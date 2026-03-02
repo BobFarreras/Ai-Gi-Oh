@@ -72,7 +72,7 @@ Esto permite distinguir validaciones de reglas e inexistencias en UI/tests.
 
 ## 8. Pendientes funcionales
 
-1. Dificultad configurable (agresivo/control/aleatorio).
+1. Persistencia de progreso de campaña (ahora se usa progreso temporal en memoria).
 2. Historial persistente de decisiones de combate.
 3. Efectos avanzados (`DRAW_CARD`, `BOOST_ATK`).
 4. Sustitución de heurística por estrategia LLM sin romper contratos.

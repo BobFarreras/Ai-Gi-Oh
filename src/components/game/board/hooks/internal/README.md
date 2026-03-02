@@ -22,7 +22,8 @@ Submódulos internos para reducir complejidad de `useBoard`.
 
 5. `useOpponentTurn.ts`
    - Loop automático del turno del rival.
-   - Ejecuta `runOpponentStep` con estrategia inyectada.
+   - Orquesta visualmente cada acción (despliegue, activación, ataque) con delays controlados.
+   - Mantiene `activeAttackerId` y `isAnimating` para feedback en tiempo real.
 
 6. `usePlayerActions.ts`
    - Acciones del jugador (play card, entity click, selección).

@@ -38,6 +38,8 @@ export function useOpponentTurn({
       const opponentId = gameState.playerB.id;
 
       if (gameState.phase === "MAIN_1") {
+        // Prioridad: resolver activaciones pendientes para que el jugador vea
+        // la carta ACTIVADA antes de aplicar su efecto.
         const pendingExecution = gameState.playerB.activeExecutions.find((entity) => entity.mode === "ACTIVATE");
         if (pendingExecution) {
           setIsAnimating(true);
@@ -61,6 +63,8 @@ export function useOpponentTurn({
             GameEngine.playCard(state, opponentId, playDecision.cardId, playDecision.mode),
           );
 
+          // Si es ACTIVAR, se deja la carta visible un paso completo y se
+          // resuelve en el siguiente ciclo de MAIN_1.
           if (playDecision.mode === "ACTIVATE" && nextState) {
             const activatedExecution = [...nextState.playerB.activeExecutions]
               .reverse()
