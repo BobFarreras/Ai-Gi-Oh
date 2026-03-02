@@ -47,6 +47,7 @@ describe('Componente UI: Board y Subcomponentes', () => {
       activeAttackerId: null,
       revealedEntities: [],
       lastError: null,
+      isPlayerTurn: true,
       setIsHistoryOpen: vi.fn(),
       toggleCardSelection: vi.fn(),
       clearSelection: vi.fn(),
@@ -81,5 +82,18 @@ describe('Componente UI: Board y Subcomponentes', () => {
 
     // Verificamos que se haya llamado a la función del hook para abrirlo
     expect(setIsHistoryOpenMock).toHaveBeenCalledWith(true);
+  });
+
+  it('no debería mostrar acciones de fase cuando es turno del rival', () => {
+    vi.mocked(useBoardModule.useBoard).mockReturnValue({
+      ...vi.mocked(useBoardModule.useBoard)(),
+      isPlayerTurn: false,
+    });
+
+    render(<Board />);
+
+    expect(screen.queryByText(/saltar fase/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/pasar turno/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/turno rival/i)).toBeInTheDocument();
   });
 });

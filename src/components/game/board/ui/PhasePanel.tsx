@@ -15,10 +15,11 @@ const PHASE_DESCRIPTIONS: Record<TurnPhase, string> = {
 interface PhasePanelProps {
   phase: TurnPhase;
   hasNormalSummonedThisTurn: boolean;
+  isPlayerTurn: boolean;
   onAdvancePhase: () => void;
 }
 
-export function PhasePanel({ phase, hasNormalSummonedThisTurn, onAdvancePhase }: PhasePanelProps) {
+export function PhasePanel({ phase, hasNormalSummonedThisTurn, isPlayerTurn, onAdvancePhase }: PhasePanelProps) {
   return (
     <div className="w-full bg-cyan-950/90 border-x-2 border-b-2 border-cyan-800 px-4 py-3 rounded-b-2xl shadow-lg flex flex-col items-center gap-3">
       <span className="text-[10px] font-black text-cyan-100 tracking-[0.1em] text-center opacity-80 uppercase">
@@ -26,8 +27,13 @@ export function PhasePanel({ phase, hasNormalSummonedThisTurn, onAdvancePhase }:
       </span>
 
       <div className="flex w-full gap-2 h-8 relative">
+        {!isPlayerTurn && (
+          <div className="w-full flex items-center justify-center text-[10px] uppercase tracking-widest text-zinc-400 font-black bg-zinc-900/70 rounded">
+            Turno Rival
+          </div>
+        )}
         <AnimatePresence>
-          {phase === "MAIN_1" && hasNormalSummonedThisTurn && (
+          {isPlayerTurn && phase === "MAIN_1" && hasNormalSummonedThisTurn && (
             <motion.div
               initial={{ opacity: 0, y: -10, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -50,7 +56,7 @@ export function PhasePanel({ phase, hasNormalSummonedThisTurn, onAdvancePhase }:
           )}
         </AnimatePresence>
 
-        {(!hasNormalSummonedThisTurn || phase !== "MAIN_1") && (
+        {isPlayerTurn && (!hasNormalSummonedThisTurn || phase !== "MAIN_1") && (
           <button
             onClick={onAdvancePhase}
             className="w-full flex items-center justify-center gap-1 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-400 hover:text-white py-1 rounded uppercase font-black text-[10px] tracking-widest transition-all"

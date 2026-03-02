@@ -13,7 +13,7 @@ const mockCard: ICard = {
   cost: 3,
   attack: 1500,
   defense: 1000,
-  imageUrl: 'none',
+  bgUrl: 'none',
 };
 
 const mockEvent = {

@@ -26,11 +26,11 @@ export function Board() {
     executePlayAction,
     handleEntityClick,
     advancePhase,
+    isPlayerTurn,
   } = useBoard();
 
   const player = gameState.playerA;
   const opponent = gameState.playerB;
-  const isPlayerTurn = gameState.activePlayerId === player.id;
 
   return (
     <div className="relative w-full h-screen bg-[#020305] overflow-hidden font-sans cursor-crosshair" onClick={clearSelection}>
@@ -71,11 +71,9 @@ export function Board() {
         <PhasePanel
           phase={gameState.phase}
           hasNormalSummonedThisTurn={gameState.hasNormalSummonedThisTurn}
+          isPlayerTurn={isPlayerTurn}
           onAdvancePhase={advancePhase}
         />
-        <div className="mt-2 text-[11px] px-3 py-1.5 rounded-md border border-white/10 bg-black/40 text-zinc-200 uppercase tracking-wider font-black">
-          {isPlayerTurn ? "Tu turno: puedes jugar acciones" : "Turno rival: acciones bloqueadas"}
-        </div>
       </div>
 
       <OpponentHandFan hand={opponent.hand} />
