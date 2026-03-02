@@ -32,6 +32,7 @@ describe('Componente UI: Board y Subcomponentes', () => {
     playerA: mockPlayer,
     playerB: mockOpponent,
     activePlayerId: 'p1',
+    startingPlayerId: 'p1',
     turn: 1,
     phase: 'MAIN_1',
     hasNormalSummonedThisTurn: false

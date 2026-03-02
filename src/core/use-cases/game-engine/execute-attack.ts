@@ -17,6 +17,18 @@ export function executeAttack(
   attackerInstanceId: string,
   defenderInstanceId?: string,
 ): GameState {
+  if (state.phase !== "BATTLE") {
+    throw new GameRuleError("Solo puedes atacar durante la fase BATTLE.");
+  }
+
+  if (state.activePlayerId !== attackerPlayerId) {
+    throw new GameRuleError("Solo el jugador activo puede declarar ataques.");
+  }
+
+  if (state.turn === 1 && state.startingPlayerId === attackerPlayerId) {
+    throw new GameRuleError("El jugador inicial no puede atacar durante el primer turno.");
+  }
+
   const { player: attacker, opponent: defender, isPlayerA } = getPlayerPair(state, attackerPlayerId);
 
   const attackerEntity = attacker.activeEntities.find((entity) => entity.instanceId === attackerInstanceId);

@@ -6,6 +6,7 @@ export interface GameState {
   playerA: IPlayer;
   playerB: IPlayer;
   activePlayerId: string;
+  startingPlayerId: string;
   turn: number;
   phase: TurnPhase;
   hasNormalSummonedThisTurn: boolean;

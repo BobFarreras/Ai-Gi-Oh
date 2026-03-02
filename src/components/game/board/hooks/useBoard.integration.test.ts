@@ -36,7 +36,7 @@ describe("useBoard integración", () => {
     expect(result.current.gameState.playerA.graveyard.some((card) => card.id === "card-spell-ddos")).toBe(true);
   });
 
-  it("debería seleccionar atacante, resolver combate y destruir objetivo en defensa", async () => {
+  it("debería bloquear ataque del jugador inicial durante el primer turno", async () => {
     const { result } = renderHook(() => useBoard());
     const entityCard = result.current.gameState.playerA.hand.find((card) => card.id === "card-p1-gemini");
 
@@ -72,9 +72,11 @@ describe("useBoard integración", () => {
     });
 
     expect(result.current.gameState.playerB.activeEntities.some((entity) => entity.instanceId === "inst-weak-bug-002")).toBe(
-      false,
+      true,
     );
-    expect(result.current.gameState.playerB.graveyard.some((card) => card.id === "op-weak")).toBe(true);
+    expect(result.current.gameState.playerB.graveyard.some((card) => card.id === "op-weak")).toBe(false);
+    expect(result.current.lastError?.code).toBe("GAME_RULE_ERROR");
+    expect(result.current.lastError?.message).toContain("no puede atacar durante el primer turno");
     expect(result.current.activeAttackerId).toBeNull();
   });
 

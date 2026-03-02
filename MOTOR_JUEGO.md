@@ -6,14 +6,16 @@ Reglas implementadas en `GameEngine`, `CombatService` y estrategia de turno del 
 
 1. `playerA`, `playerB`.
 2. `activePlayerId`.
-3. `turn`.
-4. `phase`: `DRAW | MAIN_1 | BATTLE | MAIN_2 | END`.
-5. `hasNormalSummonedThisTurn`.
+3. `startingPlayerId` (jugador que inicia la partida).
+4. `turn`.
+5. `phase`: `DRAW | MAIN_1 | BATTLE | MAIN_2 | END`.
+6. `hasNormalSummonedThisTurn`.
 
 ## 2. Reglas de fase (`nextPhase`)
 
 1. Orden fijo: `DRAW -> MAIN_1 -> BATTLE -> MAIN_2 -> END`.
-2. En `END`:
+2. En `DRAW -> MAIN_1`, el jugador activo roba 1 carta de su mazo.
+3. En `END`:
    - cambia jugador activo,
    - incrementa turno,
    - reinicia fase a `DRAW`,
@@ -35,12 +37,14 @@ Reglas implementadas en `GameEngine`, `CombatService` y estrategia de turno del 
 
 ## 4. Combate (`executeAttack` + `CombatService`)
 
-1. Atacante debe existir, estar en `ATTACK` y no haber atacado.
-2. Ataque directo solo si no hay entidades enemigas.
-3. Resolución:
+1. Solo se puede atacar en `BATTLE` y con el jugador activo.
+2. El jugador inicial (`startingPlayerId`) no puede atacar en el turno `1`.
+3. Atacante debe existir, estar en `ATTACK` y no haber atacado.
+4. Ataque directo solo si no hay entidades enemigas.
+5. Resolución:
    - `ATK vs ATK`: diferencia daña al defensor.
    - `ATK vs DEF/SET`: si ATK supera DEF destruye sin daño penetrante; si no, daño de rebote.
-4. Cartas destruidas van a `graveyard`.
+6. Cartas destruidas van a `graveyard`.
 
 ## 5. Ejecuciones (`resolveExecution`)
 
@@ -63,7 +67,7 @@ Esto permite distinguir validaciones de reglas e inexistencias en UI/tests.
 1. Servicio: `runOpponentStep`.
 2. Estrategia: `HeuristicOpponentStrategy`.
 3. En cada step, según fase:
-   - `DRAW`: avanza fase.
+   - `DRAW`: roba y avanza fase.
    - `MAIN_1`: intenta jugar mejor carta válida.
    - `BATTLE`: intenta mejor ataque disponible.
    - `MAIN_2` y `END`: avanza hasta devolver turno.

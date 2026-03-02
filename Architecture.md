@@ -47,10 +47,11 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
 
 ## Flujo de turno actual
 
-1. Jugador humano actúa en su turno (`activePlayerId = playerA.id`).
-2. Al cerrar turno, `nextPhase` transiciona a turno rival.
-3. `useOpponentTurn` ejecuta pasos automáticos del oponente (`runOpponentStep`).
-4. Al terminar fase `END` rival, vuelve el control al jugador.
+1. El duelo se inicializa con `createInitialGameState` (mazo de 20 y mano inicial de 3 por jugador).
+2. Se define `startingPlayerId`; el jugador inicial no puede atacar en turno `1`.
+3. En `DRAW`, `nextPhase` roba 1 carta y avanza a `MAIN_1`.
+4. Al cerrar turno (`END`), `nextPhase` cambia jugador activo, restaura energía y limpia flags.
+5. `useOpponentTurn` ejecuta pasos automáticos del oponente (`runOpponentStep`).
 
 ## Diseño para evolución
 

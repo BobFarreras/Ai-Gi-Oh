@@ -9,19 +9,22 @@ Submódulos internos para reducir complejidad de `useBoard`.
 ## Archivos
 
 1. `boardInitialState.ts`
-   - Estado inicial mock para partida local.
+   - Orquesta el estado inicial de partida local.
 
-2. `boardError.ts`
+2. `initialDeckFactory.ts`
+   - Construye mazos base de 20 cartas y entidades iniciales del rival.
+
+3. `boardError.ts`
    - Mapeo de errores de dominio a errores de UI (`IBoardUiError`).
 
-3. `sleep.ts`
+4. `sleep.ts`
    - Delay controlado para sincronizar animación y lógica.
 
-4. `useOpponentTurn.ts`
+5. `useOpponentTurn.ts`
    - Loop automático del turno del rival.
    - Ejecuta `runOpponentStep` con estrategia inyectada.
 
-5. `usePlayerActions.ts`
+6. `usePlayerActions.ts`
    - Acciones del jugador (play card, entity click, selección).
    - Validaciones de turno y animación.
 

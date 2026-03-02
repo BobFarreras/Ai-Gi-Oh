@@ -57,6 +57,7 @@ function createBaseState(overrides?: Partial<GameState>): GameState {
       activeExecutions: [],
     },
     activePlayerId: "p1",
+    startingPlayerId: "p1",
     turn: 1,
     phase: "MAIN_1",
     hasNormalSummonedThisTurn: false,

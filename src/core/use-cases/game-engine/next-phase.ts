@@ -1,4 +1,4 @@
-import { IBoardEntity } from "../../entities/IPlayer";
+import { IBoardEntity, IPlayer } from "../../entities/IPlayer";
 import { GameState, TurnPhase } from "./types";
 
 const PHASES: TurnPhase[] = ["DRAW", "MAIN_1", "BATTLE", "MAIN_2", "END"];
@@ -11,8 +11,38 @@ function resetEntitiesForNewTurn(entities: IBoardEntity[]): IBoardEntity[] {
   }));
 }
 
+function drawCard(player: IPlayer): IPlayer {
+  const nextCard = player.deck[0];
+
+  if (!nextCard) {
+    return player;
+  }
+
+  return {
+    ...player,
+    hand: [...player.hand, nextCard],
+    deck: player.deck.slice(1),
+  };
+}
+
 export function nextPhase(state: GameState): GameState {
   const currentIndex = PHASES.indexOf(state.phase);
+
+  if (state.phase === "DRAW") {
+    if (state.activePlayerId === state.playerA.id) {
+      return {
+        ...state,
+        phase: "MAIN_1",
+        playerA: drawCard(state.playerA),
+      };
+    }
+
+    return {
+      ...state,
+      phase: "MAIN_1",
+      playerB: drawCard(state.playerB),
+    };
+  }
 
   if (state.phase === "END") {
     const nextActivePlayerId = state.activePlayerId === state.playerA.id ? state.playerB.id : state.playerA.id;

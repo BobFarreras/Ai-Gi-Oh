@@ -19,7 +19,7 @@ export interface IPlayer {
   maxHealthPoints: number;
   currentEnergy: number;
   maxEnergy: number;
-  deck: string[];
+  deck: ICard[];
   hand: ICard[];
   graveyard: ICard[]; 
   activeEntities: IBoardEntity[];

@@ -25,7 +25,8 @@ const createInitialState = (): GameState => ({
     deck: [], hand: [], graveyard: [], activeEntities: [mockBoardEntityB], activeExecutions: []
   },
   activePlayerId: 'p1',
-  turn: 1,
+  startingPlayerId: 'p2',
+  turn: 2,
   phase: 'MAIN_1',
   hasNormalSummonedThisTurn: false
 });
@@ -56,6 +57,7 @@ describe('GameEngine', () => {
     // Reconstruimos el estado de manera inmutable en vez de reasignarlo
     state = {
       ...state,
+      phase: 'BATTLE',
       playerA: {
         ...state.playerA,
         activeEntities: [

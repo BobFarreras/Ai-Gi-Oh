@@ -64,7 +64,8 @@ function createCombatState(): GameState {
       activeExecutions: [],
     },
     activePlayerId: "p1",
-    turn: 1,
+    startingPlayerId: "p2",
+    turn: 2,
     phase: "BATTLE",
     hasNormalSummonedThisTurn: true,
   };
@@ -125,7 +126,7 @@ describe("GameEngine combate y fases", () => {
 
     state = GameEngine.nextPhase(state);
     expect(state.phase).toBe("DRAW");
-    expect(state.turn).toBe(2);
+    expect(state.turn).toBe(3);
     expect(state.activePlayerId).toBe("p2");
     expect(state.playerA.currentEnergy).toBe(10);
     expect(state.playerA.activeEntities[0].hasAttackedThisTurn).toBe(false);
@@ -134,5 +135,46 @@ describe("GameEngine combate y fases", () => {
 
   it("debería lanzar error con jugador inválido al usar el motor", () => {
     expect(() => GameEngine.changeEntityMode(createCombatState(), "invalid", "a-1", "DEFENSE")).toThrow("Jugador inválido.");
+  });
+
+  it("debería robar una carta al pasar de DRAW a MAIN_1", () => {
+    const drawCard: ICard = {
+      id: "deck-1",
+      name: "Carta de robo",
+      description: "Test de robo.",
+      type: "ENTITY",
+      faction: "NEUTRAL",
+      cost: 1,
+      attack: 1000,
+      defense: 1000,
+    };
+
+    const state = {
+      ...createCombatState(),
+      phase: "DRAW" as const,
+      activePlayerId: "p1",
+      playerA: {
+        ...createCombatState().playerA,
+        hand: [],
+        deck: [drawCard],
+      },
+    };
+
+    const nextState = GameEngine.nextPhase(state);
+    expect(nextState.phase).toBe("MAIN_1");
+    expect(nextState.playerA.hand[0]?.id).toBe("deck-1");
+    expect(nextState.playerA.deck).toHaveLength(0);
+  });
+
+  it("debería impedir ataque del jugador inicial en el turno 1", () => {
+    const state = {
+      ...createCombatState(),
+      startingPlayerId: "p1",
+      turn: 1,
+    };
+
+    expect(() => GameEngine.executeAttack(state, "p1", "a-1", "d-1")).toThrow(
+      "El jugador inicial no puede atacar durante el primer turno.",
+    );
   });
 });

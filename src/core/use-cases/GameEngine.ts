@@ -1,4 +1,5 @@
 import { BattleMode } from "../entities/IPlayer";
+import { createInitialGameState } from "./game-engine/create-initial-game-state";
 import { changeEntityMode } from "./game-engine/change-entity-mode";
 import { executeAttack } from "./game-engine/execute-attack";
 import { nextPhase } from "./game-engine/next-phase";
@@ -9,6 +10,8 @@ import { GameState } from "./game-engine/types";
 export type { GameState };
 
 export class GameEngine {
+  public static createInitialGameState = createInitialGameState;
+
   public static playCard(state: GameState, playerId: string, cardId: string, mode: BattleMode): GameState {
     return playCard(state, playerId, cardId, mode);
   }

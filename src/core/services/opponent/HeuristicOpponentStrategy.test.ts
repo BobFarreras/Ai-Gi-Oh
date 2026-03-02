@@ -43,7 +43,8 @@ function createState(): GameState {
       activeExecutions: [],
     },
     activePlayerId: "p2",
-    turn: 1,
+    startingPlayerId: "p1",
+    turn: 2,
     phase: "MAIN_1",
     hasNormalSummonedThisTurn: false,
   };
