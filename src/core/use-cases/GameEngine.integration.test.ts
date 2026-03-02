@@ -130,9 +130,6 @@ describe("GameEngine integración", () => {
     expect(state.playerB.healthPoints).toBe(8000);
 
     state = GameEngine.nextPhase(state);
-    state = GameEngine.nextPhase(state);
-    state = GameEngine.nextPhase(state);
-    state = GameEngine.nextPhase(state);
 
     expect(state.phase).toBe("MAIN_1");
     expect(state.turn).toBe(3);

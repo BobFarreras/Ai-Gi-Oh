@@ -1,7 +1,5 @@
 import { IBoardEntity, IPlayer } from "../../entities/IPlayer";
-import { GameState, TurnPhase } from "./types";
-
-const PHASES: TurnPhase[] = ["DRAW", "MAIN_1", "BATTLE", "MAIN_2", "END"];
+import { GameState } from "./types";
 
 function resetEntitiesForNewTurn(entities: IBoardEntity[]): IBoardEntity[] {
   return entities.map((entity) => ({
@@ -26,48 +24,37 @@ function drawCard(player: IPlayer): IPlayer {
 }
 
 export function nextPhase(state: GameState): GameState {
-  const currentIndex = PHASES.indexOf(state.phase);
-
-  if (state.phase === "DRAW") {
-    if (state.activePlayerId === state.playerA.id) {
-      return {
-        ...state,
-        phase: "MAIN_1",
-        playerA: drawCard(state.playerA),
-      };
-    }
-
+  if (state.phase === "MAIN_1") {
     return {
       ...state,
-      phase: "MAIN_1",
-      playerB: drawCard(state.playerB),
+      phase: "BATTLE",
     };
   }
 
-  if (state.phase === "END") {
+  if (state.phase === "BATTLE") {
     const nextActivePlayerId = state.activePlayerId === state.playerA.id ? state.playerB.id : state.playerA.id;
+    const isNextPlayerA = nextActivePlayerId === state.playerA.id;
+    const nextPlayerA = {
+      ...state.playerA,
+      currentEnergy: state.playerA.maxEnergy,
+      activeEntities: resetEntitiesForNewTurn(state.playerA.activeEntities),
+    };
+    const nextPlayerB = {
+      ...state.playerB,
+      currentEnergy: state.playerB.maxEnergy,
+      activeEntities: resetEntitiesForNewTurn(state.playerB.activeEntities),
+    };
 
     return {
       ...state,
       turn: state.turn + 1,
-      phase: "DRAW",
+      phase: "MAIN_1",
       activePlayerId: nextActivePlayerId,
       hasNormalSummonedThisTurn: false,
-      playerA: {
-        ...state.playerA,
-        currentEnergy: state.playerA.maxEnergy,
-        activeEntities: resetEntitiesForNewTurn(state.playerA.activeEntities),
-      },
-      playerB: {
-        ...state.playerB,
-        currentEnergy: state.playerB.maxEnergy,
-        activeEntities: resetEntitiesForNewTurn(state.playerB.activeEntities),
-      },
+      playerA: isNextPlayerA ? drawCard(nextPlayerA) : nextPlayerA,
+      playerB: isNextPlayerA ? nextPlayerB : drawCard(nextPlayerB),
     };
   }
 
-  return {
-    ...state,
-    phase: PHASES[currentIndex + 1],
-  };
+  return state;
 }

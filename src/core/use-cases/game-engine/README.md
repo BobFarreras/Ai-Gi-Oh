@@ -14,7 +14,7 @@ Este módulo contiene los casos de uso puros del motor.
 2. `play-card.ts`: validación y despliegue de cartas.
 3. `execute-attack.ts`: resolución de combate.
 4. `resolve-execution.ts`: efectos de ejecución.
-5. `next-phase.ts`: progresión de turnos y reinicios.
+5. `next-phase.ts`: progresión de subfases (`MAIN_1`, `BATTLE`) y paso de turno.
 6. `change-entity-mode.ts`: cambios de modo en tablero.
 7. `player-utils.ts`: utilidades de asignación por jugador.
 

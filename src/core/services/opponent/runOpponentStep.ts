@@ -7,8 +7,6 @@ export function runOpponentStep(state: GameState, opponentId: string, strategy: 
   }
 
   switch (state.phase) {
-    case "DRAW":
-      return GameEngine.nextPhase(state);
     case "MAIN_1": {
       const playDecision = strategy.choosePlay(state, opponentId);
       const stateAfterPlay = playDecision
@@ -29,10 +27,6 @@ export function runOpponentStep(state: GameState, opponentId: string, strategy: 
         attackDecision.defenderInstanceId,
       );
     }
-    case "MAIN_2":
-      return GameEngine.nextPhase(state);
-    case "END":
-      return GameEngine.nextPhase(state);
     default:
       return state;
   }

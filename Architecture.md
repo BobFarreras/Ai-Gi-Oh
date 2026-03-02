@@ -49,9 +49,9 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
 
 1. El duelo se inicializa con `createInitialGameState` (mazo de 20 y mano inicial de 3 por jugador).
 2. Se define `startingPlayerId`; el jugador inicial no puede atacar en turno `1`.
-3. En `DRAW`, `nextPhase` roba 1 carta y avanza a `MAIN_1`.
-4. Al cerrar turno (`END`), `nextPhase` cambia jugador activo, restaura energía y limpia flags.
-5. `useOpponentTurn` ejecuta pasos automáticos del oponente (`runOpponentStep`).
+3. El turno tiene 2 subfases: `MAIN_1` (despliegue) y `BATTLE` (combate).
+4. Al cerrar `BATTLE`, `nextPhase` pasa el turno al rival, roba 1 carta para ese rival, restaura energía y limpia flags.
+5. `useOpponentTurn` ejecuta pasos automáticos del oponente (`runOpponentStep`) con el mismo ciclo de 2 subfases.
 
 ## Diseño para evolución
 

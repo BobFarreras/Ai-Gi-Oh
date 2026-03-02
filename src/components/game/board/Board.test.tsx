@@ -93,7 +93,7 @@ describe('Componente UI: Board y Subcomponentes', () => {
 
     render(<Board />);
 
-    expect(screen.queryByText(/saltar fase/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ir a combate/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/pasar turno/i)).not.toBeInTheDocument();
     expect(screen.getByText(/turno rival/i)).toBeInTheDocument();
   });

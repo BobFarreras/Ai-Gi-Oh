@@ -8,24 +8,24 @@ Reglas implementadas en `GameEngine`, `CombatService` y estrategia de turno del 
 2. `activePlayerId`.
 3. `startingPlayerId` (jugador que inicia la partida).
 4. `turn`.
-5. `phase`: `DRAW | MAIN_1 | BATTLE | MAIN_2 | END`.
+5. `phase`: `MAIN_1 | BATTLE`.
 6. `hasNormalSummonedThisTurn`.
 
 ## 2. Reglas de fase (`nextPhase`)
 
-1. Orden fijo: `DRAW -> MAIN_1 -> BATTLE -> MAIN_2 -> END`.
-2. En `DRAW -> MAIN_1`, el jugador activo roba 1 carta de su mazo.
-3. En `END`:
+1. Orden fijo: `MAIN_1 -> BATTLE -> (siguiente jugador MAIN_1)`.
+2. Al pasar de `BATTLE` al siguiente turno:
    - cambia jugador activo,
    - incrementa turno,
-   - reinicia fase a `DRAW`,
+   - fija fase en `MAIN_1`,
+   - roba 1 carta para el nuevo jugador activo,
    - restaura energía,
    - limpia flags de ataque y de invocación reciente.
 
 ## 3. Juego de cartas (`playCard`)
 
 1. Solo jugador activo.
-2. Solo en `MAIN_1` o `MAIN_2`.
+2. Solo en `MAIN_1`.
 3. Requiere carta en mano y energía suficiente.
 4. Entidades:
    - máximo 3,
@@ -67,10 +67,8 @@ Esto permite distinguir validaciones de reglas e inexistencias en UI/tests.
 1. Servicio: `runOpponentStep`.
 2. Estrategia: `HeuristicOpponentStrategy`.
 3. En cada step, según fase:
-   - `DRAW`: roba y avanza fase.
    - `MAIN_1`: intenta jugar mejor carta válida.
    - `BATTLE`: intenta mejor ataque disponible.
-   - `MAIN_2` y `END`: avanza hasta devolver turno.
 
 ## 8. Pendientes funcionales
 

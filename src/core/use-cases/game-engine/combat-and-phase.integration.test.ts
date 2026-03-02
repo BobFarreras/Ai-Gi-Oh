@@ -120,12 +120,12 @@ describe("GameEngine combate y fases", () => {
 
   it("debería cambiar de fase y reiniciar estado al cerrar turno", () => {
     let state = createCombatState();
-    state = { ...state, phase: "MAIN_2" };
+    state = { ...state, phase: "MAIN_1" };
     state = GameEngine.nextPhase(state);
-    expect(state.phase).toBe("END");
+    expect(state.phase).toBe("BATTLE");
 
     state = GameEngine.nextPhase(state);
-    expect(state.phase).toBe("DRAW");
+    expect(state.phase).toBe("MAIN_1");
     expect(state.turn).toBe(3);
     expect(state.activePlayerId).toBe("p2");
     expect(state.playerA.currentEnergy).toBe(10);
@@ -137,7 +137,7 @@ describe("GameEngine combate y fases", () => {
     expect(() => GameEngine.changeEntityMode(createCombatState(), "invalid", "a-1", "DEFENSE")).toThrow("Jugador inválido.");
   });
 
-  it("debería robar una carta al pasar de DRAW a MAIN_1", () => {
+  it("debería robar una carta al cerrar combate y pasar turno", () => {
     const drawCard: ICard = {
       id: "deck-1",
       name: "Carta de robo",
@@ -151,8 +151,8 @@ describe("GameEngine combate y fases", () => {
 
     const state = {
       ...createCombatState(),
-      phase: "DRAW" as const,
-      activePlayerId: "p1",
+      phase: "BATTLE" as const,
+      activePlayerId: "p2",
       playerA: {
         ...createCombatState().playerA,
         hand: [],
@@ -164,6 +164,7 @@ describe("GameEngine combate y fases", () => {
     expect(nextState.phase).toBe("MAIN_1");
     expect(nextState.playerA.hand[0]?.id).toBe("deck-1");
     expect(nextState.playerA.deck).toHaveLength(0);
+    expect(nextState.activePlayerId).toBe("p1");
   });
 
   it("debería impedir ataque del jugador inicial en el turno 1", () => {

@@ -1,6 +1,6 @@
 import { IPlayer } from "../../entities/IPlayer";
 
-export type TurnPhase = "DRAW" | "MAIN_1" | "BATTLE" | "MAIN_2" | "END";
+export type TurnPhase = "MAIN_1" | "BATTLE";
 
 export interface GameState {
   playerA: IPlayer;

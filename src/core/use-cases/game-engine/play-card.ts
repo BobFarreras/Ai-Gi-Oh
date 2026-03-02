@@ -44,8 +44,8 @@ export function playCard(state: GameState, playerId: string, cardId: string, mod
     throw new GameRuleError("No es tu turno.");
   }
 
-  if (state.phase !== "MAIN_1" && state.phase !== "MAIN_2") {
-    throw new GameRuleError("Solo puedes jugar cartas en la Main Phase.");
+  if (state.phase !== "MAIN_1") {
+    throw new GameRuleError("Solo puedes jugar cartas en la fase de despliegue.");
   }
 
   const { player, opponent, isPlayerA } = getPlayerPair(state, playerId);

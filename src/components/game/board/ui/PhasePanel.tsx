@@ -5,11 +5,8 @@ import { ChevronRight, Swords } from "lucide-react";
 import { TurnPhase } from "@/core/use-cases/game-engine/types";
 
 const PHASE_DESCRIPTIONS: Record<TurnPhase, string> = {
-  DRAW: "ROBANDO CARTA...",
   MAIN_1: "FASE DE PREPARACIÓN (Invoca o Coloca Entidades)",
   BATTLE: "FASE DE COMBATE (Selecciona atacante)",
-  MAIN_2: "PREPARACIÓN SECUNDARIA",
-  END: "FIN DEL TURNO",
 };
 
 interface PhasePanelProps {
@@ -42,15 +39,9 @@ export function PhasePanel({ phase, hasNormalSummonedThisTurn, isPlayerTurn, onA
             >
               <button
                 onClick={onAdvancePhase}
-                className="flex-1 flex items-center justify-center gap-1 bg-red-900 hover:bg-red-700 text-red-100 py-1 rounded uppercase font-black text-[10px] tracking-widest border border-red-500 transition-all shadow-[0_0_15px_rgba(239,68,68,0.8)] animate-pulse"
+                className="w-full flex items-center justify-center gap-1 bg-red-900 hover:bg-red-700 text-red-100 py-1 rounded uppercase font-black text-[10px] tracking-widest border border-red-500 transition-all shadow-[0_0_15px_rgba(239,68,68,0.8)] animate-pulse"
               >
                 <Swords size={12} /> Ir a Combate
-              </button>
-              <button
-                onClick={onAdvancePhase}
-                className="flex-1 flex items-center justify-center gap-1 bg-cyan-800 hover:bg-cyan-600 text-cyan-100 py-1 rounded uppercase font-black text-[10px] tracking-widest border border-cyan-500 transition-all"
-              >
-                Fin Turno <ChevronRight size={14} />
               </button>
             </motion.div>
           )}
@@ -61,7 +52,7 @@ export function PhasePanel({ phase, hasNormalSummonedThisTurn, isPlayerTurn, onA
             onClick={onAdvancePhase}
             className="w-full flex items-center justify-center gap-1 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-400 hover:text-white py-1 rounded uppercase font-black text-[10px] tracking-widest transition-all"
           >
-            {phase === "END" ? "Pasar Turno" : "Saltar Fase"} <ChevronRight size={14} />
+            {phase === "MAIN_1" ? "Ir a Combate" : "Pasar Turno"} <ChevronRight size={14} />
           </button>
         )}
       </div>

@@ -70,8 +70,8 @@ describe("GameEngine reglas de juego", () => {
     expect(() => GameEngine.playCard(createBaseState({ activePlayerId: "p2" }), "p1", "entity-1", "ATTACK")).toThrow(
       "No es tu turno.",
     );
-    expect(() => GameEngine.playCard(createBaseState({ phase: "DRAW" }), "p1", "entity-1", "ATTACK")).toThrow(
-      "Solo puedes jugar cartas en la Main Phase.",
+    expect(() => GameEngine.playCard(createBaseState({ phase: "BATTLE" }), "p1", "entity-1", "ATTACK")).toThrow(
+      "Solo puedes jugar cartas en la fase de despliegue.",
     );
     expect(() => GameEngine.playCard(createBaseState(), "p1", "unknown", "ATTACK")).toThrow("La carta no está en la mano.");
   });
