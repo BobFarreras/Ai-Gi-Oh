@@ -19,6 +19,9 @@ export function Board() {
     activeAttackerId,
     revealedEntities,
     lastError,
+    pendingActionHint,
+    pendingDiscardCardIds,
+    pendingEntitySelectionIds,
     opponentDifficulty,
     setIsHistoryOpen,
     toggleCardSelection,
@@ -27,6 +30,7 @@ export function Board() {
     executePlayAction,
     handleEntityClick,
     advancePhase,
+    resolvePendingHandDiscard,
     isPlayerTurn,
   } = useBoard();
 
@@ -56,6 +60,13 @@ export function Board() {
               X
             </button>
           </div>
+        </div>
+      )}
+
+      {pendingActionHint && (
+        <div className="absolute top-28 left-1/2 -translate-x-1/2 z-[130] w-[92%] max-w-3xl bg-amber-950/85 border border-amber-400/50 text-amber-100 px-5 py-3 rounded-xl shadow-[0_0_35px_rgba(251,191,36,0.25)]">
+          <p className="text-xs font-black tracking-wider uppercase text-amber-300">Acción obligatoria</p>
+          <p className="text-sm font-semibold">{pendingActionHint}</p>
         </div>
       )}
 
@@ -102,6 +113,7 @@ export function Board() {
           activeAttackerId={activeAttackerId}
           selectedCard={selectedCard}
           revealedEntities={revealedEntities}
+          highlightedPlayerEntityIds={pendingEntitySelectionIds}
           onEntityClick={handleEntityClick}
         />
       </div>
@@ -111,6 +123,8 @@ export function Board() {
         playingCard={playingCard}
         hasSummoned={gameState.hasNormalSummonedThisTurn}
         isPlayerTurn={isPlayerTurn}
+        highlightedCardIds={pendingDiscardCardIds}
+        onMandatoryCardSelect={resolvePendingHandDiscard}
         onCardClick={toggleCardSelection}
         onPlayAction={executePlayAction}
       />

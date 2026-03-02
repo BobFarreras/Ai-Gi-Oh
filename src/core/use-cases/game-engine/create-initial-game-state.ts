@@ -72,6 +72,6 @@ export function createInitialGameState(config: ICreateInitialGameStateConfig): G
     turn: 1,
     phase: "MAIN_1",
     hasNormalSummonedThisTurn: false,
+    pendingTurnAction: null,
   };
 }
-

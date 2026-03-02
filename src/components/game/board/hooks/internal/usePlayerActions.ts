@@ -10,15 +10,18 @@ interface IUsePlayerActionsParams {
   isAnimating: boolean;
   playingCard: ICard | null;
   activeAttackerId: string | null;
+  pendingEntityReplacement: { cardId: string; mode: BattleMode } | null;
   assertPlayerTurn: () => boolean;
   applyTransition: (transition: (state: GameState) => GameState) => GameState | null;
   clearSelection: () => void;
   clearError: () => void;
+  resolvePendingTurnAction: (selectedId: string) => void;
   setSelectedCard: (card: ICard | null) => void;
   setPlayingCard: (card: ICard | null) => void;
   setActiveAttackerId: (value: string | null | ((prev: string | null) => string | null)) => void;
   setIsAnimating: (value: boolean) => void;
   setRevealedEntities: (value: string[] | ((prev: string[]) => string[])) => void;
+  setPendingEntityReplacement: (value: { cardId: string; mode: BattleMode } | null) => void;
   setLastError: (value: IBoardUiError | null) => void;
 }
 
@@ -33,21 +36,28 @@ export function usePlayerActions({
   isAnimating,
   playingCard,
   activeAttackerId,
+  pendingEntityReplacement,
   assertPlayerTurn,
   applyTransition,
   clearSelection,
   clearError,
+  resolvePendingTurnAction,
   setSelectedCard,
   setPlayingCard,
   setActiveAttackerId,
   setIsAnimating,
   setRevealedEntities,
+  setPendingEntityReplacement,
   setLastError,
 }: IUsePlayerActionsParams): IPlayerActions {
   const toggleCardSelection = useCallback(
     (card: ICard, event?: React.MouseEvent) => {
       event?.stopPropagation();
       if (isAnimating || !assertPlayerTurn()) return;
+      if (gameState.pendingTurnAction?.playerId === gameState.playerA.id) {
+        setLastError({ code: "GAME_RULE_ERROR", message: "Debes resolver la acción obligatoria antes de jugar." });
+        return;
+      }
       if (playingCard?.id === card.id) {
         clearSelection();
       } else {
@@ -57,15 +67,41 @@ export function usePlayerActions({
       }
       clearError();
     },
-    [assertPlayerTurn, clearError, clearSelection, isAnimating, playingCard?.id, setActiveAttackerId, setPlayingCard, setSelectedCard],
+    [
+      assertPlayerTurn,
+      clearError,
+      clearSelection,
+      gameState.pendingTurnAction,
+      gameState.playerA.id,
+      isAnimating,
+      playingCard?.id,
+      setActiveAttackerId,
+      setLastError,
+      setPlayingCard,
+      setSelectedCard,
+    ],
   );
 
   const executePlayAction = useCallback(
     async (mode: BattleMode, event: React.MouseEvent) => {
       event.stopPropagation();
       if (!playingCard || isAnimating || !assertPlayerTurn()) return;
+      if (gameState.pendingTurnAction?.playerId === gameState.playerA.id) {
+        setLastError({ code: "GAME_RULE_ERROR", message: "Debes resolver la acción obligatoria antes de jugar." });
+        return;
+      }
 
       clearError();
+      if (
+        playingCard.type === "ENTITY" &&
+        (mode === "ATTACK" || mode === "DEFENSE") &&
+        gameState.playerA.activeEntities.length >= 3
+      ) {
+        setPendingEntityReplacement({ cardId: playingCard.id, mode });
+        setLastError(null);
+        return;
+      }
+
       if (mode === "ACTIVATE") {
         setIsAnimating(true);
         const playedState = applyTransition((state) => GameEngine.playCard(state, state.playerA.id, playingCard.id, mode));
@@ -91,13 +127,57 @@ export function usePlayerActions({
       const played = applyTransition((state) => GameEngine.playCard(state, state.playerA.id, playingCard.id, mode));
       if (played) clearSelection();
     },
-    [applyTransition, assertPlayerTurn, clearError, clearSelection, isAnimating, playingCard, setIsAnimating, setLastError],
+    [
+      applyTransition,
+      assertPlayerTurn,
+      clearError,
+      clearSelection,
+      gameState.playerA.activeEntities.length,
+      gameState.pendingTurnAction,
+      gameState.playerA.id,
+      isAnimating,
+      playingCard,
+      setPendingEntityReplacement,
+      setIsAnimating,
+      setLastError,
+    ],
   );
 
   const handleEntityClick = useCallback(
     async (entity: IBoardEntity | null, isOpponent: boolean, event: React.MouseEvent) => {
       event.stopPropagation();
       if (isAnimating || !assertPlayerTurn()) return;
+      if (gameState.pendingTurnAction?.playerId === gameState.playerA.id) {
+        if (!isOpponent && entity) {
+          resolvePendingTurnAction(entity.instanceId);
+          return;
+        }
+
+        setLastError({ code: "GAME_RULE_ERROR", message: "Debes resolver la acción obligatoria antes de jugar." });
+        return;
+      }
+
+      if (pendingEntityReplacement) {
+        if (!isOpponent && entity) {
+          const replacedState = applyTransition((state) =>
+            GameEngine.playCardWithEntityReplacement(
+              state,
+              state.playerA.id,
+              pendingEntityReplacement.cardId,
+              pendingEntityReplacement.mode,
+              entity.instanceId,
+            ),
+          );
+          if (replacedState) {
+            setPendingEntityReplacement(null);
+            clearSelection();
+          }
+          return;
+        }
+
+        setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una entidad de tu campo para reemplazar." });
+        return;
+      }
 
       clearError();
       if (!isOpponent) {
@@ -158,13 +238,19 @@ export function usePlayerActions({
       assertPlayerTurn,
       clearError,
       clearSelection,
+      pendingEntityReplacement,
+      gameState.pendingTurnAction?.playerId,
+      gameState.playerA.id,
       gameState.phase,
       isAnimating,
+      resolvePendingTurnAction,
       setActiveAttackerId,
       setIsAnimating,
+      setPendingEntityReplacement,
       setPlayingCard,
       setRevealedEntities,
       setSelectedCard,
+      setLastError,
     ],
   );
 

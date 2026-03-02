@@ -18,9 +18,14 @@ Reglas implementadas en `GameEngine`, `CombatService` y estrategia de turno del 
    - cambia jugador activo,
    - incrementa turno,
    - fija fase en `MAIN_1`,
-   - roba 1 carta para el nuevo jugador activo,
+   - valida acciones obligatorias antes de robar,
    - restaura energía,
    - limpia flags de ataque y de invocación reciente.
+3. Si el jugador entrante tiene 3 entidades en campo:
+   - se crea acción obligatoria `SACRIFICE_ENTITY_FOR_DRAW`.
+4. Si el jugador entrante tiene 5 cartas en mano:
+   - se crea acción obligatoria `DISCARD_FOR_HAND_LIMIT`.
+5. Solo cuando se resuelve la acción obligatoria se roba 1 carta del mazo.
 
 ## 3. Juego de cartas (`playCard`)
 
@@ -30,7 +35,8 @@ Reglas implementadas en `GameEngine`, `CombatService` y estrategia de turno del 
 4. Entidades:
    - máximo 3,
    - 1 invocación normal por turno,
-   - modos válidos: `ATTACK` o `DEFENSE`.
+   - modos válidos: `ATTACK` o `DEFENSE`,
+   - si la zona está llena y se quiere invocar otra entidad, se debe reemplazar una entidad existente (la reemplazada va a cementerio).
 5. Ejecuciones:
    - máximo 3,
    - modos válidos: `SET` o `ACTIVATE`.

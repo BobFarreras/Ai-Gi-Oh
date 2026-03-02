@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ICard } from "@/core/entities/ICard";
+import { BattleMode } from "@/core/entities/IPlayer";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
 import { resolveDifficultyFromCampaign } from "@/core/services/opponent/difficulty/resolveDifficultyFromCampaign";
@@ -18,6 +19,7 @@ export function useBoard() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [revealedEntities, setRevealedEntities] = useState<string[]>([]);
   const [lastError, setLastError] = useState<IBoardUiError | null>(null);
+  const [pendingEntityReplacement, setPendingEntityReplacement] = useState<{ cardId: string; mode: BattleMode } | null>(null);
   const [campaignProgress] = useState<ICampaignProgress>({ chapterIndex: 1, duelIndex: 1, victories: 0 });
 
   const gameStateRef = useRef(gameState);
@@ -95,20 +97,51 @@ export function useBoard() {
     clearError();
   }, [applyTransition, assertPlayerTurn, clearError, clearSelection, isAnimating]);
 
+  const resolvePendingTurnAction = useCallback(
+    (selectedId: string) => {
+      if (isAnimating || !assertPlayerTurn()) {
+        return;
+      }
+
+      const nextState = applyTransition((state) => GameEngine.resolvePendingTurnAction(state, state.playerA.id, selectedId));
+      if (!nextState) {
+        return;
+      }
+
+      clearSelection();
+      clearError();
+    },
+    [applyTransition, assertPlayerTurn, clearError, clearSelection, isAnimating],
+  );
+
+  const resolvePendingHandDiscard = useCallback(
+    (cardId: string) => {
+      if (gameState.pendingTurnAction?.playerId !== gameState.playerA.id || gameState.pendingTurnAction.type !== "DISCARD_FOR_HAND_LIMIT") {
+        return;
+      }
+
+      resolvePendingTurnAction(cardId);
+    },
+    [gameState.pendingTurnAction, gameState.playerA.id, resolvePendingTurnAction],
+  );
+
   const { toggleCardSelection, executePlayAction, handleEntityClick } = usePlayerActions({
     gameState,
     isAnimating,
     playingCard,
     activeAttackerId,
+    pendingEntityReplacement,
     assertPlayerTurn,
     applyTransition,
     clearSelection,
     clearError,
+    resolvePendingTurnAction,
     setSelectedCard,
     setPlayingCard,
     setActiveAttackerId,
     setIsAnimating,
     setRevealedEntities,
+    setPendingEntityReplacement,
     setLastError,
   });
 
@@ -120,6 +153,25 @@ export function useBoard() {
     activeAttackerId,
     revealedEntities,
     lastError,
+    pendingEntityReplacement,
+    pendingActionHint:
+      gameState.pendingTurnAction?.playerId === gameState.playerA.id
+        ? gameState.pendingTurnAction.type === "DISCARD_FOR_HAND_LIMIT"
+          ? "Tienes 5 cartas en mano. Elige una carta de tu mano para enviarla al cementerio."
+          : "Tu campo de entidades está lleno. Elige una entidad de tu campo para enviarla al cementerio."
+        : pendingEntityReplacement
+          ? "Tu campo está lleno. Elige una entidad del campo para reemplazarla por la nueva invocación."
+          : null,
+    pendingDiscardCardIds:
+      gameState.pendingTurnAction?.playerId === gameState.playerA.id && gameState.pendingTurnAction.type === "DISCARD_FOR_HAND_LIMIT"
+        ? gameState.playerA.hand.map((card) => card.id)
+        : [],
+    pendingEntitySelectionIds:
+      gameState.pendingTurnAction?.playerId === gameState.playerA.id && gameState.pendingTurnAction.type === "SACRIFICE_ENTITY_FOR_DRAW"
+        ? gameState.playerA.activeEntities.map((entity) => entity.instanceId)
+        : pendingEntityReplacement
+          ? gameState.playerA.activeEntities.map((entity) => entity.instanceId)
+          : [],
     opponentDifficulty,
     isPlayerTurn: gameState.activePlayerId === gameState.playerA.id,
     setIsHistoryOpen,
@@ -129,5 +181,7 @@ export function useBoard() {
     executePlayAction,
     handleEntityClick,
     advancePhase,
+    resolvePendingTurnAction,
+    resolvePendingHandDiscard,
   };
 }

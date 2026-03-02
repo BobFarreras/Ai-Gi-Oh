@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import { ICard } from "@/core/entities/ICard";
+import { IBoardEntity } from "@/core/entities/IPlayer";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { IOpponentStrategy } from "@/core/services/opponent/types";
 import { sleep } from "./sleep";
@@ -17,6 +19,35 @@ interface IUseOpponentTurnParams {
 
 const OPPONENT_STEP_DELAY_MS = 950;
 const OPPONENT_ATTACK_WINDUP_MS = 900;
+
+function scoreCardForDiscard(card: ICard): number {
+  if (card.type === "ENTITY") {
+    return (card.attack ?? 0) + (card.defense ?? 0) - card.cost * 180;
+  }
+
+  const effectValue = card.effect?.value ?? 0;
+  return effectValue - card.cost * 140;
+}
+
+function chooseEntityToSacrifice(entities: IBoardEntity[]): IBoardEntity | null {
+  if (entities.length === 0) {
+    return null;
+  }
+
+  return entities.reduce((weakest, current) => {
+    const weakestScore = (weakest.card.attack ?? 0) + (weakest.card.defense ?? 0);
+    const currentScore = (current.card.attack ?? 0) + (current.card.defense ?? 0);
+    return currentScore < weakestScore ? current : weakest;
+  });
+}
+
+function chooseCardToDiscard(hand: ICard[]): ICard | null {
+  if (hand.length === 0) {
+    return null;
+  }
+
+  return hand.reduce((worst, current) => (scoreCardForDiscard(current) < scoreCardForDiscard(worst) ? current : worst));
+}
 
 export function useOpponentTurn({
   gameState,
@@ -38,6 +69,28 @@ export function useOpponentTurn({
       const opponentId = gameState.playerB.id;
 
       if (gameState.phase === "MAIN_1") {
+        if (gameState.pendingTurnAction?.playerId === opponentId) {
+          const selectedId =
+            gameState.pendingTurnAction.type === "SACRIFICE_ENTITY_FOR_DRAW"
+              ? chooseEntityToSacrifice(gameState.playerB.activeEntities)?.instanceId ?? null
+              : chooseCardToDiscard(gameState.playerB.hand)?.id ?? null;
+
+          if (!selectedId) {
+            return;
+          }
+
+          setIsAnimating(true);
+          await sleep(OPPONENT_STEP_DELAY_MS);
+          const nextState = applyTransition((state) => GameEngine.resolvePendingTurnAction(state, opponentId, selectedId));
+          setIsAnimating(false);
+
+          if (nextState && nextState.activePlayerId === nextState.playerA.id) {
+            clearSelection();
+            clearError();
+          }
+          return;
+        }
+
         // Prioridad: resolver activaciones pendientes para que el jugador vea
         // la carta ACTIVADA antes de aplicar su efecto.
         const pendingExecution = gameState.playerB.activeExecutions.find((entity) => entity.mode === "ACTIVATE");

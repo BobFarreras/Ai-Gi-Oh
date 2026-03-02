@@ -20,6 +20,27 @@ Guía rápida para entender la lógica de tablero y batalla.
    - Selección de objetivo o ataque directo.
    - Resolución mediante `GameEngine.executeAttack`.
 
+## Reglas obligatorias de inicio de turno
+
+1. Si el jugador entra al turno con 3 entidades:
+   - debe sacrificar 1 entidad al cementerio antes del robo.
+
+2. Si entra con 5 cartas en mano:
+   - debe descartar 1 carta antes del robo.
+
+3. `Board` no usa diálogo modal: muestra mensaje contextual y resalta opciones seleccionables.
+4. En descarte por mano (5 cartas), se resaltan las cartas de mano y al pulsar una se descarta.
+5. En sacrificio por campo lleno al inicio de turno, se resaltan las entidades de campo y al pulsar una se sacrifica.
+6. El rival resuelve estas acciones automáticamente en `useOpponentTurn`.
+
+## Reemplazo de invocación con campo lleno
+
+1. Si el jugador intenta invocar entidad con 3 entidades ya en campo:
+   - se muestra aviso contextual,
+   - se resaltan las 3 entidades del campo,
+   - al elegir una, se envía al cementerio y entra la nueva entidad.
+2. Esta lógica usa `GameEngine.playCardWithEntityReplacement`.
+
 ## Estado UI importante
 
 1. `activeAttackerId`
@@ -40,4 +61,3 @@ Guía rápida para entender la lógica de tablero y batalla.
 2. Decisiones del rival: `src/core/services/opponent/*`.
 3. Ritmo visual de acciones rival: `src/components/game/board/hooks/internal/useOpponentTurn.ts`.
 4. Render y animación de campo: `src/components/game/board/battlefield/*`.
-

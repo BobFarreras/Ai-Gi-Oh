@@ -15,6 +15,7 @@ interface BattlefieldZoneProps {
   activeAttackerId: string | null;
   selectedCard: ICard | null;
   revealedEntities: string[];
+  highlightedEntityIds: string[];
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => void;
 }
 
@@ -28,6 +29,7 @@ export function BattlefieldZone({
   activeAttackerId,
   selectedCard,
   revealedEntities,
+  highlightedEntityIds,
   onEntityClick,
 }: BattlefieldZoneProps) {
   const isOpponentSide = side === "opponent";
@@ -83,6 +85,7 @@ export function BattlefieldZone({
             activeAttackerId={activeAttackerId}
             selectedCard={selectedCard}
             revealedEntities={revealedEntities}
+            highlightedEntityIds={highlightedEntityIds}
             onEntityClick={onEntityClick}
           />
         </div>
@@ -94,6 +97,7 @@ export function BattlefieldZone({
             activeAttackerId={activeAttackerId}
             selectedCard={selectedCard}
             revealedEntities={revealedEntities}
+            highlightedEntityIds={highlightedEntityIds}
             onEntityClick={onEntityClick}
           />
         </div>

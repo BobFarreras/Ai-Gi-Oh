@@ -17,6 +17,10 @@ export function executeAttack(
   attackerInstanceId: string,
   defenderInstanceId?: string,
 ): GameState {
+  if (state.pendingTurnAction) {
+    throw new GameRuleError("Debes resolver la acción obligatoria de inicio de turno antes de declarar ataques.");
+  }
+
   if (state.phase !== "BATTLE") {
     throw new GameRuleError("Solo puedes atacar durante la fase BATTLE.");
   }

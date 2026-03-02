@@ -13,6 +13,7 @@ interface SlotGridProps {
   activeAttackerId: string | null;
   selectedCard: ICard | null;
   revealedEntities: string[];
+  highlightedEntityIds: string[];
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => void;
 }
 
@@ -23,6 +24,7 @@ export function SlotGrid({
   activeAttackerId,
   selectedCard,
   revealedEntities,
+  highlightedEntityIds,
   onEntityClick,
 }: SlotGridProps) {
   return (
@@ -32,6 +34,7 @@ export function SlotGrid({
         const isAttacking = entity?.instanceId === activeAttackerId;
         const isRevealed = entity ? revealedEntities.includes(entity.instanceId) : false;
         const isActivating = entity?.mode === "ACTIVATE";
+        const isHighlighted = entity ? highlightedEntityIds.includes(entity.instanceId) : false;
         const isFaceDown = (entity?.mode === "DEFENSE" || entity?.mode === "SET") && !isRevealed;
         const isHorizontal = entity?.mode === "DEFENSE" || (entity?.mode === "SET" && entity.card.type === "ENTITY");
         const targetX = -120 - index * 105;
@@ -65,6 +68,7 @@ export function SlotGrid({
                   className={cn(
                     "w-[260px] h-[340px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 origin-center cursor-pointer",
                     isAttacking ? "ring-4 ring-red-500 shadow-[0_0_30px_rgba(239,68,68,1)] animate-pulse rounded-xl" : "",
+                    isHighlighted ? "ring-4 ring-amber-400 shadow-[0_0_35px_rgba(251,191,36,0.8)] animate-pulse rounded-xl" : "",
                   )}
                   onClick={(event) => onEntityClick(entity, isOpponentSide, event)}
                 >

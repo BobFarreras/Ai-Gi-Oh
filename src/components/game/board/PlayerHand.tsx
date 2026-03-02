@@ -12,17 +12,29 @@ interface PlayerHandProps {
   playingCard: ICard | null; 
   hasSummoned: boolean;
   isPlayerTurn: boolean;
+  highlightedCardIds?: string[];
+  onMandatoryCardSelect?: (cardId: string) => void;
   onCardClick: (card: ICard, e: React.MouseEvent) => void;
   onPlayAction: (mode: BattleMode, e: React.MouseEvent) => void;
 }
 
-export function PlayerHand({ hand, playingCard, hasSummoned, isPlayerTurn, onCardClick, onPlayAction }: PlayerHandProps) {
+export function PlayerHand({
+  hand,
+  playingCard,
+  hasSummoned,
+  isPlayerTurn,
+  highlightedCardIds = [],
+  onMandatoryCardSelect,
+  onCardClick,
+  onPlayAction,
+}: PlayerHandProps) {
   return (
     <div className="absolute bottom-0 left-0 w-full h-[500px] flex justify-center items-end z-40 pointer-events-none perspective-[1200px] pb-4">
       <div className="flex justify-center -space-x-12 pointer-events-auto relative">
         {hand.map((card, i) => {
           const isSelected = playingCard?.id === card.id;
           const isEntity = card.type === 'ENTITY';
+          const isMandatorySelectable = highlightedCardIds.includes(card.id);
           
           // Bloqueamos la UI si es entidad y ya invocó
           const isBlocked = isEntity && hasSummoned;
@@ -77,12 +89,18 @@ export function PlayerHand({ hand, playingCard, hasSummoned, isPlayerTurn, onCar
                   if (!isPlayerTurn) {
                     return;
                   }
+                  if (isMandatorySelectable && onMandatoryCardSelect) {
+                    onMandatoryCardSelect(card.id);
+                    return;
+                  }
                   onCardClick(card, e);
                 }}
                 className={isPlayerTurn ? "cursor-pointer origin-bottom" : "origin-bottom opacity-75"}
                 style={{ zIndex: isSelected ? 100 : i }}
               >
-                <Card card={card} isSelected={isSelected} />
+                <div className={isMandatorySelectable ? "rounded-xl ring-4 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.65)] animate-pulse" : ""}>
+                  <Card card={card} isSelected={isSelected} />
+                </div>
               </motion.div>
             </div>
           );

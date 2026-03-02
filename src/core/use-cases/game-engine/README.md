@@ -17,6 +17,8 @@ Este módulo contiene los casos de uso puros del motor.
 5. `next-phase.ts`: progresión de subfases (`MAIN_1`, `BATTLE`) y paso de turno.
 6. `change-entity-mode.ts`: cambios de modo en tablero.
 7. `player-utils.ts`: utilidades de asignación por jugador.
+8. `resolve-pending-turn-action.ts`: resolución de acciones obligatorias antes del robo.
+9. `play-card-with-entity-replacement.ts`: invocación de entidad reemplazando otra en campo lleno.
 
 ## Invariantes
 
@@ -24,6 +26,7 @@ Este módulo contiene los casos de uso puros del motor.
 2. Solo el jugador activo puede ejecutar acciones de turno.
 3. Se respetan límites de zonas y energía.
 4. Errores de dominio tipados (`ValidationError`, `GameRuleError`, `NotFoundError`).
+5. El turno no puede avanzar ni jugar cartas/ataques si existe `pendingTurnAction`.
 
 ## Evolución segura
 

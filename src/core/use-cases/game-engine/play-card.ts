@@ -40,6 +40,10 @@ function createBoardEntity(card: IPlayer["hand"][number], mode: BattleMode): IBo
 }
 
 export function playCard(state: GameState, playerId: string, cardId: string, mode: BattleMode): GameState {
+  if (state.pendingTurnAction) {
+    throw new GameRuleError("Debes resolver la acción obligatoria de inicio de turno antes de jugar cartas.");
+  }
+
   if (state.activePlayerId !== playerId) {
     throw new GameRuleError("No es tu turno.");
   }
