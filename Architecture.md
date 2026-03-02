@@ -52,6 +52,7 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
 3. El turno tiene 2 subfases: `MAIN_1` (despliegue) y `BATTLE` (combate).
 4. Al cerrar `BATTLE`, `nextPhase` pasa el turno al rival, roba 1 carta para ese rival, restaura energía y limpia flags.
 5. `useOpponentTurn` ejecuta pasos automáticos del oponente (`runOpponentStep`) con el mismo ciclo de 2 subfases.
+6. La dificultad del rival se resuelve desde progreso de campaña (`resolveDifficultyFromCampaign`) y se inyecta en la estrategia.
 
 ## Diseño para evolución
 

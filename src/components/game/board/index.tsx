@@ -19,6 +19,7 @@ export function Board() {
     activeAttackerId,
     revealedEntities,
     lastError,
+    opponentDifficulty,
     setIsHistoryOpen,
     toggleCardSelection,
     clearSelection,
@@ -78,7 +79,12 @@ export function Board() {
 
       <OpponentHandFan hand={opponent.hand} />
 
-      <PlayerHUD isOpponent={true} player={opponent} isActiveTurn={gameState.activePlayerId === opponent.id} />
+      <PlayerHUD
+        isOpponent={true}
+        player={opponent}
+        isActiveTurn={gameState.activePlayerId === opponent.id}
+        badgeText={`Dificultad ${opponentDifficulty}`}
+      />
       <PlayerHUD isOpponent={false} player={player} isActiveTurn={isPlayerTurn} />
 
       <div onClick={(event) => event.stopPropagation()}>

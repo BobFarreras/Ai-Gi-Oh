@@ -1,6 +1,8 @@
 import { IPlayer } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IOpponentAttackDecision, IOpponentPlayDecision, IOpponentStrategy } from "./types";
+import { getDifficultyProfile } from "./difficulty/difficultyProfiles";
+import { IOpponentDifficultyProfile, OpponentDifficulty } from "./difficulty/types";
 import { chooseBestAttack } from "./attackEvaluator";
 
 function getPlayers(state: GameState, opponentId: string): { opponent: IPlayer; target: IPlayer } {
@@ -11,17 +13,21 @@ function getPlayers(state: GameState, opponentId: string): { opponent: IPlayer; 
   return { opponent: state.playerB, target: state.playerA };
 }
 
-function scoreEntity(card: IPlayer["hand"][number]): number {
-  return (card.attack ?? 0) * 2 + (card.defense ?? 0) - card.cost * 120;
+interface IHeuristicOpponentStrategyConfig {
+  difficulty?: OpponentDifficulty;
 }
 
-function scoreExecution(card: IPlayer["hand"][number]): number {
+function scoreEntity(card: IPlayer["hand"][number], profile: IOpponentDifficultyProfile): number {
+  return ((card.attack ?? 0) * 2 + (card.defense ?? 0) - card.cost * 120) * profile.entityTempoBias;
+}
+
+function scoreExecution(card: IPlayer["hand"][number], profile: IOpponentDifficultyProfile): number {
   if (!card.effect) {
     return -1000;
   }
 
   if (card.effect.action === "DAMAGE" && card.effect.target === "OPPONENT") {
-    return card.effect.value * 2 - card.cost * 80;
+    return (card.effect.value * 2 - card.cost * 80) * profile.executionAggroBias;
   }
 
   if (card.effect.action === "HEAL" && card.effect.target === "PLAYER") {
@@ -32,6 +38,12 @@ function scoreExecution(card: IPlayer["hand"][number]): number {
 }
 
 export class HeuristicOpponentStrategy implements IOpponentStrategy {
+  private readonly profile: IOpponentDifficultyProfile;
+
+  public constructor(config?: IHeuristicOpponentStrategyConfig) {
+    this.profile = getDifficultyProfile(config?.difficulty ?? "NORMAL");
+  }
+
   public choosePlay(state: GameState, opponentId: string): IOpponentPlayDecision | null {
     const { opponent } = getPlayers(state, opponentId);
     const playableCards = opponent.hand.filter((card) => card.cost <= opponent.currentEnergy);
@@ -42,7 +54,7 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
 
     const scored = playableCards
       .map((card) => {
-        const score = card.type === "ENTITY" ? scoreEntity(card) : scoreExecution(card);
+        const score = card.type === "ENTITY" ? scoreEntity(card, this.profile) : scoreExecution(card, this.profile);
         return { card, score };
       })
       .sort((a, b) => b.score - a.score);
@@ -82,6 +94,6 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
       ),
     };
 
-    return chooseBestAttack(normalizedOpponent, target);
+    return chooseBestAttack(normalizedOpponent, target, this.profile);
   }
 }

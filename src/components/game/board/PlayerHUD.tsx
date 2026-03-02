@@ -11,9 +11,10 @@ interface PlayerHUDProps {
   isOpponent: boolean;
   player: IPlayer;
   isActiveTurn: boolean;
+  badgeText?: string;
 }
 
-export function PlayerHUD({ isOpponent, player, isActiveTurn }: PlayerHUDProps) {
+export function PlayerHUD({ isOpponent, player, isActiveTurn, badgeText }: PlayerHUDProps) {
   const prevHp = useRef(player.healthPoints);
   const [damageTaken, setDamageTaken] = useState<number | null>(null);
   const [isShaking, setIsShaking] = useState(false);
@@ -77,6 +78,11 @@ export function PlayerHUD({ isOpponent, player, isActiveTurn }: PlayerHUDProps) 
         <div className={cn("absolute inset-0 opacity-20", isOpponent ? "bg-red-500" : "bg-cyan-500")} />
         <div className="flex items-center gap-2">
           <span className="font-black tracking-widest text-white uppercase text-sm drop-shadow-md">{player.name}</span>
+          {badgeText && (
+            <span className="text-[10px] px-2 py-0.5 border border-amber-300/60 bg-amber-500/20 text-amber-200 rounded uppercase tracking-widest font-black">
+              {badgeText}
+            </span>
+          )}
           {isActiveTurn && (
             <span className="text-[10px] px-2 py-0.5 border border-cyan-300/60 bg-cyan-500/20 text-cyan-200 rounded uppercase tracking-widest font-black animate-pulse">
               Turno Activo

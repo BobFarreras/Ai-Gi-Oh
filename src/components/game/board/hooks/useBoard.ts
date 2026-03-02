@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
+import { resolveDifficultyFromCampaign } from "@/core/services/opponent/difficulty/resolveDifficultyFromCampaign";
+import { ICampaignProgress } from "@/core/services/opponent/difficulty/types";
 import { initialGameState } from "./internal/boardInitialState";
 import { IBoardUiError, toBoardUiError } from "./internal/boardError";
 import { useOpponentTurn } from "./internal/useOpponentTurn";
@@ -16,9 +18,14 @@ export function useBoard() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [revealedEntities, setRevealedEntities] = useState<string[]>([]);
   const [lastError, setLastError] = useState<IBoardUiError | null>(null);
+  const [campaignProgress] = useState<ICampaignProgress>({ chapterIndex: 1, duelIndex: 1, victories: 0 });
 
   const gameStateRef = useRef(gameState);
-  const opponentStrategy = useMemo(() => new HeuristicOpponentStrategy(), []);
+  const opponentDifficulty = useMemo(() => resolveDifficultyFromCampaign(campaignProgress), [campaignProgress]);
+  const opponentStrategy = useMemo(
+    () => new HeuristicOpponentStrategy({ difficulty: opponentDifficulty }),
+    [opponentDifficulty],
+  );
 
   useEffect(() => {
     gameStateRef.current = gameState;
@@ -69,6 +76,9 @@ export function useBoard() {
     applyTransition,
     clearSelection,
     clearError,
+    setIsAnimating,
+    setActiveAttackerId,
+    setRevealedEntities,
   });
 
   const advancePhase = useCallback(() => {
@@ -110,6 +120,7 @@ export function useBoard() {
     activeAttackerId,
     revealedEntities,
     lastError,
+    opponentDifficulty,
     isPlayerTurn: gameState.activePlayerId === gameState.playerA.id,
     setIsHistoryOpen,
     toggleCardSelection,

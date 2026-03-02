@@ -1,11 +1,9 @@
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { IOpponentStrategy } from "./types";
 
-function resolveActivatedExecution(state: GameState, opponentId: string, activatedCardId: string): GameState {
+function resolveActivatedExecution(state: GameState, opponentId: string): GameState {
   const opponent = state.playerA.id === opponentId ? state.playerA : state.playerB;
-  const execution = [...opponent.activeExecutions]
-    .reverse()
-    .find((entity) => entity.card.id === activatedCardId && entity.mode === "ACTIVATE");
+  const execution = opponent.activeExecutions.find((entity) => entity.mode === "ACTIVATE");
 
   if (!execution) {
     return state;
@@ -21,18 +19,25 @@ export function runOpponentStep(state: GameState, opponentId: string, strategy: 
 
   switch (state.phase) {
     case "MAIN_1": {
+      const opponent = state.playerA.id === opponentId ? state.playerA : state.playerB;
+      const hasPendingActivation = opponent.activeExecutions.some((entity) => entity.mode === "ACTIVATE");
+
+      if (hasPendingActivation) {
+        return resolveActivatedExecution(state, opponentId);
+      }
+
       const playDecision = strategy.choosePlay(state, opponentId);
       if (!playDecision) {
         return GameEngine.nextPhase(state);
       }
 
       const stateAfterPlay = GameEngine.playCard(state, opponentId, playDecision.cardId, playDecision.mode);
-      const stateAfterResolve =
-        playDecision.mode === "ACTIVATE"
-          ? resolveActivatedExecution(stateAfterPlay, opponentId, playDecision.cardId)
-          : stateAfterPlay;
-      const hasAnotherPlay = strategy.choosePlay(stateAfterResolve, opponentId) !== null;
-      return hasAnotherPlay ? stateAfterResolve : GameEngine.nextPhase(stateAfterResolve);
+      if (playDecision.mode === "ACTIVATE") {
+        return stateAfterPlay;
+      }
+
+      const hasAnotherPlay = strategy.choosePlay(stateAfterPlay, opponentId) !== null;
+      return hasAnotherPlay ? stateAfterPlay : GameEngine.nextPhase(stateAfterPlay);
     }
     case "BATTLE": {
       const attackDecision = strategy.chooseAttack(state, opponentId);

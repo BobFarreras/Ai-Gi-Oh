@@ -291,9 +291,69 @@ describe("HeuristicOpponentStrategy", () => {
       },
     };
 
-    const nextState = runOpponentStep(state, "p2", strategy);
-    expect(nextState.playerA.healthPoints).toBe(7100);
-    expect(nextState.playerB.activeExecutions).toHaveLength(0);
-    expect(nextState.playerB.graveyard.some((card) => card.id === "bot-spell-dmg")).toBe(true);
+    const afterActivate = runOpponentStep(state, "p2", strategy);
+    expect(afterActivate.playerA.healthPoints).toBe(8000);
+    expect(afterActivate.playerB.activeExecutions).toHaveLength(1);
+
+    const afterResolve = runOpponentStep(afterActivate, "p2", strategy);
+    expect(afterResolve.playerA.healthPoints).toBe(7100);
+    expect(afterResolve.playerB.activeExecutions).toHaveLength(0);
+    expect(afterResolve.playerB.graveyard.some((card) => card.id === "bot-spell-dmg")).toBe(true);
+  });
+
+  it("debería evitar intercambios malos en HARD y permitirlos en EASY", () => {
+    const hardStrategy = new HeuristicOpponentStrategy({ difficulty: "HARD" });
+    const easyStrategy = new HeuristicOpponentStrategy({ difficulty: "EASY" });
+
+    const state: GameState = {
+      ...createState(),
+      phase: "BATTLE",
+      playerA: {
+        ...createState().playerA,
+        activeEntities: [
+          {
+            instanceId: "p1-wall",
+            card: {
+              id: "p1-wall-card",
+              name: "Muralla",
+              description: "Defensa elevada",
+              type: "ENTITY",
+              faction: "BIG_TECH",
+              cost: 3,
+              attack: 800,
+              defense: 2600,
+            },
+            mode: "DEFENSE",
+            hasAttackedThisTurn: false,
+            isNewlySummoned: false,
+          },
+        ],
+      },
+      playerB: {
+        ...createState().playerB,
+        hand: [],
+        activeEntities: [
+          {
+            instanceId: "p2-weak-attacker",
+            card: {
+              id: "p2-weak-attacker-card",
+              name: "Probe",
+              description: "Atacante débil",
+              type: "ENTITY",
+              faction: "OPEN_SOURCE",
+              cost: 1,
+              attack: 1000,
+              defense: 700,
+            },
+            mode: "ATTACK",
+            hasAttackedThisTurn: false,
+            isNewlySummoned: false,
+          },
+        ],
+      },
+    };
+
+    expect(hardStrategy.chooseAttack(state, "p2")).toBeNull();
+    expect(easyStrategy.chooseAttack(state, "p2")).not.toBeNull();
   });
 });

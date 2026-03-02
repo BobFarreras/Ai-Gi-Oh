@@ -48,6 +48,7 @@ describe('Componente UI: Board y Subcomponentes', () => {
       activeAttackerId: null,
       revealedEntities: [],
       lastError: null,
+      opponentDifficulty: "EASY",
       isPlayerTurn: true,
       setIsHistoryOpen: vi.fn(),
       toggleCardSelection: vi.fn(),
@@ -64,6 +65,7 @@ describe('Componente UI: Board y Subcomponentes', () => {
 
     expect(screen.getByText('Boby Master')).toBeInTheDocument();
     expect(screen.getByText('AI Overlord')).toBeInTheDocument();
+    expect(screen.getByText(/dificultad easy/i)).toBeInTheDocument();
   });
 
   it('debería abrir el historial de batalla al hacer click en el botón de historial', () => {

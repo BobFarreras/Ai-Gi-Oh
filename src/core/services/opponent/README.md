@@ -27,13 +27,18 @@ Estrategias de toma de decisiones para el rival.
    - Selecciona jugadas con heurísticas de valor/coste.
    - Evalúa ataques por resultado esperado (intercambio de mesa + daño) en lugar de elegir el primer objetivo.
 
+4. `difficulty/*`
+   - `types.ts`: contratos de dificultad y progreso de campaña.
+   - `difficultyProfiles.ts`: perfiles por nivel (`EASY`, `NORMAL`, `HARD`, `BOSS`).
+   - `resolveDifficultyFromCampaign.ts`: resolución de nivel según progreso.
+
 ## Dificultad (roadmap)
 
 Para añadir niveles de dificultad, se recomienda:
 
-1. Añadir configuración de estrategia (`easy`, `normal`, `hard`).
-2. Ajustar scoring y profundidad táctica por nivel.
-3. Añadir ruido controlado en `easy` para errores humanos simulados.
+1. Inyectar progreso real de campaña en lugar del mock local de `useBoard`.
+2. Ajustar umbrales de `resolveDifficultyFromCampaign` tras playtesting.
+3. Afinar perfiles por oponente (agresivo/control/combo) encima del nivel base.
 
 ## Extensión futura
 

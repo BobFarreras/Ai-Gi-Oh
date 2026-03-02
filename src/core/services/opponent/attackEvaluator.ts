@@ -1,5 +1,6 @@
 import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { CombatService } from "@/core/use-cases/CombatService";
+import { IOpponentDifficultyProfile } from "./difficulty/types";
 
 interface IAttackOption {
   attacker: IBoardEntity;
@@ -15,27 +16,28 @@ function getEntityBattleStat(entity: IBoardEntity): number {
   return entity.card.attack ?? 0;
 }
 
-function scoreDirectAttack(attackerAtk: number, targetPlayer: IPlayer): number {
+function scoreDirectAttack(attackerAtk: number, targetPlayer: IPlayer, profile: IOpponentDifficultyProfile): number {
   const wouldBeLethal = attackerAtk >= targetPlayer.healthPoints;
   const pressureBonus = Math.floor(attackerAtk * 0.12);
 
-  return attackerAtk + pressureBonus + (wouldBeLethal ? 10000 : 0);
+  return attackerAtk + pressureBonus + profile.directAttackBias + (wouldBeLethal ? profile.lethalBias : 0);
 }
 
-function scoreBattle(attacker: IBoardEntity, defender: IBoardEntity): number {
+function scoreBattle(attacker: IBoardEntity, defender: IBoardEntity, profile: IOpponentDifficultyProfile): number {
   const attackerAtk = attacker.card.attack ?? 0;
   const defenderStat = getEntityBattleStat(defender);
   const isDefenderInDefenseMode = defender.mode === "DEFENSE" || defender.mode === "SET";
   const result = CombatService.calculateBattle({ attackerAtk, defenderStat, isDefenderInDefenseMode });
 
-  const destroyScore = (result.defenderDestroyed ? 1500 : 0) - (result.attackerDestroyed ? 1400 : 0);
-  const damageScore = result.damageToDefenderPlayer * 1.1 - result.damageToAttackerPlayer * 1.4;
+  const destroyScore =
+    (result.defenderDestroyed ? profile.destroyReward : 0) - (result.attackerDestroyed ? profile.attackerLossPenalty : 0);
+  const damageScore = result.damageToDefenderPlayer * 1.1 - result.damageToAttackerPlayer * profile.selfDamagePenaltyMultiplier;
   const statBias = (attacker.card.attack ?? 0) * 0.06 - defenderStat * 0.03;
 
   return destroyScore + damageScore + statBias;
 }
 
-function buildAttackOptions(opponent: IPlayer, target: IPlayer): IAttackOption[] {
+function buildAttackOptions(opponent: IPlayer, target: IPlayer, profile: IOpponentDifficultyProfile): IAttackOption[] {
   const attackers = opponent.activeEntities.filter(
     (entity) => entity.mode === "ATTACK" && !entity.hasAttackedThisTurn && !entity.isNewlySummoned,
   );
@@ -47,7 +49,7 @@ function buildAttackOptions(opponent: IPlayer, target: IPlayer): IAttackOption[]
   if (target.activeEntities.length === 0) {
     return attackers.map((attacker) => ({
       attacker,
-      score: scoreDirectAttack(attacker.card.attack ?? 0, target),
+      score: scoreDirectAttack(attacker.card.attack ?? 0, target, profile),
     }));
   }
 
@@ -55,19 +57,26 @@ function buildAttackOptions(opponent: IPlayer, target: IPlayer): IAttackOption[]
     target.activeEntities.map((defender) => ({
       attacker,
       defender,
-      score: scoreBattle(attacker, defender),
+      score: scoreBattle(attacker, defender, profile),
     })),
   );
 }
 
-export function chooseBestAttack(opponent: IPlayer, target: IPlayer): { attackerInstanceId: string; defenderInstanceId?: string } | null {
-  const options = buildAttackOptions(opponent, target);
+export function chooseBestAttack(
+  opponent: IPlayer,
+  target: IPlayer,
+  profile: IOpponentDifficultyProfile,
+): { attackerInstanceId: string; defenderInstanceId?: string } | null {
+  const options = buildAttackOptions(opponent, target, profile);
 
   if (options.length === 0) {
     return null;
   }
 
   const bestOption = options.reduce((best, current) => (current.score > best.score ? current : best));
+  if (bestOption.score < profile.minAttackScore) {
+    return null;
+  }
 
   if (bestOption.defender) {
     return {
@@ -80,4 +89,3 @@ export function chooseBestAttack(opponent: IPlayer, target: IPlayer): { attacker
     attackerInstanceId: bestOption.attacker.instanceId,
   };
 }
-
