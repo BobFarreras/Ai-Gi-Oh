@@ -15,7 +15,9 @@ Juego de cartas táctico en Next.js con un motor de reglas desacoplado en TypeSc
 pnpm dev
 pnpm lint
 pnpm test
+pnpm test:coverage
 pnpm build
+pnpm quality:check
 ```
 
 ## Arquitectura
@@ -37,6 +39,7 @@ Documentación relacionada:
 2. `pnpm test` en verde.
 3. `pnpm build` en verde.
 4. Tests co-localizados junto al código que validan.
+5. Cobertura mínima en lógica de negocio (`core/use-cases`): 80% líneas/funciones/statements y 70% ramas.
 
 ## Convenciones clave
 
