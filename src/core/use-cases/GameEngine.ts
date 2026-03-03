@@ -2,6 +2,7 @@ import { BattleMode } from "../entities/IPlayer";
 import { createInitialGameState } from "./game-engine/create-initial-game-state";
 import { changeEntityMode } from "./game-engine/change-entity-mode";
 import { executeAttack } from "./game-engine/execute-attack";
+import { fuseCards } from "./game-engine/fuse-cards";
 import { nextPhase } from "./game-engine/next-phase";
 import { playCard } from "./game-engine/play-card";
 import { playCardWithEntityReplacement } from "./game-engine/play-card-with-entity-replacement";
@@ -35,6 +36,16 @@ export class GameEngine {
     defenderInstanceId?: string,
   ): GameState {
     return executeAttack(state, attackerPlayerId, attackerInstanceId, defenderInstanceId);
+  }
+
+  public static fuseCards(
+    state: GameState,
+    playerId: string,
+    fusionCardId: string,
+    materialInstanceIds: [string, string],
+    mode: "ATTACK" | "DEFENSE",
+  ): GameState {
+    return fuseCards(state, playerId, fusionCardId, materialInstanceIds, mode);
   }
 
   public static nextPhase(state: GameState): GameState {

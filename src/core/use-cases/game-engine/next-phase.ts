@@ -1,5 +1,6 @@
 import { IBoardEntity, IPlayer } from "../../entities/IPlayer";
 import { GameRuleError } from "../../errors/GameRuleError";
+import { appendCombatLogEvent } from "./combat-log";
 import { GameState } from "./types";
 
 function resetEntitiesForNewTurn(entities: IBoardEntity[]): IBoardEntity[] {
@@ -51,30 +52,36 @@ export function nextPhase(state: GameState): GameState {
   }
 
   if (state.phase === "MAIN_1") {
-    return {
+    return appendCombatLogEvent(
+      {
       ...state,
       phase: "BATTLE",
-    };
+      },
+      state.activePlayerId,
+      "PHASE_CHANGED",
+      { toPhase: "BATTLE" },
+    );
   }
 
   if (state.phase === "BATTLE") {
     const nextActivePlayerId = state.activePlayerId === state.playerA.id ? state.playerB.id : state.playerA.id;
     const isNextPlayerA = nextActivePlayerId === state.playerA.id;
+    const previousEnergy = isNextPlayerA ? state.playerA.currentEnergy : state.playerB.currentEnergy;
     const nextPlayerA = {
       ...state.playerA,
-      currentEnergy: state.playerA.maxEnergy,
+      currentEnergy: isNextPlayerA ? Math.min(state.playerA.maxEnergy, state.playerA.currentEnergy + 2) : state.playerA.currentEnergy,
       activeEntities: resetEntitiesForNewTurn(state.playerA.activeEntities),
     };
     const nextPlayerB = {
       ...state.playerB,
-      currentEnergy: state.playerB.maxEnergy,
+      currentEnergy: isNextPlayerA ? state.playerB.currentEnergy : Math.min(state.playerB.maxEnergy, state.playerB.currentEnergy + 2),
       activeEntities: resetEntitiesForNewTurn(state.playerB.activeEntities),
     };
     const turnStartResolution = isNextPlayerA
       ? resolveTurnStartForPlayer(nextPlayerA, nextActivePlayerId)
       : resolveTurnStartForPlayer(nextPlayerB, nextActivePlayerId);
 
-    return {
+    const nextState: GameState = {
       ...state,
       turn: state.turn + 1,
       phase: "MAIN_1",
@@ -84,6 +91,17 @@ export function nextPhase(state: GameState): GameState {
       playerA: isNextPlayerA ? turnStartResolution.player : nextPlayerA,
       playerB: isNextPlayerA ? nextPlayerB : turnStartResolution.player,
     };
+
+    const energyAfterGain = isNextPlayerA ? nextState.playerA.currentEnergy : nextState.playerB.currentEnergy;
+    const withTurnLog = appendCombatLogEvent(nextState, nextActivePlayerId, "TURN_STARTED", {
+      activePlayerId: nextActivePlayerId,
+      phase: "MAIN_1",
+    });
+    return appendCombatLogEvent(withTurnLog, nextActivePlayerId, "ENERGY_GAINED", {
+      before: previousEnergy,
+      gained: Math.max(0, energyAfterGain - previousEnergy),
+      after: energyAfterGain,
+    });
   }
 
   return state;

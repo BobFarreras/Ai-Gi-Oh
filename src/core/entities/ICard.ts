@@ -1,5 +1,5 @@
 // src/core/entities/ICard.ts
-export type CardType = 'ENTITY' | 'EXECUTION' | 'ENVIRONMENT';
+export type CardType = "ENTITY" | "EXECUTION" | "TRAP" | "FUSION" | "ENVIRONMENT";
 export type Faction = 'OPEN_SOURCE' | 'BIG_TECH' | 'NO_CODE' | 'NEUTRAL';
 
 // ESTRUCTURA JSON DINÁMICA PARA EFECTOS
@@ -23,4 +23,8 @@ export interface ICard {
   
   // NUEVO: El efecto se guarda como un objeto de datos (Fácil para la Base de Datos)
   readonly effect?: ICardEffect; 
+  readonly fusionRecipeId?: string;
+  readonly fusionMaterials?: string[];
+  readonly fusionEnergyRequirement?: number;
+  readonly archetype?: string;
 }

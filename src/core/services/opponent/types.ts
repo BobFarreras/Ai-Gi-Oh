@@ -4,6 +4,7 @@ import { GameState } from "@/core/use-cases/GameEngine";
 export interface IOpponentPlayDecision {
   cardId: string;
   mode: BattleMode;
+  fusionMaterialInstanceIds?: [string, string];
 }
 
 export interface IOpponentAttackDecision {

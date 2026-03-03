@@ -73,5 +73,6 @@ export function createInitialGameState(config: ICreateInitialGameStateConfig): G
     phase: "MAIN_1",
     hasNormalSummonedThisTurn: false,
     pendingTurnAction: null,
+    combatLog: [],
   };
 }

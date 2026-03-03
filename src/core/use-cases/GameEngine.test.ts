@@ -28,7 +28,8 @@ const createInitialState = (): GameState => ({
   startingPlayerId: 'p2',
   turn: 2,
   phase: 'MAIN_1',
-  hasNormalSummonedThisTurn: false
+  hasNormalSummonedThisTurn: false,
+  combatLog: []
 });
 
 describe('GameEngine', () => {

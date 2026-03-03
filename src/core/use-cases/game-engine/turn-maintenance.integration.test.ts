@@ -61,6 +61,7 @@ function baseState(): GameState {
     phase: "BATTLE",
     hasNormalSummonedThisTurn: false,
     pendingTurnAction: null,
+    combatLog: [],
   };
 }
 

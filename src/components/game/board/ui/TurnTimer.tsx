@@ -5,12 +5,17 @@ import { cn } from "@/lib/utils";
 
 interface TurnTimerProps {
   onTimeUp: () => void;
+  isActive: boolean;
 }
 
-export function TurnTimer({ onTimeUp }: TurnTimerProps) {
+export function TurnTimer({ onTimeUp, isActive }: TurnTimerProps) {
   const [timeLeft, setTimeLeft] = useState(30);
 
   useEffect(() => {
+    if (!isActive) {
+      return;
+    }
+
     if (timeLeft <= 0) {
       const timeoutId = setTimeout(onTimeUp, 0);
       return () => clearTimeout(timeoutId);
@@ -18,7 +23,7 @@ export function TurnTimer({ onTimeUp }: TurnTimerProps) {
 
     const intervalId = setInterval(() => setTimeLeft((value) => value - 1), 1000);
     return () => clearInterval(intervalId);
-  }, [timeLeft, onTimeUp]);
+  }, [isActive, timeLeft, onTimeUp]);
 
   return (
     <div
@@ -27,7 +32,7 @@ export function TurnTimer({ onTimeUp }: TurnTimerProps) {
         timeLeft <= 10 ? "text-red-500 animate-pulse border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.5)]" : "text-cyan-400",
       )}
     >
-      00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}
+      {isActive ? `00:${timeLeft < 10 ? `0${timeLeft}` : timeLeft}` : "--:--"}
     </div>
   );
 }

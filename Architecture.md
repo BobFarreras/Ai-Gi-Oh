@@ -50,15 +50,24 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
 1. El duelo se inicializa con `createInitialGameState` (mazo de 20 y mano inicial de 3 por jugador).
 2. Se define `startingPlayerId`; el jugador inicial no puede atacar en turno `1`.
 3. El turno tiene 2 subfases: `MAIN_1` (despliegue) y `BATTLE` (combate).
-4. Al cerrar `BATTLE`, `nextPhase` pasa el turno al rival, roba 1 carta para ese rival, restaura energía y limpia flags.
+4. Al cerrar `BATTLE`, `nextPhase` pasa el turno al rival, roba 1 carta para ese rival, suma energía `+2` (con tope) y limpia flags.
 5. `useOpponentTurn` ejecuta pasos automáticos del oponente (`runOpponentStep`) con el mismo ciclo de 2 subfases.
 6. La dificultad del rival se resuelve desde progreso de campaña (`resolveDifficultyFromCampaign`) y se inyecta en la estrategia.
+7. `GameState` mantiene `combatLog` en memoria y la UI consume ese stream para historial y carteleras.
+8. `Board` consume también `combatLog` para animaciones desacopladas (ej. transición al cementerio).
 
 ## Diseño para evolución
 
 1. Estrategia actual: `HeuristicOpponentStrategy` (determinista con heurísticas).
 2. Extensión futura LLM: nueva implementación de `IOpponentStrategy` sin tocar UI.
 3. Multijugador futuro: sustitución del controlador rival por controlador remoto sin romper el motor.
+
+## Eventos y observabilidad
+
+1. El motor añade eventos en `combatLog` desde los casos de uso (`playCard`, `executeAttack`, `nextPhase`, etc.).
+2. `SidePanels` muestra historial con filtros de turno y actor.
+3. `BattleBannerCenter` consume eventos críticos para mostrar carteleras centrales en tiempo real.
+4. `GraveyardTransitionLayer` reutiliza eventos `CARD_TO_GRAVEYARD` para animación genérica de descarte/destrucción/sacrificio.
 
 ## Documentación modular
 

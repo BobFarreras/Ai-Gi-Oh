@@ -2,6 +2,7 @@ import { BattleMode, IBoardEntity, IPlayer } from "../../entities/IPlayer";
 import { GameRuleError } from "../../errors/GameRuleError";
 import { NotFoundError } from "../../errors/NotFoundError";
 import { ValidationError } from "../../errors/ValidationError";
+import { appendCombatLogEvent } from "./combat-log";
 import { GameState } from "./types";
 import { getPlayerPair } from "./player-utils";
 
@@ -69,6 +70,8 @@ export function playCard(state: GameState, playerId: string, cardId: string, mod
     validateEntityPlay(state, player, mode);
   } else if (card.type === "EXECUTION") {
     validateExecutionPlay(player, mode);
+  } else if (card.type === "FUSION") {
+    throw new ValidationError("Las cartas de fusión deben invocarse con materiales desde la acción Fusionar.");
   }
 
   const boardEntity = createBoardEntity(card, mode);
@@ -80,10 +83,16 @@ export function playCard(state: GameState, playerId: string, cardId: string, mod
     activeExecutions: card.type === "EXECUTION" ? [...player.activeExecutions, boardEntity] : player.activeExecutions,
   };
 
-  return {
+  const nextState = {
     ...state,
     hasNormalSummonedThisTurn: card.type === "ENTITY" ? true : state.hasNormalSummonedThisTurn,
     playerA: isPlayerA ? updatedPlayer : opponent,
     playerB: isPlayerA ? opponent : updatedPlayer,
   };
+
+  return appendCombatLogEvent(nextState, playerId, "CARD_PLAYED", {
+    cardId: card.id,
+    cardType: card.type,
+    mode,
+  });
 }

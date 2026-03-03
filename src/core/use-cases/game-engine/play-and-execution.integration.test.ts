@@ -61,6 +61,7 @@ function createBaseState(overrides?: Partial<GameState>): GameState {
     turn: 1,
     phase: "MAIN_1",
     hasNormalSummonedThisTurn: false,
+    combatLog: [],
     ...overrides,
   };
 }

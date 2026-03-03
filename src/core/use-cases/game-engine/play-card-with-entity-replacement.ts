@@ -2,6 +2,7 @@ import { BattleMode, IPlayer } from "../../entities/IPlayer";
 import { GameRuleError } from "../../errors/GameRuleError";
 import { NotFoundError } from "../../errors/NotFoundError";
 import { ValidationError } from "../../errors/ValidationError";
+import { appendCombatLogEvent } from "./combat-log";
 import { assignPlayers, getPlayerPair } from "./player-utils";
 import { GameState } from "./types";
 import { playCard } from "./play-card";
@@ -55,7 +56,17 @@ export function playCardWithEntityReplacement(
     graveyard: [...player.graveyard, sacrificedEntity.card],
   };
 
-  const stateAfterSacrifice = assignPlayers(state, updatedPlayerAfterSacrifice, opponent, isPlayerA);
+  const stateAfterSacrifice = appendCombatLogEvent(
+    assignPlayers(state, updatedPlayerAfterSacrifice, opponent, isPlayerA),
+    playerId,
+    "CARD_TO_GRAVEYARD",
+    {
+      cardId: sacrificedEntity.card.id,
+      ownerPlayerId: playerId,
+      from: "BATTLEFIELD",
+      reason: "ENTITY_REPLACEMENT",
+    },
+  );
   return playCard(stateAfterSacrifice, playerId, cardId, mode);
 }
 

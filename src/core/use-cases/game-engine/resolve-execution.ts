@@ -1,6 +1,7 @@
 import { IPlayer } from "../../entities/IPlayer";
 import { GameRuleError } from "../../errors/GameRuleError";
 import { NotFoundError } from "../../errors/NotFoundError";
+import { appendCombatLogEvent } from "./combat-log";
 import { assignPlayers, getPlayerPair } from "./player-utils";
 import { GameState } from "./types";
 
@@ -51,5 +52,18 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
     healthPoints: newOpponentHealth,
   };
 
-  return assignPlayers(state, updatedPlayer, updatedOpponent, isPlayerA);
+  const withPlayers = assignPlayers(state, updatedPlayer, updatedOpponent, isPlayerA);
+  let withLog = appendCombatLogEvent(withPlayers, playerId, "CARD_TO_GRAVEYARD", {
+    cardId: executionEntity.card.id,
+    ownerPlayerId: playerId,
+    from: "EXECUTION_ZONE",
+  });
+  if (effect.action === "DAMAGE") {
+    withLog = appendCombatLogEvent(withLog, playerId, "DIRECT_DAMAGE", {
+      targetPlayerId: effect.target === "OPPONENT" ? opponent.id : player.id,
+      amount: effect.value,
+    });
+  }
+
+  return withLog;
 }

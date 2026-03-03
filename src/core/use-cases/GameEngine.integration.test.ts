@@ -77,6 +77,7 @@ const createCombatState = (): GameState => ({
   turn: 2,
   phase: "MAIN_1",
   hasNormalSummonedThisTurn: false,
+  combatLog: [],
 });
 
 const createExecutionState = (): GameState => ({
@@ -111,6 +112,7 @@ const createExecutionState = (): GameState => ({
   turn: 3,
   phase: "MAIN_1",
   hasNormalSummonedThisTurn: false,
+  combatLog: [],
 });
 
 describe("GameEngine integración", () => {
@@ -134,8 +136,8 @@ describe("GameEngine integración", () => {
     expect(state.phase).toBe("MAIN_1");
     expect(state.turn).toBe(3);
     expect(state.activePlayerId).toBe("p2");
-    expect(state.playerA.currentEnergy).toBe(state.playerA.maxEnergy);
-    expect(state.playerB.currentEnergy).toBe(state.playerB.maxEnergy);
+    expect(state.playerA.currentEnergy).toBe(2);
+    expect(state.playerB.currentEnergy).toBe(6);
     expect(state.hasNormalSummonedThisTurn).toBe(false);
   });
 

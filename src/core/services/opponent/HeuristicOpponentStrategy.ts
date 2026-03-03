@@ -4,6 +4,7 @@ import { IOpponentAttackDecision, IOpponentPlayDecision, IOpponentStrategy } fro
 import { getDifficultyProfile } from "./difficulty/difficultyProfiles";
 import { IOpponentDifficultyProfile, OpponentDifficulty } from "./difficulty/types";
 import { chooseBestAttack } from "./attackEvaluator";
+import { getFusionRecipe } from "@/core/use-cases/game-engine/fusion-recipes";
 
 function getPlayers(state: GameState, opponentId: string): { opponent: IPlayer; target: IPlayer } {
   if (state.playerA.id === opponentId) {
@@ -37,6 +38,48 @@ function scoreExecution(card: IPlayer["hand"][number], profile: IOpponentDifficu
   return 10 - card.cost * 100;
 }
 
+function scoreFusion(card: IPlayer["hand"][number], profile: IOpponentDifficultyProfile): number {
+  const body = (card.attack ?? 0) * 2.1 + (card.defense ?? 0) * 1.2;
+  return body * profile.entityTempoBias - card.cost * 90;
+}
+
+function chooseFusionMaterials(opponent: IPlayer, fusionCard: IPlayer["hand"][number]): [string, string] | null {
+  const recipe = getFusionRecipe(fusionCard);
+  if (!recipe || opponent.activeEntities.length < 2) {
+    return null;
+  }
+
+  const pairs: [typeof opponent.activeEntities[number], typeof opponent.activeEntities[number]][] = [];
+  for (let i = 0; i < opponent.activeEntities.length; i += 1) {
+    for (let j = i + 1; j < opponent.activeEntities.length; j += 1) {
+      pairs.push([opponent.activeEntities[i], opponent.activeEntities[j]]);
+    }
+  }
+
+  const validPair = pairs.find(([a, b]) => {
+    const materials = [a, b];
+    if (recipe.requiredArchetypes) {
+      const archetypes = materials.map((material) => material.card.archetype ?? "");
+      const pending = [...recipe.requiredArchetypes];
+      for (const archetype of archetypes) {
+        const index = pending.indexOf(archetype);
+        if (index >= 0) pending.splice(index, 1);
+      }
+      if (pending.length > 0) return false;
+    }
+    if (recipe.requiredEnergyPerMaterial && materials.some((material) => material.card.cost < recipe.requiredEnergyPerMaterial!)) {
+      return false;
+    }
+    if (recipe.requiredTotalEnergy) {
+      const totalCost = materials[0].card.cost + materials[1].card.cost;
+      if (totalCost < recipe.requiredTotalEnergy) return false;
+    }
+    return true;
+  });
+
+  return validPair ? [validPair[0].instanceId, validPair[1].instanceId] : null;
+}
+
 export class HeuristicOpponentStrategy implements IOpponentStrategy {
   private readonly profile: IOpponentDifficultyProfile;
 
@@ -54,12 +97,27 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
 
     const scored = playableCards
       .map((card) => {
-        const score = card.type === "ENTITY" ? scoreEntity(card, this.profile) : scoreExecution(card, this.profile);
+        const score =
+          card.type === "ENTITY"
+            ? scoreEntity(card, this.profile)
+            : card.type === "FUSION"
+              ? scoreFusion(card, this.profile)
+              : scoreExecution(card, this.profile);
         return { card, score };
       })
       .sort((a, b) => b.score - a.score);
 
     for (const { card } of scored) {
+      if (card.type === "FUSION") {
+        const fusionMaterials = chooseFusionMaterials(opponent, card);
+        if (!fusionMaterials || state.hasNormalSummonedThisTurn) {
+          continue;
+        }
+
+        const mode = (card.attack ?? 0) >= (card.defense ?? 0) ? "ATTACK" : "DEFENSE";
+        return { cardId: card.id, mode, fusionMaterialInstanceIds: fusionMaterials };
+      }
+
       if (card.type === "ENTITY") {
         if (state.hasNormalSummonedThisTurn || opponent.activeEntities.length >= 3) {
           continue;

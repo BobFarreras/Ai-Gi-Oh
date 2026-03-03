@@ -62,7 +62,6 @@ export function Battlefield({
           style={{ transformStyle: "preserve-3d" }}
           className={cn(
             "w-[1050px] h-[800px] transform rotate-x-[55deg] relative flex flex-col justify-center items-center gap-6 rounded-[3rem] border-[4px] border-cyan-900/80 bg-zinc-950/90 shadow-[0_0_100px_rgba(6,182,212,0.2)_inset,0_50px_100px_rgba(0,0,0,0.9)] backdrop-blur-xl transition-colors duration-500",
-            activeAttackerId ? "border-red-900/80 shadow-[0_0_100px_rgba(239,68,68,0.2)_inset,0_50px_100px_rgba(0,0,0,0.9)]" : "",
           )}
         >
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(6,182,212,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(6,182,212,0.1)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none rounded-[3rem]" />

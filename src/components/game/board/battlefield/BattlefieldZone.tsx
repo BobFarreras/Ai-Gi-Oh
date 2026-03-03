@@ -42,7 +42,6 @@ export function BattlefieldZone({
       className={cn(
         "flex w-full justify-center items-center gap-8 z-10 p-4 rounded-2xl transition-colors duration-300",
         zonePadding,
-        isOpponentSide && activeAttackerId ? "bg-red-950/30 cursor-crosshair" : "",
       )}
     >
       <div

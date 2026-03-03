@@ -37,6 +37,7 @@ describe('Componente UI: Board y Subcomponentes', () => {
     phase: 'MAIN_1',
     hasNormalSummonedThisTurn: false,
     pendingTurnAction: null,
+    combatLog: [],
   };
 
   beforeEach(() => {
@@ -55,6 +56,8 @@ describe('Componente UI: Board y Subcomponentes', () => {
       pendingEntitySelectionIds: [],
       opponentDifficulty: "EASY",
       isPlayerTurn: true,
+      lastDamageTargetPlayerId: null,
+      lastDamageEventId: null,
       resolvePendingTurnAction: vi.fn(),
       resolvePendingHandDiscard: vi.fn(),
       setIsHistoryOpen: vi.fn(),
@@ -64,6 +67,7 @@ describe('Componente UI: Board y Subcomponentes', () => {
       executePlayAction: vi.fn(),
       handleEntityClick: vi.fn(),
       advancePhase: vi.fn(),
+      handleTimerExpired: vi.fn(),
     });
   });
 

@@ -1,6 +1,7 @@
 import { IPlayer } from "../../entities/IPlayer";
 import { GameRuleError } from "../../errors/GameRuleError";
 import { NotFoundError } from "../../errors/NotFoundError";
+import { appendCombatLogEvent } from "./combat-log";
 import { assignPlayers, getPlayerPair } from "./player-utils";
 import { GameState } from "./types";
 
@@ -64,7 +65,16 @@ export function resolvePendingTurnAction(state: GameState, playerId: string, sel
       graveyard: [...player.graveyard, entity.card],
     };
 
-    return finalizeTurnStartAfterMandatoryAction(state, updatedPlayer, opponent, isPlayerA);
+    const resolvedState = finalizeTurnStartAfterMandatoryAction(state, updatedPlayer, opponent, isPlayerA);
+    const withMandatory = appendCombatLogEvent(resolvedState, playerId, "MANDATORY_ACTION_RESOLVED", {
+      type: "SACRIFICE_ENTITY_FOR_DRAW",
+      selectedId,
+    });
+    return appendCombatLogEvent(withMandatory, playerId, "CARD_TO_GRAVEYARD", {
+      cardId: entity.card.id,
+      ownerPlayerId: playerId,
+      from: "BATTLEFIELD",
+    });
   }
 
   if (state.pendingTurnAction.type === "DISCARD_FOR_HAND_LIMIT") {
@@ -80,7 +90,7 @@ export function resolvePendingTurnAction(state: GameState, playerId: string, sel
       graveyard: [...player.graveyard, card],
     };
 
-    return assignPlayers(
+    const resolvedState = assignPlayers(
       {
         ...state,
         pendingTurnAction: null,
@@ -89,6 +99,15 @@ export function resolvePendingTurnAction(state: GameState, playerId: string, sel
       opponent,
       isPlayerA,
     );
+    const withMandatory = appendCombatLogEvent(resolvedState, playerId, "MANDATORY_ACTION_RESOLVED", {
+      type: "DISCARD_FOR_HAND_LIMIT",
+      selectedId,
+    });
+    return appendCombatLogEvent(withMandatory, playerId, "CARD_TO_GRAVEYARD", {
+      cardId: card.id,
+      ownerPlayerId: playerId,
+      from: "HAND",
+    });
   }
 
   return state;

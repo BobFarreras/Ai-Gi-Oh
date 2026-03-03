@@ -18,6 +18,8 @@ Este módulo separa la dificultad del rival de la historia real de campaña.
 2. `difficultyProfiles.ts`
    - Mapa de pesos por nivel.
    - Controla agresividad, aversión al riesgo y umbral de ataque.
+   - `EASY` acepta más jugadas malas.
+   - `HARD/BOSS` castiga más autodaño y pérdidas de valor.
 
 3. `resolveDifficultyFromCampaign.ts`
    - Traduce progreso (`chapterIndex`, `duelIndex`, `victories`) a nivel de dificultad.

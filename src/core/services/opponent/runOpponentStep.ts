@@ -81,7 +81,21 @@ export function runOpponentStep(state: GameState, opponentId: string, strategy: 
         return GameEngine.nextPhase(state);
       }
 
+      if (playDecision.fusionMaterialInstanceIds) {
+        const fusionMode = playDecision.mode === "DEFENSE" ? "DEFENSE" : "ATTACK";
+        const stateAfterFusion = GameEngine.fuseCards(
+          state,
+          opponentId,
+          playDecision.cardId,
+          playDecision.fusionMaterialInstanceIds,
+          fusionMode,
+        );
+        const hasAnotherPlayAfterFusion = strategy.choosePlay(stateAfterFusion, opponentId) !== null;
+        return hasAnotherPlayAfterFusion ? stateAfterFusion : GameEngine.nextPhase(stateAfterFusion);
+      }
+
       const stateAfterPlay = GameEngine.playCard(state, opponentId, playDecision.cardId, playDecision.mode);
+
       if (playDecision.mode === "ACTIVATE") {
         return stateAfterPlay;
       }

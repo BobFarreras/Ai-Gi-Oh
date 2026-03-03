@@ -112,13 +112,21 @@ export function useOpponentTurn({
         const playDecision = strategy.choosePlay(gameState, opponentId);
         if (playDecision) {
           setIsAnimating(true);
-          const nextState = applyTransition((state) =>
-            GameEngine.playCard(state, opponentId, playDecision.cardId, playDecision.mode),
-          );
+          const nextState = playDecision.fusionMaterialInstanceIds
+            ? applyTransition((state) =>
+                GameEngine.fuseCards(
+                  state,
+                  opponentId,
+                  playDecision.cardId,
+                  playDecision.fusionMaterialInstanceIds!,
+                  playDecision.mode === "DEFENSE" ? "DEFENSE" : "ATTACK",
+                ),
+              )
+            : applyTransition((state) => GameEngine.playCard(state, opponentId, playDecision.cardId, playDecision.mode));
 
           // Si es ACTIVAR, se deja la carta visible un paso completo y se
           // resuelve en el siguiente ciclo de MAIN_1.
-          if (playDecision.mode === "ACTIVATE" && nextState) {
+          if (!playDecision.fusionMaterialInstanceIds && playDecision.mode === "ACTIVATE" && nextState) {
             const activatedExecution = [...nextState.playerB.activeExecutions]
               .reverse()
               .find((entity) => entity.card.id === playDecision.cardId);

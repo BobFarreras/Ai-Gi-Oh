@@ -1,4 +1,5 @@
 import { IPlayer } from "../../entities/IPlayer";
+import { ICombatLogEvent } from "../../entities/ICombatLog";
 
 export type TurnPhase = "MAIN_1" | "BATTLE";
 
@@ -18,4 +19,5 @@ export interface GameState {
   phase: TurnPhase;
   hasNormalSummonedThisTurn: boolean;
   pendingTurnAction?: IPendingTurnAction | null;
+  combatLog: ICombatLogEvent[];
 }

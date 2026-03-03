@@ -12,32 +12,39 @@ interface PlayerHUDProps {
   player: IPlayer;
   isActiveTurn: boolean;
   badgeText?: string;
+  wasDamagedThisAction?: boolean;
+  damagePulseKey?: string | null;
 }
 
-export function PlayerHUD({ isOpponent, player, isActiveTurn, badgeText }: PlayerHUDProps) {
+export function PlayerHUD({
+  isOpponent,
+  player,
+  isActiveTurn,
+  badgeText,
+  wasDamagedThisAction = false,
+  damagePulseKey = null,
+}: PlayerHUDProps) {
   const prevHp = useRef(player.healthPoints);
   const [damageTaken, setDamageTaken] = useState<number | null>(null);
   const [isShaking, setIsShaking] = useState(false);
 
   // Hook para detectar daño y disparar la animación
   useEffect(() => {
-    if (player.healthPoints < prevHp.current) {
-      const damage = prevHp.current - player.healthPoints;
-      setDamageTaken(damage);
-      setIsShaking(true);
-      
-      const timer = setTimeout(() => {
-        setDamageTaken(null);
-        setIsShaking(false);
-      }, 1500); 
-      
+    if (!wasDamagedThisAction || player.healthPoints >= prevHp.current) {
       prevHp.current = player.healthPoints;
-      return () => clearTimeout(timer);
-    } else {
-      // Si se cura o se reinicia
-      prevHp.current = player.healthPoints;
+      return;
     }
-  }, [player.healthPoints]);
+
+    const damage = prevHp.current - player.healthPoints;
+    setDamageTaken(damage);
+    setIsShaking(true);
+    const timer = setTimeout(() => {
+      setDamageTaken(null);
+      setIsShaking(false);
+    }, 1500);
+    prevHp.current = player.healthPoints;
+    return () => clearTimeout(timer);
+  }, [damagePulseKey, player.healthPoints, wasDamagedThisAction]);
 
   const healthPercentage = Math.max(0, Math.min(100, (player.healthPoints / player.maxHealthPoints) * 100));
 

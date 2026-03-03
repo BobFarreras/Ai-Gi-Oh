@@ -2,6 +2,7 @@ import { CombatContext, CombatService } from "../CombatService";
 import { IBoardEntity, IPlayer } from "../../entities/IPlayer";
 import { GameRuleError } from "../../errors/GameRuleError";
 import { NotFoundError } from "../../errors/NotFoundError";
+import { appendCombatLogEvent } from "./combat-log";
 import { assignPlayers, getPlayerPair } from "./player-utils";
 import { GameState } from "./types";
 
@@ -64,7 +65,22 @@ export function executeAttack(
       healthPoints: Math.max(0, defender.healthPoints - damage),
     };
 
-    return assignPlayers(state, updatedAttacker, updatedDefender, isPlayerA);
+    const withPlayers = assignPlayers(state, updatedAttacker, updatedDefender, isPlayerA);
+    const withAttack = appendCombatLogEvent(withPlayers, attackerPlayerId, "ATTACK_DECLARED", {
+      attackerInstanceId,
+      attackerCardId: attackerEntity.card.id,
+      target: "DIRECT",
+    });
+    const withDamage = appendCombatLogEvent(withAttack, attackerPlayerId, "DIRECT_DAMAGE", {
+      targetPlayerId: defender.id,
+      amount: damage,
+    });
+    return appendCombatLogEvent(withDamage, attackerPlayerId, "BATTLE_RESOLVED", {
+      attackerDestroyed: false,
+      defenderDestroyed: false,
+      damageToDefenderPlayer: damage,
+      damageToAttackerPlayer: 0,
+    });
   }
 
   const defenderEntity = defender.activeEntities.find((entity) => entity.instanceId === defenderInstanceId);
@@ -119,5 +135,45 @@ export function executeAttack(
     graveyard: updatedDefenderGraveyard,
   };
 
-  return assignPlayers(state, updatedAttacker, updatedDefender, isPlayerA);
+  const withPlayers = assignPlayers(state, updatedAttacker, updatedDefender, isPlayerA);
+  let withLogs = appendCombatLogEvent(withPlayers, attackerPlayerId, "ATTACK_DECLARED", {
+    attackerInstanceId,
+    attackerCardId: attackerEntity.card.id,
+    defenderInstanceId,
+    defenderCardId: defenderEntity.card.id,
+  });
+  withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, "BATTLE_RESOLVED", {
+    attackerDestroyed: result.attackerDestroyed,
+    defenderDestroyed: result.defenderDestroyed,
+    damageToDefenderPlayer: result.damageToDefenderPlayer,
+    damageToAttackerPlayer: result.damageToAttackerPlayer,
+  });
+  if (result.damageToDefenderPlayer > 0) {
+    withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, "DIRECT_DAMAGE", {
+      targetPlayerId: defender.id,
+      amount: result.damageToDefenderPlayer,
+    });
+  }
+  if (result.damageToAttackerPlayer > 0) {
+    withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, "DIRECT_DAMAGE", {
+      targetPlayerId: attacker.id,
+      amount: result.damageToAttackerPlayer,
+    });
+  }
+  if (result.attackerDestroyed) {
+    withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, "CARD_TO_GRAVEYARD", {
+      cardId: attackerEntity.card.id,
+      ownerPlayerId: attacker.id,
+      from: "BATTLEFIELD",
+    });
+  }
+  if (result.defenderDestroyed) {
+    withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, "CARD_TO_GRAVEYARD", {
+      cardId: defenderEntity.card.id,
+      ownerPlayerId: defender.id,
+      from: "BATTLEFIELD",
+    });
+  }
+
+  return withLogs;
 }

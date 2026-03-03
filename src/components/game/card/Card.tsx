@@ -2,7 +2,7 @@
 
 import { ICard } from "@/core/entities/ICard";
 import { BattleMode } from "@/core/entities/IPlayer";
-import { FACTION_STYLES } from "./internal/styles";
+import { getCardTypeStyles } from "./internal/styles";
 import { CardFrame } from "./internal/CardFrame";
 import { CardHologram } from "./internal/CardHologram";
 
@@ -25,7 +25,7 @@ export function Card({ card, onClick, isSelected = false, boardMode }: CardProps
     <div className="relative w-[260px] h-[340px] group/card" style={{ transformStyle: "preserve-3d" }}>
       <CardFrame
         card={card}
-        factionStyles={FACTION_STYLES[card.faction] ?? FACTION_STYLES.NEUTRAL}
+        factionStyles={getCardTypeStyles(card)}
         isSelected={isSelected}
         isOnBoard={isOnBoard}
         onClick={onClick}

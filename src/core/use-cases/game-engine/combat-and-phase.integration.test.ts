@@ -68,6 +68,7 @@ function createCombatState(): GameState {
     turn: 2,
     phase: "BATTLE",
     hasNormalSummonedThisTurn: true,
+    combatLog: [],
   };
 }
 

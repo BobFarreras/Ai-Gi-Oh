@@ -34,10 +34,11 @@ export function PlayerHand({
         {hand.map((card, i) => {
           const isSelected = playingCard?.id === card.id;
           const isEntity = card.type === 'ENTITY';
+          const isFusion = card.type === 'FUSION';
           const isMandatorySelectable = highlightedCardIds.includes(card.id);
           
           // Bloqueamos la UI si es entidad y ya invocó
-          const isBlocked = isEntity && hasSummoned;
+          const isBlocked = (isEntity || isFusion) && hasSummoned;
 
           return (
             <div key={card.id} className="relative">
@@ -54,10 +55,10 @@ export function PlayerHand({
                     ) : (
                       <>
                         {/* BOTONES INTELIGENTES SEGÚN EL TIPO DE CARTA */}
-                        {isEntity ? (
+                        {isEntity || isFusion ? (
                           <>
-                            <button onClick={(e) => onPlayAction('ATTACK', e)} className="flex items-center gap-1.5 px-4 py-2 bg-red-950/40 hover:bg-red-900 border border-red-500/50 text-red-400 text-xs font-black rounded-lg transition-all"><Sword size={16} /> ATAQUE</button>
-                            <button onClick={(e) => onPlayAction('DEFENSE', e)} className="flex items-center gap-1.5 px-4 py-2 bg-blue-950/40 hover:bg-blue-900 border border-blue-500/50 text-blue-400 text-xs font-black rounded-lg transition-all"><Shield size={16} /> DEFENSA</button>
+                            <button onClick={(e) => onPlayAction('ATTACK', e)} className="flex items-center gap-1.5 px-4 py-2 bg-red-950/40 hover:bg-red-900 border border-red-500/50 text-red-400 text-xs font-black rounded-lg transition-all"><Sword size={16} /> {isFusion ? "FUSIÓN ATQ" : "ATAQUE"}</button>
+                            <button onClick={(e) => onPlayAction('DEFENSE', e)} className="flex items-center gap-1.5 px-4 py-2 bg-blue-950/40 hover:bg-blue-900 border border-blue-500/50 text-blue-400 text-xs font-black rounded-lg transition-all"><Shield size={16} /> {isFusion ? "FUSIÓN DEF" : "DEFENSA"}</button>
                           </>
                         ) : (
                           <>

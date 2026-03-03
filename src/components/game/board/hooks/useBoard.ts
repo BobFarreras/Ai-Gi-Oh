@@ -20,6 +20,9 @@ export function useBoard() {
   const [revealedEntities, setRevealedEntities] = useState<string[]>([]);
   const [lastError, setLastError] = useState<IBoardUiError | null>(null);
   const [pendingEntityReplacement, setPendingEntityReplacement] = useState<{ cardId: string; mode: BattleMode } | null>(null);
+  const [pendingFusionSummon, setPendingFusionSummon] = useState<{ cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null>(
+    null,
+  );
   const [campaignProgress] = useState<ICampaignProgress>({ chapterIndex: 1, duelIndex: 1, victories: 0 });
 
   const gameStateRef = useRef(gameState);
@@ -27,6 +30,14 @@ export function useBoard() {
   const opponentStrategy = useMemo(
     () => new HeuristicOpponentStrategy({ difficulty: opponentDifficulty }),
     [opponentDifficulty],
+  );
+  const isPlayerTurn = gameState.activePlayerId === gameState.playerA.id;
+  const lastDamageEvent = useMemo(
+    () =>
+      [...gameState.combatLog]
+        .reverse()
+        .find((event) => event.eventType === "DIRECT_DAMAGE" && typeof event.payload === "object" && event.payload !== null),
+    [gameState.combatLog],
   );
 
   useEffect(() => {
@@ -38,6 +49,7 @@ export function useBoard() {
     setPlayingCard(null);
     setIsHistoryOpen(false);
     setActiveAttackerId(null);
+    setPendingFusionSummon(null);
   }, []);
 
   const clearError = useCallback(() => {
@@ -114,6 +126,31 @@ export function useBoard() {
     [applyTransition, assertPlayerTurn, clearError, clearSelection, isAnimating],
   );
 
+  const handleTimerExpired = useCallback(() => {
+    if (!isPlayerTurn || isAnimating) {
+      return;
+    }
+
+    const pendingAction = gameStateRef.current.pendingTurnAction;
+    if (pendingAction?.playerId === gameStateRef.current.playerA.id) {
+      if (pendingAction.type === "DISCARD_FOR_HAND_LIMIT") {
+        const leftmostCard = gameStateRef.current.playerA.hand[0];
+        if (leftmostCard) {
+          resolvePendingTurnAction(leftmostCard.id);
+        }
+        return;
+      }
+
+      const oldestEntity = gameStateRef.current.playerA.activeEntities[0];
+      if (oldestEntity) {
+        resolvePendingTurnAction(oldestEntity.instanceId);
+      }
+      return;
+    }
+
+    advancePhase();
+  }, [advancePhase, isAnimating, isPlayerTurn, resolvePendingTurnAction]);
+
   const resolvePendingHandDiscard = useCallback(
     (cardId: string) => {
       if (gameState.pendingTurnAction?.playerId !== gameState.playerA.id || gameState.pendingTurnAction.type !== "DISCARD_FOR_HAND_LIMIT") {
@@ -131,6 +168,7 @@ export function useBoard() {
     playingCard,
     activeAttackerId,
     pendingEntityReplacement,
+    pendingFusionSummon,
     assertPlayerTurn,
     applyTransition,
     clearSelection,
@@ -142,6 +180,7 @@ export function useBoard() {
     setIsAnimating,
     setRevealedEntities,
     setPendingEntityReplacement,
+    setPendingFusionSummon,
     setLastError,
   });
 
@@ -159,6 +198,8 @@ export function useBoard() {
         ? gameState.pendingTurnAction.type === "DISCARD_FOR_HAND_LIMIT"
           ? "Tienes 5 cartas en mano. Elige una carta de tu mano para enviarla al cementerio."
           : "Tu campo de entidades está lleno. Elige una entidad de tu campo para enviarla al cementerio."
+        : pendingFusionSummon
+          ? `Selecciona 2 materiales para fusionar (${pendingFusionSummon.materials.length}/2).`
         : pendingEntityReplacement
           ? "Tu campo está lleno. Elige una entidad del campo para reemplazarla por la nueva invocación."
           : null,
@@ -169,11 +210,18 @@ export function useBoard() {
     pendingEntitySelectionIds:
       gameState.pendingTurnAction?.playerId === gameState.playerA.id && gameState.pendingTurnAction.type === "SACRIFICE_ENTITY_FOR_DRAW"
         ? gameState.playerA.activeEntities.map((entity) => entity.instanceId)
+        : pendingFusionSummon
+          ? gameState.playerA.activeEntities.map((entity) => entity.instanceId)
         : pendingEntityReplacement
           ? gameState.playerA.activeEntities.map((entity) => entity.instanceId)
           : [],
     opponentDifficulty,
-    isPlayerTurn: gameState.activePlayerId === gameState.playerA.id,
+    isPlayerTurn,
+    lastDamageTargetPlayerId:
+      lastDamageEvent && typeof lastDamageEvent.payload === "object" && lastDamageEvent.payload !== null && "targetPlayerId" in lastDamageEvent.payload
+        ? String(lastDamageEvent.payload.targetPlayerId)
+        : null,
+    lastDamageEventId: lastDamageEvent?.id ?? null,
     setIsHistoryOpen,
     toggleCardSelection,
     clearSelection,
@@ -181,6 +229,7 @@ export function useBoard() {
     executePlayAction,
     handleEntityClick,
     advancePhase,
+    handleTimerExpired,
     resolvePendingTurnAction,
     resolvePendingHandDiscard,
   };

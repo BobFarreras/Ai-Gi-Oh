@@ -11,6 +11,7 @@ interface IUsePlayerActionsParams {
   playingCard: ICard | null;
   activeAttackerId: string | null;
   pendingEntityReplacement: { cardId: string; mode: BattleMode } | null;
+  pendingFusionSummon: { cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null;
   assertPlayerTurn: () => boolean;
   applyTransition: (transition: (state: GameState) => GameState) => GameState | null;
   clearSelection: () => void;
@@ -22,6 +23,7 @@ interface IUsePlayerActionsParams {
   setIsAnimating: (value: boolean) => void;
   setRevealedEntities: (value: string[] | ((prev: string[]) => string[])) => void;
   setPendingEntityReplacement: (value: { cardId: string; mode: BattleMode } | null) => void;
+  setPendingFusionSummon: (value: { cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null) => void;
   setLastError: (value: IBoardUiError | null) => void;
 }
 
@@ -37,6 +39,7 @@ export function usePlayerActions({
   playingCard,
   activeAttackerId,
   pendingEntityReplacement,
+  pendingFusionSummon,
   assertPlayerTurn,
   applyTransition,
   clearSelection,
@@ -48,6 +51,7 @@ export function usePlayerActions({
   setIsAnimating,
   setRevealedEntities,
   setPendingEntityReplacement,
+  setPendingFusionSummon,
   setLastError,
 }: IUsePlayerActionsParams): IPlayerActions {
   const toggleCardSelection = useCallback(
@@ -102,6 +106,15 @@ export function usePlayerActions({
         return;
       }
 
+      if (playingCard.type === "FUSION" && (mode === "ATTACK" || mode === "DEFENSE")) {
+        if (gameState.playerA.activeEntities.length < 2) {
+          setLastError({ code: "GAME_RULE_ERROR", message: "Necesitas 2 entidades en campo para fusionar." });
+          return;
+        }
+        setPendingFusionSummon({ cardId: playingCard.id, mode, materials: [] });
+        return;
+      }
+
       if (mode === "ACTIVATE") {
         setIsAnimating(true);
         const playedState = applyTransition((state) => GameEngine.playCard(state, state.playerA.id, playingCard.id, mode));
@@ -138,6 +151,7 @@ export function usePlayerActions({
       isAnimating,
       playingCard,
       setPendingEntityReplacement,
+      setPendingFusionSummon,
       setIsAnimating,
       setLastError,
     ],
@@ -176,6 +190,43 @@ export function usePlayerActions({
         }
 
         setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una entidad de tu campo para reemplazar." });
+        return;
+      }
+
+      if (pendingFusionSummon) {
+        if (isOpponent || !entity) {
+          setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona materiales de tu campo para fusionar." });
+          return;
+        }
+
+        if (pendingFusionSummon.materials.includes(entity.instanceId)) {
+          setPendingFusionSummon({
+            ...pendingFusionSummon,
+            materials: pendingFusionSummon.materials.filter((id) => id !== entity.instanceId),
+          });
+          return;
+        }
+
+        const nextMaterials = [...pendingFusionSummon.materials, entity.instanceId].slice(0, 2);
+        if (nextMaterials.length < 2) {
+          setPendingFusionSummon({ ...pendingFusionSummon, materials: nextMaterials });
+          return;
+        }
+
+        const fusedState = applyTransition((state) =>
+          GameEngine.fuseCards(
+            state,
+            state.playerA.id,
+            pendingFusionSummon.cardId,
+            [nextMaterials[0], nextMaterials[1]],
+            pendingFusionSummon.mode,
+          ),
+        );
+
+        if (fusedState) {
+          setPendingFusionSummon(null);
+          clearSelection();
+        }
         return;
       }
 
@@ -239,6 +290,7 @@ export function usePlayerActions({
       clearError,
       clearSelection,
       pendingEntityReplacement,
+      pendingFusionSummon,
       gameState.pendingTurnAction?.playerId,
       gameState.playerA.id,
       gameState.phase,
@@ -247,6 +299,7 @@ export function usePlayerActions({
       setActiveAttackerId,
       setIsAnimating,
       setPendingEntityReplacement,
+      setPendingFusionSummon,
       setPlayingCard,
       setRevealedEntities,
       setSelectedCard,
