@@ -9,6 +9,9 @@ interface IAttackOption {
   isLethal: boolean;
   isHighValueClear: boolean;
   isLosingTrade: boolean;
+  defenderDestroyed: boolean;
+  attackerDestroyed: boolean;
+  damageToAttackerPlayer: number;
 }
 
 function getEntityBattleStat(entity: IBoardEntity): number {
@@ -61,6 +64,9 @@ function scoreBattle(
     isLethal: lethalChance > 0,
     isHighValueClear,
     isLosingTrade,
+    defenderDestroyed: result.defenderDestroyed,
+    attackerDestroyed: result.attackerDestroyed,
+    damageToAttackerPlayer: result.damageToAttackerPlayer,
   };
 }
 
@@ -80,12 +86,44 @@ function buildAttackOptions(opponent: IPlayer, target: IPlayer, profile: IOppone
       isLethal: (attacker.card.attack ?? 0) >= target.healthPoints,
       isHighValueClear: false,
       isLosingTrade: false,
+      defenderDestroyed: false,
+      attackerDestroyed: false,
+      damageToAttackerPlayer: 0,
     }));
   }
 
   return attackers.flatMap((attacker) =>
     target.activeEntities.map((defender) => scoreBattle(attacker, defender, target, profile)),
   );
+}
+
+function isSuicidalAttack(option: IAttackOption): boolean {
+  return option.attackerDestroyed && !option.defenderDestroyed && option.damageToAttackerPlayer > 0;
+}
+
+function filterOptionsByRisk(
+  options: IAttackOption[],
+  profile: IOpponentDifficultyProfile,
+): IAttackOption[] {
+  if (profile.key === "EASY") {
+    return options;
+  }
+
+  return options.filter((option) => {
+    if (option.isLethal || option.isHighValueClear) {
+      return true;
+    }
+
+    if (isSuicidalAttack(option)) {
+      return false;
+    }
+
+    if (profile.key === "NORMAL") {
+      return option.damageToAttackerPlayer <= 900;
+    }
+
+    return option.damageToAttackerPlayer <= 250 && !option.isLosingTrade;
+  });
 }
 
 export function chooseBestAttack(
@@ -99,7 +137,12 @@ export function chooseBestAttack(
     return null;
   }
 
-  const bestOption = options.reduce((best, current) => (current.score > best.score ? current : best));
+  const filteredOptions = filterOptionsByRisk(options, profile);
+  if (filteredOptions.length === 0) {
+    return null;
+  }
+
+  const bestOption = filteredOptions.reduce((best, current) => (current.score > best.score ? current : best));
   if (bestOption.isLosingTrade && !bestOption.isLethal) {
     return null;
   }

@@ -31,7 +31,10 @@ Estrategias de toma de decisiones para el rival.
      - oportunidad de lethal,
      - riesgo de autodaño,
      - pérdida de valor del atacante.
-   - Bloquea ataques de score negativo salvo excepción de `lethal` o limpieza de amenaza crítica.
+   - Filtra ataques suicidas por dificultad:
+     - `EASY`: comete más errores (menos filtros).
+     - `NORMAL`: evita autodaño alto.
+     - `HARD/BOSS`: evita trades perdedores y autodaño salvo `lethal` o limpieza de amenaza crítica.
    - Soporta fusión mínima: si hay carta `FUSION` + materiales válidos, puede invocar por fusión.
 
 4. `difficulty/*`

@@ -20,6 +20,7 @@ interface IUseOpponentTurnParams {
 
 const OPPONENT_STEP_DELAY_MS = 950;
 const OPPONENT_ATTACK_WINDUP_MS = 900;
+const OPPONENT_POST_RESOLUTION_MS = 650;
 
 function scoreCardForDiscard(card: ICard): number {
   if (card.type === "ENTITY") {
@@ -84,6 +85,7 @@ export function useOpponentTurn({
           setIsAnimating(true);
           await sleep(OPPONENT_STEP_DELAY_MS);
           const nextState = applyTransition((state) => GameEngine.resolvePendingTurnAction(state, opponentId, selectedId));
+          await sleep(OPPONENT_POST_RESOLUTION_MS);
           setIsAnimating(false);
 
           if (nextState && nextState.activePlayerId === nextState.playerA.id) {
@@ -101,6 +103,7 @@ export function useOpponentTurn({
           setActiveAttackerId(pendingExecution.instanceId);
           await sleep(OPPONENT_STEP_DELAY_MS);
           const nextState = applyTransition((state) => GameEngine.resolveExecution(state, opponentId, pendingExecution.instanceId));
+          await sleep(OPPONENT_POST_RESOLUTION_MS);
           setActiveAttackerId(null);
           setIsAnimating(false);
 
@@ -182,6 +185,7 @@ export function useOpponentTurn({
             attackDecision.defenderInstanceId,
           ),
         );
+        await sleep(OPPONENT_POST_RESOLUTION_MS);
 
         if (targetEntity) {
           setRevealedEntities((previous) => previous.filter((id) => id !== targetEntity.instanceId));
