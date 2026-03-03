@@ -12,6 +12,14 @@ interface CardFrameProps {
   onClick?: (card: ICard) => void;
 }
 
+function resolveTypeBadge(card: ICard): string {
+  if (card.type !== "ENTITY") {
+    return card.type;
+  }
+
+  return card.archetype ? `${card.type} · ${card.archetype}` : card.type;
+}
+
 export function CardFrame({ card, factionStyles, isSelected, isOnBoard, onClick }: CardFrameProps) {
   const isExecution = card.type === "EXECUTION";
 
@@ -40,8 +48,11 @@ export function CardFrame({ card, factionStyles, isSelected, isOnBoard, onClick 
             <Zap className="absolute opacity-20 w-8 h-8" />
             <span className="relative z-10 text-xl">{card.cost}</span>
           </div>
-          <div className="bg-black/90 px-3 py-1.5 text-[10px] font-black tracking-widest text-white/70 uppercase border border-white/10 rounded-sm">
-            {card.type}
+          <div
+            aria-label="Tipo de carta"
+            className="bg-black/90 px-3 py-1.5 text-[10px] font-black tracking-widest text-white/70 uppercase border border-white/10 rounded-sm"
+          >
+            {resolveTypeBadge(card)}
           </div>
         </div>
 

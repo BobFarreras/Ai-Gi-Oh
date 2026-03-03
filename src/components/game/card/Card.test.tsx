@@ -13,6 +13,7 @@ describe('Componente UI: Card', () => {
     cost: 7,
     attack: 2500,
     defense: 2000,
+    archetype: "LLM",
   };
 
   it('debería renderizar la información de la carta correctamente', () => {
@@ -25,7 +26,7 @@ describe('Componente UI: Card', () => {
     expect(screen.getByText('7')).toBeInTheDocument(); // Coste
     expect(screen.getByText('2500')).toBeInTheDocument(); // Ataque
     expect(screen.getByText('2000')).toBeInTheDocument(); // Defensa
-    expect(screen.getByText('ENTITY')).toBeInTheDocument(); // Tipo
+    expect(screen.getByText('ENTITY · LLM')).toBeInTheDocument(); // Tipo + arquetipo
   });
 
   it('debería ejecutar la función onClick al ser clickeada pasando la carta como argumento', () => {
