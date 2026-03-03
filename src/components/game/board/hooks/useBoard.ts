@@ -77,9 +77,14 @@ export function useBoard() {
   const clearSelection = useCallback(() => {
     setSelectedCard(null);
     setPlayingCard(null);
-    setIsHistoryOpen(false);
     setActiveAttackerId(null);
     setPendingFusionSummon(null);
+  }, []);
+
+  const previewCard = useCallback((card: ICard) => {
+    setSelectedCard(card);
+    setPlayingCard(null);
+    setActiveAttackerId(null);
   }, []);
 
   const clearError = useCallback(() => {
@@ -320,6 +325,7 @@ export function useBoard() {
     toggleMute,
     setIsHistoryOpen,
     toggleCardSelection,
+    previewCard,
     clearSelection,
     clearError,
     executePlayAction,

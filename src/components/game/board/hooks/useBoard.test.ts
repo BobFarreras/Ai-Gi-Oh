@@ -57,7 +57,7 @@ describe('useBoard Custom Hook', () => {
     expect(result.current.playingCard).toBeNull();
   });
 
-  it('La función clearSelection debe purgar todos los estados activos', () => {
+  it('La función clearSelection debe purgar selección sin cerrar historial', () => {
     const { result } = renderHook(() => useBoard());
     
     // Ensuciamos el estado
@@ -73,7 +73,7 @@ describe('useBoard Custom Hook', () => {
 
     expect(result.current.selectedCard).toBeNull();
     expect(result.current.playingCard).toBeNull();
-    expect(result.current.isHistoryOpen).toBe(false);
+    expect(result.current.isHistoryOpen).toBe(true);
   });
 
   it('Debe exponer un error tipado cuando se intenta una acción inválida', async () => {

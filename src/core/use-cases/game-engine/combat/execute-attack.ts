@@ -85,6 +85,8 @@ export function executeAttack(
       amount: damage,
     });
     return appendCombatLogEvent(withDamage, attackerPlayerId, "BATTLE_RESOLVED", {
+      attackerCardId: currentAttackerEntity.card.id,
+      defenderCardId: null,
       attackerDestroyed: false,
       defenderDestroyed: false,
       damageToDefenderPlayer: damage,
@@ -152,6 +154,8 @@ export function executeAttack(
     defenderCardId: defenderEntity.card.id,
   });
   withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, "BATTLE_RESOLVED", {
+    attackerCardId: currentAttackerEntity.card.id,
+    defenderCardId: defenderEntity.card.id,
     attackerDestroyed: result.attackerDestroyed,
     defenderDestroyed: result.defenderDestroyed,
     damageToDefenderPlayer: result.damageToDefenderPlayer,

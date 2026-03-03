@@ -117,4 +117,42 @@ describe("useBoard integración", () => {
     expect(result.current.lastError?.code).toBe("GAME_RULE_ERROR");
     expect(result.current.lastError?.message).toContain("No es tu turno");
   });
+
+  it("debería cambiar a DEFENSE al pulsar dos veces la misma entidad atacante en BATTLE", async () => {
+    const { result } = renderHook(() => useBoard());
+    const entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
+    expect(entityCard).toBeDefined();
+    if (!entityCard) {
+      throw new Error("Se requiere una entidad en mano para este test.");
+    }
+
+    act(() => {
+      result.current.toggleCardSelection(entityCard, createMouseEvent());
+    });
+    await act(async () => {
+      await result.current.executePlayAction("ATTACK", createMouseEvent());
+    });
+    act(() => {
+      result.current.advancePhase();
+    });
+
+    const summoned = result.current.gameState.playerA.activeEntities[0];
+    expect(summoned).toBeDefined();
+    if (!summoned) {
+      throw new Error("La entidad invocada no está disponible.");
+    }
+
+    await act(async () => {
+      await result.current.handleEntityClick(summoned, false, createMouseEvent());
+    });
+    expect(result.current.activeAttackerId).toBe(summoned.instanceId);
+
+    await act(async () => {
+      await result.current.handleEntityClick(summoned, false, createMouseEvent());
+    });
+
+    const updated = result.current.gameState.playerA.activeEntities.find((entity) => entity.instanceId === summoned.instanceId);
+    expect(updated?.mode).toBe("DEFENSE");
+    expect(result.current.activeAttackerId).toBeNull();
+  });
 });

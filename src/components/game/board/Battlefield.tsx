@@ -30,6 +30,7 @@ interface BattlefieldProps {
   buffEventId?: string | null;
   playerId: string;
   opponentId: string;
+  onGraveyardClick: (side: "player" | "opponent") => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => void;
 }
 
@@ -56,6 +57,7 @@ export function Battlefield({
   buffEventId = null,
   playerId,
   opponentId,
+  onGraveyardClick,
   onEntityClick,
 }: BattlefieldProps) {
   const [zoom, setZoom] = useState(1);
@@ -99,6 +101,7 @@ export function Battlefield({
             buffStat={buffStat}
             buffAmount={buffAmount}
             buffEventId={buffEventId}
+            onGraveyardClick={onGraveyardClick}
             onEntityClick={onEntityClick}
           />
 
@@ -121,6 +124,7 @@ export function Battlefield({
             buffStat={buffStat}
             buffAmount={buffAmount}
             buffEventId={buffEventId}
+            onGraveyardClick={onGraveyardClick}
             onEntityClick={onEntityClick}
           />
         </div>

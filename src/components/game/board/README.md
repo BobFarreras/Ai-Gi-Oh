@@ -90,6 +90,7 @@ Guía rápida para entender la lógica de tablero y batalla.
 7. `SidePanels` incluye filtros por turno y actor para depurar partidas.
 8. `BattleBannerCenter` muestra solo turno y subturno (fase), con transición de entrada/salida.
 9. `GraveyardTransitionLayer` anima cualquier evento `CARD_TO_GRAVEYARD` (descarte, sacrificio, destrucción, fusión).
+10. `GraveyardBrowser` permite abrir el cementerio desde el tablero y previsualizar cualquier carta en el panel lateral.
 
 ## Sonido y resultado
 
@@ -106,6 +107,22 @@ Guía rápida para entender la lógica de tablero y batalla.
    - aviso de 5 segundos y fin de temporizador,
    - apertura/cierre de sidebars,
    - victoria/derrota/empate.
+
+## Interacción avanzada
+
+1. En `BATTLE`, al pulsar dos veces la misma entidad atacante propia:
+   - se cambia su modo a `DEFENSE` (si aún no atacó).
+2. El `Combat Log` muestra:
+   - color por actor (jugador/rival),
+   - mini-carta clicable,
+   - delta de impacto (`-LP`, `+LP`, `+ATK`, `+DEF`) cuando aplica.
+3. Clic en cementerio (jugador o rival):
+   - abre visor central de cartas del cementerio,
+   - al seleccionar una carta, se abre su detalle en el panel lateral.
+4. Los sidebars respetan zonas seguras de HUD:
+   - margen superior para no invadir HUD rival,
+   - margen inferior para no invadir HUD del jugador.
+5. El sidebar de detalle se limita al espacio entre panel de turno (arriba) y HUD del jugador (abajo), evitando solapes.
 
 ## Dónde tocar cada cosa
 

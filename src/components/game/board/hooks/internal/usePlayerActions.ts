@@ -256,6 +256,14 @@ export function usePlayerActions({
         }
 
         if (entity.mode !== "ATTACK" || entity.hasAttackedThisTurn) return;
+        if (activeAttackerId === entity.instanceId) {
+          const changedState = applyTransition((state) => GameEngine.changeEntityMode(state, state.playerA.id, entity.instanceId, "DEFENSE"));
+          if (changedState) {
+            setActiveAttackerId(null);
+            setSelectedCard(entity.card);
+          }
+          return;
+        }
         setActiveAttackerId((previous) => (previous === entity.instanceId ? null : entity.instanceId));
         setSelectedCard(entity.card);
         setPlayingCard(null);

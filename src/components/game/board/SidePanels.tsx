@@ -13,11 +13,12 @@ interface SidePanelsProps {
   selectedCard: ICard | null;
   gameState: GameState;
   isHistoryOpen: boolean;
+  onSelectCard: (card: ICard) => void;
   onCloseCard: () => void;
   onCloseHistory: () => void;
 }
 
-export function SidePanels({ selectedCard, gameState, isHistoryOpen, onCloseCard, onCloseHistory }: SidePanelsProps) {
+export function SidePanels({ selectedCard, gameState, isHistoryOpen, onSelectCard, onCloseCard, onCloseHistory }: SidePanelsProps) {
   const [turnFilter, setTurnFilter] = useState<number | "ALL">("ALL");
   const [actorFilter, setActorFilter] = useState<"ALL" | "PLAYER" | "OPPONENT">("ALL");
   const cardLookup = useMemo(() => {
@@ -42,6 +43,9 @@ export function SidePanels({ selectedCard, gameState, isHistoryOpen, onCloseCard
   const visibleEvents = useMemo(
     () =>
       gameState.combatLog.filter((event) => {
+        if (event.eventType === "ATTACK_DECLARED") {
+          return false;
+        }
         const actorToId = {
           PLAYER: gameState.playerA.id,
           OPPONENT: gameState.playerB.id,
@@ -62,7 +66,7 @@ export function SidePanels({ selectedCard, gameState, isHistoryOpen, onCloseCard
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: "-100%", opacity: 0 }}
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          className="absolute top-6 left-6 w-80 bottom-[120px] bg-zinc-950/80 border-r-2 border-cyan-500/50 z-50 p-6 backdrop-blur-2xl shadow-[20px_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden rounded-r-3xl"
+          className="absolute top-[148px] left-4 md:left-6 w-[min(22rem,34vw)] bottom-[228px] bg-zinc-950/80 border-r-2 border-cyan-500/50 z-[230] p-5 backdrop-blur-2xl shadow-[20px_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden rounded-r-3xl"
         >
           <button onClick={onCloseCard} className="absolute top-4 right-4 text-cyan-500 hover:text-white z-20">
             <X size={24} />
@@ -87,7 +91,7 @@ export function SidePanels({ selectedCard, gameState, isHistoryOpen, onCloseCard
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: "100%", opacity: 0 }}
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          className="absolute top-[120px] right-4 w-[360px] bottom-24 bg-zinc-950/85 border-l-2 border-red-500/50 z-50 p-5 backdrop-blur-2xl shadow-[-20px_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden rounded-l-3xl"
+          className="absolute top-[136px] right-4 md:right-6 w-[min(24rem,36vw)] bottom-[190px] bg-zinc-950/85 border-l-2 border-red-500/50 z-[230] p-5 backdrop-blur-2xl shadow-[-20px_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden rounded-l-3xl"
         >
           <div className="flex justify-between items-center mb-4 border-b border-zinc-700/80 pb-4">
             <h2 className="text-xl font-black text-white tracking-widest uppercase">Combat Log</h2>
@@ -136,6 +140,7 @@ export function SidePanels({ selectedCard, gameState, isHistoryOpen, onCloseCard
                   playerBId={gameState.playerB.id}
                   playerBName={gameState.playerB.name}
                   cardLookup={cardLookup}
+                  onCardClick={onSelectCard}
                 />
               ))}
           </div>

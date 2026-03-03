@@ -23,6 +23,7 @@ interface BattlefieldZoneProps {
   buffStat: "ATTACK" | "DEFENSE" | null;
   buffAmount: number | null;
   buffEventId: string | null;
+  onGraveyardClick: (side: "player" | "opponent") => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => void;
 }
 
@@ -43,6 +44,7 @@ export function BattlefieldZone({
   buffStat,
   buffAmount,
   buffEventId,
+  onGraveyardClick,
   onEntityClick,
 }: BattlefieldZoneProps) {
   const isOpponentSide = side === "opponent";
@@ -71,9 +73,12 @@ export function BattlefieldZone({
         isDamageFlashing ? "bg-red-900/35 shadow-[0_0_40px_rgba(239,68,68,0.4)_inset]" : "",
       )}
     >
-      <div
+      <button
+        type="button"
+        aria-label={`Abrir cementerio ${isOpponentSide ? "rival" : "jugador"}`}
+        onClick={() => onGraveyardClick(isOpponentSide ? "opponent" : "player")}
         className={cn(
-          "relative w-24 h-36 border-2 border-dashed rounded-lg flex flex-col items-center justify-center shadow-[inset_0_0_20px_rgba(6,182,212,0.2)] overflow-hidden",
+          "relative w-24 h-36 border-2 border-dashed rounded-lg flex flex-col items-center justify-center shadow-[inset_0_0_20px_rgba(6,182,212,0.2)] overflow-hidden transition-colors hover:border-cyan-300/70",
           accent === "red" ? "border-red-500/40 bg-red-950/20" : "border-cyan-500/40 bg-cyan-950/20",
         )}
       >
@@ -100,7 +105,7 @@ export function BattlefieldZone({
         >
           {graveyardCount}
         </span>
-      </div>
+      </button>
 
       <div className="flex flex-col gap-3" style={{ transformStyle: "preserve-3d" }}>
         <div className={cn("flex gap-3", isOpponentSide ? "opacity-60" : "")} style={{ transformStyle: "preserve-3d" }}>
