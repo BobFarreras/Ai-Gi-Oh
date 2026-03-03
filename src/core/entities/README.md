@@ -6,6 +6,9 @@ Tipos de dominio puros del juego, sin dependencias de UI.
 
 1. `ICard`
    - Tipos soportados: `ENTITY`, `EXECUTION`, `TRAP`, `FUSION`, `ENVIRONMENT`.
+   - Trigger de trampas:
+     - `ON_OPPONENT_ATTACK_DECLARED`
+     - `ON_OPPONENT_EXECUTION_ACTIVATED`
    - Metadatos de fusión preparados:
      - `fusionRecipeId`
      - `fusionMaterials`
@@ -26,6 +29,7 @@ Tipos de dominio puros del juego, sin dependencias de UI.
      - `ATTACK_DECLARED`
      - `BATTLE_RESOLVED`
      - `DIRECT_DAMAGE`
+     - `TRAP_TRIGGERED`
      - `CARD_TO_GRAVEYARD`
      - `MANDATORY_ACTION_RESOLVED`
      - `FUSION_SUMMONED`

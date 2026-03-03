@@ -1,6 +1,8 @@
 import { IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
+import { ValidationError } from "@/core/errors/ValidationError";
+import { resolveTrapTrigger } from "@/core/use-cases/game-engine/effects/resolve-trap-trigger";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
@@ -19,7 +21,10 @@ function drawCards(player: IPlayer, amount: number): IPlayer {
 }
 
 export function resolveExecution(state: GameState, playerId: string, executionInstanceId: string): GameState {
-  const { player, opponent, isPlayerA } = getPlayerPair(state, playerId);
+  let withTrapResolution = state;
+  const initialPair = getPlayerPair(state, playerId);
+  withTrapResolution = resolveTrapTrigger(withTrapResolution, initialPair.opponent.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
+  const { player, opponent, isPlayerA } = getPlayerPair(withTrapResolution, playerId);
 
   const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
 
@@ -29,6 +34,9 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
 
   if (!executionEntity.card.effect) {
     throw new GameRuleError("Esta carta no tiene un efecto programado.");
+  }
+  if (executionEntity.card.type !== "EXECUTION") {
+    throw new ValidationError("Solo las ejecuciones activadas pueden resolverse con esta acción.");
   }
 
   const effect = executionEntity.card.effect;
@@ -113,7 +121,7 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
     healthPoints: newOpponentHealth,
   };
 
-  const withPlayers = assignPlayers(state, updatedPlayer, updatedOpponent, isPlayerA);
+  const withPlayers = assignPlayers(withTrapResolution, updatedPlayer, updatedOpponent, isPlayerA);
   let withLog = appendCombatLogEvent(withPlayers, playerId, "CARD_TO_GRAVEYARD", {
     cardId: executionEntity.card.id,
     ownerPlayerId: playerId,

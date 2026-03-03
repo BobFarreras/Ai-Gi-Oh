@@ -72,6 +72,8 @@ export function formatCombatLogEvent(event: ICombatLogEvent, labels: IPlayerLabe
       return `${actor} resuelve combate.`;
     case "DIRECT_DAMAGE":
       return `${actor} aplica daño directo.`;
+    case "TRAP_TRIGGERED":
+      return `${actor} activa una trampa.`;
     case "CARD_TO_GRAVEYARD":
       return `${actor} envía carta al cementerio.`;
     case "MANDATORY_ACTION_RESOLVED":

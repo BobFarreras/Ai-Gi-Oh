@@ -36,6 +36,7 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
  │       │   ├── phases/
  │       │   ├── combat/
  │       │   ├── fusion/
+ │       │   ├── effects/
  │       │   └── logging/
  │       ├── CombatService.ts
  │       └── GameEngine.ts                 # Fachada estable
@@ -61,6 +62,7 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
 6. La dificultad del rival se resuelve desde progreso de campaña (`resolveDifficultyFromCampaign`) y se inyecta en la estrategia.
 7. `GameState` mantiene `combatLog` en memoria y la UI consume ese stream para historial y carteleras.
 8. `Board` consume también `combatLog` para animaciones desacopladas (ej. transición al cementerio).
+9. Las trampas (`TRAP`) viven en la misma zona de `activeExecutions` y se disparan por eventos del motor (no desde UI).
 
 ## Diseño para evolución
 

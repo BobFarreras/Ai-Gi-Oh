@@ -28,6 +28,21 @@ const spellCard: ICard = {
   },
 };
 
+const trapCard: ICard = {
+  id: "trap-1",
+  name: "Counter Trap",
+  description: "Responde a un ataque rival.",
+  type: "TRAP",
+  faction: "OPEN_SOURCE",
+  cost: 2,
+  trigger: "ON_OPPONENT_ATTACK_DECLARED",
+  effect: {
+    action: "DAMAGE",
+    target: "OPPONENT",
+    value: 500,
+  },
+};
+
 function createBaseState(overrides?: Partial<GameState>): GameState {
   return {
     playerA: {
@@ -38,7 +53,7 @@ function createBaseState(overrides?: Partial<GameState>): GameState {
       currentEnergy: 5,
       maxEnergy: 10,
       deck: [],
-      hand: [entityCard, spellCard],
+      hand: [entityCard, spellCard, trapCard],
       graveyard: [],
       activeEntities: [],
       activeExecutions: [],
@@ -116,6 +131,24 @@ describe("GameEngine reglas de juego", () => {
     expect(state.playerA.healthPoints).toBe(7500);
     expect(state.playerA.activeExecutions).toHaveLength(0);
     expect(state.playerA.graveyard[0]?.id).toBe("spell-1");
+  });
+
+  it("debería permitir armar trampas en SET y bloquear ACTIVAR", () => {
+    let state = createBaseState();
+    state = {
+      ...state,
+      playerA: {
+        ...state.playerA,
+        hand: [trapCard],
+      },
+    };
+
+    expect(() => GameEngine.playCard(state, "p1", "trap-1", "ACTIVATE")).toThrow("Modo inválido para una trampa.");
+
+    const next = GameEngine.playCard(state, "p1", "trap-1", "SET");
+    expect(next.playerA.activeExecutions).toHaveLength(1);
+    expect(next.playerA.activeExecutions[0].card.type).toBe("TRAP");
+    expect(next.playerA.activeExecutions[0].mode).toBe("SET");
   });
 
   it("debería cambiar modo en entidades y ejecuciones", () => {

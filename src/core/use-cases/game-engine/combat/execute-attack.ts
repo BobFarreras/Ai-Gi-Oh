@@ -2,6 +2,7 @@ import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { CombatContext, CombatService } from "@/core/use-cases/CombatService";
+import { resolveTrapTrigger } from "@/core/use-cases/game-engine/effects/resolve-trap-trigger";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
@@ -34,7 +35,7 @@ export function executeAttack(
     throw new GameRuleError("El jugador inicial no puede atacar durante el primer turno.");
   }
 
-  const { player: attacker, opponent: defender, isPlayerA } = getPlayerPair(state, attackerPlayerId);
+  const { player: attacker, opponent: defender } = getPlayerPair(state, attackerPlayerId);
 
   const attackerEntity = attacker.activeEntities.find((entity) => entity.instanceId === attackerInstanceId);
 
@@ -50,29 +51,37 @@ export function executeAttack(
     throw new GameRuleError("Esta carta ya ha atacado este turno");
   }
 
+  const stateAfterTrap = resolveTrapTrigger(state, defender.id, "ON_OPPONENT_ATTACK_DECLARED");
+  const { player: currentAttacker, opponent: currentDefender, isPlayerA } = getPlayerPair(stateAfterTrap, attackerPlayerId);
+  const currentAttackerEntity = currentAttacker.activeEntities.find((entity) => entity.instanceId === attackerInstanceId);
+
+  if (!currentAttackerEntity) {
+    throw new NotFoundError("La carta atacante no está en el campo");
+  }
+
   if (!defenderInstanceId) {
-    if (defender.activeEntities.length > 0) {
+    if (currentDefender.activeEntities.length > 0) {
       throw new GameRuleError("No puedes atacar directamente si el oponente tiene entidades en el campo.");
     }
 
-    const damage = attackerEntity.card.attack ?? 0;
+    const damage = currentAttackerEntity.card.attack ?? 0;
     const updatedAttacker: IPlayer = {
-      ...attacker,
-      activeEntities: markAttackerAsUsed(attacker.activeEntities, attackerInstanceId),
+      ...currentAttacker,
+      activeEntities: markAttackerAsUsed(currentAttacker.activeEntities, attackerInstanceId),
     };
     const updatedDefender: IPlayer = {
-      ...defender,
-      healthPoints: Math.max(0, defender.healthPoints - damage),
+      ...currentDefender,
+      healthPoints: Math.max(0, currentDefender.healthPoints - damage),
     };
 
-    const withPlayers = assignPlayers(state, updatedAttacker, updatedDefender, isPlayerA);
+    const withPlayers = assignPlayers(stateAfterTrap, updatedAttacker, updatedDefender, isPlayerA);
     const withAttack = appendCombatLogEvent(withPlayers, attackerPlayerId, "ATTACK_DECLARED", {
       attackerInstanceId,
-      attackerCardId: attackerEntity.card.id,
+      attackerCardId: currentAttackerEntity.card.id,
       target: "DIRECT",
     });
     const withDamage = appendCombatLogEvent(withAttack, attackerPlayerId, "DIRECT_DAMAGE", {
-      targetPlayerId: defender.id,
+      targetPlayerId: currentDefender.id,
       amount: damage,
     });
     return appendCombatLogEvent(withDamage, attackerPlayerId, "BATTLE_RESOLVED", {
@@ -83,7 +92,7 @@ export function executeAttack(
     });
   }
 
-  const defenderEntity = defender.activeEntities.find((entity) => entity.instanceId === defenderInstanceId);
+  const defenderEntity = currentDefender.activeEntities.find((entity) => entity.instanceId === defenderInstanceId);
 
   if (!defenderEntity) {
     throw new NotFoundError("La carta defensora no está en el campo");
@@ -95,22 +104,22 @@ export function executeAttack(
     : (defenderEntity.card.attack ?? 0);
 
   const context: CombatContext = {
-    attackerAtk: attackerEntity.card.attack ?? 0,
+    attackerAtk: currentAttackerEntity.card.attack ?? 0,
     defenderStat,
     isDefenderInDefenseMode,
   };
   const result = CombatService.calculateBattle(context);
 
-  let updatedAttackerEntities = markAttackerAsUsed(attacker.activeEntities, attackerInstanceId);
-  let updatedAttackerGraveyard = attacker.graveyard;
+  let updatedAttackerEntities = markAttackerAsUsed(currentAttacker.activeEntities, attackerInstanceId);
+  let updatedAttackerGraveyard = currentAttacker.graveyard;
 
   if (result.attackerDestroyed) {
     updatedAttackerEntities = updatedAttackerEntities.filter((entity) => entity.instanceId !== attackerInstanceId);
-    updatedAttackerGraveyard = [...updatedAttackerGraveyard, attackerEntity.card];
+    updatedAttackerGraveyard = [...updatedAttackerGraveyard, currentAttackerEntity.card];
   }
 
-  let updatedDefenderEntities = defender.activeEntities;
-  let updatedDefenderGraveyard = defender.graveyard;
+  let updatedDefenderEntities = currentDefender.activeEntities;
+  let updatedDefenderGraveyard = currentDefender.graveyard;
 
   if (result.defenderDestroyed) {
     updatedDefenderEntities = updatedDefenderEntities.filter((entity) => entity.instanceId !== defenderInstanceId);
@@ -122,23 +131,23 @@ export function executeAttack(
   }
 
   const updatedAttacker: IPlayer = {
-    ...attacker,
-    healthPoints: Math.max(0, attacker.healthPoints - result.damageToAttackerPlayer),
+    ...currentAttacker,
+    healthPoints: Math.max(0, currentAttacker.healthPoints - result.damageToAttackerPlayer),
     activeEntities: updatedAttackerEntities,
     graveyard: updatedAttackerGraveyard,
   };
 
   const updatedDefender: IPlayer = {
-    ...defender,
-    healthPoints: Math.max(0, defender.healthPoints - result.damageToDefenderPlayer),
+    ...currentDefender,
+    healthPoints: Math.max(0, currentDefender.healthPoints - result.damageToDefenderPlayer),
     activeEntities: updatedDefenderEntities,
     graveyard: updatedDefenderGraveyard,
   };
 
-  const withPlayers = assignPlayers(state, updatedAttacker, updatedDefender, isPlayerA);
+  const withPlayers = assignPlayers(stateAfterTrap, updatedAttacker, updatedDefender, isPlayerA);
   let withLogs = appendCombatLogEvent(withPlayers, attackerPlayerId, "ATTACK_DECLARED", {
     attackerInstanceId,
-    attackerCardId: attackerEntity.card.id,
+    attackerCardId: currentAttackerEntity.card.id,
     defenderInstanceId,
     defenderCardId: defenderEntity.card.id,
   });
@@ -150,27 +159,27 @@ export function executeAttack(
   });
   if (result.damageToDefenderPlayer > 0) {
     withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, "DIRECT_DAMAGE", {
-      targetPlayerId: defender.id,
+      targetPlayerId: currentDefender.id,
       amount: result.damageToDefenderPlayer,
     });
   }
   if (result.damageToAttackerPlayer > 0) {
     withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, "DIRECT_DAMAGE", {
-      targetPlayerId: attacker.id,
+      targetPlayerId: currentAttacker.id,
       amount: result.damageToAttackerPlayer,
     });
   }
   if (result.attackerDestroyed) {
     withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, "CARD_TO_GRAVEYARD", {
-      cardId: attackerEntity.card.id,
-      ownerPlayerId: attacker.id,
+      cardId: currentAttackerEntity.card.id,
+      ownerPlayerId: currentAttacker.id,
       from: "BATTLEFIELD",
     });
   }
   if (result.defenderDestroyed) {
     withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, "CARD_TO_GRAVEYARD", {
       cardId: defenderEntity.card.id,
-      ownerPlayerId: defender.id,
+      ownerPlayerId: currentDefender.id,
       from: "BATTLEFIELD",
     });
   }

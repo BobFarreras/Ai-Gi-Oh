@@ -41,6 +41,10 @@ Reglas implementadas en `GameEngine`, `CombatService` y estrategia de turno del 
 5. Ejecuciones:
    - máximo 3,
    - modos válidos: `SET` o `ACTIVATE`.
+6. Trampas (`TRAP`):
+   - ocupan la misma zona de ejecuciones,
+   - máximo 3 en zona,
+   - modo válido: solo `SET` (no se activan manualmente).
 
 ## 4. Combate (`executeAttack` + `CombatService`)
 
@@ -56,8 +60,21 @@ Reglas implementadas en `GameEngine`, `CombatService` y estrategia de turno del 
 ## 5. Ejecuciones (`resolveExecution`)
 
 1. Debe existir ejecución activa y tener `effect`.
-2. Acciones actuales: `DAMAGE`, `HEAL`.
+2. Solo admite cartas de tipo `EXECUTION`.
+3. Acciones actuales: `DAMAGE`, `HEAL`, `DRAW_CARD`, `BOOST_ATTACK_ALLIED_ENTITY`, `BOOST_DEFENSE_BY_ARCHETYPE`, `BOOST_ATTACK_BY_ARCHETYPE`.
+4. Antes de resolver una ejecución se evalúan trampas rivales con trigger `ON_OPPONENT_EXECUTION_ACTIVATED`.
 3. Tras resolver: sale de zona de ejecución y pasa a cementerio.
+
+## 5.1 Trampas (`TRAP`)
+
+1. Triggers soportados:
+   - `ON_OPPONENT_ATTACK_DECLARED`
+   - `ON_OPPONENT_EXECUTION_ACTIVATED`
+2. Resolución mínima de cadena:
+   - se activa la primera trampa `SET` compatible,
+   - aplica su efecto,
+   - se envía al cementerio.
+3. Las trampas de ataque se evalúan antes de resolver el daño del combate.
 
 ## 6. Errores de dominio
 
@@ -91,7 +108,7 @@ El motor registra eventos técnicos para trazabilidad y UI:
 1. `TURN_STARTED`, `PHASE_CHANGED`, `ENERGY_GAINED`.
 2. `CARD_PLAYED`, `ATTACK_DECLARED`, `BATTLE_RESOLVED`.
 3. `DIRECT_DAMAGE`, `CARD_TO_GRAVEYARD`.
-4. `MANDATORY_ACTION_RESOLVED`, `FUSION_SUMMONED` (preparado para fase de fusión completa).
+4. `TRAP_TRIGGERED`, `MANDATORY_ACTION_RESOLVED`, `FUSION_SUMMONED`.
 
 ## 10. Fusión (implementada)
 

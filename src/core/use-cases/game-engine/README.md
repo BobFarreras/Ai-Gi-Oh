@@ -22,11 +22,14 @@ Casos de uso puros del motor, organizados por responsabilidad.
 4. `combat/`
    - `execute-attack.ts`
 
-5. `fusion/`
+5. `effects/`
+   - `resolve-trap-trigger.ts`
+
+6. `fusion/`
    - `fusion-recipes.ts`
    - `fuse-cards.ts`
 
-6. `logging/`
+7. `logging/`
    - `combat-log.ts`
 
 ## Invariantes

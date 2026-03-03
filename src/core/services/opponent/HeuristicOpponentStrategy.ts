@@ -38,6 +38,14 @@ function scoreExecution(card: IPlayer["hand"][number], profile: IOpponentDifficu
   return 10 - card.cost * 100;
 }
 
+function scoreTrap(card: IPlayer["hand"][number]): number {
+  if (!card.effect || card.effect.action !== "DAMAGE") {
+    return 40 - card.cost * 80;
+  }
+
+  return card.effect.value - card.cost * 60;
+}
+
 function scoreFusion(card: IPlayer["hand"][number], profile: IOpponentDifficultyProfile): number {
   const body = (card.attack ?? 0) * 2.1 + (card.defense ?? 0) * 1.2;
   return body * profile.entityTempoBias - card.cost * 90;
@@ -105,6 +113,8 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
             ? scoreEntity(card, this.profile)
             : card.type === "FUSION"
               ? scoreFusion(card, this.profile)
+              : card.type === "TRAP"
+                ? scoreTrap(card)
               : scoreExecution(card, this.profile);
         return { card, score };
       })
@@ -137,6 +147,14 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
 
         if (card.effect?.action === "DAMAGE" && card.effect.target === "OPPONENT") {
           return { cardId: card.id, mode: "ACTIVATE" };
+        }
+
+        return { cardId: card.id, mode: "SET" };
+      }
+
+      if (card.type === "TRAP") {
+        if (opponent.activeExecutions.length >= 3) {
+          continue;
         }
 
         return { cardId: card.id, mode: "SET" };

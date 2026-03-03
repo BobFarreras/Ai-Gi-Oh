@@ -2,6 +2,7 @@
 export type CardType = "ENTITY" | "EXECUTION" | "TRAP" | "FUSION" | "ENVIRONMENT";
 export type Faction = "OPEN_SOURCE" | "BIG_TECH" | "NO_CODE" | "NEUTRAL";
 export type CardArchetype = "LLM" | "FRAMEWORK" | "DB" | "IDE" | "LANGUAGE" | "TOOL" | "SECURITY";
+export type TrapTrigger = "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED";
 
 export interface IDamageEffect {
   action: "DAMAGE";
@@ -61,4 +62,5 @@ export interface ICard {
   readonly fusionMaterials?: string[];
   readonly fusionEnergyRequirement?: number;
   readonly archetype?: CardArchetype;
+  readonly trigger?: TrapTrigger;
 }

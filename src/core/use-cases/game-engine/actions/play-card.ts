@@ -30,6 +30,16 @@ function validateExecutionPlay(player: IPlayer, mode: BattleMode): void {
   }
 }
 
+function validateTrapPlay(player: IPlayer, mode: BattleMode): void {
+  if (player.activeExecutions.length >= 3) {
+    throw new ValidationError("Tu zona de ejecuciones está llena.");
+  }
+
+  if (mode !== "SET") {
+    throw new ValidationError("Modo inválido para una trampa.");
+  }
+}
+
 function createBoardEntity(card: IPlayer["hand"][number], mode: BattleMode): IBoardEntity {
   return {
     instanceId: `${card.id}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
@@ -70,6 +80,8 @@ export function playCard(state: GameState, playerId: string, cardId: string, mod
     validateEntityPlay(state, player, mode);
   } else if (card.type === "EXECUTION") {
     validateExecutionPlay(player, mode);
+  } else if (card.type === "TRAP") {
+    validateTrapPlay(player, mode);
   } else if (card.type === "FUSION") {
     throw new ValidationError("Las cartas de fusión deben invocarse con materiales desde la acción Fusionar.");
   }
@@ -80,7 +92,7 @@ export function playCard(state: GameState, playerId: string, cardId: string, mod
     currentEnergy: player.currentEnergy - card.cost,
     hand: player.hand.filter((_, index) => index !== cardIndex),
     activeEntities: card.type === "ENTITY" ? [...player.activeEntities, boardEntity] : player.activeEntities,
-    activeExecutions: card.type === "EXECUTION" ? [...player.activeExecutions, boardEntity] : player.activeExecutions,
+    activeExecutions: card.type === "EXECUTION" || card.type === "TRAP" ? [...player.activeExecutions, boardEntity] : player.activeExecutions,
   };
 
   const nextState = {
