@@ -17,25 +17,42 @@ Submódulos internos para reducir complejidad de `useBoard`.
 3. `boardError.ts`
    - Mapeo de errores de dominio a errores de UI (`IBoardUiError`).
 
-4. `sleep.ts`
+4. `useBoardUiState.ts`
+   - Estado local de UI del tablero (selección, animación, paneles, mute).
+   - Expone acciones base (`clearSelection`, `previewCard`, `restartMatch`).
+
+5. `sleep.ts`
    - Delay controlado para sincronizar animación y lógica.
 
-5. `useOpponentTurn.ts`
+6. `useOpponentTurn.ts`
    - Loop automático del turno del rival.
    - Orquesta visualmente cada acción (despliegue, activación, ataque) con delays controlados.
    - Incluye `windup` de ataque y `cooldown` post-resolución para evitar solape entre daño, efectos y siguiente acción.
    - Mantiene `activeAttackerId` y `isAnimating` para feedback en tiempo real.
 
-6. `usePlayerActions.ts`
+7. `usePlayerActions.ts`
    - Acciones del jugador (play card, entity click, selección).
    - Validaciones de turno y animación.
    - Si hay trampa reactiva del rival, previsualiza flip de trampa antes de resolver ataque/ejecución.
 
-7. `useGameAudio.ts`
+8. `useBoardTurnControls.ts`
+   - Callbacks de avance de fase y resolución de acciones obligatorias.
+   - Maneja fallback de timer para descarte/sacrificio automático.
+
+9. `boardPendingUi.ts` y `boardCombatFeedback.ts`
+   - Proyección de estado de dominio a señales UI:
+     - hints de acciones obligatorias,
+     - ids resaltados,
+     - deltas de daño/curación/buffs.
+
+10. `buildUseBoardResult.ts`
+   - Construye el objeto público que retorna `useBoard` para mantener el hook pequeño y legible.
+
+11. `useGameAudio.ts`
    - Gestiona SFX y soundtrack principal.
    - Al finalizar duelo, detiene y reinicia el soundtrack base antes de reproducir resultado.
 
-8. `trapPreview.ts`
+12. `trapPreview.ts`
    - Detecta trampas `SET` reactivas por trigger.
    - Utilidades para revelar/ocultar temporalmente la trampa durante la cadena visual.
 
