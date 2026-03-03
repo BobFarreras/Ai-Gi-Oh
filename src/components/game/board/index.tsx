@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, History } from "lucide-react";
+import { Clock, History, Volume2, VolumeX } from "lucide-react";
 import { Battlefield } from "./Battlefield";
 import { PlayerHUD } from "./PlayerHUD";
 import { PlayerHand } from "./PlayerHand";
@@ -42,15 +42,20 @@ export function Board() {
     lastDamageEventId,
     winnerPlayerId,
     restartMatch,
+    isMuted,
+    toggleMute,
   } = useBoard();
 
   const player = gameState.playerA;
   const opponent = gameState.playerB;
-  const { playTimerExpired } = useGameAudio({
+  const { playTimerExpired, playTimerWarning, playButtonClick } = useGameAudio({
     combatLog: gameState.combatLog,
     winnerPlayerId,
-    playerAId: player.id,
-    playerBId: opponent.id,
+    playerId: player.id,
+    isHistoryOpen,
+    hasSelectedCard: Boolean(selectedCard),
+    lastErrorCode: lastError?.code ?? null,
+    isMuted,
   });
 
   return (
@@ -69,6 +74,7 @@ export function Board() {
               aria-label="Cerrar mensaje de error"
               onClick={(event) => {
                 event.stopPropagation();
+                playButtonClick();
                 clearError();
               }}
               className="text-red-200 hover:text-white font-black"
@@ -109,6 +115,7 @@ export function Board() {
               playTimerExpired();
               handleTimerExpired();
             }}
+            onWarning={playTimerWarning}
             isActive={isPlayerTurn}
           />
         </div>
@@ -185,18 +192,32 @@ export function Board() {
         />
       </div>
 
-      {!isHistoryOpen && (
+      <div className="absolute bottom-6 right-6 z-50 flex items-center gap-3">
         <button
-          aria-label="Abrir historial de batalla"
+          aria-label={isMuted ? "Activar sonido" : "Silenciar sonido"}
           onClick={(event) => {
             event.stopPropagation();
-            setIsHistoryOpen(true);
+            playButtonClick();
+            toggleMute();
           }}
-          className="absolute bottom-6 right-6 z-50 bg-zinc-950/90 border-2 border-red-500/50 text-red-500 p-4 rounded-full hover:bg-red-950 hover:shadow-[0_0_20px_rgba(239,68,68,0.6)] transition-all"
+          className="bg-zinc-950/90 border-2 border-cyan-500/50 text-cyan-300 p-4 rounded-full hover:bg-cyan-950 hover:shadow-[0_0_20px_rgba(34,211,238,0.6)] transition-all"
         >
-          <History size={24} />
+          {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
         </button>
-      )}
+        {!isHistoryOpen && (
+          <button
+            aria-label="Abrir historial de batalla"
+            onClick={(event) => {
+              event.stopPropagation();
+              playButtonClick();
+              setIsHistoryOpen(true);
+            }}
+            className="bg-zinc-950/90 border-2 border-red-500/50 text-red-500 p-4 rounded-full hover:bg-red-950 hover:shadow-[0_0_20px_rgba(239,68,68,0.6)] transition-all"
+          >
+            <History size={24} />
+          </button>
+        )}
+      </div>
 
       <DuelResultOverlay
         winnerPlayerId={winnerPlayerId}

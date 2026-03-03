@@ -17,6 +17,10 @@ export function useBoard() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [activeAttackerId, setActiveAttackerId] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isMuted, setIsMuted] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("board-muted") === "1";
+  });
   const [revealedEntities, setRevealedEntities] = useState<string[]>([]);
   const [lastError, setLastError] = useState<IBoardUiError | null>(null);
   const [pendingEntityReplacement, setPendingEntityReplacement] = useState<{ cardId: string; mode: BattleMode } | null>(null);
@@ -66,6 +70,16 @@ export function useBoard() {
 
   const clearError = useCallback(() => {
     setLastError(null);
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    setIsMuted((previous) => {
+      const next = !previous;
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("board-muted", next ? "1" : "0");
+      }
+      return next;
+    });
   }, []);
 
   const restartMatch = useCallback(() => {
@@ -242,6 +256,7 @@ export function useBoard() {
           : [],
     opponentDifficulty,
     isPlayerTurn,
+    isMuted,
     winnerPlayerId,
     lastDamageTargetPlayerId:
       lastDamageEvent && typeof lastDamageEvent.payload === "object" && lastDamageEvent.payload !== null && "targetPlayerId" in lastDamageEvent.payload
@@ -253,6 +268,7 @@ export function useBoard() {
         : null,
     lastDamageEventId: lastDamageEvent?.id ?? null,
     restartMatch,
+    toggleMute,
     setIsHistoryOpen,
     toggleCardSelection,
     clearSelection,

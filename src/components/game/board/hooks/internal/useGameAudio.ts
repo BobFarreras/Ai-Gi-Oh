@@ -1,98 +1,184 @@
-import { MutableRefObject, useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
+import { AUDIO_CATALOG, AUDIO_CHANNEL_VOLUME, AudioTrackId } from "@/core/config/audio-catalog";
 
 interface UseGameAudioParams {
   combatLog: ICombatLogEvent[];
   winnerPlayerId: string | null;
-  playerAId: string;
-  playerBId: string;
+  playerId: string;
+  isHistoryOpen: boolean;
+  hasSelectedCard: boolean;
+  lastErrorCode: string | null;
+  isMuted: boolean;
 }
 
-function beep(context: AudioContext, frequency: number, duration: number, type: OscillatorType, gain = 0.04): void {
-  const oscillator = context.createOscillator();
-  const nodeGain = context.createGain();
-  oscillator.type = type;
-  oscillator.frequency.value = frequency;
-  nodeGain.gain.value = gain;
-  oscillator.connect(nodeGain);
-  nodeGain.connect(context.destination);
-  oscillator.start();
-  oscillator.stop(context.currentTime + duration);
-}
-
-function ensureContext(ref: MutableRefObject<AudioContext | null>): AudioContext | null {
-  if (typeof window === "undefined") return null;
-  const AudioConstructor = window.AudioContext ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!AudioConstructor) return null;
-  if (!ref.current) {
-    ref.current = new AudioConstructor();
+function createAudio(trackId: AudioTrackId, isMusic: boolean): HTMLAudioElement | null {
+  if (typeof window === "undefined" || typeof window.Audio === "undefined") {
+    return null;
   }
-  if (ref.current.state === "suspended") {
-    void ref.current.resume();
-  }
-  return ref.current;
+  const track = AUDIO_CATALOG[trackId];
+  const audio = new Audio(track.path);
+  audio.preload = "auto";
+  audio.loop = Boolean(track.loop);
+  audio.volume = Math.max(0, Math.min(1, track.volume * (isMusic ? AUDIO_CHANNEL_VOLUME.music : AUDIO_CHANNEL_VOLUME.sfx)));
+  return audio;
 }
 
-export function useGameAudio({ combatLog, winnerPlayerId, playerAId, playerBId }: UseGameAudioParams) {
-  const contextRef = useRef<AudioContext | null>(null);
+function mapEventToTrack(event: ICombatLogEvent): AudioTrackId | null {
+  if (event.eventType === "TURN_STARTED") return "TURN_PASS";
+  if (event.eventType === "PHASE_CHANGED") return "BANNER";
+  if (event.eventType === "ATTACK_DECLARED") return "ATTACK";
+  if (event.eventType === "DIRECT_DAMAGE") return "LIFE_LOSS";
+  if (event.eventType === "FUSION_SUMMONED") return "FUSION_SUMMON";
+  if (event.eventType === "CARD_PLAYED") {
+    const cardType =
+      typeof event.payload === "object" && event.payload !== null && "cardType" in event.payload
+        ? String((event.payload as Record<string, unknown>).cardType)
+        : "";
+    const mode =
+      typeof event.payload === "object" && event.payload !== null && "mode" in event.payload
+        ? String((event.payload as Record<string, unknown>).mode)
+        : "";
+    if (cardType === "EXECUTION" && mode === "ACTIVATE") return "MAGIC_ATTACK";
+    if (cardType === "ENTITY") return "SUMMON_CARD";
+  }
+  return null;
+}
+
+export function useGameAudio({
+  combatLog,
+  winnerPlayerId,
+  playerId,
+  isHistoryOpen,
+  hasSelectedCard,
+  lastErrorCode,
+  isMuted,
+}: UseGameAudioParams) {
   const processedRef = useRef(0);
-  const soundtrackRef = useRef<number | null>(null);
+  const soundtrackRef = useRef<HTMLAudioElement | null>(null);
+  const prevHistoryOpenRef = useRef(isHistoryOpen);
+  const prevSelectedCardRef = useRef(hasSelectedCard);
+  const prevErrorRef = useRef<string | null>(lastErrorCode);
 
   useEffect(() => {
-    const boot = () => ensureContext(contextRef);
-    window.addEventListener("pointerdown", boot, { once: true });
-    return () => window.removeEventListener("pointerdown", boot);
+    if (soundtrackRef.current) return;
+    soundtrackRef.current = createAudio("SOUNDTRACK", true);
   }, []);
 
   useEffect(() => {
-    const context = ensureContext(contextRef);
-    if (!context || soundtrackRef.current !== null) return;
-    soundtrackRef.current = window.setInterval(() => {
-      beep(context, 120, 0.15, "triangle", 0.015);
-      setTimeout(() => beep(context, 160, 0.12, "triangle", 0.012), 180);
-    }, 2600);
-    return () => {
-      if (soundtrackRef.current !== null) {
-        window.clearInterval(soundtrackRef.current);
-      }
-    };
-  }, []);
+    const soundtrack = soundtrackRef.current;
+    if (!soundtrack) return;
+    if (isMuted) {
+      soundtrack.pause();
+      return;
+    }
+    const playPromise = soundtrack.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => undefined);
+    }
+  }, [isMuted]);
 
   useEffect(() => {
-    const context = ensureContext(contextRef);
-    if (!context) return;
+    if (isMuted) {
+      processedRef.current = combatLog.length;
+      return;
+    }
     const nextEvents = combatLog.slice(processedRef.current);
     processedRef.current = combatLog.length;
     for (const event of nextEvents) {
-      if (event.eventType === "TURN_STARTED") beep(context, 320, 0.12, "sine");
-      if (event.eventType === "PHASE_CHANGED") beep(context, 440, 0.1, "triangle");
-      if (event.eventType === "CARD_PLAYED") beep(context, 260, 0.08, "square");
-      if (event.eventType === "DIRECT_DAMAGE") beep(context, 180, 0.14, "sawtooth");
-      if (event.eventType === "FUSION_SUMMONED") {
-        beep(context, 380, 0.1, "triangle");
-        setTimeout(() => beep(context, 520, 0.14, "triangle"), 120);
+      const track = mapEventToTrack(event);
+      if (!track) continue;
+      const audio = createAudio(track, false);
+      const playPromise = audio?.play();
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch(() => undefined);
       }
     }
-  }, [combatLog]);
+  }, [combatLog, isMuted]);
 
   useEffect(() => {
-    const context = ensureContext(contextRef);
-    if (!context || !winnerPlayerId) return;
-    if (winnerPlayerId === "DRAW") {
-      beep(context, 260, 0.15, "sine");
-      setTimeout(() => beep(context, 220, 0.2, "sine"), 170);
+    if (isMuted || !winnerPlayerId) return;
+    const track: AudioTrackId =
+      winnerPlayerId === "DRAW" ? "DUEL_DRAW" : winnerPlayerId === playerId ? "DUEL_WIN" : "GAME_OVER";
+    const audio = createAudio(track, false);
+    const playPromise = audio?.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => undefined);
+    }
+    if (track === "DUEL_WIN") {
+      const stinger = createAudio("VICTORY_STINGER", false);
+      const stingerPromise = stinger?.play();
+      if (stingerPromise && typeof stingerPromise.catch === "function") {
+        stingerPromise.catch(() => undefined);
+      }
+    }
+  }, [isMuted, playerId, winnerPlayerId]);
+
+  useEffect(() => {
+    if (isMuted) {
+      prevHistoryOpenRef.current = isHistoryOpen;
       return;
     }
-    const isPlayerWin = winnerPlayerId === playerAId;
-    beep(context, isPlayerWin ? 520 : 180, 0.16, "triangle", 0.06);
-    setTimeout(() => beep(context, isPlayerWin ? 660 : 140, 0.24, "triangle", 0.05), 180);
-  }, [playerAId, playerBId, winnerPlayerId]);
+    if (prevHistoryOpenRef.current !== isHistoryOpen) {
+      const audio = createAudio(isHistoryOpen ? "SIDEBAR_OPEN" : "SIDEBAR_CLOSE", false);
+      void audio?.play().catch(() => undefined);
+      prevHistoryOpenRef.current = isHistoryOpen;
+    }
+  }, [isHistoryOpen, isMuted]);
+
+  useEffect(() => {
+    if (isMuted) {
+      prevSelectedCardRef.current = hasSelectedCard;
+      return;
+    }
+    if (prevSelectedCardRef.current !== hasSelectedCard) {
+      const audio = createAudio(hasSelectedCard ? "SIDEBAR_OPEN" : "SIDEBAR_CLOSE", false);
+      void audio?.play().catch(() => undefined);
+      prevSelectedCardRef.current = hasSelectedCard;
+    }
+  }, [hasSelectedCard, isMuted]);
+
+  useEffect(() => {
+    if (isMuted) {
+      prevErrorRef.current = lastErrorCode;
+      return;
+    }
+    if (lastErrorCode && prevErrorRef.current !== lastErrorCode) {
+      const audio = createAudio("ERROR_ACTION", false);
+      const playPromise = audio?.play();
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch(() => undefined);
+      }
+    }
+    prevErrorRef.current = lastErrorCode;
+  }, [isMuted, lastErrorCode]);
 
   const playTimerExpired = useCallback(() => {
-    const context = ensureContext(contextRef);
-    if (!context) return;
-    beep(context, 130, 0.18, "sawtooth", 0.06);
-  }, []);
+    if (isMuted) return;
+    const audio = createAudio("TIMER_END", false);
+    const playPromise = audio?.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => undefined);
+    }
+  }, [isMuted]);
 
-  return { playTimerExpired };
+  const playTimerWarning = useCallback(() => {
+    if (isMuted) return;
+    const audio = createAudio("TIMER_WARNING", false);
+    const playPromise = audio?.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => undefined);
+    }
+  }, [isMuted]);
+
+  const playButtonClick = useCallback(() => {
+    if (isMuted) return;
+    const audio = createAudio("BUTTON_CLICK", false);
+    const playPromise = audio?.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => undefined);
+    }
+  }, [isMuted]);
+
+  return { playTimerExpired, playTimerWarning, playButtonClick };
 }

@@ -114,7 +114,7 @@ El motor registra eventos técnicos para trazabilidad y UI:
 
 ## 12. Sonido del tablero
 
-1. Sonido ambiental de fondo (sintético con WebAudio).
+1. Sonido ambiental de fondo (`soundtrack.mp3`).
 2. Efectos por eventos:
    - cambio de turno/fase,
    - jugar carta/invocar,
@@ -122,3 +122,5 @@ El motor registra eventos técnicos para trazabilidad y UI:
    - fusión,
    - fin de tiempo de turno,
    - fin de partida.
+3. El catálogo de pistas/volumen por evento está en `src/core/config/audio-catalog.ts`.
+4. El jugador dispone de `mute` global persistente (localStorage).

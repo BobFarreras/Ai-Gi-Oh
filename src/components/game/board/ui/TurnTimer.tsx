@@ -5,10 +5,11 @@ import { cn } from "@/lib/utils";
 
 interface TurnTimerProps {
   onTimeUp: () => void;
+  onWarning?: () => void;
   isActive: boolean;
 }
 
-export function TurnTimer({ onTimeUp, isActive }: TurnTimerProps) {
+export function TurnTimer({ onTimeUp, onWarning, isActive }: TurnTimerProps) {
   const [timeLeft, setTimeLeft] = useState(30);
 
   useEffect(() => {
@@ -21,9 +22,18 @@ export function TurnTimer({ onTimeUp, isActive }: TurnTimerProps) {
       return () => clearTimeout(timeoutId);
     }
 
+    if (timeLeft === 5 && onWarning) {
+      const warningId = setTimeout(onWarning, 0);
+      const intervalId = setInterval(() => setTimeLeft((value) => value - 1), 1000);
+      return () => {
+        clearTimeout(warningId);
+        clearInterval(intervalId);
+      };
+    }
+
     const intervalId = setInterval(() => setTimeLeft((value) => value - 1), 1000);
     return () => clearInterval(intervalId);
-  }, [isActive, timeLeft, onTimeUp]);
+  }, [isActive, timeLeft, onTimeUp, onWarning]);
 
   return (
     <div

@@ -56,6 +56,7 @@ describe('Componente UI: Board y Subcomponentes', () => {
       pendingEntitySelectionIds: [],
       opponentDifficulty: "EASY",
       isPlayerTurn: true,
+      isMuted: false,
       lastDamageTargetPlayerId: null,
       lastDamageAmount: null,
       lastDamageEventId: null,
@@ -71,6 +72,7 @@ describe('Componente UI: Board y Subcomponentes', () => {
       advancePhase: vi.fn(),
       handleTimerExpired: vi.fn(),
       restartMatch: vi.fn(),
+      toggleMute: vi.fn(),
     });
   });
 
