@@ -1,9 +1,9 @@
-import { ICard } from "@/core/entities/ICard";
+import { CardArchetype, ICard } from "@/core/entities/ICard";
 
 export interface IFusionRecipe {
   resultCardId: string;
   requiredMaterialIds?: string[];
-  requiredArchetypes?: string[];
+  requiredArchetypes?: CardArchetype[];
   requiredEnergyPerMaterial?: number;
   requiredTotalEnergy?: number;
 }
@@ -11,15 +11,21 @@ export interface IFusionRecipe {
 const FUSION_RECIPES: IFusionRecipe[] = [
   {
     resultCardId: "fusion-p1-overmind",
-    requiredArchetypes: ["SYNTH", "SYNTH"],
+    requiredArchetypes: ["LLM", "LLM"],
     requiredEnergyPerMaterial: 2,
     requiredTotalEnergy: 4,
   },
   {
     resultCardId: "fusion-p2-overmind",
-    requiredArchetypes: ["CORE", "CORE"],
+    requiredArchetypes: ["LLM", "LLM"],
     requiredEnergyPerMaterial: 2,
     requiredTotalEnergy: 4,
+  },
+  {
+    resultCardId: "fusion-gemgpt",
+    requiredMaterialIds: ["entity-chatgpt", "entity-gemini"],
+    requiredEnergyPerMaterial: 5,
+    requiredTotalEnergy: 10,
   },
 ];
 

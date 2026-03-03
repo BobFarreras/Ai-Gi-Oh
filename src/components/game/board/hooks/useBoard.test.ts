@@ -78,7 +78,7 @@ describe('useBoard Custom Hook', () => {
 
   it('Debe exponer un error tipado cuando se intenta una acción inválida', async () => {
     const { result } = renderHook(() => useBoard());
-    const entityCard = result.current.gameState.playerA.hand.find((card) => card.id === 'card-p1-gemini');
+    const entityCard = result.current.gameState.playerA.hand.find((card) => card.id === 'entity-ollama');
 
     expect(entityCard).toBeDefined();
 

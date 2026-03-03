@@ -29,14 +29,14 @@ function stateWithMaterials(overrides?: Partial<GameState>): GameState {
       activeEntities: [
         {
           instanceId: "m1",
-          card: { id: "a1", name: "A1", description: "", type: "ENTITY", faction: "OPEN_SOURCE", cost: 2, attack: 800, defense: 1000, archetype: "SYNTH" },
+          card: { id: "a1", name: "A1", description: "", type: "ENTITY", faction: "OPEN_SOURCE", cost: 2, attack: 800, defense: 1000, archetype: "LLM" },
           mode: "ATTACK",
           hasAttackedThisTurn: false,
           isNewlySummoned: false,
         },
         {
           instanceId: "m2",
-          card: { id: "a2", name: "A2", description: "", type: "ENTITY", faction: "OPEN_SOURCE", cost: 3, attack: 1100, defense: 1050, archetype: "SYNTH" },
+          card: { id: "a2", name: "A2", description: "", type: "ENTITY", faction: "OPEN_SOURCE", cost: 3, attack: 1100, defense: 1050, archetype: "LLM" },
           mode: "ATTACK",
           hasAttackedThisTurn: false,
           isNewlySummoned: false,
@@ -81,7 +81,7 @@ describe("GameEngine fusión", () => {
       playerA: {
         ...stateWithMaterials().playerA,
         activeEntities: [
-          { ...stateWithMaterials().playerA.activeEntities[0], card: { ...stateWithMaterials().playerA.activeEntities[0].card, archetype: "OTHER" } },
+          { ...stateWithMaterials().playerA.activeEntities[0], card: { ...stateWithMaterials().playerA.activeEntities[0].card, archetype: "TOOL" } },
           stateWithMaterials().playerA.activeEntities[1],
         ],
       },

@@ -19,7 +19,8 @@ function scoreCardForDiscard(card: ICard): number {
     return (card.attack ?? 0) + (card.defense ?? 0) - card.cost * 180;
   }
 
-  return (card.effect?.value ?? 0) - card.cost * 140;
+  const effectValue = card.effect && "value" in card.effect ? card.effect.value : 0;
+  return effectValue - card.cost * 140;
 }
 
 function chooseEntityToSacrifice(entities: IBoardEntity[]): IBoardEntity | null {

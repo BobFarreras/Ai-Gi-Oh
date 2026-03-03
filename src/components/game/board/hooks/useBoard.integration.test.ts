@@ -17,7 +17,7 @@ describe("useBoard integración", () => {
 
   it("debería activar una ejecución y aplicar su efecto al rival", async () => {
     const { result } = renderHook(() => useBoard());
-    const spellCard = result.current.gameState.playerA.hand.find((card) => card.id === "card-spell-ddos");
+    const spellCard = result.current.gameState.playerA.hand.find((card) => card.id === "exec-direct-damage-900");
 
     expect(spellCard).toBeDefined();
     act(() => {
@@ -30,14 +30,14 @@ describe("useBoard integración", () => {
       await pendingAction;
     });
 
-    expect(result.current.gameState.playerB.healthPoints).toBe(7000);
+    expect(result.current.gameState.playerB.healthPoints).toBe(7100);
     expect(result.current.gameState.playerA.activeExecutions).toHaveLength(0);
-    expect(result.current.gameState.playerA.graveyard.some((card) => card.id === "card-spell-ddos")).toBe(true);
+    expect(result.current.gameState.playerA.graveyard.some((card) => card.id === "exec-direct-damage-900")).toBe(true);
   });
 
   it("debería bloquear ataque directo del jugador inicial durante el primer turno", async () => {
     const { result } = renderHook(() => useBoard());
-    const entityCard = result.current.gameState.playerA.hand.find((card) => card.id === "card-p1-gemini");
+    const entityCard = result.current.gameState.playerA.hand.find((card) => card.id === "entity-ollama");
 
     expect(entityCard).toBeDefined();
 
@@ -73,7 +73,7 @@ describe("useBoard integración", () => {
 
   it("debería bloquear acciones cuando no es el turno del jugador", async () => {
     const { result } = renderHook(() => useBoard());
-    const card = result.current.gameState.playerA.hand.find((currentCard) => currentCard.id === "card-p1-gemini");
+    const card = result.current.gameState.playerA.hand.find((currentCard) => currentCard.id === "entity-ollama");
 
     expect(card).toBeDefined();
 

@@ -43,9 +43,12 @@ function validateRecipe(player: IPlayer, materialIds: string[], fusionCardId: st
   }
 
   if (recipe.requiredArchetypes) {
-    const archetypes = materials.map((material) => material.card.archetype ?? "");
     const pending = [...recipe.requiredArchetypes];
-    for (const archetype of archetypes) {
+    for (const material of materials) {
+      const archetype = material.card.archetype;
+      if (!archetype) {
+        continue;
+      }
       const index = pending.indexOf(archetype);
       if (index >= 0) {
         pending.splice(index, 1);

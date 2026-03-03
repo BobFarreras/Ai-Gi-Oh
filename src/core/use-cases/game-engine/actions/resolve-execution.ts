@@ -5,6 +5,19 @@ import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/comba
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
+function drawCards(player: IPlayer, amount: number): IPlayer {
+  const drawAmount = Math.max(0, Math.min(amount, player.deck.length));
+  if (drawAmount === 0) {
+    return player;
+  }
+
+  return {
+    ...player,
+    hand: [...player.hand, ...player.deck.slice(0, drawAmount)],
+    deck: player.deck.slice(drawAmount),
+  };
+}
+
 export function resolveExecution(state: GameState, playerId: string, executionInstanceId: string): GameState {
   const { player, opponent, isPlayerA } = getPlayerPair(state, playerId);
 
@@ -19,7 +32,7 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
   }
 
   const effect = executionEntity.card.effect;
-  let newPlayerHealth = player.healthPoints;
+  let updatedPlayer: IPlayer = player;
   let newOpponentHealth = opponent.healthPoints;
 
   switch (effect.action) {
@@ -28,23 +41,71 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
         newOpponentHealth = Math.max(0, opponent.healthPoints - effect.value);
       }
       if (effect.target === "PLAYER") {
-        newPlayerHealth = Math.max(0, player.healthPoints - effect.value);
+        updatedPlayer = {
+          ...updatedPlayer,
+          healthPoints: Math.max(0, updatedPlayer.healthPoints - effect.value),
+        };
       }
       break;
     case "HEAL":
       if (effect.target === "PLAYER") {
-        newPlayerHealth = Math.min(player.maxHealthPoints, player.healthPoints + effect.value);
+        updatedPlayer = {
+          ...updatedPlayer,
+          healthPoints: Math.min(updatedPlayer.maxHealthPoints, updatedPlayer.healthPoints + effect.value),
+        };
       }
+      break;
+    case "DRAW_CARD":
+      updatedPlayer = drawCards(updatedPlayer, effect.cards);
+      break;
+    case "BOOST_ATTACK_ALLIED_ENTITY": {
+      const bestEntity = updatedPlayer.activeEntities.reduce<IPlayer["activeEntities"][number] | null>(
+        (best, entity) => {
+          if (!best) return entity;
+          return (entity.card.attack ?? 0) > (best.card.attack ?? 0) ? entity : best;
+        },
+        null,
+      );
+      if (bestEntity) {
+        updatedPlayer = {
+          ...updatedPlayer,
+          activeEntities: updatedPlayer.activeEntities.map((entity) =>
+            entity.instanceId === bestEntity.instanceId
+              ? { ...entity, card: { ...entity.card, attack: (entity.card.attack ?? 0) + effect.value } }
+              : entity,
+          ),
+        };
+      }
+      break;
+    }
+    case "BOOST_DEFENSE_BY_ARCHETYPE":
+      updatedPlayer = {
+        ...updatedPlayer,
+        activeEntities: updatedPlayer.activeEntities.map((entity) =>
+          entity.card.archetype === effect.archetype
+            ? { ...entity, card: { ...entity.card, defense: (entity.card.defense ?? 0) + effect.value } }
+            : entity,
+        ),
+      };
+      break;
+    case "BOOST_ATTACK_BY_ARCHETYPE":
+      updatedPlayer = {
+        ...updatedPlayer,
+        activeEntities: updatedPlayer.activeEntities.map((entity) =>
+          entity.card.archetype === effect.archetype
+            ? { ...entity, card: { ...entity.card, attack: (entity.card.attack ?? 0) + effect.value } }
+            : entity,
+        ),
+      };
       break;
     default:
       break;
   }
 
-  const updatedPlayer: IPlayer = {
-    ...player,
-    healthPoints: newPlayerHealth,
-    activeExecutions: player.activeExecutions.filter((entity) => entity.instanceId !== executionInstanceId),
-    graveyard: [...player.graveyard, executionEntity.card],
+  updatedPlayer = {
+    ...updatedPlayer,
+    activeExecutions: updatedPlayer.activeExecutions.filter((entity) => entity.instanceId !== executionInstanceId),
+    graveyard: [...updatedPlayer.graveyard, executionEntity.card],
   };
 
   const updatedOpponent: IPlayer = {

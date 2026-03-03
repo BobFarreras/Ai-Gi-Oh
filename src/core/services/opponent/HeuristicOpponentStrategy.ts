@@ -59,9 +59,12 @@ function chooseFusionMaterials(opponent: IPlayer, fusionCard: IPlayer["hand"][nu
   const validPair = pairs.find(([a, b]) => {
     const materials = [a, b];
     if (recipe.requiredArchetypes) {
-      const archetypes = materials.map((material) => material.card.archetype ?? "");
       const pending = [...recipe.requiredArchetypes];
-      for (const archetype of archetypes) {
+      for (const material of materials) {
+        const archetype = material.card.archetype;
+        if (!archetype) {
+          continue;
+        }
         const index = pending.indexOf(archetype);
         if (index >= 0) pending.splice(index, 1);
       }
