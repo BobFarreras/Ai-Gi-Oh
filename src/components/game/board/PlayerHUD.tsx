@@ -14,6 +14,7 @@ interface PlayerHUDProps {
   badgeText?: string;
   wasDamagedThisAction?: boolean;
   damagePulseKey?: string | null;
+  damageAmount?: number | null;
 }
 
 export function PlayerHUD({
@@ -23,6 +24,7 @@ export function PlayerHUD({
   badgeText,
   wasDamagedThisAction = false,
   damagePulseKey = null,
+  damageAmount = null,
 }: PlayerHUDProps) {
   const prevHp = useRef(player.healthPoints);
   const [damageTaken, setDamageTaken] = useState<number | null>(null);
@@ -30,21 +32,30 @@ export function PlayerHUD({
 
   // Hook para detectar daño y disparar la animación
   useEffect(() => {
-    if (!wasDamagedThisAction || player.healthPoints >= prevHp.current) {
+    if (!wasDamagedThisAction) {
       prevHp.current = player.healthPoints;
       return;
     }
 
-    const damage = prevHp.current - player.healthPoints;
-    setDamageTaken(damage);
-    setIsShaking(true);
+    const damage = damageAmount ?? Math.max(0, prevHp.current - player.healthPoints);
+    if (damage <= 0) {
+      prevHp.current = player.healthPoints;
+      return;
+    }
+    const startId = setTimeout(() => {
+      setDamageTaken(damage);
+      setIsShaking(true);
+    }, 0);
     const timer = setTimeout(() => {
       setDamageTaken(null);
       setIsShaking(false);
     }, 1500);
     prevHp.current = player.healthPoints;
-    return () => clearTimeout(timer);
-  }, [damagePulseKey, player.healthPoints, wasDamagedThisAction]);
+    return () => {
+      clearTimeout(startId);
+      clearTimeout(timer);
+    };
+  }, [damageAmount, damagePulseKey, player.healthPoints, wasDamagedThisAction]);
 
   const healthPercentage = Math.max(0, Math.min(100, (player.healthPoints / player.maxHealthPoints) * 100));
 

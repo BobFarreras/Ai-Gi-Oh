@@ -1,35 +1,43 @@
 # Game Engine Module
 
-Este módulo contiene los casos de uso puros del motor.
+Casos de uso puros del motor, organizados por responsabilidad.
 
-## Objetivo
+## Estructura
 
-1. Mantener reglas de juego sin dependencias de React.
-2. Exponer operaciones atómicas sobre `GameState`.
-3. Permitir testeo unitario/integración con entrada-salida determinista.
+1. `state/`
+   - `types.ts`: `GameState`, fases y acciones pendientes.
+   - `player-utils.ts`: utilidades de resolución/asignación de jugadores.
+   - `create-initial-game-state.ts`: bootstrap de estado inicial.
 
-## Archivos clave
+2. `actions/`
+   - `play-card.ts`
+   - `play-card-with-entity-replacement.ts`
+   - `change-entity-mode.ts`
+   - `resolve-execution.ts`
 
-1. `types.ts`: contrato de `GameState` y fases.
-2. `play-card.ts`: validación y despliegue de cartas.
-3. `execute-attack.ts`: resolución de combate.
-4. `resolve-execution.ts`: efectos de ejecución.
-5. `next-phase.ts`: progresión de subfases (`MAIN_1`, `BATTLE`) y paso de turno.
-6. `change-entity-mode.ts`: cambios de modo en tablero.
-7. `player-utils.ts`: utilidades de asignación por jugador.
-8. `resolve-pending-turn-action.ts`: resolución de acciones obligatorias antes del robo.
-9. `play-card-with-entity-replacement.ts`: invocación de entidad reemplazando otra en campo lleno.
+3. `phases/`
+   - `next-phase.ts`
+   - `resolve-pending-turn-action.ts`
+
+4. `combat/`
+   - `execute-attack.ts`
+
+5. `fusion/`
+   - `fusion-recipes.ts`
+   - `fuse-cards.ts`
+
+6. `logging/`
+   - `combat-log.ts`
 
 ## Invariantes
 
-1. `GameState` es inmutable: siempre retorna nuevo estado.
-2. Solo el jugador activo puede ejecutar acciones de turno.
-3. Se respetan límites de zonas y energía.
+1. `GameState` es inmutable.
+2. Solo jugador activo puede actuar.
+3. Con `pendingTurnAction` no se puede avanzar turno ni jugar/atacar.
 4. Errores de dominio tipados (`ValidationError`, `GameRuleError`, `NotFoundError`).
-5. El turno no puede avanzar ni jugar cartas/ataques si existe `pendingTurnAction`.
 
-## Evolución segura
+## Guía de extensión
 
-1. Nuevas reglas deben entrar como casos de uso pequeños, no en `GameEngine.ts` directamente.
-2. `GameEngine.ts` funciona como fachada estable para UI y tests.
-3. Cada nueva regla requiere test unitario y, si afecta flujo, test de integración.
+1. Regla nueva: crear caso de uso en submódulo correcto.
+2. Exponerlo vía `GameEngine.ts` (fachada).
+3. Añadir test unitario + test de integración si toca flujo completo.

@@ -1,6 +1,6 @@
-import { BattleMode, IBoardEntity, IPlayer } from "../../entities/IPlayer";
-import { GameState } from "./types";
-import { getPlayerPair } from "./player-utils";
+import { BattleMode, IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
+import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
+import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function updateEntityModes(entities: IBoardEntity[], instanceId: string, newMode: BattleMode): IBoardEntity[] {
   return entities.map((entity) => (entity.instanceId === instanceId ? { ...entity, mode: newMode } : entity));

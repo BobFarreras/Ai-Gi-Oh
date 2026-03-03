@@ -22,6 +22,10 @@ interface BattlefieldProps {
   selectedCard: ICard | null;
   revealedEntities?: string[];
   highlightedPlayerEntityIds?: string[];
+  damagedPlayerId?: string | null;
+  damageEventId?: string | null;
+  playerId: string;
+  opponentId: string;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => void;
 }
 
@@ -40,6 +44,10 @@ export function Battlefield({
   selectedCard,
   revealedEntities = [],
   highlightedPlayerEntityIds = [],
+  damagedPlayerId = null,
+  damageEventId = null,
+  playerId,
+  opponentId,
   onEntityClick,
 }: BattlefieldProps) {
   const [zoom, setZoom] = useState(1);
@@ -77,6 +85,8 @@ export function Battlefield({
             selectedCard={selectedCard}
             revealedEntities={revealedEntities}
             highlightedEntityIds={[]}
+            shouldDamageFlash={damagedPlayerId === opponentId}
+            damageEventId={damageEventId}
             onEntityClick={onEntityClick}
           />
 
@@ -93,6 +103,8 @@ export function Battlefield({
             selectedCard={selectedCard}
             revealedEntities={revealedEntities}
             highlightedEntityIds={highlightedPlayerEntityIds}
+            shouldDamageFlash={damagedPlayerId === playerId}
+            damageEventId={damageEventId}
             onEntityClick={onEntityClick}
           />
         </div>

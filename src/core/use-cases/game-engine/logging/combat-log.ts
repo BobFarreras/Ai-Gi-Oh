@@ -1,5 +1,5 @@
 import { CombatLogEventType, ICombatLogEvent } from "@/core/entities/ICombatLog";
-import { GameState } from "./types";
+import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function createCombatLogEvent(
   state: GameState,

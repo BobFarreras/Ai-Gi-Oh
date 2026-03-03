@@ -57,7 +57,9 @@ describe('Componente UI: Board y Subcomponentes', () => {
       opponentDifficulty: "EASY",
       isPlayerTurn: true,
       lastDamageTargetPlayerId: null,
+      lastDamageAmount: null,
       lastDamageEventId: null,
+      winnerPlayerId: null,
       resolvePendingTurnAction: vi.fn(),
       resolvePendingHandDiscard: vi.fn(),
       setIsHistoryOpen: vi.fn(),
@@ -68,6 +70,7 @@ describe('Componente UI: Board y Subcomponentes', () => {
       handleEntityClick: vi.fn(),
       advancePhase: vi.fn(),
       handleTimerExpired: vi.fn(),
+      restartMatch: vi.fn(),
     });
   });
 

@@ -75,9 +75,15 @@ Guía rápida para entender la lógica de tablero y batalla.
 ## Feedback visual
 
 1. `PlayerHUD` solo parpadea en rojo para el jugador realmente dañado en la última acción.
+2. La zona del tablero del jugador dañado también recibe flash rojo localizado.
 2. `SidePanels` incluye filtros por turno y actor para depurar partidas.
-3. `BattleBannerCenter` muestra eventos críticos (turno/fase/ataque/daño/acción obligatoria).
+3. `BattleBannerCenter` muestra solo turno y subturno (fase), con transición de entrada/salida.
 4. `GraveyardTransitionLayer` anima cualquier evento `CARD_TO_GRAVEYARD` (descarte, sacrificio, destrucción, fusión).
+
+## Sonido y resultado
+
+1. `useGameAudio` reproduce efectos según `combatLog`.
+2. El fin de partida muestra `DuelResultOverlay` central y bloquea acciones.
 
 ## Dónde tocar cada cosa
 

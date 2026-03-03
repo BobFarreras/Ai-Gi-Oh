@@ -1,7 +1,7 @@
-import { IBoardEntity, IPlayer } from "../../entities/IPlayer";
-import { GameRuleError } from "../../errors/GameRuleError";
-import { appendCombatLogEvent } from "./combat-log";
-import { GameState } from "./types";
+import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
+import { GameRuleError } from "@/core/errors/GameRuleError";
+import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
+import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function resetEntitiesForNewTurn(entities: IBoardEntity[]): IBoardEntity[] {
   return entities.map((entity) => ({

@@ -57,3 +57,20 @@
 ## 11. Accesibilidad y Testabilidad de UI
 * Todo elemento interactivo (`button`, `input`, `select`, `a`) debe tener nombre accesible (`aria-label`, texto visible o asociación correcta con `label`).
 * Los tests de UI deben priorizar queries semánticas (`getByRole`, `getByLabelText`, `getByText`) y evitar selectores frágiles por clase CSS.
+
+## 12. Estructura recomendada del motor (`game-engine/`)
+* Organizar por subdominios:
+  * `state/`
+  * `actions/`
+  * `phases/`
+  * `combat/`
+  * `fusion/`
+  * `logging/`
+* Evitar volver a mezclar lógica de diferentes dominios en la raíz de `game-engine/`.
+
+## 13. Eventos de UX obligatorios
+* Cualquier cambio relevante de turno/fase/combate debe reflejarse en `combatLog`.
+* El `combatLog` es la fuente única para:
+  * historial visual,
+  * carteleras de estado,
+  * efectos de sonido/feedback.

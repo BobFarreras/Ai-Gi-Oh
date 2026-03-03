@@ -30,7 +30,13 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
  │   ├── services/
  │   │   └── opponent/                     # IA heurística (sin LLM)
  │   └── use-cases/
- │       ├── game-engine/                  # Casos de uso modulares del motor
+ │       ├── game-engine/                  # Casos de uso modulares por dominio
+ │       │   ├── state/
+ │       │   ├── actions/
+ │       │   ├── phases/
+ │       │   ├── combat/
+ │       │   ├── fusion/
+ │       │   └── logging/
  │       ├── CombatService.ts
  │       └── GameEngine.ts                 # Fachada estable
  │
@@ -68,6 +74,13 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
 2. `SidePanels` muestra historial con filtros de turno y actor.
 3. `BattleBannerCenter` consume eventos críticos para mostrar carteleras centrales en tiempo real.
 4. `GraveyardTransitionLayer` reutiliza eventos `CARD_TO_GRAVEYARD` para animación genérica de descarte/destrucción/sacrificio.
+5. `useGameAudio` consume `combatLog` para efectos de sonido por eventos y fin de duelo.
+
+## Fin de partida
+
+1. El ganador se deriva desde `healthPoints <= 0`.
+2. Se bloquean acciones al finalizar.
+3. `DuelResultOverlay` renderiza resultado central y reinicio de partida.
 
 ## Documentación modular
 

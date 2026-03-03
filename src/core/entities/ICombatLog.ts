@@ -1,4 +1,4 @@
-import { TurnPhase } from "@/core/use-cases/game-engine/types";
+import { TurnPhase } from "@/core/use-cases/game-engine/state/types";
 
 export type CombatLogEventType =
   | "TURN_STARTED"

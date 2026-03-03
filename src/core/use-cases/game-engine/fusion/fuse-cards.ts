@@ -2,10 +2,10 @@ import { BattleMode, IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ValidationError } from "@/core/errors/ValidationError";
-import { appendCombatLogEvent } from "./combat-log";
-import { getFusionRecipe } from "./fusion-recipes";
-import { assignPlayers, getPlayerPair } from "./player-utils";
-import { GameState } from "./types";
+import { getFusionRecipe } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
+import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
+import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
+import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function validateRecipe(player: IPlayer, materialIds: string[], fusionCardId: string): void {
   const fusionCard = player.hand.find((card) => card.id === fusionCardId);

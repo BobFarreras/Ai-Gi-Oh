@@ -42,12 +42,12 @@ export function buildBannerMessage(event: ICombatLogEvent, labels: IPlayerLabels
     return { left: "Cambio de turno", right: actor };
   }
 
-  if (event.eventType === "ATTACK_DECLARED") {
-    return { left: actor, right: "declara ataque" };
-  }
-
-  if (event.eventType === "BATTLE_RESOLVED") {
-    return { left: "Combate", right: "resuelto" };
+  if (event.eventType === "PHASE_CHANGED") {
+    const toPhase =
+      typeof event.payload === "object" && event.payload !== null && "toPhase" in event.payload
+        ? String((event.payload as Record<string, unknown>).toPhase)
+        : event.phase;
+    return { left: actor, right: `Fase ${toPhase === "MAIN_1" ? "Despliegue" : "Combate"}` };
   }
 
   return null;

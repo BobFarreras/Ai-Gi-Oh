@@ -9,6 +9,7 @@ interface IUseOpponentTurnParams {
   gameState: GameState;
   isAnimating: boolean;
   strategy: IOpponentStrategy;
+  duelWinnerId: string | null;
   applyTransition: (transition: (state: GameState) => GameState) => GameState | null;
   clearSelection: () => void;
   clearError: () => void;
@@ -53,6 +54,7 @@ export function useOpponentTurn({
   gameState,
   isAnimating,
   strategy,
+  duelWinnerId,
   applyTransition,
   clearSelection,
   clearError,
@@ -61,7 +63,7 @@ export function useOpponentTurn({
   setRevealedEntities,
 }: IUseOpponentTurnParams): void {
   useEffect(() => {
-    if (isAnimating || gameState.activePlayerId !== gameState.playerB.id) {
+    if (duelWinnerId || isAnimating || gameState.activePlayerId !== gameState.playerB.id) {
       return;
     }
 
@@ -206,5 +208,6 @@ export function useOpponentTurn({
     setIsAnimating,
     setRevealedEntities,
     strategy,
+    duelWinnerId,
   ]);
 }

@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Swords } from "lucide-react";
-import { TurnPhase } from "@/core/use-cases/game-engine/types";
+import { TurnPhase } from "@/core/use-cases/game-engine/state/types";
 
 const PHASE_DESCRIPTIONS: Record<TurnPhase, string> = {
   MAIN_1: "FASE DE PREPARACIÓN (Invoca o Coloca Entidades)",

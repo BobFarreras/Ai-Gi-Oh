@@ -32,6 +32,18 @@ export function useBoard() {
     [opponentDifficulty],
   );
   const isPlayerTurn = gameState.activePlayerId === gameState.playerA.id;
+  const winnerPlayerId = useMemo(() => {
+    if (gameState.playerA.healthPoints <= 0 && gameState.playerB.healthPoints <= 0) {
+      return "DRAW";
+    }
+    if (gameState.playerA.healthPoints <= 0) {
+      return gameState.playerB.id;
+    }
+    if (gameState.playerB.healthPoints <= 0) {
+      return gameState.playerA.id;
+    }
+    return null;
+  }, [gameState.playerA.healthPoints, gameState.playerA.id, gameState.playerB.healthPoints, gameState.playerB.id]);
   const lastDamageEvent = useMemo(
     () =>
       [...gameState.combatLog]
@@ -56,6 +68,13 @@ export function useBoard() {
     setLastError(null);
   }, []);
 
+  const restartMatch = useCallback(() => {
+    setGameState(initialGameState);
+    gameStateRef.current = initialGameState;
+    clearSelection();
+    clearError();
+  }, [clearError, clearSelection]);
+
   const applyTransition = useCallback((transition: (state: GameState) => GameState): GameState | null => {
     try {
       const nextState = transition(gameStateRef.current);
@@ -69,13 +88,18 @@ export function useBoard() {
   }, []);
 
   const assertPlayerTurn = useCallback((): boolean => {
+    if (winnerPlayerId) {
+      setLastError({ code: "GAME_RULE_ERROR", message: "La partida ya terminó." });
+      return false;
+    }
+
     if (gameStateRef.current.activePlayerId === gameStateRef.current.playerA.id) {
       return true;
     }
 
     setLastError({ code: "GAME_RULE_ERROR", message: "No es tu turno. Espera a que el rival termine su fase." });
     return false;
-  }, []);
+  }, [winnerPlayerId]);
 
   useEffect(() => {
     if (!lastError) return;
@@ -87,6 +111,7 @@ export function useBoard() {
     gameState,
     isAnimating,
     strategy: opponentStrategy,
+    duelWinnerId: winnerPlayerId,
     applyTransition,
     clearSelection,
     clearError,
@@ -96,7 +121,7 @@ export function useBoard() {
   });
 
   const advancePhase = useCallback(() => {
-    if (isAnimating || !assertPlayerTurn()) {
+    if (winnerPlayerId || isAnimating || !assertPlayerTurn()) {
       return;
     }
 
@@ -107,7 +132,7 @@ export function useBoard() {
 
     clearSelection();
     clearError();
-  }, [applyTransition, assertPlayerTurn, clearError, clearSelection, isAnimating]);
+  }, [applyTransition, assertPlayerTurn, clearError, clearSelection, isAnimating, winnerPlayerId]);
 
   const resolvePendingTurnAction = useCallback(
     (selectedId: string) => {
@@ -127,7 +152,7 @@ export function useBoard() {
   );
 
   const handleTimerExpired = useCallback(() => {
-    if (!isPlayerTurn || isAnimating) {
+    if (winnerPlayerId || !isPlayerTurn || isAnimating) {
       return;
     }
 
@@ -149,7 +174,7 @@ export function useBoard() {
     }
 
     advancePhase();
-  }, [advancePhase, isAnimating, isPlayerTurn, resolvePendingTurnAction]);
+  }, [advancePhase, isAnimating, isPlayerTurn, resolvePendingTurnAction, winnerPlayerId]);
 
   const resolvePendingHandDiscard = useCallback(
     (cardId: string) => {
@@ -217,11 +242,17 @@ export function useBoard() {
           : [],
     opponentDifficulty,
     isPlayerTurn,
+    winnerPlayerId,
     lastDamageTargetPlayerId:
       lastDamageEvent && typeof lastDamageEvent.payload === "object" && lastDamageEvent.payload !== null && "targetPlayerId" in lastDamageEvent.payload
         ? String(lastDamageEvent.payload.targetPlayerId)
         : null,
+    lastDamageAmount:
+      lastDamageEvent && typeof lastDamageEvent.payload === "object" && lastDamageEvent.payload !== null && "amount" in lastDamageEvent.payload
+        ? Number(lastDamageEvent.payload.amount)
+        : null,
     lastDamageEventId: lastDamageEvent?.id ?? null,
+    restartMatch,
     setIsHistoryOpen,
     toggleCardSelection,
     clearSelection,

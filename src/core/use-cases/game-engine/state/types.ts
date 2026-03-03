@@ -1,5 +1,5 @@
-import { IPlayer } from "../../entities/IPlayer";
-import { ICombatLogEvent } from "../../entities/ICombatLog";
+import { ICombatLogEvent } from "@/core/entities/ICombatLog";
+import { IPlayer } from "@/core/entities/IPlayer";
 
 export type TurnPhase = "MAIN_1" | "BATTLE";
 

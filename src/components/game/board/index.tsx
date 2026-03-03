@@ -9,8 +9,10 @@ import { useBoard } from "./hooks/useBoard";
 import { OpponentHandFan } from "./ui/OpponentHandFan";
 import { BattleBannerCenter } from "./ui/BattleBannerCenter";
 import { GraveyardTransitionLayer } from "./ui/GraveyardTransitionLayer";
+import { DuelResultOverlay } from "./ui/DuelResultOverlay";
 import { PhasePanel } from "./ui/PhasePanel";
 import { TurnTimer } from "./ui/TurnTimer";
+import { useGameAudio } from "./hooks/internal/useGameAudio";
 
 export function Board() {
   const {
@@ -36,11 +38,20 @@ export function Board() {
     isPlayerTurn,
     handleTimerExpired,
     lastDamageTargetPlayerId,
+    lastDamageAmount,
     lastDamageEventId,
+    winnerPlayerId,
+    restartMatch,
   } = useBoard();
 
   const player = gameState.playerA;
   const opponent = gameState.playerB;
+  const { playTimerExpired } = useGameAudio({
+    combatLog: gameState.combatLog,
+    winnerPlayerId,
+    playerAId: player.id,
+    playerBId: opponent.id,
+  });
 
   return (
     <div className="relative w-full h-screen bg-[#020305] overflow-hidden font-sans cursor-crosshair" onClick={clearSelection}>
@@ -94,7 +105,10 @@ export function Board() {
           </div>
           <TurnTimer
             key={`${gameState.turn}-${gameState.phase}-${gameState.pendingTurnAction?.type ?? "NONE"}-${gameState.pendingTurnAction?.playerId ?? "NONE"}`}
-            onTimeUp={handleTimerExpired}
+            onTimeUp={() => {
+              playTimerExpired();
+              handleTimerExpired();
+            }}
             isActive={isPlayerTurn}
           />
         </div>
@@ -114,6 +128,7 @@ export function Board() {
         isActiveTurn={gameState.activePlayerId === opponent.id}
         badgeText={`Dificultad ${opponentDifficulty}`}
         wasDamagedThisAction={lastDamageTargetPlayerId === opponent.id}
+        damageAmount={lastDamageAmount}
         damagePulseKey={lastDamageEventId}
       />
       <PlayerHUD
@@ -121,6 +136,7 @@ export function Board() {
         player={player}
         isActiveTurn={isPlayerTurn}
         wasDamagedThisAction={lastDamageTargetPlayerId === player.id}
+        damageAmount={lastDamageAmount}
         damagePulseKey={lastDamageEventId}
       />
 
@@ -140,6 +156,10 @@ export function Board() {
           selectedCard={selectedCard}
           revealedEntities={revealedEntities}
           highlightedPlayerEntityIds={pendingEntitySelectionIds}
+          damagedPlayerId={lastDamageTargetPlayerId}
+          damageEventId={lastDamageEventId}
+          playerId={player.id}
+          opponentId={opponent.id}
           onEntityClick={handleEntityClick}
         />
       </div>
@@ -177,6 +197,13 @@ export function Board() {
           <History size={24} />
         </button>
       )}
+
+      <DuelResultOverlay
+        winnerPlayerId={winnerPlayerId}
+        playerA={player}
+        playerB={opponent}
+        onRestart={restartMatch}
+      />
     </div>
   );
 }

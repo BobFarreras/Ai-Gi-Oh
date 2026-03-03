@@ -1,6 +1,6 @@
-import { IPlayer } from "../../entities/IPlayer";
-import { ValidationError } from "../../errors/ValidationError";
-import { GameState } from "./types";
+import { IPlayer } from "@/core/entities/IPlayer";
+import { ValidationError } from "@/core/errors/ValidationError";
+import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 export interface IPlayerPair {
   player: IPlayer;

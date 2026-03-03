@@ -4,7 +4,7 @@ import { IOpponentAttackDecision, IOpponentPlayDecision, IOpponentStrategy } fro
 import { getDifficultyProfile } from "./difficulty/difficultyProfiles";
 import { IOpponentDifficultyProfile, OpponentDifficulty } from "./difficulty/types";
 import { chooseBestAttack } from "./attackEvaluator";
-import { getFusionRecipe } from "@/core/use-cases/game-engine/fusion-recipes";
+import { getFusionRecipe } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 
 function getPlayers(state: GameState, opponentId: string): { opponent: IPlayer; target: IPlayer } {
   if (state.playerA.id === opponentId) {

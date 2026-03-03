@@ -1,9 +1,9 @@
-import { IPlayer } from "../../entities/IPlayer";
-import { GameRuleError } from "../../errors/GameRuleError";
-import { NotFoundError } from "../../errors/NotFoundError";
-import { appendCombatLogEvent } from "./combat-log";
-import { assignPlayers, getPlayerPair } from "./player-utils";
-import { GameState } from "./types";
+import { IPlayer } from "@/core/entities/IPlayer";
+import { GameRuleError } from "@/core/errors/GameRuleError";
+import { NotFoundError } from "@/core/errors/NotFoundError";
+import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
+import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
+import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function drawCard(player: IPlayer): IPlayer {
   const nextCard = player.deck[0];

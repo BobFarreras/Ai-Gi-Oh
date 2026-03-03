@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { ICard } from "@/core/entities/ICard";
-import { createInitialGameState } from "./create-initial-game-state";
+import { createInitialGameState } from "./state/create-initial-game-state";
 
 function createDeck(prefix: string, size: number): ICard[] {
   return Array.from({ length: size }).map((_, index) => ({

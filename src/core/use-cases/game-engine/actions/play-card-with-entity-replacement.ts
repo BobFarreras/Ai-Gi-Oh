@@ -1,11 +1,11 @@
-import { BattleMode, IPlayer } from "../../entities/IPlayer";
-import { GameRuleError } from "../../errors/GameRuleError";
-import { NotFoundError } from "../../errors/NotFoundError";
-import { ValidationError } from "../../errors/ValidationError";
-import { appendCombatLogEvent } from "./combat-log";
-import { assignPlayers, getPlayerPair } from "./player-utils";
-import { GameState } from "./types";
-import { playCard } from "./play-card";
+import { BattleMode, IPlayer } from "@/core/entities/IPlayer";
+import { GameRuleError } from "@/core/errors/GameRuleError";
+import { NotFoundError } from "@/core/errors/NotFoundError";
+import { ValidationError } from "@/core/errors/ValidationError";
+import { playCard } from "@/core/use-cases/game-engine/actions/play-card";
+import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
+import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
+import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 export function playCardWithEntityReplacement(
   state: GameState,

@@ -1,14 +1,14 @@
 import { BattleMode } from "../entities/IPlayer";
-import { createInitialGameState } from "./game-engine/create-initial-game-state";
-import { changeEntityMode } from "./game-engine/change-entity-mode";
-import { executeAttack } from "./game-engine/execute-attack";
-import { fuseCards } from "./game-engine/fuse-cards";
-import { nextPhase } from "./game-engine/next-phase";
-import { playCard } from "./game-engine/play-card";
-import { playCardWithEntityReplacement } from "./game-engine/play-card-with-entity-replacement";
-import { resolvePendingTurnAction } from "./game-engine/resolve-pending-turn-action";
-import { resolveExecution } from "./game-engine/resolve-execution";
-import { GameState } from "./game-engine/types";
+import { changeEntityMode } from "./game-engine/actions/change-entity-mode";
+import { playCard } from "./game-engine/actions/play-card";
+import { playCardWithEntityReplacement } from "./game-engine/actions/play-card-with-entity-replacement";
+import { resolveExecution } from "./game-engine/actions/resolve-execution";
+import { executeAttack } from "./game-engine/combat/execute-attack";
+import { fuseCards } from "./game-engine/fusion/fuse-cards";
+import { nextPhase } from "./game-engine/phases/next-phase";
+import { resolvePendingTurnAction } from "./game-engine/phases/resolve-pending-turn-action";
+import { createInitialGameState } from "./game-engine/state/create-initial-game-state";
+import { GameState } from "./game-engine/state/types";
 
 export type { GameState };
 

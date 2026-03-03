@@ -1,10 +1,10 @@
-import { BattleMode, IBoardEntity, IPlayer } from "../../entities/IPlayer";
-import { GameRuleError } from "../../errors/GameRuleError";
-import { NotFoundError } from "../../errors/NotFoundError";
-import { ValidationError } from "../../errors/ValidationError";
-import { appendCombatLogEvent } from "./combat-log";
-import { GameState } from "./types";
-import { getPlayerPair } from "./player-utils";
+import { BattleMode, IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
+import { GameRuleError } from "@/core/errors/GameRuleError";
+import { NotFoundError } from "@/core/errors/NotFoundError";
+import { ValidationError } from "@/core/errors/ValidationError";
+import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
+import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
+import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function validateEntityPlay(state: GameState, player: IPlayer, mode: BattleMode): void {
   if (state.hasNormalSummonedThisTurn) {

@@ -105,3 +105,20 @@ El motor registra eventos técnicos para trazabilidad y UI:
 4. Los materiales van al cementerio y se registra:
    - `CARD_TO_GRAVEYARD` por cada material,
    - `FUSION_SUMMONED` para la invocación.
+
+## 11. Fin de partida
+
+1. Si `healthPoints` de un jugador llega a `0`, la partida termina.
+2. Se bloquean nuevas acciones de juego hasta reinicio.
+3. Se muestra overlay central de resultado (`victoria`, `derrota` o `empate`).
+
+## 12. Sonido del tablero
+
+1. Sonido ambiental de fondo (sintético con WebAudio).
+2. Efectos por eventos:
+   - cambio de turno/fase,
+   - jugar carta/invocar,
+   - daño directo,
+   - fusión,
+   - fin de tiempo de turno,
+   - fin de partida.
