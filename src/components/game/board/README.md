@@ -140,3 +140,5 @@ Guía rápida para entender la lógica de tablero y batalla.
 2. Decisiones del rival: `src/core/services/opponent/*`.
 3. Ritmo visual de acciones rival: `src/components/game/board/hooks/internal/useOpponentTurn.ts`.
 4. Render y animación de campo: `src/components/game/board/battlefield/*`.
+5. Subcomponentes internos de UI del historial: `src/components/game/board/ui/internal/combat-log-row/*`.
+6. Subcomponentes internos de zona de batalla: `src/components/game/board/battlefield/internal/*`.
