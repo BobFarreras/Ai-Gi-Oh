@@ -55,6 +55,20 @@ export function useBoard() {
         .find((event) => event.eventType === "DIRECT_DAMAGE" && typeof event.payload === "object" && event.payload !== null),
     [gameState.combatLog],
   );
+  const lastHealEvent = useMemo(
+    () =>
+      [...gameState.combatLog]
+        .reverse()
+        .find((event) => event.eventType === "HEAL_APPLIED" && typeof event.payload === "object" && event.payload !== null),
+    [gameState.combatLog],
+  );
+  const lastStatBuffEvent = useMemo(
+    () =>
+      [...gameState.combatLog]
+        .reverse()
+        .find((event) => event.eventType === "STAT_BUFF_APPLIED" && typeof event.payload === "object" && event.payload !== null),
+    [gameState.combatLog],
+  );
 
   useEffect(() => {
     gameStateRef.current = gameState;
@@ -268,6 +282,40 @@ export function useBoard() {
         ? Number(lastDamageEvent.payload.amount)
         : null,
     lastDamageEventId: lastDamageEvent?.id ?? null,
+    lastHealTargetPlayerId:
+      lastHealEvent && typeof lastHealEvent.payload === "object" && lastHealEvent.payload !== null && "targetPlayerId" in lastHealEvent.payload
+        ? String(lastHealEvent.payload.targetPlayerId)
+        : null,
+    lastHealAmount:
+      lastHealEvent && typeof lastHealEvent.payload === "object" && lastHealEvent.payload !== null && "amount" in lastHealEvent.payload
+        ? Number(lastHealEvent.payload.amount)
+        : null,
+    lastHealEventId: lastHealEvent?.id ?? null,
+    lastBuffTargetEntityIds:
+      lastStatBuffEvent &&
+      typeof lastStatBuffEvent.payload === "object" &&
+      lastStatBuffEvent.payload !== null &&
+      "targetEntityIds" in lastStatBuffEvent.payload &&
+      Array.isArray(lastStatBuffEvent.payload.targetEntityIds)
+        ? lastStatBuffEvent.payload.targetEntityIds
+            .map((value) => (typeof value === "string" ? value : null))
+            .filter((value): value is string => value !== null)
+        : [],
+    lastBuffStat:
+      lastStatBuffEvent &&
+      typeof lastStatBuffEvent.payload === "object" &&
+      lastStatBuffEvent.payload !== null &&
+      "stat" in lastStatBuffEvent.payload
+        ? String(lastStatBuffEvent.payload.stat)
+        : null,
+    lastBuffAmount:
+      lastStatBuffEvent &&
+      typeof lastStatBuffEvent.payload === "object" &&
+      lastStatBuffEvent.payload !== null &&
+      "amount" in lastStatBuffEvent.payload
+        ? Number(lastStatBuffEvent.payload.amount)
+        : null,
+    lastBuffEventId: lastStatBuffEvent?.id ?? null,
     restartMatch,
     toggleMute,
     setIsHistoryOpen,

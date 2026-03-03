@@ -71,14 +71,25 @@ Guía rápida para entender la lógica de tablero y batalla.
 
 6. `lastDamageTargetPlayerId`
    - Derivado de `combatLog` para aplicar feedback de daño solo al HUD correcto.
+7. `lastHealTargetPlayerId`
+   - Derivado de `combatLog` para mostrar animación de curación `+LP` en el HUD del jugador curado.
+8. `lastBuffTargetEntityIds`
+   - Derivado de `combatLog` para resaltar temporalmente entidades que reciben buff (`ATK` rojo, `DEF` azul).
 
 ## Feedback visual
 
 1. `PlayerHUD` solo parpadea en rojo para el jugador realmente dañado en la última acción.
 2. La zona del tablero del jugador dañado también recibe flash rojo localizado.
-2. `SidePanels` incluye filtros por turno y actor para depurar partidas.
-3. `BattleBannerCenter` muestra solo turno y subturno (fase), con transición de entrada/salida.
-4. `GraveyardTransitionLayer` anima cualquier evento `CARD_TO_GRAVEYARD` (descarte, sacrificio, destrucción, fusión).
+3. Las curaciones muestran texto flotante azul `+LP` en el HUD del objetivo.
+4. Los buffs de estadísticas muestran aura temporal en cartas afectadas (ATK rojo, DEF azul).
+5. Las ejecuciones `ACTIVATE` usan VFX por tipo de efecto:
+   - daño directo: haz ofensivo,
+   - curación: pulso azul,
+   - buff de estadísticas: impacto energético rojo/azul y número `+valor` grande sobre entidad objetivo.
+6. El HUD consume deltas (`damageAmount`/`healAmount`) solo por `eventId`, evitando mezclar daño antiguo con curación nueva.
+7. `SidePanels` incluye filtros por turno y actor para depurar partidas.
+8. `BattleBannerCenter` muestra solo turno y subturno (fase), con transición de entrada/salida.
+9. `GraveyardTransitionLayer` anima cualquier evento `CARD_TO_GRAVEYARD` (descarte, sacrificio, destrucción, fusión).
 
 ## Sonido y resultado
 

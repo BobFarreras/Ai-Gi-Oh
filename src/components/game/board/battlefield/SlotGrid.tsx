@@ -4,7 +4,8 @@ import { IBoardEntity } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
 import { Card } from "../../card/Card";
 import { CardBack } from "../../card/CardBack";
-import { DigitalBeam } from "./DigitalBeam";
+import { BuffImpactVfx } from "./BuffImpactVfx";
+import { ExecutionActivationVfx } from "./ExecutionActivationVfx";
 
 interface SlotGridProps {
   entities: IBoardEntity[];
@@ -14,6 +15,10 @@ interface SlotGridProps {
   selectedCard: ICard | null;
   revealedEntities: string[];
   highlightedEntityIds: string[];
+  buffedEntityIds: string[];
+  buffStat: "ATTACK" | "DEFENSE" | null;
+  buffAmount: number | null;
+  buffEventId: string | null;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => void;
 }
 
@@ -25,6 +30,10 @@ export function SlotGrid({
   selectedCard,
   revealedEntities,
   highlightedEntityIds,
+  buffedEntityIds,
+  buffStat,
+  buffAmount,
+  buffEventId,
   onEntityClick,
 }: SlotGridProps) {
   return (
@@ -35,6 +44,7 @@ export function SlotGrid({
         const isRevealed = entity ? revealedEntities.includes(entity.instanceId) : false;
         const isActivating = entity?.mode === "ACTIVATE";
         const isHighlighted = entity ? highlightedEntityIds.includes(entity.instanceId) : false;
+        const isBuffed = entity ? Boolean(buffEventId) && buffedEntityIds.includes(entity.instanceId) : false;
         const isFaceDown = (entity?.mode === "DEFENSE" || entity?.mode === "SET") && !isRevealed;
         const isHorizontal = entity?.mode === "DEFENSE" || (entity?.mode === "SET" && entity.card.type === "ENTITY");
         const targetX = -120 - index * 105;
@@ -45,9 +55,7 @@ export function SlotGrid({
             style={{ transformStyle: "preserve-3d" }}
             className="relative w-24 h-36 border-2 border-cyan-500/30 rounded-lg bg-cyan-950/40 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.15)_inset] group hover:border-cyan-300 transition-colors duration-300"
           >
-            {entity?.mode === "ACTIVATE" && (
-              <DigitalBeam direction={isOpponentSide ? "towards-player" : "towards-opponent"} onComplete={() => undefined} />
-            )}
+            {entity && <ExecutionActivationVfx entity={entity} isOpponentSide={isOpponentSide} />}
 
             <AnimatePresence>
               {entity ? (
@@ -72,6 +80,9 @@ export function SlotGrid({
                   )}
                   onClick={(event) => onEntityClick(entity, isOpponentSide, event)}
                 >
+                  {isBuffed && buffStat && buffEventId && (buffAmount ?? 0) > 0 && (
+                    <BuffImpactVfx eventId={buffEventId} entityId={entity.instanceId} stat={buffStat} amount={buffAmount ?? 0} />
+                  )}
                   <div className="absolute w-full h-full flex items-center justify-center" style={{ backfaceVisibility: "hidden" }}>
                     <Card card={entity.card} isSelected={selectedCard?.id === entity.card.id} boardMode={entity.mode} />
                     {isActivating && (

@@ -91,4 +91,54 @@ describe("resolveExecution effects", () => {
     expect(boosted?.card.attack).toBe(1900);
     expect(notBoosted?.card.attack).toBe(1000);
   });
+
+  it("debería bloquear BOOST_ATTACK_ALLIED_ENTITY sin entidades aliadas", () => {
+    const buffExecution: ICard = {
+      id: "exec-atk-buff-empty",
+      name: "Atk Buff Empty",
+      description: "Buff ataque",
+      type: "EXECUTION",
+      faction: "BIG_TECH",
+      cost: 1,
+      effect: { action: "BOOST_ATTACK_ALLIED_ENTITY", value: 400 },
+    };
+    let state = createState({
+      playerA: {
+        ...createState().playerA,
+        hand: [buffExecution],
+        activeEntities: [],
+      },
+    });
+
+    state = GameEngine.playCard(state, "p1", "exec-atk-buff-empty", "ACTIVATE");
+    expect(() => GameEngine.resolveExecution(state, "p1", state.playerA.activeExecutions[0].instanceId)).toThrow(
+      "No tienes entidades en campo para aumentar ATK.",
+    );
+  });
+
+  it("debería registrar HEAL_APPLIED al resolver curación", () => {
+    const healExecution: ICard = {
+      id: "exec-heal-test",
+      name: "Heal Test",
+      description: "Cura 500.",
+      type: "EXECUTION",
+      faction: "NO_CODE",
+      cost: 1,
+      effect: { action: "HEAL", target: "PLAYER", value: 500 },
+    };
+    let state = createState({
+      playerA: {
+        ...createState().playerA,
+        healthPoints: 7000,
+        hand: [healExecution],
+      },
+    });
+
+    state = GameEngine.playCard(state, "p1", "exec-heal-test", "ACTIVATE");
+    state = GameEngine.resolveExecution(state, "p1", state.playerA.activeExecutions[0].instanceId);
+
+    const healLog = [...state.combatLog].reverse().find((event) => event.eventType === "HEAL_APPLIED");
+    expect(healLog?.payload).toMatchObject({ targetPlayerId: "p1", amount: 500 });
+    expect(state.playerA.healthPoints).toBe(7500);
+  });
 });

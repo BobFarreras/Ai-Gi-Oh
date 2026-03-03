@@ -42,6 +42,10 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
   const effect = executionEntity.card.effect;
   let updatedPlayer: IPlayer = player;
   let newOpponentHealth = opponent.healthPoints;
+  let healApplied = 0;
+  let buffedEntityIds: string[] = [];
+  let buffStat: "ATTACK" | "DEFENSE" | null = null;
+  let buffAmount = 0;
 
   switch (effect.action) {
     case "DAMAGE":
@@ -57,9 +61,11 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
       break;
     case "HEAL":
       if (effect.target === "PLAYER") {
+        const nextHealth = Math.min(updatedPlayer.maxHealthPoints, updatedPlayer.healthPoints + effect.value);
+        healApplied = Math.max(0, nextHealth - updatedPlayer.healthPoints);
         updatedPlayer = {
           ...updatedPlayer,
-          healthPoints: Math.min(updatedPlayer.maxHealthPoints, updatedPlayer.healthPoints + effect.value),
+          healthPoints: nextHealth,
         };
       }
       break;
@@ -67,6 +73,9 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
       updatedPlayer = drawCards(updatedPlayer, effect.cards);
       break;
     case "BOOST_ATTACK_ALLIED_ENTITY": {
+      if (updatedPlayer.activeEntities.length === 0) {
+        throw new GameRuleError("No tienes entidades en campo para aumentar ATK.");
+      }
       const bestEntity = updatedPlayer.activeEntities.reduce<IPlayer["activeEntities"][number] | null>(
         (best, entity) => {
           if (!best) return entity;
@@ -75,6 +84,9 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
         null,
       );
       if (bestEntity) {
+        buffedEntityIds = [bestEntity.instanceId];
+        buffStat = "ATTACK";
+        buffAmount = effect.value;
         updatedPlayer = {
           ...updatedPlayer,
           activeEntities: updatedPlayer.activeEntities.map((entity) =>
@@ -87,6 +99,14 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
       break;
     }
     case "BOOST_DEFENSE_BY_ARCHETYPE":
+      buffedEntityIds = updatedPlayer.activeEntities
+        .filter((entity) => entity.card.archetype === effect.archetype)
+        .map((entity) => entity.instanceId);
+      if (buffedEntityIds.length === 0) {
+        throw new GameRuleError(`No hay entidades ${effect.archetype} para aumentar DEF.`);
+      }
+      buffStat = "DEFENSE";
+      buffAmount = effect.value;
       updatedPlayer = {
         ...updatedPlayer,
         activeEntities: updatedPlayer.activeEntities.map((entity) =>
@@ -97,6 +117,14 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
       };
       break;
     case "BOOST_ATTACK_BY_ARCHETYPE":
+      buffedEntityIds = updatedPlayer.activeEntities
+        .filter((entity) => entity.card.archetype === effect.archetype)
+        .map((entity) => entity.instanceId);
+      if (buffedEntityIds.length === 0) {
+        throw new GameRuleError(`No hay entidades ${effect.archetype} para aumentar ATK.`);
+      }
+      buffStat = "ATTACK";
+      buffAmount = effect.value;
       updatedPlayer = {
         ...updatedPlayer,
         activeEntities: updatedPlayer.activeEntities.map((entity) =>
@@ -131,6 +159,20 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
     withLog = appendCombatLogEvent(withLog, playerId, "DIRECT_DAMAGE", {
       targetPlayerId: effect.target === "OPPONENT" ? opponent.id : player.id,
       amount: effect.value,
+    });
+  }
+  if (healApplied > 0) {
+    withLog = appendCombatLogEvent(withLog, playerId, "HEAL_APPLIED", {
+      targetPlayerId: player.id,
+      amount: healApplied,
+    });
+  }
+  if (buffStat && buffedEntityIds.length > 0) {
+    withLog = appendCombatLogEvent(withLog, playerId, "STAT_BUFF_APPLIED", {
+      ownerPlayerId: player.id,
+      stat: buffStat,
+      amount: buffAmount,
+      targetEntityIds: buffedEntityIds,
     });
   }
 

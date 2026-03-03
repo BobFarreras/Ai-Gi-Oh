@@ -17,7 +17,14 @@ describe("useBoard integración", () => {
 
   it("debería jugar una carta válida desde la mano del jugador", async () => {
     const { result } = renderHook(() => useBoard());
-    const playableCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY" || card.type === "EXECUTION");
+    const playableCard =
+      result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY") ??
+      result.current.gameState.playerA.hand.find(
+        (card) =>
+          card.type === "EXECUTION" &&
+          card.effect !== undefined &&
+          (card.effect.action === "DAMAGE" || card.effect.action === "HEAL" || card.effect.action === "DRAW_CARD"),
+      );
 
     expect(playableCard).toBeDefined();
     if (!playableCard) {

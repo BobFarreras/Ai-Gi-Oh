@@ -24,6 +24,10 @@ interface BattlefieldProps {
   highlightedPlayerEntityIds?: string[];
   damagedPlayerId?: string | null;
   damageEventId?: string | null;
+  buffedEntityIds?: string[];
+  buffStat?: "ATTACK" | "DEFENSE" | null;
+  buffAmount?: number | null;
+  buffEventId?: string | null;
   playerId: string;
   opponentId: string;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => void;
@@ -46,6 +50,10 @@ export function Battlefield({
   highlightedPlayerEntityIds = [],
   damagedPlayerId = null,
   damageEventId = null,
+  buffedEntityIds = [],
+  buffStat = null,
+  buffAmount = null,
+  buffEventId = null,
   playerId,
   opponentId,
   onEntityClick,
@@ -87,6 +95,10 @@ export function Battlefield({
             highlightedEntityIds={[]}
             shouldDamageFlash={damagedPlayerId === opponentId}
             damageEventId={damageEventId}
+            buffedEntityIds={buffedEntityIds}
+            buffStat={buffStat}
+            buffAmount={buffAmount}
+            buffEventId={buffEventId}
             onEntityClick={onEntityClick}
           />
 
@@ -105,6 +117,10 @@ export function Battlefield({
             highlightedEntityIds={highlightedPlayerEntityIds}
             shouldDamageFlash={damagedPlayerId === playerId}
             damageEventId={damageEventId}
+            buffedEntityIds={buffedEntityIds}
+            buffStat={buffStat}
+            buffAmount={buffAmount}
+            buffEventId={buffEventId}
             onEntityClick={onEntityClick}
           />
         </div>

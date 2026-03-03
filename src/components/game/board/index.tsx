@@ -40,6 +40,13 @@ export function Board() {
     lastDamageTargetPlayerId,
     lastDamageAmount,
     lastDamageEventId,
+    lastHealTargetPlayerId,
+    lastHealAmount,
+    lastHealEventId,
+    lastBuffTargetEntityIds,
+    lastBuffStat,
+    lastBuffAmount,
+    lastBuffEventId,
     winnerPlayerId,
     restartMatch,
     isMuted,
@@ -137,6 +144,9 @@ export function Board() {
         wasDamagedThisAction={lastDamageTargetPlayerId === opponent.id}
         damageAmount={lastDamageAmount}
         damagePulseKey={lastDamageEventId}
+        wasHealedThisAction={lastHealTargetPlayerId === opponent.id}
+        healAmount={lastHealAmount}
+        healPulseKey={lastHealEventId}
       />
       <PlayerHUD
         isOpponent={false}
@@ -145,6 +155,9 @@ export function Board() {
         wasDamagedThisAction={lastDamageTargetPlayerId === player.id}
         damageAmount={lastDamageAmount}
         damagePulseKey={lastDamageEventId}
+        wasHealedThisAction={lastHealTargetPlayerId === player.id}
+        healAmount={lastHealAmount}
+        healPulseKey={lastHealEventId}
       />
 
       <div onClick={(event) => event.stopPropagation()}>
@@ -165,6 +178,10 @@ export function Board() {
           highlightedPlayerEntityIds={pendingEntitySelectionIds}
           damagedPlayerId={lastDamageTargetPlayerId}
           damageEventId={lastDamageEventId}
+          buffedEntityIds={lastBuffTargetEntityIds}
+          buffStat={lastBuffStat === "ATTACK" || lastBuffStat === "DEFENSE" ? lastBuffStat : null}
+          buffAmount={lastBuffAmount}
+          buffEventId={lastBuffEventId}
           playerId={player.id}
           opponentId={opponent.id}
           onEntityClick={handleEntityClick}

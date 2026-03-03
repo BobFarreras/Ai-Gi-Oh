@@ -1,11 +1,12 @@
 // src/components/game/board/PlayerHUD.tsx
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
+import { HudFloatingDelta } from "./internal/HudFloatingDelta";
 
 interface PlayerHUDProps {
   isOpponent: boolean;
@@ -15,6 +16,9 @@ interface PlayerHUDProps {
   wasDamagedThisAction?: boolean;
   damagePulseKey?: string | null;
   damageAmount?: number | null;
+  wasHealedThisAction?: boolean;
+  healPulseKey?: string | null;
+  healAmount?: number | null;
 }
 
 export function PlayerHUD({
@@ -25,23 +29,28 @@ export function PlayerHUD({
   wasDamagedThisAction = false,
   damagePulseKey = null,
   damageAmount = null,
+  wasHealedThisAction = false,
+  healPulseKey = null,
+  healAmount = null,
 }: PlayerHUDProps) {
-  const prevHp = useRef(player.healthPoints);
+  const lastProcessedDamageEventId = useRef<string | null>(null);
+  const lastProcessedHealEventId = useRef<string | null>(null);
   const [damageTaken, setDamageTaken] = useState<number | null>(null);
+  const [healGained, setHealGained] = useState<number | null>(null);
   const [isShaking, setIsShaking] = useState(false);
 
   // Hook para detectar daño y disparar la animación
   useEffect(() => {
-    if (!wasDamagedThisAction) {
-      prevHp.current = player.healthPoints;
+    if (!wasDamagedThisAction) return;
+    if (!damagePulseKey || lastProcessedDamageEventId.current === damagePulseKey) {
       return;
     }
 
-    const damage = damageAmount ?? Math.max(0, prevHp.current - player.healthPoints);
+    const damage = damageAmount ?? 0;
     if (damage <= 0) {
-      prevHp.current = player.healthPoints;
       return;
     }
+    lastProcessedDamageEventId.current = damagePulseKey;
     const startId = setTimeout(() => {
       setDamageTaken(damage);
       setIsShaking(true);
@@ -50,12 +59,33 @@ export function PlayerHUD({
       setDamageTaken(null);
       setIsShaking(false);
     }, 1500);
-    prevHp.current = player.healthPoints;
     return () => {
       clearTimeout(startId);
       clearTimeout(timer);
     };
-  }, [damageAmount, damagePulseKey, player.healthPoints, wasDamagedThisAction]);
+  }, [damageAmount, damagePulseKey, wasDamagedThisAction]);
+
+  useEffect(() => {
+    if (!wasHealedThisAction) {
+      return;
+    }
+    if (!healPulseKey || lastProcessedHealEventId.current === healPulseKey) {
+      return;
+    }
+
+    const heal = healAmount ?? 0;
+    if (heal <= 0) {
+      return;
+    }
+    lastProcessedHealEventId.current = healPulseKey;
+
+    const startId = setTimeout(() => setHealGained(heal), 0);
+    const timer = setTimeout(() => setHealGained(null), 1500);
+    return () => {
+      clearTimeout(startId);
+      clearTimeout(timer);
+    };
+  }, [healAmount, healPulseKey, wasHealedThisAction]);
 
   const healthPercentage = Math.max(0, Math.min(100, (player.healthPoints / player.maxHealthPoints) * 100));
 
@@ -75,22 +105,8 @@ export function PlayerHUD({
         isOpponent ? "top-6 right-6 items-end" : "bottom-6 left-6 items-start"
       )}
     >
-      {/* Damage Indicator */}
-      <AnimatePresence>
-        {damageTaken !== null && (
-          <motion.div
-            initial={{ opacity: 0, y: 0, scale: 0.5 }}
-            animate={{ opacity: 1, y: isOpponent ? 40 : -40, scale: 1.5 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className={cn(
-                "absolute font-black text-4xl drop-shadow-[0_0_20px_rgba(239,68,68,1)] z-[200]",
-                isOpponent ? "bottom-[-40px] text-red-500" : "top-[-40px] text-red-500"
-            )}
-          >
-            -{damageTaken}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <HudFloatingDelta value={damageTaken} sign="-" isOpponent={isOpponent} color="red" />
+      <HudFloatingDelta value={healGained} sign="+" isOpponent={isOpponent} color="blue" />
 
       <div className="bg-zinc-950/90 border border-zinc-700/50 backdrop-blur-xl px-4 py-1.5 mb-1 relative overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.8)]">
         <div className={cn("absolute inset-0 opacity-20", isOpponent ? "bg-red-500" : "bg-cyan-500")} />

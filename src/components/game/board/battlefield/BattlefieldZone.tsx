@@ -19,6 +19,10 @@ interface BattlefieldZoneProps {
   highlightedEntityIds: string[];
   shouldDamageFlash: boolean;
   damageEventId: string | null;
+  buffedEntityIds: string[];
+  buffStat: "ATTACK" | "DEFENSE" | null;
+  buffAmount: number | null;
+  buffEventId: string | null;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => void;
 }
 
@@ -35,6 +39,10 @@ export function BattlefieldZone({
   highlightedEntityIds,
   shouldDamageFlash,
   damageEventId,
+  buffedEntityIds,
+  buffStat,
+  buffAmount,
+  buffEventId,
   onEntityClick,
 }: BattlefieldZoneProps) {
   const isOpponentSide = side === "opponent";
@@ -104,6 +112,10 @@ export function BattlefieldZone({
             selectedCard={selectedCard}
             revealedEntities={revealedEntities}
             highlightedEntityIds={highlightedEntityIds}
+            buffedEntityIds={buffedEntityIds}
+            buffStat={buffStat}
+            buffAmount={buffAmount}
+            buffEventId={buffEventId}
             onEntityClick={onEntityClick}
           />
         </div>
@@ -116,6 +128,10 @@ export function BattlefieldZone({
             selectedCard={selectedCard}
             revealedEntities={revealedEntities}
             highlightedEntityIds={highlightedEntityIds}
+            buffedEntityIds={buffedEntityIds}
+            buffStat={buffStat}
+            buffAmount={buffAmount}
+            buffEventId={buffEventId}
             onEntityClick={onEntityClick}
           />
         </div>

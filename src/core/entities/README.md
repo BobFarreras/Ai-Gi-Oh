@@ -29,6 +29,8 @@ Tipos de dominio puros del juego, sin dependencias de UI.
      - `ATTACK_DECLARED`
      - `BATTLE_RESOLVED`
      - `DIRECT_DAMAGE`
+     - `HEAL_APPLIED`
+     - `STAT_BUFF_APPLIED`
      - `TRAP_TRIGGERED`
      - `CARD_TO_GRAVEYARD`
      - `MANDATORY_ACTION_RESOLVED`
