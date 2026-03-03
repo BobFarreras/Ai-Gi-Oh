@@ -29,10 +29,15 @@ Submódulos internos para reducir complejidad de `useBoard`.
 6. `usePlayerActions.ts`
    - Acciones del jugador (play card, entity click, selección).
    - Validaciones de turno y animación.
+   - Si hay trampa reactiva del rival, previsualiza flip de trampa antes de resolver ataque/ejecución.
 
 7. `useGameAudio.ts`
    - Gestiona SFX y soundtrack principal.
    - Al finalizar duelo, detiene y reinicia el soundtrack base antes de reproducir resultado.
+
+8. `trapPreview.ts`
+   - Detecta trampas `SET` reactivas por trigger.
+   - Utilidades para revelar/ocultar temporalmente la trampa durante la cadena visual.
 
 ## Reglas de mantenimiento
 

@@ -24,6 +24,7 @@ Casos de uso puros del motor, organizados por responsabilidad.
 
 5. `effects/`
    - `resolve-trap-trigger.ts`
+   - Soporta trampas de daño, negación de ataque con destrucción de atacante y reducción de stats rival.
 
 6. `fusion/`
    - `fusion-recipes.ts`

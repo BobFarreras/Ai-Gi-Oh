@@ -75,6 +75,12 @@ Reglas implementadas en `GameEngine`, `CombatService` y estrategia de turno del 
    - aplica su efecto,
    - se envía al cementerio.
 3. Las trampas de ataque se evalúan antes de resolver el daño del combate.
+4. Efectos de trampa soportados:
+   - `DAMAGE` (daño directo al objetivo configurado),
+   - `NEGATE_ATTACK_AND_DESTROY_ATTACKER` (anula ataque y destruye atacante),
+   - `REDUCE_OPPONENT_ATTACK` (reduce ATQ de entidades rivales),
+   - `REDUCE_OPPONENT_DEFENSE` (reduce DEF de entidades rivales).
+5. Si una trampa destruye al atacante al declarar ataque, ese ataque termina sin resolver batalla.
 
 ## 6. Errores de dominio
 

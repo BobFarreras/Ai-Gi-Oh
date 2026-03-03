@@ -120,7 +120,13 @@ describe("useBoard integración", () => {
 
   it("debería cambiar a DEFENSE al pulsar dos veces la misma entidad atacante en BATTLE", async () => {
     const { result } = renderHook(() => useBoard());
-    const entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
+    let entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
+    for (let attempt = 0; attempt < 8 && !entityCard; attempt += 1) {
+      act(() => {
+        result.current.restartMatch();
+      });
+      entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
+    }
     expect(entityCard).toBeDefined();
     if (!entityCard) {
       throw new Error("Se requiere una entidad en mano para este test.");

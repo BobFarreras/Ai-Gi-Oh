@@ -51,12 +51,15 @@ export function executeAttack(
     throw new GameRuleError("Esta carta ya ha atacado este turno");
   }
 
-  const stateAfterTrap = resolveTrapTrigger(state, defender.id, "ON_OPPONENT_ATTACK_DECLARED");
+  const stateAfterTrap = resolveTrapTrigger(state, defender.id, "ON_OPPONENT_ATTACK_DECLARED", {
+    attackerPlayerId,
+    attackerInstanceId,
+  });
   const { player: currentAttacker, opponent: currentDefender, isPlayerA } = getPlayerPair(stateAfterTrap, attackerPlayerId);
   const currentAttackerEntity = currentAttacker.activeEntities.find((entity) => entity.instanceId === attackerInstanceId);
 
   if (!currentAttackerEntity) {
-    throw new NotFoundError("La carta atacante no está en el campo");
+    return stateAfterTrap;
   }
 
   if (!defenderInstanceId) {

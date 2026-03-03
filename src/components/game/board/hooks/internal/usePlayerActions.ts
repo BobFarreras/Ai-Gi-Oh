@@ -4,6 +4,7 @@ import { BattleMode, IBoardEntity } from "@/core/entities/IPlayer";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { IBoardUiError } from "./boardError";
 import { sleep } from "./sleep";
+import { addRevealedId, findReactiveTrap, removeRevealedId } from "./trapPreview";
 
 interface IUsePlayerActionsParams {
   gameState: GameState;
@@ -32,6 +33,9 @@ interface IPlayerActions {
   executePlayAction: (mode: BattleMode, event: React.MouseEvent) => Promise<void>;
   handleEntityClick: (entity: IBoardEntity | null, isOpponent: boolean, event: React.MouseEvent) => Promise<void>;
 }
+
+const PLAYER_TRAP_PREVIEW_MS = 700;
+const PLAYER_POST_RESOLUTION_MS = 650;
 
 export function usePlayerActions({
   gameState,
@@ -132,7 +136,18 @@ export function usePlayerActions({
 
         clearSelection();
         await sleep(1500);
+        const reactiveTrap = findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
+        if (reactiveTrap) {
+          setRevealedEntities((previous) => addRevealedId(previous, reactiveTrap.instanceId));
+          setActiveAttackerId(reactiveTrap.instanceId);
+          await sleep(PLAYER_TRAP_PREVIEW_MS);
+        }
         applyTransition((state) => GameEngine.resolveExecution(state, state.playerA.id, executionId));
+        if (reactiveTrap) {
+          await sleep(PLAYER_POST_RESOLUTION_MS);
+          setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
+        }
+        setActiveAttackerId(null);
         setIsAnimating(false);
         return;
       }
@@ -145,15 +160,15 @@ export function usePlayerActions({
       assertPlayerTurn,
       clearError,
       clearSelection,
-      gameState.playerA.activeEntities.length,
-      gameState.pendingTurnAction,
-      gameState.playerA.id,
+      gameState,
       isAnimating,
       playingCard,
+      setActiveAttackerId,
       setPendingEntityReplacement,
       setPendingFusionSummon,
       setIsAnimating,
       setLastError,
+      setRevealedEntities,
     ],
   );
 
@@ -245,7 +260,18 @@ export function usePlayerActions({
           }
           clearSelection();
           await sleep(1500);
+          const reactiveTrap = findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
+          if (reactiveTrap) {
+            setRevealedEntities((previous) => addRevealedId(previous, reactiveTrap.instanceId));
+            setActiveAttackerId(reactiveTrap.instanceId);
+            await sleep(PLAYER_TRAP_PREVIEW_MS);
+          }
           applyTransition((state) => GameEngine.resolveExecution(state, state.playerA.id, entity.instanceId));
+          if (reactiveTrap) {
+            await sleep(PLAYER_POST_RESOLUTION_MS);
+            setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
+          }
+          setActiveAttackerId(null);
           setIsAnimating(false);
           return;
         }
@@ -272,19 +298,32 @@ export function usePlayerActions({
 
       if (activeAttackerId) {
         setIsAnimating(true);
+        const attackerId = activeAttackerId;
         const targetId = entity?.instanceId;
-        setActiveAttackerId(null);
         clearSelection();
 
         if (entity && (entity.mode === "DEFENSE" || entity.mode === "SET") && targetId) {
-          setRevealedEntities((previous) => [...previous, targetId]);
+          setRevealedEntities((previous) => addRevealedId(previous, targetId));
           await sleep(800);
         }
 
-        applyTransition((state) => GameEngine.executeAttack(state, state.playerA.id, activeAttackerId, targetId));
-        if (targetId) {
-          setRevealedEntities((previous) => previous.filter((id) => id !== targetId));
+        const reactiveTrap = findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_ATTACK_DECLARED");
+        if (reactiveTrap) {
+          setRevealedEntities((previous) => addRevealedId(previous, reactiveTrap.instanceId));
+          setActiveAttackerId(reactiveTrap.instanceId);
+          await sleep(PLAYER_TRAP_PREVIEW_MS);
+          setActiveAttackerId(attackerId);
         }
+
+        applyTransition((state) => GameEngine.executeAttack(state, state.playerA.id, attackerId, targetId));
+        if (targetId) {
+          setRevealedEntities((previous) => removeRevealedId(previous, targetId));
+        }
+        if (reactiveTrap) {
+          await sleep(PLAYER_POST_RESOLUTION_MS);
+          setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
+        }
+        setActiveAttackerId(null);
         setIsAnimating(false);
         return;
       }
@@ -299,9 +338,7 @@ export function usePlayerActions({
       clearSelection,
       pendingEntityReplacement,
       pendingFusionSummon,
-      gameState.pendingTurnAction?.playerId,
-      gameState.playerA.id,
-      gameState.phase,
+      gameState,
       isAnimating,
       resolvePendingTurnAction,
       setActiveAttackerId,
