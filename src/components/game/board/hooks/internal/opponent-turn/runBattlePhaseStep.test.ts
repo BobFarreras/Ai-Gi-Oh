@@ -1,4 +1,4 @@
-// src/components/game/board/hooks/internal/opponent-turn/runBattlePhaseStep.test.ts - Verifica que el oponente no revele objetivos ocultos antes de resolver ataque.
+// src/components/game/board/hooks/internal/opponent-turn/runBattlePhaseStep.test.ts - Verifica reveal breve de objetivo SET en ataque automático.
 import { describe, expect, it, vi } from "vitest";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IOpponentTurnContext } from "./types";
@@ -59,7 +59,7 @@ function createState(): GameState {
 }
 
 describe("runBattlePhaseStep", () => {
-  it("no debería previsualizar la carta objetivo en SET", async () => {
+  it("debería revelar y ocultar objetivo SET durante ataque del oponente", async () => {
     const setRevealedEntities = vi.fn();
     const state = createState();
     const context: IOpponentTurnContext = {
@@ -79,6 +79,6 @@ describe("runBattlePhaseStep", () => {
 
     await runBattlePhaseStep(context, timings);
 
-    expect(setRevealedEntities).not.toHaveBeenCalled();
+    expect(setRevealedEntities).toHaveBeenCalledTimes(2);
   });
 });

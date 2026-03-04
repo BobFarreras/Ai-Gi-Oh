@@ -23,6 +23,14 @@ export async function runBattlePhaseStep(context: IOpponentTurnContext, timings:
 
   context.setIsAnimating(true);
   context.setActiveAttackerId(attackDecision.attackerInstanceId);
+  const targetEntity = attackDecision.defenderInstanceId
+    ? gameState.playerA.activeEntities.find((entity) => entity.instanceId === attackDecision.defenderInstanceId) ?? null
+    : null;
+  const shouldRevealTargetBeforeBattle = Boolean(targetEntity && targetEntity.mode === "SET");
+  if (shouldRevealTargetBeforeBattle && targetEntity) {
+    context.setRevealedEntities((previous) => addRevealedId(previous, targetEntity.instanceId));
+    await sleep(320);
+  }
   const reactiveTrap = findReactiveTrap(gameState, gameState.playerA.id, "ON_OPPONENT_ATTACK_DECLARED");
   if (reactiveTrap) {
     context.setRevealedEntities((previous) => addRevealedId(previous, reactiveTrap.instanceId));
@@ -39,6 +47,9 @@ export async function runBattlePhaseStep(context: IOpponentTurnContext, timings:
     GameEngine.executeAttack(state, opponentId, attackDecision.attackerInstanceId, attackDecision.defenderInstanceId),
   );
   await sleep(timings.postResolutionMs);
+  if (shouldRevealTargetBeforeBattle && targetEntity) {
+    context.setRevealedEntities((previous) => removeRevealedId(previous, targetEntity.instanceId));
+  }
   if (reactiveTrap) context.setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
   context.setActiveAttackerId(null);
   context.setIsAnimating(false);

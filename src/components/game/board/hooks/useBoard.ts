@@ -27,7 +27,7 @@ export function useBoard() {
   const opponentDifficulty = useMemo(() => resolveDifficultyFromCampaign(campaignProgress), [campaignProgress]);
   const opponentStrategy = useMemo(() => new HeuristicOpponentStrategy({ difficulty: opponentDifficulty }), [opponentDifficulty]);
   const isPlayerTurn = gameState.activePlayerId === gameState.playerA.id;
-  const isActionLocked = uiState.isAnimating || uiState.isFusionCinematicActive;
+  const isActionLocked = uiState.isAnimating || uiState.isFusionCinematicActive || uiState.isPaused;
   const winnerPlayerId = useMemo(() => resolveWinnerPlayerId(gameState), [gameState]);
   const combatFeedback = useMemo(() => buildBoardCombatFeedback(gameState.combatLog), [gameState.combatLog]);
   const pendingUi = useMemo(
@@ -123,11 +123,13 @@ export function useBoard() {
     opponentDifficulty,
     isPlayerTurn,
     isMuted: uiState.isMuted,
+    isPaused: uiState.isPaused,
     isFusionCinematicActive: uiState.isFusionCinematicActive,
     setIsFusionCinematicActive: uiState.setIsFusionCinematicActive,
     winnerPlayerId,
     restartMatch: uiState.restartMatch,
     toggleMute: uiState.toggleMute,
+    togglePause: uiState.togglePause,
     setIsHistoryOpen: uiState.setIsHistoryOpen,
     toggleCardSelection,
     previewCard: uiState.previewCard,

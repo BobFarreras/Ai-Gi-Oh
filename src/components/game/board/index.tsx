@@ -49,9 +49,11 @@ export function Board() {
     winnerPlayerId,
     restartMatch,
     isMuted,
+    isPaused,
     isFusionCinematicActive,
     setIsFusionCinematicActive,
     toggleMute,
+    togglePause,
   } = useBoard();
 
   const player = gameState.playerA;
@@ -70,6 +72,7 @@ export function Board() {
     hasSelectedCard: Boolean(selectedCard),
     lastErrorCode: lastError?.code ?? null,
     isMuted,
+    isPaused,
   });
 
 
@@ -85,6 +88,8 @@ export function Board() {
         playerAName={gameState.playerA.name}
         playerBId={gameState.playerB.id}
         playerBName={gameState.playerB.name}
+        isPaused={isPaused}
+        onResumePause={() => { playButtonClick(); togglePause(); }}
         isFusionCinematicActive={isFusionCinematicActive}
         setIsFusionCinematicActive={setIsFusionCinematicActive}
         graveyardView={graveyardView}
@@ -102,6 +107,7 @@ export function Board() {
         pendingActionType={gameState.pendingTurnAction?.type ?? null}
         pendingActionPlayerId={gameState.pendingTurnAction?.playerId ?? null}
         isPlayerTurn={isPlayerTurn}
+        isPaused={isPaused}
         onAdvancePhase={advancePhase}
         onTimeUp={() => { playTimerExpired(); handleTimerExpired(); }}
         onWarning={playTimerWarning}
@@ -123,9 +129,11 @@ export function Board() {
       />
       <BoardActionButtons
         isMuted={isMuted}
+        isPaused={isPaused}
         isHistoryOpen={isHistoryOpen}
         canSetSelectedEntityToAttack={canSetSelectedEntityToAttack}
         onToggleMute={() => { playButtonClick(); toggleMute(); }}
+        onTogglePause={() => { playButtonClick(); togglePause(); }}
         onToggleHistory={() => { playButtonClick(); setIsHistoryOpen((previous) => !previous); }}
         onSetSelectedEntityToAttack={() => { playButtonClick(); setSelectedEntityToAttack(); }}
       />

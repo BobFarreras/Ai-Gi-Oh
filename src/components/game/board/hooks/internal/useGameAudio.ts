@@ -11,6 +11,7 @@ interface UseGameAudioParams {
   hasSelectedCard: boolean;
   lastErrorCode: string | null;
   isMuted: boolean;
+  isPaused: boolean;
 }
 
 function resolveDuelEndTrack(winnerPlayerId: string, playerId: string): AudioTrackId {
@@ -26,6 +27,7 @@ export function useGameAudio({
   hasSelectedCard,
   lastErrorCode,
   isMuted,
+  isPaused,
 }: UseGameAudioParams) {
   const processedRef = useRef(0);
   const soundtrackRef = useRef<HTMLAudioElement | null>(null);
@@ -44,13 +46,13 @@ export function useGameAudio({
   useEffect(() => {
     const soundtrack = soundtrackRef.current;
     if (!soundtrack) return;
-    if (isMuted || winnerPlayerId) {
+    if (isMuted || winnerPlayerId || isPaused) {
       soundtrack.pause();
       if (winnerPlayerId) soundtrack.currentTime = 0;
       return;
     }
     safePlay(soundtrack);
-  }, [isMuted, winnerPlayerId]);
+  }, [isMuted, isPaused, winnerPlayerId]);
 
   useEffect(() => {
     if (isMuted) {

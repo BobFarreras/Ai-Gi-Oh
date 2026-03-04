@@ -17,11 +17,13 @@ interface IBuildUseBoardResultParams {
   opponentDifficulty: string;
   isPlayerTurn: boolean;
   isMuted: boolean;
+  isPaused: boolean;
   isFusionCinematicActive: boolean;
   setIsFusionCinematicActive: (value: boolean) => void;
   winnerPlayerId: string | "DRAW" | null;
   restartMatch: () => void;
   toggleMute: () => void;
+  togglePause: () => void;
   setIsHistoryOpen: (value: boolean | ((previous: boolean) => boolean)) => void;
   toggleCardSelection: (card: ICard, event?: React.MouseEvent) => void;
   previewCard: (card: ICard) => void;
@@ -52,11 +54,13 @@ export function buildUseBoardResult(params: IBuildUseBoardResultParams) {
     opponentDifficulty: params.opponentDifficulty,
     isPlayerTurn: params.isPlayerTurn,
     isMuted: params.isMuted,
+    isPaused: params.isPaused,
     isFusionCinematicActive: params.isFusionCinematicActive,
     setIsFusionCinematicActive: params.setIsFusionCinematicActive,
     winnerPlayerId: params.winnerPlayerId,
     restartMatch: params.restartMatch,
     toggleMute: params.toggleMute,
+    togglePause: params.togglePause,
     setIsHistoryOpen: params.setIsHistoryOpen,
     toggleCardSelection: params.toggleCardSelection,
     previewCard: params.previewCard,

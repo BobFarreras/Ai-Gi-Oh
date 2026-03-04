@@ -29,10 +29,13 @@ interface IUseBoardUiStateResult {
   setIsFusionCinematicActive: (value: boolean) => void;
   isMuted: boolean;
   setIsMuted: (value: boolean | ((previous: boolean) => boolean)) => void;
+  isPaused: boolean;
+  setIsPaused: (value: boolean | ((previous: boolean) => boolean)) => void;
   clearSelection: () => void;
   previewCard: (card: ICard) => void;
   clearError: () => void;
   toggleMute: () => void;
+  togglePause: () => void;
   restartMatch: () => void;
 }
 
@@ -52,6 +55,7 @@ export function useBoardUiState(
   const [pendingFusionSummon, setPendingFusionSummon] = useState<{ cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null>(null);
   const [isFusionCinematicActive, setIsFusionCinematicActive] = useState(false);
   const [isMuted, setIsMuted] = useState<boolean>(() => (typeof window !== "undefined" ? window.localStorage.getItem("board-muted") === "1" : false));
+  const [isPaused, setIsPaused] = useState(false);
 
   const clearSelection = useCallback(() => {
     setSelectedCard(null);
@@ -75,6 +79,9 @@ export function useBoardUiState(
       return next;
     });
   }, []);
+  const togglePause = useCallback(() => {
+    setIsPaused((previous) => !previous);
+  }, []);
 
   const restartMatch = useCallback(() => {
     const freshState = createInitialState();
@@ -82,6 +89,7 @@ export function useBoardUiState(
     gameStateRef.current = freshState;
     clearSelection();
     clearError();
+    setIsPaused(false);
   }, [clearError, clearSelection, createInitialState, gameStateRef]);
 
   return {
@@ -109,10 +117,13 @@ export function useBoardUiState(
     setIsFusionCinematicActive,
     isMuted,
     setIsMuted,
+    isPaused,
+    setIsPaused,
     clearSelection,
     previewCard,
     clearError,
     toggleMute,
+    togglePause,
     restartMatch,
   };
 }

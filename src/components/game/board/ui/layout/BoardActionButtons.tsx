@@ -1,21 +1,25 @@
 "use client";
 
-import { History, Swords, Volume2, VolumeX } from "lucide-react";
+import { History, Pause, Play, Swords, Volume2, VolumeX } from "lucide-react";
 
 interface BoardActionButtonsProps {
   isMuted: boolean;
+  isPaused: boolean;
   isHistoryOpen: boolean;
   canSetSelectedEntityToAttack: boolean;
   onToggleMute: () => void;
+  onTogglePause: () => void;
   onToggleHistory: () => void;
   onSetSelectedEntityToAttack: () => void;
 }
 
 export function BoardActionButtons({
   isMuted,
+  isPaused,
   isHistoryOpen,
   canSetSelectedEntityToAttack,
   onToggleMute,
+  onTogglePause,
   onToggleHistory,
   onSetSelectedEntityToAttack,
 }: BoardActionButtonsProps) {
@@ -33,6 +37,16 @@ export function BoardActionButtons({
           <Swords size={24} />
         </button>
       )}
+      <button
+        aria-label={isPaused ? "Reanudar partida" : "Pausar partida"}
+        onClick={(event) => {
+          event.stopPropagation();
+          onTogglePause();
+        }}
+        className="bg-zinc-950/90 border-2 border-emerald-500/60 text-emerald-300 p-4 rounded-full hover:bg-emerald-950 hover:shadow-[0_0_20px_rgba(16,185,129,0.6)] transition-all"
+      >
+        {isPaused ? <Play size={24} /> : <Pause size={24} />}
+      </button>
       <button
         aria-label={isMuted ? "Activar sonido" : "Silenciar sonido"}
         onClick={(event) => {

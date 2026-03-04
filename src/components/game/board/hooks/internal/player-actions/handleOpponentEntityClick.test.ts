@@ -1,4 +1,4 @@
-// src/components/game/board/hooks/internal/player-actions/handleOpponentEntityClick.test.ts - Garantiza que atacar no revele temporalmente cartas ocultas del rival.
+// src/components/game/board/hooks/internal/player-actions/handleOpponentEntityClick.test.ts - Garantiza reveal breve al atacar una carta oculta rival.
 import { describe, expect, it, vi } from "vitest";
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
@@ -59,7 +59,7 @@ function createState(): GameState {
 }
 
 describe("handleOpponentEntityClick", () => {
-  it("no debería revelar objetivo en SET antes de resolver ataque", async () => {
+  it("debería revelar y ocultar objetivo SET durante la secuencia de ataque", async () => {
     const state = createState();
     const target: IBoardEntity = {
       instanceId: "target-set",
@@ -81,6 +81,6 @@ describe("handleOpponentEntityClick", () => {
       setRevealedEntities,
     });
 
-    expect(setRevealedEntities).not.toHaveBeenCalled();
+    expect(setRevealedEntities).toHaveBeenCalledTimes(2);
   });
 });

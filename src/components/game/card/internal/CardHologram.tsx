@@ -1,3 +1,4 @@
+// src/components/game/card/internal/CardHologram.tsx - Renderiza el holograma de carta con entrada progresiva desde punto inferior.
 "use client";
 
 import Image from "next/image";
@@ -20,9 +21,12 @@ export function CardHologram({ card, isDefense, className }: CardHologramProps) 
   }
 
   return (
-    <div 
-      className={cn("absolute inset-0 z-50 pointer-events-none", className)} 
-      style={{ transformStyle: "preserve-3d", transform: "translateZ(20px)" }}
+    <motion.div
+      className={cn("absolute inset-0 z-50 pointer-events-none", className)}
+      style={{ transformStyle: "preserve-3d", transform: "translateZ(20px)", transformOrigin: "50% 100%" }}
+      initial={{ opacity: 0, scale: 0.04, y: 120 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.58, ease: [0.16, 1, 0.3, 1] }}
     >
       {/* CAPA 1 (ANTI-GIRO): 
           Si la carta se acuesta (-90deg), esta capa gira (+90deg) desde el centro exacto.
@@ -108,7 +112,7 @@ export function CardHologram({ card, isDefense, className }: CardHologramProps) 
 
         </motion.div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
 

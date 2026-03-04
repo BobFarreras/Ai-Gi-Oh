@@ -6,6 +6,7 @@ import { IBoardUiError } from "../../hooks/internal/boardError";
 import { BattleBannerCenter } from "../BattleBannerCenter";
 import { FusionCinematicLayer } from "../FusionCinematicLayer";
 import { GraveyardBrowser } from "../GraveyardBrowser";
+import { PauseOverlay } from "./PauseOverlay";
 
 interface BoardStatusOverlaysProps {
   lastError: IBoardUiError | null;
@@ -15,6 +16,8 @@ interface BoardStatusOverlaysProps {
   playerAName: string;
   playerBId: string;
   playerBName: string;
+  isPaused: boolean;
+  onResumePause: () => void;
   isFusionCinematicActive?: boolean;
   setIsFusionCinematicActive?: (value: boolean) => void;
   graveyardView: "player" | "opponent" | null;
@@ -34,6 +37,8 @@ export function BoardStatusOverlays({
   playerAName,
   playerBId,
   playerBName,
+  isPaused,
+  onResumePause,
   isFusionCinematicActive = false,
   setIsFusionCinematicActive = () => undefined,
   graveyardView,
@@ -75,6 +80,7 @@ export function BoardStatusOverlays({
       )}
 
       <BattleBannerCenter events={combatLog} playerAId={playerAId} playerAName={playerAName} playerBId={playerBId} playerBName={playerBName} />
+      <PauseOverlay isPaused={isPaused} onResume={onResumePause} />
       <FusionCinematicLayer
         events={combatLog}
         onActiveChange={(active) => {

@@ -1,12 +1,13 @@
 // src/components/game/board/battlefield/SlotGrid.tsx - Renderiza slots de tablero y aplica animaciones según modo y estado visual de entidad.
 import { AnimatePresence, motion } from "framer-motion";
 import { ICard } from "@/core/entities/ICard";
-import { IBoardEntity } from "@/core/entities/IPlayer";
+import { BattleMode, IBoardEntity } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
 import { Card } from "../../card/Card";
 import { CardBack } from "../../card/CardBack";
 import { resolveEntityMotionState } from "./internal/entity-motion";
 import { resolveEntityVisibility } from "./internal/entity-visibility";
+import { SummonHologramVfx } from "./internal/SummonHologramVfx";
 import { BuffImpactVfx } from "./BuffImpactVfx";
 import { ExecutionActivationVfx } from "./ExecutionActivationVfx";
 
@@ -104,7 +105,16 @@ export function SlotGrid({
                     </div>
                   ) : (
                     <div className="absolute w-full h-full flex items-center justify-center">
-                      <Card card={entity.card} isSelected={selectedCard?.id === entity.card.id} boardMode={entity.mode} />
+                      <SummonHologramVfx show={Boolean(entity.isNewlySummoned && (entity.card.type === "ENTITY" || entity.card.type === "FUSION"))} />
+                      <Card
+                        card={entity.card}
+                        isSelected={selectedCard?.id === entity.card.id}
+                        boardMode={
+                          !visibility.isFaceDown && entity.mode === "SET" && entity.card.type === "ENTITY"
+                            ? "DEFENSE"
+                            : (entity.mode as BattleMode)
+                        }
+                      />
                       {isActivating && (
                         <motion.div
                           initial={{ opacity: 0, scale: 0 }}

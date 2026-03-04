@@ -12,6 +12,7 @@ interface BoardTopBarProps {
   pendingActionType: string | null;
   pendingActionPlayerId: string | null;
   isPlayerTurn: boolean;
+  isPaused: boolean;
   onAdvancePhase: () => void;
   onTimeUp: () => void;
   onWarning: () => void;
@@ -24,6 +25,7 @@ export function BoardTopBar({
   pendingActionType,
   pendingActionPlayerId,
   isPlayerTurn,
+  isPaused,
   onAdvancePhase,
   onTimeUp,
   onWarning,
@@ -41,7 +43,7 @@ export function BoardTopBar({
           key={`${turn}-${phase}-${pendingActionType ?? "NONE"}-${pendingActionPlayerId ?? "NONE"}`}
           onTimeUp={onTimeUp}
           onWarning={onWarning}
-          isActive={isPlayerTurn}
+          isActive={isPlayerTurn && !isPaused}
         />
       </div>
       <PhasePanel

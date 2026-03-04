@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Cpu, Shield, Sword, Zap } from "lucide-react";
+import { Binary, Bot, Braces, Cpu, Database, Shield, ShieldCheck, Sword, Wrench, Zap } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
 import { cn } from "@/lib/utils";
 import { CARD_CLIP_PATHS } from "./styles";
@@ -13,15 +13,34 @@ interface CardFrameProps {
 }
 
 function resolveTypeBadge(card: ICard): string {
-  if (card.type !== "ENTITY") {
-    return card.type;
-  }
+  if (card.type !== "ENTITY") return card.type;
+  return card.archetype ? `ENTITY · ${card.archetype}` : "ENTITY";
+}
 
-  return card.archetype ? `${card.type} · ${card.archetype}` : card.type;
+function resolveEntityArchetypeMeta(archetype: ICard["archetype"]): { Icon: typeof Bot; chipClass: string } | null {
+  switch (archetype) {
+    case "LLM":
+      return { Icon: Bot, chipClass: "text-fuchsia-200 bg-fuchsia-500/20 border-fuchsia-300/45" };
+    case "FRAMEWORK":
+      return { Icon: Braces, chipClass: "text-sky-200 bg-sky-500/20 border-sky-300/45" };
+    case "DB":
+      return { Icon: Database, chipClass: "text-emerald-200 bg-emerald-500/20 border-emerald-300/45" };
+    case "IDE":
+      return { Icon: Binary, chipClass: "text-orange-200 bg-orange-500/20 border-orange-300/45" };
+    case "LANGUAGE":
+      return { Icon: Cpu, chipClass: "text-indigo-200 bg-indigo-500/20 border-indigo-300/45" };
+    case "TOOL":
+      return { Icon: Wrench, chipClass: "text-amber-200 bg-amber-500/20 border-amber-300/45" };
+    case "SECURITY":
+      return { Icon: ShieldCheck, chipClass: "text-cyan-100 bg-cyan-500/20 border-cyan-300/45" };
+    default:
+      return null;
+  }
 }
 
 export function CardFrame({ card, factionStyles, isSelected, isOnBoard, onClick }: CardFrameProps) {
   const isExecution = card.type === "EXECUTION";
+  const archetypeMeta = card.type === "ENTITY" ? resolveEntityArchetypeMeta(card.archetype) : null;
 
   return (
     <div
@@ -50,8 +69,13 @@ export function CardFrame({ card, factionStyles, isSelected, isOnBoard, onClick 
           </div>
           <div
             aria-label="Tipo de carta"
-            className="bg-black/90 px-3 py-1.5 text-[10px] font-black tracking-widest text-white/70 uppercase border border-white/10 rounded-sm"
+            className="bg-black/90 px-2 py-1.5 text-[10px] font-black tracking-widest text-white/70 uppercase border border-white/10 rounded-sm flex items-center gap-1.5"
           >
+            {archetypeMeta ? (
+              <span className={cn("inline-flex items-center justify-center w-5 h-5 rounded border", archetypeMeta.chipClass)}>
+                <archetypeMeta.Icon className="w-3 h-3" />
+              </span>
+            ) : null}
             {resolveTypeBadge(card)}
           </div>
         </div>

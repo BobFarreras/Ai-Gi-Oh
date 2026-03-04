@@ -77,15 +77,15 @@ export function PlayerHand({
 
               <motion.div 
                 layoutId={`card-hand-${card.id}`} // Separamos el layoutId de la mano
-                initial={{ y: 200, scale: 0.6 }} 
+                initial={{ y: 200, scale: 0.76 }} 
                 animate={{ 
                   y: isSelected ? -40 : 120, 
                   rotate: isSelected ? 0 : (i - hand.length / 2) * 2, 
-                  scale: isSelected ? 1 : 0.6 
+                  scale: isSelected ? 1 : 0.76 
                 }}
                 whileHover={{ 
                   y: isSelected ? -40 : -20, 
-                  scale: isSelected ? 1 : 0.8, 
+                  scale: isSelected ? 1 : 0.9, 
                   zIndex: 100 
                 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
@@ -99,7 +99,7 @@ export function PlayerHand({
                   }
                   onCardClick(card, e);
                 }}
-                className={isPlayerTurn ? "cursor-pointer origin-bottom pointer-events-auto" : "origin-bottom opacity-75 pointer-events-auto"}
+                className={isPlayerTurn ? "cursor-pointer origin-bottom pointer-events-auto" : "origin-bottom pointer-events-auto"}
                 style={{ zIndex: isSelected ? 100 : i }}
               >
                 <div className={isMandatorySelectable ? "rounded-xl ring-4 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.65)] animate-pulse" : ""}>
