@@ -90,7 +90,7 @@ export function CardFrame({ card, factionStyles, isSelected, isOnBoard, onClick 
                 alt={card.name}
                 fill
                 sizes="260px"
-                className="absolute inset-0 object-contain p-1 z-10 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] scale-110"
+                className="absolute inset-0 object-contain p-1 z-10 drop-shadow-[0_4px_6px_rgba(0,0,0,0.65)]"
               />
             )}
             <div className="absolute top-0 w-full h-0.5 bg-cyan-400/50 opacity-0 group-hover:opacity-100 group-hover:animate-[ping_2s_infinite]" />

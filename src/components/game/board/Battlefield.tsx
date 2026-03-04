@@ -1,3 +1,4 @@
+// src/components/game/board/Battlefield.tsx - Escena 3D del campo de batalla con zonas de jugador y oponente.
 "use client";
 
 import { useState } from "react";
@@ -76,15 +77,15 @@ export function Battlefield({
         dragElastic={0.05}
         animate={{ scale: zoom }}
         transition={{ type: "spring", stiffness: 400, damping: 40 }}
-        className="w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing perspective-[1200px]"
+        className="w-full h-full flex items-center justify-center -translate-y-18 md:-translate-y-20 lg:-translate-y-22 cursor-grab active:cursor-grabbing perspective-[1200px]"
       >
         <div
           style={{ transformStyle: "preserve-3d" }}
           className={cn(
-            "w-[1050px] h-[800px] transform rotate-x-[55deg] relative flex flex-col justify-center items-center gap-6 rounded-[3rem] border-[4px] border-cyan-900/80 bg-zinc-950/90 shadow-[0_0_100px_rgba(6,182,212,0.2)_inset,0_50px_100px_rgba(0,0,0,0.9)] backdrop-blur-xl transition-colors duration-500",
+            "w-[1050px] h-[800px] transform rotate-x-[55deg] relative flex flex-col justify-center items-center gap-6 rounded-[3rem] border-[4px] border-cyan-500/35 bg-[linear-gradient(160deg,rgba(7,12,25,0.82),rgba(11,18,36,0.86))] shadow-[0_0_90px_rgba(34,211,238,0.16)_inset,0_44px_90px_rgba(1,6,16,0.86)] backdrop-blur-xl transition-colors duration-500",
           )}
         >
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(6,182,212,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(6,182,212,0.1)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none rounded-[3rem]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(56,189,248,0.15)_1px,transparent_1px),linear-gradient(to_bottom,rgba(34,211,238,0.12)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none rounded-[3rem]" />
 
           <BattlefieldZone
             side="opponent"
