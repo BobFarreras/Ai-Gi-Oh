@@ -1,3 +1,4 @@
+// src/components/game/board/ui/OpponentHandFan.tsx - Renderiza la mano del oponente en abanico con cartas cerradas.
 "use client";
 
 import { motion } from "framer-motion";
@@ -20,7 +21,7 @@ export function OpponentHandFan({ hand }: OpponentHandFanProps) {
             key={`op-hand-${index}`}
             initial={{ y: -100, scale: 0.4 }}
             animate={{ y: Math.abs(offset) * 8, rotate: offset * 5, scale: 0.4 }}
-            className="origin-top relative -mx-4 shadow-2xl"
+            className="origin-top relative -mx-5 shadow-2xl"
             style={{ zIndex: 10 - Math.abs(offset) }}
           >
             <CardBack className="shadow-[0_20px_50px_rgba(0,0,0,0.9)]" />

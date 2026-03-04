@@ -30,7 +30,7 @@ export function PlayerHand({
 }: PlayerHandProps) {
   return (
     <div className="absolute bottom-0 left-0 w-full h-[500px] flex justify-center items-end z-40 pointer-events-none perspective-[1200px] pb-4">
-      <div className="flex justify-center -space-x-12 pointer-events-none relative">
+      <div className="flex justify-center -space-x-8 pointer-events-none relative">
         {hand.map((card, i) => {
           const isSelected = playingCard?.id === card.id;
           const isEntity = card.type === 'ENTITY';
@@ -77,15 +77,15 @@ export function PlayerHand({
 
               <motion.div 
                 layoutId={`card-hand-${card.id}`} // Separamos el layoutId de la mano
-                initial={{ y: 200, scale: 0.76 }} 
+                initial={{ y: 200, scale: 0.86 }} 
                 animate={{ 
                   y: isSelected ? -40 : 120, 
                   rotate: isSelected ? 0 : (i - hand.length / 2) * 2, 
-                  scale: isSelected ? 1 : 0.76 
+                  scale: isSelected ? 1 : 0.86 
                 }}
                 whileHover={{ 
                   y: isSelected ? -40 : -20, 
-                  scale: isSelected ? 1 : 0.9, 
+                  scale: isSelected ? 1 : 0.96, 
                   zIndex: 100 
                 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
