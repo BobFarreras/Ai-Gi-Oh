@@ -82,4 +82,23 @@ describe("fusión desde ejecución", () => {
       expect.arrayContaining(["entity-chatgpt", "entity-gemini", "exec-fusion-gemgpt"]),
     );
   });
+
+  it("no debería iniciar selección si faltan materiales y debe continuar flujo sin bloqueo", () => {
+    const base = createState();
+    const stateWithOneMaterial: GameState = {
+      ...base,
+      playerA: {
+        ...base.playerA,
+        activeEntities: [base.playerA.activeEntities[0]],
+      },
+    };
+
+    let state = GameEngine.playCard(stateWithOneMaterial, "p1", "exec-fusion-gemgpt", "ACTIVATE");
+    const executionInstanceId = state.playerA.activeExecutions[0].instanceId;
+    state = GameEngine.resolveExecution(state, "p1", executionInstanceId);
+
+    expect(state.pendingTurnAction).toBeNull();
+    expect(state.playerA.activeExecutions).toHaveLength(0);
+    expect(state.playerA.graveyard.some((card) => card.id === "exec-fusion-gemgpt")).toBe(true);
+  });
 });

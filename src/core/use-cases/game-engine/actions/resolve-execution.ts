@@ -10,6 +10,37 @@ import { startFusionSummonFromExecution } from "@/core/use-cases/game-engine/fus
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
+function resolveFusionWithoutEnoughMaterials(
+  state: GameState,
+  playerId: string,
+  player: IPlayer,
+  opponent: IPlayer,
+  isPlayerA: boolean,
+  executionInstanceId: string,
+): GameState {
+  const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
+  if (!executionEntity) {
+    throw new NotFoundError("La ejecución no existe en el tablero.");
+  }
+  const updatedPlayer: IPlayer = {
+    ...player,
+    activeExecutions: player.activeExecutions.filter((entity) => entity.instanceId !== executionInstanceId),
+    graveyard: [...player.graveyard, executionEntity.card],
+  };
+  const withPlayers = assignPlayers(state, updatedPlayer, opponent, isPlayerA);
+  return appendExecutionResolutionLogs({
+    state: withPlayers,
+    playerId,
+    executionCardId: executionEntity.card.id,
+    damageTargetPlayerId: null,
+    damageAmount: 0,
+    healApplied: 0,
+    buffStat: null,
+    buffAmount: 0,
+    buffEntityIds: [],
+  });
+}
+
 /**
  * Resuelve una carta de ejecución en estado ACTIVATE para el jugador indicado.
  * @param state Estado actual del duelo.
@@ -41,6 +72,9 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
 
   const effect = executionEntity.card.effect;
   if (effect.action === "FUSION_SUMMON") {
+    if (player.activeEntities.length < 2) {
+      return resolveFusionWithoutEnoughMaterials(withTrapResolution, playerId, player, opponent, isPlayerA, executionInstanceId);
+    }
     return startFusionSummonFromExecution(withTrapResolution, playerId, executionInstanceId, effect.recipeId);
   }
   const effectResult = applyExecutionEffect(player, opponent, effect);

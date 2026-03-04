@@ -1,5 +1,6 @@
 import { BattleMode } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
+import { resolveSelectableFusionMaterialIds } from "./fusion-material-selection";
 
 interface IPendingEntityReplacement {
   cardId: string;
@@ -39,11 +40,12 @@ export function buildBoardPendingUi(
       ? gameState.playerA.hand.map((card) => card.id)
       : [];
 
+  const pendingFusionSelectableIds = resolveSelectableFusionMaterialIds(gameState);
   const pendingEntitySelectionIds =
     gameState.pendingTurnAction?.playerId === gameState.playerA.id && gameState.pendingTurnAction.type === "SACRIFICE_ENTITY_FOR_DRAW"
       ? gameState.playerA.activeEntities.map((entity) => entity.instanceId)
       : gameState.pendingTurnAction?.playerId === gameState.playerA.id && gameState.pendingTurnAction.type === "SELECT_FUSION_MATERIALS"
-        ? gameState.playerA.activeEntities.map((entity) => entity.instanceId)
+        ? pendingFusionSelectableIds
         : pendingEntityReplacement
         ? gameState.playerA.activeEntities.map((entity) => entity.instanceId)
         : [];
