@@ -178,3 +178,9 @@ El motor registra eventos técnicos para trazabilidad y UI:
 
 1. Primera línea obligatoria por archivo: comentario con ruta + descripción corta.
 2. La convención busca reducir ambigüedad durante refactors del motor y acelerar code review.
+
+## 15. Integración con Hub Central
+
+1. El hub (`/hub`) funciona como capa de navegación previa al motor de combate.
+2. El estado de desbloqueo de módulos (historia/multijugador) se resuelve en `HubService` antes de entrar a cada ruta.
+3. El módulo `training` puede reutilizar temporalmente el flujo de combate existente mientras se define tutorial guiado dedicado.

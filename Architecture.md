@@ -89,6 +89,19 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
 3. `GetHubDashboardUseCase`, `GetHubMapUseCase` y `GetAvailableSectionsUseCase` exponen lecturas específicas sin lógica en UI.
 4. `IHubRepository` abstrae acceso a progreso, secciones y nodos del mapa; `InMemoryHubRepository` es el adaptador temporal.
 
+## Hub UI y navegación (fase 3 y 4)
+
+1. `src/app/hub/page.tsx` renderiza la sala de control (HUD) como punto de entrada visual.
+2. `HubScene` y `HubSceneNode` gestionan layout de paneles, navegación por click y feedback de secciones bloqueadas.
+3. Rutas activas del hub:
+   - `/hub/market`
+   - `/hub/home`
+   - `/hub/training`
+   - `/hub/story`
+   - `/hub/multiplayer`
+4. `getHubSectionViewModel` resuelve en servidor el estado de cada sección antes de renderizar su pantalla.
+5. `HubSectionScreen` unifica la presentación base de módulos para evitar duplicación de layout.
+
 ## Eventos y observabilidad
 
 1. El motor añade eventos en `combatLog` desde los casos de uso (`playCard`, `executeAttack`, `nextPhase`, etc.).
