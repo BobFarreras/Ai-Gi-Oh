@@ -19,9 +19,10 @@ export function HomeCollectionPanel({ deck, collection, selectedCardId, onSelect
   }
 
   return (
-    <section className="rounded-2xl border border-cyan-800/35 bg-transparent p-1">
-      <h2 className="mb-3 text-lg font-black uppercase tracking-wide text-cyan-200">Almacén</h2>
-      <div className="grid grid-cols-5 gap-2">
+    <section className="flex h-full min-h-0 flex-col rounded-2xl border border-cyan-800/35 bg-[#031020]/50 p-2">
+      <h2 className="mb-2 text-sm font-black uppercase tracking-[0.2em] text-cyan-200">Almacén</h2>
+      <div className="home-modern-scroll min-h-0 flex-1 overflow-y-auto pr-1">
+        <div className="grid grid-cols-5 gap-2">
         {collection.map((entry) => {
           const usedCopies = usedByCardId.get(entry.card.id) ?? 0;
           const canAdd = usedCopies < Math.min(3, entry.ownedCopies);
@@ -46,6 +47,7 @@ export function HomeCollectionPanel({ deck, collection, selectedCardId, onSelect
             </motion.button>
           );
         })}
+        </div>
       </div>
     </section>
   );

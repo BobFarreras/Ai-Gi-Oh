@@ -76,6 +76,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
 .board-space-bg::before,
 .board-space-bg::after {
   content: "";
@@ -209,4 +217,23 @@ body {
 
 .hub-control-panel-glow {
   background: radial-gradient(circle at 50% 98%, rgba(45, 212, 191, 0.28), transparent 65%);
+}
+
+.home-modern-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 211, 238, 0.72) transparent;
+}
+
+.home-modern-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.home-modern-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.home-modern-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.95), rgba(59, 130, 246, 0.9));
+  border-radius: 999px;
+  border: 1px solid rgba(8, 145, 178, 0.35);
 }

@@ -10,7 +10,7 @@ interface HubSectionScreenProps {
 
 export function HubSectionScreen({ title, description, isLocked, lockReason }: HubSectionScreenProps) {
   return (
-    <main className="hub-control-room-bg min-h-screen px-4 py-8 text-slate-100 sm:px-6">
+    <main className="hub-control-room-bg h-full overflow-hidden px-4 py-8 text-slate-100 sm:px-6">
       <section className="mx-auto w-full max-w-4xl overflow-hidden rounded-3xl border border-slate-800/90 bg-[#040b15]/90 p-6 shadow-[0_24px_46px_rgba(2,4,12,0.8)]">
         <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-300/85">Módulo del Hub</p>
         <h1 className="mt-2 text-4xl font-black uppercase tracking-wide text-cyan-200">{title}</h1>
