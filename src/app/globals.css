@@ -29,6 +29,41 @@
   100% { opacity: 0.32; }
 }
 
+@keyframes hubDrift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-1.4%, 1%, 0) scale(1.02); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes hubScan {
+  0% { background-position: 0 0, 0 0; opacity: 0.3; }
+  50% { background-position: 26px 20px, -20px -18px; opacity: 0.45; }
+  100% { background-position: 0 0, 0 0; opacity: 0.3; }
+}
+
+@keyframes controlRingSpin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes controlRingReverse {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(-360deg); }
+}
+
+@keyframes flowSweep {
+  0% { transform: translateX(-20%); opacity: 0; }
+  20% { opacity: 0.2; }
+  55% { opacity: 0.55; }
+  100% { transform: translateX(20%); opacity: 0; }
+}
+
+@keyframes beamPulse {
+  0% { opacity: 0.16; }
+  50% { opacity: 0.36; }
+  100% { opacity: 0.16; }
+}
+
 body {
   background:
     radial-gradient(circle at 18% 22%, rgba(56, 189, 248, 0.24), transparent 46%),
@@ -65,4 +100,113 @@ body {
     radial-gradient(circle at 44% 52%, rgba(165, 243, 252, 0.06), transparent 42%);
   mix-blend-mode: screen;
   animation: cyberPulse 6.5s ease-in-out infinite;
+}
+
+.hub-city-bg::before,
+.hub-city-bg::after {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  pointer-events: none;
+}
+
+.hub-city-bg::before {
+  background:
+    radial-gradient(1.4px 1.4px at 12% 22%, rgba(255, 255, 255, 0.5), transparent 60%),
+    radial-gradient(1.2px 1.2px at 76% 30%, rgba(165, 243, 252, 0.44), transparent 60%),
+    radial-gradient(1px 1px at 42% 68%, rgba(191, 219, 254, 0.35), transparent 60%),
+    radial-gradient(1px 1px at 58% 82%, rgba(255, 255, 255, 0.28), transparent 60%);
+  animation: hubDrift 18s ease-in-out infinite;
+}
+
+.hub-city-bg::after {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(14, 165, 233, 0.18), transparent 30%),
+    radial-gradient(circle at 84% 26%, rgba(16, 185, 129, 0.13), transparent 30%),
+    radial-gradient(circle at 48% 84%, rgba(99, 102, 241, 0.17), transparent 34%);
+  mix-blend-mode: screen;
+}
+
+.hub-energy-grid {
+  background:
+    linear-gradient(rgba(34, 211, 238, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.14) 1px, transparent 1px);
+  background-size: 52px 52px;
+  animation: hubScan 8s ease-in-out infinite;
+}
+
+.hub-control-room-bg::before,
+.hub-control-room-bg::after {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  pointer-events: none;
+}
+
+.hub-control-room-bg::before {
+  background:
+    radial-gradient(1.2px 1.2px at 16% 20%, rgba(255, 255, 255, 0.48), transparent 60%),
+    radial-gradient(1px 1px at 72% 28%, rgba(165, 243, 252, 0.4), transparent 60%),
+    radial-gradient(1px 1px at 48% 78%, rgba(186, 230, 253, 0.38), transparent 60%);
+  animation: hubDrift 20s ease-in-out infinite;
+}
+
+.hub-control-room-bg::after {
+  background:
+    radial-gradient(circle at 14% 16%, rgba(34, 211, 238, 0.14), transparent 34%),
+    radial-gradient(circle at 84% 24%, rgba(45, 212, 191, 0.12), transparent 30%),
+    radial-gradient(circle at 54% 88%, rgba(56, 189, 248, 0.1), transparent 34%);
+}
+
+.hub-control-ambient {
+  background:
+    radial-gradient(circle at 18% 38%, rgba(34, 211, 238, 0.14), transparent 32%),
+    radial-gradient(circle at 82% 64%, rgba(20, 184, 166, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(2, 8, 16, 0.34), rgba(2, 8, 16, 0.7));
+}
+
+.hub-control-scan {
+  background:
+    linear-gradient(rgba(34, 211, 238, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.08) 1px, transparent 1px);
+  background-size: 56px 56px;
+  animation: hubScan 8s ease-in-out infinite;
+}
+
+.hub-control-flow-lines {
+  background:
+    linear-gradient(105deg, transparent 30%, rgba(56, 189, 248, 0.2) 50%, transparent 70%),
+    linear-gradient(75deg, transparent 26%, rgba(45, 212, 191, 0.16) 49%, transparent 72%);
+  filter: blur(0.3px);
+  animation: flowSweep 8s ease-in-out infinite;
+}
+
+.hub-control-flow-beam {
+  background:
+    radial-gradient(circle at 22% 52%, rgba(34, 211, 238, 0.18), transparent 28%),
+    radial-gradient(circle at 78% 48%, rgba(45, 212, 191, 0.16), transparent 30%);
+  animation: beamPulse 3.8s ease-in-out infinite;
+}
+
+.hub-control-ring {
+  border: 2px dashed rgba(103, 232, 249, 0.42);
+  box-shadow: 0 0 38px rgba(34, 211, 238, 0.4);
+  animation: controlRingSpin 16s linear infinite;
+}
+
+.hub-control-ring-slow {
+  border: 2px dotted rgba(125, 211, 252, 0.36);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.32);
+  animation: controlRingReverse 20s linear infinite;
+}
+
+.hub-control-panel-frame {
+  border: 2px solid rgba(125, 211, 252, 0.38);
+  box-shadow:
+    inset 0 0 0 1px rgba(6, 182, 212, 0.16),
+    0 0 18px rgba(34, 211, 238, 0.28);
+}
+
+.hub-control-panel-glow {
+  background: radial-gradient(circle at 50% 98%, rgba(45, 212, 191, 0.28), transparent 65%);
 }

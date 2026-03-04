@@ -1,14 +1,14 @@
-// src/app/hub/page.tsx - Página servidor del dashboard central que compone caso de uso y repositorio.
-import { HubDashboard } from "@/components/hub/HubDashboard";
+// src/app/hub/page.tsx - Página servidor del mundo central con escena de ciudad y acceso a secciones.
+import { HubScene } from "@/components/hub/HubScene";
 import { HubService } from "@/core/services/hub/HubService";
-import { GetHubDashboardUseCase } from "@/core/use-cases/hub/GetHubDashboardUseCase";
+import { GetHubMapUseCase } from "@/core/use-cases/hub/GetHubMapUseCase";
 import { InMemoryHubRepository } from "@/infrastructure/repositories/InMemoryHubRepository";
 
 export default async function HubPage() {
   const repository = new InMemoryHubRepository();
   const service = new HubService(repository);
-  const getHubDashboardUseCase = new GetHubDashboardUseCase(service);
-  const dashboard = await getHubDashboardUseCase.execute("local-player");
+  const getHubMapUseCase = new GetHubMapUseCase(service);
+  const hubMap = await getHubMapUseCase.execute("local-player");
 
-  return <HubDashboard progress={dashboard.progress} sections={dashboard.sections} />;
+  return <HubScene progress={hubMap.progress} sections={hubMap.sections} nodes={hubMap.nodes} />;
 }
