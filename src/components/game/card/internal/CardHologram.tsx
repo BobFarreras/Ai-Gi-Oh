@@ -1,4 +1,3 @@
-// src/components/game/card/internal/CardHologram.tsx - Renderiza el holograma de carta con entrada progresiva desde punto inferior.
 "use client";
 
 import Image from "next/image";
@@ -21,17 +20,12 @@ export function CardHologram({ card, isDefense, className }: CardHologramProps) 
   }
 
   return (
-    <motion.div
-      className={cn("absolute inset-0 z-50 pointer-events-none", className)}
-      style={{ transformStyle: "preserve-3d", transform: "translateZ(20px)", transformOrigin: "50% 100%" }}
-      initial={{ opacity: 0, scale: 0.04, y: 120 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.58, ease: [0.16, 1, 0.3, 1] }}
+    // 1. LA BASE ESTÁTICA: Usamos un <div> normal para que Framer no borre el translateZ(20px)
+    <div 
+      className={cn("absolute inset-0 z-50 pointer-events-none", className)} 
+      style={{ transformStyle: "preserve-3d", transform: "translateZ(20px)" }}
     >
-      {/* CAPA 1 (ANTI-GIRO): 
-          Si la carta se acuesta (-90deg), esta capa gira (+90deg) desde el centro exacto.
-          Esto aísla al holograma, creando un "lienzo" que SIEMPRE es vertical. 
-      */}
+      {/* CAPA 1 (ANTI-GIRO) */}
       <motion.div
         className="absolute inset-0 w-full h-full"
         style={{ transformOrigin: "center center", transformStyle: "preserve-3d" }}
@@ -40,16 +34,20 @@ export function CardHologram({ card, isDefense, className }: CardHologramProps) 
         transition={{ duration: 0.4, ease: "easeInOut" }}
       >
         
-        {/* CAPA 2 (INCLINACIÓN 3D): 
-            Como el lienzo exterior ya es siempre vertical, podemos aplicar nuestra inclinación
-            hacia atrás (-55deg) con total seguridad de que se levantará hacia la cámara.
+        {/* CAPA 2 (INCLINACIÓN Y CRECIMIENTO HOLOGRÁFICO AAA):
+            Al aplicar el scale desde el `bottom center` de esta capa inclinada,
+            logramos exactamente el efecto de "haz de luz" que se abre desde
+            la base hacia el cielo (Pirámide invertida).
         */}
         <motion.div
           className="relative w-full h-full"
           style={{ transformOrigin: "bottom center", transformStyle: "preserve-3d" }}
-          initial={{ rotateX: -55 }}
-          animate={{ rotateX: -55 }} // Siempre -55, ya no le pasamos el rotateZ aquí
-          transition={{ duration: 0.4, ease: "easeInOut" }}
+          // Inicia minúsculo (0.05), hundido en la base (y: 60) y transparente
+          initial={{ rotateX: -55, scale: 0.05, y: 60, opacity: 0 }}
+          // Crece a tamaño real, sube a su posición y se vuelve opaco
+          animate={{ rotateX: -55, scale: 1, y: 0, opacity: 1 }} 
+          // Física de Muelle: Entrada rápida que frena de golpe con un rebote microscópico
+          transition={{ type: "spring", damping: 18, stiffness: 120, mass: 0.8 }}
         >
           
           {/* Sombra de anclaje */}
@@ -58,9 +56,7 @@ export function CardHologram({ card, isDefense, className }: CardHologramProps) 
             style={{ transform: "translateZ(-10px)" }}
           />
 
-          {/* IMAGEN VIVA Y MASIVA 
-              ¡Ya no necesitamos condicionales aquí! Siempre estará a bottom-[95%] 
-          */}
+          {/* IMAGEN VIVA Y MASIVA */}
           <motion.div 
             className="absolute left-1/2 bottom-[95%] -translate-x-1/2 w-[420px] h-[420px] flex items-end justify-center"
             style={{ transformStyle: "preserve-3d" }}
@@ -76,7 +72,7 @@ export function CardHologram({ card, isDefense, className }: CardHologramProps) 
               src={card.renderUrl}
               alt={`Render de ${card.name}`}
               fill
-              className="object-contain drop-shadow-[0_20px_35px_rgba(0,0,0,0.9)]"
+              className="object-contain drop-shadow-[0_0px_35px_rgba(0,0,0,0.9)]"
               style={{ transform: "translateZ(40px)" }}
               priority 
             />
@@ -85,7 +81,6 @@ export function CardHologram({ card, isDefense, className }: CardHologramProps) 
           {/* COLUMNA DE ATRIBUTOS (HUD 2D) */}
           <div 
             className="absolute left-1/2 bottom-[75%] -translate-x-1/2 flex flex-col gap-3 w-full"
-            // Solo contrarrestamos el rotateX(55deg) porque el rotateZ ya lo maneja la CAPA 1
             style={{ transform: "translateZ(100px) rotateX(55deg)" }}
           >
             <StatRow 
@@ -112,7 +107,7 @@ export function CardHologram({ card, isDefense, className }: CardHologramProps) 
 
         </motion.div>
       </motion.div>
-    </motion.div>
+    </div>
   );
 }
 
