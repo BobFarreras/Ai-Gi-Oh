@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/internal/opponent-turn/runBattlePhaseStep.ts - Ejecuta paso de batalla del oponente con timings y resolución de trampas.
 import { GameEngine } from "@/core/use-cases/GameEngine";
 import { addRevealedId, findReactiveTrap, removeRevealedId } from "../trapPreview";
 import { sleep } from "../sleep";
@@ -23,13 +24,6 @@ export async function runBattlePhaseStep(context: IOpponentTurnContext, timings:
   context.setIsAnimating(true);
   context.setActiveAttackerId(attackDecision.attackerInstanceId);
   const reactiveTrap = findReactiveTrap(gameState, gameState.playerA.id, "ON_OPPONENT_ATTACK_DECLARED");
-  const targetEntity = attackDecision.defenderInstanceId
-    ? gameState.playerA.activeEntities.find((entity) => entity.instanceId === attackDecision.defenderInstanceId) ?? null
-    : null;
-
-  if (targetEntity && (targetEntity.mode === "SET" || targetEntity.mode === "DEFENSE")) {
-    context.setRevealedEntities((previous) => addRevealedId(previous, targetEntity.instanceId));
-  }
   if (reactiveTrap) {
     context.setRevealedEntities((previous) => addRevealedId(previous, reactiveTrap.instanceId));
   }
@@ -45,7 +39,6 @@ export async function runBattlePhaseStep(context: IOpponentTurnContext, timings:
     GameEngine.executeAttack(state, opponentId, attackDecision.attackerInstanceId, attackDecision.defenderInstanceId),
   );
   await sleep(timings.postResolutionMs);
-  if (targetEntity) context.setRevealedEntities((previous) => removeRevealedId(previous, targetEntity.instanceId));
   if (reactiveTrap) context.setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
   context.setActiveAttackerId(null);
   context.setIsAnimating(false);

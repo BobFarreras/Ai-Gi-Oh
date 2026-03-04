@@ -45,11 +45,6 @@ export async function handleOpponentEntityClick({
   const targetId = entity?.instanceId;
   clearSelection();
 
-  if (entity && (entity.mode === "DEFENSE" || entity.mode === "SET") && targetId) {
-    setRevealedEntities((previous) => addRevealedId(previous, targetId));
-    await sleep(800);
-  }
-
   const reactiveTrap = findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_ATTACK_DECLARED");
   if (reactiveTrap) {
     setRevealedEntities((previous) => addRevealedId(previous, reactiveTrap.instanceId));
@@ -59,9 +54,6 @@ export async function handleOpponentEntityClick({
   }
 
   applyTransition((state) => GameEngine.executeAttack(state, state.playerA.id, attackerId, targetId));
-  if (targetId) {
-    setRevealedEntities((previous) => removeRevealedId(previous, targetId));
-  }
   if (reactiveTrap) {
     await sleep(PLAYER_POST_RESOLUTION_MS);
     setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));

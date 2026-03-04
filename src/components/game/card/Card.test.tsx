@@ -1,3 +1,4 @@
+// src/components/game/card/Card.test.tsx - Pruebas unitarias del componente Card y su comportamiento visual base.
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { Card } from './Card';
@@ -14,6 +15,7 @@ describe('Componente UI: Card', () => {
     attack: 2500,
     defense: 2000,
     archetype: "LLM",
+    renderUrl: "/assets/renders/gemini.png",
   };
 
   it('debería renderizar la información de la carta correctamente', () => {
@@ -43,5 +45,10 @@ describe('Componente UI: Card', () => {
     // Assert
     expect(handleClick).toHaveBeenCalledTimes(1);
     expect(handleClick).toHaveBeenCalledWith(mockCard);
+  });
+
+  it('debería ocultar holograma cuando la carta está en modo SET', () => {
+    render(<Card card={mockCard} boardMode="SET" />);
+    expect(screen.queryByAltText(`Render de ${mockCard.name}`)).not.toBeInTheDocument();
   });
 });

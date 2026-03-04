@@ -12,7 +12,6 @@ import { useBoardTurnControls } from "./internal/board-state/useBoardTurnControl
 import { useBoardUiState } from "./internal/board-state/useBoardUiState";
 import { useOpponentTurn } from "./internal/useOpponentTurn";
 import { usePlayerActions } from "./internal/usePlayerActions";
-
 function resolveWinnerPlayerId(gameState: GameState): string | "DRAW" | null {
   if (gameState.playerA.healthPoints <= 0 && gameState.playerB.healthPoints <= 0) return "DRAW";
   if (gameState.playerA.healthPoints <= 0) return gameState.playerB.id;
@@ -35,11 +34,9 @@ export function useBoard() {
     () => buildBoardPendingUi(gameState, uiState.pendingEntityReplacement),
     [gameState, uiState.pendingEntityReplacement],
   );
-
   useEffect(() => {
     gameStateRef.current = gameState;
   }, [gameState]);
-
   useEffect(() => {
     if (!uiState.lastError) return;
     const timeoutId = setTimeout(() => uiState.setLastError(null), 3600);
@@ -66,7 +63,6 @@ export function useBoard() {
     uiState.setLastError({ code: "GAME_RULE_ERROR", message: "No es tu turno. Espera a que el rival termine su fase." });
     return false;
   }, [uiState, winnerPlayerId]);
-
   useOpponentTurn({
     gameState,
     isAnimating: isActionLocked,
@@ -79,10 +75,10 @@ export function useBoard() {
     setActiveAttackerId: uiState.setActiveAttackerId,
     setRevealedEntities: uiState.setRevealedEntities,
   });
-
   const turnControls = useBoardTurnControls({
     gameState,
     gameStateRef,
+    selectedCard: uiState.selectedCard,
     winnerPlayerId,
     isAnimating: isActionLocked,
     isPlayerTurn,
@@ -90,8 +86,9 @@ export function useBoard() {
     applyTransition,
     clearSelection: uiState.clearSelection,
     clearError: uiState.clearError,
+    setActiveAttackerId: uiState.setActiveAttackerId,
+    setPlayingCard: uiState.setPlayingCard,
   });
-
   const { toggleCardSelection, executePlayAction, handleEntityClick } = usePlayerActions({
     gameState,
     isAnimating: isActionLocked,
@@ -142,6 +139,8 @@ export function useBoard() {
     handleTimerExpired: turnControls.handleTimerExpired,
     resolvePendingTurnAction: turnControls.resolvePendingTurnAction,
     resolvePendingHandDiscard: turnControls.resolvePendingHandDiscard,
+    setSelectedEntityToAttack: turnControls.setSelectedEntityToAttack,
+    canSetSelectedEntityToAttack: turnControls.canSetSelectedEntityToAttack,
     pendingUi,
     combatFeedback,
   });

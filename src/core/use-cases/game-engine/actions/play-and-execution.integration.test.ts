@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/actions/play-and-execution.integration.test.ts - Pruebas de integración para reglas de juego de cartas y ejecuciones.
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
@@ -108,7 +109,11 @@ describe("GameEngine reglas de juego", () => {
     );
     expect(() => GameEngine.playCard(fullEntityZone, "p1", "entity-1", "ATTACK")).toThrow("Tu zona de entidades está llena.");
 
-    expect(() => GameEngine.playCard(createBaseState(), "p1", "entity-1", "SET")).toThrow("Modo inválido para una entidad.");
+    const setEntity = GameEngine.playCard(createBaseState(), "p1", "entity-1", "SET");
+    expect(setEntity.playerA.activeEntities[0]?.mode).toBe("SET");
+
+    const defenseEntity = GameEngine.playCard(createBaseState(), "p1", "entity-1", "DEFENSE");
+    expect(defenseEntity.playerA.activeEntities[0]?.mode).toBe("SET");
   });
 
   it("debería validar reglas de ejecución y resolver curación", () => {

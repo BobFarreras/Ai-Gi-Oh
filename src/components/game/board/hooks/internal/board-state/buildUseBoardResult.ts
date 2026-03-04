@@ -33,6 +33,8 @@ interface IBuildUseBoardResultParams {
   handleTimerExpired: () => void;
   resolvePendingTurnAction: (selectedId: string) => void;
   resolvePendingHandDiscard: (cardId: string) => void;
+  setSelectedEntityToAttack: () => void;
+  canSetSelectedEntityToAttack: boolean;
   pendingUi: IBoardPendingUi;
   combatFeedback: IBoardCombatFeedback;
 }
@@ -66,6 +68,8 @@ export function buildUseBoardResult(params: IBuildUseBoardResultParams) {
     handleTimerExpired: params.handleTimerExpired,
     resolvePendingTurnAction: params.resolvePendingTurnAction,
     resolvePendingHandDiscard: params.resolvePendingHandDiscard,
+    setSelectedEntityToAttack: params.setSelectedEntityToAttack,
+    canSetSelectedEntityToAttack: params.canSetSelectedEntityToAttack,
     ...params.pendingUi,
     ...params.combatFeedback,
   };

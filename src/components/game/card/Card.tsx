@@ -1,3 +1,4 @@
+// src/components/game/card/Card.tsx - Render de carta base con frame y holograma condicional según estado en tablero.
 "use client";
 
 import { ICard } from "@/core/entities/ICard";
@@ -19,7 +20,8 @@ function isBoardMode(mode?: BattleMode): boolean {
 
 export function Card({ card, onClick, isSelected = false, boardMode }: CardProps) {
   const isOnBoard = isBoardMode(boardMode);
-  const isDefense = boardMode === "DEFENSE" || boardMode === "SET";
+  const isDefense = boardMode === "DEFENSE";
+  const shouldRenderHologram = isOnBoard && boardMode !== "SET";
 
   return (
     <div className="relative w-[260px] h-[340px] group/card" style={{ transformStyle: "preserve-3d" }}>
@@ -30,7 +32,7 @@ export function Card({ card, onClick, isSelected = false, boardMode }: CardProps
         isOnBoard={isOnBoard}
         onClick={onClick}
       />
-      {isOnBoard && <CardHologram card={card} isDefense={isDefense} />}
+      {shouldRenderHologram && <CardHologram card={card} isDefense={isDefense} />}
     </div>
   );
 }

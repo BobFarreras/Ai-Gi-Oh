@@ -32,6 +32,8 @@ export function Board() {
     handleEntityClick,
     advancePhase,
     resolvePendingHandDiscard,
+    setSelectedEntityToAttack,
+    canSetSelectedEntityToAttack,
     isPlayerTurn,
     handleTimerExpired,
     lastDamageTargetPlayerId,
@@ -122,8 +124,10 @@ export function Board() {
       <BoardActionButtons
         isMuted={isMuted}
         isHistoryOpen={isHistoryOpen}
+        canSetSelectedEntityToAttack={canSetSelectedEntityToAttack}
         onToggleMute={() => { playButtonClick(); toggleMute(); }}
         onToggleHistory={() => { playButtonClick(); setIsHistoryOpen((previous) => !previous); }}
+        onSetSelectedEntityToAttack={() => { playButtonClick(); setSelectedEntityToAttack(); }}
       />
       <DuelResultOverlay winnerPlayerId={winnerPlayerId} playerA={player} playerB={opponent} onRestart={restartMatch} />
     </div>

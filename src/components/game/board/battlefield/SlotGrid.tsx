@@ -5,6 +5,7 @@ import { IBoardEntity } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
 import { Card } from "../../card/Card";
 import { CardBack } from "../../card/CardBack";
+import { resolveEntityMotionState } from "./internal/entity-motion";
 import { resolveEntityVisibility } from "./internal/entity-visibility";
 import { BuffImpactVfx } from "./BuffImpactVfx";
 import { ExecutionActivationVfx } from "./ExecutionActivationVfx";
@@ -51,6 +52,12 @@ export function SlotGrid({
         const isSelected = entity ? selectedEntityIds.includes(entity.instanceId) : false;
         const isBuffed = entity ? Boolean(buffEventId) && buffedEntityIds.includes(entity.instanceId) : false;
         const visibility = resolveEntityVisibility(entity, isRevealed);
+        const motionState = resolveEntityMotionState({
+          isAttacking,
+          isActivating,
+          isOpponentSide,
+          isHorizontal: visibility.isHorizontal,
+        });
         const targetX = -120 - index * 105;
 
         return (
@@ -65,16 +72,12 @@ export function SlotGrid({
               {entity ? (
                 <motion.div
                   key={entity.instanceId}
-                  style={{ transformStyle: "preserve-3d" }}
-                  initial={{ opacity: 0, scale: 0.2, y: -50 }}
-                  animate={{
-                    opacity: 1,
-                    scale: isAttacking ? 0.38 : isActivating ? 0.35 : 0.28,
-                    y: isAttacking ? (isOpponentSide ? 30 : -30) : isActivating ? -20 : 0,
-                    zIndex: isAttacking || isActivating ? 50 : 10,
-                    rotateY: visibility.isFaceDown ? 180 : 0,
-                    rotateZ: visibility.isHorizontal ? -90 : 0,
+                  style={{
+                    transformStyle: "preserve-3d",
+                    transform: `rotateY(${motionState.initial.rotateY}deg) rotateZ(${motionState.initial.rotateZ}deg)`,
                   }}
+                  initial={motionState.initial}
+                  animate={motionState.animate}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   exit={{ opacity: [1, 0], scale: [0.28, 0.1], x: targetX, y: 0, transition: { duration: 0.4 } }}
                   className={cn(
@@ -90,28 +93,33 @@ export function SlotGrid({
                   {isBuffed && buffStat && buffEventId && (buffAmount ?? 0) > 0 && (
                     <BuffImpactVfx eventId={buffEventId} entityId={entity.instanceId} stat={buffStat} amount={buffAmount ?? 0} />
                   )}
-                  <div className="absolute w-full h-full flex items-center justify-center" style={{ backfaceVisibility: "hidden" }}>
-                    <Card card={entity.card} isSelected={selectedCard?.id === entity.card.id} boardMode={entity.mode} />
-                    {isActivating && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: [0, 1, 0], scale: [1, 2.5] }}
-                        transition={{ duration: 0.5 }}
-                        className="absolute inset-0 bg-white rounded-xl mix-blend-overlay z-50"
-                      />
-                    )}
-                    {isSelected && (
-                      <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-black rounded-md bg-cyan-300 text-cyan-950 shadow-[0_0_14px_rgba(34,211,238,0.9)]">
-                        MATERIAL
-                      </span>
-                    )}
-                  </div>
-                  <div
-                    className="absolute w-full h-full flex items-center justify-center"
-                    style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-                  >
-                    <CardBack />
-                  </div>
+                  {visibility.isFaceDown ? (
+                    <div className="absolute w-full h-full flex items-center justify-center">
+                      <CardBack isHorizontal={visibility.isHorizontal} />
+                      {isSelected && (
+                        <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-black rounded-md bg-cyan-300 text-cyan-950 shadow-[0_0_14px_rgba(34,211,238,0.9)]">
+                          MATERIAL
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="absolute w-full h-full flex items-center justify-center">
+                      <Card card={entity.card} isSelected={selectedCard?.id === entity.card.id} boardMode={entity.mode} />
+                      {isActivating && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0 }}
+                          animate={{ opacity: [0, 1, 0], scale: [1, 2.5] }}
+                          transition={{ duration: 0.5 }}
+                          className="absolute inset-0 bg-white rounded-xl mix-blend-overlay z-50"
+                        />
+                      )}
+                      {isSelected && (
+                        <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-black rounded-md bg-cyan-300 text-cyan-950 shadow-[0_0_14px_rgba(34,211,238,0.9)]">
+                          MATERIAL
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </motion.div>
               ) : (
                 <motion.span
