@@ -42,6 +42,7 @@ interface IBuildUseBoardResultParams {
   pendingUi: IBoardPendingUi;
   combatFeedback: IBoardCombatFeedback;
   battleExperienceSummary: IAppliedCardExperienceResult[];
+  battleExperienceCardLookup: Record<string, ICard>;
 }
 
 export function buildUseBoardResult(params: IBuildUseBoardResultParams) {
@@ -78,6 +79,7 @@ export function buildUseBoardResult(params: IBuildUseBoardResultParams) {
     setSelectedEntityToAttack: params.setSelectedEntityToAttack,
     canSetSelectedEntityToAttack: params.canSetSelectedEntityToAttack,
     battleExperienceSummary: params.battleExperienceSummary,
+    battleExperienceCardLookup: params.battleExperienceCardLookup,
     ...params.pendingUi,
     ...params.combatFeedback,
   };

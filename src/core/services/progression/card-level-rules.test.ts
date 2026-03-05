@@ -11,29 +11,33 @@ import {
 
 describe("card-level-rules", () => {
   it("calcula escalado incremental de XP por nivel", () => {
-    expect(getXpRequiredForNextLevel(0)).toBe(1000);
-    expect(getXpRequiredForNextLevel(1)).toBe(1500);
-    expect(getXpRequiredForNextLevel(2)).toBe(2000);
+    expect(getXpRequiredForNextLevel(0)).toBe(40);
+    expect(getXpRequiredForNextLevel(1)).toBe(60);
+    expect(getXpRequiredForNextLevel(2)).toBe(80);
+    expect(getXpRequiredForNextLevel(5)).toBe(145);
+    expect(getXpRequiredForNextLevel(10)).toBe(290);
+    expect(getXpRequiredForNextLevel(20)).toBe(760);
   });
 
   it("calcula el XP acumulado requerido para llegar a un nivel", () => {
     expect(getTotalXpRequiredToReachLevel(0)).toBe(0);
-    expect(getTotalXpRequiredToReachLevel(1)).toBe(1000);
-    expect(getTotalXpRequiredToReachLevel(2)).toBe(2500);
+    expect(getTotalXpRequiredToReachLevel(1)).toBe(40);
+    expect(getTotalXpRequiredToReachLevel(2)).toBe(100);
+    expect(getTotalXpRequiredToReachLevel(5)).toBe(400);
   });
 
   it("devuelve métricas de progreso normalizadas para la barra", () => {
-    const metrics = getCardLevelProgressMetrics(1, 1750);
-    expect(metrics.xpRequiredForNextLevel).toBe(1500);
-    expect(metrics.xpIntoCurrentLevel).toBe(750);
+    const metrics = getCardLevelProgressMetrics(1, 70);
+    expect(metrics.xpRequiredForNextLevel).toBe(60);
+    expect(metrics.xpIntoCurrentLevel).toBe(30);
     expect(metrics.progressRatio).toBeCloseTo(0.5, 5);
   });
 
   it("resuelve nivel por XP total acumulada", () => {
     expect(resolveCardLevelFromTotalXp(0)).toBe(0);
-    expect(resolveCardLevelFromTotalXp(1000)).toBe(1);
-    expect(resolveCardLevelFromTotalXp(2499)).toBe(1);
-    expect(resolveCardLevelFromTotalXp(2500)).toBe(2);
+    expect(resolveCardLevelFromTotalXp(40)).toBe(1);
+    expect(resolveCardLevelFromTotalXp(99)).toBe(1);
+    expect(resolveCardLevelFromTotalXp(100)).toBe(2);
   });
 
   it("capa XP al máximo de progresión", () => {

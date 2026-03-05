@@ -1,7 +1,6 @@
 // src/core/services/progression/card-level-rules.ts - Reglas puras para progresión de nivel y cálculo de barra EXP por carta.
 const MAX_CARD_LEVEL = 30;
-const BASE_XP_PER_LEVEL = 1000;
-const XP_STEP_PER_LEVEL = 500;
+const EARLY_LEVEL_XP = [40, 60, 80, 100, 120] as const;
 
 export interface ICardLevelProgressMetrics {
   clampedLevel: number;
@@ -17,7 +16,10 @@ export function getMaxCardLevel(): number {
 export function getXpRequiredForNextLevel(level: number): number {
   const safeLevel = Number.isFinite(level) ? Math.max(0, Math.floor(level)) : 0;
   if (safeLevel >= MAX_CARD_LEVEL) return 0;
-  return BASE_XP_PER_LEVEL + safeLevel * XP_STEP_PER_LEVEL;
+  if (safeLevel <= 4) return EARLY_LEVEL_XP[safeLevel];
+  if (safeLevel <= 9) return 145 + (safeLevel - 5) * 25;
+  if (safeLevel <= 19) return 290 + (safeLevel - 10) * 45;
+  return 760 + (safeLevel - 20) * 70;
 }
 
 export function getTotalXpRequiredToReachLevel(level: number): number {

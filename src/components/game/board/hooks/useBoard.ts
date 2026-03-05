@@ -15,9 +15,14 @@ import { useBoardUiState } from "./internal/board-state/useBoardUiState";
 import { useOpponentTurn } from "./internal/useOpponentTurn";
 import { usePlayerActions } from "./internal/usePlayerActions";
 import { buildCardExperienceEvents } from "./internal/progression/build-card-experience-events";
+import { buildPlayerCardLookup } from "./internal/progression/build-player-card-lookup";
 import { applyBattleCardExperienceAction } from "@/services/game/apply-battle-card-experience-action";
 import type { IAppliedCardExperienceResult } from "@/core/use-cases/progression/ApplyBattleCardExperienceUseCase";
 import { appendExperienceSummaryToCombatLog } from "./internal/progression/append-experience-combat-log";
+function createBattleExperienceBatchId(): string {
+  return `battle-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function resolveWinnerPlayerId(gameState: GameState): string | "DRAW" | null {
   if (gameState.playerA.healthPoints <= 0 && gameState.playerB.healthPoints <= 0) return "DRAW";
   if (gameState.playerA.healthPoints <= 0) return gameState.playerB.id;
@@ -28,6 +33,7 @@ function resolveWinnerPlayerId(gameState: GameState): string | "DRAW" | null {
 export function useBoard(initialPlayerDeck?: ICard[]) {
   const [campaignProgress] = useState<ICampaignProgress>({ chapterIndex: 1, duelIndex: 1, victories: 0 });
   const [battleExperienceSummary, setBattleExperienceSummary] = useState<IAppliedCardExperienceResult[]>([]);
+  const [battleId, setBattleId] = useState<string>(() => createBattleExperienceBatchId());
   const createInitialState = useCallback(
     () => createInitialBoardState({ playerDeck: initialPlayerDeck }),
     [initialPlayerDeck],
@@ -45,12 +51,14 @@ export function useBoard(initialPlayerDeck?: ICard[]) {
     () => buildBoardPendingUi(gameState, uiState.pendingEntityReplacement),
     [gameState, uiState.pendingEntityReplacement],
   );
+  const battleExperienceCardLookup = useMemo(() => buildPlayerCardLookup(gameState.playerA), [gameState.playerA]);
   const hasAppliedBattleExperienceRef = useRef(false);
   useEffect(() => {
     gameStateRef.current = gameState;
   }, [gameState]);
   const restartMatch = useCallback(() => {
     setBattleExperienceSummary([]);
+    setBattleId(createBattleExperienceBatchId());
     uiState.restartMatch();
   }, [uiState]);
   useEffect(() => {
@@ -78,18 +86,17 @@ export function useBoard(initialPlayerDeck?: ICard[]) {
     if (hasAppliedBattleExperienceRef.current) return;
     hasAppliedBattleExperienceRef.current = true;
     const experienceEvents = buildCardExperienceEvents(gameState.combatLog, gameState.playerA.id);
-    if (experienceEvents.length === 0) return;
-    const battleId = `duel-${gameState.playerA.id}-${gameState.playerB.id}-${gameState.combatLog.length}-${gameState.combatLog[0]?.id ?? "start"}-${gameState.combatLog[gameState.combatLog.length - 1]?.id ?? "end"}`;
     applyBattleCardExperienceAction(battleId, experienceEvents)
       .then((summary) => {
         setBattleExperienceSummary(summary);
         if (summary.length === 0) return;
         applyTransition((currentState) => appendExperienceSummaryToCombatLog(currentState, currentState.playerA.id, summary));
       })
-      .catch(() => {
-        uiState.setLastError({ code: "VALIDATION_ERROR", message: "No se pudo guardar la experiencia de cartas del duelo." });
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : "No se pudo guardar la experiencia de cartas del duelo.";
+        uiState.setLastError({ code: "VALIDATION_ERROR", message });
       });
-  }, [applyTransition, gameState.combatLog, gameState.playerA.id, gameState.playerB.id, uiState, winnerPlayerId]);
+  }, [applyTransition, battleId, gameState.combatLog, gameState.playerA, uiState, winnerPlayerId]);
   const assertPlayerTurn = useCallback((): boolean => {
     if (winnerPlayerId) {
       uiState.setLastError({ code: "GAME_RULE_ERROR", message: "La partida ya terminó." });
@@ -180,6 +187,7 @@ export function useBoard(initialPlayerDeck?: ICard[]) {
     setSelectedEntityToAttack: turnControls.setSelectedEntityToAttack,
     canSetSelectedEntityToAttack: turnControls.canSetSelectedEntityToAttack,
     battleExperienceSummary,
+    battleExperienceCardLookup,
     pendingUi,
     combatFeedback,
   });

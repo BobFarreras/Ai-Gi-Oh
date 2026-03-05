@@ -11,11 +11,11 @@ export async function applyBattleCardExperienceAction(
   battleId: string,
   events: ICardExperienceEvent[],
 ): Promise<IAppliedCardExperienceResult[]> {
-  if (events.length === 0) return [];
   const payload: IApplyBattleCardExperiencePayload = { battleId, events };
   const response = await fetch("/api/game/progression/apply-battle-exp", {
     method: "POST",
     headers: { "content-type": "application/json" },
+    credentials: "include",
     cache: "no-store",
     body: JSON.stringify(payload),
   });

@@ -41,6 +41,7 @@ export function Board({ initialPlayerDeck }: IBoardProps) {
     setSelectedEntityToAttack,
     canSetSelectedEntityToAttack,
     battleExperienceSummary,
+    battleExperienceCardLookup,
     isPlayerTurn,
     handleTimerExpired,
     lastDamageTargetPlayerId,
@@ -149,6 +150,7 @@ export function Board({ initialPlayerDeck }: IBoardProps) {
         playerA={player}
         playerB={opponent}
         battleExperienceSummary={battleExperienceSummary}
+        battleExperienceCardLookup={battleExperienceCardLookup}
         onRestart={restartMatch}
       />
     </div>

@@ -1,3 +1,4 @@
+// src/components/game/board/internal/combatLogPresentation.ts - Formatea mensajes y deltas del combatLog para paneles y banners del tablero.
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 
 interface IPlayerLabels {
@@ -150,9 +151,27 @@ export function formatCombatLogEvent(event: ICombatLogEvent, labels: IPlayerLabe
     case "FUSION_SUMMONED":
       return `${actor} invoca una fusión.`;
     case "CARD_XP_GAINED":
-      return `${actor} gana experiencia con una carta.`;
+      {
+        const xpCardId = readPayloadField(event.payload, "cardId") ?? "carta desconocida";
+        const amount =
+          typeof event.payload === "object" && event.payload !== null && "amount" in event.payload
+            ? Number((event.payload as Record<string, unknown>).amount)
+            : null;
+        return `${actor} gana ${amount ?? 0} EXP con ${xpCardId}.`;
+      }
     case "CARD_LEVEL_UP":
-      return `${actor} sube de nivel una carta.`;
+      {
+        const levelCardId = readPayloadField(event.payload, "cardId") ?? "carta desconocida";
+        const oldLevel =
+          typeof event.payload === "object" && event.payload !== null && "oldLevel" in event.payload
+            ? Number((event.payload as Record<string, unknown>).oldLevel)
+            : 0;
+        const newLevel =
+          typeof event.payload === "object" && event.payload !== null && "newLevel" in event.payload
+            ? Number((event.payload as Record<string, unknown>).newLevel)
+            : 0;
+        return `${actor} sube ${levelCardId} de Lv ${oldLevel} a Lv ${newLevel}.`;
+      }
     default:
       return `${actor} ejecuta una acción.`;
   }
