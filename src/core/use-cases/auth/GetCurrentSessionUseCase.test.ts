@@ -7,6 +7,7 @@ describe("GetCurrentSessionUseCase", () => {
   it("devuelve la sesión del repositorio", async () => {
     const repository: IAuthRepository = {
       signInWithEmail: vi.fn(),
+      signUpWithEmail: vi.fn(),
       signOut: vi.fn(),
       getCurrentSession: vi.fn(async () => ({
         accessToken: "token",

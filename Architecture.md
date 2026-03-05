@@ -88,6 +88,24 @@ UI (app/components) -> UseCases/Services -> Repositories (interfaces core)
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
+## Auth UX (Fase 1.1)
+
+1. `src/app/page.tsx` pasa a ser landing pública del proyecto.
+2. Se añade alta de usuario en `src/app/register/page.tsx` con `RegisterForm`.
+3. `SignUpWithEmailUseCase` aplica validaciones mínimas y delega al repositorio.
+4. `middleware.ts` evita acceso a `/login` y `/register` si ya existe sesión.
+5. Se mantiene desacoplamiento: UI -> `services/auth/auth-actions.ts` -> use-cases -> `IAuthRepository`.
+
+## Auth Hardening (Fase 1.2)
+
+1. `src/app/api/auth/*` actúa como capa HTTP fina sin reglas de negocio.
+2. Orquestación de login/register/logout en `src/services/auth/api/*` (servicios por endpoint).
+3. Seguridad aplicada en servidor:
+   - validación de `Origin` contra `Host` para mitigar CSRF básico,
+   - rate-limit en memoria por IP/email para frenar fuerza bruta.
+4. Persistencia de sesión/cookies sigue encapsulada en `SupabaseAuthRepository`.
+5. Se añaden tests de endpoints auth (`route.test.ts`) cubriendo éxito, origen no confiable y límites de abuso.
+
 ## Flujo de turno actual
 
 1. El duelo se inicializa con `createInitialGameState` (mazo de 20 y mano inicial configurable; en tablero actual se usa 4 por jugador).

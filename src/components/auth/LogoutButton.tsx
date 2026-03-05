@@ -3,7 +3,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { signOutAction } from "@/services/auth/auth-actions";
+import { logoutCurrentUser } from "@/services/auth/auth-http-client";
 
 export function LogoutButton() {
   const router = useRouter();
@@ -15,7 +15,10 @@ export function LogoutButton() {
       aria-label="Cerrar sesión"
       onClick={() =>
         startTransition(async () => {
-          await signOutAction();
+          const result = await logoutCurrentUser();
+          if (!result.ok) {
+            return;
+          }
           router.push("/login");
           router.refresh();
         })

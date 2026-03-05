@@ -1,7 +1,7 @@
-// src/core/use-cases/auth/SignInWithEmailUseCase.test.ts - Verifica validaciones y delegación del login por email.
+// src/core/use-cases/auth/SignUpWithEmailUseCase.test.ts - Verifica validaciones y delegación del registro por email.
 import { describe, expect, it, vi } from "vitest";
 import { IAuthRepository } from "@/core/repositories/IAuthRepository";
-import { SignInWithEmailUseCase } from "@/core/use-cases/auth/SignInWithEmailUseCase";
+import { SignUpWithEmailUseCase } from "@/core/use-cases/auth/SignUpWithEmailUseCase";
 
 function createAuthRepositoryStub(): IAuthRepository {
   return {
@@ -20,16 +20,18 @@ function createAuthRepositoryStub(): IAuthRepository {
   };
 }
 
-describe("SignInWithEmailUseCase", () => {
-  it("falla cuando email está vacío", async () => {
-    const useCase = new SignInWithEmailUseCase(createAuthRepositoryStub());
-    await expect(useCase.execute({ email: " ", password: "123456" })).rejects.toThrow("email es obligatorio");
+describe("SignUpWithEmailUseCase", () => {
+  it("falla cuando contraseña es corta", async () => {
+    const useCase = new SignUpWithEmailUseCase(createAuthRepositoryStub());
+    await expect(useCase.execute({ email: "user@aigi.io", password: "1234" })).rejects.toThrow(
+      "al menos 8 caracteres",
+    );
   });
 
   it("delegada al repositorio normalizando email", async () => {
     const repository = createAuthRepositoryStub();
-    const useCase = new SignInWithEmailUseCase(repository);
-    await useCase.execute({ email: "USER@AIGI.IO ", password: "123456" });
-    expect(repository.signInWithEmail).toHaveBeenCalledWith({ email: "user@aigi.io", password: "123456" });
+    const useCase = new SignUpWithEmailUseCase(repository);
+    await useCase.execute({ email: "USER@AIGI.IO ", password: "12345678" });
+    expect(repository.signUpWithEmail).toHaveBeenCalledWith({ email: "user@aigi.io", password: "12345678" });
   });
 });

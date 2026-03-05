@@ -14,6 +14,7 @@ export interface IAuthSession {
 
 export interface IAuthRepository {
   signInWithEmail(credentials: IAuthCredentials): Promise<IAuthSession>;
+  signUpWithEmail(credentials: IAuthCredentials): Promise<IAuthSession>;
   signOut(): Promise<void>;
   getCurrentSession(): Promise<IAuthSession | null>;
 }

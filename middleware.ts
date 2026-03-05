@@ -9,6 +9,15 @@ function isHubRoute(pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request });
   const pathname = request.nextUrl.pathname;
+
+  if (request.method !== "GET") {
+    return response;
+  }
+
+  if (request.headers.has("next-action")) {
+    return response;
+  }
+
   const supabase = createSupabaseMiddlewareClient(request, response);
   const {
     data: { user },
@@ -18,13 +27,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (pathname === "/login" && user) {
-    return NextResponse.redirect(new URL("/hub", request.url));
-  }
-
   return response;
 }
 
 export const config = {
-  matcher: ["/hub/:path*", "/login"],
+  matcher: ["/hub/:path*"],
 };

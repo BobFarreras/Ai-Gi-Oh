@@ -36,6 +36,17 @@ export class SupabaseAuthRepository implements IAuthRepository {
     }
   }
 
+  async signUpWithEmail(credentials: IAuthCredentials): Promise<IAuthSession> {
+    const { data, error } = await this.client.auth.signUp({
+      email: credentials.email,
+      password: credentials.password,
+    });
+    if (error || !data.session) {
+      throw new ValidationError("No se pudo registrar la cuenta con los datos proporcionados.");
+    }
+    return mapSession(data.session);
+  }
+
   async getCurrentSession(): Promise<IAuthSession | null> {
     const { data, error } = await this.client.auth.getSession();
     if (error) {
