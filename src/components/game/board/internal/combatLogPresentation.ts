@@ -69,6 +69,9 @@ export function formatEventDelta(event: ICombatLogEvent): { text: string; tone: 
         : "STAT";
     return { text: `+${amount} ${stat}`, tone: "amber" };
   }
+  if (event.eventType === "CARD_XP_GAINED") {
+    return { text: `+${amount} EXP`, tone: "amber" };
+  }
   return null;
 }
 
@@ -146,6 +149,10 @@ export function formatCombatLogEvent(event: ICombatLogEvent, labels: IPlayerLabe
       return `${actor} resuelve acción obligatoria.`;
     case "FUSION_SUMMONED":
       return `${actor} invoca una fusión.`;
+    case "CARD_XP_GAINED":
+      return `${actor} gana experiencia con una carta.`;
+    case "CARD_LEVEL_UP":
+      return `${actor} sube de nivel una carta.`;
     default:
       return `${actor} ejecuta una acción.`;
   }

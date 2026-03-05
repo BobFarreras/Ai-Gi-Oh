@@ -17,6 +17,7 @@ import { usePlayerActions } from "./internal/usePlayerActions";
 import { buildCardExperienceEvents } from "./internal/progression/build-card-experience-events";
 import { applyBattleCardExperienceAction } from "@/services/game/apply-battle-card-experience-action";
 import type { IAppliedCardExperienceResult } from "@/core/use-cases/progression/ApplyBattleCardExperienceUseCase";
+import { appendExperienceSummaryToCombatLog } from "./internal/progression/append-experience-combat-log";
 function resolveWinnerPlayerId(gameState: GameState): string | "DRAW" | null {
   if (gameState.playerA.healthPoints <= 0 && gameState.playerB.healthPoints <= 0) return "DRAW";
   if (gameState.playerA.healthPoints <= 0) return gameState.playerB.id;
@@ -48,21 +49,6 @@ export function useBoard(initialPlayerDeck?: ICard[]) {
   useEffect(() => {
     gameStateRef.current = gameState;
   }, [gameState]);
-  useEffect(() => {
-    if (!winnerPlayerId) {
-      hasAppliedBattleExperienceRef.current = false;
-      return;
-    }
-    if (hasAppliedBattleExperienceRef.current) return;
-    hasAppliedBattleExperienceRef.current = true;
-    const experienceEvents = buildCardExperienceEvents(gameState.combatLog, gameState.playerA.id);
-    if (experienceEvents.length === 0) return;
-    applyBattleCardExperienceAction(experienceEvents)
-      .then((summary) => setBattleExperienceSummary(summary))
-      .catch(() => {
-        uiState.setLastError({ code: "VALIDATION_ERROR", message: "No se pudo guardar la experiencia de cartas del duelo." });
-      });
-  }, [gameState.combatLog, gameState.playerA.id, uiState, winnerPlayerId]);
   const restartMatch = useCallback(() => {
     setBattleExperienceSummary([]);
     uiState.restartMatch();
@@ -84,6 +70,25 @@ export function useBoard(initialPlayerDeck?: ICard[]) {
       return null;
     }
   }, [uiState]);
+  useEffect(() => {
+    if (!winnerPlayerId) {
+      hasAppliedBattleExperienceRef.current = false;
+      return;
+    }
+    if (hasAppliedBattleExperienceRef.current) return;
+    hasAppliedBattleExperienceRef.current = true;
+    const experienceEvents = buildCardExperienceEvents(gameState.combatLog, gameState.playerA.id);
+    if (experienceEvents.length === 0) return;
+    applyBattleCardExperienceAction(experienceEvents)
+      .then((summary) => {
+        setBattleExperienceSummary(summary);
+        if (summary.length === 0) return;
+        applyTransition((currentState) => appendExperienceSummaryToCombatLog(currentState, currentState.playerA.id, summary));
+      })
+      .catch(() => {
+        uiState.setLastError({ code: "VALIDATION_ERROR", message: "No se pudo guardar la experiencia de cartas del duelo." });
+      });
+  }, [applyTransition, gameState.combatLog, gameState.playerA.id, uiState, winnerPlayerId]);
   const assertPlayerTurn = useCallback((): boolean => {
     if (winnerPlayerId) {
       uiState.setLastError({ code: "GAME_RULE_ERROR", message: "La partida ya terminó." });
