@@ -1,10 +1,9 @@
 // src/app/hub/market/page.tsx - Renderiza la pantalla base del mercado dentro del hub.
-import { MarketOverview } from "@/components/hub/market/MarketOverview";
+import { MarketScene } from "@/components/hub/market/MarketScene";
 import { HubSectionScreen } from "@/components/hub/sections/HubSectionScreen";
 import { getHubSectionViewModel } from "@/app/hub/internal/getHubSectionViewModel";
 import { GetMarketCatalogUseCase } from "@/core/use-cases/market/GetMarketCatalogUseCase";
-import { InMemoryMarketRepository } from "@/infrastructure/repositories/InMemoryMarketRepository";
-import { InMemoryWalletRepository } from "@/infrastructure/repositories/InMemoryWalletRepository";
+import { sharedMarketRepository, sharedWalletRepository } from "@/infrastructure/repositories/singletons";
 
 export default async function MarketPage() {
   const playerId = "local-player";
@@ -19,11 +18,8 @@ export default async function MarketPage() {
       />
     );
   }
-  const getMarketCatalogUseCase = new GetMarketCatalogUseCase(
-    new InMemoryMarketRepository(),
-    new InMemoryWalletRepository(),
-  );
+  const getMarketCatalogUseCase = new GetMarketCatalogUseCase(sharedMarketRepository, sharedWalletRepository);
   const catalog = await getMarketCatalogUseCase.execute(playerId);
 
-  return <MarketOverview catalog={catalog} />;
+  return <MarketScene playerId={playerId} initialCatalog={catalog} />;
 }

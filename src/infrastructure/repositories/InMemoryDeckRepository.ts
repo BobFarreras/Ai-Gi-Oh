@@ -6,6 +6,7 @@ import { TRAP_CARDS } from "@/core/data/mock-cards/traps";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IDeck } from "@/core/entities/home/IDeck";
 import { NotFoundError } from "@/core/errors/NotFoundError";
+import { ICardCollectionRepository } from "@/core/repositories/ICardCollectionRepository";
 import { IDeckRepository } from "@/core/repositories/IDeckRepository";
 import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
 
@@ -25,6 +26,7 @@ export class InMemoryDeckRepository implements IDeckRepository {
   constructor(
     private readonly collection: ICollectionCard[] = STARTER_COLLECTION,
     initialDecks: IDeck[] = [],
+    private readonly collectionRepository: ICardCollectionRepository | null = null,
   ) {
     for (const deck of initialDecks) {
       this.decks.set(deck.playerId, { playerId: deck.playerId, slots: deck.slots.map((slot) => ({ ...slot })) });
@@ -44,6 +46,10 @@ export class InMemoryDeckRepository implements IDeckRepository {
   async getCollection(playerId: string): Promise<ICollectionCard[]> {
     if (!playerId.trim()) {
       throw new NotFoundError("No se encontró colección para jugador vacío.");
+    }
+
+    if (this.collectionRepository) {
+      return this.collectionRepository.getCollection(playerId);
     }
 
     return this.collection.map((entry) => ({ card: entry.card, ownedCopies: entry.ownedCopies }));
