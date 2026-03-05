@@ -6,7 +6,7 @@ import { MarketRarity } from "@/core/entities/market/IMarketRarity";
 import { IPackCardEntry } from "@/core/entities/market/IPackCardEntry";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { IMarketRepository } from "@/core/repositories/IMarketRepository";
-import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
+import { loadCardsByIds } from "@/infrastructure/persistence/supabase/internal/load-cards-by-ids";
 
 interface IMarketListingRow {
   id: string;
@@ -42,9 +42,14 @@ export class SupabaseMarketRepository implements IMarketRepository {
   async getCardListings(): Promise<IMarketCardListing[]> {
     const listingsResult = await this.client.from("market_card_listings").select("id,card_id,rarity,price_nexus,stock,is_available");
     if (listingsResult.error) throw new ValidationError("No se pudo cargar listados de mercado.");
-    return ((listingsResult.data ?? []) as IMarketListingRow[])
+    const listingsRows = (listingsResult.data ?? []) as IMarketListingRow[];
+    const cardsById = await loadCardsByIds(
+      this.client,
+      listingsRows.map((row) => row.card_id),
+    );
+    return listingsRows
       .map((row) => {
-        const card = CARD_BY_ID.get(row.card_id);
+        const card = cardsById.get(row.card_id);
         if (!card) return null;
         return {
           id: row.id,
@@ -81,9 +86,14 @@ export class SupabaseMarketRepository implements IMarketRepository {
       .select("id,pack_pool_id,card_id,rarity,weight")
       .eq("pack_pool_id", packPoolId);
     if (entriesResult.error) throw new ValidationError("No se pudo cargar el pool del sobre.");
-    return ((entriesResult.data ?? []) as IMarketPoolEntryRow[])
+    const poolRows = (entriesResult.data ?? []) as IMarketPoolEntryRow[];
+    const cardsById = await loadCardsByIds(
+      this.client,
+      poolRows.map((row) => row.card_id),
+    );
+    return poolRows
       .map((row) => {
-        const card = CARD_BY_ID.get(row.card_id);
+        const card = cardsById.get(row.card_id);
         if (!card) return null;
         return { id: row.id, card, rarity: row.rarity, weight: row.weight };
       })

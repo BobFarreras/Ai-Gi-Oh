@@ -238,6 +238,13 @@ UI (app/components) -> UseCases/Services -> Repositories (interfaces core)
    - `InMemoryWalletRepository` rechaza débito con saldo insuficiente.
    - IDs de transacción de mercado se generan con estrategia única (`generateMarketTransactionId`).
 
+## Subdominio Market/Home (fase 5 con catálogo BD)
+
+1. `cards_catalog` pasa a ser la fuente canónica para hidratar `ICard` en repositorios Supabase.
+2. `SupabaseMarketRepository` y `SupabaseCardCollectionRepository` cargan cartas por `card_id` desde BD (sin `CARD_BY_ID` hardcodeado en flujo persistente).
+3. Se mantiene fallback a in-memory solo si no está disponible el esquema completo (`market_*` + `cards_catalog`).
+4. `004_phase_4_cards_catalog_integrity.sql` garantiza FKs entre market/home y catálogo maestro.
+
 ## Eventos y observabilidad
 
 1. El motor añade eventos en `combatLog` desde los casos de uso (`playCard`, `executeAttack`, `nextPhase`, etc.).

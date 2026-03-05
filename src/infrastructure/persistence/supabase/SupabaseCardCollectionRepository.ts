@@ -1,10 +1,10 @@
 // src/infrastructure/persistence/supabase/SupabaseCardCollectionRepository.ts - Repositorio de almacén del jugador con acumulación de copias por carta.
 import { SupabaseClient } from "@supabase/supabase-js";
-import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { ICardCollectionRepository } from "@/core/repositories/ICardCollectionRepository";
-import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
+import { assertCardIdsExist } from "@/infrastructure/persistence/supabase/internal/assert-card-ids-exist";
+import { loadCardsByIds } from "@/infrastructure/persistence/supabase/internal/load-cards-by-ids";
 
 interface ICollectionRow {
   player_id: string;
@@ -22,9 +22,14 @@ export class SupabaseCardCollectionRepository implements ICardCollectionReposito
       .eq("player_id", playerId)
       .gt("owned_copies", 0);
     if (error) throw new ValidationError("No se pudo cargar el almacén del jugador.");
-    return (data as ICollectionRow[])
+    const collectionRows = data as ICollectionRow[];
+    const cardsById = await loadCardsByIds(
+      this.client,
+      collectionRows.map((row) => row.card_id),
+    );
+    return collectionRows
       .map((row) => {
-        const card = CARD_BY_ID.get(row.card_id);
+        const card = cardsById.get(row.card_id);
         if (!card) return null;
         return { card, ownedCopies: row.owned_copies };
       })
@@ -34,9 +39,9 @@ export class SupabaseCardCollectionRepository implements ICardCollectionReposito
   async addCards(playerId: string, cardIds: string[]): Promise<void> {
     const groupedCounts = new Map<string, number>();
     for (const cardId of cardIds) {
-      if (!CARD_BY_ID.has(cardId)) throw new NotFoundError(`La carta ${cardId} no existe en catálogo.`);
       groupedCounts.set(cardId, (groupedCounts.get(cardId) ?? 0) + 1);
     }
+    await assertCardIdsExist(this.client, Array.from(groupedCounts.keys()));
     for (const [cardId, increment] of groupedCounts.entries()) {
       const { data, error } = await this.client
         .from("player_collection_cards")

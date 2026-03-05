@@ -87,6 +87,12 @@
    - varias `TRAP`,
    - y sus listados en `market_card_listings`.
 
+## Fase 5 (Catálogo real consumido por repositorios)
+
+1. Aplicar previamente `003` y `004`.
+2. Los repositorios Supabase (`Market` y `Collection`) hidratan cartas desde `public.cards_catalog`.
+3. El fallback a modo mock solo se usa cuando no existe esquema completo de catálogo en BD.
+
 ## Notas
 
 1. El trigger `on_auth_user_created` solo debe existir una vez.
