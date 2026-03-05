@@ -10,7 +10,11 @@ Esta carpeta contendrá implementaciones concretas de repositorios de `core/repo
    - `create-supabase-auth-repository.ts`
    - `create-supabase-player-profile-repository.ts`
    - `create-supabase-player-progress-repository.ts`
-5. Adaptadores de `wallet`, `collection`, `deck` y `market` cuando se active persistencia real.
+5. Adaptadores de Home/Market persistentes:
+   - `SupabaseWalletRepository`
+   - `SupabaseCardCollectionRepository`
+   - `SupabaseDeckRepository`
+   - `SupabaseTransactionRepository`
 
 ## Reglas
 

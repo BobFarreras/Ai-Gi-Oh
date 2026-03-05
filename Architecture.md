@@ -121,6 +121,23 @@ UI (app/components) -> UseCases/Services -> Repositories (interfaces core)
    - RLS activa en `player_profiles` y `player_progress`,
    - políticas `SELECT/INSERT/UPDATE` solo para `auth.uid() = player_id`.
 
+## Persistencia Home/Market (Fase 3)
+
+1. Estado del jugador persistido en Supabase:
+   - wallet Nexus,
+   - colección,
+   - deck por slots,
+   - historial de transacciones.
+2. `app/api/market/*` y `app/api/home/*` encapsulan mutaciones del cliente.
+3. UI cliente consume endpoints HTTP (`services/market/market-actions.ts`, `services/home/deck-builder/deck-builder-actions.ts`).
+4. Repositorios dedicados:
+   - `SupabaseWalletRepository`,
+   - `SupabaseCardCollectionRepository`,
+   - `SupabaseDeckRepository`,
+   - `SupabaseTransactionRepository`.
+5. SQL de fase:
+   - `docs/supabase/sql/002_phase_3_market_home_persistence.sql`.
+
 ## Flujo de turno actual
 
 1. El duelo se inicializa con `createInitialGameState` (mazo de 20 y mano inicial configurable; en tablero actual se usa 4 por jugador).
