@@ -1,0 +1,46 @@
+// src/infrastructure/repositories/InMemoryCardCollectionRepository.ts - Repositorio mock de colección para integrar compras de mercado con Mi Home.
+import { ENTITY_CARDS } from "@/core/data/mock-cards/entities";
+import { EXECUTION_CARDS } from "@/core/data/mock-cards/executions";
+import { FUSION_CARDS } from "@/core/data/mock-cards/fusions";
+import { TRAP_CARDS } from "@/core/data/mock-cards/traps";
+import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
+import { NotFoundError } from "@/core/errors/NotFoundError";
+import { ICardCollectionRepository } from "@/core/repositories/ICardCollectionRepository";
+
+const CARD_CATALOG = [...ENTITY_CARDS, ...EXECUTION_CARDS, ...TRAP_CARDS, ...FUSION_CARDS];
+const CARD_BY_ID = new Map(CARD_CATALOG.map((card) => [card.id, card]));
+
+export class InMemoryCardCollectionRepository implements ICardCollectionRepository {
+  private readonly collections = new Map<string, Map<string, number>>();
+
+  constructor(initialPlayerId = "local-player") {
+    const starterCollection = new Map<string, number>();
+    for (const card of ENTITY_CARDS.slice(0, 10)) {
+      starterCollection.set(card.id, 1);
+    }
+    this.collections.set(initialPlayerId, starterCollection);
+  }
+
+  async getCollection(playerId: string): Promise<ICollectionCard[]> {
+    const collectionMap = this.collections.get(playerId) ?? new Map<string, number>();
+    this.collections.set(playerId, collectionMap);
+    return Array.from(collectionMap.entries())
+      .map(([cardId, ownedCopies]) => {
+        const card = CARD_BY_ID.get(cardId);
+        if (!card) return null;
+        return { card, ownedCopies };
+      })
+      .filter((entry): entry is ICollectionCard => entry !== null);
+  }
+
+  async addCards(playerId: string, cardIds: string[]): Promise<void> {
+    const collectionMap = this.collections.get(playerId) ?? new Map<string, number>();
+    for (const cardId of cardIds) {
+      if (!CARD_BY_ID.has(cardId)) {
+        throw new NotFoundError(`La carta ${cardId} no existe en el catálogo de mercado.`);
+      }
+      collectionMap.set(cardId, (collectionMap.get(cardId) ?? 0) + 1);
+    }
+    this.collections.set(playerId, collectionMap);
+  }
+}

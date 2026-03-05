@@ -51,3 +51,26 @@ Ruta: `public/assets/hud/`
 1. `hud-container.png`
 2. `hud-header.png`
 3. `hud-section.png`
+
+## Mercado (fase inicial de dominio)
+
+1. Moneda del mercado: `Nexus`.
+2. El catálogo contempla:
+   - compra directa de cartas,
+   - compra de sobres con cartas aleatorias.
+3. Rarezas previstas para mercado:
+   - `COMMON`, `RARE`, `EPIC`, `LEGENDARY`.
+4. La rareza y probabilidad se gestionan en la capa `market` y no altera todavía las reglas del motor de combate.
+
+## Mercado (fase 4 mock conectada)
+
+1. Repositorios `in-memory` activos para:
+   - catálogo de cartas y sobres,
+   - wallet Nexus,
+   - colección del jugador,
+   - transacciones.
+2. Casos de uso implementados:
+   - `GetMarketCatalogUseCase`,
+   - `BuyMarketCardUseCase`,
+   - `BuyPackUseCase`.
+3. La ruta `/hub/market` ya consume catálogo real mock y muestra saldo Nexus/catálogo/sobres como base para la UI completa.
