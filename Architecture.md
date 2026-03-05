@@ -117,6 +117,51 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
    - `SaveDeckUseCase`.
 5. Capa `services/home/deck-builder` adapta la interacción de UI reutilizando los casos de uso sin mover lógica al componente React.
 
+## Subdominio Market (fase 1-3)
+
+1. Entidades base:
+   - `IMarketCardListing`,
+   - `IMarketPackDefinition`,
+   - `IPackCardEntry`,
+   - `IPlayerWallet`,
+   - `IMarketTransaction`.
+2. Moneda oficial del mercado: `Nexus`.
+3. Contratos de repositorio:
+   - `IMarketRepository`,
+   - `IWalletRepository`,
+   - `ICardCollectionRepository`,
+   - `ITransactionRepository`.
+4. Reglas puras en `core/services/market`:
+   - validación de economía Nexus,
+   - apertura de sobres con selección ponderada por rareza/peso.
+5. Las rarezas (`COMMON`, `RARE`, `EPIC`, `LEGENDARY`) quedan preparadas en capa de mercado sin forzar cambios inmediatos en motor de combate.
+
+## Subdominio Market (fase 4 mock)
+
+1. `InMemoryMarketRepository` provee catálogo y pools de sobre.
+2. `InMemoryWalletRepository` gestiona saldo Nexus por jugador.
+3. `InMemoryCardCollectionRepository` permite inyectar compras al almacén del jugador.
+4. `InMemoryTransactionRepository` registra historial de compras mock.
+5. `/hub/market` consume `GetMarketCatalogUseCase` como fuente de verdad de catálogo/saldo.
+
+## Subdominio Market (fase 5 sin BD)
+
+1. Se introduce `IPlayerPersistenceStore` en infraestructura para centralizar estado de jugador (wallet, colección, deck y transacciones).
+2. `InMemoryPlayerPersistenceStore` actúa como backend temporal compartido y sustituible por adaptador real (DB) sin cambiar casos de uso.
+3. Repositorios in-memory (`Wallet`, `CardCollection`, `Deck`, `Transaction`) dependen del store y no gestionan estado aislado interno.
+4. `singletons.ts` inyecta una única instancia compartida del store para mantener consistencia entre módulos `Market` y `Home`.
+
+## Subdominio Market (auditoría UI y mantenibilidad)
+
+1. El módulo visual se documenta en `src/components/hub/market/README.md`.
+2. `MarketScene` delega estado y side-effects en `internal/useMarketSceneState.ts`.
+3. La UI se divide por subcarpetas (`layout/`, `listings/`, `packs/`, `reveal/`, `vault/`) para localizar responsabilidades rápido.
+4. Los paneles y overlays especializados respetan SRP y límite de tamaño por archivo.
+5. Componentes legacy sin referencias activas deben eliminarse para evitar deuda técnica.
+6. Endurecimiento de integridad:
+   - `InMemoryWalletRepository` rechaza débito con saldo insuficiente.
+   - IDs de transacción de mercado se generan con estrategia única (`generateMarketTransactionId`).
+
 ## Eventos y observabilidad
 
 1. El motor añade eventos en `combatLog` desde los casos de uso (`playCard`, `executeAttack`, `nextPhase`, etc.).

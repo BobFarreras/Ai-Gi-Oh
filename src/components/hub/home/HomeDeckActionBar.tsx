@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { HomeCollectionOrderDirection, HomeCollectionOrderField, HomeCollectionTypeFilter } from "@/components/hub/home/home-filters";
 import { GameSelect } from "@/components/ui/GameSelect";
 import { ArrowDownUp, Layers3, ListFilter, Download, Upload, Save } from "lucide-react";
+import { BackButton } from "@/components/ui/BackButton"; // <-- NUEVA IMPORTACIÓN
 
 interface HomeDeckActionBarProps {
   canInsert: boolean;
@@ -25,11 +26,14 @@ export function HomeDeckActionBar({ canInsert, canRemove, typeFilter, orderField
   return (
     <header className="relative flex w-full flex-col xl:flex-row xl:items-center justify-between gap-4 bg-[#041120]/90 border border-cyan-800/50 p-3 sm:px-5 sm:py-3 rounded-xl shadow-[0_0_20px_rgba(8,145,178,0.15),inset_0_0_20px_rgba(0,0,0,0.6)] backdrop-blur-xl overflow-hidden z-10">
       
-      {/* Fondo Holográfico Sutil */}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(34,211,238,0.05),transparent_45%,rgba(59,130,246,0.05))]" />
 
       {/* 1. SECCIÓN IZQUIERDA: Título y Contexto */}
-      <div className="relative flex items-baseline gap-3 pr-2 xl:pr-6 xl:border-r border-cyan-900/60">
+      {/* REFACTOR: Cambiado a items-center e inyectado el BackButton */}
+      <div className="relative flex items-center gap-3 pr-2 xl:pr-6 xl:border-r border-cyan-900/60">
+        
+        <BackButton href="/hub" label="Menú" className="mr-1 xs:flex" />
+
         <h1 className="text-xl sm:text-2xl font-black uppercase tracking-widest text-cyan-100 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)] whitespace-nowrap">
           Mi Home
         </h1>
@@ -39,6 +43,7 @@ export function HomeDeckActionBar({ canInsert, canRemove, typeFilter, orderField
         </p>
       </div>
 
+      {/* ... (El resto del código de la Barra Maestra sigue exactamente igual) ... */}
       <div className="relative flex flex-1 flex-wrap lg:flex-nowrap items-center justify-between gap-4">
         
         {/* 2. SECCIÓN CENTRAL: Acciones Principales */}

@@ -26,10 +26,7 @@ function resolveEntityDeployMode(mode: BattleMode): Extract<BattleMode, "ATTACK"
     return "SET";
   }
 
-  if (mode !== "ATTACK" && mode !== "DEFENSE") {
-    throw new ValidationError("Modo inválido para una entidad.");
-  }
-  return "SET";
+  throw new ValidationError("Modo inválido para una entidad.");
 }
 
 function validateExecutionPlay(player: IPlayer, mode: BattleMode): void {

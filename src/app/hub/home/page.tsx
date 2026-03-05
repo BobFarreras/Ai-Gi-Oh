@@ -2,15 +2,14 @@
 
 import { HomeDeckBuilderScene } from "@/components/hub/home/HomeDeckBuilderScene";
 import { GetHomeDeckBuilderDataUseCase } from "@/core/use-cases/home/GetHomeDeckBuilderDataUseCase";
-import { InMemoryDeckRepository } from "@/infrastructure/repositories/InMemoryDeckRepository";
+import { sharedDeckRepository } from "@/infrastructure/repositories/singletons";
 
 export default async function HomeModulePage() {
   const playerId = "local-player";
 
  
 
-  const repository = new InMemoryDeckRepository();
-  const getHomeDeckBuilderDataUseCase = new GetHomeDeckBuilderDataUseCase(repository);
+  const getHomeDeckBuilderDataUseCase = new GetHomeDeckBuilderDataUseCase(sharedDeckRepository);
   const data = await getHomeDeckBuilderDataUseCase.execute(playerId);
 
   return <HomeDeckBuilderScene playerId={playerId} initialDeck={data.deck} collection={data.collection} />;

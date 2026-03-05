@@ -1,8 +1,8 @@
 // src/core/services/hub/HubAccessPolicy.ts - Centraliza reglas de acceso y bloqueo por progreso del jugador.
-import { IHubSection } from "@/core/entities/hub/IHubSection";
+import { HubSectionType, IHubSection } from "@/core/entities/hub/IHubSection";
 import { IPlayerHubProgress } from "@/core/entities/hub/IPlayerHubProgress";
 
-const ALWAYS_UNLOCKED_TYPES = new Set(["MARKET", "HOME", "TRAINING"] as const);
+const ALWAYS_UNLOCKED_TYPES: ReadonlySet<HubSectionType> = new Set(["MARKET", "HOME", "TRAINING"]);
 
 export function resolveHubSectionLock(section: IHubSection, progress: IPlayerHubProgress): IHubSection {
   if (ALWAYS_UNLOCKED_TYPES.has(section.type)) {
