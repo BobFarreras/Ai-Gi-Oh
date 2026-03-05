@@ -106,6 +106,21 @@ UI (app/components) -> UseCases/Services -> Repositories (interfaces core)
 4. Persistencia de sesión/cookies sigue encapsulada en `SupabaseAuthRepository`.
 5. Se añaden tests de endpoints auth (`route.test.ts`) cubriendo éxito, origen no confiable y límites de abuso.
 
+## Persistencia jugador (Fase 2)
+
+1. Se incorporan repositorios reales:
+   - `SupabasePlayerProfileRepository`
+   - `SupabasePlayerProgressRepository`
+2. Se añade bootstrap de jugador autenticado:
+   - `GetOrCreatePlayerProfileUseCase`
+   - `GetOrCreatePlayerProgressUseCase`
+3. `Hub` empieza a consumir progreso persistido vía `SupabaseHubRepository`.
+4. SQL de fase:
+   - `docs/supabase/sql/001_phase_2_player_profile_progress.sql`
+5. Seguridad de datos:
+   - RLS activa en `player_profiles` y `player_progress`,
+   - políticas `SELECT/INSERT/UPDATE` solo para `auth.uid() = player_id`.
+
 ## Flujo de turno actual
 
 1. El duelo se inicializa con `createInitialGameState` (mazo de 20 y mano inicial configurable; en tablero actual se usa 4 por jugador).

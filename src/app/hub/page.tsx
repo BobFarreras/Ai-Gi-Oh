@@ -1,17 +1,9 @@
 // src/app/hub/page.tsx - Página servidor del mundo central con escena de ciudad y acceso a secciones.
 import { HubScene } from "@/components/hub/HubScene";
-import { HubService } from "@/core/services/hub/HubService";
-import { GetHubMapUseCase } from "@/core/use-cases/hub/GetHubMapUseCase";
-import { InMemoryHubRepository } from "@/infrastructure/repositories/InMemoryHubRepository";
-import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
+import { getHubRuntimeData } from "@/services/hub/get-hub-runtime-data";
 
 export default async function HubPage() {
-  const repository = new InMemoryHubRepository();
-  const service = new HubService(repository);
-  const getHubMapUseCase = new GetHubMapUseCase(service);
-  const hubMap = await getHubMapUseCase.execute("local-player");
-  const session = await getCurrentUserSession();
-  const playerLabel = session?.user.displayName ?? session?.user.email ?? "Operador local";
+  const { playerLabel, hubMap } = await getHubRuntimeData();
 
   return (
     <div className="relative h-full w-full">
