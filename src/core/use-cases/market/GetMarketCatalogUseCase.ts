@@ -27,7 +27,7 @@ export class GetMarketCatalogUseCase {
     ]);
     return {
       wallet,
-      listings: listings.filter((listing) => listing.isAvailable),
+      listings,
       packs: packs.filter((pack) => pack.isAvailable),
     };
   }

@@ -9,6 +9,8 @@ import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ICardCollectionRepository } from "@/core/repositories/ICardCollectionRepository";
 import { IDeckRepository } from "@/core/repositories/IDeckRepository";
 import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
+import { InMemoryPlayerPersistenceStore } from "@/infrastructure/repositories/state/InMemoryPlayerPersistenceStore";
+import { IPlayerPersistenceStore } from "@/infrastructure/repositories/state/IPlayerPersistenceStore";
 
 const STARTER_COLLECTION = [...ENTITY_CARDS, ...EXECUTION_CARDS, ...TRAP_CARDS, ...FUSION_CARDS].map((card) => ({
   card,
@@ -21,26 +23,30 @@ function createEmptyDeck(playerId: string): IDeck {
 }
 
 export class InMemoryDeckRepository implements IDeckRepository {
-  private readonly decks = new Map<string, IDeck>();
+  private readonly store: IPlayerPersistenceStore;
 
   constructor(
     private readonly collection: ICollectionCard[] = STARTER_COLLECTION,
     initialDecks: IDeck[] = [],
     private readonly collectionRepository: ICardCollectionRepository | null = null,
+    store: IPlayerPersistenceStore = new InMemoryPlayerPersistenceStore(),
   ) {
+    this.store = store;
     for (const deck of initialDecks) {
-      this.decks.set(deck.playerId, { playerId: deck.playerId, slots: deck.slots.map((slot) => ({ ...slot })) });
+      if (!this.store.getDeck(deck.playerId)) {
+        this.store.saveDeck(deck);
+      }
     }
   }
 
   async getDeck(playerId: string): Promise<IDeck> {
-    const currentDeck = this.decks.get(playerId) ?? createEmptyDeck(playerId);
-    this.decks.set(playerId, currentDeck);
+    const currentDeck = this.store.getDeck(playerId) ?? createEmptyDeck(playerId);
+    this.store.saveDeck(currentDeck);
     return { playerId: currentDeck.playerId, slots: currentDeck.slots.map((slot) => ({ ...slot })) };
   }
 
   async saveDeck(deck: IDeck): Promise<void> {
-    this.decks.set(deck.playerId, { playerId: deck.playerId, slots: deck.slots.map((slot) => ({ ...slot })) });
+    this.store.saveDeck(deck);
   }
 
   async getCollection(playerId: string): Promise<ICollectionCard[]> {

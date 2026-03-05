@@ -6,5 +6,6 @@ export interface IMarketPackDefinition {
   priceNexus: number;
   cardsPerPack: number;
   packPoolId: string;
+  previewCardIds: string[];
   isAvailable: boolean;
 }

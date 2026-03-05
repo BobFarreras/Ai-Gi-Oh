@@ -2,19 +2,25 @@
 import { IPlayerWallet } from "@/core/entities/market/IPlayerWallet";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { IWalletRepository } from "@/core/repositories/IWalletRepository";
+import { InMemoryPlayerPersistenceStore } from "@/infrastructure/repositories/state/InMemoryPlayerPersistenceStore";
+import { IPlayerPersistenceStore } from "@/infrastructure/repositories/state/IPlayerPersistenceStore";
 
 export class InMemoryWalletRepository implements IWalletRepository {
-  private readonly wallets = new Map<string, IPlayerWallet>();
+  private readonly store: IPlayerPersistenceStore;
 
-  constructor(initialWallets: IPlayerWallet[] = [{ playerId: "local-player", nexus: 1000 }]) {
+  constructor(
+    initialWallets: IPlayerWallet[] = [{ playerId: "local-player", nexus: 1000 }],
+    store: IPlayerPersistenceStore = new InMemoryPlayerPersistenceStore(),
+  ) {
+    this.store = store;
     for (const wallet of initialWallets) {
-      this.wallets.set(wallet.playerId, { ...wallet });
+      this.store.saveWallet(wallet);
     }
   }
 
   async getWallet(playerId: string): Promise<IPlayerWallet> {
-    const wallet = this.wallets.get(playerId) ?? { playerId, nexus: 0 };
-    this.wallets.set(playerId, wallet);
+    const wallet = this.store.getWallet(playerId) ?? { playerId, nexus: 0 };
+    this.store.saveWallet(wallet);
     return { ...wallet };
   }
 
@@ -24,7 +30,7 @@ export class InMemoryWalletRepository implements IWalletRepository {
       throw new ValidationError("El débito Nexus debe ser positivo.");
     }
     const updated = { ...wallet, nexus: wallet.nexus - amount };
-    this.wallets.set(playerId, updated);
+    this.store.saveWallet(updated);
     return { ...updated };
   }
 
@@ -34,7 +40,7 @@ export class InMemoryWalletRepository implements IWalletRepository {
       throw new ValidationError("El crédito Nexus debe ser positivo.");
     }
     const updated = { ...wallet, nexus: wallet.nexus + amount };
-    this.wallets.set(playerId, updated);
+    this.store.saveWallet(updated);
     return { ...updated };
   }
 }

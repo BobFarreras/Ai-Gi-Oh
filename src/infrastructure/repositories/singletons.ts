@@ -4,9 +4,15 @@ import { InMemoryDeckRepository } from "@/infrastructure/repositories/InMemoryDe
 import { InMemoryMarketRepository } from "@/infrastructure/repositories/InMemoryMarketRepository";
 import { InMemoryTransactionRepository } from "@/infrastructure/repositories/InMemoryTransactionRepository";
 import { InMemoryWalletRepository } from "@/infrastructure/repositories/InMemoryWalletRepository";
+import { InMemoryPlayerPersistenceStore } from "@/infrastructure/repositories/state/InMemoryPlayerPersistenceStore";
 
-export const sharedCollectionRepository = new InMemoryCardCollectionRepository("local-player");
-export const sharedWalletRepository = new InMemoryWalletRepository([{ playerId: "local-player", nexus: 1500 }]);
+const sharedPlayerStore = new InMemoryPlayerPersistenceStore();
+
+export const sharedCollectionRepository = new InMemoryCardCollectionRepository("local-player", sharedPlayerStore);
+export const sharedWalletRepository = new InMemoryWalletRepository(
+  [{ playerId: "local-player", nexus: 1500 }],
+  sharedPlayerStore,
+);
 export const sharedMarketRepository = new InMemoryMarketRepository();
-export const sharedTransactionRepository = new InMemoryTransactionRepository();
-export const sharedDeckRepository = new InMemoryDeckRepository(undefined, [], sharedCollectionRepository);
+export const sharedTransactionRepository = new InMemoryTransactionRepository(sharedPlayerStore);
+export const sharedDeckRepository = new InMemoryDeckRepository(undefined, [], sharedCollectionRepository, sharedPlayerStore);

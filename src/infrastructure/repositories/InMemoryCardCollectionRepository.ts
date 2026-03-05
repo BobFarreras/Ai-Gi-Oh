@@ -6,24 +6,30 @@ import { TRAP_CARDS } from "@/core/data/mock-cards/traps";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ICardCollectionRepository } from "@/core/repositories/ICardCollectionRepository";
+import { InMemoryPlayerPersistenceStore } from "@/infrastructure/repositories/state/InMemoryPlayerPersistenceStore";
+import { IPlayerPersistenceStore } from "@/infrastructure/repositories/state/IPlayerPersistenceStore";
 
 const CARD_CATALOG = [...ENTITY_CARDS, ...EXECUTION_CARDS, ...TRAP_CARDS, ...FUSION_CARDS];
 const CARD_BY_ID = new Map(CARD_CATALOG.map((card) => [card.id, card]));
 
 export class InMemoryCardCollectionRepository implements ICardCollectionRepository {
-  private readonly collections = new Map<string, Map<string, number>>();
+  private readonly store: IPlayerPersistenceStore;
 
-  constructor(initialPlayerId = "local-player") {
-    const starterCollection = new Map<string, number>();
-    for (const card of ENTITY_CARDS.slice(0, 10)) {
-      starterCollection.set(card.id, 1);
+  constructor(initialPlayerId = "local-player", store: IPlayerPersistenceStore = new InMemoryPlayerPersistenceStore()) {
+    this.store = store;
+    const existingCollection = this.store.getCollectionCounts(initialPlayerId);
+    if (!existingCollection) {
+      const starterCollection = new Map<string, number>();
+      for (const card of ENTITY_CARDS.slice(0, 10)) {
+        starterCollection.set(card.id, 1);
+      }
+      this.store.saveCollectionCounts(initialPlayerId, starterCollection);
     }
-    this.collections.set(initialPlayerId, starterCollection);
   }
 
   async getCollection(playerId: string): Promise<ICollectionCard[]> {
-    const collectionMap = this.collections.get(playerId) ?? new Map<string, number>();
-    this.collections.set(playerId, collectionMap);
+    const collectionMap = this.store.getCollectionCounts(playerId) ?? new Map<string, number>();
+    this.store.saveCollectionCounts(playerId, collectionMap);
     return Array.from(collectionMap.entries())
       .map(([cardId, ownedCopies]) => {
         const card = CARD_BY_ID.get(cardId);
@@ -34,13 +40,13 @@ export class InMemoryCardCollectionRepository implements ICardCollectionReposito
   }
 
   async addCards(playerId: string, cardIds: string[]): Promise<void> {
-    const collectionMap = this.collections.get(playerId) ?? new Map<string, number>();
+    const collectionMap = this.store.getCollectionCounts(playerId) ?? new Map<string, number>();
     for (const cardId of cardIds) {
       if (!CARD_BY_ID.has(cardId)) {
         throw new NotFoundError(`La carta ${cardId} no existe en el catálogo de mercado.`);
       }
       collectionMap.set(cardId, (collectionMap.get(cardId) ?? 0) + 1);
     }
-    this.collections.set(playerId, collectionMap);
+    this.store.saveCollectionCounts(playerId, collectionMap);
   }
 }

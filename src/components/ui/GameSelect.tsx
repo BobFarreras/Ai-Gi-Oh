@@ -23,7 +23,6 @@ export function GameSelect({ label, value, options, onChange, ariaLabel, Icon }:
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Cierra el menú si el jugador hace clic fuera del componente
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -37,14 +36,13 @@ export function GameSelect({ label, value, options, onChange, ariaLabel, Icon }:
   const selectedOption = options.find((opt) => opt.value === value) || options[0];
 
   return (
-    <div ref={containerRef} className="relative flex w-[165px] min-w-0 flex-col gap-1">
-      {/* Etiqueta superior */}
+    // REFACTOR CLAVE: Cambiado de w-[165px] a w-full. Esto elimina los solapamientos.
+    <div ref={containerRef} className="relative flex w-full min-w-0 flex-col gap-1">
       <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300/80 pl-1">
         <Icon size={12} className="text-cyan-400" />
         {label}
       </span>
 
-      {/* Botón Trigger (Lo que el usuario ve cerrado) */}
       <button
         type="button"
         aria-label={ariaLabel}
@@ -59,7 +57,6 @@ export function GameSelect({ label, value, options, onChange, ariaLabel, Icon }:
         </motion.div>
       </button>
 
-      {/* Menú Desplegable (Animado con Framer Motion) */}
       <AnimatePresence>
         {isOpen && (
           <motion.ul
@@ -87,7 +84,6 @@ export function GameSelect({ label, value, options, onChange, ariaLabel, Icon }:
                       : "text-cyan-200/60 hover:bg-cyan-900/30 hover:text-cyan-100 hover:pl-4"
                   }`}
                 >
-                  {/* Pequeño indicador de neón si está seleccionado */}
                   {isSelected && (
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,1)]" />
                   )}

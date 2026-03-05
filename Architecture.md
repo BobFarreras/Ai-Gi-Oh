@@ -144,6 +144,13 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
 4. `InMemoryTransactionRepository` registra historial de compras mock.
 5. `/hub/market` consume `GetMarketCatalogUseCase` como fuente de verdad de catálogo/saldo.
 
+## Subdominio Market (fase 5 sin BD)
+
+1. Se introduce `IPlayerPersistenceStore` en infraestructura para centralizar estado de jugador (wallet, colección, deck y transacciones).
+2. `InMemoryPlayerPersistenceStore` actúa como backend temporal compartido y sustituible por adaptador real (DB) sin cambiar casos de uso.
+3. Repositorios in-memory (`Wallet`, `CardCollection`, `Deck`, `Transaction`) dependen del store y no gestionan estado aislado interno.
+4. `singletons.ts` inyecta una única instancia compartida del store para mantener consistencia entre módulos `Market` y `Home`.
+
 ## Eventos y observabilidad
 
 1. El motor añade eventos en `combatLog` desde los casos de uso (`playCard`, `executeAttack`, `nextPhase`, etc.).

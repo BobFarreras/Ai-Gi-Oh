@@ -9,6 +9,7 @@ import { IPackCardEntry } from "@/core/entities/market/IPackCardEntry";
 import { IMarketRepository } from "@/core/repositories/IMarketRepository";
 
 const ALL_MARKET_CARDS = [...ENTITY_CARDS, ...EXECUTION_CARDS, ...TRAP_CARDS, ...FUSION_CARDS];
+const EXCLUSIVE_PACK_CARD_IDS = new Set(["entity-python", "entity-postgress", "fusion-pytgress"]);
 
 function resolveRarityFromCard(cardId: string, cost: number): "COMMON" | "RARE" | "EPIC" | "LEGENDARY" {
   if (cardId.startsWith("fusion-")) return "LEGENDARY";
@@ -23,7 +24,7 @@ const CARD_LISTINGS: IMarketCardListing[] = ALL_MARKET_CARDS.map((card, index) =
   rarity: resolveRarityFromCard(card.id, card.cost),
   priceNexus: Math.max(20, card.cost * 25 + (card.type === "FUSION" ? 100 : 0)),
   stock: index % 7 === 0 ? 8 : null,
-  isAvailable: true,
+  isAvailable: !EXCLUSIVE_PACK_CARD_IDS.has(card.id),
 }));
 
 const PACK_DEFINITIONS: IMarketPackDefinition[] = [
@@ -34,6 +35,17 @@ const PACK_DEFINITIONS: IMarketPackDefinition[] = [
     priceNexus: 220,
     cardsPerPack: 5,
     packPoolId: "pool-core-alpha",
+    previewCardIds: ["entity-vscode", "entity-react", "entity-ollama", "exec-draw-1", "trap-counter-intrusion"],
+    isAvailable: true,
+  },
+  {
+    id: "pack-fusion-lab",
+    name: "Fusion Lab: Pytgress",
+    description: "Sobre premium con núcleo Python + Postgress + Pytgress.",
+    priceNexus: 480,
+    cardsPerPack: 5,
+    packPoolId: "pool-fusion-lab",
+    previewCardIds: ["entity-python", "entity-postgress", "fusion-pytgress", "exec-fusion-pytgress", "entity-git"],
     isAvailable: true,
   },
 ];
@@ -44,6 +56,18 @@ const PACK_POOLS: Record<string, IPackCardEntry[]> = {
     const weight = rarity === "COMMON" ? 70 : rarity === "RARE" ? 20 : rarity === "EPIC" ? 8 : 2;
     return {
       id: `pool-core-alpha-${card.id}`,
+      card,
+      rarity,
+      weight,
+    };
+  }),
+  "pool-fusion-lab": ALL_MARKET_CARDS.filter((card) =>
+    ["entity-python", "entity-postgress", "fusion-pytgress", "exec-fusion-pytgress", "entity-git"].includes(card.id),
+  ).map((card) => {
+    const rarity = resolveRarityFromCard(card.id, card.cost);
+    const weight = card.id === "fusion-pytgress" ? 8 : card.id === "exec-fusion-pytgress" ? 18 : 36;
+    return {
+      id: `pool-fusion-lab-${card.id}`,
       card,
       rarity,
       weight,

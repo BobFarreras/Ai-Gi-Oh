@@ -5,6 +5,7 @@ import { getHubSectionViewModel } from "@/app/hub/internal/getHubSectionViewMode
 import { GetMarketCatalogUseCase } from "@/core/use-cases/market/GetMarketCatalogUseCase";
 import { GetMarketTransactionsUseCase } from "@/core/use-cases/market/GetMarketTransactionsUseCase";
 import {
+  sharedCollectionRepository,
   sharedMarketRepository,
   sharedTransactionRepository,
   sharedWalletRepository,
@@ -29,6 +30,14 @@ export default async function MarketPage() {
     getMarketCatalogUseCase.execute(playerId),
     getMarketTransactionsUseCase.execute(playerId),
   ]);
+  const collection = await sharedCollectionRepository.getCollection(playerId);
 
-  return <MarketScene playerId={playerId} initialCatalog={catalog} initialTransactions={transactions} />;
+  return (
+    <MarketScene
+      playerId={playerId}
+      initialCatalog={catalog}
+      initialTransactions={transactions}
+      initialCollection={collection}
+    />
+  );
 }

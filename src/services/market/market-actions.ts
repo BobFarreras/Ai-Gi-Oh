@@ -3,6 +3,7 @@ import { BuyMarketCardUseCase } from "@/core/use-cases/market/BuyMarketCardUseCa
 import { BuyPackUseCase } from "@/core/use-cases/market/BuyPackUseCase";
 import { GetMarketCatalogUseCase, IMarketCatalog } from "@/core/use-cases/market/GetMarketCatalogUseCase";
 import { GetMarketTransactionsUseCase } from "@/core/use-cases/market/GetMarketTransactionsUseCase";
+import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
 import {
   sharedCollectionRepository,
@@ -32,6 +33,10 @@ export async function getMarketCatalogAction(playerId: string): Promise<IMarketC
 
 export async function getMarketTransactionsAction(playerId: string): Promise<IMarketTransaction[]> {
   return getMarketTransactionsUseCase.execute(playerId);
+}
+
+export async function getPlayerCollectionAction(playerId: string): Promise<ICollectionCard[]> {
+  return sharedCollectionRepository.getCollection(playerId);
 }
 
 export async function buyMarketCardAction(playerId: string, listingId: string): Promise<IMarketCatalog> {
