@@ -45,7 +45,15 @@ export class SupabasePlayerProfileRepository implements IPlayerProfileRepository
       })
       .select("player_id,nickname,avatar_url,created_at,updated_at")
       .single<IPlayerProfileRow>();
-    if (error || !data) throw new ValidationError("No se pudo crear el perfil del jugador.");
+    if (error) {
+      // En registros concurrentes el trigger puede crear la fila antes que esta inserción.
+      if (error.code === "23505") {
+        const existingProfile = await this.getByPlayerId(profile.playerId);
+        if (existingProfile) return existingProfile;
+      }
+      throw new ValidationError("No se pudo crear el perfil del jugador.");
+    }
+    if (!data) throw new ValidationError("No se pudo crear el perfil del jugador.");
     return toEntity(data);
   }
 

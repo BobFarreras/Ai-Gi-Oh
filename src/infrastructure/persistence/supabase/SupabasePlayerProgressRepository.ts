@@ -46,7 +46,15 @@ export class SupabasePlayerProgressRepository implements IPlayerProgressReposito
       })
       .select("player_id,has_completed_tutorial,medals,story_chapter,updated_at")
       .single<IPlayerProgressRow>();
-    if (error || !data) throw new ValidationError("No se pudo crear el progreso del jugador.");
+    if (error) {
+      // Puede existir una fila creada por trigger justo antes de esta inserción.
+      if (error.code === "23505") {
+        const existingProgress = await this.getByPlayerId(progress.playerId);
+        if (existingProgress) return existingProgress;
+      }
+      throw new ValidationError("No se pudo crear el progreso del jugador.");
+    }
+    if (!data) throw new ValidationError("No se pudo crear el progreso del jugador.");
     return toEntity(data);
   }
 
