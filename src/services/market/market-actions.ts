@@ -1,51 +1,57 @@
 // src/services/market/market-actions.ts - Acciones de mercado para UI reutilizando casos de uso y repositorios mock compartidos.
-import { BuyMarketCardUseCase } from "@/core/use-cases/market/BuyMarketCardUseCase";
-import { BuyPackUseCase } from "@/core/use-cases/market/BuyPackUseCase";
-import { GetMarketCatalogUseCase, IMarketCatalog } from "@/core/use-cases/market/GetMarketCatalogUseCase";
-import { GetMarketTransactionsUseCase } from "@/core/use-cases/market/GetMarketTransactionsUseCase";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
-import {
-  sharedCollectionRepository,
-  sharedMarketRepository,
-  sharedTransactionRepository,
-  sharedWalletRepository,
-} from "@/infrastructure/repositories/singletons";
+import { IMarketCatalog } from "@/core/use-cases/market/GetMarketCatalogUseCase";
+import { IMarketRuntimeSnapshot } from "@/services/market/market-runtime-snapshot";
 
-const getMarketCatalogUseCase = new GetMarketCatalogUseCase(sharedMarketRepository, sharedWalletRepository);
-const getMarketTransactionsUseCase = new GetMarketTransactionsUseCase(sharedTransactionRepository);
-const buyMarketCardUseCase = new BuyMarketCardUseCase(
-  sharedMarketRepository,
-  sharedWalletRepository,
-  sharedCollectionRepository,
-  sharedTransactionRepository,
-);
-const buyPackUseCase = new BuyPackUseCase(
-  sharedMarketRepository,
-  sharedWalletRepository,
-  sharedCollectionRepository,
-  sharedTransactionRepository,
-);
+async function parseJsonResponse<T>(response: Response): Promise<T> {
+  const data = (await response.json()) as T | { message?: string };
+  if (!response.ok) {
+    const message = typeof data === "object" && data && "message" in data ? data.message : undefined;
+    throw new Error(message ?? "No se pudo completar la acción de mercado.");
+  }
+  return data as T;
+}
 
 export async function getMarketCatalogAction(playerId: string): Promise<IMarketCatalog> {
-  return getMarketCatalogUseCase.execute(playerId);
+  void playerId;
+  const response = await fetch("/api/market/catalog", { method: "GET", cache: "no-store" });
+  return parseJsonResponse<IMarketCatalog>(response);
 }
 
 export async function getMarketTransactionsAction(playerId: string): Promise<IMarketTransaction[]> {
-  return getMarketTransactionsUseCase.execute(playerId);
+  void playerId;
+  const response = await fetch("/api/market/transactions", { method: "GET", cache: "no-store" });
+  return parseJsonResponse<IMarketTransaction[]>(response);
 }
 
 export async function getPlayerCollectionAction(playerId: string): Promise<ICollectionCard[]> {
-  return sharedCollectionRepository.getCollection(playerId);
+  void playerId;
+  const response = await fetch("/api/market/collection", { method: "GET", cache: "no-store" });
+  return parseJsonResponse<ICollectionCard[]>(response);
 }
 
-export async function buyMarketCardAction(playerId: string, listingId: string): Promise<IMarketCatalog> {
-  await buyMarketCardUseCase.execute({ playerId, listingId });
-  return getMarketCatalogUseCase.execute(playerId);
+export async function buyMarketCardAction(playerId: string, listingId: string): Promise<IMarketRuntimeSnapshot> {
+  void playerId;
+  const response = await fetch("/api/market/buy-card", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ listingId }),
+    cache: "no-store",
+  });
+  return parseJsonResponse<IMarketRuntimeSnapshot>(response);
 }
 
-export async function buyPackAction(playerId: string, packId: string): Promise<{ catalog: IMarketCatalog; openedCardIds: string[] }> {
-  const openedCardIds = await buyPackUseCase.execute({ playerId, packId });
-  const catalog = await getMarketCatalogUseCase.execute(playerId);
-  return { catalog, openedCardIds };
+export async function buyPackAction(
+  playerId: string,
+  packId: string,
+): Promise<IMarketRuntimeSnapshot & { openedCardIds: string[] }> {
+  void playerId;
+  const response = await fetch("/api/market/buy-pack", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ packId }),
+    cache: "no-store",
+  });
+  return parseJsonResponse<IMarketRuntimeSnapshot & { openedCardIds: string[] }>(response);
 }

@@ -1,134 +1,53 @@
-import Image from "next/image";
-import { Binary, Bot, Braces, Cpu, Database, Shield, ShieldCheck, Sword, Wrench, Zap } from "lucide-react";
-import { ICard } from "@/core/entities/ICard";
+// src/components/game/card/internal/CardFrame.tsx - Orquesta el frame de carta desacoplado en cabecera, cuerpo, pie y aura mastery.
+import { getCardLevelProgressMetrics } from "@/core/services/progression/card-level-rules";
 import { cn } from "@/lib/utils";
+import { CardFrameArtAndProgress } from "./CardFrameArtAndProgress";
+import { CardFrameFooter } from "./CardFrameFooter";
+import { CardFrameHeader } from "./CardFrameHeader";
+import { CardFrameMasteryAura } from "./CardFrameMasteryAura";
 import { CARD_CLIP_PATHS } from "./styles";
+import { ICardFrameProps } from "./card-frame-types";
 
-interface CardFrameProps {
-  card: ICard;
-  factionStyles: { wrapper: string; inner: string };
-  isSelected: boolean;
-  isOnBoard: boolean;
-  onClick?: (card: ICard) => void;
-}
-
-function resolveTypeBadge(card: ICard): string {
-  if (card.type !== "ENTITY") return card.type;
-  return card.archetype ? `ENTITY · ${card.archetype}` : "ENTITY";
-}
-
-function resolveEntityArchetypeMeta(archetype: ICard["archetype"]): { Icon: typeof Bot; chipClass: string } | null {
-  switch (archetype) {
-    case "LLM":
-      return { Icon: Bot, chipClass: "text-fuchsia-200 bg-fuchsia-500/20 border-fuchsia-300/45" };
-    case "FRAMEWORK":
-      return { Icon: Braces, chipClass: "text-sky-200 bg-sky-500/20 border-sky-300/45" };
-    case "DB":
-      return { Icon: Database, chipClass: "text-emerald-200 bg-emerald-500/20 border-emerald-300/45" };
-    case "IDE":
-      return { Icon: Binary, chipClass: "text-orange-200 bg-orange-500/20 border-orange-300/45" };
-    case "LANGUAGE":
-      return { Icon: Cpu, chipClass: "text-indigo-200 bg-indigo-500/20 border-indigo-300/45" };
-    case "TOOL":
-      return { Icon: Wrench, chipClass: "text-amber-200 bg-amber-500/20 border-amber-300/45" };
-    case "SECURITY":
-      return { Icon: ShieldCheck, chipClass: "text-cyan-100 bg-cyan-500/20 border-cyan-300/45" };
-    default:
-      return null;
-  }
-}
-
-export function CardFrame({ card, factionStyles, isSelected, isOnBoard, onClick }: CardFrameProps) {
-  const isExecution = card.type === "EXECUTION";
-  const archetypeMeta = card.type === "ENTITY" ? resolveEntityArchetypeMeta(card.archetype) : null;
+export function CardFrame({
+  card,
+  factionStyles,
+  isSelected,
+  isOnBoard,
+  onClick,
+  versionTier,
+  level,
+  xp,
+  masteryPassiveLabel,
+}: ICardFrameProps) {
+  const levelMetrics = getCardLevelProgressMetrics(level, xp);
+  const levelProgressWidth = `${Math.round(levelMetrics.progressRatio * 100)}%`;
+  const isMasteryTier = versionTier >= 5;
+  const descriptionText =
+    isMasteryTier && masteryPassiveLabel ? `${masteryPassiveLabel}\n\n${card.description}` : card.description;
 
   return (
-    <div
-      onClick={() => onClick?.(card)}
-      style={{ clipPath: CARD_CLIP_PATHS.outer }}
-      className={cn(
-        "absolute inset-0 p-[2px] cursor-pointer select-none transition-all duration-300",
-        isSelected
-          ? "shadow-[0_0_50px_rgba(34,211,238,0.8)] ring-2 ring-cyan-400 ring-offset-black bg-gradient-to-br from-cyan-400 via-white to-blue-500"
-          : `shadow-2xl shadow-black ${factionStyles.wrapper}`,
-      )}
-    >
+    <>
+      <CardFrameMasteryAura isActive={isMasteryTier} />
       <div
-        style={{ clipPath: CARD_CLIP_PATHS.inner }}
-        className={cn("w-full h-full relative flex flex-col justify-between bg-gradient-to-br overflow-hidden", factionStyles.inner)}
+        onClick={() => onClick?.(card)}
+        style={{ clipPath: CARD_CLIP_PATHS.outer }}
+        className={cn(
+          "absolute inset-0 z-10 cursor-pointer select-none p-[2px] transition-all duration-300",
+          isSelected
+            ? "ring-offset-black shadow-[0_0_50px_rgba(251,191,36,0.8)] ring-2 ring-yellow-400 bg-gradient-to-br from-yellow-400 via-white to-slate-400"
+            : `shadow-2xl shadow-black ${factionStyles.wrapper}`,
+        )}
       >
-        <div className="absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.03)_50%,transparent_100%)] bg-[length:200%_200%] animate-[pulse_4s_ease-in-out_infinite] pointer-events-none" />
-
-        <div className="flex justify-between items-start px-2 pt-2 relative z-10">
-          <div
-            className="flex items-center justify-center w-12 h-12 bg-black border border-yellow-500/80 text-yellow-400 font-black z-10 shadow-[0_0_15px_rgba(234,179,8,0.4)]"
-            style={{ clipPath: "polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px)" }}
-          >
-            <Zap className="absolute opacity-20 w-8 h-8" />
-            <span className="relative z-10 text-xl">{card.cost}</span>
-          </div>
-          <div
-            aria-label="Tipo de carta"
-            className="bg-black/90 px-2 py-1.5 text-[10px] font-black tracking-widest text-white/70 uppercase border border-white/10 rounded-sm flex items-center gap-1.5"
-          >
-            {archetypeMeta ? (
-              <span className={cn("inline-flex items-center justify-center w-5 h-5 rounded border", archetypeMeta.chipClass)}>
-                <archetypeMeta.Icon className="w-3 h-3" />
-              </span>
-            ) : null}
-            {resolveTypeBadge(card)}
-          </div>
-        </div>
-
-        <div className="flex-grow flex flex-col items-center justify-center relative z-10 mt-2 px-3">
-          <div className="w-full h-32 mb-2 flex items-center justify-center shadow-[inset_0_0_30px_rgba(0,0,0,1)] relative overflow-hidden group rounded-sm bg-black">
-            {card.bgUrl && <Image src={card.bgUrl} alt="" fill sizes="260px" className="absolute inset-0 object-cover z-0" />}
-            <div className="absolute inset-0 mix-blend-overlay bg-cyan-500/10 z-0" />
-            {!isOnBoard && card.renderUrl && (
-              <Image
-                src={card.renderUrl}
-                alt={card.name}
-                fill
-                sizes="260px"
-                className="absolute inset-0 object-contain p-1 z-10 drop-shadow-[0_4px_6px_rgba(0,0,0,0.65)]"
-              />
-            )}
-            <div className="absolute top-0 w-full h-0.5 bg-cyan-400/50 opacity-0 group-hover:opacity-100 group-hover:animate-[ping_2s_infinite]" />
-          </div>
-          <h2 className="text-xl font-black text-white tracking-tighter uppercase w-full text-center truncate drop-shadow-[0_2px_5px_rgba(0,0,0,1)]">
-            {card.name}
-          </h2>
-        </div>
-
-        <div className="bg-black/80 border-t border-white/10 p-3 relative z-10 flex flex-col justify-between h-[105px]">
-          <p className="text-[11px] text-zinc-300 font-mono leading-relaxed line-clamp-3">{card.description}</p>
-          <div className="flex justify-between items-end mt-1">
-            {!isExecution ? (
-              <>
-                <div className="flex items-center space-x-2 text-red-500 font-black text-2xl">
-                  <Sword className="w-5 h-5" />
-                  <span>{card.attack ?? 0}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-blue-500 font-black text-2xl">
-                  <Shield className="w-5 h-5" />
-                  <span>{card.defense ?? 0}</span>
-                </div>
-              </>
-            ) : (
-              <div className="flex w-full items-center justify-between text-purple-300 font-black tracking-widest text-sm">
-                <div className="flex items-center space-x-1">
-                  <Cpu className="w-4 h-4" />
-                  <span>MAGIA</span>
-                </div>
-                <div className="flex items-center space-x-1 text-emerald-300">
-                  <Zap className="w-4 h-4" />
-                  <span>{card.effect?.action === "DAMAGE" ? card.effect.value : 0}</span>
-                </div>
-              </div>
-            )}
-          </div>
+        <div
+          style={{ clipPath: CARD_CLIP_PATHS.inner }}
+          className={cn("relative flex h-full w-full flex-col justify-between overflow-hidden bg-gradient-to-br", factionStyles.inner)}
+        >
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.03)_50%,transparent_100%)] bg-[length:200%_200%] animate-[pulse_4s_ease-in-out_infinite]" />
+          <CardFrameHeader card={card} versionTier={versionTier} />
+          <CardFrameArtAndProgress card={card} isOnBoard={isOnBoard} level={level} levelProgressWidth={levelProgressWidth} />
+          <CardFrameFooter card={card} descriptionText={descriptionText} />
         </div>
       </div>
-    </div>
+    </>
   );
 }

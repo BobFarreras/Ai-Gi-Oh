@@ -4,4 +4,5 @@ import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 export interface ICardCollectionRepository {
   getCollection(playerId: string): Promise<ICollectionCard[]>;
   addCards(playerId: string, cardIds: string[]): Promise<void>;
+  consumeCards(playerId: string, cardId: string, copies: number): Promise<void>;
 }

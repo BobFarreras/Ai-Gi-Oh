@@ -1,9 +1,11 @@
+// src/components/game/board/hooks/internal/board-state/buildUseBoardResult.ts - Construye el contrato final expuesto por el hook useBoard.
 import { ICard } from "@/core/entities/ICard";
 import { BattleMode, IBoardEntity } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IBoardUiError } from "../boardError";
 import { IBoardCombatFeedback } from "./boardCombatFeedback";
 import { IBoardPendingUi } from "./boardPendingUi";
+import type { IAppliedCardExperienceResult } from "@/core/use-cases/progression/ApplyBattleCardExperienceUseCase";
 
 interface IBuildUseBoardResultParams {
   gameState: GameState;
@@ -39,6 +41,8 @@ interface IBuildUseBoardResultParams {
   canSetSelectedEntityToAttack: boolean;
   pendingUi: IBoardPendingUi;
   combatFeedback: IBoardCombatFeedback;
+  battleExperienceSummary: IAppliedCardExperienceResult[];
+  battleExperienceCardLookup: Record<string, ICard>;
 }
 
 export function buildUseBoardResult(params: IBuildUseBoardResultParams) {
@@ -74,6 +78,8 @@ export function buildUseBoardResult(params: IBuildUseBoardResultParams) {
     resolvePendingHandDiscard: params.resolvePendingHandDiscard,
     setSelectedEntityToAttack: params.setSelectedEntityToAttack,
     canSetSelectedEntityToAttack: params.canSetSelectedEntityToAttack,
+    battleExperienceSummary: params.battleExperienceSummary,
+    battleExperienceCardLookup: params.battleExperienceCardLookup,
     ...params.pendingUi,
     ...params.combatFeedback,
   };

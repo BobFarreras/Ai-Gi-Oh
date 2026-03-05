@@ -4,6 +4,8 @@ import { HubSectionScreen } from "@/components/hub/sections/HubSectionScreen";
 import { getHubSectionViewModel } from "@/app/hub/internal/getHubSectionViewModel";
 import { GetMarketCatalogUseCase } from "@/core/use-cases/market/GetMarketCatalogUseCase";
 import { GetMarketTransactionsUseCase } from "@/core/use-cases/market/GetMarketTransactionsUseCase";
+import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
+import { createPlayerRuntimeRepositories } from "@/services/player-persistence/create-player-runtime-repositories";
 import {
   sharedCollectionRepository,
   sharedMarketRepository,
@@ -12,7 +14,16 @@ import {
 } from "@/infrastructure/repositories/singletons";
 
 export default async function MarketPage() {
-  const playerId = "local-player";
+  const session = await getCurrentUserSession();
+  const playerId = session?.user.id ?? "local-player";
+  const repositories = session
+    ? await createPlayerRuntimeRepositories()
+    : {
+        marketRepository: sharedMarketRepository,
+        walletRepository: sharedWalletRepository,
+        collectionRepository: sharedCollectionRepository,
+        transactionRepository: sharedTransactionRepository,
+      };
   const viewModel = await getHubSectionViewModel("MARKET");
   if (viewModel.section.isLocked) {
     return (
@@ -24,13 +35,13 @@ export default async function MarketPage() {
       />
     );
   }
-  const getMarketCatalogUseCase = new GetMarketCatalogUseCase(sharedMarketRepository, sharedWalletRepository);
-  const getMarketTransactionsUseCase = new GetMarketTransactionsUseCase(sharedTransactionRepository);
-  const [catalog, transactions] = await Promise.all([
+  const getMarketCatalogUseCase = new GetMarketCatalogUseCase(repositories.marketRepository, repositories.walletRepository);
+  const getMarketTransactionsUseCase = new GetMarketTransactionsUseCase(repositories.transactionRepository);
+  const [catalog, transactions, collection] = await Promise.all([
     getMarketCatalogUseCase.execute(playerId),
     getMarketTransactionsUseCase.execute(playerId),
+    repositories.collectionRepository.getCollection(playerId),
   ]);
-  const collection = await sharedCollectionRepository.getCollection(playerId);
 
   return (
     <MarketScene

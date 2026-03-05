@@ -12,25 +12,42 @@ interface CardProps {
   onClick?: (card: ICard) => void;
   isSelected?: boolean;
   boardMode?: BattleMode;
+  versionTier?: number;
+  level?: number;
+  xp?: number;
+  masteryPassiveLabel?: string | null;
 }
 
 function isBoardMode(mode?: BattleMode): boolean {
   return mode === "ATTACK" || mode === "DEFENSE" || mode === "SET" || mode === "ACTIVATE";
 }
 
-export function Card({ card, onClick, isSelected = false, boardMode }: CardProps) {
+export function Card({
+  card,
+  onClick,
+  isSelected = false,
+  boardMode,
+  versionTier = 0,
+  level = 0,
+  xp = 0,
+  masteryPassiveLabel = null,
+}: CardProps) {
   const isOnBoard = isBoardMode(boardMode);
   const isDefense = boardMode === "DEFENSE";
   const shouldRenderHologram = isOnBoard && boardMode !== "SET";
 
   return (
-    <div className="relative w-[260px] h-[340px] group/card" style={{ transformStyle: "preserve-3d" }}>
+    <div className="group/card relative h-[380px] w-[260px]" style={{ transformStyle: "preserve-3d" }}>
       <CardFrame
         card={card}
         factionStyles={getCardTypeStyles(card)}
         isSelected={isSelected}
         isOnBoard={isOnBoard}
         onClick={onClick}
+        versionTier={versionTier}
+        level={level}
+        xp={xp}
+        masteryPassiveLabel={masteryPassiveLabel}
       />
       {shouldRenderHologram && <CardHologram card={card} isDefense={isDefense} />}
     </div>

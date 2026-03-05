@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/useBoard.integration.test.ts - Pruebas de integración del hook principal del tablero.
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useBoard } from "./useBoard";
@@ -17,7 +18,7 @@ describe("useBoard integración", () => {
 
   it("debería jugar una carta válida desde la mano del jugador", async () => {
     const { result } = renderHook(() => useBoard());
-    const playableCard =
+    let playableCard =
       result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY") ??
       result.current.gameState.playerA.hand.find(
         (card) =>
@@ -25,6 +26,20 @@ describe("useBoard integración", () => {
           card.effect !== undefined &&
           (card.effect.action === "DAMAGE" || card.effect.action === "HEAL" || card.effect.action === "DRAW_CARD"),
       );
+
+    for (let attempt = 0; attempt < 8 && !playableCard; attempt += 1) {
+      act(() => {
+        result.current.restartMatch();
+      });
+      playableCard =
+        result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY") ??
+        result.current.gameState.playerA.hand.find(
+          (card) =>
+            card.type === "EXECUTION" &&
+            card.effect !== undefined &&
+            (card.effect.action === "DAMAGE" || card.effect.action === "HEAL" || card.effect.action === "DRAW_CARD"),
+        );
+    }
 
     expect(playableCard).toBeDefined();
     if (!playableCard) {

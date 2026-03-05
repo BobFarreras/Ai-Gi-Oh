@@ -1,11 +1,7 @@
 // src/services/home/deck-builder/deck-builder-actions.ts - Orquesta acciones de Mi Home reutilizando casos de uso del dominio.
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IDeck } from "@/core/entities/home/IDeck";
-import { AddCardToDeckUseCase } from "@/core/use-cases/home/AddCardToDeckUseCase";
-import { MoveDeckCardUseCase } from "@/core/use-cases/home/MoveDeckCardUseCase";
-import { RemoveCardFromDeckUseCase } from "@/core/use-cases/home/RemoveCardFromDeckUseCase";
-import { SaveDeckUseCase } from "@/core/use-cases/home/SaveDeckUseCase";
-import { InMemoryDeckRepository } from "@/infrastructure/repositories/InMemoryDeckRepository";
+import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 
 interface IDeckActionContext {
   playerId: string;
@@ -13,30 +9,68 @@ interface IDeckActionContext {
   collection: ICollectionCard[];
 }
 
-function createRepository(context: IDeckActionContext): InMemoryDeckRepository {
-  return new InMemoryDeckRepository(context.collection, [context.deck]);
+async function parseDeckResponse(response: Response): Promise<IDeck> {
+  const data = (await response.json()) as IDeck | { message?: string };
+  if (!response.ok) {
+    const message = typeof data === "object" && data && "message" in data ? data.message : undefined;
+    throw new Error(message ?? "No se pudo completar la acción de deck.");
+  }
+  return data as IDeck;
 }
 
 export async function addCardToDeckAction(context: IDeckActionContext, cardId: string): Promise<IDeck> {
-  const repository = createRepository(context);
-  const useCase = new AddCardToDeckUseCase(repository);
-  return useCase.execute({ playerId: context.playerId, cardId });
+  void context;
+  const response = await fetch("/api/home/deck/add", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ cardId }),
+    cache: "no-store",
+  });
+  return parseDeckResponse(response);
 }
 
 export async function removeCardFromDeckAction(context: IDeckActionContext, slotIndex: number): Promise<IDeck> {
-  const repository = createRepository(context);
-  const useCase = new RemoveCardFromDeckUseCase(repository);
-  return useCase.execute({ playerId: context.playerId, slotIndex });
+  void context;
+  const response = await fetch("/api/home/deck/remove", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ slotIndex }),
+    cache: "no-store",
+  });
+  return parseDeckResponse(response);
 }
 
 export async function moveDeckCardAction(context: IDeckActionContext, fromIndex: number, toIndex: number): Promise<IDeck> {
-  const repository = createRepository(context);
-  const useCase = new MoveDeckCardUseCase(repository);
-  return useCase.execute({ playerId: context.playerId, fromSlotIndex: fromIndex, toSlotIndex: toIndex });
+  void context;
+  void fromIndex;
+  void toIndex;
+  throw new Error("Reordenar slots todavía no está disponible en persistencia remota.");
 }
 
 export async function saveDeckAction(context: IDeckActionContext): Promise<IDeck> {
-  const repository = createRepository(context);
-  const useCase = new SaveDeckUseCase(repository);
-  return useCase.execute(context.playerId);
+  void context;
+  const response = await fetch("/api/home/deck/save", { method: "POST", cache: "no-store" });
+  return parseDeckResponse(response);
+}
+
+export interface IEvolveCardVersionResponse {
+  progress: IPlayerCardProgress;
+  collection: ICollectionCard[];
+  consumedCopies: number;
+}
+
+export async function evolveCardVersionAction(playerId: string, cardId: string): Promise<IEvolveCardVersionResponse> {
+  void playerId;
+  const response = await fetch("/api/home/collection/evolve", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ cardId }),
+    cache: "no-store",
+  });
+  const data = (await response.json()) as IEvolveCardVersionResponse | { message?: string };
+  if (!response.ok) {
+    const message = typeof data === "object" && data && "message" in data ? data.message : undefined;
+    throw new Error(message ?? "No se pudo evolucionar la carta.");
+  }
+  return data as IEvolveCardVersionResponse;
 }

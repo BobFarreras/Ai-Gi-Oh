@@ -1,5 +1,7 @@
+// src/components/game/board/hooks/useBoard.ts - Hook principal del tablero con soporte de mazo inicial persistido del jugador.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GameState } from "@/core/use-cases/GameEngine";
+import { ICard } from "@/core/entities/ICard";
 import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
 import { resolveDifficultyFromCampaign } from "@/core/services/opponent/difficulty/resolveDifficultyFromCampaign";
 import { ICampaignProgress } from "@/core/services/opponent/difficulty/types";
@@ -12,6 +14,15 @@ import { useBoardTurnControls } from "./internal/board-state/useBoardTurnControl
 import { useBoardUiState } from "./internal/board-state/useBoardUiState";
 import { useOpponentTurn } from "./internal/useOpponentTurn";
 import { usePlayerActions } from "./internal/usePlayerActions";
+import { buildCardExperienceEvents } from "./internal/progression/build-card-experience-events";
+import { buildPlayerCardLookup } from "./internal/progression/build-player-card-lookup";
+import { applyBattleCardExperienceAction } from "@/services/game/apply-battle-card-experience-action";
+import type { IAppliedCardExperienceResult } from "@/core/use-cases/progression/ApplyBattleCardExperienceUseCase";
+import { appendExperienceSummaryToCombatLog } from "./internal/progression/append-experience-combat-log";
+function createBattleExperienceBatchId(): string {
+  return `battle-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function resolveWinnerPlayerId(gameState: GameState): string | "DRAW" | null {
   if (gameState.playerA.healthPoints <= 0 && gameState.playerB.healthPoints <= 0) return "DRAW";
   if (gameState.playerA.healthPoints <= 0) return gameState.playerB.id;
@@ -19,10 +30,16 @@ function resolveWinnerPlayerId(gameState: GameState): string | "DRAW" | null {
   return null;
 }
 
-export function useBoard() {
+export function useBoard(initialPlayerDeck?: ICard[]) {
   const [campaignProgress] = useState<ICampaignProgress>({ chapterIndex: 1, duelIndex: 1, victories: 0 });
-  const gameStateRef = useRef<GameState>(createInitialBoardState());
-  const uiState = useBoardUiState(gameStateRef, createInitialBoardState);
+  const [battleExperienceSummary, setBattleExperienceSummary] = useState<IAppliedCardExperienceResult[]>([]);
+  const [battleId, setBattleId] = useState<string>(() => createBattleExperienceBatchId());
+  const createInitialState = useCallback(
+    () => createInitialBoardState({ playerDeck: initialPlayerDeck }),
+    [initialPlayerDeck],
+  );
+  const gameStateRef = useRef<GameState>(createInitialState());
+  const uiState = useBoardUiState(gameStateRef, createInitialState);
   const gameState = uiState.gameState;
   const opponentDifficulty = useMemo(() => resolveDifficultyFromCampaign(campaignProgress), [campaignProgress]);
   const opponentStrategy = useMemo(() => new HeuristicOpponentStrategy({ difficulty: opponentDifficulty }), [opponentDifficulty]);
@@ -34,9 +51,16 @@ export function useBoard() {
     () => buildBoardPendingUi(gameState, uiState.pendingEntityReplacement),
     [gameState, uiState.pendingEntityReplacement],
   );
+  const battleExperienceCardLookup = useMemo(() => buildPlayerCardLookup(gameState.playerA), [gameState.playerA]);
+  const hasAppliedBattleExperienceRef = useRef(false);
   useEffect(() => {
     gameStateRef.current = gameState;
   }, [gameState]);
+  const restartMatch = useCallback(() => {
+    setBattleExperienceSummary([]);
+    setBattleId(createBattleExperienceBatchId());
+    uiState.restartMatch();
+  }, [uiState]);
   useEffect(() => {
     if (!uiState.lastError) return;
     const timeoutId = setTimeout(() => uiState.setLastError(null), 3600);
@@ -54,6 +78,25 @@ export function useBoard() {
       return null;
     }
   }, [uiState]);
+  useEffect(() => {
+    if (!winnerPlayerId) {
+      hasAppliedBattleExperienceRef.current = false;
+      return;
+    }
+    if (hasAppliedBattleExperienceRef.current) return;
+    hasAppliedBattleExperienceRef.current = true;
+    const experienceEvents = buildCardExperienceEvents(gameState.combatLog, gameState.playerA.id);
+    applyBattleCardExperienceAction(battleId, experienceEvents)
+      .then((summary) => {
+        setBattleExperienceSummary(summary);
+        if (summary.length === 0) return;
+        applyTransition((currentState) => appendExperienceSummaryToCombatLog(currentState, currentState.playerA.id, summary));
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : "No se pudo guardar la experiencia de cartas del duelo.";
+        uiState.setLastError({ code: "VALIDATION_ERROR", message });
+      });
+  }, [applyTransition, battleId, gameState.combatLog, gameState.playerA, uiState, winnerPlayerId]);
   const assertPlayerTurn = useCallback((): boolean => {
     if (winnerPlayerId) {
       uiState.setLastError({ code: "GAME_RULE_ERROR", message: "La partida ya terminó." });
@@ -127,7 +170,7 @@ export function useBoard() {
     isFusionCinematicActive: uiState.isFusionCinematicActive,
     setIsFusionCinematicActive: uiState.setIsFusionCinematicActive,
     winnerPlayerId,
-    restartMatch: uiState.restartMatch,
+    restartMatch,
     toggleMute: uiState.toggleMute,
     togglePause: uiState.togglePause,
     setIsHistoryOpen: uiState.setIsHistoryOpen,
@@ -143,6 +186,8 @@ export function useBoard() {
     resolvePendingHandDiscard: turnControls.resolvePendingHandDiscard,
     setSelectedEntityToAttack: turnControls.setSelectedEntityToAttack,
     canSetSelectedEntityToAttack: turnControls.canSetSelectedEntityToAttack,
+    battleExperienceSummary,
+    battleExperienceCardLookup,
     pendingUi,
     combatFeedback,
   });
