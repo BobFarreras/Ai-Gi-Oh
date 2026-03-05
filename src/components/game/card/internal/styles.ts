@@ -66,8 +66,8 @@ export function getCardTypeStyles(card: ICard): { wrapper: string; inner: string
 
   if (card.type === "FUSION") {
     return {
-      wrapper: "bg-gradient-to-br from-cyan-200 via-indigo-300 to-fuchsia-300 shadow-cyan-300/40",
-      inner: "from-cyan-950 via-indigo-950 to-fuchsia-950",
+      wrapper: "bg-gradient-to-br from-gray-100 via-slate-200 to-zinc-300 shadow-gray-900/40 border border-white/50",
+      inner: "from-gray via-slate-900 to-black",
     };
   }
 

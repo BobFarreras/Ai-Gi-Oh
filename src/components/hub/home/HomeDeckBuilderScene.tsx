@@ -1,4 +1,4 @@
-// src/components/hub/home/HomeDeckBuilderScene.tsx - Orquesta la experiencia visual y acciones del deck builder en Mi Home.
+// src/components/hub/home/HomeDeckBuilderScene.tsx
 "use client";
 
 import { useMemo, useState } from "react";
@@ -8,7 +8,6 @@ import { HomeDeckActionBar } from "@/components/hub/home/HomeDeckActionBar";
 import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
 import { HomeCollectionPanel } from "@/components/hub/home/HomeCollectionPanel";
 import { HomeDeckPanel } from "@/components/hub/home/HomeDeckPanel";
-import { HomeDeckHeader } from "@/components/hub/home/HomeDeckHeader";
 import { HomeErrorBanner } from "@/components/hub/home/HomeErrorBanner";
 import {
   HomeCollectionOrderDirection,
@@ -36,7 +35,7 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection }: Home
   const [typeFilter, setTypeFilter] = useState<HomeCollectionTypeFilter>("ALL");
   const [orderField, setOrderField] = useState<HomeCollectionOrderField>("NAME");
   const [orderDirection, setOrderDirection] = useState<HomeCollectionOrderDirection>("ASC");
-  const filledSlots = useMemo(() => deck.slots.filter((slot) => slot.cardId !== null).length, [deck.slots]);
+  
   const cardById = useMemo(() => new Map(collection.map((entry) => [entry.card.id, entry.card])), [collection]);
   const selectedCardId = useMemo(() => {
     if (selectedCollectionCardId) return selectedCollectionCardId;
@@ -54,13 +53,12 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection }: Home
   );
 
   return (
-    <main className="hub-control-room-bg box-border h-full max-h-full overflow-hidden px-3 py-3 text-slate-100 sm:px-5">
-      <section className="mx-auto flex h-full w-full max-w-425 min-w-0 flex-col overflow-hidden rounded-3xl border border-cyan-900/40 bg-[#020a14]/88 p-3 shadow-[0_24px_50px_rgba(2,5,14,0.86)] sm:p-4">
-        <HomeDeckHeader filledCards={filledSlots} />
-        <div className="mt-3">
-          <HomeErrorBanner message={errorMessage} onClose={() => setErrorMessage(null)} />
-        </div>
-        <div className="mt-3">
+    <main className="hub-control-room-bg relative box-border w-full h-[100dvh] overflow-hidden px-3 py-3 text-slate-100 sm:px-5 flex flex-col justify-center items-center">
+      
+      <section className="mx-auto flex h-full max-h-[95dvh] w-full max-w-screen-2xl min-w-0 flex-col overflow-hidden rounded-3xl border border-cyan-900/40 bg-[#020a14]/88 p-3 shadow-[0_24px_50px_rgba(2,5,14,0.86)] backdrop-blur-xl sm:p-4 transition-all">
+        
+        {/* REFACTOR: Barra Maestra Unificada */}
+        <div className="shrink-0 z-20">
           <HomeDeckActionBar
             canInsert={Boolean(selectedCollectionCardId)}
             canRemove={selectedSlotHasCard}
@@ -103,11 +101,21 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection }: Home
             }}
           />
         </div>
-        <div className="mt-3 grid min-h-0 flex-1 gap-3 xl:grid-cols-[0.95fr_1.7fr_1.2fr]">
-          <div className="min-h-0 min-w-0 overflow-hidden">
+
+        {/* Banner de errores (Renderizado condicional para no ocupar espacio vacío) */}
+        {errorMessage && (
+          <div className="mt-3 shrink-0 animate-in fade-in slide-in-from-top-2">
+            <HomeErrorBanner message={errorMessage} onClose={() => setErrorMessage(null)} />
+          </div>
+        )}
+
+        {/* Área de Trabajo (Paneles) */}
+        <div className="mt-4 grid min-h-0 flex-1 gap-4 xl:grid-cols-[1fr_1.8fr_1.2fr]">
+          <div className="min-h-0 min-w-0 overflow-hidden rounded-xl bg-black/40 border border-cyan-900/30">
             <HomeCardInspector selectedCard={selectedCard} />
           </div>
-          <div className="min-h-0 min-w-0 overflow-hidden">
+          
+          <div className="min-h-0 min-w-0 overflow-hidden rounded-xl bg-black/40 border border-cyan-900/30">
             <HomeDeckPanel
               deck={deck}
               collection={collection}
@@ -120,7 +128,8 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection }: Home
               }}
             />
           </div>
-          <div className="min-h-0 min-w-0 overflow-hidden">
+          
+          <div className="min-h-0 min-w-0 overflow-hidden rounded-xl bg-black/40 border border-cyan-900/30">
             <HomeCollectionPanel
               deck={deck}
               collection={filteredCollection}

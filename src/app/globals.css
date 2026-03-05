@@ -1,10 +1,7 @@
 /* src/app/globals.css - Tokens visuales globales y atmósfera ciber/espacial del proyecto. */
 @import "tailwindcss";
 
-@theme {
-  --color-game-bg: #060913;
-  --font-sans: var(--font-geist-sans);
-}
+
 
 :root {
   --board-bg-base: #070b16;
@@ -236,4 +233,33 @@ body {
   background: linear-gradient(180deg, rgba(34, 211, 238, 0.95), rgba(59, 130, 246, 0.9));
   border-radius: 999px;
   border: 1px solid rgba(8, 145, 178, 0.35);
+}
+
+
+/* ========================================= */
+/* CYBERPUNK SCROLLBAR (Clase global)        */
+/* ========================================= */
+.custom-scrollbar::-webkit-scrollbar,
+.home-modern-scroll::-webkit-scrollbar {
+  width: 6px; /* Muy delgada, elegante */
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+.home-modern-scroll::-webkit-scrollbar-track {
+  background: rgba(4, 27, 44, 0.4); /* Fondo oscuro semitransparente */
+  border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.home-modern-scroll::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.5); /* Cian neón apagado */
+  border-radius: 8px;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3); /* Profundidad */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.home-modern-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 1); /* Brilla al pasar el ratón */
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.8); /* Efecto Neón Glow */
 }
