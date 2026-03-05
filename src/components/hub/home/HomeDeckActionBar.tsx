@@ -1,8 +1,8 @@
-// src/components/hub/home/HomeDeckActionBar.tsx
+// src/components/hub/home/HomeDeckActionBar.tsx - Barra de acciones principal de Mi Home con filtros y operaciones de deck/progresión.
 import { motion } from "framer-motion";
 import { HomeCollectionOrderDirection, HomeCollectionOrderField, HomeCollectionTypeFilter } from "@/components/hub/home/home-filters";
 import { GameSelect } from "@/components/ui/GameSelect";
-import { ArrowDownUp, Layers3, ListFilter, Download, Upload, Save } from "lucide-react";
+import { ArrowDownUp, Layers3, ListFilter, Download, Upload, Sparkles } from "lucide-react";
 import { BackButton } from "@/components/ui/BackButton"; // <-- NUEVA IMPORTACIÓN
 
 interface HomeDeckActionBarProps {
@@ -16,10 +16,26 @@ interface HomeDeckActionBarProps {
   onToggleOrderDirection: () => void;
   onInsert: () => void;
   onRemove: () => void;
-  onSave: () => void;
+  canEvolve: boolean;
+  evolveCost: number | null;
+  onEvolve: () => void;
 }
 
-export function HomeDeckActionBar({ canInsert, canRemove, typeFilter, orderField, orderDirection, onChangeTypeFilter, onChangeOrderField, onToggleOrderDirection, onInsert, onRemove, onSave }: HomeDeckActionBarProps) {
+export function HomeDeckActionBar({
+  canInsert,
+  canRemove,
+  typeFilter,
+  orderField,
+  orderDirection,
+  onChangeTypeFilter,
+  onChangeOrderField,
+  onToggleOrderDirection,
+  onInsert,
+  onRemove,
+  canEvolve,
+  evolveCost,
+  onEvolve,
+}: HomeDeckActionBarProps) {
   
   const buttonBaseClass = "relative flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg border font-black uppercase tracking-widest text-[10px] sm:text-xs transition-all duration-300 backdrop-blur-md overflow-hidden group shrink-0";
 
@@ -88,18 +104,23 @@ export function HomeDeckActionBar({ canInsert, canRemove, typeFilter, orderField
 
           <div className="w-px h-6 bg-cyan-900/50 mx-1 hidden sm:block" />
 
-          {/* BOTÓN GUARDAR */}
+          {/* BOTÓN EVOLUCIONAR */}
           <motion.button
             type="button"
-            aria-label="Guardar deck"
-            onClick={onSave}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="relative flex items-center gap-2 px-5 py-2 sm:py-2.5 rounded-lg border border-emerald-500/60 bg-emerald-950/50 font-black uppercase tracking-widest text-[10px] sm:text-xs text-emerald-300 transition-all duration-300 hover:border-emerald-300 hover:bg-emerald-900/80 hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] overflow-hidden group shrink-0"
+            aria-label="Evolucionar carta seleccionada"
+            disabled={!canEvolve}
+            onClick={onEvolve}
+            whileHover={canEvolve ? { scale: 1.05 } : {}}
+            whileTap={canEvolve ? { scale: 0.95 } : {}}
+            className={`relative flex items-center gap-2 px-5 py-2 sm:py-2.5 rounded-lg border font-black uppercase tracking-widest text-[10px] sm:text-xs transition-all duration-300 overflow-hidden group shrink-0 ${
+              canEvolve
+                ? "border-amber-400/60 bg-amber-900/35 text-amber-200 hover:border-amber-300 hover:bg-amber-800/45 hover:shadow-[0_0_20px_rgba(245,158,11,0.45)]"
+                : "border-zinc-800 bg-zinc-950/50 text-zinc-600 cursor-not-allowed"
+            }`}
           >
-            <div className="absolute -inset-full h-full w-1/2 z-0 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-10 group-hover:animate-[shine_1.5s_infinite]" />
-            <Save size={16} className="text-emerald-400 relative z-10" />
-            <span className="relative z-10">Compilar</span>
+            {canEvolve && <div className="absolute -inset-full h-full w-1/2 z-0 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-10 group-hover:animate-[shine_1.5s_infinite]" />}
+            <Sparkles size={16} className={`relative z-10 ${canEvolve ? "text-amber-300" : "text-zinc-600"}`} />
+            <span className="relative z-10">{canEvolve && evolveCost ? `Evolucionar (${evolveCost})` : "Evolucionar"}</span>
           </motion.button>
         </div>
 

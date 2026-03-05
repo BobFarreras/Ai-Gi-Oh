@@ -8,9 +8,20 @@ import { sharedDeckRepository } from "@/infrastructure/repositories/singletons";
 export default async function HomeModulePage() {
   const session = await getCurrentUserSession();
   const playerId = session?.user.id ?? "local-player";
-  const deckRepository = session ? (await createPlayerRuntimeRepositories()).deckRepository : sharedDeckRepository;
+  const runtimeRepositories = session ? await createPlayerRuntimeRepositories() : null;
+  const deckRepository = runtimeRepositories?.deckRepository ?? sharedDeckRepository;
   const getHomeDeckBuilderDataUseCase = new GetHomeDeckBuilderDataUseCase(deckRepository);
-  const data = await getHomeDeckBuilderDataUseCase.execute(playerId);
+  const [data, cardProgress] = await Promise.all([
+    getHomeDeckBuilderDataUseCase.execute(playerId),
+    runtimeRepositories?.playerCardProgressRepository.listByPlayer(playerId) ?? Promise.resolve([]),
+  ]);
 
-  return <HomeDeckBuilderScene playerId={playerId} initialDeck={data.deck} collection={data.collection} />;
+  return (
+    <HomeDeckBuilderScene
+      playerId={playerId}
+      initialDeck={data.deck}
+      collection={data.collection}
+      initialCardProgress={cardProgress}
+    />
+  );
 }

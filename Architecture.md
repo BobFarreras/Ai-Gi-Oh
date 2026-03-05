@@ -282,6 +282,12 @@ UI (app/components) -> UseCases/Services -> Repositories (interfaces core)
    - orquestación en `core/use-cases/home`,
    - persistencia en repositorios (`ICardCollectionRepository`, `IPlayerCardProgressRepository`).
 
+## Subdominio Progresión (fase 6.3 integración Home UI)
+
+1. `HomeDeckActionBar` reemplaza el botón de compilar por `Evolucionar` cuando la carta seleccionada cumple copias requeridas.
+2. `HomeDeckBuilderScene` mantiene estado de colección/progreso para reflejar consumo de copias tras evolución sin recargar pantalla.
+3. `Card` y `CardFrame` aceptan metadatos de progreso (`versionTier`, `level`) y los renderizan junto al bloque de energía.
+
 ## Eventos y observabilidad
 
 1. El motor añade eventos en `combatLog` desde los casos de uso (`playCard`, `executeAttack`, `nextPhase`, etc.).

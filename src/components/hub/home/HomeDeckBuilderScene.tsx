@@ -4,6 +4,7 @@
 import { useMemo, useState } from "react";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IDeck } from "@/core/entities/home/IDeck";
+import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { HomeDeckActionBar } from "@/components/hub/home/HomeDeckActionBar";
 import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
 import { HomeCollectionPanel } from "@/components/hub/home/HomeCollectionPanel";
@@ -18,18 +19,24 @@ import { buildHomeCollectionView } from "@/components/hub/home/home-collection-v
 import { applyOptimisticAddToDeck, applyOptimisticRemoveFromDeck } from "@/components/hub/home/internal/optimistic-deck-updates";
 import {
   addCardToDeckAction,
+  evolveCardVersionAction,
   removeCardFromDeckAction,
-  saveDeckAction,
 } from "@/services/home/deck-builder/deck-builder-actions";
+import { getCopiesNeededForNextVersion } from "@/core/services/progression/card-version-rules";
 
 interface HomeDeckBuilderSceneProps {
   playerId: string;
   initialDeck: IDeck;
   collection: ICollectionCard[];
+  initialCardProgress: IPlayerCardProgress[];
 }
 
-export function HomeDeckBuilderScene({ playerId, initialDeck, collection }: HomeDeckBuilderSceneProps) {
+export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initialCardProgress }: HomeDeckBuilderSceneProps) {
   const [deck, setDeck] = useState<IDeck>(initialDeck);
+  const [collectionState, setCollectionState] = useState<ICollectionCard[]>(collection);
+  const [cardProgressById, setCardProgressById] = useState<Map<string, IPlayerCardProgress>>(
+    () => new Map(initialCardProgress.map((progress) => [progress.cardId, progress])),
+  );
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const [selectedCollectionCardId, setSelectedCollectionCardId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -37,7 +44,7 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection }: Home
   const [orderField, setOrderField] = useState<HomeCollectionOrderField>("NAME");
   const [orderDirection, setOrderDirection] = useState<HomeCollectionOrderDirection>("ASC");
   
-  const cardById = useMemo(() => new Map(collection.map((entry) => [entry.card.id, entry.card])), [collection]);
+  const cardById = useMemo(() => new Map(collectionState.map((entry) => [entry.card.id, entry.card])), [collectionState]);
   const selectedCardId = useMemo(() => {
     if (selectedCollectionCardId) return selectedCollectionCardId;
     if (selectedSlotIndex === null) return null;
@@ -45,12 +52,18 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection }: Home
   }, [deck.slots, selectedCollectionCardId, selectedSlotIndex]);
   const selectedCard = selectedCardId ? cardById.get(selectedCardId) ?? null : null;
   const selectedSlotHasCard = selectedSlotIndex !== null && deck.slots[selectedSlotIndex].cardId !== null;
-  const context = { playerId, deck, collection };
+  const context = { playerId, deck, collection: collectionState };
+  const selectedCardProgress = selectedCardId ? (cardProgressById.get(selectedCardId) ?? null) : null;
+  const selectedCardVersionTier = selectedCardProgress?.versionTier ?? 0;
+  const selectedCardLevel = selectedCardProgress?.level ?? 0;
+  const selectedCardCopies = selectedCardId ? (collectionState.find((entry) => entry.card.id === selectedCardId)?.ownedCopies ?? 0) : 0;
+  const copiesRequiredToEvolve = selectedCardId ? getCopiesNeededForNextVersion(selectedCardVersionTier) : null;
+  const canEvolveSelectedCard = Boolean(selectedCardId) && copiesRequiredToEvolve !== null && selectedCardCopies >= copiesRequiredToEvolve;
   const setErrorBanner = (error: unknown) =>
     setErrorMessage(error instanceof Error ? error.message : "No se pudo completar la acción del deck.");
   const filteredCollection = useMemo(
-    () => buildHomeCollectionView({ collection, typeFilter, orderField, orderDirection }),
-    [collection, orderDirection, orderField, typeFilter],
+    () => buildHomeCollectionView({ collection: collectionState, typeFilter, orderField, orderDirection }),
+    [collectionState, orderDirection, orderField, typeFilter],
   );
 
   return (
@@ -97,10 +110,18 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection }: Home
                 setErrorBanner(error);
               }
             }}
-            onSave={async () => {
+            canEvolve={canEvolveSelectedCard}
+            evolveCost={copiesRequiredToEvolve}
+            onEvolve={async () => {
+              if (!selectedCardId || !canEvolveSelectedCard) return;
               try {
-                const savedDeck = await saveDeckAction(context);
-                setDeck(savedDeck);
+                const result = await evolveCardVersionAction(playerId, selectedCardId);
+                setCollectionState(result.collection);
+                setCardProgressById((current) => {
+                  const next = new Map(current);
+                  next.set(result.progress.cardId, result.progress);
+                  return next;
+                });
                 setErrorMessage(null);
               } catch (error) {
                 setErrorBanner(error);
@@ -119,13 +140,17 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection }: Home
         {/* Área de Trabajo (Paneles) */}
         <div className="mt-4 grid min-h-0 flex-1 gap-4 xl:grid-cols-[1fr_1.8fr_1.2fr]">
           <div className="min-h-0 min-w-0 overflow-hidden rounded-xl bg-black/40 border border-cyan-900/30">
-            <HomeCardInspector selectedCard={selectedCard} />
+            <HomeCardInspector
+              selectedCard={selectedCard}
+              selectedCardVersionTier={selectedCardVersionTier}
+              selectedCardLevel={selectedCardLevel}
+            />
           </div>
           
           <div className="min-h-0 min-w-0 overflow-hidden rounded-xl bg-black/40 border border-cyan-900/30">
             <HomeDeckPanel
               deck={deck}
-              collection={collection}
+              collection={collectionState}
               selectedSlotIndex={selectedSlotIndex}
               selectedCardId={selectedCardId}
               onSelectSlot={(slotIndex) => {

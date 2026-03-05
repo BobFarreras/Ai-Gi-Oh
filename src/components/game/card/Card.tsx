@@ -12,13 +12,15 @@ interface CardProps {
   onClick?: (card: ICard) => void;
   isSelected?: boolean;
   boardMode?: BattleMode;
+  versionTier?: number;
+  level?: number;
 }
 
 function isBoardMode(mode?: BattleMode): boolean {
   return mode === "ATTACK" || mode === "DEFENSE" || mode === "SET" || mode === "ACTIVATE";
 }
 
-export function Card({ card, onClick, isSelected = false, boardMode }: CardProps) {
+export function Card({ card, onClick, isSelected = false, boardMode, versionTier = 0, level = 0 }: CardProps) {
   const isOnBoard = isBoardMode(boardMode);
   const isDefense = boardMode === "DEFENSE";
   const shouldRenderHologram = isOnBoard && boardMode !== "SET";
@@ -31,6 +33,8 @@ export function Card({ card, onClick, isSelected = false, boardMode }: CardProps
         isSelected={isSelected}
         isOnBoard={isOnBoard}
         onClick={onClick}
+        versionTier={versionTier}
+        level={level}
       />
       {shouldRenderHologram && <CardHologram card={card} isDefense={isDefense} />}
     </div>

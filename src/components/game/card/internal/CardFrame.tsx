@@ -1,3 +1,4 @@
+// src/components/game/card/internal/CardFrame.tsx - Marco visual de carta con coste, tipo, render y estadísticas principales.
 import Image from "next/image";
 import { Binary, Bot, Braces, Cpu, Database, Shield, ShieldCheck, Sword, Wrench, Zap } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
@@ -10,6 +11,8 @@ interface CardFrameProps {
   isSelected: boolean;
   isOnBoard: boolean;
   onClick?: (card: ICard) => void;
+  versionTier: number;
+  level: number;
 }
 
 function resolveTypeBadge(card: ICard): string {
@@ -38,7 +41,7 @@ function resolveEntityArchetypeMeta(archetype: ICard["archetype"]): { Icon: type
   }
 }
 
-export function CardFrame({ card, factionStyles, isSelected, isOnBoard, onClick }: CardFrameProps) {
+export function CardFrame({ card, factionStyles, isSelected, isOnBoard, onClick, versionTier, level }: CardFrameProps) {
   const isExecution = card.type === "EXECUTION";
   const archetypeMeta = card.type === "ENTITY" ? resolveEntityArchetypeMeta(card.archetype) : null;
 
@@ -60,12 +63,22 @@ export function CardFrame({ card, factionStyles, isSelected, isOnBoard, onClick 
         <div className="absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.03)_50%,transparent_100%)] bg-[length:200%_200%] animate-[pulse_4s_ease-in-out_infinite] pointer-events-none" />
 
         <div className="flex justify-between items-start px-2 pt-2 relative z-10">
-          <div
-            className="flex items-center justify-center w-12 h-12 bg-black border border-yellow-500/80 text-yellow-400 font-black z-10 shadow-[0_0_15px_rgba(234,179,8,0.4)]"
-            style={{ clipPath: "polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px)" }}
-          >
-            <Zap className="absolute opacity-20 w-8 h-8" />
-            <span className="relative z-10 text-xl">{card.cost}</span>
+          <div className="flex items-start gap-1">
+            <div
+              className="flex items-center justify-center w-12 h-12 bg-black border border-yellow-500/80 text-yellow-400 font-black z-10 shadow-[0_0_15px_rgba(234,179,8,0.4)]"
+              style={{ clipPath: "polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px)" }}
+            >
+              <Zap className="absolute opacity-20 w-8 h-8" />
+              <span className="relative z-10 text-xl">{card.cost}</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <div className="px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-100 border border-amber-300/35 bg-amber-900/30">
+                V{versionTier}
+              </div>
+              <div className="px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-cyan-100 border border-cyan-300/35 bg-cyan-900/30">
+                Lv{level}
+              </div>
+            </div>
           </div>
           <div
             aria-label="Tipo de carta"
