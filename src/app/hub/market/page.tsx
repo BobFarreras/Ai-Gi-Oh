@@ -3,7 +3,12 @@ import { MarketScene } from "@/components/hub/market/MarketScene";
 import { HubSectionScreen } from "@/components/hub/sections/HubSectionScreen";
 import { getHubSectionViewModel } from "@/app/hub/internal/getHubSectionViewModel";
 import { GetMarketCatalogUseCase } from "@/core/use-cases/market/GetMarketCatalogUseCase";
-import { sharedMarketRepository, sharedWalletRepository } from "@/infrastructure/repositories/singletons";
+import { GetMarketTransactionsUseCase } from "@/core/use-cases/market/GetMarketTransactionsUseCase";
+import {
+  sharedMarketRepository,
+  sharedTransactionRepository,
+  sharedWalletRepository,
+} from "@/infrastructure/repositories/singletons";
 
 export default async function MarketPage() {
   const playerId = "local-player";
@@ -19,7 +24,11 @@ export default async function MarketPage() {
     );
   }
   const getMarketCatalogUseCase = new GetMarketCatalogUseCase(sharedMarketRepository, sharedWalletRepository);
-  const catalog = await getMarketCatalogUseCase.execute(playerId);
+  const getMarketTransactionsUseCase = new GetMarketTransactionsUseCase(sharedTransactionRepository);
+  const [catalog, transactions] = await Promise.all([
+    getMarketCatalogUseCase.execute(playerId),
+    getMarketTransactionsUseCase.execute(playerId),
+  ]);
 
-  return <MarketScene playerId={playerId} initialCatalog={catalog} />;
+  return <MarketScene playerId={playerId} initialCatalog={catalog} initialTransactions={transactions} />;
 }

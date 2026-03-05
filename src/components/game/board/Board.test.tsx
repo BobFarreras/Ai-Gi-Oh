@@ -12,6 +12,10 @@ vi.mock('./hooks/useBoard', () => ({
   useBoard: vi.fn(),
 }));
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
 describe('Componente UI: Board y Subcomponentes', () => {
   const mockEntity: ICard = {
     id: 'c1', name: 'Hack Script', description: 'Ataca fuerte', type: 'ENTITY', faction: 'OPEN_SOURCE', cost: 2, attack: 1500, defense: 1000
@@ -54,9 +58,12 @@ describe('Componente UI: Board y Subcomponentes', () => {
       pendingActionHint: null,
       pendingDiscardCardIds: [],
       pendingEntitySelectionIds: [],
+      pendingFusionSelectedEntityIds: [],
       opponentDifficulty: "EASY",
       isPlayerTurn: true,
       isMuted: false,
+      isPaused: false,
+      isFusionCinematicActive: false,
       lastDamageTargetPlayerId: null,
       lastDamageAmount: null,
       lastDamageEventId: null,
@@ -81,6 +88,10 @@ describe('Componente UI: Board y Subcomponentes', () => {
       handleTimerExpired: vi.fn(),
       restartMatch: vi.fn(),
       toggleMute: vi.fn(),
+      togglePause: vi.fn(),
+      setIsFusionCinematicActive: vi.fn(),
+      setSelectedEntityToAttack: vi.fn(),
+      canSetSelectedEntityToAttack: false,
     });
   });
 

@@ -2,6 +2,8 @@
 import { BuyMarketCardUseCase } from "@/core/use-cases/market/BuyMarketCardUseCase";
 import { BuyPackUseCase } from "@/core/use-cases/market/BuyPackUseCase";
 import { GetMarketCatalogUseCase, IMarketCatalog } from "@/core/use-cases/market/GetMarketCatalogUseCase";
+import { GetMarketTransactionsUseCase } from "@/core/use-cases/market/GetMarketTransactionsUseCase";
+import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
 import {
   sharedCollectionRepository,
   sharedMarketRepository,
@@ -10,6 +12,7 @@ import {
 } from "@/infrastructure/repositories/singletons";
 
 const getMarketCatalogUseCase = new GetMarketCatalogUseCase(sharedMarketRepository, sharedWalletRepository);
+const getMarketTransactionsUseCase = new GetMarketTransactionsUseCase(sharedTransactionRepository);
 const buyMarketCardUseCase = new BuyMarketCardUseCase(
   sharedMarketRepository,
   sharedWalletRepository,
@@ -25,6 +28,10 @@ const buyPackUseCase = new BuyPackUseCase(
 
 export async function getMarketCatalogAction(playerId: string): Promise<IMarketCatalog> {
   return getMarketCatalogUseCase.execute(playerId);
+}
+
+export async function getMarketTransactionsAction(playerId: string): Promise<IMarketTransaction[]> {
+  return getMarketTransactionsUseCase.execute(playerId);
 }
 
 export async function buyMarketCardAction(playerId: string, listingId: string): Promise<IMarketCatalog> {

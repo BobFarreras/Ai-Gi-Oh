@@ -3,10 +3,14 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PauseOverlay } from "./PauseOverlay";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
 describe("PauseOverlay", () => {
   it("no debería renderizar cuando no está en pausa", () => {
     render(<PauseOverlay isPaused={false} onResume={vi.fn()} />);
-    expect(screen.queryByText("Partida detenida")).not.toBeInTheDocument();
+    expect(screen.queryByText("Pausa Táctica")).not.toBeInTheDocument();
   });
 
   it("debería ejecutar onResume al pulsar reanudar", () => {

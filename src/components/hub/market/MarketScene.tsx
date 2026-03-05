@@ -7,19 +7,23 @@ import { MarketListingsPanel } from "@/components/hub/market/MarketListingsPanel
 import { MarketPackRevealOverlay } from "@/components/hub/market/MarketPackRevealOverlay";
 import { MarketPacksPanel } from "@/components/hub/market/MarketPacksPanel";
 import { MarketToolbar } from "@/components/hub/market/MarketToolbar";
+import { MarketTransactionsPanel } from "@/components/hub/market/MarketTransactionsPanel";
 import { buildMarketListingView } from "@/components/hub/market/market-listing-view";
 import { MarketOrderDirection, MarketOrderField, MarketTypeFilter } from "@/components/hub/market/market-filters";
 import { ICard } from "@/core/entities/ICard";
+import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
 import { IMarketCatalog } from "@/core/use-cases/market/GetMarketCatalogUseCase";
-import { buyMarketCardAction, buyPackAction } from "@/services/market/market-actions";
+import { buyMarketCardAction, buyPackAction, getMarketTransactionsAction } from "@/services/market/market-actions";
 
 interface MarketSceneProps {
   playerId: string;
   initialCatalog: IMarketCatalog;
+  initialTransactions: IMarketTransaction[];
 }
 
-export function MarketScene({ playerId, initialCatalog }: MarketSceneProps) {
+export function MarketScene({ playerId, initialCatalog, initialTransactions }: MarketSceneProps) {
   const [catalog, setCatalog] = useState<IMarketCatalog>(initialCatalog);
+  const [transactions, setTransactions] = useState<IMarketTransaction[]>(initialTransactions);
   const [selectedCard, setSelectedCard] = useState<ICard | null>(catalog.listings[0]?.card ?? null);
   const [nameQuery, setNameQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<MarketTypeFilter>("ALL");
@@ -37,7 +41,9 @@ export function MarketScene({ playerId, initialCatalog }: MarketSceneProps) {
   async function handleBuyCard(listingId: string): Promise<void> {
     try {
       const updatedCatalog = await buyMarketCardAction(playerId, listingId);
+      const updatedTransactions = await getMarketTransactionsAction(playerId);
       setCatalog(updatedCatalog);
+      setTransactions(updatedTransactions);
       setErrorMessage(null);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "No se pudo comprar la carta.");
@@ -47,7 +53,9 @@ export function MarketScene({ playerId, initialCatalog }: MarketSceneProps) {
   async function handleBuyPack(packId: string): Promise<void> {
     try {
       const result = await buyPackAction(playerId, packId);
+      const updatedTransactions = await getMarketTransactionsAction(playerId);
       setCatalog(result.catalog);
+      setTransactions(updatedTransactions);
       const cardMap = new Map(result.catalog.listings.map((listing) => [listing.card.id, listing.card]));
       const openedCards = result.openedCardIds
         .map((cardId) => cardMap.get(cardId))
@@ -92,7 +100,10 @@ export function MarketScene({ playerId, initialCatalog }: MarketSceneProps) {
             onSelectCard={(listing) => setSelectedCard(listing.card)}
             onBuyCard={handleBuyCard}
           />
-          <MarketPacksPanel packs={catalog.packs} onBuyPack={handleBuyPack} />
+          <div className="grid min-h-0 gap-3 grid-rows-[auto_1fr]">
+            <MarketPacksPanel packs={catalog.packs} onBuyPack={handleBuyPack} />
+            <MarketTransactionsPanel transactions={transactions} />
+          </div>
         </div>
       </section>
       <MarketPackRevealOverlay cards={revealedPackCards} isOpen={isPackRevealOpen} onClose={() => setIsPackRevealOpen(false)} />
