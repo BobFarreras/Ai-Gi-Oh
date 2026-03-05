@@ -151,6 +151,17 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
 3. Repositorios in-memory (`Wallet`, `CardCollection`, `Deck`, `Transaction`) dependen del store y no gestionan estado aislado interno.
 4. `singletons.ts` inyecta una única instancia compartida del store para mantener consistencia entre módulos `Market` y `Home`.
 
+## Subdominio Market (auditoría UI y mantenibilidad)
+
+1. El módulo visual se documenta en `src/components/hub/market/README.md`.
+2. `MarketScene` delega estado y side-effects en `internal/useMarketSceneState.ts`.
+3. La UI se divide por subcarpetas (`layout/`, `listings/`, `packs/`, `reveal/`, `vault/`) para localizar responsabilidades rápido.
+4. Los paneles y overlays especializados respetan SRP y límite de tamaño por archivo.
+5. Componentes legacy sin referencias activas deben eliminarse para evitar deuda técnica.
+6. Endurecimiento de integridad:
+   - `InMemoryWalletRepository` rechaza débito con saldo insuficiente.
+   - IDs de transacción de mercado se generan con estrategia única (`generateMarketTransactionId`).
+
 ## Eventos y observabilidad
 
 1. El motor añade eventos en `combatLog` desde los casos de uso (`playCard`, `executeAttack`, `nextPhase`, etc.).

@@ -7,6 +7,7 @@ import { IWalletRepository } from "@/core/repositories/IWalletRepository";
 import { assertEnoughNexus, assertListingAvailable } from "@/core/services/market/market-economy-rules";
 import { openWeightedPack } from "@/core/services/market/pack-rng";
 import { assertValidPlayerId, assertValidResourceId } from "@/core/use-cases/market/internal/assert-valid-market-input";
+import { generateMarketTransactionId } from "@/core/use-cases/market/internal/generate-market-transaction-id";
 
 interface IBuyPackInput {
   playerId: string;
@@ -41,7 +42,7 @@ export class BuyPackUseCase {
     await this.walletRepository.debitNexus(input.playerId, pack.priceNexus);
     await this.cardCollectionRepository.addCards(input.playerId, openedCardIds);
     await this.transactionRepository.saveMarketTransaction({
-      id: `tx-${Date.now()}-${pack.id}`,
+      id: generateMarketTransactionId(pack.id),
       playerId: input.playerId,
       transactionType: "BUY_PACK",
       amountNexus: pack.priceNexus,

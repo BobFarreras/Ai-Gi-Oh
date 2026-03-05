@@ -7,6 +7,7 @@ import { ITransactionRepository } from "@/core/repositories/ITransactionReposito
 import { IWalletRepository } from "@/core/repositories/IWalletRepository";
 import { assertEnoughNexus, assertListingAvailable } from "@/core/services/market/market-economy-rules";
 import { assertValidPlayerId, assertValidResourceId } from "@/core/use-cases/market/internal/assert-valid-market-input";
+import { generateMarketTransactionId } from "@/core/use-cases/market/internal/generate-market-transaction-id";
 
 interface IBuyMarketCardInput {
   playerId: string;
@@ -39,7 +40,7 @@ export class BuyMarketCardUseCase {
     await this.cardCollectionRepository.addCards(input.playerId, [listing.card.id]);
 
     const transaction: IMarketTransaction = {
-      id: `tx-${Date.now()}-${listing.id}`,
+      id: generateMarketTransactionId(listing.id),
       playerId: input.playerId,
       transactionType: "BUY_CARD",
       amountNexus: listing.priceNexus,

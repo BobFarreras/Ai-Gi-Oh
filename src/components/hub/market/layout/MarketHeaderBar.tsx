@@ -1,4 +1,4 @@
-// src/components/hub/market/MarketHeaderBar.tsx
+// src/components/hub/market/layout/MarketHeaderBar.tsx - Cabecera del mercado con saldo Nexus, búsqueda y filtros principales.
 "use client";
 
 import { motion } from "framer-motion";
@@ -33,7 +33,7 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
         
         {/* 1. SECCIÓN IZQUIERDA (1fr) */}
         <div className="flex items-center gap-3 xl:border-r border-cyan-900/60 xl:pr-4 min-w-0">
-          <BackButton href="/" label="" className="flex shrink-0 px-2 py-1.5" />
+          <BackButton href="/hub" label="" className="flex shrink-0 px-2 py-1.5" />
           <h1 className="text-lg font-black uppercase tracking-widest text-cyan-100 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)] truncate hidden sm:block">
             Mercado
           </h1>

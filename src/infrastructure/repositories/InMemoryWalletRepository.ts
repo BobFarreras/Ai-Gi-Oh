@@ -29,6 +29,9 @@ export class InMemoryWalletRepository implements IWalletRepository {
     if (amount <= 0) {
       throw new ValidationError("El débito Nexus debe ser positivo.");
     }
+    if (wallet.nexus < amount) {
+      throw new ValidationError("Saldo Nexus insuficiente para completar el débito.");
+    }
     const updated = { ...wallet, nexus: wallet.nexus - amount };
     this.store.saveWallet(updated);
     return { ...updated };

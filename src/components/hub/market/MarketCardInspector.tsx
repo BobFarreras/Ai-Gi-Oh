@@ -1,4 +1,4 @@
-// src/components/hub/market/MarketCardInspector.tsx
+// src/components/hub/market/MarketCardInspector.tsx - Muestra el detalle de carta seleccionada y compra contextual en el mercado.
 "use client";
 
 import { motion } from "framer-motion";

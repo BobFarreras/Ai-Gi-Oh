@@ -1,4 +1,4 @@
-// src/components/hub/market/MarketListingsPanel.tsx
+// src/components/hub/market/listings/MarketListingsPanel.tsx - Grid de cartas de mercado con precio flotante y selección de detalle.
 "use client";
 
 import { motion } from "framer-motion";
