@@ -42,7 +42,9 @@ export class EvolveCardVersionUseCase {
     const deckCopies = countDeckCopies(deck, input.cardId);
     const availableStorageCopies = (collectionEntry?.ownedCopies ?? 0) - deckCopies;
     if (!collectionEntry || availableStorageCopies < neededCopies) {
-      throw new GameRuleError(`Se necesitan ${neededCopies} copias en almacén para evolucionar esta carta.`);
+      throw new GameRuleError(
+        `Se necesitan ${neededCopies} copias libres en almacén para evolucionar esta carta. Almacén: ${collectionEntry?.ownedCopies ?? 0}, deck: ${deckCopies}, libres: ${Math.max(0, availableStorageCopies)}.`,
+      );
     }
     await this.collectionRepository.consumeCards(input.playerId, input.cardId, neededCopies);
     const updatedProgress = await this.playerCardProgressRepository.upsert({

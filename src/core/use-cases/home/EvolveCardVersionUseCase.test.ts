@@ -60,7 +60,7 @@ describe("EvolveCardVersionUseCase", () => {
     await collectionRepository.addCards("player-b", ["entity-vscode", "entity-vscode", "entity-vscode"]);
     const progressRepository: IPlayerCardProgressRepository = new InMemoryPlayerCardProgressRepository();
     const useCase = new EvolveCardVersionUseCase(collectionRepository, deckRepository, progressRepository);
-    await expect(useCase.execute({ playerId: "player-b", cardId: "entity-vscode" })).rejects.toThrow("Se necesitan 4 copias");
+    await expect(useCase.execute({ playerId: "player-b", cardId: "entity-vscode" })).rejects.toThrow("Se necesitan 4 copias libres");
   });
 
   it("bloquea evolución si las copias están ocupadas en el deck", async () => {
@@ -71,6 +71,6 @@ describe("EvolveCardVersionUseCase", () => {
     await addCardUseCase.execute({ playerId: "player-c", cardId: "entity-python" });
     const progressRepository: IPlayerCardProgressRepository = new InMemoryPlayerCardProgressRepository();
     const useCase = new EvolveCardVersionUseCase(collectionRepository, deckRepository, progressRepository);
-    await expect(useCase.execute({ playerId: "player-c", cardId: "entity-python" })).rejects.toThrow("Se necesitan 4 copias");
+    await expect(useCase.execute({ playerId: "player-c", cardId: "entity-python" })).rejects.toThrow("Se necesitan 4 copias libres");
   });
 });
