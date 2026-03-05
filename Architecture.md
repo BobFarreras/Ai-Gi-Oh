@@ -62,6 +62,32 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
 3. `core/services/opponent` depende de `core/use-cases` y `core/entities`.
 4. `infrastructure` implementa contratos del dominio cuando se conecten APIs/DB.
 
+## Frontera Auth/BD (Fase 0)
+
+1. `core/repositories` define contratos agnósticos de proveedor (`IAuthRepository`, `IPlayerProfileRepository`, `IPlayerProgressRepository`).
+2. `core/entities` aloja entidades de sesión/perfil/progreso sin tipos de SDK externo.
+3. `infrastructure/database` y `infrastructure/persistence/supabase` contendrán adaptadores concretos.
+4. `app` y `components` tienen prohibido importar SDKs de Supabase o clientes de BD.
+5. ADR asociada: `docs/adr/ADR-0001-auth-persistence-boundary.md`.
+
+```text
+UI (app/components) -> UseCases/Services -> Repositories (interfaces core)
+                                              ^
+                                              |
+                                   Infrastructure Adapters
+                         (InMemory actual / Supabase futuro / otro proveedor)
+```
+
+## Auth real (Fase 1)
+
+1. `middleware.ts` protege `/hub/*` y redirige a `/login` cuando no existe sesión válida.
+2. `services/auth/auth-actions.ts` expone login/logout mediante server actions.
+3. `SupabaseAuthRepository` implementa `IAuthRepository` en infraestructura.
+4. UI nunca importa SDK de Supabase; solo consume acciones/casos de uso.
+5. Variables mínimas:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
 ## Flujo de turno actual
 
 1. El duelo se inicializa con `createInitialGameState` (mazo de 20 y mano inicial configurable; en tablero actual se usa 4 por jugador).

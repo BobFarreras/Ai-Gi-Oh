@@ -1,0 +1,15 @@
+<!-- src/infrastructure/persistence/supabase/README.md - Guía de adaptadores Supabase para implementar contratos de persistencia. -->
+# Adaptadores Supabase
+
+Esta carpeta contendrá implementaciones concretas de repositorios de `core/repositories`:
+
+1. `SupabaseAuthRepository`
+2. `SupabasePlayerProfileRepository`
+3. `SupabasePlayerProgressRepository`
+4. Adaptadores de `wallet`, `collection`, `deck` y `market` cuando se active persistencia real.
+
+## Reglas
+
+1. No exportar objetos de SDK al dominio.
+2. Mapear DTO de Supabase a entidades de `core/entities`.
+3. Gestionar errores de proveedor y traducirlos a errores de aplicación.
