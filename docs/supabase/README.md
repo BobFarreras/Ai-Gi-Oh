@@ -30,6 +30,12 @@
    - definición de sobres (precio, tamaño de pack, pool objetivo, cartas preview).
 10. `public.market_pack_pool_entries`:
    - entradas del pool de cada sobre con peso de aparición por carta.
+11. `public.card_passive_skills`:
+   - catálogo de pasivas reutilizables para mastery de cartas (V5).
+12. `public.card_mastery_passive_map`:
+   - mapea qué pasivas puede desbloquear cada carta al llegar a mastery.
+13. `public.player_card_progress`:
+   - progreso por carta y jugador (`version_tier`, `level`, `xp`, pasiva de mastery).
 
 ## Fase 2 (Perfil y Progreso)
 
@@ -92,6 +98,25 @@
 1. Aplicar previamente `003` y `004`.
 2. Los repositorios Supabase (`Market` y `Collection`) hidratan cartas desde `public.cards_catalog`.
 3. El fallback a modo mock solo se usa cuando no existe esquema completo de catálogo en BD.
+
+## Fase 6.1 (Base de progresión por carta)
+
+1. Ejecuta `docs/supabase/sql/006_phase_6_1_card_progression_foundation.sql`.
+2. Verifica tablas:
+   - `public.card_passive_skills`
+   - `public.card_mastery_passive_map`
+   - `public.player_card_progress`
+3. Verifica RLS:
+   - lectura pública autenticada para catálogo de pasivas y mapeo de mastery,
+   - `player_card_progress` solo accesible por `auth.uid() = player_id`.
+4. Costes de versión definidos para evolución:
+   - `V0 -> V1: 4`
+   - `V1 -> V2: 8`
+   - `V2 -> V3: 16`
+   - `V3 -> V4: 32`
+   - `V4 -> V5: 64`
+5. Nota de reglas:
+   - las copias válidas para evolución se calculan desde `player_collection_cards` (almacén), no desde el deck.
 
 ## Notas
 

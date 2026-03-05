@@ -258,6 +258,18 @@ UI (app/components) -> UseCases/Services -> Repositories (interfaces core)
 2. `getPlayerBoardDeck` resuelve en servidor el mazo guardado del jugador autenticado (`deck slots + colección`).
 3. `/hub/training` inicializa el combate con mazo persistido cuando está completo; si no, usa fallback mock del motor.
 
+## Subdominio Progresión (fase 6.1)
+
+1. Se incorpora `player_card_progress` como estado canónico de progresión por carta (`version_tier`, `level`, `xp`).
+2. Versionado base de cartas:
+   - inicio en `V0`,
+   - tope en `V5`,
+   - costes: `4, 8, 16, 32, 64`.
+3. Las pasivas de mastery (`V5`) se modelan con:
+   - `card_passive_skills` (catálogo reutilizable),
+   - `card_mastery_passive_map` (asignación por carta).
+4. La lógica de evolución se basa en copias del almacén (`player_collection_cards`), sin contar slots de deck.
+
 ## Eventos y observabilidad
 
 1. El motor añade eventos en `combatLog` desde los casos de uso (`playCard`, `executeAttack`, `nextPhase`, etc.).

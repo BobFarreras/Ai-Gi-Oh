@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { SupabaseCardCollectionRepository } from "@/infrastructure/persistence/supabase/SupabaseCardCollectionRepository";
 import { SupabaseDeckRepository } from "@/infrastructure/persistence/supabase/SupabaseDeckRepository";
 import { SupabaseMarketRepository } from "@/infrastructure/persistence/supabase/SupabaseMarketRepository";
+import { SupabasePlayerCardProgressRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerCardProgressRepository";
 import { SupabaseTransactionRepository } from "@/infrastructure/persistence/supabase/SupabaseTransactionRepository";
 import { SupabaseWalletRepository } from "@/infrastructure/persistence/supabase/SupabaseWalletRepository";
 import { createSupabaseRouteClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-route-client";
@@ -18,5 +19,6 @@ export async function createPlayerRouteRepositories(request: NextRequest, respon
   const walletRepository = new SupabaseWalletRepository(client);
   const transactionRepository = new SupabaseTransactionRepository(client);
   const deckRepository = new SupabaseDeckRepository(client, collectionRepository);
-  return { client, marketRepository, walletRepository, collectionRepository, transactionRepository, deckRepository };
+  const playerCardProgressRepository = new SupabasePlayerCardProgressRepository(client);
+  return { client, marketRepository, walletRepository, collectionRepository, transactionRepository, deckRepository, playerCardProgressRepository };
 }
