@@ -20,6 +20,7 @@ export async function createHomeRouteContext(request: NextRequest) {
     saveDeckUseCase: new SaveDeckUseCase(repositories.deckRepository),
     evolveCardVersionUseCase: new EvolveCardVersionUseCase(
       repositories.collectionRepository,
+      repositories.deckRepository,
       repositories.playerCardProgressRepository,
     ),
   };

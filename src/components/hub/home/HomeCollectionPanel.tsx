@@ -2,16 +2,26 @@
 import { motion } from "framer-motion";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IDeck } from "@/core/entities/home/IDeck";
+import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { HomeMiniCard } from "@/components/hub/home/HomeMiniCard";
 
 interface HomeCollectionPanelProps {
   deck: IDeck;
   collection: ICollectionCard[];
+  cardProgressById: Map<string, IPlayerCardProgress>;
+  evolvableCardIds: Set<string>;
   selectedCardId: string | null;
   onSelectCard: (cardId: string) => void;
 }
 
-export function HomeCollectionPanel({ deck, collection, selectedCardId, onSelectCard }: HomeCollectionPanelProps) {
+export function HomeCollectionPanel({
+  deck,
+  collection,
+  cardProgressById,
+  evolvableCardIds,
+  selectedCardId,
+  onSelectCard,
+}: HomeCollectionPanelProps) {
   const usedByCardId = new Map<string, number>();
   
   for (const slot of deck.slots) {
@@ -35,6 +45,8 @@ export function HomeCollectionPanel({ deck, collection, selectedCardId, onSelect
             const usedCopies = usedByCardId.get(entry.card.id) ?? 0;
             const canAdd = usedCopies < Math.min(3, entry.ownedCopies);
             const isSelected = selectedCardId === entry.card.id;
+            const canEvolve = evolvableCardIds.has(entry.card.id);
+            const progress = cardProgressById.get(entry.card.id);
             
             return (
               <motion.button
@@ -45,29 +57,32 @@ export function HomeCollectionPanel({ deck, collection, selectedCardId, onSelect
                 whileTap={canAdd ? { scale: 0.95 } : {}}
                 onClick={() => onSelectCard(entry.card.id)}
                 // REFACTOR 3: Ajustes de opacidad más drásticos para dar feedback visual claro
-                className={`flex flex-col items-center w-[84px] transition-opacity ${
+                className={`relative flex flex-col items-center w-[84px] transition-opacity ${
                   canAdd ? "cursor-pointer" : "cursor-not-allowed opacity-40 grayscale-[50%]"
                 }`}
               >
+                {canEvolve && (
+                  <span className="pointer-events-none absolute -top-1 h-2 w-2 animate-ping rounded-full bg-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.9)]" />
+                )}
                 <HomeMiniCard
                   card={entry.card}
                   label={`Carta ${entry.card.name}`}
                   isSelected={isSelected}
+                  showSlotContainer={false}
+                  versionTier={progress?.versionTier ?? 0}
+                  level={progress?.level ?? 0}
+                  xp={progress?.xp ?? 0}
+                  masteryPassiveSkillId={progress?.masteryPassiveSkillId ?? null}
                 />
                 
                 {/* Indicador de copias con estilo neón si está al máximo */}
-                <div className="mt-2 flex flex-col items-center gap-1">
-                  <span className={`rounded bg-black/80 px-2 py-0.5 text-[10px] font-mono font-bold tracking-widest border ${
-                    usedCopies >= Math.min(3, entry.ownedCopies)
-                      ? "text-red-400 border-red-900/50 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
-                      : "text-cyan-300 border-cyan-900/50"
-                  }`}>
-                    Deck {usedCopies}/{Math.min(3, entry.ownedCopies)}
-                  </span>
-                  <span className="rounded border border-amber-500/35 bg-amber-950/35 px-2 py-0.5 text-[10px] font-mono font-bold tracking-widest text-amber-200">
-                    Alm {entry.ownedCopies}u
-                  </span>
-                </div>
+                <span className={`mt-2 rounded bg-black/80 px-2 py-0.5 text-[10px] font-mono font-bold tracking-widest border ${
+                  usedCopies >= Math.min(3, entry.ownedCopies)
+                    ? "text-red-400 border-red-900/50 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
+                    : "text-cyan-300 border-cyan-900/50"
+                }`}>
+                  D {usedCopies}/{Math.min(3, entry.ownedCopies)} U {entry.ownedCopies}
+                </span>
               </motion.button>
             );
           })}

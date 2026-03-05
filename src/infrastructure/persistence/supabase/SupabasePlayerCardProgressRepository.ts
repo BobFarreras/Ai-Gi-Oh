@@ -17,6 +17,14 @@ interface IPlayerCardProgressRow {
   updated_at: string;
 }
 
+interface ICardMasteryPassiveMapRow {
+  passive_skill_id: string;
+}
+
+interface ICardPassiveSkillRow {
+  id: string;
+}
+
 function toEntity(row: IPlayerCardProgressRow): IPlayerCardProgress {
   return {
     playerId: row.player_id,
@@ -31,6 +39,30 @@ function toEntity(row: IPlayerCardProgressRow): IPlayerCardProgress {
 
 export class SupabasePlayerCardProgressRepository implements IPlayerCardProgressRepository {
   constructor(private readonly client: SupabaseClient) {}
+
+  private async resolveDefaultMasteryPassiveSkillId(cardId: string): Promise<string | null> {
+    const { data, error } = await this.client
+      .from("card_mastery_passive_map")
+      .select("passive_skill_id")
+      .eq("card_id", cardId)
+      .order("priority", { ascending: true })
+      .limit(1)
+      .maybeSingle<ICardMasteryPassiveMapRow>();
+    if (error) throw new ValidationError("No se pudo resolver la pasiva de mastery para la carta.");
+    if (data?.passive_skill_id) return data.passive_skill_id;
+    const { data: fallbackData, error: fallbackError } = await this.client
+      .from("card_passive_skills")
+      .select("id")
+      .eq("is_active", true)
+      .order("id", { ascending: true })
+      .limit(1)
+      .maybeSingle<ICardPassiveSkillRow>();
+    if (fallbackError) throw new ValidationError("No se pudo resolver la pasiva de mastery por defecto.");
+    if (!fallbackData?.id) {
+      throw new ValidationError("No hay pasivas activas para asignar la mastery de la carta en V5.");
+    }
+    return fallbackData.id;
+  }
 
   async getByPlayerAndCard(playerId: string, cardId: string): Promise<IPlayerCardProgress | null> {
     const { data, error } = await this.client
@@ -54,13 +86,19 @@ export class SupabasePlayerCardProgressRepository implements IPlayerCardProgress
 
   async upsert(input: IUpsertPlayerCardProgressInput): Promise<IPlayerCardProgress> {
     const existing = await this.getByPlayerAndCard(input.playerId, input.cardId);
+    const targetVersionTier = input.versionTier ?? existing?.versionTier ?? 0;
+    const currentMasteryPassiveSkillId = input.masteryPassiveSkillId ?? existing?.masteryPassiveSkillId ?? null;
+    const masteryPassiveSkillId =
+      targetVersionTier >= 5 && !currentMasteryPassiveSkillId
+        ? await this.resolveDefaultMasteryPassiveSkillId(input.cardId)
+        : currentMasteryPassiveSkillId;
     const payload = {
       player_id: input.playerId,
       card_id: input.cardId,
-      version_tier: input.versionTier ?? existing?.versionTier ?? 0,
+      version_tier: targetVersionTier,
       level: input.level ?? existing?.level ?? 0,
       xp: input.xp ?? existing?.xp ?? 0,
-      mastery_passive_skill_id: input.masteryPassiveSkillId ?? existing?.masteryPassiveSkillId ?? null,
+      mastery_passive_skill_id: masteryPassiveSkillId,
     };
     const { data, error } = await this.client
       .from("player_card_progress")

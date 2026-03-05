@@ -116,7 +116,7 @@
    - `V3 -> V4: 32`
    - `V4 -> V5: 64`
 5. Nota de reglas:
-   - las copias válidas para evolución se calculan desde `player_collection_cards` (almacén), no desde el deck.
+   - las copias válidas para evolución se calculan con copias libres de almacén: `player_collection_cards.owned_copies - copias_en_player_deck_slots`.
 
 ## Notas
 
