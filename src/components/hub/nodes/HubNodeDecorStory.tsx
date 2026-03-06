@@ -1,11 +1,34 @@
-// src/components/hub/nodes/HubNodeDecorStory.tsx - Decoración de Historia con plataforma y núcleo 3D orgánico.
-export function HubNodeDecorStory() {
+// src/components/hub/nodes/HubNodeDecorStory.tsx - Núcleo 3D de la sección Historia.
+"use client";
+
+import { useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
+
+export function StoryCore3D() {
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  useFrame((_, delta) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y += delta * 0.25;
+      meshRef.current.rotation.x += delta * 0.1;
+    }
+  });
+
   return (
-    <>
-      <div className="absolute -bottom-6 left-1/2 h-10 w-[74%] -translate-x-1/2 rounded-[100%] border border-cyan-200/35 bg-cyan-300/10 blur-[1px]" />
-      <div className="absolute -top-9 left-1/2 h-16 w-16 -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_30%_25%,#7dd3fc_0%,#0f172a_70%)] shadow-[0_0_26px_rgba(56,189,248,0.65)]" />
-      <div className="absolute -top-4 left-1/2 h-8 w-1 -translate-x-[26px] -rotate-[34deg] rounded-full bg-cyan-300/45" />
-      <div className="absolute -top-4 left-1/2 h-8 w-1 -translate-x-[18px] rotate-[20deg] rounded-full bg-cyan-200/35" />
-    </>
+    <group scale={1.8} position={[0, -0.2, 0]}>
+      <pointLight position={[2, 2, 2]} color="#0284c7" intensity={2} />
+      <mesh ref={meshRef} rotation={[0.2, 0, 0]}>
+        <sphereGeometry args={[1, 16, 16]} />
+        <meshStandardMaterial
+          color="#0284c7"
+          wireframe={true}
+          emissive="#10b981"
+          emissiveIntensity={1.5}
+          transparent={true}
+          opacity={0.8}
+        />
+      </mesh>
+    </group>
   );
 }

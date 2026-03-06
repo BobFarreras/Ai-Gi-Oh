@@ -168,7 +168,7 @@ UI (app/components) -> UseCases/Services -> Repositories (interfaces core)
 ## Hub UI y navegación (fase 3 y 4)
 
 1. `src/app/hub/page.tsx` renderiza la sala de control (HUD) como punto de entrada visual.
-2. `HubScene` y `HubSceneNode` gestionan layout de paneles, navegación por click y feedback de secciones bloqueadas.
+2. `HubScene` y `HubSceneNode3D` gestionan layout de paneles, navegación por click y feedback de secciones bloqueadas.
 3. Rutas activas del hub:
    - `/hub/market`
    - `/hub/home`
@@ -177,6 +177,13 @@ UI (app/components) -> UseCases/Services -> Repositories (interfaces core)
    - `/hub/multiplayer`
 4. `getHubSectionViewModel` resuelve en servidor el estado de cada sección antes de renderizar su pantalla.
 5. `HubSectionScreen` unifica la presentación base de módulos para evitar duplicación de layout.
+
+## Hub UI (fase 3 y 4 - optimización y hardening)
+
+1. `HubNodeActionPanel` encapsula interacción accesible de nodos 3D (navegación y lock reason).
+2. Cálculos puros de posición y color de nodo se extraen a `internal/hub-3d-node-math.ts`.
+3. `MarketCore3D` se divide en submódulos (`nodes/market/*`) para reducir tamaño por archivo y aislar responsabilidades.
+4. Se eliminan wrappers legacy no referenciados para evitar deuda técnica.
 
 ## Hub UI (Refactor Fase 0 - Preparación)
 

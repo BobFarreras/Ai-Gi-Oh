@@ -10,7 +10,7 @@ El hub es la puerta de entrada a los modos principales del juego fuera del duelo
 1. El usuario entra en `/hub`.
 2. Se carga `GetHubMapUseCase` con `HubService` + `IHubRepository`.
 3. El servicio aplica reglas de acceso (`HubAccessPolicy`) sobre las secciones.
-4. La UI renderiza paneles HUD clicables (`HubSceneNode`).
+4. La UI renderiza paneles HUD clicables (`HubSceneNode3D` + `HubNodeActionPanel`).
 5. Si la sección está bloqueada:
    - no navega,
    - muestra motivo de bloqueo al hacer click.
@@ -114,6 +114,12 @@ Estado: aprobado para implementación por fases.
 2. Renderizar nodos 3D básicos por sección.
 3. Mantener fallback visual 2D si WebGL no está disponible.
 
+#### Estado actual
+
+1. Navegación real en nodos 3D (`router.push`) usando panel accesible (`HubNodeActionPanel`).
+2. Secciones bloqueadas muestran `lockReason` al hacer click.
+3. Nodos 3D mantienen estética y movimiento libre de cámara.
+
 ### Fase 3: Identidad visual por sección
 
 1. Tema visual por nodo (`HOME`, `MARKET`, `STORY`, `TRAINING`, `MULTIPLAYER`).
@@ -125,6 +131,15 @@ Estado: aprobado para implementación por fases.
 1. Optimización de rendimiento (FPS, densidad de efectos).
 2. Cobertura de tests y accesibilidad.
 3. Eliminación de estilos/archivos legacy del hub.
+
+#### Estado actual
+
+1. `MarketCore3D` refactorizado en submódulos (`market/*`) para reducir complejidad y facilitar mantenimiento.
+2. Eliminados wrappers legacy no usados en hub 3D.
+3. Añadidos tests co-localizados:
+   - `HubNodeActionPanel.test.tsx`,
+   - `hub-3d-node-math.test.ts`,
+   - `market-radar-utils.test.ts`.
 
 ## Mercado (fase inicial de dominio)
 
