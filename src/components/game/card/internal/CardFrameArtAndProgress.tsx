@@ -7,9 +7,10 @@ interface CardFrameArtAndProgressProps {
   isOnBoard: boolean;
   level: number;
   levelProgressWidth: string;
+  disableHoverEffects?: boolean;
 }
 
-export function CardFrameArtAndProgress({ card, isOnBoard, level, levelProgressWidth }: CardFrameArtAndProgressProps) {
+export function CardFrameArtAndProgress({ card, isOnBoard, level, levelProgressWidth, disableHoverEffects = false }: CardFrameArtAndProgressProps) {
   return (
     <div className="relative z-10 mt-2 flex flex-grow flex-col items-center justify-start px-3">
       <div className="group relative mb-1.5 flex h-36 w-full shrink-0 items-center justify-center overflow-hidden rounded-sm bg-black shadow-[inset_0_0_30px_rgba(0,0,0,1)]">
@@ -24,7 +25,9 @@ export function CardFrameArtAndProgress({ card, isOnBoard, level, levelProgressW
             className="absolute inset-0 z-10 object-contain p-1 drop-shadow-[0_4px_6px_rgba(0,0,0,0.65)]"
           />
         )}
-        <div className="absolute top-0 h-0.5 w-full bg-cyan-400/50 opacity-0 group-hover:animate-[ping_2s_infinite] group-hover:opacity-100" />
+        {!disableHoverEffects ? (
+          <div className="absolute top-0 h-0.5 w-full bg-cyan-400/50 opacity-0 group-hover:animate-[ping_2s_infinite] group-hover:opacity-100" />
+        ) : null}
       </div>
       <div className="flex w-full flex-1 items-center justify-center py-1">
         <h2 className="line-clamp-2 w-full text-center text-[17px] font-black uppercase leading-tight tracking-tight text-white drop-shadow-[0_2px_5px_rgba(0,0,0,1)]">

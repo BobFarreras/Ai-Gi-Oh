@@ -6,6 +6,8 @@ export interface ICardFrameProps {
   factionStyles: { wrapper: string; inner: string };
   isSelected: boolean;
   isOnBoard: boolean;
+  disableHoverEffects?: boolean;
+  disableDefaultShadow?: boolean;
   onClick?: (card: ICard) => void;
   versionTier: number;
   level: number;

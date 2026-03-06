@@ -13,6 +13,8 @@ export function CardFrame({
   factionStyles,
   isSelected,
   isOnBoard,
+  disableHoverEffects = false,
+  disableDefaultShadow = false,
   onClick,
   versionTier,
   level,
@@ -35,7 +37,7 @@ export function CardFrame({
           "absolute inset-0 z-10 cursor-pointer select-none p-[2px] transition-all duration-300",
           isSelected
             ? "ring-offset-black shadow-[0_0_50px_rgba(251,191,36,0.8)] ring-2 ring-yellow-400 bg-gradient-to-br from-yellow-400 via-white to-slate-400"
-            : `shadow-2xl shadow-black ${factionStyles.wrapper}`,
+            : `${disableDefaultShadow ? "" : "shadow-2xl shadow-black"} ${factionStyles.wrapper}`,
         )}
       >
         <div
@@ -44,7 +46,13 @@ export function CardFrame({
         >
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.03)_50%,transparent_100%)] bg-[length:200%_200%] animate-[pulse_4s_ease-in-out_infinite]" />
           <CardFrameHeader card={card} versionTier={versionTier} />
-          <CardFrameArtAndProgress card={card} isOnBoard={isOnBoard} level={level} levelProgressWidth={levelProgressWidth} />
+          <CardFrameArtAndProgress
+            card={card}
+            isOnBoard={isOnBoard}
+            level={level}
+            levelProgressWidth={levelProgressWidth}
+            disableHoverEffects={disableHoverEffects}
+          />
           <CardFrameFooter card={card} descriptionText={descriptionText} />
         </div>
       </div>

@@ -28,7 +28,7 @@ describe('Componente UI: Card', () => {
     expect(screen.getByText('7')).toBeInTheDocument(); // Coste
     expect(screen.getByText('2500')).toBeInTheDocument(); // Ataque
     expect(screen.getByText('2000')).toBeInTheDocument(); // Defensa
-    expect(screen.getByText('ENTITY · LLM')).toBeInTheDocument(); // Tipo + arquetipo
+    expect(screen.getByText('LLM')).toBeInTheDocument(); // Tipo/arquetipo visible en el chip actual
   });
 
   it('debería ejecutar la función onClick al ser clickeada pasando la carta como argumento', () => {
