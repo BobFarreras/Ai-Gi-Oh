@@ -4,7 +4,6 @@
 import { useState } from "react";
 import { IHubMapNode } from "@/core/entities/hub/IHubMapNode";
 import { HubSectionType, IHubSection } from "@/core/entities/hub/IHubSection";
-import { getControlPanelPosition } from "@/components/hub/control-room-layout";
 import { HubNodeActionPanel } from "@/components/hub/HubNodeActionPanel";
 import { resolveHubNodeInteraction } from "@/components/hub/internal/hub-node-interaction";
 import { resolveHubNodeBaseColor } from "@/components/hub/internal/hub-3d-node-math";
@@ -25,9 +24,12 @@ export function HubSceneFallback2D({ sections, nodes, onNavigate }: HubSceneFall
       {nodes.map((node) => {
         const section = sectionsByType.get(node.sectionType);
         if (!section) return null;
-        const position = getControlPanelPosition(section.type);
         return (
-          <article key={node.id} className="absolute z-30 -translate-x-1/2 -translate-y-1/2" style={{ left: position.left, top: position.top }}>
+          <article
+            key={node.id}
+            className="absolute z-30 -translate-x-1/2 -translate-y-1/2"
+            style={{ left: `${node.positionX}%`, top: `${node.positionY}%` }}
+          >
             <HubNodeActionPanel
               section={section}
               baseColor={resolveHubNodeBaseColor(section.type)}

@@ -12,9 +12,11 @@ import { HubSceneNode3D } from "@/components/hub/HubSceneNode3D";
 import { HubSceneHudOverlay } from "@/components/hub/HubSceneHudOverlay";
 import { HubSceneFallback2D } from "@/components/hub/HubSceneFallback2D";
 import { HUB_NODE_STAGGER_DELAY } from "@/components/hub/internal/hub-entry-timings";
+import { applyResponsiveNodeLayout } from "@/components/hub/internal/hub-node-responsive-layout";
 import { HUB_SCENE_FLOOR_CONFIG } from "@/components/hub/internal/hub-scene-floor-config";
 import { supportsWebGL } from "@/components/hub/internal/hub-webgl-support";
 import { useDocumentVisibility } from "@/components/hub/internal/use-document-visibility";
+import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
 
 interface HubSceneProps {
   playerLabel?: string;
@@ -35,10 +37,12 @@ export function HubScene({
 }: HubSceneProps) {
   const router = useRouter();
   const isDocumentVisible = useDocumentVisibility();
+  const viewportWidth = useViewportWidth();
   const canRender3D = useMemo(
     () => (forceFallbackForTests ? false : supportsWebGL()),
     [forceFallbackForTests],
   );
+  const responsiveNodes = useMemo(() => applyResponsiveNodeLayout(nodes, viewportWidth), [nodes, viewportWidth]);
 
   const sectionsByType = useMemo(() => {
     return new Map<HubSectionType, IHubSection>(sections.map((section) => [section.type, section]));
@@ -52,7 +56,7 @@ export function HubScene({
           2. CAPA DEL MUNDO 3D (Tactical Dark Room)
           ========================================= */}
       <div className="absolute inset-0 z-10 bg-[#010610]">
-        {!canRender3D ? <HubSceneFallback2D sections={sections} nodes={nodes} onNavigate={(href) => router.push(href)} /> : null}
+        {!canRender3D ? <HubSceneFallback2D sections={sections} nodes={responsiveNodes} onNavigate={(href) => router.push(href)} /> : null}
         {/* Fondo base ultra oscuro para que no haya fugas de luz clara */}
         {canRender3D ? (
           <Canvas
@@ -124,7 +128,7 @@ export function HubScene({
           />
 
           {/* Nodos 3D */}
-          {nodes.map((node, index) => {
+          {responsiveNodes.map((node, index) => {
             const section = sectionsByType.get(node.sectionType);
             if (!section) return null;
             const nodeDelay = index * HUB_NODE_STAGGER_DELAY;

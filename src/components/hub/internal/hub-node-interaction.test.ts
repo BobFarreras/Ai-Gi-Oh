@@ -7,7 +7,7 @@ function createSection(overrides?: Partial<IHubSection>): IHubSection {
   return {
     id: "home",
     type: "HOME",
-    title: "Mi Home",
+    title: "Arsenal",
     description: "Gestiona mazos.",
     href: "/hub/home",
     isLocked: false,

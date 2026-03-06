@@ -8,7 +8,7 @@ function createSection(overrides?: Partial<IHubSection>): IHubSection {
   return {
     id: "home",
     type: "HOME",
-    title: "Mi Home",
+    title: "Arsenal",
     description: "Gestiona mazos y perfil.",
     href: "/hub/home",
     isLocked: false,
@@ -21,7 +21,7 @@ describe("HubNodeActionPanel", () => {
   it("navega cuando la sección está desbloqueada", () => {
     const onAction = vi.fn();
     render(<HubNodeActionPanel section={createSection()} baseColor="#10b981" isHovered={false} isLockReasonVisible={false} onAction={onAction} />);
-    fireEvent.click(screen.getByRole("button", { name: "Abrir Mi Home" }));
+    fireEvent.click(screen.getByRole("button", { name: "Abrir Arsenal" }));
     expect(onAction).toHaveBeenCalledTimes(1);
   });
 

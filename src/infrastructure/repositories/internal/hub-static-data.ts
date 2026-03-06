@@ -4,7 +4,7 @@ import { IHubSection } from "@/core/entities/hub/IHubSection";
 
 export const HUB_SECTIONS: ReadonlyArray<Omit<IHubSection, "isLocked" | "lockReason">> = [
   { id: "market", type: "MARKET", title: "Mercado", description: "Compra sobres, cartas y mejoras.", href: "/hub/market" },
-  { id: "home", type: "HOME", title: "Mi Home", description: "Gestiona mazos, perfil y ajustes.", href: "/hub/home" },
+  { id: "home", type: "HOME", title: "Arsenal", description: "Gestiona mazos, cartas y ajustes.", href: "/hub/home" },
   {
     id: "training",
     type: "TRAINING",
@@ -23,7 +23,7 @@ export const HUB_SECTIONS: ReadonlyArray<Omit<IHubSection, "isLocked" | "lockRea
 ];
 
 export const HUB_MAP_NODES: ReadonlyArray<IHubMapNode> = [
-  { id: "node-home", sectionType: "HOME", positionX: 50, positionY: 78, districtLabel: "Distrito Base" },
+  { id: "node-home", sectionType: "HOME", positionX: 50, positionY: 70, districtLabel: "Distrito Base" },
   { id: "node-market", sectionType: "MARKET", positionX: 24, positionY: 58, districtLabel: "Distrito Comercial" },
   { id: "node-training", sectionType: "TRAINING", positionX: 74, positionY: 56, districtLabel: "Dojo Táctico" },
   { id: "node-story", sectionType: "STORY", positionX: 36, positionY: 30, districtLabel: "Archivo de Historia" },

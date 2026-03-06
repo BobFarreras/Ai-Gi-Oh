@@ -14,11 +14,11 @@ describe("HubScene fallback", () => {
     render(
       <HubScene
         forceFallbackForTests
-        sections={[{ id: "home", type: "HOME", title: "Mi Home", description: "Gestiona mazos.", href: "/hub/home", isLocked: false, lockReason: null }]}
+        sections={[{ id: "home", type: "HOME", title: "Arsenal", description: "Gestiona mazos.", href: "/hub/home", isLocked: false, lockReason: null }]}
         nodes={[{ id: "n1", sectionType: "HOME", districtLabel: "Distrito", positionX: 50, positionY: 50 }]}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Abrir Mi Home" }));
+    fireEvent.click(screen.getByRole("button", { name: "Abrir Arsenal" }));
     expect(push).toHaveBeenCalledWith("/hub/home");
   });
 });
