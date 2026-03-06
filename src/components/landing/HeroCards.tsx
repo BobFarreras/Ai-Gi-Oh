@@ -2,6 +2,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/game/card/Card";
 import type { ICard } from "@/core/entities/ICard";
 
@@ -50,14 +51,58 @@ const LORE_CARDS: ICard[] = [
   }
 ];
 
-export function HeroCards() {
+interface HeroCardsProps {
+  onCardReveal?: (delayMs?: number) => void;
+}
+
+export function HeroCards({ onCardReveal }: HeroCardsProps) {
+  const [viewportMode, setViewportMode] = useState<"mobile" | "tablet" | "desktop">("desktop");
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      setViewportMode("desktop");
+      return;
+    }
+    const mobileQuery = window.matchMedia("(max-width: 639px)");
+    const tabletQuery = window.matchMedia("(min-width: 640px) and (max-width: 1023px)");
+    const syncViewport = () => {
+      if (mobileQuery.matches) {
+        setViewportMode("mobile");
+        return;
+      }
+      if (tabletQuery.matches) {
+        setViewportMode("tablet");
+        return;
+      }
+      setViewportMode("desktop");
+    };
+    syncViewport();
+    mobileQuery.addEventListener("change", syncViewport);
+    tabletQuery.addEventListener("change", syncViewport);
+    return () => {
+      mobileQuery.removeEventListener("change", syncViewport);
+      tabletQuery.removeEventListener("change", syncViewport);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!onCardReveal) return;
+    onCardReveal(200);
+    onCardReveal(500);
+    onCardReveal(800);
+  }, [onCardReveal]);
+  const fanOffset = viewportMode === "mobile" ? 142 : viewportMode === "tablet" ? 182 : 230;
+  const centerYOffset = viewportMode === "mobile" ? -8 : -16;
+  const centerScale = viewportMode === "mobile" ? 0.86 : 0.94;
+  const wrapperScale = viewportMode === "mobile" ? "scale-[0.5]" : viewportMode === "tablet" ? "scale-[0.62]" : "scale-[0.84]";
+
   return (
-    <div className="relative flex h-full w-full items-center justify-center perspective-[1200px] scale-[0.52] sm:scale-[0.62] md:scale-[0.76] lg:scale-[0.84]">
+    <div className={`relative flex h-full w-full items-center justify-center perspective-[1200px] ${wrapperScale}`}>
       
       {/* Carta Izquierda (Más separada y girada) */}
       <motion.div
         initial={{ opacity: 0, x: -150, rotateY: -30, rotateZ: -10 }}
-        animate={{ opacity: 1, x: -230, rotateY: -20, rotateZ: -16 }}
+        animate={{ opacity: 1, x: -fanOffset, rotateY: -20, rotateZ: -16 }}
         transition={{ type: "spring", stiffness: 80, damping: 15, delay: 0.2 }}
         className="absolute z-10"
       >
@@ -67,7 +112,7 @@ export function HeroCards() {
       {/* Carta Centro */}
       <motion.div
         initial={{ opacity: 0, y: 100, scale: 0.8 }}
-        animate={{ opacity: 1, y: -16, scale: 0.94 }}
+        animate={{ opacity: 1, y: centerYOffset, scale: centerScale }}
         transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.5 }}
         className="absolute z-30 shadow-[0_0_60px_rgba(59,130,246,0.3)]"
       >
@@ -77,7 +122,7 @@ export function HeroCards() {
       {/* Carta Derecha (Más separada y girada) */}
       <motion.div
         initial={{ opacity: 0, x: 150, rotateY: 30, rotateZ: 10 }}
-        animate={{ opacity: 1, x: 230, rotateY: 20, rotateZ: 16 }}
+        animate={{ opacity: 1, x: fanOffset, rotateY: 20, rotateZ: 16 }}
         transition={{ type: "spring", stiffness: 80, damping: 15, delay: 0.8 }}
         className="absolute z-20"
       >

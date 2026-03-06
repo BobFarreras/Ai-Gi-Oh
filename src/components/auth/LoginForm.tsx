@@ -2,12 +2,13 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState, useTransition } from "react";
+import { FormEvent, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { loginWithEmail } from "@/services/auth/auth-http-client";
 import { AuthField } from "@/components/auth/internal/AuthField";
 import { authFormBeamVariants, authFormContainerVariants, buildAuthPieceVariants } from "@/components/auth/internal/formAnimation";
+import { useAuthFormSfx } from "@/components/auth/internal/useAuthFormSfx";
 
 export function LoginForm() {
   const router = useRouter();
@@ -15,6 +16,11 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { playButtonClick, playFormEntry } = useAuthFormSfx();
+
+  useEffect(() => {
+    playFormEntry();
+  }, [playFormEntry]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
@@ -90,6 +96,7 @@ export function LoginForm() {
         variants={buildAuthPieceVariants(0.25)}
         type="submit"
         aria-label="Iniciar sesión"
+        onClick={playButtonClick}
         disabled={isPending}
         className="group relative z-10 mt-10 flex h-16 w-full items-center justify-center overflow-hidden bg-cyan-600 px-8 font-mono text-sm font-black uppercase tracking-[0.25em] text-black transition-all hover:bg-cyan-400 hover:shadow-[0_0_35px_rgba(6,182,212,0.7)] disabled:cursor-not-allowed disabled:bg-cyan-900/60 disabled:text-cyan-600 disabled:opacity-70"
         style={{ WebkitClipPath: "polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px)" }}
@@ -100,7 +107,7 @@ export function LoginForm() {
 
       <motion.p variants={buildAuthPieceVariants(0.1)} className="relative z-10 mt-10 text-center font-mono text-xs uppercase tracking-widest text-cyan-500/70">
         ¿No tienes identificador?{" "}
-        <Link href="/register" className="font-black text-cyan-400 transition-colors hover:text-white hover:drop-shadow-[0_0_12px_rgba(6,182,212,0.9)]">
+        <Link href="/register" onClick={playButtonClick} className="font-black text-cyan-400 transition-colors hover:text-white hover:drop-shadow-[0_0_12px_rgba(6,182,212,0.9)]">
           Compilar Nuevo Nodo
         </Link>
       </motion.p>

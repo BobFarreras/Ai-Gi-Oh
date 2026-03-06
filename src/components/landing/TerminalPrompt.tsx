@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface ITerminalPromptProps {
   onComplete: (code: string) => void;
+  onAction?: () => void;
+  onInputReady?: () => void;
 }
 
 const TERMINAL_TEXT = [
@@ -16,15 +18,49 @@ const TERMINAL_TEXT = [
   "Si es tu primera vez en el ciberespacio, necesito confirmar tu identidad.",
   "Introduce tu código de verificación:"
 ];
+const TERMINAL_HELP_TEXT = "¿Te has olvidado deL código? No será tu nombre...";
 
-export function TerminalPrompt({ onComplete }: ITerminalPromptProps) {
+export function TerminalPrompt({ onComplete, onAction, onInputReady }: ITerminalPromptProps) {
   const [displayedLines, setDisplayedLines] = useState<string[]>([]);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [currentCharIndex, setCurrentCharIndex] = useState(0);
+  const [isHelpTyping, setIsHelpTyping] = useState(false);
+  const [helpCharIndex, setHelpCharIndex] = useState(0);
+  const [isHelpCompleted, setIsHelpCompleted] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isTyping = currentLineIndex < TERMINAL_TEXT.length;
+
+  useEffect(() => {
+    if (isTyping) return;
+    onInputReady?.();
+  }, [isTyping, onInputReady]);
+
+  useEffect(() => {
+    if (isTyping || isHelpCompleted || isHelpTyping) return;
+    const timeoutId = window.setTimeout(() => {
+      setIsHelpTyping(true);
+      setHelpCharIndex(0);
+    }, 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, [isHelpCompleted, isHelpTyping, isTyping]);
+
+  useEffect(() => {
+    if (!isHelpTyping || isHelpCompleted) return;
+    if (helpCharIndex < TERMINAL_HELP_TEXT.length) {
+      const timeoutId = window.setTimeout(() => {
+        setHelpCharIndex((previous) => previous + 1);
+      }, Math.random() * 10 + 8);
+      return () => window.clearTimeout(timeoutId);
+    }
+    const finalizeTimeout = window.setTimeout(() => {
+      setDisplayedLines((previous) => [...previous, TERMINAL_HELP_TEXT]);
+      setIsHelpTyping(false);
+      setIsHelpCompleted(true);
+    }, 120);
+    return () => window.clearTimeout(finalizeTimeout);
+  }, [helpCharIndex, isHelpCompleted, isHelpTyping]);
 
   useEffect(() => {
     if (!isTyping) {
@@ -52,6 +88,7 @@ export function TerminalPrompt({ onComplete }: ITerminalPromptProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim() !== "") {
+      onAction?.();
       onComplete(inputValue.trim());
     }
   };
@@ -76,6 +113,13 @@ export function TerminalPrompt({ onComplete }: ITerminalPromptProps) {
         {displayedLines.map((line, i) => (
           <div key={i}>{"> "}{line}</div>
         ))}
+        {!isTyping && isHelpTyping ? (
+          <div>
+            {"> "}
+            {TERMINAL_HELP_TEXT.substring(0, helpCharIndex)}
+            <span className="animate-pulse bg-cyan-400 text-cyan-400">|</span>
+          </div>
+        ) : null}
         
         {isTyping && (
           <div>

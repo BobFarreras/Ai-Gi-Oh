@@ -2,12 +2,13 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState, useTransition } from "react";
+import { FormEvent, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { registerWithEmail } from "@/services/auth/auth-http-client";
 import { AuthField } from "@/components/auth/internal/AuthField";
 import { authFormBeamVariants, authFormContainerVariants, buildAuthPieceVariants } from "@/components/auth/internal/formAnimation";
+import { useAuthFormSfx } from "@/components/auth/internal/useAuthFormSfx";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -16,6 +17,11 @@ export function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { playButtonClick, playFormEntry } = useAuthFormSfx();
+
+  useEffect(() => {
+    playFormEntry();
+  }, [playFormEntry]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
@@ -106,6 +112,7 @@ export function RegisterForm() {
         variants={buildAuthPieceVariants(0.2)}
         type="submit"
         aria-label="Crear cuenta"
+        onClick={playButtonClick}
         disabled={isPending}
         className="group relative z-10 mt-8 flex h-14 w-full items-center justify-center overflow-hidden bg-cyan-600 px-8 font-mono text-sm font-black uppercase tracking-[0.25em] text-black transition-all hover:bg-cyan-400 hover:shadow-[0_0_35px_rgba(6,182,212,0.7)] disabled:cursor-not-allowed disabled:bg-cyan-900/60 disabled:text-cyan-600 disabled:opacity-70 sm:h-16"
         style={{ WebkitClipPath: "polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px)" }}
@@ -116,7 +123,7 @@ export function RegisterForm() {
 
       <motion.p variants={buildAuthPieceVariants(0.1)} className="relative z-10 mt-8 text-center font-mono text-[10px] uppercase tracking-widest text-cyan-500/70 sm:text-xs">
         ¿Identidad ya registrada?{" "}
-        <Link href="/login" className="font-black text-cyan-400 transition-colors hover:text-white hover:drop-shadow-[0_0_12px_rgba(6,182,212,0.9)]">
+        <Link href="/login" onClick={playButtonClick} className="font-black text-cyan-400 transition-colors hover:text-white hover:drop-shadow-[0_0_12px_rgba(6,182,212,0.9)]">
           Inicia sesión
         </Link>
       </motion.p>

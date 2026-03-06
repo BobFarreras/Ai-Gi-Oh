@@ -2,24 +2,36 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface ICrawlTextProps {
   accessCode: string;
   onSkip: () => void;
+  onAction?: () => void;
 }
 
-export function CrawlText({ accessCode, onSkip }: ICrawlTextProps) {
+export function CrawlText({ accessCode, onSkip, onAction }: ICrawlTextProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const syncViewport = () => setIsMobile(mediaQuery.matches);
+    syncViewport();
+    mediaQuery.addEventListener("change", syncViewport);
+    return () => mediaQuery.removeEventListener("change", syncViewport);
+  }, []);
+
   // Escuchar la tecla ESC para saltar la historia
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        onAction?.();
         onSkip();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onSkip]);
+  }, [onAction, onSkip]);
 
   return (
     // pointer-events-none para que el contenedor no bloquee, pero el botón tendrá pointer-events-auto
@@ -27,7 +39,10 @@ export function CrawlText({ accessCode, onSkip }: ICrawlTextProps) {
       
       {/* Botón Flotante para Saltar (Estilo HUD) - AHORA CLICABLE */}
       <button 
-        onClick={onSkip}
+        onClick={() => {
+          onAction?.();
+          onSkip();
+        }}
         className="pointer-events-auto absolute top-8 right-8 z-[100] flex items-center gap-2 border border-cyan-500/50 bg-black/50 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-cyan-400 backdrop-blur-md transition-all hover:bg-cyan-500/20 hover:text-cyan-100"
       >
         <div className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
@@ -39,7 +54,7 @@ export function CrawlText({ accessCode, onSkip }: ICrawlTextProps) {
       <motion.div
         initial={{ y: "100%" }}
         animate={{ y: "-150%" }}
-        transition={{ duration: 45, ease: "linear" }}
+        transition={{ duration: isMobile ? 30 : 45, ease: "linear" }}
         onAnimationComplete={onSkip} // Cuando termina la animación, salta automáticamente
         className="w-full max-w-2xl px-6 text-center text-cyan-100 font-light tracking-wide leading-relaxed text-lg sm:text-xl pointer-events-none"
       >
