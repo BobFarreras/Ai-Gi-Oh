@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI-GI-OH!
 
-## Getting Started
+Juego de cartas táctico en Next.js con motor de reglas desacoplado, errores tipados de dominio y loop automático de turno para oponente heurístico.
 
-First, run the development server:
+## Stack
+
+1. Next.js (App Router)
+2. React
+3. TypeScript estricto
+4. Vitest + Testing Library
+5. ESLint
+
+## Comandos
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:coverage
+pnpm build
+pnpm quality:check
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Arquitectura
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. `src/components`: UI y hooks de interacción.
+2. `src/core/entities`: contratos de dominio.
+3. `src/core/errors`: jerarquía de errores tipados.
+4. `src/core/use-cases`: motor del juego y servicios de combate.
+5. `src/core/services/opponent`: estrategia del oponente y stepper de turno.
+6. `src/infrastructure`: adaptadores externos (reservado para integración real).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Calidad mínima para merge
 
-## Learn More
+1. `pnpm lint` en verde.
+2. `pnpm typecheck` en verde (incluye tests TS).
+3. `pnpm test:coverage` en verde.
+4. `pnpm build` en verde.
+5. Cobertura mínima en lógica de negocio (`core/use-cases`): 80% líneas/funciones/statements y 70% ramas.
 
-To learn more about Next.js, take a look at the following resources:
+## Documentación relacionada
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. `Architecture.md`: estructura y dependencias por capas.
+2. `MOTOR_JUEGO.md`: reglas funcionales del motor y ciclo de turnos.
+3. `Agents.md`: normas obligatorias de calidad y contribución.
+4. `src/core/use-cases/game-engine/README.md`: invariantes y contratos del motor.
+5. `src/core/services/opponent/README.md`: estrategia heurística y extensión futura.
+6. `src/components/game/board/hooks/internal/README.md`: responsabilidades de hooks internos del tablero.

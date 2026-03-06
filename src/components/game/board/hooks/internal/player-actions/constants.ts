@@ -1,0 +1,2 @@
+export const PLAYER_TRAP_PREVIEW_MS = 700;
+export const PLAYER_POST_RESOLUTION_MS = 650;

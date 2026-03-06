@@ -1,3 +1,4 @@
+<!-- Agents.md - Reglas obligatorias de ingeniería, arquitectura y calidad del proyecto. -->
 # SYSTEM RULES & GUIDELINES (Agents.md)
 
 ## 1. Language Policy (The "English-Code, Spanish-Docs" Rule)
@@ -28,3 +29,58 @@
 * **Nivel de Experiencia:** Actúa siempre como un Staff Software Engineer experto en Next.js, TypeScript y Clean Architecture.
 * **Cero Deuda Técnica:** No propongas "soluciones rápidas" o "parches" temporales. Si una implementación requiere refactorizar una interfaz previa para ser robusta, hazlo.
 * **Co-location (Tests y Componentes):** Los tests unitarios (`*.test.ts`, `*.test.tsx`) DEBEN colocarse en el mismo directorio que el archivo que están evaluando, nunca en una carpeta separada y aislada de `/tests`.
+
+## 8. Anti-GOD Code y Límites de Tamaño (Mandatory)
+* **Prohibido GOD Objects/Components:** Ningún archivo puede centralizar múltiples responsabilidades de dominio, UI y orquestación en un único módulo.
+* **Límite de líneas por archivo:** Máximo **150 líneas** para componentes, hooks, servicios y casos de uso.
+* **Excepciones permitidas (justificadas):** Archivos de tipos/entidades, archivos de configuración, y migraciones pueden superar el límite si existe justificación explícita en PR.
+* **Regla de extracción:** Si un archivo supera 150 líneas, se debe dividir en submódulos cohesivos en el mismo commit.
+* **Una responsabilidad por módulo:** Cada archivo debe tener un único motivo de cambio (SRP estricto).
+
+## 9. Separación de Responsabilidades (UI, Application, Domain, Infra)
+* **UI (React):** Solo renderizado y manejo de eventos de interacción. No debe contener reglas de negocio del juego.
+* **Application/Use-Cases:** Orquesta flujos del juego, validaciones y reglas. No renderiza UI.
+* **Domain/Core:** Entidades, value objects y reglas puras sin dependencias de framework.
+* **Infrastructure:** Adaptadores externos (DB, APIs, SDKs). Nunca debe contaminar `core/`.
+* **Dependencias permitidas:** `app/components -> services/use-cases -> core`. `infrastructure` implementa interfaces del `core`.
+
+## 10. Reglas Estrictas para PR y Merge (Quality Gates)
+* **Bloqueo de merge si falla cualquier gate:** `pnpm lint`, `pnpm test`, `pnpm build`.
+* **Sin warnings nuevos:** Todo warning de ESLint debe resolverse antes de mergear.
+* **Cobertura mínima de lógica de negocio:** 80% en casos de uso y servicios críticos.
+* **Cambio sin tests = cambio incompleto:** Toda nueva feature/refactor de comportamiento debe incluir tests unitarios y, cuando aplique, test de integración.
+* **Checklist obligatoria en PR:**
+  1. Se mantiene SRP y no se introduce código GOD.
+  2. Ningún archivo nuevo supera 150 líneas (o excepción justificada).
+  3. Documentación afectada actualizada en español.
+  4. `lint`, `test` y `build` en verde.
+
+## 11. Accesibilidad y Testabilidad de UI
+* Todo elemento interactivo (`button`, `input`, `select`, `a`) debe tener nombre accesible (`aria-label`, texto visible o asociación correcta con `label`).
+* Los tests de UI deben priorizar queries semánticas (`getByRole`, `getByLabelText`, `getByText`) y evitar selectores frágiles por clase CSS.
+
+## 12. Estructura recomendada del motor (`game-engine/`)
+* Organizar por subdominios:
+  * `state/`
+  * `actions/`
+  * `phases/`
+  * `combat/`
+  * `fusion/`
+  * `logging/`
+* Evitar volver a mezclar lógica de diferentes dominios en la raíz de `game-engine/`.
+
+## 13. Eventos de UX obligatorios
+* Cualquier cambio relevante de turno/fase/combate debe reflejarse en `combatLog`.
+* El `combatLog` es la fuente única para:
+  * historial visual,
+  * carteleras de estado,
+  * efectos de sonido/feedback.
+
+## 14. Cabecera obligatoria por archivo (Ruta + Descripción)
+* **Primera línea obligatoria:** Todo archivo nuevo o modificado debe incluir en su primera línea un comentario con la ruta del archivo y una descripción breve de su responsabilidad.
+* **Formato por tipo de archivo:**
+  * `ts`, `tsx`, `js`, `jsx`: `// src/ruta/archivo.ext - Descripción breve.`
+  * `md`: `<!-- ruta/archivo.md - Descripción breve. -->`
+  * `css`: `/* src/ruta/archivo.css - Descripción breve. */`
+* **Objetivo:** Mejorar trazabilidad, lectura rápida en PR y contexto inmediato al abrir archivos.
+* **Gate de calidad:** Un archivo sin cabecera de ruta y descripción se considera incumplimiento de documentación y no debe mergearse.

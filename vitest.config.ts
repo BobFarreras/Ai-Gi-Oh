@@ -14,6 +14,14 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      include: ['src/core/use-cases/**/*.ts'],
+      exclude: ['**/*.test.ts', 'src/core/use-cases/GameEngine.ts', 'src/core/use-cases/game-engine/types.ts'],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        statements: 80,
+        branches: 70,
+      },
     },
   },
 });

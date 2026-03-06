@@ -1,73 +1,124 @@
-import { Card } from "@/components/game/Card";
-import { ICard } from "@/core/entities/ICard";
+// src/app/page.tsx - Landing principal con persistencia de intro, audio contextual y acceso a login/registro.
+"use client";
 
-/**
- * Mock data for initial UI testing.
- * In the future, this will be fetched from the Supabase repository.
- */
-const mockCards: ICard[] = [
-  {
-    id: "card-1",
-    name: "Gemini 3.1 Pro",
-    description: "Modelo fundacional superinteligente. Destruye la defensa enemiga con lógica aplastante.",
-    type: "ENTITY",
-    faction: "BIG_TECH",
-    cost: 8,
-    attack: 3000,
-    defense: 2500,
-  },
-  {
-    id: "card-2",
-    name: "Llama 3 Local",
-    description: "Se ejecuta en tu máquina. Inmune a cortes de internet y miradas indiscretas.",
-    type: "ENTITY",
-    faction: "OPEN_SOURCE",
-    cost: 5,
-    attack: 2200,
-    defense: 2800,
-  },
-  {
-    id: "card-3",
-    name: "Flujo de Make",
-    description: "Automatiza 3 ataques seguidos si el enemigo tiene menos de 1000 de defensa.",
-    type: "EXECUTION",
-    faction: "NO_CODE",
-    cost: 3,
-  },
-  {
-    id: "card-4",
-    name: "Servidor Caído",
-    description: "Anula todas las cartas de tipo BIG_TECH durante un turno.",
-    type: "ENVIRONMENT",
-    faction: "NEUTRAL",
-    cost: 2,
-    defense: 1000, // Una carta de entorno con algo de resistencia
-  }
-];
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { ArrowLeft, RotateCcw } from "lucide-react";
+import { AnimatePresence, motion, Variants } from "framer-motion";
+import { CrawlText } from "@/components/landing/CrawlText";
+import { CyberBackground } from "@/components/landing/CyberBackground";
+import { HeroCards } from "@/components/landing/HeroCards";
+import { TerminalPrompt } from "@/components/landing/TerminalPrompt";
+import { useLandingAudio } from "@/components/landing/useLandingAudio";
 
-export default function Home() {
+type LandingPhase = "TERMINAL" | "NARRATIVE" | "SHOWCASE";
+const LANDING_INTRO_SEEN_KEY = "landing-intro-seen";
+
+export default function HomePage() {
+  const [phase, setPhase] = useState<LandingPhase>("TERMINAL");
+  const [isReady, setIsReady] = useState(false);
+  const [userCode, setUserCode] = useState("");
+  const { playButtonClick, playTerminalBoot, playHeroCardDeploy, stopNarrationTrack } = useLandingAudio({ isNarrativeActive: phase === "NARRATIVE" });
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      const introSeen = window.localStorage.getItem(LANDING_INTRO_SEEN_KEY) === "1";
+      if (introSeen) setPhase("SHOWCASE");
+      setIsReady(true);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  const toNarrative = (code: string) => {
+    setUserCode(code);
+    setPhase("NARRATIVE");
+  };
+  const toShowcase = () => {
+    stopNarrationTrack();
+    window.localStorage.setItem(LANDING_INTRO_SEEN_KEY, "1");
+    setPhase("SHOWCASE");
+  };
+  const replayIntro = () => {
+    playButtonClick();
+    stopNarrationTrack();
+    window.localStorage.removeItem(LANDING_INTRO_SEEN_KEY);
+    setUserCode("");
+    setPhase("TERMINAL");
+  };
+  useEffect(() => {
+    if (phase !== "TERMINAL") return;
+    playTerminalBoot();
+  }, [phase, playTerminalBoot]);
+
+  const containerVariants: Variants = useMemo(() => ({ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.3, delayChildren: 0.2 } } }), []);
+  const itemVariants: Variants = useMemo(() => ({ hidden: { opacity: 0, y: 30, scale: 0.9 }, visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 100, damping: 15 } } }), []);
+
   return (
-    <main className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-8 overflow-hidden">
-      
-      <div className="text-center mb-16">
-        <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-zinc-200 to-zinc-600 tracking-tight">
-          AI-Gi-Oh!
-        </h1>
-        <p className="text-zinc-400 mt-2 text-lg tracking-widest uppercase">
-          The AGI Wars
-        </p>
-      </div>
+    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#010308] selection:bg-cyan-500/30">
+      <CyberBackground />
+      {!isReady ? null : (
+        <>
+          <AnimatePresence mode="wait">
+            {phase === "TERMINAL" ? <TerminalPrompt key="terminal" onComplete={toNarrative} onAction={playButtonClick} /> : null}
+          </AnimatePresence>
 
-      {/* Grid de Cartas */}
-      <div className="flex flex-wrap gap-8 justify-center items-center perspective-1000">
-        {mockCards.map((card) => (
-          <Card key={card.id} card={card} />
-        ))}
-      </div>
+          <AnimatePresence>
+            {phase === "NARRATIVE" ? (
+              <motion.div key="narrative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.5 } }} className="absolute inset-0 z-40">
+                <CrawlText accessCode={userCode} onSkip={toShowcase} onAction={playButtonClick} />
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
 
-      <div className="mt-16 text-zinc-500 text-sm">
-        Pasa el ratón sobre las cartas para ver las físicas de Framer Motion
-      </div>
+          <AnimatePresence>
+            {phase === "SHOWCASE" ? (
+              <motion.div key="showcase" variants={containerVariants} initial="hidden" animate="visible" className="absolute inset-0 z-30 flex h-dvh flex-col items-center justify-between overflow-x-visible overflow-y-auto px-4 py-8 pointer-events-auto md:overflow-x-hidden sm:px-6">
+                <motion.header variants={itemVariants} className="relative mt-2 flex-shrink-0 text-center">
+                  <h1 className="bg-gradient-to-br from-white via-cyan-100 to-cyan-600 bg-clip-text text-4xl font-black uppercase tracking-tighter text-transparent drop-shadow-[0_0_15px_rgba(6,182,212,0.6)] md:text-5xl lg:text-6xl">AI-GI-OH</h1>
+                  <span className="mt-2 block font-mono text-lg tracking-[0.3em] text-cyan-500 md:text-xl lg:text-2xl">THE AGI WARS</span>
+                </motion.header>
+
+                <motion.div variants={itemVariants} className="flex min-h-[300px] w-full max-w-5xl flex-1 items-center justify-center">
+                  <HeroCards onCardReveal={playHeroCardDeploy} />
+                </motion.div>
+
+                <motion.footer variants={itemVariants} className="flex w-full max-w-3xl flex-shrink-0 flex-col items-center justify-center gap-4 sm:flex-row">
+                  <Link href="/register" onClick={playButtonClick} className="group relative flex h-14 w-full items-center justify-center overflow-hidden bg-cyan-500 px-4 font-mono text-xs font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-cyan-400 hover:shadow-[0_0_30px_rgba(6,182,212,0.8)] sm:h-16 sm:w-1/2 sm:px-8 sm:text-sm" style={{ clipPath: "polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)" }}>
+                    <div className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/40 transition-transform duration-500 ease-out group-hover:translate-x-full" />
+                    <span>Compilar ID</span>
+                  </Link>
+                  <Link href="/login" onClick={playButtonClick} className="relative flex h-14 w-full items-center justify-center border border-cyan-500/50 bg-black/60 px-4 font-mono text-xs font-bold uppercase tracking-[0.2em] text-cyan-400 backdrop-blur-md transition-all hover:border-cyan-300 hover:bg-cyan-900/40 hover:text-cyan-200 sm:h-16 sm:w-1/2 sm:px-8 sm:text-sm" style={{ clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))" }}>
+                    Conexión Red
+                  </Link>
+                </motion.footer>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+          {phase === "SHOWCASE" ? (
+            <button
+              aria-label="Reproducir secuencia terminal y narración"
+              onClick={replayIntro}
+              className="fixed right-4 top-4 z-[80] flex h-11 w-11 items-center justify-center border border-cyan-500/45 bg-black/75 text-cyan-300 transition-all hover:border-cyan-300 hover:text-cyan-100 md:bottom-6 md:right-6 md:top-auto md:h-auto md:w-auto md:px-4 md:py-3 md:font-mono md:text-[10px] md:font-black md:uppercase md:tracking-[0.16em]"
+            >
+              <RotateCcw className="h-4 w-4 md:hidden" />
+              <span className="hidden md:inline">Reproducir Intro</span>
+            </button>
+          ) : null}
+          {phase === "TERMINAL" ? (
+            <button
+              aria-label="Ir directo a la landing"
+              onClick={() => {
+                playButtonClick();
+                toShowcase();
+              }}
+              className="fixed left-4 top-4 z-[80] flex h-11 w-11 items-center justify-center border border-cyan-500/45 bg-black/75 text-cyan-300 transition-all hover:border-cyan-300 hover:text-cyan-100 md:bottom-6 md:left-auto md:right-6 md:top-auto md:h-auto md:w-auto md:px-4 md:py-3 md:font-mono md:text-[10px] md:font-black md:uppercase md:tracking-[0.16em]"
+            >
+              <ArrowLeft className="h-4 w-4 md:hidden" />
+              <span className="hidden md:inline">Ir a Landing</span>
+            </button>
+          ) : null}
+        </>
+      )}
     </main>
   );
 }

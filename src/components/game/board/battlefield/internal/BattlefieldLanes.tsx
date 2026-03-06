@@ -1,0 +1,91 @@
+// src/components/game/board/battlefield/internal/BattlefieldLanes.tsx - Separa líneas de entidades/ejecuciones y delega render de slots del tablero.
+import { ICard } from "@/core/entities/ICard";
+import { IBoardEntity } from "@/core/entities/IPlayer";
+import { cn } from "@/lib/utils";
+import { MouseEvent } from "react";
+import { SlotGrid } from "../SlotGrid";
+
+interface BattlefieldLanesProps {
+  isOpponentSide: boolean;
+  activeEntities: IBoardEntity[];
+  activeExecutions: IBoardEntity[];
+  activeAttackerId: string | null;
+  selectedCard: ICard | null;
+  revealedEntities: string[];
+  highlightedEntityIds: string[];
+  selectedEntityIds: string[];
+  buffedEntityIds: string[];
+  buffStat: "ATTACK" | "DEFENSE" | null;
+  buffAmount: number | null;
+  buffEventId: string | null;
+  cardXpCardId: string | null;
+  cardXpAmount: number | null;
+  cardXpEventId: string | null;
+  onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: MouseEvent) => void;
+}
+
+export function BattlefieldLanes({
+  isOpponentSide,
+  activeEntities,
+  activeExecutions,
+  activeAttackerId,
+  selectedCard,
+  revealedEntities,
+  highlightedEntityIds,
+  selectedEntityIds,
+  buffedEntityIds,
+  buffStat,
+  buffAmount,
+  buffEventId,
+  cardXpCardId,
+  cardXpAmount,
+  cardXpEventId,
+  onEntityClick,
+}: BattlefieldLanesProps) {
+  const upperLaneEntities = isOpponentSide ? activeExecutions : activeEntities;
+  const lowerLaneEntities = isOpponentSide ? activeEntities : activeExecutions;
+  return (
+    <div className="flex flex-col gap-3" style={{ transformStyle: "preserve-3d" }}>
+      <div className={cn("flex gap-3", isOpponentSide ? "opacity-60" : "")} style={{ transformStyle: "preserve-3d" }}>
+        <SlotGrid
+          entities={upperLaneEntities}
+          totalSlots={3}
+          isOpponentSide={isOpponentSide}
+          activeAttackerId={activeAttackerId}
+          selectedCard={selectedCard}
+          revealedEntities={revealedEntities}
+          highlightedEntityIds={highlightedEntityIds}
+          selectedEntityIds={selectedEntityIds}
+          buffedEntityIds={buffedEntityIds}
+          buffStat={buffStat}
+          buffAmount={buffAmount}
+          buffEventId={buffEventId}
+          cardXpCardId={cardXpCardId}
+          cardXpAmount={cardXpAmount}
+          cardXpEventId={cardXpEventId}
+          onEntityClick={onEntityClick}
+        />
+      </div>
+      <div className={cn("flex gap-3", isOpponentSide ? "" : "opacity-60")} style={{ transformStyle: "preserve-3d" }}>
+        <SlotGrid
+          entities={lowerLaneEntities}
+          totalSlots={3}
+          isOpponentSide={isOpponentSide}
+          activeAttackerId={activeAttackerId}
+          selectedCard={selectedCard}
+          revealedEntities={revealedEntities}
+          highlightedEntityIds={highlightedEntityIds}
+          selectedEntityIds={selectedEntityIds}
+          buffedEntityIds={buffedEntityIds}
+          buffStat={buffStat}
+          buffAmount={buffAmount}
+          buffEventId={buffEventId}
+          cardXpCardId={cardXpCardId}
+          cardXpAmount={cardXpAmount}
+          cardXpEventId={cardXpEventId}
+          onEntityClick={onEntityClick}
+        />
+      </div>
+    </div>
+  );
+}

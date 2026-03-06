@@ -1,94 +1,68 @@
 import { describe, it, expect } from 'vitest';
-import { resolveCombat } from './CombatService';
-import { ICard } from '../entities/ICard';
-import { IPlayer } from '../entities/IPlayer';
+import { CombatService, CombatContext } from './CombatService';
 
-describe('CombatService (Domain Logic)', () => {
-  it('debería restar puntos de vida y destruir al defensor si el ataque es mayor', () => {
-    // Arrange
-    const attacker: ICard = {
-      id: 'c1', 
-      name: 'Gemini 1.5 Pro', 
-      description: 'Modelo fundacional superinteligente.', 
-      type: 'ENTITY', 
-      attack: 2500, 
-      defense: 2000, 
-      faction: 'BIG_TECH', 
-      cost: 7 
-    };
+describe('CombatService - Motor de Reglas Core', () => {
+  
+  it('Ataque Directo: Debería restar los HP del jugador objetivo basados en el ATK', () => {
+    const result = CombatService.calculateDirectAttack({ attackerAtk: 2500 });
     
-    const defender: ICard = {
-      id: 'c2', 
-      name: 'Script Antiguo', 
-      description: 'Un bot que se rompe con un cambio de div.', 
-      type: 'ENTITY', 
-      attack: 1000, 
-      defense: 1500, 
-      faction: 'OPEN_SOURCE', 
-      cost: 2 
-    };
-    
-    const player: IPlayer = { 
-      id: 'p1', 
-      name: 'Rival', 
-      healthPoints: 4000, 
-      maxHealthPoints: 4000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [],         // Array vacío de referencias
-      hand: [],         // Array vacío de cartas físicas
-      graveyard: []     // Array vacío de referencias
-    };
-
-    // Act
-    const result = resolveCombat(attacker, defender, player);
-
-    // Assert
-    expect(result.newHealthPoints).toBe(3000); // 4000 - (2500 - 1500)
-    expect(result.isDefenderDestroyed).toBe(true);
+    expect(result.damageToDefenderPlayer).toBe(2500);
+    expect(result.attackerDestroyed).toBe(false);
   });
 
-  it('no debería restar vida y el defensor sobrevive si el ataque es menor o igual a la defensa', () => {
-    // Arrange
-    const attacker: ICard = {
-      id: 'c3', 
-      name: 'Bot Pequeño', 
-      description: 'Automatización básica.', 
-      type: 'ENTITY', 
-      attack: 1000, 
-      defense: 1000,
-      faction: 'NO_CODE',
-      cost: 1
-    };
-    
-    const defender: ICard = {
-      id: 'c4', 
-      name: 'Firewall', 
-      description: 'Bloquea peticiones no deseadas.', 
-      type: 'ENVIRONMENT', // Cambiado a ENVIRONMENT para dar variedad
-      attack: 0, 
-      defense: 2000,
-      faction: 'NEUTRAL',
-      cost: 3
-    };
-    
-    const player: IPlayer = { 
-      id: 'p1', 
-      name: 'Rival', 
-      healthPoints: 4000,
-      maxHealthPoints: 4000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [],
-      hand: [],
-      graveyard: [] 
-    };
+  describe('Combate contra Entidad en Modo ATAQUE', () => {
+    it('Atacante gana: Destruye al defensor y hace daño penetrante', () => {
+      const ctx: CombatContext = {
+        attackerAtk: 2500, // Ej: Gemini 1.5 Pro
+        defenderStat: 1500, // Ej: Ollama Local (en modo ataque)
+        isDefenderInDefenseMode: false
+      };
+      const result = CombatService.calculateBattle(ctx);
 
-    // Act
-    const result = resolveCombat(attacker, defender, player);
+      expect(result.defenderDestroyed).toBe(true);
+      expect(result.attackerDestroyed).toBe(false);
+      expect(result.damageToDefenderPlayer).toBe(1000); // 2500 - 1500
+      expect(result.damageToAttackerPlayer).toBe(0);
+    });
 
-    // Assert
-    expect(result.newHealthPoints).toBe(4000);
-    expect(result.isDefenderDestroyed).toBe(false);
+    it('Empate: Ambos son destruidos, sin daño a los jugadores', () => {
+      const ctx: CombatContext = { attackerAtk: 2000, defenderStat: 2000, isDefenderInDefenseMode: false };
+      const result = CombatService.calculateBattle(ctx);
+
+      expect(result.defenderDestroyed).toBe(true);
+      expect(result.attackerDestroyed).toBe(true);
+      expect(result.damageToDefenderPlayer).toBe(0);
+      expect(result.damageToAttackerPlayer).toBe(0);
+    });
+  });
+
+  describe('Combate contra Entidad en Modo DEFENSA', () => {
+    it('Atacante gana: Destruye al defensor, pero no hace daño a los HP', () => {
+      const ctx: CombatContext = {
+        attackerAtk: 2500, // Gemini
+        defenderStat: 2000, // Defensa
+        isDefenderInDefenseMode: true
+      };
+      const result = CombatService.calculateBattle(ctx);
+
+      expect(result.defenderDestroyed).toBe(true);
+      expect(result.attackerDestroyed).toBe(false);
+      expect(result.damageToDefenderPlayer).toBe(0); // El escudo absorbe el daño
+      expect(result.damageToAttackerPlayer).toBe(0);
+    });
+
+    it('Defensor gana (Rebote): Nadie muere, el atacante recibe daño por la diferencia', () => {
+      const ctx: CombatContext = {
+        attackerAtk: 1500, // Atacante débil
+        defenderStat: 2800, // Ej: Ollama Local en modo defensa
+        isDefenderInDefenseMode: true
+      };
+      const result = CombatService.calculateBattle(ctx);
+
+      expect(result.defenderDestroyed).toBe(false);
+      expect(result.attackerDestroyed).toBe(false);
+      expect(result.damageToDefenderPlayer).toBe(0);
+      expect(result.damageToAttackerPlayer).toBe(1300); // 2800 - 1500
+    });
   });
 });

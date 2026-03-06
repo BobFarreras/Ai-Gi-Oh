@@ -1,0 +1,27 @@
+import { ICard } from "@/core/entities/ICard";
+import { IBoardEntity } from "@/core/entities/IPlayer";
+import { GameState } from "@/core/use-cases/GameEngine";
+import { IOpponentStrategy } from "@/core/services/opponent/types";
+
+export interface IOpponentTurnContext {
+  gameState: GameState;
+  strategy: IOpponentStrategy;
+  applyTransition: (transition: (state: GameState) => GameState) => GameState | null;
+  clearSelection: () => void;
+  clearError: () => void;
+  setIsAnimating: (value: boolean) => void;
+  setActiveAttackerId: (value: string | null) => void;
+  setRevealedEntities: (value: string[] | ((prev: string[]) => string[])) => void;
+}
+
+export interface IOpponentStepTimings {
+  stepDelayMs: number;
+  attackWindupMs: number;
+  postResolutionMs: number;
+  trapPreviewMs: number;
+}
+
+export interface IOpponentAutoPick {
+  chooseCardToDiscard: (hand: ICard[]) => ICard | null;
+  chooseEntityToSacrifice: (entities: IBoardEntity[]) => IBoardEntity | null;
+}
