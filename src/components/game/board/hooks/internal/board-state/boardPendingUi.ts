@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/internal/board-state/boardPendingUi.ts - Deriva pistas y selecciones pendientes de UI desde el estado y acciones obligatorias.
 import { BattleMode } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { resolveSelectableFusionMaterialIds } from "./fusion-material-selection";
@@ -26,9 +27,7 @@ export function buildBoardPendingUi(
     gameState.pendingTurnAction?.playerId === gameState.playerA.id
       ? gameState.pendingTurnAction.type === "DISCARD_FOR_HAND_LIMIT"
         ? "Tienes 5 cartas en mano. Elige una carta de tu mano para enviarla al cementerio."
-        : gameState.pendingTurnAction.type === "SACRIFICE_ENTITY_FOR_DRAW"
-          ? "Tu campo de entidades está lleno. Elige una entidad de tu campo para enviarla al cementerio."
-          : `Selecciona 2 materiales para fusionar (${pendingFusionMaterialsCount ?? 0}/2).`
+        : `Selecciona 2 materiales para fusionar (${pendingFusionMaterialsCount ?? 0}/2).`
       : pendingFusionMaterialsCount !== null
         ? `Selecciona 2 materiales para fusionar (${pendingFusionMaterialsCount}/2).`
         : pendingEntityReplacement
@@ -37,14 +36,12 @@ export function buildBoardPendingUi(
 
   const pendingDiscardCardIds =
     gameState.pendingTurnAction?.playerId === gameState.playerA.id && gameState.pendingTurnAction.type === "DISCARD_FOR_HAND_LIMIT"
-      ? gameState.playerA.hand.map((card) => card.id)
+      ? gameState.playerA.hand.map((card) => card.runtimeId ?? card.id)
       : [];
 
   const pendingFusionSelectableIds = resolveSelectableFusionMaterialIds(gameState);
   const pendingEntitySelectionIds =
-    gameState.pendingTurnAction?.playerId === gameState.playerA.id && gameState.pendingTurnAction.type === "SACRIFICE_ENTITY_FOR_DRAW"
-      ? gameState.playerA.activeEntities.map((entity) => entity.instanceId)
-      : gameState.pendingTurnAction?.playerId === gameState.playerA.id && gameState.pendingTurnAction.type === "SELECT_FUSION_MATERIALS"
+    gameState.pendingTurnAction?.playerId === gameState.playerA.id && gameState.pendingTurnAction.type === "SELECT_FUSION_MATERIALS"
         ? pendingFusionSelectableIds
         : pendingEntityReplacement
         ? gameState.playerA.activeEntities.map((entity) => entity.instanceId)

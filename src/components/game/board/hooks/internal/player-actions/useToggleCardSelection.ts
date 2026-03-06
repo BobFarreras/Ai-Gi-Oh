@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/internal/player-actions/useToggleCardSelection.ts - Controla selección/deselección de carta en mano sin colisiones entre copias.
 import { useCallback } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { IUsePlayerActionsParams } from "./types";
@@ -38,7 +39,11 @@ export function useToggleCardSelection({
         return;
       }
 
-      if (playingCard?.id === card.id) {
+      const selectedRuntimeId = playingCard?.runtimeId ?? null;
+      const selectedCardId = playingCard?.id ?? null;
+      if (selectedRuntimeId && selectedRuntimeId === card.runtimeId) {
+        clearSelection();
+      } else if (!selectedRuntimeId && !card.runtimeId && selectedCardId === card.id) {
         clearSelection();
       } else {
         setSelectedCard(card);
@@ -54,7 +59,7 @@ export function useToggleCardSelection({
       gameState.pendingTurnAction,
       gameState.playerA.id,
       isAnimating,
-      playingCard?.id,
+      playingCard,
       setActiveAttackerId,
       setLastError,
       setPlayingCard,

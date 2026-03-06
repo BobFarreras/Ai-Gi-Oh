@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/actions/play-card-with-entity-replacement.ts - Permite invocar una entidad reemplazando otra del campo cuando la zona está llena.
 import { BattleMode, IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
@@ -27,7 +28,7 @@ export function playCardWithEntityReplacement(
   }
 
   const { player, opponent, isPlayerA } = getPlayerPair(state, playerId);
-  const card = player.hand.find((currentCard) => currentCard.id === cardId);
+  const card = player.hand.find((currentCard) => currentCard.runtimeId === cardId || currentCard.id === cardId);
 
   if (!card) {
     throw new NotFoundError("La carta no está en la mano.");

@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/internal/player-actions/useExecutePlayAction.ts - Ejecuta jugadas de mano del jugador respetando estados, modo y reacciones.
 import { useCallback } from "react";
 import { BattleMode } from "@/core/entities/IPlayer";
 import { GameEngine } from "@/core/use-cases/GameEngine";
@@ -17,6 +18,7 @@ type IExecutePlayActionParams = Pick<
   | "playingCard"
   | "setActiveAttackerId"
   | "setPendingEntityReplacement"
+  | "setPendingEntityReplacementTargetId"
   | "setIsAnimating"
   | "setLastError"
   | "setRevealedEntities"
@@ -32,6 +34,7 @@ export function useExecutePlayAction({
   playingCard,
   setActiveAttackerId,
   setPendingEntityReplacement,
+  setPendingEntityReplacementTargetId,
   setIsAnimating,
   setLastError,
   setRevealedEntities,
@@ -47,20 +50,22 @@ export function useExecutePlayAction({
       }
 
       clearError();
+      const selectedCardReference = playingCard.runtimeId ?? playingCard.id;
       if (playingCard.type === "ENTITY" && (mode === "ATTACK" || mode === "DEFENSE") && gameState.playerA.activeEntities.length >= 3) {
-        setPendingEntityReplacement({ cardId: playingCard.id, mode });
+        setPendingEntityReplacement({ cardId: selectedCardReference, mode });
+        setPendingEntityReplacementTargetId(null);
         setLastError(null);
         return;
       }
 
       if (playingCard.type === "FUSION" && (mode === "ATTACK" || mode === "DEFENSE")) {
-        applyTransition((state) => GameEngine.startFusionSummon(state, state.playerA.id, playingCard.id, mode));
+        applyTransition((state) => GameEngine.startFusionSummon(state, state.playerA.id, selectedCardReference, mode));
         return;
       }
 
       if (mode === "ACTIVATE") {
         setIsAnimating(true);
-        const playedState = applyTransition((state) => GameEngine.playCard(state, state.playerA.id, playingCard.id, mode));
+        const playedState = applyTransition((state) => GameEngine.playCard(state, state.playerA.id, selectedCardReference, mode));
         if (!playedState) {
           setIsAnimating(false);
           return;
@@ -91,7 +96,7 @@ export function useExecutePlayAction({
         return;
       }
 
-      const played = applyTransition((state) => GameEngine.playCard(state, state.playerA.id, playingCard.id, mode));
+      const played = applyTransition((state) => GameEngine.playCard(state, state.playerA.id, selectedCardReference, mode));
       if (played) clearSelection();
     },
     [
@@ -104,6 +109,7 @@ export function useExecutePlayAction({
       playingCard,
       setActiveAttackerId,
       setPendingEntityReplacement,
+      setPendingEntityReplacementTargetId,
       setIsAnimating,
       setLastError,
       setRevealedEntities,

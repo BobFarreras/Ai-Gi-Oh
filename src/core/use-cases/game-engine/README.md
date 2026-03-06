@@ -1,3 +1,4 @@
+<!-- src/core/use-cases/game-engine/README.md - Descripción del módulo de motor de juego, estructura e invariantes. -->
 # Game Engine Module
 
 Casos de uso puros del motor, organizados por responsabilidad.

@@ -1,7 +1,7 @@
+// src/core/services/opponent/runOpponentStep.ts - Ejecuta decisiones automáticas del rival por fase, incluyendo resolución de acciones pendientes.
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { IOpponentStrategy } from "./types";
 import { ICard } from "@/core/entities/ICard";
-import { IBoardEntity } from "@/core/entities/IPlayer";
 
 function resolveActivatedExecution(state: GameState, opponentId: string): GameState {
   const opponent = state.playerA.id === opponentId ? state.playerA : state.playerB;
@@ -23,18 +23,6 @@ function scoreCardForDiscard(card: ICard): number {
   return effectValue - card.cost * 140;
 }
 
-function chooseEntityToSacrifice(entities: IBoardEntity[]): IBoardEntity | null {
-  if (entities.length === 0) {
-    return null;
-  }
-
-  return entities.reduce((weakest, current) => {
-    const weakestScore = (weakest.card.attack ?? 0) + (weakest.card.defense ?? 0);
-    const currentScore = (current.card.attack ?? 0) + (current.card.defense ?? 0);
-    return currentScore < weakestScore ? current : weakest;
-  });
-}
-
 function chooseCardToDiscard(hand: ICard[]): ICard | null {
   if (hand.length === 0) {
     return null;
@@ -51,15 +39,6 @@ export function runOpponentStep(state: GameState, opponentId: string, strategy: 
   const opponent = state.playerA.id === opponentId ? state.playerA : state.playerB;
 
   if (state.pendingTurnAction?.playerId === opponentId) {
-    if (state.pendingTurnAction.type === "SACRIFICE_ENTITY_FOR_DRAW") {
-      const targetEntity = chooseEntityToSacrifice(opponent.activeEntities);
-      if (!targetEntity) {
-        return state;
-      }
-
-      return GameEngine.resolvePendingTurnAction(state, opponentId, targetEntity.instanceId);
-    }
-
     const targetCard = chooseCardToDiscard(opponent.hand);
     if (!targetCard) {
       return state;

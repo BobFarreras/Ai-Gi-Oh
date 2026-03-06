@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/state/create-initial-game-state.test.ts - Verifica reparto inicial y selección de jugador inicial.
 import { describe, expect, it, vi } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { createInitialGameState } from "./create-initial-game-state";

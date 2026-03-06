@@ -1,3 +1,4 @@
+// src/components/game/board/internal/combatLogPresentation.ts - Formatea mensajes y deltas del combatLog para paneles y banners del tablero.
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 
 interface IPlayerLabels {
@@ -67,7 +68,11 @@ export function formatEventDelta(event: ICombatLogEvent): { text: string; tone: 
       typeof event.payload === "object" && event.payload !== null && "stat" in event.payload
         ? String((event.payload as Record<string, unknown>).stat)
         : "STAT";
-    return { text: `+${amount} ${stat}`, tone: "amber" };
+    const sign = amount < 0 ? "-" : "+";
+    return { text: `${sign}${Math.abs(amount)} ${stat}`, tone: "amber" };
+  }
+  if (event.eventType === "CARD_XP_GAINED") {
+    return { text: `+${amount} EXP`, tone: "amber" };
   }
   return null;
 }
@@ -102,7 +107,18 @@ export function formatCombatLogEvent(event: ICombatLogEvent, labels: IPlayerLabe
     case "ENERGY_GAINED":
       return `${actor} recupera energía.`;
     case "CARD_PLAYED":
-      return `${actor} juega carta ${cardId ?? "desconocida"}.`;
+      {
+        const cardType =
+          typeof event.payload === "object" && event.payload !== null && "cardType" in event.payload
+            ? String((event.payload as Record<string, unknown>).cardType)
+            : "";
+        const mode =
+          typeof event.payload === "object" && event.payload !== null && "mode" in event.payload
+            ? String((event.payload as Record<string, unknown>).mode)
+            : "";
+        const xpSuffix = cardType === "ENTITY" ? " (+10 EXP)" : cardType === "EXECUTION" && mode === "ACTIVATE" ? " (+20 EXP)" : "";
+        return `${actor} juega carta ${cardId ?? "desconocida"}.${xpSuffix}`;
+      }
     case "ATTACK_DECLARED":
       return `${actor} declara un ataque.`;
     case "BATTLE_RESOLVED":
@@ -114,7 +130,7 @@ export function formatCombatLogEvent(event: ICombatLogEvent, labels: IPlayerLabe
         const isDirect = !defenderCardId;
 
         if (isDirect && attackerCardId) {
-          return `${actor} impacta ataque directo con ${attackerCardId}.`;
+          return `${actor} impacta ataque directo con ${attackerCardId}. (+30 EXP)`;
         }
 
         if (attackerCardId && defenderCardId && attackerDestroyed !== null && defenderDestroyed !== null) {
@@ -122,7 +138,7 @@ export function formatCombatLogEvent(event: ICombatLogEvent, labels: IPlayerLabe
             return `${actor} ataca: empate, ambas cartas destruidas.`;
           }
           if (!attackerDestroyed && defenderDestroyed) {
-            return `${actor} ataca y gana el atacante.`;
+            return `${actor} ataca y gana el atacante. (+25 EXP)`;
           }
           if (attackerDestroyed && !defenderDestroyed) {
             return `${actor} ataca y gana el defensor.`;
@@ -137,15 +153,43 @@ export function formatCombatLogEvent(event: ICombatLogEvent, labels: IPlayerLabe
     case "HEAL_APPLIED":
       return `${actor} recupera LP.`;
     case "STAT_BUFF_APPLIED":
-      return `${actor} potencia estadísticas en campo.`;
+      {
+        const amount =
+          typeof event.payload === "object" && event.payload !== null && "amount" in event.payload
+            ? Number((event.payload as Record<string, unknown>).amount)
+            : 0;
+        return amount < 0 ? `${actor} aplica reducción de estadísticas.` : `${actor} potencia estadísticas en campo.`;
+      }
     case "TRAP_TRIGGERED":
-      return `${actor} activa una trampa.`;
+      return `${actor} activa una trampa. (+20 EXP)`;
     case "CARD_TO_GRAVEYARD":
       return `${actor} envía carta al cementerio.`;
     case "MANDATORY_ACTION_RESOLVED":
       return `${actor} resuelve acción obligatoria.`;
     case "FUSION_SUMMONED":
-      return `${actor} invoca una fusión.`;
+      return `${actor} invoca una fusión. (+10 EXP)`;
+    case "CARD_XP_GAINED":
+      {
+        const xpCardId = readPayloadField(event.payload, "cardId") ?? "carta desconocida";
+        const amount =
+          typeof event.payload === "object" && event.payload !== null && "amount" in event.payload
+            ? Number((event.payload as Record<string, unknown>).amount)
+            : null;
+        return `${actor} gana ${amount ?? 0} EXP con ${xpCardId}.`;
+      }
+    case "CARD_LEVEL_UP":
+      {
+        const levelCardId = readPayloadField(event.payload, "cardId") ?? "carta desconocida";
+        const oldLevel =
+          typeof event.payload === "object" && event.payload !== null && "oldLevel" in event.payload
+            ? Number((event.payload as Record<string, unknown>).oldLevel)
+            : 0;
+        const newLevel =
+          typeof event.payload === "object" && event.payload !== null && "newLevel" in event.payload
+            ? Number((event.payload as Record<string, unknown>).newLevel)
+            : 0;
+        return `${actor} sube ${levelCardId} de Lv ${oldLevel} a Lv ${newLevel}.`;
+      }
     default:
       return `${actor} ejecuta una acción.`;
   }

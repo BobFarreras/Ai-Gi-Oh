@@ -1,9 +1,11 @@
+// src/components/game/board/hooks/internal/board-state/buildUseBoardResult.ts - Construye el contrato final expuesto por el hook useBoard.
 import { ICard } from "@/core/entities/ICard";
 import { BattleMode, IBoardEntity } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IBoardUiError } from "../boardError";
 import { IBoardCombatFeedback } from "./boardCombatFeedback";
 import { IBoardPendingUi } from "./boardPendingUi";
+import type { IAppliedCardExperienceResult } from "@/core/use-cases/progression/ApplyBattleCardExperienceUseCase";
 
 interface IBuildUseBoardResultParams {
   gameState: GameState;
@@ -14,6 +16,7 @@ interface IBuildUseBoardResultParams {
   revealedEntities: string[];
   lastError: IBoardUiError | null;
   pendingEntityReplacement: { cardId: string; mode: BattleMode } | null;
+  pendingEntityReplacementTargetId: string | null;
   opponentDifficulty: string;
   isPlayerTurn: boolean;
   isMuted: boolean;
@@ -33,12 +36,17 @@ interface IBuildUseBoardResultParams {
   handleEntityClick: (entity: IBoardEntity | null, isOpponent: boolean, event: React.MouseEvent) => Promise<void>;
   advancePhase: () => void;
   handleTimerExpired: () => void;
+  confirmEntityReplacement: () => void;
+  cancelEntityReplacement: () => void;
   resolvePendingTurnAction: (selectedId: string) => void;
   resolvePendingHandDiscard: (cardId: string) => void;
   setSelectedEntityToAttack: () => void;
   canSetSelectedEntityToAttack: boolean;
   pendingUi: IBoardPendingUi;
   combatFeedback: IBoardCombatFeedback;
+  battleExperienceSummary: IAppliedCardExperienceResult[];
+  battleExperienceCardLookup: Record<string, ICard>;
+  isBattleExperiencePending: boolean;
 }
 
 export function buildUseBoardResult(params: IBuildUseBoardResultParams) {
@@ -51,6 +59,7 @@ export function buildUseBoardResult(params: IBuildUseBoardResultParams) {
     revealedEntities: params.revealedEntities,
     lastError: params.lastError,
     pendingEntityReplacement: params.pendingEntityReplacement,
+    pendingEntityReplacementTargetId: params.pendingEntityReplacementTargetId,
     opponentDifficulty: params.opponentDifficulty,
     isPlayerTurn: params.isPlayerTurn,
     isMuted: params.isMuted,
@@ -70,10 +79,15 @@ export function buildUseBoardResult(params: IBuildUseBoardResultParams) {
     handleEntityClick: params.handleEntityClick,
     advancePhase: params.advancePhase,
     handleTimerExpired: params.handleTimerExpired,
+    confirmEntityReplacement: params.confirmEntityReplacement,
+    cancelEntityReplacement: params.cancelEntityReplacement,
     resolvePendingTurnAction: params.resolvePendingTurnAction,
     resolvePendingHandDiscard: params.resolvePendingHandDiscard,
     setSelectedEntityToAttack: params.setSelectedEntityToAttack,
     canSetSelectedEntityToAttack: params.canSetSelectedEntityToAttack,
+    battleExperienceSummary: params.battleExperienceSummary,
+    battleExperienceCardLookup: params.battleExperienceCardLookup,
+    isBattleExperiencePending: params.isBattleExperiencePending,
     ...params.pendingUi,
     ...params.combatFeedback,
   };

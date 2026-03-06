@@ -1,12 +1,20 @@
+// src/components/game/board/hooks/internal/boardInitialState.ts - Construye estado inicial del tablero con mazo persistido opcional.
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
-import { createPlayerDeckA, createPlayerDeckB } from "./initialDeckFactory";
+import { ICard } from "@/core/entities/ICard";
+import { createPlayerDeckA, createPlayerDeckB, shuffleDeck } from "./initialDeckFactory";
 
-export function createInitialBoardState(): GameState {
+interface ICreateInitialBoardStateInput {
+  playerDeck?: ICard[] | null;
+}
+
+export function createInitialBoardState(input?: ICreateInitialBoardStateInput): GameState {
+  const playerDeckSource = input?.playerDeck && input.playerDeck.length > 0 ? input.playerDeck : createPlayerDeckA();
+  const playerDeck = shuffleDeck(playerDeckSource.map((card) => ({ ...card })));
   const baseState = GameEngine.createInitialGameState({
     playerA: {
       id: "p1",
       name: "Neo (Tú)",
-      deck: createPlayerDeckA(),
+      deck: playerDeck,
     },
     playerB: {
       id: "p2",

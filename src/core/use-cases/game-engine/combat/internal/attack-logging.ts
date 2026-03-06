@@ -7,6 +7,7 @@ interface ICombatResultSummary {
   defenderDestroyed: boolean;
   damageToDefenderPlayer: number;
   damageToAttackerPlayer: number;
+  passiveAttackReduction?: number;
 }
 
 interface IBuildBattleLogsParams {
@@ -71,6 +72,14 @@ export function appendEntityBattleLogs(params: IBuildBattleLogsParams): GameStat
     withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, "DIRECT_DAMAGE", {
       targetPlayerId: attackerPlayerTargetId,
       amount: result.damageToAttackerPlayer,
+    });
+  }
+  if ((result.passiveAttackReduction ?? 0) > 0) {
+    withLogs = appendCombatLogEvent(withLogs, defenderPlayerId, "STAT_BUFF_APPLIED", {
+      stat: "ATTACK",
+      amount: -Math.abs(result.passiveAttackReduction ?? 0),
+      targetEntityIds: [attacker.instanceId],
+      reason: "MASTERY_PASSIVE_ATK_DRAIN",
     });
   }
   if (result.attackerDestroyed) {

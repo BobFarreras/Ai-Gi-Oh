@@ -7,11 +7,11 @@ export interface IControlPanelPosition {
 }
 
 const CONTROL_PANEL_LAYOUT: Record<HubSectionType, IControlPanelPosition> = {
-  STORY: { left: "50%", top: "25%" },
-  MARKET: { left: "24%", top: "45%" },
-  HOME: { left: "76%", top: "45%" },
-  MULTIPLAYER: { left: "26%", top: "73%" },
-  TRAINING: { left: "74%", top: "73%" },
+  STORY: { left: "50%", top: "34%" },
+  MARKET: { left: "22%", top: "47%" },
+  HOME: { left: "78%", top: "53%" },
+  MULTIPLAYER: { left: "24%", top: "75%" },
+  TRAINING: { left: "70%", top: "79%" },
 };
 
 export function getControlPanelPosition(sectionType: HubSectionType): IControlPanelPosition {

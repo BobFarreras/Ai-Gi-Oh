@@ -3,6 +3,7 @@
 
 import { useMemo, useState } from "react";
 import { buildMarketListingView } from "@/components/hub/market/market-listing-view";
+import { applyOptimisticBuyCard } from "@/components/hub/market/internal/optimistic-market-updates";
 import { useSyncSelectedListing } from "@/components/hub/market/internal/useSyncSelectedListing";
 import { MarketOrderDirection, MarketOrderField, MarketTypeFilter } from "@/components/hub/market/market-filters";
 import { ICard } from "@/core/entities/ICard";
@@ -13,8 +14,6 @@ import { IMarketCatalog } from "@/core/use-cases/market/GetMarketCatalogUseCase"
 import {
   buyMarketCardAction,
   buyPackAction,
-  getMarketTransactionsAction,
-  getPlayerCollectionAction,
 } from "@/services/market/market-actions";
 
 interface UseMarketSceneStateInput {
@@ -61,22 +60,21 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
 
   useSyncSelectedListing({ selectedListing, visibleListings, setSelectedListing, setSelectedCard });
 
-  async function refreshPlayerState(updatedCatalog: IMarketCatalog): Promise<void> {
-    const [updatedTransactions, updatedCollection] = await Promise.all([
-      getMarketTransactionsAction(input.playerId),
-      getPlayerCollectionAction(input.playerId),
-    ]);
-    setCatalog(updatedCatalog);
-    setTransactions(updatedTransactions);
-    setCollection(updatedCollection);
-  }
-
   async function handleBuyCard(listingId: string): Promise<void> {
+    const previousCatalog = catalog;
+    const previousCollection = collection;
+    const optimisticState = applyOptimisticBuyCard(catalog, collection, listingId);
+    setCatalog(optimisticState.catalog);
+    setCollection(optimisticState.collection);
     try {
-      const updatedCatalog = await buyMarketCardAction(input.playerId, listingId);
-      await refreshPlayerState(updatedCatalog);
+      const result = await buyMarketCardAction(input.playerId, listingId);
+      setCatalog(result.catalog);
+      setTransactions(result.transactions);
+      setCollection(result.collection);
       setErrorMessage(null);
     } catch (error) {
+      setCatalog(previousCatalog);
+      setCollection(previousCollection);
       setErrorMessage(error instanceof Error ? error.message : "No se pudo comprar la carta.");
     }
   }
@@ -84,7 +82,9 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
   async function handleBuyPack(packId: string): Promise<void> {
     try {
       const result = await buyPackAction(input.playerId, packId);
-      await refreshPlayerState(result.catalog);
+      setCatalog(result.catalog);
+      setTransactions(result.transactions);
+      setCollection(result.collection);
       const cardMap = new Map(result.catalog.listings.map((listing) => [listing.card.id, listing.card]));
       const openedCards = result.openedCardIds
         .map((cardId) => cardMap.get(cardId))

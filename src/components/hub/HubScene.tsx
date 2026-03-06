@@ -1,57 +1,90 @@
-// src/components/hub/HubScene.tsx - Construye una sala de control sci-fi con paneles tipo consola para navegar secciones.
-import Image from "next/image";
+// src/components/hub/HubScene.tsx - Escena principal del hub con HUD 2D superpuesto y mapa 3D interactivo.
+"use client";
+
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { IHubMapNode } from "@/core/entities/hub/IHubMapNode";
-import { HubSectionType, IHubSection } from "@/core/entities/hub/IHubSection";
+import { IHubSection } from "@/core/entities/hub/IHubSection";
 import { IPlayerHubProgress } from "@/core/entities/hub/IPlayerHubProgress";
-import { HubSceneNode } from "@/components/hub/HubSceneNode";
+import { HubSceneFloatingActions } from "@/components/hub/HubSceneFloatingActions";
+import { HubSceneHudOverlay } from "@/components/hub/HubSceneHudOverlay";
+import { HubSceneFallback2D } from "@/components/hub/HubSceneFallback2D";
+import { HubSceneWorld3D } from "@/components/hub/HubSceneWorld3D";
+import { resolveHubCameraPose } from "@/components/hub/internal/hub-camera-fit";
+import { applyResponsiveNodeLayout } from "@/components/hub/internal/hub-node-responsive-layout";
+import { supportsWebGL } from "@/components/hub/internal/hub-webgl-support";
+import { useDocumentVisibility } from "@/components/hub/internal/use-document-visibility";
+import { useHubSfx } from "@/components/hub/internal/use-hub-sfx";
+import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
 
 interface HubSceneProps {
-  progress: IPlayerHubProgress;
+  playerLabel?: string;
+  progress?: IPlayerHubProgress;
+  showMetaNodes?: boolean;
+  forceFallbackForTests?: boolean;
   sections: IHubSection[];
   nodes: IHubMapNode[];
 }
 
-export function HubScene({ progress, sections, nodes }: HubSceneProps) {
-  const sectionsByType = new Map<HubSectionType, IHubSection>(sections.map((section) => [section.type, section]));
+export function HubScene({
+  playerLabel,
+  progress,
+  showMetaNodes = false,
+  forceFallbackForTests = false,
+  sections,
+  nodes,
+}: HubSceneProps) {
+  const router = useRouter();
+  const isDocumentVisible = useDocumentVisibility();
+  const viewportWidth = useViewportWidth();
+  const { playHudEntry, playNodeHover } = useHubSfx();
+  const [cameraResetSignal, setCameraResetSignal] = useState(0);
+  const [areNodeLabelsVisible, setAreNodeLabelsVisible] = useState(true);
+  const canRender3D = useMemo(
+    () => (forceFallbackForTests ? false : supportsWebGL()),
+    [forceFallbackForTests],
+  );
+  const responsiveNodes = useMemo(() => applyResponsiveNodeLayout(nodes, viewportWidth), [nodes, viewportWidth]);
+  const cameraPose = useMemo(() => resolveHubCameraPose(responsiveNodes, viewportWidth), [responsiveNodes, viewportWidth]);
 
   return (
-    <main className="hub-control-room-bg relative min-h-screen overflow-hidden px-4 py-6 text-slate-100 sm:px-6 sm:py-8">
-      <header className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-2xl bg-[#040a12]/85 shadow-[0_18px_36px_rgba(1,3,8,0.7)]">
-    
-        <div className="relative grid min-h-[94px] grid-cols-[1fr_auto] items-center gap-4 px-6 py-4">
-          <div>
-            <h1 className="text-2xl font-black uppercase tracking-wider text-cyan-300">Sala de Control</h1>
-            <p className="text-xs text-slate-300">Centro táctico principal para gestionar todos los modos del juego.</p>
-          </div>
-          <div className="text-right text-xs font-semibold text-cyan-100">
-            <p>Medallas: {progress.medals}</p>
-            <p>Capítulo: {progress.storyChapter}</p>
-            <p>Tutorial: {progress.hasCompletedTutorial ? "Completado" : "Pendiente"}</p>
-          </div>
-        </div>
-      </header>
-
-      <section className="relative mx-auto mt-6 h-[74vh] w-full max-w-6xl overflow-hidden rounded-[2rem] border border-slate-800/85 bg-[#020911]/78 shadow-[0_28px_60px_rgba(1,2,7,0.86),inset_0_0_0_1px_rgba(15,23,42,0.8)]">
-        <Image
-          src="/assets/hud/hud-container.png"
-          alt=""
-          aria-hidden="true"
-          fill
-          className="pointer-events-none z-9990 object-cover opacity-95"
-        />
-        <div className="absolute inset-[8%_7%_7%_7%] z-20 overflow-hidden rounded-2xl">
-          <div className="hub-control-ambient absolute inset-0" />
-          <div className="hub-control-flow-beam absolute inset-0" />
-        </div>
-
-        {nodes.map((node) => {
-          const section = sectionsByType.get(node.sectionType);
-          if (!section) {
-            return null;
-          }
-          return <HubSceneNode key={node.id} node={node} section={section} />;
-        })}
-      </section>
-    </main>
+    <section className="relative h-screen w-full overflow-hidden">
+      <HubSceneHudOverlay
+        playerLabel={playerLabel}
+        progress={progress}
+        showMetaNodes={showMetaNodes}
+        onHudEntrySound={playHudEntry}
+      />
+      <HubSceneFloatingActions
+        canResetCamera={canRender3D}
+        onResetCamera={() => setCameraResetSignal((previous) => previous + 1)}
+        areNodeLabelsVisible={areNodeLabelsVisible}
+        onToggleNodeLabels={() => setAreNodeLabelsVisible((previous) => !previous)}
+      />
+      <div className="absolute inset-0 z-10 bg-[#010610]">
+        {!canRender3D ? (
+          <HubSceneFallback2D
+            sections={sections}
+            nodes={responsiveNodes}
+            onNavigate={(href) => router.push(href)}
+            onNodeHoverSound={playNodeHover}
+            areNodeLabelsVisible={areNodeLabelsVisible}
+          />
+        ) : null}
+        {canRender3D ? (
+          <HubSceneWorld3D
+            sections={sections}
+            nodes={responsiveNodes}
+            viewportWidth={viewportWidth}
+            isDocumentVisible={isDocumentVisible}
+            cameraResetSignal={cameraResetSignal}
+            cameraPosition={cameraPose.position}
+            cameraTarget={cameraPose.target}
+            areNodeLabelsVisible={areNodeLabelsVisible}
+            onNodeHoverSound={playNodeHover}
+          />
+        ) : null}
+      </div>
+    </section>
   );
 }

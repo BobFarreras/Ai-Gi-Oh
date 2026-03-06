@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/fusion/internal/validate-fusion-context.ts - Valida precondiciones y construye el contexto de resolución de una fusión.
 import { BattleMode, IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
@@ -22,7 +23,7 @@ export function createFusionContext(
   materialIds: [string, string],
   mode: Extract<BattleMode, "ATTACK" | "DEFENSE">,
 ): IFusionContext {
-  const fusionCard = player.hand.find((card) => card.id === fusionCardId);
+  const fusionCard = player.hand.find((card) => card.runtimeId === fusionCardId || card.id === fusionCardId);
   if (!fusionCard) throw new NotFoundError("La carta de fusión no está en la mano.");
   if (fusionCard.type !== "FUSION") throw new ValidationError("La carta seleccionada no es de tipo fusión.");
   if (materialIds[0] === materialIds[1]) throw new ValidationError("Debes seleccionar 2 materiales distintos para fusionar.");

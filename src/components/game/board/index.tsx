@@ -9,8 +9,13 @@ import { BoardTopBar } from "./ui/layout/BoardTopBar";
 import { BoardActionButtons } from "./ui/layout/BoardActionButtons";
 import { BoardPlayersLayer } from "./ui/layers/BoardPlayersLayer";
 import { BoardInteractiveLayer } from "./ui/layers/BoardInteractiveLayer";
+import { ICard } from "@/core/entities/ICard";
 
-export function Board() {
+interface IBoardProps {
+  initialPlayerDeck?: ICard[] | null;
+}
+
+export function Board({ initialPlayerDeck }: IBoardProps) {
   const {
     gameState,
     selectedCard,
@@ -20,6 +25,8 @@ export function Board() {
     revealedEntities,
     lastError,
     pendingActionHint,
+    pendingEntityReplacement,
+    pendingEntityReplacementTargetId,
     pendingDiscardCardIds,
     pendingEntitySelectionIds,
     pendingFusionSelectedEntityIds,
@@ -35,8 +42,13 @@ export function Board() {
     resolvePendingHandDiscard,
     setSelectedEntityToAttack,
     canSetSelectedEntityToAttack,
+    battleExperienceSummary,
+    battleExperienceCardLookup,
+    isBattleExperiencePending,
     isPlayerTurn,
     handleTimerExpired,
+    confirmEntityReplacement,
+    cancelEntityReplacement,
     lastDamageTargetPlayerId,
     lastDamageAmount,
     lastDamageEventId,
@@ -47,6 +59,10 @@ export function Board() {
     lastBuffStat,
     lastBuffAmount,
     lastBuffEventId,
+    lastCardXpCardId,
+    lastCardXpAmount,
+    lastCardXpEventId,
+    lastCardXpActorPlayerId,
     winnerPlayerId,
     restartMatch,
     isMuted,
@@ -55,7 +71,7 @@ export function Board() {
     setIsFusionCinematicActive,
     toggleMute,
     togglePause,
-  } = useBoard();
+  } = useBoard(initialPlayerDeck ?? undefined);
 
   const player = gameState.playerA;
   const opponent = gameState.playerB;
@@ -64,6 +80,10 @@ export function Board() {
     () => (graveyardView === "player" ? player.graveyard : graveyardView === "opponent" ? opponent.graveyard : []),
     [graveyardView, opponent.graveyard, player.graveyard],
   );
+  const pendingReplacementTargetCard = useMemo(() => {
+    if (!pendingEntityReplacementTargetId) return null;
+    return player.activeEntities.find((entity) => entity.instanceId === pendingEntityReplacementTargetId)?.card ?? null;
+  }, [pendingEntityReplacementTargetId, player.activeEntities]);
   const visibleGraveyardOwner = graveyardView === "player" ? player.name : opponent.name;
   const { playTimerExpired, playTimerWarning, playButtonClick } = useGameAudio({
     combatLog: gameState.combatLog,
@@ -84,6 +104,8 @@ export function Board() {
       <BoardStatusOverlays
         lastError={lastError}
         pendingActionHint={pendingActionHint}
+        pendingEntityReplacement={pendingEntityReplacement}
+        pendingEntityReplacementTargetCard={pendingReplacementTargetCard}
         combatLog={gameState.combatLog}
         playerAId={gameState.playerA.id}
         playerAName={gameState.playerA.name}
@@ -97,6 +119,8 @@ export function Board() {
         graveyardOwnerName={visibleGraveyardOwner}
         graveyardCards={visibleGraveyardCards}
         onCloseError={() => { playButtonClick(); clearError(); }}
+        onConfirmEntityReplacement={() => { playButtonClick(); confirmEntityReplacement(); }}
+        onCancelEntityReplacement={() => { playButtonClick(); cancelEntityReplacement(); }}
         onCloseGraveyard={() => setGraveyardView(null)}
         onPreviewCard={previewCard}
 
@@ -109,6 +133,7 @@ export function Board() {
         pendingActionPlayerId={gameState.pendingTurnAction?.playerId ?? null}
         isPlayerTurn={isPlayerTurn}
         isPaused={isPaused}
+        hasWinner={Boolean(winnerPlayerId)}
         onAdvancePhase={advancePhase}
         onTimeUp={() => { playTimerExpired(); handleTimerExpired(); }}
         onWarning={playTimerWarning}
@@ -124,6 +149,7 @@ export function Board() {
         pendingFusionSelectedEntityIds={pendingFusionSelectedEntityIds}
         isHistoryOpen={isHistoryOpen} isPlayerTurn={isPlayerTurn} lastDamageTargetPlayerId={lastDamageTargetPlayerId} lastDamageEventId={lastDamageEventId}
         lastBuffTargetEntityIds={lastBuffTargetEntityIds} lastBuffStat={lastBuffStat} lastBuffAmount={lastBuffAmount} lastBuffEventId={lastBuffEventId}
+        lastCardXpCardId={lastCardXpCardId} lastCardXpAmount={lastCardXpAmount} lastCardXpEventId={lastCardXpEventId} lastCardXpActorPlayerId={lastCardXpActorPlayerId}
         onGraveyardClick={setGraveyardView} onEntityClick={handleEntityClick} onMandatoryCardSelect={resolvePendingHandDiscard}
         onCardClick={toggleCardSelection} onPlayAction={executePlayAction} onSelectCard={previewCard} onCloseCard={clearSelection}
         onCloseHistory={() => setIsHistoryOpen(false)}
@@ -138,7 +164,15 @@ export function Board() {
         onToggleHistory={() => { playButtonClick(); setIsHistoryOpen((previous) => !previous); }}
         onSetSelectedEntityToAttack={() => { playButtonClick(); setSelectedEntityToAttack(); }}
       />
-      <DuelResultOverlay winnerPlayerId={winnerPlayerId} playerA={player} playerB={opponent} onRestart={restartMatch} />
+      <DuelResultOverlay
+        winnerPlayerId={winnerPlayerId}
+        playerA={player}
+        playerB={opponent}
+        battleExperienceSummary={battleExperienceSummary}
+        battleExperienceCardLookup={battleExperienceCardLookup}
+        isBattleExperiencePending={isBattleExperiencePending}
+        onRestart={restartMatch}
+      />
     </div>
   );
 }

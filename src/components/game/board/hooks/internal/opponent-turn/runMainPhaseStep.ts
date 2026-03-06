@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/internal/opponent-turn/runMainPhaseStep.ts - Ejecuta el paso principal del turno rival resolviendo pendientes y acciones jugables.
 import { GameEngine } from "@/core/use-cases/GameEngine";
 import { addRevealedId, findReactiveTrap, removeRevealedId } from "../trapPreview";
 import { sleep } from "../sleep";
@@ -12,10 +13,7 @@ export async function runMainPhaseStep(
   const opponentId = gameState.playerB.id;
 
   if (gameState.pendingTurnAction?.playerId === opponentId) {
-    const selectedId =
-      gameState.pendingTurnAction.type === "SACRIFICE_ENTITY_FOR_DRAW"
-        ? autoPick.chooseEntityToSacrifice(gameState.playerB.activeEntities)?.instanceId ?? null
-        : autoPick.chooseCardToDiscard(gameState.playerB.hand)?.id ?? null;
+    const selectedId = autoPick.chooseCardToDiscard(gameState.playerB.hand)?.id ?? null;
     if (!selectedId) return true;
     context.setIsAnimating(true);
     await sleep(timings.stepDelayMs);

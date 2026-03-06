@@ -13,7 +13,9 @@ export type CombatLogEventType =
   | "TRAP_TRIGGERED"
   | "CARD_TO_GRAVEYARD"
   | "MANDATORY_ACTION_RESOLVED"
-  | "FUSION_SUMMONED";
+  | "FUSION_SUMMONED"
+  | "CARD_XP_GAINED"
+  | "CARD_LEVEL_UP";
 
 export interface ICombatLogEvent {
   id: string;

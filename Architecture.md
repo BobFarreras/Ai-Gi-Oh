@@ -62,6 +62,82 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
 3. `core/services/opponent` depende de `core/use-cases` y `core/entities`.
 4. `infrastructure` implementa contratos del dominio cuando se conecten APIs/DB.
 
+## Frontera Auth/BD (Fase 0)
+
+1. `core/repositories` define contratos agnósticos de proveedor (`IAuthRepository`, `IPlayerProfileRepository`, `IPlayerProgressRepository`).
+2. `core/entities` aloja entidades de sesión/perfil/progreso sin tipos de SDK externo.
+3. `infrastructure/database` y `infrastructure/persistence/supabase` contendrán adaptadores concretos.
+4. `app` y `components` tienen prohibido importar SDKs de Supabase o clientes de BD.
+5. ADR asociada: `docs/adr/ADR-0001-auth-persistence-boundary.md`.
+
+```text
+UI (app/components) -> UseCases/Services -> Repositories (interfaces core)
+                                              ^
+                                              |
+                                   Infrastructure Adapters
+                         (InMemory actual / Supabase futuro / otro proveedor)
+```
+
+## Auth real (Fase 1)
+
+1. `middleware.ts` protege `/hub/*` y redirige a `/login` cuando no existe sesión válida.
+2. `services/auth/auth-actions.ts` expone login/logout mediante server actions.
+3. `SupabaseAuthRepository` implementa `IAuthRepository` en infraestructura.
+4. UI nunca importa SDK de Supabase; solo consume acciones/casos de uso.
+5. Variables mínimas:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+## Auth UX (Fase 1.1)
+
+1. `src/app/page.tsx` pasa a ser landing pública del proyecto.
+2. Se añade alta de usuario en `src/app/register/page.tsx` con `RegisterForm`.
+3. `SignUpWithEmailUseCase` aplica validaciones mínimas y delega al repositorio.
+4. `middleware.ts` evita acceso a `/login` y `/register` si ya existe sesión.
+5. Se mantiene desacoplamiento: UI -> `services/auth/auth-actions.ts` -> use-cases -> `IAuthRepository`.
+
+## Auth Hardening (Fase 1.2)
+
+1. `src/app/api/auth/*` actúa como capa HTTP fina sin reglas de negocio.
+2. Orquestación de login/register/logout en `src/services/auth/api/*` (servicios por endpoint).
+3. Seguridad aplicada en servidor:
+   - validación de `Origin` contra `Host` para mitigar CSRF básico,
+   - rate-limit en memoria por IP/email para frenar fuerza bruta.
+4. Persistencia de sesión/cookies sigue encapsulada en `SupabaseAuthRepository`.
+5. Se añaden tests de endpoints auth (`route.test.ts`) cubriendo éxito, origen no confiable y límites de abuso.
+
+## Persistencia jugador (Fase 2)
+
+1. Se incorporan repositorios reales:
+   - `SupabasePlayerProfileRepository`
+   - `SupabasePlayerProgressRepository`
+2. Se añade bootstrap de jugador autenticado:
+   - `GetOrCreatePlayerProfileUseCase`
+   - `GetOrCreatePlayerProgressUseCase`
+3. `Hub` empieza a consumir progreso persistido vía `SupabaseHubRepository`.
+4. SQL de fase:
+   - `docs/supabase/sql/001_phase_2_player_profile_progress.sql`
+5. Seguridad de datos:
+   - RLS activa en `player_profiles` y `player_progress`,
+   - políticas `SELECT/INSERT/UPDATE` solo para `auth.uid() = player_id`.
+
+## Persistencia Home/Market (Fase 3)
+
+1. Estado del jugador persistido en Supabase:
+   - wallet Nexus,
+   - colección,
+   - deck por slots,
+   - historial de transacciones.
+2. `app/api/market/*` y `app/api/home/*` encapsulan mutaciones del cliente.
+3. UI cliente consume endpoints HTTP (`services/market/market-actions.ts`, `services/home/deck-builder/deck-builder-actions.ts`).
+4. Repositorios dedicados:
+   - `SupabaseWalletRepository`,
+   - `SupabaseCardCollectionRepository`,
+   - `SupabaseDeckRepository`,
+   - `SupabaseTransactionRepository`.
+5. SQL de fase:
+   - `docs/supabase/sql/002_phase_3_market_home_persistence.sql`.
+
 ## Flujo de turno actual
 
 1. El duelo se inicializa con `createInitialGameState` (mazo de 20 y mano inicial configurable; en tablero actual se usa 4 por jugador).
@@ -92,7 +168,7 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
 ## Hub UI y navegación (fase 3 y 4)
 
 1. `src/app/hub/page.tsx` renderiza la sala de control (HUD) como punto de entrada visual.
-2. `HubScene` y `HubSceneNode` gestionan layout de paneles, navegación por click y feedback de secciones bloqueadas.
+2. `HubScene` y `HubSceneNode3D` gestionan layout de paneles, navegación por click y feedback de secciones bloqueadas.
 3. Rutas activas del hub:
    - `/hub/market`
    - `/hub/home`
@@ -101,6 +177,47 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
    - `/hub/multiplayer`
 4. `getHubSectionViewModel` resuelve en servidor el estado de cada sección antes de renderizar su pantalla.
 5. `HubSectionScreen` unifica la presentación base de módulos para evitar duplicación de layout.
+
+## Hub UI (fase 3 y 4 - optimización y hardening)
+
+1. `HubNodeActionPanel` encapsula interacción accesible de nodos 3D (navegación y lock reason).
+2. Cálculos puros de posición y color de nodo se extraen a `internal/hub-3d-node-math.ts`.
+3. `MarketCore3D` se divide en submódulos (`nodes/market/*`) para reducir tamaño por archivo y aislar responsabilidades.
+4. Se eliminan wrappers legacy no referenciados para evitar deuda técnica.
+
+## Hub UI (fase 5 y 6 - fallback y resiliencia runtime)
+
+1. Detección de capacidades gráficas en `internal/hub-webgl-support.ts`.
+2. Fallback 2D (`HubSceneFallback2D`) activo cuando WebGL no está disponible.
+3. `HubScene` pausa render 3D cuando la pestaña no está visible para proteger FPS/consumo.
+4. Cobertura de pruebas añadida para:
+   - detector WebGL,
+   - fallback 2D,
+   - integración de `HubScene` en modo fallback.
+
+## Hub UI (Refactor Fase 0 - Preparación)
+
+1. Se define nueva arquitectura visual por capas:
+   - `HubShell` (composición),
+   - `HubScene3D` (render y animación 3D),
+   - widgets desacoplados (`HubUserSection`, `HubSessionSection`, `HubProgressSection`).
+2. `CyberBackground` se reutiliza como capa base del hub para atmósfera compartida con landing.
+3. El header tradicional se elimina en favor de una sección de progreso dedicada.
+4. El dominio y reglas de acceso del hub no cambian:
+   - UI no decide bloqueos,
+   - bloqueos se resuelven en `HubAccessPolicy` y casos de uso.
+5. Se prioriza un diseño extensible para nodos 3D por sección con fallback visual cuando no haya soporte WebGL.
+
+## Hub UI (Fase 1 completada)
+
+1. `HubShell` ya es el contenedor raíz en `/hub`.
+2. Secciones desacopladas activas:
+   - `HubUserSection`,
+   - `HubSessionSection`,
+   - `HubProgressSection`.
+3. `HubScene` queda aislada para render de nodos distribuidos y navegación.
+4. Los nodos de sección usan decoradores por tipo en `src/components/hub/nodes/*` para mantener SRP visual.
+5. `CyberBackground` se mantiene como base visual compartida del hub.
 
 ## Subdominio Mi Home (Deck Builder)
 
@@ -161,6 +278,58 @@ Arquitectura en capas orientada a dominio con separación estricta entre UI, mot
 6. Endurecimiento de integridad:
    - `InMemoryWalletRepository` rechaza débito con saldo insuficiente.
    - IDs de transacción de mercado se generan con estrategia única (`generateMarketTransactionId`).
+
+## Subdominio Market/Home (fase 5 con catálogo BD)
+
+1. `cards_catalog` pasa a ser la fuente canónica para hidratar `ICard` en repositorios Supabase.
+2. `SupabaseMarketRepository` y `SupabaseCardCollectionRepository` cargan cartas por `card_id` desde BD (sin `CARD_BY_ID` hardcodeado en flujo persistente).
+3. Se mantiene fallback a in-memory solo si no está disponible el esquema completo (`market_*` + `cards_catalog`).
+4. `004_phase_4_cards_catalog_integrity.sql` garantiza FKs entre market/home y catálogo maestro.
+
+## Subdominio Market/Home (fase 5.1 rendimiento UX)
+
+1. Endpoints de compra del market (`buy-card`, `buy-pack`) devuelven snapshot unificado (`catalog`, `transactions`, `collection`) para evitar refetch múltiple en cliente.
+2. `useMarketSceneState` aplica actualización optimista al comprar carta y reconcilia con snapshot de servidor.
+3. `HomeDeckBuilderScene` aplica inserción/retirada optimista de slots para respuesta visual inmediata.
+4. Se cachea la validación de disponibilidad de catálogo Supabase con TTL corto para reducir round-trips repetidos de bootstrap.
+
+## Subdominio Game (fase 5.2 deck persistido)
+
+1. `Board` acepta `initialPlayerDeck` opcional para evitar dependencia rígida de mazos mock.
+2. `getPlayerBoardDeck` resuelve en servidor el mazo guardado del jugador autenticado (`deck slots + colección`).
+3. `/hub/training` inicializa el combate con mazo persistido cuando está completo; si no, usa fallback mock del motor.
+
+## Subdominio Progresión (fase 6.1)
+
+1. Se incorpora `player_card_progress` como estado canónico de progresión por carta (`version_tier`, `level`, `xp`).
+2. Versionado base de cartas:
+   - inicio en `V0`,
+   - tope en `V5`,
+   - costes: `4, 8, 16, 32, 64`.
+3. Las pasivas de mastery (`V5`) se modelan con:
+   - `card_passive_skills` (catálogo reutilizable),
+   - `card_mastery_passive_map` (asignación por carta).
+4. La lógica de evolución se basa en copias del almacén (`player_collection_cards`), sin contar slots de deck.
+
+## Subdominio Progresión (fase 6.2 evolución de versión)
+
+1. Caso de uso `EvolveCardVersionUseCase` orquesta:
+   - validación de copias requeridas por tier,
+   - consumo de copias del almacén,
+   - actualización de `player_card_progress`.
+2. Endpoint `POST /api/home/collection/evolve` expone la operación y devuelve snapshot (`progress`, `collection`, `consumedCopies`).
+3. Se mantiene separación de responsabilidades:
+   - reglas puras en `core/services/progression`,
+   - orquestación en `core/use-cases/home`,
+   - persistencia en repositorios (`ICardCollectionRepository`, `IPlayerCardProgressRepository`).
+
+## Subdominio Progresión (fase 6.3 integración Home UI)
+
+1. `HomeDeckActionBar` reemplaza el botón de compilar por `Evolucionar` cuando la carta seleccionada cumple copias requeridas.
+2. `HomeDeckBuilderScene` mantiene estado de colección/progreso para reflejar consumo de copias tras evolución sin recargar pantalla.
+3. `Card` y `CardFrame` aceptan metadatos de progreso (`versionTier`, `level`) y los renderizan junto al bloque de energía.
+4. `HomeCollectionPanel` muestra simultáneamente copias usadas en deck y unidades disponibles en almacén para guiar evolución.
+5. `HomeEvolutionOverlay` visualiza la fusión de copias y subida de versión en capa central con feedback cinemático.
 
 ## Eventos y observabilidad
 
