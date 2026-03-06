@@ -38,7 +38,7 @@ export function HubSceneHudOverlay({ playerLabel, progress, showMetaNodes, onHud
           animate={{ x: 0 }}
           transition={{ duration: HUB_HUD_ANIMATION_DURATION, ease: [0.16, 1, 0.3, 1] }}
           style={{ willChange: "transform" }}
-          className="pointer-events-auto absolute bottom-4 left-2 sm:bottom-22 sm:left-auto sm:right-6"
+          className="pointer-events-auto absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-[max(0.5rem,env(safe-area-inset-left))] sm:bottom-22 sm:left-auto sm:right-[max(1.5rem,env(safe-area-inset-right))]"
         >
           <HubUserSection playerLabel={playerLabel} />
         </motion.div>
@@ -49,7 +49,7 @@ export function HubSceneHudOverlay({ playerLabel, progress, showMetaNodes, onHud
           animate={{ y: 0 }}
           transition={{ duration: HUB_HUD_ANIMATION_DURATION, ease: [0.16, 1, 0.3, 1], delay: 0.06 }}
           style={{ willChange: "transform" }}
-          className="pointer-events-auto absolute left-1/2 top-2 -translate-x-1/2 sm:top-3"
+          className="pointer-events-auto absolute left-1/2 top-[max(0.5rem,env(safe-area-inset-top))] -translate-x-1/2 sm:top-3"
         >
           <HubProgressSection progress={progress} />
         </motion.div>

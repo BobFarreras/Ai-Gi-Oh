@@ -19,7 +19,7 @@ export function HubSceneFloatingActions({
   onToggleNodeLabels,
 }: HubSceneFloatingActionsProps) {
   return (
-    <div className="pointer-events-auto absolute bottom-4 right-4 z-50 flex items-center gap-2 sm:bottom-6 sm:right-6">
+    <div className="pointer-events-auto absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] z-50 flex items-center gap-2 sm:bottom-6 sm:right-6">
       {canResetCamera ? <HubResetCameraButton onReset={onResetCamera} /> : null}
       <HubToggleNodeLabelsButton isVisible={areNodeLabelsVisible} onToggle={onToggleNodeLabels} />
       <LogoutButton iconOnly confirmBeforeLogout />
