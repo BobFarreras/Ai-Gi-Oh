@@ -24,12 +24,13 @@ interface UseMarketSceneStateInput {
 }
 
 export function useMarketSceneState(input: UseMarketSceneStateInput) {
+  const initialAvailableListing = input.initialCatalog.listings.find((listing) => listing.isAvailable) ?? input.initialCatalog.listings[0] ?? null;
   const [catalog, setCatalog] = useState<IMarketCatalog>(input.initialCatalog);
   const [transactions, setTransactions] = useState<IMarketTransaction[]>(input.initialTransactions);
   const [collection, setCollection] = useState<ICollectionCard[]>(input.initialCollection);
-  const [selectedPackId, setSelectedPackId] = useState<string | null>(input.initialCatalog.packs[0]?.id ?? null);
-  const [selectedListing, setSelectedListing] = useState<IMarketCardListing | null>(input.initialCatalog.listings[0] ?? null);
-  const [selectedCard, setSelectedCard] = useState<ICard | null>(input.initialCatalog.listings[0]?.card ?? null);
+  const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
+  const [selectedListing, setSelectedListing] = useState<IMarketCardListing | null>(initialAvailableListing);
+  const [selectedCard, setSelectedCard] = useState<ICard | null>(initialAvailableListing?.card ?? null);
   const [nameQuery, setNameQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<MarketTypeFilter>("ALL");
   const [orderField, setOrderField] = useState<MarketOrderField>("PRICE");
@@ -37,6 +38,7 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [revealedPackCards, setRevealedPackCards] = useState<ICard[]>([]);
   const [isPackRevealOpen, setIsPackRevealOpen] = useState(false);
+  const [isBuyingPack, setIsBuyingPack] = useState(false);
 
   const scopedListings = useMemo(() => {
     if (!selectedPackId) return catalog.listings.filter((listing) => listing.isAvailable);
@@ -56,6 +58,17 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
         orderDirection,
       }),
     [nameQuery, orderDirection, orderField, scopedListings, typeFilter],
+  );
+  const mobileVisibleListings = useMemo(
+    () =>
+      buildMarketListingView({
+        listings: catalog.listings.filter((listing) => listing.isAvailable),
+        nameQuery,
+        typeFilter,
+        orderField,
+        orderDirection,
+      }),
+    [catalog.listings, nameQuery, orderDirection, orderField, typeFilter],
   );
 
   useSyncSelectedListing({ selectedListing, visibleListings, setSelectedListing, setSelectedCard });
@@ -80,6 +93,8 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
   }
 
   async function handleBuyPack(packId: string): Promise<void> {
+    if (isBuyingPack) return;
+    setIsBuyingPack(true);
     try {
       const result = await buyPackAction(input.playerId, packId);
       setCatalog(result.catalog);
@@ -94,6 +109,8 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
       setErrorMessage(null);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "No se pudo comprar el sobre.");
+    } finally {
+      setIsBuyingPack(false);
     }
   }
 
@@ -111,7 +128,9 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     errorMessage,
     revealedPackCards,
     isPackRevealOpen,
+    isBuyingPack,
     visibleListings,
+    mobileVisibleListings,
     setSelectedPackId,
     setSelectedListing,
     setSelectedCard,

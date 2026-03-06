@@ -2,6 +2,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { Zap, Swords, Shield, Tag, Lock, ShoppingCart, ScanLine } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
 import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
@@ -14,6 +15,12 @@ interface MarketCardInspectorProps {
 }
 
 export function MarketCardInspector({ selectedCard, selectedListing, onBuyCard }: MarketCardInspectorProps) {
+  const [floatingSpendId, setFloatingSpendId] = useState(0);
+  const handleBuyClick = async (listingId: string) => {
+    setFloatingSpendId((previous) => previous + 1);
+    await onBuyCard(listingId);
+  };
+
   return (
     <aside className="flex flex-col h-full overflow-hidden p-4 relative">
       <h2 className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-cyan-500/80 shrink-0">
@@ -23,8 +30,6 @@ export function MarketCardInspector({ selectedCard, selectedListing, onBuyCard }
       {selectedCard ? (
         <>
           <div className="home-modern-scroll flex-1 overflow-y-auto pr-2 pb-4">
-
-            {/* Contenedor 3D de la Carta */}
             <div className="relative flex justify-center items-center w-full h-[260px] sm:h-[300px] mb-4 perspective-1000">
               <motion.div
                 whileHover={{ scale: 1.05, rotateY: 5, rotateX: 5 }}
@@ -40,9 +45,7 @@ export function MarketCardInspector({ selectedCard, selectedListing, onBuyCard }
               {selectedCard.name}
             </h3>
 
-            {/* Módulos de Estadísticas (Badges) actualizados */}
             <div className="flex flex-wrap gap-2 mt-3 mb-4">
-              {/* REFACTOR: Uso estricto de selectedCard.archetype */}
               <span className="flex items-center gap-1.5 rounded bg-cyan-950/60 border border-cyan-800/50 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-cyan-300">
                 <Tag size={12} />
                 {selectedCard.type}
@@ -76,7 +79,19 @@ export function MarketCardInspector({ selectedCard, selectedListing, onBuyCard }
 
           <div className="mt-auto pt-4 border-t border-cyan-900/50 shrink-0 bg-[#030c16]">
             {selectedListing ? (
-              <div className="flex flex-col gap-2">
+              <div className="relative flex flex-col gap-2">
+                {floatingSpendId > 0 && selectedListing.isAvailable ? (
+                  <motion.span
+                    key={floatingSpendId}
+                    initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                    animate={{ opacity: 1, y: -22, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.55, ease: "easeOut" }}
+                    className="pointer-events-none absolute right-2 top-0 text-xs font-black tracking-wider text-rose-300 drop-shadow-[0_0_6px_rgba(251,113,133,0.6)]"
+                  >
+                    -{selectedListing.priceNexus} NX
+                  </motion.span>
+                ) : null}
                 <div className="flex justify-between items-center px-1">
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Valor de Mercado</span>
                   <span className={`text-lg font-black font-mono tracking-widest ${selectedListing.isAvailable ? "text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "text-rose-400"}`}>
@@ -84,11 +99,10 @@ export function MarketCardInspector({ selectedCard, selectedListing, onBuyCard }
                   </span>
                 </div>
 
-                {/* Botón "Comprar" */}
                 <motion.button
                   type="button"
                   disabled={!selectedListing.isAvailable}
-                  onClick={() => onBuyCard(selectedListing.id)}
+                  onClick={() => handleBuyClick(selectedListing.id)}
                   whileHover={selectedListing.isAvailable ? { scale: 1.02 } : {}}
                   whileTap={selectedListing.isAvailable ? { scale: 0.98 } : {}}
                   className={`relative w-full flex items-center justify-center gap-2 py-3 sm:py-3.5 rounded-xl border text-xs font-black uppercase tracking-widest transition-all overflow-hidden group ${selectedListing.isAvailable

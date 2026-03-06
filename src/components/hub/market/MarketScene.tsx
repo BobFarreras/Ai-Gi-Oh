@@ -1,13 +1,12 @@
 // src/components/hub/market/MarketScene.tsx - Orquesta la UI del mercado usando paneles modulares y estado desacoplado.
 "use client";
 
-import { MarketCardInspector } from "@/components/hub/market/MarketCardInspector";
 import { MarketHeaderBar } from "@/components/hub/market/layout/MarketHeaderBar";
-import { MarketListingsPanel } from "@/components/hub/market/listings/MarketListingsPanel";
-import { MarketPacksPanel } from "@/components/hub/market/packs/MarketPacksPanel";
+import { MarketDesktopGrid } from "@/components/hub/market/layout/MarketDesktopGrid";
+import { MarketMobileStack } from "@/components/hub/market/layout/MarketMobileStack";
 import { MarketPackRevealOverlay } from "@/components/hub/market/reveal/MarketPackRevealOverlay";
-import { MarketVaultPanel } from "@/components/hub/market/vault/MarketVaultPanel";
 import { useMarketSceneState } from "@/components/hub/market/internal/useMarketSceneState";
+import { ICard } from "@/core/entities/ICard";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
 import { IMarketCatalog } from "@/core/use-cases/market/GetMarketCatalogUseCase";
@@ -21,6 +20,25 @@ interface MarketSceneProps {
 
 export function MarketScene(props: MarketSceneProps) {
   const state = useMarketSceneState(props);
+  const handleSelectListing = (listing: (typeof state.visibleListings)[number]) => {
+    state.setSelectedListing(listing);
+    state.setSelectedCard(listing.card);
+  };
+  const handleSelectVaultCard = (card: ICard) => {
+    const listing = state.catalog.listings.find((currentListing) => currentListing.card.id === card.id) ?? null;
+    state.setNameQuery("");
+    state.setTypeFilter("ALL");
+    if (!listing) {
+      state.setSelectedPackId(null);
+    } else if (!listing.isAvailable) {
+      const matchingPack = state.catalog.packs.find((pack) => pack.previewCardIds.includes(card.id));
+      state.setSelectedPackId(matchingPack?.id ?? null);
+    } else {
+      state.setSelectedPackId(null);
+    }
+    state.setSelectedListing(listing);
+    state.setSelectedCard(card);
+  };
 
   return (
     <main className="hub-control-room-bg relative box-border flex h-[100dvh] w-full flex-col items-center justify-center overflow-hidden px-3 py-3 text-slate-100 sm:px-5">
@@ -47,59 +65,39 @@ export function MarketScene(props: MarketSceneProps) {
           </div>
         )}
 
-        <div className="mt-4 grid min-h-0 flex-1 gap-4 xl:grid-cols-[1fr_1.8fr_1.2fr]">
-          <div className="min-h-0 min-w-0 overflow-hidden rounded-xl border border-cyan-900/30 bg-black/40 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-            <MarketCardInspector
-              selectedCard={state.selectedCard}
-              selectedListing={state.selectedListing}
-              onBuyCard={state.handleBuyCard}
-            />
-          </div>
-
-          <div className="min-h-0 min-w-0 overflow-hidden rounded-xl border border-cyan-900/30 bg-black/40 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-            <MarketListingsPanel
-              listings={state.visibleListings}
-              onSelectCard={(listing) => {
-                state.setSelectedListing(listing);
-                state.setSelectedCard(listing.card);
-              }}
-            />
-          </div>
-
-          <div className="grid min-h-0 min-w-0 grid-rows-[auto_1fr] gap-4 overflow-hidden">
-            <div className="min-h-0 min-w-0 overflow-hidden rounded-xl border border-cyan-900/30 bg-black/40 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-              <MarketPacksPanel
-                packs={state.catalog.packs}
-                selectedPackId={state.selectedPackId}
-                onSelectPack={state.setSelectedPackId}
-                onClearPackSelection={() => state.setSelectedPackId(null)}
-                onBuyPack={state.handleBuyPack}
-              />
-            </div>
-            <div className="min-h-0 min-w-0 overflow-hidden rounded-xl border border-cyan-900/30 bg-black/40 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-              <MarketVaultPanel
-                collection={state.collection}
-                transactions={state.transactions}
-                catalogListings={state.catalog.listings}
-                onSelectCard={(card) => {
-                  const listing = state.catalog.listings.find((currentListing) => currentListing.card.id === card.id) ?? null;
-                  state.setNameQuery("");
-                  state.setTypeFilter("ALL");
-                  if (!listing) {
-                    state.setSelectedPackId(null);
-                  } else if (!listing.isAvailable) {
-                    const matchingPack = state.catalog.packs.find((pack) => pack.previewCardIds.includes(card.id));
-                    state.setSelectedPackId(matchingPack?.id ?? null);
-                  } else {
-                    state.setSelectedPackId(null);
-                  }
-                  state.setSelectedListing(listing);
-                  state.setSelectedCard(card);
-                }}
-              />
-            </div>
-          </div>
-        </div>
+        <MarketDesktopGrid
+          selectedCard={state.selectedCard}
+          selectedListing={state.selectedListing}
+          listings={state.visibleListings}
+          packs={state.catalog.packs}
+          selectedPackId={state.selectedPackId}
+          collection={state.collection}
+          transactions={state.transactions}
+          catalogListings={state.catalog.listings}
+          onBuyCard={state.handleBuyCard}
+          onBuyPack={state.handleBuyPack}
+          onSelectPack={state.setSelectedPackId}
+          onClearPackSelection={() => state.setSelectedPackId(null)}
+          onSelectListing={handleSelectListing}
+          onSelectVaultCard={handleSelectVaultCard}
+        />
+        <MarketMobileStack
+          selectedCard={state.selectedCard}
+          selectedListing={state.selectedListing}
+          listings={state.mobileVisibleListings}
+          packs={state.catalog.packs}
+          selectedPackId={state.selectedPackId}
+          collection={state.collection}
+          transactions={state.transactions}
+          catalogListings={state.catalog.listings}
+          isBuyingPack={state.isBuyingPack}
+          onBuyCard={state.handleBuyCard}
+          onBuyPack={state.handleBuyPack}
+          onSelectPack={state.setSelectedPackId}
+          onShowFreeListings={() => state.setSelectedPackId(null)}
+          onSelectListing={handleSelectListing}
+          onSelectVaultCard={handleSelectVaultCard}
+        />
       </section>
 
       <MarketPackRevealOverlay

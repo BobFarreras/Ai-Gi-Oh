@@ -49,7 +49,7 @@ export function MarketPacksPanel({
           >
             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shine_1s_infinite]" />
             <PackageOpen size={14} className="text-fuchsia-300" />
-            Adquirir x {activePack.priceNexus} NX
+            Comprar x {activePack.priceNexus} NX
           </motion.button>
         ) : (
           <span className="pr-2 text-[9px] uppercase tracking-widest text-cyan-500/50">Selecciona un Pack</span>

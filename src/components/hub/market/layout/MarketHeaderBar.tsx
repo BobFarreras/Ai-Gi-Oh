@@ -1,10 +1,12 @@
 // src/components/hub/market/layout/MarketHeaderBar.tsx - Cabecera del mercado con saldo Nexus, búsqueda y filtros principales.
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowDownUp, Layers3, ListFilter, Search } from "lucide-react";
 import { GameSelect } from "@/components/ui/GameSelect";
 import { BackButton } from "@/components/ui/BackButton";
+import { MARKET_ORDER_OPTIONS, MARKET_TYPE_OPTIONS } from "@/components/hub/market/layout/market-filter-options";
 import {
   MarketOrderDirection,
   MarketOrderField,
@@ -24,14 +26,12 @@ interface MarketHeaderBarProps {
 }
 
 export function MarketHeaderBar(props: MarketHeaderBarProps) {
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+
   return (
-    // IMPORTANTE: overflow-visible es imperativo aquí para que los selects puedan salir del header
     <header className="relative w-full bg-[#041120]/90 border border-cyan-800/50 p-2 sm:px-4 sm:py-2.5 rounded-xl shadow-[0_0_20px_rgba(8,145,178,0.15),inset_0_0_20px_rgba(0,0,0,0.6)] backdrop-blur-xl z-[100] overflow-visible">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(34,211,238,0.05),transparent_45%,rgba(59,130,246,0.05))] rounded-xl" />
-
       <div className="relative grid gap-4 xl:grid-cols-[1fr_1.8fr_1.2fr] items-center overflow-visible">
-        
-        {/* 1. SECCIÓN IZQUIERDA (1fr) */}
         <div className="flex items-center gap-3 xl:border-r border-cyan-900/60 xl:pr-4 min-w-0">
           <BackButton href="/hub" label="" className="flex shrink-0 px-2 py-1.5" />
           <h1 className="text-lg font-black uppercase tracking-widest text-cyan-100 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)] truncate hidden sm:block">
@@ -43,9 +43,7 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
             </span>
           </div>
         </div>
-
-        {/* 2. SECCIÓN CENTRAL (1.8fr) */}
-        <div className="flex items-center min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
           <label className="flex w-full items-center gap-2 rounded-lg border border-cyan-500/30 bg-[#020a14]/80 px-3 py-1.5 shadow-[inset_0_0_15px_rgba(0,0,0,0.6)] focus-within:border-cyan-400 focus-within:shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all h-[38px]">
             <Search size={14} className="text-cyan-400 shrink-0" />
             <input
@@ -56,13 +54,16 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
               placeholder="BUSCAR DATOS..."
             />
           </label>
+          <button
+            type="button"
+            aria-label="Mostrar filtros del mercado"
+            onClick={() => setIsMobileFiltersOpen((previous) => !previous)}
+            className="flex h-[38px] items-center justify-center rounded-lg border border-cyan-500/40 bg-[#021426]/85 px-3 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-200 xl:hidden"
+          >
+            Filtros
+          </button>
         </div>
-
-        {/* 3. SECCIÓN DERECHA (1.2fr) */}
-        {/* Usamos gap-y-3 para que si saltan de línea tengan espacio y no se solapen */}
-        <div className="flex flex-wrap items-center justify-start xl:justify-end gap-x-2 gap-y-3 min-w-0 overflow-visible">
-          
-          {/* z-50 para que este menú caiga por encima del de la derecha */}
+        <div className="hidden flex-wrap items-center justify-start gap-x-2 gap-y-3 min-w-0 overflow-visible xl:flex xl:justify-end">
           <div className="w-[110px] sm:w-[120px] shrink-0 relative z-50">
             <GameSelect
               label="TIPO"
@@ -70,16 +71,9 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
               onChange={(value) => props.onTypeFilterChange(value as MarketTypeFilter)}
               ariaLabel="Filtro de tipo"
               Icon={ListFilter}
-              options={[
-                { value: "ALL", label: "Todos" },
-                { value: "ENTITY", label: "Entidad" },
-                { value: "EXECUTION", label: "Magia" },
-                { value: "TRAP", label: "Trampa" },
-              ]}
+              options={MARKET_TYPE_OPTIONS}
             />
           </div>
-          
-          {/* z-40 para que esté por debajo del Tipo pero por encima de los botones */}
           <div className="w-[110px] sm:w-[120px] shrink-0 relative z-40">
             <GameSelect
               label="ORDEN"
@@ -87,14 +81,9 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
               onChange={(value) => props.onOrderFieldChange(value as MarketOrderField)}
               ariaLabel="Campo de orden"
               Icon={Layers3}
-              options={[
-                { value: "PRICE", label: "Precio" },
-                { value: "ENERGY", label: "Energía" },
-                { value: "NAME", label: "Nombre" },
-              ]}
+              options={MARKET_ORDER_OPTIONS}
             />
           </div>
-          
           <motion.button
             type="button"
             onClick={props.onOrderDirectionToggle}
@@ -107,8 +96,37 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
             </motion.div>
           </motion.button>
         </div>
-
       </div>
+      {isMobileFiltersOpen ? (
+        <div className="relative mt-3 grid grid-cols-[1fr_1fr_auto] gap-2 xl:hidden">
+          <GameSelect
+            label="TIPO"
+            value={props.typeFilter}
+            onChange={(value) => props.onTypeFilterChange(value as MarketTypeFilter)}
+            ariaLabel="Filtro de tipo"
+            Icon={ListFilter}
+            options={MARKET_TYPE_OPTIONS}
+          />
+          <GameSelect
+            label="ORDEN"
+            value={props.orderField}
+            onChange={(value) => props.onOrderFieldChange(value as MarketOrderField)}
+            ariaLabel="Campo de orden"
+            Icon={Layers3}
+            options={MARKET_ORDER_OPTIONS}
+          />
+          <motion.button
+            type="button"
+            onClick={props.onOrderDirectionToggle}
+            whileTap={{ scale: 0.95 }}
+            className="mt-[16px] flex h-[38px] items-center justify-center gap-1 rounded-lg border border-cyan-500/40 bg-[linear-gradient(180deg,rgba(4,34,56,0.8),rgba(3,22,38,0.9))] px-3"
+          >
+            <motion.div animate={{ rotate: props.orderDirection === "ASC" ? 0 : 180 }}>
+              <ArrowDownUp size={14} className="text-cyan-300" />
+            </motion.div>
+          </motion.button>
+        </div>
+      ) : null}
     </header>
   );
 }

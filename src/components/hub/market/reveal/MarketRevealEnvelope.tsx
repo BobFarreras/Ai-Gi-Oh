@@ -20,7 +20,7 @@ export function MarketRevealEnvelope({ phase }: MarketRevealEnvelopeProps) {
             animate={
               phase === "IDLE"
                 ? { scale: 1, opacity: 1, y: [-15, 15, -15] }
-                : { scale: 2, opacity: 0, filter: "brightness(300%) blur(10px)" }
+                : { scale: 1.55, opacity: 0, y: 48, filter: "brightness(300%) blur(10px)" }
             }
             exit={{ opacity: 0 }}
             transition={
@@ -28,7 +28,7 @@ export function MarketRevealEnvelope({ phase }: MarketRevealEnvelopeProps) {
                 ? { y: { duration: 4, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }, scale: { type: "spring", damping: 20 } }
                 : { duration: 0.5, ease: "easeIn" }
             }
-            className="relative z-50 flex aspect-[3/4] w-[220px] flex-col justify-between rounded-2xl border-2 border-fuchsia-400 bg-[linear-gradient(145deg,rgba(134,25,143,0.9),rgba(15,23,42,0.95))] p-6 shadow-[0_0_80px_rgba(192,38,211,0.5)]"
+            className="relative z-50 flex aspect-[3/4] w-[190px] flex-col justify-between rounded-2xl border-2 border-fuchsia-400 bg-[linear-gradient(145deg,rgba(134,25,143,0.9),rgba(15,23,42,0.95))] p-5 shadow-[0_0_80px_rgba(192,38,211,0.5)] sm:w-[220px] sm:p-6"
           >
             <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.2),transparent_50%)]" />
             <div className="pointer-events-none absolute inset-0 animate-[shine_2s_infinite] rounded-xl bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)]" />

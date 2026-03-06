@@ -18,6 +18,8 @@ src/components/hub/market
 ├── MarketCardInspector.tsx            # Detalle de carta y compra contextual
 ├── layout/
 │   └── MarketHeaderBar.tsx            # Cabecera con saldo, búsqueda y filtros
+│   ├── MarketDesktopGrid.tsx          # Composición de paneles en escritorio
+│   └── MarketMobileStack.tsx          # Navegación por pestañas en móvil
 ├── listings/
 │   └── MarketListingsPanel.tsx        # Grid principal de cartas
 ├── packs/
@@ -56,6 +58,13 @@ src/components/hub/market
    - comprar sobres,
    - refrescar `wallet`, `collection`, `transactions`.
 3. `MarketPackRevealOverlay` solo consume estado visual ya resuelto.
+4. `MarketScene` enruta la UI por viewport:
+   - `xl+`: `MarketDesktopGrid` (estructura original en 3 columnas).
+   - `<xl`: `MarketMobileStack` (vista por pestañas + inspector en diálogo).
+   - `PACKS` mobile: selector de sobres + CTA de compra (sin reemplazar listado de cartas libres).
+   - compra de pack mobile bloquea doble tap con estado `Procesando...`.
+5. Estado inicial de mercado:
+   - `selectedPackId = null` para entrar siempre en **cartas sueltas**.
 
 ## Riesgos comunes (y mitigación)
 

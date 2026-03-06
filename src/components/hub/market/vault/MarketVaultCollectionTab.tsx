@@ -18,13 +18,13 @@ export function MarketVaultCollectionTab({ collection, onSelectCard }: MarketVau
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 10 }}
-      className="flex w-full flex-wrap justify-center gap-3 pb-4"
+      className="grid w-full grid-cols-4 justify-items-center gap-2 pb-4 xl:grid-cols-3 xl:gap-3"
     >
       {collection.map((entry) => (
         <article
           key={entry.card.id}
           onClick={() => onSelectCard(entry.card)}
-          className="group relative aspect-[3/4] w-[88px] shrink-0 cursor-pointer rounded-lg border border-cyan-900/50 bg-[#02060d] p-1.5 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"
+          className="group relative aspect-[3/4] w-full max-w-[86px] cursor-pointer rounded-lg border border-cyan-900/50 bg-[#02060d] p-1.5 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]"
         >
           <div className="pointer-events-none relative h-full w-full overflow-hidden rounded">
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">

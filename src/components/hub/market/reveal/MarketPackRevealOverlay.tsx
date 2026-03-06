@@ -23,7 +23,7 @@ export function MarketPackRevealOverlay({ cards, isOpen, onClose }: MarketPackRe
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[400] flex items-center justify-center bg-[#01050a]/95 backdrop-blur-2xl"
+          className="fixed inset-0 z-[400] flex items-center justify-center bg-[#01050a]/95 p-4 backdrop-blur-2xl"
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(192,38,211,0.15),transparent_70%)]" />
           <MarketRevealEnvelope phase={phase} />
