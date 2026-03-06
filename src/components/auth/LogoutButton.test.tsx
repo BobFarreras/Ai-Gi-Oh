@@ -23,22 +23,20 @@ describe("LogoutButton", () => {
     logoutCurrentUser.mockResolvedValue({ ok: true });
   });
 
-  it("no llama al logout si se cancela la confirmación", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+  it("no llama al logout si se cancela desde el diálogo", async () => {
     render(<LogoutButton confirmBeforeLogout />);
     fireEvent.click(screen.getByRole("button", { name: "Desconectar del Hub" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar cierre de sesión" }));
     await waitFor(() => expect(logoutCurrentUser).not.toHaveBeenCalled());
-    confirmSpy.mockRestore();
   });
 
-  it("renderiza modo icono y cierra sesión cuando se confirma", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+  it("renderiza modo icono y cierra sesión cuando se confirma desde el diálogo", async () => {
     render(<LogoutButton iconOnly confirmBeforeLogout />);
     expect(screen.queryByText("Desconectar")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Desconectar del Hub" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar cierre de sesión" }));
     await waitFor(() => expect(logoutCurrentUser).toHaveBeenCalledTimes(1));
     expect(push).toHaveBeenCalledWith("/login");
     expect(refresh).toHaveBeenCalledTimes(1);
-    confirmSpy.mockRestore();
   });
 });
