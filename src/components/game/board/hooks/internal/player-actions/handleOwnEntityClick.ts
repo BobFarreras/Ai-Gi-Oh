@@ -14,10 +14,11 @@ interface IHandleOwnEntityClickParams extends Pick<
   | "gameState"
   | "pendingFusionSummon"
   | "pendingEntityReplacement"
+  | "pendingEntityReplacementTargetId"
   | "setActiveAttackerId"
   | "setIsAnimating"
   | "setLastError"
-  | "setPendingEntityReplacement"
+  | "setPendingEntityReplacementTargetId"
   | "setPendingFusionSummon"
   | "setPlayingCard"
   | "setRevealedEntities"
@@ -34,10 +35,11 @@ export async function handleOwnEntityClick({
   gameState,
   pendingFusionSummon,
   pendingEntityReplacement,
+  pendingEntityReplacementTargetId,
   setActiveAttackerId,
   setIsAnimating,
   setLastError,
-  setPendingEntityReplacement,
+  setPendingEntityReplacementTargetId,
   setPendingFusionSummon,
   setPlayingCard,
   setRevealedEntities,
@@ -46,18 +48,9 @@ export async function handleOwnEntityClick({
   if (!entity) return "pass";
 
   if (pendingEntityReplacement) {
-    const replacedState = applyTransition((state) =>
-      GameEngine.playCardWithEntityReplacement(
-        state,
-        state.playerA.id,
-        pendingEntityReplacement.cardId,
-        pendingEntityReplacement.mode,
-        entity.instanceId,
-      ),
-    );
-    if (replacedState) {
-      setPendingEntityReplacement(null);
-      clearSelection();
+    if (pendingEntityReplacementTargetId !== entity.instanceId) {
+      setPendingEntityReplacementTargetId(entity.instanceId);
+      setSelectedCard(entity.card);
     }
     return "handled";
   }

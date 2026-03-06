@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/internal/board-state/useBoardUiState.ts - Gestiona estado UI local del tablero y flujos pendientes de interacción.
 import { MutableRefObject, useCallback, useState } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { BattleMode } from "@/core/entities/IPlayer";
@@ -23,6 +24,8 @@ interface IUseBoardUiStateResult {
   setLastError: (value: IBoardUiError | null) => void;
   pendingEntityReplacement: { cardId: string; mode: BattleMode } | null;
   setPendingEntityReplacement: (value: { cardId: string; mode: BattleMode } | null) => void;
+  pendingEntityReplacementTargetId: string | null;
+  setPendingEntityReplacementTargetId: (value: string | null) => void;
   pendingFusionSummon: { cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null;
   setPendingFusionSummon: (value: { cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null) => void;
   isFusionCinematicActive: boolean;
@@ -52,6 +55,7 @@ export function useBoardUiState(
   const [revealedEntities, setRevealedEntities] = useState<string[]>([]);
   const [lastError, setLastError] = useState<IBoardUiError | null>(null);
   const [pendingEntityReplacement, setPendingEntityReplacement] = useState<{ cardId: string; mode: BattleMode } | null>(null);
+  const [pendingEntityReplacementTargetId, setPendingEntityReplacementTargetId] = useState<string | null>(null);
   const [pendingFusionSummon, setPendingFusionSummon] = useState<{ cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null>(null);
   const [isFusionCinematicActive, setIsFusionCinematicActive] = useState(false);
   const [isMuted, setIsMuted] = useState<boolean>(() => (typeof window !== "undefined" ? window.localStorage.getItem("board-muted") === "1" : false));
@@ -61,6 +65,7 @@ export function useBoardUiState(
     setSelectedCard(null);
     setPlayingCard(null);
     setActiveAttackerId(null);
+    setPendingEntityReplacementTargetId(null);
     setPendingFusionSummon(null);
   }, []);
 
@@ -111,6 +116,8 @@ export function useBoardUiState(
     setLastError,
     pendingEntityReplacement,
     setPendingEntityReplacement,
+    pendingEntityReplacementTargetId,
+    setPendingEntityReplacementTargetId,
     pendingFusionSummon,
     setPendingFusionSummon,
     isFusionCinematicActive,

@@ -1,16 +1,13 @@
+// src/core/use-cases/game-engine/state/types.ts - Tipos base del estado de partida, fases y acciones pendientes de turno.
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { IPlayer } from "@/core/entities/IPlayer";
 
 export type TurnPhase = "MAIN_1" | "BATTLE";
 
-export type PendingTurnActionType = "SACRIFICE_ENTITY_FOR_DRAW" | "DISCARD_FOR_HAND_LIMIT" | "SELECT_FUSION_MATERIALS";
+export type PendingTurnActionType = "DISCARD_FOR_HAND_LIMIT" | "SELECT_FUSION_MATERIALS";
 
 interface IBasePendingTurnAction {
   playerId: string;
-}
-
-export interface ISacrificeEntityPendingTurnAction extends IBasePendingTurnAction {
-  type: "SACRIFICE_ENTITY_FOR_DRAW";
 }
 
 export interface IDiscardForHandLimitPendingTurnAction extends IBasePendingTurnAction {
@@ -27,7 +24,6 @@ export interface ISelectFusionMaterialsPendingTurnAction extends IBasePendingTur
 }
 
 export type IPendingTurnAction =
-  | ISacrificeEntityPendingTurnAction
   | IDiscardForHandLimitPendingTurnAction
   | ISelectFusionMaterialsPendingTurnAction;
 

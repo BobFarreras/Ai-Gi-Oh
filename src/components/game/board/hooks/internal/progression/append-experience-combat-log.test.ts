@@ -8,7 +8,6 @@ describe("append-experience-combat-log", () => {
     const state = createInitialGameState({
       playerA: { id: "p1", name: "A", deck: [] },
       playerB: { id: "p2", name: "B", deck: [] },
-      seed: 1,
     });
     const next = appendExperienceSummaryToCombatLog(state, "p1", [
       {

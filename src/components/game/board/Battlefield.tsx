@@ -30,6 +30,10 @@ interface BattlefieldProps {
   buffStat?: "ATTACK" | "DEFENSE" | null;
   buffAmount?: number | null;
   buffEventId?: string | null;
+  cardXpCardId?: string | null;
+  cardXpAmount?: number | null;
+  cardXpEventId?: string | null;
+  cardXpActorPlayerId?: string | null;
   playerId: string;
   opponentId: string;
   onGraveyardClick: (side: "player" | "opponent") => void;
@@ -58,6 +62,10 @@ export function Battlefield({
   buffStat = null,
   buffAmount = null,
   buffEventId = null,
+  cardXpCardId = null,
+  cardXpAmount = null,
+  cardXpEventId = null,
+  cardXpActorPlayerId = null,
   playerId,
   opponentId,
   onGraveyardClick,
@@ -105,6 +113,9 @@ export function Battlefield({
             buffStat={buffStat}
             buffAmount={buffAmount}
             buffEventId={buffEventId}
+            cardXpCardId={cardXpActorPlayerId === opponentId ? cardXpCardId : null}
+            cardXpAmount={cardXpActorPlayerId === opponentId ? cardXpAmount : null}
+            cardXpEventId={cardXpActorPlayerId === opponentId ? cardXpEventId : null}
             onGraveyardClick={onGraveyardClick}
             onEntityClick={onEntityClick}
           />
@@ -129,6 +140,9 @@ export function Battlefield({
             buffStat={buffStat}
             buffAmount={buffAmount}
             buffEventId={buffEventId}
+            cardXpCardId={cardXpActorPlayerId === playerId ? cardXpCardId : null}
+            cardXpAmount={cardXpActorPlayerId === playerId ? cardXpAmount : null}
+            cardXpEventId={cardXpActorPlayerId === playerId ? cardXpEventId : null}
             onGraveyardClick={onGraveyardClick}
             onEntityClick={onEntityClick}
           />

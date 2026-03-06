@@ -1,3 +1,4 @@
+<!-- src/components/game/board/README.md - Guía del módulo Board: flujo, reglas, overlays y puntos de extensión. -->
 # Board Module
 
 Guía rápida para entender la lógica de tablero y batalla.
@@ -32,26 +33,22 @@ Guía rápida para entender la lógica de tablero y batalla.
 
 ## Reglas obligatorias de inicio de turno
 
-1. Si el jugador entra al turno con 3 entidades:
-   - debe sacrificar 1 entidad al cementerio antes del robo.
-
-2. Si entra con 5 cartas en mano:
+1. Si entra con 5 cartas en mano:
    - debe descartar 1 carta antes del robo.
 
-3. `Board` no usa diálogo modal: muestra mensaje contextual y resalta opciones seleccionables.
-4. En descarte por mano (5 cartas), se resaltan las cartas de mano y al pulsar una se descarta.
-5. En sacrificio por campo lleno al inicio de turno, se resaltan las entidades de campo y al pulsar una se sacrifica.
-6. El rival resuelve estas acciones automáticamente en `useOpponentTurn`.
-7. Si el timer expira durante una acción obligatoria del jugador:
+2. `Board` usa mensajes contextuales y, en reemplazo de entidad con campo lleno, muestra confirmación explícita antes de enviar la carta al cementerio.
+3. En descarte por mano (5 cartas), se resaltan las cartas de mano y al pulsar una se descarta.
+4. El rival resuelve estas acciones automáticamente en `useOpponentTurn`.
+5. Si el timer expira durante una acción obligatoria del jugador:
    - descarte por mano llena: descarta la carta más a la izquierda.
-   - sacrificio por campo lleno: sacrifica la entidad más antigua (índice 0).
 
 ## Reemplazo de invocación con campo lleno
 
 1. Si el jugador intenta invocar entidad con 3 entidades ya en campo:
    - se muestra aviso contextual,
    - se resaltan las 3 entidades del campo,
-   - al elegir una, se envía al cementerio y entra la nueva entidad.
+   - al elegir una, aparece confirmación (`Sí/No`) para evitar errores,
+   - al confirmar, se envía al cementerio y entra la nueva entidad.
 2. Esta lógica usa `GameEngine.playCardWithEntityReplacement`.
 
 ## Invocación por fusión

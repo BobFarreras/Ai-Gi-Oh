@@ -27,14 +27,18 @@ export function Card({
   onClick,
   isSelected = false,
   boardMode,
-  versionTier = 0,
-  level = 0,
-  xp = 0,
-  masteryPassiveLabel = null,
+  versionTier,
+  level,
+  xp,
+  masteryPassiveLabel,
 }: CardProps) {
   const isOnBoard = isBoardMode(boardMode);
   const isDefense = boardMode === "DEFENSE";
   const shouldRenderHologram = isOnBoard && boardMode !== "SET";
+  const resolvedVersionTier = versionTier ?? card.versionTier ?? 0;
+  const resolvedLevel = level ?? card.level ?? 0;
+  const resolvedXp = xp ?? card.xp ?? 0;
+  const resolvedMasteryPassiveLabel = masteryPassiveLabel ?? card.masteryPassiveLabel ?? null;
 
   return (
     <div className="group/card relative h-[380px] w-[260px]" style={{ transformStyle: "preserve-3d" }}>
@@ -44,10 +48,10 @@ export function Card({
         isSelected={isSelected}
         isOnBoard={isOnBoard}
         onClick={onClick}
-        versionTier={versionTier}
-        level={level}
-        xp={xp}
-        masteryPassiveLabel={masteryPassiveLabel}
+        versionTier={resolvedVersionTier}
+        level={resolvedLevel}
+        xp={resolvedXp}
+        masteryPassiveLabel={resolvedMasteryPassiveLabel}
       />
       {shouldRenderHologram && <CardHologram card={card} isDefense={isDefense} />}
     </div>

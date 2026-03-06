@@ -1,3 +1,4 @@
+// src/components/game/board/ui/layers/BoardInteractiveLayer.tsx - Orquesta capas interactivas (tablero, mano y paneles) y enruta callbacks UI.
 "use client";
 
 import { ICard } from "@/core/entities/ICard";
@@ -24,6 +25,10 @@ interface BoardInteractiveLayerProps {
   lastBuffStat: string | null;
   lastBuffAmount: number | null;
   lastBuffEventId: string | null;
+  lastCardXpCardId: string | null;
+  lastCardXpAmount: number | null;
+  lastCardXpEventId: string | null;
+  lastCardXpActorPlayerId: string | null;
   onGraveyardClick: (side: "player" | "opponent") => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => Promise<void>;
   onMandatoryCardSelect: (cardId: string) => void;
@@ -51,6 +56,10 @@ export function BoardInteractiveLayer({
   lastBuffStat,
   lastBuffAmount,
   lastBuffEventId,
+  lastCardXpCardId,
+  lastCardXpAmount,
+  lastCardXpEventId,
+  lastCardXpActorPlayerId,
   onGraveyardClick,
   onEntityClick,
   onMandatoryCardSelect,
@@ -88,6 +97,10 @@ export function BoardInteractiveLayer({
           buffStat={lastBuffStat === "ATTACK" || lastBuffStat === "DEFENSE" ? lastBuffStat : null}
           buffAmount={lastBuffAmount}
           buffEventId={lastBuffEventId}
+          cardXpCardId={lastCardXpCardId}
+          cardXpAmount={lastCardXpAmount}
+          cardXpEventId={lastCardXpEventId}
+          cardXpActorPlayerId={lastCardXpActorPlayerId}
           playerId={player.id}
           opponentId={opponent.id}
           onGraveyardClick={onGraveyardClick}

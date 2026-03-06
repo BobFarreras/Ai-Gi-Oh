@@ -1,4 +1,4 @@
-// src/core/entities/ICard.ts
+// src/core/entities/ICard.ts - Define contratos de carta base y metadatos runtime para el motor de juego.
 export type CardType = "ENTITY" | "EXECUTION" | "TRAP" | "FUSION" | "ENVIRONMENT";
 export type Faction = "OPEN_SOURCE" | "BIG_TECH" | "NO_CODE" | "NEUTRAL";
 export type CardArchetype = "LLM" | "FRAMEWORK" | "DB" | "IDE" | "LANGUAGE" | "TOOL" | "SECURITY";
@@ -87,4 +87,10 @@ export interface ICard {
   readonly fusionEnergyRequirement?: number;
   readonly archetype?: CardArchetype;
   readonly trigger?: TrapTrigger;
+  readonly runtimeId?: string;
+  readonly versionTier?: number;
+  readonly level?: number;
+  readonly xp?: number;
+  readonly masteryPassiveSkillId?: string | null;
+  readonly masteryPassiveLabel?: string | null;
 }

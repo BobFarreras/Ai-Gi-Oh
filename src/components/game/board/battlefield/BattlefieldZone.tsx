@@ -1,3 +1,4 @@
+// src/components/game/board/battlefield/BattlefieldZone.tsx - Renderiza una zona (jugador/oponente) y propaga feedback visual hacia los slots.
 import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,9 @@ interface BattlefieldZoneProps {
   buffStat: "ATTACK" | "DEFENSE" | null;
   buffAmount: number | null;
   buffEventId: string | null;
+  cardXpCardId: string | null;
+  cardXpAmount: number | null;
+  cardXpEventId: string | null;
   onGraveyardClick: (side: "player" | "opponent") => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: MouseEvent) => void;
 }
@@ -46,6 +50,9 @@ export function BattlefieldZone({
   buffStat,
   buffAmount,
   buffEventId,
+  cardXpCardId,
+  cardXpAmount,
+  cardXpEventId,
   onGraveyardClick,
   onEntityClick,
 }: BattlefieldZoneProps) {
@@ -81,6 +88,9 @@ export function BattlefieldZone({
         buffStat={buffStat}
         buffAmount={buffAmount}
         buffEventId={buffEventId}
+        cardXpCardId={cardXpCardId}
+        cardXpAmount={cardXpAmount}
+        cardXpEventId={cardXpEventId}
         onEntityClick={onEntityClick}
       />
       <DeckPile deckCount={deckCount} />

@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/state/create-initial-game-state.ts - Crea estado inicial con mazos y asigna runtimeId único a cada copia de carta.
 import { ICard } from "@/core/entities/ICard";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { GameState } from "./types";
@@ -18,6 +19,10 @@ interface ICreateInitialGameStateConfig {
 }
 
 function createPlayer(config: IInitialPlayerConfig, maxHealthPoints: number, maxEnergy: number): IPlayer {
+  const deckWithRuntimeIds = config.deck.map((card, index) => ({
+    ...card,
+    runtimeId: card.runtimeId ?? `${config.id}-${card.id}-${index}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  }));
   return {
     id: config.id,
     name: config.name,
@@ -25,7 +30,7 @@ function createPlayer(config: IInitialPlayerConfig, maxHealthPoints: number, max
     maxHealthPoints,
     currentEnergy: maxEnergy,
     maxEnergy,
-    deck: [...config.deck],
+    deck: deckWithRuntimeIds,
     hand: [],
     graveyard: [],
     activeEntities: [],

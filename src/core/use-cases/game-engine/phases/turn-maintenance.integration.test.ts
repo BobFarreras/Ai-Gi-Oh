@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/phases/turn-maintenance.integration.test.ts - Valida reglas de mantenimiento al inicio de turno y reemplazo con campo lleno.
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
@@ -66,7 +67,7 @@ function baseState(): GameState {
 }
 
 describe("GameEngine mantenimiento de turno", () => {
-  it("debería exigir sacrificio si la zona de entidades está llena antes del robo", () => {
+  it("debería permitir robar aunque la zona de entidades esté llena", () => {
     const state = {
       ...baseState(),
       playerA: {
@@ -77,28 +78,9 @@ describe("GameEngine mantenimiento de turno", () => {
 
     const nextState = GameEngine.nextPhase(state);
     expect(nextState.activePlayerId).toBe("p1");
-    expect(nextState.pendingTurnAction?.type).toBe("SACRIFICE_ENTITY_FOR_DRAW");
-    expect(nextState.playerA.hand).toHaveLength(0);
-  });
-
-  it("debería resolver sacrificio, enviar al cementerio y robar carta", () => {
-    const state = {
-      ...baseState(),
-      activePlayerId: "p1",
-      phase: "MAIN_1" as const,
-      pendingTurnAction: { type: "SACRIFICE_ENTITY_FOR_DRAW" as const, playerId: "p1" },
-      playerA: {
-        ...baseState().playerA,
-        deck: [createCard("draw-after-sacrifice")],
-        activeEntities: [createEntity("a-1", "a-card-1"), createEntity("a-2", "a-card-2"), createEntity("a-3", "a-card-3")],
-      },
-    };
-
-    const nextState = GameEngine.resolvePendingTurnAction(state, "p1", "a-2");
     expect(nextState.pendingTurnAction).toBeNull();
-    expect(nextState.playerA.activeEntities).toHaveLength(2);
-    expect(nextState.playerA.graveyard.some((card) => card.id === "a-card-2")).toBe(true);
-    expect(nextState.playerA.hand.some((card) => card.id === "draw-after-sacrifice")).toBe(true);
+    expect(nextState.playerA.activeEntities).toHaveLength(3);
+    expect(nextState.playerA.hand.some((card) => card.id === "p1-deck-1")).toBe(true);
   });
 
   it("debería exigir descarte si la mano está en límite antes del robo", () => {

@@ -1,16 +1,21 @@
+// src/components/game/board/ui/overlays/BoardStatusOverlays.tsx - Agrupa overlays de estado global del tablero: errores, acciones pendientes, pausa, fusión, cementerio y confirmaciones.
 "use client";
 
 import { ICard } from "@/core/entities/ICard";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
+import { BattleMode } from "@/core/entities/IPlayer";
 import { IBoardUiError } from "../../hooks/internal/boardError";
 import { BattleBannerCenter } from "../BattleBannerCenter";
 import { FusionCinematicLayer } from "../FusionCinematicLayer";
 import { GraveyardBrowser } from "../GraveyardBrowser";
 import { PauseOverlay } from "./PauseOverlay";
+import { EntityReplacementConfirmOverlay } from "./EntityReplacementConfirmOverlay";
 
 interface BoardStatusOverlaysProps {
   lastError: IBoardUiError | null;
   pendingActionHint: string | null;
+  pendingEntityReplacement: { cardId: string; mode: BattleMode } | null;
+  pendingEntityReplacementTargetCard: ICard | null;
   combatLog: ICombatLogEvent[];
   playerAId: string;
   playerAName: string;
@@ -24,6 +29,8 @@ interface BoardStatusOverlaysProps {
   graveyardOwnerName: string;
   graveyardCards: ICard[];
   onCloseError: () => void;
+  onConfirmEntityReplacement: () => void;
+  onCancelEntityReplacement: () => void;
   onCloseGraveyard: () => void;
   onPreviewCard: (card: ICard) => void;
  
@@ -32,6 +39,8 @@ interface BoardStatusOverlaysProps {
 export function BoardStatusOverlays({
   lastError,
   pendingActionHint,
+  pendingEntityReplacement,
+  pendingEntityReplacementTargetCard,
   combatLog,
   playerAId,
   playerAName,
@@ -45,6 +54,8 @@ export function BoardStatusOverlays({
   graveyardOwnerName,
   graveyardCards,
   onCloseError,
+  onConfirmEntityReplacement,
+  onCancelEntityReplacement,
   onCloseGraveyard,
   onPreviewCard,
   
@@ -77,6 +88,13 @@ export function BoardStatusOverlays({
           <p className="text-xs font-black tracking-wider uppercase text-amber-300">Acción obligatoria</p>
           <p className="text-sm font-semibold">{pendingActionHint}</p>
         </div>
+      )}
+      {pendingEntityReplacement && pendingEntityReplacementTargetCard && (
+        <EntityReplacementConfirmOverlay
+          targetCard={pendingEntityReplacementTargetCard}
+          onConfirm={onConfirmEntityReplacement}
+          onCancel={onCancelEntityReplacement}
+        />
       )}
 
       <BattleBannerCenter events={combatLog} playerAId={playerAId} playerAName={playerAName} playerBId={playerBId} playerBName={playerBName} />

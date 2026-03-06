@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/internal/board-state/useBoardTurnControls.ts - Centraliza controles de fase, timer y resolución de acciones pendientes del jugador.
 import { MutableRefObject, useCallback } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
@@ -73,28 +74,30 @@ export function useBoardTurnControls({
   }, [applyTransition, assertPlayerTurn, clearError, clearSelection, isAnimating, winnerPlayerId]);
 
   const handleTimerExpired = useCallback(() => {
-    if (winnerPlayerId || !isPlayerTurn || isAnimating) return;
-    const pendingAction = gameStateRef.current.pendingTurnAction;
-    if (pendingAction?.playerId === gameStateRef.current.playerA.id) {
+    const currentState = gameStateRef.current;
+    const hasWinnerNow =
+      currentState.playerA.healthPoints <= 0 ||
+      currentState.playerB.healthPoints <= 0;
+    if (hasWinnerNow || currentState.activePlayerId !== currentState.playerA.id || isAnimating) return;
+    const pendingAction = currentState.pendingTurnAction;
+    if (pendingAction?.playerId === currentState.playerA.id) {
       if (pendingAction.type === "DISCARD_FOR_HAND_LIMIT") {
-        const leftmostCard = gameStateRef.current.playerA.hand[0];
-        if (leftmostCard) resolvePendingTurnAction(leftmostCard.id);
+        const leftmostCard = currentState.playerA.hand[0];
+        if (leftmostCard) resolvePendingTurnAction(leftmostCard.runtimeId ?? leftmostCard.id);
         return;
       }
       if (pendingAction.type === "SELECT_FUSION_MATERIALS") {
-        const available = gameStateRef.current.playerA.activeEntities
+        const available = currentState.playerA.activeEntities
           .map((entity) => entity.instanceId)
           .filter((instanceId) => !pendingAction.selectedMaterialInstanceIds.includes(instanceId));
         const autoPick = available.slice(0, 2 - pendingAction.selectedMaterialInstanceIds.length);
         autoPick.forEach((instanceId) => resolvePendingTurnAction(instanceId));
         return;
       }
-      const oldestEntity = gameStateRef.current.playerA.activeEntities[0];
-      if (oldestEntity) resolvePendingTurnAction(oldestEntity.instanceId);
       return;
     }
     advancePhase();
-  }, [advancePhase, gameStateRef, isAnimating, isPlayerTurn, resolvePendingTurnAction, winnerPlayerId]);
+  }, [advancePhase, gameStateRef, isAnimating, resolvePendingTurnAction]);
 
   const resolvePendingHandDiscard = useCallback(
     (cardId: string) => {

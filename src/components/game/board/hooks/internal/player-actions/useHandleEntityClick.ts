@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/internal/player-actions/useHandleEntityClick.ts - Orquesta clics sobre entidades propias/rivales y delega flujos según contexto de acción.
 import { useCallback } from "react";
 import { IUsePlayerActionsParams } from "./types";
 import { handleOwnEntityClick } from "./handleOwnEntityClick";
@@ -13,12 +14,14 @@ type IHandleEntityClickParams = Pick<
   | "gameState"
   | "isAnimating"
   | "pendingEntityReplacement"
+  | "pendingEntityReplacementTargetId"
   | "pendingFusionSummon"
   | "resolvePendingTurnAction"
   | "setActiveAttackerId"
   | "setIsAnimating"
   | "setLastError"
   | "setPendingEntityReplacement"
+  | "setPendingEntityReplacementTargetId"
   | "setPendingFusionSummon"
   | "setPlayingCard"
   | "setRevealedEntities"
@@ -41,6 +44,11 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
       }
 
       params.clearError();
+      if (params.pendingEntityReplacement && isOpponent) {
+        params.setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una entidad de tu campo para reemplazarla." });
+        return;
+      }
+
       if (!isOpponent) {
         const result = await handleOwnEntityClick({
           entity,
@@ -50,10 +58,11 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
           gameState: params.gameState,
           pendingFusionSummon: params.pendingFusionSummon,
           pendingEntityReplacement: params.pendingEntityReplacement,
+          pendingEntityReplacementTargetId: params.pendingEntityReplacementTargetId,
           setActiveAttackerId: params.setActiveAttackerId,
           setIsAnimating: params.setIsAnimating,
           setLastError: params.setLastError,
-          setPendingEntityReplacement: params.setPendingEntityReplacement,
+          setPendingEntityReplacementTargetId: params.setPendingEntityReplacementTargetId,
           setPendingFusionSummon: params.setPendingFusionSummon,
           setPlayingCard: params.setPlayingCard,
           setRevealedEntities: params.setRevealedEntities,

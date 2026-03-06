@@ -1,4 +1,4 @@
-// src/components/game/board/PlayerHand.tsx
+// src/components/game/board/PlayerHand.tsx - Renderiza la mano del jugador con selección, acciones y estados obligatorios.
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,17 +32,17 @@ export function PlayerHand({
     <div className="absolute bottom-0 left-0 w-full h-[500px] flex justify-center items-end z-40 pointer-events-none perspective-[1200px] pb-4">
       <div className="flex justify-center -space-x-8 pointer-events-none relative">
         {hand.map((card, i) => {
-          const isSelected = playingCard?.id === card.id;
+          const isSelected = card.runtimeId && playingCard?.runtimeId ? playingCard.runtimeId === card.runtimeId : playingCard === card;
           const isEntity = card.type === 'ENTITY';
           const isFusion = card.type === 'FUSION';
           const isTrap = card.type === 'TRAP';
-          const isMandatorySelectable = highlightedCardIds.includes(card.id);
+          const isMandatorySelectable = highlightedCardIds.includes(card.runtimeId ?? card.id);
           
           // Bloqueamos la UI si es entidad y ya invocó
           const isBlocked = (isEntity || isFusion) && hasSummoned;
 
           return (
-            <div key={card.id} className="relative">
+            <div key={`${card.id}-${i}`} className="relative">
               <AnimatePresence>
                 {isSelected && (
                   <motion.div 
@@ -76,7 +76,7 @@ export function PlayerHand({
               </AnimatePresence>
 
               <motion.div 
-                layoutId={`card-hand-${card.id}`} // Separamos el layoutId de la mano
+                layoutId={`card-hand-${card.id}-${i}`} // Separamos el layoutId de la mano y evitamos colisiones con duplicadas
                 initial={{ y: 200, scale: 0.86 }} 
                 animate={{ 
                   y: isSelected ? -40 : 120, 
@@ -94,7 +94,7 @@ export function PlayerHand({
                     return;
                   }
                   if (isMandatorySelectable && onMandatoryCardSelect) {
-                    onMandatoryCardSelect(card.id);
+                    onMandatoryCardSelect(card.runtimeId ?? card.id);
                     return;
                   }
                   onCardClick(card, e);

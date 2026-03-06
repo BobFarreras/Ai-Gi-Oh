@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/fusion/start-fusion-summon.ts - Inicia flujo de selección de materiales para fusión desde una carta en mano.
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ValidationError } from "@/core/errors/ValidationError";
@@ -20,7 +21,7 @@ export function startFusionSummon(
     throw new GameRuleError("Solo puedes iniciar fusión en MAIN_1.");
   }
   const { player } = getPlayerPair(state, playerId);
-  const fusionCard = player.hand.find((card) => card.id === fusionCardId);
+  const fusionCard = player.hand.find((card) => card.runtimeId === fusionCardId || card.id === fusionCardId);
   if (!fusionCard) {
     throw new NotFoundError("La carta de fusión no está en la mano.");
   }

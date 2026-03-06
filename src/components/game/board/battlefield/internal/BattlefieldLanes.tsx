@@ -1,3 +1,4 @@
+// src/components/game/board/battlefield/internal/BattlefieldLanes.tsx - Separa líneas de entidades/ejecuciones y delega render de slots del tablero.
 import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,9 @@ interface BattlefieldLanesProps {
   buffStat: "ATTACK" | "DEFENSE" | null;
   buffAmount: number | null;
   buffEventId: string | null;
+  cardXpCardId: string | null;
+  cardXpAmount: number | null;
+  cardXpEventId: string | null;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: MouseEvent) => void;
 }
 
@@ -33,6 +37,9 @@ export function BattlefieldLanes({
   buffStat,
   buffAmount,
   buffEventId,
+  cardXpCardId,
+  cardXpAmount,
+  cardXpEventId,
   onEntityClick,
 }: BattlefieldLanesProps) {
   const upperLaneEntities = isOpponentSide ? activeExecutions : activeEntities;
@@ -53,6 +60,9 @@ export function BattlefieldLanes({
           buffStat={buffStat}
           buffAmount={buffAmount}
           buffEventId={buffEventId}
+          cardXpCardId={cardXpCardId}
+          cardXpAmount={cardXpAmount}
+          cardXpEventId={cardXpEventId}
           onEntityClick={onEntityClick}
         />
       </div>
@@ -70,6 +80,9 @@ export function BattlefieldLanes({
           buffStat={buffStat}
           buffAmount={buffAmount}
           buffEventId={buffEventId}
+          cardXpCardId={cardXpCardId}
+          cardXpAmount={cardXpAmount}
+          cardXpEventId={cardXpEventId}
           onEntityClick={onEntityClick}
         />
       </div>

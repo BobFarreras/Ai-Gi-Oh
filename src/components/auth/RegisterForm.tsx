@@ -1,10 +1,14 @@
-// src/components/auth/RegisterForm.tsx
+// src/components/auth/RegisterForm.tsx - Formulario de alta con validación de contraseña y animaciones compartidas de autenticación.
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState, useTransition } from "react";
+import { FormEvent, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { registerWithEmail } from "@/services/auth/auth-http-client";
+import { AuthField } from "@/components/auth/internal/AuthField";
+import { authFormBeamVariants, authFormContainerVariants, buildAuthPieceVariants } from "@/components/auth/internal/formAnimation";
+import { useAuthFormSfx } from "@/components/auth/internal/useAuthFormSfx";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -13,6 +17,11 @@ export function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { playButtonClick, playFormEntry } = useAuthFormSfx();
+
+  useEffect(() => {
+    playFormEntry();
+  }, [playFormEntry]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
@@ -33,84 +42,91 @@ export function RegisterForm() {
   }
 
   return (
-    <form
+    <motion.form
+      variants={authFormContainerVariants}
+      initial="hidden"
+      animate="visible"
       onSubmit={handleSubmit}
-      className="w-full rounded-2xl border border-cyan-900/45 bg-[#031020]/85 p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-md"
+      className="relative z-10 w-full overflow-hidden border border-cyan-900/60 bg-[#020813]/90 p-8 shadow-[0_0_60px_rgba(6,182,212,0.25)] backdrop-blur-xl"
+      style={{ WebkitClipPath: "polygon(25px 0, 100% 0, 100% calc(100% - 25px), calc(100% - 25px) 100%, 0 100%, 0 25px)" }}
     >
-      <div className="mb-6 text-center">
-        <h1 className="text-xl sm:text-2xl font-black uppercase tracking-widest text-cyan-100 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">
-          Crear Identidad Nexus
+      <motion.div
+        variants={authFormBeamVariants}
+        className="pointer-events-none absolute left-0 right-0 z-50 h-[3px] bg-white"
+        style={{ boxShadow: "0 0 5px #fff, 0 0 15px #06b6d4, 0 0 30px #06b6d4, 0 0 60px #06b6d4, 0 0 90px #06b6d4" }}
+      />
+
+      <motion.div variants={buildAuthPieceVariants(0.85)} className="mb-8 border-b border-cyan-900/50 pb-6 text-center">
+        <h1 className="text-2xl font-black uppercase tracking-[0.25em] text-cyan-50 drop-shadow-[0_0_12px_rgba(6,182,212,0.7)] sm:text-3xl">
+          Identidad <span className="text-cyan-500">Nexus</span>
         </h1>
-        <p className="mt-2 text-[10px] sm:text-xs uppercase tracking-widest text-cyan-400/70">
-          Registra tu perfil en el sistema
-        </p>
+        <p className="mt-3 font-mono text-xs uppercase tracking-[0.2em] text-cyan-500/80">Registra tu perfil en el sistema</p>
+      </motion.div>
+
+      <div className="relative z-10 space-y-5">
+        <motion.div variants={buildAuthPieceVariants(0.7)}>
+          <AuthField
+            label="Email"
+            ariaLabel="Email de registro"
+            type="email"
+            value={email}
+            autoComplete="email"
+            placeholder="nuevo.operador@nexus.com"
+            onChange={setEmail}
+          />
+        </motion.div>
+        <motion.div variants={buildAuthPieceVariants(0.55)}>
+          <AuthField
+            label="Contraseña"
+            ariaLabel="Contraseña de registro"
+            type="password"
+            value={password}
+            autoComplete="new-password"
+            placeholder="••••••••"
+            onChange={setPassword}
+          />
+        </motion.div>
+        <motion.div variants={buildAuthPieceVariants(0.4)}>
+          <AuthField
+            label="Confirmar credencial"
+            ariaLabel="Confirmar contraseña de registro"
+            type="password"
+            value={confirmPassword}
+            autoComplete="new-password"
+            placeholder="••••••••"
+            onChange={setConfirmPassword}
+          />
+        </motion.div>
       </div>
 
-      <label className="block text-[10px] font-black uppercase tracking-widest text-cyan-300/80">
-        Email
-        <input
-          aria-label="Email de registro"
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          required
-          autoComplete="email"
-          className="mt-1.5 w-full rounded-lg border border-cyan-800/50 bg-[#02060d]/90 px-3 py-2.5 text-sm text-cyan-50 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] outline-none transition-all placeholder:text-cyan-900/50 focus:border-cyan-400 focus:shadow-[0_0_15px_rgba(34,211,238,0.15)]"
-          placeholder="nuevo.operador@nexus.com"
-        />
-      </label>
-
-      <label className="mt-4 block text-[10px] font-black uppercase tracking-widest text-cyan-300/80">
-        Contraseña
-        <input
-          aria-label="Contraseña de registro"
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          required
-          autoComplete="new-password"
-          className="mt-1.5 w-full rounded-lg border border-cyan-800/50 bg-[#02060d]/90 px-3 py-2.5 text-sm text-cyan-50 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] outline-none transition-all placeholder:text-cyan-900/50 focus:border-cyan-400 focus:shadow-[0_0_15px_rgba(34,211,238,0.15)]"
-          placeholder="••••••••"
-        />
-      </label>
-
-      <label className="mt-4 block text-[10px] font-black uppercase tracking-widest text-cyan-300/80">
-        Confirmar credencial
-        <input
-          aria-label="Confirmar contraseña de registro"
-          type="password"
-          value={confirmPassword}
-          onChange={(event) => setConfirmPassword(event.target.value)}
-          required
-          autoComplete="new-password"
-          className="mt-1.5 w-full rounded-lg border border-cyan-800/50 bg-[#02060d]/90 px-3 py-2.5 text-sm text-cyan-50 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] outline-none transition-all placeholder:text-cyan-900/50 focus:border-cyan-400 focus:shadow-[0_0_15px_rgba(34,211,238,0.15)]"
-          placeholder="••••••••"
-        />
-      </label>
-
       {errorMessage && (
-        <div className="mt-5 rounded-lg border border-rose-500/50 bg-rose-950/40 p-3 shadow-[0_0_15px_rgba(225,29,72,0.15)]">
-          <p className="text-center text-[11px] font-black tracking-wider text-rose-300 uppercase">
+        <motion.div variants={buildAuthPieceVariants(0.3)} className="relative z-10 mt-6 border border-red-500 bg-red-950/40 p-3 shadow-[0_0_20px_rgba(225,29,72,0.25)]">
+          <p className="flex items-center justify-center gap-2 font-mono text-[10px] font-black uppercase tracking-widest text-red-300 sm:text-xs">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500 sm:h-2 sm:w-2" />
             {errorMessage}
           </p>
-        </div>
+        </motion.div>
       )}
 
-      <button
+      <motion.button
+        variants={buildAuthPieceVariants(0.2)}
         type="submit"
         aria-label="Crear cuenta"
+        onClick={playButtonClick}
         disabled={isPending}
-        className="mt-6 w-full rounded-xl border border-cyan-400/50 bg-cyan-950/40 py-3 text-xs font-black uppercase tracking-widest text-cyan-100 shadow-[0_0_15px_rgba(34,211,238,0.1)] transition-all hover:bg-cyan-900/60 hover:border-cyan-300 hover:shadow-[0_0_25px_rgba(34,211,238,0.3)] disabled:cursor-not-allowed disabled:opacity-50"
+        className="group relative z-10 mt-8 flex h-14 w-full items-center justify-center overflow-hidden bg-cyan-600 px-8 font-mono text-sm font-black uppercase tracking-[0.25em] text-black transition-all hover:bg-cyan-400 hover:shadow-[0_0_35px_rgba(6,182,212,0.7)] disabled:cursor-not-allowed disabled:bg-cyan-900/60 disabled:text-cyan-600 disabled:opacity-70 sm:h-16"
+        style={{ WebkitClipPath: "polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px)" }}
       >
-        {isPending ? "Procesando..." : "Activar Cuenta"}
-      </button>
+        <div className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/40 transition-transform duration-500 ease-out group-hover:translate-x-full" />
+        <span className="relative z-10 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">{isPending ? "Procesando..." : "Activar Cuenta"}</span>
+      </motion.button>
 
-      <p className="mt-6 border-t border-cyan-900/50 pt-4 text-center text-[10px] uppercase tracking-widest text-cyan-500/70">
+      <motion.p variants={buildAuthPieceVariants(0.1)} className="relative z-10 mt-8 text-center font-mono text-[10px] uppercase tracking-widest text-cyan-500/70 sm:text-xs">
         ¿Identidad ya registrada?{" "}
-        <Link href="/login" className="font-black text-cyan-300 transition-colors hover:text-cyan-100 drop-shadow-[0_0_5px_rgba(34,211,238,0.4)]">
+        <Link href="/login" onClick={playButtonClick} className="font-black text-cyan-400 transition-colors hover:text-white hover:drop-shadow-[0_0_12px_rgba(6,182,212,0.9)]">
           Inicia sesión
         </Link>
-      </p>
-    </form>
+      </motion.p>
+    </motion.form>
   );
 }

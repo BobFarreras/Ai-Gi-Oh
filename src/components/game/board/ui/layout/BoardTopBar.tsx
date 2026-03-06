@@ -1,3 +1,4 @@
+// src/components/game/board/ui/layout/BoardTopBar.tsx - Renderiza cabecera de turno/fase y controla activación del temporizador de acción.
 "use client";
 
 import { Clock } from "lucide-react";
@@ -13,6 +14,7 @@ interface BoardTopBarProps {
   pendingActionPlayerId: string | null;
   isPlayerTurn: boolean;
   isPaused: boolean;
+  hasWinner: boolean;
   onAdvancePhase: () => void;
   onTimeUp: () => void;
   onWarning: () => void;
@@ -26,6 +28,7 @@ export function BoardTopBar({
   pendingActionPlayerId,
   isPlayerTurn,
   isPaused,
+  hasWinner,
   onAdvancePhase,
   onTimeUp,
   onWarning,
@@ -43,7 +46,7 @@ export function BoardTopBar({
           key={`${turn}-${phase}-${pendingActionType ?? "NONE"}-${pendingActionPlayerId ?? "NONE"}`}
           onTimeUp={onTimeUp}
           onWarning={onWarning}
-          isActive={isPlayerTurn && !isPaused}
+          isActive={isPlayerTurn && !isPaused && !hasWinner}
         />
       </div>
       <PhasePanel
