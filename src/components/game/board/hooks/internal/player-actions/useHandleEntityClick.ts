@@ -62,7 +62,6 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
           setActiveAttackerId: params.setActiveAttackerId,
           setIsAnimating: params.setIsAnimating,
           setLastError: params.setLastError,
-          setPendingEntityReplacement: params.setPendingEntityReplacement,
           setPendingEntityReplacementTargetId: params.setPendingEntityReplacementTargetId,
           setPendingFusionSummon: params.setPendingFusionSummon,
           setPlayingCard: params.setPlayingCard,

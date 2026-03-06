@@ -18,7 +18,6 @@ interface IHandleOwnEntityClickParams extends Pick<
   | "setActiveAttackerId"
   | "setIsAnimating"
   | "setLastError"
-  | "setPendingEntityReplacement"
   | "setPendingEntityReplacementTargetId"
   | "setPendingFusionSummon"
   | "setPlayingCard"
@@ -40,7 +39,6 @@ export async function handleOwnEntityClick({
   setActiveAttackerId,
   setIsAnimating,
   setLastError,
-  setPendingEntityReplacement,
   setPendingEntityReplacementTargetId,
   setPendingFusionSummon,
   setPlayingCard,
