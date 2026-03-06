@@ -178,6 +178,30 @@ UI (app/components) -> UseCases/Services -> Repositories (interfaces core)
 4. `getHubSectionViewModel` resuelve en servidor el estado de cada sección antes de renderizar su pantalla.
 5. `HubSectionScreen` unifica la presentación base de módulos para evitar duplicación de layout.
 
+## Hub UI (Refactor Fase 0 - Preparación)
+
+1. Se define nueva arquitectura visual por capas:
+   - `HubShell` (composición),
+   - `HubScene3D` (render y animación 3D),
+   - widgets desacoplados (`HubUserSection`, `HubSessionSection`, `HubProgressSection`).
+2. `CyberBackground` se reutiliza como capa base del hub para atmósfera compartida con landing.
+3. El header tradicional se elimina en favor de una sección de progreso dedicada.
+4. El dominio y reglas de acceso del hub no cambian:
+   - UI no decide bloqueos,
+   - bloqueos se resuelven en `HubAccessPolicy` y casos de uso.
+5. Se prioriza un diseño extensible para nodos 3D por sección con fallback visual cuando no haya soporte WebGL.
+
+## Hub UI (Fase 1 completada)
+
+1. `HubShell` ya es el contenedor raíz en `/hub`.
+2. Secciones desacopladas activas:
+   - `HubUserSection`,
+   - `HubSessionSection`,
+   - `HubProgressSection`.
+3. `HubScene` queda aislada para render de nodos distribuidos y navegación.
+4. Los nodos de sección usan decoradores por tipo en `src/components/hub/nodes/*` para mantener SRP visual.
+5. `CyberBackground` se mantiene como base visual compartida del hub.
+
 ## Subdominio Mi Home (Deck Builder)
 
 1. Entidades: `IDeck`, `IDeckCardSlot`, `ICollectionCard`.

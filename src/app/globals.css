@@ -61,6 +61,18 @@
   100% { opacity: 0.16; }
 }
 
+@keyframes radarSweep {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes nodeScan {
+  0% { transform: translateY(100%); opacity: 0; }
+  18% { opacity: 0.7; }
+  40% { opacity: 0.2; }
+  100% { transform: translateY(-120%); opacity: 0; }
+}
+
 body {
   background:
     radial-gradient(circle at 18% 22%, rgba(56, 189, 248, 0.24), transparent 46%),
@@ -191,6 +203,46 @@ body {
     radial-gradient(circle at 22% 52%, rgba(34, 211, 238, 0.18), transparent 28%),
     radial-gradient(circle at 78% 48%, rgba(45, 212, 191, 0.16), transparent 30%);
   animation: beamPulse 3.8s ease-in-out infinite;
+}
+
+.hub-control-grid {
+  background:
+    linear-gradient(rgba(34, 211, 238, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.1) 1px, transparent 1px);
+  background-size: 46px 46px;
+}
+
+.hub-control-radar {
+  background: radial-gradient(circle, rgba(8, 58, 74, 0.16) 0%, rgba(3, 18, 27, 0.45) 55%, rgba(2, 9, 17, 0.02) 100%);
+  border: 1px solid rgba(34, 211, 238, 0.24);
+  border-radius: 999px;
+}
+
+.hub-control-radar-sweep {
+  background: conic-gradient(from 120deg, transparent 0deg, rgba(34, 211, 238, 0.28) 48deg, transparent 92deg);
+  filter: blur(0.4px);
+  animation: radarSweep 5.5s linear infinite;
+}
+
+.hub-control-core {
+  background: radial-gradient(circle, rgba(165, 243, 252, 0.95) 0%, rgba(34, 211, 238, 0.24) 60%, transparent 100%);
+  box-shadow: 0 0 30px rgba(34, 211, 238, 0.62);
+}
+
+.hub-node-panel {
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  box-shadow:
+    inset 0 0 0 1px rgba(34, 211, 238, 0.16),
+    0 0 24px rgba(6, 182, 212, 0.24);
+}
+
+.hub-node-scan {
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.08) 0%, rgba(34, 211, 238, 0) 35%, rgba(34, 211, 238, 0.12) 70%, rgba(34, 211, 238, 0) 100%);
+  animation: nodeScan 4.8s linear infinite;
+}
+
+.hub-node-glow {
+  background: radial-gradient(circle at 50% 100%, rgba(34, 211, 238, 0.45), transparent 68%);
 }
 
 .hub-control-ring {

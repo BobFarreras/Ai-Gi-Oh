@@ -7,7 +7,6 @@ describe("HubScene", () => {
   it("muestra distritos y CTA de entrada para secciones desbloqueadas", () => {
     render(
       <HubScene
-        progress={{ playerId: "p1", medals: 2, storyChapter: 3, hasCompletedTutorial: true }}
         sections={[
           {
             id: "home",
@@ -30,7 +29,6 @@ describe("HubScene", () => {
   it("muestra motivo de bloqueo cuando la sección está cerrada", () => {
     render(
       <HubScene
-        progress={{ playerId: "p1", medals: 0, storyChapter: 1, hasCompletedTutorial: false }}
         sections={[
           {
             id: "multi",

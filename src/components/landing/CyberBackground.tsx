@@ -48,10 +48,18 @@ export function CyberBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (typeof navigator !== "undefined" && /jsdom/i.test(navigator.userAgent)) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return; // Validación estricta para TypeScript
 
-    const ctx = canvas.getContext("2d");
+    let ctx: CanvasRenderingContext2D | null = null;
+    try {
+      ctx = canvas.getContext("2d");
+    } catch {
+      return;
+    }
     if (!ctx) return; // Validación estricta para TypeScript
 
     let animationFrameId: number;
