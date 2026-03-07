@@ -1,6 +1,7 @@
 // src/services/game/match/create-match-controller.test.ts - Verifica la fábrica de match y el ciclo mínimo del controller local desacoplado.
 import { describe, expect, it } from "vitest";
 import { createMatchController } from "@/services/game/match/create-match-controller";
+import { IMatchMode } from "@/core/entities/match";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function createBaseState(): GameState {
@@ -42,6 +43,20 @@ function createBaseState(): GameState {
 }
 
 describe("create-match-controller", () => {
+  it.each<IMatchMode>(["TRAINING", "STORY", "TUTORIAL", "MULTIPLAYER"])(
+    "crea controller tipado para modo %s",
+    async (mode) => {
+      const controller = createMatchController({
+        mode,
+        seed: `seed-${mode}`,
+        initialStateFactory: createBaseState,
+      });
+      const initial = await controller.initialize();
+      expect(controller.mode).toBe(mode);
+      expect(initial.turn).toBe(1);
+    },
+  );
+
   it("inicializa y resetea estado base del match", async () => {
     const controller = createMatchController({
       mode: "TRAINING",
