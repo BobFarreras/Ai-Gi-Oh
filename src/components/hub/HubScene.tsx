@@ -39,7 +39,7 @@ export function HubScene({
   const router = useRouter();
   const isDocumentVisible = useDocumentVisibility();
   const viewportWidth = useViewportWidth();
-  const { playHudEntry, playNodeHover } = useHubSfx();
+  const { playHudEntry, playNodeHover, playUiClick } = useHubSfx();
   const { navigationState, isNavigationBusy, isRouteSlow, requestNavigation } = useHubNodeNavigation({ router });
   const [cameraResetSignal, setCameraResetSignal] = useState(0);
   const [areNodeLabelsVisible, setAreNodeLabelsVisible] = useState(true);
@@ -67,12 +67,14 @@ export function HubScene({
         progress={progress}
         showMetaNodes={showMetaNodes}
         onHudEntrySound={playHudEntry}
+        onHudButtonSound={playUiClick}
       />
       <HubSceneFloatingActions
         canResetCamera={canRender3D}
         onResetCamera={() => setCameraResetSignal((previous) => previous + 1)}
         areNodeLabelsVisible={areNodeLabelsVisible}
         onToggleNodeLabels={() => setAreNodeLabelsVisible((previous) => !previous)}
+        onHudButtonSound={playUiClick}
       />
       <div className="absolute inset-0 z-10 bg-[#010610]">
         {!canRender3D ? (

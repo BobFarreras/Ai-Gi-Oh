@@ -1,5 +1,6 @@
 // src/app/hub/home/page.tsx - Renderiza Mi Home con constructor de deck y fallback bloqueado según progreso.
 import { HomeDeckBuilderScene } from "@/components/hub/home/HomeDeckBuilderScene";
+import { HubSectionEntryBurst } from "@/components/hub/sections/HubSectionEntryBurst";
 import { GetHomeDeckBuilderDataUseCase } from "@/core/use-cases/home/GetHomeDeckBuilderDataUseCase";
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { createPlayerRuntimeRepositories } from "@/services/player-persistence/create-player-runtime-repositories";
@@ -17,11 +18,14 @@ export default async function HomeModulePage() {
   ]);
 
   return (
-    <HomeDeckBuilderScene
-      playerId={playerId}
-      initialDeck={data.deck}
-      collection={data.collection}
-      initialCardProgress={cardProgress}
-    />
+    <>
+      <HubSectionEntryBurst />
+      <HomeDeckBuilderScene
+        playerId={playerId}
+        initialDeck={data.deck}
+        collection={data.collection}
+        initialCardProgress={cardProgress}
+      />
+    </>
   );
 }

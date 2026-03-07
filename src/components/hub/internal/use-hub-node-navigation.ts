@@ -17,12 +17,14 @@ export function useHubNodeNavigation({ router }: UseHubNodeNavigationInput) {
   const [navigationState, setNavigationState] = useState<IHubNodeNavigationState>(createIdleHubNavigationState);
   const transitionTimerRef = useRef<number | null>(null);
   const timeoutTimerRef = useRef<number | null>(null);
+  const timeoutResetTimerRef = useRef<number | null>(null);
   const didPushRef = useRef(false);
 
   useEffect(
     () => () => {
       if (transitionTimerRef.current !== null) window.clearTimeout(transitionTimerRef.current);
       if (timeoutTimerRef.current !== null) window.clearTimeout(timeoutTimerRef.current);
+      if (timeoutResetTimerRef.current !== null) window.clearTimeout(timeoutResetTimerRef.current);
     },
     [],
   );
@@ -39,6 +41,12 @@ export function useHubNodeNavigation({ router }: UseHubNodeNavigationInput) {
       timeoutTimerRef.current = window.setTimeout(() => {
         setNavigationState((current) => reduceHubNodeNavigation(current, { type: "ROUTE_TIMEOUT" }));
         timeoutTimerRef.current = null;
+        if (timeoutResetTimerRef.current !== null) window.clearTimeout(timeoutResetTimerRef.current);
+        timeoutResetTimerRef.current = window.setTimeout(() => {
+          setNavigationState((current) => reduceHubNodeNavigation(current, { type: "RESET" }));
+          didPushRef.current = false;
+          timeoutResetTimerRef.current = null;
+        }, 1500);
       }, HUB_NODE_ROUTE_TIMEOUT_MS);
       router.push(targetHref);
       transitionTimerRef.current = null;
@@ -46,6 +54,11 @@ export function useHubNodeNavigation({ router }: UseHubNodeNavigationInput) {
   }, [navigationState.status, navigationState.targetHref, router]);
 
   const requestNavigation = (nodeId: string, href: string) => {
+    if (timeoutResetTimerRef.current !== null) {
+      window.clearTimeout(timeoutResetTimerRef.current);
+      timeoutResetTimerRef.current = null;
+    }
+    didPushRef.current = false;
     setNavigationState((current) => reduceHubNodeNavigation(current, { type: "NODE_SELECTED", nodeId, href }));
   };
 
