@@ -4,7 +4,7 @@ import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
 import { createBoardMatchConfig } from "./match/create-board-match-config";
 
-interface ICreateInitialBoardStateInput {
+export interface ICreateInitialBoardStateInput {
   mode?: IMatchMode;
   playerDeck?: ICard[] | null;
   opponentDeck?: ICard[] | null;

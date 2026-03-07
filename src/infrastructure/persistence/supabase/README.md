@@ -18,6 +18,8 @@ Esta carpeta contendrá implementaciones concretas de repositorios de `core/repo
 6. Adaptadores de Story:
    - `SupabaseOpponentRepository`
    - `create-supabase-opponent-repository.ts`
+   - `SupabasePlayerStoryDuelProgressRepository`
+   - `create-supabase-player-story-duel-progress-repository.ts`
 
 ## Reglas
 

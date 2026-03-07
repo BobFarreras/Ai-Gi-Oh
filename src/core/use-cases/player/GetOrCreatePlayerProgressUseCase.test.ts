@@ -14,6 +14,7 @@ describe("GetOrCreatePlayerProgressUseCase", () => {
     const progress = await useCase.execute({ playerId: "user-1" });
     expect(progress.storyChapter).toBe(1);
     expect(progress.medals).toBe(0);
+    expect(progress.playerExperience).toBe(0);
     expect(repository.create).toHaveBeenCalledTimes(1);
   });
 
@@ -23,6 +24,7 @@ describe("GetOrCreatePlayerProgressUseCase", () => {
       hasCompletedTutorial: true,
       medals: 3,
       storyChapter: 2,
+      playerExperience: 150,
       updatedAtIso: "2026-01-01T00:00:00.000Z",
     };
     const repository: IPlayerProgressRepository = {
@@ -33,6 +35,7 @@ describe("GetOrCreatePlayerProgressUseCase", () => {
     const useCase = new GetOrCreatePlayerProgressUseCase(repository);
     const progress = await useCase.execute({ playerId: "user-1" });
     expect(progress.medals).toBe(3);
+    expect(progress.playerExperience).toBe(150);
     expect(repository.create).not.toHaveBeenCalled();
   });
 });

@@ -19,6 +19,7 @@ export class GetOrCreatePlayerProgressUseCase {
       hasCompletedTutorial: false,
       medals: 0,
       storyChapter: 1,
+      playerExperience: 0,
       updatedAtIso: new Date().toISOString(),
     });
   }

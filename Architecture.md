@@ -349,6 +349,17 @@ UI (app/components) -> UseCases/Services -> Repositories (interfaces core)
 2. El contrato de duelo queda tipado en `IStoryDuelDefinition` (capítulo, duelo, oponente, mazo y reglas de arranque).
 3. Objetivo inmediato: conectar este repositorio a tablas `story_opponents`, `story_duels` y `story_deck_lists` sin acoplar UI.
 
+## Subdominio Story (fase 5 implementación base)
+
+1. El mapa Story (`/hub/story`) se alimenta desde repositorios (`IOpponentRepository` + progreso de duelo por jugador).
+2. La navegación de nodos usa bloqueo por prerequisito (`unlock_requirement_duel_id`).
+3. El duelo Story usa `Board` en modo `STORY` con identidad y mazo de oponente inyectados por configuración.
+4. El cierre de duelo se registra vía `POST /api/story/duels/complete`.
+5. Recompensa de primera victoria:
+   - `Nexus` al monedero,
+   - `player_experience` global,
+   - cartas configuradas en `story_duel_reward_cards` (garantizadas y probabilísticas).
+
 ## Subdominio Progresión (fase 6.1)
 
 1. Se incorpora `player_card_progress` como estado canónico de progresión por carta (`version_tier`, `level`, `xp`).

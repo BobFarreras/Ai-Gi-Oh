@@ -5,7 +5,7 @@ import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
 import { ICampaignProgress } from "@/core/services/opponent/difficulty/types";
 import { createMatchSeed } from "@/core/services/random/create-match-seed";
-import { createInitialBoardState } from "./internal/boardInitialState";
+import { createInitialBoardState, ICreateInitialBoardStateInput } from "./internal/boardInitialState";
 import { useMatchAudio } from "./internal/match/useMatchAudio";
 import { useMatchProgression } from "./internal/match/useMatchProgression";
 import { useMatchRuntime } from "./internal/match/useMatchRuntime";
@@ -18,12 +18,12 @@ function resolveWinnerPlayerId(gameState: GameState): string | "DRAW" | null {
   return null;
 }
 
-export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINING") {
+export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINING", initialConfig?: ICreateInitialBoardStateInput) {
   const [campaignProgress] = useState<ICampaignProgress>({ chapterIndex: 1, duelIndex: 1, victories: 0 });
   const [matchSeed] = useState(() => createMatchSeed());
   const createInitialState = useCallback(
-    () => createInitialBoardState({ mode, playerDeck: initialPlayerDeck, seed: matchSeed }),
-    [initialPlayerDeck, matchSeed, mode],
+    () => createInitialBoardState({ ...initialConfig, mode, playerDeck: initialPlayerDeck, seed: initialConfig?.seed ?? matchSeed }),
+    [initialConfig, initialPlayerDeck, matchSeed, mode],
   );
   const gameStateRef = useRef<GameState>(createInitialState());
   const uiState = useMatchUiState({ gameStateRef, createInitialState });

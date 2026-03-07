@@ -50,6 +50,8 @@
    - cartas recompensa por duelo (garantizadas o probabilísticas).
 20. `public.player_story_duel_progress`:
    - progreso por jugador y duelo (wins/losses/resultado y timestamps).
+21. `public.player_progress.player_experience`:
+   - experiencia global del jugador para progresión del arquitecto.
 
 ## Fase 2 (Perfil y Progreso)
 
@@ -165,6 +167,14 @@
    - progreso de duelo solo propietario (`auth.uid() = player_id`).
 5. Contrato de aplicación preparado:
    - `IOpponentRepository` + `IStoryDuelDefinition` para eliminar hardcode de Story en UI.
+
+## Fase 5.1 (Experiencia global del jugador)
+
+1. Ejecuta `docs/supabase/sql/009_phase_5_player_progress_experience.sql`.
+2. Verifica columna:
+   - `public.player_progress.player_experience` (default `0`, no negativo).
+3. Uso previsto:
+   - recompensas de Story incrementan esta columna al ganar por primera vez cada duelo.
 
 ## Notas
 

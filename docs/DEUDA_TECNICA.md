@@ -19,7 +19,8 @@
 4. **Fase 2 (completada)**: controllers por modo (`Training`, `Story`, `Tutorial`, `Multiplayer`) con misma interfaz.
 5. **Fase 3 (completada)**: persistencia post-duelo movida a servicio de aplicación por modo.
 6. **Fase 4 (completada)**: hardcodes de jugadores/decks retirados del board y resueltos por configuración de match.
-7. **Fase 5**: conectar `IOpponentRepository` con tablas `story_opponents/story_duels/story_deck_lists` para story sin mocks.
+7. **Fase 5 (completada)**: `IOpponentRepository` conectado a tablas Story y mapa/duelos operativos sin hardcode en UI.
+8. **Fase 6**: añadir flujo de capítulo/cinemáticas y tuning de IA por oponente (`ai_profile`) en runtime de combate.
 
 ## Criterios de salida de deuda (combate)
 

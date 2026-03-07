@@ -6,6 +6,7 @@ export interface IUpdatePlayerProgressInput {
   hasCompletedTutorial?: boolean;
   medals?: number;
   storyChapter?: number;
+  playerExperience?: number;
 }
 
 export interface IPlayerProgressRepository {

@@ -4,5 +4,6 @@ export interface IPlayerProgress {
   hasCompletedTutorial: boolean;
   medals: number;
   storyChapter: number;
+  playerExperience: number;
   updatedAtIso: string;
 }

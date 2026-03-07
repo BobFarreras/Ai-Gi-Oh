@@ -1,6 +1,6 @@
 // src/components/game/board/index.tsx - Componente principal del tablero con capas visuales y control de interacción.
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useBoard } from "./hooks/useBoard";
 import { DuelResultOverlay } from "./ui/DuelResultOverlay";
 import { BoardStatusOverlays } from "./ui/overlays/BoardStatusOverlays";
@@ -10,13 +10,16 @@ import { BoardPlayersLayer } from "./ui/layers/BoardPlayersLayer";
 import { BoardInteractiveLayer } from "./ui/layers/BoardInteractiveLayer";
 import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
+import { ICreateInitialBoardStateInput } from "@/components/game/board/hooks/internal/boardInitialState";
 
 interface IBoardProps {
   initialPlayerDeck?: ICard[] | null;
   mode?: IMatchMode;
+  initialConfig?: ICreateInitialBoardStateInput;
+  onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string }) => void;
 }
 
-export function Board({ initialPlayerDeck, mode = "TRAINING" }: IBoardProps) {
+export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, onMatchResolved }: IBoardProps) {
   const {
     gameState,
     selectedCard,
@@ -75,11 +78,13 @@ export function Board({ initialPlayerDeck, mode = "TRAINING" }: IBoardProps) {
     playTimerExpired,
     playTimerWarning,
     playButtonClick,
-  } = useBoard(initialPlayerDeck ?? undefined, mode);
+    matchSeed,
+  } = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig);
 
   const player = gameState.playerA;
   const opponent = gameState.playerB;
   const [graveyardView, setGraveyardView] = useState<"player" | "opponent" | null>(null);
+  const resolvedWinnerRef = useRef<string | "DRAW" | null>(null);
   const visibleGraveyardCards = useMemo(
     () => (graveyardView === "player" ? player.graveyard : graveyardView === "opponent" ? opponent.graveyard : []),
     [graveyardView, opponent.graveyard, player.graveyard],
@@ -89,6 +94,17 @@ export function Board({ initialPlayerDeck, mode = "TRAINING" }: IBoardProps) {
     return player.activeEntities.find((entity) => entity.instanceId === pendingEntityReplacementTargetId)?.card ?? null;
   }, [pendingEntityReplacementTargetId, player.activeEntities]);
   const visibleGraveyardOwner = graveyardView === "player" ? player.name : opponent.name;
+
+  useEffect(() => {
+    if (!winnerPlayerId) {
+      resolvedWinnerRef.current = null;
+      return;
+    }
+    if (!onMatchResolved) return;
+    if (resolvedWinnerRef.current === winnerPlayerId) return;
+    onMatchResolved({ winnerPlayerId, playerId: player.id, mode, matchSeed });
+    resolvedWinnerRef.current = winnerPlayerId;
+  }, [winnerPlayerId, onMatchResolved, player.id, mode, matchSeed]);
   return (
     <div className="board-space-bg relative w-full h-screen overflow-hidden font-sans cursor-crosshair" onClick={clearSelection}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(34,211,238,0.12),transparent_52%)] pointer-events-none" />
