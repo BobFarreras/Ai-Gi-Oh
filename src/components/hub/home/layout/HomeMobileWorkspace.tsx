@@ -2,6 +2,7 @@
 "use client";
 
 import { useMemo, useState, type PointerEvent } from "react";
+import { motion } from "framer-motion";
 import { HomeCardInspectorDialog } from "@/components/hub/home/HomeCardInspectorDialog";
 import { HomeMiniCard } from "@/components/hub/home/HomeMiniCard";
 import { buildHomeMobileDeckSlotsView } from "@/components/hub/home/layout/home-mobile-deck-view";
@@ -16,10 +17,7 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
   const [activeSection, setActiveSection] = useState<IMobileSection>("DECK");
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [inspectorOrigin, setInspectorOrigin] = useState<IInspectorOrigin>({ x: 0, y: 0 });
-  const cardById = useMemo(
-    () => new Map(props.collectionState.map((entry) => [entry.card.id, entry.card])),
-    [props.collectionState],
-  );
+  const cardById = useMemo(() => new Map(props.collectionState.map((entry) => [entry.card.id, entry.card])), [props.collectionState]);
   const deckCopiesByCardId = useMemo(() => {
     const copies = new Map<string, number>();
     for (const slot of props.deck.slots) {
@@ -35,11 +33,8 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
     nameQuery: props.nameQuery,
     typeFilter: props.typeFilter,
   });
-  const selectedCardSource: ISelectedCardSource = props.selectedCollectionCardId
-    ? "COLLECTION"
-    : props.selectedSlotIndex !== null && props.deck.slots[props.selectedSlotIndex]?.cardId
-      ? "DECK"
-      : "NONE";
+  const selectedCardSource: ISelectedCardSource =
+    props.selectedCollectionCardId ? "COLLECTION" : props.selectedSlotIndex !== null && props.deck.slots[props.selectedSlotIndex]?.cardId ? "DECK" : "NONE";
   const capturePointerOrigin = (event: PointerEvent<HTMLDivElement>) => {
     setInspectorOrigin({ x: event.clientX, y: event.clientY });
   };
@@ -103,8 +98,9 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
                 const availableCopies = Math.max(0, entry.ownedCopies - usedCopies);
                 const isSelected = props.selectedCollectionCardId === entry.card.id;
                 const progress = props.cardProgressById.get(entry.card.id);
+                const canEvolve = props.evolvableCardIds.has(entry.card.id);
                 return (
-                  <div key={entry.card.id} className="relative flex flex-col items-center">
+                  <motion.div key={entry.card.id} className="relative flex flex-col items-center" animate={canEvolve ? { x: [0, -1.5, 1.5, -1, 1, 0] } : {}} transition={canEvolve ? { duration: 0.38, repeat: Infinity, repeatDelay: 1.8 } : {}}>
                     <HomeMiniCard
                       card={entry.card}
                       label={`Carta ${entry.card.name}`}
@@ -120,7 +116,7 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
                     <span className="mt-1 rounded bg-black/75 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-cyan-200">
                       D {usedCopies}/{Math.min(3, entry.ownedCopies)} U {availableCopies}
                     </span>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>

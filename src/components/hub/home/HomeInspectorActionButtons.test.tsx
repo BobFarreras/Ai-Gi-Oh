@@ -12,6 +12,7 @@ describe("HomeInspectorActionButtons", () => {
         canRemove
         canEvolve
         evolveCost={4}
+        pendingAction={null}
         onInsert={vi.fn()}
         onRemove={vi.fn()}
         onEvolve={vi.fn()}
@@ -31,6 +32,7 @@ describe("HomeInspectorActionButtons", () => {
         canRemove={false}
         canEvolve
         evolveCost={4}
+        pendingAction={null}
         onInsert={onInsert}
         onRemove={vi.fn()}
         onEvolve={onEvolve}
@@ -40,5 +42,24 @@ describe("HomeInspectorActionButtons", () => {
     fireEvent.click(screen.getByRole("button", { name: "Evolucionar carta seleccionada" }));
     expect(onInsert).toHaveBeenCalledOnce();
     expect(onEvolve).toHaveBeenCalledOnce();
+  });
+
+  it("deshabilita acciones mientras hay operación en curso", () => {
+    render(
+      <HomeInspectorActionButtons
+        source="COLLECTION"
+        canInsert
+        canRemove={false}
+        canEvolve
+        evolveCost={4}
+        pendingAction="INSERT"
+        onInsert={vi.fn()}
+        onRemove={vi.fn()}
+        onEvolve={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Añadir carta al deck" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Evolucionar carta seleccionada" })).toBeDisabled();
+    expect(screen.getByText("Añadiendo...")).toBeInTheDocument();
   });
 });

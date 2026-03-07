@@ -9,6 +9,7 @@ interface HomeInspectorActionButtonsProps {
   canRemove: boolean;
   canEvolve: boolean;
   evolveCost: number | null;
+  pendingAction: "INSERT" | "REMOVE" | "EVOLVE" | null;
   onInsert: () => void;
   onRemove: () => void;
   onEvolve: () => void;
@@ -23,6 +24,7 @@ export function HomeInspectorActionButtons({
   canRemove,
   canEvolve,
   evolveCost,
+  pendingAction,
   onInsert,
   onRemove,
   onEvolve,
@@ -30,6 +32,10 @@ export function HomeInspectorActionButtons({
   if (source === "NONE") return null;
   const showEvolve = source === "COLLECTION";
   const layoutClass = showEvolve ? "grid grid-cols-2" : "grid grid-cols-1";
+  const isBusy = pendingAction !== null;
+  const canInsertNow = canInsert && !isBusy;
+  const canRemoveNow = canRemove && !isBusy;
+  const canEvolveNow = canEvolve && !isBusy;
 
   return (
     <div className={`mt-auto gap-2 pt-3 ${layoutClass}`}>
@@ -37,41 +43,47 @@ export function HomeInspectorActionButtons({
         <button
           type="button"
           aria-label="Añadir carta al deck"
-          disabled={!canInsert}
+          disabled={!canInsertNow}
           onClick={onInsert}
           className={`${actionButtonClass} ${
-            canInsert ? "border-cyan-500/60 bg-cyan-950/35 text-cyan-200" : "border-zinc-800 bg-zinc-950/55 text-zinc-600"
+            canInsertNow
+              ? "border-cyan-500/60 bg-cyan-950/35 text-cyan-200"
+              : "border-zinc-800 bg-zinc-950/55 text-zinc-600"
           }`}
         >
           <Upload size={14} />
-          Añadir
+          {pendingAction === "INSERT" ? "Añadiendo..." : "Añadir"}
         </button>
       ) : (
         <button
           type="button"
           aria-label="Remover carta del deck"
-          disabled={!canRemove}
+          disabled={!canRemoveNow}
           onClick={onRemove}
           className={`${actionButtonClass} ${
-            canRemove ? "border-red-500/55 bg-red-950/35 text-red-200" : "border-zinc-800 bg-zinc-950/55 text-zinc-600"
+            canRemoveNow
+              ? "border-red-500/55 bg-red-950/35 text-red-200"
+              : "border-zinc-800 bg-zinc-950/55 text-zinc-600"
           }`}
         >
           <Download size={14} />
-          Remover
+          {pendingAction === "REMOVE" ? "Removiendo..." : "Remover"}
         </button>
       )}
       {showEvolve ? (
         <button
           type="button"
           aria-label="Evolucionar carta seleccionada"
-          disabled={!canEvolve}
+          disabled={!canEvolveNow}
           onClick={onEvolve}
           className={`${actionButtonClass} ${
-            canEvolve ? "border-amber-400/60 bg-amber-900/30 text-amber-100" : "border-zinc-800 bg-zinc-950/55 text-zinc-600"
+            canEvolveNow
+              ? "border-amber-400/60 bg-amber-900/30 text-amber-100"
+              : "border-zinc-800 bg-zinc-950/55 text-zinc-600"
           }`}
         >
           <Sparkles size={14} />
-          {canEvolve && evolveCost ? `Evol (${evolveCost})` : "Evolución"}
+          {pendingAction === "EVOLVE" ? "Evolucionando..." : canEvolve && evolveCost ? `Evol (${evolveCost})` : "Evolución"}
         </button>
       ) : null}
     </div>

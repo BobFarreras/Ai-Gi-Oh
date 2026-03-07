@@ -45,6 +45,19 @@ Se separa el render por breakpoint sin alterar reglas del dominio:
 3. Se añade feedback de copias fusionadas dentro del overlay.
 4. Se incorpora test de render base en `HomeEvolutionOverlay.test.tsx`.
 
+## Fase 5 - Robustez de acciones mobile en inspector
+
+1. El inspector mobile evita doble acción concurrente en `Añadir/Remover/Evolución`.
+2. Mientras hay operación activa, los botones quedan deshabilitados y muestran estado (`Añadiendo...`, etc).
+3. Se añade cobertura en `HomeInspectorActionButtons.test.tsx` para validar bloqueo en estado pendiente.
+
+## Fase 6 - Cierre seguro y feedback del inspector mobile
+
+1. `MobileInspectorDialogShell` soporta `isDismissDisabled` para impedir cierre durante operaciones críticas.
+2. El inspector mobile muestra mensajes breves de confirmación al completar acciones.
+3. `Añadir` y `Remover` cierran el diálogo al finalizar correctamente para acelerar el flujo.
+4. Se añade test de bloqueo de cierre en `MobileInspectorDialogShell.test.tsx`.
+
 ## Testing de fase 0/1/3
 
 1. `layout/HomeResponsiveWorkspace.test.tsx` valida que se montan ambos layouts.

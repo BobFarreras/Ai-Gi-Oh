@@ -99,7 +99,14 @@ export function HomeEvolutionOverlay({
           transition={{ duration: 1.2, times: [0, 0.65, 1] }}
           className={`origin-center scale-[0.52] sm:scale-100 ${resolveGlowClass(toVersionTier)}`}
         >
-          <Card card={card} versionTier={toVersionTier} level={level} />
+          <Card
+            card={card}
+            versionTier={toVersionTier}
+            level={level}
+            disableHoverEffects
+            disableDefaultShadow
+            clipToFrameShape
+          />
         </motion.div>
         <p className="-mt-12 rounded border border-cyan-500/35 bg-black/65 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-cyan-100 sm:-mt-10 sm:text-xs">
           Fusión de {consumedCopies} copias completada
