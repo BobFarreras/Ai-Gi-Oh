@@ -52,7 +52,12 @@ function ProgressItem({ label, value, icon, tone }: IProgressItemProps) {
   );
 }
 
-export function HubProgressSection({ progress }: { progress: IPlayerHubProgress }) {
+interface HubProgressSectionProps {
+  progress: IPlayerHubProgress;
+  onToggleSound?: () => void;
+}
+
+export function HubProgressSection({ progress, onToggleSound }: HubProgressSectionProps) {
   const tutorialTone = progress.hasCompletedTutorial ? "emerald" : "orange";
   const tutorialValue = progress.hasCompletedTutorial ? "Listo" : "Pendiente";
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -67,7 +72,10 @@ export function HubProgressSection({ progress }: { progress: IPlayerHubProgress 
       <button
         type="button"
         aria-label={isCollapsed ? "Expandir estado del arquitecto" : "Contraer estado del arquitecto"}
-        onClick={() => setIsCollapsed((previous) => !previous)}
+        onClick={() => {
+          onToggleSound?.();
+          setIsCollapsed((previous) => !previous);
+        }}
         className="relative z-10 flex w-full items-center justify-between border-b border-cyan-900/60 px-2 pb-1"
       >
         <div className="flex gap-1"><div className="h-1 w-3 sm:w-4 bg-cyan-500/50" /><div className="h-1 w-1 bg-cyan-500/50" /></div>

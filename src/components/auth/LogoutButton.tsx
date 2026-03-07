@@ -10,9 +10,10 @@ import { LogoutConfirmDialog } from "@/components/auth/LogoutConfirmDialog";
 interface LogoutButtonProps {
   iconOnly?: boolean;
   confirmBeforeLogout?: boolean;
+  onActionSound?: () => void;
 }
 
-export function LogoutButton({ iconOnly = false, confirmBeforeLogout = false }: LogoutButtonProps) {
+export function LogoutButton({ iconOnly = false, confirmBeforeLogout = false, onActionSound }: LogoutButtonProps) {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -34,6 +35,7 @@ export function LogoutButton({ iconOnly = false, confirmBeforeLogout = false }: 
         aria-label="Desconectar del Hub"
         disabled={isPending}
         onClick={() => {
+          onActionSound?.();
           if (confirmBeforeLogout) {
             setIsDialogOpen(true);
             return;

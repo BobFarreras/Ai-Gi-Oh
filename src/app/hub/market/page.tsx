@@ -1,5 +1,6 @@
 // src/app/hub/market/page.tsx - Renderiza la pantalla base del mercado dentro del hub.
 import { MarketScene } from "@/components/hub/market/MarketScene";
+import { HubSectionEntryBurst } from "@/components/hub/sections/HubSectionEntryBurst";
 import { HubSectionScreen } from "@/components/hub/sections/HubSectionScreen";
 import { getHubSectionViewModel } from "@/app/hub/internal/getHubSectionViewModel";
 import { GetMarketCatalogUseCase } from "@/core/use-cases/market/GetMarketCatalogUseCase";
@@ -44,11 +45,14 @@ export default async function MarketPage() {
   ]);
 
   return (
-    <MarketScene
-      playerId={playerId}
-      initialCatalog={catalog}
-      initialTransactions={transactions}
-      initialCollection={collection}
-    />
+    <>
+      <HubSectionEntryBurst />
+      <MarketScene
+        playerId={playerId}
+        initialCatalog={catalog}
+        initialTransactions={transactions}
+        initialCollection={collection}
+      />
+    </>
   );
 }

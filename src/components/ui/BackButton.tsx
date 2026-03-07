@@ -1,10 +1,11 @@
-// src/components/ui/BackButton.tsx
+// src/components/ui/BackButton.tsx - Botón de retorno reutilizable con navegación y efecto sonoro de interacción.
 "use client";
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import { useCallback, useEffect, useRef } from "react";
 
 interface BackButtonProps {
   /** Ruta opcional a la que navegar. Si no se provee, hará router.back() */
@@ -19,8 +20,29 @@ interface BackButtonProps {
 
 export function BackButton({ href, onClick, label = "Volver", className = "" }: BackButtonProps) {
   const router = useRouter();
+  const clickAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    clickAudioRef.current = new Audio("/audio/landing/button-click.mp3");
+    clickAudioRef.current.volume = 0.2;
+    return () => {
+      if (!clickAudioRef.current) return;
+      clickAudioRef.current.pause();
+      clickAudioRef.current.currentTime = 0;
+    };
+  }, []);
+
+  const playClickSound = useCallback(() => {
+    if (!clickAudioRef.current) return;
+    clickAudioRef.current.currentTime = 0;
+    const maybePromise = clickAudioRef.current.play();
+    if (maybePromise && typeof maybePromise.catch === "function") {
+      void maybePromise.catch(() => undefined);
+    }
+  }, []);
 
   const handleAction = (e: React.MouseEvent) => {
+    playClickSound();
     if (onClick) {
       e.preventDefault();
       onClick();

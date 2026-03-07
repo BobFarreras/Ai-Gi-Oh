@@ -13,9 +13,16 @@ interface HubSceneHudOverlayProps {
   progress?: IPlayerHubProgress;
   showMetaNodes: boolean;
   onHudEntrySound?: () => void;
+  onHudButtonSound?: () => void;
 }
 
-export function HubSceneHudOverlay({ playerLabel, progress, showMetaNodes, onHudEntrySound }: HubSceneHudOverlayProps) {
+export function HubSceneHudOverlay({
+  playerLabel,
+  progress,
+  showMetaNodes,
+  onHudEntrySound,
+  onHudButtonSound,
+}: HubSceneHudOverlayProps) {
   const [canShowHud, setCanShowHud] = useState(false);
   const hasPlayedEntrySoundRef = useRef(false);
 
@@ -51,7 +58,7 @@ export function HubSceneHudOverlay({ playerLabel, progress, showMetaNodes, onHud
           style={{ willChange: "transform" }}
           className="pointer-events-auto absolute left-1/2 top-[max(0.5rem,env(safe-area-inset-top))] -translate-x-1/2 sm:top-3"
         >
-          <HubProgressSection progress={progress} />
+          <HubProgressSection progress={progress} onToggleSound={onHudButtonSound} />
         </motion.div>
       ) : null}
     </div>

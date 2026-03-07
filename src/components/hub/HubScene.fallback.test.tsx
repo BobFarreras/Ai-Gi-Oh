@@ -2,6 +2,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { HubScene } from "./HubScene";
+import { HUB_NODE_TARGETING_MS } from "@/components/hub/internal/hub-node-navigation-timings";
 
 const push = vi.fn();
 
@@ -22,7 +23,7 @@ describe("HubScene fallback", () => {
       );
       fireEvent.click(screen.getByRole("button", { name: "Abrir Arsenal" }));
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(650);
+        await vi.advanceTimersByTimeAsync(HUB_NODE_TARGETING_MS + 50);
       });
       expect(push).toHaveBeenCalledWith("/hub/home");
     } finally {
