@@ -6,11 +6,9 @@ import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IDeck } from "@/core/entities/home/IDeck";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { HomeDeckActionBar } from "@/components/hub/home/HomeDeckActionBar";
-import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
-import { HomeCollectionPanel } from "@/components/hub/home/HomeCollectionPanel";
-import { HomeDeckPanel } from "@/components/hub/home/HomeDeckPanel";
 import { HomeErrorBanner } from "@/components/hub/home/HomeErrorBanner";
 import { HomeEvolutionOverlay } from "@/components/hub/home/HomeEvolutionOverlay";
+import { HomeResponsiveWorkspace } from "@/components/hub/home/layout/HomeResponsiveWorkspace";
 import {
   HomeCollectionOrderDirection,
   HomeCollectionOrderField,
@@ -49,6 +47,7 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const [selectedCollectionCardId, setSelectedCollectionCardId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [nameQuery, setNameQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<HomeCollectionTypeFilter>("ALL");
   const [orderField, setOrderField] = useState<HomeCollectionOrderField>("NAME");
   const [orderDirection, setOrderDirection] = useState<HomeCollectionOrderDirection>("ASC");
@@ -87,8 +86,8 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
   const setErrorBanner = (error: unknown) =>
     setErrorMessage(error instanceof Error ? error.message : "No se pudo completar la acción del deck.");
   const filteredCollection = useMemo(
-    () => buildHomeCollectionView({ collection: collectionState, typeFilter, orderField, orderDirection }),
-    [collectionState, orderDirection, orderField, typeFilter],
+    () => buildHomeCollectionView({ collection: collectionState, nameQuery, typeFilter, orderField, orderDirection }),
+    [collectionState, nameQuery, orderDirection, orderField, typeFilter],
   );
   const evolvableCardIds = useMemo(() => {
     const ids = new Set<string>();
@@ -115,6 +114,8 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
             typeFilter={typeFilter}
             orderField={orderField}
             orderDirection={orderDirection}
+            nameQuery={nameQuery}
+            onNameQueryChange={setNameQuery}
             onChangeTypeFilter={setTypeFilter}
             onChangeOrderField={setOrderField}
             onToggleOrderDirection={() =>
@@ -217,48 +218,32 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
           </div>
         )}
 
-        {/* Área de Trabajo (Paneles) */}
-        <div className="mt-4 grid min-h-0 flex-1 gap-4 xl:grid-cols-[1fr_1.8fr_1.2fr]">
-          <div className="min-h-0 min-w-0 overflow-hidden rounded-xl bg-black/40 border border-cyan-900/30">
-            <HomeCardInspector
-              selectedCard={selectedCard}
-              selectedCardVersionTier={selectedCardVersionTier}
-              selectedCardLevel={selectedCardLevel}
-              selectedCardXp={selectedCardXp}
-              selectedCardMasteryPassiveSkillId={selectedCardMasteryPassiveSkillId}
-            />
-          </div>
-          
-          <div className="min-h-0 min-w-0 overflow-visible rounded-xl bg-black/40 border border-cyan-900/30">
-            <HomeDeckPanel
-              deck={deck}
-              collection={collectionState}
-              cardProgressById={cardProgressById}
-              selectedSlotIndex={selectedSlotIndex}
-              selectedCardId={selectedCardId}
-              onSelectSlot={(slotIndex) => {
-                setErrorMessage(null);
-                setSelectedCollectionCardId(null);
-                setSelectedSlotIndex((previous) => (previous === slotIndex ? null : slotIndex));
-              }}
-            />
-          </div>
-          
-          <div className="min-h-0 min-w-0 overflow-hidden rounded-xl bg-black/40 border border-cyan-900/30">
-            <HomeCollectionPanel
-              deck={deck}
-              collection={filteredCollection}
-              cardProgressById={cardProgressById}
-              evolvableCardIds={evolvableCardIds}
-              selectedCardId={selectedCollectionCardId}
-              onSelectCard={(cardId) => {
-                setErrorMessage(null);
-                setSelectedSlotIndex(null);
-                setSelectedCollectionCardId((previous) => (previous === cardId ? null : cardId));
-              }}
-            />
-          </div>
-        </div>
+        <HomeResponsiveWorkspace
+          deck={deck}
+          collectionState={collectionState}
+          filteredCollection={filteredCollection}
+          cardProgressById={cardProgressById}
+          evolvableCardIds={evolvableCardIds}
+          selectedSlotIndex={selectedSlotIndex}
+          selectedCardId={selectedCardId}
+          selectedCollectionCardId={selectedCollectionCardId}
+          selectedCard={selectedCard}
+          selectedCardVersionTier={selectedCardVersionTier}
+          selectedCardLevel={selectedCardLevel}
+          selectedCardXp={selectedCardXp}
+          selectedCardMasteryPassiveSkillId={selectedCardMasteryPassiveSkillId}
+          onClearError={() => setErrorMessage(null)}
+          onSelectSlot={(slotIndex) => {
+            setErrorMessage(null);
+            setSelectedCollectionCardId(null);
+            setSelectedSlotIndex((previous) => (previous === slotIndex ? null : slotIndex));
+          }}
+          onSelectCollectionCard={(cardId) => {
+            setErrorMessage(null);
+            setSelectedSlotIndex(null);
+            setSelectedCollectionCardId((previous) => (previous === cardId ? null : cardId));
+          }}
+        />
       </section>
       {evolutionOverlay && (
         <HomeEvolutionOverlay
