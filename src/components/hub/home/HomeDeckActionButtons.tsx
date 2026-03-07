@@ -9,9 +9,9 @@ interface HomeDeckActionButtonsProps {
   canRemove: boolean;
   canEvolve: boolean;
   evolveCost: number | null;
-  onInsert: () => void;
-  onRemove: () => void;
-  onEvolve: () => void;
+  onInsert: () => Promise<unknown>;
+  onRemove: () => Promise<unknown>;
+  onEvolve: () => Promise<unknown>;
 }
 
 const buttonBaseClass =
@@ -32,7 +32,7 @@ export function HomeDeckActionButtons({
         type="button"
         aria-label="Introducir carta seleccionada en el deck"
         disabled={!canInsert}
-        onClick={onInsert}
+        onClick={() => void onInsert()}
         whileHover={canInsert ? { scale: 1.02 } : {}}
         whileTap={canInsert ? { scale: 0.95 } : {}}
         className={`${buttonBaseClass} ${canInsert ? "border-cyan-500/50 bg-cyan-950/40 text-cyan-300" : "border-zinc-800 bg-zinc-950/50 text-zinc-600"}`}
@@ -44,7 +44,7 @@ export function HomeDeckActionButtons({
         type="button"
         aria-label="Sacar carta seleccionada del deck"
         disabled={!canRemove}
-        onClick={onRemove}
+        onClick={() => void onRemove()}
         whileHover={canRemove ? { scale: 1.02 } : {}}
         whileTap={canRemove ? { scale: 0.95 } : {}}
         className={`${buttonBaseClass} ${canRemove ? "border-red-500/50 bg-red-950/40 text-red-300" : "border-zinc-800 bg-zinc-950/50 text-zinc-600"}`}
@@ -56,7 +56,7 @@ export function HomeDeckActionButtons({
         type="button"
         aria-label="Evolucionar carta seleccionada"
         disabled={!canEvolve}
-        onClick={onEvolve}
+        onClick={() => void onEvolve()}
         whileHover={canEvolve ? { scale: 1.05 } : {}}
         whileTap={canEvolve ? { scale: 0.95 } : {}}
         className={`${buttonBaseClass} ${canEvolve ? "border-amber-400/60 bg-amber-900/35 text-amber-200" : "border-zinc-800 bg-zinc-950/50 text-zinc-600"}`}

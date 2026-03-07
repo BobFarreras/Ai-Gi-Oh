@@ -144,9 +144,9 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
         canRemove={selectedCardSource === "DECK" && props.canRemoveSelectedCard}
         canEvolve={selectedCardSource === "COLLECTION" && props.canEvolveSelectedCard}
         evolveCost={props.evolveCostForSelectedCard}
-        onInsert={() => void props.onInsertSelectedCard()}
-        onRemove={() => void props.onRemoveSelectedCard()}
-        onEvolve={() => void props.onEvolveSelectedCard()}
+        onInsert={props.onInsertSelectedCard}
+        onRemove={props.onRemoveSelectedCard}
+        onEvolve={props.onEvolveSelectedCard}
         onClose={() => setIsInspectorOpen(false)}
       />
     </div>

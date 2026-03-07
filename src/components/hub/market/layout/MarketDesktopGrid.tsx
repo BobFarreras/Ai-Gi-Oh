@@ -15,14 +15,15 @@ import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
 interface MarketDesktopGridProps {
   selectedCard: ICard | null;
   selectedListing: IMarketCardListing | null;
+  isBuyingCard: boolean;
   listings: IMarketCardListing[];
   packs: IMarketPackDefinition[];
   selectedPackId: string | null;
   collection: ICollectionCard[];
   transactions: IMarketTransaction[];
   catalogListings: IMarketCardListing[];
-  onBuyCard: (listingId: string) => Promise<void>;
-  onBuyPack: (packId: string) => Promise<void>;
+  onBuyCard: (listingId: string) => Promise<boolean>;
+  onBuyPack: (packId: string) => Promise<boolean>;
   onSelectPack: (packId: string) => void;
   onClearPackSelection: () => void;
   onSelectListing: (listing: IMarketCardListing) => void;
@@ -38,6 +39,7 @@ export function MarketDesktopGrid(props: MarketDesktopGridProps) {
         <MarketCardInspector
           selectedCard={props.selectedCard}
           selectedListing={props.selectedListing}
+          isBuyingCard={props.isBuyingCard}
           onBuyCard={props.onBuyCard}
         />
       </div>

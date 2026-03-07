@@ -37,6 +37,7 @@ src/components/hub/market
 ├── market-listing-view.ts             # Pipeline de filtrado/ordenado
 └── internal/
     ├── useMarketSceneState.ts         # Estado + acciones de la escena
+    ├── MarketNexusSpendFloat.tsx      # Flotante reutilizable de gasto Nexus (-NX)
     ├── useSyncSelectedListing.ts      # Sincroniza selección y catálogo visible
     ├── usePackRevealPhase.ts          # Máquina de fases del overlay
     ├── format-market-transaction-date.ts
@@ -83,6 +84,8 @@ Integrado con `useHubModuleSfx`:
 1. Los errores de compra se muestran con `HubErrorDialog` compartido.
 2. El diálogo permite cierre manual (`X`) y autocierre para no bloquear el flujo.
 3. El feedback sonoro de error usa `ERROR_COMMON` (`/audio/hub/common/error-common.mp3`).
+4. La compra de carta no aplica descuento ni animación flotante hasta confirmar respuesta de servidor.
+5. El servidor (caso de uso + repositorios persistentes) es la autoridad final de saldo, stock y disponibilidad.
 
 ## Riesgos comunes (y mitigación)
 

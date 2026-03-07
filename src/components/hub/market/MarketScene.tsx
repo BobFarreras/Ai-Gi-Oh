@@ -61,6 +61,7 @@ export function MarketScene(props: MarketSceneProps) {
         <MarketDesktopGrid
           selectedCard={state.selectedCard}
           selectedListing={state.selectedListing}
+          isBuyingCard={state.isBuyingCard}
           listings={state.visibleListings}
           packs={state.catalog.packs}
           selectedPackId={state.selectedPackId}
@@ -77,6 +78,7 @@ export function MarketScene(props: MarketSceneProps) {
         <MarketMobileStack
           selectedCard={state.selectedCard}
           selectedListing={state.selectedListing}
+          isBuyingCard={state.isBuyingCard}
           listings={state.mobileVisibleListings}
           packs={state.catalog.packs}
           selectedPackId={state.selectedPackId}

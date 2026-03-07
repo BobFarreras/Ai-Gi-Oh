@@ -20,6 +20,7 @@ type MobilePanel = "LISTINGS" | "PACKS" | "VAULT";
 interface MarketMobileStackProps {
   selectedCard: ICard | null;
   selectedListing: IMarketCardListing | null;
+  isBuyingCard: boolean;
   listings: IMarketCardListing[];
   packs: IMarketPackDefinition[];
   selectedPackId: string | null;
@@ -27,8 +28,8 @@ interface MarketMobileStackProps {
   transactions: IMarketTransaction[];
   catalogListings: IMarketCardListing[];
   isBuyingPack: boolean;
-  onBuyCard: (listingId: string) => Promise<void>;
-  onBuyPack: (packId: string) => Promise<void>;
+  onBuyCard: (listingId: string) => Promise<boolean>;
+  onBuyPack: (packId: string) => Promise<boolean>;
   onSelectPack: (packId: string) => void;
   onShowFreeListings: () => void;
   onSelectListing: (listing: IMarketCardListing) => void;
@@ -128,7 +129,12 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
         overlayTopClassName="top-[74px]"
         panelTopClassName="top-[78px]"
       >
-        <MarketCardInspector selectedCard={props.selectedCard} selectedListing={props.selectedListing} onBuyCard={props.onBuyCard} />
+        <MarketCardInspector
+          selectedCard={props.selectedCard}
+          selectedListing={props.selectedListing}
+          isBuyingCard={props.isBuyingCard}
+          onBuyCard={props.onBuyCard}
+        />
       </MobileInspectorDialogShell>
     </div>
   );

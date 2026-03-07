@@ -5,6 +5,11 @@ import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProg
 import { ICard } from "@/core/entities/ICard";
 import { HomeCollectionTypeFilter } from "@/components/hub/home/home-filters";
 
+export interface IHomeActionResult {
+  ok: boolean;
+  message?: string;
+}
+
 export interface IHomeWorkspaceProps {
   deck: IDeck;
   collectionState: ICollectionCard[];
@@ -25,9 +30,9 @@ export interface IHomeWorkspaceProps {
   canRemoveSelectedCard: boolean;
   canEvolveSelectedCard: boolean;
   evolveCostForSelectedCard: number | null;
-  onInsertSelectedCard: () => Promise<void>;
-  onRemoveSelectedCard: () => Promise<void>;
-  onEvolveSelectedCard: () => Promise<void>;
+  onInsertSelectedCard: () => Promise<IHomeActionResult>;
+  onRemoveSelectedCard: () => Promise<IHomeActionResult>;
+  onEvolveSelectedCard: () => Promise<IHomeActionResult>;
   onSelectSlot: (slotIndex: number) => void;
   onSelectCollectionCard: (cardId: string) => void;
   onClearError: () => void;

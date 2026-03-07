@@ -9,6 +9,8 @@ import { HomeDeckActionBar } from "@/components/hub/home/HomeDeckActionBar";
 import { HubErrorDialog } from "@/components/hub/internal/HubErrorDialog";
 import { HomeEvolutionOverlay } from "@/components/hub/home/HomeEvolutionOverlay";
 import { HomeResponsiveWorkspace } from "@/components/hub/home/layout/HomeResponsiveWorkspace";
+import { IHomeActionResult } from "@/components/hub/home/layout/home-workspace-types";
+import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import {
   HomeCollectionOrderDirection,
   HomeCollectionOrderField,
@@ -21,7 +23,7 @@ import {
   evolveCardVersionAction,
   removeCardFromDeckAction,
 } from "@/services/home/deck-builder/deck-builder-actions";
-import { HOME_MAX_DUPLICATES, countDeckCopies, findFirstEmptyDeckSlot } from "@/core/services/home/deck-rules";
+import { HOME_MAX_DUPLICATES, countDeckCopies } from "@/core/services/home/deck-rules";
 import { getCopiesNeededForNextVersion } from "@/core/services/progression/card-version-rules";
 
 interface HomeDeckBuilderSceneProps {
@@ -40,6 +42,7 @@ interface IEvolutionOverlayState {
 }
 
 export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initialCardProgress }: HomeDeckBuilderSceneProps) {
+  const { play } = useHubModuleSfx();
   const [deck, setDeck] = useState<IDeck>(initialDeck);
   const [collectionState, setCollectionState] = useState<ICollectionCard[]>(collection);
   const [cardProgressById, setCardProgressById] = useState<Map<string, IPlayerCardProgress>>(
@@ -82,7 +85,6 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
   const selectedCardStorageCopies = selectedCardId ? Math.max(0, selectedCardCopies - selectedCardDeckCopies) : 0;
   const canInsertSelectedCard =
     Boolean(selectedCollectionCardId) &&
-    findFirstEmptyDeckSlot(deck) >= 0 &&
     selectedCardDeckCopies < HOME_MAX_DUPLICATES &&
     selectedCardStorageCopies > 0;
   const copiesRequiredToEvolve = selectedCardId ? getCopiesNeededForNextVersion(selectedCardVersionTier) : null;
@@ -91,8 +93,6 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
     copiesRequiredToEvolve !== null &&
     selectedCardStorageCopies >= copiesRequiredToEvolve &&
     evolutionOverlay === null;
-  const setErrorBanner = (error: unknown) =>
-    setErrorMessage(error instanceof Error ? error.message : "No se pudo completar la acción del deck.");
   const filteredCollection = useMemo(
     () => buildHomeCollectionView({ collection: collectionState, nameQuery, typeFilter, orderField, orderDirection }),
     [collectionState, nameQuery, orderDirection, orderField, typeFilter],
@@ -108,34 +108,55 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
     return ids;
   }, [cardProgressById, collectionState, deckCopiesByCardId]);
   const evolutionCard = evolutionOverlay ? cardById.get(evolutionOverlay.cardId) ?? selectedCard : null;
-  const handleInsertSelectedCard = async () => {
-    if (!selectedCollectionCardId) return;
+  const getActionErrorMessage = (error: unknown, fallback: string): string => {
+    const rawMessage = error instanceof Error ? error.message : fallback;
+    if (rawMessage.includes("20 cartas")) {
+      return "El deck está completo (20/20). Remueve una carta antes de añadir otra.";
+    }
+    if (rawMessage.includes("3 copias")) {
+      return "Ya tienes 3 copias de esta carta en el deck. Elige otra carta o remueve una copia.";
+    }
+    if (rawMessage.includes("No tienes más copias")) {
+      return "No quedan unidades libres en almacén para esta carta. Remueve una copia del deck o compra más.";
+    }
+    return rawMessage;
+  };
+  const handleInsertSelectedCard = async (): Promise<IHomeActionResult> => {
+    if (!selectedCollectionCardId) return { ok: false, message: "Selecciona una carta del almacén para añadirla." };
     const previousDeck = deck;
     setDeck((currentDeck) => applyOptimisticAddToDeck(currentDeck, selectedCollectionCardId));
     try {
       const updatedDeck = await addCardToDeckAction(context, selectedCollectionCardId);
       setDeck(updatedDeck);
       setErrorMessage(null);
+      return { ok: true };
     } catch (error) {
       setDeck(previousDeck);
-      setErrorBanner(error);
+      const message = getActionErrorMessage(error, "No se pudo añadir la carta al deck.");
+      setErrorMessage(message);
+      return { ok: false, message };
     }
   };
-  const handleRemoveSelectedCard = async () => {
-    if (selectedSlotIndex === null) return;
+  const handleRemoveSelectedCard = async (): Promise<IHomeActionResult> => {
+    if (selectedSlotIndex === null) return { ok: false, message: "Selecciona una carta del deck para removerla." };
     const previousDeck = deck;
     setDeck((currentDeck) => applyOptimisticRemoveFromDeck(currentDeck, selectedSlotIndex));
     try {
       const updatedDeck = await removeCardFromDeckAction(context, selectedSlotIndex);
       setDeck(updatedDeck);
       setErrorMessage(null);
+      return { ok: true };
     } catch (error) {
       setDeck(previousDeck);
-      setErrorBanner(error);
+      const message = getActionErrorMessage(error, "No se pudo remover la carta del deck.");
+      setErrorMessage(message);
+      return { ok: false, message };
     }
   };
-  const handleEvolveSelectedCard = async () => {
-    if (!selectedCardId || !canEvolveSelectedCard || copiesRequiredToEvolve === null) return;
+  const handleEvolveSelectedCard = async (): Promise<IHomeActionResult> => {
+    if (!selectedCardId || !canEvolveSelectedCard || copiesRequiredToEvolve === null) {
+      return { ok: false, message: "No hay copias libres suficientes en almacén para evolucionar esta carta." };
+    }
     const previousVersionTier = selectedCardVersionTier;
     const previousCollection = collectionState;
     const previousProgressById = new Map(cardProgressById);
@@ -186,11 +207,14 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
       });
       setTimeout(() => setEvolutionOverlay(null), 2200);
       setErrorMessage(null);
+      return { ok: true };
     } catch (error) {
       setCollectionState(previousCollection);
       setCardProgressById(previousProgressById);
       setEvolutionOverlay(null);
-      setErrorBanner(error);
+      const message = getActionErrorMessage(error, "No se pudo evolucionar la carta seleccionada.");
+      setErrorMessage(message);
+      return { ok: false, message };
     }
   };
 
@@ -251,12 +275,15 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
           onSelectSlot={(slotIndex) => {
             setErrorMessage(null);
             setSelectedCollectionCardId(null);
+            const cardId = deck.slots[slotIndex]?.cardId ?? null;
             setSelectedSlotIndex((previous) => (previous === slotIndex ? null : slotIndex));
+            if (cardId && selectedSlotIndex !== slotIndex) play("DETAIL_OPEN");
           }}
           onSelectCollectionCard={(cardId) => {
             setErrorMessage(null);
             setSelectedSlotIndex(null);
             setSelectedCollectionCardId((previous) => (previous === cardId ? null : cardId));
+            if (selectedCollectionCardId !== cardId) play("DETAIL_OPEN");
           }}
         />
       </section>

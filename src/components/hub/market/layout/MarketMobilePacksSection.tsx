@@ -1,11 +1,12 @@
 // src/components/hub/market/layout/MarketMobilePacksSection.tsx - Flujo mobile de packs con selector, cartas del sobre y compra al pie.
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PackageOpen } from "lucide-react";
 import { MarketListingsPanel } from "@/components/hub/market/listings/MarketListingsPanel";
 import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
 import { MarketPackCardTile } from "@/components/hub/market/packs/MarketPackCardTile";
+import { MarketNexusSpendFloat } from "@/components/hub/market/internal/MarketNexusSpendFloat";
 import { IMarketPackDefinition } from "@/core/entities/market/IMarketPackDefinition";
 
 interface MarketMobilePacksSectionProps {
@@ -14,12 +15,14 @@ interface MarketMobilePacksSectionProps {
   packListings: IMarketCardListing[];
   isBuyingPack: boolean;
   onSelectPack: (packId: string) => void;
-  onBuyPack: (packId: string) => Promise<void>;
+  onBuyPack: (packId: string) => Promise<boolean>;
   onSelectPackCard: (listing: IMarketCardListing) => void;
 }
 
 export function MarketMobilePacksSection(props: MarketMobilePacksSectionProps) {
   const { packs, selectedPackId, onSelectPack } = props;
+  const [floatingSpendId, setFloatingSpendId] = useState(0);
+  const floatingTimeoutRef = useRef<number | null>(null);
   const selectedPack = props.packs.find((pack) => pack.id === props.selectedPackId) ?? null;
 
   useEffect(() => {
@@ -27,6 +30,24 @@ export function MarketMobilePacksSection(props: MarketMobilePacksSectionProps) {
     const firstPack = packs[0];
     if (firstPack) onSelectPack(firstPack.id);
   }, [onSelectPack, packs, selectedPackId]);
+  useEffect(
+    () => () => {
+      if (floatingTimeoutRef.current === null) return;
+      window.clearTimeout(floatingTimeoutRef.current);
+    },
+    [],
+  );
+  const handleBuyPack = async () => {
+    if (!selectedPack || props.isBuyingPack) return;
+    const wasBought = await props.onBuyPack(selectedPack.id);
+    if (!wasBought) return;
+    setFloatingSpendId((previous) => previous + 1);
+    if (floatingTimeoutRef.current !== null) window.clearTimeout(floatingTimeoutRef.current);
+    floatingTimeoutRef.current = window.setTimeout(() => {
+      setFloatingSpendId(0);
+      floatingTimeoutRef.current = null;
+    }, 1280);
+  };
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 p-3">
@@ -51,9 +72,12 @@ export function MarketMobilePacksSection(props: MarketMobilePacksSectionProps) {
         type="button"
         aria-label="Comprar pack seleccionado"
         disabled={!selectedPack || props.isBuyingPack}
-        onClick={() => selectedPack && props.onBuyPack(selectedPack.id)}
-        className="flex items-center justify-center gap-2 rounded-lg border border-fuchsia-500/55 bg-fuchsia-900/35 px-4 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-fuchsia-100 disabled:cursor-not-allowed disabled:opacity-50"
+        onClick={() => void handleBuyPack()}
+        className="relative flex items-center justify-center gap-2 overflow-visible rounded-lg border border-fuchsia-500/55 bg-fuchsia-900/35 px-4 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-fuchsia-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
+        {selectedPack ? (
+          <MarketNexusSpendFloat amount={selectedPack.priceNexus} triggerId={floatingSpendId} className="right-2 top-1" />
+        ) : null}
         <PackageOpen size={16} />
         {props.isBuyingPack ? "Procesando..." : selectedPack ? `Comprar x ${selectedPack.priceNexus} NX` : "Selecciona un Pack"}
       </button>

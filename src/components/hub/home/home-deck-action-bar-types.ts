@@ -4,6 +4,7 @@ import {
   HomeCollectionOrderField,
   HomeCollectionTypeFilter,
 } from "@/components/hub/home/home-filters";
+import { IHomeActionResult } from "@/components/hub/home/layout/home-workspace-types";
 
 export interface IHomeDeckActionBarProps {
   deckCount: number;
@@ -18,9 +19,9 @@ export interface IHomeDeckActionBarProps {
   onChangeTypeFilter: (value: HomeCollectionTypeFilter) => void;
   onChangeOrderField: (value: HomeCollectionOrderField) => void;
   onToggleOrderDirection: () => void;
-  onInsert: () => void;
-  onRemove: () => void;
+  onInsert: () => Promise<IHomeActionResult>;
+  onRemove: () => Promise<IHomeActionResult>;
   canEvolve: boolean;
   evolveCost: number | null;
-  onEvolve: () => void;
+  onEvolve: () => Promise<IHomeActionResult>;
 }

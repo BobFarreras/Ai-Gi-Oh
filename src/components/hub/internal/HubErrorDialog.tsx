@@ -13,7 +13,7 @@ interface HubErrorDialogProps {
   autoCloseMs?: number;
 }
 
-export function HubErrorDialog({ message, title, onClose, autoCloseMs = 5200 }: HubErrorDialogProps) {
+export function HubErrorDialog({ message, title, onClose, autoCloseMs = 4000 }: HubErrorDialogProps) {
   const { play } = useHubModuleSfx();
 
   useEffect(() => {

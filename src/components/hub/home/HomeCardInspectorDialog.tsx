@@ -8,6 +8,7 @@ import { HomeInspectorActionButtons } from "@/components/hub/home/HomeInspectorA
 import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { IInspectorOrigin } from "@/components/hub/internal/mobile-inspector-animation";
 import { MobileInspectorDialogShell } from "@/components/hub/internal/MobileInspectorDialogShell";
+import { IHomeActionResult } from "@/components/hub/home/layout/home-workspace-types";
 
 interface HomeCardInspectorDialogProps {
   isOpen: boolean;
@@ -22,9 +23,9 @@ interface HomeCardInspectorDialogProps {
   canRemove: boolean;
   canEvolve: boolean;
   evolveCost: number | null;
-  onInsert: () => void;
-  onRemove: () => void;
-  onEvolve: () => void;
+  onInsert: () => Promise<IHomeActionResult>;
+  onRemove: () => Promise<IHomeActionResult>;
+  onEvolve: () => Promise<IHomeActionResult>;
   onClose: () => void;
 }
 
@@ -47,14 +48,14 @@ export function HomeCardInspectorDialog({
   onClose,
 }: HomeCardInspectorDialogProps) {
   const [pendingAction, setPendingAction] = useState<"INSERT" | "REMOVE" | "EVOLVE" | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const { play } = useHubModuleSfx();
   const handleRequestClose = (source: "overlay" | "button") => {
     if (source === "button") play("DIALOG_CLOSE");
   };
   useEffect(() => {
     if (!statusMessage) return;
-    const timer = window.setTimeout(() => setStatusMessage(null), 1400);
+    const timer = window.setTimeout(() => setStatusMessage(null), statusMessage.tone === "error" ? 2600 : 1400);
     return () => window.clearTimeout(timer);
   }, [statusMessage]);
   const handleInsert = async () => {
@@ -62,9 +63,16 @@ export function HomeCardInspectorDialog({
     setPendingAction("INSERT");
     try {
       play("ADD_CARD");
-      await Promise.resolve(onInsert());
-      setStatusMessage("Carta añadida al deck.");
+      const result = await Promise.resolve(onInsert());
+      if (!result.ok) {
+        setStatusMessage({ tone: "error", text: result.message ?? "No se pudo añadir la carta." });
+        return;
+      }
+      setStatusMessage({ tone: "success", text: "Carta añadida al deck." });
       onClose();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo añadir la carta.";
+      setStatusMessage({ tone: "error", text: message });
     } finally {
       setPendingAction(null);
     }
@@ -74,9 +82,8 @@ export function HomeCardInspectorDialog({
     setPendingAction("REMOVE");
     try {
       play("REMOVE_CARD");
-      await Promise.resolve(onRemove());
-      setStatusMessage("Carta removida del deck.");
       onClose();
+      await Promise.resolve(onRemove());
     } finally {
       setPendingAction(null);
     }
@@ -86,8 +93,15 @@ export function HomeCardInspectorDialog({
     setPendingAction("EVOLVE");
     try {
       play("EVOLUTION_BUTTON");
-      await Promise.resolve(onEvolve());
-      setStatusMessage("Evolución completada.");
+      const result = await Promise.resolve(onEvolve());
+      if (!result.ok) {
+        setStatusMessage({ tone: "error", text: result.message ?? "No se pudo evolucionar la carta." });
+        return;
+      }
+      setStatusMessage({ tone: "success", text: "Evolución completada." });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo evolucionar la carta.";
+      setStatusMessage({ tone: "error", text: message });
     } finally {
       setPendingAction(null);
     }
@@ -124,8 +138,14 @@ export function HomeCardInspectorDialog({
           onEvolve={handleEvolve}
         />
         {statusMessage ? (
-          <p className="mt-2 rounded border border-emerald-400/40 bg-emerald-950/30 px-2 py-1 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-200">
-            {statusMessage}
+          <p
+            className={`mt-2 rounded px-2 py-1 text-center text-[10px] font-bold uppercase tracking-[0.12em] ${
+              statusMessage.tone === "error"
+                ? "border border-rose-400/45 bg-rose-950/35 text-rose-100"
+                : "border border-emerald-400/40 bg-emerald-950/30 text-emerald-200"
+            }`}
+          >
+            {statusMessage.text}
           </p>
         ) : null}
       </div>

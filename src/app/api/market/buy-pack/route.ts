@@ -1,6 +1,7 @@
 // src/app/api/market/buy-pack/route.ts - Ejecuta compra de sobre y devuelve cartas abiertas junto al catálogo actualizado.
 import { NextRequest, NextResponse } from "next/server";
 import { ValidationError } from "@/core/errors/ValidationError";
+import { GameRuleError } from "@/core/errors/GameRuleError";
 import { createMarketRouteContext } from "@/app/api/market/internal/create-market-route-context";
 import { IMarketRuntimeSnapshot } from "@/services/market/market-runtime-snapshot";
 
@@ -21,9 +22,12 @@ export async function POST(request: NextRequest) {
     const snapshot: IMarketRuntimeSnapshot = { catalog, transactions, collection };
     return NextResponse.json({ ...snapshot, openedCardIds }, { status: 200, headers: context.response.headers });
   } catch (error) {
-    if (error instanceof ValidationError) {
+    if (error instanceof ValidationError || error instanceof GameRuleError) {
       return NextResponse.json({ message: error.message }, { status: 400 });
     }
-    return NextResponse.json({ message: "No se pudo completar la compra del sobre." }, { status: 400 });
+    return NextResponse.json(
+      { message: "No se pudo completar la compra del sobre. Revisa saldo Nexus y disponibilidad del pack." },
+      { status: 400 },
+    );
   }
 }
