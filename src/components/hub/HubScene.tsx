@@ -48,7 +48,7 @@ export function HubScene({
   const cameraPose = useMemo(() => resolveHubCameraPose(responsiveNodes, viewportWidth), [responsiveNodes, viewportWidth]);
 
   return (
-    <section className="relative h-screen w-full overflow-hidden">
+    <section className="relative h-dvh w-full overflow-hidden">
       <HubSceneHudOverlay
         playerLabel={playerLabel}
         progress={progress}
