@@ -78,6 +78,12 @@ Integrado con `useHubModuleSfx`:
 6. Comprar pack: `BUY_PACK` (`/audio/hub/market/comprar-pack.mp3`).
 7. Abrir animación de pack: `PACK_REVEAL` (`/audio/landing/hero.mp3`).
 
+## Manejo de errores
+
+1. Los errores de compra se muestran con `HubErrorDialog` compartido.
+2. El diálogo permite cierre manual (`X`) y autocierre para no bloquear el flujo.
+3. El feedback sonoro de error usa `ERROR_COMMON` (`/audio/hub/common/error-common.mp3`).
+
 ## Riesgos comunes (y mitigación)
 
 1. **Desalineación de selección** cuando cambian filtros/sobre:

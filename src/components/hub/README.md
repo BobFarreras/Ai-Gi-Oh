@@ -21,6 +21,7 @@ La UI del Hub representa un centro de control interactivo en 3D, manteniendo:
 8. `internal/hub-3d-node-math.ts`: utilidades puras de mapeo (posición/color).
 9. `nodes/*`: núcleos visuales 3D por sección.
 10. `nodes/market/*`: radar de mercado desacoplado por piezas para rendimiento.
+11. `internal/HubErrorDialog.tsx`: diálogo reutilizable de error (auto-cierre, cierre manual y sonido común).
 
 ## Flujo de interacción
 

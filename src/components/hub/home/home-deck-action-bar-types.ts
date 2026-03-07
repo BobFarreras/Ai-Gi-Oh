@@ -6,6 +6,8 @@ import {
 } from "@/components/hub/home/home-filters";
 
 export interface IHomeDeckActionBarProps {
+  deckCount: number;
+  deckSize: number;
   canInsert: boolean;
   canRemove: boolean;
   typeFilter: HomeCollectionTypeFilter;

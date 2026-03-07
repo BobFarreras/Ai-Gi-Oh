@@ -8,6 +8,8 @@ type HubModuleSfxId =
   | "FILTER_CLOSE"
   | "DETAIL_OPEN"
   | "DIALOG_CLOSE"
+  | "ERROR_COMMON"
+  | "SECTION_SWITCH"
   | "INSPECTOR_CLOSE"
   | "REMOVE_CARD"
   | "ADD_CARD"
@@ -28,6 +30,8 @@ const HUB_MODULE_SFX_CATALOG: Record<HubModuleSfxId, IHubModuleSfxConfig> = {
   FILTER_CLOSE: { path: "/audio/hub/common/cerrar-filtro.mp3", volume: 0.38 },
   DETAIL_OPEN: { path: "/audio/hub/common/open-detall.mp3", volume: 0.45 },
   DIALOG_CLOSE: { path: "/audio/hub/common/cerrar-dialog.mp3", volume: 0.45 },
+  ERROR_COMMON: { path: "/audio/hub/common/error-common.mp3", volume: 0.52 },
+  SECTION_SWITCH: { path: "/audio/hub/common/seccion.mp3", volume: 0.42 },
   INSPECTOR_CLOSE: { path: "/audio/hub/common/cerrar-dialog.mp3", volume: 0.45 },
   REMOVE_CARD: { path: "/audio/hub/arsenal/remover.mp3", volume: 0.62 },
   ADD_CARD: { path: "/audio/hub/arsenal/añadir.mp3", volume: 0.62 },
@@ -60,6 +64,7 @@ function safePlayTransient(path: string, volume: number): void {
 
 export function useHubModuleSfx() {
   const audioByIdRef = useRef<Partial<Record<HubModuleSfxId, HTMLAudioElement>>>({});
+  const lastPlayByIdRef = useRef<Partial<Record<HubModuleSfxId, number>>>({});
 
   useEffect(() => {
     const audioMap = audioByIdRef.current;
@@ -86,6 +91,10 @@ export function useHubModuleSfx() {
 
   const play = useCallback((id: HubModuleSfxId) => {
     const config = HUB_MODULE_SFX_CATALOG[id];
+    const now = Date.now();
+    const last = lastPlayByIdRef.current[id] ?? 0;
+    if (id === "EVOLUTION_OVERLAY" && now - last < 280) return;
+    lastPlayByIdRef.current[id] = now;
     if (id === "PACK_CARD_REVEAL") {
       safePlayTransient(config.path, config.volume);
       return;

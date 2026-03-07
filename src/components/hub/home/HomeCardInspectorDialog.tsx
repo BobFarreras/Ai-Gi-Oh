@@ -49,9 +49,8 @@ export function HomeCardInspectorDialog({
   const [pendingAction, setPendingAction] = useState<"INSERT" | "REMOVE" | "EVOLVE" | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const { play } = useHubModuleSfx();
-  const handleClose = () => {
-    play("INSPECTOR_CLOSE");
-    onClose();
+  const handleRequestClose = (source: "overlay" | "button") => {
+    if (source === "button") play("DIALOG_CLOSE");
   };
   useEffect(() => {
     if (!statusMessage) return;
@@ -65,7 +64,7 @@ export function HomeCardInspectorDialog({
       play("ADD_CARD");
       await Promise.resolve(onInsert());
       setStatusMessage("Carta añadida al deck.");
-      handleClose();
+      onClose();
     } finally {
       setPendingAction(null);
     }
@@ -77,7 +76,7 @@ export function HomeCardInspectorDialog({
       play("REMOVE_CARD");
       await Promise.resolve(onRemove());
       setStatusMessage("Carta removida del deck.");
-      handleClose();
+      onClose();
     } finally {
       setPendingAction(null);
     }
@@ -98,7 +97,8 @@ export function HomeCardInspectorDialog({
     <MobileInspectorDialogShell
       isOpen={isOpen}
       origin={origin}
-      onClose={handleClose}
+      onClose={onClose}
+      onRequestClose={handleRequestClose}
       closeAriaLabel="Cerrar inspección de carta"
       overlayTopClassName="top-[80px]"
       panelTopClassName="top-[88px] max-h-[calc(100dvh-96px)]"

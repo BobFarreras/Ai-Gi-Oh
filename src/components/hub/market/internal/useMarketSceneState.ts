@@ -155,6 +155,7 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     setTypeFilter,
     setOrderField,
     setOrderDirection,
+    setErrorMessage,
     setIsPackRevealOpen,
     handleBuyCard,
     handleBuyPack,

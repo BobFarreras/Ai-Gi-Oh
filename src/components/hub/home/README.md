@@ -65,6 +65,14 @@ Se separa el render por breakpoint sin alterar reglas del dominio:
 3. La vibración evita desplazamiento horizontal para no generar scroll lateral en almacén.
 4. En mobile se fuerza `overflow-x-hidden` en el contenedor de almacén para robustez visual.
 
+## Errores y seguridad de interacción
+
+1. Los errores funcionales de Arsenal se muestran con `HubErrorDialog` (animado, con `X` y autocierre).
+2. El diálogo de error reproduce `ERROR_COMMON` (`/audio/hub/common/error-common.mp3`).
+3. El botón `Añadir` se deshabilita si no hay copias libres reales en almacén.
+4. En mobile, las cartas sin unidades libres (`U 0`) se muestran desactivadas como en desktop.
+5. La validación final sigue en backend (`AddCardToDeckUseCase`), evitando bypass por cliente.
+
 ## Audio de Arsenal
 
 Eventos conectados vía `useHubModuleSfx`:

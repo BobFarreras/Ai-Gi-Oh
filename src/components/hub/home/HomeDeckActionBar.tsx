@@ -8,6 +8,8 @@ import { HomeDeckFilterControls } from "@/components/hub/home/HomeDeckFilterCont
 import { IHomeDeckActionBarProps } from "@/components/hub/home/home-deck-action-bar-types";
 
 export function HomeDeckActionBar({
+  deckCount,
+  deckSize,
   canInsert,
   canRemove,
   typeFilter,
@@ -32,6 +34,9 @@ export function HomeDeckActionBar({
         <h1 className="whitespace-nowrap text-xl font-black uppercase tracking-widest text-cyan-100 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)] sm:text-2xl">
           Arsenal
         </h1>
+        <span className="rounded border border-cyan-500/45 bg-cyan-900/25 px-2 py-0.5 text-[11px] font-black tracking-[0.12em] text-cyan-100 md:hidden">
+          {deckCount}/{deckSize}
+        </span>
         <span className="hidden select-none text-cyan-500/50 sm:inline">|</span>
         <p className="hidden whitespace-nowrap text-[10px] font-black uppercase tracking-[0.3em] text-cyan-300/60 md:block">
           Deck Hub

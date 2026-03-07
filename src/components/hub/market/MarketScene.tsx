@@ -5,8 +5,8 @@ import { MarketHeaderBar } from "@/components/hub/market/layout/MarketHeaderBar"
 import { MarketDesktopGrid } from "@/components/hub/market/layout/MarketDesktopGrid";
 import { MarketMobileStack } from "@/components/hub/market/layout/MarketMobileStack";
 import { MarketPackRevealOverlay } from "@/components/hub/market/reveal/MarketPackRevealOverlay";
+import { HubErrorDialog } from "@/components/hub/internal/HubErrorDialog";
 import { useMarketSceneState } from "@/components/hub/market/internal/useMarketSceneState";
-import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { ICard } from "@/core/entities/ICard";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
@@ -21,11 +21,9 @@ interface MarketSceneProps {
 
 export function MarketScene(props: MarketSceneProps) {
   const state = useMarketSceneState(props);
-  const { play } = useHubModuleSfx();
   const handleSelectListing = (listing: (typeof state.visibleListings)[number]) => {
     state.setSelectedListing(listing);
     state.setSelectedCard(listing.card);
-    play("DETAIL_OPEN");
   };
   const handleSelectVaultCard = (card: ICard) => {
     const listing = state.catalog.listings.find((currentListing) => currentListing.card.id === card.id) ?? null;
@@ -41,7 +39,6 @@ export function MarketScene(props: MarketSceneProps) {
     }
     state.setSelectedListing(listing);
     state.setSelectedCard(card);
-    play("DETAIL_OPEN");
   };
 
   return (
@@ -60,14 +57,6 @@ export function MarketScene(props: MarketSceneProps) {
             state.setOrderDirection((previous) => (previous === "ASC" ? "DESC" : "ASC"))
           }
         />
-
-        {state.errorMessage && (
-          <div className="mt-3 shrink-0 animate-in fade-in slide-in-from-top-2">
-            <p className="rounded-xl border border-rose-500/50 bg-rose-950/40 px-4 py-3 text-center text-sm font-bold tracking-wide text-rose-200 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
-              {state.errorMessage}
-            </p>
-          </div>
-        )}
 
         <MarketDesktopGrid
           selectedCard={state.selectedCard}
@@ -108,6 +97,11 @@ export function MarketScene(props: MarketSceneProps) {
         cards={state.revealedPackCards}
         isOpen={state.isPackRevealOpen}
         onClose={() => state.setIsPackRevealOpen(false)}
+      />
+      <HubErrorDialog
+        title="Error de Mercado"
+        message={state.errorMessage}
+        onClose={() => state.setErrorMessage(null)}
       />
     </main>
   );

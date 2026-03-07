@@ -9,6 +9,7 @@ interface MobileInspectorDialogShellProps {
   isOpen: boolean;
   origin: IInspectorOrigin;
   onClose: () => void;
+  onRequestClose?: (source: "overlay" | "button") => void;
   closeAriaLabel: string;
   overlayTopClassName: string;
   panelTopClassName: string;
@@ -20,6 +21,7 @@ export function MobileInspectorDialogShell({
   isOpen,
   origin,
   onClose,
+  onRequestClose,
   closeAriaLabel,
   overlayTopClassName,
   panelTopClassName,
@@ -27,6 +29,10 @@ export function MobileInspectorDialogShell({
   children,
 }: MobileInspectorDialogShellProps) {
   const animationOffset = resolveInspectorAnimationOffset(origin);
+  const requestClose = (source: "overlay" | "button") => {
+    onRequestClose?.(source);
+    onClose();
+  };
 
   return (
     <AnimatePresence>
@@ -35,7 +41,7 @@ export function MobileInspectorDialogShell({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={isDismissDisabled ? undefined : onClose}
+          onClick={isDismissDisabled ? undefined : () => requestClose("overlay")}
           className={`fixed inset-x-0 bottom-0 z-[220] bg-black/52 xl:hidden ${overlayTopClassName}`}
         >
           <motion.div
@@ -50,7 +56,7 @@ export function MobileInspectorDialogShell({
               type="button"
               aria-label={closeAriaLabel}
               disabled={isDismissDisabled}
-              onClick={onClose}
+              onClick={() => requestClose("button")}
               className="absolute right-3 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-md border border-cyan-400/60 bg-[#03172b] text-cyan-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <X size={16} />

@@ -59,10 +59,12 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
   };
 
   const handleSelectListing = (listing: IMarketCardListing) => {
+    play("DETAIL_OPEN");
     props.onSelectListing(listing);
     setIsInspectorOpen(true);
   };
   const handleSelectVaultCard = (card: ICard) => {
+    play("DETAIL_OPEN");
     props.onSelectVaultCard(card);
     setIsInspectorOpen(true);
   };
@@ -76,6 +78,7 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
             type="button"
             aria-label={`Mostrar ${tab.label}`}
             onClick={() => {
+              if (activePanel !== tab.id) play("SECTION_SWITCH");
               setActivePanel(tab.id);
               if (tab.id === "LISTINGS") props.onShowFreeListings();
             }}
@@ -117,9 +120,9 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
       <MobileInspectorDialogShell
         isOpen={isInspectorOpen}
         origin={inspectorOrigin}
-        onClose={() => {
-          play("DIALOG_CLOSE");
-          setIsInspectorOpen(false);
+        onClose={() => setIsInspectorOpen(false)}
+        onRequestClose={(source) => {
+          if (source === "button") play("DIALOG_CLOSE");
         }}
         closeAriaLabel="Cerrar inspección"
         overlayTopClassName="top-[74px]"

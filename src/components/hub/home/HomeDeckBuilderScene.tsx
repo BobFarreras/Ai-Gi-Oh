@@ -6,7 +6,7 @@ import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IDeck } from "@/core/entities/home/IDeck";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { HomeDeckActionBar } from "@/components/hub/home/HomeDeckActionBar";
-import { HomeErrorBanner } from "@/components/hub/home/HomeErrorBanner";
+import { HubErrorDialog } from "@/components/hub/internal/HubErrorDialog";
 import { HomeEvolutionOverlay } from "@/components/hub/home/HomeEvolutionOverlay";
 import { HomeResponsiveWorkspace } from "@/components/hub/home/layout/HomeResponsiveWorkspace";
 import {
@@ -21,6 +21,7 @@ import {
   evolveCardVersionAction,
   removeCardFromDeckAction,
 } from "@/services/home/deck-builder/deck-builder-actions";
+import { HOME_MAX_DUPLICATES, countDeckCopies, findFirstEmptyDeckSlot } from "@/core/services/home/deck-rules";
 import { getCopiesNeededForNextVersion } from "@/core/services/progression/card-version-rules";
 
 interface HomeDeckBuilderSceneProps {
@@ -67,6 +68,7 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
   const selectedCardLevel = selectedCardProgress?.level ?? 0;
   const selectedCardXp = selectedCardProgress?.xp ?? 0;
   const selectedCardMasteryPassiveSkillId = selectedCardProgress?.masteryPassiveSkillId ?? null;
+  const deckCardCount = useMemo(() => deck.slots.filter((slot) => slot.cardId !== null).length, [deck.slots]);
   const deckCopiesByCardId = useMemo(() => {
     const copies = new Map<string, number>();
     for (const slot of deck.slots) {
@@ -76,7 +78,13 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
     return copies;
   }, [deck.slots]);
   const selectedCardCopies = selectedCardId ? (collectionState.find((entry) => entry.card.id === selectedCardId)?.ownedCopies ?? 0) : 0;
-  const selectedCardStorageCopies = selectedCardId ? Math.max(0, selectedCardCopies - (deckCopiesByCardId.get(selectedCardId) ?? 0)) : 0;
+  const selectedCardDeckCopies = selectedCardId ? countDeckCopies(deck, selectedCardId) : 0;
+  const selectedCardStorageCopies = selectedCardId ? Math.max(0, selectedCardCopies - selectedCardDeckCopies) : 0;
+  const canInsertSelectedCard =
+    Boolean(selectedCollectionCardId) &&
+    findFirstEmptyDeckSlot(deck) >= 0 &&
+    selectedCardDeckCopies < HOME_MAX_DUPLICATES &&
+    selectedCardStorageCopies > 0;
   const copiesRequiredToEvolve = selectedCardId ? getCopiesNeededForNextVersion(selectedCardVersionTier) : null;
   const canEvolveSelectedCard =
     Boolean(selectedCardId) &&
@@ -194,7 +202,9 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
         {/* REFACTOR: Barra Maestra Unificada */}
         <div className="shrink-0 z-20">
           <HomeDeckActionBar
-            canInsert={Boolean(selectedCollectionCardId)}
+            deckCount={deckCardCount}
+            deckSize={deck.maxSize}
+            canInsert={canInsertSelectedCard}
             canRemove={selectedSlotHasCard}
             typeFilter={typeFilter}
             orderField={orderField}
@@ -214,13 +224,6 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
           />
         </div>
 
-        {/* Banner de errores (Renderizado condicional para no ocupar espacio vacío) */}
-        {errorMessage && (
-          <div className="mt-3 shrink-0 animate-in fade-in slide-in-from-top-2">
-            <HomeErrorBanner message={errorMessage} onClose={() => setErrorMessage(null)} />
-          </div>
-        )}
-
         <HomeResponsiveWorkspace
           deck={deck}
           collectionState={collectionState}
@@ -237,7 +240,7 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
           selectedCardMasteryPassiveSkillId={selectedCardMasteryPassiveSkillId}
           nameQuery={nameQuery}
           typeFilter={typeFilter}
-          canInsertSelectedCard={Boolean(selectedCollectionCardId)}
+          canInsertSelectedCard={canInsertSelectedCard}
           canRemoveSelectedCard={selectedSlotHasCard}
           canEvolveSelectedCard={canEvolveSelectedCard}
           evolveCostForSelectedCard={copiesRequiredToEvolve}
@@ -266,6 +269,7 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
           consumedCopies={evolutionOverlay.consumedCopies}
         />
       )}
+      <HubErrorDialog title="Error de Arsenal" message={errorMessage} onClose={() => setErrorMessage(null)} />
     </main>
   );
 }
