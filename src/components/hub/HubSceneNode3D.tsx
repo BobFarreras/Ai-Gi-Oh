@@ -2,7 +2,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -27,6 +26,9 @@ interface HubSceneNode3DProps {
   nodeEntryDelay?: number;
   onNodeHoverSound?: () => void;
   showActionPanel?: boolean;
+  onNavigate: (nodeId: string, href: string) => void;
+  activeNodeId: string | null;
+  isNavigationBusy: boolean;
 }
 
 export function HubSceneNode3D({
@@ -35,8 +37,10 @@ export function HubSceneNode3D({
   nodeEntryDelay = 0,
   onNodeHoverSound,
   showActionPanel = true,
+  onNavigate,
+  activeNodeId,
+  isNavigationBusy,
 }: HubSceneNode3DProps) {
-  const router = useRouter();
   const nodeRef = useRef<THREE.Group>(null);
   const baseRef = useRef<THREE.Group>(null);
   const [isLockReasonVisible, setIsLockReasonVisible] = useState(false);
@@ -50,8 +54,9 @@ export function HubSceneNode3D({
       setIsLockReasonVisible((previous) => !previous);
       return;
     }
-    router.push(result.href);
+    onNavigate(node.id, result.href);
   };
+  const isTargetNode = activeNodeId === node.id;
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -139,6 +144,8 @@ export function HubSceneNode3D({
             isHovered={isHovered}
             isLockReasonVisible={isLockReasonVisible}
             onAction={handleNodeAction}
+            isNavigationBusy={isNavigationBusy}
+            isTargetNode={isTargetNode}
           />
         </Html>
       ) : null}

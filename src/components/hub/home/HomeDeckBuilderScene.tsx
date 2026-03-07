@@ -23,7 +23,7 @@ import {
   evolveCardVersionAction,
   removeCardFromDeckAction,
 } from "@/services/home/deck-builder/deck-builder-actions";
-import { HOME_MAX_DUPLICATES, countDeckCopies } from "@/core/services/home/deck-rules";
+import { HOME_DECK_SIZE, HOME_MAX_DUPLICATES, countDeckCopies } from "@/core/services/home/deck-rules";
 import { getCopiesNeededForNextVersion } from "@/core/services/progression/card-version-rules";
 
 interface HomeDeckBuilderSceneProps {
@@ -227,7 +227,7 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
         <div className="shrink-0 z-20">
           <HomeDeckActionBar
             deckCount={deckCardCount}
-            deckSize={deck.maxSize}
+            deckSize={HOME_DECK_SIZE}
             canInsert={canInsertSelectedCard}
             canRemove={selectedSlotHasCard}
             typeFilter={typeFilter}

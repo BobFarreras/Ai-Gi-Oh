@@ -1,3 +1,4 @@
+// vitest.config.ts - Configura Vitest para entorno JSDOM, alias y filtros de salida de consola en tests.
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
@@ -8,6 +9,12 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./setup.ts'],
     globals: true,
+    onConsoleLog(log) {
+      if (log.includes("THREE.WARNING: Multiple instances of Three.js being imported.")) {
+        return false;
+      }
+      return undefined;
+    },
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
