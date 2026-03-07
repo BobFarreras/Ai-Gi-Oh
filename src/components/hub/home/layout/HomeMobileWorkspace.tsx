@@ -60,7 +60,7 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
             {activeSection === "DECK" ? `${deckCount}/20` : `${props.filteredCollection.length} cartas`}
           </span>
         </div>
-        <div className="home-modern-scroll h-[calc(100%-2.25rem)] overflow-y-auto pt-2">
+        <div className="home-modern-scroll h-[calc(100%-2.25rem)] overflow-y-auto overflow-x-hidden pt-2">
           {activeSection === "DECK" ? (
             <div className="grid grid-cols-4 gap-1 pb-6 pt-1">
               {deckSlotsForView.map((slot) => {
@@ -100,7 +100,7 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
                 const progress = props.cardProgressById.get(entry.card.id);
                 const canEvolve = props.evolvableCardIds.has(entry.card.id);
                 return (
-                  <motion.div key={entry.card.id} className="relative flex flex-col items-center" animate={canEvolve ? { x: [0, -1.5, 1.5, -1, 1, 0] } : {}} transition={canEvolve ? { duration: 0.38, repeat: Infinity, repeatDelay: 1.8 } : {}}>
+                  <motion.div key={entry.card.id} className="relative flex flex-col items-center" animate={canEvolve ? { rotate: [0, -1.2, 1.2, -0.8, 0.8, 0] } : {}} transition={canEvolve ? { duration: 0.38, repeat: Infinity, repeatDelay: 1.8 } : {}}>
                     <HomeMiniCard
                       card={entry.card}
                       label={`Carta ${entry.card.name}`}

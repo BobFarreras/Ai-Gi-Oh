@@ -6,6 +6,7 @@ import { MarketDesktopGrid } from "@/components/hub/market/layout/MarketDesktopG
 import { MarketMobileStack } from "@/components/hub/market/layout/MarketMobileStack";
 import { MarketPackRevealOverlay } from "@/components/hub/market/reveal/MarketPackRevealOverlay";
 import { useMarketSceneState } from "@/components/hub/market/internal/useMarketSceneState";
+import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { ICard } from "@/core/entities/ICard";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
@@ -20,9 +21,11 @@ interface MarketSceneProps {
 
 export function MarketScene(props: MarketSceneProps) {
   const state = useMarketSceneState(props);
+  const { play } = useHubModuleSfx();
   const handleSelectListing = (listing: (typeof state.visibleListings)[number]) => {
     state.setSelectedListing(listing);
     state.setSelectedCard(listing.card);
+    play("DETAIL_OPEN");
   };
   const handleSelectVaultCard = (card: ICard) => {
     const listing = state.catalog.listings.find((currentListing) => currentListing.card.id === card.id) ?? null;
@@ -38,6 +41,7 @@ export function MarketScene(props: MarketSceneProps) {
     }
     state.setSelectedListing(listing);
     state.setSelectedCard(card);
+    play("DETAIL_OPEN");
   };
 
   return (
@@ -71,7 +75,7 @@ export function MarketScene(props: MarketSceneProps) {
           listings={state.visibleListings}
           packs={state.catalog.packs}
           selectedPackId={state.selectedPackId}
-          collection={state.collection}
+          collection={state.visibleCollection}
           transactions={state.transactions}
           catalogListings={state.catalog.listings}
           onBuyCard={state.handleBuyCard}
@@ -87,7 +91,7 @@ export function MarketScene(props: MarketSceneProps) {
           listings={state.mobileVisibleListings}
           packs={state.catalog.packs}
           selectedPackId={state.selectedPackId}
-          collection={state.collection}
+          collection={state.visibleCollection}
           transactions={state.transactions}
           catalogListings={state.catalog.listings}
           isBuyingPack={state.isBuyingPack}

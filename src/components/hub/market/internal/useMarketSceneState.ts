@@ -6,6 +6,8 @@ import { buildMarketListingView } from "@/components/hub/market/market-listing-v
 import { applyOptimisticBuyCard } from "@/components/hub/market/internal/optimistic-market-updates";
 import { useSyncSelectedListing } from "@/components/hub/market/internal/useSyncSelectedListing";
 import { MarketOrderDirection, MarketOrderField, MarketTypeFilter } from "@/components/hub/market/market-filters";
+import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
+import { buildMarketVaultCollectionView } from "@/components/hub/market/vault/build-market-vault-collection-view";
 import { ICard } from "@/core/entities/ICard";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
@@ -24,6 +26,7 @@ interface UseMarketSceneStateInput {
 }
 
 export function useMarketSceneState(input: UseMarketSceneStateInput) {
+  const { play } = useHubModuleSfx();
   const initialAvailableListing = input.initialCatalog.listings.find((listing) => listing.isAvailable) ?? input.initialCatalog.listings[0] ?? null;
   const [catalog, setCatalog] = useState<IMarketCatalog>(input.initialCatalog);
   const [transactions, setTransactions] = useState<IMarketTransaction[]>(input.initialTransactions);
@@ -70,6 +73,17 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
       }),
     [catalog.listings, nameQuery, orderDirection, orderField, typeFilter],
   );
+  const visibleCollection = useMemo(
+    () =>
+      buildMarketVaultCollectionView({
+        collection,
+        nameQuery,
+        typeFilter,
+        orderField,
+        orderDirection,
+      }),
+    [collection, nameQuery, orderDirection, orderField, typeFilter],
+  );
 
   useSyncSelectedListing({ selectedListing, visibleListings, setSelectedListing, setSelectedCard });
 
@@ -80,6 +94,7 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     setCatalog(optimisticState.catalog);
     setCollection(optimisticState.collection);
     try {
+      play("BUY_CARD");
       const result = await buyMarketCardAction(input.playerId, listingId);
       setCatalog(result.catalog);
       setTransactions(result.transactions);
@@ -96,6 +111,7 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     if (isBuyingPack) return;
     setIsBuyingPack(true);
     try {
+      play("BUY_PACK");
       const result = await buyPackAction(input.playerId, packId);
       setCatalog(result.catalog);
       setTransactions(result.transactions);
@@ -131,6 +147,7 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     isBuyingPack,
     visibleListings,
     mobileVisibleListings,
+    visibleCollection,
     setSelectedPackId,
     setSelectedListing,
     setSelectedCard,

@@ -56,7 +56,7 @@ export function HomeCollectionPanel({
                 aria-label={`Seleccionar ${entry.card.name}`}
                 whileHover={canAdd ? { y: -4, scale: 1.05 } : {}}
                 whileTap={canAdd ? { scale: 0.95 } : {}}
-                animate={canEvolve ? { x: [0, -1.5, 1.5, -1, 1, 0] } : {}}
+                animate={canEvolve ? { rotate: [0, -1.2, 1.2, -0.8, 0.8, 0] } : {}}
                 transition={canEvolve ? { duration: 0.38, repeat: Infinity, repeatDelay: 1.8 } : {}}
                 onClick={() => onSelectCard(entry.card.id)}
                 // REFACTOR 3: Ajustes de opacidad más drásticos para dar feedback visual claro

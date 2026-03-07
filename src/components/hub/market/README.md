@@ -66,6 +66,18 @@ src/components/hub/market
 5. Estado inicial de mercado:
    - `selectedPackId = null` para entrar siempre en **cartas sueltas**.
 
+## Audio de Market
+
+Integrado con `useHubModuleSfx`:
+
+1. Abrir detalle/inspector: `DETAIL_OPEN` (`/audio/hub/common/open-detall.mp3`).
+2. Cerrar detalle/inspector: `DIALOG_CLOSE` (`/audio/hub/common/cerrar-dialog.mp3`).
+3. Abrir filtros: `FILTER_OPEN` (`/audio/hub/common/filter.mp3`).
+4. Cerrar filtros: `FILTER_CLOSE` (`/audio/hub/common/cerrar-filtro.mp3`).
+5. Comprar carta individual: `BUY_CARD` (`/audio/hub/market/comprar-carta.mp3`).
+6. Comprar pack: `BUY_PACK` (`/audio/hub/market/comprar-pack.mp3`).
+7. Abrir animación de pack: `PACK_REVEAL` (`/audio/landing/hero.mp3`).
+
 ## Riesgos comunes (y mitigación)
 
 1. **Desalineación de selección** cuando cambian filtros/sobre:

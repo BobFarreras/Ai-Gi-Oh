@@ -2,7 +2,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Zap, Swords, Shield, Tag, Lock, ShoppingCart, ScanLine } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
 import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
@@ -16,8 +16,23 @@ interface MarketCardInspectorProps {
 
 export function MarketCardInspector({ selectedCard, selectedListing, onBuyCard }: MarketCardInspectorProps) {
   const [floatingSpendId, setFloatingSpendId] = useState(0);
+  const floatingTimeoutRef = useRef<number | null>(null);
+  useEffect(
+    () => () => {
+      if (floatingTimeoutRef.current === null) return;
+      window.clearTimeout(floatingTimeoutRef.current);
+    },
+    [],
+  );
   const handleBuyClick = async (listingId: string) => {
     setFloatingSpendId((previous) => previous + 1);
+    if (floatingTimeoutRef.current !== null) {
+      window.clearTimeout(floatingTimeoutRef.current);
+    }
+    floatingTimeoutRef.current = window.setTimeout(() => {
+      setFloatingSpendId(0);
+      floatingTimeoutRef.current = null;
+    }, 680);
     await onBuyCard(listingId);
   };
 

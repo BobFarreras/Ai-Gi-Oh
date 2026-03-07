@@ -1,8 +1,10 @@
 // src/components/hub/market/reveal/MarketRevealCardsGrid.tsx - Renderiza las cartas reveladas del sobre con animación escalonada.
 "use client";
 
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/game/card/Card";
+import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { ICard } from "@/core/entities/ICard";
 
 interface MarketRevealCardsGridProps {
@@ -11,13 +13,24 @@ interface MarketRevealCardsGridProps {
 }
 
 export function MarketRevealCardsGrid({ cards, onClose }: MarketRevealCardsGridProps) {
+  const { play } = useHubModuleSfx();
+  useEffect(() => {
+    if (cards.length === 0) return;
+    const timers: number[] = [];
+    cards.forEach((_, index) => {
+      const timer = window.setTimeout(() => play("PACK_CARD_REVEAL"), index * 160 + 20);
+      timers.push(timer);
+    });
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [cards, play]);
+
   return (
     <motion.div
       key="cards-grid"
       initial="hidden"
       animate="visible"
       exit="hidden"
-      variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.35 } } }}
+      variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.22 } } }}
       className="relative z-50 flex h-full w-full max-w-7xl flex-col items-center justify-center px-3 py-4 sm:px-4 sm:py-6"
     >
       <motion.h2
@@ -51,7 +64,7 @@ export function MarketRevealCardsGrid({ cards, onClose }: MarketRevealCardsGridP
         ))}
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: cards.length * 0.35 + 0.8 }} className="mt-4 sm:mt-8">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: cards.length * 0.22 + 0.8 }} className="mt-4 sm:mt-8">
         <button
           type="button"
           onClick={onClose}

@@ -7,6 +7,7 @@ import { MobileInspectorDialogShell } from "@/components/hub/internal/MobileInsp
 import { MarketListingsPanel } from "@/components/hub/market/listings/MarketListingsPanel";
 import { MarketVaultPanel } from "@/components/hub/market/vault/MarketVaultPanel";
 import { MarketMobilePacksSection } from "@/components/hub/market/layout/MarketMobilePacksSection";
+import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { ICard } from "@/core/entities/ICard";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
@@ -44,6 +45,7 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
   const [activePanel, setActivePanel] = useState<MobilePanel>("LISTINGS");
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [inspectorOrigin, setInspectorOrigin] = useState({ x: 0, y: 0 });
+  const { play } = useHubModuleSfx();
   const packListings = useMemo(() => {
     if (!props.selectedPackId) return [];
     const selectedPack = props.packs.find((pack) => pack.id === props.selectedPackId);
@@ -115,7 +117,10 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
       <MobileInspectorDialogShell
         isOpen={isInspectorOpen}
         origin={inspectorOrigin}
-        onClose={() => setIsInspectorOpen(false)}
+        onClose={() => {
+          play("DIALOG_CLOSE");
+          setIsInspectorOpen(false);
+        }}
         closeAriaLabel="Cerrar inspección"
         overlayTopClassName="top-[74px]"
         panelTopClassName="top-[78px]"

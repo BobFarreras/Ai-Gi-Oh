@@ -1,9 +1,11 @@
 // src/components/hub/home/HomeEvolutionOverlay.tsx - Overlay cinemático para visualizar evolución de versión y fusión de copias.
 "use client";
 
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { ICard } from "@/core/entities/ICard";
 import { Card } from "@/components/game/card/Card";
+import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 
 interface HomeEvolutionOverlayProps {
   card: ICard | null;
@@ -28,6 +30,11 @@ export function HomeEvolutionOverlay({
   level,
   consumedCopies,
 }: HomeEvolutionOverlayProps) {
+  const { play } = useHubModuleSfx();
+  useEffect(() => {
+    if (!card) return;
+    play("EVOLUTION_OVERLAY");
+  }, [card, play]);
   if (!card) return null;
   const visualCopies = Math.max(4, Math.min(consumedCopies, 64));
   return (

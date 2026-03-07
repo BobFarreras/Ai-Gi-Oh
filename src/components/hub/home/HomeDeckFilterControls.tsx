@@ -5,6 +5,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowDownUp, Layers3, ListFilter, Search } from "lucide-react";
 import { GameSelect } from "@/components/ui/GameSelect";
+import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import {
   HomeCollectionOrderDirection,
   HomeCollectionOrderField,
@@ -27,6 +28,7 @@ interface HomeDeckFilterControlsProps {
 export function HomeDeckFilterControls(props: HomeDeckFilterControlsProps) {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const showDesktopSearch = props.showDesktopSearch ?? true;
+  const { play } = useHubModuleSfx();
 
   return (
     <div className="relative z-30 flex w-full flex-col gap-2">
@@ -67,6 +69,8 @@ export function HomeDeckFilterControls(props: HomeDeckFilterControlsProps) {
           label="TIPO"
           value={props.typeFilter}
           onChange={(value) => props.onChangeTypeFilter(value as HomeCollectionTypeFilter)}
+          onOpen={() => play("FILTER_OPEN")}
+          onClose={() => play("FILTER_CLOSE")}
           ariaLabel="Filtrar por tipo"
           Icon={ListFilter}
           options={HOME_TYPE_OPTIONS}
@@ -75,6 +79,8 @@ export function HomeDeckFilterControls(props: HomeDeckFilterControlsProps) {
           label="ORDEN"
           value={props.orderField}
           onChange={(value) => props.onChangeOrderField(value as HomeCollectionOrderField)}
+          onOpen={() => play("FILTER_OPEN")}
+          onClose={() => play("FILTER_CLOSE")}
           ariaLabel="Campo de orden"
           Icon={Layers3}
           options={HOME_ORDER_OPTIONS}
@@ -96,6 +102,8 @@ export function HomeDeckFilterControls(props: HomeDeckFilterControlsProps) {
             label="TIPO"
             value={props.typeFilter}
             onChange={(value) => props.onChangeTypeFilter(value as HomeCollectionTypeFilter)}
+            onOpen={() => play("FILTER_OPEN")}
+            onClose={() => play("FILTER_CLOSE")}
             ariaLabel="Filtrar por tipo"
             Icon={ListFilter}
             options={HOME_TYPE_OPTIONS}
@@ -104,6 +112,8 @@ export function HomeDeckFilterControls(props: HomeDeckFilterControlsProps) {
             label="ORDEN"
             value={props.orderField}
             onChange={(value) => props.onChangeOrderField(value as HomeCollectionOrderField)}
+            onOpen={() => play("FILTER_OPEN")}
+            onClose={() => play("FILTER_CLOSE")}
             ariaLabel="Campo de orden"
             Icon={Layers3}
             options={HOME_ORDER_OPTIONS}

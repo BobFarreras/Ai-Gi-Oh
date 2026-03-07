@@ -58,6 +58,24 @@ Se separa el render por breakpoint sin alterar reglas del dominio:
 3. `Añadir` y `Remover` cierran el diálogo al finalizar correctamente para acelerar el flujo.
 4. Se añade test de bloqueo de cierre en `MobileInspectorDialogShell.test.tsx`.
 
+## Ajustes finales de UI (desktop + mobile)
+
+1. El overlay de evolución renderiza la carta con clipping limpio para evitar artefactos de fondo.
+2. El indicador de carta evolucionable pasa de punto pulsante a vibración sutil de carta.
+3. La vibración evita desplazamiento horizontal para no generar scroll lateral en almacén.
+4. En mobile se fuerza `overflow-x-hidden` en el contenedor de almacén para robustez visual.
+
+## Audio de Arsenal
+
+Eventos conectados vía `useHubModuleSfx`:
+
+1. Abrir filtros mobile: `FILTER_OPEN` (`/audio/hub/common/filter.mp3`).
+2. Cerrar inspector: `INSPECTOR_CLOSE` (`/audio/hub/common/cerrar-dialog.mp3`).
+3. Pulsar remover: `REMOVE_CARD` (`/audio/hub/arsenal/remover.mp3`).
+4. Pulsar añadir: `ADD_CARD` (`/audio/hub/arsenal/añadir.mp3`).
+5. Mostrar overlay de evolución: `EVOLUTION_OVERLAY` (`/audio/hub/arsenal/evolution.mp3`).
+6. Pulsar botón evolucionar: `EVOLUTION_BUTTON` (`/audio/landing/button-click.mp3`).
+
 ## Testing de fase 0/1/3
 
 1. `layout/HomeResponsiveWorkspace.test.tsx` valida que se montan ambos layouts.
