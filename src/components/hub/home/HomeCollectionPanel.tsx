@@ -56,15 +56,14 @@ export function HomeCollectionPanel({
                 aria-label={`Seleccionar ${entry.card.name}`}
                 whileHover={canAdd ? { y: -4, scale: 1.05 } : {}}
                 whileTap={canAdd ? { scale: 0.95 } : {}}
+                animate={canEvolve ? { rotate: [0, -1.2, 1.2, -0.8, 0.8, 0] } : {}}
+                transition={canEvolve ? { duration: 0.38, repeat: Infinity, repeatDelay: 1.8 } : {}}
                 onClick={() => onSelectCard(entry.card.id)}
                 // REFACTOR 3: Ajustes de opacidad más drásticos para dar feedback visual claro
                 className={`relative flex flex-col items-center w-[84px] transition-opacity ${
                   canAdd ? "cursor-pointer" : "cursor-not-allowed opacity-40 grayscale-[50%]"
                 }`}
               >
-                {canEvolve && (
-                  <span className="pointer-events-none absolute -top-1 h-2 w-2 animate-ping rounded-full bg-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.9)]" />
-                )}
                 <HomeMiniCard
                   card={entry.card}
                   label={`Carta ${entry.card.name}`}

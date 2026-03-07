@@ -3,9 +3,10 @@
 
 import { useMemo, useState } from "react";
 import { buildMarketListingView } from "@/components/hub/market/market-listing-view";
-import { applyOptimisticBuyCard } from "@/components/hub/market/internal/optimistic-market-updates";
 import { useSyncSelectedListing } from "@/components/hub/market/internal/useSyncSelectedListing";
 import { MarketOrderDirection, MarketOrderField, MarketTypeFilter } from "@/components/hub/market/market-filters";
+import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
+import { buildMarketVaultCollectionView } from "@/components/hub/market/vault/build-market-vault-collection-view";
 import { ICard } from "@/core/entities/ICard";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
@@ -24,6 +25,7 @@ interface UseMarketSceneStateInput {
 }
 
 export function useMarketSceneState(input: UseMarketSceneStateInput) {
+  const { play } = useHubModuleSfx();
   const initialAvailableListing = input.initialCatalog.listings.find((listing) => listing.isAvailable) ?? input.initialCatalog.listings[0] ?? null;
   const [catalog, setCatalog] = useState<IMarketCatalog>(input.initialCatalog);
   const [transactions, setTransactions] = useState<IMarketTransaction[]>(input.initialTransactions);
@@ -38,7 +40,22 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [revealedPackCards, setRevealedPackCards] = useState<ICard[]>([]);
   const [isPackRevealOpen, setIsPackRevealOpen] = useState(false);
+  const [isBuyingCard, setIsBuyingCard] = useState(false);
   const [isBuyingPack, setIsBuyingPack] = useState(false);
+
+  const mapMarketErrorMessage = (error: unknown, fallback: string): string => {
+    const rawMessage = error instanceof Error ? error.message : fallback;
+    if (rawMessage.includes("Nexus suficiente")) {
+      return "Saldo Nexus insuficiente. Compra cancelada en servidor para proteger tu cuenta.";
+    }
+    if (rawMessage.includes("stock")) {
+      return "No hay stock disponible para esta carta. Prueba con otra opción del mercado.";
+    }
+    if (rawMessage.includes("no está disponible")) {
+      return "Esta carta no está disponible para compra directa. Revisa la sección de packs.";
+    }
+    return rawMessage;
+  };
 
   const scopedListings = useMemo(() => {
     if (!selectedPackId) return catalog.listings.filter((listing) => listing.isAvailable);
@@ -70,33 +87,45 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
       }),
     [catalog.listings, nameQuery, orderDirection, orderField, typeFilter],
   );
+  const visibleCollection = useMemo(
+    () =>
+      buildMarketVaultCollectionView({
+        collection,
+        nameQuery,
+        typeFilter,
+        orderField,
+        orderDirection,
+      }),
+    [collection, nameQuery, orderDirection, orderField, typeFilter],
+  );
 
   useSyncSelectedListing({ selectedListing, visibleListings, setSelectedListing, setSelectedCard });
 
-  async function handleBuyCard(listingId: string): Promise<void> {
-    const previousCatalog = catalog;
-    const previousCollection = collection;
-    const optimisticState = applyOptimisticBuyCard(catalog, collection, listingId);
-    setCatalog(optimisticState.catalog);
-    setCollection(optimisticState.collection);
+  async function handleBuyCard(listingId: string): Promise<boolean> {
+    if (isBuyingCard) return false;
+    setIsBuyingCard(true);
     try {
       const result = await buyMarketCardAction(input.playerId, listingId);
+      play("BUY_CARD");
       setCatalog(result.catalog);
       setTransactions(result.transactions);
       setCollection(result.collection);
       setErrorMessage(null);
+      return true;
     } catch (error) {
-      setCatalog(previousCatalog);
-      setCollection(previousCollection);
-      setErrorMessage(error instanceof Error ? error.message : "No se pudo comprar la carta.");
+      setErrorMessage(mapMarketErrorMessage(error, "No se pudo comprar la carta en este momento."));
+      return false;
+    } finally {
+      setIsBuyingCard(false);
     }
   }
 
-  async function handleBuyPack(packId: string): Promise<void> {
-    if (isBuyingPack) return;
+  async function handleBuyPack(packId: string): Promise<boolean> {
+    if (isBuyingPack) return false;
     setIsBuyingPack(true);
     try {
       const result = await buyPackAction(input.playerId, packId);
+      play("BUY_PACK");
       setCatalog(result.catalog);
       setTransactions(result.transactions);
       setCollection(result.collection);
@@ -107,8 +136,10 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
       setRevealedPackCards(openedCards);
       setIsPackRevealOpen(true);
       setErrorMessage(null);
+      return true;
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "No se pudo comprar el sobre.");
+      setErrorMessage(mapMarketErrorMessage(error, "No se pudo comprar el sobre en este momento."));
+      return false;
     } finally {
       setIsBuyingPack(false);
     }
@@ -128,9 +159,11 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     errorMessage,
     revealedPackCards,
     isPackRevealOpen,
+    isBuyingCard,
     isBuyingPack,
     visibleListings,
     mobileVisibleListings,
+    visibleCollection,
     setSelectedPackId,
     setSelectedListing,
     setSelectedCard,
@@ -138,6 +171,7 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     setTypeFilter,
     setOrderField,
     setOrderDirection,
+    setErrorMessage,
     setIsPackRevealOpen,
     handleBuyCard,
     handleBuyPack,

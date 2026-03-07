@@ -1,10 +1,12 @@
 // src/components/hub/market/reveal/MarketPackRevealOverlay.tsx - Overlay de apertura de sobres con fases de sobre y revelado de cartas.
 "use client";
 
+import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MarketRevealCardsGrid } from "@/components/hub/market/reveal/MarketRevealCardsGrid";
 import { MarketRevealEnvelope } from "@/components/hub/market/reveal/MarketRevealEnvelope";
 import { usePackRevealPhase } from "@/components/hub/market/internal/usePackRevealPhase";
+import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { ICard } from "@/core/entities/ICard";
 
 interface MarketPackRevealOverlayProps {
@@ -15,6 +17,11 @@ interface MarketPackRevealOverlayProps {
 
 export function MarketPackRevealOverlay({ cards, isOpen, onClose }: MarketPackRevealOverlayProps) {
   const { phase, resetPhase } = usePackRevealPhase({ isOpen });
+  const { play } = useHubModuleSfx();
+  useEffect(() => {
+    if (!isOpen) return;
+    play("PACK_REVEAL");
+  }, [isOpen, play]);
 
   return (
     <AnimatePresence>

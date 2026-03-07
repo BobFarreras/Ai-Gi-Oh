@@ -26,14 +26,14 @@ const NODES: IHubMapNode[] = [
 describe("HubSceneFallback2D", () => {
   it("navega al hacer click en sección desbloqueada", () => {
     const onNavigate = vi.fn();
-    render(<HubSceneFallback2D sections={SECTIONS} nodes={NODES} onNavigate={onNavigate} />);
+    render(<HubSceneFallback2D sections={SECTIONS} nodes={NODES} onNavigate={onNavigate} activeNodeId={null} isNavigationBusy={false} />);
     fireEvent.click(screen.getByRole("button", { name: "Abrir Arsenal" }));
-    expect(onNavigate).toHaveBeenCalledWith("/hub/home");
+    expect(onNavigate).toHaveBeenCalledWith("home-node", "/hub/home");
   });
 
   it("muestra lockReason al interactuar con sección bloqueada", () => {
     const onNavigate = vi.fn();
-    render(<HubSceneFallback2D sections={SECTIONS} nodes={NODES} onNavigate={onNavigate} />);
+    render(<HubSceneFallback2D sections={SECTIONS} nodes={NODES} onNavigate={onNavigate} activeNodeId={null} isNavigationBusy={false} />);
     fireEvent.click(screen.getByRole("button", { name: "Mostrar bloqueo de Historia" }));
     expect(screen.getByText("Completa el entrenamiento para desbloquear historia.")).toBeInTheDocument();
     expect(onNavigate).not.toHaveBeenCalled();

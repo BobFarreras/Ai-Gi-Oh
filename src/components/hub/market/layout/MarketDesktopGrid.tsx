@@ -5,6 +5,7 @@ import { MarketCardInspector } from "@/components/hub/market/MarketCardInspector
 import { MarketListingsPanel } from "@/components/hub/market/listings/MarketListingsPanel";
 import { MarketPacksPanel } from "@/components/hub/market/packs/MarketPacksPanel";
 import { MarketVaultPanel } from "@/components/hub/market/vault/MarketVaultPanel";
+import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { ICard } from "@/core/entities/ICard";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
@@ -14,14 +15,15 @@ import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
 interface MarketDesktopGridProps {
   selectedCard: ICard | null;
   selectedListing: IMarketCardListing | null;
+  isBuyingCard: boolean;
   listings: IMarketCardListing[];
   packs: IMarketPackDefinition[];
   selectedPackId: string | null;
   collection: ICollectionCard[];
   transactions: IMarketTransaction[];
   catalogListings: IMarketCardListing[];
-  onBuyCard: (listingId: string) => Promise<void>;
-  onBuyPack: (packId: string) => Promise<void>;
+  onBuyCard: (listingId: string) => Promise<boolean>;
+  onBuyPack: (packId: string) => Promise<boolean>;
   onSelectPack: (packId: string) => void;
   onClearPackSelection: () => void;
   onSelectListing: (listing: IMarketCardListing) => void;
@@ -29,18 +31,27 @@ interface MarketDesktopGridProps {
 }
 
 export function MarketDesktopGrid(props: MarketDesktopGridProps) {
+  const { play } = useHubModuleSfx();
+
   return (
     <div className="mt-4 hidden min-h-0 flex-1 gap-4 xl:grid xl:grid-cols-[1fr_1.8fr_1.2fr]">
       <div className="min-h-0 min-w-0 overflow-hidden rounded-xl border border-cyan-900/30 bg-black/40 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
         <MarketCardInspector
           selectedCard={props.selectedCard}
           selectedListing={props.selectedListing}
+          isBuyingCard={props.isBuyingCard}
           onBuyCard={props.onBuyCard}
         />
       </div>
 
       <div className="min-h-0 min-w-0 overflow-hidden rounded-xl border border-cyan-900/30 bg-black/40 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-        <MarketListingsPanel listings={props.listings} onSelectCard={props.onSelectListing} />
+        <MarketListingsPanel
+          listings={props.listings}
+          onSelectCard={(listing) => {
+            play("DETAIL_OPEN");
+            props.onSelectListing(listing);
+          }}
+        />
       </div>
 
       <div className="grid min-h-0 min-w-0 grid-rows-[auto_1fr] gap-4 overflow-hidden">
@@ -58,7 +69,10 @@ export function MarketDesktopGrid(props: MarketDesktopGridProps) {
             collection={props.collection}
             transactions={props.transactions}
             catalogListings={props.catalogListings}
-            onSelectCard={props.onSelectVaultCard}
+            onSelectCard={(card) => {
+              play("DETAIL_OPEN");
+              props.onSelectVaultCard(card);
+            }}
           />
         </div>
       </div>
