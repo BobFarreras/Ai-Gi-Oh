@@ -22,6 +22,9 @@ interface HubSceneWorld3DProps {
   cameraTarget: [number, number, number];
   areNodeLabelsVisible: boolean;
   onNodeHoverSound: () => void;
+  onNavigate: (nodeId: string, href: string) => void;
+  activeNodeId: string | null;
+  isNavigationBusy: boolean;
 }
 
 export function HubSceneWorld3D({
@@ -34,6 +37,9 @@ export function HubSceneWorld3D({
   cameraTarget,
   areNodeLabelsVisible,
   onNodeHoverSound,
+  onNavigate,
+  activeNodeId,
+  isNavigationBusy,
 }: HubSceneWorld3DProps) {
   const sectionsByType = useMemo(
     () => new Map<HubSectionType, IHubSection>(sections.map((section) => [section.type, section])),
@@ -90,6 +96,9 @@ export function HubSceneWorld3D({
             nodeEntryDelay={index * HUB_NODE_STAGGER_DELAY}
             onNodeHoverSound={onNodeHoverSound}
             showActionPanel={areNodeLabelsVisible}
+            onNavigate={onNavigate}
+            activeNodeId={activeNodeId}
+            isNavigationBusy={isNavigationBusy}
           />
         );
       })}

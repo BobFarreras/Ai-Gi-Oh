@@ -11,9 +11,11 @@ import { resolveHubNodeBaseColor } from "@/components/hub/internal/hub-3d-node-m
 interface HubSceneFallback2DProps {
   sections: IHubSection[];
   nodes: IHubMapNode[];
-  onNavigate: (href: string) => void;
+  onNavigate: (nodeId: string, href: string) => void;
   onNodeHoverSound?: () => void;
   areNodeLabelsVisible?: boolean;
+  activeNodeId: string | null;
+  isNavigationBusy: boolean;
 }
 
 export function HubSceneFallback2D({
@@ -22,6 +24,8 @@ export function HubSceneFallback2D({
   onNavigate,
   onNodeHoverSound,
   areNodeLabelsVisible = true,
+  activeNodeId,
+  isNavigationBusy,
 }: HubSceneFallback2DProps) {
   const [lockVisibleBySection, setLockVisibleBySection] = useState<Record<string, boolean>>({});
   const sectionsByType = new Map<HubSectionType, IHubSection>(sections.map((section) => [section.type, section]));
@@ -45,13 +49,15 @@ export function HubSceneFallback2D({
                 isHovered={false}
                 isLockReasonVisible={Boolean(lockVisibleBySection[section.id])}
                 onHoverStart={onNodeHoverSound}
+                isNavigationBusy={isNavigationBusy}
+                isTargetNode={activeNodeId === node.id}
                 onAction={() => {
                   const result = resolveHubNodeInteraction(section);
                   if (result.kind === "locked") {
                     setLockVisibleBySection((previous) => ({ ...previous, [section.id]: !previous[section.id] }));
                     return;
                   }
-                  onNavigate(result.href);
+                  onNavigate(node.id, result.href);
                 }}
               />
             ) : null}

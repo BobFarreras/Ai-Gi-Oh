@@ -10,7 +10,8 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("HubScene fallback", () => {
-  it("renderiza nodos 2D navegables cuando se fuerza fallback", () => {
+  it("renderiza nodos 2D navegables cuando se fuerza fallback", async () => {
+    vi.useFakeTimers();
     render(
       <HubScene
         forceFallbackForTests
@@ -19,6 +20,8 @@ describe("HubScene fallback", () => {
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Abrir Arsenal" }));
+    await vi.advanceTimersByTimeAsync(650);
     expect(push).toHaveBeenCalledWith("/hub/home");
+    vi.useRealTimers();
   });
 });

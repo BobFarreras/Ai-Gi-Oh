@@ -50,4 +50,21 @@ describe("HubNodeActionPanel", () => {
     const button = screen.getByRole("button", { name: "Mostrar bloqueo de Historia" });
     expect(button).toHaveStyle({ borderColor: "#0ea5e980" });
   });
+
+  it("deshabilita nodos no objetivo durante navegación", () => {
+    const onAction = vi.fn();
+    render(
+      <HubNodeActionPanel
+        section={createSection()}
+        baseColor="#10b981"
+        isHovered={false}
+        isLockReasonVisible={false}
+        isNavigationBusy
+        isTargetNode={false}
+        onAction={onAction}
+      />,
+    );
+    const button = screen.getByRole("button", { name: "Abrir Arsenal" });
+    expect(button).toBeDisabled();
+  });
 });

@@ -6,6 +6,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { OrbitControls } from "@react-three/drei";
 import { HUB_CAMERA_DEFAULT_POSITION, HUB_CAMERA_DEFAULT_TARGET } from "@/components/hub/internal/hub-camera-config";
+import { sampleHubCameraArc } from "@/components/hub/internal/hub-camera-path";
 
 interface HubSceneCameraControlsProps {
   resetSignal: number;
@@ -25,9 +26,8 @@ interface ICameraResetAnimationState {
   toTarget: THREE.Vector3;
 }
 
-function easeOutCubic(t: number): number {
-  const inverse = 1 - t;
-  return 1 - inverse * inverse * inverse;
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
 export function HubSceneCameraControls({
@@ -69,8 +69,8 @@ export function HubSceneCameraControls({
 
     animation.elapsed = Math.min(animation.elapsed + delta, CAMERA_RESET_DURATION_SECONDS);
     const progress = animation.elapsed / CAMERA_RESET_DURATION_SECONDS;
-    const easedProgress = easeOutCubic(progress);
-    nextPositionRef.current.lerpVectors(animation.fromPosition, animation.toPosition, easedProgress);
+    const easedProgress = easeInOutCubic(progress);
+    nextPositionRef.current.copy(sampleHubCameraArc(animation.fromPosition, animation.toPosition, easedProgress));
     nextTargetRef.current.lerpVectors(animation.fromTarget, animation.toTarget, easedProgress);
     controls.object.position.copy(nextPositionRef.current);
     controls.target.copy(nextTargetRef.current);
@@ -78,6 +78,9 @@ export function HubSceneCameraControls({
 
     if (progress >= 1) {
       animation.active = false;
+      controls.object.position.copy(animation.toPosition);
+      controls.target.copy(animation.toTarget);
+      controls.update();
     }
   });
 

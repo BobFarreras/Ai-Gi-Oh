@@ -10,10 +10,12 @@ import { HubSceneFloatingActions } from "@/components/hub/HubSceneFloatingAction
 import { HubSceneHudOverlay } from "@/components/hub/HubSceneHudOverlay";
 import { HubSceneFallback2D } from "@/components/hub/HubSceneFallback2D";
 import { HubSceneWorld3D } from "@/components/hub/HubSceneWorld3D";
-import { resolveHubCameraPose } from "@/components/hub/internal/hub-camera-fit";
+import { resolveHubCameraPose, resolveHubNodeFocusPose } from "@/components/hub/internal/hub-camera-fit";
 import { applyResponsiveNodeLayout } from "@/components/hub/internal/hub-node-responsive-layout";
 import { supportsWebGL } from "@/components/hub/internal/hub-webgl-support";
 import { useDocumentVisibility } from "@/components/hub/internal/use-document-visibility";
+import { useHubNodeNavigation } from "@/components/hub/internal/use-hub-node-navigation";
+import { useHubRoutePrefetch } from "@/components/hub/internal/use-hub-route-prefetch";
 import { useHubSfx } from "@/components/hub/internal/use-hub-sfx";
 import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
 
@@ -38,6 +40,7 @@ export function HubScene({
   const isDocumentVisible = useDocumentVisibility();
   const viewportWidth = useViewportWidth();
   const { playHudEntry, playNodeHover } = useHubSfx();
+  const { navigationState, isNavigationBusy, isRouteSlow, requestNavigation } = useHubNodeNavigation({ router });
   const [cameraResetSignal, setCameraResetSignal] = useState(0);
   const [areNodeLabelsVisible, setAreNodeLabelsVisible] = useState(true);
   const canRender3D = useMemo(
@@ -46,6 +49,16 @@ export function HubScene({
   );
   const responsiveNodes = useMemo(() => applyResponsiveNodeLayout(nodes, viewportWidth), [nodes, viewportWidth]);
   const cameraPose = useMemo(() => resolveHubCameraPose(responsiveNodes, viewportWidth), [responsiveNodes, viewportWidth]);
+  const sectionHrefs = useMemo(() => sections.map((section) => section.href), [sections]);
+  const activeNode = useMemo(
+    () => responsiveNodes.find((node) => node.id === navigationState.targetNodeId) ?? null,
+    [navigationState.targetNodeId, responsiveNodes],
+  );
+  const activeCameraPose = useMemo(
+    () => (activeNode ? resolveHubNodeFocusPose(activeNode, viewportWidth) : cameraPose),
+    [activeNode, cameraPose, viewportWidth],
+  );
+  useHubRoutePrefetch({ router, hrefs: sectionHrefs });
 
   return (
     <section className="relative h-dvh w-full overflow-hidden">
@@ -66,9 +79,11 @@ export function HubScene({
           <HubSceneFallback2D
             sections={sections}
             nodes={responsiveNodes}
-            onNavigate={(href) => router.push(href)}
+            onNavigate={requestNavigation}
             onNodeHoverSound={playNodeHover}
             areNodeLabelsVisible={areNodeLabelsVisible}
+            activeNodeId={navigationState.targetNodeId}
+            isNavigationBusy={isNavigationBusy}
           />
         ) : null}
         {canRender3D ? (
@@ -78,11 +93,21 @@ export function HubScene({
             viewportWidth={viewportWidth}
             isDocumentVisible={isDocumentVisible}
             cameraResetSignal={cameraResetSignal}
-            cameraPosition={cameraPose.position}
-            cameraTarget={cameraPose.target}
+            cameraPosition={activeCameraPose.position}
+            cameraTarget={activeCameraPose.target}
             areNodeLabelsVisible={areNodeLabelsVisible}
             onNodeHoverSound={playNodeHover}
+            onNavigate={requestNavigation}
+            activeNodeId={navigationState.targetNodeId}
+            isNavigationBusy={isNavigationBusy}
           />
+        ) : null}
+        {isRouteSlow ? (
+          <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center bg-black/35">
+            <div className="rounded-lg border border-cyan-500/45 bg-[#041120]/90 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-cyan-100">
+              Sincronizando modulo...
+            </div>
+          </div>
         ) : null}
       </div>
     </section>

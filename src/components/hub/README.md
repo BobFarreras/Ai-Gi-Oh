@@ -22,6 +22,11 @@ La UI del Hub representa un centro de control interactivo en 3D, manteniendo:
 9. `nodes/*`: núcleos visuales 3D por sección.
 10. `nodes/market/*`: radar de mercado desacoplado por piezas para rendimiento.
 11. `internal/HubErrorDialog.tsx`: diálogo reutilizable de error (auto-cierre, cierre manual y sonido común).
+12. `internal/hub-node-navigation-flow.ts`: máquina de estados de navegación de nodos (`idle`, `targeting`, `routing`, `timeout`).
+13. `internal/use-hub-node-navigation.ts`: integra máquina + timers para bloquear doble click y disparar `router.push` tras transición.
+14. `internal/hub-camera-fit.ts`: además del encuadre global, calcula foco de cámara por nodo (`resolveHubNodeFocusPose`).
+15. `internal/use-hub-route-prefetch.ts`: precarga rutas del Hub para reducir latencia percibida al navegar.
+16. `internal/hub-camera-path.ts`: genera el arco de trayectoria para la transición cinematográfica de cámara.
 
 ## Flujo de interacción
 
@@ -39,6 +44,12 @@ La UI del Hub representa un centro de control interactivo en 3D, manteniendo:
 3. El nodo `MARKET` está dividido en submódulos (`grid`, `sweep`, `blips`) para limitar complejidad y facilitar tuning.
 4. El render 3D se pausa automáticamente cuando la pestaña no está visible (`frameloop: never`).
 5. El arranque usa `boot/HubSceneBootLoader` para ocultar artefactos iniciales y mostrar escena solo al completar transición.
+6. La transición de navegación de nodos se modela con estado puro para evitar dobles clicks y facilitar testeo antes de conectar cámara/loader.
+7. Mientras hay transición activa, los nodos no objetivo quedan deshabilitados y el nodo objetivo muestra estado `CONECTANDO`.
+8. Durante `targeting/routing`, la cámara se desplaza al nodo activo antes de cambiar de ruta.
+11. El movimiento de cámara usa trayectoria curva (arco) para evitar desplazamientos lineales bruscos.
+9. El Hub ejecuta prefetch de rutas de secciones al montar escena.
+10. Cada sección usa `loading.tsx` para mostrar feedback de carga real mientras resuelve datos en servidor.
 
 ## Fallback WebGL
 
@@ -67,6 +78,9 @@ La UI del Hub representa un centro de control interactivo en 3D, manteniendo:
 7. `src/components/hub/internal/hub-webgl-support.test.ts`
 8. `src/components/hub/boot/HubSceneBootLoader.test.tsx`
 9. `src/components/hub/internal/hub-render-profile.test.ts`
+10. `src/components/hub/internal/hub-node-navigation-flow.test.ts`
+11. `src/components/hub/internal/hub-route-prefetch.test.ts`
+12. `src/components/hub/internal/hub-camera-path.test.ts`
 
 Comando:
 

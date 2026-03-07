@@ -30,3 +30,14 @@ export function resolveHubCameraPose(nodes: readonly IHubMapNode[], viewportWidt
     target: [centerX, targetYOffset, centerZ],
   };
 }
+
+export function resolveHubNodeFocusPose(node: IHubMapNode, viewportWidth: number): IHubCameraPose {
+  const worldPosition = resolveHubNodeWorldPosition(node.positionX, node.positionY);
+  const verticalOffset = viewportWidth < 640 ? 0.9 : 1.25;
+  const cameraHeight = viewportWidth < 640 ? 7.1 : 8.8;
+  const cameraDistance = viewportWidth < 640 ? 8.9 : 10.6;
+  return {
+    position: [worldPosition.x, cameraHeight, worldPosition.z + cameraDistance],
+    target: [worldPosition.x, verticalOffset, worldPosition.z],
+  };
+}
