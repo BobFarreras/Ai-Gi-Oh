@@ -4,16 +4,22 @@ import { HomeCollectionOrderDirection, HomeCollectionOrderField, HomeCollectionT
 
 interface BuildCollectionViewInput {
   collection: ICollectionCard[];
+  nameQuery: string;
   typeFilter: HomeCollectionTypeFilter;
   orderField: HomeCollectionOrderField;
   orderDirection: HomeCollectionOrderDirection;
 }
 
 export function buildHomeCollectionView(input: BuildCollectionViewInput): ICollectionCard[] {
-  const filtered =
+  const byType =
     input.typeFilter === "ALL"
       ? [...input.collection]
       : input.collection.filter((entry) => entry.card.type === input.typeFilter);
+  const normalizedQuery = input.nameQuery.trim().toLowerCase();
+  const filtered =
+    normalizedQuery.length === 0
+      ? byType
+      : byType.filter((entry) => entry.card.name.toLowerCase().includes(normalizedQuery));
   const orderFactor = input.orderDirection === "ASC" ? 1 : -1;
 
   filtered.sort((entryA, entryB) => {

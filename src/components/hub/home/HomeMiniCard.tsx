@@ -15,6 +15,7 @@ interface HomeMiniCardProps {
   level?: number;
   xp?: number;
   masteryPassiveSkillId?: string | null;
+  size?: "default" | "mobileLarge";
 }
 
 export function HomeMiniCard({
@@ -27,6 +28,7 @@ export function HomeMiniCard({
   level = 0,
   xp = 0,
   masteryPassiveSkillId = null,
+  size = "default",
 }: HomeMiniCardProps) {
   const filledContainerClass = showSlotContainer
     ? isSelected
@@ -43,6 +45,11 @@ export function HomeMiniCard({
   const wrapperProps = onClick
     ? { type: "button" as const, "aria-label": label, onClick }
     : { "aria-label": label };
+
+  const cardScaleClass =
+    size === "mobileLarge"
+      ? "scale-[0.26] xs:scale-[0.28] sm:scale-[0.3] md:scale-[0.25]"
+      : "scale-[0.18] xs:scale-[0.2] sm:scale-[0.22] md:scale-[0.25]";
 
   if (!card) {
     return (
@@ -61,8 +68,7 @@ export function HomeMiniCard({
     <Wrapper {...wrapperProps} className={filledContainerClass}>
       {/* Contenedor centralizado para la miniatura */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        {/* Usamos clases responsivas de Tailwind para reducir el scale en pantallas pequeñas */}
-        <div className="scale-[0.18] xs:scale-[0.2] sm:scale-[0.22] md:scale-[0.25] origin-center">
+        <div className={`${cardScaleClass} origin-center`}>
           <Card card={card} versionTier={versionTier} level={level} xp={xp} masteryPassiveLabel={masteryPassiveLabel} />
         </div>
       </div>

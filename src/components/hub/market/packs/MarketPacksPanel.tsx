@@ -2,8 +2,10 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import { PackageOpen, X } from "lucide-react";
 import { MarketPackCardTile } from "@/components/hub/market/packs/MarketPackCardTile";
+import { MarketNexusSpendFloat } from "@/components/hub/market/internal/MarketNexusSpendFloat";
 import { IMarketPackDefinition } from "@/core/entities/market/IMarketPackDefinition";
 
 interface MarketPacksPanelProps {
@@ -11,7 +13,7 @@ interface MarketPacksPanelProps {
   selectedPackId: string | null;
   onSelectPack: (packId: string) => void;
   onClearPackSelection: () => void;
-  onBuyPack: (packId: string) => Promise<void>;
+  onBuyPack: (packId: string) => Promise<boolean>;
 }
 
 export function MarketPacksPanel({
@@ -21,7 +23,27 @@ export function MarketPacksPanel({
   onClearPackSelection,
   onBuyPack,
 }: MarketPacksPanelProps) {
+  const [floatingSpendId, setFloatingSpendId] = useState(0);
+  const floatingTimeoutRef = useRef<number | null>(null);
   const activePack = packs.find((pack) => pack.id === selectedPackId);
+  useEffect(
+    () => () => {
+      if (floatingTimeoutRef.current === null) return;
+      window.clearTimeout(floatingTimeoutRef.current);
+    },
+    [],
+  );
+  const handleBuyPack = async () => {
+    if (!activePack) return;
+    const wasBought = await onBuyPack(activePack.id);
+    if (!wasBought) return;
+    setFloatingSpendId((previous) => previous + 1);
+    if (floatingTimeoutRef.current !== null) window.clearTimeout(floatingTimeoutRef.current);
+    floatingTimeoutRef.current = window.setTimeout(() => {
+      setFloatingSpendId(0);
+      floatingTimeoutRef.current = null;
+    }, 1280);
+  };
 
   return (
     <section className="flex h-full flex-col overflow-hidden rounded-xl border border-cyan-800/35 bg-[#031020]/55 p-3">
@@ -44,10 +66,11 @@ export function MarketPacksPanel({
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             type="button"
-            onClick={() => onBuyPack(activePack.id)}
-            className="group relative flex items-center gap-2 overflow-hidden rounded-lg border border-fuchsia-400/60 bg-fuchsia-900/40 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-fuchsia-200 shadow-[0_0_15px_rgba(192,38,211,0.2)] transition-all hover:bg-fuchsia-800/60"
+            onClick={() => void handleBuyPack()}
+            className="group relative flex items-center gap-2 overflow-visible rounded-lg border border-fuchsia-400/60 bg-fuchsia-900/40 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-fuchsia-200 shadow-[0_0_15px_rgba(192,38,211,0.2)] transition-all hover:bg-fuchsia-800/60"
           >
             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shine_1s_infinite]" />
+            <MarketNexusSpendFloat amount={activePack.priceNexus} triggerId={floatingSpendId} className="-right-2 top-0" />
             <PackageOpen size={14} className="text-fuchsia-300" />
             Comprar x {activePack.priceNexus} NX
           </motion.button>

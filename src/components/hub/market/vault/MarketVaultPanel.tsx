@@ -5,6 +5,7 @@ import { AnimatePresence } from "framer-motion";
 import { useMemo, useState } from "react";
 import { MarketVaultCollectionTab } from "@/components/hub/market/vault/MarketVaultCollectionTab";
 import { MarketVaultHistoryTab } from "@/components/hub/market/vault/MarketVaultHistoryTab";
+import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { ICard } from "@/core/entities/ICard";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
@@ -19,6 +20,7 @@ interface MarketVaultPanelProps {
 
 export function MarketVaultPanel({ collection, transactions, catalogListings, onSelectCard }: MarketVaultPanelProps) {
   const [activeTab, setActiveTab] = useState<"COLLECTION" | "HISTORY">("COLLECTION");
+  const { play } = useHubModuleSfx();
   const orderedCollection = useMemo(
     () =>
       [...collection].sort(
@@ -33,7 +35,10 @@ export function MarketVaultPanel({ collection, transactions, catalogListings, on
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setActiveTab("COLLECTION")}
+            onClick={() => {
+              if (activeTab !== "COLLECTION") play("SECTION_SWITCH");
+              setActiveTab("COLLECTION");
+            }}
             className={`flex-1 rounded-lg py-1.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
               activeTab === "COLLECTION"
                 ? "border border-cyan-400 bg-cyan-950/80 text-cyan-100 shadow-[0_0_10px_rgba(34,211,238,0.2)]"
@@ -44,7 +49,10 @@ export function MarketVaultPanel({ collection, transactions, catalogListings, on
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("HISTORY")}
+            onClick={() => {
+              if (activeTab !== "HISTORY") play("SECTION_SWITCH");
+              setActiveTab("HISTORY");
+            }}
             className={`flex-1 rounded-lg py-1.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
               activeTab === "HISTORY"
                 ? "border border-cyan-400 bg-cyan-950/80 text-cyan-100 shadow-[0_0_10px_rgba(34,211,238,0.2)]"

@@ -17,9 +17,11 @@ interface GameSelectProps {
   onChange: (value: string) => void;
   ariaLabel: string;
   Icon: LucideIcon;
+  onOpen?: () => void;
+  onClose?: () => void;
 }
 
-export function GameSelect({ label, value, options, onChange, ariaLabel, Icon }: GameSelectProps) {
+export function GameSelect({ label, value, options, onChange, ariaLabel, Icon, onOpen, onClose }: GameSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -31,7 +33,7 @@ export function GameSelect({ label, value, options, onChange, ariaLabel, Icon }:
     };
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, []);
+  }, [onClose]);
 
   const selectedOption = options.find((opt) => opt.value === value) || options[0];
 
@@ -48,7 +50,14 @@ export function GameSelect({ label, value, options, onChange, ariaLabel, Icon }:
         aria-label={ariaLabel}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() =>
+          setIsOpen((previous) => {
+            const next = !previous;
+            if (next) onOpen?.();
+            else onClose?.();
+            return next;
+          })
+        }
         className="flex w-full items-center justify-between rounded-xl border border-cyan-500/40 bg-[linear-gradient(180deg,rgba(4,34,56,0.8),rgba(3,22,38,0.9))] px-3 py-2 text-xs font-bold text-cyan-50 shadow-[inset_0_0_10px_rgba(34,211,238,0.1)] outline-none transition-all hover:border-cyan-300/80 focus:border-cyan-300 focus:shadow-[0_0_15px_rgba(34,211,238,0.3)] backdrop-blur-md"
       >
         <span className="truncate">{selectedOption?.label}</span>

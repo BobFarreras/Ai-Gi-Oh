@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowDownUp, Layers3, ListFilter, Search } from "lucide-react";
 import { GameSelect } from "@/components/ui/GameSelect";
 import { BackButton } from "@/components/ui/BackButton";
+import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { MARKET_ORDER_OPTIONS, MARKET_TYPE_OPTIONS } from "@/components/hub/market/layout/market-filter-options";
 import {
   MarketOrderDirection,
@@ -27,6 +28,7 @@ interface MarketHeaderBarProps {
 
 export function MarketHeaderBar(props: MarketHeaderBarProps) {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const { play } = useHubModuleSfx();
 
   return (
     <header className="relative w-full bg-[#041120]/90 border border-cyan-800/50 p-2 sm:px-4 sm:py-2.5 rounded-xl shadow-[0_0_20px_rgba(8,145,178,0.15),inset_0_0_20px_rgba(0,0,0,0.6)] backdrop-blur-xl z-[100] overflow-visible">
@@ -69,6 +71,8 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
               label="TIPO"
               value={props.typeFilter}
               onChange={(value) => props.onTypeFilterChange(value as MarketTypeFilter)}
+              onOpen={() => play("FILTER_OPEN")}
+              onClose={() => play("FILTER_CLOSE")}
               ariaLabel="Filtro de tipo"
               Icon={ListFilter}
               options={MARKET_TYPE_OPTIONS}
@@ -79,6 +83,8 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
               label="ORDEN"
               value={props.orderField}
               onChange={(value) => props.onOrderFieldChange(value as MarketOrderField)}
+              onOpen={() => play("FILTER_OPEN")}
+              onClose={() => play("FILTER_CLOSE")}
               ariaLabel="Campo de orden"
               Icon={Layers3}
               options={MARKET_ORDER_OPTIONS}
@@ -103,6 +109,8 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
             label="TIPO"
             value={props.typeFilter}
             onChange={(value) => props.onTypeFilterChange(value as MarketTypeFilter)}
+            onOpen={() => play("FILTER_OPEN")}
+            onClose={() => play("FILTER_CLOSE")}
             ariaLabel="Filtro de tipo"
             Icon={ListFilter}
             options={MARKET_TYPE_OPTIONS}
@@ -111,6 +119,8 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
             label="ORDEN"
             value={props.orderField}
             onChange={(value) => props.onOrderFieldChange(value as MarketOrderField)}
+            onOpen={() => play("FILTER_OPEN")}
+            onClose={() => play("FILTER_CLOSE")}
             ariaLabel="Campo de orden"
             Icon={Layers3}
             options={MARKET_ORDER_OPTIONS}

@@ -5,6 +5,7 @@ import { MarketHeaderBar } from "@/components/hub/market/layout/MarketHeaderBar"
 import { MarketDesktopGrid } from "@/components/hub/market/layout/MarketDesktopGrid";
 import { MarketMobileStack } from "@/components/hub/market/layout/MarketMobileStack";
 import { MarketPackRevealOverlay } from "@/components/hub/market/reveal/MarketPackRevealOverlay";
+import { HubErrorDialog } from "@/components/hub/internal/HubErrorDialog";
 import { useMarketSceneState } from "@/components/hub/market/internal/useMarketSceneState";
 import { ICard } from "@/core/entities/ICard";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
@@ -57,21 +58,14 @@ export function MarketScene(props: MarketSceneProps) {
           }
         />
 
-        {state.errorMessage && (
-          <div className="mt-3 shrink-0 animate-in fade-in slide-in-from-top-2">
-            <p className="rounded-xl border border-rose-500/50 bg-rose-950/40 px-4 py-3 text-center text-sm font-bold tracking-wide text-rose-200 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
-              {state.errorMessage}
-            </p>
-          </div>
-        )}
-
         <MarketDesktopGrid
           selectedCard={state.selectedCard}
           selectedListing={state.selectedListing}
+          isBuyingCard={state.isBuyingCard}
           listings={state.visibleListings}
           packs={state.catalog.packs}
           selectedPackId={state.selectedPackId}
-          collection={state.collection}
+          collection={state.visibleCollection}
           transactions={state.transactions}
           catalogListings={state.catalog.listings}
           onBuyCard={state.handleBuyCard}
@@ -84,10 +78,11 @@ export function MarketScene(props: MarketSceneProps) {
         <MarketMobileStack
           selectedCard={state.selectedCard}
           selectedListing={state.selectedListing}
+          isBuyingCard={state.isBuyingCard}
           listings={state.mobileVisibleListings}
           packs={state.catalog.packs}
           selectedPackId={state.selectedPackId}
-          collection={state.collection}
+          collection={state.visibleCollection}
           transactions={state.transactions}
           catalogListings={state.catalog.listings}
           isBuyingPack={state.isBuyingPack}
@@ -104,6 +99,11 @@ export function MarketScene(props: MarketSceneProps) {
         cards={state.revealedPackCards}
         isOpen={state.isPackRevealOpen}
         onClose={() => state.setIsPackRevealOpen(false)}
+      />
+      <HubErrorDialog
+        title="Error de Mercado"
+        message={state.errorMessage}
+        onClose={() => state.setErrorMessage(null)}
       />
     </main>
   );
