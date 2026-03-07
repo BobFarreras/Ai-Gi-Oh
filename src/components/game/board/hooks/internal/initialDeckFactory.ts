@@ -1,8 +1,10 @@
+// src/components/game/board/hooks/internal/initialDeckFactory.ts - Construye y baraja mazos mock del tablero con fuente aleatoria inyectable.
 import { ICard } from "@/core/entities/ICard";
 import { ENTITY_CARDS } from "@/core/data/mock-cards/entities";
 import { EXECUTION_CARDS } from "@/core/data/mock-cards/executions";
 import { TRAP_CARDS } from "@/core/data/mock-cards/traps";
 import { FUSION_CARDS } from "@/core/data/mock-cards/fusions";
+import { RandomSource } from "@/core/services/random/seeded-rng";
 
 type CardMap = Record<string, ICard>;
 
@@ -67,7 +69,7 @@ function toDeck(deckIds: readonly string[]): ICard[] {
   });
 }
 
-export function shuffleDeck(deck: ICard[], randomFn: () => number = Math.random): ICard[] {
+export function shuffleDeck(deck: ICard[], randomFn: RandomSource = Math.random): ICard[] {
   const shuffled = [...deck];
   for (let index = shuffled.length - 1; index > 0; index -= 1) {
     const randomIndex = Math.floor(randomFn() * (index + 1));
@@ -76,10 +78,10 @@ export function shuffleDeck(deck: ICard[], randomFn: () => number = Math.random)
   return shuffled;
 }
 
-export function createPlayerDeckA(): ICard[] {
-  return shuffleDeck(toDeck(PLAYER_A_DECK_IDS));
+export function createPlayerDeckA(randomFn: RandomSource = Math.random): ICard[] {
+  return shuffleDeck(toDeck(PLAYER_A_DECK_IDS), randomFn);
 }
 
-export function createPlayerDeckB(): ICard[] {
-  return shuffleDeck(toDeck(PLAYER_B_DECK_IDS));
+export function createPlayerDeckB(randomFn: RandomSource = Math.random): ICard[] {
+  return shuffleDeck(toDeck(PLAYER_B_DECK_IDS), randomFn);
 }

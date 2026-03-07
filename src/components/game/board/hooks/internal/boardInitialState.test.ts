@@ -29,4 +29,15 @@ describe("boardInitialState", () => {
     const state = createInitialBoardState();
     expect(state.playerA.hand.length + state.playerA.deck.length).toBe(20);
   });
+
+  it("mantiene orden y runtimeIds deterministas con la misma seed", () => {
+    const seed = "seed-deterministic-board";
+    const firstState = createInitialBoardState({ seed });
+    const secondState = createInitialBoardState({ seed });
+
+    const firstHandRuntimeIds = firstState.playerA.hand.map((card) => card.runtimeId);
+    const secondHandRuntimeIds = secondState.playerA.hand.map((card) => card.runtimeId);
+    expect(firstHandRuntimeIds).toEqual(secondHandRuntimeIds);
+    expect(firstState.playerA.hand.map((card) => card.id)).toEqual(secondState.playerA.hand.map((card) => card.id));
+  });
 });

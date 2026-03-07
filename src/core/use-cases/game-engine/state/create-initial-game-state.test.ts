@@ -1,5 +1,5 @@
 // src/core/use-cases/game-engine/state/create-initial-game-state.test.ts - Verifica reparto inicial y selección de jugador inicial.
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { createInitialGameState } from "./create-initial-game-state";
 
@@ -34,16 +34,14 @@ describe("createInitialGameState", () => {
   });
 
   it("debería elegir jugador inicial aleatorio cuando no se especifica", () => {
-    const randomSpy = vi.spyOn(Math, "random").mockReturnValueOnce(0.8);
-
     const state = createInitialGameState({
       playerA: { id: "p1", name: "Neo", deck: createDeck("a", 20) },
       playerB: { id: "p2", name: "Smith", deck: createDeck("b", 20) },
+      randomSource: () => 0.8,
     });
 
     expect(state.startingPlayerId).toBe("p2");
     expect(state.activePlayerId).toBe("p2");
-    randomSpy.mockRestore();
   });
 });
 

@@ -333,6 +333,15 @@ UI (app/components) -> UseCases/Services -> Repositories (interfaces core)
    - resto de modos locales actuales: persistencia remota vía API.
 3. `useBoard` deja de invocar cliente HTTP de progresión de forma directa y delega en servicio de aplicación desacoplado.
 
+## Subdominio Game (fase 4 determinismo por seed)
+
+1. Se introduce RNG determinista en `core/services/random/seeded-rng.ts` para que el arranque de partida sea reproducible.
+2. `createInitialGameState` acepta `randomSource` inyectable (sin acoplarse a `Math.random`).
+3. `boardInitialState` usa `seed` de partida para:
+   - barajar mazos con RNG inyectado,
+   - generar `runtimeId` inicial de cartas de forma estable.
+4. `useBoard` conserva `matchSeed` estable durante la partida para depuración y futuros replays/sincronización.
+
 ## Subdominio Progresión (fase 6.1)
 
 1. Se incorpora `player_card_progress` como estado canónico de progresión por carta (`version_tier`, `level`, `xp`).

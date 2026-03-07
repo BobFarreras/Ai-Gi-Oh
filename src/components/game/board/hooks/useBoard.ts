@@ -4,6 +4,7 @@ import { GameState } from "@/core/use-cases/GameEngine";
 import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
 import { ICampaignProgress } from "@/core/services/opponent/difficulty/types";
+import { createMatchSeed } from "@/core/services/random/create-match-seed";
 import { createInitialBoardState } from "./internal/boardInitialState";
 import { useMatchAudio } from "./internal/match/useMatchAudio";
 import { useMatchProgression } from "./internal/match/useMatchProgression";
@@ -19,9 +20,10 @@ function resolveWinnerPlayerId(gameState: GameState): string | "DRAW" | null {
 
 export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINING") {
   const [campaignProgress] = useState<ICampaignProgress>({ chapterIndex: 1, duelIndex: 1, victories: 0 });
+  const [matchSeed] = useState(() => createMatchSeed());
   const createInitialState = useCallback(
-    () => createInitialBoardState({ playerDeck: initialPlayerDeck }),
-    [initialPlayerDeck],
+    () => createInitialBoardState({ playerDeck: initialPlayerDeck, seed: matchSeed }),
+    [initialPlayerDeck, matchSeed],
   );
   const gameStateRef = useRef<GameState>(createInitialState());
   const uiState = useMatchUiState({ gameStateRef, createInitialState });
@@ -93,6 +95,7 @@ export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINI
     battleExperienceSummary: progression.battleExperienceSummary,
     battleExperienceCardLookup: progression.battleExperienceCardLookup,
     isBattleExperiencePending: progression.isBattleExperiencePending,
+    matchSeed,
     playTimerExpired: audio.playTimerExpired,
     playTimerWarning: audio.playTimerWarning,
     playButtonClick: audio.playButtonClick,
