@@ -67,7 +67,7 @@ export function PlayerHUD({
       }}
       transition={{ type: "spring", stiffness: 200, damping: 20 }}
       className={cn(
-        "absolute z-[100] flex w-[420px] h-[140px] transition-all duration-300 pointer-events-none",
+        "absolute z-[100] flex w-[clamp(18rem,30vw,26.25rem)] h-[clamp(6.2rem,11vh,8.75rem)] transition-all duration-300 pointer-events-none",
         isOpponent ? "top-0 right-0 justify-start" : "bottom-0 left-0 justify-end"
       )}
     >

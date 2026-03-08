@@ -42,6 +42,7 @@ interface BattlefieldProps {
   playerId: string;
   opponentId: string;
   canActivateSelectedExecution: boolean;
+  viewportBoardScale?: number;
   onActivateSelectedExecution: () => void;
   onGraveyardClick: (side: "player" | "opponent") => void;
   onDestroyedClick?: (side: "player" | "opponent") => void;
@@ -82,6 +83,7 @@ export function Battlefield({
   playerId,
   opponentId,
   canActivateSelectedExecution,
+  viewportBoardScale = 1,
   onActivateSelectedExecution,
   onGraveyardClick,
   onDestroyedClick = () => undefined,
@@ -99,7 +101,7 @@ export function Battlefield({
         drag
         dragConstraints={{ left: -300, right: 300, top: -200, bottom: 200 }}
         dragElastic={0.05}
-        animate={{ scale: zoom }}
+        animate={{ scale: zoom * viewportBoardScale }}
         transition={{ type: "spring", stiffness: 400, damping: 40 }}
         className="w-full h-full flex items-center justify-center -translate-y-18 md:-translate-y-20 lg:-translate-y-22 cursor-grab active:cursor-grabbing perspective-[1200px]"
       >

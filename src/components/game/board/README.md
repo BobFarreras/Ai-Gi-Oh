@@ -160,3 +160,19 @@ Guía rápida para entender la lógica de tablero y batalla.
 5. Subcomponentes internos de UI del historial: `src/components/game/board/ui/internal/combat-log-row/*`.
 6. Subcomponentes internos de zona de batalla: `src/components/game/board/battlefield/internal/*`.
 7. Narración y scripts: `src/components/game/board/narration/*`.
+
+## Responsive desktop (fase previa a móvil)
+
+1. La escala de tablero y densidad de mano se calcula en:
+   - `hooks/internal/layout/board-layout-metrics.ts`
+   - `hooks/internal/layout/use-board-viewport-scale.ts`
+2. Objetivo:
+   - mantener la misma UI desktop,
+   - reducir escala en pantallas desktop pequeñas,
+   - evitar pisadas entre tablero, mano y paneles laterales.
+3. Métricas expuestas:
+   - `boardScale`,
+   - `handCardScale`,
+   - `handOverlapPx`,
+   - `handYOffsetPx`,
+   - `handContainerHeightPx`.
