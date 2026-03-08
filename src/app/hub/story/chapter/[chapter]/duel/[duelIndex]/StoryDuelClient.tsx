@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Board } from "@/components/game/board";
+import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result-reward-summary";
 import { ICard } from "@/core/entities/ICard";
 
 interface StoryDuelClientProps {
@@ -20,6 +21,7 @@ interface StoryDuelClientProps {
 export function StoryDuelClient(props: StoryDuelClientProps) {
   const router = useRouter();
   const [status, setStatus] = useState<string | null>(null);
+  const [rewardSummary, setRewardSummary] = useState<IDuelResultRewardSummary | null>(null);
   const hasPostedResultRef = useRef(false);
 
   async function handleMatchResolved(result: { winnerPlayerId: string | "DRAW"; playerId: string }) {
@@ -38,11 +40,13 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
       hasPostedResultRef.current = false;
       return;
     }
+    const payload = (await response.json()) as { rewardNexus?: number; rewardPlayerExperience?: number; rewardCards?: ICard[] };
+    setRewardSummary({
+      rewardNexus: payload.rewardNexus ?? 0,
+      rewardPlayerExperience: payload.rewardPlayerExperience ?? 0,
+      rewardCards: payload.rewardCards ?? [],
+    });
     setStatus("Resultado Story sincronizado.");
-    setTimeout(() => {
-      router.push("/hub/story");
-      router.refresh();
-    }, 1000);
   }
 
   return (
@@ -59,6 +63,12 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
           opponentDeck: props.opponentDeck,
           starterPlayerId: props.playerId,
           openingHandSize: 4,
+        }}
+        duelResultRewardSummary={rewardSummary}
+        resultActionLabel="Volver al mapa Story"
+        onResultAction={() => {
+          router.push("/hub/story");
+          router.refresh();
         }}
         onMatchResolved={handleMatchResolved}
       />

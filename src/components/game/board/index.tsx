@@ -11,15 +11,19 @@ import { BoardInteractiveLayer } from "./ui/layers/BoardInteractiveLayer";
 import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
 import { ICreateInitialBoardStateInput } from "@/components/game/board/hooks/internal/boardInitialState";
+import { IDuelResultRewardSummary } from "./ui/internal/duel-result-reward-summary";
 
 interface IBoardProps {
   initialPlayerDeck?: ICard[] | null;
   mode?: IMatchMode;
   initialConfig?: ICreateInitialBoardStateInput;
+  duelResultRewardSummary?: IDuelResultRewardSummary | null;
+  resultActionLabel?: string;
+  onResultAction?: () => void;
   onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string }) => void;
 }
 
-export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, onMatchResolved }: IBoardProps) {
+export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, resultActionLabel, onResultAction, onMatchResolved }: IBoardProps) {
   const {
     gameState,
     selectedCard,
@@ -179,6 +183,9 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, onM
         battleExperienceSummary={battleExperienceSummary}
         battleExperienceCardLookup={battleExperienceCardLookup}
         isBattleExperiencePending={isBattleExperiencePending}
+        rewardSummary={duelResultRewardSummary}
+        resultActionLabel={resultActionLabel}
+        onResultAction={onResultAction}
         onRestart={restartMatch}
       />
     </div>
