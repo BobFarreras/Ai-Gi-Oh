@@ -39,6 +39,7 @@ const STORY_OPPONENT_PACK_OVERRIDES: Record<string, Partial<Record<string, { tex
     },
     "win-opponent-defeat": {
       text: "La próxima vez ganaré.",
+      audioUrl: "/audio/story/opp-ch1-apprentice/derrota-oponente.mp3",
       portraitUrl: "/assets/story/opponents/opp-ch1-apprentice/derrota-GenNvim.png",
       durationMs: 3600,
     },
