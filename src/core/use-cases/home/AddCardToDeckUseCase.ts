@@ -2,7 +2,7 @@
 import { IDeck } from "@/core/entities/home/IDeck";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { IDeckRepository } from "@/core/repositories/IDeckRepository";
-import { assertCanAddCardToDeck, countDeckCopies, findFirstEmptyDeckSlot } from "@/core/services/home/deck-rules";
+import { assertCanAddCardToDeck, countAssignedCopies, findFirstEmptyDeckSlot } from "@/core/services/home/deck-rules";
 import { assertValidCardId, assertValidPlayerId } from "@/core/use-cases/home/internal/assert-valid-home-input";
 
 interface IAddCardToDeckInput {
@@ -24,15 +24,19 @@ export class AddCardToDeckUseCase {
     if (!collectionEntry) {
       throw new GameRuleError("La carta no existe en el almacén del jugador.");
     }
+    if (collectionEntry.card.type === "FUSION") {
+      throw new GameRuleError("Las cartas de fusión solo pueden equiparse en el bloque de fusión.");
+    }
 
     assertCanAddCardToDeck(deck, input.cardId);
-    if (countDeckCopies(deck, input.cardId) >= collectionEntry.ownedCopies) {
+    if (countAssignedCopies(deck, input.cardId) >= collectionEntry.ownedCopies) {
       throw new GameRuleError("No tienes más copias disponibles de esta carta.");
     }
     const slotIndex = findFirstEmptyDeckSlot(deck);
     const updatedDeck: IDeck = {
       playerId: deck.playerId,
       slots: deck.slots.map((slot) => ({ ...slot })),
+      fusionSlots: deck.fusionSlots.map((slot) => ({ ...slot })),
     };
     updatedDeck.slots[slotIndex] = { ...updatedDeck.slots[slotIndex], cardId: input.cardId };
     await this.deckRepository.saveDeck(updatedDeck);

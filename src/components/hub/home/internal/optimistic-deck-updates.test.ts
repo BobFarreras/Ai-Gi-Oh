@@ -10,6 +10,10 @@ function createDeck(): IDeck {
       { index: 0, cardId: "entity-a" },
       { index: 1, cardId: null },
     ],
+    fusionSlots: [
+      { index: 0, cardId: null },
+      { index: 1, cardId: null },
+    ],
   };
 }
 

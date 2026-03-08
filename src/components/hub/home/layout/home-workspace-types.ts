@@ -17,6 +17,7 @@ export interface IHomeWorkspaceProps {
   cardProgressById: Map<string, IPlayerCardProgress>;
   evolvableCardIds: Set<string>;
   selectedSlotIndex: number | null;
+  selectedFusionSlotIndex: number | null;
   selectedCardId: string | null;
   selectedCollectionCardId: string | null;
   selectedCard: ICard | null;
@@ -34,6 +35,7 @@ export interface IHomeWorkspaceProps {
   onRemoveSelectedCard: () => Promise<IHomeActionResult>;
   onEvolveSelectedCard: () => Promise<IHomeActionResult>;
   onSelectSlot: (slotIndex: number) => void;
+  onSelectFusionSlot: (slotIndex: number) => void;
   onSelectCollectionCard: (cardId: string) => void;
   onClearError: () => void;
 }

@@ -4,7 +4,7 @@ import { IBoardEntity } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
 import { MouseEvent } from "react";
 import { BattlefieldLanes } from "./internal/BattlefieldLanes";
-import { DeckPile, GraveyardPile } from "./internal/BattlefieldPiles";
+import { DeckPile, DestroyedPile, FusionDeckPile, GraveyardPile } from "./internal/BattlefieldPiles";
 import { useDamageFlash } from "./internal/useDamageFlash";
 
 interface BattlefieldZoneProps {
@@ -12,8 +12,10 @@ interface BattlefieldZoneProps {
   activeEntities: IBoardEntity[];
   activeExecutions: IBoardEntity[];
   deckCount: number;
+  fusionDeckCount: number;
   topGraveCard: ICard | null;
   graveyardCount: number;
+  destroyedCount: number;
   activeAttackerId: string | null;
   selectedCard: ICard | null;
   selectedBoardEntityInstanceId: string | null;
@@ -40,8 +42,10 @@ export function BattlefieldZone({
   activeEntities,
   activeExecutions,
   deckCount,
+  fusionDeckCount,
   topGraveCard,
   graveyardCount,
+  destroyedCount,
   activeAttackerId,
   selectedCard,
   selectedBoardEntityInstanceId,
@@ -81,6 +85,7 @@ export function BattlefieldZone({
         graveyardCount={graveyardCount}
         onClick={onGraveyardClick}
       />
+      <DestroyedPile destroyedCount={destroyedCount} />
       <BattlefieldLanes
         isOpponentSide={isOpponentSide}
         activeEntities={activeEntities}
@@ -102,6 +107,7 @@ export function BattlefieldZone({
         onActivateSelectedExecution={onActivateSelectedExecution}
         onEntityClick={onEntityClick}
       />
+      <FusionDeckPile fusionDeckCount={fusionDeckCount} />
       <DeckPile deckCount={deckCount} />
     </div>
   );

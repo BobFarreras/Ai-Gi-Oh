@@ -1,7 +1,7 @@
 // src/services/story/get-story-duel-runtime-data.ts - Resuelve datos de ejecución de un duelo Story (jugador, oponente, mazos y acceso).
 import { ICard } from "@/core/entities/ICard";
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
-import { getPlayerBoardDeck } from "@/services/game/get-player-board-deck";
+import { getPlayerBoardLoadout } from "@/services/game/get-player-board-deck";
 import { createSupabaseOpponentRepository } from "@/infrastructure/persistence/supabase/create-supabase-opponent-repository";
 import { createSupabasePlayerStoryDuelProgressRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-story-duel-progress-repository";
 import { createSupabaseServerClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-server-client";
@@ -16,6 +16,7 @@ export interface IStoryDuelRuntimeData {
   duelDescription: string;
   isUnlocked: boolean;
   playerDeck: ICard[];
+  playerFusionDeck: ICard[];
   opponentDeck: ICard[];
   opponentId: string;
   opponentName: string;
@@ -25,7 +26,9 @@ export interface IStoryDuelRuntimeData {
 export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number): Promise<IStoryDuelRuntimeData | null> {
   const session = await getCurrentUserSession();
   if (!session) return null;
-  const playerDeck = (await getPlayerBoardDeck()) ?? [];
+  const loadout = await getPlayerBoardLoadout();
+  const playerDeck = loadout.deck ?? [];
+  const playerFusionDeck = loadout.fusionDeck ?? [];
   const opponentRepository = await createSupabaseOpponentRepository();
   const storyProgressRepository = await createSupabasePlayerStoryDuelProgressRepository();
   const duel = await opponentRepository.getStoryDuel(chapter, duelIndex);
@@ -52,6 +55,7 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
     duelDescription: duel.description,
     isUnlocked,
     playerDeck,
+    playerFusionDeck,
     opponentDeck,
     opponentId: duel.opponentId,
     opponentName: duel.opponentName,

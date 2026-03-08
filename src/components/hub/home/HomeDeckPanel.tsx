@@ -4,13 +4,16 @@ import { IDeck } from "@/core/entities/home/IDeck";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { HomeMiniCard } from "@/components/hub/home/HomeMiniCard";
+import { HomeFusionDeckPanel } from "@/components/hub/home/HomeFusionDeckPanel";
 
 interface HomeDeckPanelProps {
   deck: IDeck;
   collection: ICollectionCard[];
   cardProgressById: Map<string, IPlayerCardProgress>;
   selectedSlotIndex: number | null;
+  selectedFusionSlotIndex: number | null;
   onSelectSlot: (slotIndex: number) => void;
+  onSelectFusionSlot: (slotIndex: number) => void;
   selectedCardId: string | null;
 }
 
@@ -19,7 +22,9 @@ export function HomeDeckPanel({
   collection,
   cardProgressById,
   selectedSlotIndex,
+  selectedFusionSlotIndex,
   onSelectSlot,
+  onSelectFusionSlot,
   selectedCardId,
 }: HomeDeckPanelProps) {
   const cardById = new Map(collection.map((entry) => [entry.card.id, entry.card]));
@@ -63,6 +68,14 @@ export function HomeDeckPanel({
             );
           })}
         </div>
+        <HomeFusionDeckPanel
+          deck={deck}
+          collection={collection}
+          cardProgressById={cardProgressById}
+          selectedFusionSlotIndex={selectedFusionSlotIndex}
+          selectedCardId={selectedCardId}
+          onSelectFusionSlot={onSelectFusionSlot}
+        />
       </div>
     </section>
   );

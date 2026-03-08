@@ -1,14 +1,18 @@
 // src/core/services/home/deck-rules.test.ts - Verifica reglas de tamaño y duplicados del constructor de mazos.
 import { describe, expect, it } from "vitest";
 import { IDeck } from "@/core/entities/home/IDeck";
-import { assertCanAddCardToDeck, assertDeckReadyToSave, HOME_DECK_SIZE } from "./deck-rules";
+import { assertCanAddCardToDeck, assertDeckReadyToSave, HOME_DECK_SIZE, HOME_FUSION_DECK_SIZE } from "./deck-rules";
 
 function createDeckWithCardCopies(cardId: string, copies: number): IDeck {
   const slots = Array.from({ length: HOME_DECK_SIZE }, (_, index) => ({
     index,
     cardId: index < copies ? cardId : null,
   }));
-  return { playerId: "player-a", slots };
+  return {
+    playerId: "player-a",
+    slots,
+    fusionSlots: Array.from({ length: HOME_FUSION_DECK_SIZE }, (_, index) => ({ index, cardId: null })),
+  };
 }
 
 describe("deck-rules", () => {

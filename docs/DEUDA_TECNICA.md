@@ -22,6 +22,15 @@
 7. **Fase 5 (completada)**: `IOpponentRepository` conectado a tablas Story y mapa/duelos operativos sin hardcode en UI.
 8. **Fase 6**: añadir flujo de capítulo/cinemáticas y tuning de IA por oponente (`ai_profile`) en runtime de combate.
 
+## Bloque de mejoras en preparación (2026-03-08)
+
+1. Política de cola de banners en acciones rápidas para evitar backlog visual.
+2. Refuerzo de fusión con `fusionDeck` dedicado y validación estricta de receta completa.
+3. Guardas de salida de Arsenal con requisito obligatorio `deck 20/20`.
+4. Introducción de `destroyedPile` como subdominio separado de `graveyard`.
+5. Referencia de diseño:
+   - `docs/adr/2026-03-08-combat-block-banner-fusion-destroyed.md`.
+
 ## Criterios de salida de deuda (combate)
 
 1. `Board` solo renderiza y delega eventos a un controller.

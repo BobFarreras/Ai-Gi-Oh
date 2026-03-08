@@ -3,6 +3,7 @@ import { IDeck } from "@/core/entities/home/IDeck";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 
 export const HOME_DECK_SIZE = 20;
+export const HOME_FUSION_DECK_SIZE = 2;
 export const HOME_MAX_DUPLICATES = 3;
 
 export function countDeckCopies(deck: IDeck, cardId: string): number {
@@ -43,4 +44,13 @@ export function assertDeckReadyToSave(deck: IDeck): void {
       throw new GameRuleError("No se permiten más de 3 copias de la misma carta.");
     }
   }
+  if (deck.fusionSlots.length !== HOME_FUSION_DECK_SIZE) {
+    throw new GameRuleError("El bloque de fusión debe tener exactamente 2 slots.");
+  }
+}
+
+export function countAssignedCopies(deck: IDeck, cardId: string): number {
+  const mainDeckCopies = deck.slots.filter((slot) => slot.cardId === cardId).length;
+  const fusionDeckCopies = deck.fusionSlots.filter((slot) => slot.cardId === cardId).length;
+  return mainDeckCopies + fusionDeckCopies;
 }

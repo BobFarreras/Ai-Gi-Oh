@@ -28,6 +28,10 @@ export function HomeCollectionPanel({
     if (!slot.cardId) continue;
     usedByCardId.set(slot.cardId, (usedByCardId.get(slot.cardId) ?? 0) + 1);
   }
+  for (const slot of deck.fusionSlots) {
+    if (!slot.cardId) continue;
+    usedByCardId.set(slot.cardId, (usedByCardId.get(slot.cardId) ?? 0) + 1);
+  }
 
   return (
     <section className="flex h-full min-h-0 flex-col rounded-2xl border border-cyan-800/35 bg-[#031020]/50 p-3">

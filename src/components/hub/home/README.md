@@ -58,6 +58,20 @@ Se separa el render por breakpoint sin alterar reglas del dominio:
 3. `Añadir` y `Remover` cierran el diálogo al finalizar correctamente para acelerar el flujo.
 4. Se añade test de bloqueo de cierre en `MobileInspectorDialogShell.test.tsx`.
 
+## Fase 2 del nuevo bloque (fusión dedicada)
+
+1. `IDeck` ahora incluye `fusionSlots` (2 slots dedicados, separados del deck principal de 20).
+2. Se añade panel `HomeFusionDeckPanel` debajo del contenedor de deck en desktop.
+3. Reglas de inserción:
+   - cartas `FUSION` solo pueden equiparse en `fusionSlots`,
+   - cartas no `FUSION` no pueden entrar en `fusionSlots`.
+4. Se añaden casos de uso y endpoints dedicados:
+   - `AddCardToFusionDeckUseCase`,
+   - `RemoveCardFromFusionDeckUseCase`,
+   - `/api/home/deck/fusion/add`,
+   - `/api/home/deck/fusion/remove`.
+5. La validación de copias disponibles cuenta asignaciones en deck principal + bloque de fusión.
+
 ## Ajustes finales de UI (desktop + mobile)
 
 1. El overlay de evolución renderiza la carta con clipping limpio para evitar artefactos de fondo.

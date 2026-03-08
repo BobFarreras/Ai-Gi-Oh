@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
-import { buildBannerMessage } from "../internal/combatLogPresentation";
+import { IBattleBannerMessage, resolveLatestBannerMessage } from "./internal/banner-message-policy";
 
 interface BattleBannerCenterProps {
   events: ICombatLogEvent[];
@@ -16,15 +16,6 @@ interface BattleBannerCenterProps {
 }
 
 const DISPLAY_MS = 2200;
-const CRITICAL_EVENT_TYPES: ICombatLogEvent["eventType"][] = [
-  "TURN_STARTED",
-  "PHASE_CHANGED",
-  "AUTO_PHASE_ADVANCED",
-  "TURN_GUARD_SHOWN",
-  "TURN_GUARD_CONFIRMED",
-  "TURN_GUARD_CANCELLED",
-];
-
 export function BattleBannerCenter({
   events,
   playerAId,
@@ -33,34 +24,28 @@ export function BattleBannerCenter({
   playerBName,
   externalBannerSignal = null,
 }: BattleBannerCenterProps) {
-  const [queue, setQueue] = useState<{ id: string; left: string; right: string }[]>([]);
+  const [activeMessage, setActiveMessage] = useState<IBattleBannerMessage | null>(null);
   const processedCountRef = useRef(0);
   const processedExternalIdRef = useRef<string | null>(null);
   const labels = useMemo(() => ({ playerAId, playerAName, playerBId, playerBName }), [playerAId, playerAName, playerBId, playerBName]);
-  const activeMessage = queue[0] ?? null;
   const isAutoModeMessage = Boolean(activeMessage?.id.startsWith("auto-mode-"));
 
   useEffect(() => {
-    const nextEvents = events.slice(processedCountRef.current).filter((event) => CRITICAL_EVENT_TYPES.includes(event.eventType));
+    const nextEvents = events.slice(processedCountRef.current);
     processedCountRef.current = events.length;
-    const nextMessages = nextEvents.map((event) => ({
-      id: event.id,
-      ...(buildBannerMessage(event, labels) ?? { left: "Evento", right: "de batalla" }),
-    }));
-    if (externalBannerSignal && processedExternalIdRef.current !== externalBannerSignal.id) {
-      processedExternalIdRef.current = externalBannerSignal.id;
-      nextMessages.push(externalBannerSignal);
-    }
-    if (nextMessages.length === 0) return;
-    setQueue((previous) => [...previous, ...nextMessages]);
+    const nextExternalSignal =
+      externalBannerSignal && processedExternalIdRef.current !== externalBannerSignal.id ? externalBannerSignal : null;
+    if (nextExternalSignal) processedExternalIdRef.current = nextExternalSignal.id;
+    const latest = resolveLatestBannerMessage({ events: nextEvents, labels, externalBannerSignal: nextExternalSignal });
+    if (!latest) return;
+    setActiveMessage(latest);
   }, [events, externalBannerSignal, labels]);
 
   useEffect(() => {
     if (!activeMessage) {
       return;
     }
-
-    const timeoutId = setTimeout(() => setQueue((previous) => previous.slice(1)), DISPLAY_MS);
+    const timeoutId = setTimeout(() => setActiveMessage((current) => (current?.id === activeMessage.id ? null : current)), DISPLAY_MS);
     return () => clearTimeout(timeoutId);
   }, [activeMessage]);
 

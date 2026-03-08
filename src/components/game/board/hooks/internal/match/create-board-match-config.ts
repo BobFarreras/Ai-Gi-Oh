@@ -3,12 +3,13 @@ import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
 import { createMatchSeed } from "@/core/services/random/create-match-seed";
 import { createSeededRandom } from "@/core/services/random/seeded-rng";
-import { createPlayerDeckA, createPlayerDeckB, shuffleDeck } from "../initialDeckFactory";
+import { createDefaultFusionDeck, createPlayerDeckA, createPlayerDeckB, shuffleDeck } from "../initialDeckFactory";
 
 interface IBoardPlayerConfig {
   id: string;
   name: string;
   deck: ICard[];
+  fusionDeck: ICard[];
 }
 
 export interface IBoardMatchConfig {
@@ -25,7 +26,9 @@ interface ICreateBoardMatchConfigInput {
   mode?: IMatchMode;
   seed?: string;
   playerDeck?: ICard[] | null;
+  playerFusionDeck?: ICard[] | null;
   opponentDeck?: ICard[] | null;
+  opponentFusionDeck?: ICard[] | null;
   playerId?: string;
   playerName?: string;
   opponentId?: string;
@@ -59,7 +62,11 @@ export function createBoardMatchConfig(input?: ICreateBoardMatchConfigInput): IB
   const opponentName = input?.opponentName ?? "Rival Nexus";
 
   const playerDeckBase = input?.playerDeck && input.playerDeck.length > 0 ? input.playerDeck : createPlayerDeckA(randomSource);
+  const playerFusionDeckBase =
+    input?.playerFusionDeck && input.playerFusionDeck.length > 0 ? input.playerFusionDeck : createDefaultFusionDeck();
   const opponentDeckBase = input?.opponentDeck && input.opponentDeck.length > 0 ? input.opponentDeck : createPlayerDeckB(randomSource);
+  const opponentFusionDeckBase =
+    input?.opponentFusionDeck && input.opponentFusionDeck.length > 0 ? input.opponentFusionDeck : createDefaultFusionDeck();
 
   return {
     mode: defaults.mode,
@@ -70,11 +77,13 @@ export function createBoardMatchConfig(input?: ICreateBoardMatchConfigInput): IB
       id: playerId,
       name: playerName,
       deck: shuffleDeck(playerDeckBase.map((card) => ({ ...card })), randomSource),
+      fusionDeck: playerFusionDeckBase.map((card) => ({ ...card })),
     },
     playerB: {
       id: opponentId,
       name: opponentName,
       deck: shuffleDeck(opponentDeckBase.map((card) => ({ ...card })), randomSource),
+      fusionDeck: opponentFusionDeckBase.map((card) => ({ ...card })),
     },
     randomSource,
   };

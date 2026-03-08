@@ -52,6 +52,9 @@
    - progreso por jugador y duelo (wins/losses/resultado y timestamps).
 21. `public.player_progress.player_experience`:
    - experiencia global del jugador para progresión del arquitecto.
+22. `public.player_fusion_deck_slots`:
+   - bloque de 2 slots dedicado a cartas de tipo `FUSION`.
+   - separado del deck principal de 20 slots.
 
 ## Fase 2 (Perfil y Progreso)
 
@@ -175,6 +178,16 @@
    - `public.player_progress.player_experience` (default `0`, no negativo).
 3. Uso previsto:
    - recompensas de Story incrementan esta columna al ganar por primera vez cada duelo.
+
+## Fase 2.x (Bloque de fusión dedicado en Arsenal)
+
+1. Ejecuta `docs/supabase/sql/010_phase_2_fusion_deck_slots.sql`.
+2. Verifica tabla:
+   - `public.player_fusion_deck_slots`.
+3. Verifica bootstrap en alta de usuario:
+   - 2 filas por jugador (`slot_index` 0 y 1).
+4. Verifica RLS:
+   - `SELECT/INSERT/UPDATE` solo para `auth.uid() = player_id`.
 
 ## Notas
 

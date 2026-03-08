@@ -87,11 +87,15 @@ export function BoardInteractiveLayer({
           opponentActiveEntities={opponent.activeEntities}
           opponentActiveExecutions={opponent.activeExecutions}
           playerDeckCount={player.deck.length}
+          playerFusionDeckCount={player.fusionDeck?.length ?? 0}
           opponentDeckCount={opponent.deck.length}
+          opponentFusionDeckCount={opponent.fusionDeck?.length ?? 0}
           playerTopGraveCard={player.graveyard[player.graveyard.length - 1] ?? null}
           opponentTopGraveCard={opponent.graveyard[opponent.graveyard.length - 1] ?? null}
           playerGraveyardCount={player.graveyard.length}
           opponentGraveyardCount={opponent.graveyard.length}
+          playerDestroyedCount={player.destroyedPile?.length ?? 0}
+          opponentDestroyedCount={opponent.destroyedPile?.length ?? 0}
           activeAttackerId={activeAttackerId}
           selectedCard={selectedCard}
           selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}

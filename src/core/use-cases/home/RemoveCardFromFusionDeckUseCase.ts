@@ -1,32 +1,29 @@
-// src/core/use-cases/home/RemoveCardFromDeckUseCase.ts - Quita una carta de un slot del deck para devolver espacio al mazo.
+// src/core/use-cases/home/RemoveCardFromFusionDeckUseCase.ts - Limpia un slot del bloque de fusión del Arsenal.
 import { IDeck } from "@/core/entities/home/IDeck";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { IDeckRepository } from "@/core/repositories/IDeckRepository";
-import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
 import { assertValidDeckIndex, assertValidPlayerId } from "@/core/use-cases/home/internal/assert-valid-home-input";
 
-interface IRemoveCardFromDeckInput {
+interface IRemoveCardFromFusionDeckInput {
   playerId: string;
   slotIndex: number;
 }
 
-export class RemoveCardFromDeckUseCase {
+export class RemoveCardFromFusionDeckUseCase {
   constructor(private readonly deckRepository: IDeckRepository) {}
 
-  async execute(input: IRemoveCardFromDeckInput): Promise<IDeck> {
+  async execute(input: IRemoveCardFromFusionDeckInput): Promise<IDeck> {
     assertValidPlayerId(input.playerId);
     assertValidDeckIndex(input.slotIndex);
-    if (input.slotIndex >= HOME_DECK_SIZE) {
-      throw new ValidationError("El índice de slot excede el tamaño del deck.");
-    }
-
     const deck = await this.deckRepository.getDeck(input.playerId);
+    const targetSlot = deck.fusionSlots[input.slotIndex];
+    if (!targetSlot) throw new ValidationError("El slot de fusión seleccionado no es válido.");
     const updatedDeck: IDeck = {
       playerId: deck.playerId,
       slots: deck.slots.map((slot) => ({ ...slot })),
       fusionSlots: deck.fusionSlots.map((slot) => ({ ...slot })),
     };
-    updatedDeck.slots[input.slotIndex] = { ...updatedDeck.slots[input.slotIndex], cardId: null };
+    updatedDeck.fusionSlots[input.slotIndex] = { ...targetSlot, cardId: null };
     await this.deckRepository.saveDeck(updatedDeck);
     return updatedDeck;
   }

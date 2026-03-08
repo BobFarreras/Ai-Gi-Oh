@@ -3,6 +3,7 @@ import { BattleMode, IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ValidationError } from "@/core/errors/ValidationError";
+import { assertFusionCardInFusionDeck } from "@/core/use-cases/game-engine/fusion/internal/assert-fusion-card-in-fusion-deck";
 import { IFusionRecipe, getFusionRecipe } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 import { IFusionContext } from "@/core/use-cases/game-engine/fusion/internal/fusion-types";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
@@ -26,6 +27,7 @@ export function createFusionContext(
   const fusionCard = player.hand.find((card) => card.runtimeId === fusionCardId || card.id === fusionCardId);
   if (!fusionCard) throw new NotFoundError("La carta de fusión no está en la mano.");
   if (fusionCard.type !== "FUSION") throw new ValidationError("La carta seleccionada no es de tipo fusión.");
+  assertFusionCardInFusionDeck(player, fusionCard.id);
   if (materialIds[0] === materialIds[1]) throw new ValidationError("Debes seleccionar 2 materiales distintos para fusionar.");
   const materials = materialIds.map((instanceId) => {
     const entity = player.activeEntities.find((current) => current.instanceId === instanceId);

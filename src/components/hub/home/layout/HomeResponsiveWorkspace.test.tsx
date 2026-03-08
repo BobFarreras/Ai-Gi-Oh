@@ -17,12 +17,17 @@ function createProps(): IHomeWorkspaceProps {
     deck: {
       playerId: "player-1",
       slots: Array.from({ length: 20 }, (_, index) => ({ index, cardId: null })),
+      fusionSlots: [
+        { index: 0, cardId: null },
+        { index: 1, cardId: null },
+      ],
     },
     collectionState: [],
     filteredCollection: [],
     cardProgressById: new Map(),
     evolvableCardIds: new Set(),
     selectedSlotIndex: null,
+    selectedFusionSlotIndex: null,
     selectedCardId: null,
     selectedCollectionCardId: null,
     selectedCard: null,
@@ -40,6 +45,7 @@ function createProps(): IHomeWorkspaceProps {
     onRemoveSelectedCard: vi.fn(async () => ({ ok: true })),
     onEvolveSelectedCard: vi.fn(async () => ({ ok: true })),
     onSelectSlot: vi.fn(),
+    onSelectFusionSlot: vi.fn(),
     onSelectCollectionCard: vi.fn(),
     onClearError: vi.fn(),
   };

@@ -14,11 +14,15 @@ interface BattlefieldProps {
   opponentActiveEntities: IBoardEntity[];
   opponentActiveExecutions: IBoardEntity[];
   playerDeckCount: number;
+  playerFusionDeckCount: number;
   opponentDeckCount: number;
+  opponentFusionDeckCount: number;
   playerTopGraveCard: ICard | null;
   opponentTopGraveCard: ICard | null;
   playerGraveyardCount: number;
   opponentGraveyardCount: number;
+  playerDestroyedCount: number;
+  opponentDestroyedCount: number;
   activeAttackerId: string | null;
   selectedCard: ICard | null;
   selectedBoardEntityInstanceId: string | null;
@@ -49,11 +53,15 @@ export function Battlefield({
   opponentActiveEntities,
   opponentActiveExecutions,
   playerDeckCount,
+  playerFusionDeckCount,
   opponentDeckCount,
+  opponentFusionDeckCount,
   playerTopGraveCard,
   opponentTopGraveCard,
   playerGraveyardCount,
   opponentGraveyardCount,
+  playerDestroyedCount,
+  opponentDestroyedCount,
   activeAttackerId,
   selectedCard,
   selectedBoardEntityInstanceId,
@@ -106,8 +114,10 @@ export function Battlefield({
             activeEntities={opponentActiveEntities}
             activeExecutions={opponentActiveExecutions}
             deckCount={opponentDeckCount}
+            fusionDeckCount={opponentFusionDeckCount}
             topGraveCard={opponentTopGraveCard}
             graveyardCount={opponentGraveyardCount}
+            destroyedCount={opponentDestroyedCount}
             activeAttackerId={activeAttackerId}
             selectedCard={selectedCard}
             selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}
@@ -136,8 +146,10 @@ export function Battlefield({
             activeEntities={playerActiveEntities}
             activeExecutions={playerActiveExecutions}
             deckCount={playerDeckCount}
+            fusionDeckCount={playerFusionDeckCount}
             topGraveCard={playerTopGraveCard}
             graveyardCount={playerGraveyardCount}
+            destroyedCount={playerDestroyedCount}
             activeAttackerId={activeAttackerId}
             selectedCard={selectedCard}
             selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}

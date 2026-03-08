@@ -85,3 +85,7 @@ export function createPlayerDeckA(randomFn: RandomSource = Math.random): ICard[]
 export function createPlayerDeckB(randomFn: RandomSource = Math.random): ICard[] {
   return shuffleDeck(toDeck(PLAYER_B_DECK_IDS), randomFn);
 }
+
+export function createDefaultFusionDeck(): ICard[] {
+  return FUSION_CARDS.slice(0, 2).map((card) => ({ ...card }));
+}

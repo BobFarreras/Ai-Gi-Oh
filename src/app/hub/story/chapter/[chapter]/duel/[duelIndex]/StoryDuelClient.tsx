@@ -18,6 +18,7 @@ interface StoryDuelClientProps {
   opponentName: string;
   opponentAvatarUrl?: string | null;
   playerDeck: ICard[];
+  playerFusionDeck: ICard[];
   opponentDeck: ICard[];
 }
 
@@ -67,6 +68,7 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
         initialConfig={{
           playerId: props.playerId,
           playerName: props.playerName,
+          playerFusionDeck: props.playerFusionDeck,
           opponentId: props.opponentId,
           opponentName: props.opponentName,
           opponentDeck: props.opponentDeck,

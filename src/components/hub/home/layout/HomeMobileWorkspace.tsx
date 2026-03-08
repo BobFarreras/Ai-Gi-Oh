@@ -24,8 +24,12 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
       if (!slot.cardId) continue;
       copies.set(slot.cardId, (copies.get(slot.cardId) ?? 0) + 1);
     }
+    for (const slot of props.deck.fusionSlots) {
+      if (!slot.cardId) continue;
+      copies.set(slot.cardId, (copies.get(slot.cardId) ?? 0) + 1);
+    }
     return copies;
-  }, [props.deck.slots]);
+  }, [props.deck.fusionSlots, props.deck.slots]);
   const deckCount = props.deck.slots.filter((slot) => slot.cardId !== null).length;
   const deckSlotsForView = buildHomeMobileDeckSlotsView({
     deck: props.deck,
