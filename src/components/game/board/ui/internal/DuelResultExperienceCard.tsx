@@ -1,4 +1,4 @@
-// src/components/game/board/ui/internal/DuelResultExperienceCard.tsx
+// src/components/game/board/ui/internal/DuelResultExperienceCard.tsx - Tarjeta de progreso animado por carta para el resumen final del duelo.
 "use client";
 
 import { motion } from "framer-motion";
@@ -24,7 +24,8 @@ export function DuelResultExperienceCard({ entry, card, density }: DuelResultExp
   });
   
   const densityClass =
-    density === "compact" ? "w-[128px] sm:w-[150px]" : density === "large" ? "w-[150px] sm:w-[182px]" : "w-[140px] sm:w-[170px]";
+    density === "compact" ? "w-full max-w-[92px] min-[390px]:max-w-[102px] sm:w-[150px] sm:max-w-none" : density === "large" ? "w-[150px] sm:w-[182px]" : "w-[140px] sm:w-[170px]";
+  const isCompact = density === "compact";
 
   const cardWithProgress: ICard = {
     ...card,
@@ -40,12 +41,12 @@ export function DuelResultExperienceCard({ entry, card, density }: DuelResultExp
       initial={{ opacity: 0, y: 20, scale: 0.95 }} 
       animate={{ opacity: 1, y: 0, scale: 1 }} 
       // ELIMINADOS LOS BORDES: Fondo translúcido mínimo para que parezcan hologramas flotantes
-      className={`relative flex flex-col ${densityClass} shrink-0 rounded-xl bg-black/20 p-3 transition-colors hover:bg-black/40`}
+      className={`relative flex flex-col ${densityClass} shrink-0 rounded-xl bg-black/20 ${isCompact ? "p-1.5" : "p-3"} transition-colors hover:bg-black/40`}
     >
       {/* Etiqueta Superior: EXP Ganada */}
-      <div className="mb-3 flex justify-center">
+      <div className={`${isCompact ? "mb-1.5" : "mb-3"} flex justify-center`}>
         <div className="rounded-sm bg-amber-500/10 px-3 py-1">
-          <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-amber-300 drop-shadow-md">
+          <span className={`${isCompact ? "text-[8px]" : "text-[10px] sm:text-[11px]"} font-black uppercase tracking-widest text-amber-300 drop-shadow-md`}>
             +{entry.gainedXp} EXP
           </span>
         </div>
@@ -59,7 +60,7 @@ export function DuelResultExperienceCard({ entry, card, density }: DuelResultExp
           filter: animation.levelUpPulseTick > 0 ? ["brightness(1)", "brightness(1.5)", "brightness(1)"] : "brightness(1)"
         }}
         transition={{ duration: 0.6 }}
-        className="relative flex items-center justify-center h-[140px] sm:h-[180px] w-full"
+        className={`relative flex items-center justify-center ${isCompact ? "h-[96px]" : "h-[140px] sm:h-[180px]"} w-full`}
       >
         {/* Flare de Level Up */}
         <motion.div
@@ -69,7 +70,7 @@ export function DuelResultExperienceCard({ entry, card, density }: DuelResultExp
           className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle,rgba(34,211,238,0.6)_0%,transparent_70%)] mix-blend-screen"
         />
         
-        <div className="origin-center transform scale-[0.45] sm:scale-[0.55]">
+        <div className={`origin-center transform ${isCompact ? "scale-[0.3]" : "scale-[0.45] sm:scale-[0.55]"}`}>
           <Card 
             card={cardWithProgress} 
             versionTier={entry.progress.versionTier} 
@@ -82,18 +83,18 @@ export function DuelResultExperienceCard({ entry, card, density }: DuelResultExp
       </motion.div>
 
       {/* Footer de la Carta */}
-      <div className="mt-3 pt-3 flex flex-col justify-end">
-        <p className="truncate text-center text-[10px] sm:text-xs font-black uppercase tracking-widest text-white/90 mb-1.5">
+      <div className={`${isCompact ? "mt-1 pt-1" : "mt-3 pt-3"} flex flex-col justify-end`}>
+        <p className={`truncate text-center ${isCompact ? "text-[8px]" : "text-[10px] sm:text-xs"} font-black uppercase tracking-widest text-white/90 ${isCompact ? "mb-1" : "mb-1.5"}`}>
           {card.name}
         </p>
         
-        <div className="flex justify-between items-center px-1 mb-1.5">
-          <span className="text-[9px] sm:text-[10px] font-bold text-cyan-500 uppercase tracking-wider">Lv {entry.oldLevel}</span>
-          <span className="text-[9px] sm:text-[10px] font-black text-cyan-300 uppercase tracking-wider drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]">Lv {animation.displayLevel}</span>
+        <div className={`flex justify-between items-center px-1 ${isCompact ? "mb-1" : "mb-1.5"}`}>
+          <span className={`${isCompact ? "text-[7px]" : "text-[9px] sm:text-[10px]"} font-bold text-cyan-500 uppercase tracking-wider`}>Lv {entry.oldLevel}</span>
+          <span className={`${isCompact ? "text-[7px]" : "text-[9px] sm:text-[10px]"} font-black text-cyan-300 uppercase tracking-wider drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]`}>Lv {animation.displayLevel}</span>
         </div>
         
         {/* Barra de Progreso */}
-        <div className="h-1.5 sm:h-2 w-full overflow-hidden rounded-full bg-zinc-950/80 shadow-inner">
+        <div className={`${isCompact ? "h-1" : "h-1.5 sm:h-2"} w-full overflow-hidden rounded-full bg-zinc-950/80 shadow-inner`}>
           <motion.div
             animate={{ width: `${animation.progressPercent}%` }}
             transition={{ duration: animation.progressPercent === 0 ? 0 : 0.8, ease: "easeOut" }}

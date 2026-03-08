@@ -127,8 +127,8 @@ describe('Componente UI: Board y Subcomponentes', () => {
 
     render(<Board />);
 
-    // Hacemos click en el botón de historial usando su nombre accesible
-    const historyBtn = screen.getByRole('button', { name: /abrir historial de batalla/i });
+    fireEvent.click(screen.getByRole('button', { name: /abrir acciones/i }));
+    const historyBtn = screen.getByRole('button', { name: /abrir historial/i });
     fireEvent.click(historyBtn);
 
     // Verificamos que se haya llamado en modo toggle
@@ -146,8 +146,8 @@ describe('Componente UI: Board y Subcomponentes', () => {
 
     render(<Board />);
 
-    expect(screen.queryByText(/ir a combate/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/pasar turno/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/turno rival/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /fase invocar/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /pasar a combate/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /pasar turno/i })).toBeDisabled();
   });
 });

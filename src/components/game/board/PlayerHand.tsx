@@ -1,6 +1,7 @@
 // src/components/game/board/PlayerHand.tsx - Renderiza la mano del jugador con selección, acciones y estados obligatorios.
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ICard } from "@/core/entities/ICard";
 import { BattleMode } from "@/core/entities/IPlayer";
@@ -13,6 +14,16 @@ interface PlayerHandProps {
   hasSummoned: boolean;
   isPlayerTurn: boolean;
   highlightedCardIds?: string[];
+  cardScale?: number;
+  overlapPx?: number;
+  handYOffsetPx?: number;
+  containerHeightPx?: number;
+  hoverLiftPx?: number;
+  centerOffsetPx?: number;
+  dockRight?: boolean;
+  bottomPx?: number;
+  isMobileLayout?: boolean;
+  showInlineActionPopover?: boolean;
   onMandatoryCardSelect?: (cardId: string) => void;
   onCardClick: (card: ICard, e: React.MouseEvent) => void;
   onPlayAction: (mode: BattleMode, e: React.MouseEvent) => void;
@@ -24,13 +35,58 @@ export function PlayerHand({
   hasSummoned,
   isPlayerTurn,
   highlightedCardIds = [],
+  cardScale = 0.82,
+  overlapPx = 22,
+  handYOffsetPx = 118,
+  containerHeightPx = 500,
+  hoverLiftPx = 34,
+  centerOffsetPx = 0,
+  dockRight = false,
+  bottomPx = 0,
+  isMobileLayout = false,
+  showInlineActionPopover = true,
   onMandatoryCardSelect,
   onCardClick,
   onPlayAction,
 }: PlayerHandProps) {
+  const [isLeftCardHovered, setIsLeftCardHovered] = useState(false);
+  const [mobileViewportWidth, setMobileViewportWidth] = useState(390);
+  useEffect(() => {
+    if (!isMobileLayout) return;
+    const sync = () => setMobileViewportWidth(window.innerWidth);
+    sync();
+    window.addEventListener("resize", sync);
+    return () => window.removeEventListener("resize", sync);
+  }, [isMobileLayout]);
+  const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+  const effectiveCardScale = isMobileLayout ? clamp(cardScale, 0.3, 0.42) : cardScale;
+  const mobileAvailableWidth = Math.max(130, mobileViewportWidth - 176);
+  const estimatedCardWidth = 260 * effectiveCardScale;
+  const mobileOverlapPx =
+    hand.length <= 1
+      ? 0
+      : clamp(Math.round(((estimatedCardWidth * hand.length) - mobileAvailableWidth) / (hand.length - 1)), 30, Math.round(estimatedCardWidth - 18));
+  const effectiveOverlapPx = isMobileLayout
+    ? mobileOverlapPx
+    : hand.length >= 5
+      ? overlapPx + 24
+      : hand.length === 4
+        ? overlapPx + 10
+        : overlapPx;
+  const isSelectedCardVisible = Boolean(playingCard);
+  const handLayerClass = isLeftCardHovered || isSelectedCardVisible ? "z-[180]" : "z-40";
+
   return (
-    <div className="absolute bottom-0 left-0 w-full h-[500px] flex justify-center items-end z-40 pointer-events-none perspective-[1200px] pb-4">
-      <div className="flex justify-center -space-x-8 pointer-events-none relative">
+    <div
+      className={`absolute ${isMobileLayout ? "right-0" : "left-0 w-full"} flex items-end pointer-events-none perspective-[1200px] ${isMobileLayout ? "pb-0 pr-1" : "pb-4"} ${dockRight ? "justify-end" : "justify-center"} ${handLayerClass}`}
+      style={{
+        height: `${containerHeightPx}px`,
+        transform: `translateX(${centerOffsetPx}px)`,
+        bottom: `${bottomPx}px`,
+        width: isMobileLayout ? `${mobileAvailableWidth}px` : undefined,
+      }}
+    >
+      <div className="flex justify-center pointer-events-none relative">
         {hand.map((card, i) => {
           const isSelected = card.runtimeId && playingCard?.runtimeId ? playingCard.runtimeId === card.runtimeId : playingCard === card;
           const isEntity = card.type === 'ENTITY';
@@ -44,7 +100,7 @@ export function PlayerHand({
           return (
             <div key={`${card.id}-${i}`} className="relative">
               <AnimatePresence>
-                {isSelected && (
+                {showInlineActionPopover && isSelected && (
                   <motion.div 
                     initial={{ opacity: 0, y: 20, scale: 0.8 }} 
                     animate={{ opacity: 1, y: -20, scale: 1 }} 
@@ -79,16 +135,28 @@ export function PlayerHand({
                 layoutId={`card-hand-${card.id}-${i}`} // Separamos el layoutId de la mano y evitamos colisiones con duplicadas
                 initial={{ y: 200, scale: 0.86 }} 
                 animate={{ 
-                  y: isSelected ? -40 : 120, 
-                  rotate: isSelected ? 0 : (i - hand.length / 2) * 2, 
-                  scale: isSelected ? 1 : 0.86 
+                  y: isSelected ? (isMobileLayout ? handYOffsetPx - 8 : -40) : handYOffsetPx, 
+                  rotate: isSelected ? 0 : isMobileLayout ? (i - hand.length / 2) * 1.2 : (i - hand.length / 2) * 2, 
+                  scale: isSelected ? Math.min(1, effectiveCardScale + 0.1) : effectiveCardScale 
                 }}
-                whileHover={{ 
-                  y: isSelected ? -40 : -20, 
-                  scale: isSelected ? 1 : 0.96, 
-                  zIndex: 100 
-                }}
+                whileHover={
+                  isMobileLayout
+                    ? undefined
+                    : {
+                        y: isSelected ? -40 : -Math.min(hoverLiftPx, 12),
+                        scale: isSelected ? Math.min(1, cardScale + 0.1) : Math.min(1, cardScale + 0.1),
+                        zIndex: 9999,
+                      }
+                }
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                onHoverStart={() => {
+                  if (isMobileLayout) return;
+                  if (i === 0) setIsLeftCardHovered(true);
+                }}
+                onHoverEnd={() => {
+                  if (isMobileLayout) return;
+                  if (i === 0) setIsLeftCardHovered(false);
+                }}
                 onClick={(e) => {
                   if (!isPlayerTurn) {
                     return;
@@ -100,7 +168,7 @@ export function PlayerHand({
                   onCardClick(card, e);
                 }}
                 className={isPlayerTurn ? "cursor-pointer origin-bottom pointer-events-auto" : "origin-bottom pointer-events-auto"}
-                style={{ zIndex: isSelected ? 100 : i }}
+                style={{ zIndex: isSelected ? 100 : i, marginLeft: i === 0 ? 0 : -effectiveOverlapPx }}
               >
                 <div className={isMandatorySelectable ? "rounded-xl ring-4 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.65)] animate-pulse" : ""}>
                   <Card card={card} isSelected={isSelected} />

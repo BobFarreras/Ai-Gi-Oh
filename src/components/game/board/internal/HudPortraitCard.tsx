@@ -40,14 +40,14 @@ export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, b
         </div>
       ) : null}
 
-      <div className={cn("relative z-10 w-full h-full flex flex-col justify-center", isOpponent ? "pl-10 pr-4 items-start" : "pr-10 pl-4 items-end")}>
-        {badgeText ? <span className="mb-1 text-[9px] px-2 py-0.5 bg-zinc-800/80 text-zinc-300 rounded-sm uppercase tracking-widest font-black border border-zinc-600/50 shadow-sm">{badgeText}</span> : null}
+      <div className={cn("relative z-10 w-full h-full flex flex-col justify-center", isOpponent ? "pl-6 md:pl-10 pr-3 md:pr-4 items-start" : "pr-6 md:pr-10 pl-3 md:pl-4 items-end")}>
+        {badgeText ? <span className="mb-1 text-[8px] md:text-[9px] px-1.5 md:px-2 py-0.5 bg-zinc-800/80 text-zinc-300 rounded-sm uppercase tracking-widest font-black border border-zinc-600/50 shadow-sm">{badgeText}</span> : null}
         <div className={cn("flex flex-col w-full", isOpponent ? "items-start" : "items-end")}>
           <div className="flex items-baseline gap-2 drop-shadow-md">
-            <span className="text-4xl font-black italic tracking-tighter text-white">{player.healthPoints}</span>
-            <span className="text-xl font-bold text-zinc-400">/ {player.maxHealthPoints} LP</span>
+            <span className="text-[clamp(1.35rem,2.7vw,2.25rem)] font-black italic tracking-tighter text-white">{player.healthPoints}</span>
+            <span className="text-[clamp(0.82rem,1.45vw,1.25rem)] font-bold text-zinc-400">/ {player.maxHealthPoints} LP</span>
           </div>
-          <div className={cn("w-60 h-2.5 bg-zinc-900/90 mt-1 relative overflow-hidden shadow-inner", isOpponent ? "[clip-path:polygon(4%_0,100%_0,100%_100%,0_100%)]" : "[clip-path:polygon(0_0,100%_0,96%_100%,0_100%)]")}>
+          <div className={cn("w-[clamp(9.5rem,15vw,15rem)] h-2 md:h-2.5 bg-zinc-900/90 mt-1 relative overflow-hidden shadow-inner", isOpponent ? "[clip-path:polygon(4%_0,100%_0,100%_100%,0_100%)]" : "[clip-path:polygon(0_0,100%_0,96%_100%,0_100%)]")}>
             <motion.div
               initial={false}
               animate={{ width: `${Math.max(0, (player.healthPoints / player.maxHealthPoints) * 100)}%` }}
@@ -56,12 +56,12 @@ export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, b
             />
           </div>
         </div>
-        <div className={cn("mt-3 flex items-center bg-zinc-950/80 border border-yellow-500/30 px-3 py-1", isOpponent ? "[clip-path:polygon(10%_0,100%_0,100%_100%,0_100%)]" : "[clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]")}>
-          <Zap className="w-4 h-4 text-yellow-400 mr-2 drop-shadow-[0_0_5px_rgba(234,179,8,0.8)]" />
-          <span className="font-black text-yellow-400 text-lg italic drop-shadow-md">{player.currentEnergy} <span className="text-xs text-yellow-600/80 uppercase">/ {player.maxEnergy} NRG</span></span>
+        <div className={cn("mt-2 md:mt-3 flex items-center bg-zinc-950/80 border border-yellow-500/30 px-2.5 md:px-3 py-0.5 md:py-1", isOpponent ? "[clip-path:polygon(10%_0,100%_0,100%_100%,0_100%)]" : "[clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]")}>
+          <Zap className="w-3.5 h-3.5 md:w-4 md:h-4 text-yellow-400 mr-1.5 md:mr-2 drop-shadow-[0_0_5px_rgba(234,179,8,0.8)]" />
+          <span className="font-black text-yellow-400 text-[clamp(0.88rem,1.5vw,1.1rem)] italic drop-shadow-md">{player.currentEnergy} <span className="text-[10px] md:text-xs text-yellow-600/80 uppercase">/ {player.maxEnergy}</span></span>
         </div>
       </div>
-      <div className={cn("absolute z-[110] px-5 py-1.5 font-black tracking-widest uppercase text-xs shadow-lg", isOpponent ? "bg-red-600 top-0 right-0 text-white [clip-path:polygon(0_0,100%_0,100%_100%,15%_100%)]" : "bg-cyan-500 bottom-0 left-0 text-zinc-950 [clip-path:polygon(0_0,85%_0,100%_100%,0_100%)]")}>
+      <div className={cn("absolute z-[110] px-3 md:px-5 py-1 md:py-1.5 font-black tracking-widest uppercase text-[10px] md:text-xs shadow-lg", isOpponent ? "bg-red-600 top-0 right-0 text-white [clip-path:polygon(0_0,100%_0,100%_100%,15%_100%)]" : "bg-cyan-500 bottom-0 left-0 text-zinc-950 [clip-path:polygon(0_0,85%_0,100%_100%,0_100%)]")}>
         {player.name}
       </div>
     </div>

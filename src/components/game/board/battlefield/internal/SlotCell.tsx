@@ -106,6 +106,13 @@ export function SlotCell({
     entity.card.type === "EXECUTION" &&
     selectedBoardEntityInstanceId === entity.instanceId &&
     canActivateSelectedExecution;
+  const matchesSelectedCard =
+    !!entity &&
+    !!selectedCard &&
+    (selectedCard.runtimeId
+      ? selectedCard.runtimeId === (entity.card.runtimeId ?? entity.card.id)
+      : selectedCard.id === entity.card.id);
+  const isBoardEntitySelected = !!entity && (selectedBoardEntityInstanceId === entity.instanceId || matchesSelectedCard);
     
   const floatingEvents = buildFloatingEvents(entity, buffEventId, buffStat, buffAmount, buffedEntityIds, cardXpEventId, cardXpCardId, cardXpAmount);
   const visibility = resolveEntityVisibility(entity ?? undefined, isRevealed);
@@ -129,6 +136,7 @@ export function SlotCell({
             className={cn(
               "w-65 h-85 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 origin-center cursor-pointer", 
               isAttacking ? "ring-4 ring-red-500 shadow-[0_0_30px_rgba(239,68,68,1)] animate-pulse rounded-xl" : "", 
+              isBoardEntitySelected ? "ring-4 ring-cyan-300 shadow-[0_0_35px_rgba(34,211,238,0.9)] rounded-xl" : "",
               isHighlighted ? "ring-4 ring-amber-400 shadow-[0_0_35px_rgba(251,191,36,0.8)] animate-pulse rounded-xl" : "", 
               isSelected ? "ring-4 ring-cyan-300 shadow-[0_0_35px_rgba(34,211,238,0.9)] rounded-xl" : ""
             )}

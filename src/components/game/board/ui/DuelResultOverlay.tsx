@@ -1,7 +1,9 @@
-// src/components/game/board/ui/DuelResultOverlay.tsx
+// src/components/game/board/ui/DuelResultOverlay.tsx - Overlay final del duelo con resultado, recompensas y progreso de cartas en desktop y mobile.
 "use client";
 
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Card } from "@/components/game/card/Card";
 import { ICard } from "@/core/entities/ICard";
 import { IPlayer } from "@/core/entities/IPlayer";
 import type { IAppliedCardExperienceResult } from "@/core/use-cases/progression/ApplyBattleCardExperienceUseCase";
@@ -44,9 +46,17 @@ export function DuelResultOverlay({
   onResultAction,
   onRestart,
 }: DuelResultOverlayProps) {
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"CARDS" | "GIFT">("CARDS");
+  useEffect(() => {
+    const sync = () => setIsMobile(window.innerWidth <= 1024);
+    sync();
+    window.addEventListener("resize", sync);
+    return () => window.removeEventListener("resize", sync);
+  }, []);
   const text = resolveResultText(winnerPlayerId, playerA, playerB);
   const isVisible = Boolean(winnerPlayerId);
-  const { actionLabel, handleAction, isGiftOpen, setIsGiftOpen, cardDensity, showFireworks } = useDuelResultOverlayState({
+  const { actionLabel, handleAction, isGiftOpen, setIsGiftOpen, cardDensity, showFireworks, rewardCard } = useDuelResultOverlayState({
     winnerPlayerId,
     playerA,
     battleExperienceCount: battleExperienceSummary.length,
@@ -78,17 +88,94 @@ export function DuelResultOverlay({
             
             {/* HEADER COMPACTO: Una sola línea */}
             <div className="relative z-10 mb-6 flex flex-row items-center justify-center gap-4 border-b border-cyan-900/50 pb-4">
-              <span className="text-xs sm:text-sm tracking-[0.4em] uppercase text-cyan-500 font-bold whitespace-nowrap">
-                Reporte //
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-widest text-white drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] whitespace-nowrap">
+              <h2 className="max-w-full text-lg sm:text-3xl font-black uppercase tracking-[0.18em] sm:tracking-widest text-white drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] break-words text-center leading-tight">
                 {text}
               </h2>
             </div>
 
             {/* Layout Principal */}
             <div className="relative z-10 flex-1 flex flex-col lg:flex-row gap-6 min-h-0 w-full">
-              
+              {isMobile ? (
+                <>
+                  {rewardSummary && (
+                    <div className="grid grid-cols-3 gap-2 rounded-lg border border-cyan-900/40 bg-black/30 p-2 text-center">
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-cyan-400">EXP</p>
+                        <p className="text-sm font-black text-white">+{rewardSummary.rewardPlayerExperience}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Nexus</p>
+                        <p className="text-sm font-black text-white">+{rewardSummary.rewardNexus}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-amber-400">Regalo</p>
+                        <p className="text-sm font-black text-white">{rewardSummary.rewardCards.length}</p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <button
+                      aria-label="Ver cartas con experiencia"
+                      onClick={() => setMobileTab("CARDS")}
+                      className={`flex-1 rounded border px-3 py-2 text-[10px] font-black uppercase tracking-wider ${mobileTab === "CARDS" ? "border-cyan-300/70 bg-cyan-500/15 text-cyan-100" : "border-zinc-700 bg-zinc-900/60 text-zinc-400"}`}
+                    >
+                      Cartas
+                    </button>
+                    <button
+                      aria-label="Ver carta regalo"
+                      onClick={() => setMobileTab("GIFT")}
+                      className={`flex-1 rounded border px-3 py-2 text-[10px] font-black uppercase tracking-wider ${mobileTab === "GIFT" ? "border-amber-300/70 bg-amber-500/15 text-amber-100" : "border-zinc-700 bg-zinc-900/60 text-zinc-400"}`}
+                    >
+                      Regalo
+                    </button>
+                  </div>
+                  <div className="flex-1 min-h-0 p-1 overflow-hidden">
+                    {mobileTab === "CARDS" ? (
+                      isBattleExperiencePending ? (
+                        <div className="flex h-full items-center justify-center">
+                          <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} className="h-10 w-10 rounded-full border-4 border-cyan-900 border-t-cyan-400" />
+                        </div>
+                      ) : battleExperienceSummary.length > 0 ? (
+                        <div className="h-full overflow-y-auto custom-scrollbar pr-1">
+                          <div className="grid grid-cols-3 justify-items-center gap-1 pb-2">
+                            {battleExperienceSummary.map((entry, index) => {
+                              const card = battleExperienceCardLookup[entry.cardId];
+                              if (!card) return null;
+                              return (
+                                <div key={`${entry.cardId}-${index}`} className="min-w-0">
+                                  <DuelResultExperienceCard entry={entry} card={card} density="compact" />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex h-full items-center justify-center">
+                          <p className="text-xs uppercase tracking-widest text-zinc-500">Sin datos de experiencia.</p>
+                        </div>
+                      )
+                    ) : rewardCard ? (
+                      <div className="flex h-full items-center justify-center">
+                        <div className="origin-top scale-[0.65]">
+                          <Card card={rewardCard} />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex h-full items-center justify-center">
+                        <p className="text-xs uppercase tracking-widest text-zinc-500">No hay carta regalo.</p>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleAction}
+                    className="group relative w-full py-3 bg-cyan-950/80 border border-cyan-400/60 text-cyan-50 font-black uppercase tracking-[0.2em] text-xs rounded-xl hover:bg-cyan-900 transition-all overflow-hidden shadow-[0_0_15px_rgba(34,211,238,0.15)] hover:shadow-[0_0_25px_rgba(34,211,238,0.4)]"
+                  >
+                    <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:250%_250%,100%_100%] animate-[bg-pan_3s_linear_infinite]" />
+                    <span className="relative z-10">{actionLabel}</span>
+                  </button>
+                </>
+              ) : (
+              <>
               {/* PANEL IZQUIERDO: Recompensas y Botón de Acción */}
               <div className="w-full lg:w-[280px] flex-shrink-0 flex flex-col gap-4">
                 {rewardSummary && (
@@ -131,6 +218,8 @@ export function DuelResultOverlay({
                   </div>
                 )}
               </div>
+              </>
+              )}
             </div>
           </motion.div>
         </motion.div>

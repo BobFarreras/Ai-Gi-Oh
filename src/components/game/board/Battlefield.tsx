@@ -1,7 +1,7 @@
 // src/components/game/board/Battlefield.tsx - Escena 3D del campo de batalla con zonas de jugador y oponente.
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
@@ -42,6 +42,8 @@ interface BattlefieldProps {
   playerId: string;
   opponentId: string;
   canActivateSelectedExecution: boolean;
+  viewportBoardScale?: number;
+  isMobileLayout?: boolean;
   onActivateSelectedExecution: () => void;
   onGraveyardClick: (side: "player" | "opponent") => void;
   onDestroyedClick?: (side: "player" | "opponent") => void;
@@ -82,12 +84,35 @@ export function Battlefield({
   playerId,
   opponentId,
   canActivateSelectedExecution,
+  viewportBoardScale = 1,
+  isMobileLayout = false,
   onActivateSelectedExecution,
   onGraveyardClick,
   onDestroyedClick = () => undefined,
   onEntityClick,
 }: BattlefieldProps) {
   const [zoom, setZoom] = useState(1);
+  const [mobileFitScale, setMobileFitScale] = useState(1);
+  const [mobileBoardOffsetY, setMobileBoardOffsetY] = useState(-72);
+  const effectiveBoardScale = isMobileLayout ? viewportBoardScale * 0.88 * mobileFitScale : viewportBoardScale;
+
+  useEffect(() => {
+    if (!isMobileLayout) return;
+    const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+    const update = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const narrowPenalty = clamp((430 - width) / 140, 0, 1);
+      const shortPenalty = clamp((860 - height) / 260, 0, 1);
+      const fitScale = clamp(1 - narrowPenalty * 0.14 - shortPenalty * 0.11, 0.74, 1);
+      const offsetY = Math.round(-68 - shortPenalty * 22);
+      setMobileFitScale(fitScale);
+      setMobileBoardOffsetY(offsetY);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [isMobileLayout]);
 
   const handleWheel = (event: React.WheelEvent) => {
     setZoom((previous) => Math.min(Math.max(previous - event.deltaY * 0.001, 0.6), 1.6));
@@ -99,9 +124,12 @@ export function Battlefield({
         drag
         dragConstraints={{ left: -300, right: 300, top: -200, bottom: 200 }}
         dragElastic={0.05}
-        animate={{ scale: zoom }}
+        animate={{ scale: zoom * effectiveBoardScale, y: isMobileLayout ? mobileBoardOffsetY : 0 }}
         transition={{ type: "spring", stiffness: 400, damping: 40 }}
-        className="w-full h-full flex items-center justify-center -translate-y-18 md:-translate-y-20 lg:-translate-y-22 cursor-grab active:cursor-grabbing perspective-[1200px]"
+        className={cn(
+          "w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing perspective-[1200px]",
+          isMobileLayout ? "" : "-translate-y-18 md:-translate-y-20 lg:-translate-y-22",
+        )}
       >
         <div
           style={{ transformStyle: "preserve-3d" }}
@@ -113,6 +141,7 @@ export function Battlefield({
 
           <BattlefieldZone
             side="opponent"
+            isMobileLayout={isMobileLayout}
             activeEntities={opponentActiveEntities}
             activeExecutions={opponentActiveExecutions}
             deckCount={opponentDeckCount}
@@ -146,6 +175,7 @@ export function Battlefield({
 
           <BattlefieldZone
             side="player"
+            isMobileLayout={isMobileLayout}
             activeEntities={playerActiveEntities}
             activeExecutions={playerActiveExecutions}
             deckCount={playerDeckCount}

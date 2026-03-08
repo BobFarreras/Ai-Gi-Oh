@@ -9,6 +9,7 @@ import { useDamageFlash } from "./internal/useDamageFlash";
 
 interface BattlefieldZoneProps {
   side: "opponent" | "player";
+  isMobileLayout?: boolean;
   activeEntities: IBoardEntity[];
   activeExecutions: IBoardEntity[];
   deckCount: number;
@@ -40,6 +41,7 @@ interface BattlefieldZoneProps {
 
 export function BattlefieldZone({
   side,
+  isMobileLayout = false,
   activeEntities,
   activeExecutions,
   deckCount,
@@ -71,6 +73,7 @@ export function BattlefieldZone({
   const isOpponentSide = side === "opponent";
   const zonePadding = isOpponentSide ? "mb-4" : "mt-4";
   const isDamageFlashing = useDamageFlash(shouldDamageFlash, damageEventId);
+  const sideStackClass = isMobileLayout ? "flex flex-col gap-2 scale-[0.86]" : "flex flex-col gap-3";
 
   return (
     <div
@@ -81,8 +84,10 @@ export function BattlefieldZone({
         isDamageFlashing ? "bg-red-900/35 shadow-[0_0_40px_rgba(239,68,68,0.4)_inset]" : "",
       )}
     >
-      <FusionDeckPile fusionDeckCount={fusionDeckCount} />
-      <DeckPile deckCount={deckCount} />
+      <div className={sideStackClass}>
+        <DeckPile deckCount={deckCount} />
+        <FusionDeckPile fusionDeckCount={fusionDeckCount} />
+      </div>
       <BattlefieldLanes
         isOpponentSide={isOpponentSide}
         activeEntities={activeEntities}
@@ -104,13 +109,15 @@ export function BattlefieldZone({
         onActivateSelectedExecution={onActivateSelectedExecution}
         onEntityClick={onEntityClick}
       />
-      <GraveyardPile
-        isOpponentSide={isOpponentSide}
-        topGraveCard={topGraveCard}
-        graveyardCount={graveyardCount}
-        onClick={onGraveyardClick}
-      />
-      <DestroyedPile isOpponentSide={isOpponentSide} destroyedCount={destroyedCount} onClick={onDestroyedClick} />
+      <div className={sideStackClass}>
+        <GraveyardPile
+          isOpponentSide={isOpponentSide}
+          topGraveCard={topGraveCard}
+          graveyardCount={graveyardCount}
+          onClick={onGraveyardClick}
+        />
+        <DestroyedPile isOpponentSide={isOpponentSide} destroyedCount={destroyedCount} onClick={onDestroyedClick} />
+      </div>
     </div>
   );
 }

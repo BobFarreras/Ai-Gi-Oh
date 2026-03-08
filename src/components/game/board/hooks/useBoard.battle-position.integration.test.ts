@@ -8,7 +8,8 @@ function createMouseEvent(): React.MouseEvent {
 }
 
 describe("useBoard cambio de posición en batalla", () => {
-  it("debería requerir acción explícita para pasar una entidad en SET a ATTACK", async () => {
+  it("no debería pasar automáticamente una entidad en SET a ATTACK al hacer click", async () => {
+    window.localStorage.setItem("board-auto-phase", "0");
     const { result } = renderHook(() => useBoard());
     let entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
     for (let attempt = 0; attempt < 8 && !entityCard; attempt += 1) {
@@ -43,14 +44,6 @@ describe("useBoard cambio de posición en batalla", () => {
     const afterClick = result.current.gameState.playerA.activeEntities.find((entity) => entity.instanceId === defending.instanceId);
     expect(afterClick?.mode).toBe("SET");
     expect(result.current.activeAttackerId).toBeNull();
-    expect(result.current.canSetSelectedEntityToAttack).toBe(true);
-
-    act(() => {
-      result.current.setSelectedEntityToAttack();
-    });
-
-    const updated = result.current.gameState.playerA.activeEntities.find((entity) => entity.instanceId === defending.instanceId);
-    expect(updated?.mode).toBe("ATTACK");
-    expect(result.current.activeAttackerId).toBe(defending.instanceId);
+    expect(result.current.canSetSelectedEntityToAttack).toBe(false);
   });
 });

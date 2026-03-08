@@ -160,3 +160,92 @@ Guía rápida para entender la lógica de tablero y batalla.
 5. Subcomponentes internos de UI del historial: `src/components/game/board/ui/internal/combat-log-row/*`.
 6. Subcomponentes internos de zona de batalla: `src/components/game/board/battlefield/internal/*`.
 7. Narración y scripts: `src/components/game/board/narration/*`.
+
+## Responsive desktop (fase previa a móvil)
+
+1. La escala de tablero y densidad de mano se calcula en:
+   - `hooks/internal/layout/board-layout-metrics.ts`
+   - `hooks/internal/layout/use-board-viewport-scale.ts`
+2. Objetivo:
+   - mantener la misma UI desktop,
+   - reducir escala en pantallas desktop pequeñas,
+   - evitar pisadas entre tablero, mano y paneles laterales.
+3. Métricas expuestas:
+   - `boardScale`,
+   - `handCardScale`,
+   - `handOverlapPx`,
+   - `handYOffsetPx`,
+   - `handContainerHeightPx`.
+
+## Shell móvil (fase 0-2)
+
+1. `Board` conmuta por viewport entre:
+   - layout desktop existente,
+   - shell móvil base.
+2. Piezas nuevas del shell móvil:
+   - `hooks/internal/layout/use-board-viewport-mode.ts`,
+   - `ui/layout/BoardMobileTopBar.tsx`,
+   - `ui/layout/BoardMobileActionsFab.tsx`,
+   - `ui/OpponentHandCompact.tsx`.
+3. En esta fase solo cambia la composición visual; reglas y motor se mantienen en `useBoard` y `GameEngine`.
+
+## Fase 3 móvil: paneles laterales como diálogo
+
+1. En móvil, `SidePanels` desktop se desactiva.
+2. El detalle de carta e historial se renderizan como diálogos laterales:
+   - izquierda: detalle de carta,
+   - derecha: combat log.
+3. Archivo de esta capa:
+   - `ui/overlays/BoardMobilePanelsDialog.tsx`.
+
+## Incidencias resueltas (mobile board) y solución aplicada
+
+1. **Selección incoherente entre mano/tablero/oponente**
+   - **Problema:** en móvil, algunas selecciones del oponente se interpretaban como mano y mostraban acciones incorrectas.
+   - **Solución:** se unificó la detección de origen (`HAND`/`BOARD`) con inferencia por `instanceId` y fallback por `selectedCard` mapeada a entidades activas. Además, prioridad explícita a `playingCard` para evitar falsos positivos.
+
+2. **Overlay móvil bloqueando ataque en fase de combate**
+   - **Problema:** al seleccionar entidad propia en `BATTLE`, el overlay impedía flujo de ataque.
+   - **Solución:** en combate se desactiva overlay para selección de tablero propia; se mantiene interacción nativa de ataque.
+
+3. **Mano del oponente no adaptativa según dispositivo**
+   - **Problema:** en algunos tamaños quedaba descentrada o invadía HUD/turno.
+   - **Solución:** `BoardMobileTopBar` calcula en runtime el hueco real entre bloque de turno y HUD rival, y centra la mano dentro de ese espacio. `OpponentHand` se centra internamente por `left-1/2`.
+
+4. **Escala de cartas de mano del oponente fija**
+   - **Problema:** con distintas resoluciones o número de cartas se recortaban visualmente.
+   - **Solución:** escala calculada por fórmula (`ancho disponible`, `nº cartas`, `separación`) con clamps para evitar extremos.
+
+5. **Mano del jugador en móvil heredando comportamiento desktop**
+   - **Problema:** distribución irregular (se veían pocas cartas, solapes inconsistentes).
+   - **Solución:** se creó componente dedicado `MobilePlayerHand` con layout y spacing responsive propios, separado de `PlayerHand` desktop.
+
+6. **Botones de fase poco legibles en móvil**
+   - **Problema:** recortes y poca legibilidad en anchos reducidos.
+   - **Solución:** rediseño horizontal adaptativo por ancho de viewport, con texto solo en fase activa y animación de barrido de fase.
+
+7. **Overlay de carta seleccionada con contraste bajo**
+   - **Problema:** botones de acción con color poco visible.
+   - **Solución:** se subió saturación, contraste y glow en botones de acción; se movieron acciones arriba junto al cierre para lectura rápida.
+
+## Auditoría técnica (2026-03-08)
+
+1. **Quality gates**
+   - `pnpm lint`: OK.
+   - `pnpm build`: OK.
+   - `pnpm test`: con fallos activos (ver tests de referencia abajo).
+
+2. **Tests con regresión detectada**
+   - `src/components/game/board/Board.test.tsx`
+   - `src/components/game/board/hooks/useBoard.battle-position.integration.test.ts`
+   - `src/components/game/board/ui/DuelResultOverlay.test.tsx`
+   - `src/core/use-cases/game-engine/effects/resolve-execution-return.integration.test.ts`
+   - `src/core/use-cases/game-engine/fusion/fuse-cards.rules.integration.test.ts`
+
+3. **Deuda técnica estructural pendiente (regla <150 líneas)**
+   - `src/components/game/board/index.tsx`
+   - `src/components/game/board/ui/DuelResultOverlay.tsx`
+   - ✅ `src/components/game/board/ui/overlays/BoardStatusOverlays.tsx` quedó dividido por SRP en:
+     - `ui/overlays/internal/BoardErrorOverlay.tsx`
+     - `ui/overlays/internal/BoardZoneBrowsers.tsx`
+   - Pendiente: seguir fragmentación de `index.tsx` y `DuelResultOverlay.tsx` para cumplir umbral estricto.
