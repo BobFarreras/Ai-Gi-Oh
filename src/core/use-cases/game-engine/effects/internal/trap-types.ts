@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/effects/internal/trap-types.ts - Tipos de contexto y resultado para resolución de trampas.
 import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 
 export interface ITrapTriggerContext {
@@ -10,6 +11,7 @@ export interface ITrapResolutionResult {
   opponent: IPlayer;
   damage: number;
   destroyedOpponentEntityCardId: string | null;
+  destroyedOpponentEntityDestination: "GRAVEYARD" | "DESTROYED" | null;
 }
 
 export interface ITriggeredTrap {

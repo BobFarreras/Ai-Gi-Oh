@@ -14,13 +14,18 @@ interface BattlefieldProps {
   opponentActiveEntities: IBoardEntity[];
   opponentActiveExecutions: IBoardEntity[];
   playerDeckCount: number;
+  playerFusionDeckCount: number;
   opponentDeckCount: number;
+  opponentFusionDeckCount: number;
   playerTopGraveCard: ICard | null;
   opponentTopGraveCard: ICard | null;
   playerGraveyardCount: number;
   opponentGraveyardCount: number;
+  playerDestroyedCount: number;
+  opponentDestroyedCount: number;
   activeAttackerId: string | null;
   selectedCard: ICard | null;
+  selectedBoardEntityInstanceId: string | null;
   revealedEntities?: string[];
   highlightedPlayerEntityIds?: string[];
   selectedFusionMaterialIds?: string[];
@@ -36,7 +41,10 @@ interface BattlefieldProps {
   cardXpActorPlayerId?: string | null;
   playerId: string;
   opponentId: string;
+  canActivateSelectedExecution: boolean;
+  onActivateSelectedExecution: () => void;
   onGraveyardClick: (side: "player" | "opponent") => void;
+  onDestroyedClick?: (side: "player" | "opponent") => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => void;
 }
 
@@ -46,13 +54,18 @@ export function Battlefield({
   opponentActiveEntities,
   opponentActiveExecutions,
   playerDeckCount,
+  playerFusionDeckCount,
   opponentDeckCount,
+  opponentFusionDeckCount,
   playerTopGraveCard,
   opponentTopGraveCard,
   playerGraveyardCount,
   opponentGraveyardCount,
+  playerDestroyedCount,
+  opponentDestroyedCount,
   activeAttackerId,
   selectedCard,
+  selectedBoardEntityInstanceId,
   revealedEntities = [],
   highlightedPlayerEntityIds = [],
   selectedFusionMaterialIds = [],
@@ -68,7 +81,10 @@ export function Battlefield({
   cardXpActorPlayerId = null,
   playerId,
   opponentId,
+  canActivateSelectedExecution,
+  onActivateSelectedExecution,
   onGraveyardClick,
+  onDestroyedClick = () => undefined,
   onEntityClick,
 }: BattlefieldProps) {
   const [zoom, setZoom] = useState(1);
@@ -100,10 +116,13 @@ export function Battlefield({
             activeEntities={opponentActiveEntities}
             activeExecutions={opponentActiveExecutions}
             deckCount={opponentDeckCount}
+            fusionDeckCount={opponentFusionDeckCount}
             topGraveCard={opponentTopGraveCard}
             graveyardCount={opponentGraveyardCount}
+            destroyedCount={opponentDestroyedCount}
             activeAttackerId={activeAttackerId}
             selectedCard={selectedCard}
+            selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}
             revealedEntities={revealedEntities}
             highlightedEntityIds={[]}
             selectedEntityIds={[]}
@@ -116,7 +135,10 @@ export function Battlefield({
             cardXpCardId={cardXpActorPlayerId === opponentId ? cardXpCardId : null}
             cardXpAmount={cardXpActorPlayerId === opponentId ? cardXpAmount : null}
             cardXpEventId={cardXpActorPlayerId === opponentId ? cardXpEventId : null}
+            canActivateSelectedExecution={false}
+            onActivateSelectedExecution={onActivateSelectedExecution}
             onGraveyardClick={onGraveyardClick}
+            onDestroyedClick={onDestroyedClick}
             onEntityClick={onEntityClick}
           />
 
@@ -127,10 +149,13 @@ export function Battlefield({
             activeEntities={playerActiveEntities}
             activeExecutions={playerActiveExecutions}
             deckCount={playerDeckCount}
+            fusionDeckCount={playerFusionDeckCount}
             topGraveCard={playerTopGraveCard}
             graveyardCount={playerGraveyardCount}
+            destroyedCount={playerDestroyedCount}
             activeAttackerId={activeAttackerId}
             selectedCard={selectedCard}
+            selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}
             revealedEntities={revealedEntities}
             highlightedEntityIds={highlightedPlayerEntityIds}
             selectedEntityIds={selectedFusionMaterialIds}
@@ -143,7 +168,10 @@ export function Battlefield({
             cardXpCardId={cardXpActorPlayerId === playerId ? cardXpCardId : null}
             cardXpAmount={cardXpActorPlayerId === playerId ? cardXpAmount : null}
             cardXpEventId={cardXpActorPlayerId === playerId ? cardXpEventId : null}
+            canActivateSelectedExecution={canActivateSelectedExecution}
+            onActivateSelectedExecution={onActivateSelectedExecution}
             onGraveyardClick={onGraveyardClick}
+            onDestroyedClick={onDestroyedClick}
             onEntityClick={onEntityClick}
           />
         </div>

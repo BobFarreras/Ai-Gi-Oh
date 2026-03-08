@@ -10,6 +10,8 @@ function createMouseEvent(): React.MouseEvent {
 describe("useBoard integración", () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    window.localStorage.setItem("board-turn-help", "0");
+    window.localStorage.setItem("board-auto-phase", "1");
   });
 
   afterEach(() => {
@@ -175,5 +177,19 @@ describe("useBoard integración", () => {
     const updated = result.current.gameState.playerA.activeEntities.find((entity) => entity.instanceId === summoned.instanceId);
     expect(updated?.mode).toBe("DEFENSE");
     expect(result.current.activeAttackerId).toBeNull();
+  });
+
+  it("debería pasar automáticamente al rival si en BATTLE no hay atacantes disponibles", async () => {
+    const { result } = renderHook(() => useBoard());
+    expect(result.current.gameState.phase).toBe("MAIN_1");
+    act(() => {
+      result.current.advancePhase();
+    });
+    expect(result.current.gameState.phase).toBe("BATTLE");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(420);
+    });
+    expect(result.current.gameState.activePlayerId).toBe(result.current.gameState.playerB.id);
+    expect(result.current.gameState.phase).toBe("MAIN_1");
   });
 });

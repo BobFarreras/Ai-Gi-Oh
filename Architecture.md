@@ -219,6 +219,21 @@ UI (app/components) -> UseCases/Services -> Repositories (interfaces core)
 4. Los nodos de sección usan decoradores por tipo en `src/components/hub/nodes/*` para mantener SRP visual.
 5. `CyberBackground` se mantiene como base visual compartida del hub.
 
+## Combate (Bloque nuevo - Fase 0 preparada)
+
+1. ADR base del bloque:
+   - `docs/adr/2026-03-08-combat-block-banner-fusion-destroyed.md`.
+2. Se define política de banners transitorios `latest-wins` para evitar backlog visual bajo spam de acciones.
+3. Se fija contrato de fusión reforzada:
+   - materiales + carta mágica + carta final existente en `fusionDeck`.
+4. Se fija doble ubicación de `fusionDeck`:
+   - **Arsenal/Home**: debajo del contenedor del deck principal.
+   - **Tablero/Combate**: junto a zonas de deck/cementerio para consulta rápida.
+5. Se formaliza nueva zona de juego `destroyedPile` separada de `graveyard` para futuras mecánicas.
+6. Se acuerda guarda de integridad para salir de Arsenal:
+   - deck principal obligatorio de `20/20`,
+   - validación en UI y capa de aplicación.
+
 ## Subdominio Mi Home (Deck Builder)
 
 1. Entidades: `IDeck`, `IDeckCardSlot`, `ICollectionCard`.

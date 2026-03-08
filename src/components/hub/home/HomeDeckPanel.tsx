@@ -4,13 +4,21 @@ import { IDeck } from "@/core/entities/home/IDeck";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { HomeMiniCard } from "@/components/hub/home/HomeMiniCard";
+import { HomeFusionDeckPanel } from "@/components/hub/home/HomeFusionDeckPanel";
+import { DragEvent } from "react";
 
 interface HomeDeckPanelProps {
   deck: IDeck;
   collection: ICollectionCard[];
   cardProgressById: Map<string, IPlayerCardProgress>;
   selectedSlotIndex: number | null;
+  selectedFusionSlotIndex: number | null;
   onSelectSlot: (slotIndex: number) => void;
+  onSelectFusionSlot: (slotIndex: number) => void;
+  onStartDragDeckSlot: (slotIndex: number, event: DragEvent<HTMLElement>) => void;
+  onStartDragFusionSlot: (slotIndex: number, event: DragEvent<HTMLElement>) => void;
+  onDropOnDeckSlot: (slotIndex: number, event: DragEvent<HTMLElement>) => void;
+  onDropOnFusionSlot: (slotIndex: number, event: DragEvent<HTMLElement>) => void;
   selectedCardId: string | null;
 }
 
@@ -19,7 +27,13 @@ export function HomeDeckPanel({
   collection,
   cardProgressById,
   selectedSlotIndex,
+  selectedFusionSlotIndex,
   onSelectSlot,
+  onSelectFusionSlot,
+  onStartDragDeckSlot,
+  onStartDragFusionSlot,
+  onDropOnDeckSlot,
+  onDropOnFusionSlot,
   selectedCardId,
 }: HomeDeckPanelProps) {
   const cardById = new Map(collection.map((entry) => [entry.card.id, entry.card]));
@@ -42,17 +56,21 @@ export function HomeDeckPanel({
             const progress = slot.cardId ? cardProgressById.get(slot.cardId) : null;
             
             return (
-              <motion.div
+          <motion.div
                 key={slot.index}
                 whileHover={{ scale: 1.05, y: -2, zIndex: 10 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative w-full flex justify-center"
+                className="relative w-[76px] flex justify-center"
               >
                 <HomeMiniCard
                   card={card ?? null}
                   isSelected={isSelected}
                   label={`Slot ${slot.index + 1}`}
                   onClick={() => onSelectSlot(slot.index)}
+                  isDraggable={card !== null}
+                  onDragStart={(event) => onStartDragDeckSlot(slot.index, event)}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={(event) => onDropOnDeckSlot(slot.index, event)}
                   showSlotContainer={card === null}
                   versionTier={progress?.versionTier ?? 0}
                   level={progress?.level ?? 0}
@@ -63,6 +81,16 @@ export function HomeDeckPanel({
             );
           })}
         </div>
+        <HomeFusionDeckPanel
+          deck={deck}
+          collection={collection}
+          cardProgressById={cardProgressById}
+          selectedFusionSlotIndex={selectedFusionSlotIndex}
+          selectedCardId={selectedCardId}
+          onSelectFusionSlot={onSelectFusionSlot}
+          onStartDragFusionSlot={onStartDragFusionSlot}
+          onDropOnFusionSlot={onDropOnFusionSlot}
+        />
       </div>
     </section>
   );

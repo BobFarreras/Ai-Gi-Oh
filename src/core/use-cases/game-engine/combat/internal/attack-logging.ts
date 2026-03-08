@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/combat/internal/attack-logging.ts - Registra eventos de combate y envío de cartas a cementerio/destrucción.
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
@@ -8,6 +9,8 @@ interface ICombatResultSummary {
   damageToDefenderPlayer: number;
   damageToAttackerPlayer: number;
   passiveAttackReduction?: number;
+  attackerDestroyedDestination?: "GRAVEYARD" | "DESTROYED" | null;
+  defenderDestroyedDestination?: "GRAVEYARD" | "DESTROYED" | null;
 }
 
 interface IBuildBattleLogsParams {
@@ -83,14 +86,16 @@ export function appendEntityBattleLogs(params: IBuildBattleLogsParams): GameStat
     });
   }
   if (result.attackerDestroyed) {
-    withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, "CARD_TO_GRAVEYARD", {
+    const eventType = result.attackerDestroyedDestination === "DESTROYED" ? "CARD_TO_DESTROYED" : "CARD_TO_GRAVEYARD";
+    withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, eventType, {
       cardId: attacker.card.id,
       ownerPlayerId: attackerPlayerTargetId,
       from: "BATTLEFIELD",
     });
   }
   if (result.defenderDestroyed) {
-    withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, "CARD_TO_GRAVEYARD", {
+    const eventType = result.defenderDestroyedDestination === "DESTROYED" ? "CARD_TO_DESTROYED" : "CARD_TO_GRAVEYARD";
+    withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, eventType, {
       cardId: defender.card.id,
       ownerPlayerId: defenderPlayerId,
       from: "BATTLEFIELD",

@@ -1,4 +1,4 @@
-// src/components/game/board/internal/HudDialogueBubble.tsx - Burbuja breve de diálogo asociada al HUD para feedback reactivo del duelo.
+// src/components/game/board/internal/HudDialogueBubble.tsx - Burbuja de diálogo contextual del HUD anclada al lado del retrato activo.
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
@@ -15,17 +15,18 @@ export function HudDialogueBubble({ isOpponent, message }: HudDialogueBubbleProp
       {message ? (
         <motion.div
           key={message}
-          initial={{ opacity: 0, y: isOpponent ? -8 : 8, x: isOpponent ? 10 : -10 }}
-          animate={{ opacity: 1, y: 0, x: 0 }}
-          exit={{ opacity: 0, y: isOpponent ? -6 : 6 }}
-          transition={{ duration: 0.22 }}
+          initial={{ opacity: 0, y: isOpponent ? 14 : -14, scale: 0.88 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: isOpponent ? 8 : -8, scale: 0.94 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
           className={cn(
-            "relative mb-2 max-w-[300px] rounded-xl border-2 border-black bg-white px-3 py-2 text-xs font-black text-black shadow-[0_6px_0_rgba(0,0,0,0.9)]",
-            isOpponent ? "text-right" : "text-left",
+            "absolute z-[120] max-w-[280px] rounded-2xl border-[3px] border-zinc-950 bg-white px-4 py-3 text-sm font-black tracking-tight text-zinc-900 shadow-[5px_5px_0_rgba(0,0,0,0.85)]",
+            isOpponent ? "right-8 top-[145px]" : "left-8 -top-[98px]",
           )}
         >
           {message}
-          <span className={cn("absolute top-full h-3 w-3 rotate-45 border-b-2 border-r-2 border-black bg-white", isOpponent ? "right-5 -mt-[7px]" : "left-5 -mt-[7px]")} />
+
+          <span className={cn("absolute left-10 h-4 w-4 rotate-45 border-zinc-950 bg-white", isOpponent ? "-top-[9.5px] border-l-[3px] border-t-[3px]" : "-bottom-[9.5px] border-r-[3px] border-b-[3px]")} />
         </motion.div>
       ) : null}
     </AnimatePresence>

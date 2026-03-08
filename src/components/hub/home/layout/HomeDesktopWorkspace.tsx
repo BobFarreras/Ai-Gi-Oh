@@ -24,8 +24,14 @@ export function HomeDesktopWorkspace(props: IHomeWorkspaceProps) {
           collection={props.collectionState}
           cardProgressById={props.cardProgressById}
           selectedSlotIndex={props.selectedSlotIndex}
+          selectedFusionSlotIndex={props.selectedFusionSlotIndex}
           selectedCardId={props.selectedCardId}
           onSelectSlot={props.onSelectSlot}
+          onSelectFusionSlot={props.onSelectFusionSlot}
+          onStartDragDeckSlot={props.onStartDragDeckSlot}
+          onStartDragFusionSlot={props.onStartDragFusionSlot}
+          onDropOnDeckSlot={props.onDropOnDeckSlot}
+          onDropOnFusionSlot={props.onDropOnFusionSlot}
         />
       </div>
       <div className="min-h-0 min-w-0 overflow-hidden rounded-xl border border-cyan-900/30 bg-black/40">
@@ -36,6 +42,8 @@ export function HomeDesktopWorkspace(props: IHomeWorkspaceProps) {
           evolvableCardIds={props.evolvableCardIds}
           selectedCardId={props.selectedCollectionCardId}
           onSelectCard={props.onSelectCollectionCard}
+          onStartDragCollectionCard={props.onStartDragCollectionCard}
+          onDropOnCollectionArea={props.onDropOnCollectionArea}
         />
       </div>
     </div>

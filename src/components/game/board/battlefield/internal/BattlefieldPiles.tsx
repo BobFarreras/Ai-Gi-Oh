@@ -1,3 +1,4 @@
+// src/components/game/board/battlefield/internal/BattlefieldPiles.tsx - Renderiza pilas visuales de deck, fusión, cementerio y destrucción.
 import { Card } from "@/components/game/card/Card";
 import { CardBack } from "@/components/game/card/CardBack";
 import { ICard } from "@/core/entities/ICard";
@@ -55,5 +56,44 @@ export function DeckPile({ deckCount }: { deckCount: number }) {
         {deckCount}
       </span>
     </div>
+  );
+}
+
+export function FusionDeckPile({ fusionDeckCount }: { fusionDeckCount: number }) {
+  return (
+    <div className="relative w-24 h-36 border-2 border-fuchsia-500/40 rounded-lg shadow-[0_0_28px_rgba(192,132,252,0.26)] flex flex-col items-center justify-center bg-fuchsia-950/20 overflow-hidden">
+      {fusionDeckCount > 0 && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="scale-[0.25] origin-center opacity-80">
+            <CardBack />
+          </div>
+        </div>
+      )}
+      <span className="relative z-10 bg-black/90 px-2.5 py-1 rounded-md text-fuchsia-300 font-mono text-xs border border-fuchsia-900/80">
+        FUS {fusionDeckCount}
+      </span>
+    </div>
+  );
+}
+
+interface DestroyedPileProps {
+  isOpponentSide: boolean;
+  destroyedCount: number;
+  onClick: (side: "player" | "opponent") => void;
+}
+
+export function DestroyedPile({ isOpponentSide, destroyedCount, onClick }: DestroyedPileProps) {
+  const side = isOpponentSide ? "opponent" : "player";
+  return (
+    <button
+      type="button"
+      aria-label={`Abrir zona destruida ${isOpponentSide ? "rival" : "jugador"}`}
+      onClick={() => onClick(side)}
+      className="relative w-24 h-36 border-2 border-amber-500/40 rounded-lg shadow-[0_0_28px_rgba(245,158,11,0.24)] flex flex-col items-center justify-center bg-amber-950/20 overflow-hidden transition-colors hover:border-amber-300/70"
+    >
+      <span className="relative z-10 bg-black/90 px-2 py-1 rounded-md text-amber-300 font-mono text-[11px] border border-amber-900/80">
+        DEST {destroyedCount}
+      </span>
+    </button>
   );
 }

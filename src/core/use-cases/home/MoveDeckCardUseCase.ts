@@ -23,7 +23,11 @@ export class MoveDeckCardUseCase {
     }
 
     const deck = await this.deckRepository.getDeck(input.playerId);
-    const updatedDeck: IDeck = { playerId: deck.playerId, slots: deck.slots.map((slot) => ({ ...slot })) };
+    const updatedDeck: IDeck = {
+      playerId: deck.playerId,
+      slots: deck.slots.map((slot) => ({ ...slot })),
+      fusionSlots: deck.fusionSlots.map((slot) => ({ ...slot })),
+    };
     const fromCard = updatedDeck.slots[input.fromSlotIndex].cardId;
     const toCard = updatedDeck.slots[input.toSlotIndex].cardId;
     updatedDeck.slots[input.fromSlotIndex] = { ...updatedDeck.slots[input.fromSlotIndex], cardId: toCard };

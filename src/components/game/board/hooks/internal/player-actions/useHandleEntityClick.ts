@@ -26,6 +26,7 @@ type IHandleEntityClickParams = Pick<
   | "setPlayingCard"
   | "setRevealedEntities"
   | "setSelectedCard"
+  | "setSelectedBoardEntityInstanceId"
 >;
 
 export function useHandleEntityClick(params: IHandleEntityClickParams) {
@@ -60,13 +61,12 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
           pendingEntityReplacement: params.pendingEntityReplacement,
           pendingEntityReplacementTargetId: params.pendingEntityReplacementTargetId,
           setActiveAttackerId: params.setActiveAttackerId,
-          setIsAnimating: params.setIsAnimating,
           setLastError: params.setLastError,
           setPendingEntityReplacementTargetId: params.setPendingEntityReplacementTargetId,
           setPendingFusionSummon: params.setPendingFusionSummon,
           setPlayingCard: params.setPlayingCard,
-          setRevealedEntities: params.setRevealedEntities,
           setSelectedCard: params.setSelectedCard,
+          setSelectedBoardEntityInstanceId: params.setSelectedBoardEntityInstanceId,
         });
         if (result === "handled") return;
       }
@@ -83,7 +83,10 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
       });
       if (result === "handled") return;
 
-      if (entity) params.setSelectedCard(entity.card);
+      if (entity) {
+        params.setSelectedCard(entity.card);
+        params.setSelectedBoardEntityInstanceId(null);
+      }
     },
     [params],
   );

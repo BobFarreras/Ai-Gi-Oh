@@ -62,7 +62,6 @@ export function HomeCardInspectorDialog({
     if (pendingAction) return;
     setPendingAction("INSERT");
     try {
-      play("ADD_CARD");
       const result = await Promise.resolve(onInsert());
       if (!result.ok) {
         setStatusMessage({ tone: "error", text: result.message ?? "No se pudo añadir la carta." });
@@ -81,7 +80,6 @@ export function HomeCardInspectorDialog({
     if (pendingAction) return;
     setPendingAction("REMOVE");
     try {
-      play("REMOVE_CARD");
       onClose();
       await Promise.resolve(onRemove());
     } finally {
@@ -92,7 +90,6 @@ export function HomeCardInspectorDialog({
     if (pendingAction) return;
     setPendingAction("EVOLVE");
     try {
-      play("EVOLUTION_BUTTON");
       const result = await Promise.resolve(onEvolve());
       if (!result.ok) {
         setStatusMessage({ tone: "error", text: result.message ?? "No se pudo evolucionar la carta." });

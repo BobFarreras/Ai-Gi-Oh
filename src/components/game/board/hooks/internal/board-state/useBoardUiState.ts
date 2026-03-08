@@ -1,68 +1,35 @@
 // src/components/game/board/hooks/internal/board-state/useBoardUiState.ts - Gestiona estado UI local del tablero y flujos pendientes de interacción.
 import { MutableRefObject, useCallback, useState } from "react";
 import { ICard } from "@/core/entities/ICard";
-import { BattleMode } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IBoardUiError } from "../boardError";
-
-interface IUseBoardUiStateResult {
-  gameState: GameState;
-  setGameState: (value: GameState) => void;
-  selectedCard: ICard | null;
-  setSelectedCard: (value: ICard | null) => void;
-  playingCard: ICard | null;
-  setPlayingCard: (value: ICard | null) => void;
-  isHistoryOpen: boolean;
-  setIsHistoryOpen: (value: boolean | ((previous: boolean) => boolean)) => void;
-  activeAttackerId: string | null;
-  setActiveAttackerId: (value: string | null | ((previous: string | null) => string | null)) => void;
-  isAnimating: boolean;
-  setIsAnimating: (value: boolean) => void;
-  revealedEntities: string[];
-  setRevealedEntities: (value: string[] | ((previous: string[]) => string[])) => void;
-  lastError: IBoardUiError | null;
-  setLastError: (value: IBoardUiError | null) => void;
-  pendingEntityReplacement: { cardId: string; mode: BattleMode } | null;
-  setPendingEntityReplacement: (value: { cardId: string; mode: BattleMode } | null) => void;
-  pendingEntityReplacementTargetId: string | null;
-  setPendingEntityReplacementTargetId: (value: string | null) => void;
-  pendingFusionSummon: { cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null;
-  setPendingFusionSummon: (value: { cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null) => void;
-  isFusionCinematicActive: boolean;
-  setIsFusionCinematicActive: (value: boolean) => void;
-  isMuted: boolean;
-  setIsMuted: (value: boolean | ((previous: boolean) => boolean)) => void;
-  isPaused: boolean;
-  setIsPaused: (value: boolean | ((previous: boolean) => boolean)) => void;
-  clearSelection: () => void;
-  previewCard: (card: ICard) => void;
-  clearError: () => void;
-  toggleMute: () => void;
-  togglePause: () => void;
-  restartMatch: () => void;
-}
+import { IPendingZoneReplacement } from "./pending-replacement";
 
 export function useBoardUiState(
   gameStateRef: MutableRefObject<GameState>,
   createInitialState: () => GameState,
-): IUseBoardUiStateResult {
+) {
   const [gameState, setGameState] = useState<GameState>(() => createInitialState());
   const [selectedCard, setSelectedCard] = useState<ICard | null>(null);
+  const [selectedBoardEntityInstanceId, setSelectedBoardEntityInstanceId] = useState<string | null>(null);
   const [playingCard, setPlayingCard] = useState<ICard | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [activeAttackerId, setActiveAttackerId] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [revealedEntities, setRevealedEntities] = useState<string[]>([]);
   const [lastError, setLastError] = useState<IBoardUiError | null>(null);
-  const [pendingEntityReplacement, setPendingEntityReplacement] = useState<{ cardId: string; mode: BattleMode } | null>(null);
+  const [pendingEntityReplacement, setPendingEntityReplacement] = useState<IPendingZoneReplacement | null>(null);
   const [pendingEntityReplacementTargetId, setPendingEntityReplacementTargetId] = useState<string | null>(null);
   const [pendingFusionSummon, setPendingFusionSummon] = useState<{ cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null>(null);
   const [isFusionCinematicActive, setIsFusionCinematicActive] = useState(false);
   const [isMuted, setIsMuted] = useState<boolean>(() => (typeof window !== "undefined" ? window.localStorage.getItem("board-muted") === "1" : false));
   const [isPaused, setIsPaused] = useState(false);
+  const [isAutoPhaseEnabled, setIsAutoPhaseEnabled] = useState<boolean>(() => (typeof window !== "undefined" ? window.localStorage.getItem("board-auto-phase") !== "0" : true));
+  const [isTurnHelpEnabled, setIsTurnHelpEnabled] = useState<boolean>(() => (typeof window !== "undefined" ? window.localStorage.getItem("board-turn-help") !== "0" : true));
 
   const clearSelection = useCallback(() => {
     setSelectedCard(null);
+    setSelectedBoardEntityInstanceId(null);
     setPlayingCard(null);
     setActiveAttackerId(null);
     setPendingEntityReplacementTargetId(null);
@@ -71,6 +38,7 @@ export function useBoardUiState(
 
   const previewCard = useCallback((card: ICard) => {
     setSelectedCard(card);
+    setSelectedBoardEntityInstanceId(null);
     setPlayingCard(null);
     setActiveAttackerId(null);
   }, []);
@@ -87,6 +55,17 @@ export function useBoardUiState(
   const togglePause = useCallback(() => {
     setIsPaused((previous) => !previous);
   }, []);
+  const toggleAutoPhase = useCallback(() => {
+    setIsAutoPhaseEnabled((previous) => {
+      const next = !previous;
+      if (typeof window !== "undefined") window.localStorage.setItem("board-auto-phase", next ? "1" : "0");
+      return next;
+    });
+  }, []);
+  const disableTurnHelp = useCallback(() => {
+    setIsTurnHelpEnabled(false);
+    if (typeof window !== "undefined") window.localStorage.setItem("board-turn-help", "0");
+  }, []);
 
   const restartMatch = useCallback(() => {
     const freshState = createInitialState();
@@ -102,6 +81,8 @@ export function useBoardUiState(
     setGameState,
     selectedCard,
     setSelectedCard,
+    selectedBoardEntityInstanceId,
+    setSelectedBoardEntityInstanceId,
     playingCard,
     setPlayingCard,
     isHistoryOpen,
@@ -126,6 +107,12 @@ export function useBoardUiState(
     setIsMuted,
     isPaused,
     setIsPaused,
+    isAutoPhaseEnabled,
+    setIsAutoPhaseEnabled,
+    toggleAutoPhase,
+    isTurnHelpEnabled,
+    setIsTurnHelpEnabled,
+    disableTurnHelp,
     clearSelection,
     previewCard,
     clearError,

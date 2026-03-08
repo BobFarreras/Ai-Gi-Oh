@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/effects/internal/trap-logging.ts - Construye trazas del combatLog para activación y resolución de trampas.
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { TrapTrigger } from "@/core/entities/ICard";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
@@ -33,11 +34,16 @@ export function appendTrapResolutionLogs(params: ITrapLoggingParams): GameState 
     });
   }
   if (resolved.destroyedOpponentEntityCardId) {
-    withLogs = appendCombatLogEvent(withLogs, reactivePlayerId, "CARD_TO_GRAVEYARD", {
+    withLogs = appendCombatLogEvent(
+      withLogs,
+      reactivePlayerId,
+      resolved.destroyedOpponentEntityDestination === "DESTROYED" ? "CARD_TO_DESTROYED" : "CARD_TO_GRAVEYARD",
+      {
       cardId: resolved.destroyedOpponentEntityCardId,
       ownerPlayerId: targetOpponentId,
       from: "BATTLEFIELD",
-    });
+    },
+    );
   }
   return withLogs;
 }

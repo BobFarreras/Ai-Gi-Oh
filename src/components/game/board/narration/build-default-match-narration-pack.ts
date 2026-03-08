@@ -9,7 +9,6 @@ export function buildDefaultMatchNarrationPack(): IMatchNarrationPack {
   return {
     lines: [
       line({ id: "start-opponent", trigger: "MATCH_START", channel: "CINEMATIC", actor: "OPPONENT", text: "Te estaba esperando. Demuestra tu arquitectura." }, 3600),
-      line({ id: "hit-dealt-player", trigger: "DIRECT_HIT_DEALT", channel: "HUD", actor: "PLAYER", text: "Este duelo no ha acabado!!" }, 1800, "/audio/story/player/impacto-directo.mp3"),
       line({ id: "hit-dealt", trigger: "DIRECT_HIT_DEALT", channel: "HUD", actor: "OPPONENT", text: "Aún puedo resistir." }, 1800, "/audio/sfx/damage.mp3"),
       line({ id: "hit-taken-player", trigger: "DIRECT_HIT_TAKEN", channel: "HUD", actor: "PLAYER", text: "Este duelo no ha acabado!!" }, 1800, "/audio/story/player/impacto-directo.mp3"),
       line({ id: "hit-taken", trigger: "DIRECT_HIT_TAKEN", channel: "HUD", actor: "OPPONENT", text: "Acaba con sus puntos de vida." }, 1800, "/audio/sfx/damage.mp3"),

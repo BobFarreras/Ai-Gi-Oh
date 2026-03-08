@@ -3,6 +3,7 @@ import { BattleMode, IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ValidationError } from "@/core/errors/ValidationError";
+import { assertFusionCardInFusionDeck } from "@/core/use-cases/game-engine/fusion/internal/assert-fusion-card-in-fusion-deck";
 import { IFusionRecipe, getFusionRecipe } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 import { IFusionContext } from "@/core/use-cases/game-engine/fusion/internal/fusion-types";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
@@ -26,6 +27,7 @@ export function createFusionContext(
   const fusionCard = player.hand.find((card) => card.runtimeId === fusionCardId || card.id === fusionCardId);
   if (!fusionCard) throw new NotFoundError("La carta de fusión no está en la mano.");
   if (fusionCard.type !== "FUSION") throw new ValidationError("La carta seleccionada no es de tipo fusión.");
+  assertFusionCardInFusionDeck(player, fusionCard.id);
   if (materialIds[0] === materialIds[1]) throw new ValidationError("Debes seleccionar 2 materiales distintos para fusionar.");
   const materials = materialIds.map((instanceId) => {
     const entity = player.activeEntities.find((current) => current.instanceId === instanceId);
@@ -57,11 +59,6 @@ function validateMaterialsAgainstRecipe(recipe: IFusionRecipe, materials: [IBoar
     }
     if (pending.length > 0) throw new ValidationError("Los arquetipos de los materiales no cumplen la receta.");
   }
-  if (recipe.requiredEnergyPerMaterial) {
-    const minMaterialEnergy = recipe.requiredEnergyPerMaterial;
-    const hasInvalidMaterial = materials.some((material) => material.card.cost < minMaterialEnergy);
-    if (hasInvalidMaterial) throw new ValidationError("Uno de los materiales no alcanza la energía mínima requerida.");
-  }
 }
 
 function validateFusionEnergy(
@@ -70,10 +67,8 @@ function validateFusionEnergy(
   materials: [IBoardEntity, IBoardEntity],
   recipeTotalEnergy: number | null,
 ): void {
-  if (recipeTotalEnergy) {
-    const totalEnergy = materials.reduce((sum, material) => sum + material.card.cost, 0);
-    if (totalEnergy < recipeTotalEnergy) throw new ValidationError("La energía total de materiales no alcanza la receta.");
-  }
-  const fusionEnergyCost = fusionCard.fusionEnergyRequirement ?? recipeTotalEnergy ?? fusionCard.cost;
-  if (player.currentEnergy < fusionEnergyCost) throw new GameRuleError("No tienes energía suficiente para fusionar.");
+  void player;
+  void fusionCard;
+  void materials;
+  void recipeTotalEnergy;
 }

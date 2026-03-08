@@ -83,7 +83,7 @@ describe("fusión desde ejecución", () => {
     );
   });
 
-  it("no debería iniciar selección si faltan materiales y debe continuar flujo sin bloqueo", () => {
+  it("si faltan materiales debe quedar en espera sin bloquear el flujo", () => {
     const base = createState();
     const stateWithOneMaterial: GameState = {
       ...base,
@@ -98,7 +98,8 @@ describe("fusión desde ejecución", () => {
     state = GameEngine.resolveExecution(state, "p1", executionInstanceId);
 
     expect(state.pendingTurnAction).toBeNull();
-    expect(state.playerA.activeExecutions).toHaveLength(0);
-    expect(state.playerA.graveyard.some((card) => card.id === "exec-fusion-gemgpt")).toBe(true);
+    expect(state.playerA.activeExecutions).toHaveLength(1);
+    expect(state.playerA.activeExecutions[0].mode).toBe("SET");
+    expect(state.playerA.graveyard.some((card) => card.id === "exec-fusion-gemgpt")).toBe(false);
   });
 });

@@ -11,6 +11,7 @@ import { SidePanels } from "../../SidePanels";
 interface BoardInteractiveLayerProps {
   gameState: GameState;
   selectedCard: ICard | null;
+  selectedBoardEntityInstanceId: string | null;
   playingCard: ICard | null;
   activeAttackerId: string | null;
   revealedEntities: string[];
@@ -19,6 +20,7 @@ interface BoardInteractiveLayerProps {
   pendingDiscardCardIds: string[];
   isHistoryOpen: boolean;
   isPlayerTurn: boolean;
+  canActivateSelectedExecution: boolean;
   lastDamageTargetPlayerId: string | null;
   lastDamageEventId: string | null;
   lastBuffTargetEntityIds: string[];
@@ -30,10 +32,12 @@ interface BoardInteractiveLayerProps {
   lastCardXpEventId: string | null;
   lastCardXpActorPlayerId: string | null;
   onGraveyardClick: (side: "player" | "opponent") => void;
+  onDestroyedClick?: (side: "player" | "opponent") => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => Promise<void>;
   onMandatoryCardSelect: (cardId: string) => void;
   onCardClick: (card: ICard, event?: React.MouseEvent) => void;
   onPlayAction: (mode: BattleMode, event: React.MouseEvent) => Promise<void>;
+  onActivateSelectedExecution: () => void;
   onSelectCard: (card: ICard) => void;
   onCloseCard: () => void;
   onCloseHistory: () => void;
@@ -42,6 +46,7 @@ interface BoardInteractiveLayerProps {
 export function BoardInteractiveLayer({
   gameState,
   selectedCard,
+  selectedBoardEntityInstanceId,
   playingCard,
   activeAttackerId,
   revealedEntities,
@@ -50,6 +55,7 @@ export function BoardInteractiveLayer({
   pendingDiscardCardIds,
   isHistoryOpen,
   isPlayerTurn,
+  canActivateSelectedExecution,
   lastDamageTargetPlayerId,
   lastDamageEventId,
   lastBuffTargetEntityIds,
@@ -61,10 +67,12 @@ export function BoardInteractiveLayer({
   lastCardXpEventId,
   lastCardXpActorPlayerId,
   onGraveyardClick,
+  onDestroyedClick = () => undefined,
   onEntityClick,
   onMandatoryCardSelect,
   onCardClick,
   onPlayAction,
+  onActivateSelectedExecution,
   onSelectCard,
   onCloseCard,
   onCloseHistory,
@@ -81,13 +89,18 @@ export function BoardInteractiveLayer({
           opponentActiveEntities={opponent.activeEntities}
           opponentActiveExecutions={opponent.activeExecutions}
           playerDeckCount={player.deck.length}
+          playerFusionDeckCount={player.fusionDeck?.length ?? 0}
           opponentDeckCount={opponent.deck.length}
+          opponentFusionDeckCount={opponent.fusionDeck?.length ?? 0}
           playerTopGraveCard={player.graveyard[player.graveyard.length - 1] ?? null}
           opponentTopGraveCard={opponent.graveyard[opponent.graveyard.length - 1] ?? null}
           playerGraveyardCount={player.graveyard.length}
           opponentGraveyardCount={opponent.graveyard.length}
+          playerDestroyedCount={player.destroyedPile?.length ?? 0}
+          opponentDestroyedCount={opponent.destroyedPile?.length ?? 0}
           activeAttackerId={activeAttackerId}
           selectedCard={selectedCard}
+          selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}
           revealedEntities={revealedEntities}
           highlightedPlayerEntityIds={pendingEntitySelectionIds}
           selectedFusionMaterialIds={pendingFusionSelectedEntityIds}
@@ -103,7 +116,10 @@ export function BoardInteractiveLayer({
           cardXpActorPlayerId={lastCardXpActorPlayerId}
           playerId={player.id}
           opponentId={opponent.id}
+          canActivateSelectedExecution={canActivateSelectedExecution}
+          onActivateSelectedExecution={onActivateSelectedExecution}
           onGraveyardClick={onGraveyardClick}
+          onDestroyedClick={onDestroyedClick}
           onEntityClick={onEntityClick}
         />
       </div>

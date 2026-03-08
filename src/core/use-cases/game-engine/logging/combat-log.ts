@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/logging/combat-log.ts - Crea y agrega eventos tipados del combatLog en estado inmutable.
 import { CombatLogEventType, ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 

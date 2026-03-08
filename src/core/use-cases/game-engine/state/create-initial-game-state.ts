@@ -8,6 +8,7 @@ interface IInitialPlayerConfig {
   id: string;
   name: string;
   deck: ICard[];
+  fusionDeck?: ICard[];
 }
 
 interface ICreateInitialGameStateConfig {
@@ -40,8 +41,10 @@ function createPlayer(config: IInitialPlayerConfig, maxHealthPoints: number, max
     currentEnergy: maxEnergy,
     maxEnergy,
     deck: deckWithRuntimeIds,
+    fusionDeck: (config.fusionDeck ?? []).map((card) => ({ ...card })),
     hand: [],
     graveyard: [],
+    destroyedPile: [],
     activeEntities: [],
     activeExecutions: [],
   };

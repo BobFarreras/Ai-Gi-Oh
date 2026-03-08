@@ -3,9 +3,11 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
+import { GameEngine } from "@/core/use-cases/GameEngine";
 import { ICampaignProgress } from "@/core/services/opponent/difficulty/types";
 import { createMatchSeed } from "@/core/services/random/create-match-seed";
 import { createInitialBoardState, ICreateInitialBoardStateInput } from "./internal/boardInitialState";
+import { sleep } from "./internal/sleep";
 import { useMatchAudio } from "./internal/match/useMatchAudio";
 import { useMatchProgression } from "./internal/match/useMatchProgression";
 import { useMatchRuntime } from "./internal/match/useMatchRuntime";
@@ -17,6 +19,18 @@ function resolveWinnerPlayerId(gameState: GameState): string | "DRAW" | null {
   if (gameState.playerB.healthPoints <= 0) return gameState.playerA.id;
   return null;
 }
+
+function isExecutionWaitingForFusionMaterials(state: GameState, executionInstanceId: string): boolean {
+  const waitingExecution = state.playerA.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
+  if (!waitingExecution) return false;
+  return (
+    waitingExecution.mode === "SET" &&
+    waitingExecution.card.type === "EXECUTION" &&
+    waitingExecution.card.effect?.action === "FUSION_SUMMON" &&
+    state.pendingTurnAction === null
+  );
+}
+const EXECUTION_ACTIVATION_PREVIEW_MS = 720;
 
 export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINING", initialConfig?: ICreateInitialBoardStateInput) {
   const [campaignProgress] = useState<ICampaignProgress>({ chapterIndex: 1, duelIndex: 1, victories: 0 });
@@ -56,10 +70,52 @@ export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINI
     progression.resetBattleProgression();
     uiState.restartMatch();
   }, [progression, uiState]);
+  const selectedActivatableExecution = useMemo(() => {
+    if (!uiState.selectedBoardEntityInstanceId) return null;
+    return (
+      uiState.gameState.playerA.activeExecutions.find(
+        (entity) =>
+          entity.instanceId === uiState.selectedBoardEntityInstanceId &&
+          entity.mode === "SET" &&
+          entity.card.type === "EXECUTION",
+      ) ?? null
+    );
+  }, [uiState.gameState.playerA.activeExecutions, uiState.selectedBoardEntityInstanceId]);
+  const canActivateSelectedExecution =
+    Boolean(selectedActivatableExecution) &&
+    !winnerPlayerId &&
+    uiState.isPlayerTurn &&
+    uiState.gameState.phase === "MAIN_1" &&
+    !uiState.isActionLocked &&
+    uiState.gameState.pendingTurnAction?.playerId !== uiState.gameState.playerA.id;
+  const activateSelectedExecution = useCallback(async (): Promise<"NOOP" | "ACTIVATED" | "MISSING_MATERIALS"> => {
+    if (!canActivateSelectedExecution || !selectedActivatableExecution) return "NOOP";
+    uiState.setIsAnimating(true);
+    const activated = runtime.applyTransition((state) =>
+      GameEngine.changeEntityMode(state, state.playerA.id, selectedActivatableExecution.instanceId, "ACTIVATE"),
+    );
+    if (!activated) {
+      uiState.setIsAnimating(false);
+      return "NOOP";
+    }
+    await sleep(EXECUTION_ACTIVATION_PREVIEW_MS);
+    const resolved = runtime.applyTransition((state) =>
+      GameEngine.resolveExecution(state, state.playerA.id, selectedActivatableExecution.instanceId),
+    );
+    uiState.setIsAnimating(false);
+    if (!resolved) return "NOOP";
+    if (isExecutionWaitingForFusionMaterials(resolved, selectedActivatableExecution.instanceId)) {
+      uiState.clearSelection();
+      return "MISSING_MATERIALS";
+    }
+    uiState.clearSelection();
+    return "ACTIVATED";
+  }, [canActivateSelectedExecution, runtime, selectedActivatableExecution, uiState]);
 
   return {
     gameState: uiState.gameState,
     selectedCard: uiState.selectedCard,
+    selectedBoardEntityInstanceId: uiState.selectedBoardEntityInstanceId,
     playingCard: uiState.playingCard,
     isHistoryOpen: uiState.isHistoryOpen,
     activeAttackerId: uiState.activeAttackerId,
@@ -71,12 +127,15 @@ export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINI
     isPlayerTurn: uiState.isPlayerTurn,
     isMuted: uiState.isMuted,
     isPaused: uiState.isPaused,
+    isAutoPhaseEnabled: uiState.isAutoPhaseEnabled,
+    isTurnHelpEnabled: uiState.isTurnHelpEnabled,
     isFusionCinematicActive: uiState.isFusionCinematicActive,
     setIsFusionCinematicActive: uiState.setIsFusionCinematicActive,
     winnerPlayerId,
     restartMatch,
     toggleMute: uiState.toggleMute,
     togglePause: uiState.togglePause,
+    toggleAutoPhase: uiState.toggleAutoPhase,
     setIsHistoryOpen: uiState.setIsHistoryOpen,
     toggleCardSelection: runtime.toggleCardSelection,
     previewCard: uiState.previewCard,
@@ -85,6 +144,9 @@ export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINI
     executePlayAction: runtime.executePlayAction,
     handleEntityClick: runtime.handleEntityClick,
     advancePhase: runtime.advancePhase,
+    confirmAdvancePhase: runtime.confirmAdvancePhase,
+    cancelAdvancePhase: runtime.cancelAdvancePhase,
+    pendingAdvanceWarning: runtime.pendingAdvanceWarning,
     handleTimerExpired: runtime.handleTimerExpired,
     confirmEntityReplacement: runtime.confirmEntityReplacement,
     cancelEntityReplacement: runtime.cancelEntityReplacement,
@@ -92,6 +154,8 @@ export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINI
     resolvePendingHandDiscard: runtime.resolvePendingHandDiscard,
     setSelectedEntityToAttack: runtime.setSelectedEntityToAttack,
     canSetSelectedEntityToAttack: runtime.canSetSelectedEntityToAttack,
+    activateSelectedExecution,
+    canActivateSelectedExecution,
     battleExperienceSummary: progression.battleExperienceSummary,
     battleExperienceCardLookup: progression.battleExperienceCardLookup,
     isBattleExperiencePending: progression.isBattleExperiencePending,
@@ -99,6 +163,7 @@ export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINI
     playTimerExpired: audio.playTimerExpired,
     playTimerWarning: audio.playTimerWarning,
     playButtonClick: audio.playButtonClick,
+    playBanner: audio.playBanner,
     ...uiState.pendingUi,
     ...uiState.combatFeedback,
   };

@@ -58,6 +58,20 @@ Se separa el render por breakpoint sin alterar reglas del dominio:
 3. `Añadir` y `Remover` cierran el diálogo al finalizar correctamente para acelerar el flujo.
 4. Se añade test de bloqueo de cierre en `MobileInspectorDialogShell.test.tsx`.
 
+## Fase 2 del nuevo bloque (fusión dedicada)
+
+1. `IDeck` ahora incluye `fusionSlots` (2 slots dedicados, separados del deck principal de 20).
+2. Se añade panel `HomeFusionDeckPanel` debajo del contenedor de deck en desktop.
+3. Reglas de inserción:
+   - cartas `FUSION` solo pueden equiparse en `fusionSlots`,
+   - cartas no `FUSION` no pueden entrar en `fusionSlots`.
+4. Se añaden casos de uso y endpoints dedicados:
+   - `AddCardToFusionDeckUseCase`,
+   - `RemoveCardFromFusionDeckUseCase`,
+   - `/api/home/deck/fusion/add`,
+   - `/api/home/deck/fusion/remove`.
+5. La validación de copias disponibles cuenta asignaciones en deck principal + bloque de fusión.
+
 ## Ajustes finales de UI (desktop + mobile)
 
 1. El overlay de evolución renderiza la carta con clipping limpio para evitar artefactos de fondo.
@@ -83,6 +97,20 @@ Eventos conectados vía `useHubModuleSfx`:
 4. Pulsar añadir: `ADD_CARD` (`/audio/hub/arsenal/añadir.mp3`).
 5. Mostrar overlay de evolución: `EVOLUTION_OVERLAY` (`/audio/hub/arsenal/evolution.mp3`).
 6. Pulsar botón evolucionar: `EVOLUTION_BUTTON` (`/audio/landing/button-click.mp3`).
+
+## Reglas de salida y combate (deck 20/20)
+
+1. Salir de `Arsenal` con el botón `Menú` queda bloqueado si el deck principal no está en `20/20`.
+2. El bloqueo muestra `HubErrorDialog` con causa explícita (`Deck incompleto`).
+3. Entrar a `Training` o `Story Duel` también valida `20/20` en servidor.
+4. Si no cumple, se muestra pantalla de bloqueo con CTA a `/hub/home`.
+
+## Drag & Drop instantáneo
+
+1. `Collection -> Deck/Fusion` aplica actualización optimista inmediata y rollback si falla persistencia.
+2. `Deck/Fusion -> Collection` también es optimista para mantener respuesta instantánea.
+3. `Deck -> Deck` y `Fusion -> Fusion` permiten recolocar cartas entre slots vacíos.
+4. Se mantiene feedback sonoro de `ADD_CARD` y `REMOVE_CARD` en desktop y mobile.
 
 ## Testing de fase 0/1/3
 

@@ -4,6 +4,7 @@
 import { ICard } from "@/core/entities/ICard";
 import { resolveMasteryPassiveLabel } from "@/core/services/progression/mastery-passive-display";
 import { Card } from "@/components/game/card/Card";
+import { DragEvent } from "react";
 
 interface HomeMiniCardProps {
   card: ICard | null;
@@ -16,6 +17,10 @@ interface HomeMiniCardProps {
   xp?: number;
   masteryPassiveSkillId?: string | null;
   size?: "default" | "mobileLarge";
+  isDraggable?: boolean;
+  onDragStart?: (event: DragEvent<HTMLElement>) => void;
+  onDragOver?: (event: DragEvent<HTMLElement>) => void;
+  onDrop?: (event: DragEvent<HTMLElement>) => void;
 }
 
 export function HomeMiniCard({
@@ -29,6 +34,10 @@ export function HomeMiniCard({
   xp = 0,
   masteryPassiveSkillId = null,
   size = "default",
+  isDraggable = false,
+  onDragStart,
+  onDragOver,
+  onDrop,
 }: HomeMiniCardProps) {
   const filledContainerClass = showSlotContainer
     ? isSelected
@@ -43,8 +52,8 @@ export function HomeMiniCard({
 
   const Wrapper = onClick ? "button" : "div";
   const wrapperProps = onClick
-    ? { type: "button" as const, "aria-label": label, onClick }
-    : { "aria-label": label };
+    ? { type: "button" as const, "aria-label": label, onClick, draggable: isDraggable, onDragStart, onDragOver, onDrop }
+    : { "aria-label": label, draggable: isDraggable, onDragStart, onDragOver, onDrop };
 
   const cardScaleClass =
     size === "mobileLarge"

@@ -1,7 +1,9 @@
+// src/core/use-cases/GameEngine.ts - Fachada del motor de juego que expone casos de uso puros al resto de capas.
 import { BattleMode } from "../entities/IPlayer";
 import { changeEntityMode } from "./game-engine/actions/change-entity-mode";
 import { playCard } from "./game-engine/actions/play-card";
 import { playCardWithEntityReplacement } from "./game-engine/actions/play-card-with-entity-replacement";
+import { playCardWithZoneReplacement, ReplacementZoneType } from "./game-engine/actions/play-card-with-zone-replacement";
 import { resolveExecution } from "./game-engine/actions/resolve-execution";
 import { executeAttack } from "./game-engine/combat/execute-attack";
 import { fuseCards } from "./game-engine/fusion/fuse-cards";
@@ -28,6 +30,17 @@ export class GameEngine {
     sacrificedEntityInstanceId: string,
   ): GameState {
     return playCardWithEntityReplacement(state, playerId, cardId, mode, sacrificedEntityInstanceId);
+  }
+
+  public static playCardWithZoneReplacement(
+    state: GameState,
+    playerId: string,
+    cardId: string,
+    mode: BattleMode,
+    sacrificedEntityInstanceId: string,
+    zone: ReplacementZoneType,
+  ): GameState {
+    return playCardWithZoneReplacement(state, playerId, cardId, mode, sacrificedEntityInstanceId, zone);
   }
 
   public static executeAttack(

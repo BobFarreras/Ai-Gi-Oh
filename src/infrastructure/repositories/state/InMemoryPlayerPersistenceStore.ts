@@ -29,11 +29,19 @@ export class InMemoryPlayerPersistenceStore implements IPlayerPersistenceStore {
   getDeck(playerId: string): IDeck | null {
     const deck = this.decks.get(playerId);
     if (!deck) return null;
-    return { playerId: deck.playerId, slots: deck.slots.map((slot) => ({ ...slot })) };
+    return {
+      playerId: deck.playerId,
+      slots: deck.slots.map((slot) => ({ ...slot })),
+      fusionSlots: (deck.fusionSlots ?? []).map((slot) => ({ ...slot })),
+    };
   }
 
   saveDeck(deck: IDeck): void {
-    this.decks.set(deck.playerId, { playerId: deck.playerId, slots: deck.slots.map((slot) => ({ ...slot })) });
+    this.decks.set(deck.playerId, {
+      playerId: deck.playerId,
+      slots: deck.slots.map((slot) => ({ ...slot })),
+      fusionSlots: (deck.fusionSlots ?? []).map((slot) => ({ ...slot })),
+    });
   }
 
   appendTransaction(transaction: IMarketTransaction): void {

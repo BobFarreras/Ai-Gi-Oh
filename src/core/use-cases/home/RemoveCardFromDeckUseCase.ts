@@ -21,7 +21,11 @@ export class RemoveCardFromDeckUseCase {
     }
 
     const deck = await this.deckRepository.getDeck(input.playerId);
-    const updatedDeck: IDeck = { playerId: deck.playerId, slots: deck.slots.map((slot) => ({ ...slot })) };
+    const updatedDeck: IDeck = {
+      playerId: deck.playerId,
+      slots: deck.slots.map((slot) => ({ ...slot })),
+      fusionSlots: deck.fusionSlots.map((slot) => ({ ...slot })),
+    };
     updatedDeck.slots[input.slotIndex] = { ...updatedDeck.slots[input.slotIndex], cardId: null };
     await this.deckRepository.saveDeck(updatedDeck);
     return updatedDeck;

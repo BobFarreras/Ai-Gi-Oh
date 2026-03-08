@@ -206,3 +206,33 @@ El motor registra eventos técnicos para trazabilidad y UI:
    - `STORY`: recompensa escalada por tier del oponente.
    - `TRAINING` y `MULTIPLAYER`: curvas separadas.
 4. El motor de juego sigue sin llamadas a BD; la persistencia de recompensas se aplicará fuera del motor.
+
+## 18. Diseño objetivo próximo (Bloque Combate - Fase 0)
+
+1. Política de carteleras de estado (banners):
+   - eventos transitorios con `latest-wins`,
+   - eventos críticos (error bloqueante/resultado de duelo) no descartables.
+2. Fusión endurecida:
+   - requisito conjunto de carta mágica + 2 materiales + carta final en `fusionDeck`.
+3. `fusionDeck` tendrá 2 slots dedicados fuera de las 20 cartas del deck principal.
+4. Distribución UI acordada:
+   - en Arsenal, `fusionDeck` debajo del bloque del deck,
+   - en Combate, bloque visible junto al área deck/cementerio.
+5. Nueva zona por jugador `destroyedPile`:
+   - separada de `graveyard`,
+   - preparada para efectos futuros de destrucción permanente/exilio.
+6. Integridad de mazo:
+   - no se permitirá salir de Arsenal con deck principal distinto de `20` cartas.
+
+## 19. Estado implementado (Bloque Combate - Fase 2)
+
+1. `IPlayer` soporta zonas adicionales:
+   - `fusionDeck` (lectura en combate),
+   - `destroyedPile` (visualización inicial junto a cementerio).
+2. El tablero muestra:
+   - `fusionDeck` al lado del deck,
+   - `destroyedPile` al lado del cementerio.
+3. La resolución de fusión ahora valida carta final en `fusionDeck` cuando ese bloque está configurado.
+4. Arsenal persistido:
+   - `IDeck` incluye `fusionSlots` (2 slots),
+   - acciones API dedicadas para equipar/quitar cartas de fusión.

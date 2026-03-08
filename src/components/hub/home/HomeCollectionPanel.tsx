@@ -4,6 +4,7 @@ import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IDeck } from "@/core/entities/home/IDeck";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { HomeMiniCard } from "@/components/hub/home/HomeMiniCard";
+import { DragEvent } from "react";
 
 interface HomeCollectionPanelProps {
   deck: IDeck;
@@ -12,6 +13,8 @@ interface HomeCollectionPanelProps {
   evolvableCardIds: Set<string>;
   selectedCardId: string | null;
   onSelectCard: (cardId: string) => void;
+  onStartDragCollectionCard: (cardId: string, event: DragEvent<HTMLElement>) => void;
+  onDropOnCollectionArea: (event: DragEvent<HTMLElement>) => void;
 }
 
 export function HomeCollectionPanel({
@@ -21,10 +24,16 @@ export function HomeCollectionPanel({
   evolvableCardIds,
   selectedCardId,
   onSelectCard,
+  onStartDragCollectionCard,
+  onDropOnCollectionArea,
 }: HomeCollectionPanelProps) {
   const usedByCardId = new Map<string, number>();
   
   for (const slot of deck.slots) {
+    if (!slot.cardId) continue;
+    usedByCardId.set(slot.cardId, (usedByCardId.get(slot.cardId) ?? 0) + 1);
+  }
+  for (const slot of deck.fusionSlots) {
     if (!slot.cardId) continue;
     usedByCardId.set(slot.cardId, (usedByCardId.get(slot.cardId) ?? 0) + 1);
   }
@@ -36,7 +45,11 @@ export function HomeCollectionPanel({
       </h2>
       
       {/* REFACTOR 1: Aseguramos overflow-x-hidden por seguridad y añadimos padding derecho para la scrollbar */}
-      <div className="home-modern-scroll min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-2">
+      <div
+        className="home-modern-scroll min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-2"
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={onDropOnCollectionArea}
+      >
         
         {/* REFACTOR 2: Magia responsiva. auto-fill calcula las columnas dinámicamente. justify-items-center centra las cartas si sobra espacio. */}
         <div className="grid grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-3 justify-items-center pb-4">
@@ -68,6 +81,8 @@ export function HomeCollectionPanel({
                   card={entry.card}
                   label={`Carta ${entry.card.name}`}
                   isSelected={isSelected}
+                  isDraggable
+                  onDragStart={(event) => onStartDragCollectionCard(entry.card.id, event)}
                   showSlotContainer={false}
                   versionTier={progress?.versionTier ?? 0}
                   level={progress?.level ?? 0}

@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { StoryDuelClient } from "@/app/hub/story/chapter/[chapter]/duel/[duelIndex]/StoryDuelClient";
 import { getStoryDuelRuntimeData } from "@/services/story/get-story-duel-runtime-data";
+import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
 
 interface StoryDuelPageProps {
   params: Promise<{ chapter: string; duelIndex: string }>;
@@ -35,6 +36,19 @@ export default async function StoryDuelPage({ params }: StoryDuelPageProps) {
           <p className="mt-1 text-sm text-amber-100">Completa el nodo anterior para desbloquear este combate.</p>
           <Link href="/hub/story" className="mt-3 inline-block rounded-md border border-amber-300/40 px-3 py-2 text-xs font-bold uppercase">
             Volver al mapa Story
+          </Link>
+        </div>
+      </main>
+    );
+  }
+  if (runtime.playerDeck.length !== HOME_DECK_SIZE) {
+    return (
+      <main className="hub-control-room-bg flex min-h-dvh items-center justify-center px-4 text-cyan-100">
+        <div className="rounded-xl border border-rose-300/45 bg-rose-950/45 p-4 text-center">
+          <p className="text-sm font-bold uppercase text-rose-100">Deck incompleto</p>
+          <p className="mt-1 text-sm text-rose-100/90">Necesitas 20 cartas en Arsenal para iniciar duelos de historia.</p>
+          <Link href="/hub/home" className="mt-3 inline-block rounded-md border border-rose-200/45 px-3 py-2 text-xs font-bold uppercase">
+            Ir a Arsenal
           </Link>
         </div>
       </main>

@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/effects/trap-triggers.integration.test.ts - Valida disparo de trampas, negación y rutas a cementerio/destrucción.
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
@@ -56,6 +57,17 @@ const trapReduceDefenseOnExecution: ICard = {
   cost: 2,
   trigger: "ON_OPPONENT_EXECUTION_ACTIVATED",
   effect: { action: "REDUCE_OPPONENT_DEFENSE", value: 300 },
+};
+
+const trapCounterTrap: ICard = {
+  id: "trap-counter-trap",
+  name: "Trap Firewall",
+  description: "",
+  type: "TRAP",
+  faction: "OPEN_SOURCE",
+  cost: 2,
+  trigger: "ON_OPPONENT_TRAP_ACTIVATED",
+  effect: { action: "NEGATE_OPPONENT_TRAP_AND_DESTROY" },
 };
 
 const executionCard: ICard = {
@@ -170,7 +182,8 @@ describe("Trap triggers", () => {
 
     const next = GameEngine.executeAttack(state, "p1", "a-neg");
     expect(next.playerA.activeEntities).toHaveLength(0);
-    expect(next.playerA.graveyard.some((card) => card.id === "atk-card")).toBe(true);
+    expect((next.playerA.destroyedPile ?? []).some((card) => card.id === "atk-card")).toBe(true);
+    expect(next.playerA.graveyard.some((card) => card.id === "atk-card")).toBe(false);
     expect(next.playerB.healthPoints).toBe(8000);
     expect(next.combatLog.some((event) => event.eventType === "TRAP_TRIGGERED")).toBe(true);
   });
@@ -213,5 +226,26 @@ describe("Trap triggers", () => {
 
     const defender = next.playerA.activeEntities.find((entity) => entity.instanceId === "p1-defender");
     expect(defender?.card.defense).toBe(1100);
+  });
+
+  it("debería negar trampa rival y destruirla con counter-trap", () => {
+    const state: GameState = {
+      ...baseState(),
+      playerA: {
+        ...baseState().playerA,
+        activeEntities: [{ instanceId: "a-counter", card: attackerCard, mode: "ATTACK", hasAttackedThisTurn: false, isNewlySummoned: false }],
+        activeExecutions: [createTrapEntity("counter", trapCounterTrap)],
+      },
+      playerB: {
+        ...baseState().playerB,
+        activeExecutions: [createTrapEntity("trap-source", trapOnAttack)],
+      },
+    };
+    const next = GameEngine.executeAttack(state, "p1", "a-counter");
+    expect(next.playerA.healthPoints).toBe(8000);
+    expect(next.playerB.healthPoints).toBe(6400);
+    expect(next.playerA.graveyard.some((card) => card.id === "trap-counter-trap")).toBe(true);
+    expect((next.playerB.destroyedPile ?? []).some((card) => card.id === "trap-on-attack")).toBe(true);
+    expect(next.playerB.graveyard.some((card) => card.id === "trap-on-attack")).toBe(false);
   });
 });

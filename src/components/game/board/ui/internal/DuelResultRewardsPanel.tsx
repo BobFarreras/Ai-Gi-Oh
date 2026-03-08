@@ -1,7 +1,8 @@
-// src/components/game/board/ui/internal/DuelResultRewardsPanel.tsx - Sidebar compacto de recompensas del jugador con acceso rápido al regalo.
+// src/components/game/board/ui/internal/DuelResultRewardsPanel.tsx
 "use client";
 
 import { motion } from "framer-motion";
+import { Zap, Hexagon, Gift } from "lucide-react";
 import { IDuelResultRewardSummary } from "./duel-result-reward-summary";
 
 interface DuelResultRewardsPanelProps {
@@ -14,38 +15,58 @@ export function DuelResultRewardsPanel({ rewardSummary, isGiftOpen, onToggleGift
   const hasGift = rewardSummary.rewardCards.length > 0;
 
   return (
-    <section className="rounded-2xl border border-cyan-300/35 bg-cyan-950/25 p-3 text-left lg:h-full">
-      <p className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200/90">Recompensas</p>
-      <div className="space-y-2">
-        <div className="rounded-lg border border-cyan-300/35 bg-black/40 px-3 py-2">
-          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-cyan-200/80">EXP</p>
-          <p className="text-xl font-black text-cyan-100">+{rewardSummary.rewardPlayerExperience}</p>
-        </div>
-        <div className="rounded-lg border border-emerald-300/35 bg-black/40 px-3 py-2">
-          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-emerald-200/80">Nexus</p>
-          <p className="text-xl font-black text-emerald-100">+{rewardSummary.rewardNexus}</p>
+    <section className="flex flex-col gap-4 h-full">
+      {/* TARJETA DE EXPERIENCIA DE JUGADOR */}
+      <div className="relative overflow-hidden rounded-xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/60 to-black/80 p-5 shadow-[inset_0_0_20px_rgba(34,211,238,0.1)]">
+        <Zap className="absolute -right-6 -top-2 w-28 h-28 text-cyan-500/10 -rotate-12 pointer-events-none" />
+        <div className="relative z-10">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-400 mb-1">EXP Jugador</p>
+          <p className="text-5xl font-black italic tracking-tighter text-white drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]">
+            +{rewardSummary.rewardPlayerExperience}
+          </p>
         </div>
       </div>
-      <div className="mt-3 rounded-lg border border-amber-300/40 bg-black/40 p-2">
-        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-amber-200/80">Regalo</p>
-        <motion.button
-          aria-label="Mostrar carta recompensa"
-          onClick={onToggleGift}
-          animate={
-            hasGift
-              ? { y: [0, -1.5, 0], boxShadow: ["0 0 0 rgba(251,191,36,0)", "0 0 16px rgba(251,191,36,0.65)", "0 0 0 rgba(251,191,36,0)"] }
-              : undefined
-          }
-          transition={hasGift ? { duration: 0.85, repeat: Infinity, ease: "easeInOut" } : undefined}
-          className="mt-1 flex h-10 w-full items-center justify-center rounded-md border border-amber-300/60 bg-amber-500/15 text-lg hover:bg-amber-500/25"
-        >
-          {hasGift ? "🎁" : "—"}
-        </motion.button>
-        {hasGift ? (
-          <p className="mt-1 text-[10px] font-semibold text-amber-100">{isGiftOpen ? "Ocultar carta" : "Ver carta"}</p>
-        ) : (
-          <p className="mt-1 text-[10px] font-semibold text-zinc-300">Sin drop</p>
-        )}
+
+      {/* TARJETA DE NEXUS (MONEDAS) */}
+      <div className="relative overflow-hidden rounded-xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/60 to-black/80 p-5 shadow-[inset_0_0_20px_rgba(16,185,129,0.1)]">
+        <Hexagon className="absolute -right-6 -top-2 w-28 h-28 text-emerald-500/10 pointer-events-none" />
+        <div className="relative z-10">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-400 mb-1">Nexus Coins</p>
+          <p className="text-5xl font-black italic tracking-tighter text-white drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">
+            +{rewardSummary.rewardNexus}
+          </p>
+        </div>
+      </div>
+
+      {/* TARJETA DE REGALO / DROP */}
+      <div className="relative flex-1 flex flex-col overflow-hidden rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-950/40 to-black/80 p-5">
+        <Gift className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 text-amber-500/5 pointer-events-none" />
+        
+        <p className="relative z-10 text-xs font-black uppercase tracking-[0.2em] text-amber-400 mb-4">
+          Drop Especial
+        </p>
+        
+        <div className="relative z-10 flex-1 flex flex-col justify-center items-center">
+          <motion.button
+            aria-label="Mostrar carta recompensa"
+            onClick={onToggleGift}
+            disabled={!hasGift}
+            whileHover={hasGift ? { scale: 1.05 } : {}}
+            whileTap={hasGift ? { scale: 0.95 } : {}}
+            animate={
+              hasGift && !isGiftOpen
+                ? { y: [0, -5, 0], filter: ["brightness(1)", "brightness(1.3)", "brightness(1)"] }
+                : undefined
+            }
+            transition={hasGift ? { duration: 1.5, repeat: Infinity, ease: "easeInOut" } : undefined}
+            className={`w-full h-16 flex items-center justify-center gap-3 rounded-lg border-2 font-black tracking-widest uppercase transition-all
+              ${hasGift 
+                ? "border-amber-400 bg-amber-500/20 text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:bg-amber-500/40 cursor-pointer" 
+                : "border-zinc-800 bg-zinc-900/50 text-zinc-600 cursor-not-allowed"}`}
+          >
+            {hasGift ? (isGiftOpen ? "Ocultar Carta" : "Revelar Drop") : "Sin Drop"}
+          </motion.button>
+        </div>
       </div>
     </section>
   );

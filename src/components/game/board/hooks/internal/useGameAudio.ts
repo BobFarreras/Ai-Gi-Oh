@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/internal/useGameAudio.ts - Gestiona soundtrack y efectos del tablero a partir de combatLog y estado UI.
 import { useCallback, useEffect, useRef } from "react";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { AudioTrackId } from "@/core/config/audio-catalog";
@@ -118,6 +119,9 @@ export function useGameAudio({
   const playButtonClick = useCallback(() => {
     if (!isMuted) safePlay(createAudio("BUTTON_CLICK", false));
   }, [isMuted]);
+  const playBanner = useCallback(() => {
+    if (!isMuted) safePlay(createAudio("BANNER", false));
+  }, [isMuted]);
 
-  return { playTimerExpired, playTimerWarning, playButtonClick };
+  return { playTimerExpired, playTimerWarning, playButtonClick, playBanner };
 }

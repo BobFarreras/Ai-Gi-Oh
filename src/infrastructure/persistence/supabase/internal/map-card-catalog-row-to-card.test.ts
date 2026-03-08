@@ -48,4 +48,22 @@ describe("mapCardCatalogRowToCard", () => {
     expect(card.fusionMaterials).toEqual(["entity-a", "entity-b"]);
     expect(card.fusionEnergyRequirement).toBe(8);
   });
+
+  it("mapea efectos avanzados de recuperación y contra-trampa", () => {
+    const recovery = mapCardCatalogRowToCard({
+      ...createBaseRow(),
+      id: "exec-recovery",
+      type: "EXECUTION",
+      effect: { action: "RETURN_GRAVEYARD_CARD_TO_HAND", cardType: "ENTITY" },
+    });
+    const counterTrap = mapCardCatalogRowToCard({
+      ...createBaseRow(),
+      id: "trap-counter",
+      type: "TRAP",
+      trigger: "ON_OPPONENT_TRAP_ACTIVATED",
+      effect: { action: "NEGATE_OPPONENT_TRAP_AND_DESTROY" },
+    });
+    expect(recovery.effect).toEqual({ action: "RETURN_GRAVEYARD_CARD_TO_HAND", cardType: "ENTITY" });
+    expect(counterTrap.effect).toEqual({ action: "NEGATE_OPPONENT_TRAP_AND_DESTROY" });
+  });
 });

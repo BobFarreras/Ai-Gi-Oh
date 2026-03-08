@@ -4,7 +4,7 @@ import { IBoardEntity } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
 import { MouseEvent } from "react";
 import { BattlefieldLanes } from "./internal/BattlefieldLanes";
-import { DeckPile, GraveyardPile } from "./internal/BattlefieldPiles";
+import { DeckPile, DestroyedPile, FusionDeckPile, GraveyardPile } from "./internal/BattlefieldPiles";
 import { useDamageFlash } from "./internal/useDamageFlash";
 
 interface BattlefieldZoneProps {
@@ -12,10 +12,13 @@ interface BattlefieldZoneProps {
   activeEntities: IBoardEntity[];
   activeExecutions: IBoardEntity[];
   deckCount: number;
+  fusionDeckCount: number;
   topGraveCard: ICard | null;
   graveyardCount: number;
+  destroyedCount: number;
   activeAttackerId: string | null;
   selectedCard: ICard | null;
+  selectedBoardEntityInstanceId: string | null;
   revealedEntities: string[];
   highlightedEntityIds: string[];
   selectedEntityIds: string[];
@@ -28,7 +31,10 @@ interface BattlefieldZoneProps {
   cardXpCardId: string | null;
   cardXpAmount: number | null;
   cardXpEventId: string | null;
+  canActivateSelectedExecution: boolean;
+  onActivateSelectedExecution: () => void;
   onGraveyardClick: (side: "player" | "opponent") => void;
+  onDestroyedClick?: (side: "player" | "opponent") => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: MouseEvent) => void;
 }
 
@@ -37,10 +43,13 @@ export function BattlefieldZone({
   activeEntities,
   activeExecutions,
   deckCount,
+  fusionDeckCount,
   topGraveCard,
   graveyardCount,
+  destroyedCount,
   activeAttackerId,
   selectedCard,
+  selectedBoardEntityInstanceId,
   revealedEntities,
   highlightedEntityIds,
   selectedEntityIds,
@@ -53,7 +62,10 @@ export function BattlefieldZone({
   cardXpCardId,
   cardXpAmount,
   cardXpEventId,
+  canActivateSelectedExecution,
+  onActivateSelectedExecution,
   onGraveyardClick,
+  onDestroyedClick = () => undefined,
   onEntityClick,
 }: BattlefieldZoneProps) {
   const isOpponentSide = side === "opponent";
@@ -69,18 +81,15 @@ export function BattlefieldZone({
         isDamageFlashing ? "bg-red-900/35 shadow-[0_0_40px_rgba(239,68,68,0.4)_inset]" : "",
       )}
     >
-      <GraveyardPile
-        isOpponentSide={isOpponentSide}
-        topGraveCard={topGraveCard}
-        graveyardCount={graveyardCount}
-        onClick={onGraveyardClick}
-      />
+      <FusionDeckPile fusionDeckCount={fusionDeckCount} />
+      <DeckPile deckCount={deckCount} />
       <BattlefieldLanes
         isOpponentSide={isOpponentSide}
         activeEntities={activeEntities}
         activeExecutions={activeExecutions}
         activeAttackerId={activeAttackerId}
         selectedCard={selectedCard}
+        selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}
         revealedEntities={revealedEntities}
         highlightedEntityIds={highlightedEntityIds}
         selectedEntityIds={selectedEntityIds}
@@ -91,9 +100,17 @@ export function BattlefieldZone({
         cardXpCardId={cardXpCardId}
         cardXpAmount={cardXpAmount}
         cardXpEventId={cardXpEventId}
+        canActivateSelectedExecution={canActivateSelectedExecution}
+        onActivateSelectedExecution={onActivateSelectedExecution}
         onEntityClick={onEntityClick}
       />
-      <DeckPile deckCount={deckCount} />
+      <GraveyardPile
+        isOpponentSide={isOpponentSide}
+        topGraveCard={topGraveCard}
+        graveyardCount={graveyardCount}
+        onClick={onGraveyardClick}
+      />
+      <DestroyedPile isOpponentSide={isOpponentSide} destroyedCount={destroyedCount} onClick={onDestroyedClick} />
     </div>
   );
 }

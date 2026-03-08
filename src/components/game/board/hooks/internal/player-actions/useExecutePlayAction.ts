@@ -21,6 +21,7 @@ type IExecutePlayActionParams = Pick<
   | "setPendingEntityReplacementTargetId"
   | "setIsAnimating"
   | "setLastError"
+  | "setSelectedBoardEntityInstanceId"
   | "setRevealedEntities"
 >;
 
@@ -37,6 +38,7 @@ export function useExecutePlayAction({
   setPendingEntityReplacementTargetId,
   setIsAnimating,
   setLastError,
+  setSelectedBoardEntityInstanceId,
   setRevealedEntities,
 }: IExecutePlayActionParams) {
   return useCallback(
@@ -50,9 +52,17 @@ export function useExecutePlayAction({
       }
 
       clearError();
+      setSelectedBoardEntityInstanceId(null);
       const selectedCardReference = playingCard.runtimeId ?? playingCard.id;
       if (playingCard.type === "ENTITY" && (mode === "ATTACK" || mode === "DEFENSE") && gameState.playerA.activeEntities.length >= 3) {
-        setPendingEntityReplacement({ cardId: selectedCardReference, mode });
+        setPendingEntityReplacement({ cardId: selectedCardReference, mode, zone: "ENTITIES" });
+        setPendingEntityReplacementTargetId(null);
+        setLastError(null);
+        return;
+      }
+
+      if ((playingCard.type === "EXECUTION" || playingCard.type === "TRAP") && gameState.playerA.activeExecutions.length >= 3) {
+        setPendingEntityReplacement({ cardId: selectedCardReference, mode, zone: "EXECUTIONS" });
         setPendingEntityReplacementTargetId(null);
         setLastError(null);
         return;
@@ -112,6 +122,7 @@ export function useExecutePlayAction({
       setPendingEntityReplacementTargetId,
       setIsAnimating,
       setLastError,
+      setSelectedBoardEntityInstanceId,
       setRevealedEntities,
     ],
   );

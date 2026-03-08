@@ -24,4 +24,5 @@ export interface IHomeDeckActionBarProps {
   canEvolve: boolean;
   evolveCost: number | null;
   onEvolve: () => Promise<IHomeActionResult>;
+  onBackToHub?: () => void;
 }

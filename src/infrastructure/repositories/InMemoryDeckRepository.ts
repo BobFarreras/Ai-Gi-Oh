@@ -8,7 +8,7 @@ import { IDeck } from "@/core/entities/home/IDeck";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ICardCollectionRepository } from "@/core/repositories/ICardCollectionRepository";
 import { IDeckRepository } from "@/core/repositories/IDeckRepository";
-import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
+import { HOME_DECK_SIZE, HOME_FUSION_DECK_SIZE } from "@/core/services/home/deck-rules";
 import { InMemoryPlayerPersistenceStore } from "@/infrastructure/repositories/state/InMemoryPlayerPersistenceStore";
 import { IPlayerPersistenceStore } from "@/infrastructure/repositories/state/IPlayerPersistenceStore";
 
@@ -19,7 +19,8 @@ const STARTER_COLLECTION = [...ENTITY_CARDS, ...EXECUTION_CARDS, ...TRAP_CARDS, 
 
 function createEmptyDeck(playerId: string): IDeck {
   const slots = Array.from({ length: HOME_DECK_SIZE }, (_, index) => ({ index, cardId: null }));
-  return { playerId, slots };
+  const fusionSlots = Array.from({ length: HOME_FUSION_DECK_SIZE }, (_, index) => ({ index, cardId: null }));
+  return { playerId, slots, fusionSlots };
 }
 
 export class InMemoryDeckRepository implements IDeckRepository {
@@ -42,7 +43,11 @@ export class InMemoryDeckRepository implements IDeckRepository {
   async getDeck(playerId: string): Promise<IDeck> {
     const currentDeck = this.store.getDeck(playerId) ?? createEmptyDeck(playerId);
     this.store.saveDeck(currentDeck);
-    return { playerId: currentDeck.playerId, slots: currentDeck.slots.map((slot) => ({ ...slot })) };
+    return {
+      playerId: currentDeck.playerId,
+      slots: currentDeck.slots.map((slot) => ({ ...slot })),
+      fusionSlots: currentDeck.fusionSlots.map((slot) => ({ ...slot })),
+    };
   }
 
   async saveDeck(deck: IDeck): Promise<void> {

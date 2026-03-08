@@ -24,8 +24,12 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
       if (!slot.cardId) continue;
       copies.set(slot.cardId, (copies.get(slot.cardId) ?? 0) + 1);
     }
+    for (const slot of props.deck.fusionSlots) {
+      if (!slot.cardId) continue;
+      copies.set(slot.cardId, (copies.get(slot.cardId) ?? 0) + 1);
+    }
     return copies;
-  }, [props.deck.slots]);
+  }, [props.deck.fusionSlots, props.deck.slots]);
   const deckCount = props.deck.slots.filter((slot) => slot.cardId !== null).length;
   const deckSlotsForView = buildHomeMobileDeckSlotsView({
     deck: props.deck,
@@ -34,7 +38,12 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
     typeFilter: props.typeFilter,
   });
   const selectedCardSource: ISelectedCardSource =
-    props.selectedCollectionCardId ? "COLLECTION" : props.selectedSlotIndex !== null && props.deck.slots[props.selectedSlotIndex]?.cardId ? "DECK" : "NONE";
+    props.selectedCollectionCardId
+      ? "COLLECTION"
+      : (props.selectedSlotIndex !== null && props.deck.slots[props.selectedSlotIndex]?.cardId) ||
+          (props.selectedFusionSlotIndex !== null && props.deck.fusionSlots[props.selectedFusionSlotIndex]?.cardId)
+        ? "DECK"
+        : "NONE";
   const capturePointerOrigin = (event: PointerEvent<HTMLDivElement>) => {
     setInspectorOrigin({ x: event.clientX, y: event.clientY });
   };
@@ -46,6 +55,11 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
   const handleSelectCollectionCard = (cardId: string) => {
     props.onSelectCollectionCard(cardId);
     setIsInspectorOpen(true);
+  };
+  const handleSelectFusionSlot = (slotIndex: number) => {
+    const slotCardId = props.deck.fusionSlots[slotIndex]?.cardId ?? null;
+    props.onSelectFusionSlot(slotIndex);
+    if (slotCardId) setIsInspectorOpen(true);
   };
 
   return (
@@ -62,7 +76,8 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
         </div>
         <div className="home-modern-scroll h-[calc(100%-2.25rem)] overflow-y-auto overflow-x-hidden pt-2">
           {activeSection === "DECK" ? (
-            <div className="grid grid-cols-4 gap-1 pb-6 pt-1">
+            <>
+            <div className="grid grid-cols-4 gap-1 pb-3 pt-1">
               {deckSlotsForView.map((slot) => {
                 const card = slot.cardId ? (cardById.get(slot.cardId) ?? null) : null;
                 const progress = slot.cardId ? (props.cardProgressById.get(slot.cardId) ?? null) : null;
@@ -76,6 +91,10 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
                     isSelected={isSelected}
                     label={`Slot ${slot.index + 1}`}
                     onClick={() => handleSelectSlot(slot.index)}
+                    isDraggable={card !== null}
+                    onDragStart={(event) => props.onStartDragDeckSlot(slot.index, event)}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={(event) => props.onDropOnDeckSlot(slot.index, event)}
                     showSlotContainer={card === null}
                     size="mobileLarge"
                     versionTier={progress?.versionTier ?? 0}
@@ -91,8 +110,41 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
                 </p>
               ) : null}
             </div>
+            <div className="mt-2 rounded-lg border border-fuchsia-800/40 bg-fuchsia-950/15 p-2">
+              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-fuchsia-200">Bloque Fusiones</p>
+              <div className="grid grid-cols-2 place-items-center gap-2">
+                {props.deck.fusionSlots.map((slot) => {
+                  const card = slot.cardId ? (cardById.get(slot.cardId) ?? null) : null;
+                  const progress = slot.cardId ? (props.cardProgressById.get(slot.cardId) ?? null) : null;
+                  const isSelected =
+                    props.selectedFusionSlotIndex === slot.index ||
+                    (slot.cardId !== null && slot.cardId === props.selectedCardId);
+                  return (
+                    <div key={`mobile-fusion-slot-${slot.index}`} className="w-[84px]">
+                      <HomeMiniCard
+                        card={card}
+                        isSelected={isSelected}
+                        label={`Fusión ${slot.index + 1}`}
+                        onClick={() => handleSelectFusionSlot(slot.index)}
+                        isDraggable={card !== null}
+                        onDragStart={(event) => props.onStartDragFusionSlot(slot.index, event)}
+                        onDragOver={(event) => event.preventDefault()}
+                        onDrop={(event) => props.onDropOnFusionSlot(slot.index, event)}
+                        showSlotContainer={card === null}
+                        size="mobileLarge"
+                        versionTier={progress?.versionTier ?? 0}
+                        level={progress?.level ?? 0}
+                        xp={progress?.xp ?? 0}
+                        masteryPassiveSkillId={progress?.masteryPassiveSkillId ?? null}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            </>
           ) : (
-            <div className="grid grid-cols-4 gap-1 pb-6 pt-1">
+            <div className="grid grid-cols-4 gap-1 pb-6 pt-1" onDragOver={(event) => event.preventDefault()} onDrop={props.onDropOnCollectionArea}>
               {props.filteredCollection.map((entry) => {
                 const usedCopies = deckCopiesByCardId.get(entry.card.id) ?? 0;
                 const availableCopies = Math.max(0, entry.ownedCopies - usedCopies);
@@ -114,6 +166,8 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
                       label={`Carta ${entry.card.name}`}
                       isSelected={isSelected}
                       onClick={() => handleSelectCollectionCard(entry.card.id)}
+                      isDraggable
+                      onDragStart={(event) => props.onStartDragCollectionCard(entry.card.id, event)}
                       showSlotContainer={false}
                       size="mobileLarge"
                       versionTier={progress?.versionTier ?? 0}

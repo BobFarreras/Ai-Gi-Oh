@@ -3,18 +3,19 @@
 
 import { ICard } from "@/core/entities/ICard";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
-import { BattleMode } from "@/core/entities/IPlayer";
 import { IBoardUiError } from "../../hooks/internal/boardError";
+import { IPendingZoneReplacement } from "../../hooks/internal/board-state/pending-replacement";
 import { BattleBannerCenter } from "../BattleBannerCenter";
 import { FusionCinematicLayer } from "../FusionCinematicLayer";
 import { GraveyardBrowser } from "../GraveyardBrowser";
 import { PauseOverlay } from "./PauseOverlay";
 import { EntityReplacementConfirmOverlay } from "./EntityReplacementConfirmOverlay";
+import { TurnAdvanceGuardOverlay } from "./TurnAdvanceGuardOverlay";
 
 interface BoardStatusOverlaysProps {
   lastError: IBoardUiError | null;
   pendingActionHint: string | null;
-  pendingEntityReplacement: { cardId: string; mode: BattleMode } | null;
+  pendingEntityReplacement: IPendingZoneReplacement | null;
   pendingEntityReplacementTargetCard: ICard | null;
   combatLog: ICombatLogEvent[];
   playerAId: string;
@@ -28,12 +29,20 @@ interface BoardStatusOverlaysProps {
   graveyardView: "player" | "opponent" | null;
   graveyardOwnerName: string;
   graveyardCards: ICard[];
+  graveyardSelectableCardRefs?: string[];
+  destroyedView?: "player" | "opponent" | null;
+  destroyedOwnerName?: string;
+  destroyedCards?: ICard[];
   onCloseError: () => void;
   onConfirmEntityReplacement: () => void;
   onCancelEntityReplacement: () => void;
   onCloseGraveyard: () => void;
+  onCloseDestroyed?: () => void;
   onPreviewCard: (card: ICard) => void;
- 
+  pendingAdvanceWarning: "MAIN_SKIP_ACTIONS" | "BATTLE_SKIP_ATTACKS" | null;
+  onConfirmAdvancePhase: (disableHelp: boolean) => void;
+  onCancelAdvancePhase: () => void;
+  externalBannerSignal?: { id: string; left: string; right: string } | null;
 }
 
 export function BoardStatusOverlays({
@@ -53,12 +62,20 @@ export function BoardStatusOverlays({
   graveyardView,
   graveyardOwnerName,
   graveyardCards,
+  graveyardSelectableCardRefs = [],
+  destroyedView = null,
+  destroyedOwnerName = "",
+  destroyedCards = [],
   onCloseError,
   onConfirmEntityReplacement,
   onCancelEntityReplacement,
   onCloseGraveyard,
+  onCloseDestroyed = () => undefined,
   onPreviewCard,
-  
+  pendingAdvanceWarning,
+  onConfirmAdvancePhase,
+  onCancelAdvancePhase,
+  externalBannerSignal = null,
 }: BoardStatusOverlaysProps) {
   return (
     <>
@@ -91,14 +108,27 @@ export function BoardStatusOverlays({
       )}
       {pendingEntityReplacement && pendingEntityReplacementTargetCard && (
         <EntityReplacementConfirmOverlay
+          zone={pendingEntityReplacement.zone}
           targetCard={pendingEntityReplacementTargetCard}
           onConfirm={onConfirmEntityReplacement}
           onCancel={onCancelEntityReplacement}
         />
       )}
 
-      <BattleBannerCenter events={combatLog} playerAId={playerAId} playerAName={playerAName} playerBId={playerBId} playerBName={playerBName} />
+      <BattleBannerCenter
+        events={combatLog}
+        playerAId={playerAId}
+        playerAName={playerAName}
+        playerBId={playerBId}
+        playerBName={playerBName}
+        externalBannerSignal={externalBannerSignal}
+      />
       <PauseOverlay isPaused={isPaused} onResume={onResumePause} />
+      <TurnAdvanceGuardOverlay
+        warning={pendingAdvanceWarning}
+        onConfirm={onConfirmAdvancePhase}
+        onCancel={onCancelAdvancePhase}
+      />
       <FusionCinematicLayer
         events={combatLog}
         onActiveChange={(active) => {
@@ -111,8 +141,20 @@ export function BoardStatusOverlays({
       <GraveyardBrowser
         isOpen={graveyardView !== null}
         ownerName={graveyardOwnerName}
+        title="Cementerio"
+        emptyMessage="No hay cartas en este cementerio."
         cards={graveyardCards}
+        selectableCardRefs={graveyardSelectableCardRefs}
         onClose={onCloseGraveyard}
+        onSelectCard={onPreviewCard}
+      />
+      <GraveyardBrowser
+        isOpen={destroyedView !== null}
+        ownerName={destroyedOwnerName}
+        title="Zona Destruida"
+        emptyMessage="No hay cartas destruidas."
+        cards={destroyedCards}
+        onClose={onCloseDestroyed}
         onSelectCard={onPreviewCard}
       />
     </>

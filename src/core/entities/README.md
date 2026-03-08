@@ -9,6 +9,7 @@ Tipos de dominio puros del juego, sin dependencias de UI.
    - Trigger de trampas:
      - `ON_OPPONENT_ATTACK_DECLARED`
      - `ON_OPPONENT_EXECUTION_ACTIVATED`
+     - `ON_OPPONENT_TRAP_ACTIVATED`
    - Metadatos de fusión preparados:
      - `fusionRecipeId`
      - `fusionMaterials`
@@ -35,5 +36,6 @@ Tipos de dominio puros del juego, sin dependencias de UI.
      - `STAT_BUFF_APPLIED`
      - `TRAP_TRIGGERED`
      - `CARD_TO_GRAVEYARD`
+     - `CARD_TO_DESTROYED`
      - `MANDATORY_ACTION_RESOLVED`
      - `FUSION_SUMMONED`

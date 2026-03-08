@@ -20,6 +20,8 @@ interface BoardPlayersLayerProps {
   opponentAvatarUrl?: string | null;
   playerDialogueMessage?: string | null;
   opponentDialogueMessage?: string | null;
+  phase: string;
+  onAdvancePhase: () => void;
 }
 
 export function BoardPlayersLayer({
@@ -37,6 +39,8 @@ export function BoardPlayersLayer({
   opponentAvatarUrl = null,
   playerDialogueMessage = null,
   opponentDialogueMessage = null,
+  phase,
+  onAdvancePhase,
 }: BoardPlayersLayerProps) {
   return (
     <>
@@ -67,6 +71,8 @@ export function BoardPlayersLayer({
         healPulseKey={lastHealEventId}
         avatarUrl={playerAvatarUrl}
         dialogueMessage={playerDialogueMessage}
+        phase={phase}
+        onAdvancePhase={onAdvancePhase}
       />
     </>
   );

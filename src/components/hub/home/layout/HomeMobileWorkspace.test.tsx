@@ -43,12 +43,17 @@ function createProps(): IHomeWorkspaceProps {
     deck: {
       playerId: "player-1",
       slots: [{ index: 0, cardId: "entity-python" }, ...Array.from({ length: 19 }, (_, index) => ({ index: index + 1, cardId: null }))],
+      fusionSlots: [
+        { index: 0, cardId: null },
+        { index: 1, cardId: null },
+      ],
     },
     collectionState: collection,
     filteredCollection: collection,
     cardProgressById: new Map(),
     evolvableCardIds: new Set(),
     selectedSlotIndex: null,
+    selectedFusionSlotIndex: null,
     selectedCardId: "entity-python",
     selectedCollectionCardId: null,
     selectedCard: null,
@@ -66,7 +71,14 @@ function createProps(): IHomeWorkspaceProps {
     onRemoveSelectedCard: vi.fn(async () => ({ ok: true })),
     onEvolveSelectedCard: vi.fn(async () => ({ ok: true })),
     onSelectSlot: vi.fn(),
+    onSelectFusionSlot: vi.fn(),
     onSelectCollectionCard: vi.fn(),
+    onStartDragCollectionCard: vi.fn(),
+    onStartDragDeckSlot: vi.fn(),
+    onStartDragFusionSlot: vi.fn(),
+    onDropOnDeckSlot: vi.fn(),
+    onDropOnFusionSlot: vi.fn(),
+    onDropOnCollectionArea: vi.fn(),
     onClearError: vi.fn(),
   };
 }

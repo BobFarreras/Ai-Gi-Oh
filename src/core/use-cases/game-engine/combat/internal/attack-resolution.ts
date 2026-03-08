@@ -52,6 +52,12 @@ interface IResolveEntityBattleParams {
 
 interface IResolvedEntityBattleResult extends ReturnType<typeof CombatService.calculateBattle> {
   passiveAttackReduction: number;
+  attackerDestroyedDestination: "GRAVEYARD" | "DESTROYED" | null;
+  defenderDestroyedDestination: "GRAVEYARD" | "DESTROYED" | null;
+}
+
+function shouldDestroyBattleTarget(winner: IBoardEntity, winnerDestroyed: boolean, loserDestroyed: boolean): boolean {
+  return !winnerDestroyed && loserDestroyed && winner.card.effect?.action === "DESTROY_ENTITY_ON_BATTLE_WIN";
 }
 
 export function resolveEntityBattleState(params: IResolveEntityBattleParams): { state: GameState; result: IResolvedEntityBattleResult; defenderEntity: IBoardEntity } {
@@ -75,23 +81,44 @@ export function resolveEntityBattleState(params: IResolveEntityBattleParams): { 
   const updatedAttacker = buildUpdatedAttacker(
     attacker,
     attackerEntity,
+    defenderEntity,
     attackerInstanceId,
     passiveAttackReduction,
     result.attackerDestroyed,
     result.damageToAttackerPlayer,
+    result.defenderDestroyed,
   );
-  const updatedDefender = buildUpdatedDefender(defender, defenderEntity, defenderInstanceId, result.defenderDestroyed, result.damageToDefenderPlayer);
-  return { state: assignPlayers(state, updatedAttacker, updatedDefender, isPlayerA), result: { ...result, passiveAttackReduction }, defenderEntity };
+  const updatedDefender = buildUpdatedDefender(
+    defender,
+    defenderEntity,
+    attackerEntity,
+    defenderInstanceId,
+    result.defenderDestroyed,
+    result.damageToDefenderPlayer,
+    result.attackerDestroyed,
+  );
+  return {
+    state: assignPlayers(state, updatedAttacker.player, updatedDefender.player, isPlayerA),
+    result: {
+      ...result,
+      passiveAttackReduction,
+      attackerDestroyedDestination: updatedAttacker.destroyedDestination,
+      defenderDestroyedDestination: updatedDefender.destroyedDestination,
+    },
+    defenderEntity,
+  };
 }
 
 function buildUpdatedAttacker(
   attacker: IPlayer,
   attackerEntity: IBoardEntity,
+  defenderEntity: IBoardEntity,
   attackerInstanceId: string,
   passiveAttackReduction: number,
   attackerDestroyed: boolean,
   damageToAttackerPlayer: number,
-): IPlayer {
+  defenderDestroyed: boolean,
+): { player: IPlayer; destroyedDestination: "GRAVEYARD" | "DESTROYED" | null } {
   const entitiesWithPassiveReduction =
     passiveAttackReduction > 0
       ? attacker.activeEntities.map((entity) =>
@@ -102,39 +129,65 @@ function buildUpdatedAttacker(
       : attacker.activeEntities;
   let updatedEntities = markAttackerAsUsed(entitiesWithPassiveReduction, attackerInstanceId);
   let updatedGraveyard = attacker.graveyard;
+  let updatedDestroyedPile = [...(attacker.destroyedPile ?? [])];
+  let destroyedDestination: "GRAVEYARD" | "DESTROYED" | null = null;
   if (attackerDestroyed) {
     updatedEntities = updatedEntities.filter((entity) => entity.instanceId !== attackerInstanceId);
-    updatedGraveyard = [...updatedGraveyard, attackerEntity.card];
+    if (shouldDestroyBattleTarget(defenderEntity, defenderDestroyed, attackerDestroyed)) {
+      updatedDestroyedPile = [...updatedDestroyedPile, attackerEntity.card];
+      destroyedDestination = "DESTROYED";
+    } else {
+      updatedGraveyard = [...updatedGraveyard, attackerEntity.card];
+      destroyedDestination = "GRAVEYARD";
+    }
   }
   return {
+    destroyedDestination,
+    player: {
     ...attacker,
     healthPoints: Math.max(0, attacker.healthPoints - damageToAttackerPlayer),
     activeEntities: updatedEntities,
     graveyard: updatedGraveyard,
+    destroyedPile: updatedDestroyedPile,
+  },
   };
 }
 
 function buildUpdatedDefender(
   defender: IPlayer,
   defenderEntity: IBoardEntity,
+  attackerEntity: IBoardEntity,
   defenderInstanceId: string,
   defenderDestroyed: boolean,
   damageToDefenderPlayer: number,
-): IPlayer {
+  attackerDestroyed: boolean,
+): { player: IPlayer; destroyedDestination: "GRAVEYARD" | "DESTROYED" | null } {
   let updatedEntities = defender.activeEntities;
   let updatedGraveyard = defender.graveyard;
+  let updatedDestroyedPile = [...(defender.destroyedPile ?? [])];
+  let destroyedDestination: "GRAVEYARD" | "DESTROYED" | null = null;
   if (defenderDestroyed) {
     updatedEntities = updatedEntities.filter((entity) => entity.instanceId !== defenderInstanceId);
-    updatedGraveyard = [...updatedGraveyard, defenderEntity.card];
+    if (shouldDestroyBattleTarget(attackerEntity, attackerDestroyed, defenderDestroyed)) {
+      updatedDestroyedPile = [...updatedDestroyedPile, defenderEntity.card];
+      destroyedDestination = "DESTROYED";
+    } else {
+      updatedGraveyard = [...updatedGraveyard, defenderEntity.card];
+      destroyedDestination = "GRAVEYARD";
+    }
   } else if (defenderEntity.mode === "SET") {
     updatedEntities = updatedEntities.map((entity) =>
       entity.instanceId === defenderInstanceId ? { ...entity, mode: "DEFENSE" } : entity,
     );
   }
   return {
+    destroyedDestination,
+    player: {
     ...defender,
     healthPoints: Math.max(0, defender.healthPoints - damageToDefenderPlayer),
     activeEntities: updatedEntities,
     graveyard: updatedGraveyard,
+    destroyedPile: updatedDestroyedPile,
+  },
   };
 }

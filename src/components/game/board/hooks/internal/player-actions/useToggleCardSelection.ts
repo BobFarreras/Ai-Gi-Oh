@@ -11,6 +11,7 @@ type IToggleSelectionParams = Pick<
   | "playingCard"
   | "clearSelection"
   | "setSelectedCard"
+  | "setSelectedBoardEntityInstanceId"
   | "setPlayingCard"
   | "setActiveAttackerId"
   | "clearError"
@@ -24,6 +25,7 @@ export function useToggleCardSelection({
   playingCard,
   clearSelection,
   setSelectedCard,
+  setSelectedBoardEntityInstanceId,
   setPlayingCard,
   setActiveAttackerId,
   clearError,
@@ -47,6 +49,7 @@ export function useToggleCardSelection({
         clearSelection();
       } else {
         setSelectedCard(card);
+        setSelectedBoardEntityInstanceId(null);
         setPlayingCard(card);
         setActiveAttackerId(null);
       }
@@ -63,6 +66,7 @@ export function useToggleCardSelection({
       setActiveAttackerId,
       setLastError,
       setPlayingCard,
+      setSelectedBoardEntityInstanceId,
       setSelectedCard,
     ],
   );

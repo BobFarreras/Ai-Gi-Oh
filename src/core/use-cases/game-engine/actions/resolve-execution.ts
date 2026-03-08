@@ -1,4 +1,5 @@
-// src/core/use-cases/game-engine/actions/resolve-execution.ts - Resuelve ejecuciones activas, incluyendo trampas reactivas y flujo de fusión.
+// src/core/use-cases/game-engine/actions/resolve-execution.ts - Resuelve ejecuciones activas, trampas y flujos pendientes de fusión o selección de cementerio.
+import { CardType } from "@/core/entities/ICard";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
@@ -7,10 +8,11 @@ import { applyExecutionEffect } from "@/core/use-cases/game-engine/actions/inter
 import { appendExecutionResolutionLogs } from "@/core/use-cases/game-engine/actions/internal/execution-logging";
 import { resolveTrapTrigger } from "@/core/use-cases/game-engine/effects/resolve-trap-trigger";
 import { startFusionSummonFromExecution } from "@/core/use-cases/game-engine/fusion/start-fusion-summon-from-execution";
+import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
-function resolveFusionWithoutEnoughMaterials(
+function suspendFusionExecutionUntilMaterials(
   state: GameState,
   playerId: string,
   player: IPlayer,
@@ -19,82 +21,58 @@ function resolveFusionWithoutEnoughMaterials(
   executionInstanceId: string,
 ): GameState {
   const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
-  if (!executionEntity) {
-    throw new NotFoundError("La ejecución no existe en el tablero.");
-  }
+  if (!executionEntity) throw new NotFoundError("La ejecución no existe en el tablero.");
   const updatedPlayer: IPlayer = {
     ...player,
-    activeExecutions: player.activeExecutions.filter((entity) => entity.instanceId !== executionInstanceId),
-    graveyard: [...player.graveyard, executionEntity.card],
+    activeExecutions: player.activeExecutions.map((entity) =>
+      entity.instanceId === executionInstanceId ? { ...entity, mode: "SET" } : entity,
+    ),
   };
   const withPlayers = assignPlayers(state, updatedPlayer, opponent, isPlayerA);
-  return appendExecutionResolutionLogs({
-    state: withPlayers,
-    playerId,
+  return appendCombatLogEvent(withPlayers, playerId, "MANDATORY_ACTION_RESOLVED", {
+    type: "FUSION_WAITING_MATERIALS",
     executionCardId: executionEntity.card.id,
-    damageTargetPlayerId: null,
-    damageAmount: 0,
-    healApplied: 0,
-    buffStat: null,
-    buffAmount: 0,
-    buffEntityIds: [],
   });
 }
 
-/**
- * Resuelve una carta de ejecución en estado ACTIVATE para el jugador indicado.
- * @param state Estado actual del duelo.
- * @param playerId Jugador activo que intenta resolver la ejecución.
- * @param executionInstanceId Instancia concreta en la zona de ejecuciones.
- * @returns Nuevo estado tras aplicar trampas, efecto y logs.
- * @throws NotFoundError Si la ejecución no existe en tablero.
- * @throws GameRuleError Si la carta no tiene efecto definido.
- * @throws ValidationError Si la instancia no corresponde a una ejecución válida.
- */
-export function resolveExecution(state: GameState, playerId: string, executionInstanceId: string): GameState {
-  let withTrapResolution = state;
-  const initialPair = getPlayerPair(state, playerId);
-  withTrapResolution = resolveTrapTrigger(withTrapResolution, initialPair.opponent.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
-  const { player, opponent, isPlayerA } = getPlayerPair(withTrapResolution, playerId);
-
-  const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
-
-  if (!executionEntity) {
-    throw new NotFoundError("La ejecución no existe en el tablero.");
+function resolveFusionExecution(
+  state: GameState,
+  playerId: string,
+  player: IPlayer,
+  opponent: IPlayer,
+  isPlayerA: boolean,
+  executionInstanceId: string,
+  recipeId: string,
+): GameState {
+  if (player.activeEntities.length < 2) {
+    return suspendFusionExecutionUntilMaterials(state, playerId, player, opponent, isPlayerA, executionInstanceId);
   }
+  return startFusionSummonFromExecution(state, playerId, executionInstanceId, recipeId);
+}
 
-  if (!executionEntity.card.effect) {
-    throw new GameRuleError("Esta carta no tiene un efecto programado.");
+function hasSelectableGraveyardCard(player: IPlayer, cardType?: CardType): boolean {
+  return player.graveyard.some((card) => !cardType || card.type === cardType);
+}
+
+function startGraveyardSelection(
+  state: GameState,
+  playerId: string,
+  executionInstanceId: string,
+  destination: "HAND" | "FIELD",
+  cardType?: CardType,
+): GameState {
+  const { player } = getPlayerPair(state, playerId);
+  if (!hasSelectableGraveyardCard(player, cardType)) {
+    throw new GameRuleError("No hay cartas válidas en cementerio para este efecto.");
   }
-  if (executionEntity.card.type !== "EXECUTION") {
-    throw new ValidationError("Solo las ejecuciones activadas pueden resolverse con esta acción.");
-  }
+  return { ...state, pendingTurnAction: { type: "SELECT_GRAVEYARD_CARD", playerId, executionInstanceId, destination, cardType } };
+}
 
-  const effect = executionEntity.card.effect;
-  if (effect.action === "FUSION_SUMMON") {
-    if (player.activeEntities.length < 2) {
-      return resolveFusionWithoutEnoughMaterials(withTrapResolution, playerId, player, opponent, isPlayerA, executionInstanceId);
-    }
-    return startFusionSummonFromExecution(withTrapResolution, playerId, executionInstanceId, effect.recipeId);
-  }
-  const effectResult = applyExecutionEffect(player, opponent, effect);
-  let updatedPlayer: IPlayer = effectResult.player;
-
-  updatedPlayer = {
-    ...updatedPlayer,
-    activeExecutions: updatedPlayer.activeExecutions.filter((entity) => entity.instanceId !== executionInstanceId),
-    graveyard: [...updatedPlayer.graveyard, executionEntity.card],
-  };
-
-  const updatedOpponent: IPlayer = {
-    ...effectResult.opponent,
-  };
-
-  const withPlayers = assignPlayers(withTrapResolution, updatedPlayer, updatedOpponent, isPlayerA);
-  return appendExecutionResolutionLogs({
-    state: withPlayers,
+function appendExecutionResultLogs(state: GameState, playerId: string, executionCardId: string, effectResult: ReturnType<typeof applyExecutionEffect>): GameState {
+  let withLogs = appendExecutionResolutionLogs({
+    state,
     playerId,
-    executionCardId: executionEntity.card.id,
+    executionCardId,
     damageTargetPlayerId: effectResult.damageTargetPlayerId,
     damageAmount: effectResult.damageAmount,
     healApplied: effectResult.healApplied,
@@ -102,4 +80,35 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
     buffAmount: effectResult.buff.amount,
     buffEntityIds: effectResult.buff.entityIds,
   });
+  for (const systemEvent of effectResult.systemEvents) withLogs = appendCombatLogEvent(withLogs, playerId, systemEvent.eventType, systemEvent.payload);
+  return withLogs;
+}
+
+export function resolveExecution(state: GameState, playerId: string, executionInstanceId: string): GameState {
+  const withTrapResolution = resolveTrapTrigger(state, getPlayerPair(state, playerId).opponent.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
+  const { player, opponent, isPlayerA } = getPlayerPair(withTrapResolution, playerId);
+  const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
+  if (!executionEntity) throw new NotFoundError("La ejecución no existe en el tablero.");
+  if (!executionEntity.card.effect) throw new GameRuleError("Esta carta no tiene un efecto programado.");
+  if (executionEntity.card.type !== "EXECUTION") throw new ValidationError("Solo las ejecuciones activadas pueden resolverse con esta acción.");
+
+  const effect = executionEntity.card.effect;
+  if (effect.action === "FUSION_SUMMON") {
+    return resolveFusionExecution(withTrapResolution, playerId, player, opponent, isPlayerA, executionInstanceId, effect.recipeId);
+  }
+  if (effect.action === "RETURN_GRAVEYARD_CARD_TO_HAND") {
+    return startGraveyardSelection(withTrapResolution, playerId, executionInstanceId, "HAND", effect.cardType);
+  }
+  if (effect.action === "RETURN_GRAVEYARD_CARD_TO_FIELD") {
+    return startGraveyardSelection(withTrapResolution, playerId, executionInstanceId, "FIELD", effect.cardType);
+  }
+
+  const effectResult = applyExecutionEffect(player, opponent, effect);
+  const updatedPlayer: IPlayer = {
+    ...effectResult.player,
+    activeExecutions: effectResult.player.activeExecutions.filter((entity) => entity.instanceId !== executionInstanceId),
+    graveyard: [...effectResult.player.graveyard, executionEntity.card],
+  };
+  const withPlayers = assignPlayers(withTrapResolution, updatedPlayer, effectResult.opponent, isPlayerA);
+  return appendExecutionResultLogs(withPlayers, playerId, executionEntity.card.id, effectResult);
 }

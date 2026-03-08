@@ -3,13 +3,14 @@ import { ICard } from "@/core/entities/ICard";
 import { BattleMode, IBoardEntity } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IBoardUiError } from "../boardError";
+import { IPendingZoneReplacement } from "../board-state/pending-replacement";
 
 export interface IUsePlayerActionsParams {
   gameState: GameState;
   isAnimating: boolean;
   playingCard: ICard | null;
   activeAttackerId: string | null;
-  pendingEntityReplacement: { cardId: string; mode: BattleMode } | null;
+  pendingEntityReplacement: IPendingZoneReplacement | null;
   pendingEntityReplacementTargetId: string | null;
   pendingFusionSummon: { cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null;
   assertPlayerTurn: () => boolean;
@@ -18,11 +19,12 @@ export interface IUsePlayerActionsParams {
   clearError: () => void;
   resolvePendingTurnAction: (selectedId: string) => void;
   setSelectedCard: (card: ICard | null) => void;
+  setSelectedBoardEntityInstanceId: (value: string | null) => void;
   setPlayingCard: (card: ICard | null) => void;
   setActiveAttackerId: (value: string | null | ((prev: string | null) => string | null)) => void;
   setIsAnimating: (value: boolean) => void;
   setRevealedEntities: (value: string[] | ((prev: string[]) => string[])) => void;
-  setPendingEntityReplacement: (value: { cardId: string; mode: BattleMode } | null) => void;
+  setPendingEntityReplacement: (value: IPendingZoneReplacement | null) => void;
   setPendingEntityReplacementTargetId: (value: string | null) => void;
   setPendingFusionSummon: (value: { cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null) => void;
   setLastError: (value: IBoardUiError | null) => void;

@@ -76,10 +76,13 @@ export function useMatchRuntime({ campaignProgress, gameStateRef, uiState, winne
     winnerPlayerId,
     isAnimating: uiState.isActionLocked,
     isPlayerTurn: uiState.isPlayerTurn,
+    isAutoPhaseEnabled: uiState.isAutoPhaseEnabled,
+    isTurnHelpEnabled: uiState.isTurnHelpEnabled,
     assertPlayerTurn,
     applyTransition,
     clearSelection: uiState.clearSelection,
     clearError: uiState.clearError,
+    disableTurnHelp: uiState.disableTurnHelp,
     setActiveAttackerId: uiState.setActiveAttackerId,
     setPlayingCard: uiState.setPlayingCard,
   });
@@ -98,6 +101,7 @@ export function useMatchRuntime({ campaignProgress, gameStateRef, uiState, winne
     clearError: uiState.clearError,
     resolvePendingTurnAction: turnControls.resolvePendingTurnAction,
     setSelectedCard: uiState.setSelectedCard,
+    setSelectedBoardEntityInstanceId: uiState.setSelectedBoardEntityInstanceId,
     setPlayingCard: uiState.setPlayingCard,
     setActiveAttackerId: uiState.setActiveAttackerId,
     setIsAnimating: uiState.setIsAnimating,
@@ -111,15 +115,29 @@ export function useMatchRuntime({ campaignProgress, gameStateRef, uiState, winne
   const confirmEntityReplacement = useCallback(() => {
     if (!uiState.pendingEntityReplacement || !uiState.pendingEntityReplacementTargetId) return;
     const replacedState = applyTransition((state) =>
-      GameEngine.playCardWithEntityReplacement(
+      GameEngine.playCardWithZoneReplacement(
         state,
         state.playerA.id,
         uiState.pendingEntityReplacement!.cardId,
         uiState.pendingEntityReplacement!.mode,
         uiState.pendingEntityReplacementTargetId!,
+        uiState.pendingEntityReplacement!.zone,
       ),
     );
     if (!replacedState) return;
+    if (uiState.pendingEntityReplacement.zone === "EXECUTIONS" && uiState.pendingEntityReplacement.mode === "ACTIVATE") {
+      const activatedExecution = [...replacedState.playerA.activeExecutions]
+        .reverse()
+        .find(
+          (entity) =>
+            entity.card.type === "EXECUTION" &&
+            entity.mode === "ACTIVATE" &&
+            (entity.card.runtimeId === uiState.pendingEntityReplacement?.cardId || entity.card.id === uiState.pendingEntityReplacement?.cardId),
+        );
+      if (activatedExecution) {
+        applyTransition((state) => GameEngine.resolveExecution(state, state.playerA.id, activatedExecution.instanceId));
+      }
+    }
     uiState.setPendingEntityReplacement(null);
     uiState.setPendingEntityReplacementTargetId(null);
     uiState.clearSelection();
@@ -138,6 +156,9 @@ export function useMatchRuntime({ campaignProgress, gameStateRef, uiState, winne
     executePlayAction,
     handleEntityClick,
     advancePhase: turnControls.advancePhase,
+    confirmAdvancePhase: turnControls.confirmAdvancePhase,
+    cancelAdvancePhase: turnControls.cancelAdvancePhase,
+    pendingAdvanceWarning: turnControls.pendingAdvanceWarning,
     handleTimerExpired: turnControls.handleTimerExpired,
     resolvePendingTurnAction: turnControls.resolvePendingTurnAction,
     resolvePendingHandDiscard: turnControls.resolvePendingHandDiscard,

@@ -4,7 +4,7 @@ import { IPlayer } from "@/core/entities/IPlayer";
 
 export type TurnPhase = "MAIN_1" | "BATTLE";
 
-export type PendingTurnActionType = "DISCARD_FOR_HAND_LIMIT" | "SELECT_FUSION_MATERIALS";
+export type PendingTurnActionType = "DISCARD_FOR_HAND_LIMIT" | "SELECT_FUSION_MATERIALS" | "SELECT_GRAVEYARD_CARD";
 
 interface IBasePendingTurnAction {
   playerId: string;
@@ -23,9 +23,17 @@ export interface ISelectFusionMaterialsPendingTurnAction extends IBasePendingTur
   selectedMaterialInstanceIds: string[];
 }
 
+export interface ISelectGraveyardCardPendingTurnAction extends IBasePendingTurnAction {
+  type: "SELECT_GRAVEYARD_CARD";
+  executionInstanceId: string;
+  destination: "HAND" | "FIELD";
+  cardType?: "ENTITY" | "EXECUTION" | "TRAP" | "FUSION" | "ENVIRONMENT";
+}
+
 export type IPendingTurnAction =
   | IDiscardForHandLimitPendingTurnAction
-  | ISelectFusionMaterialsPendingTurnAction;
+  | ISelectFusionMaterialsPendingTurnAction
+  | ISelectGraveyardCardPendingTurnAction;
 
 export interface GameState {
   playerA: IPlayer;

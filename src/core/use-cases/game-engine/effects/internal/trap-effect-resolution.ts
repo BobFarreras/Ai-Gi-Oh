@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/effects/internal/trap-effect-resolution.ts - Aplica efectos de trampas y enruta destrucción a zona destroyedPile.
 import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { ITrapResolutionResult, ITrapTriggerContext } from "@/core/use-cases/game-engine/effects/internal/trap-types";
 
@@ -31,7 +32,7 @@ function destroyAttackerIfPresent(opponent: IPlayer, context?: ITrapTriggerConte
     opponent: {
       ...opponent,
       activeEntities: opponent.activeEntities.filter((entity) => entity.instanceId !== context.attackerInstanceId),
-      graveyard: [...opponent.graveyard, attacker.card],
+      destroyedPile: [...(opponent.destroyedPile ?? []), attacker.card],
     },
     cardId: attacker.card.id,
   };
@@ -43,19 +44,19 @@ export function resolveTrapEffect(
   trap: IBoardEntity,
   context?: ITrapTriggerContext,
 ): ITrapResolutionResult {
-  if (!trap.card.effect) return { player, opponent, damage: 0, destroyedOpponentEntityCardId: null };
+  if (!trap.card.effect) return { player, opponent, damage: 0, destroyedOpponentEntityCardId: null, destroyedOpponentEntityDestination: null };
   if (trap.card.effect.action === "DAMAGE") return resolveDamage(player, opponent, trap.card.effect.target, trap.card.effect.value);
   if (trap.card.effect.action === "REDUCE_OPPONENT_ATTACK") {
-    return { player, opponent: applyOpponentAttackReduction(opponent, trap.card.effect.value), damage: 0, destroyedOpponentEntityCardId: null };
+    return { player, opponent: applyOpponentAttackReduction(opponent, trap.card.effect.value), damage: 0, destroyedOpponentEntityCardId: null, destroyedOpponentEntityDestination: null };
   }
   if (trap.card.effect.action === "REDUCE_OPPONENT_DEFENSE") {
-    return { player, opponent: applyOpponentDefenseReduction(opponent, trap.card.effect.value), damage: 0, destroyedOpponentEntityCardId: null };
+    return { player, opponent: applyOpponentDefenseReduction(opponent, trap.card.effect.value), damage: 0, destroyedOpponentEntityCardId: null, destroyedOpponentEntityDestination: null };
   }
   if (trap.card.effect.action === "NEGATE_ATTACK_AND_DESTROY_ATTACKER") {
     const destroyed = destroyAttackerIfPresent(opponent, context);
-    return { player, opponent: destroyed.opponent, damage: 0, destroyedOpponentEntityCardId: destroyed.cardId };
+    return { player, opponent: destroyed.opponent, damage: 0, destroyedOpponentEntityCardId: destroyed.cardId, destroyedOpponentEntityDestination: destroyed.cardId ? "DESTROYED" : null };
   }
-  return { player, opponent, damage: 0, destroyedOpponentEntityCardId: null };
+  return { player, opponent, damage: 0, destroyedOpponentEntityCardId: null, destroyedOpponentEntityDestination: null };
 }
 
 function resolveDamage(
@@ -70,6 +71,7 @@ function resolveDamage(
       opponent,
       damage: value,
       destroyedOpponentEntityCardId: null,
+      destroyedOpponentEntityDestination: null,
     };
   }
   return {
@@ -77,5 +79,6 @@ function resolveDamage(
     opponent: { ...opponent, healthPoints: Math.max(0, opponent.healthPoints - value) },
     damage: value,
     destroyedOpponentEntityCardId: null,
+    destroyedOpponentEntityDestination: null,
   };
 }

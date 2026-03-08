@@ -2,6 +2,7 @@ import { IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ValidationError } from "@/core/errors/ValidationError";
+import { assertFusionCardInFusionDeck } from "@/core/use-cases/game-engine/fusion/internal/assert-fusion-card-in-fusion-deck";
 import { findFusionCardById } from "@/core/use-cases/game-engine/fusion/internal/fusion-card-catalog";
 import { getFusionRecipeByResultId } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
@@ -19,6 +20,7 @@ export function fuseCardsFromExecution(
   if (state.activePlayerId !== playerId) throw new GameRuleError("No es tu turno.");
   if (state.phase !== "MAIN_1") throw new GameRuleError("Solo puedes fusionar en MAIN_1.");
   const { player, opponent, isPlayerA } = getPlayerPair(state, playerId);
+  assertFusionCardInFusionDeck(player, recipeId);
   const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
   if (!executionEntity) throw new NotFoundError("No existe la ejecución de fusión en tu zona de ejecuciones.");
   if (executionEntity.card.type !== "EXECUTION" || executionEntity.card.effect?.action !== "FUSION_SUMMON") {
@@ -55,16 +57,6 @@ function validateMaterials(recipe: NonNullable<ReturnType<typeof getFusionRecipe
       if (index >= 0) pending.splice(index, 1);
     }
     if (pending.length > 0) throw new ValidationError("Los arquetipos de los materiales no cumplen la receta.");
-  }
-  if (recipe.requiredEnergyPerMaterial) {
-    const minEnergy = recipe.requiredEnergyPerMaterial;
-    if (materials.some((material) => material.card.cost < minEnergy)) {
-      throw new ValidationError("Uno de los materiales no alcanza la energía mínima requerida.");
-    }
-  }
-  if (recipe.requiredTotalEnergy) {
-    const total = materials.reduce((sum, material) => sum + material.card.cost, 0);
-    if (total < recipe.requiredTotalEnergy) throw new ValidationError("La energía total de materiales no alcanza la receta.");
   }
 }
 

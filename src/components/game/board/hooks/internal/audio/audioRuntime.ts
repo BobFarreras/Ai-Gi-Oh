@@ -14,6 +14,9 @@ export function createAudio(trackId: AudioTrackId, isMusic: boolean): HTMLAudioE
 export function mapEventToTrack(event: ICombatLogEvent): AudioTrackId | null {
   if (event.eventType === "TURN_STARTED") return "TURN_PASS";
   if (event.eventType === "PHASE_CHANGED") return "BANNER";
+  if (event.eventType === "AUTO_PHASE_ADVANCED") return "TURN_PASS";
+  if (event.eventType === "TURN_GUARD_SHOWN") return "BANNER";
+  if (event.eventType === "TURN_GUARD_CONFIRMED" || event.eventType === "TURN_GUARD_CANCELLED") return "BUTTON_CLICK";
   if (event.eventType === "ATTACK_DECLARED") return "ATTACK";
   if (event.eventType === "DIRECT_DAMAGE") return "LIFE_LOSS";
   if (event.eventType === "FUSION_SUMMONED") return "FUSION_SUMMON";

@@ -6,10 +6,14 @@ import {
   ICard,
   ICardEffect,
   IDamageEffect,
+  IDestroyEntityOnBattleWinEffect,
   IDrawCardEffect,
   IFusionSummonEffect,
   IHealEffect,
+  INegateOpponentTrapAndDestroyEffect,
   INegateAttackAndDestroyAttackerEffect,
+  IReturnGraveyardCardToFieldEffect,
+  IReturnGraveyardCardToHandEffect,
   IReduceOpponentAttackEffect,
   IReduceOpponentDefenseEffect,
 } from "@/core/entities/ICard";
@@ -54,6 +58,14 @@ function mapEffect(value: unknown): ICardEffect | undefined {
         : undefined;
     case "NEGATE_ATTACK_AND_DESTROY_ATTACKER":
       return { action: "NEGATE_ATTACK_AND_DESTROY_ATTACKER" } as INegateAttackAndDestroyAttackerEffect;
+    case "RETURN_GRAVEYARD_CARD_TO_HAND":
+      return { action: "RETURN_GRAVEYARD_CARD_TO_HAND", cardType: typeof value.cardType === "string" ? value.cardType : undefined } as IReturnGraveyardCardToHandEffect;
+    case "RETURN_GRAVEYARD_CARD_TO_FIELD":
+      return { action: "RETURN_GRAVEYARD_CARD_TO_FIELD", cardType: typeof value.cardType === "string" ? value.cardType : undefined } as IReturnGraveyardCardToFieldEffect;
+    case "DESTROY_ENTITY_ON_BATTLE_WIN":
+      return { action: "DESTROY_ENTITY_ON_BATTLE_WIN" } as IDestroyEntityOnBattleWinEffect;
+    case "NEGATE_OPPONENT_TRAP_AND_DESTROY":
+      return { action: "NEGATE_OPPONENT_TRAP_AND_DESTROY" } as INegateOpponentTrapAndDestroyEffect;
     case "FUSION_SUMMON":
       return typeof value.recipeId === "string" && typeof value.materialsRequired === "number"
         ? ({ action: "FUSION_SUMMON", recipeId: value.recipeId, materialsRequired: value.materialsRequired } as IFusionSummonEffect)

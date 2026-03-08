@@ -1,14 +1,17 @@
+// src/components/game/board/ui/layout/BoardActionButtons.tsx - Acciones rápidas del tablero (pausa, audio, historial, auto-turno y atajos de combate).
 "use client";
 
-import { History, Pause, Play, Swords, Volume2, VolumeX } from "lucide-react";
+import { Bot, History, Pause, Play, Swords, Volume2, VolumeX } from "lucide-react";
 
 interface BoardActionButtonsProps {
   isMuted: boolean;
   isPaused: boolean;
+  isAutoPhaseEnabled: boolean;
   isHistoryOpen: boolean;
   canSetSelectedEntityToAttack: boolean;
   onToggleMute: () => void;
   onTogglePause: () => void;
+  onToggleAutoPhase: () => void;
   onToggleHistory: () => void;
   onSetSelectedEntityToAttack: () => void;
 }
@@ -16,10 +19,12 @@ interface BoardActionButtonsProps {
 export function BoardActionButtons({
   isMuted,
   isPaused,
+  isAutoPhaseEnabled,
   isHistoryOpen,
   canSetSelectedEntityToAttack,
   onToggleMute,
   onTogglePause,
+  onToggleAutoPhase,
   onToggleHistory,
   onSetSelectedEntityToAttack,
 }: BoardActionButtonsProps) {
@@ -46,6 +51,16 @@ export function BoardActionButtons({
         className="bg-zinc-950/90 border-2 border-emerald-500/60 text-emerald-300 p-4 rounded-full hover:bg-emerald-950 hover:shadow-[0_0_20px_rgba(16,185,129,0.6)] transition-all"
       >
         {isPaused ? <Play size={24} /> : <Pause size={24} />}
+      </button>
+      <button
+        aria-label={isAutoPhaseEnabled ? "Desactivar modo automático de turnos" : "Activar modo automático de turnos"}
+        onClick={(event) => {
+          event.stopPropagation();
+          onToggleAutoPhase();
+        }}
+        className={`bg-zinc-950/90 border-2 p-4 rounded-full transition-all ${isAutoPhaseEnabled ? "border-violet-400/70 text-violet-200 hover:bg-violet-950 hover:shadow-[0_0_20px_rgba(167,139,250,0.65)]" : "border-zinc-600 text-zinc-400 hover:bg-zinc-900"}`}
+      >
+        <Bot size={24} />
       </button>
       <button
         aria-label={isMuted ? "Activar sonido" : "Silenciar sonido"}

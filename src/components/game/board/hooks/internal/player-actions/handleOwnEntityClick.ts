@@ -1,9 +1,6 @@
 // src/components/game/board/hooks/internal/player-actions/handleOwnEntityClick.ts - Gestiona clics sobre entidades propias según fase, acciones pendientes y animaciones.
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { GameEngine } from "@/core/use-cases/GameEngine";
-import { sleep } from "../sleep";
-import { addRevealedId, findReactiveTrap, removeRevealedId } from "../trapPreview";
-import { PLAYER_POST_RESOLUTION_MS, PLAYER_TRAP_PREVIEW_MS } from "./constants";
 import { IUsePlayerActionsParams } from "./types";
 
 interface IHandleOwnEntityClickParams extends Pick<
@@ -16,13 +13,12 @@ interface IHandleOwnEntityClickParams extends Pick<
   | "pendingEntityReplacement"
   | "pendingEntityReplacementTargetId"
   | "setActiveAttackerId"
-  | "setIsAnimating"
   | "setLastError"
   | "setPendingEntityReplacementTargetId"
   | "setPendingFusionSummon"
   | "setPlayingCard"
-  | "setRevealedEntities"
   | "setSelectedCard"
+  | "setSelectedBoardEntityInstanceId"
 > {
   entity: IBoardEntity | null;
 }
@@ -37,24 +33,37 @@ export async function handleOwnEntityClick({
   pendingEntityReplacement,
   pendingEntityReplacementTargetId,
   setActiveAttackerId,
-  setIsAnimating,
   setLastError,
   setPendingEntityReplacementTargetId,
   setPendingFusionSummon,
   setPlayingCard,
-  setRevealedEntities,
   setSelectedCard,
+  setSelectedBoardEntityInstanceId,
 }: IHandleOwnEntityClickParams): Promise<"handled" | "pass"> {
   if (!entity) return "pass";
 
   if (pendingEntityReplacement) {
+    const selectableIds =
+      pendingEntityReplacement.zone === "ENTITIES"
+        ? gameState.playerA.activeEntities.map((current) => current.instanceId)
+        : gameState.playerA.activeExecutions.map((current) => current.instanceId);
+    if (!selectableIds.includes(entity.instanceId)) {
+      setLastError({
+        code: "GAME_RULE_ERROR",
+        message:
+          pendingEntityReplacement.zone === "ENTITIES"
+            ? "Debes seleccionar una entidad de tu campo para reemplazar."
+            : "Debes seleccionar una ejecución de tu campo para reemplazar.",
+      });
+      return "handled";
+    }
     if (pendingEntityReplacementTargetId !== entity.instanceId) {
       setPendingEntityReplacementTargetId(entity.instanceId);
       setSelectedCard(entity.card);
+      setSelectedBoardEntityInstanceId(entity.instanceId);
     }
     return "handled";
   }
-
   if (pendingFusionSummon) {
     if (pendingFusionSummon.materials.includes(entity.instanceId)) {
       setPendingFusionSummon({
@@ -83,28 +92,11 @@ export async function handleOwnEntityClick({
     return "handled";
   }
 
-  if (entity.card.type === "EXECUTION" && entity.mode === "SET") {
-    setIsAnimating(true);
-    const activated = applyTransition((state) => GameEngine.changeEntityMode(state, state.playerA.id, entity.instanceId, "ACTIVATE"));
-    if (!activated) {
-      setIsAnimating(false);
-      return "handled";
-    }
-    clearSelection();
-    await sleep(1500);
-    const reactiveTrap = findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
-    if (reactiveTrap) {
-      setRevealedEntities((previous) => addRevealedId(previous, reactiveTrap.instanceId));
-      setActiveAttackerId(reactiveTrap.instanceId);
-      await sleep(PLAYER_TRAP_PREVIEW_MS);
-    }
-    applyTransition((state) => GameEngine.resolveExecution(state, state.playerA.id, entity.instanceId));
-    if (reactiveTrap) {
-      await sleep(PLAYER_POST_RESOLUTION_MS);
-      setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
-    }
-    setActiveAttackerId(null);
-    setIsAnimating(false);
+  if ((entity.card.type === "EXECUTION" || entity.card.type === "TRAP") && entity.mode === "SET") {
+    setSelectedCard(entity.card);
+    setSelectedBoardEntityInstanceId(entity.instanceId);
+    setPlayingCard(null);
+    setLastError(null);
     return "handled";
   }
 
@@ -116,6 +108,7 @@ export async function handleOwnEntityClick({
   if (entity.hasAttackedThisTurn) return "handled";
   if (entity.mode === "DEFENSE" || entity.mode === "SET") {
     setSelectedCard(entity.card);
+    setSelectedBoardEntityInstanceId(entity.instanceId);
     setPlayingCard(null);
     setLastError(null);
     return "handled";
@@ -126,11 +119,13 @@ export async function handleOwnEntityClick({
     if (changedState) {
       setActiveAttackerId(null);
       setSelectedCard(entity.card);
+      setSelectedBoardEntityInstanceId(entity.instanceId);
     }
     return "handled";
   }
   setActiveAttackerId((previous) => (previous === entity.instanceId ? null : entity.instanceId));
   setSelectedCard(entity.card);
+  setSelectedBoardEntityInstanceId(entity.instanceId);
   setPlayingCard(null);
   setLastError(null);
   return "handled";

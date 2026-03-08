@@ -40,10 +40,16 @@ El pack se prepara antes del duelo y luego todo corre en memoria.
    - `public/audio/story/opp-ch1-apprentice/impacto-directo-jugador.mp3`
    - `public/audio/story/opp-ch1-apprentice/fusion.mp3`
    - `public/audio/story/opp-ch1-apprentice/victoria-oponente.mp3`
-   - `public/audio/story/opp-ch1-apprentice/derrota-oponente.mp3`
    - `public/audio/story/player/fusion.mp3`
    - `public/audio/story/player/impacto-directo.mp3`
    - `public/audio/story/player/trampa.mp3`
+
+## Fallback de audio recomendado
+
+1. Si falta un archivo específico de una línea narrativa:
+   - no fuerces `audioUrl` en el override,
+   - deja que use el audio base del pack por defecto.
+2. Esto evita silencios en victoria/derrota por rutas inexistentes.
 
 ## Cómo probar rápido
 

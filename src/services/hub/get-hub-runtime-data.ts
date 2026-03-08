@@ -8,6 +8,8 @@ import { createSupabasePlayerProgressRepository } from "@/infrastructure/persist
 import { InMemoryHubRepository } from "@/infrastructure/repositories/InMemoryHubRepository";
 import { SupabaseHubRepository } from "@/infrastructure/repositories/SupabaseHubRepository";
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
+import { getPlayerBoardLoadout } from "@/services/game/get-player-board-deck";
+import { applyCombatReadinessLock } from "@/services/hub/internal/apply-combat-readiness-lock";
 
 interface IHubRuntimeData {
   playerLabel: string;
@@ -37,6 +39,12 @@ export async function getHubRuntimeData(): Promise<IHubRuntimeData> {
   await new GetOrCreatePlayerProgressUseCase(progressRepository).execute({ playerId: session.user.id });
 
   const hubService = new HubService(new SupabaseHubRepository(progressRepository));
-  const hubMap = await new GetHubMapUseCase(hubService).execute(session.user.id);
-  return { playerLabel: profile.nickname || session.user.email || "Operador", hubMap };
+  const [hubMap, loadout] = await Promise.all([
+    new GetHubMapUseCase(hubService).execute(session.user.id),
+    getPlayerBoardLoadout(),
+  ]);
+  return {
+    playerLabel: profile.nickname || session.user.email || "Operador",
+    hubMap: { ...hubMap, sections: applyCombatReadinessLock(hubMap.sections, loadout) },
+  };
 }

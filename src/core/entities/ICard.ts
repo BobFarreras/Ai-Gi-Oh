@@ -1,8 +1,9 @@
 // src/core/entities/ICard.ts - Define contratos de carta base y metadatos runtime para el motor de juego.
+// src/core/entities/ICard.ts - Define contratos de carta base, triggers de trampa y efectos de combate/recuperación.
 export type CardType = "ENTITY" | "EXECUTION" | "TRAP" | "FUSION" | "ENVIRONMENT";
 export type Faction = "OPEN_SOURCE" | "BIG_TECH" | "NO_CODE" | "NEUTRAL";
 export type CardArchetype = "LLM" | "FRAMEWORK" | "DB" | "IDE" | "LANGUAGE" | "TOOL" | "SECURITY";
-export type TrapTrigger = "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED";
+export type TrapTrigger = "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED" | "ON_OPPONENT_TRAP_ACTIVATED";
 
 export interface IDamageEffect {
   action: "DAMAGE";
@@ -52,6 +53,24 @@ export interface INegateAttackAndDestroyAttackerEffect {
   action: "NEGATE_ATTACK_AND_DESTROY_ATTACKER";
 }
 
+export interface IReturnGraveyardCardToHandEffect {
+  action: "RETURN_GRAVEYARD_CARD_TO_HAND";
+  cardType?: CardType;
+}
+
+export interface IReturnGraveyardCardToFieldEffect {
+  action: "RETURN_GRAVEYARD_CARD_TO_FIELD";
+  cardType?: "ENTITY" | "EXECUTION" | "TRAP";
+}
+
+export interface IDestroyEntityOnBattleWinEffect {
+  action: "DESTROY_ENTITY_ON_BATTLE_WIN";
+}
+
+export interface INegateOpponentTrapAndDestroyEffect {
+  action: "NEGATE_OPPONENT_TRAP_AND_DESTROY";
+}
+
 export interface IFusionSummonEffect {
   action: "FUSION_SUMMON";
   recipeId: string;
@@ -68,6 +87,10 @@ export type ICardEffect =
   | IReduceOpponentAttackEffect
   | IReduceOpponentDefenseEffect
   | INegateAttackAndDestroyAttackerEffect
+  | IReturnGraveyardCardToHandEffect
+  | IReturnGraveyardCardToFieldEffect
+  | IDestroyEntityOnBattleWinEffect
+  | INegateOpponentTrapAndDestroyEffect
   | IFusionSummonEffect;
 
 export interface ICard {

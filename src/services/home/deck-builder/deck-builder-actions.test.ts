@@ -10,6 +10,7 @@ function createEmptyDeck(playerId: string): IDeck {
   return {
     playerId,
     slots: Array.from({ length: HOME_DECK_SIZE }, (_, index) => ({ index, cardId: null })),
+    fusionSlots: Array.from({ length: 2 }, (_, index) => ({ index, cardId: null })),
   };
 }
 
