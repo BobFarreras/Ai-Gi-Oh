@@ -49,6 +49,7 @@ describe('Componente UI: Board y Subcomponentes', () => {
     vi.mocked(useBoardModule.useBoard).mockReturnValue({
       gameState: mockGameState,
       selectedCard: null,
+      selectedBoardEntityInstanceId: null,
       playingCard: null,
       isHistoryOpen: false,
       activeAttackerId: null,

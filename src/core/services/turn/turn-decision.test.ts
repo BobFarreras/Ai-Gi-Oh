@@ -1,5 +1,6 @@
 // src/core/services/turn/turn-decision.test.ts - Pruebas unitarias de decisiones de auto-pase y avisos de avance de fase.
 import { IBoardEntity } from "@/core/entities/IPlayer";
+import { describe, expect, it } from "vitest";
 import { canAutoAdvanceBattle, hasAvailableBattleActions, shouldShowAdvanceWarning } from "./turn-decision";
 
 function createEntity(mode: IBoardEntity["mode"], hasAttackedThisTurn = false, isNewlySummoned = false): IBoardEntity {

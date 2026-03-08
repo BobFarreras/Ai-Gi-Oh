@@ -1,5 +1,6 @@
 // src/services/story/build-story-opponent-narration-pack.test.ts - Valida personalización de textos/audio/retratos narrativos por oponente Story.
 import { buildStoryOpponentNarrationPack } from "./build-story-opponent-narration-pack";
+import { describe, expect, it } from "vitest";
 
 describe("buildStoryOpponentNarrationPack", () => {
   it("aplica overrides del primer oponente de story", () => {

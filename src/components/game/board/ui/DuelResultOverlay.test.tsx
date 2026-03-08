@@ -1,5 +1,6 @@
 // src/components/game/board/ui/DuelResultOverlay.test.tsx - Verifica que el overlay de resultado muestre recompensas Story sin romper el resumen de EXP.
 import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import { DuelResultOverlay } from "./DuelResultOverlay";
 import { ICard } from "@/core/entities/ICard";
 import { IPlayer } from "@/core/entities/IPlayer";

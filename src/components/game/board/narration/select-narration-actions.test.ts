@@ -1,5 +1,6 @@
 // src/components/game/board/narration/select-narration-actions.test.ts - Prueba selección de acciones narrativas desde eventos de combate y cierre de duelo.
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
+import { describe, expect, it } from "vitest";
 import { buildDefaultMatchNarrationPack } from "./build-default-match-narration-pack";
 import { selectNarrationActionForResult, selectNarrationActionsFromEvents } from "./select-narration-actions";
 
