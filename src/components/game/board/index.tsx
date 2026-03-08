@@ -154,6 +154,7 @@ export function Board({
     narrationPack,
   });
   const { isMobile } = useBoardViewportMode();
+  const isResultVisible = Boolean(winnerPlayerId);
   const pendingGraveyardSelectionRefs = useMemo(() => {
     const pending = gameState.pendingTurnAction;
     if (!pending || pending.type !== "SELECT_GRAVEYARD_CARD" || pending.playerId !== player.id) return [];
@@ -194,45 +195,49 @@ export function Board({
     <div className="board-space-bg relative w-full h-screen overflow-hidden font-sans cursor-crosshair" onClick={clearSelection}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(34,211,238,0.12),transparent_52%)] pointer-events-none" />
       <div className="absolute inset-0 shadow-[inset_0_0_200px_rgba(1,4,12,0.58)] pointer-events-none" />
-      <BoardStatusOverlays
-        lastError={lastError}
-        pendingActionHint={pendingActionHint}
-        pendingEntityReplacement={pendingEntityReplacement}
-        pendingEntityReplacementTargetCard={pendingReplacementTargetCard}
-        combatLog={gameState.combatLog}
-        playerAId={gameState.playerA.id}
-        playerAName={gameState.playerA.name}
-        playerBId={gameState.playerB.id}
-        playerBName={gameState.playerB.name}
-        isPaused={isPaused}
-        onResumePause={() => { playButtonClick(); togglePause(); }}
-        isFusionCinematicActive={isFusionCinematicActive}
-        setIsFusionCinematicActive={setIsFusionCinematicActive}
-        graveyardView={effectiveGraveyardView}
-        graveyardOwnerName={visibleGraveyardOwner}
-        graveyardCards={visibleGraveyardCards}
-        graveyardSelectableCardRefs={effectiveGraveyardView === "player" ? pendingGraveyardSelectionRefs : []}
-        destroyedView={destroyedView}
-        destroyedOwnerName={visibleDestroyedOwner}
-        destroyedCards={visibleDestroyedCards}
-        onCloseError={() => { playButtonClick(); clearError(); }}
-        onConfirmEntityReplacement={() => { playButtonClick(); confirmEntityReplacement(); }}
-        onCancelEntityReplacement={() => { playButtonClick(); cancelEntityReplacement(); }}
-        onCloseGraveyard={() => setGraveyardView(null)}
-        onCloseDestroyed={() => setDestroyedView(null)}
-        onPreviewCard={onOverlayCardSelect}
-        pendingAdvanceWarning={pendingAdvanceWarning}
-        onConfirmAdvancePhase={confirmAdvancePhase}
-        onCancelAdvancePhase={cancelAdvancePhase}
-        externalBannerSignal={autoModeBannerSignal}
-      />
-      <CinematicNarrationOverlay
-        action={narration.activeCinematicAction}
-        playerId={player.id}
-        playerAvatarUrl={playerAvatarUrl}
-        opponentAvatarUrl={opponentAvatarUrl}
-      />
-      {isMobile ? (
+      {!isResultVisible && (
+        <BoardStatusOverlays
+          lastError={lastError}
+          pendingActionHint={pendingActionHint}
+          pendingEntityReplacement={pendingEntityReplacement}
+          pendingEntityReplacementTargetCard={pendingReplacementTargetCard}
+          combatLog={gameState.combatLog}
+          playerAId={gameState.playerA.id}
+          playerAName={gameState.playerA.name}
+          playerBId={gameState.playerB.id}
+          playerBName={gameState.playerB.name}
+          isPaused={isPaused}
+          onResumePause={() => { playButtonClick(); togglePause(); }}
+          isFusionCinematicActive={isFusionCinematicActive}
+          setIsFusionCinematicActive={setIsFusionCinematicActive}
+          graveyardView={effectiveGraveyardView}
+          graveyardOwnerName={visibleGraveyardOwner}
+          graveyardCards={visibleGraveyardCards}
+          graveyardSelectableCardRefs={effectiveGraveyardView === "player" ? pendingGraveyardSelectionRefs : []}
+          destroyedView={destroyedView}
+          destroyedOwnerName={visibleDestroyedOwner}
+          destroyedCards={visibleDestroyedCards}
+          onCloseError={() => { playButtonClick(); clearError(); }}
+          onConfirmEntityReplacement={() => { playButtonClick(); confirmEntityReplacement(); }}
+          onCancelEntityReplacement={() => { playButtonClick(); cancelEntityReplacement(); }}
+          onCloseGraveyard={() => setGraveyardView(null)}
+          onCloseDestroyed={() => setDestroyedView(null)}
+          onPreviewCard={onOverlayCardSelect}
+          pendingAdvanceWarning={pendingAdvanceWarning}
+          onConfirmAdvancePhase={confirmAdvancePhase}
+          onCancelAdvancePhase={cancelAdvancePhase}
+          externalBannerSignal={autoModeBannerSignal}
+        />
+      )}
+      {!isResultVisible && (
+        <CinematicNarrationOverlay
+          action={narration.activeCinematicAction}
+          playerId={player.id}
+          playerAvatarUrl={playerAvatarUrl}
+          opponentAvatarUrl={opponentAvatarUrl}
+        />
+      )}
+      {!isResultVisible && (isMobile ? (
         <BoardMobileTopBar
           hand={opponent.hand}
           turn={gameState.turn}
@@ -260,8 +265,8 @@ export function Board({
           onTimeUp={() => { playTimerExpired(); handleTimerExpired(); }}
           onWarning={playTimerWarning}
         />
-      )}
-      {isMobile ? (
+      ))}
+      {!isResultVisible && (isMobile ? (
         <>
           <PlayerHUD
             isOpponent={true}
@@ -310,7 +315,8 @@ export function Board({
           phase={gameState.phase}
           onAdvancePhase={advancePhase}
         />
-      )}
+      ))}
+      {!isResultVisible && (
       <BoardInteractiveLayer
         gameState={gameState} selectedCard={selectedCard} playingCard={playingCard} activeAttackerId={activeAttackerId}
         selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}
@@ -341,7 +347,8 @@ export function Board({
         onCloseHistory={() => setIsHistoryOpen(false)}
         isMobileLayout={isMobile}
       />
-      {isMobile && (
+      )}
+      {!isResultVisible && isMobile && (
         <BoardMobilePanelsDialog
           selectedCard={null}
           gameState={gameState}
@@ -351,7 +358,7 @@ export function Board({
           onCloseHistory={() => setIsHistoryOpen(false)}
         />
       )}
-      {isMobile ? (
+      {!isResultVisible && (isMobile ? (
         <BoardMobileActionsFab
           isMuted={isMuted}
           isPaused={isPaused}
@@ -395,7 +402,7 @@ export function Board({
           onToggleHistory={() => { playButtonClick(); setIsHistoryOpen((previous) => !previous); }}
           onSetSelectedEntityToAttack={() => { playButtonClick(); setSelectedEntityToAttack(); }}
         />
-      )}
+      ))}
       <DuelResultOverlay
         winnerPlayerId={winnerPlayerId}
         playerA={player}

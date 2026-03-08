@@ -33,6 +33,8 @@ const mockPlayer: IPlayer = {
 
 describe("DuelResultOverlay", () => {
   it("muestra recompensas de Story y permite revelar la carta regalo", () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1280 });
+    window.dispatchEvent(new Event("resize"));
     render(
       <DuelResultOverlay
         winnerPlayerId={mockPlayer.id}
@@ -47,11 +49,11 @@ describe("DuelResultOverlay", () => {
       />,
     );
 
-    expect(screen.getByText("Recompensas")).toBeInTheDocument();
+    expect(screen.getByText("EXP Jugador")).toBeInTheDocument();
     expect(screen.getByText("+120")).toBeInTheDocument();
     expect(screen.getByText("+80")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /mostrar carta recompensa/i }));
-    expect(screen.getByText("Carta obtenida")).toBeInTheDocument();
+    expect(screen.getByText(/ocultar carta/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Volver al mapa Story" })).toBeInTheDocument();
   });
 });

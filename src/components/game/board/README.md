@@ -227,3 +227,25 @@ Guía rápida para entender la lógica de tablero y batalla.
 7. **Overlay de carta seleccionada con contraste bajo**
    - **Problema:** botones de acción con color poco visible.
    - **Solución:** se subió saturación, contraste y glow en botones de acción; se movieron acciones arriba junto al cierre para lectura rápida.
+
+## Auditoría técnica (2026-03-08)
+
+1. **Quality gates**
+   - `pnpm lint`: OK.
+   - `pnpm build`: OK.
+   - `pnpm test`: con fallos activos (ver tests de referencia abajo).
+
+2. **Tests con regresión detectada**
+   - `src/components/game/board/Board.test.tsx`
+   - `src/components/game/board/hooks/useBoard.battle-position.integration.test.ts`
+   - `src/components/game/board/ui/DuelResultOverlay.test.tsx`
+   - `src/core/use-cases/game-engine/effects/resolve-execution-return.integration.test.ts`
+   - `src/core/use-cases/game-engine/fusion/fuse-cards.rules.integration.test.ts`
+
+3. **Deuda técnica estructural pendiente (regla <150 líneas)**
+   - `src/components/game/board/index.tsx`
+   - `src/components/game/board/ui/DuelResultOverlay.tsx`
+   - ✅ `src/components/game/board/ui/overlays/BoardStatusOverlays.tsx` quedó dividido por SRP en:
+     - `ui/overlays/internal/BoardErrorOverlay.tsx`
+     - `ui/overlays/internal/BoardZoneBrowsers.tsx`
+   - Pendiente: seguir fragmentación de `index.tsx` y `DuelResultOverlay.tsx` para cumplir umbral estricto.

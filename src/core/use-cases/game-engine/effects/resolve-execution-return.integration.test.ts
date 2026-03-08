@@ -79,7 +79,9 @@ describe("resolveExecution return effects", () => {
     state = { ...state, playerA: { ...state.playerA, hand: [effectCard, ...extraHandCards], graveyard: [{ ...extraHandCards[0], id: "grave-entity" }] } };
     state = GameEngine.playCard(state, "p1", "exec-return-hand", "ACTIVATE");
     const executionId = state.playerA.activeExecutions[0].instanceId;
-    const next = GameEngine.resolveExecution(state, "p1", executionId);
+    const withPending = GameEngine.resolveExecution(state, "p1", executionId);
+    expect(withPending.pendingTurnAction?.type).toBe("SELECT_GRAVEYARD_CARD");
+    const next = GameEngine.resolvePendingTurnAction(withPending, "p1", "grave-entity");
     expect(next.playerA.hand.some((card) => card.id === "grave-entity")).toBe(true);
     expect((next.playerA.destroyedPile ?? []).length).toBe(1);
     expect(next.combatLog.some((event) => event.eventType === "CARD_TO_DESTROYED")).toBe(true);
@@ -106,7 +108,9 @@ describe("resolveExecution return effects", () => {
     };
     state = GameEngine.playCard(state, "p1", "exec-return-field", "ACTIVATE");
     const executionId = state.playerA.activeExecutions[0].instanceId;
-    const next = GameEngine.resolveExecution(state, "p1", executionId);
+    const withPending = GameEngine.resolveExecution(state, "p1", executionId);
+    expect(withPending.pendingTurnAction?.type).toBe("SELECT_GRAVEYARD_CARD");
+    const next = GameEngine.resolvePendingTurnAction(withPending, "p1", "grave-target");
     expect(next.playerA.activeEntities.some((entity) => entity.card.id === "grave-target")).toBe(true);
     expect((next.playerA.destroyedPile ?? []).some((card) => card.id === "field-1")).toBe(true);
   });

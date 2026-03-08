@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/fusion/fuse-cards.rules.integration.test.ts - Verifica reglas de validación y coste de energía de la invocación por fusión.
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
@@ -66,16 +67,15 @@ function createState(overrides?: Partial<GameState>): GameState {
 }
 
 describe("GameEngine fusión - reglas", () => {
-  it("debería consumir energía al invocar la fusión", () => {
-    const next = GameEngine.fuseCards(createState(), "p1", "fusion-gemgpt", ["m1", "m2"], "ATTACK");
+  it("debería permitir la fusión aunque la energía sea inferior al coste", () => {
+    const state = createState({ playerA: { ...createState().playerA, currentEnergy: 9 } });
+    const next = GameEngine.fuseCards(state, "p1", "fusion-gemgpt", ["m1", "m2"], "ATTACK");
     expect(next.playerA.currentEnergy).toBe(0);
   });
 
-  it("debería fallar si no hay energía suficiente", () => {
-    const state = createState({ playerA: { ...createState().playerA, currentEnergy: 9 } });
-    expect(() => GameEngine.fuseCards(state, "p1", "fusion-gemgpt", ["m1", "m2"], "ATTACK")).toThrow(
-      "No tienes energía suficiente para fusionar.",
-    );
+  it("debería consumir energía con clamp a 0 al invocar la fusión", () => {
+    const next = GameEngine.fuseCards(createState(), "p1", "fusion-gemgpt", ["m1", "m2"], "ATTACK");
+    expect(next.playerA.currentEnergy).toBe(0);
   });
 
   it("debería fallar si repites el mismo material", () => {

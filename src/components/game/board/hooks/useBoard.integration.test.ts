@@ -1,11 +1,23 @@
 // src/components/game/board/hooks/useBoard.integration.test.ts - Pruebas de integración del hook principal del tablero.
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ICard } from "@/core/entities/ICard";
 import { useBoard } from "./useBoard";
 
 function createMouseEvent(): React.MouseEvent {
   return { stopPropagation: vi.fn() } as unknown as React.MouseEvent;
 }
+
+const integrationEntityCard: ICard = {
+  id: "entity-integration-alpha",
+  name: "Integration Alpha",
+  description: "Carta estable para pruebas de integración del hook.",
+  type: "ENTITY",
+  faction: "NEUTRAL",
+  cost: 2,
+  attack: 1200,
+  defense: 1000,
+};
 
 describe("useBoard integración", () => {
   beforeEach(() => {
@@ -136,18 +148,16 @@ describe("useBoard integración", () => {
   });
 
   it("debería cambiar a DEFENSE al pulsar dos veces la misma entidad atacante en BATTLE", async () => {
-    const { result } = renderHook(() => useBoard());
-    let entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
-    for (let attempt = 0; attempt < 8 && !entityCard; attempt += 1) {
-      act(() => {
-        result.current.restartMatch();
-      });
-      entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
-    }
+    const forcedDeck: ICard[] = Array.from({ length: 20 }, (_, index) => ({
+      ...integrationEntityCard,
+      id: `${integrationEntityCard.id}-${index}`,
+      name: `${integrationEntityCard.name} ${index + 1}`,
+      runtimeId: `integration-entity-${index + 1}`,
+    }));
+    const { result } = renderHook(() => useBoard(forcedDeck));
+    const entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
     expect(entityCard).toBeDefined();
-    if (!entityCard) {
-      throw new Error("Se requiere una entidad en mano para este test.");
-    }
+    if (!entityCard) throw new Error("Se requiere una entidad en mano para este test.");
 
     act(() => {
       result.current.toggleCardSelection(entityCard, createMouseEvent());
