@@ -11,6 +11,7 @@ import { CardBack } from "@/components/game/card/CardBack";
 import { resolveEntityMotionState } from "./entity-motion";
 import { resolveEntityVisibility } from "./entity-visibility";
 import { SummonHologramVfx } from "./SummonHologramVfx";
+import { ExecutionActivateButton } from "./ExecutionActivateButton";
 import { CardFloatingQueueVfx } from "../CardFloatingQueueVfx";
 import { ExecutionActivationVfx } from "../ExecutionActivationVfx";
 
@@ -48,9 +49,7 @@ interface IXpFloatingEvent {
   type: "XP";
   amount: number;
 }
-
 type FloatingEvent = IStatFloatingEvent | IXpFloatingEvent;
-
 function buildFloatingEvents(
   entity: IBoardEntity | null,
   buffEventId: string | null,
@@ -71,7 +70,6 @@ function buildFloatingEvents(
   }
   return events;
 }
-
 export function SlotCell({
   index,
   entity,
@@ -108,7 +106,6 @@ export function SlotCell({
   const visibility = resolveEntityVisibility(entity ?? undefined, isRevealed);
   const motionState = resolveEntityMotionState({ isAttacking, isActivating, isOpponentSide, isHorizontal: visibility.isHorizontal });
   const targetX = -120 - index * 105;
-
   return (
     <div data-slot-index={index} style={{ transformStyle: "preserve-3d" }} className="relative w-24 h-36 border-2 border-cyan-500/30 rounded-lg bg-cyan-950/40 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.15)_inset] group hover:border-cyan-300 transition-colors duration-300">
       {entity && <ExecutionActivationVfx entity={entity} isOpponentSide={isOpponentSide} />}
@@ -127,6 +124,7 @@ export function SlotCell({
             data-board-entity-instance-id={entity.instanceId}
             onClick={(event) => onEntityClick(entity, isOpponentSide, event)}
           >
+            {isExecutionSelectedForActivation && <ExecutionActivateButton onActivateSelectedExecution={onActivateSelectedExecution} />}
             {visibility.isFaceDown ? (
               <div className="absolute w-full h-full flex items-center justify-center">
                 <CardBack isHorizontal={visibility.isHorizontal} />
@@ -138,18 +136,6 @@ export function SlotCell({
                 <Card card={entity.card} isSelected={selectedCard?.id === entity.card.id} boardMode={!visibility.isFaceDown && entity.mode === "SET" && entity.card.type === "ENTITY" ? "DEFENSE" : (entity.mode as BattleMode)} />
                 {isActivating && <motion.div initial={{ opacity: 0, scale: 0 }} animate={{ opacity: [0, 1, 0], scale: [1, 2.5] }} transition={{ duration: 0.5 }} className="absolute inset-0 bg-white rounded-xl mix-blend-overlay z-50" />}
                 {isSelected && <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-black rounded-md bg-cyan-300 text-cyan-950 shadow-[0_0_14px_rgba(34,211,238,0.9)]">MATERIAL</span>}
-                {isExecutionSelectedForActivation && (
-                  <button
-                    aria-label="Activar ejecución seleccionada"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onActivateSelectedExecution();
-                    }}
-                    className="absolute -top-10 left-1/2 -translate-x-1/2 z-[120] rounded-md border border-fuchsia-300/80 bg-fuchsia-700/85 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-[0_0_16px_rgba(217,70,239,0.55)] hover:bg-fuchsia-600"
-                  >
-                    Activar
-                  </button>
-                )}
               </div>
             )}
           </motion.div>

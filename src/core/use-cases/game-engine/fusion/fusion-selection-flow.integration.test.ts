@@ -97,4 +97,12 @@ describe("GameEngine flujo de selección de fusión", () => {
     expect(state.playerA.activeEntities.some((entity) => entity.card.id === "fusion-gemgpt")).toBe(true);
     expect(state.playerA.graveyard.map((card) => card.id)).toEqual(expect.arrayContaining(["entity-chatgpt", "entity-gemini"]));
   });
+
+  it("debería fallar sin bloquear si no hay 2 materiales válidos", () => {
+    const state = createState();
+    state.playerA.activeEntities = [createEntity("m1", "entity-chatgpt"), createEntity("mX", "entity-otro")];
+    expect(() => GameEngine.startFusionSummon(state, "p1", "fusion-gemgpt", "ATTACK")).toThrow(
+      "No puedes fusionar: faltan materiales válidos en el campo.",
+    );
+  });
 });
