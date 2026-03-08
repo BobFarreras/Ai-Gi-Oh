@@ -29,6 +29,7 @@ type MatchNarrationAction =
 
 const initialState: IMatchNarrationState = { queue: [], activeAction: null, hudDialogueByPlayerId: {} };
 const RESULT_NARRATION_DELAY_MS = 1900;
+const CINEMATIC_ENTRY_DELAY_MS = 320;
 
 function reducer(state: IMatchNarrationState, action: MatchNarrationAction): IMatchNarrationState {
   if (action.type === "ENQUEUE") {
@@ -103,16 +104,25 @@ export function useMatchNarration({ combatLog, winnerPlayerId, playerId, opponen
 
   useEffect(() => {
     if (!state.activeAction) return;
-    if (!isMuted && state.activeAction.line.audioUrl) {
-      audioRef.current?.pause();
-      audioRef.current = new Audio(state.activeAction.line.audioUrl);
-      audioRef.current.volume = 0.7;
-      void audioRef.current.play().catch(() => undefined);
+    const activeAction = state.activeAction;
+    const audioDelay = activeAction.line.channel === "CINEMATIC" ? CINEMATIC_ENTRY_DELAY_MS : 0;
+    let audioTimeout: number | null = null;
+    if (!isMuted && activeAction.line.audioUrl) {
+      audioTimeout = window.setTimeout(() => {
+        audioRef.current?.pause();
+        audioRef.current = new Audio(activeAction.line.audioUrl!);
+        audioRef.current.volume = 0.7;
+        void audioRef.current.play().catch(() => undefined);
+      }, audioDelay);
     }
+    const clearDelay = activeAction.line.channel === "CINEMATIC" ? CINEMATIC_ENTRY_DELAY_MS : 0;
     const timeout = window.setTimeout(() => {
       dispatch({ type: "CLEAR_ACTIVE" });
-    }, state.activeAction.line.durationMs ?? (state.activeAction.line.channel === "HUD" ? 1800 : 3200));
-    return () => window.clearTimeout(timeout);
+    }, (activeAction.line.durationMs ?? (activeAction.line.channel === "HUD" ? 1800 : 3200)) + clearDelay);
+    return () => {
+      if (audioTimeout) window.clearTimeout(audioTimeout);
+      window.clearTimeout(timeout);
+    };
   }, [isMuted, state.activeAction]);
 
   useEffect(() => () => audioRef.current?.pause(), []);
