@@ -115,9 +115,6 @@ describe('Componente UI: Board y Subcomponentes', () => {
       playTimerWarning: vi.fn(),
       playButtonClick: vi.fn(),
       playBanner: vi.fn(),
-      pendingGraveyardSelection: null,
-      pendingDestroyedSelection: null,
-      pendingFusionSummon: null,
     });
   });
 

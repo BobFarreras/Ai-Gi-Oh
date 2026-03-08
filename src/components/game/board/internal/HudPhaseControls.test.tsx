@@ -1,5 +1,6 @@
 // src/components/game/board/internal/HudPhaseControls.test.tsx - Verifica estados y transición de botones de fase en HUD del jugador.
 import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { HudPhaseControls } from "./HudPhaseControls";
 
 describe("HudPhaseControls", () => {
