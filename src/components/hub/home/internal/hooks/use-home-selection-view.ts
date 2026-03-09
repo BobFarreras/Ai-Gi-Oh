@@ -27,6 +27,9 @@ interface IUseHomeSelectionViewInput {
   evolutionOverlay: IHomeEvolutionOverlayState | null;
 }
 
+/**
+ * Deriva la vista seleccionada y permisos de acción a partir de estado bruto del deck/colección.
+ */
 export function useHomeSelectionView(input: IUseHomeSelectionViewInput) {
   const {
     deck,
@@ -48,6 +51,7 @@ export function useHomeSelectionView(input: IUseHomeSelectionViewInput) {
     if (selectedSlotIndex === null) return null;
     return deck.slots[selectedSlotIndex]?.cardId ?? null;
   }, [deck.fusionSlots, deck.slots, selectedCollectionCardId, selectedFusionSlotIndex, selectedSlotIndex]);
+  // Copias "storage" = copias en colección no asignadas actualmente al deck/fusión.
   const selectedCard = selectedCardId ? cardById.get(selectedCardId) ?? null : null;
   const selectedSlotHasCard = selectedSlotIndex !== null && deck.slots[selectedSlotIndex].cardId !== null;
   const selectedFusionSlotHasCard = selectedFusionSlotIndex !== null && deck.fusionSlots[selectedFusionSlotIndex].cardId !== null;
@@ -65,12 +69,14 @@ export function useHomeSelectionView(input: IUseHomeSelectionViewInput) {
     : null;
   const firstEmptyFusionSlotIndex = deck.fusionSlots.findIndex((slot) => slot.cardId === null);
   const targetFusionSlotIndex = selectedFusionSlotIndex ?? (firstEmptyFusionSlotIndex >= 0 ? firstEmptyFusionSlotIndex : null);
+  // Inserción válida según tipo, límite de duplicados y disponibilidad real en storage.
   const canInsertSelectedCard = Boolean(selectedCollectionCardId) && (
     selectedCollectionCardType === "FUSION"
       ? targetFusionSlotIndex !== null && selectedCardStorageCopies > 0
       : selectedCollectionCardType !== "FUSION" && selectedCardDeckCopies < HOME_MAX_DUPLICATES && selectedCardStorageCopies > 0
   );
   const copiesRequiredToEvolve = selectedCardId ? getCopiesNeededForNextVersion(selectedCardVersionTier) : null;
+  // Evolución solo si hay copias suficientes y no hay overlay activo para evitar doble submit.
   const canEvolveSelectedCard =
     Boolean(selectedCardId) &&
     copiesRequiredToEvolve !== null &&

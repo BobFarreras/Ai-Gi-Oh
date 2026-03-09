@@ -6,6 +6,9 @@ interface IDeckMutationGuard {
   isLatestMutation: (mutationId: number) => boolean;
 }
 
+/**
+ * Evita aplicar respuestas asíncronas obsoletas cuando hay múltiples mutaciones encadenadas.
+ */
 export function useDeckMutationGuard(): IDeckMutationGuard {
   const deckMutationIdRef = useRef(0);
   const beginMutation = (): number => {

@@ -20,6 +20,9 @@ interface IUseHomeDeckBuilderActionsInput extends IHomeActionDeps {
   selectedCardProgress: IPlayerCardProgress | null;
 }
 
+/**
+ * Orquesta acciones de alto nivel del builder reutilizando casos de uso UI desacoplados.
+ */
 export function useHomeDeckBuilderActions(input: IUseHomeDeckBuilderActionsInput) {
   const handleInsertSelectedCard = async (): Promise<IHomeActionResult> =>
     handleHomeInsertSelectedCard({

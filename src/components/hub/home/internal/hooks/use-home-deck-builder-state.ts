@@ -14,6 +14,9 @@ interface IUseHomeDeckBuilderStateInput {
   initialCardProgress: IPlayerCardProgress[];
 }
 
+/**
+ * Centraliza estado mutable del builder y conecta derivados de selección en una sola salida tipada.
+ */
 export function useHomeDeckBuilderState(input: IUseHomeDeckBuilderStateInput) {
   const [deck, setDeck] = useState<IDeck>(input.initialDeck);
   const [collectionState, setCollectionState] = useState<ICollectionCard[]>(input.collection);
@@ -30,6 +33,7 @@ export function useHomeDeckBuilderState(input: IUseHomeDeckBuilderStateInput) {
   const [orderDirection, setOrderDirection] = useState<HomeCollectionOrderDirection>("ASC");
   const [evolutionOverlay, setEvolutionOverlay] = useState<IHomeEvolutionOverlayState | null>(null);
   const [draggedCard, setDraggedCard] = useState<IHomeDraggedCardState | null>(null);
+  // Contexto único que consumen acciones y handlers para mantener consistencia de snapshot.
   const context = { playerId: input.playerId, deck, collection: collectionState };
   const deckCardCount = useMemo(() => deck.slots.filter((slot) => slot.cardId !== null).length, [deck.slots]);
   const selectionView = useHomeSelectionView({

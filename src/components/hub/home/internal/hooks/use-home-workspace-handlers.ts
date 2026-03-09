@@ -3,10 +3,8 @@ import { Dispatch, DragEvent, SetStateAction } from "react";
 import { IDeck } from "@/core/entities/home/IDeck";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IHomeDraggedCardState } from "@/components/hub/home/internal/types/home-deck-builder-types";
-import { handleHomeDropOnDeckSlot } from "@/components/hub/home/internal/dnd/handle-home-drop-on-deck-slot";
-import { handleHomeDropOnFusionSlot } from "@/components/hub/home/internal/dnd/handle-home-drop-on-fusion-slot";
-import { handleHomeDropOnCollectionArea } from "@/components/hub/home/internal/dnd/handle-home-drop-on-collection-area";
 import { IHomeDeckActionContext } from "@/components/hub/home/internal/actions/home-action-deps";
+import { createHomeDropHandlers } from "@/components/hub/home/internal/hooks/create-home-drop-handlers";
 
 interface IUseHomeWorkspaceHandlersInput {
   deck: IDeck;
@@ -28,6 +26,9 @@ interface IUseHomeWorkspaceHandlersInput {
   resolveActionErrorMessage: (error: unknown, fallback: string) => string;
 }
 
+/**
+ * Expone handlers de selección y drag&drop del builder sin mezclar reglas de dominio.
+ */
 export function useHomeWorkspaceHandlers(input: IUseHomeWorkspaceHandlersInput) {
   const {
     deck,
@@ -48,6 +49,7 @@ export function useHomeWorkspaceHandlers(input: IUseHomeWorkspaceHandlersInput) 
     setSelectedCollectionCardId,
     resolveActionErrorMessage,
   } = input;
+  // La selección es mutuamente excluyente para evitar ambigüedad entre slot, fusión y colección.
   const onSelectSlot = (slotIndex: number) => {
     setErrorMessage(null);
     setSelectedCollectionCardId(null);
@@ -86,60 +88,22 @@ export function useHomeWorkspaceHandlers(input: IUseHomeWorkspaceHandlersInput) 
     event.dataTransfer.effectAllowed = "move";
     setDraggedCard({ cardId, source: "FUSION", slotIndex });
   };
-  const onDropOnDeckSlot = async (slotIndex: number, event: DragEvent<HTMLElement>) => {
-    await handleHomeDropOnDeckSlot({
-      slotIndex,
-      event,
-      draggedCard,
-      deck,
-      collectionState,
-      context,
-      play,
-      beginMutation,
-      isLatestMutation,
-      setDeck,
-      setDraggedCard,
-      setErrorMessage,
-      setSelectedSlotIndex,
-      setSelectedCollectionCardId,
-      resolveActionErrorMessage,
-    });
-  };
-  const onDropOnFusionSlot = async (slotIndex: number, event: DragEvent<HTMLElement>) => {
-    await handleHomeDropOnFusionSlot({
-      slotIndex,
-      event,
-      draggedCard,
-      deck,
-      collectionState,
-      context,
-      play,
-      beginMutation,
-      isLatestMutation,
-      setDeck,
-      setDraggedCard,
-      setErrorMessage,
-      setSelectedFusionSlotIndex,
-      setSelectedCollectionCardId,
-      resolveActionErrorMessage,
-    });
-  };
-  const onDropOnCollectionArea = async (event: DragEvent<HTMLElement>) => {
-    await handleHomeDropOnCollectionArea({
-      event,
-      draggedCard,
-      deck,
-      collectionState,
-      context,
-      play,
-      beginMutation,
-      isLatestMutation,
-      setDeck,
-      setDraggedCard,
-      setErrorMessage,
-      resolveActionErrorMessage,
-    });
-  };
+  const { onDropOnDeckSlot, onDropOnFusionSlot, onDropOnCollectionArea } = createHomeDropHandlers({
+    draggedCard,
+    deck,
+    collectionState,
+    context,
+    play,
+    beginMutation,
+    isLatestMutation,
+    setDeck,
+    setDraggedCard,
+    setErrorMessage,
+    setSelectedSlotIndex,
+    setSelectedFusionSlotIndex,
+    setSelectedCollectionCardId,
+    resolveActionErrorMessage,
+  });
   return {
     onSelectSlot,
     onSelectFusionSlot,
