@@ -1,9 +1,9 @@
 // src/components/game/board/ui/internal/duel-result-overlay/DuelResultDesktopContent.tsx - Layout desktop del overlay con recompensas y lista de progreso.
 import type { IAppliedCardExperienceResult } from "@/core/use-cases/progression/ApplyBattleCardExperienceUseCase";
 import { ICard } from "@/core/entities/ICard";
-import { DuelResultCardDensity } from "@/components/game/board/ui/internal/duel-result-card-density";
-import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result-reward-summary";
-import { DuelResultRewardsPanel } from "@/components/game/board/ui/internal/DuelResultRewardsPanel";
+import { DuelResultCardDensity } from "@/components/game/board/ui/internal/duel-result/duel-result-card-density";
+import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result/duel-result-reward-summary";
+import { DuelResultRewardsPanel } from "@/components/game/board/ui/internal/duel-result/DuelResultRewardsPanel";
 import { DuelResultActionButton } from "@/components/game/board/ui/internal/duel-result-overlay/DuelResultActionButton";
 import { DuelResultExperienceContent } from "@/components/game/board/ui/internal/duel-result-overlay/DuelResultExperienceContent";
 
@@ -55,3 +55,4 @@ export function DuelResultDesktopContent({
     </>
   );
 }
+

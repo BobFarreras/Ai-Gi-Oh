@@ -1,4 +1,4 @@
-// src/components/hub/home/internal/optimistic-deck-updates.ts - Helpers de actualización optimista del deck para respuesta inmediata en Mi Home.
+// src/components/hub/home/internal/optimistic/optimistic-deck-updates.ts - Helpers de actualización optimista del deck para respuesta inmediata en Mi Home.
 import { IDeck } from "@/core/entities/home/IDeck";
 
 export function applyOptimisticAddToDeck(deck: IDeck, cardId: string): IDeck {

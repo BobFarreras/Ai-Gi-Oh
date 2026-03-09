@@ -8,8 +8,8 @@
 3. `hooks/`: estado/orquestación/handlers de interacción del contenedor.
 4. `types/`: contratos compartidos del módulo.
 5. `view/`: vista presentacional + builder de props de UI.
-6. Archivos raíz:
-`optimistic-deck-updates.ts` y `home-action-error-message.ts` como utilidades transversales internas.
+6. `optimistic/`: helpers y tests de actualización optimista.
+7. `errors/`: normalización de errores para UX.
 
 ## Regla de uso
 

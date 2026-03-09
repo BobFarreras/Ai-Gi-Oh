@@ -1,4 +1,4 @@
-// src/components/game/board/ui/internal/use-duel-card-experience-animation.ts - Anima progreso de EXP del overlay nivel a nivel para cada carta.
+// src/components/game/board/ui/internal/duel-result/use-duel-card-experience-animation.ts - Anima progreso de EXP del overlay nivel a nivel para cada carta.
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -71,3 +71,4 @@ export function useDuelCardExperienceAnimation(input: IUseDuelCardExperienceAnim
     levelUpPulseTick,
   };
 }
+

@@ -1,6 +1,6 @@
-// src/components/game/board/ui/internal/banner-message-policy.ts - Resuelve la política latest-wins para mensajes del banner central del combate.
+// src/components/game/board/ui/internal/banner/banner-message-policy.ts - Resuelve la política latest-wins para mensajes del banner central del combate.
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
-import { buildBannerMessage } from "../../internal/combatLogPresentation";
+import { buildBannerMessage } from "../../../internal/combatLogPresentation";
 
 export interface IBattleBannerMessage {
   id: string;
@@ -37,3 +37,4 @@ export function resolveLatestBannerMessage({
   const merged = externalBannerSignal ? [...eventMessages, externalBannerSignal] : eventMessages;
   return merged.length > 0 ? merged[merged.length - 1] : null;
 }
+

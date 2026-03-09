@@ -103,7 +103,6 @@ export function HomeCardInspectorDialog({
       setPendingAction(null);
     }
   };
-
   return (
     <MobileInspectorDialogShell
       isOpen={isOpen}

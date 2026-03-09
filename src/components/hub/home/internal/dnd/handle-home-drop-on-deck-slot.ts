@@ -1,7 +1,7 @@
 // src/components/hub/home/internal/dnd/handle-home-drop-on-deck-slot.ts - Gestiona drop sobre slots del deck principal en Arsenal.
 import { DragEvent } from "react";
 import { addCardToDeckSlotAction, removeCardFromDeckAction } from "@/services/home/deck-builder/deck-builder-actions";
-import { applyOptimisticAddToDeckSlot, applyOptimisticRemoveFromDeck } from "@/components/hub/home/internal/optimistic-deck-updates";
+import { applyOptimisticAddToDeckSlot, applyOptimisticRemoveFromDeck } from "@/components/hub/home/internal/optimistic/optimistic-deck-updates";
 import { IHomeDraggedCardState } from "@/components/hub/home/internal/types/home-deck-builder-types";
 import { IHomeDropHandlerDeps } from "@/components/hub/home/internal/dnd/home-drop-handler-deps";
 
@@ -112,3 +112,4 @@ export async function handleHomeDropOnDeckSlot(input: IHandleHomeDropOnDeckSlotI
     setDraggedCard(null);
   }
 }
+

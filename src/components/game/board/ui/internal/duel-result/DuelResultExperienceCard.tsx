@@ -1,4 +1,4 @@
-// src/components/game/board/ui/internal/DuelResultExperienceCard.tsx - Tarjeta de progreso animado por carta para el resumen final del duelo.
+// src/components/game/board/ui/internal/duel-result/DuelResultExperienceCard.tsx - Tarjeta de progreso animado por carta para el resumen final del duelo.
 "use client";
 
 import { motion } from "framer-motion";
@@ -105,3 +105,4 @@ export function DuelResultExperienceCard({ entry, card, density }: DuelResultExp
     </motion.article>
   );
 }
+

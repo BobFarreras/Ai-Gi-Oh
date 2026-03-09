@@ -1,7 +1,7 @@
 // src/components/hub/home/internal/dnd/handle-home-drop-on-collection-area.ts - Gestiona devolución de cartas al almacén desde deck principal o bloque de fusión.
 import { DragEvent } from "react";
 import { removeCardFromDeckAction, removeCardFromFusionDeckAction } from "@/services/home/deck-builder/deck-builder-actions";
-import { applyOptimisticRemoveFromDeck, applyOptimisticRemoveFromFusion } from "@/components/hub/home/internal/optimistic-deck-updates";
+import { applyOptimisticRemoveFromDeck, applyOptimisticRemoveFromFusion } from "@/components/hub/home/internal/optimistic/optimistic-deck-updates";
 import { IHomeDraggedCardState } from "@/components/hub/home/internal/types/home-deck-builder-types";
 import { IHomeDropHandlerDeps } from "@/components/hub/home/internal/dnd/home-drop-handler-deps";
 
@@ -58,3 +58,4 @@ export async function handleHomeDropOnCollectionArea(input: IHandleHomeDropOnCol
   }
   setDraggedCard(null);
 }
+

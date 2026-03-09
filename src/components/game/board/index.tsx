@@ -6,7 +6,7 @@ import { BoardInteractiveLayer } from "./ui/layers/BoardInteractiveLayer";
 import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
 import { ICreateInitialBoardStateInput } from "@/components/game/board/hooks/internal/boardInitialState";
-import { IDuelResultRewardSummary } from "./ui/internal/duel-result-reward-summary";
+import { IDuelResultRewardSummary } from "./ui/internal/duel-result/duel-result-reward-summary";
 import { IMatchNarrationPack } from "./narration/types";
 import { useBoardViewportMode } from "./hooks/internal/layout/use-board-viewport-mode";
 import { countRender } from "@/services/performance/dev-performance-telemetry";

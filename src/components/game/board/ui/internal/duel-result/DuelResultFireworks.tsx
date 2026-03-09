@@ -1,4 +1,4 @@
-// src/components/game/board/ui/internal/DuelResultFireworks.tsx - Efecto visual de fuegos artificiales para victorias en el overlay de resultado.
+// src/components/game/board/ui/internal/duel-result/DuelResultFireworks.tsx - Efecto visual de fuegos artificiales para victorias en el overlay de resultado.
 "use client";
 
 import { motion } from "framer-motion";
@@ -33,3 +33,4 @@ export function DuelResultFireworks({ isVisible }: DuelResultFireworksProps) {
     </div>
   );
 }
+

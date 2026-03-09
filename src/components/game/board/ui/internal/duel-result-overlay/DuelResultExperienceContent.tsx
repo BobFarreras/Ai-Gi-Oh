@@ -1,6 +1,6 @@
 // src/components/game/board/ui/internal/duel-result-overlay/DuelResultExperienceContent.tsx - Renderiza estado de carga/vacío/listado de cartas con EXP.
 import { motion } from "framer-motion";
-import { DuelResultExperienceCard } from "@/components/game/board/ui/internal/DuelResultExperienceCard";
+import { DuelResultExperienceCard } from "@/components/game/board/ui/internal/duel-result/DuelResultExperienceCard";
 import { IDuelResultExperienceContentProps } from "@/components/game/board/ui/internal/duel-result-overlay/types";
 
 export function DuelResultExperienceContent({
@@ -44,3 +44,4 @@ export function DuelResultExperienceContent({
     </div>
   );
 }
+

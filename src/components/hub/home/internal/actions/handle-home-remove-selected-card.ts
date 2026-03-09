@@ -1,6 +1,6 @@
 // src/components/hub/home/internal/actions/handle-home-remove-selected-card.ts - Resuelve retirada de carta seleccionada desde deck principal o bloque de fusión.
 import { removeCardFromDeckAction, removeCardFromFusionDeckAction } from "@/services/home/deck-builder/deck-builder-actions";
-import { applyOptimisticRemoveFromDeck, applyOptimisticRemoveFromFusion } from "@/components/hub/home/internal/optimistic-deck-updates";
+import { applyOptimisticRemoveFromDeck, applyOptimisticRemoveFromFusion } from "@/components/hub/home/internal/optimistic/optimistic-deck-updates";
 import { endInteraction, startInteraction } from "@/services/performance/dev-performance-telemetry";
 import { IHomeActionDeps } from "@/components/hub/home/internal/actions/home-action-deps";
 import { IHomeActionResult } from "@/components/hub/home/layout/home-workspace-types";
@@ -66,3 +66,4 @@ export async function handleHomeRemoveSelectedCard(input: IHandleHomeRemoveSelec
     return { ok: false, message };
   }
 }
+

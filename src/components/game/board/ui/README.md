@@ -45,19 +45,16 @@ Componentes visuales del tablero. Renderiza estado y eventos, sin reglas de domi
 4. `internal/combat-log-row/`
    - Helpers de presentación para filas del `CombatLog`.
 
-5. `internal/DuelResultRewardsPanel.tsx`
-   - Sidebar compacto con EXP/Nexus/regalo del jugador.
+5. `internal/duel-result/*`
+   - Piezas reutilizables del overlay de resultado (panel, fuegos, densidad, estado, tipos).
 
-6. `internal/DuelResultFireworks.tsx`
-   - Fuegos artificiales visuales en victoria.
+6. `internal/duel-result-overlay/*`
+   - Segmentación del contenedor por variantes mobile/desktop y utilidades de composición.
 
-7. `internal/duel-result-card-density.ts`
-   - Regla de densidad para ajustar el tamaño de cartas según cantidad.
+7. `internal/banner/*`
+   - Política de priorización de mensajes del banner central + tests.
 
-8. `internal/duel-result-overlay/*`
-   - Segmentación del overlay final por tipos, hook mobile y vistas desktop/mobile.
-
-9. `../narration/*`
+8. `../narration/*`
    - Contratos y selector de eventos narrativos desacoplados del motor.
 
 ## Reglas de módulo

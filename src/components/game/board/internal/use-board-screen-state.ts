@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
-import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result-reward-summary";
+import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result/duel-result-reward-summary";
 import { IMatchNarrationPack } from "@/components/game/board/narration/types";
 import { useMatchNarration } from "@/components/game/board/hooks/internal/match/useMatchNarration";
 import { startInteraction, endInteraction } from "@/services/performance/dev-performance-telemetry";
@@ -145,3 +145,4 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
 }
 
 export type IBoardScreenState = ReturnType<typeof useBoardScreenState>;
+

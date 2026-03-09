@@ -1,4 +1,4 @@
-// src/components/game/board/ui/internal/use-duel-result-overlay-state.ts - Centraliza estado y control visual del overlay final para mantener el componente de UI limpio.
+// src/components/game/board/ui/internal/duel-result/use-duel-result-overlay-state.ts - Centraliza estado y control visual del overlay final para mantener el componente de UI limpio.
 "use client";
 
 import { useMemo, useState } from "react";
@@ -43,3 +43,4 @@ export function useDuelResultOverlayState({
     handleAction,
   };
 }
+

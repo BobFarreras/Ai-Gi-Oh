@@ -4,7 +4,7 @@
 import { useRouter } from "next/navigation";
 import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
 import { countRender } from "@/services/performance/dev-performance-telemetry";
-import { resolveHomeActionErrorMessage } from "@/components/hub/home/internal/home-action-error-message";
+import { resolveHomeActionErrorMessage } from "@/components/hub/home/internal/errors/home-action-error-message";
 import { useDeckMutationGuard } from "@/components/hub/home/internal/hooks/use-deck-mutation-guard";
 import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { IHomeDeckBuilderSceneProps } from "@/components/hub/home/internal/types/home-deck-builder-types";
@@ -132,3 +132,4 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
   });
   return <HomeDeckBuilderSceneView {...viewProps} />;
 }
+

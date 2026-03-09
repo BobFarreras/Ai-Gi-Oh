@@ -1,6 +1,6 @@
 // src/components/hub/home/internal/actions/handle-home-insert-selected-card.ts - Resuelve la inserción de carta seleccionada en deck o bloque de fusión.
 import { addCardToDeckAction, addCardToFusionDeckAction } from "@/services/home/deck-builder/deck-builder-actions";
-import { applyOptimisticAddToDeck, applyOptimisticAddToFusionSlot } from "@/components/hub/home/internal/optimistic-deck-updates";
+import { applyOptimisticAddToDeck, applyOptimisticAddToFusionSlot } from "@/components/hub/home/internal/optimistic/optimistic-deck-updates";
 import { endInteraction, startInteraction } from "@/services/performance/dev-performance-telemetry";
 import { IHomeActionDeps } from "@/components/hub/home/internal/actions/home-action-deps";
 import { IHomeActionResult } from "@/components/hub/home/layout/home-workspace-types";
@@ -74,3 +74,4 @@ export async function handleHomeInsertSelectedCard(input: IHandleHomeInsertSelec
     return { ok: false, message };
   }
 }
+

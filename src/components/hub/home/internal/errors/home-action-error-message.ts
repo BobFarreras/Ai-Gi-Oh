@@ -1,4 +1,4 @@
-// src/components/hub/home/internal/home-action-error-message.ts - Traduce errores técnicos de acciones de Home a mensajes UX consistentes.
+// src/components/hub/home/internal/errors/home-action-error-message.ts - Traduce errores técnicos de acciones de Home a mensajes UX consistentes.
 export function resolveHomeActionErrorMessage(error: unknown, fallback: string): string {
   const rawMessage = error instanceof Error ? error.message : fallback;
   if (rawMessage.includes("20 cartas")) {

@@ -1,4 +1,4 @@
-// src/components/game/board/ui/internal/banner-message-policy.test.ts - Pruebas de política latest-wins para evitar cola atrasada de banners del combate.
+// src/components/game/board/ui/internal/banner/banner-message-policy.test.ts - Pruebas de política latest-wins para evitar cola atrasada de banners del combate.
 import { describe, expect, it } from "vitest";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { resolveLatestBannerMessage } from "./banner-message-policy";
@@ -40,3 +40,4 @@ describe("resolveLatestBannerMessage", () => {
     expect(result).toBeNull();
   });
 });
+

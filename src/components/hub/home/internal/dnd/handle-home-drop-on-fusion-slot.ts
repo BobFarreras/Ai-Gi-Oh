@@ -1,7 +1,7 @@
 // src/components/hub/home/internal/dnd/handle-home-drop-on-fusion-slot.ts - Gestiona drop sobre slots del bloque de fusión.
 import { DragEvent } from "react";
 import { addCardToFusionDeckAction, removeCardFromFusionDeckAction } from "@/services/home/deck-builder/deck-builder-actions";
-import { applyOptimisticAddToFusionSlot, applyOptimisticRemoveFromFusion } from "@/components/hub/home/internal/optimistic-deck-updates";
+import { applyOptimisticAddToFusionSlot, applyOptimisticRemoveFromFusion } from "@/components/hub/home/internal/optimistic/optimistic-deck-updates";
 import { IHomeDraggedCardState } from "@/components/hub/home/internal/types/home-deck-builder-types";
 import { IHomeDropHandlerDeps } from "@/components/hub/home/internal/dnd/home-drop-handler-deps";
 
@@ -112,3 +112,4 @@ export async function handleHomeDropOnFusionSlot(input: IHandleHomeDropOnFusionS
     setDraggedCard(null);
   }
 }
+

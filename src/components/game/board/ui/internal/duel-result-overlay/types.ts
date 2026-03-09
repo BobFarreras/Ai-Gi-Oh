@@ -1,9 +1,9 @@
 // src/components/game/board/ui/internal/duel-result-overlay/types.ts - Tipos compartidos para renderizar el overlay final del duelo.
 import { ICard } from "@/core/entities/ICard";
 import { IPlayer } from "@/core/entities/IPlayer";
-import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result-reward-summary";
+import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result/duel-result-reward-summary";
 import type { IAppliedCardExperienceResult } from "@/core/use-cases/progression/ApplyBattleCardExperienceUseCase";
-import { DuelResultCardDensity } from "@/components/game/board/ui/internal/duel-result-card-density";
+import { DuelResultCardDensity } from "@/components/game/board/ui/internal/duel-result/duel-result-card-density";
 
 export interface IDuelResultOverlayProps {
   winnerPlayerId: string | "DRAW" | null;
@@ -27,3 +27,4 @@ export interface IDuelResultExperienceContentProps {
   gridClassName: string;
   wrapperClassName: string;
 }
+

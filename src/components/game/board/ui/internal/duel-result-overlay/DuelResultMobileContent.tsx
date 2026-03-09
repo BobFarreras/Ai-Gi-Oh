@@ -1,6 +1,6 @@
 // src/components/game/board/ui/internal/duel-result-overlay/DuelResultMobileContent.tsx - Layout del resultado final optimizado para viewport móvil.
 import { Card } from "@/components/game/card/Card";
-import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result-reward-summary";
+import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result/duel-result-reward-summary";
 import type { IAppliedCardExperienceResult } from "@/core/use-cases/progression/ApplyBattleCardExperienceUseCase";
 import { ICard } from "@/core/entities/ICard";
 import { DuelResultActionButton } from "@/components/game/board/ui/internal/duel-result-overlay/DuelResultActionButton";
@@ -67,3 +67,4 @@ export function DuelResultMobileContent({
     </>
   );
 }
+

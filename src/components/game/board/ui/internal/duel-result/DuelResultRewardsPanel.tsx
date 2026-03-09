@@ -1,4 +1,4 @@
-// src/components/game/board/ui/internal/DuelResultRewardsPanel.tsx
+// src/components/game/board/ui/internal/duel-result/DuelResultRewardsPanel.tsx
 "use client";
 
 import { motion } from "framer-motion";

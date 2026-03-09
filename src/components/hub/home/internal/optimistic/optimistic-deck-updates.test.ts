@@ -1,7 +1,7 @@
-// src/components/hub/home/internal/optimistic-deck-updates.test.ts - Valida inserción y retirada optimista de cartas en deck.
+// src/components/hub/home/internal/optimistic/optimistic-deck-updates.test.ts - Valida inserción y retirada optimista de cartas en deck.
 import { describe, expect, it } from "vitest";
 import { IDeck } from "@/core/entities/home/IDeck";
-import { applyOptimisticAddToDeck, applyOptimisticRemoveFromDeck } from "@/components/hub/home/internal/optimistic-deck-updates";
+import { applyOptimisticAddToDeck, applyOptimisticRemoveFromDeck } from "@/components/hub/home/internal/optimistic/optimistic-deck-updates";
 
 function createDeck(): IDeck {
   return {
@@ -28,3 +28,4 @@ describe("optimistic-deck-updates", () => {
     expect(updatedDeck.slots[0].cardId).toBeNull();
   });
 });
+

@@ -2,8 +2,8 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { DuelResultFireworks } from "@/components/game/board/ui/internal/DuelResultFireworks";
-import { useDuelResultOverlayState } from "@/components/game/board/ui/internal/use-duel-result-overlay-state";
+import { DuelResultFireworks } from "@/components/game/board/ui/internal/duel-result/DuelResultFireworks";
+import { useDuelResultOverlayState } from "@/components/game/board/ui/internal/duel-result/use-duel-result-overlay-state";
 import { IDuelResultOverlayProps } from "@/components/game/board/ui/internal/duel-result-overlay/types";
 import { resolveDuelResultText } from "@/components/game/board/ui/internal/duel-result-overlay/resolve-duel-result-text";
 import { useDuelResultMobileState } from "@/components/game/board/ui/internal/duel-result-overlay/use-duel-result-mobile";
@@ -90,3 +90,4 @@ export function DuelResultOverlay({
     </AnimatePresence>
   );
 }
+
