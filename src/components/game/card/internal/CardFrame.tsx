@@ -15,6 +15,7 @@ export function CardFrame({
   isOnBoard,
   disableHoverEffects = false,
   disableDefaultShadow = false,
+  isPerformanceMode = false,
   onClick,
   versionTier,
   level,
@@ -29,7 +30,7 @@ export function CardFrame({
 
   return (
     <>
-      <CardFrameMasteryAura isActive={isMasteryTier} />
+      <CardFrameMasteryAura isActive={isMasteryTier && !isPerformanceMode} />
       <div
         onClick={() => onClick?.(card)}
         style={{ clipPath: CARD_CLIP_PATHS.outer }}
@@ -44,14 +45,17 @@ export function CardFrame({
           style={{ clipPath: CARD_CLIP_PATHS.inner }}
           className={cn("relative flex h-full w-full flex-col justify-between overflow-hidden bg-gradient-to-br", factionStyles.inner)}
         >
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.03)_50%,transparent_100%)] bg-[length:200%_200%] animate-[pulse_4s_ease-in-out_infinite]" />
-          <CardFrameHeader card={card} versionTier={versionTier} />
+          {!isPerformanceMode ? (
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.03)_50%,transparent_100%)] bg-[length:200%_200%] animate-[pulse_4s_ease-in-out_infinite]" />
+          ) : null}
+          <CardFrameHeader card={card} versionTier={versionTier} isPerformanceMode={isPerformanceMode} />
           <CardFrameArtAndProgress
             card={card}
             isOnBoard={isOnBoard}
             level={level}
             levelProgressWidth={levelProgressWidth}
             disableHoverEffects={disableHoverEffects}
+            isPerformanceMode={isPerformanceMode}
           />
           <CardFrameFooter card={card} descriptionText={descriptionText} />
         </div>

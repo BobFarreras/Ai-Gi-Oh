@@ -23,6 +23,7 @@ interface BattlefieldLanesProps {
   cardXpAmount: number | null;
   cardXpEventId: string | null;
   canActivateSelectedExecution: boolean;
+  isMobileLayout?: boolean;
   onActivateSelectedExecution: () => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: MouseEvent) => void;
 }
@@ -45,6 +46,7 @@ export function BattlefieldLanes({
   cardXpAmount,
   cardXpEventId,
   canActivateSelectedExecution,
+  isMobileLayout = false,
   onActivateSelectedExecution,
   onEntityClick,
 }: BattlefieldLanesProps) {
@@ -72,6 +74,7 @@ export function BattlefieldLanes({
           cardXpAmount={cardXpAmount}
           cardXpEventId={cardXpEventId}
           canActivateSelectedExecution={canActivateSelectedExecution}
+          isMobileLayout={isMobileLayout}
           onActivateSelectedExecution={onActivateSelectedExecution}
           onEntityClick={onEntityClick}
         />
@@ -96,6 +99,7 @@ export function BattlefieldLanes({
           cardXpAmount={cardXpAmount}
           cardXpEventId={cardXpEventId}
           canActivateSelectedExecution={canActivateSelectedExecution}
+          isMobileLayout={isMobileLayout}
           onActivateSelectedExecution={onActivateSelectedExecution}
           onEntityClick={onEntityClick}
         />

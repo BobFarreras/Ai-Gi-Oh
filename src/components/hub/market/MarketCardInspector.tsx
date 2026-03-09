@@ -12,22 +12,45 @@ import { MarketNexusSpendFloat } from "@/components/hub/market/internal/MarketNe
 interface MarketCardInspectorProps {
   selectedCard: ICard | null;
   selectedListing: IMarketCardListing | null;
-  isBuyingCard: boolean;
+  isCompactMode?: boolean;
   onBuyCard: (listingId: string) => Promise<boolean>;
 }
 
-export function MarketCardInspector({ selectedCard, selectedListing, isBuyingCard, onBuyCard }: MarketCardInspectorProps) {
+export function MarketCardInspector({ selectedCard, selectedListing, isCompactMode = false, onBuyCard }: MarketCardInspectorProps) {
   const [floatingSpendId, setFloatingSpendId] = useState(0);
+  const [isSubmittingPurchase, setIsSubmittingPurchase] = useState(false);
+  const [isCardRenderDeferred, setIsCardRenderDeferred] = useState(false);
   const floatingTimeoutRef = useRef<number | null>(null);
+  const deferredCardTimeoutRef = useRef<number | null>(null);
   useEffect(
     () => () => {
       if (floatingTimeoutRef.current === null) return;
       window.clearTimeout(floatingTimeoutRef.current);
+      if (deferredCardTimeoutRef.current !== null) window.clearTimeout(deferredCardTimeoutRef.current);
     },
     [],
   );
+  useEffect(() => {
+    if (!isCompactMode || !selectedCard) {
+      setIsCardRenderDeferred(false);
+      return;
+    }
+    setIsCardRenderDeferred(true);
+    if (deferredCardTimeoutRef.current !== null) window.clearTimeout(deferredCardTimeoutRef.current);
+    deferredCardTimeoutRef.current = window.setTimeout(() => {
+      setIsCardRenderDeferred(false);
+      deferredCardTimeoutRef.current = null;
+    }, 220);
+  }, [isCompactMode, selectedCard]);
   const handleBuyClick = async (listingId: string) => {
-    const wasBought = await onBuyCard(listingId);
+    if (isSubmittingPurchase) return;
+    setIsSubmittingPurchase(true);
+    let wasBought = false;
+    try {
+      wasBought = await onBuyCard(listingId);
+    } finally {
+      setIsSubmittingPurchase(false);
+    }
     if (!wasBought) return;
     setFloatingSpendId((previous) => previous + 1);
     if (floatingTimeoutRef.current !== null) window.clearTimeout(floatingTimeoutRef.current);
@@ -48,12 +71,19 @@ export function MarketCardInspector({ selectedCard, selectedListing, isBuyingCar
           <div className="home-modern-scroll flex-1 overflow-y-auto pr-2 pb-4">
             <div className="relative flex justify-center items-center w-full h-[260px] sm:h-[300px] mb-4 perspective-1000">
               <motion.div
-                whileHover={{ scale: 1.05, rotateY: 5, rotateX: 5 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                whileHover={isCompactMode ? {} : { scale: 1.05, rotateY: 5, rotateX: 5 }}
+                transition={isCompactMode ? { duration: 0.01 } : { type: "spring", stiffness: 300, damping: 20 }}
                 className="relative origin-center scale-[0.55] sm:scale-[0.65] md:scale-[0.70] shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
               >
-                <div className="absolute -inset-4 bg-cyan-400/20 blur-2xl rounded-full opacity-0 hover:opacity-100 transition-opacity duration-500" />
-                <Card card={selectedCard} />
+                {!isCompactMode ? <div className="absolute -inset-4 bg-cyan-400/20 blur-2xl rounded-full opacity-0 hover:opacity-100 transition-opacity duration-500" /> : null}
+                {isCardRenderDeferred ? <div className="h-[380px] w-[260px] rounded-lg border border-cyan-800/40 bg-[#071225]" /> : (
+                  <Card
+                    card={selectedCard}
+                    isPerformanceMode={isCompactMode}
+                    disableHoverEffects={isCompactMode}
+                    disableDefaultShadow={isCompactMode}
+                  />
+                )}
               </motion.div>
             </div>
 
@@ -112,20 +142,20 @@ export function MarketCardInspector({ selectedCard, selectedListing, isBuyingCar
 
                   <motion.button
                     type="button"
-                    disabled={!selectedListing.isAvailable || isBuyingCard}
+                    disabled={!selectedListing.isAvailable || isSubmittingPurchase}
                     onClick={() => handleBuyClick(selectedListing.id)}
-                    whileHover={selectedListing.isAvailable && !isBuyingCard ? { scale: 1.02 } : {}}
-                    whileTap={selectedListing.isAvailable && !isBuyingCard ? { scale: 0.98 } : {}}
+                    whileHover={!isCompactMode && selectedListing.isAvailable && !isSubmittingPurchase ? { scale: 1.02 } : {}}
+                    whileTap={!isCompactMode && selectedListing.isAvailable && !isSubmittingPurchase ? { scale: 0.98 } : {}}
                     className={`relative w-full flex items-center justify-center gap-2 py-3 sm:py-3.5 rounded-xl border text-xs font-black uppercase tracking-widest transition-all overflow-hidden group ${selectedListing.isAvailable
-                      ? `border-emerald-500/50 bg-emerald-950/40 text-emerald-300 ${isBuyingCard ? "cursor-wait opacity-75" : "hover:border-emerald-300 hover:bg-emerald-900/60 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] cursor-pointer"}`
+                      ? `border-emerald-500/50 bg-emerald-950/40 text-emerald-300 ${isSubmittingPurchase ? "cursor-wait opacity-75" : "hover:border-emerald-300 hover:bg-emerald-900/60 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] cursor-pointer"}`
                       : "border-zinc-800 bg-zinc-950/60 text-zinc-500 cursor-not-allowed"
                     }`}
                   >
                   {selectedListing.isAvailable ? (
                     <>
-                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/10 to-emerald-500/0 opacity-0 group-hover:opacity-100 group-hover:animate-[shine_1.5s_infinite] transition-opacity" />
+                      {!isCompactMode ? <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/10 to-emerald-500/0 opacity-0 group-hover:opacity-100 group-hover:animate-[shine_1.5s_infinite] transition-opacity" /> : null}
                       <ShoppingCart size={16} className="relative z-10" />
-                      <span className="relative z-10">{isBuyingCard ? "Procesando..." : "Comprar"}</span>
+                      <span className="relative z-10">{isSubmittingPurchase ? "Procesando..." : "Comprar"}</span>
                     </>
                   ) : (
                     <>

@@ -21,6 +21,7 @@ interface HomeMiniCardProps {
   onDragStart?: (event: DragEvent<HTMLElement>) => void;
   onDragOver?: (event: DragEvent<HTMLElement>) => void;
   onDrop?: (event: DragEvent<HTMLElement>) => void;
+  isPerformanceMode?: boolean;
 }
 
 export function HomeMiniCard({
@@ -38,6 +39,7 @@ export function HomeMiniCard({
   onDragStart,
   onDragOver,
   onDrop,
+  isPerformanceMode = false,
 }: HomeMiniCardProps) {
   const filledContainerClass = showSlotContainer
     ? isSelected
@@ -78,7 +80,16 @@ export function HomeMiniCard({
       {/* Contenedor centralizado para la miniatura */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className={`${cardScaleClass} origin-center`}>
-          <Card card={card} versionTier={versionTier} level={level} xp={xp} masteryPassiveLabel={masteryPassiveLabel} />
+          <Card
+            card={card}
+            versionTier={versionTier}
+            level={level}
+            xp={xp}
+            masteryPassiveLabel={masteryPassiveLabel}
+            disableHoverEffects={isPerformanceMode}
+            disableDefaultShadow={isPerformanceMode}
+            isPerformanceMode={isPerformanceMode}
+          />
         </div>
       </div>
     </Wrapper>

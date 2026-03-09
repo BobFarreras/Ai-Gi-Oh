@@ -7,9 +7,10 @@ import { resolveEntityArchetypeMeta, resolveTypeBadge } from "./card-frame-meta"
 interface CardFrameHeaderProps {
   card: ICard;
   versionTier: number;
+  isPerformanceMode?: boolean;
 }
 
-export function CardFrameHeader({ card, versionTier }: CardFrameHeaderProps) {
+export function CardFrameHeader({ card, versionTier, isPerformanceMode = false }: CardFrameHeaderProps) {
   const archetypeMeta = card.type === "ENTITY" ? resolveEntityArchetypeMeta(card.archetype) : null;
   const ArchetypeIcon = (archetypeMeta?.Icon ?? Bot) as typeof Bot;
 
@@ -17,13 +18,16 @@ export function CardFrameHeader({ card, versionTier }: CardFrameHeaderProps) {
     <div className="relative z-10 flex items-start justify-between px-2 pt-2">
       <div className="flex items-center gap-1.5">
         <div
-          className="z-10 flex h-12 w-12 shrink-0 items-center justify-center border border-yellow-500/80 bg-black font-black text-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.4)]"
+          className={cn(
+            "z-10 flex h-12 w-12 shrink-0 items-center justify-center border border-yellow-500/80 bg-black font-black text-yellow-400",
+            isPerformanceMode ? "" : "shadow-[0_0_15px_rgba(234,179,8,0.4)]",
+          )}
           style={{ clipPath: "polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px)" }}
         >
-          <Zap className="absolute h-8 w-8 opacity-20" />
+          {!isPerformanceMode ? <Zap className="absolute h-8 w-8 opacity-20" /> : null}
           <span className="relative z-10 text-xl">{card.cost}</span>
         </div>
-        <div className="ml-1 flex items-baseline drop-shadow-[0_0_12px_rgba(251,191,36,0.9)]">
+        <div className={cn("ml-1 flex items-baseline", isPerformanceMode ? "" : "drop-shadow-[0_0_12px_rgba(251,191,36,0.9)]")}>
           <span className="mr-0.5 text-sm font-black italic text-amber-500/90">V</span>
           <span className="text-3xl font-black italic leading-none tracking-tighter text-white">{versionTier}</span>
         </div>

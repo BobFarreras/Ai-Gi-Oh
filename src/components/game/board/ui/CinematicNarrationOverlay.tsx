@@ -38,7 +38,7 @@ export function CinematicNarrationOverlay({ action, playerId, playerAvatarUrl, o
                 className="relative h-[170px] w-[170px] shrink-0 overflow-visible bg-transparent"
               >
                 {avatarUrl ? (
-                  <Image src={avatarUrl} alt="Retrato de duelista" fill sizes="170px" className="object-contain drop-shadow-[0_0_24px_rgba(34,211,238,0.45)]" />
+                  <Image src={avatarUrl} alt="Retrato de duelista" fill sizes="170px" priority className="object-contain drop-shadow-[0_0_24px_rgba(34,211,238,0.45)]" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-sm font-black uppercase tracking-[0.15em] text-cyan-100">{isPlayerActor ? "YOU" : "CPU"}</div>
                 )}

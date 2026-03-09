@@ -1,3 +1,4 @@
+// src/components/game/card/internal/CardHologram.tsx - Renderiza la capa holográfica animada de cartas en tablero.
 "use client";
 
 import Image from "next/image";
@@ -9,14 +10,35 @@ import { cn } from "@/lib/utils";
 interface CardHologramProps {
   card: ICard;
   isDefense: boolean;
+  mode?: "full" | "lite";
   className?: string;
 }
 
-export function CardHologram({ card, isDefense, className }: CardHologramProps) {
+export function CardHologram({ card, isDefense, mode = "full", className }: CardHologramProps) {
   const isExecution = card.type === "EXECUTION";
 
   if (!card.renderUrl) {
     return null;
+  }
+
+  if (mode === "lite") {
+    return (
+      <div
+        className={cn("absolute inset-0 z-50 pointer-events-none", className)}
+        style={{ transformStyle: "preserve-3d", transform: "translateZ(12px)" }}
+      >
+        <div className="absolute inset-0 rounded-xl bg-cyan-500/8" />
+        <div className="absolute left-1/2 top-[10%] h-[72%] w-[72%] -translate-x-1/2 rounded-full bg-cyan-400/20 blur-2xl" />
+        <Image
+          src={card.renderUrl}
+          alt={`Render de ${card.name}`}
+          fill
+          sizes="180px"
+          quality={45}
+          className="object-contain opacity-85 drop-shadow-[0_0px_12px_rgba(0,0,0,0.7)]"
+        />
+      </div>
+    );
   }
 
   return (
@@ -74,7 +96,6 @@ export function CardHologram({ card, isDefense, className }: CardHologramProps) 
               fill
               className="object-contain drop-shadow-[0_0px_35px_rgba(0,0,0,0.9)]"
               style={{ transform: "translateZ(40px)" }}
-              priority 
             />
           </motion.div>
 

@@ -15,7 +15,6 @@ import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
 interface MarketDesktopGridProps {
   selectedCard: ICard | null;
   selectedListing: IMarketCardListing | null;
-  isBuyingCard: boolean;
   listings: IMarketCardListing[];
   packs: IMarketPackDefinition[];
   selectedPackId: string | null;
@@ -39,7 +38,6 @@ export function MarketDesktopGrid(props: MarketDesktopGridProps) {
         <MarketCardInspector
           selectedCard={props.selectedCard}
           selectedListing={props.selectedListing}
-          isBuyingCard={props.isBuyingCard}
           onBuyCard={props.onBuyCard}
         />
       </div>

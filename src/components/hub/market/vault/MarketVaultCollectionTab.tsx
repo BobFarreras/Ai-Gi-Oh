@@ -3,6 +3,7 @@
 
 import { motion } from "framer-motion";
 import { Card } from "@/components/game/card/Card";
+import { useProgressiveRenderLimit } from "@/components/hub/internal/useProgressiveRenderLimit";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { ICard } from "@/core/entities/ICard";
 
@@ -12,6 +13,8 @@ interface MarketVaultCollectionTabProps {
 }
 
 export function MarketVaultCollectionTab({ collection, onSelectCard }: MarketVaultCollectionTabProps) {
+  const renderLimit = useProgressiveRenderLimit({ total: collection.length, initialLimit: 16, step: 12, intervalMs: 70 });
+  const visibleCollection = collection.slice(0, renderLimit);
   return (
     <motion.div
       key="collection"
@@ -20,7 +23,7 @@ export function MarketVaultCollectionTab({ collection, onSelectCard }: MarketVau
       exit={{ opacity: 0, x: 10 }}
       className="grid w-full grid-cols-4 justify-items-center gap-2 pb-4 xl:grid-cols-3 xl:gap-3"
     >
-      {collection.map((entry) => (
+      {visibleCollection.map((entry) => (
         <article
           key={entry.card.id}
           onClick={() => onSelectCard(entry.card)}
@@ -29,7 +32,7 @@ export function MarketVaultCollectionTab({ collection, onSelectCard }: MarketVau
           <div className="pointer-events-none relative h-full w-full overflow-hidden rounded">
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="origin-center scale-[0.31]">
-                <Card card={entry.card} />
+                <Card card={entry.card} disableHoverEffects disableDefaultShadow isPerformanceMode />
               </div>
             </div>
           </div>

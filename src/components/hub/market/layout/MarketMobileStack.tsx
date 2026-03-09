@@ -1,7 +1,7 @@
 // src/components/hub/market/layout/MarketMobileStack.tsx - Layout móvil del mercado con paneles conmutables por pestañas.
 "use client";
 
-import { useMemo, useState, type PointerEvent } from "react";
+import { startTransition, useMemo, useState } from "react";
 import { MarketCardInspector } from "@/components/hub/market/MarketCardInspector";
 import { MobileInspectorDialogShell } from "@/components/hub/internal/MobileInspectorDialogShell";
 import { MarketListingsPanel } from "@/components/hub/market/listings/MarketListingsPanel";
@@ -20,7 +20,6 @@ type MobilePanel = "LISTINGS" | "PACKS" | "VAULT";
 interface MarketMobileStackProps {
   selectedCard: ICard | null;
   selectedListing: IMarketCardListing | null;
-  isBuyingCard: boolean;
   listings: IMarketCardListing[];
   packs: IMarketPackDefinition[];
   selectedPackId: string | null;
@@ -45,7 +44,7 @@ const PANEL_TABS: Array<{ id: MobilePanel; label: string }> = [
 export function MarketMobileStack(props: MarketMobileStackProps) {
   const [activePanel, setActivePanel] = useState<MobilePanel>("LISTINGS");
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
-  const [inspectorOrigin, setInspectorOrigin] = useState({ x: 0, y: 0 });
+  const inspectorOrigin = { x: 0, y: 0 };
   const { play } = useHubModuleSfx();
   const packListings = useMemo(() => {
     if (!props.selectedPackId) return [];
@@ -55,23 +54,23 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
     return props.catalogListings.filter((listing) => packCardIds.has(listing.card.id));
   }, [props.catalogListings, props.packs, props.selectedPackId]);
 
-  const capturePointerOrigin = (event: PointerEvent<HTMLDivElement>) => {
-    setInspectorOrigin({ x: event.clientX, y: event.clientY });
-  };
-
   const handleSelectListing = (listing: IMarketCardListing) => {
-    play("DETAIL_OPEN");
-    props.onSelectListing(listing);
     setIsInspectorOpen(true);
+    startTransition(() => {
+      props.onSelectListing(listing);
+    });
+    window.requestAnimationFrame(() => play("DETAIL_OPEN"));
   };
   const handleSelectVaultCard = (card: ICard) => {
-    play("DETAIL_OPEN");
-    props.onSelectVaultCard(card);
     setIsInspectorOpen(true);
+    startTransition(() => {
+      props.onSelectVaultCard(card);
+    });
+    window.requestAnimationFrame(() => play("DETAIL_OPEN"));
   };
 
   return (
-    <div className="mt-4 flex min-h-0 flex-1 flex-col gap-3 xl:hidden" onPointerDownCapture={capturePointerOrigin}>
+    <div className="mt-4 flex min-h-0 flex-1 flex-col gap-3 xl:hidden">
       <nav aria-label="Paneles del mercado" className="home-modern-scroll flex gap-2 overflow-x-auto pb-1">
         {PANEL_TABS.map((tab) => (
           <button
@@ -121,6 +120,7 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
       <MobileInspectorDialogShell
         isOpen={isInspectorOpen}
         origin={inspectorOrigin}
+        disableMotion
         onClose={() => setIsInspectorOpen(false)}
         onRequestClose={(source) => {
           if (source === "button") play("DIALOG_CLOSE");
@@ -132,7 +132,7 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
         <MarketCardInspector
           selectedCard={props.selectedCard}
           selectedListing={props.selectedListing}
-          isBuyingCard={props.isBuyingCard}
+          isCompactMode
           onBuyCard={props.onBuyCard}
         />
       </MobileInspectorDialogShell>

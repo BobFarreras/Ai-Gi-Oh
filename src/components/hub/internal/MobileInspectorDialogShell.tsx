@@ -14,6 +14,7 @@ interface MobileInspectorDialogShellProps {
   overlayTopClassName: string;
   panelTopClassName: string;
   isDismissDisabled?: boolean;
+  disableMotion?: boolean;
   children: React.ReactNode;
 }
 
@@ -26,6 +27,7 @@ export function MobileInspectorDialogShell({
   overlayTopClassName,
   panelTopClassName,
   isDismissDisabled = false,
+  disableMotion = false,
   children,
 }: MobileInspectorDialogShellProps) {
   const animationOffset = resolveInspectorAnimationOffset(origin);
@@ -38,17 +40,17 @@ export function MobileInspectorDialogShell({
     <AnimatePresence>
       {isOpen ? (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          initial={disableMotion ? false : { opacity: 0 }}
+          animate={disableMotion ? { opacity: 1 } : { opacity: 1 }}
+          exit={disableMotion ? { opacity: 0 } : { opacity: 0 }}
           onClick={isDismissDisabled ? undefined : () => requestClose("overlay")}
           className={`fixed inset-x-0 bottom-0 z-[220] bg-black/52 xl:hidden ${overlayTopClassName}`}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.2, x: animationOffset.x, y: animationOffset.y }}
-            animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 16 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            initial={disableMotion ? false : { opacity: 0, scale: 0.2, x: animationOffset.x, y: animationOffset.y }}
+            animate={disableMotion ? { opacity: 1 } : { opacity: 1, scale: 1, x: 0, y: 0 }}
+            exit={disableMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 16 }}
+            transition={disableMotion ? { duration: 0.12 } : { duration: 0.3, ease: "easeOut" }}
             onClick={(event) => event.stopPropagation()}
             className={`fixed bottom-[max(8px,env(safe-area-inset-bottom))] left-2 right-2 mx-auto flex max-w-lg flex-col overflow-hidden rounded-xl border border-cyan-500/45 bg-[#020a14] shadow-[0_0_40px_rgba(0,0,0,0.65)] ${panelTopClassName}`}
           >

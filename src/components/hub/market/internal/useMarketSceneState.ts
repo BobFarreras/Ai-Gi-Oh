@@ -1,21 +1,17 @@
-// src/components/hub/market/internal/useMarketSceneState.ts - Encapsula estado y acciones del MarketScene para reducir complejidad del componente.
+// src/components/hub/market/internal/useMarketSceneState.ts - Orquesta estado/acciones de Market sobre store local Zustand y selectores derivados.
 "use client";
 
-import { useMemo, useState } from "react";
+import { SetStateAction, useCallback, useMemo } from "react";
 import { buildMarketListingView } from "@/components/hub/market/market-listing-view";
 import { useSyncSelectedListing } from "@/components/hub/market/internal/useSyncSelectedListing";
-import { MarketOrderDirection, MarketOrderField, MarketTypeFilter } from "@/components/hub/market/market-filters";
 import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { buildMarketVaultCollectionView } from "@/components/hub/market/vault/build-market-vault-collection-view";
-import { ICard } from "@/core/entities/ICard";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
-import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
 import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
 import { IMarketCatalog } from "@/core/use-cases/market/GetMarketCatalogUseCase";
-import {
-  buyMarketCardAction,
-  buyPackAction,
-} from "@/services/market/market-actions";
+import { useMarketPurchaseActions } from "@/components/hub/market/internal/useMarketPurchaseActions";
+import { useLocalMarketSceneStore, useMarketStoreSelector } from "@/components/hub/market/internal/market-scene-store";
+import { countRender } from "@/services/performance/dev-performance-telemetry";
 
 interface UseMarketSceneStateInput {
   playerId: string;
@@ -25,38 +21,44 @@ interface UseMarketSceneStateInput {
 }
 
 export function useMarketSceneState(input: UseMarketSceneStateInput) {
+  countRender("useMarketSceneState");
   const { play } = useHubModuleSfx();
-  const initialAvailableListing = input.initialCatalog.listings.find((listing) => listing.isAvailable) ?? input.initialCatalog.listings[0] ?? null;
-  const [catalog, setCatalog] = useState<IMarketCatalog>(input.initialCatalog);
-  const [transactions, setTransactions] = useState<IMarketTransaction[]>(input.initialTransactions);
-  const [collection, setCollection] = useState<ICollectionCard[]>(input.initialCollection);
-  const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
-  const [selectedListing, setSelectedListing] = useState<IMarketCardListing | null>(initialAvailableListing);
-  const [selectedCard, setSelectedCard] = useState<ICard | null>(initialAvailableListing?.card ?? null);
-  const [nameQuery, setNameQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<MarketTypeFilter>("ALL");
-  const [orderField, setOrderField] = useState<MarketOrderField>("PRICE");
-  const [orderDirection, setOrderDirection] = useState<MarketOrderDirection>("ASC");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [revealedPackCards, setRevealedPackCards] = useState<ICard[]>([]);
-  const [isPackRevealOpen, setIsPackRevealOpen] = useState(false);
-  const [isBuyingCard, setIsBuyingCard] = useState(false);
-  const [isBuyingPack, setIsBuyingPack] = useState(false);
-
-  const mapMarketErrorMessage = (error: unknown, fallback: string): string => {
-    const rawMessage = error instanceof Error ? error.message : fallback;
-    if (rawMessage.includes("Nexus suficiente")) {
-      return "Saldo Nexus insuficiente. Compra cancelada en servidor para proteger tu cuenta.";
-    }
-    if (rawMessage.includes("stock")) {
-      return "No hay stock disponible para esta carta. Prueba con otra opción del mercado.";
-    }
-    if (rawMessage.includes("no está disponible")) {
-      return "Esta carta no está disponible para compra directa. Revisa la sección de packs.";
-    }
-    return rawMessage;
-  };
-
+  const store = useLocalMarketSceneStore(input.initialCatalog, input.initialTransactions, input.initialCollection);
+  const catalog = useMarketStoreSelector(store, (state) => state.catalog);
+  const transactions = useMarketStoreSelector(store, (state) => state.transactions);
+  const collection = useMarketStoreSelector(store, (state) => state.collection);
+  const selectedPackId = useMarketStoreSelector(store, (state) => state.selectedPackId);
+  const selectedListing = useMarketStoreSelector(store, (state) => state.selectedListing);
+  const selectedCard = useMarketStoreSelector(store, (state) => state.selectedCard);
+  const nameQuery = useMarketStoreSelector(store, (state) => state.nameQuery);
+  const typeFilter = useMarketStoreSelector(store, (state) => state.typeFilter);
+  const orderField = useMarketStoreSelector(store, (state) => state.orderField);
+  const orderDirection = useMarketStoreSelector(store, (state) => state.orderDirection);
+  const errorMessage = useMarketStoreSelector(store, (state) => state.errorMessage);
+  const revealedPackCards = useMarketStoreSelector(store, (state) => state.revealedPackCards);
+  const isPackRevealOpen = useMarketStoreSelector(store, (state) => state.isPackRevealOpen);
+  const isBuyingPack = useMarketStoreSelector(store, (state) => state.isBuyingPack);
+  const setSelectedListing = useCallback(
+    (value: SetStateAction<typeof selectedListing>) =>
+      store.setState((state) => ({ selectedListing: typeof value === "function" ? value(state.selectedListing) : value })),
+    [store],
+  );
+  const setSelectedCard = useCallback(
+    (value: SetStateAction<typeof selectedCard>) =>
+      store.setState((state) => ({ selectedCard: typeof value === "function" ? value(state.selectedCard) : value })),
+    [store],
+  );
+  const setSelectedPackId = useCallback((value: string | null) => store.setState({ selectedPackId: value }), [store]);
+  const setNameQuery = useCallback((value: string) => store.setState({ nameQuery: value }), [store]);
+  const setTypeFilter = useCallback((value: typeof typeFilter) => store.setState({ typeFilter: value }), [store]);
+  const setOrderField = useCallback((value: typeof orderField) => store.setState({ orderField: value }), [store]);
+  const setOrderDirection = useCallback(
+    (value: typeof orderDirection | ((previous: typeof orderDirection) => typeof orderDirection)) =>
+      store.setState((state) => ({ orderDirection: typeof value === "function" ? value(state.orderDirection) : value })),
+    [store],
+  );
+  const setErrorMessage = useCallback((value: string | null) => store.setState({ errorMessage: value }), [store]);
+  const setIsPackRevealOpen = useCallback((value: boolean) => store.setState({ isPackRevealOpen: value }), [store]);
   const scopedListings = useMemo(() => {
     if (!selectedPackId) return catalog.listings.filter((listing) => listing.isAvailable);
     const selectedPack = catalog.packs.find((pack) => pack.id === selectedPackId);
@@ -64,86 +66,20 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     const previewSet = new Set(selectedPack.previewCardIds);
     return catalog.listings.filter((listing) => previewSet.has(listing.card.id));
   }, [catalog.listings, catalog.packs, selectedPackId]);
-
   const visibleListings = useMemo(
-    () =>
-      buildMarketListingView({
-        listings: scopedListings,
-        nameQuery,
-        typeFilter,
-        orderField,
-        orderDirection,
-      }),
+    () => buildMarketListingView({ listings: scopedListings, nameQuery, typeFilter, orderField, orderDirection }),
     [nameQuery, orderDirection, orderField, scopedListings, typeFilter],
   );
   const mobileVisibleListings = useMemo(
-    () =>
-      buildMarketListingView({
-        listings: catalog.listings.filter((listing) => listing.isAvailable),
-        nameQuery,
-        typeFilter,
-        orderField,
-        orderDirection,
-      }),
+    () => buildMarketListingView({ listings: catalog.listings.filter((listing) => listing.isAvailable), nameQuery, typeFilter, orderField, orderDirection }),
     [catalog.listings, nameQuery, orderDirection, orderField, typeFilter],
   );
   const visibleCollection = useMemo(
-    () =>
-      buildMarketVaultCollectionView({
-        collection,
-        nameQuery,
-        typeFilter,
-        orderField,
-        orderDirection,
-      }),
+    () => buildMarketVaultCollectionView({ collection, nameQuery, typeFilter, orderField, orderDirection }),
     [collection, nameQuery, orderDirection, orderField, typeFilter],
   );
-
   useSyncSelectedListing({ selectedListing, visibleListings, setSelectedListing, setSelectedCard });
-
-  async function handleBuyCard(listingId: string): Promise<boolean> {
-    if (isBuyingCard) return false;
-    setIsBuyingCard(true);
-    try {
-      const result = await buyMarketCardAction(input.playerId, listingId);
-      play("BUY_CARD");
-      setCatalog(result.catalog);
-      setTransactions(result.transactions);
-      setCollection(result.collection);
-      setErrorMessage(null);
-      return true;
-    } catch (error) {
-      setErrorMessage(mapMarketErrorMessage(error, "No se pudo comprar la carta en este momento."));
-      return false;
-    } finally {
-      setIsBuyingCard(false);
-    }
-  }
-
-  async function handleBuyPack(packId: string): Promise<boolean> {
-    if (isBuyingPack) return false;
-    setIsBuyingPack(true);
-    try {
-      const result = await buyPackAction(input.playerId, packId);
-      play("BUY_PACK");
-      setCatalog(result.catalog);
-      setTransactions(result.transactions);
-      setCollection(result.collection);
-      const cardMap = new Map(result.catalog.listings.map((listing) => [listing.card.id, listing.card]));
-      const openedCards = result.openedCardIds
-        .map((cardId) => cardMap.get(cardId))
-        .filter((card): card is ICard => Boolean(card));
-      setRevealedPackCards(openedCards);
-      setIsPackRevealOpen(true);
-      setErrorMessage(null);
-      return true;
-    } catch (error) {
-      setErrorMessage(mapMarketErrorMessage(error, "No se pudo comprar el sobre en este momento."));
-      return false;
-    } finally {
-      setIsBuyingPack(false);
-    }
-  }
+  const { handleBuyCard, handleBuyPack } = useMarketPurchaseActions({ store, playerId: input.playerId, play });
 
   return {
     catalog,
@@ -159,7 +95,6 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     errorMessage,
     revealedPackCards,
     isPackRevealOpen,
-    isBuyingCard,
     isBuyingPack,
     visibleListings,
     mobileVisibleListings,

@@ -1,9 +1,8 @@
-// src/components/game/board/battlefield/internal/SlotCell.tsx
+// src/components/game/board/battlefield/internal/SlotCell.tsx - Renderiza un slot del tablero con estado visual derivado y animaciones de entidad.
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { MouseEvent } from "react";
-import { ICard } from "@/core/entities/ICard";
+import { memo, MouseEvent } from "react";
 import { BattleMode, IBoardEntity } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/game/card/Card";
@@ -14,18 +13,20 @@ import { SummonHologramVfx } from "./SummonHologramVfx";
 import { ExecutionActivateButton } from "./ExecutionActivateButton";
 import { CardFloatingQueueVfx } from "../CardFloatingQueueVfx";
 import { ExecutionActivationVfx } from "../ExecutionActivationVfx";
+import { countRender } from "@/services/performance/dev-performance-telemetry";
 
 interface SlotCellProps {
   index: number;
   entity: IBoardEntity | null;
   isOpponentSide: boolean;
   activeAttackerId: string | null;
-  selectedCard: ICard | null;
+  selectedCardId: string | null;
   selectedBoardEntityInstanceId: string | null;
-  revealedEntities: string[];
-  highlightedEntityIds: string[];
-  selectedEntityIds: string[];
-  buffedEntityIds: string[];
+  isSelectedByCard: boolean;
+  isRevealed: boolean;
+  isHighlighted: boolean;
+  isSelectedMaterial: boolean;
+  isBuffed: boolean;
   buffStat: "ATTACK" | "DEFENSE" | null;
   buffAmount: number | null;
   buffEventId: string | null;
@@ -33,6 +34,7 @@ interface SlotCellProps {
   cardXpAmount: number | null;
   cardXpEventId: string | null;
   canActivateSelectedExecution: boolean;
+  isMobileLayout?: boolean;
   onActivateSelectedExecution: () => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: MouseEvent) => void;
 }
@@ -57,14 +59,14 @@ function buildFloatingEvents(
   buffEventId: string | null,
   buffStat: "ATTACK" | "DEFENSE" | null,
   buffAmount: number | null,
-  buffedEntityIds: string[],
+  isBuffed: boolean,
   cardXpEventId: string | null,
   cardXpCardId: string | null,
   cardXpAmount: number | null,
 ) : FloatingEvent[] {
   if (!entity) return [];
   const events: FloatingEvent[] = [];
-  if (buffEventId && buffStat && (buffAmount ?? 0) !== 0 && buffedEntityIds.includes(entity.instanceId)) {
+  if (buffEventId && buffStat && (buffAmount ?? 0) !== 0 && isBuffed) {
     events.push({ id: `${buffEventId}-${entity.instanceId}`, type: "STAT" as const, amount: buffAmount ?? 0, stat: buffStat });
   }
   if (cardXpEventId && (cardXpAmount ?? 0) > 0 && cardXpCardId === entity.card.id) {
@@ -73,17 +75,18 @@ function buildFloatingEvents(
   return events;
 }
 
-export function SlotCell({
+function SlotCellComponent({
   index,
   entity,
   isOpponentSide,
   activeAttackerId,
-  selectedCard,
+  selectedCardId,
   selectedBoardEntityInstanceId,
-  revealedEntities,
-  highlightedEntityIds,
-  selectedEntityIds,
-  buffedEntityIds,
+  isSelectedByCard,
+  isRevealed,
+  isHighlighted,
+  isSelectedMaterial,
+  isBuffed,
   buffStat,
   buffAmount,
   buffEventId,
@@ -91,14 +94,13 @@ export function SlotCell({
   cardXpAmount,
   cardXpEventId,
   canActivateSelectedExecution,
+  isMobileLayout = false,
   onActivateSelectedExecution,
   onEntityClick,
 }: SlotCellProps) {
+  countRender("SlotCell");
   const isAttacking = entity?.instanceId === activeAttackerId;
-  const isRevealed = entity ? revealedEntities.includes(entity.instanceId) : false;
   const isActivating = entity?.mode === "ACTIVATE";
-  const isHighlighted = entity ? highlightedEntityIds.includes(entity.instanceId) : false;
-  const isSelected = entity ? selectedEntityIds.includes(entity.instanceId) : false;
   
   const isExecutionSelectedForActivation =
     !isOpponentSide &&
@@ -106,15 +108,9 @@ export function SlotCell({
     entity.card.type === "EXECUTION" &&
     selectedBoardEntityInstanceId === entity.instanceId &&
     canActivateSelectedExecution;
-  const matchesSelectedCard =
-    !!entity &&
-    !!selectedCard &&
-    (selectedCard.runtimeId
-      ? selectedCard.runtimeId === (entity.card.runtimeId ?? entity.card.id)
-      : selectedCard.id === entity.card.id);
-  const isBoardEntitySelected = !!entity && (selectedBoardEntityInstanceId === entity.instanceId || matchesSelectedCard);
+  const isBoardEntitySelected = !!entity && (selectedBoardEntityInstanceId === entity.instanceId || isSelectedByCard);
     
-  const floatingEvents = buildFloatingEvents(entity, buffEventId, buffStat, buffAmount, buffedEntityIds, cardXpEventId, cardXpCardId, cardXpAmount);
+  const floatingEvents = buildFloatingEvents(entity, buffEventId, buffStat, buffAmount, isBuffed, cardXpEventId, cardXpCardId, cardXpAmount);
   const visibility = resolveEntityVisibility(entity ?? undefined, isRevealed);
   const motionState = resolveEntityMotionState({ isAttacking, isActivating, isOpponentSide, isHorizontal: visibility.isHorizontal });
   const targetX = -120 - index * 105;
@@ -138,7 +134,7 @@ export function SlotCell({
               isAttacking ? "ring-4 ring-red-500 shadow-[0_0_30px_rgba(239,68,68,1)] animate-pulse rounded-xl" : "", 
               isBoardEntitySelected ? "ring-4 ring-cyan-300 shadow-[0_0_35px_rgba(34,211,238,0.9)] rounded-xl" : "",
               isHighlighted ? "ring-4 ring-amber-400 shadow-[0_0_35px_rgba(251,191,36,0.8)] animate-pulse rounded-xl" : "", 
-              isSelected ? "ring-4 ring-cyan-300 shadow-[0_0_35px_rgba(34,211,238,0.9)] rounded-xl" : ""
+              isSelectedMaterial ? "ring-4 ring-cyan-300 shadow-[0_0_35px_rgba(34,211,238,0.9)] rounded-xl" : ""
             )}
             data-board-card-id={entity.card.id}
             data-board-entity-instance-id={entity.instanceId}
@@ -148,14 +144,19 @@ export function SlotCell({
             {visibility.isFaceDown ? (
               <div className="absolute w-full h-full flex items-center justify-center">
                 <CardBack isHorizontal={visibility.isHorizontal} />
-                {isSelected && <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-black rounded-md bg-cyan-300 text-cyan-950 shadow-[0_0_14px_rgba(34,211,238,0.9)]">MATERIAL</span>}
+                {isSelectedMaterial && <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-black rounded-md bg-cyan-300 text-cyan-950 shadow-[0_0_14px_rgba(34,211,238,0.9)]">MATERIAL</span>}
               </div>
             ) : (
               <div className="absolute w-full h-full flex items-center justify-center">
                 <SummonHologramVfx show={Boolean(entity.isNewlySummoned && (entity.card.type === "ENTITY" || entity.card.type === "FUSION"))} />
-                <Card card={entity.card} isSelected={selectedCard?.id === entity.card.id} boardMode={!visibility.isFaceDown && entity.mode === "SET" && entity.card.type === "ENTITY" ? "DEFENSE" : (entity.mode as BattleMode)} />
+                <Card
+                  card={entity.card}
+                  isSelected={selectedCardId === entity.card.id}
+                  hologramMode={isMobileLayout ? "lite" : "full"}
+                  boardMode={!visibility.isFaceDown && entity.mode === "SET" && entity.card.type === "ENTITY" ? "DEFENSE" : (entity.mode as BattleMode)}
+                />
                 {isActivating && <motion.div initial={{ opacity: 0, scale: 0 }} animate={{ opacity: [0, 1, 0], scale: [1, 2.5] }} transition={{ duration: 0.5 }} className="absolute inset-0 bg-white rounded-xl mix-blend-overlay z-50" />}
-                {isSelected && <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-black rounded-md bg-cyan-300 text-cyan-950 shadow-[0_0_14px_rgba(34,211,238,0.9)]">MATERIAL</span>}
+                {isSelectedMaterial && <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-black rounded-md bg-cyan-300 text-cyan-950 shadow-[0_0_14px_rgba(34,211,238,0.9)]">MATERIAL</span>}
               </div>
             )}
 
@@ -183,3 +184,31 @@ export function SlotCell({
     </div>
   );
 }
+
+function areEqualSlotCellProps(previous: SlotCellProps, next: SlotCellProps): boolean {
+  return (
+    previous.index === next.index &&
+    previous.entity === next.entity &&
+    previous.isOpponentSide === next.isOpponentSide &&
+    previous.activeAttackerId === next.activeAttackerId &&
+    previous.selectedCardId === next.selectedCardId &&
+    previous.selectedBoardEntityInstanceId === next.selectedBoardEntityInstanceId &&
+    previous.isSelectedByCard === next.isSelectedByCard &&
+    previous.isRevealed === next.isRevealed &&
+    previous.isHighlighted === next.isHighlighted &&
+    previous.isSelectedMaterial === next.isSelectedMaterial &&
+    previous.isBuffed === next.isBuffed &&
+    previous.buffStat === next.buffStat &&
+    previous.buffAmount === next.buffAmount &&
+    previous.buffEventId === next.buffEventId &&
+    previous.cardXpCardId === next.cardXpCardId &&
+    previous.cardXpAmount === next.cardXpAmount &&
+    previous.cardXpEventId === next.cardXpEventId &&
+    previous.canActivateSelectedExecution === next.canActivateSelectedExecution &&
+    previous.isMobileLayout === next.isMobileLayout &&
+    previous.onActivateSelectedExecution === next.onActivateSelectedExecution &&
+    previous.onEntityClick === next.onEntityClick
+  );
+}
+
+export const SlotCell = memo(SlotCellComponent, areEqualSlotCellProps);

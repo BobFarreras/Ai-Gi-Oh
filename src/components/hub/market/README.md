@@ -37,6 +37,8 @@ src/components/hub/market
 ├── market-listing-view.ts             # Pipeline de filtrado/ordenado
 └── internal/
     ├── useMarketSceneState.ts         # Estado + acciones de la escena
+    ├── market-scene-store.ts          # Store local Zustand para estado UI y datos
+    ├── useMarketPurchaseActions.ts    # Acciones de compra desacopladas del render
     ├── MarketNexusSpendFloat.tsx      # Flotante reutilizable de gasto Nexus (-NX)
     ├── useSyncSelectedListing.ts      # Sincroniza selección y catálogo visible
     ├── usePackRevealPhase.ts          # Máquina de fases del overlay
@@ -50,11 +52,12 @@ src/components/hub/market
 2. Compra/actualización de estado vía `services/market/market-actions.ts`.
 3. Un archivo por responsabilidad; objetivo `< 150` líneas.
 4. Todo elemento interactivo con `aria-label`.
+5. Estado de escena gestionado con store local Zustand para minimizar re-renders.
 
 ## Dependencias y flujo
 
 1. `app/hub/market/page.tsx` hidrata datos iniciales con casos de uso.
-2. `MarketScene` usa `useMarketSceneState` para:
+2. `MarketScene` usa `useMarketSceneState` (sobre Zustand local) para:
    - comprar cartas,
    - comprar sobres,
    - refrescar `wallet`, `collection`, `transactions`.

@@ -114,7 +114,7 @@ export function BoardMobileSelectedCardOverlay({
             <button aria-label={`Deseleccionar ${card.name}`} onClick={onClose} className="drop-shadow-[0_0_22px_rgba(34,211,238,0.55)]">
               <div className="relative h-[266px] w-[182px] overflow-visible">
                 <div style={{ width: "260px", height: "380px", transform: "scale(0.7)", transformOrigin: "top left" }}>
-                  <Card card={card} isSelected />
+                  <Card card={card} isSelected disableHoverEffects disableDefaultShadow isPerformanceMode />
                 </div>
               </div>
             </button>

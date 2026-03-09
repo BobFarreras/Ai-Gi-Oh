@@ -1,7 +1,7 @@
 // src/components/hub/home/HomeDeckBuilderScene.tsx - Escena principal de Mi Home con interacción de deck y colección.
 "use client";
 
-import { DragEvent, useMemo, useState } from "react";
+import { DragEvent, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IDeck } from "@/core/entities/home/IDeck";
@@ -35,6 +35,7 @@ import {
 } from "@/services/home/deck-builder/deck-builder-actions";
 import { HOME_DECK_SIZE, HOME_MAX_DUPLICATES, countAssignedCopies, countDeckCopies } from "@/core/services/home/deck-rules";
 import { getCopiesNeededForNextVersion } from "@/core/services/progression/card-version-rules";
+import { countRender, endInteraction, startInteraction } from "@/services/performance/dev-performance-telemetry";
 
 interface HomeDeckBuilderSceneProps {
   playerId: string;
@@ -52,6 +53,7 @@ interface IEvolutionOverlayState {
 }
 
 export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initialCardProgress }: HomeDeckBuilderSceneProps) {
+  countRender("HomeDeckBuilderScene");
   const router = useRouter();
   const { play } = useHubModuleSfx();
   const [deck, setDeck] = useState<IDeck>(initialDeck);
@@ -69,6 +71,7 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
   const [orderDirection, setOrderDirection] = useState<HomeCollectionOrderDirection>("ASC");
   const [evolutionOverlay, setEvolutionOverlay] = useState<IEvolutionOverlayState | null>(null);
   const [draggedCard, setDraggedCard] = useState<{ cardId: string; source: "COLLECTION" | "DECK" | "FUSION"; slotIndex?: number } | null>(null);
+  const deckMutationIdRef = useRef(0);
   
   const cardById = useMemo(() => new Map(collectionState.map((entry) => [entry.card.id, entry.card])), [collectionState]);
   const selectedCardId = useMemo(() => {
@@ -138,8 +141,14 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
     }
     return rawMessage;
   };
+  const beginDeckMutation = (): number => {
+    deckMutationIdRef.current += 1;
+    return deckMutationIdRef.current;
+  };
+  const isLatestDeckMutation = (mutationId: number): boolean => mutationId === deckMutationIdRef.current;
   const handleInsertSelectedCard = async (): Promise<IHomeActionResult> => {
     if (!selectedCollectionCardId) return { ok: false, message: "Selecciona una carta del almacén para añadirla." };
+    const telemetry = startInteraction("home.insertCard");
     const previousDeck = deck;
     if (selectedCollectionCardType === "FUSION") {
       if (targetFusionSlotIndex === null) {
@@ -149,34 +158,49 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
       }
       setDeck((currentDeck) => applyOptimisticAddToFusionSlot(currentDeck, targetFusionSlotIndex, selectedCollectionCardId));
       play("ADD_CARD");
+      const mutationId = beginDeckMutation();
       try {
         const updatedDeck = await addCardToFusionDeckAction(context, selectedCollectionCardId, targetFusionSlotIndex);
-        setDeck(updatedDeck);
+        if (isLatestDeckMutation(mutationId)) {
+          setDeck(updatedDeck);
+        }
         setErrorMessage(null);
+        endInteraction(telemetry, "ok");
         return { ok: true };
       } catch (error) {
-        setDeck(previousDeck);
+        if (isLatestDeckMutation(mutationId)) {
+          setDeck(previousDeck);
+        }
         const message = getActionErrorMessage(error, "No se pudo equipar la carta en el bloque de fusión.");
         setErrorMessage(message);
+        endInteraction(telemetry, "error");
         return { ok: false, message };
       }
     }
     if (selectedCollectionCardType === "FUSION") {
       const message = "Esta carta solo puede añadirse al Bloque Fusiones.";
       setErrorMessage(message);
+      endInteraction(telemetry, "error");
       return { ok: false, message };
     }
     play("ADD_CARD");
     setDeck((currentDeck) => applyOptimisticAddToDeck(currentDeck, selectedCollectionCardId));
+    const mutationId = beginDeckMutation();
     try {
       const updatedDeck = await addCardToDeckAction(context, selectedCollectionCardId);
-      setDeck(updatedDeck);
+      if (isLatestDeckMutation(mutationId)) {
+        setDeck(updatedDeck);
+      }
       setErrorMessage(null);
+      endInteraction(telemetry, "ok");
       return { ok: true };
     } catch (error) {
-      setDeck(previousDeck);
+      if (isLatestDeckMutation(mutationId)) {
+        setDeck(previousDeck);
+      }
       const message = getActionErrorMessage(error, "No se pudo añadir la carta al deck.");
       setErrorMessage(message);
+      endInteraction(telemetry, "error");
       return { ok: false, message };
     }
   };
@@ -184,19 +208,27 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
     if (selectedSlotIndex === null && selectedFusionSlotIndex === null) {
       return { ok: false, message: "Selecciona una carta del deck para removerla." };
     }
+    const telemetry = startInteraction("home.removeCard");
     if (selectedFusionSlotIndex !== null) {
       const previousDeck = deck;
       play("REMOVE_CARD");
       setDeck((currentDeck) => applyOptimisticRemoveFromFusion(currentDeck, selectedFusionSlotIndex));
+      const mutationId = beginDeckMutation();
       try {
         const updatedDeck = await removeCardFromFusionDeckAction(context, selectedFusionSlotIndex);
-        setDeck(updatedDeck);
+        if (isLatestDeckMutation(mutationId)) {
+          setDeck(updatedDeck);
+        }
         setErrorMessage(null);
+        endInteraction(telemetry, "ok");
         return { ok: true };
       } catch (error) {
-        setDeck(previousDeck);
+        if (isLatestDeckMutation(mutationId)) {
+          setDeck(previousDeck);
+        }
         const message = getActionErrorMessage(error, "No se pudo retirar la carta del bloque de fusión.");
         setErrorMessage(message);
+        endInteraction(telemetry, "error");
         return { ok: false, message };
       }
     }
@@ -205,15 +237,22 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
     const previousDeck = deck;
     play("REMOVE_CARD");
     setDeck((currentDeck) => applyOptimisticRemoveFromDeck(currentDeck, mainSlotIndex));
+    const mutationId = beginDeckMutation();
     try {
       const updatedDeck = await removeCardFromDeckAction(context, mainSlotIndex);
-      setDeck(updatedDeck);
+      if (isLatestDeckMutation(mutationId)) {
+        setDeck(updatedDeck);
+      }
       setErrorMessage(null);
+      endInteraction(telemetry, "ok");
       return { ok: true };
     } catch (error) {
-      setDeck(previousDeck);
+      if (isLatestDeckMutation(mutationId)) {
+        setDeck(previousDeck);
+      }
       const message = getActionErrorMessage(error, "No se pudo remover la carta del deck.");
       setErrorMessage(message);
+      endInteraction(telemetry, "error");
       return { ok: false, message };
     }
   };
@@ -221,6 +260,7 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
     if (!selectedCardId || !canEvolveSelectedCard || copiesRequiredToEvolve === null) {
       return { ok: false, message: "No hay copias libres suficientes en almacén para evolucionar esta carta." };
     }
+    const telemetry = startInteraction("home.evolveCard");
     play("EVOLUTION_BUTTON");
     const previousVersionTier = selectedCardVersionTier;
     const previousCollection = collectionState;
@@ -272,6 +312,7 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
       });
       setTimeout(() => setEvolutionOverlay(null), 2200);
       setErrorMessage(null);
+      endInteraction(telemetry, "ok");
       return { ok: true };
     } catch (error) {
       setCollectionState(previousCollection);
@@ -279,6 +320,7 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
       setEvolutionOverlay(null);
       const message = getActionErrorMessage(error, "No se pudo evolucionar la carta seleccionada.");
       setErrorMessage(message);
+      endInteraction(telemetry, "error");
       return { ok: false, message };
     }
   };
@@ -333,15 +375,20 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
         return applyOptimisticAddToDeckSlot(withoutSource, slotIndex, sourceCardId);
       });
       play("ADD_CARD");
+      const mutationId = beginDeckMutation();
       try {
         const deckAfterRemove = await removeCardFromDeckAction(context, sourceIndex);
         const finalDeck = await addCardToDeckSlotAction({ ...context, deck: deckAfterRemove }, sourceCardId, slotIndex);
-        setDeck(finalDeck);
+        if (isLatestDeckMutation(mutationId)) {
+          setDeck(finalDeck);
+        }
         setSelectedSlotIndex(slotIndex);
         setSelectedCollectionCardId(null);
         setErrorMessage(null);
       } catch (error) {
-        setDeck(previousDeck);
+        if (isLatestDeckMutation(mutationId)) {
+          setDeck(previousDeck);
+        }
         setErrorMessage(getActionErrorMessage(error, "No se pudo mover la carta al slot de deck."));
       } finally {
         setDraggedCard(null);
@@ -366,13 +413,18 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
     }
     setDeck((currentDeck) => applyOptimisticAddToDeckSlot(currentDeck, slotIndex, draggedCard.cardId));
     play("ADD_CARD");
+    const mutationId = beginDeckMutation();
     try {
       const updatedDeck = await addCardToDeckSlotAction(context, draggedCard.cardId, slotIndex);
-      setDeck(updatedDeck);
+      if (isLatestDeckMutation(mutationId)) {
+        setDeck(updatedDeck);
+      }
       setSelectedCollectionCardId(draggedCard.cardId);
       setErrorMessage(null);
     } catch (error) {
-      setDeck(previousDeck);
+      if (isLatestDeckMutation(mutationId)) {
+        setDeck(previousDeck);
+      }
       setErrorMessage(getActionErrorMessage(error, "No se pudo colocar la carta en el slot de deck."));
     } finally {
       setDraggedCard(null);
@@ -413,15 +465,20 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
         return applyOptimisticAddToFusionSlot(withoutSource, slotIndex, sourceCardId);
       });
       play("ADD_CARD");
+      const mutationId = beginDeckMutation();
       try {
         const deckAfterRemove = await removeCardFromFusionDeckAction(context, sourceIndex);
         const finalDeck = await addCardToFusionDeckAction({ ...context, deck: deckAfterRemove }, sourceCardId, slotIndex);
-        setDeck(finalDeck);
+        if (isLatestDeckMutation(mutationId)) {
+          setDeck(finalDeck);
+        }
         setSelectedFusionSlotIndex(slotIndex);
         setSelectedCollectionCardId(null);
         setErrorMessage(null);
       } catch (error) {
-        setDeck(previousDeck);
+        if (isLatestDeckMutation(mutationId)) {
+          setDeck(previousDeck);
+        }
         setErrorMessage(getActionErrorMessage(error, "No se pudo mover la carta al Bloque Fusiones."));
       } finally {
         setDraggedCard(null);
@@ -446,13 +503,18 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
     }
     setDeck((currentDeck) => applyOptimisticAddToFusionSlot(currentDeck, slotIndex, draggedCard.cardId));
     play("ADD_CARD");
+    const mutationId = beginDeckMutation();
     try {
       const updatedDeck = await addCardToFusionDeckAction(context, draggedCard.cardId, slotIndex);
-      setDeck(updatedDeck);
+      if (isLatestDeckMutation(mutationId)) {
+        setDeck(updatedDeck);
+      }
       setSelectedCollectionCardId(draggedCard.cardId);
       setErrorMessage(null);
     } catch (error) {
-      setDeck(previousDeck);
+      if (isLatestDeckMutation(mutationId)) {
+        setDeck(previousDeck);
+      }
       setErrorMessage(getActionErrorMessage(error, "No se pudo colocar la carta en Bloque Fusiones."));
     } finally {
       setDraggedCard(null);
@@ -466,12 +528,17 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
       const previousDeck = deck;
       setDeck((currentDeck) => applyOptimisticRemoveFromDeck(currentDeck, slotIndex));
       play("REMOVE_CARD");
+      const mutationId = beginDeckMutation();
       try {
         const updatedDeck = await removeCardFromDeckAction(context, slotIndex);
-        setDeck(updatedDeck);
+        if (isLatestDeckMutation(mutationId)) {
+          setDeck(updatedDeck);
+        }
         setErrorMessage(null);
       } catch (error) {
-        setDeck(previousDeck);
+        if (isLatestDeckMutation(mutationId)) {
+          setDeck(previousDeck);
+        }
         setErrorMessage(getActionErrorMessage(error, "No se pudo devolver la carta al almacén."));
       }
     }
@@ -480,12 +547,17 @@ export function HomeDeckBuilderScene({ playerId, initialDeck, collection, initia
       const previousDeck = deck;
       setDeck((currentDeck) => applyOptimisticRemoveFromFusion(currentDeck, slotIndex));
       play("REMOVE_CARD");
+      const mutationId = beginDeckMutation();
       try {
         const updatedDeck = await removeCardFromFusionDeckAction(context, slotIndex);
-        setDeck(updatedDeck);
+        if (isLatestDeckMutation(mutationId)) {
+          setDeck(updatedDeck);
+        }
         setErrorMessage(null);
       } catch (error) {
-        setDeck(previousDeck);
+        if (isLatestDeckMutation(mutationId)) {
+          setDeck(previousDeck);
+        }
         setErrorMessage(getActionErrorMessage(error, "No se pudo devolver la carta al almacén."));
       }
     }

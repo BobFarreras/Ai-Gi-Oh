@@ -106,6 +106,7 @@ export function BattlefieldZone({
         cardXpAmount={cardXpAmount}
         cardXpEventId={cardXpEventId}
         canActivateSelectedExecution={canActivateSelectedExecution}
+        isMobileLayout={isMobileLayout}
         onActivateSelectedExecution={onActivateSelectedExecution}
         onEntityClick={onEntityClick}
       />

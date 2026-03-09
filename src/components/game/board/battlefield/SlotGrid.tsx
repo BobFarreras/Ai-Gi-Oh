@@ -26,6 +26,7 @@ interface SlotGridProps {
   cardXpAmount: number | null;
   cardXpEventId: string | null;
   canActivateSelectedExecution: boolean;
+  isMobileLayout?: boolean;
   onActivateSelectedExecution: () => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => void;
 }
@@ -49,6 +50,7 @@ export function SlotGrid({
   cardXpAmount,
   cardXpEventId,
   canActivateSelectedExecution,
+  isMobileLayout = false,
   onActivateSelectedExecution,
   onEntityClick,
 }: SlotGridProps) {
@@ -57,23 +59,32 @@ export function SlotGrid({
     const lane = laneType === "ENTITIES" ? "entities" : "executions";
     return resolvePinnedSlotsForSide(side, lane, entities, totalSlots);
   }, [entities, totalSlots, isOpponentSide, laneType]);
+  const revealedSet = useMemo(() => new Set(revealedEntities), [revealedEntities]);
+  const highlightedSet = useMemo(() => new Set(highlightedEntityIds), [highlightedEntityIds]);
+  const selectedSet = useMemo(() => new Set(selectedEntityIds), [selectedEntityIds]);
+  const buffedSet = useMemo(() => new Set(buffedEntityIds), [buffedEntityIds]);
+  const selectedCardId = selectedCard?.id ?? null;
+  const selectedCardKey = selectedCard ? (selectedCard.runtimeId ?? selectedCard.id) : null;
 
   return (
     <>
       {Array.from({ length: totalSlots }).map((_, index) => {
+        const entity = pinned.entitiesBySlot[index];
+        const entityCardKey = entity ? (entity.card.runtimeId ?? entity.card.id) : null;
         return (
           <SlotCell
             key={index}
             index={index}
-            entity={pinned.entitiesBySlot[index]}
+            entity={entity}
             isOpponentSide={isOpponentSide}
             activeAttackerId={activeAttackerId}
-            selectedCard={selectedCard}
+            selectedCardId={selectedCardId}
             selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}
-            revealedEntities={revealedEntities}
-            highlightedEntityIds={highlightedEntityIds}
-            selectedEntityIds={selectedEntityIds}
-            buffedEntityIds={buffedEntityIds}
+            isSelectedByCard={Boolean(entity && selectedCardKey && selectedCardKey === entityCardKey)}
+            isRevealed={Boolean(entity && revealedSet.has(entity.instanceId))}
+            isHighlighted={Boolean(entity && highlightedSet.has(entity.instanceId))}
+            isSelectedMaterial={Boolean(entity && selectedSet.has(entity.instanceId))}
+            isBuffed={Boolean(entity && buffedSet.has(entity.instanceId))}
             buffStat={buffStat}
             buffAmount={buffAmount}
             buffEventId={buffEventId}
@@ -81,6 +92,7 @@ export function SlotGrid({
             cardXpAmount={cardXpAmount}
             cardXpEventId={cardXpEventId}
             canActivateSelectedExecution={canActivateSelectedExecution}
+            isMobileLayout={isMobileLayout}
             onActivateSelectedExecution={onActivateSelectedExecution}
             onEntityClick={onEntityClick}
           />

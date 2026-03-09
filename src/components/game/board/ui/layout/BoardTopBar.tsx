@@ -1,4 +1,4 @@
-// src/components/game/board/ui/layout/BoardTopBar.tsx
+// src/components/game/board/ui/layout/BoardTopBar.tsx - Muestra turno, fase y temporizador principal del combate con estilo HUD.
 "use client";
 
 import { Clock } from "lucide-react";
@@ -20,10 +20,10 @@ interface BoardTopBarProps {
 // Helper de UX: Nombres legibles y colores temáticos según la fase
 function getPhaseDisplay(phase: string) {
   const p = phase.toUpperCase();
-  if (p.includes("MAIN")) return { label: "Fase de Invocación", color: "text-cyan-400", shadow: "drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" };
-  if (p.includes("BATTLE")) return { label: "Fase de Combate", color: "text-amber-400", shadow: "drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]" };
+  if (p.includes("MAIN")) return { label: "Fase de Invocación", color: "text-cyan-400", shadow: "" };
+  if (p.includes("BATTLE")) return { label: "Fase de Combate", color: "text-amber-400", shadow: "" };
   if (p.includes("END")) return { label: "Fin de Turno", color: "text-zinc-400", shadow: "" };
-  if (p.includes("DRAW") || p.includes("STANDBY")) return { label: "Preparación", color: "text-emerald-400", shadow: "drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" };
+  if (p.includes("DRAW") || p.includes("STANDBY")) return { label: "Preparación", color: "text-emerald-400", shadow: "" };
   return { label: phase, color: "text-cyan-400", shadow: "" };
 }
 
@@ -80,7 +80,7 @@ export function BoardTopBar({
               
               {/* Información de Fase */}
               <span className={cn(
-                "text-xs sm:text-sm font-black tracking-widest uppercase mb-1 transition-colors duration-300", 
+                "text-xs sm:text-sm font-black tracking-widest uppercase mb-1", 
                 phaseInfo.color, 
                 phaseInfo.shadow
               )}>

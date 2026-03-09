@@ -1,12 +1,13 @@
 // src/components/game/board/Battlefield.tsx - Escena 3D del campo de batalla con zonas de jugador y oponente.
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
 import { BattlefieldZone } from "./battlefield/BattlefieldZone";
+import { countRender } from "@/services/performance/dev-performance-telemetry";
 
 interface BattlefieldProps {
   playerActiveEntities: IBoardEntity[];
@@ -50,7 +51,7 @@ interface BattlefieldProps {
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => void;
 }
 
-export function Battlefield({
+function BattlefieldComponent({
   playerActiveEntities,
   playerActiveExecutions,
   opponentActiveEntities,
@@ -91,10 +92,11 @@ export function Battlefield({
   onDestroyedClick = () => undefined,
   onEntityClick,
 }: BattlefieldProps) {
+  countRender("Battlefield");
   const [zoom, setZoom] = useState(1);
   const [mobileFitScale, setMobileFitScale] = useState(1);
   const [mobileBoardOffsetY, setMobileBoardOffsetY] = useState(-72);
-  const effectiveBoardScale = isMobileLayout ? viewportBoardScale * 0.88 * mobileFitScale : viewportBoardScale;
+  const effectiveBoardScale = isMobileLayout ? viewportBoardScale * 0.82 * mobileFitScale : viewportBoardScale;
 
   useEffect(() => {
     if (!isMobileLayout) return;
@@ -115,26 +117,28 @@ export function Battlefield({
   }, [isMobileLayout]);
 
   const handleWheel = (event: React.WheelEvent) => {
+    if (isMobileLayout) return;
     setZoom((previous) => Math.min(Math.max(previous - event.deltaY * 0.001, 0.6), 1.6));
   };
 
   return (
     <div className="absolute inset-0 pointer-events-auto" onWheel={handleWheel}>
       <motion.div
-        drag
+        drag={!isMobileLayout}
         dragConstraints={{ left: -300, right: 300, top: -200, bottom: 200 }}
-        dragElastic={0.05}
+        dragElastic={isMobileLayout ? 0 : 0.05}
         animate={{ scale: zoom * effectiveBoardScale, y: isMobileLayout ? mobileBoardOffsetY : 0 }}
-        transition={{ type: "spring", stiffness: 400, damping: 40 }}
+        transition={isMobileLayout ? { type: "tween", duration: 0.16 } : { type: "spring", stiffness: 400, damping: 40 }}
         className={cn(
-          "w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing perspective-[1200px]",
-          isMobileLayout ? "" : "-translate-y-18 md:-translate-y-20 lg:-translate-y-22",
+          "w-full h-full flex items-center justify-center perspective-[1200px]",
+          isMobileLayout ? "cursor-default touch-pan-y" : "cursor-grab active:cursor-grabbing -translate-y-18 md:-translate-y-20 lg:-translate-y-22",
         )}
       >
         <div
           style={{ transformStyle: "preserve-3d" }}
           className={cn(
-            "w-[1050px] h-[800px] transform rotate-x-[55deg] relative flex flex-col justify-center items-center gap-6 rounded-[3rem] border-[4px] border-cyan-500/35 bg-[linear-gradient(160deg,rgba(7,12,25,0.82),rgba(11,18,36,0.86))] shadow-[0_0_90px_rgba(34,211,238,0.16)_inset,0_44px_90px_rgba(1,6,16,0.86)] backdrop-blur-xl transition-colors duration-500",
+            "w-[1050px] h-[800px] transform relative flex flex-col justify-center items-center gap-6 rounded-[3rem] border-[4px] border-cyan-500/35 bg-[linear-gradient(160deg,rgba(7,12,25,0.82),rgba(11,18,36,0.86))] shadow-[0_0_90px_rgba(34,211,238,0.16)_inset,0_44px_90px_rgba(1,6,16,0.86)] backdrop-blur-xl transition-colors duration-500",
+            isMobileLayout ? "rotate-x-[46deg]" : "rotate-x-[55deg]",
           )}
         >
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(56,189,248,0.15)_1px,transparent_1px),linear-gradient(to_bottom,rgba(34,211,238,0.12)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none rounded-[3rem]" />
@@ -209,3 +213,49 @@ export function Battlefield({
     </div>
   );
 }
+
+function areEqualBattlefieldProps(previous: BattlefieldProps, next: BattlefieldProps): boolean {
+  return (
+    previous.playerActiveEntities === next.playerActiveEntities &&
+    previous.playerActiveExecutions === next.playerActiveExecutions &&
+    previous.opponentActiveEntities === next.opponentActiveEntities &&
+    previous.opponentActiveExecutions === next.opponentActiveExecutions &&
+    previous.playerDeckCount === next.playerDeckCount &&
+    previous.playerFusionDeckCount === next.playerFusionDeckCount &&
+    previous.opponentDeckCount === next.opponentDeckCount &&
+    previous.opponentFusionDeckCount === next.opponentFusionDeckCount &&
+    previous.playerTopGraveCard === next.playerTopGraveCard &&
+    previous.opponentTopGraveCard === next.opponentTopGraveCard &&
+    previous.playerGraveyardCount === next.playerGraveyardCount &&
+    previous.opponentGraveyardCount === next.opponentGraveyardCount &&
+    previous.playerDestroyedCount === next.playerDestroyedCount &&
+    previous.opponentDestroyedCount === next.opponentDestroyedCount &&
+    previous.activeAttackerId === next.activeAttackerId &&
+    previous.selectedCard === next.selectedCard &&
+    previous.selectedBoardEntityInstanceId === next.selectedBoardEntityInstanceId &&
+    previous.revealedEntities === next.revealedEntities &&
+    previous.highlightedPlayerEntityIds === next.highlightedPlayerEntityIds &&
+    previous.selectedFusionMaterialIds === next.selectedFusionMaterialIds &&
+    previous.damagedPlayerId === next.damagedPlayerId &&
+    previous.damageEventId === next.damageEventId &&
+    previous.buffedEntityIds === next.buffedEntityIds &&
+    previous.buffStat === next.buffStat &&
+    previous.buffAmount === next.buffAmount &&
+    previous.buffEventId === next.buffEventId &&
+    previous.cardXpCardId === next.cardXpCardId &&
+    previous.cardXpAmount === next.cardXpAmount &&
+    previous.cardXpEventId === next.cardXpEventId &&
+    previous.cardXpActorPlayerId === next.cardXpActorPlayerId &&
+    previous.playerId === next.playerId &&
+    previous.opponentId === next.opponentId &&
+    previous.canActivateSelectedExecution === next.canActivateSelectedExecution &&
+    previous.viewportBoardScale === next.viewportBoardScale &&
+    previous.isMobileLayout === next.isMobileLayout &&
+    previous.onActivateSelectedExecution === next.onActivateSelectedExecution &&
+    previous.onGraveyardClick === next.onGraveyardClick &&
+    previous.onDestroyedClick === next.onDestroyedClick &&
+    previous.onEntityClick === next.onEntityClick
+  );
+}
+
+export const Battlefield = memo(BattlefieldComponent, areEqualBattlefieldProps);

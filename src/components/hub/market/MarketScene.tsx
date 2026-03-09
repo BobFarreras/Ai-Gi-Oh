@@ -6,11 +6,13 @@ import { MarketDesktopGrid } from "@/components/hub/market/layout/MarketDesktopG
 import { MarketMobileStack } from "@/components/hub/market/layout/MarketMobileStack";
 import { MarketPackRevealOverlay } from "@/components/hub/market/reveal/MarketPackRevealOverlay";
 import { HubErrorDialog } from "@/components/hub/internal/HubErrorDialog";
+import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
 import { useMarketSceneState } from "@/components/hub/market/internal/useMarketSceneState";
 import { ICard } from "@/core/entities/ICard";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
 import { IMarketCatalog } from "@/core/use-cases/market/GetMarketCatalogUseCase";
+import { startTransition, useCallback } from "react";
 
 interface MarketSceneProps {
   playerId: string;
@@ -21,14 +23,20 @@ interface MarketSceneProps {
 
 export function MarketScene(props: MarketSceneProps) {
   const state = useMarketSceneState(props);
-  const handleSelectListing = (listing: (typeof state.visibleListings)[number]) => {
-    state.setSelectedListing(listing);
-    state.setSelectedCard(listing.card);
-  };
-  const handleSelectVaultCard = (card: ICard) => {
+  const viewportWidth = useViewportWidth();
+  const isDesktopLayout = viewportWidth >= 1280;
+  const handleSelectListing = useCallback((listing: (typeof state.visibleListings)[number]) => {
+    startTransition(() => {
+      state.setSelectedListing(listing);
+      state.setSelectedCard(listing.card);
+    });
+  }, [state]);
+  const handleSelectVaultCard = useCallback((card: ICard) => {
     const listing = state.catalog.listings.find((currentListing) => currentListing.card.id === card.id) ?? null;
-    state.setNameQuery("");
-    state.setTypeFilter("ALL");
+    startTransition(() => {
+      state.setNameQuery("");
+      state.setTypeFilter("ALL");
+    });
     if (!listing) {
       state.setSelectedPackId(null);
     } else if (!listing.isAvailable) {
@@ -37,9 +45,11 @@ export function MarketScene(props: MarketSceneProps) {
     } else {
       state.setSelectedPackId(null);
     }
-    state.setSelectedListing(listing);
-    state.setSelectedCard(card);
-  };
+    startTransition(() => {
+      state.setSelectedListing(listing);
+      state.setSelectedCard(card);
+    });
+  }, [state]);
 
   return (
     <main className="hub-control-room-bg relative box-border flex h-[100dvh] w-full flex-col items-center justify-center overflow-hidden px-3 py-3 text-slate-100 sm:px-5">
@@ -58,41 +68,42 @@ export function MarketScene(props: MarketSceneProps) {
           }
         />
 
-        <MarketDesktopGrid
-          selectedCard={state.selectedCard}
-          selectedListing={state.selectedListing}
-          isBuyingCard={state.isBuyingCard}
-          listings={state.visibleListings}
-          packs={state.catalog.packs}
-          selectedPackId={state.selectedPackId}
-          collection={state.visibleCollection}
-          transactions={state.transactions}
-          catalogListings={state.catalog.listings}
-          onBuyCard={state.handleBuyCard}
-          onBuyPack={state.handleBuyPack}
-          onSelectPack={state.setSelectedPackId}
-          onClearPackSelection={() => state.setSelectedPackId(null)}
-          onSelectListing={handleSelectListing}
-          onSelectVaultCard={handleSelectVaultCard}
-        />
-        <MarketMobileStack
-          selectedCard={state.selectedCard}
-          selectedListing={state.selectedListing}
-          isBuyingCard={state.isBuyingCard}
-          listings={state.mobileVisibleListings}
-          packs={state.catalog.packs}
-          selectedPackId={state.selectedPackId}
-          collection={state.visibleCollection}
-          transactions={state.transactions}
-          catalogListings={state.catalog.listings}
-          isBuyingPack={state.isBuyingPack}
-          onBuyCard={state.handleBuyCard}
-          onBuyPack={state.handleBuyPack}
-          onSelectPack={state.setSelectedPackId}
-          onShowFreeListings={() => state.setSelectedPackId(null)}
-          onSelectListing={handleSelectListing}
-          onSelectVaultCard={handleSelectVaultCard}
-        />
+        {isDesktopLayout ? (
+          <MarketDesktopGrid
+            selectedCard={state.selectedCard}
+            selectedListing={state.selectedListing}
+            listings={state.visibleListings}
+            packs={state.catalog.packs}
+            selectedPackId={state.selectedPackId}
+            collection={state.visibleCollection}
+            transactions={state.transactions}
+            catalogListings={state.catalog.listings}
+            onBuyCard={state.handleBuyCard}
+            onBuyPack={state.handleBuyPack}
+            onSelectPack={state.setSelectedPackId}
+            onClearPackSelection={() => state.setSelectedPackId(null)}
+            onSelectListing={handleSelectListing}
+            onSelectVaultCard={handleSelectVaultCard}
+          />
+        ) : (
+          <MarketMobileStack
+            selectedCard={state.selectedCard}
+            selectedListing={state.selectedListing}
+            listings={state.mobileVisibleListings}
+            packs={state.catalog.packs}
+            selectedPackId={state.selectedPackId}
+            collection={state.visibleCollection}
+            transactions={state.transactions}
+            catalogListings={state.catalog.listings}
+            isBuyingPack={state.isBuyingPack}
+            onBuyCard={state.handleBuyCard}
+            onBuyPack={state.handleBuyPack}
+            onSelectPack={state.setSelectedPackId}
+            onShowFreeListings={() => state.setSelectedPackId(null)}
+            onSelectListing={handleSelectListing}
+            onSelectVaultCard={handleSelectVaultCard}
+          />
+        )}
       </section>
 
       <MarketPackRevealOverlay

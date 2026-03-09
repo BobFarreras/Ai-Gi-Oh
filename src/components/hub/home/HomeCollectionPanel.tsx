@@ -4,7 +4,8 @@ import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IDeck } from "@/core/entities/home/IDeck";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { HomeMiniCard } from "@/components/hub/home/HomeMiniCard";
-import { DragEvent } from "react";
+import { useVirtualGridWindow } from "@/components/hub/internal/useVirtualGridWindow";
+import { DragEvent, useRef } from "react";
 
 interface HomeCollectionPanelProps {
   deck: IDeck;
@@ -27,6 +28,16 @@ export function HomeCollectionPanel({
   onStartDragCollectionCard,
   onDropOnCollectionArea,
 }: HomeCollectionPanelProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const windowState = useVirtualGridWindow({
+    containerRef: scrollRef,
+    itemCount: collection.length,
+    itemMinWidth: 84,
+    itemHeight: 145,
+    gap: 12,
+    overscanRows: 2,
+  });
+  const visibleCollection = collection.slice(windowState.startIndex, windowState.endIndex);
   const usedByCardId = new Map<string, number>();
   
   for (const slot of deck.slots) {
@@ -46,15 +57,17 @@ export function HomeCollectionPanel({
       
       {/* REFACTOR 1: Aseguramos overflow-x-hidden por seguridad y añadimos padding derecho para la scrollbar */}
       <div
+        ref={scrollRef}
         className="home-modern-scroll min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-2"
         onDragOver={(event) => event.preventDefault()}
         onDrop={onDropOnCollectionArea}
       >
-        
-        {/* REFACTOR 2: Magia responsiva. auto-fill calcula las columnas dinámicamente. justify-items-center centra las cartas si sobra espacio. */}
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-3 justify-items-center pb-4">
-          
-          {collection.map((entry) => {
+        <div className="relative pb-4" style={{ height: `${windowState.totalHeight}px` }}>
+          <div
+            className="grid grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-3 justify-items-center"
+            style={{ transform: `translateY(${windowState.offsetTop}px)` }}
+          >
+          {visibleCollection.map((entry) => {
             const usedCopies = usedByCardId.get(entry.card.id) ?? 0;
             const availableStorageCopies = Math.max(0, entry.ownedCopies - usedCopies);
             const canAdd = usedCopies < Math.min(3, entry.ownedCopies);
@@ -76,6 +89,7 @@ export function HomeCollectionPanel({
                 className={`relative flex flex-col items-center w-[84px] transition-opacity ${
                   canAdd ? "cursor-pointer" : "cursor-not-allowed opacity-40 grayscale-[50%]"
                 }`}
+                style={{ contentVisibility: "auto", containIntrinsicSize: "145px 84px" }}
               >
                 <HomeMiniCard
                   card={entry.card}
@@ -88,6 +102,7 @@ export function HomeCollectionPanel({
                   level={progress?.level ?? 0}
                   xp={progress?.xp ?? 0}
                   masteryPassiveSkillId={progress?.masteryPassiveSkillId ?? null}
+                  isPerformanceMode
                 />
                 
                 {/* Indicador de copias con estilo neón si está al máximo */}
@@ -101,6 +116,7 @@ export function HomeCollectionPanel({
               </motion.button>
             );
           })}
+          </div>
         </div>
       </div>
     </section>
