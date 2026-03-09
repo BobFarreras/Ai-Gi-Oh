@@ -152,7 +152,7 @@ function SlotCellComponent({
                 <Card
                   card={entity.card}
                   isSelected={selectedCardId === entity.card.id}
-                  disableHologram={isMobileLayout}
+                  hologramMode={isMobileLayout ? "lite" : "full"}
                   boardMode={!visibility.isFaceDown && entity.mode === "SET" && entity.card.type === "ENTITY" ? "DEFENSE" : (entity.mode as BattleMode)}
                 />
                 {isActivating && <motion.div initial={{ opacity: 0, scale: 0 }} animate={{ opacity: [0, 1, 0], scale: [1, 2.5] }} transition={{ duration: 0.5 }} className="absolute inset-0 bg-white rounded-xl mix-blend-overlay z-50" />}

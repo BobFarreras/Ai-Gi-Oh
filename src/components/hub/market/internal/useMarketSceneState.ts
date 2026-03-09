@@ -1,7 +1,7 @@
 // src/components/hub/market/internal/useMarketSceneState.ts - Orquesta estado/acciones de Market sobre store local Zustand y selectores derivados.
 "use client";
 
-import { SetStateAction, useMemo } from "react";
+import { SetStateAction, useCallback, useMemo } from "react";
 import { buildMarketListingView } from "@/components/hub/market/market-listing-view";
 import { useSyncSelectedListing } from "@/components/hub/market/internal/useSyncSelectedListing";
 import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
@@ -38,18 +38,27 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
   const revealedPackCards = useMarketStoreSelector(store, (state) => state.revealedPackCards);
   const isPackRevealOpen = useMarketStoreSelector(store, (state) => state.isPackRevealOpen);
   const isBuyingPack = useMarketStoreSelector(store, (state) => state.isBuyingPack);
-  const setSelectedListing = (value: SetStateAction<typeof selectedListing>) =>
-    store.setState((state) => ({ selectedListing: typeof value === "function" ? value(state.selectedListing) : value }));
-  const setSelectedCard = (value: SetStateAction<typeof selectedCard>) =>
-    store.setState((state) => ({ selectedCard: typeof value === "function" ? value(state.selectedCard) : value }));
-  const setSelectedPackId = (value: string | null) => store.setState({ selectedPackId: value });
-  const setNameQuery = (value: string) => store.setState({ nameQuery: value });
-  const setTypeFilter = (value: typeof typeFilter) => store.setState({ typeFilter: value });
-  const setOrderField = (value: typeof orderField) => store.setState({ orderField: value });
-  const setOrderDirection = (value: typeof orderDirection | ((previous: typeof orderDirection) => typeof orderDirection)) =>
-    store.setState((state) => ({ orderDirection: typeof value === "function" ? value(state.orderDirection) : value }));
-  const setErrorMessage = (value: string | null) => store.setState({ errorMessage: value });
-  const setIsPackRevealOpen = (value: boolean) => store.setState({ isPackRevealOpen: value });
+  const setSelectedListing = useCallback(
+    (value: SetStateAction<typeof selectedListing>) =>
+      store.setState((state) => ({ selectedListing: typeof value === "function" ? value(state.selectedListing) : value })),
+    [store],
+  );
+  const setSelectedCard = useCallback(
+    (value: SetStateAction<typeof selectedCard>) =>
+      store.setState((state) => ({ selectedCard: typeof value === "function" ? value(state.selectedCard) : value })),
+    [store],
+  );
+  const setSelectedPackId = useCallback((value: string | null) => store.setState({ selectedPackId: value }), [store]);
+  const setNameQuery = useCallback((value: string) => store.setState({ nameQuery: value }), [store]);
+  const setTypeFilter = useCallback((value: typeof typeFilter) => store.setState({ typeFilter: value }), [store]);
+  const setOrderField = useCallback((value: typeof orderField) => store.setState({ orderField: value }), [store]);
+  const setOrderDirection = useCallback(
+    (value: typeof orderDirection | ((previous: typeof orderDirection) => typeof orderDirection)) =>
+      store.setState((state) => ({ orderDirection: typeof value === "function" ? value(state.orderDirection) : value })),
+    [store],
+  );
+  const setErrorMessage = useCallback((value: string | null) => store.setState({ errorMessage: value }), [store]);
+  const setIsPackRevealOpen = useCallback((value: boolean) => store.setState({ isPackRevealOpen: value }), [store]);
   const scopedListings = useMemo(() => {
     if (!selectedPackId) return catalog.listings.filter((listing) => listing.isAvailable);
     const selectedPack = catalog.packs.find((pack) => pack.id === selectedPackId);

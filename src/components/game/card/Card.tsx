@@ -16,6 +16,7 @@ interface CardProps {
   clipToFrameShape?: boolean;
   disableDefaultShadow?: boolean;
   disableHologram?: boolean;
+  hologramMode?: "full" | "lite";
   isPerformanceMode?: boolean;
   versionTier?: number;
   level?: number;
@@ -36,6 +37,7 @@ export function Card({
   clipToFrameShape = false,
   disableDefaultShadow = false,
   disableHologram = false,
+  hologramMode = "full",
   isPerformanceMode = false,
   versionTier,
   level,
@@ -67,7 +69,7 @@ export function Card({
         xp={resolvedXp}
         masteryPassiveLabel={resolvedMasteryPassiveLabel}
       />
-      {shouldRenderHologram && <CardHologram card={card} isDefense={isDefense} />}
+      {shouldRenderHologram && <CardHologram card={card} isDefense={isDefense} mode={hologramMode} />}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 // src/components/hub/market/internal/useMarketPurchaseActions.ts - Encapsula compras de cartas/sobres usando store Zustand de Market.
-import { MutableRefObject, startTransition, useRef } from "react";
+import { MutableRefObject, startTransition, useCallback, useRef } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { buyMarketCardAction, buyPackAction } from "@/services/market/market-actions";
 import { applyOptimisticBuyCard } from "@/components/hub/market/internal/optimistic-market-updates";
@@ -27,7 +27,7 @@ export function useMarketPurchaseActions({ store, playerId, play }: UseMarketPur
   const packQueueRef = useRef<Promise<void>>(Promise.resolve());
   const isBuyingCardRef = useRef(false);
 
-  const handleBuyCard = async (listingId: string): Promise<boolean> => {
+  const handleBuyCard = useCallback(async (listingId: string): Promise<boolean> => {
     if (isBuyingCardRef.current) return false;
     isBuyingCardRef.current = true;
     return enqueueTask(cardQueueRef, async () => {
@@ -49,9 +49,9 @@ export function useMarketPurchaseActions({ store, playerId, play }: UseMarketPur
         isBuyingCardRef.current = false;
       }
     });
-  };
+  }, [playerId, play, store]);
 
-  const handleBuyPack = async (packId: string): Promise<boolean> =>
+  const handleBuyPack = useCallback(async (packId: string): Promise<boolean> =>
     enqueueTask(packQueueRef, async () => {
       const telemetry = startInteraction("market.buyPack");
       const previous = store.getState();
@@ -75,7 +75,7 @@ export function useMarketPurchaseActions({ store, playerId, play }: UseMarketPur
       } finally {
         startTransition(() => store.setState({ isBuyingPack: false }));
       }
-    });
+    }), [playerId, play, store]);
 
   return { handleBuyCard, handleBuyPack };
 }
