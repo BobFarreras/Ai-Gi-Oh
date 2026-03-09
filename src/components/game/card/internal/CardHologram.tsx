@@ -1,3 +1,4 @@
+// src/components/game/card/internal/CardHologram.tsx - Renderiza la capa holográfica animada de cartas en tablero.
 "use client";
 
 import Image from "next/image";
@@ -74,7 +75,6 @@ export function CardHologram({ card, isDefense, className }: CardHologramProps) 
               fill
               className="object-contain drop-shadow-[0_0px_35px_rgba(0,0,0,0.9)]"
               style={{ transform: "translateZ(40px)" }}
-              priority 
             />
           </motion.div>
 

@@ -1,7 +1,7 @@
 // src/components/hub/market/internal/useMarketSceneState.ts - Encapsula estado y acciones del MarketScene para reducir complejidad del componente.
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { buildMarketListingView } from "@/components/hub/market/market-listing-view";
 import { useSyncSelectedListing } from "@/components/hub/market/internal/useSyncSelectedListing";
 import { MarketOrderDirection, MarketOrderField, MarketTypeFilter } from "@/components/hub/market/market-filters";
@@ -16,6 +16,8 @@ import {
   buyMarketCardAction,
   buyPackAction,
 } from "@/services/market/market-actions";
+import { applyOptimisticBuyCard } from "@/components/hub/market/internal/optimistic-market-updates";
+import { countRender, endInteraction, startInteraction } from "@/services/performance/dev-performance-telemetry";
 
 interface UseMarketSceneStateInput {
   playerId: string;
@@ -25,6 +27,7 @@ interface UseMarketSceneStateInput {
 }
 
 export function useMarketSceneState(input: UseMarketSceneStateInput) {
+  countRender("useMarketSceneState");
   const { play } = useHubModuleSfx();
   const initialAvailableListing = input.initialCatalog.listings.find((listing) => listing.isAvailable) ?? input.initialCatalog.listings[0] ?? null;
   const [catalog, setCatalog] = useState<IMarketCatalog>(input.initialCatalog);
@@ -42,6 +45,7 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
   const [isPackRevealOpen, setIsPackRevealOpen] = useState(false);
   const [isBuyingCard, setIsBuyingCard] = useState(false);
   const [isBuyingPack, setIsBuyingPack] = useState(false);
+  const marketMutationIdRef = useRef(0);
 
   const mapMarketErrorMessage = (error: unknown, fallback: string): string => {
     const rawMessage = error instanceof Error ? error.message : fallback;
@@ -56,6 +60,11 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     }
     return rawMessage;
   };
+  const beginMarketMutation = (): number => {
+    marketMutationIdRef.current += 1;
+    return marketMutationIdRef.current;
+  };
+  const isLatestMarketMutation = (mutationId: number): boolean => mutationId === marketMutationIdRef.current;
 
   const scopedListings = useMemo(() => {
     if (!selectedPackId) return catalog.listings.filter((listing) => listing.isAvailable);
@@ -103,17 +112,34 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
 
   async function handleBuyCard(listingId: string): Promise<boolean> {
     if (isBuyingCard) return false;
+    const telemetry = startInteraction("market.buyCard");
     setIsBuyingCard(true);
+    const mutationId = beginMarketMutation();
+    const previousCatalog = catalog;
+    const previousCollection = collection;
+    const previousTransactions = transactions;
+    const optimistic = applyOptimisticBuyCard(catalog, collection, listingId);
+    setCatalog(optimistic.catalog);
+    setCollection(optimistic.collection);
     try {
       const result = await buyMarketCardAction(input.playerId, listingId);
       play("BUY_CARD");
-      setCatalog(result.catalog);
-      setTransactions(result.transactions);
-      setCollection(result.collection);
+      if (isLatestMarketMutation(mutationId)) {
+        setCatalog(result.catalog);
+        setTransactions(result.transactions);
+        setCollection(result.collection);
+      }
       setErrorMessage(null);
+      endInteraction(telemetry, "ok");
       return true;
     } catch (error) {
+      if (isLatestMarketMutation(mutationId)) {
+        setCatalog(previousCatalog);
+        setCollection(previousCollection);
+        setTransactions(previousTransactions);
+      }
       setErrorMessage(mapMarketErrorMessage(error, "No se pudo comprar la carta en este momento."));
+      endInteraction(telemetry, "error");
       return false;
     } finally {
       setIsBuyingCard(false);
@@ -122,23 +148,43 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
 
   async function handleBuyPack(packId: string): Promise<boolean> {
     if (isBuyingPack) return false;
+    const telemetry = startInteraction("market.buyPack");
     setIsBuyingPack(true);
+    const mutationId = beginMarketMutation();
+    const previousCatalog = catalog;
+    const previousCollection = collection;
+    const previousTransactions = transactions;
+    const pack = catalog.packs.find((entry) => entry.id === packId);
+    if (pack && catalog.wallet.nexus >= pack.priceNexus) {
+      setCatalog((current) => ({ ...current, wallet: { ...current.wallet, nexus: current.wallet.nexus - pack.priceNexus } }));
+    }
     try {
       const result = await buyPackAction(input.playerId, packId);
       play("BUY_PACK");
-      setCatalog(result.catalog);
-      setTransactions(result.transactions);
-      setCollection(result.collection);
+      if (isLatestMarketMutation(mutationId)) {
+        setCatalog(result.catalog);
+        setTransactions(result.transactions);
+        setCollection(result.collection);
+      }
       const cardMap = new Map(result.catalog.listings.map((listing) => [listing.card.id, listing.card]));
       const openedCards = result.openedCardIds
         .map((cardId) => cardMap.get(cardId))
         .filter((card): card is ICard => Boolean(card));
-      setRevealedPackCards(openedCards);
-      setIsPackRevealOpen(true);
+      if (isLatestMarketMutation(mutationId)) {
+        setRevealedPackCards(openedCards);
+        setIsPackRevealOpen(true);
+      }
       setErrorMessage(null);
+      endInteraction(telemetry, "ok");
       return true;
     } catch (error) {
+      if (isLatestMarketMutation(mutationId)) {
+        setCatalog(previousCatalog);
+        setCollection(previousCollection);
+        setTransactions(previousTransactions);
+      }
       setErrorMessage(mapMarketErrorMessage(error, "No se pudo comprar el sobre en este momento."));
+      endInteraction(telemetry, "error");
       return false;
     } finally {
       setIsBuyingPack(false);

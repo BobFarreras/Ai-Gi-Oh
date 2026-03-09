@@ -15,6 +15,7 @@ interface CardProps {
   disableHoverEffects?: boolean;
   clipToFrameShape?: boolean;
   disableDefaultShadow?: boolean;
+  disableHologram?: boolean;
   versionTier?: number;
   level?: number;
   xp?: number;
@@ -33,6 +34,7 @@ export function Card({
   disableHoverEffects = false,
   clipToFrameShape = false,
   disableDefaultShadow = false,
+  disableHologram = false,
   versionTier,
   level,
   xp,
@@ -40,7 +42,7 @@ export function Card({
 }: CardProps) {
   const isOnBoard = isBoardMode(boardMode);
   const isDefense = boardMode === "DEFENSE";
-  const shouldRenderHologram = isOnBoard && boardMode !== "SET";
+  const shouldRenderHologram = isOnBoard && boardMode !== "SET" && !disableHologram;
   const resolvedVersionTier = versionTier ?? card.versionTier ?? 0;
   const resolvedLevel = level ?? card.level ?? 0;
   const resolvedXp = xp ?? card.xp ?? 0;

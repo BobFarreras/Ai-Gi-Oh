@@ -21,6 +21,7 @@ import { IDuelResultRewardSummary } from "./ui/internal/duel-result-reward-summa
 import { IMatchNarrationPack } from "./narration/types";
 import { useMatchNarration } from "./hooks/internal/match/useMatchNarration";
 import { useBoardViewportMode } from "./hooks/internal/layout/use-board-viewport-mode";
+import { countRender, endInteraction, startInteraction } from "@/services/performance/dev-performance-telemetry";
 
 interface IBoardProps {
   initialPlayerDeck?: ICard[] | null;
@@ -47,6 +48,7 @@ export function Board({
   onResultAction,
   onMatchResolved,
 }: IBoardProps) {
+  countRender("Board");
   const {
     gameState,
     selectedCard,
@@ -173,6 +175,39 @@ export function Board({
       previewCard(card);
     },
     [gameState.pendingTurnAction, player.id, previewCard, resolvePendingTurnAction],
+  );
+  const handleActivateSelectedExecution = useCallback(() => {
+    void (async () => {
+      const token = startInteraction("board.activateSelectedExecution");
+      try {
+        playButtonClick();
+        const result = await activateSelectedExecution();
+        if (result === "MISSING_MATERIALS") {
+          setAutoModeBannerSignal({
+            id: `fusion-missing-materials-${Date.now()}`,
+            left: "Fusion",
+            right: "Faltan materiales",
+          });
+          playBanner();
+        }
+        endInteraction(token, "ok");
+      } catch {
+        endInteraction(token, "error");
+      }
+    })();
+  }, [activateSelectedExecution, playBanner, playButtonClick]);
+  const handlePlayAction = useCallback(
+    async (mode: "ATTACK" | "DEFENSE" | "SET" | "ACTIVATE", event: React.MouseEvent) => {
+      const token = startInteraction("board.playAction");
+      try {
+        await executePlayAction(mode, event);
+        endInteraction(token, "ok");
+      } catch (error) {
+        endInteraction(token, "error");
+        throw error;
+      }
+    },
+    [executePlayAction],
   );
 
   useEffect(() => {
@@ -318,7 +353,14 @@ export function Board({
       ))}
       {!isResultVisible && (
       <BoardInteractiveLayer
-        gameState={gameState} selectedCard={selectedCard} playingCard={playingCard} activeAttackerId={activeAttackerId}
+        gameState={gameState}
+        player={player}
+        opponent={opponent}
+        phase={gameState.phase}
+        hasNormalSummonedThisTurn={gameState.hasNormalSummonedThisTurn}
+        selectedCard={selectedCard}
+        playingCard={playingCard}
+        activeAttackerId={activeAttackerId}
         selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}
         revealedEntities={revealedEntities} pendingEntitySelectionIds={pendingEntitySelectionIds} pendingDiscardCardIds={pendingDiscardCardIds}
         pendingFusionSelectedEntityIds={pendingFusionSelectedEntityIds}
@@ -329,20 +371,11 @@ export function Board({
         onDestroyedClick={setDestroyedView}
         canActivateSelectedExecution={canActivateSelectedExecution}
         canSetSelectedEntityToAttack={canSetSelectedEntityToAttack}
-        onCardClick={toggleCardSelection} onPlayAction={executePlayAction} onActivateSelectedExecution={() => {
-          void (async () => {
-            playButtonClick();
-            const result = await activateSelectedExecution();
-            if (result === "MISSING_MATERIALS") {
-              setAutoModeBannerSignal({
-                id: `fusion-missing-materials-${Date.now()}`,
-                left: "Fusion",
-                right: "Faltan materiales",
-              });
-              playBanner();
-            }
-          })();
-        }} onSelectCard={previewCard} onCloseCard={clearSelection}
+        onCardClick={toggleCardSelection}
+        onPlayAction={handlePlayAction}
+        onActivateSelectedExecution={handleActivateSelectedExecution}
+        onSelectCard={previewCard}
+        onCloseCard={clearSelection}
         onSetSelectedEntityToAttack={setSelectedEntityToAttack}
         onCloseHistory={() => setIsHistoryOpen(false)}
         isMobileLayout={isMobile}

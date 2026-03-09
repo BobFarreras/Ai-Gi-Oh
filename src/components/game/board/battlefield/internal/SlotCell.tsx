@@ -2,7 +2,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { MouseEvent } from "react";
+import { memo, MouseEvent } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { BattleMode, IBoardEntity } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ import { SummonHologramVfx } from "./SummonHologramVfx";
 import { ExecutionActivateButton } from "./ExecutionActivateButton";
 import { CardFloatingQueueVfx } from "../CardFloatingQueueVfx";
 import { ExecutionActivationVfx } from "../ExecutionActivationVfx";
+import { countRender } from "@/services/performance/dev-performance-telemetry";
 
 interface SlotCellProps {
   index: number;
@@ -33,6 +34,7 @@ interface SlotCellProps {
   cardXpAmount: number | null;
   cardXpEventId: string | null;
   canActivateSelectedExecution: boolean;
+  isMobileLayout?: boolean;
   onActivateSelectedExecution: () => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: MouseEvent) => void;
 }
@@ -73,7 +75,7 @@ function buildFloatingEvents(
   return events;
 }
 
-export function SlotCell({
+function SlotCellComponent({
   index,
   entity,
   isOpponentSide,
@@ -91,9 +93,11 @@ export function SlotCell({
   cardXpAmount,
   cardXpEventId,
   canActivateSelectedExecution,
+  isMobileLayout = false,
   onActivateSelectedExecution,
   onEntityClick,
 }: SlotCellProps) {
+  countRender("SlotCell");
   const isAttacking = entity?.instanceId === activeAttackerId;
   const isRevealed = entity ? revealedEntities.includes(entity.instanceId) : false;
   const isActivating = entity?.mode === "ACTIVATE";
@@ -153,7 +157,12 @@ export function SlotCell({
             ) : (
               <div className="absolute w-full h-full flex items-center justify-center">
                 <SummonHologramVfx show={Boolean(entity.isNewlySummoned && (entity.card.type === "ENTITY" || entity.card.type === "FUSION"))} />
-                <Card card={entity.card} isSelected={selectedCard?.id === entity.card.id} boardMode={!visibility.isFaceDown && entity.mode === "SET" && entity.card.type === "ENTITY" ? "DEFENSE" : (entity.mode as BattleMode)} />
+                <Card
+                  card={entity.card}
+                  isSelected={selectedCard?.id === entity.card.id}
+                  disableHologram={isMobileLayout}
+                  boardMode={!visibility.isFaceDown && entity.mode === "SET" && entity.card.type === "ENTITY" ? "DEFENSE" : (entity.mode as BattleMode)}
+                />
                 {isActivating && <motion.div initial={{ opacity: 0, scale: 0 }} animate={{ opacity: [0, 1, 0], scale: [1, 2.5] }} transition={{ duration: 0.5 }} className="absolute inset-0 bg-white rounded-xl mix-blend-overlay z-50" />}
                 {isSelected && <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-black rounded-md bg-cyan-300 text-cyan-950 shadow-[0_0_14px_rgba(34,211,238,0.9)]">MATERIAL</span>}
               </div>
@@ -183,3 +192,30 @@ export function SlotCell({
     </div>
   );
 }
+
+function areEqualSlotCellProps(previous: SlotCellProps, next: SlotCellProps): boolean {
+  return (
+    previous.index === next.index &&
+    previous.entity === next.entity &&
+    previous.isOpponentSide === next.isOpponentSide &&
+    previous.activeAttackerId === next.activeAttackerId &&
+    previous.selectedCard === next.selectedCard &&
+    previous.selectedBoardEntityInstanceId === next.selectedBoardEntityInstanceId &&
+    previous.revealedEntities === next.revealedEntities &&
+    previous.highlightedEntityIds === next.highlightedEntityIds &&
+    previous.selectedEntityIds === next.selectedEntityIds &&
+    previous.buffedEntityIds === next.buffedEntityIds &&
+    previous.buffStat === next.buffStat &&
+    previous.buffAmount === next.buffAmount &&
+    previous.buffEventId === next.buffEventId &&
+    previous.cardXpCardId === next.cardXpCardId &&
+    previous.cardXpAmount === next.cardXpAmount &&
+    previous.cardXpEventId === next.cardXpEventId &&
+    previous.canActivateSelectedExecution === next.canActivateSelectedExecution &&
+    previous.isMobileLayout === next.isMobileLayout &&
+    previous.onActivateSelectedExecution === next.onActivateSelectedExecution &&
+    previous.onEntityClick === next.onEntityClick
+  );
+}
+
+export const SlotCell = memo(SlotCellComponent, areEqualSlotCellProps);
