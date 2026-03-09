@@ -26,6 +26,7 @@ export function MarketListingsPanel({ listings, onSelectCard }: MarketListingsPa
                 ? "border-cyan-900/60 bg-[#081220] hover:border-cyan-400/80 cursor-pointer shadow-[0_0_10px_rgba(34,211,238,0.1)]" 
                 : "border-zinc-800 bg-zinc-950/80 grayscale-[80%] opacity-60 cursor-pointer"
             } overflow-hidden transition-all duration-300`}
+            style={{ contentVisibility: "auto", containIntrinsicSize: "140px 96px" }}
             aria-label={`${listing.card.name} disponible por ${listing.priceNexus} Nexus`}
           >
             {/* Etiqueta de Precio */}
@@ -46,7 +47,7 @@ export function MarketListingsPanel({ listings, onSelectCard }: MarketListingsPa
               {/* Contenedor seguro para escalar la carta sin romper el layout */}
               <div className="absolute inset-0 flex top-5 items-center justify-center pointer-events-none">
                 <div className="scale-[0.24] origin-center sm:scale-[0.28] md:scale-[0.3]">
-                  <Card card={listing.card} />
+                  <Card card={listing.card} disableHoverEffects disableDefaultShadow isPerformanceMode />
                 </div>
               </div>
             </button>

@@ -80,7 +80,13 @@ export function MobilePlayerHand({
                   className={mandatory ? "rounded-xl ring-4 ring-amber-400/85 shadow-[0_0_18px_rgba(251,191,36,0.62)]" : ""}
                   style={{ width: "260px", height: "380px", transform: `scale(${metrics.scale})`, transformOrigin: "top left" }}
                 >
-                  <Card card={card} isSelected={isSelected} />
+                  <Card
+                    card={card}
+                    isSelected={isSelected}
+                    disableHoverEffects
+                    disableDefaultShadow
+                    isPerformanceMode
+                  />
                 </div>
               </motion.button>
             );

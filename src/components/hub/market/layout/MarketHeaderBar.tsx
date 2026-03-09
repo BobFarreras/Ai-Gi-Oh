@@ -39,8 +39,8 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
           <h1 className="text-lg font-black uppercase tracking-widest text-cyan-100 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)] truncate hidden sm:block">
             Mercado
           </h1>
-          <div className="ml-auto flex items-center justify-center px-3 py-1 bg-[#020a14]/90 border border-emerald-500/40 rounded-lg shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] shrink-0">
-            <span className="text-sm font-black text-emerald-400 font-mono tracking-widest drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]">
+          <div className="ml-auto flex min-w-[104px] items-center justify-center px-3 py-1 bg-[#020a14]/90 border border-emerald-500/40 rounded-lg shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] shrink-0">
+            <span className="text-sm font-black text-emerald-400 font-mono tabular-nums tracking-widest">
               {props.walletBalance} <span className="text-emerald-600 text-[10px] ml-0.5">NX</span>
             </span>
           </div>

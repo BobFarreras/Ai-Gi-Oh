@@ -8,6 +8,7 @@ export interface ICardFrameProps {
   isOnBoard: boolean;
   disableHoverEffects?: boolean;
   disableDefaultShadow?: boolean;
+  isPerformanceMode?: boolean;
   onClick?: (card: ICard) => void;
   versionTier: number;
   level: number;

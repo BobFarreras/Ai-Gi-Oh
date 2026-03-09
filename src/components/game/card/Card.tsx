@@ -16,6 +16,7 @@ interface CardProps {
   clipToFrameShape?: boolean;
   disableDefaultShadow?: boolean;
   disableHologram?: boolean;
+  isPerformanceMode?: boolean;
   versionTier?: number;
   level?: number;
   xp?: number;
@@ -35,6 +36,7 @@ export function Card({
   clipToFrameShape = false,
   disableDefaultShadow = false,
   disableHologram = false,
+  isPerformanceMode = false,
   versionTier,
   level,
   xp,
@@ -58,6 +60,7 @@ export function Card({
         isOnBoard={isOnBoard}
         disableHoverEffects={disableHoverEffects}
         disableDefaultShadow={disableDefaultShadow}
+        isPerformanceMode={isPerformanceMode}
         onClick={onClick}
         versionTier={resolvedVersionTier}
         level={resolvedLevel}

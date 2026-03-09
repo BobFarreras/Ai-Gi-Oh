@@ -76,6 +76,7 @@ export function HomeCollectionPanel({
                 className={`relative flex flex-col items-center w-[84px] transition-opacity ${
                   canAdd ? "cursor-pointer" : "cursor-not-allowed opacity-40 grayscale-[50%]"
                 }`}
+                style={{ contentVisibility: "auto", containIntrinsicSize: "145px 84px" }}
               >
                 <HomeMiniCard
                   card={entry.card}
@@ -88,6 +89,7 @@ export function HomeCollectionPanel({
                   level={progress?.level ?? 0}
                   xp={progress?.xp ?? 0}
                   masteryPassiveSkillId={progress?.masteryPassiveSkillId ?? null}
+                  isPerformanceMode
                 />
                 
                 {/* Indicador de copias con estilo neón si está al máximo */}
