@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/effects/resolve-execution-effects.integration.test.ts - Descripción breve del módulo.
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
@@ -142,3 +143,4 @@ describe("resolveExecution effects", () => {
     expect(state.playerA.healthPoints).toBe(7500);
   });
 });
+

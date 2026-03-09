@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/internal/useOpponentTurn.ts - Descripción breve del módulo.
 import { useEffect } from "react";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IOpponentStrategy } from "@/core/services/opponent/types";
@@ -70,3 +71,4 @@ export function useOpponentTurn({
     strategy,
   ]);
 }
+

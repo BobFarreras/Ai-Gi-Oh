@@ -1,3 +1,4 @@
+<!-- src/core/use-cases/game-engine/fusion/README.md - Descripción breve del módulo. -->
 # Fusion Module
 
 Reglas de invocación por fusión del motor.
@@ -49,3 +50,4 @@ Reglas de invocación por fusión del motor.
 
 1. `fuse-cards.integration.test.ts`: flujo base de éxito/fracaso por receta.
 2. `fuse-cards.rules.integration.test.ts`: energía, materiales duplicados, materiales inexistentes y protección de slots.
+

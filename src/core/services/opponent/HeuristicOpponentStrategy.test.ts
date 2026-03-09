@@ -1,3 +1,4 @@
+// src/core/services/opponent/HeuristicOpponentStrategy.test.ts - Descripción breve del módulo.
 import { describe, expect, it } from "vitest";
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
@@ -512,3 +513,4 @@ describe("HeuristicOpponentStrategy", () => {
     expect(nextState.playerB.activeEntities.some((entity) => entity.card.type === "FUSION")).toBe(true);
   });
 });
+

@@ -1,3 +1,4 @@
+// src/components/game/board/ui/CombatLogEventRow.tsx - Descripción breve del módulo.
 "use client";
 
 import { ICard } from "@/core/entities/ICard";
@@ -50,3 +51,4 @@ export function CombatLogEventRow({
     </div>
   );
 }
+

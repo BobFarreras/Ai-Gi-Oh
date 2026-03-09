@@ -1,3 +1,4 @@
+// src/core/errors/AppError.ts - Descripción breve del módulo.
 import { ErrorCode } from "./ErrorCode";
 
 export abstract class AppError extends Error {
@@ -11,3 +12,4 @@ export abstract class AppError extends Error {
     this.details = details;
   }
 }
+

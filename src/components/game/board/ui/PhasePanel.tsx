@@ -1,3 +1,4 @@
+// src/components/game/board/ui/PhasePanel.tsx - Descripción breve del módulo.
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
@@ -59,3 +60,4 @@ export function PhasePanel({ phase, hasNormalSummonedThisTurn, isPlayerTurn, onA
     </div>
   );
 }
+

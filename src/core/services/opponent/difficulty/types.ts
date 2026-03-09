@@ -1,3 +1,4 @@
+// src/core/services/opponent/difficulty/types.ts - Descripción breve del módulo.
 export type OpponentDifficulty = "EASY" | "NORMAL" | "HARD" | "BOSS";
 
 /**
@@ -38,3 +39,4 @@ export interface IOpponentDifficultyProfile {
   /** Umbral mínimo de score para permitir un ataque. */
   minAttackScore: number;
 }
+

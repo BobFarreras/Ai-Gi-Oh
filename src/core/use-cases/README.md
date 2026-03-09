@@ -1,3 +1,4 @@
+<!-- src/core/use-cases/README.md - Descripción breve del módulo. -->
 # Use Cases Module
 
 Capa de aplicación del dominio. Orquesta reglas del juego sin dependencias de UI.
@@ -27,4 +28,5 @@ Capa de aplicación del dominio. Orquesta reglas del juego sin dependencias de U
 1. No introducir JSX ni lógica de render en esta capa.
 2. Mantener inmutabilidad de `GameState`.
 3. Toda regla nueva debe venir con tests unitarios/integración.
+
 

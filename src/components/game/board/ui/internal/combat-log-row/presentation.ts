@@ -1,3 +1,4 @@
+// src/components/game/board/ui/internal/combat-log-row/presentation.ts - Descripción breve del módulo.
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 
 export function actorPalette(actorPlayerId: string, playerAId: string): { tone: string; border: string } {
@@ -38,3 +39,4 @@ export function resolveWinnerText(
   if (attackerDestroyed && !defenderDestroyed) return `Gana ${defenderName}`;
   return "Sin destrucciones";
 }
+

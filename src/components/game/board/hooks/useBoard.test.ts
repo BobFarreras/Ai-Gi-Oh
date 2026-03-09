@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/useBoard.test.ts - Descripción breve del módulo.
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { useBoard } from './useBoard';
@@ -99,3 +100,4 @@ describe('useBoard Custom Hook', () => {
     expect(typeof result.current.lastError?.message).toBe('string');
   });
 });
+

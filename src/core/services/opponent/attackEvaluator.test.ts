@@ -1,3 +1,4 @@
+// src/core/services/opponent/attackEvaluator.test.ts - Descripción breve del módulo.
 import { describe, expect, it } from "vitest";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { getDifficultyProfile } from "./difficulty/difficultyProfiles";
@@ -71,3 +72,4 @@ describe("attackEvaluator", () => {
     expect(decision?.defenderInstanceId).toBe("p1-threat");
   });
 });
+

@@ -1,3 +1,4 @@
+<!-- src/core/entities/README.md - Descripción breve del módulo. -->
 # Entities Module
 
 Tipos de dominio puros del juego, sin dependencias de UI.
@@ -39,3 +40,4 @@ Tipos de dominio puros del juego, sin dependencias de UI.
      - `CARD_TO_DESTROYED`
      - `MANDATORY_ACTION_RESOLVED`
      - `FUSION_SUMMONED`
+

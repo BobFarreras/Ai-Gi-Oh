@@ -1,3 +1,4 @@
+<!-- src/core/services/opponent/README.md - Descripción breve del módulo. -->
 # Opponent Service Module
 
 Estrategias de toma de decisiones para el rival.
@@ -55,3 +56,4 @@ Para añadir niveles de dificultad, se recomienda:
 1. `LlmOpponentStrategy` implementando `IOpponentStrategy`.
 2. `RemotePlayerStrategy` para multijugador real.
 3. Selección de estrategia por partida vía DI/configuración.
+

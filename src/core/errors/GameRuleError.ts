@@ -1,3 +1,4 @@
+// src/core/errors/GameRuleError.ts - Descripción breve del módulo.
 import { AppError } from "./AppError";
 
 export class GameRuleError extends AppError {
@@ -5,3 +6,4 @@ export class GameRuleError extends AppError {
     super("GAME_RULE_ERROR", message, details);
   }
 }
+

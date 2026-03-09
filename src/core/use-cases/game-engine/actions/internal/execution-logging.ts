@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/actions/internal/execution-logging.ts - Descripción breve del módulo.
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
@@ -53,3 +54,4 @@ export function appendExecutionResolutionLogs(params: IExecutionLoggingParams): 
   }
   return withLog;
 }
+

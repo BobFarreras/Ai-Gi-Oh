@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/internal/opponent-turn/types.ts - Descripción breve del módulo.
 import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
@@ -25,3 +26,4 @@ export interface IOpponentAutoPick {
   chooseCardToDiscard: (hand: ICard[]) => ICard | null;
   chooseEntityToSacrifice: (entities: IBoardEntity[]) => IBoardEntity | null;
 }
+

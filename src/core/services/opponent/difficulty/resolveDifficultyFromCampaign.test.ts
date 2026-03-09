@@ -1,3 +1,4 @@
+// src/core/services/opponent/difficulty/resolveDifficultyFromCampaign.test.ts - Descripción breve del módulo.
 import { describe, expect, it } from "vitest";
 import { resolveDifficultyFromCampaign } from "./resolveDifficultyFromCampaign";
 
@@ -21,4 +22,5 @@ describe("resolveDifficultyFromCampaign", () => {
     expect(resolveDifficultyFromCampaign({ chapterIndex: 4, duelIndex: 7, victories: 20 })).toBe("BOSS");
   });
 });
+
 

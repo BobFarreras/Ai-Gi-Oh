@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/fusion/fusion-recipes.ts - Descripción breve del módulo.
 import { CardArchetype, ICard } from "@/core/entities/ICard";
 
 export interface IFusionRecipe {
@@ -56,3 +57,4 @@ export function getFusionRecipe(card: ICard): IFusionRecipe | null {
 
   return getFusionRecipeByResultId(card.id);
 }
+

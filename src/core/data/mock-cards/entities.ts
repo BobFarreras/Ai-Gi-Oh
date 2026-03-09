@@ -1,3 +1,4 @@
+// src/core/data/mock-cards/entities.ts - Descripción breve del módulo.
 import { CardArchetype, ICard } from "@/core/entities/ICard";
 
 interface EntitySeed {
@@ -58,3 +59,4 @@ export const ENTITY_CARDS: ICard[] = [
   createEntity({ id: "entity-n8n", name: "n8n", renderFile: "n8n", cost: 3, faction: "OPEN_SOURCE", archetype: "TOOL", description: "Automatización de flujos para ganar ventaja." }),
   createEntity({ id: "entity-make", name: "Make", renderFile: "make", cost: 3, faction: "NO_CODE", archetype: "TOOL", description: "Orquestador visual de alto valor táctico." }),
 ];
+

@@ -1,3 +1,4 @@
+// src/components/game/board/ui/internal/combat-log-row/CombatLogEventHeader.tsx - Descripción breve del módulo.
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 
 interface CombatLogEventHeaderProps {
@@ -27,3 +28,4 @@ export function CombatLogEventHeader({
     </div>
   );
 }
+

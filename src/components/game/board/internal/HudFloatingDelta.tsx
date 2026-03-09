@@ -1,3 +1,4 @@
+// src/components/game/board/internal/HudFloatingDelta.tsx - Descripción breve del módulo.
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
@@ -33,3 +34,4 @@ export function HudFloatingDelta({ value, sign, isOpponent, color }: HudFloating
     </AnimatePresence>
   );
 }
+
