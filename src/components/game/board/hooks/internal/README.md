@@ -24,6 +24,7 @@ Submódulos internos para reducir complejidad de `useBoard` y mantener SRP.
    - `useMatchRuntime.ts`: transiciones del motor, turnos y acciones del jugador.
    - `useMatchProgression.ts`: persistencia/proyección de EXP de cartas post-duelo.
    - `useMatchAudio.ts`: fachada de audio del duelo (SFX + soundtrack).
+   - `board-derived-state.ts`: utilidades puras de ganador y estado derivado de ejecución.
 
 4. `player-actions/`
    - `useToggleCardSelection.ts`

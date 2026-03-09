@@ -24,6 +24,9 @@ Render del campo de batalla, slots y VFX de acciones de combate/ejecución.
    - `BattlefieldLanes.tsx`: líneas superiores/inferiores.
    - `BattlefieldPiles.tsx`: mazo y cementerio.
    - `useDamageFlash.ts`: hook de flash temporal de daño.
+   - `BattlefieldView.tsx` + `battlefield-types.ts`: render desacoplado y contratos.
+   - `use-battlefield-mobile-fit.ts`: ajuste responsive para móvil.
+   - `battlefield-props-equality.ts`: comparator memo para estabilidad de render.
 
 ## Flujo visual
 

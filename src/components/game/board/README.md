@@ -243,9 +243,9 @@ Guía rápida para entender la lógica de tablero y batalla.
    - `src/core/use-cases/game-engine/fusion/fuse-cards.rules.integration.test.ts`
 
 3. **Deuda técnica estructural pendiente (regla <150 líneas)**
-   - `src/components/game/board/index.tsx`
-   - `src/components/game/board/ui/DuelResultOverlay.tsx`
+   - ✅ `src/components/game/board/index.tsx` quedó reducido a shell de composición con secciones internas en `src/components/game/board/internal/*`.
+   - ✅ `src/components/game/board/ui/DuelResultOverlay.tsx` quedó dividido por SRP en `src/components/game/board/ui/internal/duel-result-overlay/*`.
    - ✅ `src/components/game/board/ui/overlays/BoardStatusOverlays.tsx` quedó dividido por SRP en:
      - `ui/overlays/internal/BoardErrorOverlay.tsx`
      - `ui/overlays/internal/BoardZoneBrowsers.tsx`
-   - Pendiente: seguir fragmentación de `index.tsx` y `DuelResultOverlay.tsx` para cumplir umbral estricto.
+   - Pendiente: mantener esta segmentación en futuras iteraciones de UX sin volver a agrupar responsabilidades.

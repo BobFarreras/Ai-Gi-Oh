@@ -1,10 +1,15 @@
 <!-- src/components/hub/home/internal/README.md - Detalla utilidades internas del módulo Home para mutaciones y estado optimista. -->
 # Home Internal
 
-## Qué contiene
+## Estructura recomendada
 
-1. Actualizaciones optimistas de deck y bloque de fusión.
-2. Helpers de estado transitorio del constructor de mazos.
+1. `actions/`: flujos async de insertar, remover y evolucionar.
+2. `dnd/`: handlers de drag and drop por zona.
+3. `hooks/`: estado/orquestación/handlers de interacción del contenedor.
+4. `types/`: contratos compartidos del módulo.
+5. `view/`: vista presentacional + builder de props de UI.
+6. Archivos raíz:
+`optimistic-deck-updates.ts` y `home-action-error-message.ts` como utilidades transversales internas.
 
 ## Regla de uso
 

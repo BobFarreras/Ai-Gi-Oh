@@ -12,24 +12,7 @@ import { useMatchAudio } from "./internal/match/useMatchAudio";
 import { useMatchProgression } from "./internal/match/useMatchProgression";
 import { useMatchRuntime } from "./internal/match/useMatchRuntime";
 import { useMatchUiState } from "./internal/match/useMatchUiState";
-
-function resolveWinnerPlayerId(gameState: GameState): string | "DRAW" | null {
-  if (gameState.playerA.healthPoints <= 0 && gameState.playerB.healthPoints <= 0) return "DRAW";
-  if (gameState.playerA.healthPoints <= 0) return gameState.playerB.id;
-  if (gameState.playerB.healthPoints <= 0) return gameState.playerA.id;
-  return null;
-}
-
-function isExecutionWaitingForFusionMaterials(state: GameState, executionInstanceId: string): boolean {
-  const waitingExecution = state.playerA.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
-  if (!waitingExecution) return false;
-  return (
-    waitingExecution.mode === "SET" &&
-    waitingExecution.card.type === "EXECUTION" &&
-    waitingExecution.card.effect?.action === "FUSION_SUMMON" &&
-    state.pendingTurnAction === null
-  );
-}
+import { isExecutionWaitingForFusionMaterials, resolveWinnerPlayerId } from "./internal/match/board-derived-state";
 const EXECUTION_ACTIVATION_PREVIEW_MS = 720;
 
 export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINING", initialConfig?: ICreateInitialBoardStateInput) {

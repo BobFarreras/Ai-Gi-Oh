@@ -34,6 +34,7 @@ Componentes visuales del tablero. Renderiza estado y eventos, sin reglas de domi
 
 1. `layers/`
    - Capas de composición de `Board`.
+   - `layers/internal/` contiene tipos, selector de estado derivado y vista desacoplada de `BoardInteractiveLayer`.
 
 2. `layout/`
    - Layout de controles y topbar.
@@ -53,7 +54,10 @@ Componentes visuales del tablero. Renderiza estado y eventos, sin reglas de domi
 7. `internal/duel-result-card-density.ts`
    - Regla de densidad para ajustar el tamaño de cartas según cantidad.
 
-8. `../narration/*`
+8. `internal/duel-result-overlay/*`
+   - Segmentación del overlay final por tipos, hook mobile y vistas desktop/mobile.
+
+9. `../narration/*`
    - Contratos y selector de eventos narrativos desacoplados del motor.
 
 ## Reglas de módulo
