@@ -29,7 +29,8 @@ pnpm quality:check
 3. `src/core/errors`: jerarquía de errores tipados.
 4. `src/core/use-cases`: motor del juego y servicios de combate.
 5. `src/core/services/opponent`: estrategia del oponente y stepper de turno.
-6. `src/infrastructure`: adaptadores externos (reservado para integración real).
+6. `src/infrastructure`: adaptadores externos (Supabase + in-memory).
+7. `src/services`: orquestación de aplicación y composición de repositorios/runtime.
 
 ## Calidad mínima para merge
 
@@ -47,3 +48,6 @@ pnpm quality:check
 4. `src/core/use-cases/game-engine/README.md`: invariantes y contratos del motor.
 5. `src/core/services/opponent/README.md`: estrategia heurística y extensión futura.
 6. `src/components/game/board/hooks/internal/README.md`: responsabilidades de hooks internos del tablero.
+7. `src/app/README.md`: mapa de App Router y API routes.
+8. `src/services/README.md`: mapa de servicios de aplicación.
+9. `src/infrastructure/README.md`: inventario de adaptadores y persistencia.
