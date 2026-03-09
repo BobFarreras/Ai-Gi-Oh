@@ -6,6 +6,8 @@ import { assignPlayers } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 import { markAttackerAsUsed } from "@/core/use-cases/game-engine/combat/internal/attack-entities";
 import { validateDirectAttack } from "@/core/use-cases/game-engine/combat/internal/attack-validation";
+import { applyAttackDrainByDefenderPassive, resolveDirectHitBonus } from "@/core/use-cases/game-engine/combat/internal/attack-passives";
+import { buildUpdatedAttacker, buildUpdatedDefender } from "@/core/use-cases/game-engine/combat/internal/attack-player-updates";
 
 interface IResolveDirectAttackParams {
   state: GameState;
@@ -14,15 +16,6 @@ interface IResolveDirectAttackParams {
   attackerEntity: IBoardEntity;
   attackerInstanceId: string;
   isPlayerA: boolean;
-}
-
-function resolveDirectHitBonus(attackerEntity: IBoardEntity): number {
-  return attackerEntity.card.masteryPassiveSkillId === "passive-direct-hit-plus-200" ? 200 : 0;
-}
-
-function applyAttackDrainByDefenderPassive(attackerAttack: number, defenderEntity: IBoardEntity): number {
-  if (defenderEntity.card.masteryPassiveSkillId !== "passive-atk-drain-200") return attackerAttack;
-  return Math.max(0, attackerAttack - 200);
 }
 
 export function resolveDirectAttackState(params: IResolveDirectAttackParams): { state: GameState; damage: number } {
@@ -54,10 +47,6 @@ interface IResolvedEntityBattleResult extends ReturnType<typeof CombatService.ca
   passiveAttackReduction: number;
   attackerDestroyedDestination: "GRAVEYARD" | "DESTROYED" | null;
   defenderDestroyedDestination: "GRAVEYARD" | "DESTROYED" | null;
-}
-
-function shouldDestroyBattleTarget(winner: IBoardEntity, winnerDestroyed: boolean, loserDestroyed: boolean): boolean {
-  return !winnerDestroyed && loserDestroyed && winner.card.effect?.action === "DESTROY_ENTITY_ON_BATTLE_WIN";
 }
 
 export function resolveEntityBattleState(params: IResolveEntityBattleParams): { state: GameState; result: IResolvedEntityBattleResult; defenderEntity: IBoardEntity } {
@@ -106,88 +95,5 @@ export function resolveEntityBattleState(params: IResolveEntityBattleParams): { 
       defenderDestroyedDestination: updatedDefender.destroyedDestination,
     },
     defenderEntity,
-  };
-}
-
-function buildUpdatedAttacker(
-  attacker: IPlayer,
-  attackerEntity: IBoardEntity,
-  defenderEntity: IBoardEntity,
-  attackerInstanceId: string,
-  passiveAttackReduction: number,
-  attackerDestroyed: boolean,
-  damageToAttackerPlayer: number,
-  defenderDestroyed: boolean,
-): { player: IPlayer; destroyedDestination: "GRAVEYARD" | "DESTROYED" | null } {
-  const entitiesWithPassiveReduction =
-    passiveAttackReduction > 0
-      ? attacker.activeEntities.map((entity) =>
-          entity.instanceId === attackerInstanceId && typeof entity.card.attack === "number"
-            ? { ...entity, card: { ...entity.card, attack: Math.max(0, entity.card.attack - passiveAttackReduction) } }
-            : entity,
-        )
-      : attacker.activeEntities;
-  let updatedEntities = markAttackerAsUsed(entitiesWithPassiveReduction, attackerInstanceId);
-  let updatedGraveyard = attacker.graveyard;
-  let updatedDestroyedPile = [...(attacker.destroyedPile ?? [])];
-  let destroyedDestination: "GRAVEYARD" | "DESTROYED" | null = null;
-  if (attackerDestroyed) {
-    updatedEntities = updatedEntities.filter((entity) => entity.instanceId !== attackerInstanceId);
-    if (shouldDestroyBattleTarget(defenderEntity, defenderDestroyed, attackerDestroyed)) {
-      updatedDestroyedPile = [...updatedDestroyedPile, attackerEntity.card];
-      destroyedDestination = "DESTROYED";
-    } else {
-      updatedGraveyard = [...updatedGraveyard, attackerEntity.card];
-      destroyedDestination = "GRAVEYARD";
-    }
-  }
-  return {
-    destroyedDestination,
-    player: {
-    ...attacker,
-    healthPoints: Math.max(0, attacker.healthPoints - damageToAttackerPlayer),
-    activeEntities: updatedEntities,
-    graveyard: updatedGraveyard,
-    destroyedPile: updatedDestroyedPile,
-  },
-  };
-}
-
-function buildUpdatedDefender(
-  defender: IPlayer,
-  defenderEntity: IBoardEntity,
-  attackerEntity: IBoardEntity,
-  defenderInstanceId: string,
-  defenderDestroyed: boolean,
-  damageToDefenderPlayer: number,
-  attackerDestroyed: boolean,
-): { player: IPlayer; destroyedDestination: "GRAVEYARD" | "DESTROYED" | null } {
-  let updatedEntities = defender.activeEntities;
-  let updatedGraveyard = defender.graveyard;
-  let updatedDestroyedPile = [...(defender.destroyedPile ?? [])];
-  let destroyedDestination: "GRAVEYARD" | "DESTROYED" | null = null;
-  if (defenderDestroyed) {
-    updatedEntities = updatedEntities.filter((entity) => entity.instanceId !== defenderInstanceId);
-    if (shouldDestroyBattleTarget(attackerEntity, attackerDestroyed, defenderDestroyed)) {
-      updatedDestroyedPile = [...updatedDestroyedPile, defenderEntity.card];
-      destroyedDestination = "DESTROYED";
-    } else {
-      updatedGraveyard = [...updatedGraveyard, defenderEntity.card];
-      destroyedDestination = "GRAVEYARD";
-    }
-  } else if (defenderEntity.mode === "SET") {
-    updatedEntities = updatedEntities.map((entity) =>
-      entity.instanceId === defenderInstanceId ? { ...entity, mode: "DEFENSE" } : entity,
-    );
-  }
-  return {
-    destroyedDestination,
-    player: {
-    ...defender,
-    healthPoints: Math.max(0, defender.healthPoints - damageToDefenderPlayer),
-    activeEntities: updatedEntities,
-    graveyard: updatedGraveyard,
-    destroyedPile: updatedDestroyedPile,
-  },
   };
 }

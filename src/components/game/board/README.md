@@ -237,7 +237,8 @@ Guía rápida para entender la lógica de tablero y batalla.
    - `pnpm test`: con fallos activos (ver tests de referencia abajo).
 
 2. **Tests con regresión detectada**
-   - `src/components/game/board/Board.test.tsx`
+   - `src/components/game/board/Board.hud-and-phase.test.tsx`
+   - `src/components/game/board/Board.history-toggle.test.tsx`
    - `src/components/game/board/hooks/useBoard.battle-position.integration.test.ts`
    - `src/components/game/board/ui/DuelResultOverlay.test.tsx`
    - `src/core/use-cases/game-engine/effects/resolve-execution-return.integration.test.ts`
