@@ -1,5 +1,5 @@
 <!-- src/core/use-cases/game-engine/README.md - Descripción del módulo de motor de juego, estructura e invariantes. -->
-# Game Engine Module
+# Módulo de Motor de Juego
 
 Casos de uso puros del motor, organizados por responsabilidad.
 
@@ -60,3 +60,4 @@ Casos de uso puros del motor, organizados por responsabilidad.
 1. Regla nueva: crear caso de uso en submódulo correcto.
 2. Exponerlo vía `GameEngine.ts` (fachada).
 3. Añadir test unitario + test de integración si toca flujo completo.
+

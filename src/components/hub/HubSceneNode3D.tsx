@@ -12,8 +12,6 @@ import { resolveHubNodeInteraction } from "@/components/hub/internal/hub-node-in
 import { resolveHubNodeEntryScale } from "@/components/hub/internal/hub-node-entry-animation";
 import { resolveHubNodeBaseColor, resolveHubNodeWorldPosition } from "@/components/hub/internal/hub-3d-node-math";
 import { HUB_NODE_PANEL_Y_OFFSET } from "@/components/hub/internal/hub-node-panel-layout";
-
-// Importamos los núcleos
 import { MarketCore3D } from "./nodes/market/MarketCore3D";
 import { HomeCore3D } from "./nodes/HubNodeDecorHome";
 import { MultiplayerCore3D } from "./nodes/HubNodeDecorMultiplayer";
@@ -82,18 +80,7 @@ export function HubSceneNode3D({
 
   return (
     <group ref={nodeRef} position={[posX, 0, posZ]} scale={[0, 0, 0]}>
-      
-      {/* 💡 FIX DE ILUMINACIÓN: Luz puntual propia para cada nodo.
-          Esto hace que el material PBR (meshStandardMaterial) brille perfectamente
-          sin importar dónde esté el "sol" de la escena global. */}
-      <pointLight 
-        position={[0, 1.5, 0]} // Posicionada justo en el centro del holograma
-        intensity={8}          // Intensidad alta para que parezca un neón
-        distance={5}           // Rango de la luz
-        color={baseColor} 
-      />
-
-      {/* 1. EL NÚCLEO HOLOGRÁFICO 3D */}
+      <pointLight position={[0, 1.5, 0]} intensity={8} distance={5} color={baseColor} />
       <group
         position={[0, 1.5, 0]}
         onClick={handleNodeAction}
@@ -115,7 +102,6 @@ export function HubSceneNode3D({
          {section.type === "TRAINING" && <TrainingCore3D />}
       </group>
 
-      {/* 2. LA BASE HOLOGRÁFICA */}
       <group rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]} ref={baseRef}>
         <mesh><circleGeometry args={[1.8, 32]} /><meshBasicMaterial color={baseColor} transparent opacity={0.03} depthWrite={false} /></mesh>
         <mesh><ringGeometry args={[1.78, 1.8, 64]} /><meshBasicMaterial color={baseColor} transparent opacity={0.4} depthWrite={false} /></mesh>
@@ -127,7 +113,6 @@ export function HubSceneNode3D({
         ))}
       </group>
 
-      {/* 3. LA UI DOM CON HTML DE DREI */}
       {showActionPanel ? (
         <Html
           center

@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/fusion/fusion-from-execution.integration.test.ts - Descripción breve del módulo.
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
@@ -103,3 +104,4 @@ describe("fusión desde ejecución", () => {
     expect(state.playerA.graveyard.some((card) => card.id === "exec-fusion-gemgpt")).toBe(false);
   });
 });
+

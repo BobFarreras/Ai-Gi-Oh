@@ -1,3 +1,4 @@
+// src/core/config/audio-catalog.ts - Descripción breve del módulo.
 export type AudioTrackId =
   // Música de fondo en loop durante el duelo.
   | "SOUNDTRACK"
@@ -73,3 +74,4 @@ export const AUDIO_CHANNEL_VOLUME = {
   music: 0.8,
   sfx: 1,
 };
+

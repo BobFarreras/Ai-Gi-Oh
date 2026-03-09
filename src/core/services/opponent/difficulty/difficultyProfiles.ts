@@ -1,3 +1,4 @@
+// src/core/services/opponent/difficulty/difficultyProfiles.ts - Descripción breve del módulo.
 import { IOpponentDifficultyProfile, OpponentDifficulty } from "./types";
 
 const DIFFICULTY_PROFILES: Record<OpponentDifficulty, IOpponentDifficultyProfile> = {
@@ -50,3 +51,4 @@ const DIFFICULTY_PROFILES: Record<OpponentDifficulty, IOpponentDifficultyProfile
 export function getDifficultyProfile(difficulty: OpponentDifficulty): IOpponentDifficultyProfile {
   return DIFFICULTY_PROFILES[difficulty];
 }
+

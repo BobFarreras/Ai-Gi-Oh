@@ -1,3 +1,4 @@
+// src/core/use-cases/CombatSercice.test.ts - Descripción breve del módulo.
 import { describe, it, expect } from 'vitest';
 import { CombatService, CombatContext } from './CombatService';
 
@@ -66,3 +67,4 @@ describe('CombatService - Motor de Reglas Core', () => {
     });
   });
 });
+

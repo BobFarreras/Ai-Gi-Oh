@@ -1,8 +1,10 @@
 // src/components/landing/TerminalPrompt.tsx - Prompt inicial de acceso que valida entrada y desbloquea el flujo narrativo.
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TERMINAL_HELP_TEXT, TERMINAL_TEXT } from "@/components/landing/internal/terminal-prompt-copy";
+import { useTerminalPromptTyping } from "@/components/landing/internal/use-terminal-prompt-typing";
 
 interface ITerminalPromptProps {
   onComplete: (code: string) => void;
@@ -10,80 +12,17 @@ interface ITerminalPromptProps {
   onInputReady?: () => void;
 }
 
-const TERMINAL_TEXT = [
-  "Estableciendo conexión segura con The Core...",
-  "Transmisión entrante interceptada.",
-  "¿Hola? ¿Estás ahí?",
-  "Soy del Escuadrón 430.",
-  "Si es tu primera vez en el ciberespacio, necesito confirmar tu identidad.",
-  "Introduce tu código de verificación:"
-];
-const TERMINAL_HELP_TEXT = "¿Te has olvidado deL código? No será tu nombre...";
-
 export function TerminalPrompt({ onComplete, onAction, onInputReady }: ITerminalPromptProps) {
-  const [displayedLines, setDisplayedLines] = useState<string[]>([]);
-  const [currentLineIndex, setCurrentLineIndex] = useState(0);
-  const [currentCharIndex, setCurrentCharIndex] = useState(0);
-  const [isHelpTyping, setIsHelpTyping] = useState(false);
-  const [helpCharIndex, setHelpCharIndex] = useState(0);
-  const [isHelpCompleted, setIsHelpCompleted] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const isTyping = currentLineIndex < TERMINAL_TEXT.length;
-
-  useEffect(() => {
-    if (isTyping) return;
-    onInputReady?.();
-  }, [isTyping, onInputReady]);
-
-  useEffect(() => {
-    if (isTyping || isHelpCompleted || isHelpTyping) return;
-    const timeoutId = window.setTimeout(() => {
-      setIsHelpTyping(true);
-      setHelpCharIndex(0);
-    }, 3000);
-    return () => window.clearTimeout(timeoutId);
-  }, [isHelpCompleted, isHelpTyping, isTyping]);
-
-  useEffect(() => {
-    if (!isHelpTyping || isHelpCompleted) return;
-    if (helpCharIndex < TERMINAL_HELP_TEXT.length) {
-      const timeoutId = window.setTimeout(() => {
-        setHelpCharIndex((previous) => previous + 1);
-      }, Math.random() * 10 + 8);
-      return () => window.clearTimeout(timeoutId);
-    }
-    const finalizeTimeout = window.setTimeout(() => {
-      setDisplayedLines((previous) => [...previous, TERMINAL_HELP_TEXT]);
-      setIsHelpTyping(false);
-      setIsHelpCompleted(true);
-    }, 120);
-    return () => window.clearTimeout(finalizeTimeout);
-  }, [helpCharIndex, isHelpCompleted, isHelpTyping]);
-
-  useEffect(() => {
-    if (!isTyping) {
-      const focusTimeout = setTimeout(() => inputRef.current?.focus(), 50);
-      return () => clearTimeout(focusTimeout);
-    }
-
-    const currentFullLine = TERMINAL_TEXT[currentLineIndex];
-
-    if (currentCharIndex < currentFullLine.length) {
-      const timeout = setTimeout(() => {
-        setCurrentCharIndex((prev) => prev + 1);
-      }, Math.random() * 10 + 5); 
-      return () => clearTimeout(timeout);
-    } else {
-      const timeout = setTimeout(() => {
-        setDisplayedLines((prev) => [...prev, currentFullLine]);
-        setCurrentLineIndex((prev) => prev + 1);
-        setCurrentCharIndex(0);
-      }, 200); 
-      return () => clearTimeout(timeout);
-    }
-  }, [currentLineIndex, currentCharIndex, isTyping]);
+  const {
+    inputRef,
+    isTyping,
+    displayedLines,
+    currentLineIndex,
+    currentCharIndex,
+    isHelpTyping,
+    helpCharIndex,
+  } = useTerminalPromptTyping(true, onInputReady);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,16 +38,13 @@ export function TerminalPrompt({ onComplete, onAction, onInputReady }: ITerminal
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
       transition={{ duration: 0.5 }}
-      // AÑADIDO: min-h-[350px] y flex-col para mantener el tamaño estático
       className="relative z-40 flex min-h-[350px] w-full max-w-2xl flex-col rounded-sm border border-cyan-500/30 bg-black/80 p-6 font-mono shadow-[0_0_30px_rgba(6,182,212,0.2)] backdrop-blur-md sm:p-10"
     >
-      {/* HEADER */}
       <div className="mb-4 flex flex-shrink-0 items-center gap-2 border-b border-cyan-900/50 pb-2 text-xs text-cyan-600">
         <div className="h-2 w-2 animate-pulse bg-red-500" />
         <span>SYS_TERMINAL // SECURE_CHANNEL_430</span>
       </div>
 
-      {/* TEXTO - Ocupará el espacio disponible gracias a flex-1 */}
       <div className="flex-1 space-y-2 text-sm text-cyan-400 sm:text-base">
         {displayedLines.map((line, i) => (
           <div key={i}>{"> "}{line}</div>
@@ -129,7 +65,6 @@ export function TerminalPrompt({ onComplete, onAction, onInputReady }: ITerminal
         )}
       </div>
 
-      {/* FORMULARIO */}
       <div className="mt-4 flex-shrink-0 min-h-[40px]">
         <AnimatePresence>
           {!isTyping && (

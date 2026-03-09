@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/logging/combat-log.integration.test.ts - Descripción breve del módulo.
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
@@ -77,3 +78,4 @@ describe("GameEngine CombatLog", () => {
     expect(damageLog?.payload).toMatchObject({ targetPlayerId: "p2" });
   });
 });
+

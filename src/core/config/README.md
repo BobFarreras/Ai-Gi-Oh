@@ -1,4 +1,5 @@
-# Core Config Module
+<!-- src/core/config/README.md - Catálogo de configuración estática compartida por core y UI. -->
+# Módulo de Configuración Core
 
 Configuraciones estáticas de dominio/aplicación.
 
@@ -14,4 +15,6 @@ Configuraciones estáticas de dominio/aplicación.
 1. Solo datos/configuración, sin efectos secundarios.
 2. No meter lógica de negocio compleja.
 3. Cambios de claves de evento deben mantenerse compatibles con `useGameAudio`.
+
+
 

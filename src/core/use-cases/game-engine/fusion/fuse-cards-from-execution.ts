@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/fusion/fuse-cards-from-execution.ts - Descripción breve del módulo.
 import { IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
@@ -113,3 +114,4 @@ function appendFusionExecutionLogs(
     source: "EXECUTION",
   });
 }
+

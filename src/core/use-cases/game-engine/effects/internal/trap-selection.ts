@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/effects/internal/trap-selection.ts - Descripción breve del módulo.
 import { TrapTrigger } from "@/core/entities/ICard";
 import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
@@ -22,3 +23,4 @@ export function selectTriggeredTrap(
   if (!trap) return null;
   return { trap, player, opponent, isPlayerA };
 }
+

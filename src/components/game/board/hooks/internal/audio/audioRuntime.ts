@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/internal/audio/audioRuntime.ts - Descripción breve del módulo.
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { AUDIO_CATALOG, AUDIO_CHANNEL_VOLUME, AudioTrackId } from "@/core/config/audio-catalog";
 
@@ -36,3 +37,4 @@ export function safePlay(audio: HTMLAudioElement | null): void {
     playPromise.catch(() => undefined);
   }
 }
+

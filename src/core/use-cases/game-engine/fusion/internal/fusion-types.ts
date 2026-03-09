@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/fusion/internal/fusion-types.ts - Descripción breve del módulo.
 import { BattleMode, IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { ICard } from "@/core/entities/ICard";
 import { IFusionRecipe } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
@@ -16,3 +17,4 @@ export interface IResolvedFusionState {
   materialCardIds: [string, string];
   fusionCardId: string;
 }
+

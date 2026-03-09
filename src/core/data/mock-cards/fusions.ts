@@ -1,3 +1,4 @@
+// src/core/data/mock-cards/fusions.ts - Descripción breve del módulo.
 import { ICard } from "@/core/entities/ICard";
 
 export const FUSION_CARDS: ICard[] = [
@@ -50,3 +51,4 @@ export const FUSION_CARDS: ICard[] = [
     renderUrl: "/assets/renders/pytgress.png",
   },
 ];
+

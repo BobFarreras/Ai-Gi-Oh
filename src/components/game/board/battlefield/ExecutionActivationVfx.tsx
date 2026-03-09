@@ -1,3 +1,4 @@
+// src/components/game/board/battlefield/ExecutionActivationVfx.tsx - Descripción breve del módulo.
 import { motion } from "framer-motion";
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { DigitalBeam } from "./DigitalBeam";
@@ -70,3 +71,4 @@ export function ExecutionActivationVfx({ entity, isOpponentSide }: ExecutionActi
 
   return null;
 }
+

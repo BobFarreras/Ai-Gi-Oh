@@ -1,3 +1,4 @@
+// src/core/use-cases/GameEngine.integration.test.ts - Descripción breve del módulo.
 import { describe, expect, it } from "vitest";
 import { ICard } from "../entities/ICard";
 import { IBoardEntity } from "../entities/IPlayer";
@@ -154,3 +155,4 @@ describe("GameEngine integración", () => {
     expect(state.playerA.graveyard[0]?.id).toBe("spell-ddos");
   });
 });
+

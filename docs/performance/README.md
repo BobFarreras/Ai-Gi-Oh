@@ -39,6 +39,12 @@ window.__AIGIOH_PERF__?.interactions
 window.__AIGIOH_PERF__ = { renders: {}, interactions: [] };
 ```
 
+## Política de resultados versionados
+
+1. `docs/performance/results/` no debe acumular históricos locales de cada ejecución.
+2. Se conserva solo `.gitkeep` y reportes curados que se referencien explícitamente en una fase.
+3. Los resultados automáticos locales (`baseline-mobile-*.json/.md`) se consideran artefactos temporales y se pueden limpiar.
+
 ## Interacciones instrumentadas
 
 1. `board.playAction`

@@ -1,4 +1,5 @@
-# Core Errors Module
+<!-- src/core/errors/README.md - Contrato de errores tipados del dominio y aplicación. -->
+# Módulo de Errores Core
 
 Jerarquía de errores tipados para reglas de dominio y validaciones.
 
@@ -30,4 +31,6 @@ Jerarquía de errores tipados para reglas de dominio y validaciones.
 1. Casos de uso deben lanzar errores tipados (no `Error` genérico).
 2. UI transforma esos errores a mensajes amigables.
 3. Evitar `console.log` para manejo de errores funcionales.
+
+
 

@@ -1,3 +1,4 @@
+// src/core/data/mock-cards/executions.ts - Descripción breve del módulo.
 import { ICard } from "@/core/entities/ICard";
 
 interface IExecutionSeed extends Omit<ICard, "type" | "renderUrl" | "bgUrl"> {
@@ -109,3 +110,4 @@ export const EXECUTION_CARDS: ICard[] = [
     effect: { action: "FUSION_SUMMON", recipeId: "fusion-pytgress", materialsRequired: 2 },
   }),
 ];
+

@@ -3,14 +3,19 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { IAuthCredentials, IAuthRepository, IAuthSession } from "@/core/repositories/IAuthRepository";
 
-function mapSession(session: NonNullable<Awaited<ReturnType<SupabaseClient["auth"]["getSession"]>>["data"]["session"]>): IAuthSession {
+type TSupabaseSession = NonNullable<Awaited<ReturnType<SupabaseClient["auth"]["getSession"]>>["data"]["session"]>;
+type TSupabaseUser = NonNullable<Awaited<ReturnType<SupabaseClient["auth"]["getUser"]>>["data"]["user"]>;
+
+function mapSession(session: TSupabaseSession, userOverride?: TSupabaseUser): IAuthSession {
+  // Priorizamos `getUser()` cuando está disponible para evitar confiar en `session.user` desde storage.
+  const user = userOverride ?? session.user;
   return {
     accessToken: session.access_token,
     expiresAtIso: new Date(session.expires_at ? session.expires_at * 1000 : Date.now()).toISOString(),
     user: {
-      id: session.user.id,
-      email: session.user.email ?? null,
-      displayName: typeof session.user.user_metadata?.display_name === "string" ? session.user.user_metadata.display_name : null,
+      id: user.id,
+      email: user.email ?? null,
+      displayName: typeof user.user_metadata?.display_name === "string" ? user.user_metadata.display_name : null,
     },
   };
 }
@@ -48,10 +53,14 @@ export class SupabaseAuthRepository implements IAuthRepository {
   }
 
   async getCurrentSession(): Promise<IAuthSession | null> {
-    const { data, error } = await this.client.auth.getSession();
-    if (error) {
+    const [{ data: sessionData, error: sessionError }, { data: userData, error: userError }] = await Promise.all([
+      this.client.auth.getSession(),
+      this.client.auth.getUser(),
+    ]);
+    if (sessionError || userError) {
       throw new ValidationError("No se pudo obtener la sesión actual.");
     }
-    return data.session ? mapSession(data.session) : null;
+    if (!sessionData.session || !userData.user) return null;
+    return mapSession(sessionData.session, userData.user);
   }
 }

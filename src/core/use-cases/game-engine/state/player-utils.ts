@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/state/player-utils.ts - Descripción breve del módulo.
 import { IPlayer } from "@/core/entities/IPlayer";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
@@ -27,3 +28,4 @@ export function assignPlayers(state: GameState, updatedPlayer: IPlayer, updatedO
     playerB: isPlayerA ? updatedOpponent : updatedPlayer,
   };
 }
+

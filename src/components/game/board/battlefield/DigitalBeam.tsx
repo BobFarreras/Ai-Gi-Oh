@@ -1,3 +1,4 @@
+// src/components/game/board/battlefield/DigitalBeam.tsx - Descripción breve del módulo.
 import { motion } from "framer-motion";
 
 interface DigitalBeamProps {
@@ -23,3 +24,4 @@ export function DigitalBeam({ direction, onComplete }: DigitalBeamProps) {
     </motion.div>
   );
 }
+

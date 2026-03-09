@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
-import { IBattleBannerMessage, resolveLatestBannerMessage } from "./internal/banner-message-policy";
+import { IBattleBannerMessage, resolveLatestBannerMessage } from "./internal/banner/banner-message-policy";
 
 interface BattleBannerCenterProps {
   events: ICombatLogEvent[];
