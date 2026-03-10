@@ -139,3 +139,19 @@ Blindar rutas Story ante entradas inválidas y documentar hardening aplicado.
 
 1. `nodeId` inválido dispara `ValidationError`.
 2. `pnpm lint`, `pnpm test`, `pnpm build` en verde.
+
+## Fase 11 - Cierre de entrega Story
+
+### Objetivo
+
+Entregar un cierre auditable con quality gate dedicado al módulo Story.
+
+### Implementado
+
+1. Script `pnpm quality:story` en `package.json`.
+2. Reporte técnico de fases 4-11:
+   - `docs/story/PHASES-4-11-REPORT.md`.
+
+### Validación
+
+1. `pnpm quality:story` ejecuta tests Story + lint + build.

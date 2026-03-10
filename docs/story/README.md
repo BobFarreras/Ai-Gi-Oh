@@ -10,7 +10,8 @@ Definir cómo se modela el mapa, desbloqueos, navegación e integración con due
 1. `docs/story/01-world-graph.md`: modelo de grafo de mundo, reglas de desbloqueo y movimiento.
 2. `docs/story/02-use-cases.md`: casos de uso de Story para estado, movimiento y resolución.
 3. `docs/story/03-narrative-engine.md`: motor de briefing narrativo por capítulo.
-4. `docs/story/NARRACION_OPONENTES.md`: narrativa y personalidad de oponentes.
+4. `docs/story/PHASES-4-11-REPORT.md`: reporte de implementación y trazabilidad de fases.
+5. `docs/story/NARRACION_OPONENTES.md`: narrativa y personalidad de oponentes.
 
 ## Estado actual
 
