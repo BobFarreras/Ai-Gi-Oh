@@ -25,3 +25,4 @@
 2. Cierre de duelo vía endpoint dedicado y recompensa posterior.
 3. Integración con `Board` en modo `STORY` sin duplicar lógica del motor.
 4. Desbloqueo y navegación del mapa mediante grafo puro en `core/services/story/world`.
+5. Orquestación de estado/movimiento/resolución en `core/use-cases/story`.

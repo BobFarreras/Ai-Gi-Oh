@@ -63,7 +63,7 @@ export function CrawlText({ accessCode, onSkip, onAction }: ICrawlTextProps) {
         </p>
 
         <p className="mb-12 text-3xl font-black text-white tracking-widest">
-          AÑO 2030
+          AÑO 2050
         </p>
         
         <p className="mb-8">
