@@ -8,15 +8,24 @@ interface BoardMobileEnergyBadgeProps {
   currentEnergy: number;
   maxEnergy: number;
   isPlayerTurn: boolean;
+  dockLeftPx?: number;
+  bottomPx?: number;
 }
 
-export function BoardMobileEnergyBadge({ currentEnergy, maxEnergy, isPlayerTurn }: BoardMobileEnergyBadgeProps) {
+export function BoardMobileEnergyBadge({
+  currentEnergy,
+  maxEnergy,
+  isPlayerTurn,
+  dockLeftPx = 188,
+  bottomPx = 10,
+}: BoardMobileEnergyBadgeProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="pointer-events-none absolute bottom-2 left-[calc(clamp(11.8rem,36vw,16.8rem)-0.05rem)] z-[290] flex h-9 items-center gap-1.5 border border-yellow-500/45 bg-zinc-950/88 px-2.5 text-yellow-300 shadow-[0_0_15px_rgba(234,179,8,0.25)]"
+      className="pointer-events-none absolute z-[290] flex h-9 max-w-[calc(100vw-16px)] items-center gap-1.5 border border-yellow-500/45 bg-zinc-950/88 px-2.5 text-yellow-300 shadow-[0_0_15px_rgba(234,179,8,0.25)]"
+      style={{ left: `${dockLeftPx}px`, bottom: `${bottomPx}px` }}
     >
       <Zap className={`h-3.5 w-3.5 ${isPlayerTurn ? "text-yellow-300" : "text-yellow-500/75"}`} />
       <span className="text-[11px] font-black uppercase tracking-widest">

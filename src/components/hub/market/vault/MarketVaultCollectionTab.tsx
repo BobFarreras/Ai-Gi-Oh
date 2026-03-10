@@ -22,7 +22,7 @@ export function MarketVaultCollectionTab({ collection, onSelectCard, isPerforman
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 10 }}
-      className="grid w-full grid-cols-4 justify-items-center gap-2 pb-4 xl:grid-cols-3 xl:gap-3"
+      className="grid w-full grid-cols-4 justify-items-center gap-2 pb-4 xl:grid-cols-4 xl:gap-3"
     >
       {visibleCollection.map((entry) => (
         <article

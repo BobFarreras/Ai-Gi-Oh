@@ -229,6 +229,10 @@ Guía rápida para entender la lógica de tablero y batalla.
    - **Problema:** botones de acción con color poco visible.
    - **Solución:** se subió saturación, contraste y glow en botones de acción; se movieron acciones arriba junto al cierre para lectura rápida.
 
+8. **HUD y controles móviles recortados en producción**
+   - **Problema:** en móviles reales con barras dinámicas/notch, HUD y controles podían quedar fuera de pantalla.
+   - **Solución:** se introdujo `use-board-mobile-hud-layout` para calcular offsets con `visualViewport` + `safe-area` y anclar HUD/energía/fases con coordenadas adaptativas.
+
 ## Auditoría técnica (2026-03-08)
 
 1. **Quality gates**

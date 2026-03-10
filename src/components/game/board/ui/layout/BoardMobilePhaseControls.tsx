@@ -12,9 +12,18 @@ interface BoardMobilePhaseControlsProps {
   isPlayerTurn: boolean;
   hasWinner: boolean;
   onAdvancePhase: () => void;
+  dockLeftPx?: number;
+  bottomPx?: number;
 }
 
-export function BoardMobilePhaseControls({ phase, isPlayerTurn, hasWinner, onAdvancePhase }: BoardMobilePhaseControlsProps) {
+export function BoardMobilePhaseControls({
+  phase,
+  isPlayerTurn,
+  hasWinner,
+  onAdvancePhase,
+  dockLeftPx = 188,
+  bottomPx = 46,
+}: BoardMobilePhaseControlsProps) {
   const normalized = phase.toUpperCase();
   const isMain = normalized.includes("MAIN");
   const isBattle = normalized.includes("BATTLE");
@@ -46,7 +55,10 @@ export function BoardMobilePhaseControls({ phase, isPlayerTurn, hasWinner, onAdv
 
   if (shouldReduceCombatEffects) {
     return (
-      <div className="absolute bottom-12 left-[calc(clamp(11.8rem,36vw,16.8rem)-0.05rem)] z-[290] flex items-center gap-1 pointer-events-auto">
+      <div
+        className="absolute z-[290] flex max-w-[calc(100vw-10px)] items-center gap-1 overflow-x-auto pointer-events-auto"
+        style={{ left: `${dockLeftPx}px`, bottom: `${bottomPx}px` }}
+      >
         <button
           aria-label="Fase invocar"
           disabled
@@ -78,7 +90,10 @@ export function BoardMobilePhaseControls({ phase, isPlayerTurn, hasWinner, onAdv
   }
 
   return (
-    <div className="absolute bottom-12 left-[calc(clamp(11.8rem,36vw,16.8rem)-0.05rem)] z-[290] flex items-center gap-1 pointer-events-auto">
+    <div
+      className="absolute z-[290] flex max-w-[calc(100vw-10px)] items-center gap-1 overflow-x-auto pointer-events-auto"
+      style={{ left: `${dockLeftPx}px`, bottom: `${bottomPx}px` }}
+    >
       <AnimatePresence mode="popLayout">
         <motion.div
           key={currentPhaseKey}

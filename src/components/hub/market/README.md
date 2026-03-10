@@ -56,6 +56,7 @@ src/components/hub/market
 6. Render de carta adaptativo por layout:
    - desktop: calidad completa (fondo visual activo),
    - móvil: modo `isPerformanceMode` para reducir coste.
+7. En desktop, la pestaña `Almacén` del vault usa grilla de 4 columnas para mejorar densidad visual.
 
 ## Dependencias y flujo
 

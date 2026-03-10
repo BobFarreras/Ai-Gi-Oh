@@ -26,6 +26,7 @@ interface PlayerHUDProps {
   phase?: string;
   onAdvancePhase?: () => void;
   containerClassName?: string;
+  containerStyle?: React.CSSProperties;
   showPhaseControls?: boolean;
   showEnergy?: boolean;
 }
@@ -46,6 +47,7 @@ export function PlayerHUD({
   phase = "MAIN_1",
   onAdvancePhase,
   containerClassName,
+  containerStyle,
   showPhaseControls = true,
   showEnergy = true,
 }: PlayerHUDProps) {
@@ -72,6 +74,7 @@ export function PlayerHUD({
         y: 0 
       }}
       transition={{ type: "spring", stiffness: 200, damping: 20 }}
+      style={containerStyle}
       className={cn(
         "absolute z-[100] flex w-[clamp(18rem,30vw,26.25rem)] h-[clamp(6.9rem,12vh,9.5rem)] transition-all duration-300 pointer-events-none",
         isOpponent ? "top-0 right-0 justify-start" : "bottom-0 left-0 justify-end",
