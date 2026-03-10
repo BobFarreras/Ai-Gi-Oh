@@ -398,4 +398,22 @@ body {
   background: linear-gradient(180deg, rgba(103, 232, 249, 1), rgba(56, 189, 248, 0.95));
 }
 
+.reduced-combat-effects * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+.reduced-combat-effects [class*="shadow-"],
+.reduced-combat-effects [class*="drop-shadow-"] {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.reduced-combat-effects [class*="backdrop-blur"],
+.reduced-combat-effects [class*="mix-blend"] {
+  backdrop-filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
 

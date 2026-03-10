@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "playwright";
 import { maybeStartServer, stopServer } from "./baseline-server.mjs";
+import { loadLocalEnv } from "./load-local-env.mjs";
 
 function readArg(name, fallback) {
   const match = process.argv.find((arg) => arg.startsWith(`--${name}=`));
@@ -132,6 +133,7 @@ async function writeReport(payload) {
 }
 
 async function main() {
+  loadLocalEnv();
   const baseUrl = readArg("baseUrl", process.env.PERF_BASE_URL ?? "http://localhost:3000");
   const combatPath = readArg("combatPath", process.env.PERF_COMBAT_PATH ?? "");
   const storageState = readArg("storageState", "");

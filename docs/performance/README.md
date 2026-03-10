@@ -25,6 +25,8 @@ Usa esta guía para capturar una línea base reproducible:
 3. Auto con servidor prod: `pnpm perf:combat:e2e:real:auto:prod -- --email=... --password=...`.
 4. El flujo entra en `/login`, abre `/hub/story`, selecciona el primer duelo disponible desde BD y ejecuta interacciones de combate.
 5. Reportes: `docs/performance/results/combat-e2e-real-*.json|.md`.
+6. También soporta `.env.local` automáticamente (`PERF_EMAIL`, `PERF_PASSWORD`, `PERF_BASE_URL`) sin pasar credenciales por CLI.
+7. Perfil por defecto: `realistic` (sin throttling artificial). Stress: `pnpm perf:combat:e2e:real:stress:auto:prod`.
 
 ## Activación
 

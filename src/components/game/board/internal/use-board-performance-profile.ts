@@ -21,9 +21,17 @@ function detectProfile(): IBoardPerformanceProfile {
     : 8;
   const isConstrainedDevice = concurrency <= 4 || memory <= 4;
 
+  const forceReduceByFlag = (() => {
+    try {
+      return window.localStorage.getItem("combat-effects-profile") === "reduced";
+    } catch {
+      return false;
+    }
+  })();
+
   return {
     isMobileViewport,
-    shouldReduceCombatEffects: prefersReducedMotion || (isMobileViewport && isConstrainedDevice),
+    shouldReduceCombatEffects: forceReduceByFlag || prefersReducedMotion || isMobileViewport || isConstrainedDevice,
   };
 }
 

@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "playwright";
 import { maybeStartServer, stopServer } from "./baseline-server.mjs";
+import { loadLocalEnv } from "./load-local-env.mjs";
 
 function readArg(name, fallback) {
   const match = process.argv.find((arg) => arg.startsWith(`--${name}=`));
@@ -58,7 +59,8 @@ async function runStep(page, label, selectors) {
   return { label, ok: false, selector: "fallback-tap", durationMs: Date.now() - startedAt };
 }
 
-async function applyMobileStress(page) {
+async function applyMobileProfile(page, profile) {
+  if (profile !== "stress") return;
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Network.enable");
   await cdp.send("Network.emulateNetworkConditions", {
@@ -83,8 +85,9 @@ async function writeReport(payload) {
     "",
     `1. Fecha: ${payload.generatedAt}`,
     `2. Base URL: ${payload.baseUrl}`,
-    `3. Usuario: ${payload.email}`,
-    `4. URL duelo: ${payload.duelUrl ?? "n/a"}`,
+    `3. Perfil: ${payload.profile}`,
+    `4. Usuario: ${payload.email}`,
+    `5. URL duelo: ${payload.duelUrl ?? "n/a"}`,
     "",
     "## Métricas globales",
     "",
@@ -108,8 +111,10 @@ async function writeReport(payload) {
 }
 
 async function main() {
+  loadLocalEnv();
   const baseUrl = readArg("baseUrl", process.env.PERF_BASE_URL ?? "http://localhost:3000");
   const startServer = readArg("startServer", "");
+  const profile = readArg("profile", process.env.PERF_PROFILE ?? "realistic");
   const email = readArg("email", process.env.PERF_EMAIL ?? "");
   const password = readArg("password", process.env.PERF_PASSWORD ?? "");
   if (!email || !password) throw new Error("Faltan credenciales. Usa --email=... --password=...");
@@ -123,7 +128,7 @@ async function main() {
     const context = await browser.newContext({ viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true });
     const page = await context.newPage();
     await installObservers(page);
-    await applyMobileStress(page);
+    await applyMobileProfile(page, profile);
     await page.goto(`${baseUrl}/login`, { waitUntil: "domcontentloaded", timeout: 120000 });
     await page.getByLabel("Email de acceso").fill(email);
     await page.getByLabel("Contraseña de acceso").fill(password);
@@ -162,7 +167,7 @@ async function main() {
     const bodyText = await page.locator("body").innerText();
     if (bodyText.includes("Application error") || bodyText.includes("inválido")) error = bodyText.slice(0, 260);
     const metrics = await page.evaluate(() => window.__AIGIOH_COMBAT_PERF__ ?? { lcp: -1, cls: -1, inp: -1, longTasks: 0, longTaskMax: 0 });
-    const payload = { generatedAt: new Date().toISOString(), baseUrl, email, duelUrl, steps, metrics, error };
+    const payload = { generatedAt: new Date().toISOString(), baseUrl, profile, email, duelUrl, steps, metrics, error };
     const files = await writeReport(payload);
     console.log("Auditoría E2E real de combate completada.");
     console.log(`JSON: ${files.jsonPath}`);
