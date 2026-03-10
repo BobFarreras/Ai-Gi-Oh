@@ -23,3 +23,4 @@ Definir cómo se modela el mapa, desbloqueos, navegación e integración con due
 5. Fase 7 implementada: briefing narrativo dinámico por capítulo/acto.
 6. Fase B implementada: definiciones visuales locales por acto + merge con runtime real.
 7. Fase C implementada: nodos virtuales con interacción contextual y rutas secundarias.
+8. Fase D implementada: transición visual del avatar en movimiento y lock temporal de interacción.

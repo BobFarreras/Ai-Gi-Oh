@@ -179,3 +179,23 @@ Introducir rutas alternativas e interacciones no-duelo en el mapa Story sin acop
 1. El mapa muestra nodos laterales de `EVENT` y `REWARD_*`.
 2. Nodos virtuales no fuerzan navegación a duelo.
 3. `pnpm lint`, tests Story añadidos y `pnpm build` en verde.
+
+## Fase D - Transición visual de movimiento en mapa
+
+### Objetivo
+
+Evitar saltos instantáneos del avatar al mover el cursor Story y proteger la interacción durante el tránsito.
+
+### Implementado
+
+1. Hook dedicado de movimiento visual:
+   - `src/components/hub/story/internal/use-story-avatar-travel.ts`.
+2. `StoryCircuitMap` usa motion values del hook para desplazar avatar con arco breve.
+3. Lock de interacción mientras se confirma y anima el movimiento (`isMoving`).
+4. Indicador visual `En transito...` para feedback de estado al jugador.
+
+### Validación
+
+1. Al mover nodo, avatar ya no hace salto seco.
+2. Durante tránsito no se puede re-seleccionar nodos.
+3. `pnpm lint`, tests Story relevantes y `pnpm build` en verde.

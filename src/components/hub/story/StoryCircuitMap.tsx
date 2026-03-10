@@ -11,11 +11,13 @@ import {
   resolveStoryPathSegments,
 } from "@/components/hub/story/story-circuit-layout";
 import { StoryMapNode } from "./internal/StoryMapNode";
+import { useStoryAvatarTravel } from "./internal/use-story-avatar-travel";
 
 interface StoryCircuitMapProps {
   nodes: IStoryMapNodeRuntime[];
   currentNodeId: string | null;
   selectedNodeId: string | null;
+  isInteractionLocked?: boolean;
   onSelectNode: (nodeId: string | null) => void;
 }
 
@@ -23,6 +25,7 @@ export function StoryCircuitMap({
   nodes,
   currentNodeId,
   selectedNodeId,
+  isInteractionLocked,
   onSelectNode,
 }: StoryCircuitMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -34,6 +37,11 @@ export function StoryCircuitMap({
     [nodes, positionMap],
   );
   const avatarNode = nodes.find((node) => node.id === currentNodeId) ?? nodes[0];
+  const resolvePosition = (nodeId: string) => resolveStoryNodePosition(nodeId, positionMap);
+  const { avatarX, avatarY } = useStoryAvatarTravel({
+    targetNodeId: avatarNode?.id ?? null,
+    resolvePosition,
+  });
   const avatarPos = resolveStoryNodePosition(avatarNode?.id ?? "", positionMap);
 
   useEffect(() => {
@@ -50,7 +58,9 @@ export function StoryCircuitMap({
     <div
       ref={mapContainerRef}
       className="relative h-full w-full cursor-grab overflow-hidden active:cursor-grabbing"
-      onClick={() => onSelectNode(null)}
+      onClick={() => {
+        if (!isInteractionLocked) onSelectNode(null);
+      }}
     >
       <div
         className="pointer-events-none absolute inset-0 opacity-20"
@@ -95,7 +105,9 @@ export function StoryCircuitMap({
               <StoryMapNode
                 node={node}
                 isSelected={selectedNodeId === node.id}
-                onClick={() => onSelectNode(node.id)}
+                onClick={() => {
+                  if (!isInteractionLocked) onSelectNode(node.id);
+                }}
               />
             </div>
           );
@@ -104,10 +116,11 @@ export function StoryCircuitMap({
         <motion.div
           className="pointer-events-none absolute z-30 flex w-24 -translate-x-1/2 -translate-y-full flex-col items-center"
           initial={false}
-          animate={{ top: avatarPos.y, left: avatarPos.x }}
-          transition={{ type: "spring", stiffness: 280, damping: 24 }}
+          style={{ top: avatarY, left: avatarX }}
         >
-          <div className="mb-2 h-0 w-0 animate-bounce border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent border-t-emerald-400" />
+          <div
+            className="mb-2 h-0 w-0 animate-bounce border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent border-t-emerald-400"
+          />
           <div className="relative mb-2 h-14 w-14 overflow-hidden rounded-full border-2 border-emerald-400 bg-black shadow-[0_0_30px_#10b981]">
             <Image
               src="/assets/story/player/bob.png"
@@ -120,6 +133,11 @@ export function StoryCircuitMap({
           </div>
           <div className="absolute bottom-0 h-6 w-16 rounded-[50%] border-2 border-emerald-400 opacity-60 shadow-[0_0_20px_#10b981]" />
         </motion.div>
+        {isInteractionLocked ? (
+          <div className="pointer-events-none absolute left-1/2 top-8 z-40 -translate-x-1/2 rounded border border-emerald-400/50 bg-black/80 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-200">
+            En transito...
+          </div>
+        ) : null}
       </motion.div>
     </div>
   );

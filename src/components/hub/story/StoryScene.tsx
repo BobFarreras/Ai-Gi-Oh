@@ -55,6 +55,7 @@ export function StoryScene({ runtime, briefing }: IStorySceneProps) {
       };
       setCurrentNodeId(payload.currentNodeId);
       setHistory(payload.history);
+      await new Promise((resolve) => setTimeout(resolve, 850));
     } catch {
       setMovementError("No se pudo mover al nodo seleccionado.");
     } finally {
@@ -80,7 +81,12 @@ export function StoryScene({ runtime, briefing }: IStorySceneProps) {
         <StorySidebar
           briefing={briefing}
           selectedNode={selectedNode}
-          canMove={Boolean(selectedNode && selectedNode.isUnlocked && !selectedNode.isVirtualNode && selectedNode.id !== currentNodeId)}
+          canMove={Boolean(
+            selectedNode &&
+              selectedNode.isUnlocked &&
+              !selectedNode.isVirtualNode &&
+              selectedNode.id !== currentNodeId,
+          )}
           isMoving={isMoving}
           movementError={movementError}
           interactionFeedback={interactionFeedback}
@@ -97,6 +103,7 @@ export function StoryScene({ runtime, briefing }: IStorySceneProps) {
           nodes={runtime.nodes}
           currentNodeId={currentNodeId}
           selectedNodeId={selectedNodeId}
+          isInteractionLocked={isMoving}
           onSelectNode={setSelectedNodeId}
         />
       </div>
