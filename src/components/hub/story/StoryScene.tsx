@@ -7,6 +7,7 @@ import { useStore } from "zustand";
 import { StoryCircuitMap } from "@/components/hub/story/StoryCircuitMap";
 import { StoryHistoryPanel } from "@/components/hub/story/internal/StoryHistoryPanel";
 import { createStorySceneStore, StorySceneStore } from "@/components/hub/story/internal/story-scene-store";
+import { resolveStoryNodeInteraction } from "@/core/services/story/world/resolve-story-node-interaction";
 import { IStoryMapRuntimeData } from "@/services/story/story-map-runtime-data";
 
 interface StorySceneProps {
@@ -31,6 +32,7 @@ export function StoryScene({ runtime }: StorySceneProps) {
   const [isMoving, setIsMoving] = useState(false);
   const [movementError, setMovementError] = useState<string | null>(null);
   const selectedNode = selectedNodeId ? nodesById[selectedNodeId] : null;
+  const selectedNodeInteraction = selectedNode ? resolveStoryNodeInteraction(selectedNode) : null;
 
   const handleMove = async () => {
     if (!selectedNodeId || isMoving) return;
@@ -74,8 +76,11 @@ export function StoryScene({ runtime }: StorySceneProps) {
             >
               {isMoving ? "Moviendo..." : "Moverse aquí"}
             </button>
-            <Link href={selectedNode.href} className="rounded border border-emerald-400/50 bg-emerald-950/60 px-3 py-1 text-xs font-black uppercase tracking-wider">
-              Entrar al nodo
+            <Link
+              href={selectedNode.href}
+              className="rounded border border-emerald-400/50 bg-emerald-950/60 px-3 py-1 text-xs font-black uppercase tracking-wider"
+            >
+              {selectedNodeInteraction?.actionLabel ?? "Entrar al nodo"}
             </Link>
           </div>
           {movementError ? <p className="mt-2 text-xs text-rose-300">{movementError}</p> : null}

@@ -40,3 +40,23 @@ Permitir movimiento explícito por nodos desbloqueados y mostrar caminos visuale
 1. El movimiento a nodo bloqueado devuelve error controlado.
 2. El movimiento válido actualiza nodo actual e historial.
 3. `pnpm lint`, `pnpm test`, `pnpm build` en verde.
+
+## Fase 6 - Interacciones por tipo de nodo
+
+### Objetivo
+
+Desacoplar la acción principal de la UI respecto al tipo de nodo Story.
+
+### Implementado
+
+1. Resolver de interacción por tipo:
+   - `core/services/story/world/resolve-story-node-interaction.ts`.
+2. Cobertura de tests de interacción por tipos (`DUEL`, `EVENT`, `REWARD_*`).
+3. `StoryMapRuntimeData` expone `nodeType`.
+4. `StoryScene` y `StoryCircuitMap` muestran/consumen la semántica de tipo.
+
+### Validación
+
+1. El label de acción en inspector depende del `nodeType`.
+2. El mapa muestra etiqueta de tipo por nodo.
+3. `pnpm lint`, `pnpm test`, `pnpm build` en verde.

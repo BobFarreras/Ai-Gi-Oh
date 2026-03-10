@@ -37,6 +37,7 @@ export async function getStoryMapRuntimeData(): Promise<IStoryMapRuntimeData | n
       duelIndex: node.duelIndex,
       title: node.title,
       opponentName: node.opponentName,
+      nodeType: node.nodeType,
       difficulty: node.difficulty,
       rewardNexus: node.rewardNexus,
       rewardPlayerExperience: node.rewardPlayerExperience,

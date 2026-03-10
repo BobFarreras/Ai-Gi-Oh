@@ -21,6 +21,15 @@ function resolveNodeTone(node: IStoryMapNodeRuntime): string {
   return "border-cyan-300/80 bg-cyan-950/55 text-cyan-100";
 }
 
+function resolveNodeTypeLabel(node: IStoryMapNodeRuntime): string {
+  if (node.nodeType === "BOSS") return "BOSS";
+  if (node.nodeType === "DUEL") return "DUEL";
+  if (node.nodeType === "REWARD_CARD") return "REWARD CARD";
+  if (node.nodeType === "REWARD_NEXUS") return "REWARD NX";
+  if (node.nodeType === "EVENT") return "EVENT";
+  return "MOVE";
+}
+
 export function StoryCircuitMap({ nodes, selectedNodeId = null, currentNodeId = null, onSelectNode }: StoryCircuitMapProps) {
   const viewportWidth = useViewportWidth();
   const isMobile = viewportWidth < 768;
@@ -68,6 +77,7 @@ export function StoryCircuitMap({ nodes, selectedNodeId = null, currentNodeId = 
               <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Cap {node.chapter} · Nodo {node.duelIndex}</p>
               <h3 className="mt-1 text-base font-black uppercase leading-tight">{node.title}</h3>
               <p className="mt-1 text-xs font-semibold uppercase tracking-wide">{node.opponentName}</p>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-200/80">{resolveNodeTypeLabel(node)}</p>
               <p className="mt-1 text-[11px]">Dificultad: {node.difficulty}</p>
               <p className="text-[11px]">Recompensa: {node.rewardNexus} NX · {node.rewardPlayerExperience} EXP</p>
               <p className="mt-1 text-[10px] text-amber-200">{node.isCompleted ? "Completado" : node.isUnlocked ? "Disponible" : lockedReason}</p>
