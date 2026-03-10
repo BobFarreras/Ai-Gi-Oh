@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/internal/initialDeckFactory.test.ts - Descripción breve del módulo.
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { createPlayerDeckA, createPlayerDeckB, shuffleDeck } from "./initialDeckFactory";
@@ -35,3 +36,4 @@ describe("initialDeckFactory", () => {
     expect(deck).toHaveLength(20);
   });
 });
+

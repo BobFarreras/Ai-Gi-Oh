@@ -1,3 +1,4 @@
+// src/core/errors/NotFoundError.ts - Descripción breve del módulo.
 import { AppError } from "./AppError";
 
 export class NotFoundError extends AppError {
@@ -5,3 +6,4 @@ export class NotFoundError extends AppError {
     super("NOT_FOUND_ERROR", message, details);
   }
 }
+

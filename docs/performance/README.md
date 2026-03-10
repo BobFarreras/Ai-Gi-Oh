@@ -9,6 +9,26 @@ Usa esta guía para capturar una línea base reproducible:
 2. [Plantilla de reporte](./BASELINE-REPORT-TEMPLATE.md)
 3. Comando automático: `pnpm perf:baseline:mobile`
 
+## Auditoría E2E específica de combate
+
+1. Script dedicado: `pnpm perf:combat:e2e`.
+2. Auto con servidor local en dev: `pnpm perf:combat:e2e:auto:dev`.
+3. Auto con servidor local en prod: `pnpm perf:combat:e2e:auto:prod`.
+4. Ruta por defecto del benchmark: `/hub/training` (se puede sobreescribir con `--combatPath=/ruta`).
+5. Reportes generados: `docs/performance/results/combat-e2e-*.json|.md`.
+6. Si combate requiere login, usar sesión de Playwright: `--storageState=playwright/.auth/user.json`.
+
+## Auditoría E2E real con BD y login
+
+1. Script real con autenticación: `pnpm perf:combat:e2e:real`.
+2. Auto con servidor dev: `pnpm perf:combat:e2e:real:auto:dev -- --email=... --password=...`.
+3. Auto con servidor prod: `pnpm perf:combat:e2e:real:auto:prod -- --email=... --password=...`.
+4. El flujo entra en `/login`, abre `/hub/story`, selecciona el primer duelo disponible desde BD y ejecuta interacciones de combate.
+5. Reportes: `docs/performance/results/combat-e2e-real-*.json|.md`.
+6. También soporta `.env.local` automáticamente (`PERF_EMAIL`, `PERF_PASSWORD`, `PERF_BASE_URL`) sin pasar credenciales por CLI.
+7. Perfil por defecto: `realistic` (sin throttling artificial). Stress: `pnpm perf:combat:e2e:real:stress:auto:prod`.
+8. El flujo es estricto y determinista: no usa taps por coordenadas ni fallback silencioso; si no encuentra controles válidos, falla con error explícito.
+
 ## Activación
 
 1. Abre la app en navegador.
@@ -38,6 +58,12 @@ window.__AIGIOH_PERF__?.interactions
 ```js
 window.__AIGIOH_PERF__ = { renders: {}, interactions: [] };
 ```
+
+## Política de resultados versionados
+
+1. `docs/performance/results/` no debe acumular históricos locales de cada ejecución.
+2. Se conserva solo `.gitkeep` y reportes curados que se referencien explícitamente en una fase.
+3. Los resultados automáticos locales (`baseline-mobile-*.json/.md`) se consideran artefactos temporales y se pueden limpiar.
 
 ## Interacciones instrumentadas
 

@@ -1,3 +1,4 @@
+// src/core/data/mock-cards/traps.ts - Descripción breve del módulo.
 import { ICard } from "@/core/entities/ICard";
 
 interface ITrapSeed extends Omit<ICard, "type" | "renderUrl" | "bgUrl"> {
@@ -65,3 +66,4 @@ export const TRAP_CARDS: ICard[] = [
     effect: { action: "REDUCE_OPPONENT_DEFENSE", value: 300 },
   }),
 ];
+

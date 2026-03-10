@@ -1,6 +1,6 @@
 // src/components/game/board/hooks/internal/match/useMatchRuntime.ts - Encapsula reglas de runtime del duelo y transiciones del motor.
 import { MutableRefObject, useCallback, useEffect, useMemo } from "react";
-import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
+import { GameState } from "@/core/use-cases/GameEngine";
 import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
 import { resolveDifficultyFromCampaign } from "@/core/services/opponent/difficulty/resolveDifficultyFromCampaign";
 import { ICampaignProgress } from "@/core/services/opponent/difficulty/types";
@@ -9,6 +9,7 @@ import { useOpponentTurn } from "../useOpponentTurn";
 import { usePlayerActions } from "../usePlayerActions";
 import { useBoardTurnControls } from "../board-state/useBoardTurnControls";
 import { IUseMatchUiStateResult } from "./useMatchUiState";
+import { useEntityReplacementActions } from "./useEntityReplacementActions";
 
 interface IUseMatchRuntimeParams {
   campaignProgress: ICampaignProgress;
@@ -112,42 +113,7 @@ export function useMatchRuntime({ campaignProgress, gameStateRef, uiState, winne
     setLastError: uiState.setLastError,
   });
 
-  const confirmEntityReplacement = useCallback(() => {
-    if (!uiState.pendingEntityReplacement || !uiState.pendingEntityReplacementTargetId) return;
-    const replacedState = applyTransition((state) =>
-      GameEngine.playCardWithZoneReplacement(
-        state,
-        state.playerA.id,
-        uiState.pendingEntityReplacement!.cardId,
-        uiState.pendingEntityReplacement!.mode,
-        uiState.pendingEntityReplacementTargetId!,
-        uiState.pendingEntityReplacement!.zone,
-      ),
-    );
-    if (!replacedState) return;
-    if (uiState.pendingEntityReplacement.zone === "EXECUTIONS" && uiState.pendingEntityReplacement.mode === "ACTIVATE") {
-      const activatedExecution = [...replacedState.playerA.activeExecutions]
-        .reverse()
-        .find(
-          (entity) =>
-            entity.card.type === "EXECUTION" &&
-            entity.mode === "ACTIVATE" &&
-            (entity.card.runtimeId === uiState.pendingEntityReplacement?.cardId || entity.card.id === uiState.pendingEntityReplacement?.cardId),
-        );
-      if (activatedExecution) {
-        applyTransition((state) => GameEngine.resolveExecution(state, state.playerA.id, activatedExecution.instanceId));
-      }
-    }
-    uiState.setPendingEntityReplacement(null);
-    uiState.setPendingEntityReplacementTargetId(null);
-    uiState.clearSelection();
-  }, [applyTransition, uiState]);
-
-  const cancelEntityReplacement = useCallback(() => {
-    uiState.setPendingEntityReplacement(null);
-    uiState.setPendingEntityReplacementTargetId(null);
-    uiState.clearSelection();
-  }, [uiState]);
+  const { confirmEntityReplacement, cancelEntityReplacement } = useEntityReplacementActions({ uiState, applyTransition });
 
   return {
     opponentDifficulty,

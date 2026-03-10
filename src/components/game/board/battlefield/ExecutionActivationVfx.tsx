@@ -1,6 +1,8 @@
+// src/components/game/board/battlefield/ExecutionActivationVfx.tsx - VFX de activación de ejecuciones/trampas con degradación adaptativa en móvil.
 import { motion } from "framer-motion";
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { DigitalBeam } from "./DigitalBeam";
+import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 
 interface ExecutionActivationVfxProps {
   entity: IBoardEntity;
@@ -12,11 +14,25 @@ function isBuffAction(action: string): boolean {
 }
 
 export function ExecutionActivationVfx({ entity, isOpponentSide }: ExecutionActivationVfxProps) {
+  const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
+
   if (entity.card.type !== "EXECUTION" || entity.mode !== "ACTIVATE" || !entity.card.effect) {
     return null;
   }
 
   const action = entity.card.effect.action;
+  if (shouldReduceCombatEffects) {
+    const label = action === "HEAL" ? "HEAL" : action === "DAMAGE" ? "DMG" : "BUFF";
+    const textClass = action === "HEAL" ? "text-cyan-200" : action === "DAMAGE" ? "text-red-200" : "text-amber-200";
+    return (
+      <div className="pointer-events-none absolute inset-0 z-[210] flex items-center justify-center">
+        <div className="rounded border border-white/35 bg-black/70 px-3 py-1">
+          <span className={`text-xs font-black tracking-wider ${textClass}`}>{label}</span>
+        </div>
+      </div>
+    );
+  }
+
   if (action === "DAMAGE") {
     return <DigitalBeam direction={isOpponentSide ? "towards-player" : "towards-opponent"} onComplete={() => undefined} />;
   }
@@ -70,3 +86,4 @@ export function ExecutionActivationVfx({ entity, isOpponentSide }: ExecutionActi
 
   return null;
 }
+

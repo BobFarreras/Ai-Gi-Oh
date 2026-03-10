@@ -1,3 +1,4 @@
+// src/core/services/opponent/types.ts - Descripción breve del módulo.
 import { BattleMode } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
 
@@ -16,3 +17,4 @@ export interface IOpponentStrategy {
   choosePlay(state: GameState, opponentId: string): IOpponentPlayDecision | null;
   chooseAttack(state: GameState, opponentId: string): IOpponentAttackDecision | null;
 }
+

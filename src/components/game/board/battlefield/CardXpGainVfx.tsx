@@ -1,6 +1,7 @@
 // src/components/game/board/battlefield/CardXpGainVfx.tsx - Efecto flotante de experiencia ganada sobre una carta del campo.
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 
 interface CardXpGainVfxProps {
   eventId: string;
@@ -9,6 +10,16 @@ interface CardXpGainVfxProps {
 }
 
 export function CardXpGainVfx({ eventId, entityId, amount }: CardXpGainVfxProps) {
+  const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
+
+  if (shouldReduceCombatEffects) {
+    return (
+      <div className="pointer-events-none absolute left-1/2 top-2 z-[82] -translate-x-1/2 text-xl font-black leading-none text-emerald-200">
+        +{amount} EXP
+      </div>
+    );
+  }
+
   return (
     <>
       <motion.div

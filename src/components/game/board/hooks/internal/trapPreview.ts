@@ -1,3 +1,4 @@
+// src/components/game/board/hooks/internal/trapPreview.ts - Descripción breve del módulo.
 import { TrapTrigger } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
@@ -21,3 +22,4 @@ export function addRevealedId(ids: string[], entityId: string): string[] {
 export function removeRevealedId(ids: string[], entityId: string): string[] {
   return ids.filter((id) => id !== entityId);
 }
+

@@ -1,3 +1,4 @@
+// src/core/errors/AppError.test.ts - Descripción breve del módulo.
 import { describe, expect, it } from "vitest";
 import { NotFoundError } from "./NotFoundError";
 import { ValidationError } from "./ValidationError";
@@ -29,3 +30,4 @@ describe("Errores de dominio", () => {
     expect(isAppError(error)).toBe(true);
   });
 });
+

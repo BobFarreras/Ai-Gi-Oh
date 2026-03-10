@@ -1,3 +1,4 @@
+// src/components/game/board/battlefield/internal/useDamageFlash.ts - Descripción breve del módulo.
 import { useEffect, useState } from "react";
 
 export function useDamageFlash(shouldDamageFlash: boolean, damageEventId: string | null): boolean {
@@ -15,3 +16,4 @@ export function useDamageFlash(shouldDamageFlash: boolean, damageEventId: string
 
   return isDamageFlashing;
 }
+

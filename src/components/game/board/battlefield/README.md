@@ -1,4 +1,5 @@
-# Battlefield Module
+<!-- src/components/game/board/battlefield/README.md - Componentes visuales del campo de batalla y animaciones de entidades. -->
+# Módulo Battlefield
 
 Render del campo de batalla, slots y VFX de acciones de combate/ejecución.
 
@@ -24,6 +25,9 @@ Render del campo de batalla, slots y VFX de acciones de combate/ejecución.
    - `BattlefieldLanes.tsx`: líneas superiores/inferiores.
    - `BattlefieldPiles.tsx`: mazo y cementerio.
    - `useDamageFlash.ts`: hook de flash temporal de daño.
+   - `BattlefieldView.tsx` + `battlefield-types.ts`: render desacoplado y contratos.
+   - `use-battlefield-mobile-fit.ts`: ajuste responsive para móvil.
+   - `battlefield-props-equality.ts`: comparator memo para estabilidad de render.
 
 ## Flujo visual
 
@@ -37,4 +41,6 @@ Render del campo de batalla, slots y VFX de acciones de combate/ejecución.
 1. El módulo no modifica reglas de combate.
 2. Solo renderiza estado recibido por props.
 3. Toda interacción vuelve al hook/controlador superior.
+
+
 

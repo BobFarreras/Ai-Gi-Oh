@@ -1,4 +1,5 @@
-# Mock Cards Module
+<!-- src/core/data/mock-cards/README.md - Dataset mock de cartas para desarrollo y pruebas del motor. -->
+# Módulo de Cartas Mock
 
 Dataset local de cartas para desarrollo y tests de juego sin backend.
 
@@ -26,3 +27,5 @@ Dataset local de cartas para desarrollo y tests de juego sin backend.
 1. Nombres/ids estables para no romper tests.
 2. Tipado estricto con `ICard`.
 3. Si cambian tipos/efectos, actualizar también documentación de motor y tests.
+
+

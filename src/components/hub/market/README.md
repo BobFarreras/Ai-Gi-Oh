@@ -98,3 +98,4 @@ Integrado con `useHubModuleSfx`:
    - mitigado centralizando acciones en `useMarketSceneState`.
 3. **Deuda visual por componentes legacy**:
    - mantener inventario limpio y eliminar UI no referenciada.
+

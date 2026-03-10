@@ -1,3 +1,4 @@
+// src/core/use-cases/CombatService.ts - Descripción breve del módulo.
 export interface CombatContext {
   attackerAtk: number;
   defenderStat: number; // Será el ATK si está en ataque, o DEF si está en defensa

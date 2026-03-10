@@ -112,8 +112,17 @@ Eventos conectados vía `useHubModuleSfx`:
 3. `Deck -> Deck` y `Fusion -> Fusion` permiten recolocar cartas entre slots vacíos.
 4. Se mantiene feedback sonoro de `ADD_CARD` y `REMOVE_CARD` en desktop y mobile.
 
+## Estructura interna (Fase 2)
+
+1. `internal/actions/`: acciones async de negocio UI (`insert/remove/evolve`).
+2. `internal/dnd/`: resolución de drops por destino.
+3. `internal/hooks/`: estado y composición de handlers.
+4. `internal/view/`: vista principal y builder de props.
+5. `internal/types/`: contratos internos compartidos.
+
 ## Testing de fase 0/1/3
 
 1. `layout/HomeResponsiveWorkspace.test.tsx` valida que se montan ambos layouts.
 2. `layout/HomeMobileWorkspace.test.tsx` valida tabs mobile y apertura del inspector.
 3. Las pruebas existentes de negocio y acciones del módulo se mantienen.
+

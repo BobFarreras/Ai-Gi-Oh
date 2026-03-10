@@ -26,3 +26,4 @@ Esta carpeta contendrá implementaciones concretas de repositorios de `core/repo
 1. No exportar objetos de SDK al dominio.
 2. Mapear DTO de Supabase a entidades de `core/entities`.
 3. Gestionar errores de proveedor y traducirlos a errores de aplicación.
+

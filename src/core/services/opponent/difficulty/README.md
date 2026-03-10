@@ -1,4 +1,5 @@
-# Opponent Difficulty Module
+<!-- src/core/services/opponent/difficulty/README.md - Perfiles y resolución de dificultad para el bot rival. -->
+# Módulo de Dificultad de Oponente
 
 Este módulo separa la dificultad del rival de la historia real de campaña.
 
@@ -36,4 +37,6 @@ Este módulo separa la dificultad del rival de la historia real de campaña.
 1. Sustituir el estado mock de `campaignProgress` por un `CampaignProgressRepository`.
 2. Mantener `resolveDifficultyFromCampaign` como única puerta de entrada.
 3. Ajustar perfiles tras playtesting por capítulo/oponente.
+
+
 

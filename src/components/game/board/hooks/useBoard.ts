@@ -12,26 +12,8 @@ import { useMatchAudio } from "./internal/match/useMatchAudio";
 import { useMatchProgression } from "./internal/match/useMatchProgression";
 import { useMatchRuntime } from "./internal/match/useMatchRuntime";
 import { useMatchUiState } from "./internal/match/useMatchUiState";
-
-function resolveWinnerPlayerId(gameState: GameState): string | "DRAW" | null {
-  if (gameState.playerA.healthPoints <= 0 && gameState.playerB.healthPoints <= 0) return "DRAW";
-  if (gameState.playerA.healthPoints <= 0) return gameState.playerB.id;
-  if (gameState.playerB.healthPoints <= 0) return gameState.playerA.id;
-  return null;
-}
-
-function isExecutionWaitingForFusionMaterials(state: GameState, executionInstanceId: string): boolean {
-  const waitingExecution = state.playerA.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
-  if (!waitingExecution) return false;
-  return (
-    waitingExecution.mode === "SET" &&
-    waitingExecution.card.type === "EXECUTION" &&
-    waitingExecution.card.effect?.action === "FUSION_SUMMON" &&
-    state.pendingTurnAction === null
-  );
-}
+import { isExecutionWaitingForFusionMaterials, resolveWinnerPlayerId } from "./internal/match/board-derived-state";
 const EXECUTION_ACTIVATION_PREVIEW_MS = 720;
-
 export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINING", initialConfig?: ICreateInitialBoardStateInput) {
   const [campaignProgress] = useState<ICampaignProgress>({ chapterIndex: 1, duelIndex: 1, victories: 0 });
   const [matchSeed] = useState(() => createMatchSeed());
@@ -42,12 +24,7 @@ export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINI
   const gameStateRef = useRef<GameState>(createInitialState());
   const uiState = useMatchUiState({ gameStateRef, createInitialState });
   const winnerPlayerId = useMemo(() => resolveWinnerPlayerId(uiState.gameState), [uiState.gameState]);
-  const runtime = useMatchRuntime({
-    campaignProgress,
-    gameStateRef,
-    uiState,
-    winnerPlayerId,
-  });
+  const runtime = useMatchRuntime({ campaignProgress, gameStateRef, uiState, winnerPlayerId });
   const progression = useMatchProgression({
     mode,
     gameState: uiState.gameState,
@@ -65,7 +42,6 @@ export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINI
     isMuted: uiState.isMuted,
     isPaused: uiState.isPaused,
   });
-
   const restartMatch = useCallback(() => {
     progression.resetBattleProgression();
     uiState.restartMatch();

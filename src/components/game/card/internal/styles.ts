@@ -1,3 +1,4 @@
+// src/components/game/card/internal/styles.ts - Descripción breve del módulo.
 import { Faction, ICard } from "@/core/entities/ICard";
 
 export const FACTION_STYLES: Record<Faction, { wrapper: string; inner: string }> = {
@@ -73,3 +74,4 @@ export function getCardTypeStyles(card: ICard): { wrapper: string; inner: string
 
   return FACTION_STYLES[card.faction] ?? FACTION_STYLES.NEUTRAL;
 }
+

@@ -1,3 +1,4 @@
+// src/lib/utils.ts - Descripción breve del módulo.
 
 
 import { clsx, type ClassValue } from "clsx";

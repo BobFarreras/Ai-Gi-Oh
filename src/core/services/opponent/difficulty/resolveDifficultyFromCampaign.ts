@@ -1,3 +1,4 @@
+// src/core/services/opponent/difficulty/resolveDifficultyFromCampaign.ts - Descripción breve del módulo.
 import { ICampaignProgress, OpponentDifficulty } from "./types";
 
 export function resolveDifficultyFromCampaign(progress: ICampaignProgress): OpponentDifficulty {
@@ -15,4 +16,5 @@ export function resolveDifficultyFromCampaign(progress: ICampaignProgress): Oppo
 
   return "EASY";
 }
+
 

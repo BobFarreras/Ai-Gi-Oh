@@ -1,4 +1,5 @@
-# Board Hooks Module
+<!-- src/components/game/board/hooks/README.md - Guía de hooks públicos del tablero y su fachada de orquestación UI. -->
+# Módulo de Hooks del Board
 
 Hooks públicos del tablero. Este módulo actúa como fachada para la lógica de UI/orquestación del duelo.
 
@@ -12,8 +13,8 @@ Hooks públicos del tablero. Este módulo actúa como fachada para la lógica de
 2. `useBoard.test.ts`
    - Pruebas unitarias del contrato del hook.
 
-3. `useBoard.integration.test.ts`
-   - Pruebas de integración del flujo UI + motor.
+3. `useBoard.integration.core.test.ts` y `useBoard.integration.battle-rules.test.ts`
+   - Pruebas de integración del flujo UI + motor separadas por escenario.
 
 4. `internal/`
    - Submódulos SRP para estado UI, acciones de jugador, turno rival, audio y feedback.
@@ -31,4 +32,5 @@ Hooks públicos del tablero. Este módulo actúa como fachada para la lógica de
 1. `useBoard` no contiene reglas de negocio puras del juego.
 2. Errores del motor se traducen a mensajes UI.
 3. La fuente de verdad de acciones y resultado es `GameState`.
+
 

@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/fusion/fuse-cards.ts - Descripción breve del módulo.
 import { BattleMode } from "@/core/entities/IPlayer";
 import { applyFusionResult } from "@/core/use-cases/game-engine/fusion/internal/apply-fusion-result";
 import { appendFusionLogs } from "@/core/use-cases/game-engine/fusion/internal/append-fusion-logs";
@@ -25,3 +26,4 @@ export function fuseCards(
     mode,
   });
 }
+

@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/phases/next-phase.energy.test.ts - Descripción breve del módulo.
 import { describe, expect, it } from "vitest";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 
@@ -64,3 +65,4 @@ describe("Regla de energía por turno", () => {
     expect(state.playerA.currentEnergy).toBe(6);
   });
 });
+

@@ -4,12 +4,30 @@
 import { Power } from "lucide-react"; // Cambiamos Play por Power (System Override)
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 
 interface ExecutionActivateButtonProps {
   onActivateSelectedExecution: () => void;
 }
 
 export function ExecutionActivateButton({ onActivateSelectedExecution }: ExecutionActivateButtonProps) {
+  const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
+
+  if (shouldReduceCombatEffects) {
+    return (
+      <button
+        aria-label="Activar ejecución seleccionada"
+        onClick={(event) => {
+          event.stopPropagation();
+          onActivateSelectedExecution();
+        }}
+        className="absolute top-1/2 left-1/2 z-[120] flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-fuchsia-300/70 bg-fuchsia-900/80 text-fuchsia-100 shadow-[0_10px_24px_rgba(217,70,239,0.45)]"
+      >
+        <Power size={38} />
+      </button>
+    );
+  }
+
   return (
     <motion.button
       // Entrada con Z aún más alto

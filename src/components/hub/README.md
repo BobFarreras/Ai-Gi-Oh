@@ -1,5 +1,5 @@
 <!-- src/components/hub/README.md - Documenta la arquitectura UI del Hub 3D, sus componentes y reglas de mantenimiento. -->
-# Hub UI (3D)
+# Módulo Hub UI (3D)
 
 ## Objetivo
 
@@ -91,3 +91,4 @@ Comando:
 ```bash
 pnpm vitest src/components/hub --run
 ```
+

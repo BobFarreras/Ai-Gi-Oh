@@ -1,6 +1,7 @@
 // src/components/game/board/battlefield/BuffImpactVfx.tsx - VFX de aumento/reducción temporal de estadísticas sobre entidades en el campo.
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 
 interface BuffImpactVfxProps {
   eventId: string;
@@ -14,6 +15,16 @@ export function BuffImpactVfx({ eventId, entityId, stat, amount }: BuffImpactVfx
   const absoluteAmount = Math.abs(amount);
   const isAttack = stat === "ATTACK";
   const colorClass = isDebuff ? "text-amber-200" : isAttack ? "text-red-300" : "text-blue-300";
+  const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
+
+  if (shouldReduceCombatEffects) {
+    return (
+      <div className={cn("absolute top-1 left-1/2 z-[80] -translate-x-1/2 text-lg font-black leading-none", colorClass)}>
+        {isDebuff ? "-" : "+"}
+        {absoluteAmount}
+      </div>
+    );
+  }
 
   return (
     <>

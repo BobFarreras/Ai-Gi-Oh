@@ -1,3 +1,4 @@
+// src/core/errors/ValidationError.ts - Descripción breve del módulo.
 import { AppError } from "./AppError";
 
 export class ValidationError extends AppError {
@@ -5,3 +6,4 @@ export class ValidationError extends AppError {
     super("VALIDATION_ERROR", message, details);
   }
 }
+

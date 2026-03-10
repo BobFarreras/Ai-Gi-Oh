@@ -1,3 +1,4 @@
+// src/core/use-cases/game-engine/fusion/fuse-cards.integration.test.ts - Descripción breve del módulo.
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
@@ -89,3 +90,4 @@ describe("GameEngine fusión", () => {
     expect(() => GameEngine.fuseCards(invalid, "p1", "fusion-p1-overmind", ["m1", "m2"], "ATTACK")).toThrow();
   });
 });
+

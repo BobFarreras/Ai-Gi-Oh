@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Board } from "@/components/game/board";
-import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result-reward-summary";
+import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result/duel-result-reward-summary";
 import { ICard } from "@/core/entities/ICard";
 import { buildStoryOpponentNarrationPack } from "@/services/story/build-story-opponent-narration-pack";
 

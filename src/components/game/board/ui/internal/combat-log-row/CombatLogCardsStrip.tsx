@@ -1,3 +1,4 @@
+// src/components/game/board/ui/internal/combat-log-row/CombatLogCardsStrip.tsx - Descripción breve del módulo.
 import { Sword } from "lucide-react";
 import { Card } from "@/components/game/card/Card";
 import { ICard } from "@/core/entities/ICard";
@@ -74,3 +75,4 @@ export function CombatLogCardsStrip({ cards, onCardClick }: CombatLogCardsStripP
     </div>
   );
 }
+
