@@ -1,27 +1,20 @@
-// src/components/hub/story/StoryScene.tsx - Escena cliente del mapa Story con selección de nodos e historial desacoplado.
+// src/components/hub/story/StoryScene.tsx - Escena principal Story con mapa vivo y panel lateral conectado a estado persistible.
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useStore } from "zustand";
-import { StoryCircuitMap } from "@/components/hub/story/StoryCircuitMap";
-import { StoryBriefingPanel } from "@/components/hub/story/internal/StoryBriefingPanel";
-import { StoryHistoryPanel } from "@/components/hub/story/internal/StoryHistoryPanel";
-import { resolveStoryPerformanceProfile } from "@/components/hub/story/internal/resolve-story-performance-profile";
-import { createStorySceneStore, StorySceneStore } from "@/components/hub/story/internal/story-scene-store";
-import { resolveStoryNodeInteraction } from "@/core/services/story/world/resolve-story-node-interaction";
-import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
-import { IStoryChapterBriefing } from "@/services/story/build-story-chapter-briefing";
+import { StoryCircuitMap } from "./StoryCircuitMap";
+import { StorySidebar } from "./internal/StorySidebar";
+import { createStorySceneStore, StorySceneStore } from "./internal/story-scene-store";
 import { IStoryMapRuntimeData } from "@/services/story/story-map-runtime-data";
+import { IStoryChapterBriefing } from "@/services/story/build-story-chapter-briefing";
 
-interface StorySceneProps {
+interface IStorySceneProps {
   runtime: IStoryMapRuntimeData;
   briefing: IStoryChapterBriefing;
 }
 
-export function StoryScene({ runtime, briefing }: StorySceneProps) {
-  const viewportWidth = useViewportWidth();
-  const profile = resolveStoryPerformanceProfile(viewportWidth);
+export function StoryScene({ runtime, briefing }: IStorySceneProps) {
   const [store] = useState<StorySceneStore>(() =>
     createStorySceneStore({
       nodes: runtime.nodes,
@@ -31,15 +24,13 @@ export function StoryScene({ runtime, briefing }: StorySceneProps) {
   );
   const selectedNodeId = useStore(store, (state) => state.selectedNodeId);
   const currentNodeId = useStore(store, (state) => state.currentNodeId);
-  const history = useStore(store, (state) => state.history);
   const nodesById = useStore(store, (state) => state.nodesById);
   const setSelectedNodeId = useStore(store, (state) => state.setSelectedNodeId);
   const setCurrentNodeId = useStore(store, (state) => state.setCurrentNodeId);
   const setHistory = useStore(store, (state) => state.setHistory);
   const [isMoving, setIsMoving] = useState(false);
   const [movementError, setMovementError] = useState<string | null>(null);
-  const selectedNode = selectedNodeId ? nodesById[selectedNodeId] : null;
-  const selectedNodeInteraction = selectedNode ? resolveStoryNodeInteraction(selectedNode) : null;
+  const selectedNode = selectedNodeId ? nodesById[selectedNodeId] ?? null : null;
 
   const handleMove = async () => {
     if (!selectedNodeId || isMoving) return;
@@ -52,7 +43,10 @@ export function StoryScene({ runtime, briefing }: StorySceneProps) {
         body: JSON.stringify({ nodeId: selectedNodeId }),
       });
       if (!response.ok) throw new Error("Movimiento inválido.");
-      const payload = (await response.json()) as { currentNodeId: string | null; history: typeof runtime.history };
+      const payload = (await response.json()) as {
+        currentNodeId: string | null;
+        history: IStoryMapRuntimeData["history"];
+      };
       setCurrentNodeId(payload.currentNodeId);
       setHistory(payload.history);
     } catch {
@@ -63,38 +57,27 @@ export function StoryScene({ runtime, briefing }: StorySceneProps) {
   };
 
   return (
-    <section className="mx-auto w-full max-w-6xl space-y-3">
-      <StoryCircuitMap
-        nodes={runtime.nodes}
-        selectedNodeId={selectedNodeId}
-        currentNodeId={currentNodeId}
-        onSelectNode={setSelectedNodeId}
-      />
-      {selectedNode ? (
-        <article className="rounded-xl border border-cyan-500/30 bg-slate-950/80 p-3 text-cyan-100">
-          <h2 className="text-sm font-black uppercase tracking-wider">{selectedNode.title}</h2>
-          <p className="mt-1 text-xs text-slate-300">Oponente: {selectedNode.opponentName}</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={handleMove}
-              disabled={isMoving || selectedNodeId === currentNodeId || !selectedNode.isUnlocked}
-              className="rounded border border-cyan-400/50 bg-cyan-950/60 px-3 py-1 text-xs font-black uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-45"
-            >
-              {isMoving ? "Moviendo..." : "Moverse aquí"}
-            </button>
-            <Link
-              href={selectedNode.href}
-              className="rounded border border-emerald-400/50 bg-emerald-950/60 px-3 py-1 text-xs font-black uppercase tracking-wider"
-            >
-              {selectedNodeInteraction?.actionLabel ?? "Entrar al nodo"}
-            </Link>
-          </div>
-          {movementError ? <p className="mt-2 text-xs text-rose-300">{movementError}</p> : null}
-        </article>
-      ) : null}
-      <StoryBriefingPanel briefing={briefing} />
-      <StoryHistoryPanel history={history} isCompact={profile.shouldReduceMapEffects} />
-    </section>
+    <div className="flex h-full w-full flex-1 overflow-hidden border-t border-cyan-900/50 bg-black font-sans">
+      <div className="z-20 w-80 flex-shrink-0 border-r border-cyan-500/30 shadow-[10px_0_30px_rgba(0,0,0,0.8)] md:w-96">
+        <StorySidebar
+          briefing={briefing}
+          selectedNode={selectedNode}
+          canMove={Boolean(selectedNode && selectedNode.isUnlocked && selectedNode.id !== currentNodeId)}
+          isMoving={isMoving}
+          movementError={movementError}
+          onMove={handleMove}
+          onDeselect={() => setSelectedNodeId(null)}
+        />
+      </div>
+
+      <div className="relative z-0 flex-1 overflow-hidden bg-[#050810]">
+        <StoryCircuitMap
+          nodes={runtime.nodes}
+          currentNodeId={currentNodeId}
+          selectedNodeId={selectedNodeId}
+          onSelectNode={setSelectedNodeId}
+        />
+      </div>
+    </div>
   );
 }

@@ -1,7 +1,9 @@
-// src/components/hub/story/story-circuit-layout.ts - Define posiciones del diagrama de nodos Story en vista desktop y móvil.
-interface IStoryCircuitPosition {
-  left: string;
-  top: string;
+// src/components/hub/story/story-circuit-layout.ts - Calcula posiciones y segmentos de nodos Story de forma dinámica según dependencias.
+import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
+
+export interface IStoryCircuitPosition {
+  x: number;
+  y: number;
 }
 
 export interface IStoryCircuitSegment {
@@ -9,41 +11,81 @@ export interface IStoryCircuitSegment {
   to: IStoryCircuitPosition;
 }
 
-const DESKTOP_PATH: ReadonlyArray<IStoryCircuitPosition> = [
-  { left: "10%", top: "58%" },
-  { left: "28%", top: "36%" },
-  { left: "48%", top: "52%" },
-  { left: "68%", top: "30%" },
-  { left: "86%", top: "48%" },
-];
-
-const MOBILE_PATH: ReadonlyArray<IStoryCircuitPosition> = [
-  { left: "18%", top: "14%" },
-  { left: "72%", top: "26%" },
-  { left: "18%", top: "44%" },
-  { left: "72%", top: "62%" },
-  { left: "20%", top: "80%" },
-];
-
-export function resolveStoryNodePosition(index: number, isMobile: boolean): IStoryCircuitPosition {
-  const source = isMobile ? MOBILE_PATH : DESKTOP_PATH;
-  if (index < source.length) return source[index];
-  const last = source[source.length - 1];
-  const overflow = index - source.length + 1;
-  return { left: last.left, top: `${Math.min(90, Number.parseFloat(last.top) + overflow * 8)}%` };
+function sortNodes(nodes: IStoryMapNodeRuntime[]): IStoryMapNodeRuntime[] {
+  return [...nodes].sort((left, right) => {
+    if (left.chapter !== right.chapter) return left.chapter - right.chapter;
+    return left.duelIndex - right.duelIndex;
+  });
 }
 
 /**
- * Genera segmentos visuales del camino principal para reforzar lectura de progresión.
+ * Construye un mapa de posiciones basado en jerarquía de dependencias (`unlockRequirementNodeId`).
  */
-export function resolveStoryPathSegments(totalNodes: number, isMobile: boolean): IStoryCircuitSegment[] {
-  if (totalNodes <= 1) return [];
-  const segments: IStoryCircuitSegment[] = [];
-  for (let index = 1; index < totalNodes; index += 1) {
-    segments.push({
-      from: resolveStoryNodePosition(index - 1, isMobile),
-      to: resolveStoryNodePosition(index, isMobile),
-    });
+export function buildStoryNodePositionMap(nodes: IStoryMapNodeRuntime[]): Record<string, IStoryCircuitPosition> {
+  const sortedNodes = sortNodes(nodes);
+  const childrenByParent = new Map<string, IStoryMapNodeRuntime[]>();
+  const nodeById = new Map(sortedNodes.map((node) => [node.id, node]));
+  const positions: Record<string, IStoryCircuitPosition> = {};
+
+  for (const node of sortedNodes) {
+    const parentId = node.unlockRequirementNodeId ?? null;
+    if (!parentId) continue;
+    const group = childrenByParent.get(parentId) ?? [];
+    group.push(node);
+    childrenByParent.set(parentId, group);
   }
-  return segments;
+
+  const roots = sortedNodes.filter(
+    (node) => !node.unlockRequirementNodeId || !nodeById.has(node.unlockRequirementNodeId),
+  );
+  const rootSpacing = 380;
+  const rootStartX = 1000 - ((roots.length - 1) * rootSpacing) / 2;
+  roots.forEach((root, index) => {
+    positions[root.id] = { x: rootStartX + index * rootSpacing, y: 1700 };
+  });
+
+  const visited = new Set<string>();
+  const placeChildren = (parentId: string): void => {
+    if (visited.has(parentId)) return;
+    visited.add(parentId);
+    const parentPosition = positions[parentId];
+    const children = (childrenByParent.get(parentId) ?? []).sort(
+      (left, right) => left.duelIndex - right.duelIndex,
+    );
+    if (!parentPosition || children.length === 0) return;
+    const siblingSpacing = 340;
+    children.forEach((child, index) => {
+      const offset = (index - (children.length - 1) / 2) * siblingSpacing;
+      positions[child.id] = { x: parentPosition.x + offset, y: parentPosition.y - 260 };
+      placeChildren(child.id);
+    });
+  };
+
+  roots.forEach((root) => placeChildren(root.id));
+  sortedNodes.forEach((node, index) => {
+    if (positions[node.id]) return;
+    positions[node.id] = { x: 700 + (index % 4) * 260, y: 1100 - Math.floor(index / 4) * 220 };
+  });
+
+  return positions;
+}
+
+export function resolveStoryNodePosition(
+  nodeId: string,
+  positionMap: Record<string, IStoryCircuitPosition>,
+): IStoryCircuitPosition {
+  return positionMap[nodeId] ?? { x: 1000, y: 1000 };
+}
+
+export function resolveStoryPathSegments(
+  nodes: IStoryMapNodeRuntime[],
+  positionMap: Record<string, IStoryCircuitPosition>,
+): IStoryCircuitSegment[] {
+  return nodes.flatMap((node) => {
+    if (!node.unlockRequirementNodeId) return [];
+    const parent = positionMap[node.unlockRequirementNodeId];
+    const child = positionMap[node.id];
+    if (!parent || !child) return [];
+    return [{ from: parent, to: child }];
+  });
 }

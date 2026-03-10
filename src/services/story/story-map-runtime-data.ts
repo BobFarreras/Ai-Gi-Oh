@@ -16,6 +16,7 @@ export interface IStoryMapNodeRuntime {
   isBossDuel: boolean;
   isCompleted: boolean;
   isUnlocked: boolean;
+  unlockRequirementNodeId?: string | null;
   href: string;
 }
 

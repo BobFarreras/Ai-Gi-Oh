@@ -1,100 +1,126 @@
-// src/components/hub/story/StoryCircuitMap.tsx - Renderiza el mapa Story en formato circuito con nodos de duelo bloqueables por progreso.
+// src/components/hub/story/StoryCircuitMap.tsx - Renderiza el mapa Story con cámara arrastrable, nodos y segmentos dinámicos.
 "use client";
 
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { useEffect, useMemo, useRef } from "react";
+import { animate, motion, useMotionValue } from "framer-motion";
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
-import { resolveStoryNodePosition, resolveStoryPathSegments } from "@/components/hub/story/story-circuit-layout";
-import { resolveStoryPerformanceProfile } from "@/components/hub/story/internal/resolve-story-performance-profile";
-import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
+import {
+  buildStoryNodePositionMap,
+  resolveStoryNodePosition,
+  resolveStoryPathSegments,
+} from "@/components/hub/story/story-circuit-layout";
+import { StoryMapNode } from "./internal/StoryMapNode";
 
 interface StoryCircuitMapProps {
   nodes: IStoryMapNodeRuntime[];
-  selectedNodeId?: string | null;
-  currentNodeId?: string | null;
-  onSelectNode?: (nodeId: string) => void;
+  currentNodeId: string | null;
+  selectedNodeId: string | null;
+  onSelectNode: (nodeId: string | null) => void;
 }
 
-function resolveNodeTone(node: IStoryMapNodeRuntime): string {
-  if (!node.isUnlocked) return "border-zinc-600/70 bg-zinc-900/80 text-zinc-400";
-  if (node.isCompleted) return "border-emerald-300/80 bg-emerald-950/65 text-emerald-100";
-  if (node.isBossDuel) return "border-fuchsia-300/85 bg-fuchsia-950/55 text-fuchsia-100";
-  return "border-cyan-300/80 bg-cyan-950/55 text-cyan-100";
-}
+export function StoryCircuitMap({
+  nodes,
+  currentNodeId,
+  selectedNodeId,
+  onSelectNode,
+}: StoryCircuitMapProps) {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const cameraX = useMotionValue(0);
+  const cameraY = useMotionValue(0);
+  const positionMap = useMemo(() => buildStoryNodePositionMap(nodes), [nodes]);
+  const segments = useMemo(
+    () => resolveStoryPathSegments(nodes, positionMap),
+    [nodes, positionMap],
+  );
+  const avatarNode = nodes.find((node) => node.id === currentNodeId) ?? nodes[0];
+  const avatarPos = resolveStoryNodePosition(avatarNode?.id ?? "", positionMap);
 
-function resolveNodeTypeLabel(node: IStoryMapNodeRuntime): string {
-  if (node.nodeType === "BOSS") return "BOSS";
-  if (node.nodeType === "DUEL") return "DUEL";
-  if (node.nodeType === "REWARD_CARD") return "REWARD CARD";
-  if (node.nodeType === "REWARD_NEXUS") return "REWARD NX";
-  if (node.nodeType === "EVENT") return "EVENT";
-  return "MOVE";
-}
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+    const containerWidth = mapContainerRef.current.clientWidth;
+    const containerHeight = mapContainerRef.current.clientHeight;
+    const targetX = containerWidth / 2 - avatarPos.x;
+    const targetY = containerHeight / 2 - avatarPos.y + 100;
+    animate(cameraX, targetX, { type: "spring", stiffness: 80, damping: 20, mass: 1 });
+    animate(cameraY, targetY, { type: "spring", stiffness: 80, damping: 20, mass: 1 });
+  }, [avatarPos.x, avatarPos.y, cameraX, cameraY]);
 
-export function StoryCircuitMap({ nodes, selectedNodeId = null, currentNodeId = null, onSelectNode }: StoryCircuitMapProps) {
-  const viewportWidth = useViewportWidth();
-  const profile = resolveStoryPerformanceProfile(viewportWidth);
-  const isMobile = profile.isMobileViewport;
-  const segments = resolveStoryPathSegments(nodes.length, isMobile);
   return (
-    <section className={cn(
-      "relative mx-auto h-[74vh] max-h-[780px] min-h-[520px] w-full max-w-6xl overflow-hidden rounded-3xl border border-cyan-400/30",
-      profile.shouldReduceMapEffects
-        ? "bg-[linear-gradient(180deg,rgba(2,6,23,0.94),rgba(2,18,36,0.96))]"
-        : "bg-[radial-gradient(circle_at_30%_40%,rgba(34,211,238,0.16),transparent_52%),linear-gradient(180deg,rgba(2,6,23,0.94),rgba(2,18,36,0.96))]",
-    )}>
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(34,211,238,0.08)_1px,transparent_1px),linear-gradient(0deg,rgba(34,211,238,0.06)_1px,transparent_1px)] bg-[size:42px_42px]" />
-      {!profile.shouldReduceMapEffects ? <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(59,130,246,0.18),transparent_42%)]" /> : null}
-      {!profile.shouldReduceMapEffects ? (
-        <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>
+    <div
+      ref={mapContainerRef}
+      className="relative h-full w-full cursor-grab overflow-hidden active:cursor-grabbing"
+      onClick={() => onSelectNode(null)}
+    >
+      <div
+        className="pointer-events-none absolute inset-0 opacity-20"
+        style={{ transform: "rotateX(60deg) scale(2)", transformOrigin: "center" }}
+      >
+        <div className="h-full w-full bg-[linear-gradient(rgba(6,182,212,0.3)_2px,transparent_2px),linear-gradient(90deg,rgba(6,182,212,0.3)_2px,transparent_2px)] bg-[size:100px_100px]" />
+      </div>
+
+      <motion.div
+        drag
+        dragConstraints={mapContainerRef}
+        dragElastic={0.1}
+        style={{ x: cameraX, y: cameraY }}
+        className="absolute left-0 top-0 h-[2000px] w-[2000px]"
+      >
+        <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full">
           {segments.map((segment, index) => (
-            <line
-              key={`segment-${index}`}
-              x1={segment.from.left}
-              y1={segment.from.top}
-              x2={segment.to.left}
-              y2={segment.to.top}
-              stroke="rgba(34,211,238,0.45)"
-              strokeWidth="2"
-              strokeDasharray="6 6"
+            <motion.line
+              key={`path-${index}`}
+              x1={segment.from.x}
+              y1={segment.from.y}
+              x2={segment.to.x}
+              y2={segment.to.y}
+              stroke="rgba(6, 182, 212, 0.4)"
+              strokeWidth="6"
+              strokeDasharray="15 15"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 1.2, delay: index * 0.08 }}
             />
           ))}
         </svg>
-      ) : null}
-      {nodes.map((node, index) => {
-        const nodePosition = resolveStoryNodePosition(index, isMobile);
-        const lockedReason = node.isUnlocked ? "" : "Derrota el nodo anterior para desbloquear.";
-        return (
-          <article
-            key={node.id}
-            className="absolute -translate-x-1/2 -translate-y-1/2 transition-transform duration-300 hover:scale-[1.02]"
-            style={{ left: nodePosition.left, top: nodePosition.top }}
-          >
-            <Link
-              href={node.isUnlocked ? node.href : "#"}
-              aria-disabled={!node.isUnlocked}
-              aria-label={`Nodo ${node.chapter}-${node.duelIndex}: ${node.title}`}
-              onClick={() => onSelectNode?.(node.id)}
-              className={cn(
-                "block w-[200px] rounded-xl border px-3 py-2 shadow-[0_10px_26px_rgba(0,0,0,0.5)] sm:w-[220px]",
-                profile.shouldReduceMapEffects && "shadow-none",
-                resolveNodeTone(node),
-                !node.isUnlocked && "cursor-not-allowed opacity-85",
-                selectedNodeId === node.id && "ring-2 ring-cyan-300/80",
-                currentNodeId === node.id && "shadow-[0_0_18px_rgba(34,211,238,0.45)]",
-              )}
+
+        {nodes.map((node) => {
+          const position = resolveStoryNodePosition(node.id, positionMap);
+          return (
+            <div
+              key={node.id}
+              className="absolute z-10 -translate-x-1/2 -translate-y-1/2"
+              style={{ top: position.y, left: position.x }}
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Cap {node.chapter} · Nodo {node.duelIndex}</p>
-              <h3 className="mt-1 text-base font-black uppercase leading-tight">{node.title}</h3>
-              <p className="mt-1 text-xs font-semibold uppercase tracking-wide">{node.opponentName}</p>
-              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-200/80">{resolveNodeTypeLabel(node)}</p>
-              <p className="mt-1 text-[11px]">Dificultad: {node.difficulty}</p>
-              <p className="text-[11px]">Recompensa: {node.rewardNexus} NX · {node.rewardPlayerExperience} EXP</p>
-              <p className="mt-1 text-[10px] text-amber-200">{node.isCompleted ? "Completado" : node.isUnlocked ? "Disponible" : lockedReason}</p>
-            </Link>
-          </article>
-        );
-      })}
-    </section>
+              <StoryMapNode
+                node={node}
+                isSelected={selectedNodeId === node.id}
+                onClick={() => onSelectNode(node.id)}
+              />
+            </div>
+          );
+        })}
+
+        <motion.div
+          className="pointer-events-none absolute z-30 flex w-24 -translate-x-1/2 -translate-y-full flex-col items-center"
+          initial={false}
+          animate={{ top: avatarPos.y, left: avatarPos.x }}
+          transition={{ type: "spring", stiffness: 280, damping: 24 }}
+        >
+          <div className="mb-2 h-0 w-0 animate-bounce border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent border-t-emerald-400" />
+          <div className="relative mb-2 h-14 w-14 overflow-hidden rounded-full border-2 border-emerald-400 bg-black shadow-[0_0_30px_#10b981]">
+            <Image
+              src="/assets/story/player/bob.png"
+              alt="Avatar del jugador"
+              fill
+              sizes="56px"
+              quality={55}
+              className="object-cover opacity-90"
+            />
+          </div>
+          <div className="absolute bottom-0 h-6 w-16 rounded-[50%] border-2 border-emerald-400 opacity-60 shadow-[0_0_20px_#10b981]" />
+        </motion.div>
+      </motion.div>
+    </div>
   );
 }

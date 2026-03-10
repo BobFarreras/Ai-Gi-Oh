@@ -44,6 +44,7 @@ export async function getStoryMapRuntimeData(): Promise<IStoryMapRuntimeData | n
       isBossDuel: node.nodeType === "BOSS",
       isCompleted: duelProgress?.bestResult === "WON",
       isUnlocked: unlockedNodeIds.has(node.id),
+      unlockRequirementNodeId: node.unlockRequirementNodeId,
       href: node.href,
     };
   });
