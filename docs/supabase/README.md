@@ -55,6 +55,12 @@
 22. `public.player_fusion_deck_slots`:
    - bloque de 2 slots dedicado a cartas de tipo `FUSION`.
    - separado del deck principal de 20 slots.
+23. `public.player_story_world_state`:
+   - cursor de navegación Story del jugador (`current_node_id`).
+   - 1 fila por usuario.
+24. `public.player_story_history_events`:
+   - historial de eventos Story (`MOVE`, `NODE_RESOLVED`, `REWARD_GRANTED`).
+   - múltiples filas por usuario ordenadas por `created_at`.
 
 ## Fase 2 (Perfil y Progreso)
 
@@ -188,6 +194,18 @@
    - 2 filas por jugador (`slot_index` 0 y 1).
 4. Verifica RLS:
    - `SELECT/INSERT/UPDATE` solo para `auth.uid() = player_id`.
+
+## Fase 8 (Estado e historial del mundo Story)
+
+1. Ejecuta `docs/supabase/sql/013_phase_8_story_world_history.sql`.
+2. Verifica tablas:
+   - `public.player_story_world_state`
+   - `public.player_story_history_events`
+3. Verifica RLS:
+   - ambas tablas solo visibles/modificables por el propio usuario (`auth.uid() = player_id`).
+4. Uso previsto:
+   - `player_story_world_state`: nodo actual del mapa Story.
+   - `player_story_history_events`: timeline de movimiento, resolución de nodo y recompensas.
 
 ## Notas
 

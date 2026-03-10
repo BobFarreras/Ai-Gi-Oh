@@ -26,3 +26,4 @@
 3. Integración con `Board` en modo `STORY` sin duplicar lógica del motor.
 4. Desbloqueo y navegación del mapa mediante grafo puro en `core/services/story/world`.
 5. Orquestación de estado/movimiento/resolución en `core/use-cases/story`.
+6. Persistencia de cursor e historial en `player_story_world_state` y `player_story_history_events`.

@@ -3,9 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { ICard } from "@/core/entities/ICard";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { GetOrCreatePlayerProgressUseCase } from "@/core/use-cases/player/GetOrCreatePlayerProgressUseCase";
+import { CommitStoryProgressUseCase } from "@/core/use-cases/story/CommitStoryProgressUseCase";
+import { GetStoryWorldStateUseCase } from "@/core/use-cases/story/GetStoryWorldStateUseCase";
+import { ResolveStoryNodeUseCase } from "@/core/use-cases/story/ResolveStoryNodeUseCase";
 import { SupabaseOpponentRepository } from "@/infrastructure/persistence/supabase/SupabaseOpponentRepository";
 import { SupabasePlayerProgressRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerProgressRepository";
 import { SupabasePlayerStoryDuelProgressRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerStoryDuelProgressRepository";
+import { SupabasePlayerStoryWorldRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerStoryWorldRepository";
 import { loadCardsByIds } from "@/infrastructure/persistence/supabase/internal/load-cards-by-ids";
 import { resolveStoryRewardCards } from "@/services/story/resolve-story-reward-cards";
 import { getAuthenticatedUserId } from "@/services/auth/api/internal/get-authenticated-user-id";
@@ -24,6 +28,26 @@ function buildRewardCardsPayload(cardsById: Map<string, ICard>, rewardCardIds: s
   });
 }
 
+async function commitStoryNodeResolution(input: {
+  playerId: string;
+  nodeId: string;
+  opponentRepository: SupabaseOpponentRepository;
+  storyProgressRepository: SupabasePlayerStoryDuelProgressRepository;
+  storyWorldRepository: SupabasePlayerStoryWorldRepository;
+}) {
+  const worldStateUseCase = new GetStoryWorldStateUseCase(input.opponentRepository, input.storyProgressRepository);
+  const worldState = await worldStateUseCase.execute({ playerId: input.playerId });
+  const resolveNodeUseCase = new ResolveStoryNodeUseCase();
+  const resolved = resolveNodeUseCase.execute({
+    graph: worldState.graph,
+    progress: worldState.progress,
+    nodeId: input.nodeId,
+    nowIso: new Date().toISOString(),
+  });
+  const commitUseCase = new CommitStoryProgressUseCase(input.storyWorldRepository);
+  await commitUseCase.execute({ playerId: input.playerId, progress: resolved.progress });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const response = NextResponse.json({ ok: true }, { status: 200 });
@@ -36,6 +60,7 @@ export async function POST(request: NextRequest) {
 
     const opponentRepository = new SupabaseOpponentRepository(repositories.client);
     const storyProgressRepository = new SupabasePlayerStoryDuelProgressRepository(repositories.client);
+    const storyWorldRepository = new SupabasePlayerStoryWorldRepository(repositories.client);
     const playerProgressRepository = new SupabasePlayerProgressRepository(repositories.client);
     const duel = await opponentRepository.getStoryDuel(payload.chapter, payload.duelIndex);
     if (!duel) throw new ValidationError("No se encontró el duelo Story solicitado.");
@@ -43,6 +68,16 @@ export async function POST(request: NextRequest) {
     const previous = await storyProgressRepository.getByPlayerAndDuelId(playerId, duel.id);
     const duelProgress = await storyProgressRepository.registerDuelResult(playerId, duel.id, payload.didWin);
     const firstVictory = payload.didWin && previous?.bestResult !== "WON";
+    if (payload.didWin) {
+      // Si la migración de historial Story aún no está aplicada, no bloqueamos el cierre de duelo.
+      await commitStoryNodeResolution({
+        playerId,
+        nodeId: duel.id,
+        opponentRepository,
+        storyProgressRepository,
+        storyWorldRepository,
+      }).catch(() => undefined);
+    }
     if (!firstVictory) {
       return NextResponse.json(
         { duelProgress, rewarded: false, rewardNexus: 0, rewardPlayerExperience: 0, rewardCardIds: [], rewardCards: [] },

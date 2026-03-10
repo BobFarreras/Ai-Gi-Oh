@@ -21,3 +21,8 @@
 - Entrada: `graph`, `progress`, `nodeId`, `nowIso`.
 - Salida: `progress` actualizado + recompensa.
 - Responsabilidad: marcar nodo completado, registrar eventos de historial y recalcular desbloqueos.
+
+4. `CommitStoryProgressUseCase`
+- Entrada: `playerId`, `progress`.
+- Salida: `void`.
+- Responsabilidad: persistir nodo actual e historial Story en repositorio de infraestructura.

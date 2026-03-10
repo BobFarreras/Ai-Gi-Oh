@@ -15,4 +15,5 @@ Definir cómo se modela el mapa, desbloqueos, navegación e integración con due
 
 1. Fase 1 implementada: grafo Story puro en `src/core/services/story/world/`.
 2. Runtime de mapa conectado al grafo en `src/services/story/get-story-map-runtime-data.ts`.
-3. Fase 2 iniciada: casos de uso Story en `src/core/use-cases/story/`.
+3. Fase 2 implementada: casos de uso Story en `src/core/use-cases/story/`.
+4. Fase 3 implementada: persistencia de cursor/historial Story en Supabase.

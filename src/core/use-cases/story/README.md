@@ -10,6 +10,7 @@ Orquestar estado y acciones del modo Story sin acoplar UI ni infraestructura.
 1. `GetStoryWorldStateUseCase`: carga grafo + progreso desbloqueado/completado.
 2. `MoveToStoryNodeUseCase`: valida movimiento entre nodos conectados.
 3. `ResolveStoryNodeUseCase`: marca nodo resuelto y expande desbloqueos.
+4. `CommitStoryProgressUseCase`: persiste nodo actual e historial Story.
 
 ## Nota de arquitectura
 

@@ -2,6 +2,7 @@
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { createSupabaseOpponentRepository } from "@/infrastructure/persistence/supabase/create-supabase-opponent-repository";
 import { createSupabasePlayerStoryDuelProgressRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-story-duel-progress-repository";
+import { createSupabasePlayerStoryWorldRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-story-world-repository";
 import { IStoryMapRuntimeData, IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import {
   buildStoryWorldGraph,
@@ -13,9 +14,14 @@ export async function getStoryMapRuntimeData(): Promise<IStoryMapRuntimeData | n
   if (!session) return null;
   const opponentRepository = await createSupabaseOpponentRepository();
   const progressRepository = await createSupabasePlayerStoryDuelProgressRepository();
+  const worldRepository = await createSupabasePlayerStoryWorldRepository();
   const [duels, progress] = await Promise.all([
     opponentRepository.listStoryDuels(),
     progressRepository.listByPlayerId(session.user.id),
+  ]);
+  const [currentNodeId, history] = await Promise.all([
+    worldRepository.getCurrentNodeIdByPlayerId(session.user.id).catch(() => null),
+    worldRepository.listHistoryByPlayerId(session.user.id, 20).catch(() => []),
   ]);
   const progressByDuelId = new Map(progress.map((entry) => [entry.duelId, entry]));
   const completedNodeIds = progress
@@ -40,5 +46,5 @@ export async function getStoryMapRuntimeData(): Promise<IStoryMapRuntimeData | n
       href: node.href,
     };
   });
-  return { playerId: session.user.id, nodes: runtimeNodes };
+  return { playerId: session.user.id, nodes: runtimeNodes, currentNodeId, history };
 }
