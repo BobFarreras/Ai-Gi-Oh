@@ -46,6 +46,10 @@ interface ICreateHomeDeckBuilderViewPropsInput {
   onEvolveSelectedCard: () => Promise<IHomeActionResult>;
   onBackToHub: () => void;
   onClearError: () => void;
+  isExitDialogOpen: boolean;
+  onCloseExitDialog: () => void;
+  onConfirmExitToHub: () => void;
+  onGoToMarket: () => void;
   onSelectSlot: (slotIndex: number) => void;
   onSelectFusionSlot: (slotIndex: number) => void;
   onSelectCollectionCard: (cardId: string) => void;
@@ -117,5 +121,9 @@ export function createHomeDeckBuilderViewProps(input: ICreateHomeDeckBuilderView
     onEvolveSelectedCard: input.onEvolveSelectedCard,
     onBackToHub: input.onBackToHub,
     onClearError: input.onClearError,
+    isExitDialogOpen: input.isExitDialogOpen,
+    onCloseExitDialog: input.onCloseExitDialog,
+    onConfirmExitToHub: input.onConfirmExitToHub,
+    onGoToMarket: input.onGoToMarket,
   };
 }

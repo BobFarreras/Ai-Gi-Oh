@@ -100,8 +100,11 @@ Eventos conectados vía `useHubModuleSfx`:
 
 ## Reglas de salida y combate (deck 20/20)
 
-1. Salir de `Arsenal` con el botón `Menú` queda bloqueado si el deck principal no está en `20/20`.
-2. El bloqueo muestra `HubErrorDialog` con causa explícita (`Deck incompleto`).
+1. Salir de `Arsenal` con el botón `Menú` abre diálogo de confirmación si el deck principal no está en `20/20`.
+2. El diálogo ofrece tres decisiones:
+   - `Salir Igual` (volver al Hub),
+   - `Ir al Market`,
+   - `Cerrar` (seguir en Arsenal).
 3. Entrar a `Training` o `Story Duel` también valida `20/20` en servidor.
 4. Si no cumple, se muestra pantalla de bloqueo con CTA a `/hub/home`.
 
