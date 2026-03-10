@@ -79,3 +79,21 @@ Mostrar contexto de acto/capítulo en el mapa sin hardcodear texto en componente
 1. El mapa muestra briefing narrativo del capítulo activo.
 2. Capítulos no definidos usan fallback estable.
 3. `pnpm lint`, `pnpm test`, `pnpm build` en verde.
+
+## Fase 8 - Integración mapa/combate Story
+
+### Objetivo
+
+Alinear entrada a combate con el estado real del mundo Story (nodo activo + desbloqueo).
+
+### Implementado
+
+1. `get-story-duel-runtime-data` usa `GetStoryWorldStateUseCase` para validar desbloqueo.
+2. Se comprueba `currentNodeId` persistido antes de permitir iniciar duelo.
+3. Página de duelo bloquea entrada con mensaje claro si el nodo no está activo.
+
+### Validación
+
+1. Si el jugador no está en el nodo, no entra al duelo.
+2. Si el nodo está activo y desbloqueado, el flujo de combate funciona.
+3. `pnpm lint`, `pnpm test`, `pnpm build` en verde.

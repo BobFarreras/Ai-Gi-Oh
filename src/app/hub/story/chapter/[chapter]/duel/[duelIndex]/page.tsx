@@ -41,6 +41,19 @@ export default async function StoryDuelPage({ params }: StoryDuelPageProps) {
       </main>
     );
   }
+  if (!runtime.isCurrentNode) {
+    return (
+      <main className="hub-control-room-bg flex min-h-dvh items-center justify-center px-4 text-cyan-100">
+        <div className="rounded-xl border border-cyan-400/40 bg-cyan-950/45 p-4 text-center">
+          <p className="text-sm font-bold uppercase text-cyan-100">Nodo no activo</p>
+          <p className="mt-1 text-sm text-cyan-100/90">Muévete primero a este nodo desde el mapa Story para iniciar el duelo.</p>
+          <Link href="/hub/story" className="mt-3 inline-block rounded-md border border-cyan-300/40 px-3 py-2 text-xs font-bold uppercase">
+            Volver al mapa Story
+          </Link>
+        </div>
+      </main>
+    );
+  }
   if (runtime.playerDeck.length !== HOME_DECK_SIZE) {
     return (
       <main className="hub-control-room-bg flex min-h-dvh items-center justify-center px-4 text-cyan-100">
