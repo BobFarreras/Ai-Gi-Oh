@@ -17,29 +17,14 @@ interface MarketCardInspectorProps {
 export function MarketCardInspector({ selectedCard, selectedListing, isCompactMode = false, onBuyCard }: MarketCardInspectorProps) {
   const [floatingSpendId, setFloatingSpendId] = useState(0);
   const [isSubmittingPurchase, setIsSubmittingPurchase] = useState(false);
-  const [isCardRenderDeferred, setIsCardRenderDeferred] = useState(false);
   const floatingTimeoutRef = useRef<number | null>(null);
-  const deferredCardTimeoutRef = useRef<number | null>(null);
   useEffect(
     () => () => {
       if (floatingTimeoutRef.current === null) return;
       window.clearTimeout(floatingTimeoutRef.current);
-      if (deferredCardTimeoutRef.current !== null) window.clearTimeout(deferredCardTimeoutRef.current);
     },
     [],
   );
-  useEffect(() => {
-    if (!isCompactMode || !selectedCard) {
-      setIsCardRenderDeferred(false);
-      return;
-    }
-    setIsCardRenderDeferred(true);
-    if (deferredCardTimeoutRef.current !== null) window.clearTimeout(deferredCardTimeoutRef.current);
-    deferredCardTimeoutRef.current = window.setTimeout(() => {
-      setIsCardRenderDeferred(false);
-      deferredCardTimeoutRef.current = null;
-    }, 220);
-  }, [isCompactMode, selectedCard]);
   const handleBuyClick = async (listingId: string) => {
     if (isSubmittingPurchase) return;
     setIsSubmittingPurchase(true);
@@ -69,7 +54,6 @@ export function MarketCardInspector({ selectedCard, selectedListing, isCompactMo
           selectedCard={selectedCard}
           selectedListing={selectedListing}
           isCompactMode={isCompactMode}
-          isCardRenderDeferred={isCardRenderDeferred}
           isSubmittingPurchase={isSubmittingPurchase}
           floatingSpendId={floatingSpendId}
           onBuyClick={handleBuyClick}

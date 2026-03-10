@@ -8,13 +8,19 @@ export interface IBoardPerformanceProfile {
   shouldReduceCombatEffects: boolean;
 }
 
+function hasMatchMediaApi(): boolean {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function";
+}
+
 function detectProfile(): IBoardPerformanceProfile {
   if (typeof window === "undefined") {
     return { isMobileViewport: false, shouldReduceCombatEffects: false };
   }
 
   const isMobileViewport = window.innerWidth <= 1024;
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const prefersReducedMotion = hasMatchMediaApi()
+    ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    : false;
   const concurrency = typeof navigator.hardwareConcurrency === "number" ? navigator.hardwareConcurrency : 8;
   const memory = typeof (navigator as Navigator & { deviceMemory?: number }).deviceMemory === "number"
     ? (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8
@@ -39,14 +45,14 @@ export function useBoardPerformanceProfile(): IBoardPerformanceProfile {
   const [profile, setProfile] = useState<IBoardPerformanceProfile>(() => detectProfile());
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     const syncProfile = () => setProfile(detectProfile());
     syncProfile();
     window.addEventListener("resize", syncProfile);
-    mediaQuery.addEventListener("change", syncProfile);
+    const mediaQuery = hasMatchMediaApi() ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+    mediaQuery?.addEventListener("change", syncProfile);
     return () => {
       window.removeEventListener("resize", syncProfile);
-      mediaQuery.removeEventListener("change", syncProfile);
+      mediaQuery?.removeEventListener("change", syncProfile);
     };
   }, []);
 

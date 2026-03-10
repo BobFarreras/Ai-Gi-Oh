@@ -16,6 +16,7 @@ export function CardFrame({
   disableHoverEffects = false,
   disableDefaultShadow = false,
   isPerformanceMode = false,
+  showBackgroundInPerformanceMode = false,
   onClick,
   versionTier,
   level,
@@ -56,6 +57,7 @@ export function CardFrame({
             levelProgressWidth={levelProgressWidth}
             disableHoverEffects={disableHoverEffects}
             isPerformanceMode={isPerformanceMode}
+            showBackgroundInPerformanceMode={showBackgroundInPerformanceMode}
           />
           <CardFrameFooter card={card} descriptionText={descriptionText} />
         </div>

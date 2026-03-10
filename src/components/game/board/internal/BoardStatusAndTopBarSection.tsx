@@ -3,6 +3,7 @@ import { BoardStatusOverlays } from "@/components/game/board/ui/overlays/BoardSt
 import { CinematicNarrationOverlay } from "@/components/game/board/ui/CinematicNarrationOverlay";
 import { BoardMobileTopBar } from "@/components/game/board/ui/layout/BoardMobileTopBar";
 import { BoardTopBar } from "@/components/game/board/ui/layout/BoardTopBar";
+import { IFusionMaterialCandidate } from "@/components/game/board/ui/overlays/internal/FusionMaterialBrowser";
 import { IBoardViewSectionProps } from "@/components/game/board/internal/board-view-types";
 
 export function BoardStatusAndTopBarSection({
@@ -15,6 +16,24 @@ export function BoardStatusAndTopBarSection({
   opponentAvatarUrl,
 }: IBoardViewSectionProps) {
   if (screen.isResultVisible) return null;
+  const pendingFusionAction =
+    board.gameState.pendingTurnAction?.type === "SELECT_FUSION_MATERIALS" &&
+    board.gameState.pendingTurnAction.playerId === player.id
+      ? board.gameState.pendingTurnAction
+      : null;
+  const selectableIds = new Set(board.pendingEntitySelectionIds);
+  const selectedIds = new Set(board.pendingFusionSelectedEntityIds);
+  const fusionMaterialCandidates: IFusionMaterialCandidate[] = pendingFusionAction
+    ? player.activeEntities
+        .filter((entity) => selectableIds.has(entity.instanceId) || selectedIds.has(entity.instanceId))
+        .map((entity) => ({
+          instanceId: entity.instanceId,
+          card: entity.card,
+          mode: entity.mode,
+          isSelected: selectedIds.has(entity.instanceId),
+          isSelectable: selectableIds.has(entity.instanceId),
+        }))
+    : [];
 
   return (
     <>
@@ -61,6 +80,10 @@ export function BoardStatusAndTopBarSection({
         onConfirmAdvancePhase={board.confirmAdvancePhase}
         onCancelAdvancePhase={board.cancelAdvancePhase}
         externalBannerSignal={screen.autoModeBannerSignal}
+        isFusionMaterialBrowserOpen={Boolean(pendingFusionAction)}
+        fusionMaterialCandidates={fusionMaterialCandidates}
+        fusionSelectedCount={board.pendingFusionSelectedEntityIds.length}
+        onSelectFusionMaterial={(instanceId) => board.resolvePendingTurnAction(instanceId)}
       />
       <CinematicNarrationOverlay
         action={screen.narration.activeCinematicAction}

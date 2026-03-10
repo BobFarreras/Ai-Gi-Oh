@@ -5,4 +5,5 @@
 
 1. `HomeDeckBuilderSceneView.tsx`: render principal de Arsenal.
 2. `create-home-deck-builder-view-props.ts`: ensamblador de props para desacoplar el orquestador.
+3. `HomeIncompleteDeckExitDialog.tsx`: confirmación de salida cuando el deck principal no está completo.
 

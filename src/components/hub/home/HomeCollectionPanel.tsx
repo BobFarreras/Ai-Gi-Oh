@@ -102,7 +102,6 @@ export function HomeCollectionPanel({
                   level={progress?.level ?? 0}
                   xp={progress?.xp ?? 0}
                   masteryPassiveSkillId={progress?.masteryPassiveSkillId ?? null}
-                  isPerformanceMode
                 />
                 
                 {/* Indicador de copias con estilo neón si está al máximo */}

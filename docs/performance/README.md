@@ -6,8 +6,9 @@
 Usa esta guía para capturar una línea base reproducible:
 
 1. [Protocolo Fase 1](./PHASE-1-BASELINE.md)
-2. [Plantilla de reporte](./BASELINE-REPORT-TEMPLATE.md)
-3. Comando automático: `pnpm perf:baseline:mobile`
+2. [Protocolo Fase 0 Home/Market/Combat](./PHASE-0-HOME-MARKET-BASELINE.md)
+3. [Plantilla de reporte](./BASELINE-REPORT-TEMPLATE.md)
+4. Comando automático: `pnpm perf:baseline:mobile`
 
 ## Auditoría E2E específica de combate
 
