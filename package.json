@@ -16,7 +16,14 @@
     "perf:baseline:mobile:realistic": "node scripts/performance/run-mobile-baseline.mjs --profile=realistic",
     "perf:baseline:mobile:stress": "node scripts/performance/run-mobile-baseline.mjs --profile=stress",
     "perf:baseline:mobile:auto": "node scripts/performance/run-mobile-baseline.mjs --profile=both --startServer=\"pnpm dev\"",
-    "perf:baseline:mobile:auto:prod": "node scripts/performance/run-mobile-baseline.mjs --profile=both --startServer=\"pnpm start\""
+    "perf:baseline:mobile:auto:prod": "node scripts/performance/run-mobile-baseline.mjs --profile=both --startServer=\"pnpm start\"",
+    "perf:combat:e2e": "node scripts/performance/run-combat-e2e.mjs",
+    "perf:combat:e2e:auto:dev": "node scripts/performance/run-combat-e2e.mjs --startServer=\"pnpm dev\"",
+    "perf:combat:e2e:auto:prod": "node scripts/performance/run-combat-e2e.mjs --startServer=\"pnpm start\"",
+    "perf:combat:e2e:real": "node scripts/performance/run-combat-e2e-real.mjs",
+    "perf:combat:e2e:real:auto:dev": "node scripts/performance/run-combat-e2e-real.mjs --startServer=\"pnpm dev\"",
+    "perf:combat:e2e:real:auto:prod": "node scripts/performance/run-combat-e2e-real.mjs --startServer=\"pnpm start\"",
+    "perf:combat:e2e:real:stress:auto:prod": "node scripts/performance/run-combat-e2e-real.mjs --profile=stress --startServer=\"pnpm start\""
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

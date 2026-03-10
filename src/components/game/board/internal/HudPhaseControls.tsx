@@ -4,6 +4,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, SkipForward, Swords, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 
 interface HudPhaseControlsProps {
   phase: string;
@@ -12,6 +13,7 @@ interface HudPhaseControlsProps {
 }
 
 export function HudPhaseControls({ phase, isVisible, onAdvancePhase }: HudPhaseControlsProps) {
+  const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
   if (!isVisible) return null;
   const normalizedPhase = phase.toUpperCase();
   const isMainPhase = normalizedPhase.includes("MAIN");
@@ -23,15 +25,17 @@ export function HudPhaseControls({ phase, isVisible, onAdvancePhase }: HudPhaseC
     <div className="absolute -top-[52px] left-0 w-full pl-6 pr-4 flex flex-row items-end justify-between gap-1 sm:gap-1.5 pointer-events-auto z-[120]">
       
       {/* EFECTO DE TRANSICIÓN: Flash cibernético al cambiar de fase */}
-      <AnimatePresence mode="popLayout">
-        <motion.div
-          key={phase}
-          initial={{ opacity: 0.8, x: -100, skewX: -15 }}
-          animate={{ opacity: 0, x: 400, skewX: -15 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="absolute inset-0 z-50 w-32 bg-white mix-blend-overlay pointer-events-none shadow-[0_0_20px_rgba(255,255,255,0.8)]"
-        />
-      </AnimatePresence>
+      {!shouldReduceCombatEffects ? (
+        <AnimatePresence mode="popLayout">
+          <motion.div
+            key={phase}
+            initial={{ opacity: 0.8, x: -100, skewX: -15 }}
+            animate={{ opacity: 0, x: 400, skewX: -15 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="absolute inset-0 z-50 w-32 bg-white mix-blend-overlay pointer-events-none shadow-[0_0_20px_rgba(255,255,255,0.8)]"
+          />
+        </AnimatePresence>
+      ) : null}
 
       {/* 1. INDICADOR: INVOCAR */}
       {/* flex-1: Se expande u encoge según el espacio disponible sin romper el diseño */}
@@ -71,8 +75,8 @@ export function HudPhaseControls({ phase, isVisible, onAdvancePhase }: HudPhaseC
         onClick={() => onAdvancePhase?.()}
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1, height: isBattlePhase ? 48 : 40 }}
-        whileHover={{ scale: isMainPhase ? 1.05 : 1, y: isMainPhase ? -2 : 0 }}
-        whileTap={{ scale: isMainPhase ? 0.95 : 1 }}
+        whileHover={shouldReduceCombatEffects ? undefined : { scale: isMainPhase ? 1.05 : 1, y: isMainPhase ? -2 : 0 }}
+        whileTap={shouldReduceCombatEffects ? undefined : { scale: isMainPhase ? 0.95 : 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className={cn(
           "relative group flex-1 flex flex-col items-center justify-center transform skew-x-[-12deg] border-b-[3px]",
@@ -83,7 +87,7 @@ export function HudPhaseControls({ phase, isVisible, onAdvancePhase }: HudPhaseC
               : "bg-zinc-950/60 border-zinc-800 opacity-50 grayscale cursor-not-allowed z-0"
         )}
       >
-        {isMainPhase && <div className="absolute inset-0 bg-amber-500/10 animate-pulse pointer-events-none" />}
+        {isMainPhase && !shouldReduceCombatEffects ? <div className="absolute inset-0 bg-amber-500/10 animate-pulse pointer-events-none" /> : null}
         <div className="flex flex-col items-center transform skew-x-[12deg] relative z-10 w-full">
           {isBattlePhase && <span className="text-[8px] text-amber-300 font-black tracking-widest leading-none mb-0.5 animate-pulse">ACTUAL</span>}
           {isMainPhase && <span className="text-[8px] text-amber-500/80 font-black tracking-widest leading-none mb-0.5 group-hover:text-amber-400 transition-colors">SIGUIENTE</span>}
@@ -108,8 +112,8 @@ export function HudPhaseControls({ phase, isVisible, onAdvancePhase }: HudPhaseC
         onClick={() => onAdvancePhase?.()}
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1, height: 40 }}
-        whileHover={{ scale: isEndTurnEnabled ? 1.05 : 1, y: isEndTurnEnabled ? -2 : 0 }}
-        whileTap={{ scale: isEndTurnEnabled ? 0.95 : 1 }}
+        whileHover={shouldReduceCombatEffects ? undefined : { scale: isEndTurnEnabled ? 1.05 : 1, y: isEndTurnEnabled ? -2 : 0 }}
+        whileTap={shouldReduceCombatEffects ? undefined : { scale: isEndTurnEnabled ? 0.95 : 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className={cn(
           "relative group flex-1 flex flex-col items-center justify-center transform skew-x-[-12deg] border-b-[3px]",
@@ -118,7 +122,7 @@ export function HudPhaseControls({ phase, isVisible, onAdvancePhase }: HudPhaseC
             : "bg-zinc-950/60 border-zinc-800 opacity-50 grayscale cursor-not-allowed z-0"
         )}
       >
-        {isEndTurnEnabled && <div className="absolute inset-0 bg-fuchsia-500/10 animate-pulse pointer-events-none" />}
+        {isEndTurnEnabled && !shouldReduceCombatEffects ? <div className="absolute inset-0 bg-fuchsia-500/10 animate-pulse pointer-events-none" /> : null}
         <div className="flex flex-col items-center transform skew-x-[12deg] relative z-10 w-full">
           {isEndTurnEnabled && <span className="text-[8px] text-fuchsia-500/80 font-black tracking-widest leading-none mb-0.5 group-hover:text-fuchsia-400 transition-colors">SIGUIENTE</span>}
           <div className="flex items-center justify-center gap-1 sm:gap-1.5">

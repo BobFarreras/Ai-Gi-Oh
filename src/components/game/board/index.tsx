@@ -14,6 +14,7 @@ import { useBoardScreenState } from "@/components/game/board/internal/use-board-
 import { BoardStatusAndTopBarSection } from "@/components/game/board/internal/BoardStatusAndTopBarSection";
 import { BoardPlayersSection } from "@/components/game/board/internal/BoardPlayersSection";
 import { BoardActionControlsSection } from "@/components/game/board/internal/BoardActionControlsSection";
+import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 interface IBoardProps {
   initialPlayerDeck?: ICard[] | null;
   mode?: IMatchMode;
@@ -26,22 +27,12 @@ interface IBoardProps {
   onResultAction?: () => void;
   onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string }) => void;
 }
-export function Board({
-  initialPlayerDeck,
-  mode = "TRAINING",
-  initialConfig,
-  duelResultRewardSummary,
-  narrationPack,
-  playerAvatarUrl = null,
-  opponentAvatarUrl = null,
-  resultActionLabel,
-  onResultAction,
-  onMatchResolved,
-}: IBoardProps) {
+export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, resultActionLabel, onResultAction, onMatchResolved }: IBoardProps) {
   countRender("Board");
   const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig);
   const player = board.gameState.playerA; const opponent = board.gameState.playerB;
   const { isMobile } = useBoardViewportMode();
+  const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
   const screen = useBoardScreenState({
     board,
     mode,
@@ -60,7 +51,7 @@ export function Board({
     onMatchResolved,
   });
   return (
-    <div className="board-space-bg relative w-full h-screen overflow-hidden font-sans cursor-crosshair" onClick={board.clearSelection}>
+    <div className={`board-space-bg relative w-full h-screen overflow-hidden font-sans cursor-crosshair ${shouldReduceCombatEffects ? "reduced-combat-effects" : ""}`} onClick={board.clearSelection}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(34,211,238,0.12),transparent_52%)] pointer-events-none" />
       <div className="absolute inset-0 shadow-[inset_0_0_200px_rgba(1,4,12,0.58)] pointer-events-none" />
       <BoardStatusAndTopBarSection
