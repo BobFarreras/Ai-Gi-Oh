@@ -119,3 +119,23 @@ Reducir coste visual del mapa Story en móviles low-end sin cambiar flujo de jue
 1. En móvil estrecho se reducen efectos del mapa.
 2. En desktop se mantiene estética completa.
 3. `pnpm lint`, `pnpm test`, `pnpm build` en verde.
+
+## Fase 10 - Seguridad y QA de flujos Story
+
+### Objetivo
+
+Blindar rutas Story ante entradas inválidas y documentar hardening aplicado.
+
+### Implementado
+
+1. Validador de `nodeId` en capa de aplicación:
+   - `assert-valid-story-node-id.ts`.
+2. Tests de validación de formato.
+3. API `/api/story/world/move` reforzada con validación explícita.
+4. Documento de hardening:
+   - `docs/security/story-world-hardening.md`.
+
+### Validación
+
+1. `nodeId` inválido dispara `ValidationError`.
+2. `pnpm lint`, `pnpm test`, `pnpm build` en verde.

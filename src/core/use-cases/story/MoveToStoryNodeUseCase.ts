@@ -2,6 +2,7 @@
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { canMoveBetweenStoryNodes } from "@/core/services/story/world/story-world-navigation";
+import { assertValidStoryNodeId } from "@/core/use-cases/story/internal/assert-valid-story-node-id";
 import { IStoryWorldGraph, IStoryWorldProgressState } from "@/core/services/story/world/story-world-types";
 
 interface IMoveToStoryNodeInput {
@@ -16,6 +17,7 @@ export class MoveToStoryNodeUseCase {
    * Mueve el cursor Story únicamente si el nodo destino está desbloqueado y conectado.
    */
   execute(input: IMoveToStoryNodeInput): IStoryWorldProgressState {
+    assertValidStoryNodeId(input.toNodeId);
     const targetNode = input.graph.nodes.find((node) => node.id === input.toNodeId);
     if (!targetNode) throw new NotFoundError("Nodo Story no encontrado.", { nodeId: input.toNodeId });
     const canMove = canMoveBetweenStoryNodes({

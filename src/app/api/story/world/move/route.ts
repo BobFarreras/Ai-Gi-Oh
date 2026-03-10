@@ -4,6 +4,7 @@ import { ValidationError } from "@/core/errors/ValidationError";
 import { CommitStoryProgressUseCase } from "@/core/use-cases/story/CommitStoryProgressUseCase";
 import { GetStoryWorldStateUseCase } from "@/core/use-cases/story/GetStoryWorldStateUseCase";
 import { MoveToStoryNodeUseCase } from "@/core/use-cases/story/MoveToStoryNodeUseCase";
+import { assertValidStoryNodeId } from "@/core/use-cases/story/internal/assert-valid-story-node-id";
 import { SupabaseOpponentRepository } from "@/infrastructure/persistence/supabase/SupabaseOpponentRepository";
 import { SupabasePlayerStoryDuelProgressRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerStoryDuelProgressRepository";
 import { SupabasePlayerStoryWorldRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerStoryWorldRepository";
@@ -23,6 +24,7 @@ export async function POST(request: NextRequest) {
     if (!payload.nodeId || typeof payload.nodeId !== "string") {
       throw new ValidationError("Nodo destino inválido.");
     }
+    assertValidStoryNodeId(payload.nodeId);
     const opponentRepository = new SupabaseOpponentRepository(repositories.client);
     const duelProgressRepository = new SupabasePlayerStoryDuelProgressRepository(repositories.client);
     const worldRepository = new SupabasePlayerStoryWorldRepository(repositories.client);

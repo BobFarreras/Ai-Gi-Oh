@@ -4,7 +4,7 @@ import { MoveToStoryNodeUseCase } from "@/core/use-cases/story/MoveToStoryNodeUs
 
 const graph = buildStoryWorldGraph([
   {
-    id: "d1",
+    id: "duel-1",
     chapter: 1,
     duelIndex: 1,
     title: "A",
@@ -16,7 +16,7 @@ const graph = buildStoryWorldGraph([
     isBossDuel: false,
   },
   {
-    id: "d2",
+    id: "duel-2",
     chapter: 1,
     duelIndex: 2,
     title: "B",
@@ -24,7 +24,7 @@ const graph = buildStoryWorldGraph([
     opponentDifficulty: "STANDARD",
     rewardNexus: 14,
     rewardPlayerExperience: 24,
-    unlockRequirementDuelId: "d1",
+    unlockRequirementDuelId: "duel-1",
     isBossDuel: false,
   },
 ]);
@@ -33,17 +33,17 @@ describe("MoveToStoryNodeUseCase", () => {
   it("mueve cuando el destino está desbloqueado y conectado", () => {
     const useCase = new MoveToStoryNodeUseCase();
     const output = useCase.execute({
-      graph,
-      progress: {
-        currentNodeId: "d1",
-        completedNodeIds: ["d1"],
-        unlockedNodeIds: ["d1", "d2"],
-        history: [],
-      },
-      toNodeId: "d2",
-      nowIso: "2026-03-10T00:00:00.000Z",
-    });
-    expect(output.currentNodeId).toBe("d2");
+        graph,
+        progress: {
+          currentNodeId: "duel-1",
+          completedNodeIds: ["duel-1"],
+          unlockedNodeIds: ["duel-1", "duel-2"],
+          history: [],
+        },
+        toNodeId: "duel-2",
+        nowIso: "2026-03-10T00:00:00.000Z",
+      });
+    expect(output.currentNodeId).toBe("duel-2");
     expect(output.history).toHaveLength(1);
     expect(output.history[0]?.kind).toBe("MOVE");
   });
@@ -54,12 +54,12 @@ describe("MoveToStoryNodeUseCase", () => {
       useCase.execute({
         graph,
         progress: {
-          currentNodeId: "d1",
+          currentNodeId: "duel-1",
           completedNodeIds: [],
-          unlockedNodeIds: ["d1"],
+          unlockedNodeIds: ["duel-1"],
           history: [],
         },
-        toNodeId: "d2",
+        toNodeId: "duel-2",
         nowIso: "2026-03-10T00:00:00.000Z",
       }),
     ).toThrow("No se puede mover al nodo Story destino.");
