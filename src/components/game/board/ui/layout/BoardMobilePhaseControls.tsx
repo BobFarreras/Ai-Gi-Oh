@@ -46,7 +46,7 @@ export function BoardMobilePhaseControls({ phase, isPlayerTurn, hasWinner, onAdv
 
   if (shouldReduceCombatEffects) {
     return (
-      <div className="absolute bottom-2 left-[calc(clamp(11.8rem,36vw,16.8rem)-0.05rem)] z-[290] flex items-center gap-1 pointer-events-auto">
+      <div className="absolute bottom-12 left-[calc(clamp(11.8rem,36vw,16.8rem)-0.05rem)] z-[290] flex items-center gap-1 pointer-events-auto">
         <button
           aria-label="Fase invocar"
           disabled
@@ -78,7 +78,7 @@ export function BoardMobilePhaseControls({ phase, isPlayerTurn, hasWinner, onAdv
   }
 
   return (
-    <div className="absolute bottom-2 left-[calc(clamp(11.8rem,36vw,16.8rem)-0.05rem)] z-[290] flex items-center gap-1 pointer-events-auto">
+    <div className="absolute bottom-12 left-[calc(clamp(11.8rem,36vw,16.8rem)-0.05rem)] z-[290] flex items-center gap-1 pointer-events-auto">
       <AnimatePresence mode="popLayout">
         <motion.div
           key={currentPhaseKey}

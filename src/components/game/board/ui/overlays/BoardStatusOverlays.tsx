@@ -12,6 +12,7 @@ import { EntityReplacementConfirmOverlay } from "./EntityReplacementConfirmOverl
 import { TurnAdvanceGuardOverlay } from "./TurnAdvanceGuardOverlay";
 import { BoardErrorOverlay } from "./internal/BoardErrorOverlay";
 import { BoardZoneBrowsers } from "./internal/BoardZoneBrowsers";
+import { IFusionMaterialCandidate, FusionMaterialBrowser } from "./internal/FusionMaterialBrowser";
 
 interface BoardStatusOverlaysProps {
   lastError: IBoardUiError | null;
@@ -44,6 +45,10 @@ interface BoardStatusOverlaysProps {
   onConfirmAdvancePhase: (disableHelp: boolean) => void;
   onCancelAdvancePhase: () => void;
   externalBannerSignal?: { id: string; left: string; right: string } | null;
+  isFusionMaterialBrowserOpen?: boolean;
+  fusionMaterialCandidates?: IFusionMaterialCandidate[];
+  fusionSelectedCount?: number;
+  onSelectFusionMaterial?: (instanceId: string) => void;
 }
 
 export function BoardStatusOverlays({
@@ -77,6 +82,10 @@ export function BoardStatusOverlays({
   onConfirmAdvancePhase,
   onCancelAdvancePhase,
   externalBannerSignal = null,
+  isFusionMaterialBrowserOpen = false,
+  fusionMaterialCandidates = [],
+  fusionSelectedCount = 0,
+  onSelectFusionMaterial = () => undefined,
 }: BoardStatusOverlaysProps) {
   return (
     <>
@@ -118,6 +127,12 @@ export function BoardStatusOverlays({
             setIsFusionCinematicActive(active);
           }
         }}
+      />
+      <FusionMaterialBrowser
+        isOpen={isFusionMaterialBrowserOpen}
+        candidates={fusionMaterialCandidates}
+        selectedCount={fusionSelectedCount}
+        onSelectMaterial={onSelectFusionMaterial}
       />
    
       <BoardZoneBrowsers

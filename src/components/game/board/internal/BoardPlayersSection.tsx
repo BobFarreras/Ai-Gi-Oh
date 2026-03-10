@@ -1,5 +1,6 @@
 // src/components/game/board/internal/BoardPlayersSection.tsx - Muestra HUD de jugadores en desktop y mobile.
 import { PlayerHUD } from "@/components/game/board/PlayerHUD";
+import { BoardMobileEnergyBadge } from "@/components/game/board/internal/BoardMobileEnergyBadge";
 import { BoardMobilePhaseControls } from "@/components/game/board/ui/layout/BoardMobilePhaseControls";
 import { BoardPlayersLayer } from "@/components/game/board/ui/layers/BoardPlayersLayer";
 import { IBoardViewSectionProps } from "@/components/game/board/internal/board-view-types";
@@ -72,12 +73,18 @@ export function BoardPlayersSection({
         onAdvancePhase={board.advancePhase}
         containerClassName="!bottom-0 !left-0 !right-auto !z-[280] !justify-end !w-[clamp(11.8rem,36vw,16.8rem)] !h-[clamp(5.6rem,10.5vh,7.1rem)]"
         showPhaseControls={false}
+        showEnergy={false}
       />
       <BoardMobilePhaseControls
         phase={board.gameState.phase}
         isPlayerTurn={board.isPlayerTurn}
         hasWinner={Boolean(board.winnerPlayerId)}
         onAdvancePhase={board.advancePhase}
+      />
+      <BoardMobileEnergyBadge
+        currentEnergy={player.currentEnergy}
+        maxEnergy={player.maxEnergy}
+        isPlayerTurn={board.isPlayerTurn}
       />
     </>
   );
