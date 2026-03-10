@@ -6,6 +6,7 @@ import { Card } from "@/components/game/card/Card";
 import { useProgressiveRenderLimit } from "@/components/hub/internal/useProgressiveRenderLimit";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { ICard } from "@/core/entities/ICard";
+import { useEffect, useState } from "react";
 
 interface MarketVaultCollectionTabProps {
   collection: ICollectionCard[];
@@ -14,8 +15,28 @@ interface MarketVaultCollectionTabProps {
 }
 
 export function MarketVaultCollectionTab({ collection, onSelectCard, isPerformanceMode }: MarketVaultCollectionTabProps) {
-  const renderLimit = useProgressiveRenderLimit({ total: collection.length, initialLimit: 16, step: 12, intervalMs: 70 });
+  const [isLiteBackgroundEnabled, setIsLiteBackgroundEnabled] = useState(!isPerformanceMode);
+  const renderLimit = useProgressiveRenderLimit({
+    total: collection.length,
+    initialLimit: isPerformanceMode ? 6 : 16,
+    step: isPerformanceMode ? 8 : 12,
+    intervalMs: isPerformanceMode ? 90 : 70,
+  });
   const visibleCollection = collection.slice(0, renderLimit);
+  useEffect(() => {
+    if (!isPerformanceMode) return;
+    const idleHandle =
+      typeof window.requestIdleCallback === "function"
+        ? window.requestIdleCallback(() => setIsLiteBackgroundEnabled(true), { timeout: 1200 })
+        : window.setTimeout(() => setIsLiteBackgroundEnabled(true), 900);
+    return () => {
+      if (typeof idleHandle === "number") {
+        window.clearTimeout(idleHandle);
+        return;
+      }
+      window.cancelIdleCallback?.(idleHandle);
+    };
+  }, [isPerformanceMode]);
   return (
     <motion.div
       key="collection"
@@ -32,13 +53,13 @@ export function MarketVaultCollectionTab({ collection, onSelectCard, isPerforman
         >
           <div className="pointer-events-none relative h-full w-full overflow-hidden rounded">
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="origin-center scale-[0.31]">
+              <div className={isPerformanceMode ? "origin-center scale-[0.25] sm:scale-[0.27]" : "origin-center scale-[0.31]"}>
                 <Card
                   card={entry.card}
                   disableHoverEffects={isPerformanceMode}
                   disableDefaultShadow={isPerformanceMode}
                   isPerformanceMode={isPerformanceMode}
-                  showBackgroundInPerformanceMode={isPerformanceMode}
+                  showBackgroundInPerformanceMode={isLiteBackgroundEnabled}
                 />
               </div>
             </div>

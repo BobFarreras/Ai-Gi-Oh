@@ -21,10 +21,10 @@ export function CardFrameArtAndProgress({
   isPerformanceMode = false,
   showBackgroundInPerformanceMode = false,
 }: CardFrameArtAndProgressProps) {
-  const renderImageSizes = isPerformanceMode ? "96px" : "260px";
-  const renderImageQuality = isPerformanceMode ? 55 : 75;
-  const backgroundImageSizes = isPerformanceMode ? "96px" : "260px";
-  const backgroundImageQuality = isPerformanceMode ? 40 : 75;
+  const renderImageSizes = isPerformanceMode ? "88px" : "260px";
+  const renderImageQuality = isPerformanceMode ? 45 : 75;
+  const backgroundImageSizes = isPerformanceMode ? "72px" : "260px";
+  const backgroundImageQuality = isPerformanceMode ? 28 : 75;
   const shouldRenderBackground = Boolean(card.bgUrl) && (!isPerformanceMode || showBackgroundInPerformanceMode);
   return (
     <div className="relative z-10 mt-2 flex flex-grow flex-col items-center justify-start px-3">
@@ -47,8 +47,8 @@ export function CardFrameArtAndProgress({
               alt={card.name}
               fill
               loading="lazy"
-              sizes="96px"
-              quality={40}
+              sizes={renderImageSizes}
+              quality={renderImageQuality}
               className="absolute inset-0 z-10 object-contain p-1"
             />
           ) : (

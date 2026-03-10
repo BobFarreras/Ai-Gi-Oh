@@ -59,7 +59,7 @@ export function HomeMiniCard({
 
   const cardScaleClass =
     size === "mobileLarge"
-      ? "scale-[0.26] xs:scale-[0.28] sm:scale-[0.3] md:scale-[0.25]"
+      ? "scale-[0.22] xs:scale-[0.24] sm:scale-[0.26] md:scale-[0.25]"
       : "scale-[0.18] xs:scale-[0.2] sm:scale-[0.22] md:scale-[0.25]";
 
   if (!card) {
