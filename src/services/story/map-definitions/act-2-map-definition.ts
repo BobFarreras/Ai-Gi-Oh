@@ -50,4 +50,9 @@ export const storyAct2MapDefinition: IStoryActMapDefinition = {
       position: { x: 1410, y: 540 },
     },
   ],
+  platforms: [
+    { id: "act2-platform-1", position: { x: 760, y: 710 }, width: 210, height: 26, rotationDeg: -5, style: "METAL" },
+    { id: "act2-platform-2", position: { x: 1180, y: 520 }, width: 260, height: 24, style: "NEON" },
+    { id: "act2-platform-3", position: { x: 1430, y: 620 }, width: 190, height: 20, rotationDeg: 8, style: "RUIN" },
+  ],
 };

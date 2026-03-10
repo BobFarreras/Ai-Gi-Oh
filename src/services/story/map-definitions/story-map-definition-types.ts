@@ -29,8 +29,18 @@ export interface IStoryMapVirtualNodeDefinition {
   position: IStoryMapVisualPosition;
 }
 
+export interface IStoryMapPlatformDefinition {
+  id: string;
+  position: IStoryMapVisualPosition;
+  width: number;
+  height: number;
+  rotationDeg?: number;
+  style: "METAL" | "NEON" | "RUIN";
+}
+
 export interface IStoryActMapDefinition {
   act: number;
   nodes: IStoryMapVisualNodeDefinition[];
   virtualNodes?: IStoryMapVirtualNodeDefinition[];
+  platforms?: IStoryMapPlatformDefinition[];
 }

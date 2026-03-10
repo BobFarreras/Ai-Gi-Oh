@@ -12,6 +12,8 @@ import {
 } from "@/components/hub/story/story-circuit-layout";
 import { StoryMapNode } from "./internal/StoryMapNode";
 import { useStoryAvatarTravel } from "./internal/use-story-avatar-travel";
+import { StoryMapPlatforms } from "./internal/StoryMapPlatforms";
+import { listStoryMapPlatforms } from "@/services/story/map-definitions/story-map-definition-registry";
 
 interface StoryCircuitMapProps {
   nodes: IStoryMapNodeRuntime[];
@@ -36,6 +38,7 @@ export function StoryCircuitMap({
     () => resolveStoryPathSegments(nodes, positionMap),
     [nodes, positionMap],
   );
+  const platforms = useMemo(() => listStoryMapPlatforms(), []);
   const avatarNode = nodes.find((node) => node.id === currentNodeId) ?? nodes[0];
   const resolvePosition = (nodeId: string) => resolveStoryNodePosition(nodeId, positionMap);
   const { avatarX, avatarY } = useStoryAvatarTravel({
@@ -93,6 +96,7 @@ export function StoryCircuitMap({
             />
           ))}
         </svg>
+        <StoryMapPlatforms platforms={platforms} />
 
         {nodes.map((node) => {
           const position = resolveStoryNodePosition(node.id, positionMap);

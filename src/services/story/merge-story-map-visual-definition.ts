@@ -9,7 +9,7 @@ function resolveVirtualNodeUnlocked(input: {
   if (!input.dependencyNodeId) return true;
   const dependencyNode = input.nodesById.get(input.dependencyNodeId);
   if (!dependencyNode) return false;
-  return dependencyNode.isCompleted || dependencyNode.isUnlocked;
+  return dependencyNode.isCompleted;
 }
 
 /**

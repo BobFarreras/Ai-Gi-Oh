@@ -1,9 +1,12 @@
 // src/services/story/resolve-story-node-interaction-dialogue.ts - Resuelve secuencias narrativas por nodo Story para interacciones no-duelo.
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
+import { resolveStoryDialogueLineMedia } from "@/services/story/story-node-dialogue-media";
 
 export interface IStoryInteractionDialogueLine {
   speaker: string;
   text: string;
+  portraitUrl?: string;
+  audioUrl?: string;
 }
 
 export interface IStoryNodeInteractionDialogue {
@@ -61,6 +64,13 @@ function buildFallbackDialogue(node: IStoryMapNodeRuntime): IStoryNodeInteractio
   };
 }
 
+function withMultimedia(nodeId: string, dialogue: IStoryNodeInteractionDialogue): IStoryNodeInteractionDialogue {
+  return {
+    ...dialogue,
+    lines: dialogue.lines.map((line, index) => ({ ...line, ...resolveStoryDialogueLineMedia(nodeId, index) })),
+  };
+}
+
 /**
  * Devuelve la secuencia narrativa para nodos virtuales. Nodos de duelo no generan diálogo local.
  */
@@ -71,7 +81,7 @@ export function resolveStoryNodeInteractionDialogue(
   if (!node.isVirtualNode && node.nodeType !== "EVENT" && node.nodeType !== "REWARD_CARD" && node.nodeType !== "REWARD_NEXUS") {
     return null;
   }
-  const firstDialogue = DIALOGUE_BY_NODE_ID[node.id] ?? buildFallbackDialogue(node);
+  const firstDialogue = withMultimedia(node.id, DIALOGUE_BY_NODE_ID[node.id] ?? buildFallbackDialogue(node));
   if (interactionCount <= 1) return firstDialogue;
   return {
     title: firstDialogue.title,

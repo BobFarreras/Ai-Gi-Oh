@@ -13,6 +13,7 @@ Definir cómo se modela el mapa, desbloqueos, navegación e integración con due
 4. `docs/story/PHASES-4-11-REPORT.md`: reporte de implementación y trazabilidad de fases.
 5. `docs/story/NARRACION_OPONENTES.md`: narrativa y personalidad de oponentes.
 6. `src/services/story/map-definitions/`: layout visual editable por acto (sin tocar reglas de dominio).
+7. `docs/story/STORY_DIALOGUE_ASSETS_TEMPLATE.md`: plantilla para producción de texto/retrato/audio por nodo.
 
 ## Estado actual
 
@@ -26,3 +27,5 @@ Definir cómo se modela el mapa, desbloqueos, navegación e integración con due
 8. Fase D implementada: transición visual del avatar en movimiento y lock temporal de interacción.
 9. Fase E implementada: diálogos narrativos por nodo virtual con modal secuencial.
 10. Fase F implementada: persistencia de interacción narrativa y variantes por repetición.
+11. Fase G implementada: catálogo local de imágenes/audios para diálogos narrativos.
+12. Fase H implementada: selección directa de nodos + plataformas decorativas + bloqueo estricto por progreso completado.

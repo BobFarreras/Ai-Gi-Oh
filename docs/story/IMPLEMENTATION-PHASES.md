@@ -247,3 +247,47 @@ Registrar en backend las interacciones de nodos virtuales para trazabilidad y va
 1. Interacción virtual se persiste y aparece en historial Story.
 2. Repetir interacción muestra texto resumido de reintento.
 3. `pnpm lint`, tests Story relevantes y `pnpm build` en verde.
+
+## Fase G - Integración local de assets narrativos
+
+### Objetivo
+
+Permitir que el equipo de contenido gestione imágenes y audios de diálogos Story dentro del repositorio, sin depender de BD para multimedia.
+
+### Implementado
+
+1. Catálogo local de multimedia por nodo/línea:
+   - `src/services/story/story-node-dialogue-media.ts`.
+2. Resolver narrativo enriquece líneas con `portraitUrl` y `audioUrl`.
+3. Modal de interacción renderiza retrato y reproductor de audio cuando existen assets.
+
+### Validación
+
+1. Los diálogos de nodos configurados muestran rutas de retrato/audio.
+2. Nodos sin assets siguen funcionando por fallback de texto.
+3. `pnpm lint`, tests Story relevantes y `pnpm build` en verde.
+
+## Fase H - Flujo de mapa interactivo directo
+
+### Objetivo
+
+Reducir fricción de navegación: click en nodo ejecuta flujo directo (movimiento/interacción) y reforzar lectura visual del mapa.
+
+### Implementado
+
+1. Selección automática por nodo:
+   - `src/components/hub/story/internal/use-story-auto-node-selection.ts`.
+   - nodos de ruta disparan movimiento,
+   - nodos virtuales disparan interacción narrativa.
+2. Plataformas decorativas no jugables:
+   - `platforms` en definiciones por acto.
+   - render en `StoryMapPlatforms` para enriquecer mapa sin lógica extra.
+3. Bloqueo estricto por progreso completado:
+   - nodos virtuales dependientes solo se activan cuando el nodo previo está `completed`.
+4. Duelos completados con presencia reducida (estado visual derrotado).
+
+### Validación
+
+1. Click en nodo desbloqueado dispara acción sin usar botón intermedio.
+2. Nodos detrás de un duelo no completado permanecen bloqueados.
+3. `pnpm lint`, tests Story relevantes y `pnpm build` en verde.

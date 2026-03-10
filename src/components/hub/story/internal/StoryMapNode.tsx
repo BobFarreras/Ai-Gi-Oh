@@ -24,6 +24,7 @@ function resolveHologramAsset(node: IStoryMapNodeRuntime): { src: string; alt: s
 
 export function StoryMapNode({ node, isSelected, onClick }: StoryMapNodeProps) {
   const hologram = resolveHologramAsset(node);
+  const isDefeatedDuel = node.isCompleted && (node.nodeType === "DUEL" || node.nodeType === "BOSS");
 
   return (
     <motion.button
@@ -53,6 +54,7 @@ export function StoryMapNode({ node, isSelected, onClick }: StoryMapNodeProps) {
             "relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 bg-black/50 backdrop-blur-sm",
             node.isBossDuel ? "rotate-45 rounded-lg border-fuchsia-500" : "border-cyan-500",
             node.isCompleted && "border-emerald-500",
+            isDefeatedDuel && "opacity-40 saturate-0",
           )}
         >
           <div className={cn("relative h-full w-full", node.isBossDuel && "-rotate-45")}>

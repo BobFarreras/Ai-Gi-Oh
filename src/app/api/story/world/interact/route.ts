@@ -18,10 +18,9 @@ interface IStoryWorldInteractPayload {
 function canInteractVirtualNode(input: {
   requiredNodeId: string | null;
   completedNodeIds: string[];
-  unlockedNodeIds: string[];
 }): boolean {
   if (!input.requiredNodeId) return true;
-  return input.completedNodeIds.includes(input.requiredNodeId) || input.unlockedNodeIds.includes(input.requiredNodeId);
+  return input.completedNodeIds.includes(input.requiredNodeId);
 }
 
 export async function POST(request: NextRequest) {
@@ -46,7 +45,6 @@ export async function POST(request: NextRequest) {
     const unlocked = canInteractVirtualNode({
       requiredNodeId: virtualNode.unlockRequirementNodeId,
       completedNodeIds: worldState.progress.completedNodeIds,
-      unlockedNodeIds: worldState.progress.unlockedNodeIds,
     });
     if (!unlocked) {
       throw new ValidationError("El nodo virtual todavía está bloqueado.");

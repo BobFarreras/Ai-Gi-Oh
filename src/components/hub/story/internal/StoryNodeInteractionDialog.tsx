@@ -2,6 +2,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import { IStoryInteractionDialogueLine } from "@/services/story/resolve-story-node-interaction-dialogue";
 
 interface IStoryNodeInteractionDialogProps {
@@ -37,8 +38,29 @@ export function StoryNodeInteractionDialog({
             <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-400">Interacción Story</p>
             <h3 className="mt-1 text-lg font-black uppercase tracking-wider text-fuchsia-100">{title}</h3>
             <div className="mt-4 rounded border border-cyan-900/60 bg-black/60 p-4">
+              {line?.portraitUrl ? (
+                <div className="relative mb-3 h-40 w-full overflow-hidden rounded border border-cyan-500/40 bg-black/70">
+                  <Image
+                    src={line.portraitUrl}
+                    alt={`Retrato de ${line.speaker}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 520px"
+                    quality={55}
+                    className="object-cover"
+                  />
+                </div>
+              ) : null}
               <p className="text-xs font-bold uppercase tracking-wider text-cyan-300">{line?.speaker ?? "Sistema"}</p>
               <p className="mt-2 text-sm leading-relaxed text-slate-100">{line?.text ?? "Sin contenido narrativo."}</p>
+              {line?.audioUrl ? (
+                <audio
+                  key={line.audioUrl}
+                  controls
+                  preload="none"
+                  className="mt-3 w-full"
+                  src={line.audioUrl}
+                />
+              ) : null}
             </div>
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
