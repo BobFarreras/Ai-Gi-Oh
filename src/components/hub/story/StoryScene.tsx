@@ -28,48 +28,59 @@ export function StoryScene({ runtime, briefing }: IStorySceneProps) {
   const setHistory = useStore(store, (state) => state.setHistory);
   const [isMoving, setIsMoving] = useState(false);
   const [isInteracting, setIsInteracting] = useState(false);
+  const [avatarVisualTarget, setAvatarVisualTarget] = useState<{ nodeId: string; stance: "CENTER" | "SIDE" } | null>(null);
+  const [pendingCenterNodeId, setPendingCenterNodeId] = useState<string | null>(null);
   const [movementError, setMovementError] = useState<string | null>(null);
   const [interactionFeedback, setInteractionFeedback] = useState<string | null>(null);
   const interactionDialog = useStoryNodeInteractionDialog();
   const selectedNode = selectedNodeId ? nodesById[selectedNodeId] ?? null : null;
   const primaryAction = resolveStoryPrimaryAction(selectedNode);
   const isBusy = isMoving || isInteracting || interactionDialog.isOpen;
+  const centerAvatarOnNode = async (nodeId: string) => {
+    setCurrentNodeId(nodeId); setAvatarVisualTarget({ nodeId, stance: "CENTER" }); await new Promise((resolve) => setTimeout(resolve, 260));
+  };
 
-  const handleMove = async () => {
+  const handleMove = async (triggerActionAfterMove = false) => {
     if (!selectedNodeId || isMoving) return;
     setIsMoving(true); setMovementError(null); setInteractionFeedback(null);
     if (selectedNode?.isVirtualNode && selectedNode.nodeType === "MOVE") {
-      setCurrentNodeId(selectedNode.id);
+      setAvatarVisualTarget({ nodeId: selectedNode.id, stance: "SIDE" }); await new Promise((resolve) => setTimeout(resolve, 420)); await centerAvatarOnNode(selectedNode.id);
       setInteractionFeedback(`Desplazamiento completado: ${selectedNode.title}.`);
       await new Promise((resolve) => setTimeout(resolve, 550));
-      setIsMoving(false);
+      setIsMoving(false); setAvatarVisualTarget(null);
       return;
     }
     try {
       const response = await fetch("/api/story/world/move", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ nodeId: selectedNodeId }) });
       if (!response.ok) throw new Error("Movimiento inválido.");
       const payload = (await response.json()) as { currentNodeId: string | null; history: IStoryMapRuntimeData["history"] };
-      setCurrentNodeId(payload.currentNodeId); setHistory(payload.history); await new Promise((resolve) => setTimeout(resolve, 850));
+      if (payload.currentNodeId) { setAvatarVisualTarget({ nodeId: payload.currentNodeId, stance: "SIDE" }); await new Promise((resolve) => setTimeout(resolve, 420)); await centerAvatarOnNode(payload.currentNodeId); }
+      setHistory(payload.history); await new Promise((resolve) => setTimeout(resolve, 420));
+      if (triggerActionAfterMove && selectedNode && selectedNode.nodeType !== "MOVE") await handlePrimaryAction(selectedNode);
     } catch { setMovementError("No se pudo mover al nodo seleccionado."); } finally { setIsMoving(false); }
   };
 
-  const handlePrimaryAction = async () => {
-    if (!selectedNode) return;
+  const handlePrimaryAction = async (targetNode = selectedNode) => {
+    if (!targetNode) return;
     setInteractionFeedback(null);
-    if (primaryAction.mode === "ROUTE") { router.push(selectedNode.href); return; }
-    if (primaryAction.mode !== "VIRTUAL_INTERACTION") return;
+    const targetMode = resolveStoryPrimaryAction(targetNode);
+    if (targetMode.mode === "DISABLED") return;
+    setAvatarVisualTarget({ nodeId: targetNode.id, stance: "SIDE" }); await new Promise((resolve) => setTimeout(resolve, 420));
+    if (targetMode.mode === "ROUTE") { await centerAvatarOnNode(targetNode.id); router.push(targetNode.href); return; }
+    if (targetMode.mode !== "VIRTUAL_INTERACTION") return;
     try {
       setIsInteracting(true);
-      const response = await fetch("/api/story/world/interact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ nodeId: selectedNode.id }) });
+      const response = await fetch("/api/story/world/interact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ nodeId: targetNode.id }) });
       if (!response.ok) throw new Error("Interacción inválida.");
       const payload = (await response.json()) as IStoryInteractResponse;
       setHistory(payload.history);
-      const opened = interactionDialog.start(selectedNode, payload.interactionCountForNode);
-      setInteractionFeedback(opened ? `Interacción iniciada: ${selectedNode.title}.` : `Interacción completada: ${selectedNode.title}.`);
+      const opened = interactionDialog.start(targetNode, payload.interactionCountForNode);
+      setPendingCenterNodeId(targetNode.id);
+      setInteractionFeedback(opened ? `Interacción iniciada: ${targetNode.title}.` : `Interacción completada: ${targetNode.title}.`);
     } catch { setInteractionFeedback("No se pudo registrar la interacción narrativa."); } finally { setIsInteracting(false); }
   };
 
-  useStoryAutoNodeSelection({ selectedNode, currentNodeId, isBusy, onAutoMove: () => void handleMove(), onAutoInteract: () => void handlePrimaryAction() });
+  useStoryAutoNodeSelection({ selectedNode, currentNodeId, isBusy, onAutoMove: () => void handleMove(true), onAutoInteract: () => void handlePrimaryAction() });
 
   return (
     <div className="flex h-full w-full flex-1 overflow-hidden border-t border-cyan-900/50 bg-black font-sans">
@@ -90,14 +101,20 @@ export function StoryScene({ runtime, briefing }: IStorySceneProps) {
           interactionFeedback={interactionFeedback}
           primaryActionLabel={primaryAction.label}
           canRunPrimaryAction={primaryAction.isEnabled && !isBusy}
-          onMove={handleMove}
-          onPrimaryAction={handlePrimaryAction}
+          onMove={() => void handleMove(false)}
+          onPrimaryAction={() => void handlePrimaryAction()}
           onDeselect={() => setSelectedNodeId(null)}
         />
       </div>
       <div className="relative z-0 flex-1 overflow-hidden bg-[#050810]">
-        <StoryCircuitMap nodes={runtime.nodes} currentNodeId={currentNodeId} selectedNodeId={selectedNodeId} isInteractionLocked={isBusy} onSelectNode={setSelectedNodeId} />
-        <StoryNodeInteractionDialog isOpen={interactionDialog.isOpen} title={interactionDialog.dialogueTitle} line={interactionDialog.currentLine} onNext={interactionDialog.next} onClose={interactionDialog.close} />
+        <StoryCircuitMap nodes={runtime.nodes} currentNodeId={currentNodeId} selectedNodeId={selectedNodeId} avatarVisualTarget={avatarVisualTarget} isInteractionLocked={isBusy} onSelectNode={setSelectedNodeId} />
+        <StoryNodeInteractionDialog
+          isOpen={interactionDialog.isOpen}
+          title={interactionDialog.dialogueTitle}
+          line={interactionDialog.currentLine}
+          onNext={interactionDialog.next}
+          onClose={async () => { interactionDialog.close(); if (pendingCenterNodeId) { await centerAvatarOnNode(pendingCenterNodeId); setPendingCenterNodeId(null); setAvatarVisualTarget(null); } }}
+        />
       </div>
     </div>
   );

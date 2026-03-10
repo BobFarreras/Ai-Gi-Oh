@@ -21,6 +21,7 @@ interface StoryCircuitMapProps {
   nodes: IStoryMapNodeRuntime[];
   currentNodeId: string | null;
   selectedNodeId: string | null;
+  avatarVisualTarget?: { nodeId: string; stance: "CENTER" | "SIDE" } | null;
   isInteractionLocked?: boolean;
   onSelectNode: (nodeId: string | null) => void;
 }
@@ -29,6 +30,7 @@ export function StoryCircuitMap({
   nodes,
   currentNodeId,
   selectedNodeId,
+  avatarVisualTarget,
   isInteractionLocked,
   onSelectNode,
 }: StoryCircuitMapProps) {
@@ -39,13 +41,14 @@ export function StoryCircuitMap({
   const { zoom, zoomIn, zoomOut, resetZoom, handleWheel } = useStoryMapZoom();
   const segments = useMemo(() => resolveStoryPathSegments(nodes, positionMap), [nodes, positionMap]);
   const platforms = useMemo(() => listStoryMapPlatforms(), []);
-  const avatarNode = nodes.find((node) => node.id === currentNodeId) ?? nodes.find((node) => node.id === "story-ch1-player-start") ?? nodes[0];
+  const avatarTargetNodeId = avatarVisualTarget?.nodeId ?? currentNodeId;
+  const avatarNode = nodes.find((node) => node.id === avatarTargetNodeId) ?? nodes.find((node) => node.id === "story-ch1-player-start") ?? nodes[0];
   const resolvePosition = (nodeId: string) => resolveStoryNodePosition(nodeId, positionMap);
-  const { avatarX, avatarY } = useStoryAvatarTravel({
-    targetNodeId: avatarNode?.id ?? null,
-    resolvePosition,
-  });
-  const avatarPos = resolveStoryNodePosition(avatarNode?.id ?? "", positionMap);
+  const { avatarX, avatarY } = useStoryAvatarTravel({ targetNodeId: avatarNode?.id ?? null, resolvePosition });
+  const avatarPosBase = resolveStoryNodePosition(avatarNode?.id ?? "", positionMap);
+  const avatarPos = avatarVisualTarget?.stance === "SIDE"
+    ? { x: avatarPosBase.x + 118, y: avatarPosBase.y - 4 }
+    : avatarPosBase;
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -72,7 +75,6 @@ export function StoryCircuitMap({
       >
         <div className="h-full w-full bg-[linear-gradient(rgba(6,182,212,0.3)_2px,transparent_2px),linear-gradient(90deg,rgba(6,182,212,0.3)_2px,transparent_2px)] bg-[size:100px_100px]" />
       </div>
-
       <motion.div
         drag
         dragConstraints={mapContainerRef}
@@ -81,24 +83,9 @@ export function StoryCircuitMap({
         className="absolute left-0 top-0 h-[2000px] w-[2000px]"
       >
         <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full">
-          {segments.map((segment, index) => (
-            <motion.line
-              key={`path-${index}`}
-              x1={segment.from.x}
-              y1={segment.from.y}
-              x2={segment.to.x}
-              y2={segment.to.y}
-              stroke="rgba(6, 182, 212, 0.4)"
-              strokeWidth="6"
-              strokeDasharray="15 15"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 1.2, delay: index * 0.08 }}
-            />
-          ))}
+          {segments.map((segment, index) => <motion.line key={`path-${index}`} x1={segment.from.x} y1={segment.from.y} x2={segment.to.x} y2={segment.to.y} stroke="rgba(6, 182, 212, 0.4)" strokeWidth="6" strokeDasharray="15 15" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.2, delay: index * 0.08 }} />)}
         </svg>
         <StoryMapPlatforms platforms={platforms} />
-
         {nodes.map((node) => {
           const position = resolveStoryNodePosition(node.id, positionMap);
           return (
@@ -123,9 +110,7 @@ export function StoryCircuitMap({
           initial={false}
           style={{ top: avatarY, left: avatarX }}
         >
-          <div
-            className="mb-2 h-0 w-0 animate-bounce border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent border-t-emerald-400"
-          />
+          <div className="mb-2 h-0 w-0 animate-bounce border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent border-t-emerald-400" />
           <div className="relative mb-2 h-20 w-20 overflow-hidden rounded-full border-2 border-emerald-400 bg-black shadow-[0_0_30px_#10b981]">
             <Image
               src="/assets/story/player/bob.png"

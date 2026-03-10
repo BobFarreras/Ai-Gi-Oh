@@ -49,10 +49,13 @@ export async function getStoryMapRuntimeData(): Promise<IStoryMapRuntimeData | n
       href: node.href,
     };
   });
+  const mergedNodes = mergeStoryMapVisualDefinition(runtimeNodes, history);
+  const defaultStartNodeId = mergedNodes.find((node) => node.id === "story-ch1-player-start")?.id ?? mergedNodes[0]?.id ?? null;
+  const effectiveCurrentNodeId = currentNodeId ?? defaultStartNodeId;
   return {
     playerId: session.user.id,
-    nodes: mergeStoryMapVisualDefinition(runtimeNodes, history),
-    currentNodeId,
+    nodes: mergedNodes,
+    currentNodeId: effectiveCurrentNodeId,
     history,
   };
 }
