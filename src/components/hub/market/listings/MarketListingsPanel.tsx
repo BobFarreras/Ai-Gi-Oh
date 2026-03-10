@@ -24,10 +24,10 @@ export function MarketListingsPanel({ listings, onSelectCard, isPerformanceMode 
     overscanRows: 2,
   });
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => setIsInitialBatchActive(false), 650);
+    const timeoutId = window.setTimeout(() => setIsInitialBatchActive(false), 420);
     return () => window.clearTimeout(timeoutId);
   }, []);
-  const initialEndIndex = Math.min(windowState.endIndex, windowState.startIndex + 8);
+  const initialEndIndex = Math.min(windowState.endIndex, windowState.startIndex + 5);
   const endIndex = isInitialBatchActive ? initialEndIndex : windowState.endIndex;
   const visibleListings = listings.slice(windowState.startIndex, endIndex);
   return (
@@ -74,6 +74,7 @@ export function MarketListingsPanel({ listings, onSelectCard, isPerformanceMode 
                     disableHoverEffects={isPerformanceMode}
                     disableDefaultShadow={isPerformanceMode}
                     isPerformanceMode={isPerformanceMode}
+                    showBackgroundInPerformanceMode={isPerformanceMode}
                   />
                 </div>
               </div>

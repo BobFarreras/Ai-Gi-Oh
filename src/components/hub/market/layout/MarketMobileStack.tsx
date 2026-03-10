@@ -43,6 +43,11 @@ const PANEL_TABS: Array<{ id: MobilePanel; label: string }> = [
 
 export function MarketMobileStack(props: MarketMobileStackProps) {
   const [activePanel, setActivePanel] = useState<MobilePanel>("LISTINGS");
+  const [visitedPanels, setVisitedPanels] = useState<Record<MobilePanel, boolean>>({
+    LISTINGS: true,
+    PACKS: false,
+    VAULT: false,
+  });
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const inspectorOrigin = { x: 0, y: 0 };
   const { play } = useHubModuleSfx();
@@ -69,6 +74,10 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
     window.requestAnimationFrame(() => play("DETAIL_OPEN"));
   };
 
+  const markPanelAsVisited = (panel: MobilePanel) => {
+    setVisitedPanels((previous) => (previous[panel] ? previous : { ...previous, [panel]: true }));
+  };
+
   return (
     <div className="mt-4 flex min-h-0 flex-1 flex-col gap-3 xl:hidden">
       <nav aria-label="Paneles del mercado" className="home-modern-scroll flex gap-2 overflow-x-auto pb-1">
@@ -80,7 +89,12 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
             onClick={() => {
               if (activePanel !== tab.id) play("SECTION_SWITCH");
               setActivePanel(tab.id);
-              if (tab.id === "LISTINGS") props.onShowFreeListings();
+              markPanelAsVisited(tab.id);
+              if (tab.id === "LISTINGS") {
+                startTransition(() => {
+                  props.onShowFreeListings();
+                });
+              }
             }}
             className={cn(
               "shrink-0 rounded-lg border px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all",
@@ -95,26 +109,34 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
       </nav>
 
       <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-cyan-900/30 bg-black/40 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-        {activePanel === "LISTINGS" ? <MarketListingsPanel listings={props.listings} isPerformanceMode={true} onSelectCard={handleSelectListing} /> : null}
-        {activePanel === "PACKS" ? (
-          <MarketMobilePacksSection
-            packs={props.packs}
-            selectedPackId={props.selectedPackId}
-            packListings={packListings}
-            isBuyingPack={props.isBuyingPack}
-            onSelectPack={props.onSelectPack}
-            onBuyPack={props.onBuyPack}
-            onSelectPackCard={handleSelectListing}
-          />
+        {visitedPanels.LISTINGS ? (
+          <div className={activePanel === "LISTINGS" ? "h-full" : "hidden"}>
+            <MarketListingsPanel listings={props.listings} isPerformanceMode={true} onSelectCard={handleSelectListing} />
+          </div>
         ) : null}
-        {activePanel === "VAULT" ? (
-          <MarketVaultPanel
-            collection={props.collection}
-            transactions={props.transactions}
-            catalogListings={props.catalogListings}
-            isPerformanceMode={true}
-            onSelectCard={handleSelectVaultCard}
-          />
+        {visitedPanels.PACKS ? (
+          <div className={activePanel === "PACKS" ? "h-full" : "hidden"}>
+            <MarketMobilePacksSection
+              packs={props.packs}
+              selectedPackId={props.selectedPackId}
+              packListings={packListings}
+              isBuyingPack={props.isBuyingPack}
+              onSelectPack={props.onSelectPack}
+              onBuyPack={props.onBuyPack}
+              onSelectPackCard={handleSelectListing}
+            />
+          </div>
+        ) : null}
+        {visitedPanels.VAULT ? (
+          <div className={activePanel === "VAULT" ? "h-full" : "hidden"}>
+            <MarketVaultPanel
+              collection={props.collection}
+              transactions={props.transactions}
+              catalogListings={props.catalogListings}
+              isPerformanceMode={true}
+              onSelectCard={handleSelectVaultCard}
+            />
+          </div>
         ) : null}
       </div>
 

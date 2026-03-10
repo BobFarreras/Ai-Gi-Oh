@@ -57,6 +57,8 @@ src/components/hub/market
    - desktop: calidad completa (fondo visual activo),
    - móvil: modo `isPerformanceMode` para reducir coste.
 7. En desktop, la pestaña `Almacén` del vault usa grilla de 4 columnas para mejorar densidad visual.
+8. En móvil, los tabs (`Mercado/Packs/Almacén`) mantienen paneles visitados montados y solo alternan visibilidad.
+   - Objetivo: reducir coste de remount y mejorar INP en cambios de pestaña.
 
 ## Dependencias y flujo
 

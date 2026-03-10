@@ -18,6 +18,7 @@ interface CardProps {
   disableHologram?: boolean;
   hologramMode?: "full" | "lite";
   isPerformanceMode?: boolean;
+  showBackgroundInPerformanceMode?: boolean;
   versionTier?: number;
   level?: number;
   xp?: number;
@@ -39,6 +40,7 @@ export function Card({
   disableHologram = false,
   hologramMode = "full",
   isPerformanceMode = false,
+  showBackgroundInPerformanceMode = false,
   versionTier,
   level,
   xp,
@@ -63,6 +65,7 @@ export function Card({
         disableHoverEffects={disableHoverEffects}
         disableDefaultShadow={disableDefaultShadow}
         isPerformanceMode={isPerformanceMode}
+        showBackgroundInPerformanceMode={showBackgroundInPerformanceMode}
         onClick={onClick}
         versionTier={resolvedVersionTier}
         level={resolvedLevel}

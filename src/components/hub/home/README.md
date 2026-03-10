@@ -82,7 +82,7 @@ Se separa el render por breakpoint sin alterar reglas del dominio:
 ## Perfil visual de cartas (Fase 2 rendimiento)
 
 1. En desktop (`HomeCollectionPanel`) las mini-cartas usan render completo para conservar fondo visual.
-2. En móvil (`HomeMobileCollectionPanel`) se activa `isPerformanceMode` para reducir coste de pintura.
+2. En móvil (`HomeMobileCollectionPanel`) se activa `isPerformanceMode` con fondo simplificado (`showBackgroundInPerformanceMode`) para equilibrar estética y coste.
 3. Esta separación mantiene legibilidad en desktop y estabilidad de FPS en móvil.
 
 ## Errores y seguridad de interacción

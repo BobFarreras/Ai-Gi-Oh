@@ -38,6 +38,7 @@ export function MarketVaultCollectionTab({ collection, onSelectCard, isPerforman
                   disableHoverEffects={isPerformanceMode}
                   disableDefaultShadow={isPerformanceMode}
                   isPerformanceMode={isPerformanceMode}
+                  showBackgroundInPerformanceMode={isPerformanceMode}
                 />
               </div>
             </div>
