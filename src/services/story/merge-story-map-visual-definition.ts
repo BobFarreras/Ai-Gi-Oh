@@ -1,18 +1,62 @@
-// src/services/story/merge-story-map-visual-definition.ts - Mezcla el runtime Story con layout visual local editable por acto.
+// src/services/story/merge-story-map-visual-definition.ts - Mezcla runtime Story real con layout editable y nodos virtuales locales.
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
-import { findStoryVisualNodeDefinition } from "@/services/story/map-definitions/story-map-definition-registry";
+import { listStoryActMapDefinitions } from "@/services/story/map-definitions/story-map-definition-registry";
+
+function resolveVirtualNodeUnlocked(input: {
+  dependencyNodeId: string | null;
+  nodesById: Map<string, IStoryMapNodeRuntime>;
+}): boolean {
+  if (!input.dependencyNodeId) return true;
+  const dependencyNode = input.nodesById.get(input.dependencyNodeId);
+  if (!dependencyNode) return false;
+  return dependencyNode.isCompleted || dependencyNode.isUnlocked;
+}
 
 /**
- * Añade metadatos de layout visual (posición y dependencia opcional) sin alterar reglas de desbloqueo.
+ * Añade metadatos de layout visual y nodos virtuales al runtime sin tocar reglas de dominio.
  */
 export function mergeStoryMapVisualDefinition(nodes: IStoryMapNodeRuntime[]): IStoryMapNodeRuntime[] {
-  return nodes.map((node) => {
-    const visualNode = findStoryVisualNodeDefinition(node.id);
-    if (!visualNode) return node;
-    return {
-      ...node,
-      unlockRequirementNodeId: visualNode.unlockRequirementNodeId ?? node.unlockRequirementNodeId,
-      position: visualNode.position,
-    };
-  });
+  const nextNodes = nodes.map((node) => ({ ...node }));
+  const nodeById = new Map(nextNodes.map((node) => [node.id, node]));
+
+  for (const actDefinition of listStoryActMapDefinitions()) {
+    for (const visualNode of actDefinition.nodes) {
+      const runtimeNode = nodeById.get(visualNode.id);
+      if (!runtimeNode) continue;
+      runtimeNode.unlockRequirementNodeId = visualNode.unlockRequirementNodeId ?? runtimeNode.unlockRequirementNodeId;
+      runtimeNode.position = visualNode.position;
+    }
+  }
+
+  for (const actDefinition of listStoryActMapDefinitions()) {
+    const virtualNodes = actDefinition.virtualNodes ?? [];
+    for (const virtualNode of virtualNodes) {
+      if (nodeById.has(virtualNode.id)) continue;
+      const runtimeVirtualNode: IStoryMapNodeRuntime = {
+        id: virtualNode.id,
+        chapter: virtualNode.chapter,
+        duelIndex: virtualNode.duelIndex,
+        title: virtualNode.title,
+        opponentName: virtualNode.opponentName,
+        nodeType: virtualNode.nodeType,
+        difficulty: virtualNode.difficulty,
+        rewardNexus: virtualNode.rewardNexus,
+        rewardPlayerExperience: virtualNode.rewardPlayerExperience,
+        isBossDuel: virtualNode.isBossDuel,
+        isCompleted: false,
+        isUnlocked: resolveVirtualNodeUnlocked({
+          dependencyNodeId: virtualNode.unlockRequirementNodeId,
+          nodesById: nodeById,
+        }),
+        unlockRequirementNodeId: virtualNode.unlockRequirementNodeId,
+        href: virtualNode.href,
+        isVirtualNode: true,
+        position: virtualNode.position,
+      };
+      nextNodes.push(runtimeVirtualNode);
+      nodeById.set(runtimeVirtualNode.id, runtimeVirtualNode);
+    }
+  }
+
+  return nextNodes;
 }

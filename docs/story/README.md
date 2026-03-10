@@ -22,3 +22,4 @@ Definir cómo se modela el mapa, desbloqueos, navegación e integración con due
 4. Fase 3 implementada: persistencia de cursor/historial Story en Supabase.
 5. Fase 7 implementada: briefing narrativo dinámico por capítulo/acto.
 6. Fase B implementada: definiciones visuales locales por acto + merge con runtime real.
+7. Fase C implementada: nodos virtuales con interacción contextual y rutas secundarias.

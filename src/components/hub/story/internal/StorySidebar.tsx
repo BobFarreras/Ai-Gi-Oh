@@ -2,7 +2,6 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { IStoryChapterBriefing } from "@/services/story/build-story-chapter-briefing";
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
@@ -13,7 +12,11 @@ interface StorySidebarProps {
   canMove: boolean;
   isMoving: boolean;
   movementError: string | null;
+  interactionFeedback: string | null;
+  primaryActionLabel: string;
+  canRunPrimaryAction: boolean;
   onMove: () => void;
+  onPrimaryAction: () => void;
   onDeselect: () => void;
 }
 
@@ -23,10 +26,13 @@ export function StorySidebar({
   canMove,
   isMoving,
   movementError,
+  interactionFeedback,
+  primaryActionLabel,
+  canRunPrimaryAction,
   onMove,
+  onPrimaryAction,
   onDeselect,
 }: StorySidebarProps) {
-  const router = useRouter();
   return (
     <aside className="relative flex h-full w-full flex-col overflow-x-hidden overflow-y-auto bg-slate-950/90 backdrop-blur-xl">
       <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(transparent_50%,rgba(6,182,212,0.03)_50%)] bg-[length:100%_4px]" />
@@ -86,19 +92,20 @@ export function StorySidebar({
                 </button>
                 <button
                   type="button"
-                  onClick={() => router.push(selectedNode.href)}
-                  disabled={!selectedNode.isUnlocked}
+                  onClick={onPrimaryAction}
+                  disabled={!canRunPrimaryAction}
                   className={cn(
                     "w-full rounded py-4 font-black tracking-widest transition-all active:scale-95",
                     selectedNode.nodeType === "BOSS"
                       ? "bg-fuchsia-700 text-white shadow-[0_0_20px_rgba(192,38,211,0.4)] hover:bg-fuchsia-600"
                       : "bg-cyan-600 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:bg-cyan-500",
-                    !selectedNode.isUnlocked && "cursor-not-allowed opacity-45",
+                    !canRunPrimaryAction && "cursor-not-allowed opacity-45",
                   )}
                 >
-                  {selectedNode.nodeType === "EVENT" ? "INICIAR INTERACCIÓN" : "HACKEAR NODO"}
+                  {primaryActionLabel}
                 </button>
                 {movementError ? <p className="text-xs text-rose-300">{movementError}</p> : null}
+                {interactionFeedback ? <p className="text-xs text-emerald-300">{interactionFeedback}</p> : null}
               </div>
             </motion.div>
           ) : (

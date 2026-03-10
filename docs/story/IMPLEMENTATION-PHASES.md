@@ -155,3 +155,27 @@ Entregar un cierre auditable con quality gate dedicado al módulo Story.
 ### Validación
 
 1. `pnpm quality:story` ejecuta tests Story + lint + build.
+
+## Fase C - Nodos virtuales y rutas secundarias
+
+### Objetivo
+
+Introducir rutas alternativas e interacciones no-duelo en el mapa Story sin acoplar UI al motor de persistencia.
+
+### Implementado
+
+1. Definiciones por acto con `virtualNodes`:
+   - `src/services/story/map-definitions/act-1-map-definition.ts`
+   - `src/services/story/map-definitions/act-2-map-definition.ts`
+2. `mergeStoryMapVisualDefinition` agrega nodos virtuales al runtime en memoria.
+3. Acción primaria contextual:
+   - navegación real para duelos (`ROUTE`),
+   - interacción local para nodos virtuales (`VIRTUAL_INTERACTION`),
+   - estado deshabilitado para nodos bloqueados.
+4. `StoryScene`/`StorySidebar` muestran feedback de interacción virtual sin tocar BD.
+
+### Validación
+
+1. El mapa muestra nodos laterales de `EVENT` y `REWARD_*`.
+2. Nodos virtuales no fuerzan navegación a duelo.
+3. `pnpm lint`, tests Story añadidos y `pnpm build` en verde.

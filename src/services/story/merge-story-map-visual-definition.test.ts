@@ -39,4 +39,22 @@ describe("mergeStoryMapVisualDefinition", () => {
     expect(merged[0]?.position).toBeUndefined();
     expect(merged[0]?.unlockRequirementNodeId).toBe("story-ch9-duel-98");
   });
+
+  it("agrega nodos virtuales desbloqueados cuando su dependencia está completada", () => {
+    const nodes = [
+      createRuntimeNode({ id: "story-ch1-duel-1", isCompleted: true, isUnlocked: true }),
+      createRuntimeNode({
+        id: "story-ch1-duel-2",
+        isCompleted: false,
+        isUnlocked: true,
+        unlockRequirementNodeId: "story-ch1-duel-1",
+      }),
+    ];
+
+    const merged = mergeStoryMapVisualDefinition(nodes);
+    const virtualNode = merged.find((node) => node.id === "story-ch1-event-briefing");
+
+    expect(virtualNode?.isVirtualNode).toBe(true);
+    expect(virtualNode?.isUnlocked).toBe(true);
+  });
 });
