@@ -1,7 +1,7 @@
 // src/components/hub/market/layout/MarketMobileStack.tsx - Layout móvil del mercado con paneles conmutables por pestañas.
 "use client";
 
-import { startTransition, useEffect, useMemo, useState } from "react";
+import { startTransition, useMemo, useState } from "react";
 import { MarketCardInspector } from "@/components/hub/market/MarketCardInspector";
 import { MobileInspectorDialogShell } from "@/components/hub/internal/MobileInspectorDialogShell";
 import { MarketListingsPanel } from "@/components/hub/market/listings/MarketListingsPanel";
@@ -58,20 +58,6 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
     const packCardIds = new Set(selectedPack.previewCardIds);
     return props.catalogListings.filter((listing) => packCardIds.has(listing.card.id));
   }, [props.catalogListings, props.packs, props.selectedPackId]);
-  useEffect(() => {
-    const warmUp = () => setVisitedPanels({ LISTINGS: true, PACKS: true, VAULT: true });
-    const idleHandle =
-      typeof window.requestIdleCallback === "function"
-        ? window.requestIdleCallback(warmUp, { timeout: 1100 })
-        : window.setTimeout(warmUp, 500);
-    return () => {
-      if (typeof idleHandle === "number") {
-        window.clearTimeout(idleHandle);
-        return;
-      }
-      window.cancelIdleCallback?.(idleHandle);
-    };
-  }, []);
 
   const handleSelectListing = (listing: IMarketCardListing) => {
     props.onSelectListing(listing);
