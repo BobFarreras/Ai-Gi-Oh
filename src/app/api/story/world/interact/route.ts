@@ -18,9 +18,10 @@ interface IStoryWorldInteractPayload {
 function canInteractVirtualNode(input: {
   requiredNodeId: string | null;
   completedNodeIds: string[];
+  interactedNodeIds: string[];
 }): boolean {
   if (!input.requiredNodeId) return true;
-  return input.completedNodeIds.includes(input.requiredNodeId);
+  return input.completedNodeIds.includes(input.requiredNodeId) || input.interactedNodeIds.includes(input.requiredNodeId);
 }
 
 export async function POST(request: NextRequest) {
@@ -41,10 +42,15 @@ export async function POST(request: NextRequest) {
     const worldRepository = new SupabasePlayerStoryWorldRepository(repositories.client);
     const worldStateUseCase = new GetStoryWorldStateUseCase(opponentRepository, duelProgressRepository);
     const worldState = await worldStateUseCase.execute({ playerId });
+    const currentHistory = await worldRepository.listHistoryByPlayerId(playerId, 200);
+    const interactedNodeIds = currentHistory
+      .filter((event) => event.kind === "INTERACTION")
+      .map((event) => event.nodeId);
 
     const unlocked = canInteractVirtualNode({
       requiredNodeId: virtualNode.unlockRequirementNodeId,
       completedNodeIds: worldState.progress.completedNodeIds,
+      interactedNodeIds,
     });
     if (!unlocked) {
       throw new ValidationError("El nodo virtual todavía está bloqueado.");

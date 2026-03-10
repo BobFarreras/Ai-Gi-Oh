@@ -19,6 +19,7 @@ export interface IStoryMapNodeRuntime {
   unlockRequirementNodeId?: string | null;
   href: string;
   isVirtualNode?: boolean;
+  pathLinkFromNodeIds?: string[];
   position?: {
     x: number;
     y: number;

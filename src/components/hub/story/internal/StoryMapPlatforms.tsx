@@ -17,16 +17,16 @@ export function StoryMapPlatforms({ platforms }: IStoryMapPlatformsProps) {
       {platforms.map((platform) => (
         <div
           key={platform.id}
-          className={`pointer-events-none absolute z-[5] -translate-x-1/2 -translate-y-1/2 rounded border ${resolvePlatformClass(platform.style)}`}
+          className={`pointer-events-none absolute z-[5] -translate-x-1/2 -translate-y-1/2 rounded-full border ${resolvePlatformClass(platform.style)}`}
           style={{
             left: platform.position.x,
             top: platform.position.y,
-            width: platform.width,
-            height: platform.height,
+            width: platform.size,
+            height: platform.size * 0.46,
             transform: `translate(-50%, -50%) rotate(${platform.rotationDeg ?? 0}deg)`,
           }}
         >
-          <div className="h-full w-full rounded bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent)]" />
+          <div className="h-full w-full rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.14),transparent_55%)]" />
         </div>
       ))}
     </>

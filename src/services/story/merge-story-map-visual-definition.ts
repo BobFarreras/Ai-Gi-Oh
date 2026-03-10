@@ -1,6 +1,7 @@
 // src/services/story/merge-story-map-visual-definition.ts - Mezcla runtime Story real con layout editable y nodos virtuales locales.
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import { listStoryActMapDefinitions } from "@/services/story/map-definitions/story-map-definition-registry";
+import { IPlayerStoryHistoryEvent } from "@/core/entities/story/IPlayerStoryHistoryEvent";
 
 function resolveVirtualNodeUnlocked(input: {
   dependencyNodeId: string | null;
@@ -15,15 +16,22 @@ function resolveVirtualNodeUnlocked(input: {
 /**
  * Añade metadatos de layout visual y nodos virtuales al runtime sin tocar reglas de dominio.
  */
-export function mergeStoryMapVisualDefinition(nodes: IStoryMapNodeRuntime[]): IStoryMapNodeRuntime[] {
+export function mergeStoryMapVisualDefinition(
+  nodes: IStoryMapNodeRuntime[],
+  history: IPlayerStoryHistoryEvent[] = [],
+): IStoryMapNodeRuntime[] {
   const nextNodes = nodes.map((node) => ({ ...node }));
   const nodeById = new Map(nextNodes.map((node) => [node.id, node]));
+  const interactedNodeIdSet = new Set(
+    history.filter((event) => event.kind === "INTERACTION").map((event) => event.nodeId),
+  );
 
   for (const actDefinition of listStoryActMapDefinitions()) {
     for (const visualNode of actDefinition.nodes) {
       const runtimeNode = nodeById.get(visualNode.id);
       if (!runtimeNode) continue;
       runtimeNode.unlockRequirementNodeId = visualNode.unlockRequirementNodeId ?? runtimeNode.unlockRequirementNodeId;
+      runtimeNode.pathLinkFromNodeIds = visualNode.pathLinkFromNodeIds;
       runtimeNode.position = visualNode.position;
     }
   }
@@ -43,12 +51,13 @@ export function mergeStoryMapVisualDefinition(nodes: IStoryMapNodeRuntime[]): IS
         rewardNexus: virtualNode.rewardNexus,
         rewardPlayerExperience: virtualNode.rewardPlayerExperience,
         isBossDuel: virtualNode.isBossDuel,
-        isCompleted: false,
+        isCompleted: interactedNodeIdSet.has(virtualNode.id),
         isUnlocked: resolveVirtualNodeUnlocked({
           dependencyNodeId: virtualNode.unlockRequirementNodeId,
           nodesById: nodeById,
         }),
         unlockRequirementNodeId: virtualNode.unlockRequirementNodeId,
+        pathLinkFromNodeIds: virtualNode.pathLinkFromNodeIds,
         href: virtualNode.href,
         isVirtualNode: true,
         position: virtualNode.position,

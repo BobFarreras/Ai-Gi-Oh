@@ -87,11 +87,16 @@ export function resolveStoryPathSegments(
   nodes: IStoryMapNodeRuntime[],
   positionMap: Record<string, IStoryCircuitPosition>,
 ): IStoryCircuitSegment[] {
-  return nodes.flatMap((node) => {
-    if (!node.unlockRequirementNodeId) return [];
-    const parent = positionMap[node.unlockRequirementNodeId];
-    const child = positionMap[node.id];
-    if (!parent || !child) return [];
-    return [{ from: parent, to: child }];
-  });
+  const segments: IStoryCircuitSegment[] = [];
+  const pushSegment = (fromNodeId: string, toNodeId: string) => {
+    const from = positionMap[fromNodeId];
+    const to = positionMap[toNodeId];
+    if (!from || !to) return;
+    segments.push({ from, to });
+  };
+  for (const node of nodes) {
+    if (node.unlockRequirementNodeId) pushSegment(node.unlockRequirementNodeId, node.id);
+    for (const linkedNodeId of node.pathLinkFromNodeIds ?? []) pushSegment(linkedNodeId, node.id);
+  }
+  return segments;
 }

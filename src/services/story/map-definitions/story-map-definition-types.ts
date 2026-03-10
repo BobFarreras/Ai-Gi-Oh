@@ -10,6 +10,7 @@ export interface IStoryMapVisualPosition {
 export interface IStoryMapVisualNodeDefinition {
   id: string;
   unlockRequirementNodeId?: string | null;
+  pathLinkFromNodeIds?: string[];
   position: IStoryMapVisualPosition;
 }
 
@@ -25,6 +26,7 @@ export interface IStoryMapVirtualNodeDefinition {
   rewardPlayerExperience: number;
   isBossDuel: boolean;
   unlockRequirementNodeId: string | null;
+  pathLinkFromNodeIds?: string[];
   href: string;
   position: IStoryMapVisualPosition;
 }
@@ -32,8 +34,7 @@ export interface IStoryMapVirtualNodeDefinition {
 export interface IStoryMapPlatformDefinition {
   id: string;
   position: IStoryMapVisualPosition;
-  width: number;
-  height: number;
+  size: number;
   rotationDeg?: number;
   style: "METAL" | "NEON" | "RUIN";
 }

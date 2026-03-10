@@ -29,3 +29,4 @@ Definir cómo se modela el mapa, desbloqueos, navegación e integración con due
 10. Fase F implementada: persistencia de interacción narrativa y variantes por repetición.
 11. Fase G implementada: catálogo local de imágenes/audios para diálogos narrativos.
 12. Fase H implementada: selección directa de nodos + plataformas decorativas + bloqueo estricto por progreso completado.
+13. Fase I implementada: zoom, nodo inicial de jugador y rutas de mayor densidad con reconvergencias.

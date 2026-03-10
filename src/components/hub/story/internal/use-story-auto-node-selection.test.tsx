@@ -58,4 +58,21 @@ describe("useStoryAutoNodeSelection", () => {
     expect(onAutoInteract).toHaveBeenCalledTimes(1);
     expect(onAutoMove).not.toHaveBeenCalled();
   });
+
+  it("no dispara interacción automática en nodo virtual de movimiento", () => {
+    const onAutoMove = vi.fn();
+    const onAutoInteract = vi.fn();
+    renderHook(() =>
+      useStoryAutoNodeSelection({
+        selectedNode: createNode({ id: "story-ch1-player-start", isVirtualNode: true, href: "#", nodeType: "MOVE" }),
+        currentNodeId: null,
+        isBusy: false,
+        onAutoMove,
+        onAutoInteract,
+      }),
+    );
+
+    expect(onAutoMove).not.toHaveBeenCalled();
+    expect(onAutoInteract).not.toHaveBeenCalled();
+  });
 });

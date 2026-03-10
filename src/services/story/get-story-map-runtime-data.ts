@@ -51,7 +51,7 @@ export async function getStoryMapRuntimeData(): Promise<IStoryMapRuntimeData | n
   });
   return {
     playerId: session.user.id,
-    nodes: mergeStoryMapVisualDefinition(runtimeNodes),
+    nodes: mergeStoryMapVisualDefinition(runtimeNodes, history),
     currentNodeId,
     history,
   };

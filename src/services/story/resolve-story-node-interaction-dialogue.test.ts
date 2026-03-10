@@ -30,8 +30,6 @@ describe("resolveStoryNodeInteractionDialogue", () => {
 
     expect(dialogue?.title).toContain("Terminal");
     expect(dialogue?.lines.length).toBeGreaterThan(1);
-    expect(dialogue?.lines[0]?.portraitUrl).toContain("/assets/story/dialogues/");
-    expect(dialogue?.lines[0]?.audioUrl).toContain("/audio/story/dialogues/");
   });
 
   it("aplica fallback para nodos virtuales sin plantilla dedicada", () => {

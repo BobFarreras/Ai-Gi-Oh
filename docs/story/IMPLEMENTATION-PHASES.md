@@ -291,3 +291,26 @@ Reducir fricción de navegación: click en nodo ejecuta flujo directo (movimient
 1. Click en nodo desbloqueado dispara acción sin usar botón intermedio.
 2. Nodos detrás de un duelo no completado permanecen bloqueados.
 3. `pnpm lint`, tests Story relevantes y `pnpm build` en verde.
+
+## Fase I - Mapa vivo (zoom + rutas extensas)
+
+### Objetivo
+
+Escalar el mapa Story a una experiencia más de mundo semi-abierto con mayor densidad de interacción y navegación visual.
+
+### Implementado
+
+1. Zoom del mapa:
+   - rueda de ratón,
+   - controles `+`, `-`, `1x`.
+2. Nodo inicial exclusivo del jugador (`story-ch1-player-start`) sin oponente en plataforma de spawn.
+3. Múltiples interacciones por camino (4-5+) y rutas que se reencuentran con enlaces visuales adicionales.
+4. Plataformas de ambiente no rectangulares para evitar bloques rígidos.
+5. Restricción de desbloqueo reforzada:
+   - nodos detrás de un duelo/interacción previa permanecen inactivos hasta completar requisito.
+
+### Validación
+
+1. El jugador puede explorar con zoom y rutas densas sin romper flujo.
+2. Los nodos virtuales en cadena se desbloquean por `INTERACTION`.
+3. `pnpm lint`, tests Story relevantes y `pnpm build` en verde.

@@ -28,7 +28,7 @@ describe("mergeStoryMapVisualDefinition", () => {
 
     const merged = mergeStoryMapVisualDefinition(nodes);
 
-    expect(merged[0]?.position).toEqual({ x: 1000, y: 1650 });
+    expect(merged[0]?.position).toEqual({ x: 1000, y: 1540 });
   });
 
   it("mantiene nodos sin cambios si no hay definición visual", () => {
