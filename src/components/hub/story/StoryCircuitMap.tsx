@@ -14,6 +14,7 @@ import {
 import { StoryMapNode } from "./internal/map/components/StoryMapNode";
 import { StoryRewardCollectEffect } from "./internal/map/components/StoryRewardCollectEffect";
 import { StoryRewardFloatingText } from "./internal/map/components/StoryRewardFloatingText";
+import { StoryNodeRetreatEffect } from "./internal/map/components/StoryNodeRetreatEffect";
 import { StoryMapZoomControls } from "./internal/map/components/StoryMapZoomControls";
 import { useStoryMapZoom } from "./internal/map/hooks/use-story-map-zoom";
 import { resolveStoryNodeSideOffsetPx, STORY_NODE_TOKEN_SIZE } from "./internal/map/constants/story-map-geometry";
@@ -26,6 +27,7 @@ interface StoryCircuitMapProps {
   duelFocusNodeId?: string | null;
   floatingReward?: { label: string; tone: "NEXUS" | "CARD" } | null;
   collectingRewardNodeId?: string | null;
+  retreatingNodeId?: string | null;
   isInteractionLocked?: boolean;
   onSelectNode: (nodeId: string | null) => void;
   onRewardCollectAnimationComplete?: () => void;
@@ -41,6 +43,7 @@ export function StoryCircuitMap({
   duelFocusNodeId,
   floatingReward,
   collectingRewardNodeId,
+  retreatingNodeId,
   isInteractionLocked,
   onSelectNode,
   onRewardCollectAnimationComplete,
@@ -60,6 +63,7 @@ export function StoryCircuitMap({
   const avatarPos = avatarNode ? resolveStoryNodeTokenAnchor(avatarNode.id, positionMap) : { x: 1000, y: 1000 };
   const avatarSideOffsetX = visualStance === "SIDE" ? -resolveStoryNodeSideOffsetPx() : 0;
   const collectingAnchor = collectingRewardNodeId ? resolveStoryNodeTokenAnchor(collectingRewardNodeId, positionMap) : null;
+  const retreatingAnchor = retreatingNodeId ? resolveStoryNodeTokenAnchor(retreatingNodeId, positionMap) : null;
 
   useEffect(() => {
     const fromX = avatarX.get();
@@ -138,6 +142,7 @@ export function StoryCircuitMap({
         </motion.div>
         <StoryRewardCollectEffect isVisible={Boolean(collectingAnchor && onRewardCollectAnimationComplete)} from={collectingAnchor ?? { x: 0, y: 0 }} to={{ x: avatarX.get() + avatarSideOffsetX, y: avatarY.get() }} onComplete={() => onRewardCollectAnimationComplete?.()} />
         <StoryRewardFloatingText isVisible={Boolean(floatingReward)} label={floatingReward?.label ?? ""} tone={floatingReward?.tone} at={{ x: avatarX.get() + avatarSideOffsetX, y: avatarY.get() }} />
+        <StoryNodeRetreatEffect isVisible={Boolean(retreatingAnchor)} at={retreatingAnchor ?? { x: 0, y: 0 }} />
         {isInteractionLocked ? (
           <div className="pointer-events-none absolute left-1/2 top-8 z-40 -translate-x-1/2 rounded border border-emerald-400/50 bg-black/80 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-200">
             Acción en curso...

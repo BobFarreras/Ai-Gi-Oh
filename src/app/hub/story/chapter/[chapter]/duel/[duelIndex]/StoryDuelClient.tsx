@@ -28,6 +28,7 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
   const router = useRouter();
   const [status, setStatus] = useState<string | null>(null);
   const [rewardSummary, setRewardSummary] = useState<IDuelResultRewardSummary | null>(null);
+  const [resultTransition, setResultTransition] = useState<{ outcome: StoryDuelOutcome; duelNodeId: string; returnNodeId: string } | null>(null);
   const hasPostedResultRef = useRef(false);
   const playerAvatarUrl = "/assets/story/player/bob.png";
   const resolvedOpponentAvatarUrl = props.opponentAvatarUrl ?? "/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.png";
@@ -52,6 +53,7 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
     setStatus(outcome === "WON" ? "Registrando victoria y recompensas..." : "Registrando derrota...");
     try {
       const payload = await postStoryDuelCompletion({ chapter: props.chapter, duelIndex: props.duelIndex, outcome });
+      setResultTransition({ outcome, duelNodeId: payload.duelNodeId, returnNodeId: payload.returnNodeId });
       setRewardSummary({
         rewardNexus: payload.rewardNexus,
         rewardPlayerExperience: payload.rewardPlayerExperience,
@@ -104,11 +106,11 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
         duelResultRewardSummary={rewardSummary}
         resultActionLabel="Volver al mapa Story"
         onResultAction={() => {
-          pushBackToStory({
-            outcome: "WON",
-            duelNodeId: `story-ch${props.chapter}-duel-${props.duelIndex}`,
-            returnNodeId: `story-ch${props.chapter}-duel-${props.duelIndex}`,
-          });
+          if (resultTransition) {
+            pushBackToStory(resultTransition);
+            return;
+          }
+          pushBackToStory({ outcome: "LOST", duelNodeId: `story-ch${props.chapter}-duel-${props.duelIndex}`, returnNodeId: "story-ch1-player-start" });
         }}
         onExitMatch={() => void handleAbortMatch()}
         onMatchResolved={handleMatchResolved}

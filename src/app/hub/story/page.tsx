@@ -2,9 +2,15 @@
 import Link from "next/link";
 import { StoryScene } from "@/components/hub/story/StoryScene";
 import { buildStoryChapterBriefing } from "@/services/story/build-story-chapter-briefing";
+import { resolveStoryPostDuelTransitionFromSearchParams } from "@/services/story/duel-flow/story-post-duel-transition";
 import { getStoryMapRuntimeData } from "@/services/story/get-story-map-runtime-data";
 
-export default async function StoryPage() {
+interface IStoryPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function StoryPage({ searchParams }: IStoryPageProps) {
+  const resolvedSearchParams = await searchParams;
   const runtime = await getStoryMapRuntimeData();
   if (!runtime) {
     return (
@@ -26,10 +32,11 @@ export default async function StoryPage() {
     .filter((node) => node.isUnlocked)
     .reduce((maxChapter, node) => Math.max(maxChapter, node.chapter), 1);
   const briefing = buildStoryChapterBriefing(maxUnlockedChapter);
+  const postDuelTransition = resolveStoryPostDuelTransitionFromSearchParams(resolvedSearchParams);
 
   return (
     <main className="flex h-[100dvh] w-full flex-col overflow-hidden bg-black">
-      <StoryScene runtime={runtime} briefing={briefing} />
+      <StoryScene runtime={runtime} briefing={briefing} postDuelTransition={postDuelTransition} />
     </main>
   );
 }

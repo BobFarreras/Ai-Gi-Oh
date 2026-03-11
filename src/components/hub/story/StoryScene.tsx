@@ -10,12 +10,14 @@ import { createStorySceneStore, StorySceneStore } from "./internal/scene/state/s
 import { resolveStorySceneCanMove } from "./internal/scene/state/resolve-story-scene-can-move";
 import { useStoryNodeInteractionDialog } from "./internal/scene/dialog/use-story-node-interaction-dialog";
 import { useStorySceneSfx } from "./internal/scene/audio/use-story-scene-sfx";
+import { useStoryPostDuelTransition } from "./internal/scene/transitions/use-story-post-duel-transition";
 import { IStoryMapRuntimeData } from "@/services/story/story-map-runtime-data";
 import { IStoryChapterBriefing } from "@/services/story/build-story-chapter-briefing";
+import { IStoryPostDuelTransition } from "@/services/story/duel-flow/story-post-duel-transition";
 import { resolveStoryPrimaryAction } from "@/services/story/resolve-story-primary-action";
-interface IStorySceneProps { runtime: IStoryMapRuntimeData; briefing: IStoryChapterBriefing; }
+interface IStorySceneProps { runtime: IStoryMapRuntimeData; briefing: IStoryChapterBriefing; postDuelTransition?: IStoryPostDuelTransition | null; }
 interface IStoryInteractResponse { interactionCountForNode: number; }
-export function StoryScene({ runtime, briefing }: IStorySceneProps) {
+export function StoryScene({ runtime, briefing, postDuelTransition = null }: IStorySceneProps) {
   const router = useRouter();
   const [store] = useState<StorySceneStore>(() => createStorySceneStore({ nodes: runtime.nodes, currentNodeId: runtime.currentNodeId }));
   const selectedNodeId = useStore(store, (state) => state.selectedNodeId);
@@ -30,6 +32,7 @@ export function StoryScene({ runtime, briefing }: IStorySceneProps) {
   const [duelFocusNodeId, setDuelFocusNodeId] = useState<string | null>(null);
   const [floatingReward, setFloatingReward] = useState<{ label: string; tone: "NEXUS" | "CARD" } | null>(null);
   const [collectingRewardNodeId, setCollectingRewardNodeId] = useState<string | null>(null);
+  const [retreatingNodeId, setRetreatingNodeId] = useState<string | null>(null);
   const [pendingCenterNodeId, setPendingCenterNodeId] = useState<string | null>(null);
   const [movementError, setMovementError] = useState<string | null>(null);
   const [interactionFeedback, setInteractionFeedback] = useState<string | null>(null);
@@ -45,6 +48,12 @@ export function StoryScene({ runtime, briefing }: IStorySceneProps) {
     isDialogOpen: interactionDialog.isOpen,
   });
   const isBusy = isMoving || isInteracting || interactionDialog.isOpen;
+  useStoryPostDuelTransition({
+    transition: postDuelTransition,
+    currentNodeId,
+    setAvatarVisualTarget,
+    setRetreatingNodeId,
+  });
   const runRewardCollectAnimation = (nodeId: string): Promise<void> => new Promise((resolve) => { setCollectingRewardNodeId(nodeId); window.setTimeout(resolve, 620); });
   const showFloatingReward = (label: string, tone: "NEXUS" | "CARD"): void => {
     setFloatingReward({ label, tone });
@@ -131,7 +140,7 @@ export function StoryScene({ runtime, briefing }: IStorySceneProps) {
         />
       </div>
       <div className="relative z-0 flex-1 overflow-hidden bg-[#050810]">
-        <StoryCircuitMap nodes={sceneNodes} currentNodeId={currentNodeId} selectedNodeId={selectedNodeId} avatarVisualTarget={avatarVisualTarget} duelFocusNodeId={duelFocusNodeId} floatingReward={floatingReward} collectingRewardNodeId={collectingRewardNodeId} isInteractionLocked={isBusy} onSelectNode={(nodeId) => { if (nodeId) sceneSfx.playNodeSelect(); setSelectedNodeId(nodeId); }} onRewardCollectAnimationComplete={() => setCollectingRewardNodeId(null)} />
+        <StoryCircuitMap nodes={sceneNodes} currentNodeId={currentNodeId} selectedNodeId={selectedNodeId} avatarVisualTarget={avatarVisualTarget} duelFocusNodeId={duelFocusNodeId} floatingReward={floatingReward} collectingRewardNodeId={collectingRewardNodeId} retreatingNodeId={retreatingNodeId} isInteractionLocked={isBusy} onSelectNode={(nodeId) => { if (nodeId) sceneSfx.playNodeSelect(); setSelectedNodeId(nodeId); }} onRewardCollectAnimationComplete={() => setCollectingRewardNodeId(null)} />
         <StoryNodeInteractionDialog isOpen={interactionDialog.isOpen} title={interactionDialog.dialogueTitle} line={interactionDialog.currentLine} onNext={interactionDialog.next} onClose={async () => { interactionDialog.close(); if (pendingCenterNodeId) { await centerAvatarOnNode(pendingCenterNodeId); setPendingCenterNodeId(null); setAvatarVisualTarget(null); } }} />
       </div>
     </div>

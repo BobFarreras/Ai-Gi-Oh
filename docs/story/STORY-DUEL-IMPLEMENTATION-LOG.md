@@ -54,3 +54,33 @@ Forzar que la acción "Desconectar y salir" en combate Story registre `ABANDONED
 
 ### Validación (TDD)
 - Se añadió test de `PauseOverlay` para comprobar que `onExit` se ejecuta al abandonar.
+
+## Fase 2 - Transición visual post-duelo en Story
+
+### Objetivo
+Mostrar retorno visual coherente al salir del duelo:
+- `LOST`/`ABANDONED`: retroceso del jugador al nodo previo.
+- `WON`: retirada visual del nodo oponente antes de desaparecer.
+
+### Cambios aplicados
+1. Se creó parser tipado de transición post-duelo desde `searchParams`.
+2. `/hub/story` ahora inyecta transición en `StoryScene`.
+3. `StoryScene` aplica transición inicial mediante hook dedicado.
+4. `StoryCircuitMap` renderiza efecto de retirada de oponente (`StoryNodeRetreatEffect`).
+5. `StoryDuelClient` conserva outcome real (`WON`/`LOST`) para volver al mapa con datos exactos.
+
+### Archivos creados
+- `src/services/story/duel-flow/story-post-duel-transition.ts`
+- `src/services/story/duel-flow/story-post-duel-transition.test.ts`
+- `src/components/hub/story/internal/scene/transitions/use-story-post-duel-transition.ts`
+- `src/components/hub/story/internal/map/components/StoryNodeRetreatEffect.tsx`
+
+### Archivos modificados
+- `src/app/hub/story/page.tsx`
+- `src/components/hub/story/StoryScene.tsx`
+- `src/components/hub/story/StoryCircuitMap.tsx`
+- `src/app/hub/story/chapter/[chapter]/duel/[duelIndex]/StoryDuelClient.tsx`
+
+### Validación (TDD)
+- Test de parser de transición (`story-post-duel-transition.test.ts`).
+- Re-ejecución de test de escena Story para validar compatibilidad.
