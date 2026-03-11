@@ -10,6 +10,18 @@ import {
   resolveStoryUnlockedNodeIds,
 } from "@/core/services/story/world/build-story-world-graph";
 
+function resolveActiveChapter(input: {
+  nodes: IStoryMapNodeRuntime[];
+  currentNodeId: string | null;
+  completedNodeIds: string[];
+}): number {
+  const currentNode = input.nodes.find((node) => node.id === input.currentNodeId);
+  if (currentNode) return currentNode.chapter;
+  const completedNodes = input.nodes.filter((node) => input.completedNodeIds.includes(node.id));
+  if (completedNodes.length === 0) return 1;
+  return Math.max(...completedNodes.map((node) => node.chapter));
+}
+
 export async function getStoryMapRuntimeData(): Promise<IStoryMapRuntimeData | null> {
   const session = await getCurrentUserSession();
   if (!session) return null;
@@ -63,10 +75,23 @@ export async function getStoryMapRuntimeData(): Promise<IStoryMapRuntimeData | n
     history.some((event) => event.kind === "MOVE" || event.kind === "INTERACTION");
   const effectiveCurrentNodeId =
     hasValidCurrentNode && hasProgressSignal ? currentNodeId : defaultStartNodeId;
-  return {
-    playerId: session.user.id,
+  const activeChapter = resolveActiveChapter({
     nodes: mergedNodes,
     currentNodeId: effectiveCurrentNodeId,
+    completedNodeIds,
+  });
+  const chapterNodes = mergedNodes.filter((node) => node.chapter === activeChapter);
+  const chapterStartNodeId =
+    chapterNodes.find((node) => node.id === `story-ch${activeChapter}-player-start`)?.id ??
+    chapterNodes[0]?.id ??
+    null;
+  const chapterCurrentNodeId = chapterNodes.some((node) => node.id === effectiveCurrentNodeId)
+    ? effectiveCurrentNodeId
+    : chapterStartNodeId;
+  return {
+    playerId: session.user.id,
+    nodes: chapterNodes,
+    currentNodeId: chapterCurrentNodeId,
     history,
   };
 }

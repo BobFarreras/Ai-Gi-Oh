@@ -9,13 +9,16 @@ import {
   buildStoryNodePositionMap,
   resolveStoryNodePosition,
   resolveStoryPathSegments,
+  resolveStoryNodeTokenAnchor,
 } from "@/components/hub/story/internal/map/layout/story-circuit-layout";
 import { StoryMapNode } from "./internal/map/components/StoryMapNode";
 import { useStoryAvatarTravel } from "./internal/map/hooks/use-story-avatar-travel";
-
 import { StoryMapZoomControls } from "./internal/map/components/StoryMapZoomControls";
 import { useStoryMapZoom } from "./internal/map/hooks/use-story-map-zoom";
-import { listStoryMapPlatforms } from "@/services/story/map-definitions/story-map-definition-registry";
+import {
+  resolveStoryNodeSideOffsetPx,
+  STORY_NODE_TOKEN_SIZE,
+} from "./internal/map/constants/story-map-geometry";
 
 interface StoryCircuitMapProps {
   nodes: IStoryMapNodeRuntime[];
@@ -31,12 +34,11 @@ function resolveAvatarAnchor(input: {
   stance: "CENTER" | "SIDE";
   positionMap: Record<string, { x: number; y: number }>;
 }): { x: number; y: number } {
-  const nodePosition = resolveStoryNodePosition(input.nodeId, input.positionMap);
-  const platformY = nodePosition.y + 74;
+  const tokenAnchor = resolveStoryNodeTokenAnchor(input.nodeId, input.positionMap);
   if (input.stance === "SIDE") {
-    return { x: nodePosition.x - 92, y: platformY };
+    return { x: tokenAnchor.x - 92, y: tokenAnchor.y };
   }
-  return { x: nodePosition.x, y: platformY };
+  return tokenAnchor;
 }
 
 export function StoryCircuitMap({
@@ -54,7 +56,6 @@ export function StoryCircuitMap({
   const positionMap = useMemo(() => buildStoryNodePositionMap(nodes), [nodes]);
   const { zoom, zoomIn, zoomOut, resetZoom, handleWheel } = useStoryMapZoom();
   const segments = useMemo(() => resolveStoryPathSegments(nodes, positionMap), [nodes, positionMap]);
-  const platforms = useMemo(() => listStoryMapPlatforms(), []);
   const avatarTargetNodeId = avatarVisualTarget?.nodeId ?? currentNodeId;
   const avatarNode = nodes.find((node) => node.id === avatarTargetNodeId) ?? nodes.find((node) => node.id === "story-ch1-player-start") ?? nodes[0];
   const visualStance = avatarVisualTarget?.stance ?? "CENTER";
@@ -68,7 +69,7 @@ export function StoryCircuitMap({
     targetNodeId: avatarNode?.id ?? null,
     resolvePosition: resolveTravelPosition,
   });
-  const avatarSideOffsetX = visualStance === "SIDE" ? -92 : 0;
+  const avatarSideOffsetX = visualStance === "SIDE" ? -resolveStoryNodeSideOffsetPx() : 0;
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -96,16 +97,15 @@ export function StoryCircuitMap({
         style={{ x: cameraX, y: cameraY, scale: zoom }}
         className="absolute left-0 top-0 h-[2200px] w-[3400px]"
       >
-        <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full">
-          {segments.map((segment, index) => <motion.line key={`path-${index}`} x1={segment.from.x} y1={segment.from.y} x2={segment.to.x} y2={segment.to.y} stroke="rgba(6, 182, 212, 0.4)" strokeWidth="6" strokeDasharray="15 15" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.2, delay: index * 0.08 }} />)}
+        <svg className="pointer-events-none absolute inset-0 h-full w-full">
+          {segments.map((segment, index) => <motion.line key={`path-${index}`} x1={segment.from.x} y1={segment.from.y} x2={segment.to.x} y2={segment.to.y} stroke="rgba(6, 182, 212, 0.26)" strokeWidth="4" strokeDasharray="12 14" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.2, delay: index * 0.08 }} />)}
         </svg>
-    
         {nodes.map((node) => {
           const position = resolveStoryNodePosition(node.id, positionMap);
           return (
             <div
               key={node.id}
-              className="absolute z-30 -translate-x-1/2 -translate-y-1/2"
+              className="absolute -translate-x-1/2 -translate-y-1/2"
               style={{ top: position.y, left: position.x }}
             >
               <StoryMapNode
@@ -121,20 +121,18 @@ export function StoryCircuitMap({
         })}
 
         <motion.div
-          className="pointer-events-none absolute z-40 flex w-20 -translate-x-1/2 -translate-y-full flex-col items-center"
+          className="pointer-events-none absolute z-40 -translate-x-1/2 -translate-y-1/2"
           initial={false}
-          style={{ top: avatarY, left: avatarX, x: avatarSideOffsetX }}
+          style={{ top: avatarY, left: avatarX, x: avatarSideOffsetX, width: STORY_NODE_TOKEN_SIZE, height: STORY_NODE_TOKEN_SIZE }}
         >
-          <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-emerald-400 bg-black shadow-[0_0_22px_rgba(16,185,129,0.6)]">
-            <Image
-              src="/assets/story/player/bob.png"
-              alt="Avatar del jugador"
-              fill
-              sizes="80px"
-              quality={55}
-              className="object-cover"
-            />
-          </div>
+          <Image
+            src="/assets/story/player/bob.png"
+            alt="Avatar del jugador"
+            fill
+            sizes="80px"
+            quality={55}
+            className="rounded-full border-2 border-emerald-400 object-cover shadow-[0_0_22px_rgba(16,185,129,0.6)]"
+          />
         </motion.div>
         {isInteractionLocked ? (
           <div className="pointer-events-none absolute left-1/2 top-8 z-40 -translate-x-1/2 rounded border border-emerald-400/50 bg-black/80 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-200">

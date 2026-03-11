@@ -2,6 +2,8 @@
 import { describe, expect, it } from "vitest";
 import {
   buildStoryNodePositionMap,
+  resolveStoryNodePlatformAnchor,
+  resolveStoryNodeTokenAnchor,
   resolveStoryPathSegments,
 } from "@/components/hub/story/internal/map/layout/story-circuit-layout";
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
@@ -46,7 +48,21 @@ describe("buildStoryNodePositionMap", () => {
     const segments = resolveStoryPathSegments(nodes, positionMap);
 
     expect(segments).toHaveLength(1);
-    expect(segments[0]).toEqual({ from: { x: 1000, y: 1200 }, to: { x: 1000, y: 900 } });
+    expect(segments[0]).toEqual({ from: { x: 1000, y: 1256 }, to: { x: 1000, y: 956 } });
+  });
+
+  it("resuelve anclaje de plataforma por debajo del centro del nodo", () => {
+    const anchor = resolveStoryNodePlatformAnchor("story-ch1-duel-1", {
+      "story-ch1-duel-1": { x: 600, y: 700 },
+    });
+    expect(anchor).toEqual({ x: 600, y: 756 });
+  });
+
+  it("resuelve anclaje de token en la misma altura usada por fichas del mapa", () => {
+    const anchor = resolveStoryNodeTokenAnchor("story-ch1-duel-1", {
+      "story-ch1-duel-1": { x: 600, y: 700 },
+    });
+    expect(anchor).toEqual({ x: 600, y: 708 });
   });
 
   it("evita coordenadas solapadas en el acto 1 para mejorar interacción visual", () => {

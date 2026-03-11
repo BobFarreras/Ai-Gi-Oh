@@ -3,7 +3,6 @@ import { storyAct1MapDefinition } from "@/services/story/map-definitions/act-1-m
 import { storyAct2MapDefinition } from "@/services/story/map-definitions/act-2-map-definition";
 import {
   IStoryActMapDefinition,
-  IStoryMapPlatformDefinition,
   IStoryMapVirtualNodeDefinition,
   IStoryMapVisualNodeDefinition,
 } from "@/services/story/map-definitions/story-map-definition-types";
@@ -37,11 +36,4 @@ export function findStoryVirtualNodeDefinition(nodeId: string): IStoryMapVirtual
     if (virtualNode) return virtualNode;
   }
   return null;
-}
-
-/**
- * Lista plataformas decorativas para enriquecer el mapa sin crear nodos jugables.
- */
-export function listStoryMapPlatforms(): IStoryMapPlatformDefinition[] {
-  return storyActDefinitions.flatMap((definition) => definition.platforms ?? []);
 }

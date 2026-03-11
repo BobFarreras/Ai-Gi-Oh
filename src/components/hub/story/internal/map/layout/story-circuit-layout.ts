@@ -11,6 +11,9 @@ export interface IStoryCircuitSegment {
   to: IStoryCircuitPosition;
 }
 
+const STORY_NODE_PLATFORM_OFFSET_Y = 56;
+const STORY_NODE_TOKEN_OFFSET_Y = 8;
+
 function sortNodes(nodes: IStoryMapNodeRuntime[]): IStoryMapNodeRuntime[] {
   return [...nodes].sort((left, right) => {
     if (left.chapter !== right.chapter) return left.chapter - right.chapter;
@@ -83,15 +86,36 @@ export function resolveStoryNodePosition(
   return positionMap[nodeId] ?? { x: 1000, y: 1000 };
 }
 
+/**
+ * Devuelve el punto de anclaje de plataforma (debajo del token) para trazar caminos.
+ */
+export function resolveStoryNodePlatformAnchor(
+  nodeId: string,
+  positionMap: Record<string, IStoryCircuitPosition>,
+): IStoryCircuitPosition {
+  const nodePosition = resolveStoryNodePosition(nodeId, positionMap);
+  return { x: nodePosition.x, y: nodePosition.y + STORY_NODE_PLATFORM_OFFSET_Y };
+}
+
+/**
+ * Devuelve el punto central del token/ficha del nodo para alinear avatar y elementos flotantes.
+ */
+export function resolveStoryNodeTokenAnchor(
+  nodeId: string,
+  positionMap: Record<string, IStoryCircuitPosition>,
+): IStoryCircuitPosition {
+  const nodePosition = resolveStoryNodePosition(nodeId, positionMap);
+  return { x: nodePosition.x, y: nodePosition.y + STORY_NODE_TOKEN_OFFSET_Y };
+}
+
 export function resolveStoryPathSegments(
   nodes: IStoryMapNodeRuntime[],
   positionMap: Record<string, IStoryCircuitPosition>,
 ): IStoryCircuitSegment[] {
   const segments: IStoryCircuitSegment[] = [];
   const pushSegment = (fromNodeId: string, toNodeId: string) => {
-    const from = positionMap[fromNodeId];
-    const to = positionMap[toNodeId];
-    if (!from || !to) return;
+    const from = resolveStoryNodePlatformAnchor(fromNodeId, positionMap);
+    const to = resolveStoryNodePlatformAnchor(toNodeId, positionMap);
     segments.push({ from, to });
   };
   for (const node of nodes) {

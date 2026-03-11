@@ -20,7 +20,7 @@ story/
     map/
       components/
         StoryMapNode.tsx
-        StoryMapPlatforms.tsx
+        StoryNodePlatform.tsx
         StoryMapZoomControls.tsx
       hooks/
         use-story-avatar-travel.ts
@@ -29,6 +29,8 @@ story/
       layout/
         story-circuit-layout.ts
         story-circuit-layout.test.ts
+      constants/
+        story-map-geometry.ts
     scene/
       dialog/
         StoryNodeInteractionDialog.tsx

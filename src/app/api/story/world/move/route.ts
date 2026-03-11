@@ -25,11 +25,13 @@ function hasVisitedNode(history: IPlayerStoryHistoryEvent[], nodeId: string): bo
 }
 
 function canMoveToVirtualNode(input: {
+  currentNodeId: string | null;
   requiredNodeId: string | null;
   completedNodeIds: string[];
   interactedNodeIds: string[];
 }): boolean {
   if (!input.requiredNodeId) return true;
+  if (input.currentNodeId !== input.requiredNodeId) return false;
   const requiredVirtualNode = findStoryVirtualNodeDefinition(input.requiredNodeId);
   if (requiredVirtualNode?.nodeType === "MOVE") return true;
   return input.completedNodeIds.includes(input.requiredNodeId) || input.interactedNodeIds.includes(input.requiredNodeId);
@@ -89,6 +91,7 @@ export async function POST(request: NextRequest) {
         .filter((event) => event.kind === "INTERACTION")
         .map((event) => event.nodeId);
       const canMove = canMoveToVirtualNode({
+        currentNodeId,
         requiredNodeId: virtualNode.unlockRequirementNodeId,
         completedNodeIds: worldState.progress.completedNodeIds,
         interactedNodeIds,
@@ -110,11 +113,7 @@ export async function POST(request: NextRequest) {
       );
     }
     const visualNode = findStoryVisualNodeDefinition(payload.nodeId);
-    if (
-      visualNode &&
-      currentNodeId &&
-      visualNode.unlockRequirementNodeId === currentNodeId
-    ) {
+    if (visualNode && currentNodeId && visualNode.unlockRequirementNodeId === currentNodeId) {
       const targetNode = worldState.graph.nodes.find((node) => node.id === payload.nodeId);
       await worldRepository.saveCurrentNodeId(playerId, payload.nodeId);
       await worldRepository.appendHistoryEvents(playerId, [
@@ -132,6 +131,9 @@ export async function POST(request: NextRequest) {
         },
         { status: 200, headers: response.headers },
       );
+    }
+    if (visualNode && visualNode.unlockRequirementNodeId && visualNode.unlockRequirementNodeId !== currentNodeId) {
+      throw new ValidationError("Debes resolver el nodo anterior antes de avanzar.");
     }
     const moveUseCase = new MoveToStoryNodeUseCase();
     const moved = moveUseCase.execute({
