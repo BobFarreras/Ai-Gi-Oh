@@ -22,6 +22,8 @@ story/
         StoryMapNode.tsx
         StoryNodePlatform.tsx
         StoryRewardCollectEffect.tsx
+        StoryRewardFloatingText.tsx
+        StoryNodeRetreatEffect.tsx
         StoryMapZoomControls.tsx
       hooks/
         use-story-avatar-travel.ts
@@ -45,6 +47,9 @@ story/
         resolve-story-scene-can-move.ts
         resolve-story-scene-can-move.test.ts
         story-scene-store.ts
+      transitions/
+        use-story-post-duel-transition.ts
+        use-story-post-duel-transition.test.tsx
 ```
 
 ## Responsabilidades por capa
@@ -59,6 +64,7 @@ story/
 - `internal/scene/audio/*`: reproducción de SFX del mapa Story.
 - `internal/scene/dialog/*`: flujo de diálogo narrativo.
 - `internal/scene/panels/*`: panel lateral e información contextual.
+- `internal/scene/transitions/*`: transición visual post-duelo al volver desde combate.
 
 ## Reglas de mantenimiento
 - Mantener SRP: un archivo = un motivo de cambio.
@@ -72,7 +78,9 @@ story/
 3. `POST /api/story/world/move` valida y persiste movimiento.
 4. Si aplica, `POST /api/story/world/interact` registra interacción narrativa.
 5. En duelos, la ruta de resultado (`/api/story/duels/complete`) actualiza progreso.
-6. Persistencia Story usa estado compacto: `currentNodeId + visitedNodeIds + interactedNodeIds`.
+6. Al volver de duelo, `StoryScene` consume query de transición (`duelOutcome`, `duelNodeId`, `returnNodeId`).
+7. Persistencia Story usa estado compacto: `currentNodeId + visitedNodeIds + interactedNodeIds`.
+8. Antes de iniciar combate Story se ejecuta coin toss y su resultado define `starterPlayerId`.
 
 ## Herramientas de depuración
 - `POST /api/story/world/reset`: reinicia cursor Story al nodo inicial y limpia estado compacto (visitados/interacciones) para reproducir pruebas del mapa.

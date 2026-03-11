@@ -143,3 +143,23 @@ Blindar las animaciones de retorno Story con tests de comportamiento para evitar
 
 ### Validación (TDD)
 - Pruebas con timers fake para validar secuencia temporal de animaciones.
+
+## Fase 6 - Documentación y cierre de calidad
+
+### Objetivo
+Dejar trazabilidad completa de arquitectura y flujo Story/Duel para mantenimiento y revisión de TFM.
+
+### Cambios aplicados
+1. Se actualizó `docs/story/README.md` con:
+   - índice del registro por fases,
+   - estado actual de implementación de flujo duelo.
+2. Se actualizó `src/components/hub/story/README.md` con:
+   - nuevos submódulos (`transitions`, efectos de mapa),
+   - flujo actualizado de retorno post-duelo y coin toss.
+
+### Archivos modificados
+- `docs/story/README.md`
+- `src/components/hub/story/README.md`
+
+### Validación
+- Verificación final de `pnpm lint`, `pnpm test` (target Story) y `pnpm build`.

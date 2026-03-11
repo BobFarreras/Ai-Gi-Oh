@@ -14,6 +14,7 @@ Definir cómo se modela el mapa, desbloqueos, navegación e integración con due
 5. `docs/story/NARRACION_OPONENTES.md`: narrativa y personalidad de oponentes.
 6. `src/services/story/map-definitions/`: layout visual editable por acto (sin tocar reglas de dominio).
 7. `docs/story/STORY_DIALOGUE_ASSETS_TEMPLATE.md`: plantilla para producción de texto/retrato/audio por nodo.
+8. `docs/story/STORY-DUEL-IMPLEMENTATION-LOG.md`: bitácora fase a fase del flujo Story <-> Duel.
 
 ## Estado actual
 
@@ -30,3 +31,8 @@ Definir cómo se modela el mapa, desbloqueos, navegación e integración con due
 11. Fase G implementada: catálogo local de imágenes/audios para diálogos narrativos.
 12. Fase H implementada: selección directa de nodos + plataformas decorativas + bloqueo estricto por progreso completado.
 13. Fase I implementada: zoom, nodo inicial de jugador y rutas de mayor densidad con reconvergencias.
+14. Fase 0-5 (duelo Story) implementada:
+   - contrato canónico de resultado (`WON`, `LOST`, `ABANDONED`),
+   - salida de pausa Story hacia `/hub/story` con persistencia de abandono,
+   - transición visual post-duelo en mapa (retirada de rival o retroceso de jugador),
+   - coin toss previo al combate con base 50/50 y soporte de modificadores.
