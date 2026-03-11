@@ -25,9 +25,10 @@ interface IBoardProps {
   opponentAvatarUrl?: string | null;
   resultActionLabel?: string;
   onResultAction?: () => void;
+  onExitMatch?: () => void;
   onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string }) => void;
 }
-export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, resultActionLabel, onResultAction, onMatchResolved }: IBoardProps) {
+export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, resultActionLabel, onResultAction, onExitMatch, onMatchResolved }: IBoardProps) {
   countRender("Board");
   const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig);
   const player = board.gameState.playerA; const opponent = board.gameState.playerB;
@@ -62,6 +63,7 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
         opponent={opponent}
         playerAvatarUrl={playerAvatarUrl}
         opponentAvatarUrl={opponentAvatarUrl}
+        onExitMatch={onExitMatch}
       />
       <BoardPlayersSection
         board={board}

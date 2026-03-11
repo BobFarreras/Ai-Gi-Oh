@@ -26,6 +26,7 @@ interface BoardStatusOverlaysProps {
   playerBName: string;
   isPaused: boolean;
   onResumePause: () => void;
+  onExitPause?: () => void;
   isFusionCinematicActive?: boolean;
   setIsFusionCinematicActive?: (value: boolean) => void;
   graveyardView: "player" | "opponent" | null;
@@ -63,6 +64,7 @@ export function BoardStatusOverlays({
   playerBName,
   isPaused,
   onResumePause,
+  onExitPause,
   isFusionCinematicActive = false,
   setIsFusionCinematicActive = () => undefined,
   graveyardView,
@@ -114,7 +116,7 @@ export function BoardStatusOverlays({
         playerBName={playerBName}
         externalBannerSignal={externalBannerSignal}
       />
-      <PauseOverlay isPaused={isPaused} onResume={onResumePause} />
+      <PauseOverlay isPaused={isPaused} onResume={onResumePause} onExit={onExitPause} />
       <TurnAdvanceGuardOverlay
         warning={pendingAdvanceWarning}
         onConfirm={onConfirmAdvancePhase}

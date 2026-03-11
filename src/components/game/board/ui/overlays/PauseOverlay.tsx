@@ -1,4 +1,4 @@
-// src/components/game/board/ui/overlays/PauseOverlay.tsx
+// src/components/game/board/ui/overlays/PauseOverlay.tsx - Overlay de pausa con acciones de reanudar o abandonar el duelo según modo.
 "use client";
 
 import { Play, TriangleAlert } from "lucide-react";
@@ -8,9 +8,10 @@ import { BackButton } from "@/components/ui/BackButton";
 interface PauseOverlayProps {
   isPaused: boolean;
   onResume: () => void;
+  onExit?: () => void;
 }
 
-export function PauseOverlay({ isPaused, onResume }: PauseOverlayProps) {
+export function PauseOverlay({ isPaused, onResume, onExit }: PauseOverlayProps) {
   const router = useRouter();
   
   if (!isPaused) return null;
@@ -57,7 +58,13 @@ export function PauseOverlay({ isPaused, onResume }: PauseOverlayProps) {
           {/* BOTÓN SECUNDARIO: Abandonar (Usando onClick manual para forzar el enrutamiento y evitar bloqueos del Overlay) */}
           <BackButton 
             label="Desconectar y Salir" 
-            onClick={() => router.push('/hub')}
+            onClick={() => {
+              if (onExit) {
+                onExit();
+                return;
+              }
+              router.push("/hub");
+            }}
             className="w-full justify-center py-3 border-zinc-800 bg-zinc-900/50 hover:border-red-500/50 hover:bg-red-950/40 hover:text-red-400 group-hover:text-red-400"
           />
           

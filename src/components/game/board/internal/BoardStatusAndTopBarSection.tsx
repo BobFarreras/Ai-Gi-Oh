@@ -14,6 +14,7 @@ export function BoardStatusAndTopBarSection({
   opponent,
   playerAvatarUrl,
   opponentAvatarUrl,
+  onExitMatch,
 }: IBoardViewSectionProps) {
   if (screen.isResultVisible) return null;
   const pendingFusionAction =
@@ -52,6 +53,7 @@ export function BoardStatusAndTopBarSection({
           board.playButtonClick();
           board.togglePause();
         }}
+        onExitPause={onExitMatch}
         isFusionCinematicActive={board.isFusionCinematicActive}
         setIsFusionCinematicActive={board.setIsFusionCinematicActive}
         graveyardView={screen.effectiveGraveyardView}
