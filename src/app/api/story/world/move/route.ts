@@ -12,6 +12,7 @@ import { SupabasePlayerStoryWorldRepository } from "@/infrastructure/persistence
 import { getAuthenticatedUserId } from "@/services/auth/api/internal/get-authenticated-user-id";
 import { createPlayerRouteRepositories } from "@/services/player-persistence/create-player-route-repositories";
 import { resolveStoryWorldMoveMode } from "@/services/story/resolve-story-world-move-mode";
+import { shouldAppendStoryMoveEvent } from "@/services/story/should-append-story-move-event";
 
 interface IStoryWorldMovePayload {
   nodeId: string;
@@ -70,6 +71,15 @@ export async function POST(request: NextRequest) {
       history: currentHistory,
       completedNodeIds: worldState.progress.completedNodeIds,
     });
+    if (payload.nodeId === effectiveCurrentNodeId) {
+      return NextResponse.json(
+        {
+          currentNodeId: effectiveCurrentNodeId,
+          history: currentHistory.slice(0, 60),
+        },
+        { status: 200, headers: response.headers },
+      );
+    }
     const moveMode = resolveStoryWorldMoveMode({
       targetNodeId: payload.nodeId,
       currentNodeId: effectiveCurrentNodeId,
@@ -85,14 +95,21 @@ export async function POST(request: NextRequest) {
       if (targetVirtualNode) {
         await worldRepository.saveCurrentNodeId(playerId, payload.nodeId);
       }
-      const targetNode = worldState.graph.nodes.find((node) => node.id === payload.nodeId);
-      await worldRepository.appendHistoryEvents(playerId, [
-        buildVirtualMoveEvent({
-          playerId,
-          nodeId: payload.nodeId,
-          title: targetNode?.title ?? payload.nodeId,
-        }),
-      ]);
+      if (
+        shouldAppendStoryMoveEvent({
+          history: currentHistory,
+          targetNodeId: payload.nodeId,
+        })
+      ) {
+        const targetNode = worldState.graph.nodes.find((node) => node.id === payload.nodeId);
+        await worldRepository.appendHistoryEvents(playerId, [
+          buildVirtualMoveEvent({
+            playerId,
+            nodeId: payload.nodeId,
+            title: targetNode?.title ?? payload.nodeId,
+          }),
+        ]);
+      }
       const history = await worldRepository.listHistoryByPlayerId(playerId, 60);
       return NextResponse.json(
         {

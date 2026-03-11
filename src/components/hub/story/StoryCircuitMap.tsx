@@ -3,22 +3,18 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef } from "react";
-import { animate, motion, useMotionValue } from "framer-motion";
+import { animate, motion, useMotionValue, AnimationPlaybackControls } from "framer-motion";
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import {
   buildStoryNodePositionMap,
   resolveStoryNodePosition,
-  resolveStoryNodePlatformAnchor,
   resolveStoryPathSegments,
   resolveStoryNodeTokenAnchor,
 } from "@/components/hub/story/internal/map/layout/story-circuit-layout";
 import { StoryMapNode } from "./internal/map/components/StoryMapNode";
 import { StoryMapZoomControls } from "./internal/map/components/StoryMapZoomControls";
 import { useStoryMapZoom } from "./internal/map/hooks/use-story-map-zoom";
-import {
-  resolveStoryNodeSideOffsetPx,
-  STORY_NODE_TOKEN_SIZE,
-} from "./internal/map/constants/story-map-geometry";
+import { resolveStoryNodeSideOffsetPx, STORY_NODE_TOKEN_SIZE } from "./internal/map/constants/story-map-geometry";
 
 interface StoryCircuitMapProps {
   nodes: IStoryMapNodeRuntime[];
@@ -27,21 +23,6 @@ interface StoryCircuitMapProps {
   avatarVisualTarget?: { nodeId: string; stance: "CENTER" | "SIDE" } | null;
   isInteractionLocked?: boolean;
   onSelectNode: (nodeId: string | null) => void;
-}
-
-function resolveAvatarAnchor(input: {
-  node: IStoryMapNodeRuntime;
-  stance: "CENTER" | "SIDE";
-  positionMap: Record<string, { x: number; y: number }>;
-}): { x: number; y: number } {
-  const isPlatformAnchorNode = input.node.nodeType === "MOVE" || input.node.isCompleted;
-  const baseAnchor = isPlatformAnchorNode
-    ? resolveStoryNodePlatformAnchor(input.node.id, input.positionMap)
-    : resolveStoryNodeTokenAnchor(input.node.id, input.positionMap);
-  if (input.stance === "SIDE") {
-    return { x: baseAnchor.x - 92, y: baseAnchor.y };
-  }
-  return baseAnchor;
 }
 
 export function StoryCircuitMap({
@@ -55,6 +36,13 @@ export function StoryCircuitMap({
   // Cámara y zoom separados de la lógica de nodos para mantener SRP del componente.
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const hasCenteredCamera = useRef(false);
+  const avatarAnimRef = useRef<{
+    x: AnimationPlaybackControls | null;
+    y: AnimationPlaybackControls | null;
+  }>({
+    x: null,
+    y: null,
+  });
   const cameraX = useMotionValue(0);
   const cameraY = useMotionValue(0);
   const avatarX = useMotionValue(1000);
@@ -63,16 +51,31 @@ export function StoryCircuitMap({
   const { zoom, zoomIn, zoomOut, resetZoom, handleWheel } = useStoryMapZoom();
   const segments = useMemo(() => resolveStoryPathSegments(nodes, positionMap), [nodes, positionMap]);
   const avatarTargetNodeId = avatarVisualTarget?.nodeId ?? currentNodeId;
-  const avatarNode = nodes.find((node) => node.id === avatarTargetNodeId) ?? nodes.find((node) => node.id === "story-ch1-player-start") ?? nodes[0];
+  const avatarNode =
+    nodes.find((node) => node.id === avatarTargetNodeId) ??
+    nodes.find((node) => node.id === "story-ch1-player-start") ??
+    nodes[0];
   const visualStance = avatarVisualTarget?.stance ?? "CENTER";
   const avatarPos = avatarNode
-    ? resolveAvatarAnchor({ node: avatarNode, stance: visualStance, positionMap })
+    ? resolveStoryNodeTokenAnchor(avatarNode.id, positionMap)
     : { x: 1000, y: 1000 };
   const avatarSideOffsetX = visualStance === "SIDE" ? -resolveStoryNodeSideOffsetPx() : 0;
 
   useEffect(() => {
-    animate(avatarX, avatarPos.x, { type: "spring", stiffness: 140, damping: 22 });
-    animate(avatarY, avatarPos.y, { type: "spring", stiffness: 140, damping: 22 });
+    const fromX = avatarX.get();
+    const fromY = avatarY.get();
+    avatarAnimRef.current.x?.stop();
+    avatarAnimRef.current.y?.stop();
+    const distance = Math.hypot(avatarPos.x - fromX, avatarPos.y - fromY);
+    const duration = Math.min(0.7, Math.max(0.24, distance / 760));
+    avatarAnimRef.current.x = animate(avatarX, avatarPos.x, {
+      duration,
+      ease: "easeInOut",
+    });
+    avatarAnimRef.current.y = animate(avatarY, avatarPos.y, {
+      duration,
+      ease: "easeInOut",
+    });
   }, [avatarPos.x, avatarPos.y, avatarX, avatarY]);
 
   useEffect(() => {
@@ -125,7 +128,6 @@ export function StoryCircuitMap({
             </div>
           );
         })}
-
         <motion.div
           className="pointer-events-none absolute z-40 -translate-x-1/2 -translate-y-1/2"
           initial={false}
