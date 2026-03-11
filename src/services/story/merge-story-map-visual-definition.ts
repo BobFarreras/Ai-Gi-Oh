@@ -29,6 +29,7 @@ export function mergeStoryMapVisualDefinition(
   const movedNodeIdSet = new Set(
     history.filter((event) => event.kind === "MOVE").map((event) => event.nodeId),
   );
+  const visitedNodeIdSet = new Set(history.map((event) => event.nodeId));
 
   for (const actDefinition of listStoryActMapDefinitions()) {
     for (const visualNode of actDefinition.nodes) {
@@ -71,6 +72,13 @@ export function mergeStoryMapVisualDefinition(
       };
       nextNodes.push(runtimeVirtualNode);
       nodeById.set(runtimeVirtualNode.id, runtimeVirtualNode);
+    }
+  }
+
+  for (const node of nextNodes) {
+    // Los nodos visitados o completados deben permanecer seleccionables para permitir retroceso.
+    if (visitedNodeIdSet.has(node.id) || node.isCompleted) {
+      node.isUnlocked = true;
     }
   }
 

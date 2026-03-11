@@ -48,7 +48,7 @@ describe("buildStoryNodePositionMap", () => {
     const segments = resolveStoryPathSegments(nodes, positionMap);
 
     expect(segments).toHaveLength(1);
-    expect(segments[0]).toEqual({ from: { x: 1000, y: 1256 }, to: { x: 1000, y: 956 } });
+    expect(segments[0]).toEqual({ from: { x: 1000, y: 1246 }, to: { x: 1000, y: 966 } });
   });
 
   it("resuelve anclaje de plataforma por debajo del centro del nodo", () => {

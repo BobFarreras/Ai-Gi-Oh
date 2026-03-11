@@ -31,6 +31,7 @@ export function StoryMapNode({ node, isSelected, isCurrentNode, onClick }: Story
   const isDefeatedDuel = node.isCompleted && (node.nodeType === "DUEL" || node.nodeType === "BOSS");
   const isStartNode = node.id === "story-ch1-player-start";
   const isPlatformOnly = node.nodeType === "MOVE" || node.isCompleted;
+  const isSelectable = node.isUnlocked || node.isCompleted;
 
   return (
     <motion.button
@@ -38,12 +39,12 @@ export function StoryMapNode({ node, isSelected, isCurrentNode, onClick }: Story
       aria-label={`Seleccionar nodo ${node.id}`}
       onClick={(event) => {
         event.stopPropagation();
-        if (node.isUnlocked) onClick();
+        if (isSelectable) onClick();
       }}
-      disabled={!node.isUnlocked}
+      aria-disabled={!isSelectable}
       className={cn(
         "group relative flex h-40 w-32 flex-col items-center justify-end outline-none",
-        !node.isUnlocked && "cursor-not-allowed opacity-30 grayscale",
+        isSelectable ? "cursor-pointer" : "cursor-not-allowed opacity-30 grayscale",
       )}
     >
       <motion.div

@@ -65,4 +65,21 @@ describe("mergeStoryMapVisualDefinition", () => {
 
     expect(virtualNode?.isUnlocked).toBe(false);
   });
+
+  it("mantiene desbloqueado un nodo visitado aunque su regla actual lo bloqueara", () => {
+    const nodes = [createRuntimeNode({ id: "story-ch1-duel-1", isCompleted: false, isUnlocked: true })];
+    const merged = mergeStoryMapVisualDefinition(nodes, [
+      {
+        eventId: "move-story-ch1-reward-nexus-beta",
+        playerId: "player-1",
+        nodeId: "story-ch1-reward-nexus-beta",
+        kind: "MOVE",
+        details: "Movimiento previo.",
+        createdAtIso: new Date().toISOString(),
+      },
+    ]);
+    const virtualNode = merged.find((node) => node.id === "story-ch1-reward-nexus-beta");
+
+    expect(virtualNode?.isUnlocked).toBe(true);
+  });
 });

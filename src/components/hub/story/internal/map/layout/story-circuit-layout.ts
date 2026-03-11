@@ -13,6 +13,8 @@ export interface IStoryCircuitSegment {
 
 const STORY_NODE_PLATFORM_OFFSET_Y = 56;
 const STORY_NODE_TOKEN_OFFSET_Y = 8;
+const STORY_PLATFORM_RADIUS_X = 48;
+const STORY_PLATFORM_RADIUS_Y = 10;
 
 function sortNodes(nodes: IStoryMapNodeRuntime[]): IStoryMapNodeRuntime[] {
   return [...nodes].sort((left, right) => {
@@ -113,9 +115,26 @@ export function resolveStoryPathSegments(
   positionMap: Record<string, IStoryCircuitPosition>,
 ): IStoryCircuitSegment[] {
   const segments: IStoryCircuitSegment[] = [];
+  const resolveEdgeAnchor = (
+    sourceNodeId: string,
+    targetNodeId: string,
+  ): IStoryCircuitPosition => {
+    const source = resolveStoryNodePlatformAnchor(sourceNodeId, positionMap);
+    const target = resolveStoryNodePlatformAnchor(targetNodeId, positionMap);
+    const deltaX = target.x - source.x;
+    const deltaY = target.y - source.y;
+    const distance = Math.hypot(deltaX, deltaY);
+    if (distance === 0) return source;
+    const nx = deltaX / distance;
+    const ny = deltaY / distance;
+    return {
+      x: source.x + nx * STORY_PLATFORM_RADIUS_X,
+      y: source.y + ny * STORY_PLATFORM_RADIUS_Y,
+    };
+  };
   const pushSegment = (fromNodeId: string, toNodeId: string) => {
-    const from = resolveStoryNodePlatformAnchor(fromNodeId, positionMap);
-    const to = resolveStoryNodePlatformAnchor(toNodeId, positionMap);
+    const from = resolveEdgeAnchor(fromNodeId, toNodeId);
+    const to = resolveEdgeAnchor(toNodeId, fromNodeId);
     segments.push({ from, to });
   };
   for (const node of nodes) {
