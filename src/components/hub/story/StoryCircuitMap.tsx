@@ -12,6 +12,7 @@ import {
   resolveStoryNodeTokenAnchor,
 } from "@/components/hub/story/internal/map/layout/story-circuit-layout";
 import { StoryMapNode } from "./internal/map/components/StoryMapNode";
+import { StoryRewardCollectEffect } from "./internal/map/components/StoryRewardCollectEffect";
 import { StoryMapZoomControls } from "./internal/map/components/StoryMapZoomControls";
 import { useStoryMapZoom } from "./internal/map/hooks/use-story-map-zoom";
 import { resolveStoryNodeSideOffsetPx, STORY_NODE_TOKEN_SIZE } from "./internal/map/constants/story-map-geometry";
@@ -21,8 +22,10 @@ interface StoryCircuitMapProps {
   currentNodeId: string | null;
   selectedNodeId: string | null;
   avatarVisualTarget?: { nodeId: string; stance: "CENTER" | "SIDE" } | null;
+  collectingRewardNodeId?: string | null;
   isInteractionLocked?: boolean;
   onSelectNode: (nodeId: string | null) => void;
+  onRewardCollectAnimationComplete?: () => void;
 }
 
 export function StoryCircuitMap({
@@ -30,19 +33,14 @@ export function StoryCircuitMap({
   currentNodeId,
   selectedNodeId,
   avatarVisualTarget,
+  collectingRewardNodeId,
   isInteractionLocked,
   onSelectNode,
+  onRewardCollectAnimationComplete,
 }: StoryCircuitMapProps) {
-  // Cámara y zoom separados de la lógica de nodos para mantener SRP del componente.
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const hasCenteredCamera = useRef(false);
-  const avatarAnimRef = useRef<{
-    x: AnimationPlaybackControls | null;
-    y: AnimationPlaybackControls | null;
-  }>({
-    x: null,
-    y: null,
-  });
+  const avatarAnimRef = useRef<{ x: AnimationPlaybackControls | null; y: AnimationPlaybackControls | null }>({ x: null, y: null });
   const cameraX = useMotionValue(0);
   const cameraY = useMotionValue(0);
   const avatarX = useMotionValue(1000);
@@ -51,15 +49,15 @@ export function StoryCircuitMap({
   const { zoom, zoomIn, zoomOut, resetZoom, handleWheel } = useStoryMapZoom();
   const segments = useMemo(() => resolveStoryPathSegments(nodes, positionMap), [nodes, positionMap]);
   const avatarTargetNodeId = avatarVisualTarget?.nodeId ?? currentNodeId;
-  const avatarNode =
-    nodes.find((node) => node.id === avatarTargetNodeId) ??
-    nodes.find((node) => node.id === "story-ch1-player-start") ??
-    nodes[0];
+  const avatarNode = nodes.find((node) => node.id === avatarTargetNodeId) ?? nodes.find((node) => node.id === "story-ch1-player-start") ?? nodes[0];
   const visualStance = avatarVisualTarget?.stance ?? "CENTER";
   const avatarPos = avatarNode
     ? resolveStoryNodeTokenAnchor(avatarNode.id, positionMap)
     : { x: 1000, y: 1000 };
   const avatarSideOffsetX = visualStance === "SIDE" ? -resolveStoryNodeSideOffsetPx() : 0;
+  const collectingAnchor = collectingRewardNodeId
+    ? resolveStoryNodeTokenAnchor(collectingRewardNodeId, positionMap)
+    : null;
 
   useEffect(() => {
     const fromX = avatarX.get();
@@ -68,14 +66,8 @@ export function StoryCircuitMap({
     avatarAnimRef.current.y?.stop();
     const distance = Math.hypot(avatarPos.x - fromX, avatarPos.y - fromY);
     const duration = Math.min(0.7, Math.max(0.24, distance / 760));
-    avatarAnimRef.current.x = animate(avatarX, avatarPos.x, {
-      duration,
-      ease: "easeInOut",
-    });
-    avatarAnimRef.current.y = animate(avatarY, avatarPos.y, {
-      duration,
-      ease: "easeInOut",
-    });
+    avatarAnimRef.current.x = animate(avatarX, avatarPos.x, { duration, ease: "easeInOut" });
+    avatarAnimRef.current.y = animate(avatarY, avatarPos.y, { duration, ease: "easeInOut" });
   }, [avatarPos.x, avatarPos.y, avatarX, avatarY]);
 
   useEffect(() => {
@@ -112,15 +104,12 @@ export function StoryCircuitMap({
         {nodes.map((node) => {
           const position = resolveStoryNodePosition(node.id, positionMap);
           return (
-            <div
-              key={node.id}
-              className="absolute -translate-x-1/2 -translate-y-1/2"
-              style={{ top: position.y, left: position.x }}
-            >
+            <div key={node.id} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ top: position.y, left: position.x }}>
               <StoryMapNode
                 node={node}
                 isSelected={selectedNodeId === node.id}
                 isCurrentNode={currentNodeId === node.id}
+                isCollecting={collectingRewardNodeId === node.id}
                 onClick={() => {
                   if (!isInteractionLocked) onSelectNode(node.id);
                 }}
@@ -142,6 +131,12 @@ export function StoryCircuitMap({
             className="rounded-full border-2 border-emerald-400 object-cover shadow-[0_0_22px_rgba(16,185,129,0.6)]"
           />
         </motion.div>
+        <StoryRewardCollectEffect
+          isVisible={Boolean(collectingAnchor && onRewardCollectAnimationComplete)}
+          from={collectingAnchor ?? { x: 0, y: 0 }}
+          to={{ x: avatarX.get() + avatarSideOffsetX, y: avatarY.get() }}
+          onComplete={() => onRewardCollectAnimationComplete?.()}
+        />
         {isInteractionLocked ? (
           <div className="pointer-events-none absolute left-1/2 top-8 z-40 -translate-x-1/2 rounded border border-emerald-400/50 bg-black/80 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-200">
             Acción en curso...

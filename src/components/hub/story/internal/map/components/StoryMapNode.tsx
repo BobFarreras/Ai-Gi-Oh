@@ -12,6 +12,7 @@ interface StoryMapNodeProps {
   node: IStoryMapNodeRuntime;
   isSelected: boolean;
   isCurrentNode?: boolean;
+  isCollecting?: boolean;
   onClick: () => void;
 }
 
@@ -26,13 +27,20 @@ function resolveHologramAsset(node: IStoryMapNodeRuntime): { src: string; alt: s
   return { src: "/assets/renders/react.png", alt: "Nodo de movimiento" };
 }
 
-export function StoryMapNode({ node, isSelected, isCurrentNode, onClick }: StoryMapNodeProps) {
+export function StoryMapNode({
+  node,
+  isSelected,
+  isCurrentNode,
+  isCollecting = false,
+  onClick,
+}: StoryMapNodeProps) {
   const hologram = resolveHologramAsset(node);
   const isDefeatedDuel = node.isCompleted && (node.nodeType === "DUEL" || node.nodeType === "BOSS");
   const isStartNode = node.id === "story-ch1-player-start";
   const isPlatformOnly = node.nodeType === "MOVE" || node.isCompleted;
   const isSelectable = node.isUnlocked || node.isCompleted;
   const shouldRenderNodeTitle = node.nodeType === "DUEL" || node.nodeType === "BOSS";
+  const shouldHideToken = isCollecting || isPlatformOnly;
 
   return (
     <motion.button
@@ -53,7 +61,7 @@ export function StoryMapNode({ node, isSelected, isCurrentNode, onClick }: Story
         transition={isSelected ? { type: "spring" } : { repeat: Infinity, duration: 3, ease: "easeInOut" }}
         className={cn(
           "absolute bottom-8 z-20 flex items-center justify-center transition-all duration-300",
-          isPlatformOnly && "hidden",
+          shouldHideToken && "hidden",
           isSelected && "scale-125 drop-shadow-[0_0_20px_rgba(6,182,212,0.8)]",
           isCurrentNode && "scale-110 drop-shadow-[0_0_24px_rgba(16,185,129,0.85)]",
         )}

@@ -21,6 +21,7 @@ story/
       components/
         StoryMapNode.tsx
         StoryNodePlatform.tsx
+        StoryRewardCollectEffect.tsx
         StoryMapZoomControls.tsx
       hooks/
         use-story-avatar-travel.ts
@@ -32,6 +33,8 @@ story/
       constants/
         story-map-geometry.ts
     scene/
+      audio/
+        use-story-scene-sfx.ts
       dialog/
         StoryNodeInteractionDialog.tsx
         use-story-node-interaction-dialog.ts
@@ -49,9 +52,11 @@ story/
 - `StoryCircuitMap.tsx`: render del canvas de mapa, nodos, caminos, plataformas y avatar.
 - `internal/map/layout/*`: cálculo de posiciones/segmentos del circuito.
 - `internal/map/components/*`: piezas visuales puras del mapa.
+  `StoryRewardCollectEffect.tsx` anima la absorción visual de recompensas.
 - `internal/map/hooks/*`: comportamiento de zoom y travel del avatar.
 - `internal/scene/state/*`: estado local (Zustand) de la escena Story.
   `resolve-story-scene-can-move.ts` centraliza la política del botón de movimiento.
+- `internal/scene/audio/*`: reproducción de SFX del mapa Story.
 - `internal/scene/dialog/*`: flujo de diálogo narrativo.
 - `internal/scene/panels/*`: panel lateral e información contextual.
 
