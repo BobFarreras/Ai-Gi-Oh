@@ -1,16 +1,13 @@
 // src/components/hub/story/internal/scene/state/story-scene-store.ts - Store local Zustand para estado UI del mapa Story sin acoplar dominio.
 import { create } from "zustand";
-import { IPlayerStoryHistoryEvent } from "@/core/entities/story/IPlayerStoryHistoryEvent";
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 
 interface IStorySceneState {
   selectedNodeId: string | null;
   currentNodeId: string | null;
-  history: IPlayerStoryHistoryEvent[];
   nodesById: Record<string, IStoryMapNodeRuntime>;
   setSelectedNodeId: (nodeId: string | null) => void;
   setCurrentNodeId: (nodeId: string | null) => void;
-  setHistory: (history: IPlayerStoryHistoryEvent[]) => void;
   markNodeCompleted: (nodeId: string) => void;
 }
 
@@ -25,7 +22,6 @@ function createNodesById(nodes: IStoryMapNodeRuntime[]): Record<string, IStoryMa
 export function createStorySceneStore(input: {
   nodes: IStoryMapNodeRuntime[];
   currentNodeId: string | null;
-  history: IPlayerStoryHistoryEvent[];
 }) {
   const defaultNodeId =
     input.currentNodeId ??
@@ -35,11 +31,9 @@ export function createStorySceneStore(input: {
   return create<IStorySceneState>((set) => ({
     selectedNodeId: defaultNodeId,
     currentNodeId: defaultNodeId,
-    history: input.history,
     nodesById: createNodesById(input.nodes),
     setSelectedNodeId: (selectedNodeId) => set({ selectedNodeId }),
     setCurrentNodeId: (currentNodeId) => set({ currentNodeId }),
-    setHistory: (history) => set({ history }),
     markNodeCompleted: (nodeId) =>
       set((state) => {
         const targetNode = state.nodesById[nodeId];

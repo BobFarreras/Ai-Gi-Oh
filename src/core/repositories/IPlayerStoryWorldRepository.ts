@@ -1,5 +1,4 @@
-// src/core/repositories/IPlayerStoryWorldRepository.ts - Contrato de persistencia para estado de nodo actual e historial Story del jugador.
-import { IPlayerStoryHistoryEvent } from "@/core/entities/story/IPlayerStoryHistoryEvent";
+// src/core/repositories/IPlayerStoryWorldRepository.ts - Contrato de persistencia para estado compacto de navegación Story del jugador.
 import { IPlayerStoryWorldCompactState } from "@/core/entities/story/IPlayerStoryWorldCompactState";
 
 export interface IPlayerStoryWorldRepository {
@@ -10,7 +9,4 @@ export interface IPlayerStoryWorldRepository {
     playerId: string,
     state: IPlayerStoryWorldCompactState,
   ) => Promise<void>;
-  listHistoryByPlayerId: (playerId: string, limit?: number) => Promise<IPlayerStoryHistoryEvent[]>;
-  appendHistoryEvents: (playerId: string, events: IPlayerStoryHistoryEvent[]) => Promise<void>;
-  clearHistoryByPlayerId: (playerId: string) => Promise<void>;
 }

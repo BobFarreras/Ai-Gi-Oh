@@ -15,18 +15,17 @@ import { IStoryChapterBriefing } from "@/services/story/build-story-chapter-brie
 import { resolveStoryPrimaryAction } from "@/services/story/resolve-story-primary-action";
 
 interface IStorySceneProps { runtime: IStoryMapRuntimeData; briefing: IStoryChapterBriefing; }
-interface IStoryInteractResponse { history: IStoryMapRuntimeData["history"]; interactionCountForNode: number; }
+interface IStoryInteractResponse { interactionCountForNode: number; }
 
 export function StoryScene({ runtime, briefing }: IStorySceneProps) {
   const router = useRouter();
   // La store local evita que cambios de un subpanel provoquen re-render global del mapa.
-  const [store] = useState<StorySceneStore>(() => createStorySceneStore({ nodes: runtime.nodes, currentNodeId: runtime.currentNodeId, history: runtime.history }));
+  const [store] = useState<StorySceneStore>(() => createStorySceneStore({ nodes: runtime.nodes, currentNodeId: runtime.currentNodeId }));
   const selectedNodeId = useStore(store, (state) => state.selectedNodeId);
   const currentNodeId = useStore(store, (state) => state.currentNodeId);
   const nodesById = useStore(store, (state) => state.nodesById);
   const setSelectedNodeId = useStore(store, (state) => state.setSelectedNodeId);
   const setCurrentNodeId = useStore(store, (state) => state.setCurrentNodeId);
-  const setHistory = useStore(store, (state) => state.setHistory);
   const markNodeCompleted = useStore(store, (state) => state.markNodeCompleted);
   const [isMoving, setIsMoving] = useState(false);
   const [isInteracting, setIsInteracting] = useState(false);
@@ -65,7 +64,7 @@ export function StoryScene({ runtime, briefing }: IStorySceneProps) {
     try {
       const response = await fetch("/api/story/world/move", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ nodeId: selectedNodeId }) });
       if (!response.ok) throw new Error("Movimiento inválido.");
-      const payload = (await response.json()) as { currentNodeId: string | null; history: IStoryMapRuntimeData["history"] };
+      const payload = (await response.json()) as { currentNodeId: string | null };
       if (payload.currentNodeId) {
         const targetNode = nodesById[payload.currentNodeId] ?? null;
         const shouldStaySide =
@@ -77,7 +76,7 @@ export function StoryScene({ runtime, briefing }: IStorySceneProps) {
         await new Promise((resolve) => setTimeout(resolve, shouldStaySide ? 360 : 420));
         if (!shouldStaySide) await centerAvatarOnNode(payload.currentNodeId);
       }
-      setHistory(payload.history); await new Promise((resolve) => setTimeout(resolve, 420));
+      await new Promise((resolve) => setTimeout(resolve, 420));
       if (triggerActionAfterMove && selectedNode && selectedNode.nodeType !== "MOVE") await handlePrimaryAction(selectedNode);
     } catch { setMovementError("No se pudo mover al nodo seleccionado."); } finally { setIsMoving(false); }
   };
@@ -96,7 +95,6 @@ export function StoryScene({ runtime, briefing }: IStorySceneProps) {
       const response = await fetch("/api/story/world/interact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ nodeId: targetNode.id }) });
       if (!response.ok) throw new Error("Interacción inválida.");
       const payload = (await response.json()) as IStoryInteractResponse;
-      setHistory(payload.history);
       markNodeCompleted(targetNode.id);
       const opened = interactionDialog.start(targetNode, payload.interactionCountForNode);
       setPendingCenterNodeId(targetNode.id);

@@ -21,7 +21,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         currentNodeId: STORY_DEFAULT_START_NODE_ID,
-        history: [],
       },
       { status: 200, headers: response.headers },
     );

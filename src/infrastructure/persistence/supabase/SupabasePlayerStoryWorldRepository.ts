@@ -1,7 +1,6 @@
-// src/infrastructure/persistence/supabase/SupabasePlayerStoryWorldRepository.ts - Persistencia Supabase del cursor de mapa Story e historial de eventos.
+// src/infrastructure/persistence/supabase/SupabasePlayerStoryWorldRepository.ts - Persistencia Supabase del estado compacto de navegación Story.
 import { SupabaseClient } from "@supabase/supabase-js";
 import { ValidationError } from "@/core/errors/ValidationError";
-import { IPlayerStoryHistoryEvent } from "@/core/entities/story/IPlayerStoryHistoryEvent";
 import { IPlayerStoryWorldCompactState } from "@/core/entities/story/IPlayerStoryWorldCompactState";
 import { IPlayerStoryWorldRepository } from "@/core/repositories/IPlayerStoryWorldRepository";
 
@@ -10,26 +9,6 @@ interface IStoryWorldStateRow {
   current_node_id: string | null;
   visited_node_ids?: string[] | null;
   interacted_node_ids?: string[] | null;
-}
-
-interface IStoryHistoryRow {
-  event_id: string;
-  player_id: string;
-  node_id: string;
-  kind: "MOVE" | "NODE_RESOLVED" | "REWARD_GRANTED" | "INTERACTION";
-  details: string;
-  created_at: string;
-}
-
-function toHistoryEntity(row: IStoryHistoryRow): IPlayerStoryHistoryEvent {
-  return {
-    eventId: row.event_id,
-    playerId: row.player_id,
-    nodeId: row.node_id,
-    kind: row.kind,
-    details: row.details,
-    createdAtIso: row.created_at,
-  };
 }
 
 export class SupabasePlayerStoryWorldRepository implements IPlayerStoryWorldRepository {
@@ -87,38 +66,4 @@ export class SupabasePlayerStoryWorldRepository implements IPlayerStoryWorldRepo
     if (error) throw new ValidationError("No se pudo guardar estado compacto de Story.");
   }
 
-  async listHistoryByPlayerId(playerId: string, limit = 20): Promise<IPlayerStoryHistoryEvent[]> {
-    const { data, error } = await this.client
-      .from("player_story_history_events")
-      .select("event_id,player_id,node_id,kind,details,created_at")
-      .eq("player_id", playerId)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-    if (error) throw new ValidationError("No se pudo cargar el historial Story.");
-    return ((data ?? []) as IStoryHistoryRow[]).map(toHistoryEntity);
-  }
-
-  async appendHistoryEvents(playerId: string, events: IPlayerStoryHistoryEvent[]): Promise<void> {
-    if (events.length === 0) return;
-    const rows = events.map((event) => ({
-      event_id: event.eventId,
-      player_id: playerId,
-      node_id: event.nodeId,
-      kind: event.kind,
-      details: event.details,
-      created_at: event.createdAtIso,
-    }));
-    const { error } = await this.client
-      .from("player_story_history_events")
-      .upsert(rows, { onConflict: "event_id" });
-    if (error) throw new ValidationError("No se pudo guardar eventos de historial Story.");
-  }
-
-  async clearHistoryByPlayerId(playerId: string): Promise<void> {
-    const { error } = await this.client
-      .from("player_story_history_events")
-      .delete()
-      .eq("player_id", playerId);
-    if (error) throw new ValidationError("No se pudo limpiar historial Story.");
-  }
 }

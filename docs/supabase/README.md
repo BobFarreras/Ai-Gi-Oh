@@ -58,9 +58,6 @@
 23. `public.player_story_world_state`:
    - estado compacto Story por jugador (`current_node_id`, `visited_node_ids`, `interacted_node_ids`).
    - 1 fila por usuario.
-24. `public.player_story_history_events`:
-   - historial legacy de eventos Story (`MOVE`, `NODE_RESOLVED`, `REWARD_GRANTED`, `INTERACTION`).
-   - múltiples filas por usuario ordenadas por `created_at`.
 
 ## Fase 2 (Perfil y Progreso)
 
@@ -211,8 +208,7 @@
 
 1. Ejecuta `docs/supabase/sql/014_phase_e_story_virtual_interactions.sql`.
 2. Ajustes principales:
-   - `player_story_history_events.kind` acepta `INTERACTION`.
-   - `player_story_history_events.node_id` ya no requiere FK a `story_duels` para permitir nodos virtuales.
+   - (legacy) ajustes sobre `player_story_history_events` para permitir nodos virtuales.
 
 ## Fase F (Estado compacto Story)
 
@@ -222,7 +218,14 @@
    - se añaden `visited_node_ids` e `interacted_node_ids` en la misma tabla.
 3. Uso previsto:
    - la navegación Story usa solo estado compacto (`current + visited + interacted`).
-   - `player_story_history_events` queda como soporte legacy, no crítico para runtime.
+   - el historial legacy puede eliminarse con fase de cleanup.
+
+## Fase F.1 (Cleanup historial legacy Story)
+
+1. Ejecuta `docs/supabase/sql/016_phase_f_story_history_cleanup.sql`.
+2. Resultado:
+   - se elimina `public.player_story_history_events` y sus políticas/índice asociados.
+   - runtime Story sigue operativo al usar solo `player_story_world_state`.
 
 ## Notas
 

@@ -63,7 +63,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        history: [],
         interactionCountForNode,
       },
       { status: 200, headers: response.headers },

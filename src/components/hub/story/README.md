@@ -38,7 +38,6 @@ story/
       panels/
         StorySidebar.tsx
         StoryBriefingPanel.tsx
-        StoryHistoryPanel.tsx
       state/
         resolve-story-scene-can-move.ts
         resolve-story-scene-can-move.test.ts

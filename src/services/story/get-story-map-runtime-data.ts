@@ -138,6 +138,5 @@ export async function getStoryMapRuntimeData(): Promise<IStoryMapRuntimeData | n
     playerId: session.user.id,
     nodes: chapterNodes,
     currentNodeId: chapterCurrentNodeId,
-    history: [],
   };
 }

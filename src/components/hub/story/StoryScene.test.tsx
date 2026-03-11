@@ -32,7 +32,6 @@ function createMockNode(overrides: Partial<IStoryMapNodeRuntime>): IStoryMapNode
 const mockRuntime: IStoryMapRuntimeData = {
   playerId: "player-1",
   currentNodeId: "story-ch1-duel-1",
-  history: [],
   nodes: [
     createMockNode({ id: "story-ch1-duel-1", nodeType: "MOVE", isCompleted: true }),
     createMockNode({ id: "story-ch1-duel-2", title: "Nodo Objetivo", unlockRequirementNodeId: "story-ch1-duel-1" }),

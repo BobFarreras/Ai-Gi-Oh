@@ -40,7 +40,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           currentNodeId: effectiveCurrentNodeId,
-          history: [],
         },
         { status: 200, headers: response.headers },
       );
@@ -64,7 +63,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         currentNodeId: nextCompactState.currentNodeId,
-        history: [],
       },
       { status: 200, headers: response.headers },
     );
