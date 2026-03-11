@@ -11,15 +11,18 @@ import { SupabasePlayerProgressRepository } from "@/infrastructure/persistence/s
 import { SupabasePlayerStoryDuelProgressRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerStoryDuelProgressRepository";
 import { SupabasePlayerStoryWorldRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerStoryWorldRepository";
 import { loadCardsByIds } from "@/infrastructure/persistence/supabase/internal/load-cards-by-ids";
+import { resolveStoryDuelCompletionInput } from "@/services/story/duel-flow/resolve-story-duel-completion-input";
+import { didWinFromStoryOutcome } from "@/services/story/duel-flow/story-duel-outcome";
 import { resolveStoryRewardCards } from "@/services/story/resolve-story-reward-cards";
 import { applyStoryMoveToCompactState } from "@/services/story/story-compact-state";
 import { getAuthenticatedUserId } from "@/services/auth/api/internal/get-authenticated-user-id";
 import { createPlayerRouteRepositories } from "@/services/player-persistence/create-player-route-repositories";
 
 interface ICompleteStoryDuelPayload {
-  chapter: number;
-  duelIndex: number;
-  didWin: boolean;
+  chapter?: unknown;
+  duelIndex?: unknown;
+  didWin?: unknown;
+  outcome?: unknown;
 }
 
 function buildRewardCardsPayload(cardsById: Map<string, ICard>, rewardCardIds: string[]): ICard[] {
@@ -35,7 +38,7 @@ async function commitStoryNodeResolution(input: {
   opponentRepository: SupabaseOpponentRepository;
   storyProgressRepository: SupabasePlayerStoryDuelProgressRepository;
   storyWorldRepository: SupabasePlayerStoryWorldRepository;
-}) {
+}): Promise<string> {
   const worldStateUseCase = new GetStoryWorldStateUseCase(input.opponentRepository, input.storyProgressRepository);
   const worldState = await worldStateUseCase.execute({ playerId: input.playerId });
   const resolveNodeUseCase = new ResolveStoryNodeUseCase();
@@ -54,6 +57,7 @@ async function commitStoryNodeResolution(input: {
     targetNodeId: input.nodeId,
   });
   await input.storyWorldRepository.saveCompactStateByPlayerId(input.playerId, nextState);
+  return nextState.currentNodeId ?? input.nodeId;
 }
 
 async function moveBackOnStoryDefeat(input: {
@@ -62,7 +66,7 @@ async function moveBackOnStoryDefeat(input: {
   opponentRepository: SupabaseOpponentRepository;
   storyProgressRepository: SupabasePlayerStoryDuelProgressRepository;
   storyWorldRepository: SupabasePlayerStoryWorldRepository;
-}) {
+}): Promise<string> {
   const worldStateUseCase = new GetStoryWorldStateUseCase(input.opponentRepository, input.storyProgressRepository);
   const worldState = await worldStateUseCase.execute({ playerId: input.playerId });
   const node = worldState.graph.nodes.find((entry) => entry.id === input.nodeId);
@@ -74,6 +78,7 @@ async function moveBackOnStoryDefeat(input: {
     targetNodeId: fallbackNodeId,
   });
   await input.storyWorldRepository.saveCompactStateByPlayerId(input.playerId, nextState);
+  return nextState.currentNodeId ?? fallbackNodeId;
 }
 
 export async function POST(request: NextRequest) {
@@ -82,41 +87,52 @@ export async function POST(request: NextRequest) {
     const repositories = await createPlayerRouteRepositories(request, response);
     const playerId = await getAuthenticatedUserId(repositories.client);
     const payload = (await request.json()) as ICompleteStoryDuelPayload;
-    if (!Number.isInteger(payload.chapter) || payload.chapter <= 0) throw new ValidationError("Capítulo inválido.");
-    if (!Number.isInteger(payload.duelIndex) || payload.duelIndex <= 0) throw new ValidationError("Índice de duelo inválido.");
-    if (typeof payload.didWin !== "boolean") throw new ValidationError("El resultado del duelo es obligatorio.");
+    const input = resolveStoryDuelCompletionInput(payload);
+    if (!input) throw new ValidationError("El resultado del duelo Story es inválido.");
+    const didWin = didWinFromStoryOutcome(input.outcome);
 
     const opponentRepository = new SupabaseOpponentRepository(repositories.client);
     const storyProgressRepository = new SupabasePlayerStoryDuelProgressRepository(repositories.client);
     const storyWorldRepository = new SupabasePlayerStoryWorldRepository(repositories.client);
     const playerProgressRepository = new SupabasePlayerProgressRepository(repositories.client);
-    const duel = await opponentRepository.getStoryDuel(payload.chapter, payload.duelIndex);
+    const duel = await opponentRepository.getStoryDuel(input.chapter, input.duelIndex);
     if (!duel) throw new ValidationError("No se encontró el duelo Story solicitado.");
 
     const previous = await storyProgressRepository.getByPlayerAndDuelId(playerId, duel.id);
-    const duelProgress = await storyProgressRepository.registerDuelResult(playerId, duel.id, payload.didWin);
-    const firstVictory = payload.didWin && previous?.bestResult !== "WON";
-    if (payload.didWin) {
+    const duelProgress = await storyProgressRepository.registerDuelResult(playerId, duel.id, didWin);
+    const firstVictory = didWin && previous?.bestResult !== "WON";
+    const returnNodeId = didWin
+      ? await commitStoryNodeResolution({
+          playerId,
+          nodeId: duel.id,
+          opponentRepository,
+          storyProgressRepository,
+          storyWorldRepository,
+        }).catch(() => duel.id)
+      : await moveBackOnStoryDefeat({
+          playerId,
+          nodeId: duel.id,
+          opponentRepository,
+          storyProgressRepository,
+          storyWorldRepository,
+        }).catch(() => "story-ch1-player-start");
+    if (didWin) {
       // Si la migración de historial Story aún no está aplicada, no bloqueamos el cierre de duelo.
-      await commitStoryNodeResolution({
-        playerId,
-        nodeId: duel.id,
-        opponentRepository,
-        storyProgressRepository,
-        storyWorldRepository,
-      }).catch(() => undefined);
-    } else {
-      await moveBackOnStoryDefeat({
-        playerId,
-        nodeId: duel.id,
-        opponentRepository,
-        storyProgressRepository,
-        storyWorldRepository,
-      }).catch(() => undefined);
+      // El commit de estado se ejecutó arriba para devolver returnNodeId al cliente.
     }
     if (!firstVictory) {
       return NextResponse.json(
-        { duelProgress, rewarded: false, rewardNexus: 0, rewardPlayerExperience: 0, rewardCardIds: [], rewardCards: [] },
+        {
+          duelProgress,
+          rewarded: false,
+          rewardNexus: 0,
+          rewardPlayerExperience: 0,
+          rewardCardIds: [],
+          rewardCards: [],
+          outcome: input.outcome,
+          duelNodeId: duel.id,
+          returnNodeId,
+        },
         { status: 200, headers: response.headers },
       );
     }
@@ -140,6 +156,9 @@ export async function POST(request: NextRequest) {
         rewardCardIds,
         rewardCards,
         playerProgress,
+        outcome: input.outcome,
+        duelNodeId: duel.id,
+        returnNodeId,
       },
       { status: 200, headers: response.headers },
     );
