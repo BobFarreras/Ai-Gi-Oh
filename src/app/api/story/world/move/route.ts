@@ -21,6 +21,18 @@ function resolveLatestHistoryNodeId(history: IPlayerStoryHistoryEvent[]): string
   return history[0]?.nodeId ?? null;
 }
 
+function resolveEffectiveCurrentNodeId(input: {
+  currentNodeId: string | null;
+  history: IPlayerStoryHistoryEvent[];
+  completedNodeIds: string[];
+}): string {
+  const hasProgressSignal =
+    input.completedNodeIds.length > 0 ||
+    input.history.some((event) => event.kind === "MOVE" || event.kind === "INTERACTION");
+  if (!hasProgressSignal) return "story-ch1-player-start";
+  return resolveLatestHistoryNodeId(input.history) ?? input.currentNodeId ?? "story-ch1-player-start";
+}
+
 function buildVirtualMoveEvent(input: { playerId: string; nodeId: string; title: string }): IPlayerStoryHistoryEvent {
   const nowIso = new Date().toISOString();
   return {
@@ -53,7 +65,11 @@ export async function POST(request: NextRequest) {
     const interactedNodeIds = currentHistory
       .filter((event) => event.kind === "INTERACTION")
       .map((event) => event.nodeId);
-    const effectiveCurrentNodeId = resolveLatestHistoryNodeId(currentHistory) ?? currentNodeId;
+    const effectiveCurrentNodeId = resolveEffectiveCurrentNodeId({
+      currentNodeId,
+      history: currentHistory,
+      completedNodeIds: worldState.progress.completedNodeIds,
+    });
     const moveMode = resolveStoryWorldMoveMode({
       targetNodeId: payload.nodeId,
       currentNodeId: effectiveCurrentNodeId,
