@@ -22,12 +22,13 @@
 - Se unificó la construcción de `pendingTurnAction` con fábrica dedicada para descartar, seleccionar materiales y selección de cementerio.
 - Se añadieron pruebas negativas de límites de fase/turno para `start-fusion-summon` y `start-fusion-summon-from-execution`.
 - Se extrajeron handlers internos de acciones especiales en `resolve-execution` para reducir branching y centralizar la orquestación.
+- Se consolidaron fixtures base de `IPlayer`/`GameState` en `test-support/state-fixtures.ts` y se reutilizaron en suites de `combat`, `fusion`, `effects`, `phases` y `logging`.
 
 ## 3. Hallazgos priorizados
 
 ### Medio
-- Existe duplicación residual de fixtures entre suites de `combat`, `fusion` y `effects`.
+- Persisten algunos estados inline en pruebas puntuales fuera de los dominios ya consolidados.
 
 ## 4. Plan incremental recomendado (sin big-bang)
-1. Consolidar factories de test entre `combat`, `fusion` y `effects` para evitar duplicación residual.
+1. Extender `test-support/state-fixtures.ts` a suites aisladas con estado inline restante para terminar de homogeneizar pruebas.
 2. Ejecutar `pnpm lint`, `pnpm test`, `pnpm build` al cerrar cada subfase.

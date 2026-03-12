@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { IGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
+import { createTestGameState, createTestPlayer } from "@/core/use-cases/game-engine/test-support/state-fixtures";
 
 const entityCard: ICard = {
   id: "entity-log-1",
@@ -16,41 +17,14 @@ const entityCard: ICard = {
 };
 
 function createState(): GameState {
-  return {
-    playerA: {
-      id: "p1",
-      name: "Neo",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [],
-      hand: [entityCard],
-      graveyard: [],
-      activeEntities: [],
-      activeExecutions: [],
-    },
-    playerB: {
-      id: "p2",
-      name: "Smith",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [],
-      hand: [],
-      graveyard: [],
-      activeEntities: [],
-      activeExecutions: [],
-    },
+  return createTestGameState({
+    playerA: createTestPlayer("p1", { name: "Neo", hand: [entityCard] }),
+    playerB: createTestPlayer("p2", { name: "Smith" }),
     activePlayerId: "p1",
     startingPlayerId: "p2",
     turn: 2,
     phase: "MAIN_1",
-    hasNormalSummonedThisTurn: false,
-    pendingTurnAction: null,
-    combatLog: [],
-  };
+  });
 }
 
 describe("GameEngine CombatLog", () => {

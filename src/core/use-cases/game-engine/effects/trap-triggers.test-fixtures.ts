@@ -2,6 +2,7 @@
 import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
+import { createTestGameState } from "@/core/use-cases/game-engine/test-support/state-fixtures";
 
 export const attackerCard: ICard = {
   id: "atk-card",
@@ -87,39 +88,10 @@ export function createTrapEntity(instanceId: string, card: ICard): IBoardEntity 
  * Estado base reutilizable para pruebas de trampas.
  */
 export function createTrapBaseState(): GameState {
-  return {
-    playerA: {
-      id: "p1",
-      name: "Neo",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [],
-      hand: [],
-      graveyard: [],
-      activeEntities: [],
-      activeExecutions: [],
-    },
-    playerB: {
-      id: "p2",
-      name: "Smith",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [],
-      hand: [],
-      graveyard: [],
-      activeEntities: [],
-      activeExecutions: [],
-    },
+  return createTestGameState({
     activePlayerId: "p1",
     startingPlayerId: "p2",
     turn: 2,
     phase: "BATTLE",
-    hasNormalSummonedThisTurn: false,
-    pendingTurnAction: null,
-    combatLog: [],
-  };
+  });
 }

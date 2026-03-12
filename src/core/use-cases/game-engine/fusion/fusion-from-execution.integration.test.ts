@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
+import { createTestGameState, createTestPlayer } from "@/core/use-cases/game-engine/test-support/state-fixtures";
 
 const fusionExecution: ICard = {
   id: "exec-fusion-gemgpt",
@@ -14,17 +15,10 @@ const fusionExecution: ICard = {
 };
 
 function createState(): GameState {
-  return {
-    playerA: {
-      id: "p1",
+  return createTestGameState({
+    playerA: createTestPlayer("p1", {
       name: "Neo",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [],
       hand: [fusionExecution],
-      graveyard: [],
       activeEntities: [
         {
           instanceId: "m1",
@@ -41,29 +35,13 @@ function createState(): GameState {
           isNewlySummoned: false,
         },
       ],
-      activeExecutions: [],
-    },
-    playerB: {
-      id: "p2",
-      name: "Smith",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [],
-      hand: [],
-      graveyard: [],
-      activeEntities: [],
-      activeExecutions: [],
-    },
+    }),
+    playerB: createTestPlayer("p2", { name: "Smith" }),
     activePlayerId: "p1",
     startingPlayerId: "p1",
     turn: 2,
     phase: "MAIN_1",
-    hasNormalSummonedThisTurn: false,
-    pendingTurnAction: null,
-    combatLog: [],
-  };
+  });
 }
 
 describe("fusión desde ejecución", () => {

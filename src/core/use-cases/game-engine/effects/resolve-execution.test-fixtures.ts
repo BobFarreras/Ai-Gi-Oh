@@ -2,6 +2,7 @@
 import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
+import { createTestGameState, createTestPlayer } from "@/core/use-cases/game-engine/test-support/state-fixtures";
 
 export function createNeutralEntityCard(id: string, attack = 1000, defense = 900): ICard {
   return {
@@ -27,38 +28,19 @@ export function createExecutionEntity(instanceId: string, card: ICard, mode: "AC
 }
 
 export function createExecutionTestPlayer(id: string): IPlayer {
-  return {
-    id,
-    name: id,
-    healthPoints: 8000,
-    maxHealthPoints: 8000,
-    currentEnergy: 10,
-    maxEnergy: 10,
-    deck: [],
-    fusionDeck: [],
-    hand: [],
-    graveyard: [],
-    destroyedPile: [],
-    activeEntities: [],
-    activeExecutions: [],
-  };
+  return createTestPlayer(id, { fusionDeck: [], destroyedPile: [] });
 }
 
 /**
  * Crea un estado base consistente para pruebas de resolveExecution.
  */
 export function createResolveExecutionBaseState(playerA?: Partial<IPlayer>): GameState {
-  const basePlayerA = createExecutionTestPlayer("p1");
-  const basePlayerB = createExecutionTestPlayer("p2");
-  return {
-    playerA: { ...basePlayerA, ...playerA },
-    playerB: basePlayerB,
+  return createTestGameState({
+    playerA: { ...createExecutionTestPlayer("p1"), ...playerA },
+    playerB: createExecutionTestPlayer("p2"),
     activePlayerId: "p1",
     startingPlayerId: "p1",
     turn: 2,
     phase: "MAIN_1",
-    hasNormalSummonedThisTurn: false,
-    pendingTurnAction: null,
-    combatLog: [],
-  };
+  });
 }
