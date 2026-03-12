@@ -10,6 +10,7 @@ import { resolveTrapTrigger } from "@/core/use-cases/game-engine/effects/resolve
 import { startFusionSummonFromExecution } from "@/core/use-cases/game-engine/fusion/start-fusion-summon-from-execution";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
+import { createGraveyardSelectionPendingAction } from "@/core/use-cases/game-engine/state/pending-turn-action-factory";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function suspendFusionExecutionUntilMaterials(
@@ -65,7 +66,7 @@ function startGraveyardSelection(
   if (!hasSelectableGraveyardCard(player, cardType)) {
     throw new GameRuleError("No hay cartas válidas en cementerio para este efecto.");
   }
-  return { ...state, pendingTurnAction: { type: "SELECT_GRAVEYARD_CARD", playerId, executionInstanceId, destination, cardType } };
+  return { ...state, pendingTurnAction: createGraveyardSelectionPendingAction(playerId, executionInstanceId, destination, cardType) };
 }
 
 function appendExecutionResultLogs(state: GameState, playerId: string, executionCardId: string, effectResult: ReturnType<typeof applyExecutionEffect>): GameState {

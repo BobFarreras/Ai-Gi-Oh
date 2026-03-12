@@ -1,12 +1,12 @@
 // src/core/use-cases/game-engine/fusion/fuse-cards-from-execution.ts - Resuelve invocación de fusión disparada por una ejecución activa.
 import { IPlayer } from "@/core/entities/IPlayer";
-import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { assertFusionCardInFusionDeck } from "@/core/use-cases/game-engine/fusion/internal/assert-fusion-card-in-fusion-deck";
 import { findFusionCardById } from "@/core/use-cases/game-engine/fusion/internal/fusion-card-catalog";
 import { getFusionRecipeByResultId } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
+import { assertMainPhaseActionAllowedForActivePlayer } from "@/core/use-cases/game-engine/state/action-flow-preconditions";
 import { defaultGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
@@ -18,9 +18,10 @@ export function fuseCardsFromExecution(
   recipeId: string,
   materialInstanceIds: [string, string],
 ): GameState {
-  if (state.pendingTurnAction) throw new GameRuleError("Debes resolver la acción obligatoria antes de fusionar.");
-  if (state.activePlayerId !== playerId) throw new GameRuleError("No es tu turno.");
-  if (state.phase !== "MAIN_1") throw new GameRuleError("Solo puedes fusionar en MAIN_1.");
+  assertMainPhaseActionAllowedForActivePlayer(state, playerId, {
+    pendingActionMessage: "Debes resolver la acción obligatoria antes de fusionar.",
+    phaseMessage: "Solo puedes fusionar en MAIN_1.",
+  });
   const { player, opponent, isPlayerA } = getPlayerPair(state, playerId);
   assertFusionCardInFusionDeck(player, recipeId);
   const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);

@@ -3,6 +3,7 @@ import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { drawTopDeckCard } from "@/core/use-cases/game-engine/state/player-utils";
+import { createDiscardForHandLimitPendingAction } from "@/core/use-cases/game-engine/state/pending-turn-action-factory";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function resetEntitiesForNewTurn(entities: IBoardEntity[]): IBoardEntity[] {
@@ -17,7 +18,7 @@ function resolveTurnStartForPlayer(player: IPlayer, playerId: string): { player:
   if (player.hand.length >= 5) {
     return {
       player,
-      pendingTurnAction: { type: "DISCARD_FOR_HAND_LIMIT", playerId },
+      pendingTurnAction: createDiscardForHandLimitPendingAction(playerId),
     };
   }
 

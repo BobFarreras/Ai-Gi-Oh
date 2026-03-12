@@ -18,13 +18,15 @@
 - Se reemplazaron cabeceras genéricas por descripciones específicas en módulos de `game-engine`.
 - Se dividió `actions/play-and-execution.integration.test.ts` en suites específicas de reglas de juego, ejecución/trampas y cambio de modo.
 - Se extrajeron fixtures transversales para `effects/` y `phases/` y se añadieron pruebas de error para `resolveExecution` y `resolvePendingTurnAction`.
+- Se consolidaron validaciones repetidas de turno/fase para flujos de fusión y se simplificó `resolve-pending-turn-action` mediante resolvers internos por tipo.
+- Se unificó la construcción de `pendingTurnAction` con fábrica dedicada para descartar, seleccionar materiales y selección de cementerio.
 
 ## 3. Hallazgos priorizados
 
 ### Medio
-- Revisar consistencia de factories de test entre subdominios (`combat`, `fusion`, `effects`) para evitar utilidades duplicadas.
+- Aún hay oportunidad de aplicar la misma estrategia de extracción por resolvers en otros casos de uso largos (`resolve-execution`).
 
 ## 4. Plan incremental recomendado (sin big-bang)
-1. Evaluar convergencia de fixtures compartidas entre `combat/`, `fusion/` y `effects/` en utilidades comunes de test.
-2. Añadir tests negativos para límites de fase/turno en `start-fusion-summon` y `start-fusion-summon-from-execution`.
+1. Evaluar extracción por estrategia en `resolve-execution` para reducir branching y orquestación en un único módulo.
+2. Añadir tests negativos explícitos para límites de fase/turno en `start-fusion-summon` y `start-fusion-summon-from-execution`.
 3. Ejecutar `pnpm lint`, `pnpm test`, `pnpm build` al cerrar cada subfase.
