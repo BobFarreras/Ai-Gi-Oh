@@ -1,8 +1,12 @@
 // src/core/use-cases/game-engine/actions/resolve-execution.graveyard-selection.integration.test.ts - Verifica flujo pendiente para revivir desde cementerio con selección manual.
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
-import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
+import {
+  createExecutionEntity,
+  createExecutionTestPlayer,
+  createResolveExecutionBaseState,
+} from "@/core/use-cases/game-engine/effects/resolve-execution.test-fixtures";
 
 const reviveToHand: ICard = {
   id: "exec-revive-hand",
@@ -36,46 +40,12 @@ const graveTrap: ICard = {
   cost: 1,
 };
 
-function createPlayer(id: string): IPlayer {
-  return {
-    id,
-    name: id,
-    healthPoints: 8000,
-    maxHealthPoints: 8000,
-    currentEnergy: 10,
-    maxEnergy: 10,
-    deck: [],
-    fusionDeck: [],
-    hand: [],
-    graveyard: [],
-    destroyedPile: [],
-    activeEntities: [],
-    activeExecutions: [],
-  };
-}
-
 function createState(): GameState {
-  const executionEntity: IBoardEntity = {
-    instanceId: "exec-1",
-    card: reviveToHand,
-    mode: "ACTIVATE",
-    hasAttackedThisTurn: false,
-    isNewlySummoned: false,
-  };
-  const playerA = createPlayer("p1");
+  const executionEntity = createExecutionEntity("exec-1", reviveToHand);
+  const playerA = createExecutionTestPlayer("p1");
   playerA.activeExecutions = [executionEntity];
   playerA.graveyard = [graveTrap, revivedEntity];
-  return {
-    playerA,
-    playerB: createPlayer("p2"),
-    activePlayerId: "p1",
-    startingPlayerId: "p1",
-    turn: 1,
-    phase: "MAIN_1",
-    hasNormalSummonedThisTurn: false,
-    pendingTurnAction: null,
-    combatLog: [],
-  };
+  return createResolveExecutionBaseState(playerA);
 }
 
 describe("resolveExecution con selección de cementerio", () => {

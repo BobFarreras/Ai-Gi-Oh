@@ -17,13 +17,14 @@
 - Se dividió `combat/combat-and-phase.integration.test.ts` en suites de combate y transición de fase con fixtures compartidas.
 - Se reemplazaron cabeceras genéricas por descripciones específicas en módulos de `game-engine`.
 - Se dividió `actions/play-and-execution.integration.test.ts` en suites específicas de reglas de juego, ejecución/trampas y cambio de modo.
+- Se extrajeron fixtures transversales para `effects/` y `phases/` y se añadieron pruebas de error para `resolveExecution` y `resolvePendingTurnAction`.
 
 ## 3. Hallazgos priorizados
 
 ### Medio
-- Aún existen oportunidades de extracción adicional de fixtures compartidas entre `actions/` y `effects/`.
+- Revisar consistencia de factories de test entre subdominios (`combat`, `fusion`, `effects`) para evitar utilidades duplicadas.
 
 ## 4. Plan incremental recomendado (sin big-bang)
-1. Evaluar extracción transversal de fixtures para `effects/` y `phases/` donde persista duplicación de estado base.
-2. Revisar cobertura de rutas de error en `resolve-pending-turn-action` y `resolve-execution` para asegurar regresión fina.
+1. Evaluar convergencia de fixtures compartidas entre `combat/`, `fusion/` y `effects/` en utilidades comunes de test.
+2. Añadir tests negativos para límites de fase/turno en `start-fusion-summon` y `start-fusion-summon-from-execution`.
 3. Ejecutar `pnpm lint`, `pnpm test`, `pnpm build` al cerrar cada subfase.
