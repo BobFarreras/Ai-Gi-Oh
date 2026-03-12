@@ -1,9 +1,9 @@
 // src/app/api/story/world/reset/route.ts - Reinicia estado navegable Story compacto (posición, visitados e interacciones).
 import { NextRequest, NextResponse } from "next/server";
-import { ValidationError } from "@/core/errors/ValidationError";
 import { SupabasePlayerStoryWorldRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerStoryWorldRepository";
 import { getAuthenticatedUserId } from "@/services/auth/api/internal/get-authenticated-user-id";
 import { createPlayerRouteRepositories } from "@/services/player-persistence/create-player-route-repositories";
+import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
 import { requireTrustedMutationOrigin } from "@/services/security/api/require-trusted-mutation-origin";
 
 const STORY_DEFAULT_START_NODE_ID = "story-ch1-player-start";
@@ -28,9 +28,6 @@ export async function POST(request: NextRequest) {
       { status: 200, headers: response.headers },
     );
   } catch (error) {
-    if (error instanceof ValidationError) {
-      return NextResponse.json({ message: error.message }, { status: 400 });
-    }
-    return NextResponse.json({ message: "No se pudo reiniciar el estado Story." }, { status: 400 });
+    return createApiErrorResponse(error, "No se pudo reiniciar el estado Story.");
   }
 }

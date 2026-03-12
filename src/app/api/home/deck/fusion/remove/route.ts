@@ -1,8 +1,7 @@
 // src/app/api/home/deck/fusion/remove/route.ts - Vacía un slot del bloque de fusión del Arsenal.
 import { NextRequest, NextResponse } from "next/server";
-import { GameRuleError } from "@/core/errors/GameRuleError";
-import { ValidationError } from "@/core/errors/ValidationError";
 import { createHomeRouteContext } from "@/app/api/home/internal/create-home-route-context";
+import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
 import { requireTrustedMutationOrigin } from "@/services/security/api/require-trusted-mutation-origin";
 import {
   readJsonObjectBody,
@@ -22,9 +21,6 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json(deck, { status: 200, headers: context.response.headers });
   } catch (error) {
-    if (error instanceof ValidationError || error instanceof GameRuleError) {
-      return NextResponse.json({ message: error.message }, { status: 400 });
-    }
-    return NextResponse.json({ message: "No se pudo retirar la carta del bloque de fusión." }, { status: 400 });
+    return createApiErrorResponse(error, "No se pudo retirar la carta del bloque de fusión.");
   }
 }

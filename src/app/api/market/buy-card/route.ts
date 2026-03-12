@@ -1,9 +1,8 @@
 // src/app/api/market/buy-card/route.ts - Ejecuta compra de carta individual y devuelve catálogo actualizado.
 import { NextRequest, NextResponse } from "next/server";
-import { ValidationError } from "@/core/errors/ValidationError";
-import { GameRuleError } from "@/core/errors/GameRuleError";
 import { createMarketRouteContext } from "@/app/api/market/internal/create-market-route-context";
 import { IMarketRuntimeSnapshot } from "@/services/market/market-runtime-snapshot";
+import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
 import { requireTrustedMutationOrigin } from "@/services/security/api/require-trusted-mutation-origin";
 import { readJsonObjectBody, readRequiredStringField } from "@/services/security/api/request-body-parser";
 
@@ -23,12 +22,6 @@ export async function POST(request: NextRequest) {
     const snapshot: IMarketRuntimeSnapshot = { catalog, transactions, collection };
     return NextResponse.json(snapshot, { status: 200, headers: context.response.headers });
   } catch (error) {
-    if (error instanceof ValidationError || error instanceof GameRuleError) {
-      return NextResponse.json({ message: error.message }, { status: 400 });
-    }
-    return NextResponse.json(
-      { message: "No se pudo completar la compra de carta. Revisa saldo Nexus, stock y disponibilidad." },
-      { status: 400 },
-    );
+    return createApiErrorResponse(error, "No se pudo completar la compra de carta. Revisa saldo Nexus, stock y disponibilidad.");
   }
 }

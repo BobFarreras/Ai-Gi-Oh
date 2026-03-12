@@ -10,6 +10,7 @@ import { getAuthenticatedUserId } from "@/services/auth/api/internal/get-authent
 import { findStoryVirtualNodeDefinition } from "@/services/story/map-definitions/story-map-definition-registry";
 import { applyStoryInteractionToCompactState } from "@/services/story/story-compact-state";
 import { createPlayerRouteRepositories } from "@/services/player-persistence/create-player-route-repositories";
+import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
 import { requireTrustedMutationOrigin } from "@/services/security/api/require-trusted-mutation-origin";
 import { readJsonObjectBody, readRequiredStringField } from "@/services/security/api/request-body-parser";
 
@@ -80,9 +81,6 @@ export async function POST(request: NextRequest) {
       { status: 200, headers: response.headers },
     );
   } catch (error) {
-    if (error instanceof ValidationError) {
-      return NextResponse.json({ message: error.message }, { status: 400 });
-    }
-    return NextResponse.json({ message: "No se pudo registrar la interacción Story." }, { status: 400 });
+    return createApiErrorResponse(error, "No se pudo registrar la interacción Story.");
   }
 }
