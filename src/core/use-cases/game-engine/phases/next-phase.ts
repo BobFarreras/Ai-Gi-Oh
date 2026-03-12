@@ -2,6 +2,7 @@
 import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
+import { drawTopDeckCard } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function resetEntitiesForNewTurn(entities: IBoardEntity[]): IBoardEntity[] {
@@ -10,20 +11,6 @@ function resetEntitiesForNewTurn(entities: IBoardEntity[]): IBoardEntity[] {
     hasAttackedThisTurn: false,
     isNewlySummoned: false,
   }));
-}
-
-function drawCard(player: IPlayer): IPlayer {
-  const nextCard = player.deck[0];
-
-  if (!nextCard) {
-    return player;
-  }
-
-  return {
-    ...player,
-    hand: [...player.hand, nextCard],
-    deck: player.deck.slice(1),
-  };
 }
 
 function resolveTurnStartForPlayer(player: IPlayer, playerId: string): { player: IPlayer; pendingTurnAction: GameState["pendingTurnAction"] } {
@@ -35,7 +22,7 @@ function resolveTurnStartForPlayer(player: IPlayer, playerId: string): { player:
   }
 
   return {
-    player: drawCard(player),
+    player: drawTopDeckCard(player),
     pendingTurnAction: null,
   };
 }

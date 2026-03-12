@@ -7,14 +7,8 @@ import { applyReturnGraveyardCardToField, applyReturnGraveyardCardToHand } from 
 import { fuseCards } from "@/core/use-cases/game-engine/fusion/fuse-cards";
 import { fuseCardsFromExecution } from "@/core/use-cases/game-engine/fusion/fuse-cards-from-execution";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
-import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
+import { assignPlayers, drawTopDeckCard, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
-
-function drawCard(player: IPlayer): IPlayer {
-  const nextCard = player.deck[0];
-  if (!nextCard) return player;
-  return { ...player, hand: [...player.hand, nextCard], deck: player.deck.slice(1) };
-}
 
 export function resolvePendingTurnAction(state: GameState, playerId: string, selectedId: string): GameState {
   if (!state.pendingTurnAction) {
@@ -45,7 +39,7 @@ export function resolvePendingTurnAction(state: GameState, playerId: string, sel
         ...state,
         pendingTurnAction: null,
       },
-      drawCard(updatedPlayer),
+      drawTopDeckCard(updatedPlayer),
       opponent,
       isPlayerA,
     );
@@ -145,6 +139,6 @@ export function resolvePendingTurnAction(state: GameState, playerId: string, sel
     });
   }
 
-  return state;
+  throw new GameRuleError("Tipo de acción obligatoria no soportado.");
 }
 
