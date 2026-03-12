@@ -1,7 +1,11 @@
 // src/core/use-cases/game-engine/actions/internal/execution-effects.ts - Aplica efectos de ejecución sobre estado de jugadores y expone eventos sistémicos.
-import { CardArchetype, ICardEffect } from "@/core/entities/ICard";
+import { ICardEffect } from "@/core/entities/ICard";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
+import {
+  boostArchetypeStat,
+  boostBestAlliedAttack,
+} from "@/core/use-cases/game-engine/actions/internal/execution-effect-buffs";
 import { IExecutionSystemEvent } from "@/core/use-cases/game-engine/actions/internal/execution-return-effects";
 
 interface IBuffSummary {
@@ -91,53 +95,4 @@ function applyDamageEffect(player: IPlayer, opponent: IPlayer, value: number, ta
 function applyHealEffect(player: IPlayer, value: number): { updatedPlayer: IPlayer; healApplied: number } {
   const nextHealth = Math.min(player.maxHealthPoints, player.healthPoints + value);
   return { updatedPlayer: { ...player, healthPoints: nextHealth }, healApplied: Math.max(0, nextHealth - player.healthPoints) };
-}
-
-function boostBestAlliedAttack(player: IPlayer, value: number): { updatedPlayer: IPlayer; buffIds: string[] } {
-  if (player.activeEntities.length === 0) {
-    throw new GameRuleError("No tienes entidades en campo para aumentar ATK.");
-  }
-  const bestEntity = player.activeEntities.reduce((best, entity) => ((entity.card.attack ?? 0) > (best.card.attack ?? 0) ? entity : best));
-  return {
-    buffIds: [bestEntity.instanceId],
-    updatedPlayer: {
-      ...player,
-      activeEntities: player.activeEntities.map((entity) =>
-        entity.instanceId === bestEntity.instanceId
-          ? { ...entity, card: { ...entity.card, attack: (entity.card.attack ?? 0) + value } }
-          : entity,
-      ),
-    },
-  };
-}
-
-function boostArchetypeStat(
-  player: IPlayer,
-  stat: "ATTACK" | "DEFENSE",
-  archetype: CardArchetype,
-  value: number,
-): { updatedPlayer: IPlayer; buffIds: string[] } {
-  const buffIds = player.activeEntities
-    .filter((entity) => entity.card.archetype === archetype)
-    .map((entity) => entity.instanceId);
-  if (buffIds.length === 0) {
-    throw new GameRuleError(`No hay entidades ${archetype} para aumentar ${stat === "ATTACK" ? "ATK" : "DEF"}.`);
-  }
-  return {
-    buffIds,
-    updatedPlayer: {
-      ...player,
-      activeEntities: player.activeEntities.map((entity) =>
-        entity.card.archetype !== archetype
-          ? entity
-          : {
-              ...entity,
-              card:
-                stat === "ATTACK"
-                  ? { ...entity.card, attack: (entity.card.attack ?? 0) + value }
-                  : { ...entity.card, defense: (entity.card.defense ?? 0) + value },
-            },
-      ),
-    },
-  };
 }

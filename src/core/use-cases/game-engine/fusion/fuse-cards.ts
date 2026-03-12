@@ -1,4 +1,4 @@
-// src/core/use-cases/game-engine/fusion/fuse-cards.ts - Descripción breve del módulo.
+// src/core/use-cases/game-engine/fusion/fuse-cards.ts - Caso de uso principal para fusionar cartas desde mano con validaciones y logs.
 import { BattleMode } from "@/core/entities/IPlayer";
 import { applyFusionResult } from "@/core/use-cases/game-engine/fusion/internal/apply-fusion-result";
 import { appendFusionLogs } from "@/core/use-cases/game-engine/fusion/internal/append-fusion-logs";
@@ -15,7 +15,7 @@ export function fuseCards(
 ): GameState {
   validateFusionPreconditions(state, playerId, mode);
   const { player, opponent, isPlayerA } = getPlayerPair(state, playerId);
-  const fusionContext = createFusionContext(player, opponent, fusionCardId, materialInstanceIds, mode);
+  const fusionContext = { ...createFusionContext(player, opponent, fusionCardId, materialInstanceIds, mode), idFactory: state.idFactory };
   const fusionResolution = applyFusionResult(fusionContext);
   const nextState = assignPlayers(state, fusionResolution.updatedPlayer, opponent, isPlayerA);
   return appendFusionLogs({

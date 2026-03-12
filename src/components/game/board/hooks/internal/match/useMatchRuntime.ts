@@ -16,9 +16,10 @@ interface IUseMatchRuntimeParams {
   gameStateRef: MutableRefObject<GameState>;
   uiState: IUseMatchUiStateResult;
   winnerPlayerId: string | "DRAW" | null;
+  isMatchStartLocked?: boolean;
 }
 
-export function useMatchRuntime({ campaignProgress, gameStateRef, uiState, winnerPlayerId }: IUseMatchRuntimeParams) {
+export function useMatchRuntime({ campaignProgress, gameStateRef, uiState, winnerPlayerId, isMatchStartLocked = false }: IUseMatchRuntimeParams) {
   const opponentDifficulty = useMemo(() => resolveDifficultyFromCampaign(campaignProgress), [campaignProgress]);
   const opponentStrategy = useMemo(() => new HeuristicOpponentStrategy({ difficulty: opponentDifficulty }), [opponentDifficulty]);
 
@@ -60,6 +61,7 @@ export function useMatchRuntime({ campaignProgress, gameStateRef, uiState, winne
   useOpponentTurn({
     gameState: uiState.gameState,
     isAnimating: uiState.isActionLocked,
+    isMatchStartLocked,
     strategy: opponentStrategy,
     duelWinnerId: winnerPlayerId,
     applyTransition,

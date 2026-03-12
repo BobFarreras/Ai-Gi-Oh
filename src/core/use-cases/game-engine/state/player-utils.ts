@@ -1,4 +1,4 @@
-// src/core/use-cases/game-engine/state/player-utils.ts - Descripción breve del módulo.
+// src/core/use-cases/game-engine/state/player-utils.ts - Utilidades de resolución de jugador activo/oponente y transformaciones comunes de estado.
 import { IPlayer } from "@/core/entities/IPlayer";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
@@ -27,5 +27,14 @@ export function assignPlayers(state: GameState, updatedPlayer: IPlayer, updatedO
     playerA: isPlayerA ? updatedPlayer : updatedOpponent,
     playerB: isPlayerA ? updatedOpponent : updatedPlayer,
   };
+}
+
+/**
+ * Roba la carta superior del mazo si existe y devuelve el jugador actualizado.
+ */
+export function drawTopDeckCard(player: IPlayer): IPlayer {
+  const nextCard = player.deck[0];
+  if (!nextCard) return player;
+  return { ...player, hand: [...player.hand, nextCard], deck: player.deck.slice(1) };
 }
 

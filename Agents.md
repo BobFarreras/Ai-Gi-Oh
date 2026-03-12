@@ -91,3 +91,21 @@
 * **JSDoc en contratos clave:** Funciones públicas, utilidades compartidas y hooks reutilizables deben incluir JSDoc corto con entrada/salida o efecto.
 * **Prohibido comentario redundante:** No se aceptan comentarios obvios (ej. "incrementa contador"); el comentario debe aportar contexto de diseño o decisión.
 * **Objetivo:** Facilitar mantenimiento, onboarding y auditoría técnica sin abrir múltiples archivos para entender el flujo.
+
+## 16. Memoria Persistente con Engram (Mandatory)
+* **Uso obligatorio en tareas con historial:** Antes de refactors, bugfixes o cambios de arquitectura, consultar memoria con `mem_search` o `engram search`.
+* **Guardado obligatorio de hitos:** Tras decisiones técnicas, descubrimientos o fixes validados, registrar memoria con `mem_save` (o `engram save`).
+* **Cierre de sesión obligatorio:** Antes de terminar una sesión, guardar resumen estructurado con `mem_session_summary` (objetivo, hallazgos, cambios, archivos).
+* **Recuperación tras compaction:** Después de pérdida de contexto o compaction, ejecutar `mem_context` (o `engram context`) antes de continuar.
+* **Convención de topic_key:** Usar claves estables por dominio (`architecture/*`, `bug/*`, `decision/*`, `pattern/*`, `config/*`, `discovery/*`).
+
+## 17. Skills del Proyecto y Activación (Mandatory)
+* **Ubicación oficial:** Todas las skills del proyecto viven en `skills/<skill-name>/SKILL.md`.
+* **Formato obligatorio:** Cada skill debe incluir frontmatter YAML con `name` y `description`, además de instrucciones en español.
+* **Activación por intención:** Si la tarea implica memoria, arquitectura, testing o mejora de mantenibilidad documental/comentarios, activar respectivamente:
+  * `skills/engram-memory-protocol/SKILL.md`
+  * `skills/architecture-decision/SKILL.md`
+  * `skills/testing-enforcement/SKILL.md`
+  * `skills/commenting-intent-enforcer/SKILL.md`
+* **Sin bypass de quality gates:** Las skills no pueden relajar normas de SRP, TDD, tipado estricto ni checks de `lint`, `test`, `build`.
+* **Evidencia en PR:** Cualquier cambio relevante debe reflejar qué skill fue aplicada y qué decisión técnica resultó.

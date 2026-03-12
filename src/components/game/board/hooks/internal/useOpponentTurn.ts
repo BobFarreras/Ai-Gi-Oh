@@ -10,6 +10,7 @@ import { IOpponentStepTimings, IOpponentTurnContext } from "./opponent-turn/type
 interface IUseOpponentTurnParams extends IOpponentTurnContext {
   isAnimating: boolean;
   duelWinnerId: string | null;
+  isMatchStartLocked?: boolean;
   strategy: IOpponentStrategy;
   gameState: GameState;
 }
@@ -26,6 +27,7 @@ export function useOpponentTurn({
   isAnimating,
   strategy,
   duelWinnerId,
+  isMatchStartLocked = false,
   applyTransition,
   clearSelection,
   clearError,
@@ -34,7 +36,7 @@ export function useOpponentTurn({
   setRevealedEntities,
 }: IUseOpponentTurnParams): void {
   useEffect(() => {
-    if (duelWinnerId || isAnimating || gameState.activePlayerId !== gameState.playerB.id) return;
+    if (isMatchStartLocked || duelWinnerId || isAnimating || gameState.activePlayerId !== gameState.playerB.id) return;
 
     const context: IOpponentTurnContext = {
       gameState,
@@ -63,6 +65,7 @@ export function useOpponentTurn({
     clearError,
     clearSelection,
     duelWinnerId,
+    isMatchStartLocked,
     gameState,
     isAnimating,
     setActiveAttackerId,

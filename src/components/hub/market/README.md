@@ -53,6 +53,14 @@ src/components/hub/market
 3. Un archivo por responsabilidad; objetivo `< 150` líneas.
 4. Todo elemento interactivo con `aria-label`.
 5. Estado de escena gestionado con store local Zustand para minimizar re-renders.
+6. Render de carta adaptativo por layout:
+   - desktop: calidad completa (fondo visual activo),
+   - móvil: modo `isPerformanceMode` para reducir coste.
+7. En desktop, la pestaña `Almacén` del vault usa grilla de 4 columnas para mejorar densidad visual.
+8. En móvil, los tabs (`Mercado/Packs/Almacén`) mantienen paneles visitados montados y solo alternan visibilidad.
+   - Objetivo: reducir coste de remount y mejorar INP en cambios de pestaña.
+9. El inspector móvil abre con la carta ya resuelta (sin placeholder diferido) para evitar parpadeo visual.
+10. La pestaña `Packs` no fuerza auto-selección al abrir; se evita trabajo extra en el primer tap.
 
 ## Dependencias y flujo
 

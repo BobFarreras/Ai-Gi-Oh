@@ -1,74 +1,37 @@
-// src/core/use-cases/game-engine/fusion/fusion-from-execution.integration.test.ts - Descripción breve del módulo.
+// src/core/use-cases/game-engine/fusion/fusion-from-execution.integration.test.ts - Verifica el flujo de fusión activada desde ejecución y sus efectos en tablero/log.
 import { describe, expect, it } from "vitest";
-import { ICard } from "@/core/entities/ICard";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
-
-const fusionExecution: ICard = {
-  id: "exec-fusion-gemgpt",
-  name: "Fusion Compiler",
-  description: "Inicia fusión.",
-  type: "EXECUTION",
-  faction: "BIG_TECH",
-  cost: 4,
-  effect: { action: "FUSION_SUMMON", recipeId: "fusion-gemgpt", materialsRequired: 2 },
-};
-
-function createState(): GameState {
-  return {
-    playerA: {
-      id: "p1",
-      name: "Neo",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [],
-      hand: [fusionExecution],
-      graveyard: [],
-      activeEntities: [
-        {
-          instanceId: "m1",
-          card: { id: "entity-chatgpt", name: "chatgpt", description: "", type: "ENTITY", faction: "BIG_TECH", cost: 5, attack: 1500, defense: 1200, archetype: "LLM" },
-          mode: "ATTACK",
-          hasAttackedThisTurn: false,
-          isNewlySummoned: false,
-        },
-        {
-          instanceId: "m2",
-          card: { id: "entity-gemini", name: "gemini", description: "", type: "ENTITY", faction: "BIG_TECH", cost: 5, attack: 1500, defense: 1200, archetype: "LLM" },
-          mode: "ATTACK",
-          hasAttackedThisTurn: false,
-          isNewlySummoned: false,
-        },
-      ],
-      activeExecutions: [],
-    },
-    playerB: {
-      id: "p2",
-      name: "Smith",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [],
-      hand: [],
-      graveyard: [],
-      activeEntities: [],
-      activeExecutions: [],
-    },
-    activePlayerId: "p1",
-    startingPlayerId: "p1",
-    turn: 2,
-    phase: "MAIN_1",
-    hasNormalSummonedThisTurn: false,
-    pendingTurnAction: null,
-    combatLog: [],
-  };
-}
+import {
+  createFusionExecutionCard,
+  createFusionMaterialEntity,
+} from "@/core/use-cases/game-engine/fusion/fusion-test-fixtures";
+import {
+  createTestGameState,
+  createTestPlayer,
+} from "@/core/use-cases/game-engine/test-support/state-fixtures";
 
 describe("fusión desde ejecución", () => {
   it("debería iniciar selección y completar fusión al elegir 2 materiales", () => {
-    let state = GameEngine.playCard(createState(), "p1", "exec-fusion-gemgpt", "ACTIVATE");
+    let state = GameEngine.playCard(
+      createTestGameState({
+        playerA: createTestPlayer("p1", {
+          name: "Neo",
+          hand: [createFusionExecutionCard()],
+          activeEntities: [
+            createFusionMaterialEntity("m1", "entity-chatgpt", "BIG_TECH"),
+            createFusionMaterialEntity("m2", "entity-gemini", "BIG_TECH"),
+          ],
+        }),
+        playerB: createTestPlayer("p2", { name: "Smith" }),
+        activePlayerId: "p1",
+        startingPlayerId: "p1",
+        turn: 2,
+        phase: "MAIN_1",
+      }),
+      "p1",
+      "exec-fusion-gemgpt",
+      "ACTIVATE",
+    );
     const executionInstanceId = state.playerA.activeExecutions[0].instanceId;
     state = GameEngine.resolveExecution(state, "p1", executionInstanceId);
     expect(state.pendingTurnAction?.type).toBe("SELECT_FUSION_MATERIALS");
@@ -85,7 +48,21 @@ describe("fusión desde ejecución", () => {
   });
 
   it("si faltan materiales debe quedar en espera sin bloquear el flujo", () => {
-    const base = createState();
+    const base = createTestGameState({
+      playerA: createTestPlayer("p1", {
+        name: "Neo",
+        hand: [createFusionExecutionCard()],
+        activeEntities: [
+          createFusionMaterialEntity("m1", "entity-chatgpt", "BIG_TECH"),
+          createFusionMaterialEntity("m2", "entity-gemini", "BIG_TECH"),
+        ],
+      }),
+      playerB: createTestPlayer("p2", { name: "Smith" }),
+      activePlayerId: "p1",
+      startingPlayerId: "p1",
+      turn: 2,
+      phase: "MAIN_1",
+    });
     const stateWithOneMaterial: GameState = {
       ...base,
       playerA: {

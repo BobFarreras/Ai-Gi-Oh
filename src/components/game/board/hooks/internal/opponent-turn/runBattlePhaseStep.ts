@@ -4,9 +4,25 @@ import { addRevealedId, findReactiveTrap, removeRevealedId } from "../trapPrevie
 import { sleep } from "../sleep";
 import { IOpponentStepTimings, IOpponentTurnContext } from "./types";
 
+function isFirstTurnBattleBlocked(gameState: IOpponentTurnContext["gameState"], opponentId: string): boolean {
+  return gameState.turn === 1 && gameState.startingPlayerId === opponentId;
+}
+
 export async function runBattlePhaseStep(context: IOpponentTurnContext, timings: IOpponentStepTimings): Promise<boolean> {
   const { gameState } = context;
   const opponentId = gameState.playerB.id;
+  if (isFirstTurnBattleBlocked(gameState, opponentId)) {
+    context.setIsAnimating(true);
+    await sleep(280);
+    const nextState = context.applyTransition((state) => GameEngine.nextPhase(state));
+    context.setIsAnimating(false);
+    context.setActiveAttackerId(null);
+    if (nextState && nextState.activePlayerId === nextState.playerA.id) {
+      context.clearSelection();
+      context.clearError();
+    }
+    return true;
+  }
   const attackDecision = context.strategy.chooseAttack(gameState, opponentId);
 
   if (!attackDecision) {

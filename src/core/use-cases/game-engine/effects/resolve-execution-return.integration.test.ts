@@ -1,58 +1,12 @@
 // src/core/use-cases/game-engine/effects/resolve-execution-return.integration.test.ts - Valida retornos desde cementerio a mano/campo y overflow hacia destroyedPile.
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
-import { IBoardEntity } from "@/core/entities/IPlayer";
-import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
-
-function createEntity(instanceId: string, cardId: string, attack = 1000): IBoardEntity {
-  return {
-    instanceId,
-    card: { id: cardId, name: cardId, description: "", type: "ENTITY", faction: "NEUTRAL", cost: 2, attack, defense: 900 },
-    mode: "ATTACK",
-    hasAttackedThisTurn: false,
-    isNewlySummoned: false,
-  };
-}
-
-function createState(executionCard: ICard): GameState {
-  return {
-    playerA: {
-      id: "p1",
-      name: "Neo",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [],
-      hand: [executionCard],
-      graveyard: [],
-      destroyedPile: [],
-      activeEntities: [],
-      activeExecutions: [],
-    },
-    playerB: {
-      id: "p2",
-      name: "Smith",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [],
-      hand: [],
-      graveyard: [],
-      destroyedPile: [],
-      activeEntities: [],
-      activeExecutions: [],
-    },
-    activePlayerId: "p1",
-    startingPlayerId: "p2",
-    turn: 2,
-    phase: "MAIN_1",
-    hasNormalSummonedThisTurn: false,
-    pendingTurnAction: null,
-    combatLog: [],
-  };
-}
+import { GameEngine } from "@/core/use-cases/GameEngine";
+import {
+  createExecutionEntity,
+  createNeutralEntityCard,
+  createResolveExecutionBaseState,
+} from "@/core/use-cases/game-engine/effects/resolve-execution.test-fixtures";
 
 describe("resolveExecution return effects", () => {
   it("devuelve del cementerio a mano y destruye una carta si la mano está llena", () => {
@@ -75,7 +29,9 @@ describe("resolveExecution return effects", () => {
       attack: 500,
       defense: 500,
     }));
-    let state = createState(effectCard);
+    let state = createResolveExecutionBaseState({
+      hand: [effectCard],
+    });
     state = { ...state, playerA: { ...state.playerA, hand: [effectCard, ...extraHandCards], graveyard: [{ ...extraHandCards[0], id: "grave-entity" }] } };
     state = GameEngine.playCard(state, "p1", "exec-return-hand", "ACTIVATE");
     const executionId = state.playerA.activeExecutions[0].instanceId;
@@ -97,13 +53,19 @@ describe("resolveExecution return effects", () => {
       cost: 2,
       effect: { action: "RETURN_GRAVEYARD_CARD_TO_FIELD", cardType: "ENTITY" },
     };
-    let state = createState(effectCard);
+    let state = createResolveExecutionBaseState({
+      hand: [effectCard],
+    });
     state = {
       ...state,
       playerA: {
         ...state.playerA,
-        activeEntities: [createEntity("e1", "field-1", 900), createEntity("e2", "field-2", 950), createEntity("e3", "field-3", 980)],
-        graveyard: [{ id: "grave-target", name: "grave-target", description: "", type: "ENTITY", faction: "NEUTRAL", cost: 2, attack: 1300, defense: 1000 }],
+        activeEntities: [
+          createExecutionEntity("e1", createNeutralEntityCard("field-1", 900), "SET"),
+          createExecutionEntity("e2", createNeutralEntityCard("field-2", 950), "SET"),
+          createExecutionEntity("e3", createNeutralEntityCard("field-3", 980), "SET"),
+        ],
+        graveyard: [createNeutralEntityCard("grave-target", 1300, 1000)],
       },
     };
     state = GameEngine.playCard(state, "p1", "exec-return-field", "ACTIVATE");

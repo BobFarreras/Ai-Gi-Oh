@@ -9,24 +9,40 @@ import { useEffect, useRef, useState } from "react";
 interface MarketListingsPanelProps {
   listings: IMarketCardListing[];
   onSelectCard: (listing: IMarketCardListing) => void;
+  isPerformanceMode: boolean;
 }
 
-export function MarketListingsPanel({ listings, onSelectCard }: MarketListingsPanelProps) {
+export function MarketListingsPanel({ listings, onSelectCard, isPerformanceMode }: MarketListingsPanelProps) {
   const scrollRef = useRef<HTMLElement>(null);
   const [isInitialBatchActive, setIsInitialBatchActive] = useState(true);
+  const [isLiteBackgroundEnabled, setIsLiteBackgroundEnabled] = useState(!isPerformanceMode);
   const windowState = useVirtualGridWindow({
     containerRef: scrollRef,
     itemCount: listings.length,
     itemMinWidth: 90,
     itemHeight: 140,
     gap: 12,
-    overscanRows: 2,
+    overscanRows: isPerformanceMode ? 1 : 2,
   });
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => setIsInitialBatchActive(false), 650);
+    const timeoutId = window.setTimeout(() => setIsInitialBatchActive(false), isPerformanceMode ? 320 : 420);
     return () => window.clearTimeout(timeoutId);
-  }, []);
-  const initialEndIndex = Math.min(windowState.endIndex, windowState.startIndex + 8);
+  }, [isPerformanceMode]);
+  useEffect(() => {
+    if (!isPerformanceMode) return;
+    const idleHandle =
+      typeof window.requestIdleCallback === "function"
+        ? window.requestIdleCallback(() => setIsLiteBackgroundEnabled(true), { timeout: 1200 })
+        : window.setTimeout(() => setIsLiteBackgroundEnabled(true), 900);
+    return () => {
+      if (typeof idleHandle === "number") {
+        window.clearTimeout(idleHandle);
+        return;
+      }
+      window.cancelIdleCallback?.(idleHandle);
+    };
+  }, [isPerformanceMode]);
+  const initialEndIndex = Math.min(windowState.endIndex, windowState.startIndex + (isPerformanceMode ? 3 : 5));
   const endIndex = isInitialBatchActive ? initialEndIndex : windowState.endIndex;
   const visibleListings = listings.slice(windowState.startIndex, endIndex);
   return (
@@ -66,9 +82,15 @@ export function MarketListingsPanel({ listings, onSelectCard }: MarketListingsPa
               onClick={() => onSelectCard(listing)}
             >
               {/* Contenedor seguro para escalar la carta sin romper el layout */}
-              <div className="absolute inset-0 flex top-5 items-center justify-center pointer-events-none">
-                <div className="scale-[0.24] origin-center sm:scale-[0.28] md:scale-[0.3]">
-                  <Card card={listing.card} disableHoverEffects disableDefaultShadow isPerformanceMode />
+              <div className="absolute inset-0 flex top-4 items-center justify-center pointer-events-none">
+                <div className={isPerformanceMode ? "origin-center scale-[0.21] sm:scale-[0.24] md:scale-[0.27]" : "origin-center scale-[0.24] sm:scale-[0.28] md:scale-[0.3]"}>
+                  <Card
+                    card={listing.card}
+                    disableHoverEffects={isPerformanceMode}
+                    disableDefaultShadow={isPerformanceMode}
+                    isPerformanceMode={isPerformanceMode}
+                    showBackgroundInPerformanceMode={isLiteBackgroundEnabled}
+                  />
                 </div>
               </div>
             </button>

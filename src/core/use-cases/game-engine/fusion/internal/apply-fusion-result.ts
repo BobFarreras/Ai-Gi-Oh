@@ -1,15 +1,13 @@
 // src/core/use-cases/game-engine/fusion/internal/apply-fusion-result.ts - Aplica el resultado de la fusión sobre el estado del jugador y sus zonas.
 import { IResolvedFusionState, IFusionContext } from "@/core/use-cases/game-engine/fusion/internal/fusion-types";
-
-function createFusionInstanceId(cardId: string): string {
-  return `${cardId}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
-}
+import { defaultGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 
 export function applyFusionResult(context: IFusionContext): IResolvedFusionState {
+  const idFactory = context.idFactory ?? defaultGameEngineIdFactory;
   const materialInstanceIds = context.materials.map((material) => material.instanceId);
   const remainingEntities = context.player.activeEntities.filter((entity) => !materialInstanceIds.includes(entity.instanceId));
   const fusionEntity = {
-    instanceId: createFusionInstanceId(context.fusionCard.id),
+    instanceId: idFactory.createFusionInstanceId(context.fusionCard.id),
     card: context.fusionCard,
     mode: context.mode,
     hasAttackedThisTurn: false,

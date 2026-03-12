@@ -1,4 +1,4 @@
-// src/core/use-cases/game-engine/fusion/fusion-recipes.ts - Descripción breve del módulo.
+// src/core/use-cases/game-engine/fusion/fusion-recipes.ts - Catálogo de recetas de fusión y utilidades de búsqueda por carta resultado.
 import { CardArchetype, ICard } from "@/core/entities/ICard";
 
 export interface IFusionRecipe {

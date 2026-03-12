@@ -13,7 +13,7 @@ export async function handleLogoutRequest(request: NextRequest): Promise<NextRes
   }
 
   const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown-ip";
-  const isAllowed = consumeAuthRateLimit(`logout:ip:${clientIp}`, 20, 10 * 60 * 1000);
+  const isAllowed = await consumeAuthRateLimit(`logout:ip:${clientIp}`, 20, 10 * 60 * 1000);
   if (!isAllowed) {
     return NextResponse.json({ ok: false, message: "Demasiadas peticiones de cierre de sesión." }, { status: 429 });
   }

@@ -4,8 +4,9 @@ import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { assertFusionCardInFusionDeck } from "@/core/use-cases/game-engine/fusion/internal/assert-fusion-card-in-fusion-deck";
-import { IFusionRecipe, getFusionRecipe } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
+import { getFusionRecipe } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 import { IFusionContext } from "@/core/use-cases/game-engine/fusion/internal/fusion-types";
+import { validateMaterialsAgainstRecipe } from "@/core/use-cases/game-engine/fusion/internal/validate-materials-against-recipe";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 const MAX_ENTITY_SLOTS = 3;
@@ -41,24 +42,6 @@ export function createFusionContext(
   const remainingSlots = player.activeEntities.length - materials.length + 1;
   if (remainingSlots > MAX_ENTITY_SLOTS) throw new GameRuleError("No hay espacio en el campo para invocar la fusión.");
   return { player, opponent, fusionCard, recipe, materials, mode };
-}
-
-function validateMaterialsAgainstRecipe(recipe: IFusionRecipe, materials: [IBoardEntity, IBoardEntity]): void {
-  if (recipe.requiredMaterialIds) {
-    const cardIds = materials.map((material) => material.card.id);
-    const matches = recipe.requiredMaterialIds.every((requiredId) => cardIds.includes(requiredId));
-    if (!matches) throw new ValidationError("Los materiales no cumplen la receta de fusión.");
-  }
-  if (recipe.requiredArchetypes) {
-    const pending = [...recipe.requiredArchetypes];
-    for (const material of materials) {
-      const archetype = material.card.archetype;
-      if (!archetype) continue;
-      const index = pending.indexOf(archetype);
-      if (index >= 0) pending.splice(index, 1);
-    }
-    if (pending.length > 0) throw new ValidationError("Los arquetipos de los materiales no cumplen la receta.");
-  }
 }
 
 function validateFusionEnergy(

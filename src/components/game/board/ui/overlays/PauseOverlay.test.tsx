@@ -19,4 +19,11 @@ describe("PauseOverlay", () => {
     fireEvent.click(screen.getByRole("button", { name: "Reanudar partida" }));
     expect(onResume).toHaveBeenCalledTimes(1);
   });
+
+  it("prioriza callback de salida cuando existe", () => {
+    const onExit = vi.fn();
+    render(<PauseOverlay isPaused onResume={vi.fn()} onExit={onExit} />);
+    fireEvent.click(screen.getByText("Desconectar y Salir"));
+    expect(onExit).toHaveBeenCalledTimes(1);
+  });
 });

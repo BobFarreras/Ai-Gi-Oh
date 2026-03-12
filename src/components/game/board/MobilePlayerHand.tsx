@@ -68,6 +68,7 @@ export function MobilePlayerHand({
                 className="pointer-events-auto absolute bottom-0 rounded-lg text-left"
                 style={{ left: `${left}px`, width: `${metrics.cardWidth}px`, height: `${metrics.cardHeight}px`, zIndex: isSelected ? 999 : index + 10 }}
                 onClick={(event) => {
+                  event.stopPropagation();
                   if (!isPlayerTurn) return;
                   if (mandatory && onMandatoryCardSelect) {
                     onMandatoryCardSelect(card.runtimeId ?? card.id);

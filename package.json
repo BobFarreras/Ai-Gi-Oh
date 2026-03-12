@@ -11,6 +11,7 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
+    "quality:story": "pnpm vitest run src/core/use-cases/story src/core/services/story/world src/services/story/build-story-chapter-briefing.test.ts src/components/hub/story/internal/resolve-story-performance-profile.test.ts && pnpm lint && pnpm build",
     "quality:check": "pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build",
     "perf:baseline:mobile": "node scripts/performance/run-mobile-baseline.mjs",
     "perf:baseline:mobile:realistic": "node scripts/performance/run-mobile-baseline.mjs --profile=realistic",

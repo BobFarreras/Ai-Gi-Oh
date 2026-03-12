@@ -25,11 +25,13 @@ export function MarketScene(props: MarketSceneProps) {
   const state = useMarketSceneState(props);
   const viewportWidth = useViewportWidth();
   const isDesktopLayout = viewportWidth >= 1280;
+  /**
+   * Selección inmediata para evitar parpadeo del inspector móvil:
+   * el contenido de la carta debe estar listo antes de abrir el diálogo.
+   */
   const handleSelectListing = useCallback((listing: (typeof state.visibleListings)[number]) => {
-    startTransition(() => {
-      state.setSelectedListing(listing);
-      state.setSelectedCard(listing.card);
-    });
+    state.setSelectedListing(listing);
+    state.setSelectedCard(listing.card);
   }, [state]);
   const handleSelectVaultCard = useCallback((card: ICard) => {
     const listing = state.catalog.listings.find((currentListing) => currentListing.card.id === card.id) ?? null;
@@ -45,10 +47,8 @@ export function MarketScene(props: MarketSceneProps) {
     } else {
       state.setSelectedPackId(null);
     }
-    startTransition(() => {
-      state.setSelectedListing(listing);
-      state.setSelectedCard(card);
-    });
+    state.setSelectedListing(listing);
+    state.setSelectedCard(card);
   }, [state]);
 
   return (

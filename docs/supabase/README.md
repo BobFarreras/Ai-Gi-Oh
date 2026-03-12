@@ -55,6 +55,9 @@
 22. `public.player_fusion_deck_slots`:
    - bloque de 2 slots dedicado a cartas de tipo `FUSION`.
    - separado del deck principal de 20 slots.
+23. `public.player_story_world_state`:
+   - estado compacto Story por jugador (`current_node_id`, `visited_node_ids`, `interacted_node_ids`).
+   - 1 fila por usuario.
 
 ## Fase 2 (Perfil y Progreso)
 
@@ -188,6 +191,41 @@
    - 2 filas por jugador (`slot_index` 0 y 1).
 4. Verifica RLS:
    - `SELECT/INSERT/UPDATE` solo para `auth.uid() = player_id`.
+
+## Fase 8 (Estado e historial del mundo Story)
+
+1. Ejecuta `docs/supabase/sql/013_phase_8_story_world_history.sql`.
+2. Verifica tablas:
+   - `public.player_story_world_state`
+   - `public.player_story_history_events`
+3. Verifica RLS:
+   - ambas tablas solo visibles/modificables por el propio usuario (`auth.uid() = player_id`).
+4. Uso previsto:
+   - `player_story_world_state`: nodo actual del mapa Story.
+   - `player_story_history_events`: timeline de movimiento, resolución de nodo, recompensas e interacciones.
+
+## Fase E (Interacciones narrativas virtuales)
+
+1. Ejecuta `docs/supabase/sql/014_phase_e_story_virtual_interactions.sql`.
+2. Ajustes principales:
+   - (legacy) ajustes sobre `player_story_history_events` para permitir nodos virtuales.
+
+## Fase F (Estado compacto Story)
+
+1. Ejecuta `docs/supabase/sql/015_phase_f_story_compact_state.sql`.
+2. Ajustes principales:
+   - `player_story_world_state.current_node_id` deja de depender de FK a `story_duels`.
+   - se añaden `visited_node_ids` e `interacted_node_ids` en la misma tabla.
+3. Uso previsto:
+   - la navegación Story usa solo estado compacto (`current + visited + interacted`).
+   - el historial legacy puede eliminarse con fase de cleanup.
+
+## Fase F.1 (Cleanup historial legacy Story)
+
+1. Ejecuta `docs/supabase/sql/016_phase_f_story_history_cleanup.sql`.
+2. Resultado:
+   - se elimina `public.player_story_history_events` y sus políticas/índice asociados.
+   - runtime Story sigue operativo al usar solo `player_story_world_state`.
 
 ## Notas
 

@@ -51,7 +51,7 @@ export const AUDIO_CATALOG: Record<AudioTrackId, IAudioTrackConfig> = {
   SOUNDTRACK: { path: "/audio/music/soundtrack.mp3", volume: 0.4, loop: true },
   DAMAGE: { path: "/audio/sfx/damage.mp3", volume: 0.75 },
   LIFE_LOSS: { path: "/audio/sfx/life-loss.mp3", volume: 0.8 },
-  ATTACK: { path: "/audio/sfx/attack.mp3", volume: 0.65 },
+  ATTACK: { path: "/audio/landing/formulario.mp3", volume: 0.55 },
   MAGIC_ATTACK: { path: "/audio/sfx/magic-attack.mp3", volume: 0.75 },
   BANNER: { path: "/audio/sfx/banner.mp3", volume: 0.55 },
   DRAW_CARD: { path: "/audio/sfx/draw-card.mp3", volume: 0.55 },

@@ -16,9 +16,16 @@ interface MarketVaultPanelProps {
   transactions: IMarketTransaction[];
   catalogListings: IMarketCardListing[];
   onSelectCard: (card: ICard) => void;
+  isPerformanceMode: boolean;
 }
 
-export function MarketVaultPanel({ collection, transactions, catalogListings, onSelectCard }: MarketVaultPanelProps) {
+export function MarketVaultPanel({
+  collection,
+  transactions,
+  catalogListings,
+  onSelectCard,
+  isPerformanceMode,
+}: MarketVaultPanelProps) {
   const [activeTab, setActiveTab] = useState<"COLLECTION" | "HISTORY">("COLLECTION");
   const { play } = useHubModuleSfx();
   const orderedCollection = useMemo(
@@ -67,7 +74,11 @@ export function MarketVaultPanel({ collection, transactions, catalogListings, on
       <div className="home-modern-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto pt-3 pr-2">
         <AnimatePresence mode="wait">
           {activeTab === "COLLECTION" ? (
-            <MarketVaultCollectionTab collection={orderedCollection} onSelectCard={onSelectCard} />
+            <MarketVaultCollectionTab
+              collection={orderedCollection}
+              onSelectCard={onSelectCard}
+              isPerformanceMode={isPerformanceMode}
+            />
           ) : (
             <MarketVaultHistoryTab transactions={transactions} catalogListings={catalogListings} />
           )}

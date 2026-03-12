@@ -1,4 +1,4 @@
-// src/core/use-cases/game-engine/actions/internal/execution-logging.ts - Descripción breve del módulo.
+// src/core/use-cases/game-engine/actions/internal/execution-logging.ts - Construye eventos de log para resoluciones de ejecuciones y efectos derivados.
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 

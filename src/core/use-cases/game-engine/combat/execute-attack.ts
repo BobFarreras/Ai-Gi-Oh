@@ -1,4 +1,4 @@
-// src/core/use-cases/game-engine/combat/execute-attack.ts - Descripción breve del módulo.
+// src/core/use-cases/game-engine/combat/execute-attack.ts - Orquesta declaración de ataque, reacción de trampas y resolución de daño/combate.
 import { resolveTrapTrigger } from "@/core/use-cases/game-engine/effects/resolve-trap-trigger";
 import { appendDirectAttackLogs, appendEntityBattleLogs } from "@/core/use-cases/game-engine/combat/internal/attack-logging";
 import { resolveDirectAttackState, resolveEntityBattleState } from "@/core/use-cases/game-engine/combat/internal/attack-resolution";

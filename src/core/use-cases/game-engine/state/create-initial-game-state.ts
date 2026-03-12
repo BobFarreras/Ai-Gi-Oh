@@ -2,6 +2,7 @@
 import { ICard } from "@/core/entities/ICard";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { RandomSource } from "@/core/services/random/seeded-rng";
+import type { IGameEngineIdFactory } from "./id-factory";
 import { GameState } from "./types";
 
 interface IInitialPlayerConfig {
@@ -19,6 +20,7 @@ interface ICreateInitialGameStateConfig {
   maxEnergy?: number;
   starterPlayerId?: string;
   randomSource?: RandomSource;
+  idFactory?: IGameEngineIdFactory;
 }
 
 function createRuntimeId(config: IInitialPlayerConfig, card: ICard, index: number, randomSource: RandomSource): string {
@@ -92,5 +94,6 @@ export function createInitialGameState(config: ICreateInitialGameStateConfig): G
     hasNormalSummonedThisTurn: false,
     pendingTurnAction: null,
     combatLog: [],
+    idFactory: config.idFactory,
   };
 }

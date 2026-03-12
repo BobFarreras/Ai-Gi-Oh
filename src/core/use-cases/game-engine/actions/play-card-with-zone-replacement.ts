@@ -1,9 +1,9 @@
 // src/core/use-cases/game-engine/actions/play-card-with-zone-replacement.ts - Reemplaza una carta ocupando su misma zona (entidades o ejecuciones) y luego juega la carta seleccionada.
 import { CardType } from "@/core/entities/ICard";
 import { BattleMode, IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
-import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ValidationError } from "@/core/errors/ValidationError";
+import { assertMainPhaseActionAllowed } from "@/core/use-cases/game-engine/actions/internal/action-preconditions";
 import { playCard } from "@/core/use-cases/game-engine/actions/play-card";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
@@ -61,9 +61,7 @@ export function playCardWithZoneReplacement(
   sacrificedEntityInstanceId: string,
   zone: ReplacementZoneType,
 ): GameState {
-  if (state.pendingTurnAction) throw new GameRuleError("Debes resolver la acción obligatoria de inicio de turno antes de jugar cartas.");
-  if (state.activePlayerId !== playerId) throw new GameRuleError("No es tu turno.");
-  if (state.phase !== "MAIN_1") throw new GameRuleError("Solo puedes jugar cartas en la fase de despliegue.");
+  assertMainPhaseActionAllowed(state, playerId);
 
   const { player, opponent, isPlayerA } = getPlayerPair(state, playerId);
   const card = player.hand.find((currentCard) => currentCard.runtimeId === cardId || currentCard.id === cardId);
