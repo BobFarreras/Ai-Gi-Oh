@@ -53,8 +53,17 @@ describe("DuelResultOverlay", () => {
     expect(screen.getByText("EXP Jugador")).toBeInTheDocument();
     expect(screen.getByText("+120")).toBeInTheDocument();
     expect(screen.getByText("+80")).toBeInTheDocument();
+    expect(screen.getByText(/sin datos de experiencia/i)).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole("button", { name: /mostrar carta recompensa/i }));
+
+    expect(screen.getByText("Carta Regalo")).toBeInTheDocument();
+    expect(screen.getByText("Carta Test")).toBeInTheDocument();
     expect(screen.getByText(/ocultar carta/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /mostrar carta recompensa/i }));
+
+    expect(screen.getByText(/sin datos de experiencia/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Volver al mapa Story" })).toBeInTheDocument();
   });
 });

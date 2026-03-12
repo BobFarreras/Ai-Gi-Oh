@@ -75,6 +75,7 @@ export function DuelResultOverlay({
                   rewardSummary={rewardSummary}
                   isGiftOpen={state.isGiftOpen}
                   onToggleGift={() => state.setIsGiftOpen((previous) => !previous)}
+                  rewardCard={state.rewardCard}
                   actionLabel={state.actionLabel}
                   onAction={state.handleAction}
                   isBattleExperiencePending={isBattleExperiencePending}
