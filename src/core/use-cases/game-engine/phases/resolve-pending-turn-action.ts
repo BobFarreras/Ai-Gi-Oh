@@ -116,7 +116,12 @@ export function resolvePendingTurnAction(state: GameState, playerId: string, sel
     const returnResult =
       pending.destination === "HAND"
         ? applyReturnGraveyardCardToHand(player, effect.action === "RETURN_GRAVEYARD_CARD_TO_HAND" ? effect : { action: "RETURN_GRAVEYARD_CARD_TO_HAND", cardType: pending.cardType }, selectedId)
-        : applyReturnGraveyardCardToField(player, effect.action === "RETURN_GRAVEYARD_CARD_TO_FIELD" ? effect : { action: "RETURN_GRAVEYARD_CARD_TO_FIELD", cardType: fieldCardType }, selectedId);
+        : applyReturnGraveyardCardToField(
+            player,
+            effect.action === "RETURN_GRAVEYARD_CARD_TO_FIELD" ? effect : { action: "RETURN_GRAVEYARD_CARD_TO_FIELD", cardType: fieldCardType },
+            selectedId,
+            state.idFactory,
+          );
 
     const updatedPlayer: IPlayer = {
       ...returnResult.updatedPlayer,

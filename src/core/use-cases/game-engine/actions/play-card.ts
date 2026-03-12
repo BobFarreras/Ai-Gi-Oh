@@ -5,6 +5,7 @@ import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { assertMainPhaseActionAllowed } from "@/core/use-cases/game-engine/actions/internal/action-preconditions";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
+import { defaultGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
@@ -50,9 +51,10 @@ function validateTrapPlay(player: IPlayer, mode: BattleMode): void {
   }
 }
 
-function createBoardEntity(card: IPlayer["hand"][number], mode: BattleMode): IBoardEntity {
+function createBoardEntity(state: GameState, card: IPlayer["hand"][number], mode: BattleMode): IBoardEntity {
+  const idFactory = state.idFactory ?? defaultGameEngineIdFactory;
   return {
-    instanceId: `${card.id}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+    instanceId: idFactory.createEntityInstanceId(card.id),
     card,
     mode,
     hasAttackedThisTurn: false,
@@ -92,7 +94,7 @@ export function playCard(state: GameState, playerId: string, cardId: string, mod
     throw new ValidationError("Las cartas de fusión deben invocarse con materiales desde la acción Fusionar.");
   }
 
-  const boardEntity = createBoardEntity(card, resolvedMode);
+  const boardEntity = createBoardEntity(state, card, resolvedMode);
   const updatedPlayer: IPlayer = {
     ...player,
     currentEnergy: player.currentEnergy - card.cost,

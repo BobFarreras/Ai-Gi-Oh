@@ -15,7 +15,7 @@ export function fuseCards(
 ): GameState {
   validateFusionPreconditions(state, playerId, mode);
   const { player, opponent, isPlayerA } = getPlayerPair(state, playerId);
-  const fusionContext = createFusionContext(player, opponent, fusionCardId, materialInstanceIds, mode);
+  const fusionContext = { ...createFusionContext(player, opponent, fusionCardId, materialInstanceIds, mode), idFactory: state.idFactory };
   const fusionResolution = applyFusionResult(fusionContext);
   const nextState = assignPlayers(state, fusionResolution.updatedPlayer, opponent, isPlayerA);
   return appendFusionLogs({

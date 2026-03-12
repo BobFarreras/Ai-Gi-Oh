@@ -2,6 +2,7 @@
 import { CardType, ICard, IReturnGraveyardCardToFieldEffect, IReturnGraveyardCardToHandEffect } from "@/core/entities/ICard";
 import { BattleMode, IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
+import { defaultGameEngineIdFactory, type IGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 
 export interface IExecutionSystemEvent {
   eventType: "CARD_TO_DESTROYED";
@@ -16,9 +17,14 @@ function resolveSelectedGraveyardCard(graveyard: readonly ICard[], selectedCardR
   return [targetCard, targetIndex];
 }
 
-function createRevivedEntity(cardId: string, cardType: CardType, cardIndex: number): { instanceId: string; mode: BattleMode } {
+function createRevivedEntity(
+  cardId: string,
+  cardType: CardType,
+  cardIndex: number,
+  idFactory: IGameEngineIdFactory,
+): { instanceId: string; mode: BattleMode } {
   const mode: BattleMode = cardType === "ENTITY" ? "ATTACK" : "SET";
-  return { instanceId: `revived-${cardId}-${Date.now()}-${cardIndex}`, mode };
+  return { instanceId: idFactory.createRevivedInstanceId(cardId, cardIndex), mode };
 }
 
 export function applyReturnGraveyardCardToHand(
@@ -51,6 +57,7 @@ export function applyReturnGraveyardCardToField(
   player: IPlayer,
   effect: IReturnGraveyardCardToFieldEffect,
   selectedCardReference: string,
+  idFactory: IGameEngineIdFactory = defaultGameEngineIdFactory,
 ): { updatedPlayer: IPlayer; events: IExecutionSystemEvent[] } {
   const [targetCard, targetIndex] = resolveSelectedGraveyardCard(player.graveyard, selectedCardReference, effect.cardType);
   const nextGraveyard = player.graveyard.filter((_, index) => index !== targetIndex);
@@ -69,7 +76,7 @@ export function applyReturnGraveyardCardToField(
         payload: { cardId: destroyedEntity.card.id, ownerPlayerId: player.id, from: "BATTLEFIELD" },
       });
     }
-    const revived = createRevivedEntity(targetCard.id, targetCard.type, nextEntities.length);
+    const revived = createRevivedEntity(targetCard.id, targetCard.type, nextEntities.length, idFactory);
     nextEntities = [...nextEntities, { instanceId: revived.instanceId, card: targetCard, mode: revived.mode, hasAttackedThisTurn: false, isNewlySummoned: true }];
   } else {
     if (nextExecutions.length >= 3) {
@@ -81,7 +88,7 @@ export function applyReturnGraveyardCardToField(
         payload: { cardId: destroyedExecution.card.id, ownerPlayerId: player.id, from: "EXECUTION_ZONE" },
       });
     }
-    const revived = createRevivedEntity(targetCard.id, targetCard.type, nextExecutions.length);
+    const revived = createRevivedEntity(targetCard.id, targetCard.type, nextExecutions.length, idFactory);
     nextExecutions = [...nextExecutions, { instanceId: revived.instanceId, card: targetCard, mode: revived.mode, hasAttackedThisTurn: false, isNewlySummoned: true }];
   }
   return {

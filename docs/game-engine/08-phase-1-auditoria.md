@@ -13,15 +13,11 @@
 - Se reemplazó el fallback silencioso de `resolve-pending-turn-action` por error explícito para tipos no soportados.
 - Se extrajo guard reutilizable `assertMainPhaseActionAllowed` para centralizar precondiciones de `play-card*`.
 - Se dividió `effects/trap-triggers.integration.test.ts` en suites separadas de ataque y ejecución con fixtures compartidas.
+- Se introdujo `idFactory` opcional en `GameState` para generar IDs/timestamps deterministas en `play-card`, `combat-log`, fusión y revive.
 
 ## 3. Hallazgos priorizados
 
 ### Medio
-- Generación de IDs no determinista en dominio:
-  - `play-card.ts` crea `instanceId` con `Date.now()` y `Math.random()`.
-  - `logging/combat-log.ts` crea `event.id` con `Date.now()` y `Math.random()`.
-  - Riesgo: tests menos deterministas y menor trazabilidad reproducible.
-
 - Archivos de test de integración con alta densidad de escenarios:
   - `actions/play-and-execution.integration.test.ts` (~182 líneas).
   - `combat/combat-and-phase.integration.test.ts` (~184 líneas).

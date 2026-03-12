@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
+import { IGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 
 const entityCard: ICard = {
   id: "entity-log-1",
@@ -53,6 +54,22 @@ function createState(): GameState {
 }
 
 describe("GameEngine CombatLog", () => {
+  it("debería usar idFactory inyectada para ids y timestamp", () => {
+    const deterministicFactory: IGameEngineIdFactory = {
+      createEntityInstanceId: (cardId: string) => `entity-fixed-${cardId}`,
+      createFusionInstanceId: (cardId: string) => `fusion-fixed-${cardId}`,
+      createRevivedInstanceId: (cardId: string, slotIndex: number) => `revived-fixed-${cardId}-${slotIndex}`,
+      createCombatLogEventId: (eventType) => `log-fixed-${eventType}`,
+      createTimestampIso: () => "2026-03-12T00:00:00.000Z",
+    };
+    const state = GameEngine.playCard({ ...createState(), idFactory: deterministicFactory }, "p1", "entity-log-1", "ATTACK");
+    expect(state.playerA.activeEntities[0]?.instanceId).toBe("entity-fixed-entity-log-1");
+    expect(state.combatLog[state.combatLog.length - 1]).toMatchObject({
+      id: "log-fixed-CARD_PLAYED",
+      timestamp: "2026-03-12T00:00:00.000Z",
+    });
+  });
+
   it("debería registrar CARD_PLAYED con id de carta", () => {
     const state = GameEngine.playCard(createState(), "p1", "entity-log-1", "ATTACK");
     const log = state.combatLog[state.combatLog.length - 1];

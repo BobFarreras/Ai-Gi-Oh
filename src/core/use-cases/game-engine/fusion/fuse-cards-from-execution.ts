@@ -7,6 +7,7 @@ import { assertFusionCardInFusionDeck } from "@/core/use-cases/game-engine/fusio
 import { findFusionCardById } from "@/core/use-cases/game-engine/fusion/internal/fusion-card-catalog";
 import { getFusionRecipeByResultId } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
+import { defaultGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
@@ -38,7 +39,7 @@ export function fuseCardsFromExecution(
   });
   if (materialInstanceIds[0] === materialInstanceIds[1]) throw new ValidationError("Debes seleccionar 2 materiales distintos para fusionar.");
   validateMaterials(recipe, materials);
-  const updatedPlayer = buildUpdatedPlayer(player, executionEntity.instanceId, fusionCard, materials);
+  const updatedPlayer = buildUpdatedPlayer(player, executionEntity.instanceId, fusionCard, materials, state.idFactory ?? defaultGameEngineIdFactory);
   const withPlayers = assignPlayers(state, updatedPlayer, opponent, isPlayerA);
   return appendFusionExecutionLogs(withPlayers, playerId, fusionCard.id, executionEntity.card.id, materials.map((material) => material.card.id));
 }
@@ -66,6 +67,7 @@ function buildUpdatedPlayer(
   executionInstanceId: string,
   fusionCard: ReturnType<typeof findFusionCardById> extends infer C ? Exclude<C, null> : never,
   materials: IPlayer["activeEntities"],
+  idFactory: typeof defaultGameEngineIdFactory,
 ): IPlayer {
   const materialIds = materials.map((material) => material.instanceId);
   const remainingEntities = player.activeEntities.filter((entity) => !materialIds.includes(entity.instanceId));
@@ -74,7 +76,7 @@ function buildUpdatedPlayer(
     activeEntities: [
       ...remainingEntities,
       {
-        instanceId: `${fusionCard.id}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+        instanceId: idFactory.createFusionInstanceId(fusionCard.id),
         card: fusionCard,
         mode: "ATTACK",
         hasAttackedThisTurn: false,
