@@ -21,6 +21,7 @@ interface IStorySceneMapPaneProps {
   dialog: {
     isOpen: boolean;
     title: string;
+    soundtrackUrl: string | null;
     line: IStoryInteractionDialogueLine | null;
     onNext: () => void;
     onClose: () => void | Promise<void>;
@@ -48,6 +49,7 @@ export function StorySceneMapPane(props: IStorySceneMapPaneProps) {
       <StoryNodeInteractionDialog
         isOpen={props.dialog.isOpen}
         title={props.dialog.title}
+        soundtrackUrl={props.dialog.soundtrackUrl}
         line={props.dialog.line}
         onNext={props.dialog.onNext}
         onClose={props.dialog.onClose}

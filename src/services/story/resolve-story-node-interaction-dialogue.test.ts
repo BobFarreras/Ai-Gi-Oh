@@ -50,6 +50,22 @@ describe("resolveStoryNodeInteractionDialogue", () => {
     expect(dialogue?.lines[0]?.text).toContain("Registro recurrente");
   });
 
+  it("resuelve evento scout con puesta en escena y aviso de trampas", () => {
+    const dialogue = resolveStoryNodeInteractionDialogue(
+      createNode({ id: "story-ch1-event-scout-log", title: "Evento Scout" }),
+    );
+
+    expect(dialogue?.title).toContain("Reconocimiento");
+    expect(dialogue?.lines.length).toBe(4);
+    expect(dialogue?.lines[0]?.side).toBe("RIGHT");
+    expect(dialogue?.lines[0]?.text).toContain("cartas trampa muy poderosas");
+    expect(dialogue?.lines[0]?.portraitUrl).toContain("intro-GenNvim");
+    expect(dialogue?.lines[1]?.portraitUrl).toContain("player/bob.png");
+    expect(dialogue?.lines[2]?.speaker).toBe("GenNvim");
+    expect(dialogue?.lines[3]?.speaker).toBe("Operador");
+    expect(dialogue?.lines[1]?.autoAdvanceMs).toBeGreaterThan(0);
+  });
+
   it("no genera diálogo para nodo de duelo real", () => {
     const dialogue = resolveStoryNodeInteractionDialogue(
       createNode({ id: "story-ch1-duel-1", nodeType: "DUEL", isVirtualNode: false, href: "/hub/story/chapter/1/duel/1" }),

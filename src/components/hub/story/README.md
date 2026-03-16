@@ -41,6 +41,7 @@ story/
         use-story-scene-sfx.ts
       dialog/
         StoryNodeInteractionDialog.tsx
+        StoryNodeInteractionDialog.test.tsx
         use-story-node-interaction-dialog.ts
       panels/
         StorySidebar.tsx
@@ -67,6 +68,7 @@ story/
   `resolve-story-scene-can-move.ts` centraliza la política del botón de movimiento.
 - `internal/scene/audio/*`: reproducción de SFX del mapa Story.
 - `internal/scene/dialog/*`: flujo de diálogo narrativo.
+  Incluye autoavance temporal por línea, avance manual por botón flotante y cierre explícito de interacción.
 - `internal/scene/panels/*`: panel lateral e información contextual con acción única (sin doble botón).
 - `internal/scene/transitions/*`: transición visual post-duelo al volver desde combate.
 
@@ -87,6 +89,7 @@ story/
 8. En recompensas de carta, nodo + animación usan visual real según `rewardCardId` (servicio `resolve-story-reward-card-visual`).
 9. Persistencia Story usa estado compacto: `currentNodeId + visitedNodeIds + interactedNodeIds`.
 10. Antes de iniciar combate Story se ejecuta coin toss y su resultado define `starterPlayerId`.
+11. En nodos `EVENT`, la escena reproduce `soundtrack` del evento durante el diálogo y, al cerrar, dispara SFX de finalización (`finish-event`).
 
 ## Herramientas de depuración
 - `POST /api/story/world/reset`: reinicia cursor Story al nodo inicial y limpia estado compacto (visitados/interacciones) para reproducir pruebas del mapa.

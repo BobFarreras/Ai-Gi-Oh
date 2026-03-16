@@ -80,6 +80,20 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null }: ISt
     navigateTo: router.push,
     startInteractionDialog: interactionDialog.start,
   });
+  const finalizeInteractionDialog = async () => {
+    interactionDialog.close();
+    if (!pendingCenterNodeId) return;
+    sceneSfx.playEventFinish();
+    setSelectedNodeId(pendingCenterNodeId);
+    await centerAvatarOnNode(pendingCenterNodeId);
+    setPendingCenterNodeId(null);
+    setAvatarVisualTarget(null);
+  };
+  const advanceInteractionDialog = async () => {
+    const shouldFinalize = interactionDialog.isLastLine;
+    interactionDialog.next();
+    if (shouldFinalize) await finalizeInteractionDialog();
+  };
   return (
     <div className="flex h-full w-full flex-1 overflow-hidden border-t border-cyan-900/50 bg-black font-sans">
       <StorySceneSidebarPane
@@ -116,16 +130,10 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null }: ISt
         dialog={{
           isOpen: interactionDialog.isOpen,
           title: interactionDialog.dialogueTitle,
+          soundtrackUrl: interactionDialog.soundtrackUrl,
           line: interactionDialog.currentLine,
-          onNext: interactionDialog.next,
-          onClose: async () => {
-            interactionDialog.close();
-            if (pendingCenterNodeId) {
-              await centerAvatarOnNode(pendingCenterNodeId);
-              setPendingCenterNodeId(null);
-              setAvatarVisualTarget(null);
-            }
-          },
+          onNext: advanceInteractionDialog,
+          onClose: finalizeInteractionDialog,
         }}
       />
     </div>

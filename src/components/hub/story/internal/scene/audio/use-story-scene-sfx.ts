@@ -10,6 +10,7 @@ interface IStorySceneSfxMap {
   REWARD_NEXUS: string;
   REWARD_CARD: string;
   DUEL_START: string;
+  EVENT_FINISH: string;
 }
 
 const STORY_SCENE_SFX_PATHS: IStorySceneSfxMap = {
@@ -19,6 +20,7 @@ const STORY_SCENE_SFX_PATHS: IStorySceneSfxMap = {
   REWARD_NEXUS: "/audio/story/effects/moneda.mp3",
   REWARD_CARD: "/audio/story/effects/obtener-carta.mp3",
   DUEL_START: "/audio/landing/formulario.mp3",
+  EVENT_FINISH: "/audio/story/effects/finish-event.mp3",
 };
 
 function safeReplay(audio: HTMLAudioElement | null): void {
@@ -71,5 +73,6 @@ export function useStorySceneSfx() {
     playRewardNexus: () => safeReplay(audioByIdRef.current.REWARD_NEXUS ?? null),
     playRewardCard: () => safeReplay(audioByIdRef.current.REWARD_CARD ?? null),
     playDuelStart: () => safeReplay(audioByIdRef.current.DUEL_START ?? null),
+    playEventFinish: () => safeReplay(audioByIdRef.current.EVENT_FINISH ?? null),
   };
 }

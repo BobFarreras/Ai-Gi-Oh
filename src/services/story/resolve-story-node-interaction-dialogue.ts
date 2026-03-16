@@ -3,20 +3,26 @@ import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import { resolveStoryDialogueLineMedia } from "@/services/story/story-node-dialogue-media";
 
 export interface IStoryInteractionDialogueLine {
+  actorId?: string;
+  side?: "LEFT" | "RIGHT";
+  visualKind?: "CHARACTER" | "CARD" | "MONSTER" | "OBJECT";
   speaker: string;
   text: string;
   portraitUrl?: string;
   audioUrl?: string;
+  autoAdvanceMs?: number;
 }
 
 export interface IStoryNodeInteractionDialogue {
   title: string;
+  soundtrackUrl?: string;
   lines: IStoryInteractionDialogueLine[];
 }
 
 const DIALOGUE_BY_NODE_ID: Record<string, IStoryNodeInteractionDialogue> = {
   "story-ch1-event-briefing": {
     title: "Terminal de Briefing",
+    soundtrackUrl: "/audio/story/soundtruck.mp3",
     lines: [
       { speaker: "Canal de mando", text: "Hemos interceptado tráfico en el eje norte." },
       { speaker: "Canal de mando", text: "Prioriza nodos de control antes del jefe de acto." },
@@ -31,6 +37,7 @@ const DIALOGUE_BY_NODE_ID: Record<string, IStoryNodeInteractionDialogue> = {
   },
   "story-ch2-event-signal": {
     title: "Señal Fantasma",
+    soundtrackUrl: "/audio/story/soundtruck.mp3",
     lines: [
       { speaker: "Canal cifrado", text: "Patrón hostil detectado. Cambia tu ruta de aproximación." },
       { speaker: "Canal cifrado", text: "El núcleo Omega ya conoce tu firma." },
@@ -43,24 +50,62 @@ const DIALOGUE_BY_NODE_ID: Record<string, IStoryNodeInteractionDialogue> = {
       { speaker: "Sistema", text: "Recoge el recurso para reforzar el siguiente duelo." },
     ],
   },
+  "story-ch1-event-scout-log": {
+    title: "Canal de Reconocimiento",
+    soundtrackUrl: "/audio/story/soundtruck.mp3",
+    lines: [
+      {
+        actorId: "opp-ch1-apprentice",
+        side: "RIGHT",
+        visualKind: "CHARACTER",
+        speaker: "GenNvim",
+        text: "Buenas, ten cuidado, por este camino hay oponentes con cartas trampa muy poderosas.",
+      },
+      {
+        actorId: "player",
+        side: "LEFT",
+        visualKind: "CHARACTER",
+        speaker: "Operador",
+        text: "Entendido. Ajustaré mi ruta y guardaré recursos para responder a trampas.",
+        autoAdvanceMs: 4200,
+      },
+      {
+        actorId: "opp-ch1-apprentice",
+        side: "RIGHT",
+        visualKind: "CHARACTER",
+        speaker: "GenNvim",
+        text: "Si ves defensas en SET, no ataques a ciegas. Primero fuerza recursos y limpia la línea.",
+        autoAdvanceMs: 4300,
+      },
+      {
+        actorId: "player",
+        side: "LEFT",
+        visualKind: "CHARACTER",
+        speaker: "Operador",
+        text: "Perfecto. Mantendré presión con ritmo corto y reservaré respuesta para la próxima trampa.",
+        autoAdvanceMs: 4300,
+      },
+    ],
+  },
 };
 
 function buildFallbackDialogue(node: IStoryMapNodeRuntime): IStoryNodeInteractionDialogue {
   if (node.nodeType === "EVENT") {
     return {
       title: node.title,
-      lines: [{ speaker: "Evento", text: "Se ejecuta una interacción narrativa sin combate." }],
+      lines: [{ side: "RIGHT", visualKind: "CHARACTER", speaker: "Evento", text: "Se ejecuta una interacción narrativa sin combate." }],
+      soundtrackUrl: "/audio/story/soundtruck.mp3",
     };
   }
   if (node.nodeType === "REWARD_CARD" || node.nodeType === "REWARD_NEXUS") {
     return {
       title: node.title,
-      lines: [{ speaker: "Sistema", text: "Recompensa registrada en la ruta de historia." }],
+      lines: [{ side: "RIGHT", visualKind: "OBJECT", speaker: "Sistema", text: "Recompensa registrada en la ruta de historia." }],
     };
   }
   return {
     title: node.title,
-    lines: [{ speaker: "Sistema", text: "Nodo de exploración procesado." }],
+    lines: [{ side: "RIGHT", visualKind: "OBJECT", speaker: "Sistema", text: "Nodo de exploración procesado." }],
   };
 }
 
@@ -85,8 +130,11 @@ export function resolveStoryNodeInteractionDialogue(
   if (interactionCount <= 1) return firstDialogue;
   return {
     title: firstDialogue.title,
+    soundtrackUrl: firstDialogue.soundtrackUrl,
     lines: [
       {
+        side: "RIGHT",
+        visualKind: "OBJECT",
         speaker: "Sistema",
         text: `Registro recurrente detectado (${interactionCount}). Optimizando resumen narrativo.`,
       },
