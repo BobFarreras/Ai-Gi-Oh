@@ -52,6 +52,6 @@ describe("StoryScene", () => {
     render(<StoryScene runtime={mockRuntime} briefing={mockBriefing} />);
     const targetNode = screen.getByRole("button", { name: "Seleccionar nodo story-ch1-duel-2" });
     fireEvent.click(targetNode);
-    expect(screen.getByText("Nodo Objetivo")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Nodo Objetivo" })).toBeInTheDocument();
   });
 });

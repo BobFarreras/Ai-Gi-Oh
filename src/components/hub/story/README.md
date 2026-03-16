@@ -46,6 +46,12 @@ story/
       panels/
         StorySidebar.tsx
         StoryBriefingPanel.tsx
+        internal/
+          StorySidebarHeader.tsx
+          StorySidebarNodeContent.tsx
+          StorySidebarEmptyState.tsx
+          story-sidebar-motion.ts
+          story-sidebar-view-model.ts
       state/
         resolve-story-scene-can-move.ts
         resolve-story-scene-can-move.test.ts

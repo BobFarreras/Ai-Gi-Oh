@@ -58,4 +58,20 @@ describe("resolveStoryWorldTraversalPath", () => {
     });
     expect(path).toEqual(["story-ch1-path-lower-a", "story-ch1-path-lower-b", "story-ch1-duel-2"]);
   });
+
+  it("bloquea avance al evento del acto 2 si la recompensa previa no fue interactuada", () => {
+    const path = resolveStoryWorldTraversalPath({
+      currentNodeId: "story-ch2-reward-nexus-a",
+      targetNodeId: "story-ch2-event-core",
+      visitedNodeIds: [
+        "story-ch2-player-start",
+        "story-ch2-path-entry",
+        "story-ch2-path-blank-a",
+        "story-ch2-reward-nexus-a",
+      ],
+      completedNodeIds: [],
+      interactedNodeIds: [],
+    });
+    expect(path).toBeNull();
+  });
 });

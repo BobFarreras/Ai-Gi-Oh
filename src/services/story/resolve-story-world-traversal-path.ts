@@ -66,7 +66,11 @@ function canEnterNode(nodeId: string, fromNodeId: string, state: IResolveStoryWo
     state.completedNodeIds.includes(nodeId)
   ) return true;
   if (!node.unlockRequirementNodeId) return true;
-  if (node.unlockRequirementNodeId === fromNodeId) return true;
+  if (node.unlockRequirementNodeId === fromNodeId) {
+    const requirementNode = nodeById.get(node.unlockRequirementNodeId);
+    if (requirementNode?.nodeType === "MOVE") return true;
+    return isRequirementSatisfied(node.unlockRequirementNodeId, state, nodeById);
+  }
   return isRequirementSatisfied(node.unlockRequirementNodeId, state, nodeById);
 }
 

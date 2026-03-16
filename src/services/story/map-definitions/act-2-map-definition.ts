@@ -43,8 +43,8 @@ export const storyAct2MapDefinition: IStoryActMapDefinition = {
     v({ id: "story-ch2-branch-top-a", duelIndex: 205, nodeType: "MOVE", title: "Ruta Superior", unlockRequirementNodeId: "story-ch2-event-core", position: { x: 3640, y: 700 } }),
     v({ id: "story-ch2-reward-card-top", duelIndex: 206, nodeType: "REWARD_CARD", title: "Carta", rewardCardId: "exec-draw-1", unlockRequirementNodeId: "story-ch2-duel-1", position: { x: 4160, y: 700 } }),
 
-    v({ id: "story-ch2-branch-center-a", duelIndex: 207, nodeType: "REWARD_NEXUS", title: "Moneda", rewardNexus: 220, unlockRequirementNodeId: "story-ch2-event-core", position: { x: 3640, y: 980 } }),
-    v({ id: "story-ch2-branch-center-b", duelIndex: 208, nodeType: "MOVE", title: "Paso", unlockRequirementNodeId: "story-ch2-branch-center-a", position: { x: 3900, y: 980 } }),
+    v({ id: "story-ch2-branch-center-a", duelIndex: 207, nodeType: "REWARD_NEXUS", title: "Moneda", rewardNexus: 220, unlockRequirementNodeId: "story-ch2-event-core", position: { x: 3640, y: 840 } }),
+    v({ id: "story-ch2-branch-center-b", duelIndex: 208, nodeType: "MOVE", title: "Paso", unlockRequirementNodeId: "story-ch2-branch-center-a", position: { x: 3900, y: 840 } }),
 
     v({ id: "story-ch2-branch-bottom-a", duelIndex: 209, nodeType: "MOVE", title: "Ruta Inferior", unlockRequirementNodeId: "story-ch2-event-core", position: { x: 3640, y: 1260 } }),
     v({ id: "story-ch2-branch-bottom-b", duelIndex: 210, nodeType: "MOVE", title: "Paso", unlockRequirementNodeId: "story-ch2-branch-bottom-a", position: { x: 3900, y: 1260 } }),
@@ -81,5 +81,7 @@ export const storyAct2MapDefinition: IStoryActMapDefinition = {
     { id: "act2-p-18", position: { x: 4940, y: 1260 }, size: 170, style: "METAL" },
     { id: "act2-p-19", position: { x: 5200, y: 1120 }, size: 170, style: "NEON" },
     { id: "act2-p-20", position: { x: 5200, y: 1260 }, size: 170, style: "RUIN" },
+    { id: "act2-p-21", position: { x: 3640, y: 840 }, size: 170, style: "METAL" },
+    { id: "act2-p-22", position: { x: 3900, y: 840 }, size: 170, style: "NEON" },
   ],
 };
