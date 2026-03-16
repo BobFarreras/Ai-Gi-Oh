@@ -12,9 +12,10 @@ Definir cómo se modela el mapa, desbloqueos, navegación e integración con due
 3. `docs/story/03-narrative-engine.md`: motor de briefing narrativo por capítulo.
 4. `docs/story/PHASES-4-11-REPORT.md`: reporte de implementación y trazabilidad de fases.
 5. `docs/story/NARRACION_OPONENTES.md`: narrativa y personalidad de oponentes.
-6. `src/services/story/map-definitions/`: layout visual editable por acto (sin tocar reglas de dominio).
-7. `docs/story/STORY_DIALOGUE_ASSETS_TEMPLATE.md`: plantilla para producción de texto/retrato/audio por nodo.
-8. `docs/story/STORY-DUEL-IMPLEMENTATION-LOG.md`: bitácora fase a fase del flujo Story <-> Duel.
+6. `docs/story/OPPONENT_CONTENT_INVENTORY.md`: inventario de assets por oponente para planificar cargas faltantes.
+7. `src/services/story/map-definitions/`: layout visual editable por acto (sin tocar reglas de dominio).
+8. `docs/story/STORY_DIALOGUE_ASSETS_TEMPLATE.md`: plantilla para producción de texto/retrato/audio por nodo.
+9. `docs/story/STORY-DUEL-IMPLEMENTATION-LOG.md`: bitácora fase a fase del flujo Story <-> Duel.
 
 ## Estado actual
 

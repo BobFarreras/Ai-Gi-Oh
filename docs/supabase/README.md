@@ -174,6 +174,17 @@
 5. Contrato de aplicación preparado:
    - `IOpponentRepository` + `IStoryDuelDefinition` para eliminar hardcode de Story en UI.
 
+## Fase 5.2 (Ampliación de roster Story)
+
+1. Ejecuta `docs/supabase/sql/017_phase_5_2_story_opponent_roster_expansion.sql`.
+2. Ajustes principales:
+   - normaliza nombre visible de `opp-ch1-apprentice` a `GenNvim`,
+   - crea 4 oponentes adicionales (`BigLog`, `Jaku`, `Helena`, `Soldado Acto 01`),
+   - crea mazos dedicados por oponente con perfil alineado a dificultad.
+3. Alcance de esta fase:
+   - solo catálogo de oponentes + deck lists.
+   - la activación visual en mapa/nodos se hace en fase de layout Story.
+
 ## Fase 5.1 (Experiencia global del jugador)
 
 1. Ejecuta `docs/supabase/sql/009_phase_5_player_progress_experience.sql`.
