@@ -119,6 +119,13 @@ body {
   animation: cyberPulse 6.5s ease-in-out infinite;
 }
 
+.board-boss-theme::after {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(244, 63, 94, 0.14), transparent 34%),
+    radial-gradient(circle at 78% 68%, rgba(251, 113, 133, 0.1), transparent 38%),
+    radial-gradient(circle at 46% 50%, rgba(251, 146, 60, 0.08), transparent 42%);
+}
+
 .hub-city-bg::before,
 .hub-city-bg::after {
   content: "";

@@ -54,7 +54,7 @@ describe("mergeStoryMapVisualDefinition", () => {
     const merged = mergeStoryMapVisualDefinition(nodes, {
       visitedNodeIds: ["story-ch1-duel-1"],
     });
-    const virtualNode = merged.find((node) => node.id === "story-ch1-reward-nexus-beta");
+    const virtualNode = merged.find((node) => node.id === "story-ch1-reward-nexus-alpha");
 
     expect(virtualNode?.isVirtualNode).toBe(true);
     expect(virtualNode?.isUnlocked).toBe(true);
@@ -63,7 +63,7 @@ describe("mergeStoryMapVisualDefinition", () => {
   it("mantiene nodo virtual bloqueado si su dependencia no está completada", () => {
     const nodes = [createRuntimeNode({ id: "story-ch1-duel-1", isCompleted: false, isUnlocked: true })];
     const merged = mergeStoryMapVisualDefinition(nodes, {});
-    const virtualNode = merged.find((node) => node.id === "story-ch1-reward-nexus-beta");
+    const virtualNode = merged.find((node) => node.id === "story-ch1-reward-nexus-alpha");
 
     expect(virtualNode?.isUnlocked).toBe(false);
   });
@@ -71,9 +71,9 @@ describe("mergeStoryMapVisualDefinition", () => {
   it("mantiene desbloqueado un nodo visitado aunque su regla actual lo bloqueara", () => {
     const nodes = [createRuntimeNode({ id: "story-ch1-duel-1", isCompleted: false, isUnlocked: true })];
     const merged = mergeStoryMapVisualDefinition(nodes, {
-      visitedNodeIds: ["story-ch1-reward-nexus-beta"],
+      visitedNodeIds: ["story-ch1-reward-nexus-alpha"],
     });
-    const virtualNode = merged.find((node) => node.id === "story-ch1-reward-nexus-beta");
+    const virtualNode = merged.find((node) => node.id === "story-ch1-reward-nexus-alpha");
 
     expect(virtualNode?.isUnlocked).toBe(true);
   });

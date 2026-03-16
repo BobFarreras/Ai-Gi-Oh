@@ -195,6 +195,17 @@
 3. Dependencias:
    - requiere haber ejecutado `017_phase_5_2_story_opponent_roster_expansion.sql`.
 
+## Fase 5.4 (Rebalanceo de capítulos Story)
+
+1. Ejecuta `docs/supabase/sql/019_phase_5_4_story_chapter_rebalance.sql`.
+2. Ajustes principales:
+   - mueve la rotación nueva (`Soldado`, `Jaku`, `BigLog`, `Helena`) a capítulo 1,
+   - simplifica capítulo 2 a flujo corto (duelo, economía/evento, boss),
+   - actualiza `avatar_url` de oponentes con assets locales cargados,
+   - desactiva `opp-ch1-architect` y `opp-ch1-sysadmin` en el roster activo.
+3. Nota:
+   - esta fase pisa configuración funcional de `018` para dejar el orden final de playtesting.
+
 ## Fase 5.1 (Experiencia global del jugador)
 
 1. Ejecuta `docs/supabase/sql/009_phase_5_player_progress_experience.sql`.

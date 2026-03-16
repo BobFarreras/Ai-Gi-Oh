@@ -14,7 +14,13 @@ import { useMatchRuntime } from "./internal/match/useMatchRuntime";
 import { useMatchUiState } from "./internal/match/useMatchUiState";
 import { isExecutionWaitingForFusionMaterials, resolveWinnerPlayerId } from "./internal/match/board-derived-state";
 const EXECUTION_ACTIVATION_PREVIEW_MS = 720;
-export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINING", initialConfig?: ICreateInitialBoardStateInput, isMatchStartLocked = false) {
+export function useBoard(
+  initialPlayerDeck?: ICard[],
+  mode: IMatchMode = "TRAINING",
+  initialConfig?: ICreateInitialBoardStateInput,
+  isMatchStartLocked = false,
+  disableBaseSoundtrack = false,
+) {
   const [campaignProgress] = useState<ICampaignProgress>({ chapterIndex: 1, duelIndex: 1, victories: 0 });
   const [matchSeed] = useState(() => createMatchSeed());
   const createInitialState = useCallback(
@@ -41,6 +47,7 @@ export function useBoard(initialPlayerDeck?: ICard[], mode: IMatchMode = "TRAINI
     lastErrorCode: uiState.lastError?.code ?? null,
     isMuted: uiState.isMuted,
     isPaused: uiState.isPaused,
+    disableBaseSoundtrack,
   });
   const restartMatch = useCallback(() => {
     progression.resetBattleProgression();

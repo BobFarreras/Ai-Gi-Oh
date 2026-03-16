@@ -10,6 +10,7 @@ interface IUseMatchAudioParams {
   lastErrorCode: string | null;
   isMuted: boolean;
   isPaused: boolean;
+  disableBaseSoundtrack?: boolean;
 }
 
 export function useMatchAudio(params: IUseMatchAudioParams) {

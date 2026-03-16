@@ -16,6 +16,7 @@ export interface IStoryDuelRuntimeData {
   duelIndex: number;
   duelTitle: string;
   duelDescription: string;
+  isBossDuel: boolean;
   isUnlocked: boolean;
   isCurrentNode: boolean;
   playerDeck: ICard[];
@@ -59,6 +60,7 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
     duelIndex: duel.duelIndex,
     duelTitle: duel.title,
     duelDescription: duel.description,
+    isBossDuel: duel.isBossDuel,
     isUnlocked,
     isCurrentNode,
     playerDeck,

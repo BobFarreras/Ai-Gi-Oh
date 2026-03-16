@@ -48,7 +48,10 @@ export function useBoardUiState(
   const toggleMute = useCallback(() => {
     setIsMuted((previous) => {
       const next = !previous;
-      if (typeof window !== "undefined") window.localStorage.setItem("board-muted", next ? "1" : "0");
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("board-muted", next ? "1" : "0");
+        window.dispatchEvent(new CustomEvent("board-muted-changed", { detail: { isMuted: next } }));
+      }
       return next;
     });
   }, []);

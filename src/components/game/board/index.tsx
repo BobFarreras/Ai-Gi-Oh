@@ -23,19 +23,26 @@ interface IBoardProps {
   narrationPack?: IMatchNarrationPack | null;
   playerAvatarUrl?: string | null;
   opponentAvatarUrl?: string | null;
+  isBossTheme?: boolean;
   resultActionLabel?: string;
   onResultAction?: () => void;
   onExitMatch?: () => void;
   isMatchStartLocked?: boolean;
   onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string }) => void;
 }
-export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, resultActionLabel, onResultAction, onExitMatch, isMatchStartLocked = false, onMatchResolved }: IBoardProps) {
+export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, isBossTheme = false, resultActionLabel, onResultAction, onExitMatch, isMatchStartLocked = false, onMatchResolved }: IBoardProps) {
   countRender("Board");
-  const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked);
+  const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme);
   const player = board.gameState.playerA; const opponent = board.gameState.playerB;
   const { isMobile } = useBoardViewportMode();
   const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
-  const boardRootClassName = `board-space-bg relative w-full h-screen overflow-hidden font-sans cursor-crosshair ${shouldReduceCombatEffects ? "reduced-combat-effects" : ""}`;
+  const boardRootClassName = `board-space-bg relative w-full h-screen overflow-hidden font-sans cursor-crosshair ${isBossTheme ? "board-boss-theme" : ""} ${shouldReduceCombatEffects ? "reduced-combat-effects" : ""}`;
+  const boardAmbientClassName = isBossTheme
+    ? "absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(244,63,94,0.14),transparent_52%)] pointer-events-none"
+    : "absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(34,211,238,0.12),transparent_52%)] pointer-events-none";
+  const boardVignetteClassName = isBossTheme
+    ? "absolute inset-0 shadow-[inset_0_0_210px_rgba(44,7,16,0.64)] pointer-events-none"
+    : "absolute inset-0 shadow-[inset_0_0_200px_rgba(1,4,12,0.58)] pointer-events-none";
   const screen = useBoardScreenState({
     board,
     mode,
@@ -56,8 +63,8 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
   });
   return (
     <div className={boardRootClassName} onClick={board.clearSelection}>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(34,211,238,0.12),transparent_52%)] pointer-events-none" />
-      <div className="absolute inset-0 shadow-[inset_0_0_200px_rgba(1,4,12,0.58)] pointer-events-none" />
+      <div className={boardAmbientClassName} />
+      <div className={boardVignetteClassName} />
       {!isMatchStartLocked ? (
         <>
           <BoardStatusAndTopBarSection

@@ -13,6 +13,7 @@ interface UseGameAudioParams {
   lastErrorCode: string | null;
   isMuted: boolean;
   isPaused: boolean;
+  disableBaseSoundtrack?: boolean;
 }
 
 function resolveDuelEndTrack(winnerPlayerId: string, playerId: string): AudioTrackId {
@@ -29,6 +30,7 @@ export function useGameAudio({
   lastErrorCode,
   isMuted,
   isPaused,
+  disableBaseSoundtrack = false,
 }: UseGameAudioParams) {
   const processedRef = useRef(0);
   const soundtrackRef = useRef<HTMLAudioElement | null>(null);
@@ -37,12 +39,17 @@ export function useGameAudio({
   const prevErrorRef = useRef<string | null>(lastErrorCode);
 
   useEffect(() => {
+    if (disableBaseSoundtrack) {
+      soundtrackRef.current?.pause();
+      soundtrackRef.current = null;
+      return;
+    }
     if (!soundtrackRef.current) soundtrackRef.current = createAudio("SOUNDTRACK", true);
     return () => {
       soundtrackRef.current?.pause();
       soundtrackRef.current = null;
     };
-  }, []);
+  }, [disableBaseSoundtrack]);
 
   useEffect(() => {
     const soundtrack = soundtrackRef.current;

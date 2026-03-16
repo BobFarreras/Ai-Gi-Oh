@@ -81,3 +81,11 @@ El pack se prepara antes del duelo y luego todo corre en memoria.
    - mantener motor del duelo aislado de I/O.
 3. El catálogo narrativo es independiente de `story_opponents`.
 4. La sincronización con Supabase (IDs finales, dificultad y decks) se realizará en la siguiente fase de integración de oponentes.
+
+## Soundtrack BOSS
+
+1. Duelos con `isBossDuel = true` reproducen música en loop al iniciar combate (tras overlays de entrada).
+2. Ruta principal esperada:
+   - `public/audio/story/effects/boss-soundtrack.mp3`
+3. Fallback automático:
+   - `public/audio/story/soundtruck.mp3`

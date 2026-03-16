@@ -10,12 +10,13 @@ import { buildStoryOpponentNarrationPack } from "@/services/story/build-story-op
 import { resolveStoryCoinToss } from "@/services/story/duel-flow/resolve-story-coin-toss";
 import { postStoryDuelCompletion } from "./story-duel-completion-client";
 import { StoryDuelCoinTossOverlay } from "./StoryDuelCoinTossOverlay";
-
+import { useStoryBossSoundtrack } from "./use-story-boss-soundtrack";
 interface StoryDuelClientProps {
   chapter: number;
   duelIndex: number;
   duelTitle: string;
   duelDescription: string;
+  isBossDuel: boolean;
   playerId: string;
   playerName: string;
   opponentId: string;
@@ -25,7 +26,6 @@ interface StoryDuelClientProps {
   playerFusionDeck: ICard[];
   opponentDeck: ICard[];
 }
-
 export function StoryDuelClient(props: StoryDuelClientProps) {
   const router = useRouter();
   const [status, setStatus] = useState<string | null>(null);
@@ -45,6 +45,10 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
     () => buildStoryOpponentNarrationPack({ opponentId: props.opponentId, opponentName: props.opponentName, duelDescription: props.duelDescription }),
     [props.duelDescription, props.opponentId, props.opponentName],
   );
+  useStoryBossSoundtrack({
+    isBossDuel: props.isBossDuel,
+    isBlockedByOverlay: isCoinTossVisible,
+  });
   const pushBackToStory = (input: { outcome: StoryDuelOutcome; duelNodeId: string; returnNodeId: string }) => {
     const query = new URLSearchParams({
       duelOutcome: input.outcome,
@@ -54,7 +58,9 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
     router.push(`/hub/story?${query.toString()}`);
     router.refresh();
   };
-
+  const handleResultAction = () => pushBackToStory(
+    resultTransition ?? { outcome: "LOST", duelNodeId: `story-ch${props.chapter}-duel-${props.duelIndex}`, returnNodeId: "story-ch1-player-start" },
+  );
   async function handleMatchResolved(result: { winnerPlayerId: string | "DRAW"; playerId: string }) {
     if (hasPostedResultRef.current) return;
     hasPostedResultRef.current = true;
@@ -75,7 +81,6 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
       return;
     }
   }
-
   async function handleAbortMatch() {
     if (hasPostedResultRef.current) return;
     hasPostedResultRef.current = true;
@@ -92,7 +97,6 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
       setStatus("No se pudo sincronizar el abandono Story.");
     }
   }
-
   return (
     <main className="min-h-screen bg-zinc-950">
       {status ? <p className="absolute left-4 top-4 z-[500] rounded-md bg-cyan-950/80 px-3 py-2 text-xs font-bold text-cyan-100">{status}</p> : null}
@@ -111,17 +115,12 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
         }}
         opponentAvatarUrl={resolvedOpponentAvatarUrl}
         playerAvatarUrl={playerAvatarUrl}
+        isBossTheme={props.isBossDuel}
         narrationPack={narrationPack}
         isMatchStartLocked={isCoinTossVisible}
         duelResultRewardSummary={rewardSummary}
         resultActionLabel="Volver al mapa Story"
-        onResultAction={() => {
-          if (resultTransition) {
-            pushBackToStory(resultTransition);
-            return;
-          }
-          pushBackToStory({ outcome: "LOST", duelNodeId: `story-ch${props.chapter}-duel-${props.duelIndex}`, returnNodeId: "story-ch1-player-start" });
-        }}
+        onResultAction={handleResultAction}
         onExitMatch={() => void handleAbortMatch()}
         onMatchResolved={handleMatchResolved}
       />
