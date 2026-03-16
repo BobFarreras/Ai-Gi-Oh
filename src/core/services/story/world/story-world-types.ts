@@ -16,6 +16,7 @@ export interface IStoryWorldNode {
   duelIndex: number;
   title: string;
   opponentName: string;
+  opponentAvatarUrl?: string | null;
   difficulty: StoryOpponentDifficulty;
   nodeType: StoryWorldNodeType;
   rewardNexus: number;
@@ -56,6 +57,7 @@ export type StoryWorldSeedNode = Pick<
   | "duelIndex"
   | "title"
   | "opponentName"
+  | "opponentAvatarUrl"
   | "opponentDifficulty"
   | "rewardNexus"
   | "rewardPlayerExperience"

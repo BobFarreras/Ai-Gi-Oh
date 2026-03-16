@@ -78,6 +78,7 @@ export class SupabaseOpponentRepository implements IOpponentRepository {
         title: duel.title,
         opponentId: opponent.id,
         opponentName: opponent.display_name,
+        opponentAvatarUrl: opponent.avatar_url,
         opponentDifficulty: opponent.difficulty,
         unlockRequirementDuelId: duel.unlock_requirement_duel_id,
         rewardNexus: duel.reward_nexus,

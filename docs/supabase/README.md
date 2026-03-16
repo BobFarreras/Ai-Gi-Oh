@@ -185,6 +185,16 @@
    - solo catálogo de oponentes + deck lists.
    - la activación visual en mapa/nodos se hace en fase de layout Story.
 
+## Fase 5.3 (Expansión de rotación de duelos Story)
+
+1. Ejecuta `docs/supabase/sql/018_phase_5_3_story_duel_rotation_expansion.sql`.
+2. Ajustes principales:
+   - añade `story-ch2-duel-3` a `story-ch2-duel-6`,
+   - conecta los nuevos oponentes (`Soldado Acto 01`, `Jaku`, `BigLog`, `Helena`) al flujo de capítulo 2,
+   - asigna recompensas de carta garantizadas por duelo nuevo.
+3. Dependencias:
+   - requiere haber ejecutado `017_phase_5_2_story_opponent_roster_expansion.sql`.
+
 ## Fase 5.1 (Experiencia global del jugador)
 
 1. Ejecuta `docs/supabase/sql/009_phase_5_player_progress_experience.sql`.

@@ -258,6 +258,20 @@ Permitir que el equipo de contenido gestione imágenes y audios de diálogos Sto
 
 1. Catálogo local de multimedia por nodo/línea:
    - `src/services/story/story-node-dialogue-media.ts`.
+
+## Fase 4 (nueva) - Expansión de roster jugable en Story
+
+### Objetivo
+
+Conectar los nuevos oponentes al flujo real de mapa/duelo para validar progresión end-to-end sin hardcodes de avatar únicos.
+
+### Implementado (inicio)
+
+1. `IStoryDuelSummary`, grafo world y runtime Story ahora transportan `opponentAvatarUrl`.
+2. `StoryMapNode` deja de usar un único avatar fijo y consume avatar por nodo cuando existe.
+3. Migración de duelos ampliada:
+   - `docs/supabase/sql/018_phase_5_3_story_duel_rotation_expansion.sql`.
+4. Layout visual de acto 2 extendido con nodos de `story-ch2-duel-3` a `story-ch2-duel-6` y nodos virtuales intermedios.
 2. Resolver narrativo enriquece líneas con `portraitUrl` y `audioUrl`.
 3. Modal de interacción renderiza retrato y reproductor de audio cuando existen assets.
 

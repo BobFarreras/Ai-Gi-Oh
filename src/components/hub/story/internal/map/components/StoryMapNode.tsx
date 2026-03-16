@@ -18,7 +18,10 @@ interface StoryMapNodeProps {
 function resolveHologramAsset(node: IStoryMapNodeRuntime): { src: string; alt: string } | null {
   if (node.nodeType === "MOVE") return null;
   if (node.nodeType === "BOSS" || node.nodeType === "DUEL") {
-    return { src: "/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.png", alt: "Oponente" };
+    return {
+      src: node.opponentAvatarUrl ?? "/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.png",
+      alt: node.opponentName || "Oponente",
+    };
   }
   if (node.nodeType === "REWARD_NEXUS") return { src: "/assets/renders/nexus.png", alt: "Nexus" };
   if (node.nodeType === "REWARD_CARD") return resolveStoryRewardCardVisual(node.rewardCardId);

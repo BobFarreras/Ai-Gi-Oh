@@ -20,6 +20,7 @@ function toWorldNode(node: StoryWorldSeedNode): IStoryWorldNode {
     duelIndex: node.duelIndex,
     title: node.title,
     opponentName: node.opponentName,
+    opponentAvatarUrl: node.opponentAvatarUrl,
     difficulty: node.opponentDifficulty,
     nodeType: node.isBossDuel ? "BOSS" : "DUEL",
     rewardNexus: node.rewardNexus,
