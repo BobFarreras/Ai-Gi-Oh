@@ -50,6 +50,7 @@ interface IStoryCircuitCanvasProps {
   retreatTrail: IPathSegmentPoint[];
   retreatingAvatarUrl: string;
   retreatingAvatarAlt: string;
+  isCameraDragEnabled: boolean;
   onRetreatAnimationComplete?: () => void;
 }
 
@@ -59,7 +60,8 @@ interface IStoryCircuitCanvasProps {
 export function StoryCircuitCanvas(props: IStoryCircuitCanvasProps) {
   return (
     <motion.div
-      drag
+      drag={props.isCameraDragEnabled}
+      dragMomentum={false}
       dragConstraints={props.dragConstraintsRef}
       dragElastic={0.1}
       style={{ x: props.cameraX, y: props.cameraY, scale: props.mapScale, width: props.width, height: props.height }}

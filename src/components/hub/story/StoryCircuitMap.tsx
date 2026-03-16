@@ -272,6 +272,7 @@ export function StoryCircuitMap({
         retreatTrail={retreatTrail}
         retreatingAvatarUrl={retreatingAvatarUrl}
         retreatingAvatarAlt={retreatingAvatarAlt}
+        isCameraDragEnabled={!isInteractionLocked && !duelFocusNodeId}
         onRetreatAnimationComplete={onRetreatAnimationComplete}
       />
       {!isMobileVerticalFlow ? <StoryMapZoomControls onCenterPlayerNode={centerCameraOnAvatarNode} onExitToHub={onExitToHub} /> : null}
