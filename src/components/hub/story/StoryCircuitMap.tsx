@@ -32,7 +32,22 @@ interface StoryCircuitMapProps {
   onRetreatAnimationComplete?: () => void;
 }
 
-const MAP_CANVAS_SIZE = { width: 3400, height: 2200 };
+interface IStoryCanvasSize {
+  width: number;
+  height: number;
+}
+
+function resolveStoryCanvasSize(positionMap: Record<string, { x: number; y: number }>): IStoryCanvasSize {
+  const points = Object.values(positionMap);
+  if (points.length === 0) return { width: 4200, height: 2600 };
+  const maxX = Math.max(...points.map((point) => point.x));
+  const maxY = Math.max(...points.map((point) => point.y));
+  // Margen amplio para que nodos extremos y líneas nunca queden cortados.
+  return {
+    width: Math.max(4200, maxX + 640),
+    height: Math.max(2600, maxY + 520),
+  };
+}
 
 export function StoryCircuitMap({
   nodes,
@@ -55,7 +70,8 @@ export function StoryCircuitMap({
   const cameraX = useMotionValue(0); const cameraY = useMotionValue(0); const cinematicScale = useMotionValue(1);
   const avatarX = useMotionValue(1000); const avatarY = useMotionValue(1000);
   const positionMap = useMemo(() => buildStoryNodePositionMap(nodes), [nodes]);
-  const { zoom, zoomIn, zoomOut, resetZoom, handleWheel } = useStoryMapZoom();
+  const canvasSize = useMemo(() => resolveStoryCanvasSize(positionMap), [positionMap]);
+  const { zoom, setZoom, handleWheel } = useStoryMapZoom();
   const mapScale = useTransform(() => zoom.get() * cinematicScale.get());
   const segments = useMemo(() => resolveStoryPathSegments(nodes, positionMap), [nodes, positionMap]);
   const avatarTargetNodeId = avatarVisualTarget?.nodeId ?? currentNodeId;
@@ -113,6 +129,18 @@ export function StoryCircuitMap({
     hasCenteredCamera.current = true;
   }, [avatarPos.x, avatarPos.y, cameraX, cameraY]);
 
+  const centerCameraOnAvatarNode = () => {
+    if (!mapContainerRef.current) return;
+    const containerWidth = mapContainerRef.current.clientWidth;
+    const containerHeight = mapContainerRef.current.clientHeight;
+    const targetX = containerWidth / 2 - avatarPos.x;
+    const targetY = containerHeight / 2 - avatarPos.y + 100;
+    animate(cameraX, targetX, { duration: 0.34, ease: "easeInOut" });
+    animate(cameraY, targetY, { duration: 0.34, ease: "easeInOut" });
+    animate(cinematicScale, 1, { duration: 0.28, ease: "easeOut" });
+    setZoom(1);
+  };
+
   return (
     <div
       ref={mapContainerRef}
@@ -123,8 +151,8 @@ export function StoryCircuitMap({
       }}
     >
       <StoryCircuitCanvas
-        width={MAP_CANVAS_SIZE.width}
-        height={MAP_CANVAS_SIZE.height}
+        width={canvasSize.width}
+        height={canvasSize.height}
         dragConstraintsRef={mapContainerRef}
         cameraX={cameraX}
         cameraY={cameraY}
@@ -150,7 +178,7 @@ export function StoryCircuitMap({
         retreatingAvatarAlt={retreatingAvatarAlt}
         onRetreatAnimationComplete={onRetreatAnimationComplete}
       />
-      <StoryMapZoomControls onZoomIn={zoomIn} onZoomOut={zoomOut} onReset={resetZoom} />
+      <StoryMapZoomControls onCenterPlayerNode={centerCameraOnAvatarNode} />
     </div>
   );
 }

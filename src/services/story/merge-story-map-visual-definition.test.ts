@@ -98,4 +98,21 @@ describe("mergeStoryMapVisualDefinition", () => {
 
     expect(duelNode?.isUnlocked).toBe(false);
   });
+
+  it("mantiene bloqueado GenNvim normal hasta visitar la plataforma superior intermedia", () => {
+    const nodes = [createRuntimeNode({ id: "story-ch1-duel-3", isCompleted: false, isUnlocked: true })];
+    const mergedWithoutUpperGateway = mergeStoryMapVisualDefinition(nodes, {
+      currentNodeId: "story-ch1-path-branch-2",
+      visitedNodeIds: ["story-ch1-path-branch-2"],
+    });
+    const duelNodeLocked = mergedWithoutUpperGateway.find((node) => node.id === "story-ch1-duel-3");
+    expect(duelNodeLocked?.isUnlocked).toBe(false);
+
+    const mergedWithUpperGatewayVisited = mergeStoryMapVisualDefinition(nodes, {
+      currentNodeId: "story-ch1-path-upper-branch-2",
+      visitedNodeIds: ["story-ch1-path-branch-2", "story-ch1-path-upper-branch-2"],
+    });
+    const duelNodeUnlocked = mergedWithUpperGatewayVisited.find((node) => node.id === "story-ch1-duel-3");
+    expect(duelNodeUnlocked?.isUnlocked).toBe(true);
+  });
 });

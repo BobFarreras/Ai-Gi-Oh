@@ -6,6 +6,8 @@ import { resolveStoryPostDuelTransitionFromSearchParams } from "@/services/story
 import { getStoryMapRuntimeData } from "@/services/story/get-story-map-runtime-data";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 interface IStoryPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

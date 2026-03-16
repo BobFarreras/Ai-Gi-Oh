@@ -17,12 +17,9 @@ function clampZoom(value: number): number {
 export function useStoryMapZoom() {
   const zoom = useMotionValue(1);
   const setZoom = (next: number) => zoom.set(clampZoom(next));
-  const zoomIn = () => setZoom(zoom.get() + 0.1);
-  const zoomOut = () => setZoom(zoom.get() - 0.1);
-  const resetZoom = () => setZoom(1);
   const handleWheel: WheelEventHandler<HTMLDivElement> = (event) => {
     event.preventDefault();
     setZoom(zoom.get() + (event.deltaY < 0 ? 0.05 : -0.05));
   };
-  return { zoom, zoomIn, zoomOut, resetZoom, handleWheel };
+  return { zoom, setZoom, handleWheel };
 }

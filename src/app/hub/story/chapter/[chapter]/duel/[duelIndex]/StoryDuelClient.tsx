@@ -61,8 +61,9 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
       duelOutcome: input.outcome,
       duelNodeId: input.duelNodeId,
       returnNodeId: input.returnNodeId,
+      hardReload: Date.now().toString(),
     });
-    window.location.assign(`/hub/story?${query.toString()}`);
+    window.location.replace(`/hub/story?${query.toString()}`);
   };
   const handleResultAction = () => pushBackToStory(
     resultTransition ?? { outcome: "LOST", duelNodeId: `story-ch${props.chapter}-duel-${props.duelIndex}`, returnNodeId: "story-ch1-player-start" },
