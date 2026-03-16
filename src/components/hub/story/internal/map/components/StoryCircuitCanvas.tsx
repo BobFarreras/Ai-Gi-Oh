@@ -63,9 +63,9 @@ export function StoryCircuitCanvas(props: IStoryCircuitCanvasProps) {
       dragConstraints={props.dragConstraintsRef}
       dragElastic={0.1}
       style={{ x: props.cameraX, y: props.cameraY, scale: props.mapScale, width: props.width, height: props.height }}
-      className="absolute left-0 top-0"
+      className="absolute left-0 top-0 isolate"
     >
-      <svg className="pointer-events-none absolute inset-0 h-full w-full">
+      <svg className="pointer-events-none absolute inset-0 z-0 h-full w-full">
         {props.segments.map((segment, index) => (
           <motion.line
             key={`path-${index}`}
@@ -85,7 +85,7 @@ export function StoryCircuitCanvas(props: IStoryCircuitCanvasProps) {
       {props.nodes.map((node) => {
         const position = resolveStoryNodePosition(node.id, props.positionMap);
         return (
-          <div key={node.id} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ top: position.y, left: position.x }}>
+          <div key={node.id} className="absolute z-30 -translate-x-1/2 -translate-y-1/2" style={{ top: position.y, left: position.x }}>
             <StoryMapNode
               node={node}
               isSelected={props.selectedNodeId === node.id}

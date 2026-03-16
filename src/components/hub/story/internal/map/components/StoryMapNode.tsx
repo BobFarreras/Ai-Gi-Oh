@@ -52,7 +52,7 @@ export function StoryMapNode({ node, isSelected, isCurrentNode, isCollecting = f
       disabled={!node.isUnlocked}
       className={cn(
         "group relative flex h-40 w-32 flex-col items-center justify-end outline-none",
-        !node.isUnlocked && "cursor-not-allowed opacity-30 grayscale",
+        !node.isUnlocked && "cursor-not-allowed grayscale brightness-75 saturate-50",
       )}
     >
       <motion.div

@@ -16,11 +16,12 @@ interface IStorySceneMapPaneProps {
   collectingRewardVisual: { assetSrc: string; assetAlt: string; tone: "NEXUS" | "CARD" } | null;
   retreatingNodeId: string | null;
   isBusy: boolean;
-  actSwitchLabel: string | null;
   actTransitionTargetId: number | null;
   shouldPlayActEntryAnimation?: boolean;
+  isMobileVerticalFlow?: boolean;
   onSelectNode: (nodeId: string | null) => void;
-  onSwitchAct: () => void;
+  centerRequestKey?: number;
+  onExitToHub?: () => void;
   onRewardCollectAnimationComplete: () => void;
   onRetreatAnimationComplete: () => void;
   dialog: {
@@ -47,10 +48,11 @@ export function StorySceneMapPane(props: IStorySceneMapPaneProps) {
         collectingRewardVisual={props.collectingRewardVisual}
         retreatingNodeId={props.retreatingNodeId}
         isInteractionLocked={props.isBusy}
-        actSwitchLabel={props.actSwitchLabel}
         shouldPlayActEntryAnimation={props.shouldPlayActEntryAnimation ?? false}
+        isMobileVerticalFlow={props.isMobileVerticalFlow ?? false}
+        centerRequestKey={props.centerRequestKey ?? 0}
+        onExitToHub={props.onExitToHub}
         onSelectNode={props.onSelectNode}
-        onSwitchAct={props.onSwitchAct}
         onRewardCollectAnimationComplete={props.onRewardCollectAnimationComplete}
         onRetreatAnimationComplete={props.onRetreatAnimationComplete}
       />

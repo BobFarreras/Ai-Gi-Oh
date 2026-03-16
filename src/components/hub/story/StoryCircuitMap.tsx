@@ -28,9 +28,10 @@ interface StoryCircuitMapProps {
   collectingRewardVisual?: { assetSrc: string; assetAlt: string; tone: "NEXUS" | "CARD" } | null;
   retreatingNodeId?: string | null;
   isInteractionLocked?: boolean;
-  actSwitchLabel?: string | null;
+  isMobileVerticalFlow?: boolean;
+  centerRequestKey?: number;
   onSelectNode: (nodeId: string | null) => void;
-  onSwitchAct?: () => void;
+  onExitToHub?: () => void;
   onRewardCollectAnimationComplete?: () => void;
   onRetreatAnimationComplete?: () => void;
 }
@@ -38,6 +39,21 @@ interface StoryCircuitMapProps {
 interface IStoryCanvasSize {
   width: number;
   height: number;
+}
+
+function rotateStoryPositionMapForMobile(positionMap: Record<string, { x: number; y: number }>): Record<string, { x: number; y: number }> {
+  const points = Object.values(positionMap);
+  if (points.length === 0) return positionMap;
+  const maxX = Math.max(...points.map((point) => point.x));
+  const minY = Math.min(...points.map((point) => point.y));
+  const transformed: Record<string, { x: number; y: number }> = {};
+  for (const [nodeId, point] of Object.entries(positionMap)) {
+    transformed[nodeId] = {
+      x: point.y - minY + 420,
+      y: maxX - point.x + 520,
+    };
+  }
+  return transformed;
 }
 
 function resolveStoryCanvasSize(positionMap: Record<string, { x: number; y: number }>): IStoryCanvasSize {
@@ -49,6 +65,18 @@ function resolveStoryCanvasSize(positionMap: Record<string, { x: number; y: numb
   return {
     width: Math.max(4200, maxX + 640),
     height: Math.max(2600, maxY + 520),
+  };
+}
+
+function resolveCameraCenterTarget(input: {
+  containerWidth: number;
+  containerHeight: number;
+  nodePosition: { x: number; y: number };
+  scale: number;
+}): { x: number; y: number } {
+  return {
+    x: input.containerWidth / 2 - input.nodePosition.x * input.scale,
+    y: input.containerHeight / 2 - input.nodePosition.y * input.scale + 100,
   };
 }
 
@@ -64,29 +92,39 @@ export function StoryCircuitMap({
   collectingRewardVisual,
   retreatingNodeId,
   isInteractionLocked,
-  actSwitchLabel = null,
+  isMobileVerticalFlow = false,
+  centerRequestKey = 0,
   onSelectNode,
-  onSwitchAct,
+  onExitToHub,
   onRewardCollectAnimationComplete,
   onRetreatAnimationComplete,
 }: StoryCircuitMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const hasCenteredCamera = useRef(false);
   const avatarAnimRef = useRef<{ x: AnimationPlaybackControls | null; y: AnimationPlaybackControls | null }>({ x: null, y: null });
+  const cameraAnimRef = useRef<{ x: AnimationPlaybackControls | null; y: AnimationPlaybackControls | null }>({ x: null, y: null });
   const cameraX = useMotionValue(0); const cameraY = useMotionValue(0); const cinematicScale = useMotionValue(1);
   const avatarX = useMotionValue(1000); const avatarY = useMotionValue(1000); const avatarScale = useMotionValue(1);
-  const positionMap = useMemo(() => buildStoryNodePositionMap(nodes), [nodes]);
+  const basePositionMap = useMemo(() => buildStoryNodePositionMap(nodes), [nodes]);
+  const positionMap = useMemo(
+    () => (isMobileVerticalFlow ? rotateStoryPositionMapForMobile(basePositionMap) : basePositionMap),
+    [basePositionMap, isMobileVerticalFlow],
+  );
   const canvasSize = useMemo(() => resolveStoryCanvasSize(positionMap), [positionMap]);
-  const { zoom, setZoom, handleWheel } = useStoryMapZoom();
+  const { zoom, setZoom, applyWheelZoom } = useStoryMapZoom();
   const mapScale = useTransform(() => zoom.get() * cinematicScale.get());
   const segments = useMemo(() => resolveStoryPathSegments(nodes, positionMap), [nodes, positionMap]);
   const avatarTargetNodeId = avatarVisualTarget?.nodeId ?? currentNodeId;
-  const avatarNode = nodes.find((node) => node.id === avatarTargetNodeId) ?? nodes.find((node) => node.id === "story-ch1-player-start") ?? nodes[0];
+  const avatarNode = nodes.find((node) => node.id === avatarTargetNodeId) ?? nodes.find((node) => node.id === currentNodeId) ?? nodes.find((node) => node.id === `story-ch${nodes[0]?.chapter ?? 1}-player-start`) ?? nodes.find((node) => node.isUnlocked) ?? nodes[0];
+  const currentNodeAnchor = currentNodeId ? resolveStoryNodeTokenAnchor(currentNodeId, positionMap) : null;
   const visualStance = avatarVisualTarget?.stance ?? "CENTER";
   const avatarPos = avatarNode ? resolveStoryNodeTokenAnchor(avatarNode.id, positionMap) : { x: 1000, y: 1000 };
   const avatarSideOffsetX = visualStance === "SIDE" ? -resolveStoryNodeSideOffsetPx() : 0;
+  const avatarAnchorX = avatarPos.x + avatarSideOffsetX;
+  const avatarAnchorY = avatarPos.y;
   const hasInitializedAvatarRef = useRef(false);
   const hasPlayedActSpawnRef = useRef(false);
+  const hasAppliedCenterRequestRef = useRef(0);
   const collectingAnchor = collectingRewardNodeId ? resolveStoryNodeTokenAnchor(collectingRewardNodeId, positionMap) : null;
   const retreatTrail = useMemo(
     () => resolveStoryRetreatTrail({ retreatingNodeId: retreatingNodeId ?? null, nodes, positionMap }),
@@ -116,7 +154,16 @@ export function StoryCircuitMap({
     const duration = Math.min(0.7, Math.max(0.24, distance / 760));
     avatarAnimRef.current.x = animate(avatarX, avatarPos.x, { duration, ease: "easeInOut" });
     avatarAnimRef.current.y = animate(avatarY, avatarPos.y, { duration, ease: "easeInOut" });
-  }, [avatarPos.x, avatarPos.y, avatarX, avatarY]);
+    if (mapContainerRef.current && hasCenteredCamera.current && !duelFocusNodeId) {
+      const containerWidth = mapContainerRef.current.clientWidth;
+      const containerHeight = mapContainerRef.current.clientHeight;
+      const target = resolveCameraCenterTarget({ containerWidth, containerHeight, nodePosition: { x: avatarAnchorX, y: avatarAnchorY }, scale: zoom.get() * cinematicScale.get() });
+      cameraAnimRef.current.x?.stop();
+      cameraAnimRef.current.y?.stop();
+      cameraAnimRef.current.x = animate(cameraX, target.x, { duration, ease: "easeInOut" });
+      cameraAnimRef.current.y = animate(cameraY, target.y, { duration, ease: "easeInOut" });
+    }
+  }, [avatarPos.x, avatarPos.y, avatarAnchorX, avatarAnchorY, avatarX, avatarY, cameraX, cameraY, cinematicScale, duelFocusNodeId, zoom]);
 
   useEffect(() => {
     const targetScale = visualStance === "PORTAL" ? 0.5 : 1;
@@ -137,45 +184,62 @@ export function StoryCircuitMap({
     const containerWidth = mapContainerRef.current.clientWidth;
     const containerHeight = mapContainerRef.current.clientHeight;
     const focus = resolveStoryNodeTokenAnchor(duelFocusNodeId, positionMap);
-    const targetX = containerWidth / 2 - focus.x;
-    const targetY = containerHeight / 2 - focus.y + 100;
-    const xControls = animate(cameraX, targetX, { duration: 0.38, ease: "easeInOut" }); const yControls = animate(cameraY, targetY, { duration: 0.38, ease: "easeInOut" }); const scaleControls = animate(cinematicScale, 1.2, { duration: 0.35, ease: "easeOut" });
+    const target = resolveCameraCenterTarget({ containerWidth, containerHeight, nodePosition: focus, scale: zoom.get() * cinematicScale.get() });
+    const xControls = animate(cameraX, target.x, { duration: 0.38, ease: "easeInOut" }); const yControls = animate(cameraY, target.y, { duration: 0.38, ease: "easeInOut" }); const scaleControls = animate(cinematicScale, 1.2, { duration: 0.35, ease: "easeOut" });
     return () => {
       xControls.stop();
       yControls.stop();
       scaleControls.stop();
     };
-  }, [duelFocusNodeId, positionMap, cameraX, cameraY, cinematicScale]);
+  }, [duelFocusNodeId, positionMap, cameraX, cameraY, cinematicScale, zoom]);
+
+  const centerCameraOnAvatarNode = (zoomValue = zoom.get(), resetZoom = true, animated = true) => {
+    if (!mapContainerRef.current) return;
+    const anchor = currentNodeAnchor ?? { x: avatarAnchorX, y: avatarAnchorY };
+    const effectiveZoom = resetZoom ? 1 : zoomValue;
+    const containerWidth = mapContainerRef.current.clientWidth;
+    const containerHeight = mapContainerRef.current.clientHeight;
+    const target = resolveCameraCenterTarget({ containerWidth, containerHeight, nodePosition: anchor, scale: effectiveZoom * cinematicScale.get() });
+    cameraAnimRef.current.x?.stop();
+    cameraAnimRef.current.y?.stop();
+    if (animated) {
+      cameraAnimRef.current.x = animate(cameraX, target.x, { duration: 0.34, ease: "easeInOut" });
+      cameraAnimRef.current.y = animate(cameraY, target.y, { duration: 0.34, ease: "easeInOut" });
+    } else {
+      cameraX.set(target.x);
+      cameraY.set(target.y);
+    }
+    if (resetZoom) {
+      setZoom(1);
+      animate(cinematicScale, 1, { duration: 0.28, ease: "easeOut" });
+    }
+  };
 
   useEffect(() => {
-    if (hasCenteredCamera.current) return;
     if (!mapContainerRef.current) return;
-    const containerWidth = mapContainerRef.current.clientWidth;
-    const containerHeight = mapContainerRef.current.clientHeight;
-    const targetX = containerWidth / 2 - avatarPos.x;
-    const targetY = containerHeight / 2 - avatarPos.y + 100;
-    cameraX.set(targetX);
-    cameraY.set(targetY);
-    hasCenteredCamera.current = true;
-  }, [avatarPos.x, avatarPos.y, cameraX, cameraY]);
+    if (!hasCenteredCamera.current) {
+      centerCameraOnAvatarNode(zoom.get(), false, false);
+      hasCenteredCamera.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentNodeId, currentNodeAnchor?.x, currentNodeAnchor?.y]);
 
-  const centerCameraOnAvatarNode = () => {
-    if (!mapContainerRef.current) return;
-    const containerWidth = mapContainerRef.current.clientWidth;
-    const containerHeight = mapContainerRef.current.clientHeight;
-    const targetX = containerWidth / 2 - avatarPos.x;
-    const targetY = containerHeight / 2 - avatarPos.y + 100;
-    animate(cameraX, targetX, { duration: 0.34, ease: "easeInOut" });
-    animate(cameraY, targetY, { duration: 0.34, ease: "easeInOut" });
-    animate(cinematicScale, 1, { duration: 0.28, ease: "easeOut" });
-    setZoom(1);
-  };
+  useEffect(() => {
+    if (!hasCenteredCamera.current) return;
+    if (centerRequestKey === hasAppliedCenterRequestRef.current) return;
+    hasAppliedCenterRequestRef.current = centerRequestKey;
+    centerCameraOnAvatarNode();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [centerRequestKey]);
 
   return (
     <div
       ref={mapContainerRef}
       className="relative h-full w-full cursor-grab overflow-hidden active:cursor-grabbing"
-      onWheel={handleWheel}
+      onWheel={(event) => {
+        const nextZoom = applyWheelZoom(event.deltaY);
+        centerCameraOnAvatarNode(nextZoom, false, false);
+      }}
       onClick={() => {
         if (!isInteractionLocked) onSelectNode(null);
       }}
@@ -210,7 +274,7 @@ export function StoryCircuitMap({
         retreatingAvatarAlt={retreatingAvatarAlt}
         onRetreatAnimationComplete={onRetreatAnimationComplete}
       />
-      <StoryMapZoomControls onCenterPlayerNode={centerCameraOnAvatarNode} actSwitchLabel={actSwitchLabel} onSwitchAct={onSwitchAct} />
+      {!isMobileVerticalFlow ? <StoryMapZoomControls onCenterPlayerNode={centerCameraOnAvatarNode} onExitToHub={onExitToHub} /> : null}
     </div>
   );
 }

@@ -16,6 +16,7 @@ Definir cómo se modela el mapa, desbloqueos, navegación e integración con due
 7. `src/services/story/map-definitions/`: layout visual editable por acto (sin tocar reglas de dominio).
 8. `docs/story/STORY_DIALOGUE_ASSETS_TEMPLATE.md`: plantilla para producción de texto/retrato/audio por nodo.
 9. `docs/story/STORY-DUEL-IMPLEMENTATION-LOG.md`: bitácora fase a fase del flujo Story <-> Duel.
+10. `docs/story/MOBILE-STORY-PHASES-1-3.md`: plan base para habilitar Story en móvil sin romper desktop.
 
 ## Estado actual
 

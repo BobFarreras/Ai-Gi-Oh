@@ -1,12 +1,10 @@
 // src/components/hub/story/internal/map/components/StoryMapZoomControls.tsx - Botón rápido para centrar cámara en el nodo actual del jugador.
 interface IStoryMapZoomControlsProps {
   onCenterPlayerNode: () => void;
-  actSwitchLabel?: string | null;
-  onSwitchAct?: () => void;
+  onExitToHub?: () => void;
 }
 
-export function StoryMapZoomControls({ onCenterPlayerNode, actSwitchLabel = null, onSwitchAct }: IStoryMapZoomControlsProps) {
-  const actSwitchButtonLabel = actSwitchLabel ? `Ir al ${actSwitchLabel}` : null;
+export function StoryMapZoomControls({ onCenterPlayerNode, onExitToHub }: IStoryMapZoomControlsProps) {
   return (
     <div className="absolute right-3 top-3 z-50 flex items-center gap-1 rounded border border-cyan-500/40 bg-black/70 p-1 text-cyan-100 backdrop-blur-sm">
       <button
@@ -29,14 +27,14 @@ export function StoryMapZoomControls({ onCenterPlayerNode, actSwitchLabel = null
           <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
         </svg>
       </button>
-      {actSwitchButtonLabel && onSwitchAct ? (
+      {onExitToHub ? (
         <button
           type="button"
-          aria-label={actSwitchButtonLabel}
-          onClick={onSwitchAct}
-          className="rounded border border-cyan-500/40 px-2 py-1 text-[10px] font-black uppercase tracking-wider"
+          aria-label="Volver al hub"
+          onClick={onExitToHub}
+          className="rounded border border-cyan-500/40 px-2 py-2 text-[10px] font-black uppercase tracking-wider"
         >
-          {actSwitchButtonLabel}
+          Hub
         </button>
       ) : null}
     </div>

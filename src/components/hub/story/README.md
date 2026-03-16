@@ -37,6 +37,12 @@ story/
       constants/
         story-map-geometry.ts
     scene/
+      view/
+        StorySceneDesktopLayout.tsx
+        StorySceneMobileLayout.tsx
+        StoryMobileSidebarSheet.tsx
+        story-scene-view-props.ts
+        use-story-scene-mobile-mode.ts
       audio/
         use-story-scene-sfx.ts
       dialog/
@@ -65,6 +71,7 @@ story/
 ## Responsabilidades por capa
 - `StoryScene.tsx`: composición de escena, acciones de UI y coordinación con API.
   Implementa CTA único inteligente (`smart action`) para mover/interactuar con un solo botón.
+  Selecciona layout desktop/mobile sin duplicar la lógica de estado.
 - `StoryCircuitMap.tsx`: render del canvas de mapa, nodos, caminos, plataformas y avatar.
 - `internal/map/layout/*`: cálculo de posiciones/segmentos del circuito.
   `resolve-story-retreat-trail.ts` calcula la ruta de retirada rival siguiendo el grafo.
@@ -79,6 +86,8 @@ story/
 - `internal/scene/panels/*`: panel lateral e información contextual con acción única (sin doble botón).
 - `internal/scene/transitions/*`: transición visual post-duelo al volver desde combate.
   Incluye entrada por portal al cambiar de acto (spawn pequeño -> crecer -> desplazamiento al nodo destino del acto).
+- `internal/scene/view/*`: layouts de presentación Story.
+  En mobile se usa sidebar desplegable y proyección visual vertical del mapa con el mismo motor.
 
 ## Reglas de mantenimiento
 - Mantener SRP: un archivo = un motivo de cambio.

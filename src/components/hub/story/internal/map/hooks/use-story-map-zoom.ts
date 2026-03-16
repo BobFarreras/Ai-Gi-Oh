@@ -2,12 +2,11 @@
 "use client";
 
 import { useMotionValue } from "framer-motion";
-import { WheelEventHandler } from "react";
 
 const MIN_ZOOM = 0.72;
 const MAX_ZOOM = 1.48;
 
-function clampZoom(value: number): number {
+export function clampStoryMapZoom(value: number): number {
   return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, value));
 }
 
@@ -16,10 +15,11 @@ function clampZoom(value: number): number {
  */
 export function useStoryMapZoom() {
   const zoom = useMotionValue(1);
-  const setZoom = (next: number) => zoom.set(clampZoom(next));
-  const handleWheel: WheelEventHandler<HTMLDivElement> = (event) => {
-    event.preventDefault();
-    setZoom(zoom.get() + (event.deltaY < 0 ? 0.05 : -0.05));
+  const setZoom = (next: number) => zoom.set(clampStoryMapZoom(next));
+  const applyWheelZoom = (deltaY: number): number => {
+    const nextZoom = clampStoryMapZoom(zoom.get() + (deltaY < 0 ? 0.05 : -0.05));
+    zoom.set(nextZoom);
+    return nextZoom;
   };
-  return { zoom, setZoom, handleWheel };
+  return { zoom, setZoom, applyWheelZoom };
 }
