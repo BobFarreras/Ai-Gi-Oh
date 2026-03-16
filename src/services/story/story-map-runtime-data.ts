@@ -31,4 +31,6 @@ export interface IStoryMapRuntimeData {
   playerId: string;
   nodes: IStoryMapNodeRuntime[];
   currentNodeId: string | null;
+  activeActId: number;
+  availableActIds: number[];
 }

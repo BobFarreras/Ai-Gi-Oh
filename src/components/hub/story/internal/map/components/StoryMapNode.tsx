@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import { resolveStoryRewardCardVisual } from "@/services/story/resolve-story-reward-card-visual";
 import { resolveStoryOpponentAvatarUrl } from "@/components/hub/story/internal/map/story-opponent-avatar";
+import { resolveStoryActTransitionTarget } from "@/services/story/resolve-story-act-transition-target";
 
 interface StoryMapNodeProps {
   node: IStoryMapNodeRuntime;
@@ -32,10 +33,12 @@ function resolveHologramAsset(node: IStoryMapNodeRuntime): { src: string; alt: s
 
 export function StoryMapNode({ node, isSelected, isCurrentNode, isCollecting = false, onClick }: StoryMapNodeProps) {
   const hologram = resolveHologramAsset(node);
+  const transitionActTarget = resolveStoryActTransitionTarget(node.id);
+  const isActTransitionNode = transitionActTarget !== null;
   const isDefeatedDuel = node.isCompleted && (node.nodeType === "DUEL" || node.nodeType === "BOSS");
   const shouldShowTitle = node.nodeType === "DUEL" || node.nodeType === "BOSS";
-  // Un nodo resuelto debe quedar como plataforma vacía para que solo permanezca la ficha del jugador.
-  const shouldHideCompletedToken = node.isCompleted && node.nodeType !== "MOVE";
+  // Un nodo resuelto debe quedar como plataforma vacía, excepto transiciones de acto para permitir reuso.
+  const shouldHideCompletedToken = node.isCompleted && node.nodeType !== "MOVE" && !isActTransitionNode;
   const shouldRenderToken = Boolean(hologram) && !isCollecting && !shouldHideCompletedToken;
 
   return (
@@ -67,12 +70,24 @@ export function StoryMapNode({ node, isSelected, isCurrentNode, isCollecting = f
           className={cn(
             "relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 bg-black/85 backdrop-blur-sm",
             node.isBossDuel ? "rotate-45 rounded-lg border-fuchsia-500" : "border-cyan-500",
+            isActTransitionNode && "border-violet-300/80 bg-black",
             node.isCompleted && "border-emerald-500",
             isDefeatedDuel && "opacity-40 saturate-0",
             node.nodeType === "MOVE" && "border-emerald-400/60 bg-emerald-950/35",
             isCurrentNode && "border-emerald-300",
           )}
         >
+          {isActTransitionNode ? (
+            <>
+              <motion.div
+                aria-hidden
+                animate={{ rotate: 360 }}
+                transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-1 rounded-full bg-[conic-gradient(from_0deg,rgba(168,85,247,0.0)_0deg,rgba(168,85,247,0.95)_90deg,rgba(15,23,42,0.75)_200deg,rgba(168,85,247,0.0)_360deg)]"
+              />
+              <div aria-hidden className="absolute inset-4 rounded-full border border-violet-200/60 bg-black shadow-[inset_0_0_22px_rgba(76,29,149,0.95)]" />
+            </>
+          ) : null}
           {hologram ? (
             <div className={cn("relative h-full w-full", node.isBossDuel && "-rotate-45")}>
               <Image
@@ -83,6 +98,7 @@ export function StoryMapNode({ node, isSelected, isCurrentNode, isCollecting = f
                 quality={55}
                 className={cn(
                   "object-contain",
+                  isActTransitionNode && "opacity-50 blur-[0.4px]",
                   node.nodeType === "DUEL" || node.nodeType === "BOSS" ? "object-cover" : "p-1",
                 )}
               />

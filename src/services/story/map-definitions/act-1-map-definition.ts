@@ -45,6 +45,7 @@ export const storyAct1MapDefinition: IStoryActMapDefinition = {
     v({ id: "story-ch1-reward-card-elite", duelIndex: 102, nodeType: "REWARD_CARD", title: "Carta", rewardCardId: "trap-kernel-panic", unlockRequirementNodeId: "story-ch1-duel-3", position: { x: 3120, y: 1000 } }),
     v({ id: "story-ch1-path-lower-branch-nexus", duelIndex: 103, nodeType: "REWARD_NEXUS", title: "Moneda", rewardNexus: 280, unlockRequirementNodeId: "story-ch1-path-branch-2", position: { x: 2860, y: 1420 } }),
     v({ id: "story-ch1-path-lower-final-blank", duelIndex: 104, nodeType: "MOVE", title: "Tramo Final", unlockRequirementNodeId: "story-ch2-duel-3", position: { x: 3380, y: 1420 } }),
+    v({ id: "story-ch1-transition-to-act2", duelIndex: 105, nodeType: "EVENT", title: "Puerta de Acto", unlockRequirementNodeId: "story-ch2-duel-4", position: { x: 3900, y: 1420 } }),
   ],
   platforms: [
     { id: "act1-p-1", position: { x: 260, y: 980 }, size: 170, style: "METAL" },
@@ -67,5 +68,6 @@ export const storyAct1MapDefinition: IStoryActMapDefinition = {
     { id: "act1-p-18", position: { x: 3120, y: 1420 }, size: 170, style: "METAL" },
     { id: "act1-p-19", position: { x: 3380, y: 1420 }, size: 170, style: "RUIN" },
     { id: "act1-p-20", position: { x: 3640, y: 1420 }, size: 170, style: "NEON" },
+    { id: "act1-p-21", position: { x: 3900, y: 1420 }, size: 170, style: "METAL" },
   ],
 };

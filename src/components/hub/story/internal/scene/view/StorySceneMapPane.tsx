@@ -1,6 +1,7 @@
 // src/components/hub/story/internal/scene/view/StorySceneMapPane.tsx - Contenedor del mapa Story y diálogo narrativo desacoplado de StoryScene.
 import { StoryCircuitMap } from "@/components/hub/story/StoryCircuitMap";
 import { StoryNodeInteractionDialog } from "@/components/hub/story/internal/scene/dialog/StoryNodeInteractionDialog";
+import { StoryActTransitionOverlay } from "@/components/hub/story/internal/scene/view/StoryActTransitionOverlay";
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import { IStoryInteractionDialogueLine } from "@/services/story/resolve-story-node-interaction-dialogue";
 
@@ -15,7 +16,10 @@ interface IStorySceneMapPaneProps {
   collectingRewardVisual: { assetSrc: string; assetAlt: string; tone: "NEXUS" | "CARD" } | null;
   retreatingNodeId: string | null;
   isBusy: boolean;
+  actSwitchLabel: string | null;
+  actTransitionTargetId: number | null;
   onSelectNode: (nodeId: string | null) => void;
+  onSwitchAct: () => void;
   onRewardCollectAnimationComplete: () => void;
   onRetreatAnimationComplete: () => void;
   dialog: {
@@ -42,7 +46,9 @@ export function StorySceneMapPane(props: IStorySceneMapPaneProps) {
         collectingRewardVisual={props.collectingRewardVisual}
         retreatingNodeId={props.retreatingNodeId}
         isInteractionLocked={props.isBusy}
+        actSwitchLabel={props.actSwitchLabel}
         onSelectNode={props.onSelectNode}
+        onSwitchAct={props.onSwitchAct}
         onRewardCollectAnimationComplete={props.onRewardCollectAnimationComplete}
         onRetreatAnimationComplete={props.onRetreatAnimationComplete}
       />
@@ -54,6 +60,7 @@ export function StorySceneMapPane(props: IStorySceneMapPaneProps) {
         onNext={props.dialog.onNext}
         onClose={props.dialog.onClose}
       />
+      <StoryActTransitionOverlay targetActId={props.actTransitionTargetId} />
     </div>
   );
 }

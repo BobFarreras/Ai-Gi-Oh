@@ -1,6 +1,6 @@
 // src/components/hub/story/StoryScene.tsx - Escena principal Story con mapa vivo y panel lateral conectado a estado persistible.
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "zustand";
 import { StorySceneMapPane } from "./internal/scene/view/StorySceneMapPane";
@@ -18,6 +18,11 @@ import { resolveStoryPrimaryAction } from "@/services/story/resolve-story-primar
 import { resolveStorySmartAction } from "@/services/story/resolve-story-smart-action";
 interface IStorySceneProps { runtime: IStoryMapRuntimeData; briefing: IStoryChapterBriefing; postDuelTransition?: IStoryPostDuelTransition | null; }
 interface IStoryCollectVisual { assetSrc: string; assetAlt: string; tone: "NEXUS" | "CARD"; }
+function resolveNextActId(activeActId: number, availableActIds: number[]): number | null {
+  const sorted = [...availableActIds].sort((left, right) => left - right); const currentIndex = sorted.indexOf(activeActId);
+  if (currentIndex < 0 || sorted.length <= 1) return null; return sorted[(currentIndex + 1) % sorted.length] ?? null;
+}
+
 export function StoryScene({ runtime, briefing, postDuelTransition = null }: IStorySceneProps) {
   const router = useRouter();
   const [store] = useState<StorySceneStore>(() => createStorySceneStore({ nodes: runtime.nodes, currentNodeId: runtime.currentNodeId }));
@@ -35,6 +40,7 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null }: ISt
   const [collectingRewardNodeId, setCollectingRewardNodeId] = useState<string | null>(null);
   const [collectingRewardVisual, setCollectingRewardVisual] = useState<IStoryCollectVisual | null>(null);
   const [retreatingNodeId, setRetreatingNodeId] = useState<string | null>(null);
+  const [actTransitionTargetId, setActTransitionTargetId] = useState<number | null>(null);
   const [pendingCenterNodeId, setPendingCenterNodeId] = useState<string | null>(null);
   const [movementError, setMovementError] = useState<string | null>(null);
   const [interactionFeedback, setInteractionFeedback] = useState<string | null>(null);
@@ -42,6 +48,8 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null }: ISt
   const sceneSfx = useStorySceneSfx();
   const selectedNode = selectedNodeId ? nodesById[selectedNodeId] ?? null : null;
   const sceneNodes = useMemo(() => Object.values(nodesById).sort((left, right) => (left.chapter !== right.chapter ? left.chapter - right.chapter : left.duelIndex - right.duelIndex)), [nodesById]);
+  const nextActId = resolveNextActId(runtime.activeActId, runtime.availableActIds);
+  const actSwitchLabel = nextActId ? `Acto ${nextActId}` : null;
   const primaryAction = resolveStoryPrimaryAction(selectedNode);
   const canMoveSelectedNode = resolveStorySceneCanMove({
     selectedNode,
@@ -50,13 +58,8 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null }: ISt
     isDialogOpen: interactionDialog.isOpen,
   });
   const smartAction = resolveStorySmartAction({ selectedNode, canMove: canMoveSelectedNode, primaryAction });
-  const isBusy = isMoving || isInteracting || interactionDialog.isOpen;
-  useStoryPostDuelTransition({
-    transition: postDuelTransition,
-    currentNodeId,
-    setAvatarVisualTarget,
-    setRetreatingNodeId,
-  });
+  const isBusy = isMoving || isInteracting || interactionDialog.isOpen || Boolean(actTransitionTargetId);
+  useStoryPostDuelTransition({ transition: postDuelTransition, currentNodeId, setAvatarVisualTarget, setRetreatingNodeId });
   const { centerAvatarOnNode, handleSmartAction } = createStorySceneActions({
     selectedNodeId,
     selectedNode,
@@ -78,8 +81,10 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null }: ISt
     markNodeCompleted,
     sceneSfx,
     navigateTo: router.push,
+    requestActTransition: (actId) => setActTransitionTargetId(actId),
     startInteractionDialog: interactionDialog.start,
   });
+  useEffect(() => { if (!actTransitionTargetId) return; const timeoutId = window.setTimeout(() => router.push(`/hub/story?act=${actTransitionTargetId}`), 900); return () => window.clearTimeout(timeoutId); }, [actTransitionTargetId, router]);
   const finalizeInteractionDialog = async () => {
     interactionDialog.close();
     if (!pendingCenterNodeId) return;
@@ -118,14 +123,14 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null }: ISt
         collectingRewardVisual={collectingRewardVisual}
         retreatingNodeId={retreatingNodeId}
         isBusy={isBusy}
+        actSwitchLabel={actSwitchLabel}
+        actTransitionTargetId={actTransitionTargetId}
         onSelectNode={(nodeId) => {
           if (nodeId) sceneSfx.playNodeSelect();
           setSelectedNodeId(nodeId);
         }}
-        onRewardCollectAnimationComplete={() => {
-          setCollectingRewardNodeId(null);
-          setCollectingRewardVisual(null);
-        }}
+        onSwitchAct={() => { if (!nextActId) return; sceneSfx.playButtonClick(); router.push(`/hub/story?act=${nextActId}`); }}
+        onRewardCollectAnimationComplete={() => { setCollectingRewardNodeId(null); setCollectingRewardVisual(null); }}
         onRetreatAnimationComplete={() => setRetreatingNodeId(null)}
         dialog={{
           isOpen: interactionDialog.isOpen,

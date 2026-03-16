@@ -50,6 +50,18 @@ const DIALOGUE_BY_NODE_ID: Record<string, IStoryNodeInteractionDialogue> = {
       { speaker: "Sistema", text: "Recoge el recurso para reforzar el siguiente duelo." },
     ],
   },
+  "story-ch1-transition-to-act2": {
+    title: "Puerta de Acto",
+    lines: [
+      { speaker: "Sistema", text: "Ruta de ascenso desbloqueada. Preparando salto al Acto 2.", autoAdvanceMs: 2600 },
+    ],
+  },
+  "story-ch2-transition-to-act1": {
+    title: "Retorno de Acto",
+    lines: [
+      { speaker: "Sistema", text: "Canal inverso estable. Regresando al Acto 1.", autoAdvanceMs: 2600 },
+    ],
+  },
   "story-ch1-event-scout-log": {
     title: "Canal de Reconocimiento",
     soundtrackUrl: "/audio/story/soundtruck.mp3",

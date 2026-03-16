@@ -216,6 +216,16 @@
 3. Dependencias:
    - requiere esquema Story previo (`008`) y roster ampliado (`017`).
 
+## Fase 7 (Acto 2 ramificado con puente de BOSS)
+
+1. Ejecuta `docs/supabase/sql/021_phase_7_act2_branching_flow.sql`.
+2. Ajustes principales:
+   - define Acto 2 con tres ramas (superior, central e inferior),
+   - introduce doble nodo de Helena para condicionar el acceso final,
+   - configura `story-ch2-duel-9` como BOSS Jaku tras activar el puente.
+3. Dependencias:
+   - requiere haber aplicado `020_phase_6_act1_real_flow.sql`.
+
 ## Fase 5.1 (Experiencia global del jugador)
 
 1. Ejecuta `docs/supabase/sql/009_phase_5_player_progress_experience.sql`.

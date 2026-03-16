@@ -115,4 +115,33 @@ describe("mergeStoryMapVisualDefinition", () => {
     const duelNodeUnlocked = mergedWithUpperGatewayVisited.find((node) => node.id === "story-ch1-duel-3");
     expect(duelNodeUnlocked?.isUnlocked).toBe(true);
   });
+
+  it("bloquea boss de acto 2 hasta activar el puente tras la segunda Helena", () => {
+    const nodes = [
+      createRuntimeNode({ id: "story-ch2-duel-8", chapter: 2, duelIndex: 6, isCompleted: true, isUnlocked: true }),
+      createRuntimeNode({ id: "story-ch2-duel-9", chapter: 2, duelIndex: 7, isCompleted: false, isUnlocked: true }),
+    ];
+
+    const mergedLocked = mergeStoryMapVisualDefinition(nodes, {
+      currentNodeId: "story-ch2-branch-lower-down-b",
+      visitedNodeIds: ["story-ch2-branch-lower-down-b"],
+    });
+    const bossLocked = mergedLocked.find((node) => node.id === "story-ch2-duel-9");
+    expect(bossLocked?.isUnlocked).toBe(false);
+
+    const mergedUnlocked = mergeStoryMapVisualDefinition(nodes, {
+      currentNodeId: "story-ch2-boss-bridge",
+      visitedNodeIds: ["story-ch2-branch-lower-down-b", "story-ch2-boss-bridge"],
+    });
+    const bossUnlocked = mergedUnlocked.find((node) => node.id === "story-ch2-duel-9");
+    expect(bossUnlocked?.isUnlocked).toBe(true);
+  });
+
+  it("muestra nodo de transición al Acto 2 tras completar el boss del Acto 1", () => {
+    const nodes = [createRuntimeNode({ id: "story-ch2-duel-4", chapter: 1, duelIndex: 5, isCompleted: true, isUnlocked: true })];
+    const merged = mergeStoryMapVisualDefinition(nodes, { currentNodeId: "story-ch2-duel-4", visitedNodeIds: ["story-ch2-duel-4"] });
+    const transitionNode = merged.find((node) => node.id === "story-ch1-transition-to-act2");
+    expect(transitionNode?.isUnlocked).toBe(true);
+    expect(transitionNode?.nodeType).toBe("EVENT");
+  });
 });

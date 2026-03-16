@@ -3,17 +3,12 @@ import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import { resolveStoryPrimaryAction } from "@/services/story/resolve-story-primary-action";
 import { resolveStoryRewardCardVisual } from "@/services/story/resolve-story-reward-card-visual";
 import { animateStoryAvatarPath } from "@/components/hub/story/internal/scene/actions/animate-story-avatar-path";
+import { resolveStoryActTransitionTarget } from "@/services/story/resolve-story-act-transition-target";
 
-interface IStoryInteractResponse {
-  interactionCountForNode: number;
-}
+interface IStoryInteractResponse { interactionCountForNode: number; }
 type StoryRewardTone = "NEXUS" | "CARD";
 type StorySmartActionMode = "MOVE" | "PRIMARY" | "MOVE_AND_PRIMARY" | "DISABLED";
-interface IStoryCollectVisual {
-  assetSrc: string;
-  assetAlt: string;
-  tone: StoryRewardTone;
-}
+interface IStoryCollectVisual { assetSrc: string; assetAlt: string; tone: StoryRewardTone; }
 
 interface ICreateStorySceneActionsParams {
   selectedNodeId: string | null;
@@ -34,13 +29,9 @@ interface ICreateStorySceneActionsParams {
   setCollectingRewardVisual: (value: IStoryCollectVisual | null) => void;
   setPendingCenterNodeId: (value: string | null) => void;
   markNodeCompleted: (nodeId: string) => void;
-  sceneSfx: {
-    playMove: () => void;
-    playDuelStart: () => void;
-    playRewardNexus: () => void;
-    playRewardCard: () => void;
-  };
+  sceneSfx: { playMove: () => void; playDuelStart: () => void; playRewardNexus: () => void; playRewardCard: () => void; };
   navigateTo: (href: string) => void;
+  requestActTransition: (actId: number) => void;
   startInteractionDialog: (node: IStoryMapNodeRuntime, interactionCountForNode: number) => boolean;
 }
 
@@ -51,24 +42,13 @@ function resolveCollectVisual(targetNode: IStoryMapNodeRuntime): IStoryCollectVi
 }
 
 function wait(ms: number): Promise<void> { return new Promise((resolve) => window.setTimeout(resolve, ms)); }
-/**
- * Crea handlers de escena para mantener StoryScene como componente de composición.
- */
 export function createStorySceneActions(params: ICreateStorySceneActionsParams) {
   const showFloatingReward = (label: string, tone: StoryRewardTone): void => {
     params.setFloatingReward({ label, tone });
     window.setTimeout(() => params.setFloatingReward(null), 620);
   };
-  const runRewardCollectAnimation = async (targetNode: IStoryMapNodeRuntime): Promise<void> => {
-    params.setCollectingRewardNodeId(targetNode.id);
-    params.setCollectingRewardVisual(resolveCollectVisual(targetNode));
-    await wait(620);
-  };
-  const centerAvatarOnNode = async (nodeId: string): Promise<void> => {
-    params.setCurrentNodeId(nodeId);
-    params.setAvatarVisualTarget({ nodeId, stance: "CENTER" });
-    await wait(260);
-  };
+  const runRewardCollectAnimation = async (targetNode: IStoryMapNodeRuntime): Promise<void> => { params.setCollectingRewardNodeId(targetNode.id); params.setCollectingRewardVisual(resolveCollectVisual(targetNode)); await wait(620); };
+  const centerAvatarOnNode = async (nodeId: string): Promise<void> => { params.setCurrentNodeId(nodeId); params.setAvatarVisualTarget({ nodeId, stance: "CENTER" }); await wait(260); };
   const handleMove = async (triggerActionAfterMove = false, targetNodeForAction: IStoryMapNodeRuntime | null = params.selectedNode): Promise<void> => {
     if (!params.selectedNodeId || params.isMoving) return;
     params.setIsMoving(true);
@@ -131,6 +111,13 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
         await runRewardCollectAnimation(targetNode);
       }
       params.markNodeCompleted(targetNode.id);
+      const actTransitionTarget = resolveStoryActTransitionTarget(targetNode.id);
+      if (actTransitionTarget) {
+        await centerAvatarOnNode(targetNode.id);
+        params.requestActTransition(actTransitionTarget);
+        params.setInteractionFeedback(`Transición iniciada hacia Acto ${actTransitionTarget}.`);
+        return;
+      }
       if (targetNode.nodeType === "REWARD_NEXUS" || targetNode.nodeType === "REWARD_CARD") {
         await centerAvatarOnNode(targetNode.id);
         params.setInteractionFeedback(targetNode.nodeType === "REWARD_NEXUS" ? `NEXUS obtenido: +${targetNode.rewardNexus}.` : "Carta obtenida: Windows92.");
@@ -145,10 +132,6 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
       params.setIsInteracting(false);
     }
   };
-  const handleSmartAction = async (): Promise<void> => {
-    if (params.smartActionMode === "MOVE") return handleMove(false);
-    if (params.smartActionMode === "PRIMARY") return handlePrimaryAction();
-    if (params.smartActionMode === "MOVE_AND_PRIMARY") return handleMove(true);
-  };
+  const handleSmartAction = async (): Promise<void> => { if (params.smartActionMode === "MOVE") return handleMove(false); if (params.smartActionMode === "PRIMARY") return handlePrimaryAction(); if (params.smartActionMode === "MOVE_AND_PRIMARY") return handleMove(true); };
   return { centerAvatarOnNode, handleMove, handlePrimaryAction, handleSmartAction };
 }

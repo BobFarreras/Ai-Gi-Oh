@@ -27,7 +27,9 @@ interface StoryCircuitMapProps {
   collectingRewardVisual?: { assetSrc: string; assetAlt: string; tone: "NEXUS" | "CARD" } | null;
   retreatingNodeId?: string | null;
   isInteractionLocked?: boolean;
+  actSwitchLabel?: string | null;
   onSelectNode: (nodeId: string | null) => void;
+  onSwitchAct?: () => void;
   onRewardCollectAnimationComplete?: () => void;
   onRetreatAnimationComplete?: () => void;
 }
@@ -60,7 +62,9 @@ export function StoryCircuitMap({
   collectingRewardVisual,
   retreatingNodeId,
   isInteractionLocked,
+  actSwitchLabel = null,
   onSelectNode,
+  onSwitchAct,
   onRewardCollectAnimationComplete,
   onRetreatAnimationComplete,
 }: StoryCircuitMapProps) {
@@ -178,7 +182,7 @@ export function StoryCircuitMap({
         retreatingAvatarAlt={retreatingAvatarAlt}
         onRetreatAnimationComplete={onRetreatAnimationComplete}
       />
-      <StoryMapZoomControls onCenterPlayerNode={centerCameraOnAvatarNode} />
+      <StoryMapZoomControls onCenterPlayerNode={centerCameraOnAvatarNode} actSwitchLabel={actSwitchLabel} onSwitchAct={onSwitchAct} />
     </div>
   );
 }

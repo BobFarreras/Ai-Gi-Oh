@@ -15,7 +15,12 @@ interface IStoryPageProps {
 
 export default async function StoryPage({ searchParams }: IStoryPageProps) {
   const resolvedSearchParams = await searchParams;
-  const runtime = await getStoryMapRuntimeData();
+  const rawActParam = resolvedSearchParams.act;
+  const preferredActValue = Array.isArray(rawActParam) ? rawActParam[0] : rawActParam;
+  const preferredActId = preferredActValue ? Number.parseInt(preferredActValue, 10) : null;
+  const runtime = await getStoryMapRuntimeData({
+    preferredActId: Number.isFinite(preferredActId) ? preferredActId : null,
+  });
   if (!runtime) {
     return (
       <main className="hub-control-room-bg flex min-h-dvh items-center justify-center px-4 py-8">

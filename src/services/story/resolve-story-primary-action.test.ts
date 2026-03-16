@@ -60,4 +60,14 @@ describe("resolveStoryPrimaryAction", () => {
     expect(action.mode).toBe("DISABLED");
     expect(action.label).toBe("Nodo resuelto");
   });
+
+  it("mantiene habilitada la transición de acto aunque el nodo esté resuelto", () => {
+    const action = resolveStoryPrimaryAction(
+      createNode({ id: "story-ch1-transition-to-act2", nodeType: "EVENT", href: "#", isVirtualNode: true, isCompleted: true }),
+    );
+
+    expect(action.mode).toBe("VIRTUAL_INTERACTION");
+    expect(action.isEnabled).toBe(true);
+    expect(action.label).toBe("Ir al Acto 2");
+  });
 });
