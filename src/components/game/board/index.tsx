@@ -15,6 +15,7 @@ import { BoardPlayersSection } from "@/components/game/board/internal/BoardPlaye
 import { BoardActionControlsSection } from "@/components/game/board/internal/BoardActionControlsSection";
 import { BoardInteractiveSection } from "@/components/game/board/internal/BoardInteractiveSection";
 import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
+import { BoardTutorialGuide } from "@/components/game/board/internal/BoardTutorialGuide";
 
 export type BoardBossThemeVariant = "CRIMSON" | "AMBER" | "VIOLET" | "CYAN";
 
@@ -94,6 +95,16 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
         </>
       ) : null}
       <BoardInteractiveSection board={board} screen={screen} isMobile={isMobile} />
+      {mode === "TUTORIAL" && !isMatchStartLocked ? (
+        <BoardTutorialGuide
+          combatLog={board.gameState.combatLog}
+          selectedCard={Boolean(board.selectedCard)}
+          isGraveyardOpen={Boolean(screen.effectiveGraveyardView)}
+          isCombatLogOpen={board.isHistoryOpen}
+          hasReviveInteraction={board.gameState.pendingTurnAction?.type === "SELECT_GRAVEYARD_CARD"}
+          hasWinner={Boolean(board.winnerPlayerId)}
+        />
+      ) : null}
       {!isMatchStartLocked ? (
         <BoardActionControlsSection
           board={board}

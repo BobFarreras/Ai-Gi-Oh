@@ -48,6 +48,14 @@
 4. Test del procesador interno de tutorial completado.
 5. Commit: `99b7e5a`.
 
+## Fase 6 - Tutorial guiado dinámico sobre combate real
+
+1. Se añadió secuencia guiada de pasos del tutorial (`moneda inicial`, `primer turno`, `selección`, `ataque/defensa`, `mágica`, `fusión`, `cementerio/revive`, `combatLog`, `victoria`).
+2. La guía vive en `Board` y avanza con eventos reales de `combatLog` y estado de pantalla (sin motor paralelo duplicado).
+3. Se bloquea visualmente el inicio con overlay de moneda y se define quién comienza el duelo antes de liberar interacción.
+4. Se añadieron tests de la máquina de pasos para validación TDD del avance automático/manual.
+5. Commit: pendiente en esta sesión.
+
 ## Validación global aplicada por fase
 
 1. `pnpm lint`

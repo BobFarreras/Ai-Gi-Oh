@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Board } from "@/components/game/board";
 import { ICard } from "@/core/entities/ICard";
 import { postTrainingTutorialCompletion } from "./training-tutorial-completion-client";
+import { TrainingCoinTossOverlay } from "./TrainingCoinTossOverlay";
 
 interface ITrainingTutorialClientProps {
   deck: ICard[];
@@ -13,6 +14,8 @@ interface ITrainingTutorialClientProps {
 export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
   const hasPostedRef = useRef(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [isCoinTossVisible, setIsCoinTossVisible] = useState(true);
+  const [starterSide] = useState<"PLAYER" | "OPPONENT">(() => (Math.random() >= 0.5 ? "PLAYER" : "OPPONENT"));
 
   async function handleMatchResolved(result: { winnerPlayerId: string | "DRAW"; playerId: string }) {
     if (result.winnerPlayerId !== result.playerId || hasPostedRef.current) {
@@ -36,11 +39,17 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
       <Board
         mode="TUTORIAL"
         initialPlayerDeck={props.deck}
-        initialConfig={{ playerFusionDeck: props.fusionDeck }}
+        initialConfig={{ playerFusionDeck: props.fusionDeck, starterPlayerId: starterSide === "PLAYER" ? "player-local" : "opponent-local" }}
+        isMatchStartLocked={isCoinTossVisible}
         resultActionLabel="Volver a selección"
         onResultAction={() => window.location.replace("/hub/training")}
         onExitMatch={() => window.location.replace("/hub/training")}
         onMatchResolved={handleMatchResolved}
+      />
+      <TrainingCoinTossOverlay
+        isVisible={isCoinTossVisible}
+        starterSide={starterSide}
+        onContinue={() => setIsCoinTossVisible(false)}
       />
     </main>
   );
