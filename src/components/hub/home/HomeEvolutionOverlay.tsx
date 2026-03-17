@@ -45,15 +45,15 @@ export function HomeEvolutionOverlay({
   }, [card, play]);
   if (!card) return null;
   const visualCopies = Math.max(4, Math.min(consumedCopies, shouldUseLiteAnimation ? 18 : 42));
-  const cardScaleClass = isMobileViewport ? "scale-[0.5]" : shouldUseLiteAnimation ? "scale-[0.78]" : "scale-100";
+  const cardScaleClass = isMobileViewport ? "scale-[0.56]" : shouldUseLiteAnimation ? "scale-[0.82]" : "scale-100";
   const pulseRepeat = shouldUseLiteAnimation ? 0 : 1;
   return (
-    <div className="pointer-events-none absolute inset-0 z-[420] flex items-center justify-center bg-black/75 px-3 py-4 backdrop-blur-md sm:px-6 sm:py-6">
+    <div className="pointer-events-none absolute inset-0 z-[420] flex items-center justify-center overflow-y-auto bg-black/75 px-3 py-4 backdrop-blur-md sm:px-6 sm:py-6">
       <motion.div
         initial={{ opacity: 0, scale: 0.7 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.25 }}
-        className="relative flex w-full max-w-xl flex-col items-center"
+        className="relative my-auto flex max-h-[92dvh] w-full max-w-xl flex-col items-center overflow-visible"
       >
         <motion.div
           initial={{ opacity: 0.4, scale: 0.8 }}
@@ -129,7 +129,7 @@ export function HomeEvolutionOverlay({
             clipToFrameShape
           />
         </motion.div>
-        <p className="-mt-12 rounded border border-cyan-500/35 bg-black/65 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-cyan-100 sm:-mt-10 sm:text-xs">
+        <p className="mt-3 rounded border border-cyan-500/35 bg-black/65 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-cyan-100 sm:mt-4 sm:text-xs">
           Fusión de {consumedCopies} copias completada
         </p>
       </motion.div>
