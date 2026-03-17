@@ -1,7 +1,8 @@
-// src/core/use-cases/game-engine/effects/resolve-execution-effects.integration.test.ts - Descripción breve del módulo.
+// src/core/use-cases/game-engine/effects/resolve-execution-effects.integration.test.ts - Pruebas de resolución de efectos de ejecuciones sobre vida, daño y buffs.
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
-import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
+import { GameEngine } from "@/core/use-cases/GameEngine";
+import { createNeutralEntityCard, createResolveExecutionBaseState } from "@/core/use-cases/game-engine/effects/resolve-execution.test-fixtures";
 
 const drawExecution: ICard = {
   id: "exec-draw-test",
@@ -13,48 +14,12 @@ const drawExecution: ICard = {
   effect: { action: "DRAW_CARD", cards: 1 },
 };
 
-function createState(overrides?: Partial<GameState>): GameState {
-  return {
-    playerA: {
-      id: "p1",
-      name: "Neo",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [{ id: "entity-deck", name: "Deck Entity", description: "", type: "ENTITY", faction: "OPEN_SOURCE", cost: 2, attack: 800, defense: 1000 }],
-      hand: [drawExecution],
-      graveyard: [],
-      activeEntities: [],
-      activeExecutions: [],
-    },
-    playerB: {
-      id: "p2",
-      name: "Smith",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [],
-      hand: [],
-      graveyard: [],
-      activeEntities: [],
-      activeExecutions: [],
-    },
-    activePlayerId: "p1",
-    startingPlayerId: "p1",
-    turn: 2,
-    phase: "MAIN_1",
-    hasNormalSummonedThisTurn: false,
-    pendingTurnAction: null,
-    combatLog: [],
-    ...overrides,
-  };
-}
-
 describe("resolveExecution effects", () => {
   it("debería robar cartas al resolver DRAW_CARD", () => {
-    let state = createState();
+    let state = createResolveExecutionBaseState({
+      deck: [{ id: "entity-deck", name: "Deck Entity", description: "", type: "ENTITY", faction: "OPEN_SOURCE", cost: 2, attack: 800, defense: 1000 }],
+      hand: [drawExecution],
+    });
     state = GameEngine.playCard(state, "p1", "exec-draw-test", "ACTIVATE");
     state = GameEngine.resolveExecution(state, "p1", state.playerA.activeExecutions[0].instanceId);
 
@@ -73,15 +38,12 @@ describe("resolveExecution effects", () => {
       cost: 1,
       effect: { action: "BOOST_ATTACK_ALLIED_ENTITY", value: 400 },
     };
-    let state = createState({
-      playerA: {
-        ...createState().playerA,
-        hand: [buffExecution],
-        activeEntities: [
-          { instanceId: "weak", card: { id: "weak-card", name: "Weak", description: "", type: "ENTITY", faction: "OPEN_SOURCE", cost: 2, attack: 1000, defense: 1000 }, mode: "ATTACK", hasAttackedThisTurn: false, isNewlySummoned: false },
-          { instanceId: "strong", card: { id: "strong-card", name: "Strong", description: "", type: "ENTITY", faction: "OPEN_SOURCE", cost: 3, attack: 1500, defense: 1000 }, mode: "ATTACK", hasAttackedThisTurn: false, isNewlySummoned: false },
-        ],
-      },
+    let state = createResolveExecutionBaseState({
+      hand: [buffExecution],
+      activeEntities: [
+        { instanceId: "weak", card: createNeutralEntityCard("weak-card", 1000, 1000), mode: "ATTACK", hasAttackedThisTurn: false, isNewlySummoned: false },
+        { instanceId: "strong", card: createNeutralEntityCard("strong-card", 1500, 1000), mode: "ATTACK", hasAttackedThisTurn: false, isNewlySummoned: false },
+      ],
     });
 
     state = GameEngine.playCard(state, "p1", "exec-atk-buff-test", "ACTIVATE");
@@ -103,12 +65,9 @@ describe("resolveExecution effects", () => {
       cost: 1,
       effect: { action: "BOOST_ATTACK_ALLIED_ENTITY", value: 400 },
     };
-    let state = createState({
-      playerA: {
-        ...createState().playerA,
-        hand: [buffExecution],
-        activeEntities: [],
-      },
+    let state = createResolveExecutionBaseState({
+      hand: [buffExecution],
+      activeEntities: [],
     });
 
     state = GameEngine.playCard(state, "p1", "exec-atk-buff-empty", "ACTIVATE");
@@ -127,12 +86,9 @@ describe("resolveExecution effects", () => {
       cost: 1,
       effect: { action: "HEAL", target: "PLAYER", value: 500 },
     };
-    let state = createState({
-      playerA: {
-        ...createState().playerA,
-        healthPoints: 7000,
-        hand: [healExecution],
-      },
+    let state = createResolveExecutionBaseState({
+      healthPoints: 7000,
+      hand: [healExecution],
     });
 
     state = GameEngine.playCard(state, "p1", "exec-heal-test", "ACTIVATE");

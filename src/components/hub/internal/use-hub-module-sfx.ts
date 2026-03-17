@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
-type HubModuleSfxId =
+export type HubModuleSfxId =
   | "FILTER_OPEN"
   | "FILTER_CLOSE"
   | "DETAIL_OPEN"

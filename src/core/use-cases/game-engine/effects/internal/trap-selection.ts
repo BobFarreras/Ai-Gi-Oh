@@ -1,4 +1,4 @@
-// src/core/use-cases/game-engine/effects/internal/trap-selection.ts - Descripción breve del módulo.
+// src/core/use-cases/game-engine/effects/internal/trap-selection.ts - Selecciona la trampa reactiva aplicable según trigger y estado de tablero.
 import { TrapTrigger } from "@/core/entities/ICard";
 import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";

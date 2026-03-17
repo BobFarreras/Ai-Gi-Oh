@@ -11,6 +11,7 @@ import { resolveEntityMotionState } from "@/components/game/board/battlefield/in
 import { resolveEntityVisibility } from "@/components/game/board/battlefield/internal/entity-visibility";
 import { SummonHologramVfx } from "@/components/game/board/battlefield/internal/SummonHologramVfx";
 import { ExecutionActivateButton } from "@/components/game/board/battlefield/internal/ExecutionActivateButton";
+import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 
 interface ISlotCellEntityProps {
   entity: IBoardEntity;
@@ -47,6 +48,7 @@ export function SlotCellEntity({
   onEntityClick,
   onActivateSelectedExecution,
 }: ISlotCellEntityProps) {
+  const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
   const isExecutionSelectedForActivation =
     !isOpponentSide && entity.mode === "SET" && entity.card.type === "EXECUTION" && selectedBoardEntityInstanceId === entity.instanceId && canActivateSelectedExecution;
   const isBoardEntitySelected = selectedBoardEntityInstanceId === entity.instanceId || isSelectedByCard;
@@ -60,7 +62,7 @@ export function SlotCellEntity({
       style={{ transformStyle: "preserve-3d", transform: `rotateY(${motionState.initial.rotateY}deg) rotateZ(${motionState.initial.rotateZ}deg)` }}
       initial={motionState.initial}
       animate={motionState.animate}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      transition={shouldReduceCombatEffects ? { duration: 0.22, ease: "linear" } : { type: "spring", stiffness: 300, damping: 20 }}
       exit={{ opacity: [1, 0], scale: [0.28, 0.1], x: targetX, y: 0, transition: { duration: 0.4 } }}
       className={cn(
         "w-65 h-85 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 origin-center cursor-pointer",
@@ -82,7 +84,13 @@ export function SlotCellEntity({
         <div className="absolute w-full h-full flex items-center justify-center">
           <SummonHologramVfx show={Boolean(entity.isNewlySummoned && (entity.card.type === "ENTITY" || entity.card.type === "FUSION"))} />
           <Card card={entity.card} isSelected={selectedCardId === entity.card.id} hologramMode={isMobileLayout ? "lite" : "full"} boardMode={!visibility.isFaceDown && entity.mode === "SET" && entity.card.type === "ENTITY" ? "DEFENSE" : (entity.mode as BattleMode)} />
-          {isActivating ? <motion.div initial={{ opacity: 0, scale: 0 }} animate={{ opacity: [0, 1, 0], scale: [1, 2.5] }} transition={{ duration: 0.5 }} className="absolute inset-0 bg-white rounded-xl mix-blend-overlay z-50" /> : null}
+          {isActivating ? (
+            shouldReduceCombatEffects ? (
+              <div className="absolute inset-0 z-50 rounded-xl border-2 border-white/55 bg-white/20" />
+            ) : (
+              <motion.div initial={{ opacity: 0, scale: 0 }} animate={{ opacity: [0, 1, 0], scale: [1, 2.5] }} transition={{ duration: 0.5 }} className="absolute inset-0 bg-white rounded-xl mix-blend-overlay z-50" />
+            )
+          ) : null}
           {isSelectedMaterial ? <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-black rounded-md bg-cyan-300 text-cyan-950 shadow-[0_0_14px_rgba(34,211,238,0.9)]">MATERIAL</span> : null}
         </div>
       )}

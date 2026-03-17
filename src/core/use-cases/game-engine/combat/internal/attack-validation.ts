@@ -1,4 +1,4 @@
-// src/core/use-cases/game-engine/combat/internal/attack-validation.ts - Descripción breve del módulo.
+// src/core/use-cases/game-engine/combat/internal/attack-validation.ts - Validaciones de reglas previas para declarar ataques y objetivos válidos.
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";

@@ -1,42 +1,16 @@
-// src/core/use-cases/game-engine/phases/next-phase.energy.test.ts - Descripción breve del módulo.
+// src/core/use-cases/game-engine/phases/next-phase.energy.test.ts - Pruebas de ganancia de energía y cambio de jugador al avanzar de fase.
 import { describe, expect, it } from "vitest";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
+import { createPhaseBaseState } from "@/core/use-cases/game-engine/phases/phase-state.test-fixtures";
 
 function createState(overrides?: Partial<GameState>): GameState {
+  const base = createPhaseBaseState();
   return {
-    playerA: {
-      id: "p1",
-      name: "Neo",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 4,
-      maxEnergy: 10,
-      deck: [],
-      hand: [],
-      graveyard: [],
-      activeEntities: [],
-      activeExecutions: [],
-    },
-    playerB: {
-      id: "p2",
-      name: "Smith",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 5,
-      maxEnergy: 10,
-      deck: [],
-      hand: [],
-      graveyard: [],
-      activeEntities: [],
-      activeExecutions: [],
-    },
+    ...base,
+    playerA: { ...base.playerA, currentEnergy: 4, deck: [] },
+    playerB: { ...base.playerB, currentEnergy: 5, deck: [] },
     activePlayerId: "p1",
     startingPlayerId: "p1",
-    turn: 2,
-    phase: "BATTLE",
-    hasNormalSummonedThisTurn: false,
-    pendingTurnAction: null,
-    combatLog: [],
     ...overrides,
   };
 }

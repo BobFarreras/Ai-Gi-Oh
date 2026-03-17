@@ -9,6 +9,7 @@ import { HomeResponsiveWorkspace } from "@/components/hub/home/layout/HomeRespon
 import { IHomeWorkspaceProps } from "@/components/hub/home/layout/home-workspace-types";
 import { HomeCollectionOrderDirection, HomeCollectionOrderField, HomeCollectionTypeFilter } from "@/components/hub/home/home-filters";
 import { IHomeEvolutionOverlayState } from "@/components/hub/home/internal/types/home-deck-builder-types";
+import { HomeIncompleteDeckExitDialog } from "@/components/hub/home/internal/view/HomeIncompleteDeckExitDialog";
 
 export interface IHomeDeckBuilderSceneViewProps {
   deckCardCount: number;
@@ -34,6 +35,10 @@ export interface IHomeDeckBuilderSceneViewProps {
   onEvolveSelectedCard: () => Promise<{ ok: boolean; message?: string }>;
   onBackToHub: () => void;
   onClearError: () => void;
+  isExitDialogOpen: boolean;
+  onCloseExitDialog: () => void;
+  onConfirmExitToHub: () => void;
+  onGoToMarket: () => void;
 }
 
 export function HomeDeckBuilderSceneView(props: IHomeDeckBuilderSceneViewProps) {
@@ -73,6 +78,14 @@ export function HomeDeckBuilderSceneView(props: IHomeDeckBuilderSceneViewProps) 
           consumedCopies={props.evolutionOverlay.consumedCopies}
         />
       )}
+      <HomeIncompleteDeckExitDialog
+        isOpen={props.isExitDialogOpen}
+        deckCardCount={props.deckCardCount}
+        deckSize={props.deckSize}
+        onClose={props.onCloseExitDialog}
+        onExitToHub={props.onConfirmExitToHub}
+        onGoToMarket={props.onGoToMarket}
+      />
       <HubErrorDialog title="Error de Arsenal" message={props.errorMessage} onClose={props.onClearError} />
     </main>
   );

@@ -1,7 +1,8 @@
 // src/core/use-cases/game-engine/actions/play-card-with-zone-replacement.test.ts - Verifica reemplazo en zona de ejecuciones para magias/trampas cuando el campo está lleno.
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
-import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
+import { IBoardEntity } from "@/core/entities/IPlayer";
+import { createTestGameState, createTestPlayer } from "@/core/use-cases/game-engine/test-support/state-fixtures";
 import { playCardWithZoneReplacement } from "./play-card-with-zone-replacement";
 import { GameState } from "../state/types";
 
@@ -26,29 +27,19 @@ function createExecution(instanceId: string, cardId: string): IBoardEntity {
 }
 
 function createState(): GameState {
-  const playerA: IPlayer = {
-    id: "p1",
-    name: "Neo",
-    healthPoints: 8000,
-    maxHealthPoints: 8000,
-    currentEnergy: 8,
-    maxEnergy: 10,
-    deck: [],
-    hand: [{ ...spellCard, runtimeId: "runtime-exec-new" }],
-    graveyard: [],
-    activeEntities: [],
-    activeExecutions: [createExecution("ex-1", "exec-1"), createExecution("ex-2", "exec-2"), createExecution("ex-3", "exec-3")],
-  };
-  return {
-    playerA,
-    playerB: { ...playerA, id: "p2", name: "Smith", hand: [], activeExecutions: [], currentEnergy: 10 },
+  return createTestGameState({
+    playerA: createTestPlayer("p1", {
+      name: "Neo",
+      currentEnergy: 8,
+      hand: [{ ...spellCard, runtimeId: "runtime-exec-new" }],
+      activeExecutions: [createExecution("ex-1", "exec-1"), createExecution("ex-2", "exec-2"), createExecution("ex-3", "exec-3")],
+    }),
+    playerB: createTestPlayer("p2", { name: "Smith" }),
     activePlayerId: "p1",
     startingPlayerId: "p1",
     turn: 1,
     phase: "MAIN_1",
-    hasNormalSummonedThisTurn: false,
-    combatLog: [],
-  };
+  });
 }
 
 describe("playCardWithZoneReplacement", () => {

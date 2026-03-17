@@ -23,6 +23,7 @@ interface IUseBoardScreenStateInput {
   playerActiveExecutions: ReturnType<typeof useBoard>["gameState"]["playerA"]["activeExecutions"];
   duelResultRewardSummary?: IDuelResultRewardSummary | null;
   narrationPack?: IMatchNarrationPack | null;
+  isNarrationLocked?: boolean;
   onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string }) => void;
 }
 
@@ -120,6 +121,7 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
     opponentId: input.opponentId,
     isMuted: board.isMuted,
     narrationPack: input.narrationPack,
+    isLocked: input.isNarrationLocked ?? false,
   });
   return {
     narration,

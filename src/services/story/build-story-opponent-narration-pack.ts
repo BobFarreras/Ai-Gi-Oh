@@ -1,6 +1,7 @@
 // src/services/story/build-story-opponent-narration-pack.ts - Construye pack narrativo por oponente Story (texto, retratos y audio) para ejecutar duelo sin lecturas de BD.
 import { buildDefaultMatchNarrationPack } from "@/components/game/board/narration/build-default-match-narration-pack";
 import { IMatchNarrationPack } from "@/components/game/board/narration/types";
+import { getStoryOpponentNarrationProfile } from "@/services/story/story-opponent-narration-catalog";
 
 interface IBuildStoryOpponentNarrationPackParams {
   opponentId: string;
@@ -8,53 +9,65 @@ interface IBuildStoryOpponentNarrationPackParams {
   duelDescription: string;
 }
 
-const STORY_OPPONENT_PACK_OVERRIDES: Record<string, Partial<Record<string, { text?: string; audioUrl?: string; portraitUrl?: string; durationMs?: number }>>> = {
-  "opp-ch1-apprentice": {
+interface IMatchNarrationOverride {
+  text: string;
+  audioUrl: string;
+  durationMs: number;
+  portraitUrl?: string;
+}
+
+function buildStoryOpponentPackOverrides(opponentId: string): Partial<Record<string, IMatchNarrationOverride>> {
+  const profile = getStoryOpponentNarrationProfile(opponentId);
+  if (!profile) return {};
+
+  const audioBasePath = `/audio/story/${profile.assetFolder}`;
+  const portraitBasePath = `/assets/story/opponents/${profile.assetFolder}`;
+  return {
     "start-opponent": {
-      text: "Prepárate para perder.",
-      audioUrl: "/audio/story/opp-ch1-apprentice/intro.mp3",
-      portraitUrl: "/assets/story/opponents/opp-ch1-apprentice/intro-GenNvim.png",
-      durationMs: 3600,
+      text: profile.lines.intro.text,
+      audioUrl: `${audioBasePath}/${profile.lines.intro.audioFile}`,
+      portraitUrl: `${portraitBasePath}/${profile.portraits.intro}`,
+      durationMs: profile.lines.intro.durationMs,
     },
     "hit-dealt": {
-      text: "Aún puedo resistir.",
-      audioUrl: "/audio/story/opp-ch1-apprentice/impacto-directo-jugador.mp3",
-      durationMs: 1800,
+      text: profile.lines.directHitToPlayer.text,
+      audioUrl: `${audioBasePath}/${profile.lines.directHitToPlayer.audioFile}`,
+      durationMs: profile.lines.directHitToPlayer.durationMs,
     },
     "hit-taken": {
-      text: "Acaba con sus puntos de vida.",
-      audioUrl: "/audio/story/opp-ch1-apprentice/impacto-directo-opponente.mp3",
-      durationMs: 1800,
+      text: profile.lines.directHitToOpponent.text,
+      audioUrl: `${audioBasePath}/${profile.lines.directHitToOpponent.audioFile}`,
+      durationMs: profile.lines.directHitToOpponent.durationMs,
     },
     "trap-opponent": {
-      text: "Has caído en mi trampa.",
-      audioUrl: "/audio/story/opp-ch1-apprentice/trampa.mp3",
-      durationMs: 1900,
+      text: profile.lines.trap.text,
+      audioUrl: `${audioBasePath}/${profile.lines.trap.audioFile}`,
+      durationMs: profile.lines.trap.durationMs,
     },
     "fusion-opponent": {
-      text: "La fusión definitiva.",
-      audioUrl: "/audio/story/opp-ch1-apprentice/fusion.mp3",
-      portraitUrl: "/assets/story/opponents/opp-ch1-apprentice/intro-GenNvim.png",
-      durationMs: 3200,
+      text: profile.lines.fusion.text,
+      audioUrl: `${audioBasePath}/${profile.lines.fusion.audioFile}`,
+      portraitUrl: `${portraitBasePath}/${profile.portraits.intro}`,
+      durationMs: profile.lines.fusion.durationMs,
     },
     "win-opponent-defeat": {
-      text: "La próxima vez ganaré.",
-      audioUrl: "/audio/story/opp-ch1-apprentice/derrota-oponente.mp3",
-      portraitUrl: "/assets/story/opponents/opp-ch1-apprentice/derrota-GenNvim.png",
-      durationMs: 3600,
+      text: profile.lines.opponentDefeat.text,
+      audioUrl: `${audioBasePath}/${profile.lines.opponentDefeat.audioFile}`,
+      portraitUrl: `${portraitBasePath}/${profile.portraits.defeat}`,
+      durationMs: profile.lines.opponentDefeat.durationMs,
     },
     "lose-player": {
-      text: "Se acabó, he ganado.",
-      audioUrl: "/audio/story/opp-ch1-apprentice/victoria-oponente.mp3",
-      portraitUrl: "/assets/story/opponents/opp-ch1-apprentice/victoria-GenNvim.png",
-      durationMs: 3600,
+      text: profile.lines.opponentVictory.text,
+      audioUrl: `${audioBasePath}/${profile.lines.opponentVictory.audioFile}`,
+      portraitUrl: `${portraitBasePath}/${profile.portraits.victory}`,
+      durationMs: profile.lines.opponentVictory.durationMs,
     },
-  },
-};
+  };
+}
 
 export function buildStoryOpponentNarrationPack({ opponentId, opponentName, duelDescription }: IBuildStoryOpponentNarrationPackParams): IMatchNarrationPack {
   const basePack = buildDefaultMatchNarrationPack();
-  const overrides = STORY_OPPONENT_PACK_OVERRIDES[opponentId] ?? {};
+  const overrides = buildStoryOpponentPackOverrides(opponentId);
   return {
     lines: basePack.lines.map((line) => {
       if (line.id === "start-opponent") {

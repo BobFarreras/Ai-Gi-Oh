@@ -1,78 +1,15 @@
 // src/core/use-cases/game-engine/phases/turn-maintenance.integration.test.ts - Valida reglas de mantenimiento al inicio de turno y reemplazo con campo lleno.
 import { describe, expect, it } from "vitest";
-import { ICard } from "@/core/entities/ICard";
-import { IBoardEntity } from "@/core/entities/IPlayer";
-import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
-
-function createCard(id: string, type: "ENTITY" | "EXECUTION" = "ENTITY"): ICard {
-  return {
-    id,
-    name: id,
-    description: "Carta de test",
-    type,
-    faction: "NEUTRAL",
-    cost: 1,
-    attack: type === "ENTITY" ? 1000 : undefined,
-    defense: type === "ENTITY" ? 1000 : undefined,
-    effect: type === "EXECUTION" ? { action: "DAMAGE", target: "OPPONENT", value: 300 } : undefined,
-  };
-}
-
-function createEntity(instanceId: string, cardId: string): IBoardEntity {
-  return {
-    instanceId,
-    card: createCard(cardId),
-    mode: "ATTACK",
-    hasAttackedThisTurn: false,
-    isNewlySummoned: false,
-  };
-}
-
-function baseState(): GameState {
-  return {
-    playerA: {
-      id: "p1",
-      name: "Neo",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [createCard("p1-deck-1")],
-      hand: [],
-      graveyard: [],
-      activeEntities: [],
-      activeExecutions: [],
-    },
-    playerB: {
-      id: "p2",
-      name: "Smith",
-      healthPoints: 8000,
-      maxHealthPoints: 8000,
-      currentEnergy: 10,
-      maxEnergy: 10,
-      deck: [createCard("p2-deck-1")],
-      hand: [],
-      graveyard: [],
-      activeEntities: [],
-      activeExecutions: [],
-    },
-    activePlayerId: "p2",
-    startingPlayerId: "p1",
-    turn: 2,
-    phase: "BATTLE",
-    hasNormalSummonedThisTurn: false,
-    pendingTurnAction: null,
-    combatLog: [],
-  };
-}
+import { GameEngine } from "@/core/use-cases/GameEngine";
+import { createPhaseBaseState, createPhaseCard, createPhaseEntity } from "@/core/use-cases/game-engine/phases/phase-state.test-fixtures";
 
 describe("GameEngine mantenimiento de turno", () => {
   it("debería permitir robar aunque la zona de entidades esté llena", () => {
     const state = {
-      ...baseState(),
+      ...createPhaseBaseState(),
       playerA: {
-        ...baseState().playerA,
-        activeEntities: [createEntity("a-1", "a-card-1"), createEntity("a-2", "a-card-2"), createEntity("a-3", "a-card-3")],
+        ...createPhaseBaseState().playerA,
+        activeEntities: [createPhaseEntity("a-1", "a-card-1"), createPhaseEntity("a-2", "a-card-2"), createPhaseEntity("a-3", "a-card-3")],
       },
     };
 
@@ -84,10 +21,10 @@ describe("GameEngine mantenimiento de turno", () => {
   });
 
   it("debería exigir descarte si la mano está en límite antes del robo", () => {
-    const hand = [1, 2, 3, 4, 5].map((index) => createCard(`hand-${index}`));
+    const hand = [1, 2, 3, 4, 5].map((index) => createPhaseCard(`hand-${index}`));
     const state = {
-      ...baseState(),
-      playerA: { ...baseState().playerA, hand },
+      ...createPhaseBaseState(),
+      playerA: { ...createPhaseBaseState().playerA, hand },
     };
 
     const nextState = GameEngine.nextPhase(state);
@@ -96,13 +33,13 @@ describe("GameEngine mantenimiento de turno", () => {
   });
 
   it("debería descartar una carta y luego robar, manteniendo mano en 5", () => {
-    const hand = [1, 2, 3, 4, 5].map((index) => createCard(`hand-${index}`));
+    const hand = [1, 2, 3, 4, 5].map((index) => createPhaseCard(`hand-${index}`));
     const state = {
-      ...baseState(),
+      ...createPhaseBaseState(),
       activePlayerId: "p1",
       phase: "MAIN_1" as const,
       pendingTurnAction: { type: "DISCARD_FOR_HAND_LIMIT" as const, playerId: "p1" },
-      playerA: { ...baseState().playerA, hand, deck: [createCard("new-draw")] },
+      playerA: { ...createPhaseBaseState().playerA, hand, deck: [createPhaseCard("new-draw")] },
     };
 
     const nextState = GameEngine.resolvePendingTurnAction(state, "p1", "hand-3");
@@ -114,14 +51,14 @@ describe("GameEngine mantenimiento de turno", () => {
 
   it("debería permitir invocar entidad reemplazando una del campo lleno", () => {
     const state = {
-      ...baseState(),
+      ...createPhaseBaseState(),
       activePlayerId: "p1",
       phase: "MAIN_1" as const,
       playerA: {
-        ...baseState().playerA,
+        ...createPhaseBaseState().playerA,
         currentEnergy: 8,
-        hand: [createCard("new-entity")],
-        activeEntities: [createEntity("a-1", "a-card-1"), createEntity("a-2", "a-card-2"), createEntity("a-3", "a-card-3")],
+        hand: [createPhaseCard("new-entity")],
+        activeEntities: [createPhaseEntity("a-1", "a-card-1"), createPhaseEntity("a-2", "a-card-2"), createPhaseEntity("a-3", "a-card-3")],
       },
     };
 

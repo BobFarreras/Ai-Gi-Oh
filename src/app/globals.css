@@ -119,6 +119,34 @@ body {
   animation: cyberPulse 6.5s ease-in-out infinite;
 }
 
+.board-boss-theme::after {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(244, 63, 94, 0.14), transparent 34%),
+    radial-gradient(circle at 78% 68%, rgba(251, 113, 133, 0.1), transparent 38%),
+    radial-gradient(circle at 46% 50%, rgba(251, 146, 60, 0.08), transparent 42%);
+}
+
+.board-boss-theme--amber::after {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(251, 191, 36, 0.16), transparent 34%),
+    radial-gradient(circle at 78% 68%, rgba(251, 146, 60, 0.11), transparent 38%),
+    radial-gradient(circle at 46% 50%, rgba(245, 158, 11, 0.1), transparent 42%);
+}
+
+.board-boss-theme--violet::after {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(167, 139, 250, 0.16), transparent 34%),
+    radial-gradient(circle at 78% 68%, rgba(129, 140, 248, 0.11), transparent 38%),
+    radial-gradient(circle at 46% 50%, rgba(192, 132, 252, 0.1), transparent 42%);
+}
+
+.board-boss-theme--cyan::after {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(34, 211, 238, 0.16), transparent 34%),
+    radial-gradient(circle at 78% 68%, rgba(56, 189, 248, 0.11), transparent 38%),
+    radial-gradient(circle at 46% 50%, rgba(103, 232, 249, 0.1), transparent 42%);
+}
+
 .hub-city-bg::before,
 .hub-city-bg::after {
   content: "";
@@ -396,6 +424,24 @@ body {
 
 .card-description-scroll::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, rgba(103, 232, 249, 1), rgba(56, 189, 248, 0.95));
+}
+
+.reduced-combat-effects * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+.reduced-combat-effects [class*="shadow-"],
+.reduced-combat-effects [class*="drop-shadow-"] {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.reduced-combat-effects [class*="backdrop-blur"],
+.reduced-combat-effects [class*="mix-blend"] {
+  backdrop-filter: none !important;
+  mix-blend-mode: normal !important;
 }
 
 

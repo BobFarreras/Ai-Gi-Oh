@@ -26,3 +26,22 @@ Esta sección sustituye la documentación monolítica previa y describe el estad
 2. `src/core/use-cases/CombatService.ts`
 3. `src/core/services/opponent/*`
 4. `src/services/game/match/*`
+
+## Glosario rápido del motor
+
+- **`GameState`**: estado completo e inmutable de la partida en tiempo de ejecución.
+  - Referencia: `src/core/use-cases/game-engine/state/types.ts`
+- **`pendingTurnAction`**: acción obligatoria que bloquea flujo hasta resolverse.
+  - Referencia: `src/core/use-cases/game-engine/phases/resolve-pending-turn-action.ts`
+- **`MAIN_1` / `BATTLE`**: fases principales de turno gestionadas por `nextPhase`.
+  - Referencia: `src/core/use-cases/game-engine/phases/next-phase.ts`
+- **`combatLog`**: fuente única de historial, feedback y trazabilidad de combate.
+  - Referencia: `src/core/use-cases/game-engine/logging/combat-log.ts`
+- **`EXECUTION`**: carta de efecto activo resuelta por `resolveExecution`.
+  - Referencia: `src/core/use-cases/game-engine/actions/resolve-execution.ts`
+- **`TRAP`**: carta reactiva disparada por triggers de combate/ejecución.
+  - Referencia: `src/core/use-cases/game-engine/effects/resolve-trap-trigger.ts`
+- **`FUSION`**: invocación resultante de materiales con receta válida.
+  - Referencias: `src/core/use-cases/game-engine/fusion/start-fusion-summon.ts`, `src/core/use-cases/game-engine/fusion/fuse-cards.ts`
+- **`idFactory`**: estrategia inyectable para IDs/timestamps deterministas.
+  - Referencia: `src/core/use-cases/game-engine/state/id-factory.ts`

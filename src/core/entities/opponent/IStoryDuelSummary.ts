@@ -8,6 +8,7 @@ export interface IStoryDuelSummary {
   title: string;
   opponentId: string;
   opponentName: string;
+  opponentAvatarUrl?: string | null;
   opponentDifficulty: StoryOpponentDifficulty;
   unlockRequirementDuelId: string | null;
   rewardNexus: number;

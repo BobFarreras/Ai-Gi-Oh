@@ -9,6 +9,7 @@ interface CardFrameArtAndProgressProps {
   levelProgressWidth: string;
   disableHoverEffects?: boolean;
   isPerformanceMode?: boolean;
+  showBackgroundInPerformanceMode?: boolean;
 }
 
 export function CardFrameArtAndProgress({
@@ -18,13 +19,26 @@ export function CardFrameArtAndProgress({
   levelProgressWidth,
   disableHoverEffects = false,
   isPerformanceMode = false,
+  showBackgroundInPerformanceMode = false,
 }: CardFrameArtAndProgressProps) {
-  const renderImageSizes = isPerformanceMode ? "96px" : "260px";
-  const renderImageQuality = isPerformanceMode ? 55 : 75;
+  const renderImageSizes = isPerformanceMode ? "88px" : "260px";
+  const renderImageQuality = isPerformanceMode ? 45 : 75;
+  const backgroundImageSizes = isPerformanceMode ? "72px" : "260px";
+  const backgroundImageQuality = isPerformanceMode ? 28 : 75;
+  const shouldRenderBackground = Boolean(card.bgUrl) && (!isPerformanceMode || showBackgroundInPerformanceMode);
   return (
     <div className="relative z-10 mt-2 flex flex-grow flex-col items-center justify-start px-3">
       <div className="group relative mb-1.5 flex h-36 w-full shrink-0 items-center justify-center overflow-hidden rounded-sm bg-black shadow-[inset_0_0_30px_rgba(0,0,0,1)]">
-        {!isPerformanceMode && card.bgUrl ? <Image src={card.bgUrl} alt="" fill sizes="260px" className="absolute inset-0 z-0 object-cover" /> : null}
+        {shouldRenderBackground ? (
+          <Image
+            src={card.bgUrl!}
+            alt=""
+            fill
+            sizes={backgroundImageSizes}
+            quality={backgroundImageQuality}
+            className={isPerformanceMode ? "absolute inset-0 z-0 object-cover opacity-55 saturate-75" : "absolute inset-0 z-0 object-cover"}
+          />
+        ) : null}
         {!isPerformanceMode ? <div className="absolute inset-0 z-0 bg-cyan-500/10 mix-blend-overlay" /> : null}
         {!isOnBoard && card.renderUrl && (
           isPerformanceMode ? (
@@ -33,8 +47,8 @@ export function CardFrameArtAndProgress({
               alt={card.name}
               fill
               loading="lazy"
-              sizes="96px"
-              quality={40}
+              sizes={renderImageSizes}
+              quality={renderImageQuality}
               className="absolute inset-0 z-10 object-contain p-1"
             />
           ) : (

@@ -1,4 +1,4 @@
-// src/core/use-cases/game-engine/combat/internal/attack-entities.ts - Descripción breve del módulo.
+// src/core/use-cases/game-engine/combat/internal/attack-entities.ts - Utilidades para marcar y actualizar entidades involucradas en ataque.
 import { IBoardEntity } from "@/core/entities/IPlayer";
 
 export function markAttackerAsUsed(entities: IBoardEntity[], attackerInstanceId: string): IBoardEntity[] {

@@ -12,6 +12,7 @@ import { EntityReplacementConfirmOverlay } from "./EntityReplacementConfirmOverl
 import { TurnAdvanceGuardOverlay } from "./TurnAdvanceGuardOverlay";
 import { BoardErrorOverlay } from "./internal/BoardErrorOverlay";
 import { BoardZoneBrowsers } from "./internal/BoardZoneBrowsers";
+import { IFusionMaterialCandidate, FusionMaterialBrowser } from "./internal/FusionMaterialBrowser";
 
 interface BoardStatusOverlaysProps {
   lastError: IBoardUiError | null;
@@ -25,6 +26,7 @@ interface BoardStatusOverlaysProps {
   playerBName: string;
   isPaused: boolean;
   onResumePause: () => void;
+  onExitPause?: () => void;
   isFusionCinematicActive?: boolean;
   setIsFusionCinematicActive?: (value: boolean) => void;
   graveyardView: "player" | "opponent" | null;
@@ -44,6 +46,10 @@ interface BoardStatusOverlaysProps {
   onConfirmAdvancePhase: (disableHelp: boolean) => void;
   onCancelAdvancePhase: () => void;
   externalBannerSignal?: { id: string; left: string; right: string } | null;
+  isFusionMaterialBrowserOpen?: boolean;
+  fusionMaterialCandidates?: IFusionMaterialCandidate[];
+  fusionSelectedCount?: number;
+  onSelectFusionMaterial?: (instanceId: string) => void;
 }
 
 export function BoardStatusOverlays({
@@ -58,6 +64,7 @@ export function BoardStatusOverlays({
   playerBName,
   isPaused,
   onResumePause,
+  onExitPause,
   isFusionCinematicActive = false,
   setIsFusionCinematicActive = () => undefined,
   graveyardView,
@@ -77,6 +84,10 @@ export function BoardStatusOverlays({
   onConfirmAdvancePhase,
   onCancelAdvancePhase,
   externalBannerSignal = null,
+  isFusionMaterialBrowserOpen = false,
+  fusionMaterialCandidates = [],
+  fusionSelectedCount = 0,
+  onSelectFusionMaterial = () => undefined,
 }: BoardStatusOverlaysProps) {
   return (
     <>
@@ -105,7 +116,7 @@ export function BoardStatusOverlays({
         playerBName={playerBName}
         externalBannerSignal={externalBannerSignal}
       />
-      <PauseOverlay isPaused={isPaused} onResume={onResumePause} />
+      <PauseOverlay isPaused={isPaused} onResume={onResumePause} onExit={onExitPause} />
       <TurnAdvanceGuardOverlay
         warning={pendingAdvanceWarning}
         onConfirm={onConfirmAdvancePhase}
@@ -118,6 +129,12 @@ export function BoardStatusOverlays({
             setIsFusionCinematicActive(active);
           }
         }}
+      />
+      <FusionMaterialBrowser
+        isOpen={isFusionMaterialBrowserOpen}
+        candidates={fusionMaterialCandidates}
+        selectedCount={fusionSelectedCount}
+        onSelectMaterial={onSelectFusionMaterial}
       />
    
       <BoardZoneBrowsers

@@ -1,6 +1,7 @@
 // src/core/use-cases/game-engine/state/types.ts - Tipos base del estado de partida, fases y acciones pendientes de turno.
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { IPlayer } from "@/core/entities/IPlayer";
+import type { IGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 
 export type TurnPhase = "MAIN_1" | "BATTLE";
 
@@ -45,4 +46,5 @@ export interface GameState {
   hasNormalSummonedThisTurn: boolean;
   pendingTurnAction?: IPendingTurnAction | null;
   combatLog: ICombatLogEvent[];
+  idFactory?: IGameEngineIdFactory;
 }

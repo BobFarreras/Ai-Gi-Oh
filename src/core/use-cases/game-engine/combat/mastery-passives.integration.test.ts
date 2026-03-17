@@ -3,23 +3,25 @@ import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
+import {
+  createTestGameState,
+  createTestPlayer,
+} from "@/core/use-cases/game-engine/test-support/state-fixtures";
 
 function createEntity(instanceId: string, card: ICard, mode: "ATTACK" | "DEFENSE" | "SET"): IBoardEntity {
   return { instanceId, card, mode, hasAttackedThisTurn: false, isNewlySummoned: false };
 }
 
 function createBaseState(attackerCard: ICard, defenderCard: ICard): GameState {
-  return {
-    playerA: { id: "p1", name: "A", healthPoints: 8000, maxHealthPoints: 8000, currentEnergy: 10, maxEnergy: 10, deck: [], hand: [], graveyard: [], activeEntities: [createEntity("a1", attackerCard, "ATTACK")], activeExecutions: [] },
-    playerB: { id: "p2", name: "B", healthPoints: 8000, maxHealthPoints: 8000, currentEnergy: 10, maxEnergy: 10, deck: [], hand: [], graveyard: [], activeEntities: [createEntity("d1", defenderCard, "ATTACK")], activeExecutions: [] },
+  return createTestGameState({
+    playerA: createTestPlayer("p1", { name: "A", activeEntities: [createEntity("a1", attackerCard, "ATTACK")] }),
+    playerB: createTestPlayer("p2", { name: "B", activeEntities: [createEntity("d1", defenderCard, "ATTACK")] }),
     activePlayerId: "p1",
     startingPlayerId: "p2",
     turn: 2,
     phase: "BATTLE",
     hasNormalSummonedThisTurn: true,
-    pendingTurnAction: null,
-    combatLog: [],
-  };
+  });
 }
 
 describe("mastery passives en combate", () => {

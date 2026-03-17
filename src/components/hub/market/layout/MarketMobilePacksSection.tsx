@@ -20,16 +20,10 @@ interface MarketMobilePacksSectionProps {
 }
 
 export function MarketMobilePacksSection(props: MarketMobilePacksSectionProps) {
-  const { packs, selectedPackId, onSelectPack } = props;
   const [floatingSpendId, setFloatingSpendId] = useState(0);
   const floatingTimeoutRef = useRef<number | null>(null);
   const selectedPack = props.packs.find((pack) => pack.id === props.selectedPackId) ?? null;
 
-  useEffect(() => {
-    if (selectedPackId) return;
-    const firstPack = packs[0];
-    if (firstPack) onSelectPack(firstPack.id);
-  }, [onSelectPack, packs, selectedPackId]);
   useEffect(
     () => () => {
       if (floatingTimeoutRef.current === null) return;
@@ -65,7 +59,15 @@ export function MarketMobilePacksSection(props: MarketMobilePacksSectionProps) {
       </section>
 
       <section className="min-h-0 flex-1 overflow-hidden rounded-lg border border-cyan-800/35 bg-[#031020]/55">
-        <MarketListingsPanel listings={props.packListings} onSelectCard={props.onSelectPackCard} />
+        {props.selectedPackId ? (
+          <MarketListingsPanel listings={props.packListings} isPerformanceMode={true} onSelectCard={props.onSelectPackCard} />
+        ) : (
+          <div className="flex h-full items-center justify-center text-center">
+            <p className="px-4 text-xs font-black uppercase tracking-[0.16em] text-cyan-300/80">
+              Selecciona un pack para ver su contenido.
+            </p>
+          </div>
+        )}
       </section>
 
       <button

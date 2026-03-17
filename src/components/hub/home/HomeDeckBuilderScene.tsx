@@ -13,6 +13,7 @@ import { HomeDeckBuilderSceneView } from "@/components/hub/home/internal/view/Ho
 import { createHomeDeckBuilderViewProps } from "@/components/hub/home/internal/view/create-home-deck-builder-view-props";
 import { useHomeDeckBuilderState } from "@/components/hub/home/internal/hooks/use-home-deck-builder-state";
 import { useHomeDeckBuilderActions } from "@/components/hub/home/internal/hooks/use-home-deck-builder-actions";
+import { useHomeExitGuard } from "@/components/hub/home/internal/hooks/use-home-exit-guard";
 
 export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
   countRender("HomeDeckBuilderScene");
@@ -68,14 +69,12 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
     setSelectedCollectionCardId: state.setSelectedCollectionCardId,
     resolveActionErrorMessage: resolveHomeActionErrorMessage,
   });
-  const handleBackToHub = () => {
-    if (state.deckCardCount < HOME_DECK_SIZE) {
-      play("ERROR_COMMON");
-      state.setErrorMessage(`Deck incompleto (${state.deckCardCount}/${HOME_DECK_SIZE}). Completa 20 cartas antes de salir de Arsenal.`);
-      return;
-    }
-    router.push("/hub");
-  };
+  const exitGuard = useHomeExitGuard({
+    deckCardCount: state.deckCardCount,
+    deckSize: HOME_DECK_SIZE,
+    onNavigate: (href) => router.push(href),
+    play,
+  });
   const viewProps = createHomeDeckBuilderViewProps({
     deck: state.deck,
     collectionState: state.collectionState,
@@ -112,8 +111,12 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
     onInsertSelectedCard: actions.handleInsertSelectedCard,
     onRemoveSelectedCard: actions.handleRemoveSelectedCard,
     onEvolveSelectedCard: actions.handleEvolveSelectedCard,
-    onBackToHub: handleBackToHub,
+    onBackToHub: exitGuard.handleBackToHubRequest,
     onClearError: () => state.setErrorMessage(null),
+    isExitDialogOpen: exitGuard.isExitDialogOpen,
+    onCloseExitDialog: exitGuard.closeExitDialog,
+    onConfirmExitToHub: exitGuard.confirmExitToHub,
+    onGoToMarket: exitGuard.goToMarket,
     onSelectSlot: workspaceHandlers.onSelectSlot,
     onSelectFusionSlot: workspaceHandlers.onSelectFusionSlot,
     onSelectCollectionCard: workspaceHandlers.onSelectCollectionCard,

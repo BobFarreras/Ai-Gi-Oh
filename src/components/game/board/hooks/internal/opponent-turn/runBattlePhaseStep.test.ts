@@ -81,4 +81,34 @@ describe("runBattlePhaseStep", () => {
 
     expect(setRevealedEntities).toHaveBeenCalledTimes(2);
   });
+
+  it("no intenta atacar si el oponente es jugador inicial en turno 1", async () => {
+    const setActiveAttackerId = vi.fn();
+    const state = {
+      ...createState(),
+      turn: 1,
+      startingPlayerId: "p2",
+      activePlayerId: "p2",
+    } as GameState;
+    const context: IOpponentTurnContext = {
+      gameState: state,
+      strategy: {
+        choosePlay: () => null,
+        chooseAttack: () => ({ attackerInstanceId: "attacker", defenderInstanceId: "defender-set" }),
+      },
+      applyTransition: (transition) => transition(state),
+      clearSelection: vi.fn(),
+      clearError: vi.fn(),
+      setIsAnimating: vi.fn(),
+      setActiveAttackerId,
+      setRevealedEntities: vi.fn(),
+    };
+    const timings = { stepDelayMs: 0, attackWindupMs: 0, postResolutionMs: 0, trapPreviewMs: 0 };
+
+    await runBattlePhaseStep(context, timings);
+
+    expect(setActiveAttackerId).toHaveBeenCalledWith(null);
+    expect(context.clearSelection).toHaveBeenCalledTimes(1);
+    expect(context.clearError).toHaveBeenCalledTimes(1);
+  });
 });

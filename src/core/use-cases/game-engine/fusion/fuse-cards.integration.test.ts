@@ -1,4 +1,4 @@
-// src/core/use-cases/game-engine/fusion/fuse-cards.integration.test.ts - Descripción breve del módulo.
+// src/core/use-cases/game-engine/fusion/fuse-cards.integration.test.ts - Pruebas de integración de fusión estándar desde cartas en mano.
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";

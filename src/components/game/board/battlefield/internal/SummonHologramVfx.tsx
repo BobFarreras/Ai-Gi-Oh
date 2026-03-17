@@ -1,6 +1,7 @@
 // src/components/game/board/battlefield/internal/SummonHologramVfx.tsx
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 
 interface SummonHologramVfxProps {
   show: boolean;
@@ -8,6 +9,7 @@ interface SummonHologramVfxProps {
 
 export function SummonHologramVfx({ show }: SummonHologramVfxProps) {
   const [visible, setVisible] = useState(false);
+  const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
 
   useEffect(() => {
     if (!show) return;
@@ -18,15 +20,23 @@ export function SummonHologramVfx({ show }: SummonHologramVfxProps) {
     
     // 2. HACEMOS LA ANIMACIÓN MÁS LENTA: 
     // Subimos de 980ms a 1600ms para que la entrada del holograma sea majestuosa.
-    const timeoutId = setTimeout(() => setVisible(false), 1600);
+    const timeoutId = setTimeout(() => setVisible(false), shouldReduceCombatEffects ? 600 : 1600);
     
     return () => {
       clearTimeout(startId);
       clearTimeout(timeoutId);
     };
-  }, [show]);
+  }, [show, shouldReduceCombatEffects]);
 
   if (!visible) return null;
+
+  if (shouldReduceCombatEffects) {
+    return (
+      <div className="absolute inset-0 z-40 pointer-events-none flex items-center justify-center">
+        <div className="h-28 w-20 rounded-lg border border-cyan-200/60 bg-cyan-300/12" />
+      </div>
+    );
+  }
 
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">

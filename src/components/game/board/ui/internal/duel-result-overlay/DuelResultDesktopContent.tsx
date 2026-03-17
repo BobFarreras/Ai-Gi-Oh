@@ -6,6 +6,7 @@ import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/du
 import { DuelResultRewardsPanel } from "@/components/game/board/ui/internal/duel-result/DuelResultRewardsPanel";
 import { DuelResultActionButton } from "@/components/game/board/ui/internal/duel-result-overlay/DuelResultActionButton";
 import { DuelResultExperienceContent } from "@/components/game/board/ui/internal/duel-result-overlay/DuelResultExperienceContent";
+import { Card } from "@/components/game/card/Card";
 
 interface IDuelResultDesktopContentProps {
   rewardSummary?: IDuelResultRewardSummary | null;
@@ -16,6 +17,7 @@ interface IDuelResultDesktopContentProps {
   isBattleExperiencePending: boolean;
   battleExperienceSummary: IAppliedCardExperienceResult[];
   battleExperienceCardLookup: Record<string, ICard>;
+  rewardCard: ICard | null;
   cardDensity: DuelResultCardDensity;
 }
 
@@ -28,6 +30,7 @@ export function DuelResultDesktopContent({
   isBattleExperiencePending,
   battleExperienceSummary,
   battleExperienceCardLookup,
+  rewardCard,
   cardDensity,
 }: IDuelResultDesktopContentProps) {
   return (
@@ -41,16 +44,35 @@ export function DuelResultDesktopContent({
         />
       </div>
       <div className="flex-1 flex flex-col min-h-0 rounded-xl border border-cyan-900/50 bg-black/40 p-4 sm:p-6 shadow-inner relative overflow-hidden">
-        <p className="mb-4 text-xs font-black uppercase tracking-[0.2em] text-cyan-400">Rendimiento del Escuadrón</p>
-        <DuelResultExperienceContent
-          battleExperienceSummary={battleExperienceSummary}
-          battleExperienceCardLookup={battleExperienceCardLookup}
-          isBattleExperiencePending={isBattleExperiencePending}
-          density={cardDensity}
-          emptyLabelClassName="text-sm uppercase tracking-widest text-zinc-500"
-          gridClassName="flex flex-wrap justify-center sm:justify-start content-start gap-4 pb-4"
-          wrapperClassName="flex-1 overflow-y-auto custom-scrollbar pr-4 -mr-2"
-        />
+        {isGiftOpen ? (
+          <>
+            <p className="mb-4 text-xs font-black uppercase tracking-[0.2em] text-amber-300">Carta Regalo</p>
+            {rewardCard ? (
+              <div className="flex h-full items-center justify-center overflow-auto custom-scrollbar">
+                <div className="origin-top scale-[0.88]">
+                  <Card card={rewardCard} />
+                </div>
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <p className="text-sm uppercase tracking-widest text-zinc-500">No hay carta regalo.</p>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="mb-4 text-xs font-black uppercase tracking-[0.2em] text-cyan-400">Rendimiento del Escuadrón</p>
+            <DuelResultExperienceContent
+              battleExperienceSummary={battleExperienceSummary}
+              battleExperienceCardLookup={battleExperienceCardLookup}
+              isBattleExperiencePending={isBattleExperiencePending}
+              density={cardDensity}
+              emptyLabelClassName="text-sm uppercase tracking-widest text-zinc-500"
+              gridClassName="flex flex-wrap justify-center sm:justify-start content-start gap-4 pb-4"
+              wrapperClassName="flex-1 overflow-y-auto custom-scrollbar pr-4 -mr-2"
+            />
+          </>
+        )}
       </div>
     </>
   );

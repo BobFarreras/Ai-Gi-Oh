@@ -39,6 +39,8 @@ export function HomeMobileCollectionPanel({ props, deckCopiesByCardId, onSelectC
               level={progress?.level ?? 0}
               xp={progress?.xp ?? 0}
               masteryPassiveSkillId={progress?.masteryPassiveSkillId ?? null}
+              isPerformanceMode
+              showBackgroundInPerformanceMode
             />
             <span className="mt-1 rounded bg-black/75 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-cyan-200">D {usedCopies}/{Math.min(3, entry.ownedCopies)} U {availableCopies}</span>
           </motion.div>

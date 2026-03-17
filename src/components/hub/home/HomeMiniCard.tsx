@@ -22,6 +22,7 @@ interface HomeMiniCardProps {
   onDragOver?: (event: DragEvent<HTMLElement>) => void;
   onDrop?: (event: DragEvent<HTMLElement>) => void;
   isPerformanceMode?: boolean;
+  showBackgroundInPerformanceMode?: boolean;
 }
 
 export function HomeMiniCard({
@@ -40,6 +41,7 @@ export function HomeMiniCard({
   onDragOver,
   onDrop,
   isPerformanceMode = false,
+  showBackgroundInPerformanceMode = false,
 }: HomeMiniCardProps) {
   const filledContainerClass = showSlotContainer
     ? isSelected
@@ -59,7 +61,7 @@ export function HomeMiniCard({
 
   const cardScaleClass =
     size === "mobileLarge"
-      ? "scale-[0.26] xs:scale-[0.28] sm:scale-[0.3] md:scale-[0.25]"
+      ? "scale-[0.22] xs:scale-[0.24] sm:scale-[0.26] md:scale-[0.25]"
       : "scale-[0.18] xs:scale-[0.2] sm:scale-[0.22] md:scale-[0.25]";
 
   if (!card) {
@@ -89,6 +91,7 @@ export function HomeMiniCard({
             disableHoverEffects={isPerformanceMode}
             disableDefaultShadow={isPerformanceMode}
             isPerformanceMode={isPerformanceMode}
+            showBackgroundInPerformanceMode={showBackgroundInPerformanceMode}
           />
         </div>
       </div>

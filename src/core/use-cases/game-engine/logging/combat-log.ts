@@ -1,5 +1,6 @@
 // src/core/use-cases/game-engine/logging/combat-log.ts - Crea y agrega eventos tipados del combatLog en estado inmutable.
 import { CombatLogEventType, ICombatLogEvent } from "@/core/entities/ICombatLog";
+import { defaultGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function createCombatLogEvent(
@@ -8,14 +9,15 @@ function createCombatLogEvent(
   eventType: CombatLogEventType,
   payload: Record<string, unknown>,
 ): ICombatLogEvent {
+  const idFactory = state.idFactory ?? defaultGameEngineIdFactory;
   return {
-    id: `${eventType}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+    id: idFactory.createCombatLogEventId(eventType),
     turn: state.turn,
     phase: state.phase,
     actorPlayerId,
     eventType,
     payload,
-    timestamp: new Date().toISOString(),
+    timestamp: idFactory.createTimestampIso(),
   };
 }
 

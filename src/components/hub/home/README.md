@@ -79,6 +79,12 @@ Se separa el render por breakpoint sin alterar reglas del dominio:
 3. La vibración evita desplazamiento horizontal para no generar scroll lateral en almacén.
 4. En mobile se fuerza `overflow-x-hidden` en el contenedor de almacén para robustez visual.
 
+## Perfil visual de cartas (Fase 2 rendimiento)
+
+1. En desktop (`HomeCollectionPanel`) las mini-cartas usan render completo para conservar fondo visual.
+2. En móvil (`HomeMobileCollectionPanel`) se activa `isPerformanceMode` con fondo simplificado (`showBackgroundInPerformanceMode`) para equilibrar estética y coste.
+3. Esta separación mantiene legibilidad en desktop y estabilidad de FPS en móvil.
+
 ## Errores y seguridad de interacción
 
 1. Los errores funcionales de Arsenal se muestran con `HubErrorDialog` (animado, con `X` y autocierre).
@@ -100,8 +106,11 @@ Eventos conectados vía `useHubModuleSfx`:
 
 ## Reglas de salida y combate (deck 20/20)
 
-1. Salir de `Arsenal` con el botón `Menú` queda bloqueado si el deck principal no está en `20/20`.
-2. El bloqueo muestra `HubErrorDialog` con causa explícita (`Deck incompleto`).
+1. Salir de `Arsenal` con el botón `Menú` abre diálogo de confirmación si el deck principal no está en `20/20`.
+2. El diálogo ofrece tres decisiones:
+   - `Salir Igual` (volver al Hub),
+   - `Ir al Market`,
+   - `Cerrar` (seguir en Arsenal).
 3. Entrar a `Training` o `Story Duel` también valida `20/20` en servidor.
 4. Si no cumple, se muestra pantalla de bloqueo con CTA a `/hub/home`.
 

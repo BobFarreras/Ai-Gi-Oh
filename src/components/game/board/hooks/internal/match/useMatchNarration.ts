@@ -14,6 +14,7 @@ interface UseMatchNarrationParams {
   opponentId: string;
   isMuted: boolean;
   narrationPack?: IMatchNarrationPack | null;
+  isLocked?: boolean;
 }
 
 interface IMatchNarrationState {
@@ -53,7 +54,7 @@ function reducer(state: IMatchNarrationState, action: MatchNarrationAction): IMa
   return { ...state, activeAction: null };
 }
 
-export function useMatchNarration({ combatLog, winnerPlayerId, playerId, opponentId, isMuted, narrationPack }: UseMatchNarrationParams) {
+export function useMatchNarration({ combatLog, winnerPlayerId, playerId, opponentId, isMuted, narrationPack, isLocked = false }: UseMatchNarrationParams) {
   const pack = useMemo(() => narrationPack ?? buildDefaultMatchNarrationPack(), [narrationPack]);
   const processedRef = useRef(0);
   const queuedIntroRef = useRef(false);
@@ -63,15 +64,17 @@ export function useMatchNarration({ combatLog, winnerPlayerId, playerId, opponen
   const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
+    if (isLocked) return;
     if (queuedIntroRef.current) return;
     const introLine = pack.lines.find((line) => line.trigger === "MATCH_START" && line.actor === "OPPONENT") ?? pack.lines.find((line) => line.trigger === "MATCH_START");
     queuedIntroRef.current = true;
     if (!introLine) return;
     triggerCountRef.current.MATCH_START = 1;
     dispatch({ type: "ENQUEUE", actions: [{ line: introLine, actorPlayerId: introLine.actor === "PLAYER" ? playerId : opponentId, sourceEvent: null }] });
-  }, [opponentId, pack, playerId]);
+  }, [isLocked, opponentId, pack, playerId]);
 
   useEffect(() => {
+    if (isLocked) return;
     const nextEvents = combatLog.slice(processedRef.current);
     processedRef.current = combatLog.length;
     if (nextEvents.length === 0) return;
@@ -84,9 +87,10 @@ export function useMatchNarration({ combatLog, winnerPlayerId, playerId, opponen
       return nextCount === 1 || (nextCount > 1 && (nextCount - 1) % 3 === 0);
     });
     dispatch({ type: "ENQUEUE", actions: filteredActions });
-  }, [combatLog, pack, playerId, opponentId]);
+  }, [combatLog, isLocked, pack, playerId, opponentId]);
 
   useEffect(() => {
+    if (isLocked) return;
     if (queuedResultRef.current || !winnerPlayerId) return;
     const resultAction = selectNarrationActionForResult(winnerPlayerId, pack, { playerId, opponentId });
     queuedResultRef.current = true;
@@ -95,7 +99,7 @@ export function useMatchNarration({ combatLog, winnerPlayerId, playerId, opponen
       dispatch({ type: "ENQUEUE", actions: [resultAction] });
     }, RESULT_NARRATION_DELAY_MS);
     return () => window.clearTimeout(timeout);
-  }, [winnerPlayerId, pack, playerId, opponentId]);
+  }, [isLocked, winnerPlayerId, pack, playerId, opponentId]);
 
   useEffect(() => {
     if (state.activeAction || state.queue.length === 0) return;
@@ -107,12 +111,19 @@ export function useMatchNarration({ combatLog, winnerPlayerId, playerId, opponen
     const activeAction = state.activeAction;
     const audioDelay = activeAction.line.channel === "CINEMATIC" ? CINEMATIC_ENTRY_DELAY_MS : 0;
     let audioTimeout: number | null = null;
+    let retryTimeout: number | null = null;
     if (!isMuted && activeAction.line.audioUrl) {
       audioTimeout = window.setTimeout(() => {
         audioRef.current?.pause();
         audioRef.current = new Audio(activeAction.line.audioUrl!);
         audioRef.current.volume = 0.7;
-        void audioRef.current.play().catch(() => undefined);
+        void audioRef.current.play().catch(() => {
+          // Reintento breve para navegadores que bloquean el primer intento tras transición visual.
+          retryTimeout = window.setTimeout(() => {
+            if (!audioRef.current) return;
+            void audioRef.current.play().catch(() => undefined);
+          }, 220);
+        });
       }, audioDelay);
     }
     const clearDelay = activeAction.line.channel === "CINEMATIC" ? CINEMATIC_ENTRY_DELAY_MS : 0;
@@ -121,6 +132,7 @@ export function useMatchNarration({ combatLog, winnerPlayerId, playerId, opponen
     }, (activeAction.line.durationMs ?? (activeAction.line.channel === "HUD" ? 1800 : 3200)) + clearDelay);
     return () => {
       if (audioTimeout) window.clearTimeout(audioTimeout);
+      if (retryTimeout) window.clearTimeout(retryTimeout);
       window.clearTimeout(timeout);
     };
   }, [isMuted, state.activeAction]);

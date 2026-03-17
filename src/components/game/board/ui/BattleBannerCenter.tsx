@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { IBattleBannerMessage, resolveLatestBannerMessage } from "./internal/banner/banner-message-policy";
+import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 
 interface BattleBannerCenterProps {
   events: ICombatLogEvent[];
@@ -25,18 +26,11 @@ export function BattleBannerCenter({
   externalBannerSignal = null,
 }: BattleBannerCenterProps) {
   const [activeMessage, setActiveMessage] = useState<IBattleBannerMessage | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const { isMobileViewport, shouldReduceCombatEffects } = useBoardPerformanceProfile();
   const processedCountRef = useRef(0);
   const processedExternalIdRef = useRef<string | null>(null);
   const labels = useMemo(() => ({ playerAId, playerAName, playerBId, playerBName }), [playerAId, playerAName, playerBId, playerBName]);
   const isAutoModeMessage = Boolean(activeMessage?.id.startsWith("auto-mode-"));
-
-  useEffect(() => {
-    const sync = () => setIsMobile(window.innerWidth <= 1024);
-    sync();
-    window.addEventListener("resize", sync);
-    return () => window.removeEventListener("resize", sync);
-  }, []);
 
   useEffect(() => {
     const nextEvents = events.slice(processedCountRef.current);
@@ -61,10 +55,22 @@ export function BattleBannerCenter({
     return null;
   }
 
+  if (shouldReduceCombatEffects) {
+    return (
+      <div className="absolute top-[42%] left-1/2 z-[145] -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+        <div className="flex items-center gap-2 rounded-xl border border-cyan-300/55 bg-black/70 px-4 py-2">
+          <p className={`text-sm font-black uppercase tracking-wide ${isAutoModeMessage ? "text-violet-100" : "text-cyan-100"}`}>{activeMessage.left}</p>
+          <span className="text-cyan-300/60">|</span>
+          <p className={`text-sm font-black uppercase tracking-wide ${isAutoModeMessage ? "text-violet-100" : "text-red-100"}`}>{activeMessage.right}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="absolute top-[42%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[145] pointer-events-none">
       <AnimatePresence mode="wait">
-        {isMobile ? (
+        {isMobileViewport ? (
           <motion.div
             key={activeMessage.id}
             initial={{ opacity: 0, scale: 0.88 }}

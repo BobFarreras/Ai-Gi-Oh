@@ -55,6 +55,9 @@
 22. `public.player_fusion_deck_slots`:
    - bloque de 2 slots dedicado a cartas de tipo `FUSION`.
    - separado del deck principal de 20 slots.
+23. `public.player_story_world_state`:
+   - estado compacto Story por jugador (`current_node_id`, `visited_node_ids`, `interacted_node_ids`).
+   - 1 fila por usuario.
 
 ## Fase 2 (Perfil y Progreso)
 
@@ -171,6 +174,58 @@
 5. Contrato de aplicación preparado:
    - `IOpponentRepository` + `IStoryDuelDefinition` para eliminar hardcode de Story en UI.
 
+## Fase 5.2 (Ampliación de roster Story)
+
+1. Ejecuta `docs/supabase/sql/017_phase_5_2_story_opponent_roster_expansion.sql`.
+2. Ajustes principales:
+   - normaliza nombre visible de `opp-ch1-apprentice` a `GenNvim`,
+   - crea 4 oponentes adicionales (`BigLog`, `Jaku`, `Helena`, `Soldado Acto 01`),
+   - crea mazos dedicados por oponente con perfil alineado a dificultad.
+3. Alcance de esta fase:
+   - solo catálogo de oponentes + deck lists.
+   - la activación visual en mapa/nodos se hace en fase de layout Story.
+
+## Fase 5.3 (Expansión de rotación de duelos Story)
+
+1. Ejecuta `docs/supabase/sql/018_phase_5_3_story_duel_rotation_expansion.sql`.
+2. Ajustes principales:
+   - añade `story-ch2-duel-3` a `story-ch2-duel-6`,
+   - conecta los nuevos oponentes (`Soldado Acto 01`, `Jaku`, `BigLog`, `Helena`) al flujo de capítulo 2,
+   - asigna recompensas de carta garantizadas por duelo nuevo.
+3. Dependencias:
+   - requiere haber ejecutado `017_phase_5_2_story_opponent_roster_expansion.sql`.
+
+## Fase 5.4 (Rebalanceo de capítulos Story)
+
+1. Ejecuta `docs/supabase/sql/019_phase_5_4_story_chapter_rebalance.sql`.
+2. Ajustes principales:
+   - mueve la rotación nueva (`Soldado`, `Jaku`, `BigLog`, `Helena`) a capítulo 1,
+   - simplifica capítulo 2 a flujo corto (duelo, economía/evento, boss),
+   - actualiza `avatar_url` de oponentes con assets locales cargados,
+   - desactiva `opp-ch1-architect` y `opp-ch1-sysadmin` en el roster activo.
+3. Nota:
+   - esta fase pisa configuración funcional de `018` para dejar el orden final de playtesting.
+
+## Fase 6 (Acto 1 real con cierre BOSS)
+
+1. Ejecuta `docs/supabase/sql/020_phase_6_act1_real_flow.sql`.
+2. Ajustes principales:
+   - define flujo real de acto 1 con Soldado repetido + GenNvim difícil + BOSS GenNvim,
+   - crea `deck-opp-ch1-apprentice-v2` para el tramo difícil de GenNvim,
+   - mantiene desbloqueo de acto 2 al ganar el BOSS del acto 1.
+3. Dependencias:
+   - requiere esquema Story previo (`008`) y roster ampliado (`017`).
+
+## Fase 7 (Acto 2 ramificado con puente de BOSS)
+
+1. Ejecuta `docs/supabase/sql/021_phase_7_act2_branching_flow.sql`.
+2. Ajustes principales:
+   - define Acto 2 con tres ramas (superior, central e inferior),
+   - introduce doble nodo de Helena para condicionar el acceso final,
+   - configura `story-ch2-duel-9` como BOSS Jaku tras activar el puente.
+3. Dependencias:
+   - requiere haber aplicado `020_phase_6_act1_real_flow.sql`.
+
 ## Fase 5.1 (Experiencia global del jugador)
 
 1. Ejecuta `docs/supabase/sql/009_phase_5_player_progress_experience.sql`.
@@ -188,6 +243,41 @@
    - 2 filas por jugador (`slot_index` 0 y 1).
 4. Verifica RLS:
    - `SELECT/INSERT/UPDATE` solo para `auth.uid() = player_id`.
+
+## Fase 8 (Estado e historial del mundo Story)
+
+1. Ejecuta `docs/supabase/sql/013_phase_8_story_world_history.sql`.
+2. Verifica tablas:
+   - `public.player_story_world_state`
+   - `public.player_story_history_events`
+3. Verifica RLS:
+   - ambas tablas solo visibles/modificables por el propio usuario (`auth.uid() = player_id`).
+4. Uso previsto:
+   - `player_story_world_state`: nodo actual del mapa Story.
+   - `player_story_history_events`: timeline de movimiento, resolución de nodo, recompensas e interacciones.
+
+## Fase E (Interacciones narrativas virtuales)
+
+1. Ejecuta `docs/supabase/sql/014_phase_e_story_virtual_interactions.sql`.
+2. Ajustes principales:
+   - (legacy) ajustes sobre `player_story_history_events` para permitir nodos virtuales.
+
+## Fase F (Estado compacto Story)
+
+1. Ejecuta `docs/supabase/sql/015_phase_f_story_compact_state.sql`.
+2. Ajustes principales:
+   - `player_story_world_state.current_node_id` deja de depender de FK a `story_duels`.
+   - se añaden `visited_node_ids` e `interacted_node_ids` en la misma tabla.
+3. Uso previsto:
+   - la navegación Story usa solo estado compacto (`current + visited + interacted`).
+   - el historial legacy puede eliminarse con fase de cleanup.
+
+## Fase F.1 (Cleanup historial legacy Story)
+
+1. Ejecuta `docs/supabase/sql/016_phase_f_story_history_cleanup.sql`.
+2. Resultado:
+   - se elimina `public.player_story_history_events` y sus políticas/índice asociados.
+   - runtime Story sigue operativo al usar solo `player_story_world_state`.
 
 ## Notas
 
