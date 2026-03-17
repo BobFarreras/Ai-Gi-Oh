@@ -1,7 +1,7 @@
-// src/app/hub/training/tutorial/page.tsx - Ejecuta tutorial de combate sobre el tablero reutilizando el runtime del modo tutorial.
-import { Board } from "@/components/game/board";
+// src/app/hub/training/tutorial/page.tsx - Entry server-side para tutorial de combate con runtime delegado a cliente.
 import { HubSectionEntryBurst } from "@/components/hub/sections/HubSectionEntryBurst";
 import { TrainingDeckReadyGate } from "@/components/hub/training/TrainingDeckReadyGate";
+import { TrainingTutorialClient } from "@/app/hub/training/tutorial/TrainingTutorialClient";
 import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
 import { getPlayerBoardLoadout } from "@/services/game/get-player-board-deck";
 
@@ -19,7 +19,7 @@ export default async function TrainingTutorialPage() {
   return (
     <main className="min-h-screen bg-zinc-950">
       <HubSectionEntryBurst />
-      <Board mode="TUTORIAL" initialPlayerDeck={loadout.deck} initialConfig={{ playerFusionDeck: loadout.fusionDeck }} />
+      <TrainingTutorialClient deck={loadout.deck} fusionDeck={loadout.fusionDeck ?? []} />
     </main>
   );
 }
