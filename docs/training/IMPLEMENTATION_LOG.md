@@ -30,7 +30,23 @@
    - `/hub/training/arena`
 3. Se reutiliza guard de deck incompleto para ambas rutas.
 4. Se añade test del selector de modos para accesibilidad y rutas.
-5. Commit: pendiente al cerrar esta fase.
+5. Commit: `a36fd67`.
+
+## Fase 4 - Arena progresiva con tiers y cierre remoto
+
+1. Se añadió `GetTrainingArenaStateUseCase` para resolver tier efectivo y bloqueo/desbloqueo.
+2. `Arena` ahora carga progreso persistido y muestra tiers disponibles en UI.
+3. El cierre del combate en arena se sincroniza con `POST /api/training/matches/complete` usando `battleId` idempotente.
+4. Se muestran recompensas Nexus/EXP y desbloqueos tras finalizar duelo.
+5. Commit: `2218f49`.
+
+## Fase 5 - Tutorial completion persistente
+
+1. Se añadió endpoint `POST /api/training/tutorial/complete`.
+2. El tutorial marca `hasCompletedTutorial=true` al ganar.
+3. Se orquesta desde `TrainingTutorialClient` con retorno a selector.
+4. Test del procesador interno de tutorial completado.
+5. Commit: `99b7e5a`.
 
 ## Validación global aplicada por fase
 

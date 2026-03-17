@@ -27,7 +27,7 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
     <main className="min-h-screen bg-zinc-950">
       <HubSectionEntryBurst />
       <TrainingArenaClient
-        deck={loadout.deck}
+        deck={loadout.deck!}
         fusionDeck={loadout.fusionDeck ?? []}
         selectedTier={runtime.effectiveTier}
         highestUnlockedTier={runtime.highestUnlockedTier}

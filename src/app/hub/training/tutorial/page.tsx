@@ -19,7 +19,7 @@ export default async function TrainingTutorialPage() {
   return (
     <main className="min-h-screen bg-zinc-950">
       <HubSectionEntryBurst />
-      <TrainingTutorialClient deck={loadout.deck} fusionDeck={loadout.fusionDeck ?? []} />
+      <TrainingTutorialClient deck={loadout.deck!} fusionDeck={loadout.fusionDeck ?? []} />
     </main>
   );
 }
