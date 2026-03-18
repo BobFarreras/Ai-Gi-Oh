@@ -65,6 +65,17 @@
 5. Se crean páginas de nodo (`arsenal`, `market`, `reward`) como base de migración progresiva.
 6. Commit: pendiente en esta sesión.
 
+## Fase 8 - Motor reusable de spotlight + bloqueo + diálogo
+
+1. Se implementa motor de pasos con `completionType` (`MANUAL_NEXT`, `USER_ACTION`, `BOTH`) y transición determinista.
+2. Se añaden componentes reutilizables:
+   - spotlight de objetivo activo,
+   - guard global de interacción fuera del target permitido,
+   - diálogo BigLog con botón `Siguiente`.
+3. Se integra en el nodo `Preparar Deck` con simulación funcional de acciones.
+4. Se añaden tests de motor y flujo de cliente para validar avance guiado.
+5. Commit: pendiente en esta sesión.
+
 ## Validación global aplicada por fase
 
 1. `pnpm lint`
