@@ -18,6 +18,7 @@ export function GraveyardPile({ isOpponentSide, topGraveCard, graveyardCount, on
   return (
     <button
       type="button"
+      data-tutorial-id={isOpponentSide ? undefined : "tutorial-board-graveyard-player"}
       aria-label={`Abrir cementerio ${isOpponentSide ? "rival" : "jugador"}`}
       onClick={() => onClick(isOpponentSide ? "opponent" : "player")}
       className={cn(

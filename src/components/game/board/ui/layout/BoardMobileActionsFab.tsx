@@ -43,7 +43,7 @@ export function BoardMobileActionsFab({
             <button aria-label={isPaused ? "Reanudar" : "Pausar"} onClick={onTogglePause} className="rounded-xl border border-emerald-500/50 p-2 text-emerald-300">{isPaused ? <Play size={18} /> : <Pause size={18} />}</button>
             <button aria-label={isAutoPhaseEnabled ? "Desactivar automático" : "Activar automático"} onClick={onToggleAutoPhase} className={cn("rounded-xl border p-2", isAutoPhaseEnabled ? "border-violet-400/60 text-violet-200" : "border-zinc-600 text-zinc-300")}><Bot size={18} /></button>
             <button aria-label={isMuted ? "Activar sonido" : "Silenciar"} onClick={onToggleMute} className="rounded-xl border border-cyan-500/50 p-2 text-cyan-300">{isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
-            <button aria-label={isHistoryOpen ? "Cerrar historial" : "Abrir historial"} onClick={onToggleHistory} className="rounded-xl border border-rose-500/50 p-2 text-rose-300"><History size={18} /></button>
+            <button data-tutorial-id="tutorial-board-history-button" aria-label={isHistoryOpen ? "Cerrar historial" : "Abrir historial"} onClick={onToggleHistory} className="rounded-xl border border-rose-500/50 p-2 text-rose-300"><History size={18} /></button>
           </div>
         </div>
       )}

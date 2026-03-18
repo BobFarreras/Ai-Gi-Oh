@@ -44,6 +44,7 @@ export function BoardMobilePhaseControls({
   if (shouldReduceCombatEffects) {
     return (
       <div
+        data-tutorial-id="tutorial-board-phase-controls"
         className="absolute z-[290] flex max-w-[calc(100vw-10px)] items-center gap-1 overflow-x-auto pointer-events-auto"
         style={{ left: `${dockLeftPx}px`, bottom: `${bottomPx}px` }}
       >
@@ -91,6 +92,7 @@ export function BoardMobilePhaseControls({
 
   return (
     <div
+      data-tutorial-id="tutorial-board-phase-controls"
       className="absolute z-[290] flex max-w-[calc(100vw-10px)] items-center gap-1 overflow-x-auto pointer-events-auto"
       style={{ left: `${dockLeftPx}px`, bottom: `${bottomPx}px` }}
     >

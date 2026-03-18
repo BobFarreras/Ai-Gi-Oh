@@ -16,6 +16,7 @@ interface IPlayerHandActionPopoverProps {
 export function PlayerHandActionPopover({ isBlocked, isEntityOrFusion, isFusion, isTrap, onPlayAction }: IPlayerHandActionPopoverProps) {
   return (
     <motion.div
+      data-tutorial-id="tutorial-board-hand-actions"
       initial={{ opacity: 0, y: 20, scale: 0.8 }}
       animate={{ opacity: 1, y: -20, scale: 1 }}
       exit={{ opacity: 0, y: 10, scale: 0.8 }}

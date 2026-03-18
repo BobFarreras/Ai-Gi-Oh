@@ -88,6 +88,14 @@
 4. Se añaden tests de UI para validar avance completo del nodo.
 5. Commit: pendiente en esta sesión.
 
+## Fase 10 - Migración del tutorial de combate al motor unificado
+
+1. Se reemplaza el panel legacy del board por overlay narrativo BigLog con spotlight y guard de interacción.
+2. El avance del flujo usa eventos reales de combate (`combatLog`, selección, cementerio, historial y victoria).
+3. Se añaden targets `data-tutorial-id` en mano, popover de acciones, battlefield, phase controls, cementerio e historial.
+4. Se crea catálogo de pasos de combate reutilizable y test de contrato.
+5. Commit: pendiente en esta sesión.
+
 ## Validación global aplicada por fase
 
 1. `pnpm lint`

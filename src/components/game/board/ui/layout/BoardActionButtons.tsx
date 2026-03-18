@@ -73,6 +73,7 @@ export function BoardActionButtons({
         {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
       </button>
       <button
+        data-tutorial-id="tutorial-board-history-button"
         aria-label={isHistoryOpen ? "Cerrar historial de batalla" : "Abrir historial de batalla"}
         onClick={(event) => {
           event.stopPropagation();

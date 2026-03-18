@@ -22,7 +22,7 @@ export function HudPhaseControls({ phase, isVisible, onAdvancePhase }: HudPhaseC
 
   return (
     // ADAPTATIVO: w-full hereda los 420px del PlayerHUD. left-0 lo ancla perfectamente al borde.
-    <div className="absolute -top-[52px] left-0 w-full pl-6 pr-4 flex flex-row items-end justify-between gap-1 sm:gap-1.5 pointer-events-auto z-[120]">
+    <div data-tutorial-id="tutorial-board-phase-controls" className="absolute -top-[52px] left-0 w-full pl-6 pr-4 flex flex-row items-end justify-between gap-1 sm:gap-1.5 pointer-events-auto z-[120]">
       
       {/* EFECTO DE TRANSICIÓN: Flash cibernético al cambiar de fase */}
       {!shouldReduceCombatEffects ? (

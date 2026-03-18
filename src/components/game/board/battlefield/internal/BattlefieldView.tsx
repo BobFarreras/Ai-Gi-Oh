@@ -8,7 +8,7 @@ import { BattlefieldViewProps } from "@/components/game/board/battlefield/intern
 
 export function BattlefieldView(props: BattlefieldViewProps) {
   return (
-    <div className="absolute inset-0 pointer-events-auto" onWheel={props.onWheel}>
+    <div data-tutorial-id="tutorial-board-battlefield" className="absolute inset-0 pointer-events-auto" onWheel={props.onWheel}>
       <motion.div
         drag={!props.isMobileLayout}
         dragConstraints={{ left: -300, right: 300, top: -200, bottom: 200 }}

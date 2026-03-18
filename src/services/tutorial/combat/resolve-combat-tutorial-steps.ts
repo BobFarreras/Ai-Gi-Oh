@@ -1,0 +1,87 @@
+// src/services/tutorial/combat/resolve-combat-tutorial-steps.ts - Define pasos guiados del tutorial de combate sobre el board real.
+import { ITutorialFlowStep } from "@/core/entities/tutorial/ITutorialFlowStep";
+
+export function resolveCombatTutorialSteps(): ITutorialFlowStep[] {
+  return [
+    {
+      id: "combat-first-turn-rule",
+      title: "Regla del primer turno",
+      description: "El jugador inicial no puede atacar en turno 1. Pulsa Siguiente para continuar.",
+      targetId: "tutorial-board-phase-controls",
+      allowedTargetIds: ["tutorial-board-phase-controls"],
+      completionType: "MANUAL_NEXT",
+    },
+    {
+      id: "combat-select-card",
+      title: "Seleccionar carta",
+      description: "Selecciona una carta de tu mano para abrir acciones de juego.",
+      targetId: "tutorial-board-hand",
+      allowedTargetIds: ["tutorial-board-hand"],
+      completionType: "USER_ACTION",
+      expectedActionId: "SELECT_CARD",
+    },
+    {
+      id: "combat-attack-defense",
+      title: "Invocar ataque/defensa",
+      description: "Usa el popover de la mano para invocar una entidad en ATTACK o DEFENSE.",
+      targetId: "tutorial-board-hand-actions",
+      allowedTargetIds: ["tutorial-board-hand", "tutorial-board-hand-actions"],
+      completionType: "USER_ACTION",
+      expectedActionId: "PLAY_ENTITY",
+    },
+    {
+      id: "combat-battle-resolution",
+      title: "Resolver combate",
+      description: "Pasa a combate y ataca para ver cómo se calcula daño o destrucción.",
+      targetId: "tutorial-board-battlefield",
+      allowedTargetIds: ["tutorial-board-phase-controls", "tutorial-board-battlefield"],
+      completionType: "USER_ACTION",
+      expectedActionId: "RESOLVE_BATTLE",
+    },
+    {
+      id: "combat-execution",
+      title: "Activar mágica",
+      description: "Juega una EXECUTION para aplicar efecto táctico durante MAIN.",
+      targetId: "tutorial-board-hand-actions",
+      allowedTargetIds: ["tutorial-board-hand", "tutorial-board-hand-actions"],
+      completionType: "USER_ACTION",
+      expectedActionId: "PLAY_EXECUTION",
+    },
+    {
+      id: "combat-fusion",
+      title: "Fusión",
+      description: "Ejecuta una fusión válida para invocar una entidad superior.",
+      targetId: "tutorial-board-hand-actions",
+      allowedTargetIds: ["tutorial-board-hand", "tutorial-board-hand-actions", "tutorial-board-battlefield"],
+      completionType: "USER_ACTION",
+      expectedActionId: "FUSION_SUMMON",
+    },
+    {
+      id: "combat-graveyard",
+      title: "Cementerio y revive",
+      description: "Abre tu cementerio para revisar cartas y práctica de revive.",
+      targetId: "tutorial-board-graveyard-player",
+      allowedTargetIds: ["tutorial-board-graveyard-player"],
+      completionType: "BOTH",
+      expectedActionId: "OPEN_GRAVEYARD",
+    },
+    {
+      id: "combat-log",
+      title: "CombatLog",
+      description: "Abre historial para seguir los eventos del duelo en orden temporal.",
+      targetId: "tutorial-board-history-button",
+      allowedTargetIds: ["tutorial-board-history-button"],
+      completionType: "USER_ACTION",
+      expectedActionId: "OPEN_COMBAT_LOG",
+    },
+    {
+      id: "combat-win-condition",
+      title: "Condición de victoria",
+      description: "El duelo termina al dejar al rival a 0 de vida.",
+      targetId: "tutorial-board-battlefield",
+      allowedTargetIds: ["tutorial-board-battlefield", "tutorial-board-phase-controls", "tutorial-board-hand"],
+      completionType: "USER_ACTION",
+      expectedActionId: "MATCH_WON",
+    },
+  ];
+}

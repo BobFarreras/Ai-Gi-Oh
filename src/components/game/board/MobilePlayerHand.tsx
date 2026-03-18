@@ -50,7 +50,7 @@ export function MobilePlayerHand({
   }, [hand.length, viewportWidth]);
 
   return (
-    <div className="pointer-events-none absolute bottom-[90px] left-0 right-0 z-[170] flex h-[150px] items-end justify-center px-1">
+    <div data-tutorial-id="tutorial-board-hand" className="pointer-events-none absolute bottom-[90px] left-0 right-0 z-[170] flex h-[150px] items-end justify-center px-1">
       <div className="relative h-full" style={{ width: `${metrics.availableWidth}px` }}>
         <div className="relative mx-auto h-full" style={{ width: `${metrics.containerWidth}px` }}>
           {hand.map((card, index) => {
