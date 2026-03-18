@@ -94,7 +94,16 @@
 2. El avance del flujo usa eventos reales de combate (`combatLog`, selección, cementerio, historial y victoria).
 3. Se añaden targets `data-tutorial-id` en mano, popover de acciones, battlefield, phase controls, cementerio e historial.
 4. Se crea catálogo de pasos de combate reutilizable y test de contrato.
-5. Commit: pendiente en esta sesión.
+5. Commit: `f77c45c`.
+
+## Fase 11 - Persistencia por nodo + recompensa final idempotente
+
+1. Se añade persistencia de progreso por nodo tutorial (`POST /api/tutorial/nodes/complete`).
+2. Se implementa claim final idempotente (`POST /api/tutorial/reward/claim`) con validación de elegibilidad por nodos.
+3. Se conecta sincronización automática desde nodos `Arsenal`, `Combat` y `Market`.
+4. Se activa UI de claim en `/hub/tutorial/reward` y runtime del mapa con progreso real persistido.
+5. Se añade SQL `023_phase_tutorial_node_progress_and_reward.sql` + documentación Supabase.
+6. Commit: pendiente en esta sesión.
 
 ## Validación global aplicada por fase
 

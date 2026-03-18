@@ -1,11 +1,12 @@
 // src/app/hub/tutorial/market/TutorialMarketClient.tsx - Simulación guiada del Market con foco en filtros, compra e historial.
 "use client";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { TutorialBigLogDialog } from "@/components/tutorial/flow/TutorialBigLogDialog";
 import { TutorialInteractionGuard } from "@/components/tutorial/flow/TutorialInteractionGuard";
 import { TutorialSpotlightOverlay } from "@/components/tutorial/flow/TutorialSpotlightOverlay";
 import { useTutorialFlowController } from "@/components/tutorial/flow/useTutorialFlowController";
+import { postTutorialNodeCompletion } from "@/app/hub/tutorial/internal/tutorial-node-progress-client";
 import { MARKET_ORDER_OPTIONS, MARKET_TYPE_OPTIONS } from "@/components/hub/market/layout/market-filter-options";
 import { resolveMarketTutorialSteps } from "@/services/tutorial/market/resolve-market-tutorial-steps";
 
@@ -21,6 +22,15 @@ export function TutorialMarketClient() {
   const [wallet, setWallet] = useState(700);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [historyEntries, setHistoryEntries] = useState<string[]>([]);
+  const hasSyncedCompletionRef = useRef(false);
+
+  useEffect(() => {
+    if (!tutorial.isFinished || hasSyncedCompletionRef.current) return;
+    hasSyncedCompletionRef.current = true;
+    postTutorialNodeCompletion("tutorial-market-basics").catch(() => {
+      hasSyncedCompletionRef.current = false;
+    });
+  }, [tutorial.isFinished]);
 
   return (
     <section className="relative mx-auto w-full max-w-5xl rounded-2xl border border-cyan-300/30 bg-slate-950/90 p-5 pb-40">

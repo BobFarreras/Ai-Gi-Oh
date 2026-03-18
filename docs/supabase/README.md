@@ -62,6 +62,10 @@
    - progreso acumulado de entrenamiento por tier y desbloqueo más alto.
 25. `public.player_training_match_claims`:
    - idempotencia por batalla para impedir doble recompensa en entrenamiento.
+26. `public.player_tutorial_node_progress`:
+   - progreso por nodo del tutorial (`arsenal`, `combat`, `market`, `reward`).
+27. `public.player_tutorial_reward_claims`:
+   - claim único de recompensa final del onboarding tutorial.
 
 ## Fase 2 (Perfil y Progreso)
 
@@ -293,6 +297,18 @@
    - ambas tablas solo accesibles por propietario (`auth.uid() = player_id`).
 4. Uso previsto:
    - endpoint `POST /api/training/matches/complete` aplica recompensa una sola vez por `battle_id`.
+
+## Fase T.1 (Progreso por nodo tutorial y recompensa final)
+
+1. Ejecuta `docs/supabase/sql/023_phase_tutorial_node_progress_and_reward.sql`.
+2. Verifica tablas:
+   - `public.player_tutorial_node_progress`
+   - `public.player_tutorial_reward_claims`
+3. Verifica RLS:
+   - ambas tablas solo accesibles por propietario (`auth.uid() = player_id`).
+4. Uso previsto:
+   - `POST /api/tutorial/nodes/complete` persiste completion idempotente de cada nodo.
+   - `POST /api/tutorial/reward/claim` aplica una sola vez la recompensa final del tutorial.
 
 ## Notas
 

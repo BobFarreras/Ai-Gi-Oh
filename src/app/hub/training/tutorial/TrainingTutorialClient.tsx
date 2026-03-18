@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Board } from "@/components/game/board";
 import { ICard } from "@/core/entities/ICard";
+import { postTutorialNodeCompletion } from "@/app/hub/tutorial/internal/tutorial-node-progress-client";
 import { postTrainingTutorialCompletion } from "./training-tutorial-completion-client";
 import { TrainingCoinTossOverlay } from "./TrainingCoinTossOverlay";
 
@@ -26,6 +27,7 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
     setStatus("Registrando tutorial completado...");
     try {
       await postTrainingTutorialCompletion();
+      await postTutorialNodeCompletion("tutorial-combat-basics");
       setStatus("Tutorial completado y sincronizado.");
     } catch {
       setStatus("No se pudo sincronizar el tutorial completado.");

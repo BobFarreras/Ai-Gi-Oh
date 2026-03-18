@@ -1,11 +1,12 @@
 // src/app/hub/tutorial/arsenal/TutorialArsenalClient.tsx - Simulación guiada de Arsenal usando el motor reusable de tutorial.
 "use client";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { TutorialBigLogDialog } from "@/components/tutorial/flow/TutorialBigLogDialog";
 import { TutorialInteractionGuard } from "@/components/tutorial/flow/TutorialInteractionGuard";
 import { TutorialSpotlightOverlay } from "@/components/tutorial/flow/TutorialSpotlightOverlay";
 import { useTutorialFlowController } from "@/components/tutorial/flow/useTutorialFlowController";
+import { postTutorialNodeCompletion } from "@/app/hub/tutorial/internal/tutorial-node-progress-client";
 import { resolveArsenalTutorialSteps } from "@/services/tutorial/arsenal/resolve-arsenal-tutorial-steps";
 
 function isAllowedTarget(activeTargetIds: string[], targetId: string): boolean {
@@ -16,6 +17,18 @@ export function TutorialArsenalClient() {
   const steps = useMemo(() => resolveArsenalTutorialSteps(), []);
   const tutorial = useTutorialFlowController(steps);
   const [statusMessage, setStatusMessage] = useState("Sigue las instrucciones de BigLog.");
+  const hasSyncedCompletionRef = useRef(false);
+
+  useEffect(() => {
+    if (!tutorial.isFinished || hasSyncedCompletionRef.current) return;
+    hasSyncedCompletionRef.current = true;
+    postTutorialNodeCompletion("tutorial-arsenal-basics")
+      .then(() => setStatusMessage("Nodo completado y sincronizado en el mapa tutorial."))
+      .catch(() => {
+        hasSyncedCompletionRef.current = false;
+        setStatusMessage("Completaste la práctica, pero no se pudo sincronizar el nodo.");
+      });
+  }, [tutorial.isFinished]);
 
   return (
     <section className="relative mx-auto w-full max-w-5xl rounded-2xl border border-cyan-300/30 bg-slate-950/90 p-5 pb-40">
