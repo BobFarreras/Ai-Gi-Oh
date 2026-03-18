@@ -14,9 +14,23 @@ interface IRect {
   height: number;
 }
 
+function resolveVisibleElementByTutorialId(targetId: string): HTMLElement | null {
+  const candidates = Array.from(document.querySelectorAll<HTMLElement>(`[data-tutorial-id="${targetId}"]`));
+  if (candidates.length === 0) return null;
+  const visible = candidates.filter((node) => {
+    const rect = node.getBoundingClientRect();
+    if (rect.width < 2 || rect.height < 2) return false;
+    const style = window.getComputedStyle(node);
+    return style.display !== "none" && style.visibility !== "hidden";
+  });
+  if (visible.length === 0) return null;
+  visible.sort((a, b) => b.getBoundingClientRect().width * b.getBoundingClientRect().height - a.getBoundingClientRect().width * a.getBoundingClientRect().height);
+  return visible[0] ?? null;
+}
+
 function resolveRect(targetId: string | null): IRect | null {
   if (!targetId) return null;
-  const element = document.querySelector<HTMLElement>(`[data-tutorial-id="${targetId}"]`);
+  const element = resolveVisibleElementByTutorialId(targetId);
   if (element) {
     const rect = element.getBoundingClientRect();
     return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
@@ -34,7 +48,7 @@ function resolveRect(targetId: string | null): IRect | null {
 function ensureTargetVisibility(targetId: string | null): void {
   if (!targetId) return;
   const element =
-    document.querySelector<HTMLElement>(`[data-tutorial-id="${targetId}"]`) ??
+    resolveVisibleElementByTutorialId(targetId) ??
     document.querySelector<HTMLElement>(`[data-tutorial-group="${targetId}"]`);
   if (!element) return;
   const rect = element.getBoundingClientRect();

@@ -18,7 +18,7 @@ export function resolveArsenalTutorialSteps(): ITutorialFlowStep[] {
       description:
         "Este panel explica estadísticas, versión, nivel y texto de carta. Acostúmbrate a revisarlo antes de mover cartas.",
       targetId: "tutorial-home-inspector",
-      allowedTargetIds: ["tutorial-home-inspector"],
+      allowedTargetIds: [],
       completionType: "MANUAL_NEXT",
     },
     {
@@ -64,7 +64,16 @@ export function resolveArsenalTutorialSteps(): ITutorialFlowStep[] {
       description:
         "Deck principal: 20 cartas obligatorias para competir. Si bajas de 20, rellena; si llegas a 20, añade solo tras remover.",
       targetId: "tutorial-home-deck",
-      allowedTargetIds: ["tutorial-home-deck"],
+      allowedTargetIds: [],
+      completionType: "MANUAL_NEXT",
+    },
+    {
+      id: "arsenal-max-copies-rule",
+      title: "Límite de copias por carta",
+      description:
+        "Regla clave de Arsenal: en el deck solo puedes llevar hasta 3 copias de la misma carta.",
+      targetId: "tutorial-home-deck",
+      allowedTargetIds: [],
       completionType: "MANUAL_NEXT",
     },
     {
@@ -73,7 +82,7 @@ export function resolveArsenalTutorialSteps(): ITutorialFlowStep[] {
       description:
         "La receta de GemGPT usa 3 cartas del deck principal: ChatGPT + Gemini + Kernel de GemGPT (mágica).",
       targetId: "tutorial-home-fusion-recipe-cards",
-      allowedTargetIds: ["tutorial-home-deck"],
+      allowedTargetIds: [],
       completionType: "MANUAL_NEXT",
     },
     {
@@ -82,7 +91,7 @@ export function resolveArsenalTutorialSteps(): ITutorialFlowStep[] {
       description:
         "GemGPT debe estar en este bloque. Las cartas de tipo FUSION quedan fuera del deck principal.",
       targetId: "tutorial-home-fusion-card-tutorial-gemgpt-fusion",
-      allowedTargetIds: ["tutorial-home-fusion-block"],
+      allowedTargetIds: [],
       completionType: "MANUAL_NEXT",
     },
     {
@@ -91,25 +100,26 @@ export function resolveArsenalTutorialSteps(): ITutorialFlowStep[] {
       description:
         "Para fusionar necesitas 2 materiales + 1 mágica de fusión y la carta de fusión colocada en su bloque.",
       targetId: "tutorial-home-fusion-block",
-      allowedTargetIds: ["tutorial-home-fusion-block"],
+      allowedTargetIds: [],
       completionType: "MANUAL_NEXT",
     },
     {
       id: "arsenal-evolution-theory",
       title: "Cómo detectar evolución",
       description:
-        "Cuando una carta puede evolucionar, vibra en el almacén. Costes por salto: 4, 8, 16... copias según el siguiente tier.",
+        "Selecciona una carta vibrando: eso indica que puede evolucionar. Costes por salto: 4, 8, 16... copias.",
       targetId: "tutorial-home-collection",
       allowedTargetIds: ["tutorial-home-collection", "tutorial-home-inspector"],
-      completionType: "MANUAL_NEXT",
+      completionType: "USER_ACTION",
+      expectedActionId: "SELECT_COLLECTION_CARD",
     },
     {
       id: "arsenal-open-evolve",
       title: "Evolución práctica",
-      description: "Selecciona una carta vibrando y pulsa Evolucionar para ejecutar la mejora y ver la animación.",
+      description: "Perfecto. Ahora pulsa el botón Evolucionar para ejecutar la mejora y ver la animación.",
       targetId: "tutorial-home-evolve-button",
       allowedTargetIds: ["tutorial-home-collection", "tutorial-home-evolve-button", "tutorial-home-inspector"],
-      completionType: "BOTH",
+      completionType: "USER_ACTION",
       expectedActionId: "OPEN_EVOLVE_PANEL",
     },
   ];

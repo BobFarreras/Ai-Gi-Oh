@@ -10,29 +10,60 @@ interface ITutorialBigLogDialogProps {
   isFinished: boolean;
   onNext: () => void;
   targetId?: string | null;
+  preferTopPlacement?: boolean;
+  forceBottomPlacement?: boolean;
 }
 
 type DialogPlacement = "bottom" | "top";
+const ACTION_TARGET_IDS = new Set(["tutorial-home-add-button", "tutorial-home-remove-button", "tutorial-home-evolve-button"]);
 
-function resolveRect(targetId: string | null): DOMRect | null {
+function resolveElement(targetId: string | null): HTMLElement | null {
   if (!targetId) return null;
-  const element = document.querySelector<HTMLElement>(`[data-tutorial-id="${targetId}"]`);
-  return element?.getBoundingClientRect() ?? null;
+  const candidates = Array.from(document.querySelectorAll<HTMLElement>(`[data-tutorial-id="${targetId}"]`));
+  if (candidates.length === 0) return null;
+  const visible = candidates.filter((node) => {
+    const rect = node.getBoundingClientRect();
+    if (rect.width < 2 || rect.height < 2) return false;
+    const style = window.getComputedStyle(node);
+    return style.display !== "none" && style.visibility !== "hidden";
+  });
+  if (visible.length === 0) return null;
+  visible.sort((a, b) => b.getBoundingClientRect().width * b.getBoundingClientRect().height - a.getBoundingClientRect().width * a.getBoundingClientRect().height);
+  return visible[0] ?? null;
 }
 
 function hasRectOverlap(a: DOMRect, b: DOMRect): boolean {
   return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
 }
 
-export function TutorialBigLogDialog({ title, description, canUseNext, isFinished, onNext, targetId = null }: ITutorialBigLogDialogProps) {
+export function TutorialBigLogDialog({
+  title,
+  description,
+  canUseNext,
+  isFinished,
+  onNext,
+  targetId = null,
+  preferTopPlacement = false,
+  forceBottomPlacement = false,
+}: ITutorialBigLogDialogProps) {
   const containerRef = useRef<HTMLElement | null>(null);
+  const forceTopPlacement = !forceBottomPlacement && (preferTopPlacement || Boolean(targetId && ACTION_TARGET_IDS.has(targetId)));
   const [placement, setPlacement] = useState<DialogPlacement>("bottom");
 
   useEffect(() => {
+    if (forceBottomPlacement) return;
     if (!targetId) return;
     const updatePlacement = (): void => {
+      const targetElement = resolveElement(targetId);
       const dialogRect = containerRef.current?.getBoundingClientRect();
-      const targetRect = resolveRect(targetId);
+      const targetRect = targetElement?.getBoundingClientRect() ?? null;
+      if (forceTopPlacement) {
+        setPlacement("top");
+        if (typeof targetElement?.scrollIntoView === "function") {
+          targetElement.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+        }
+        return;
+      }
       if (!dialogRect || !targetRect) {
         setPlacement("bottom");
         return;
@@ -52,11 +83,11 @@ export function TutorialBigLogDialog({ title, description, canUseNext, isFinishe
       window.removeEventListener("resize", updatePlacement);
       window.removeEventListener("scroll", updatePlacement, true);
     };
-  }, [targetId]);
+  }, [forceBottomPlacement, forceTopPlacement, targetId]);
 
   const positionClass = useMemo(
-    () => (placement === "top" ? "top-4 bottom-auto" : "bottom-4 top-auto"),
-    [placement],
+    () => (forceBottomPlacement ? "bottom-4 top-auto" : placement === "top" ? "top-4 bottom-auto" : "bottom-4 top-auto"),
+    [forceBottomPlacement, placement],
   );
 
   return (

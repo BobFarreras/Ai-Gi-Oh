@@ -27,6 +27,8 @@ interface HomeCardInspectorDialogProps {
   onRemove: () => Promise<IHomeActionResult>;
   onEvolve: () => Promise<IHomeActionResult>;
   onClose: () => void;
+  isTutorialActionStep?: boolean;
+  tutorialHighlightTargetId?: string | null;
 }
 
 export function HomeCardInspectorDialog({
@@ -46,6 +48,8 @@ export function HomeCardInspectorDialog({
   onRemove,
   onEvolve,
   onClose,
+  isTutorialActionStep = false,
+  tutorialHighlightTargetId = null,
 }: HomeCardInspectorDialogProps) {
   const [pendingAction, setPendingAction] = useState<"INSERT" | "REMOVE" | "EVOLVE" | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
@@ -112,6 +116,8 @@ export function HomeCardInspectorDialog({
       closeAriaLabel="Cerrar inspección de carta"
       overlayTopClassName="top-[80px]"
       panelTopClassName="top-[88px] max-h-[calc(100dvh-96px)]"
+      zIndexClassName={isTutorialActionStep ? "z-[426]" : "z-[220]"}
+      overlayTintClassName={isTutorialActionStep ? "bg-transparent" : "bg-black/52"}
       isDismissDisabled={pendingAction !== null}
     >
       <div className="flex h-full min-h-0 flex-col">
@@ -132,6 +138,7 @@ export function HomeCardInspectorDialog({
           onInsert={handleInsert}
           onRemove={handleRemove}
           onEvolve={handleEvolve}
+          tutorialHighlightTargetId={tutorialHighlightTargetId}
         />
         {statusMessage ? (
           <p

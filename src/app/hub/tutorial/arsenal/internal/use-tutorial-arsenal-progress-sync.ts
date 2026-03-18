@@ -15,13 +15,34 @@ interface IUseTutorialArsenalProgressSyncInput {
  */
 export function useTutorialArsenalProgressSync(input: IUseTutorialArsenalProgressSyncInput): void {
   const hasSyncedCompletionRef = useRef(false);
+  const lastStepIdRef = useRef<string | null>(null);
+  const selectionBaselineRef = useRef<{ collectionCardId: string | null; slotIndex: number | null }>({
+    collectionCardId: null,
+    slotIndex: null,
+  });
 
   useEffect(() => {
-    if (input.tutorial.currentStep?.id === "arsenal-select-deck-card" && input.selectedSlotIndex !== null) input.tutorial.onAction("SELECT_DECK_CARD");
+    const stepId = input.tutorial.currentStep?.id ?? null;
+    if (lastStepIdRef.current !== stepId) {
+      lastStepIdRef.current = stepId;
+      selectionBaselineRef.current = {
+        collectionCardId: input.selectedCollectionCardId,
+        slotIndex: input.selectedSlotIndex,
+      };
+    }
     if (
-      (input.tutorial.currentStep?.id === "arsenal-select-collection-card" ||
-        input.tutorial.currentStep?.id === "arsenal-reselect-collection-card") &&
-      input.selectedCollectionCardId
+      stepId === "arsenal-select-deck-card" &&
+      input.selectedSlotIndex !== null &&
+      input.selectedSlotIndex !== selectionBaselineRef.current.slotIndex
+    ) {
+      input.tutorial.onAction("SELECT_DECK_CARD");
+    }
+    if (
+      (stepId === "arsenal-select-collection-card" ||
+        stepId === "arsenal-reselect-collection-card" ||
+        stepId === "arsenal-evolution-theory") &&
+      input.selectedCollectionCardId &&
+      input.selectedCollectionCardId !== selectionBaselineRef.current.collectionCardId
     ) {
       input.tutorial.onAction("SELECT_COLLECTION_CARD");
     }

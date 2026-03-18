@@ -6,14 +6,12 @@ import { HomeEvolutionOverlay } from "@/components/hub/home/HomeEvolutionOverlay
 import { HomeResponsiveWorkspace } from "@/components/hub/home/layout/HomeResponsiveWorkspace";
 import { HubErrorDialog } from "@/components/hub/internal/HubErrorDialog";
 import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
-import { TutorialBigLogDialog } from "@/components/tutorial/flow/TutorialBigLogDialog";
-import { TutorialBigLogIntroOverlay } from "@/components/tutorial/flow/TutorialBigLogIntroOverlay";
-import { TutorialInteractionGuard } from "@/components/tutorial/flow/TutorialInteractionGuard";
-import { TutorialSpotlightOverlay } from "@/components/tutorial/flow/TutorialSpotlightOverlay";
 import { useTutorialFlowController } from "@/components/tutorial/flow/useTutorialFlowController";
 import { IHomeDeckBuilderSceneProps } from "@/components/hub/home/internal/types/home-deck-builder-types";
 import { useTutorialArsenalSandbox } from "@/app/hub/tutorial/arsenal/internal/use-tutorial-arsenal-sandbox";
 import { useTutorialArsenalProgressSync } from "@/app/hub/tutorial/arsenal/internal/use-tutorial-arsenal-progress-sync";
+import { TutorialArsenalFlowOverlays } from "@/app/hub/tutorial/arsenal/internal/TutorialArsenalFlowOverlays";
+import { resolveTutorialMobileSection } from "@/app/hub/tutorial/arsenal/internal/resolve-tutorial-mobile-section";
 import { resolveArsenalTutorialSteps } from "@/services/tutorial/arsenal/resolve-arsenal-tutorial-steps";
 
 export function TutorialArsenalClient(props: IHomeDeckBuilderSceneProps) {
@@ -22,6 +20,20 @@ export function TutorialArsenalClient(props: IHomeDeckBuilderSceneProps) {
   const { play } = useHubModuleSfx();
   const [isIntroVisible, setIsIntroVisible] = useState(true);
   const evolutionCard = sandbox.state.selectedCard ?? null;
+  const tutorialForcedMobileSection = useMemo(
+    () => (isIntroVisible || tutorial.isFinished ? null : resolveTutorialMobileSection(tutorial.currentStep)),
+    [isIntroVisible, tutorial.currentStep, tutorial.isFinished],
+  );
+  const shouldPreferTopTutorialDialog = useMemo(
+    () =>
+      tutorial.currentStep?.id === "arsenal-add-deck" ||
+      tutorial.currentStep?.id === "arsenal-remove-deck" ||
+      tutorial.currentStep?.id === "arsenal-open-evolve" ||
+      tutorial.currentStep?.id === "arsenal-fusion-recipe-cards" ||
+      tutorial.currentStep?.id === "arsenal-fusion-result" ||
+      tutorial.currentStep?.id === "arsenal-fusion-explanation",
+    [tutorial.currentStep?.id],
+  );
   useTutorialArsenalProgressSync({
     selectedSlotIndex: sandbox.state.selectedSlotIndex,
     selectedCollectionCardId: sandbox.state.selectedCollectionCardId,
@@ -101,6 +113,8 @@ export function TutorialArsenalClient(props: IHomeDeckBuilderSceneProps) {
             onDropOnFusionSlot={() => {}}
             onDropOnCollectionArea={() => {}}
             onClearError={() => sandbox.state.setErrorMessage(null)}
+            tutorialForcedMobileSection={tutorialForcedMobileSection}
+            tutorialCurrentStepId={tutorial.currentStep?.id ?? null}
           />
         </section>
         {sandbox.state.evolutionOverlay ? (
@@ -114,30 +128,14 @@ export function TutorialArsenalClient(props: IHomeDeckBuilderSceneProps) {
         ) : null}
         <HubErrorDialog title="Error de Tutorial" message={sandbox.state.errorMessage} onClose={() => sandbox.state.setErrorMessage(null)} />
       </main>
-      <TutorialInteractionGuard isEnabled={isIntroVisible || !tutorial.isFinished} allowedTargetIds={isIntroVisible ? [] : tutorial.allowedTargetIds} />
-      <TutorialSpotlightOverlay isVisible={!isIntroVisible && !tutorial.isFinished} targetId={tutorial.currentStep?.targetId ?? null} />
-      <TutorialBigLogIntroOverlay
-        isVisible={isIntroVisible}
-        title="Preparar Deck"
-        description="Practicarás con un mazo sandbox visual: revisar detalle, gestionar cupo de 20 cartas, entender fusión y dominar evolución por copias."
-        onStart={() => {
-          play("EVOLUTION_BUTTON");
-          setIsIntroVisible(false);
-        }}
+      <TutorialArsenalFlowOverlays
+        isIntroVisible={isIntroVisible}
+        setIsIntroVisible={setIsIntroVisible}
+        tutorial={tutorial}
+        shouldPreferTopTutorialDialog={shouldPreferTopTutorialDialog}
+        isEvolutionOverlayVisible={Boolean(sandbox.state.evolutionOverlay)}
+        playSfx={play}
       />
-      {!isIntroVisible ? (
-        <TutorialBigLogDialog
-          title={tutorial.currentStep?.title ?? "Nodo completado"}
-          description={tutorial.currentStep?.description ?? "Has completado Preparar Deck. Vuelve al mapa para continuar."}
-          canUseNext={tutorial.canUseNext}
-          isFinished={tutorial.isFinished}
-          onNext={() => {
-            play("EVOLUTION_BUTTON");
-            tutorial.onNext();
-          }}
-          targetId={tutorial.currentStep?.targetId ?? null}
-        />
-      ) : null}
     </>
   );
 }

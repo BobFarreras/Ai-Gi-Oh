@@ -23,6 +23,8 @@ interface HomeMiniCardProps {
   onDrop?: (event: DragEvent<HTMLElement>) => void;
   isPerformanceMode?: boolean;
   showBackgroundInPerformanceMode?: boolean;
+  dataTutorialId?: string;
+  dataTutorialGroup?: string;
 }
 
 export function HomeMiniCard({
@@ -42,6 +44,8 @@ export function HomeMiniCard({
   onDrop,
   isPerformanceMode = false,
   showBackgroundInPerformanceMode = false,
+  dataTutorialId,
+  dataTutorialGroup,
 }: HomeMiniCardProps) {
   const filledContainerClass = showSlotContainer
     ? isSelected
@@ -68,6 +72,8 @@ export function HomeMiniCard({
     return (
         <Wrapper
         {...wrapperProps}
+        data-tutorial-id={dataTutorialId}
+        data-tutorial-group={dataTutorialGroup}
         className={`${emptyContainerClass} flex items-center justify-center text-center text-[8px] sm:text-[10px] font-semibold text-cyan-100/20 hover:text-cyan-100/50 hover:bg-cyan-950/30`}
       >
         <span className="opacity-50 font-mono tracking-widest">SLOT<br/>{label.split(' ')[1]}</span>
@@ -78,7 +84,7 @@ export function HomeMiniCard({
   const masteryPassiveLabel = resolveMasteryPassiveLabel(masteryPassiveSkillId);
 
   return (
-    <Wrapper {...wrapperProps} className={filledContainerClass}>
+    <Wrapper {...wrapperProps} data-tutorial-id={dataTutorialId} data-tutorial-group={dataTutorialGroup} className={filledContainerClass}>
       {/* Contenedor centralizado para la miniatura */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className={`${cardScaleClass} origin-center`}>

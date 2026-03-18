@@ -15,8 +15,8 @@ Reemplazar el tutorial monolítico por un sistema de nodos guiados, con ritmo co
 ## Nodos del mapa
 
 1. `Preparar Deck` (`/hub/tutorial/arsenal`).
-2. `Combate Base` (`/hub/training/tutorial`).
-3. `Market` (`/hub/tutorial/market`).
+2. `Market` (`/hub/tutorial/market`).
+3. `Combate Base` (`/hub/training/tutorial`).
 4. `Recompensa Final` (`/hub/tutorial/reward`).
 
 ## Motor de pasos guiados (target)

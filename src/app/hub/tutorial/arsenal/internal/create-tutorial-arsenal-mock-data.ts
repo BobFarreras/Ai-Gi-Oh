@@ -49,8 +49,29 @@ export function createTutorialArsenalMockData(playerId: string): ITutorialArsena
     ["mock-filler-3", buildCard("mock-filler-3", "Event Bus", "ENTITY", 2, "/assets/renders/supabase.png", "Carta de soporte para mantener el cupo reglamentario del deck.", 1000, 1500)],
     ["mock-filler-4", buildCard("mock-filler-4", "Cache Layer", "TRAP", 2, "/assets/renders/cloudflare.png", "Trampa de práctica para enseñar tipos distintos dentro del mismo mazo.", 0, 0)],
   ]);
-  const deckPattern = ["tutorial-chatgpt", "tutorial-gemini", "tutorial-gemgpt-magic", "mock-filler-1", "mock-filler-2", "mock-filler-3", "mock-filler-4"];
-  const deckSlots = Array.from({ length: 20 }, (_, index) => ({ index, cardId: deckPattern[index % deckPattern.length] ?? "mock-filler-1" }));
+  const tutorialDeckOrder = [
+    "tutorial-chatgpt",
+    "tutorial-gemini",
+    "tutorial-gemgpt-magic",
+    "mock-filler-1",
+    "mock-filler-2",
+    "mock-filler-3",
+    "mock-filler-4",
+    "mock-filler-1",
+    "mock-filler-2",
+    "mock-filler-3",
+    "mock-filler-4",
+    "mock-filler-1",
+    "mock-filler-2",
+    "mock-filler-3",
+    "mock-filler-4",
+    "mock-filler-1",
+    "mock-filler-2",
+    "mock-filler-3",
+    "mock-filler-4",
+    "mock-filler-1",
+  ];
+  const deckSlots = tutorialDeckOrder.map((cardId, index) => ({ index, cardId }));
   const collection: ICollectionCard[] = Array.from(cards.values()).map((card) => ({
     card,
     ownedCopies: card.id === "mock-evolve-spark" ? 20 : card.id === "tutorial-gemgpt-fusion" ? 1 : 6,

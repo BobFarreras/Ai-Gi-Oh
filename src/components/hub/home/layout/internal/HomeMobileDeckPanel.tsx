@@ -15,16 +15,23 @@ interface IHomeMobileDeckPanelProps {
  * Agrupa la sección móvil del deck para reducir complejidad del contenedor.
  */
 export function HomeMobileDeckPanel({ props, cardById, deckSlotsForView, onSelectSlot, onSelectFusionSlot }: IHomeMobileDeckPanelProps) {
+  const fusionRecipeCardIds = new Set(["tutorial-chatgpt", "tutorial-gemini", "tutorial-gemgpt-magic"]);
+  const highlightedRecipeCardIds = new Set<string>();
   return (
     <>
-      <div className="grid grid-cols-4 gap-1 pb-3 pt-1">
+      <div data-tutorial-id="tutorial-home-deck" className="grid grid-cols-4 gap-1 pb-3 pt-1">
         {deckSlotsForView.map((slot) => {
           const card = slot.cardId ? (cardById.get(slot.cardId) ?? null) : null;
+          const shouldHighlightRecipe =
+            Boolean(card) && fusionRecipeCardIds.has(card.id) && !highlightedRecipeCardIds.has(card.id);
+          if (shouldHighlightRecipe && card) highlightedRecipeCardIds.add(card.id);
           const progress = slot.cardId ? (props.cardProgressById.get(slot.cardId) ?? null) : null;
           const isSelected = props.selectedSlotIndex === slot.index || (slot.cardId !== null && slot.cardId === props.selectedCardId);
           return (
             <HomeMiniCard
               key={slot.index}
+              dataTutorialId={card ? `tutorial-home-card-${card.id}` : undefined}
+              dataTutorialGroup={shouldHighlightRecipe ? "tutorial-home-fusion-recipe-cards" : undefined}
               card={card}
               isSelected={isSelected}
               label={`Slot ${slot.index + 1}`}
@@ -46,7 +53,7 @@ export function HomeMobileDeckPanel({ props, cardById, deckSlotsForView, onSelec
           <p className="col-span-4 rounded-lg border border-cyan-900/40 bg-black/30 p-2 text-center text-[11px] text-cyan-200/80">No hay cartas del deck que cumplan el filtro.</p>
         ) : null}
       </div>
-      <div className="mt-2 rounded-lg border border-fuchsia-800/40 bg-fuchsia-950/15 p-2">
+      <div data-tutorial-id="tutorial-home-fusion-block" className="mt-2 rounded-lg border border-fuchsia-800/40 bg-fuchsia-950/15 p-2">
         <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-fuchsia-200">Bloque Fusiones</p>
         <div className="grid grid-cols-2 place-items-center gap-2">
           {props.deck.fusionSlots.map((slot) => {
@@ -54,7 +61,11 @@ export function HomeMobileDeckPanel({ props, cardById, deckSlotsForView, onSelec
             const progress = slot.cardId ? (props.cardProgressById.get(slot.cardId) ?? null) : null;
             const isSelected = props.selectedFusionSlotIndex === slot.index || (slot.cardId !== null && slot.cardId === props.selectedCardId);
             return (
-              <div key={`mobile-fusion-slot-${slot.index}`} className="w-[84px]">
+              <div
+                key={`mobile-fusion-slot-${slot.index}`}
+                data-tutorial-id={card ? `tutorial-home-fusion-card-${card.id}` : undefined}
+                className="w-[84px]"
+              >
                 <HomeMiniCard
                   card={card}
                   isSelected={isSelected}

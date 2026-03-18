@@ -38,6 +38,7 @@ export function HomeDeckPanel({
 }: HomeDeckPanelProps) {
   const cardById = new Map(collection.map((entry) => [entry.card.id, entry.card]));
   const fusionRecipeCardIds = new Set(["tutorial-chatgpt", "tutorial-gemini", "tutorial-gemgpt-magic"]);
+  const highlightedRecipeCardIds = new Set<string>();
 
   return (
     <section data-tutorial-id="tutorial-home-deck" className="flex h-full min-h-0 flex-col rounded-2xl border border-cyan-800/35 bg-[#030c16]/72 p-3 sm:p-4 shadow-[0_0_22px_rgba(8,145,178,0.12)]">
@@ -53,6 +54,9 @@ export function HomeDeckPanel({
         <div className="grid grid-cols-[repeat(auto-fill,minmax(68px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start justify-items-center gap-2 w-full pb-4">
           {deck.slots.map((slot) => {
             const card = slot.cardId ? cardById.get(slot.cardId) : null;
+            const shouldHighlightRecipe =
+              Boolean(card) && fusionRecipeCardIds.has(card.id) && !highlightedRecipeCardIds.has(card.id);
+            if (shouldHighlightRecipe && card) highlightedRecipeCardIds.add(card.id);
             const isSelected = selectedSlotIndex === slot.index || (slot.cardId !== null && slot.cardId === selectedCardId);
             const progress = slot.cardId ? cardProgressById.get(slot.cardId) : null;
             
@@ -60,7 +64,7 @@ export function HomeDeckPanel({
           <motion.div
                 key={slot.index}
                 data-tutorial-id={card ? `tutorial-home-card-${card.id}` : undefined}
-                data-tutorial-group={card && fusionRecipeCardIds.has(card.id) ? "tutorial-home-fusion-recipe-cards" : undefined}
+                data-tutorial-group={shouldHighlightRecipe ? "tutorial-home-fusion-recipe-cards" : undefined}
                 whileHover={{ scale: 1.05, y: -2, zIndex: 10 }}
                 whileTap={{ scale: 0.95 }}
                 className="relative w-[76px] flex justify-center"
