@@ -115,6 +115,7 @@ export function useTutorialArsenalSandbox(input: IUseTutorialArsenalSandboxInput
       level: state.selectedCardLevel,
       consumedCopies: state.copiesRequiredToEvolve,
     });
+    play("EVOLUTION_OVERLAY");
     setTimeout(() => state.setEvolutionOverlay(null), 4300);
     if (input.tutorial.currentStep?.id === "arsenal-open-evolve") input.tutorial.onAction("OPEN_EVOLVE_PANEL");
     state.setErrorMessage(null);

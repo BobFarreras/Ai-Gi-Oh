@@ -1,5 +1,6 @@
 // src/app/hub/tutorial/arsenal/internal/TutorialArsenalFlowOverlays.tsx - Renderiza overlays del flujo guiado de Preparar Deck (guard, spotlight, intro, diálogo y cierre).
 "use client";
+import { useEffect, useState } from "react";
 import { TutorialBigLogDialog } from "@/components/tutorial/flow/TutorialBigLogDialog";
 import { TutorialBigLogIntroOverlay } from "@/components/tutorial/flow/TutorialBigLogIntroOverlay";
 import { TutorialBigLogOutroOverlay } from "@/components/tutorial/flow/TutorialBigLogOutroOverlay";
@@ -21,6 +22,17 @@ interface ITutorialArsenalFlowOverlaysProps {
  * Aísla la capa de overlays tutorial para mantener el cliente principal del nodo liviano.
  */
 export function TutorialArsenalFlowOverlays(props: ITutorialArsenalFlowOverlaysProps) {
+  const [isOutroVisible, setIsOutroVisible] = useState(false);
+  const shouldHighlightNextButton = props.tutorial.canUseNext;
+
+  useEffect(() => {
+    if (props.isIntroVisible || !props.tutorial.isFinished) return;
+    if (isOutroVisible) return;
+    if (props.isEvolutionOverlayVisible) return;
+    const timerId = window.setTimeout(() => setIsOutroVisible(true), 1200);
+    return () => window.clearTimeout(timerId);
+  }, [isOutroVisible, props.isEvolutionOverlayVisible, props.isIntroVisible, props.tutorial.isFinished]);
+
   return (
     <>
       <TutorialInteractionGuard
@@ -53,10 +65,11 @@ export function TutorialArsenalFlowOverlays(props: ITutorialArsenalFlowOverlaysP
           targetId={props.tutorial.currentStep?.targetId ?? null}
           preferTopPlacement={props.shouldPreferTopTutorialDialog}
           forceBottomPlacement={props.isEvolutionOverlayVisible}
+          shouldHighlightNextButton={shouldHighlightNextButton}
         />
       ) : null}
       <TutorialBigLogOutroOverlay
-        isVisible={!props.isIntroVisible && props.tutorial.isFinished}
+        isVisible={isOutroVisible}
         title="Preparar Deck Completado"
         description="Ya dominas fundamentos de Arsenal. Elige continuar con el siguiente tutorial o volver al mapa."
         onContinue={() => {
