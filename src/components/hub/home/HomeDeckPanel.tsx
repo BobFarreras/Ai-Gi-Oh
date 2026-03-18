@@ -39,7 +39,7 @@ export function HomeDeckPanel({
   const cardById = new Map(collection.map((entry) => [entry.card.id, entry.card]));
 
   return (
-    <section className="flex h-full min-h-0 flex-col rounded-2xl border border-cyan-800/35 bg-[#030c16]/72 p-3 sm:p-4 shadow-[0_0_22px_rgba(8,145,178,0.12)]">
+    <section data-tutorial-id="tutorial-home-deck" className="flex h-full min-h-0 flex-col rounded-2xl border border-cyan-800/35 bg-[#030c16]/72 p-3 sm:p-4 shadow-[0_0_22px_rgba(8,145,178,0.12)]">
       <div className="mb-3 flex items-center justify-between border-b border-cyan-900/50 pb-2">
         <h2 className="text-sm font-black uppercase tracking-[0.2em] text-cyan-200">Deck</h2>
         <p className="text-xs font-semibold text-cyan-100/85 bg-black/50 px-2 py-1 rounded border border-cyan-900">

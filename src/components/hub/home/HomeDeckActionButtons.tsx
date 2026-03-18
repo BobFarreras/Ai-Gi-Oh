@@ -43,6 +43,7 @@ export function HomeDeckActionButtons({
       </motion.button>
       <motion.button
         type="button"
+        data-tutorial-id="tutorial-home-remove-button"
         aria-label="Sacar carta seleccionada del deck"
         disabled={!canRemove}
         onClick={() => void onRemove()}
