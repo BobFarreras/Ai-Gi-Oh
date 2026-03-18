@@ -5,6 +5,7 @@ import { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 interface ITutorialSpotlightOverlayProps {
   isVisible: boolean;
   targetId: string | null;
+  disableAutoScroll?: boolean;
 }
 
 interface IRect {
@@ -58,7 +59,7 @@ function ensureTargetVisibility(targetId: string | null): void {
   element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
 }
 
-export function TutorialSpotlightOverlay({ isVisible, targetId }: ITutorialSpotlightOverlayProps) {
+export function TutorialSpotlightOverlay({ isVisible, targetId, disableAutoScroll = false }: ITutorialSpotlightOverlayProps) {
   const [rect, setRect] = useState<IRect | null>(null);
   const lastAutoScrollTargetRef = useRef<string | null>(null);
 
@@ -66,7 +67,7 @@ export function TutorialSpotlightOverlay({ isVisible, targetId }: ITutorialSpotl
     if (!isVisible) return;
     const update = () => {
       setRect(resolveRect(targetId));
-      if (targetId && lastAutoScrollTargetRef.current !== targetId) {
+      if (!disableAutoScroll && targetId && lastAutoScrollTargetRef.current !== targetId) {
         ensureTargetVisibility(targetId);
         lastAutoScrollTargetRef.current = targetId;
       }
@@ -80,7 +81,7 @@ export function TutorialSpotlightOverlay({ isVisible, targetId }: ITutorialSpotl
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, true);
     };
-  }, [isVisible, targetId]);
+  }, [disableAutoScroll, isVisible, targetId]);
 
   const frameStyle = useMemo(() => {
     if (!rect) return undefined;

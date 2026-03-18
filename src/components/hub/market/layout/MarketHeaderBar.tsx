@@ -8,6 +8,7 @@ import { GameSelect } from "@/components/ui/GameSelect";
 import { BackButton } from "@/components/ui/BackButton";
 import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { MARKET_ORDER_OPTIONS, MARKET_TYPE_OPTIONS } from "@/components/hub/market/layout/market-filter-options";
+import { IMarketTutorialActions } from "@/components/hub/market/internal/market-tutorial-contract";
 import {
   MarketOrderDirection,
   MarketOrderField,
@@ -24,6 +25,7 @@ interface MarketHeaderBarProps {
   onTypeFilterChange: (value: MarketTypeFilter) => void;
   onOrderFieldChange: (value: MarketOrderField) => void;
   onOrderDirectionToggle: () => void;
+  tutorialActions?: IMarketTutorialActions;
 }
 
 export function MarketHeaderBar(props: MarketHeaderBarProps) {
@@ -66,11 +68,14 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
           </button>
         </div>
         <div className="hidden flex-wrap items-center justify-start gap-x-2 gap-y-3 min-w-0 overflow-visible min-[900px]:flex min-[900px]:justify-end">
-          <div className="w-[110px] sm:w-[120px] shrink-0 relative z-50">
+          <div data-tutorial-id="market-type-filter" className="w-[110px] sm:w-[120px] shrink-0 relative z-50">
             <GameSelect
               label="TIPO"
               value={props.typeFilter}
-              onChange={(value) => props.onTypeFilterChange(value as MarketTypeFilter)}
+              onChange={(value) => {
+                props.onTypeFilterChange(value as MarketTypeFilter);
+                props.tutorialActions?.onTypeFilterChange?.();
+              }}
               onOpen={() => play("FILTER_OPEN")}
               onClose={() => play("FILTER_CLOSE")}
               ariaLabel="Filtro de tipo"
@@ -78,11 +83,14 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
               options={MARKET_TYPE_OPTIONS}
             />
           </div>
-          <div className="w-[110px] sm:w-[120px] shrink-0 relative z-40">
+          <div data-tutorial-id="market-order-filter" className="w-[110px] sm:w-[120px] shrink-0 relative z-40">
             <GameSelect
               label="ORDEN"
               value={props.orderField}
-              onChange={(value) => props.onOrderFieldChange(value as MarketOrderField)}
+              onChange={(value) => {
+                props.onOrderFieldChange(value as MarketOrderField);
+                props.tutorialActions?.onOrderFieldChange?.();
+              }}
               onOpen={() => play("FILTER_OPEN")}
               onClose={() => play("FILTER_CLOSE")}
               ariaLabel="Campo de orden"
@@ -92,7 +100,12 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
           </div>
           <motion.button
             type="button"
-            onClick={props.onOrderDirectionToggle}
+            data-tutorial-id="market-order-direction"
+            aria-label="Dirección de orden"
+            onClick={() => {
+              props.onOrderDirectionToggle();
+              props.tutorialActions?.onOrderDirectionToggle?.();
+            }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="flex h-[38px] mt-[16px] items-center justify-center gap-1 rounded-lg border border-cyan-500/40 bg-[linear-gradient(180deg,rgba(4,34,56,0.8),rgba(3,22,38,0.9))] px-3 shadow-[inset_0_0_10px_rgba(34,211,238,0.1)] hover:border-cyan-300/80 shrink-0 relative z-30"
@@ -105,29 +118,44 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
       </div>
       {isMobileFiltersOpen ? (
         <div className="relative mt-3 grid grid-cols-[1fr_1fr_auto] gap-2 min-[900px]:hidden">
-          <GameSelect
-            label="TIPO"
-            value={props.typeFilter}
-            onChange={(value) => props.onTypeFilterChange(value as MarketTypeFilter)}
-            onOpen={() => play("FILTER_OPEN")}
-            onClose={() => play("FILTER_CLOSE")}
-            ariaLabel="Filtro de tipo"
-            Icon={ListFilter}
-            options={MARKET_TYPE_OPTIONS}
-          />
-          <GameSelect
-            label="ORDEN"
-            value={props.orderField}
-            onChange={(value) => props.onOrderFieldChange(value as MarketOrderField)}
-            onOpen={() => play("FILTER_OPEN")}
-            onClose={() => play("FILTER_CLOSE")}
-            ariaLabel="Campo de orden"
-            Icon={Layers3}
-            options={MARKET_ORDER_OPTIONS}
-          />
+          <div data-tutorial-id="market-type-filter">
+            <GameSelect
+              label="TIPO"
+              value={props.typeFilter}
+              onChange={(value) => {
+                props.onTypeFilterChange(value as MarketTypeFilter);
+                props.tutorialActions?.onTypeFilterChange?.();
+              }}
+              onOpen={() => play("FILTER_OPEN")}
+              onClose={() => play("FILTER_CLOSE")}
+              ariaLabel="Filtro de tipo"
+              Icon={ListFilter}
+              options={MARKET_TYPE_OPTIONS}
+            />
+          </div>
+          <div data-tutorial-id="market-order-filter">
+            <GameSelect
+              label="ORDEN"
+              value={props.orderField}
+              onChange={(value) => {
+                props.onOrderFieldChange(value as MarketOrderField);
+                props.tutorialActions?.onOrderFieldChange?.();
+              }}
+              onOpen={() => play("FILTER_OPEN")}
+              onClose={() => play("FILTER_CLOSE")}
+              ariaLabel="Campo de orden"
+              Icon={Layers3}
+              options={MARKET_ORDER_OPTIONS}
+            />
+          </div>
           <motion.button
             type="button"
-            onClick={props.onOrderDirectionToggle}
+            data-tutorial-id="market-order-direction"
+            aria-label="Dirección de orden"
+            onClick={() => {
+              props.onOrderDirectionToggle();
+              props.tutorialActions?.onOrderDirectionToggle?.();
+            }}
             whileTap={{ scale: 0.95 }}
             className="mt-[16px] flex h-[38px] items-center justify-center gap-1 rounded-lg border border-cyan-500/40 bg-[linear-gradient(180deg,rgba(4,34,56,0.8),rgba(3,22,38,0.9))] px-3"
           >

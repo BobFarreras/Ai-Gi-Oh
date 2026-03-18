@@ -33,6 +33,8 @@ interface MarketMobileStackProps {
   onShowFreeListings: () => void;
   onSelectListing: (listing: IMarketCardListing) => void;
   onSelectVaultCard: (card: ICard) => void;
+  onTutorialBuyPack?: () => void;
+  onVaultTabChange?: (tab: "COLLECTION" | "HISTORY") => void;
 }
 
 const PANEL_TABS: Array<{ id: MobilePanel; label: string }> = [
@@ -118,7 +120,11 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
               packListings={packListings}
               isBuyingPack={props.isBuyingPack}
               onSelectPack={props.onSelectPack}
-              onBuyPack={props.onBuyPack}
+              onBuyPack={async (packId) => {
+                const wasBought = await props.onBuyPack(packId);
+                if (wasBought) props.onTutorialBuyPack?.();
+                return wasBought;
+              }}
               onSelectPackCard={handleSelectListing}
             />
           </div>
@@ -130,6 +136,7 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
               transactions={props.transactions}
               catalogListings={props.catalogListings}
               isPerformanceMode={true}
+              onActiveTabChange={props.onVaultTabChange}
               onSelectCard={handleSelectVaultCard}
             />
           </div>

@@ -1,30 +1,40 @@
-// src/app/hub/tutorial/market/TutorialMarketClient.tsx - Simulación guiada del Market con foco en filtros, compra e historial.
+// src/app/hub/tutorial/market/TutorialMarketClient.tsx - Ejecuta nodo Market tutorial sobre la UI real del Market con datos mock controlados.
 "use client";
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { MarketScene } from "@/components/hub/market/MarketScene";
 import { TutorialBigLogDialog } from "@/components/tutorial/flow/TutorialBigLogDialog";
 import { TutorialBigLogIntroOverlay } from "@/components/tutorial/flow/TutorialBigLogIntroOverlay";
+import { TutorialBigLogOutroOverlay } from "@/components/tutorial/flow/TutorialBigLogOutroOverlay";
 import { TutorialInteractionGuard } from "@/components/tutorial/flow/TutorialInteractionGuard";
 import { TutorialSpotlightOverlay } from "@/components/tutorial/flow/TutorialSpotlightOverlay";
 import { useTutorialFlowController } from "@/components/tutorial/flow/useTutorialFlowController";
+import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { postTutorialNodeCompletion } from "@/app/hub/tutorial/internal/tutorial-node-progress-client";
-import { MARKET_ORDER_OPTIONS, MARKET_TYPE_OPTIONS } from "@/components/hub/market/layout/market-filter-options";
+import { useTutorialMarketRuntime } from "@/app/hub/tutorial/market/internal/use-tutorial-market-runtime";
 import { resolveMarketTutorialSteps } from "@/services/tutorial/market/resolve-market-tutorial-steps";
 
-function isAllowedTarget(activeTargetIds: string[], targetId: string): boolean {
-  return activeTargetIds.includes(targetId);
-}
-
 export function TutorialMarketClient() {
-  const steps = useMemo(() => resolveMarketTutorialSteps(), []);
-  const tutorial = useTutorialFlowController(steps);
+  const tutorial = useTutorialFlowController(useMemo(() => resolveMarketTutorialSteps(), []));
+  const runtime = useTutorialMarketRuntime();
+  const { play } = useHubModuleSfx();
   const [isIntroVisible, setIsIntroVisible] = useState(true);
-  const [typeFilter, setTypeFilter] = useState("ALL");
-  const [orderFilter, setOrderFilter] = useState("PRICE");
-  const [wallet, setWallet] = useState(700);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [historyEntries, setHistoryEntries] = useState<string[]>([]);
+  const [isPackRevealOpen, setIsPackRevealOpen] = useState(false);
   const hasSyncedCompletionRef = useRef(false);
+  const currentStepId = tutorial.currentStep?.id ?? null;
+  const isPinnedTopPurchaseStep =
+    currentStepId === "market-buy-card" || currentStepId === "market-buy-card-result-warehouse";
+  const isFilterGuideStep =
+    currentStepId === "market-type-filter" ||
+    currentStepId === "market-order-filter" ||
+    currentStepId === "market-order-direction";
+  const shouldHighlightNextButton =
+    isFilterGuideStep ||
+    currentStepId === "market-buy-card-result-warehouse" ||
+    currentStepId === "market-pack-selection" ||
+    currentStepId === "market-pack-preview-cards" ||
+    currentStepId === "market-pack-random-explanation" ||
+    currentStepId === "market-open-vault-collection" ||
+    currentStepId === "market-open-history";
 
   useEffect(() => {
     if (!tutorial.isFinished || hasSyncedCompletionRef.current) return;
@@ -35,97 +45,69 @@ export function TutorialMarketClient() {
   }, [tutorial.isFinished]);
 
   return (
-    <section className="relative mx-auto w-full max-w-5xl rounded-2xl border border-cyan-300/30 bg-slate-950/90 p-5 pb-40">
-      <TutorialInteractionGuard isEnabled={isIntroVisible || !tutorial.isFinished} allowedTargetIds={isIntroVisible ? [] : tutorial.allowedTargetIds} />
-      <TutorialSpotlightOverlay isVisible={!isIntroVisible && !tutorial.isFinished} targetId={tutorial.currentStep?.targetId ?? null} />
+    <>
+      <TutorialInteractionGuard
+        isEnabled={isIntroVisible || !tutorial.isFinished}
+        allowedTargetIds={isIntroVisible ? [] : tutorial.allowedTargetIds}
+      />
+      <TutorialSpotlightOverlay
+        isVisible={!isIntroVisible && !tutorial.isFinished}
+        targetId={tutorial.currentStep?.targetId ?? null}
+        disableAutoScroll={isPinnedTopPurchaseStep}
+      />
       <TutorialBigLogIntroOverlay
         isVisible={isIntroVisible}
         title="Market"
-        description="Aprenderás a filtrar cartas, ordenar resultados y registrar compras de forma segura para no gastar Nexus por error."
+        description="Aprenderás a filtrar el catálogo, comprar cartas sueltas, abrir packs y revisar tu historial de compras."
         onStart={() => setIsIntroVisible(false)}
       />
-      <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-300">Nodo 3 - Market</p>
-      <h1 className="mt-1 text-2xl font-black uppercase text-cyan-100">Simulación de Market</h1>
-      <p className="mt-2 text-sm text-slate-300">Práctica guiada para dominar búsqueda, orden y compra antes de usar el market real.</p>
-      <p className="mt-4 text-sm font-black uppercase text-emerald-300">Nexus: {wallet}</p>
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <label className="text-xs font-black uppercase text-cyan-200">
-          Tipo
-          <select
-            data-tutorial-id="market-type-filter"
-            value={typeFilter}
-            onChange={(event) => {
-              setTypeFilter(event.target.value);
-              tutorial.onAction("CHANGE_TYPE_FILTER");
-            }}
-            disabled={!isAllowedTarget(tutorial.allowedTargetIds, "market-type-filter") && !tutorial.isFinished}
-            className="mt-2 block w-full rounded-md border border-cyan-300/35 bg-slate-900 px-2 py-2 text-xs text-slate-100 disabled:opacity-45"
-          >
-            {MARKET_TYPE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-          </select>
-        </label>
-        <label className="text-xs font-black uppercase text-cyan-200">
-          Orden
-          <select
-            data-tutorial-id="market-order-filter"
-            value={orderFilter}
-            onChange={(event) => {
-              setOrderFilter(event.target.value);
-              tutorial.onAction("CHANGE_ORDER_FILTER");
-            }}
-            disabled={!isAllowedTarget(tutorial.allowedTargetIds, "market-order-filter") && !tutorial.isFinished}
-            className="mt-2 block w-full rounded-md border border-cyan-300/35 bg-slate-900 px-2 py-2 text-xs text-slate-100 disabled:opacity-45"
-          >
-            {MARKET_ORDER_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-          </select>
-        </label>
-      </div>
-      <button
-        type="button"
-        data-tutorial-id="market-buy-pack"
-        onClick={() => {
-          setWallet((current) => current - 200);
-          setHistoryEntries((current) => [`Compra de sobre: -200 NX (${new Date().toISOString()})`, ...current].slice(0, 4));
-          tutorial.onAction("BUY_PACK");
+      <MarketScene
+        playerId="tutorial-player"
+        initialCatalog={runtime.initialCatalog}
+        initialTransactions={runtime.initialTransactions}
+        initialCollection={runtime.initialCollection}
+        purchaseActionOverrides={runtime.purchaseActionOverrides}
+        tutorialActions={{
+          onTypeFilterChange: () => tutorial.onAction("CHANGE_TYPE_FILTER"),
+          onOrderFieldChange: () => tutorial.onAction("CHANGE_ORDER_FILTER"),
+          onOrderDirectionToggle: () => tutorial.onAction("TOGGLE_ORDER_DIRECTION"),
+          onBuyCard: () => tutorial.onAction("BUY_CARD"),
+          onBuyPack: () => tutorial.onAction("BUY_PACK"),
+          onOpenVaultCollection: () => tutorial.onAction("OPEN_VAULT_COLLECTION"),
+          onOpenVaultHistory: () => tutorial.onAction("OPEN_HISTORY"),
+          onSelectPack: (packId) => {
+            if (packId === "tutorial-market-pack-gemgpt") tutorial.onAction("SELECT_PACK_FOCUS");
+          },
+          onPackRevealOpen: () => setIsPackRevealOpen(true),
+          onPackRevealClose: () => setIsPackRevealOpen(false),
         }}
-        disabled={wallet < 200 || (!isAllowedTarget(tutorial.allowedTargetIds, "market-buy-pack") && !tutorial.isFinished)}
-        className="mt-4 rounded-md border border-cyan-300/45 px-3 py-2 text-xs font-black uppercase text-cyan-100 disabled:opacity-45"
-      >
-        Comprar sobre (200 NX)
-      </button>
-      <button
-        type="button"
-        data-tutorial-id="market-history-tab"
-        onClick={() => {
-          setIsHistoryOpen(true);
-          tutorial.onAction("OPEN_HISTORY");
-        }}
-        disabled={!isAllowedTarget(tutorial.allowedTargetIds, "market-history-tab") && !tutorial.isFinished}
-        className="ml-2 mt-4 rounded-md border border-fuchsia-300/45 px-3 py-2 text-xs font-black uppercase text-fuchsia-100 disabled:opacity-45"
-      >
-        Abrir historial
-      </button>
-      {isHistoryOpen ? (
-        <div className="mt-4 rounded-xl border border-cyan-800/70 bg-slate-900/75 p-3">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-cyan-200">Historial reciente</p>
-          <ul className="mt-2 space-y-1 text-xs text-slate-200">
-            {historyEntries.length > 0 ? historyEntries.map((entry) => <li key={entry}>{entry}</li>) : <li>Sin transacciones.</li>}
-          </ul>
-        </div>
-      ) : null}
-      <div className="mt-6 flex gap-2">
-        <Link href="/hub/tutorial" className="rounded-md border border-slate-600 px-3 py-2 text-xs font-black uppercase text-slate-200">Volver al mapa</Link>
-        <Link href="/hub/market" className="rounded-md border border-cyan-300/45 px-3 py-2 text-xs font-black uppercase text-cyan-100">Abrir Market real</Link>
-      </div>
-      {!isIntroVisible ? (
+      />
+      {!isIntroVisible && !tutorial.isFinished && !isPackRevealOpen ? (
         <TutorialBigLogDialog
           title={tutorial.currentStep?.title ?? "Práctica completada"}
-          description={tutorial.currentStep?.description ?? "Has completado el flujo base de Market. Ya puedes volver al mapa del tutorial para continuar."}
+          description={
+            tutorial.currentStep?.description ??
+            "Has completado el flujo base de Market. Ya puedes volver al mapa del tutorial para continuar."
+          }
           canUseNext={tutorial.canUseNext}
           isFinished={tutorial.isFinished}
-          onNext={tutorial.onNext}
+          onNext={() => {
+            play("SECTION_SWITCH");
+            tutorial.onNext();
+          }}
+          targetId={tutorial.currentStep?.targetId ?? null}
+          preferTopPlacement={isPinnedTopPurchaseStep}
+          disableAutoScrollWhenPinnedTop={isPinnedTopPurchaseStep}
+          shouldHighlightNextButton={shouldHighlightNextButton}
         />
       ) : null}
-    </section>
+      <TutorialBigLogOutroOverlay
+        isVisible={!isIntroVisible && tutorial.isFinished}
+        title="Market Completado"
+        description="Has dominado compras directas, packs aleatorios y auditoría del historial."
+        onContinue={() => window.location.assign("/hub/training/tutorial")}
+        onExit={() => window.location.assign("/hub/tutorial")}
+      />
+    </>
   );
 }

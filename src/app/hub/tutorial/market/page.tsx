@@ -4,9 +4,9 @@ import { TutorialMarketClient } from "@/app/hub/tutorial/market/TutorialMarketCl
 
 export default function TutorialMarketPage() {
   return (
-    <main className="hub-control-room-bg min-h-dvh px-4 py-8 text-slate-100 sm:px-6">
+    <>
       <HubSectionEntryBurst />
       <TutorialMarketClient />
-    </main>
+    </>
   );
 }

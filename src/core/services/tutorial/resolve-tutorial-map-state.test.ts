@@ -19,6 +19,7 @@ describe("resolveTutorialMapState", () => {
       completedNodeIds: ["tutorial-arsenal-basics"],
     });
     expect(runtime[0]?.state).toBe("COMPLETED");
+    expect(runtime[1]?.id).toBe("tutorial-market-basics");
     expect(runtime[1]?.state).toBe("AVAILABLE");
   });
 });

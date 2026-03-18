@@ -45,7 +45,7 @@ export function MarketMobilePacksSection(props: MarketMobilePacksSectionProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 p-3">
-      <section className="rounded-lg border border-cyan-800/35 bg-[#031020]/55 p-2">
+      <section data-tutorial-id="market-pack-selector" className="rounded-lg border border-cyan-800/35 bg-[#031020]/55 p-2">
         <div className="home-modern-scroll flex gap-2 overflow-x-auto pb-1">
           {props.packs.map((pack) => (
             <MarketPackCardTile
@@ -58,7 +58,7 @@ export function MarketMobilePacksSection(props: MarketMobilePacksSectionProps) {
         </div>
       </section>
 
-      <section className="min-h-0 flex-1 overflow-hidden rounded-lg border border-cyan-800/35 bg-[#031020]/55">
+      <section data-tutorial-id="market-pack-preview" className="min-h-0 flex-1 overflow-hidden rounded-lg border border-cyan-800/35 bg-[#031020]/55">
         {props.selectedPackId ? (
           <MarketListingsPanel listings={props.packListings} isPerformanceMode={true} onSelectCard={props.onSelectPackCard} />
         ) : (

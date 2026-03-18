@@ -44,7 +44,7 @@ export function MarketCardInspector({ selectedCard, selectedListing, isCompactMo
   };
 
   return (
-    <aside className="flex flex-col h-full overflow-hidden p-4 relative">
+    <aside data-tutorial-id="market-inspector-panel" className="flex flex-col h-full overflow-hidden p-4 relative">
       <h2 className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-cyan-500/80 shrink-0">
         Inspección de Datos
       </h2>

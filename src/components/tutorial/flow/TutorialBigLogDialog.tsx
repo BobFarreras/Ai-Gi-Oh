@@ -14,6 +14,7 @@ interface ITutorialBigLogDialogProps {
   preferTopPlacement?: boolean;
   forceBottomPlacement?: boolean;
   shouldHighlightNextButton?: boolean;
+  disableAutoScrollWhenPinnedTop?: boolean;
 }
 
 type DialogPlacement = "bottom" | "top";
@@ -47,6 +48,7 @@ export function TutorialBigLogDialog({
   preferTopPlacement = false,
   forceBottomPlacement = false,
   shouldHighlightNextButton = false,
+  disableAutoScrollWhenPinnedTop = false,
 }: ITutorialBigLogDialogProps) {
   const containerRef = useRef<HTMLElement | null>(null);
   const forceTopPlacement = !forceBottomPlacement && preferTopPlacement;
@@ -61,7 +63,7 @@ export function TutorialBigLogDialog({
       const targetRect = targetElement?.getBoundingClientRect() ?? null;
       if (forceTopPlacement) {
         setPlacement("top");
-        if (typeof targetElement?.scrollIntoView === "function") {
+        if (!disableAutoScrollWhenPinnedTop && typeof targetElement?.scrollIntoView === "function") {
           targetElement.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
         }
         return;
@@ -85,7 +87,7 @@ export function TutorialBigLogDialog({
       window.removeEventListener("resize", updatePlacement);
       window.removeEventListener("scroll", updatePlacement, true);
     };
-  }, [forceBottomPlacement, forceTopPlacement, targetId]);
+  }, [disableAutoScrollWhenPinnedTop, forceBottomPlacement, forceTopPlacement, targetId]);
 
   const positionClass = useMemo(
     () => (forceBottomPlacement ? "bottom-4 top-auto" : placement === "top" ? "top-4 bottom-auto" : "bottom-4 top-auto"),
