@@ -26,8 +26,8 @@ export function TutorialBigLogIntroOverlay({ isVisible, title, description, onSt
   return (
     <section data-tutorial-overlay="true" className="pointer-events-auto fixed inset-0 z-[440] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-sm">
       <div className="flex max-w-[min(95vw,1120px)] flex-col items-center gap-3 sm:flex-row sm:gap-6">
-        <div className="relative h-[240px] w-[240px] shrink-0 overflow-visible bg-transparent sm:h-[320px] sm:w-[320px]">
-          <Image src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png" alt="Introducción de BigLog" fill sizes="(max-width: 640px) 240px, 320px" priority className="object-contain drop-shadow-[0_0_30px_rgba(34,211,238,0.48)]" />
+        <div className="relative h-[340px] w-[340px] shrink-0 overflow-visible bg-transparent sm:h-[480px] sm:w-[480px]">
+          <Image src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png" alt="Introducción de BigLog" fill sizes="(max-width: 640px) 240px, 380px" priority className="object-contain drop-shadow-[0_0_30px_rgba(34,211,238,0.48)]" />
         </div>
         <article className="relative max-w-[680px] rounded-xl border-2 border-black bg-white px-4 py-3 text-black shadow-[0_8px_0_rgba(0,0,0,0.9)] sm:px-6 sm:py-5">
           <p className="text-[11px] font-black uppercase tracking-[0.26em] text-black/70">BigLog</p>

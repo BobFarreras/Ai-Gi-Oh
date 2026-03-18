@@ -1,6 +1,7 @@
 // src/components/tutorial/flow/TutorialBigLogDialog.tsx - Diálogo narrativo de BigLog con botón siguiente y soporte de bloqueos del tutorial.
 "use client";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 interface ITutorialBigLogDialogProps {
@@ -12,10 +13,10 @@ interface ITutorialBigLogDialogProps {
   targetId?: string | null;
   preferTopPlacement?: boolean;
   forceBottomPlacement?: boolean;
+  shouldHighlightNextButton?: boolean;
 }
 
 type DialogPlacement = "bottom" | "top";
-const ACTION_TARGET_IDS = new Set(["tutorial-home-add-button", "tutorial-home-remove-button", "tutorial-home-evolve-button"]);
 
 function resolveElement(targetId: string | null): HTMLElement | null {
   if (!targetId) return null;
@@ -45,9 +46,10 @@ export function TutorialBigLogDialog({
   targetId = null,
   preferTopPlacement = false,
   forceBottomPlacement = false,
+  shouldHighlightNextButton = false,
 }: ITutorialBigLogDialogProps) {
   const containerRef = useRef<HTMLElement | null>(null);
-  const forceTopPlacement = !forceBottomPlacement && (preferTopPlacement || Boolean(targetId && ACTION_TARGET_IDS.has(targetId)));
+  const forceTopPlacement = !forceBottomPlacement && preferTopPlacement;
   const [placement, setPlacement] = useState<DialogPlacement>("bottom");
 
   useEffect(() => {
@@ -103,16 +105,37 @@ export function TutorialBigLogDialog({
           <h3 className="mt-1 text-base font-black uppercase leading-tight text-cyan-100 sm:text-lg">{title}</h3>
           <p className="mt-2 text-sm leading-relaxed text-slate-100 sm:text-base">{description}</p>
           <div className="mt-3 flex items-center gap-2">
-            <button
+            <motion.button
               type="button"
               data-tutorial-overlay="true"
               onClick={onNext}
               disabled={!canUseNext || isFinished}
               aria-label="Siguiente paso del tutorial"
-              className="rounded-md border border-cyan-200/45 px-3 py-2 text-xs font-black uppercase text-cyan-100 disabled:cursor-not-allowed disabled:opacity-45"
+              className={`rounded-md border border-cyan-200/45 px-3 py-2 text-xs font-black uppercase text-cyan-100 disabled:cursor-default disabled:opacity-45 ${
+                shouldHighlightNextButton && canUseNext && !isFinished
+                  ? "ring-2 ring-cyan-300/90 shadow-[0_0_18px_rgba(34,211,238,0.75)]"
+                  : ""
+              }`}
+              animate={
+                shouldHighlightNextButton && canUseNext && !isFinished
+                  ? {
+                      scale: [1, 1.04, 1],
+                      boxShadow: [
+                        "0 0 0 rgba(34,211,238,0)",
+                        "0 0 18px rgba(34,211,238,0.85)",
+                        "0 0 0 rgba(34,211,238,0)",
+                      ],
+                    }
+                  : { scale: 1, boxShadow: "0 0 0 rgba(0,0,0,0)" }
+              }
+              transition={
+                shouldHighlightNextButton && canUseNext && !isFinished
+                  ? { duration: 0.95, repeat: Infinity, ease: "easeInOut" }
+                  : { duration: 0.15 }
+              }
             >
               Siguiente
-            </button>
+            </motion.button>
             <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{isFinished ? "Tutorial completado" : canUseNext ? "Puedes continuar" : "Realiza la acción marcada"}</span>
           </div>
         </div>

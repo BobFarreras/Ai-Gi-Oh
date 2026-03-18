@@ -1,12 +1,13 @@
 // src/app/hub/tutorial/arsenal/TutorialArsenalClient.tsx - Ejecuta Preparar Deck con sandbox mock sobre UI real de Arsenal y flujo guiado seguro.
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HomeDeckActionBar } from "@/components/hub/home/HomeDeckActionBar";
 import { HomeEvolutionOverlay } from "@/components/hub/home/HomeEvolutionOverlay";
 import { HomeResponsiveWorkspace } from "@/components/hub/home/layout/HomeResponsiveWorkspace";
 import { HubErrorDialog } from "@/components/hub/internal/HubErrorDialog";
 import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { useTutorialFlowController } from "@/components/tutorial/flow/useTutorialFlowController";
+import { isMobileLayoutViewport } from "@/components/internal/layout-breakpoints";
 import { IHomeDeckBuilderSceneProps } from "@/components/hub/home/internal/types/home-deck-builder-types";
 import { useTutorialArsenalSandbox } from "@/app/hub/tutorial/arsenal/internal/use-tutorial-arsenal-sandbox";
 import { useTutorialArsenalProgressSync } from "@/app/hub/tutorial/arsenal/internal/use-tutorial-arsenal-progress-sync";
@@ -19,21 +20,29 @@ export function TutorialArsenalClient(props: IHomeDeckBuilderSceneProps) {
   const sandbox = useTutorialArsenalSandbox({ ...props, tutorial });
   const { play } = useHubModuleSfx();
   const [isIntroVisible, setIsIntroVisible] = useState(true);
+  const [isMobileLayout, setIsMobileLayout] = useState<boolean>(() =>
+    typeof window === "undefined" ? false : isMobileLayoutViewport(window.innerWidth),
+  );
   const evolutionCard = sandbox.state.selectedCard ?? null;
   const tutorialForcedMobileSection = useMemo(
     () => (isIntroVisible || tutorial.isFinished ? null : resolveTutorialMobileSection(tutorial.currentStep)),
     [isIntroVisible, tutorial.currentStep, tutorial.isFinished],
   );
-  const shouldPreferTopTutorialDialog = useMemo(
-    () =>
-      tutorial.currentStep?.id === "arsenal-add-deck" ||
-      tutorial.currentStep?.id === "arsenal-remove-deck" ||
-      tutorial.currentStep?.id === "arsenal-open-evolve" ||
-      tutorial.currentStep?.id === "arsenal-fusion-recipe-cards" ||
-      tutorial.currentStep?.id === "arsenal-fusion-result" ||
-      tutorial.currentStep?.id === "arsenal-fusion-explanation",
-    [tutorial.currentStep?.id],
-  );
+  useEffect(() => {
+    const updateLayoutMode = (): void => setIsMobileLayout(isMobileLayoutViewport(window.innerWidth));
+    updateLayoutMode();
+    window.addEventListener("resize", updateLayoutMode);
+    return () => window.removeEventListener("resize", updateLayoutMode);
+  }, []);
+  const isFusionStep =
+    tutorial.currentStep?.id === "arsenal-fusion-recipe-cards" ||
+    tutorial.currentStep?.id === "arsenal-fusion-result" ||
+    tutorial.currentStep?.id === "arsenal-fusion-explanation";
+  const isActionStep =
+    tutorial.currentStep?.id === "arsenal-add-deck" ||
+    tutorial.currentStep?.id === "arsenal-remove-deck" ||
+    tutorial.currentStep?.id === "arsenal-open-evolve";
+  const shouldPreferTopTutorialDialog = isFusionStep || (isMobileLayout && isActionStep);
   useTutorialArsenalProgressSync({
     selectedSlotIndex: sandbox.state.selectedSlotIndex,
     selectedCollectionCardId: sandbox.state.selectedCollectionCardId,

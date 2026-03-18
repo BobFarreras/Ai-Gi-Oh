@@ -1,6 +1,7 @@
 // src/components/tutorial/flow/TutorialBigLogOutroOverlay.tsx - Cierre narrativo del tutorial con acciones para continuar o volver al mapa de tutoriales.
 "use client";
 import Image from "next/image";
+import { useEffect } from "react";
 
 interface ITutorialBigLogOutroOverlayProps {
   isVisible: boolean;
@@ -17,6 +18,17 @@ export function TutorialBigLogOutroOverlay({
   onContinue,
   onExit,
 }: ITutorialBigLogOutroOverlayProps) {
+  useEffect(() => {
+    if (!isVisible) return;
+    const audio = new Audio("/audio/sfx/banner.mp3");
+    audio.volume = 0.6;
+    void audio.play().catch(() => undefined);
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, [isVisible]);
+
   if (!isVisible) return null;
   return (
     <section
@@ -24,7 +36,7 @@ export function TutorialBigLogOutroOverlay({
       className="pointer-events-auto fixed inset-0 z-[440] flex items-center justify-center bg-slate-950/88 p-4 backdrop-blur-sm"
     >
       <div className="flex max-w-[min(95vw,1120px)] flex-col items-center gap-3 sm:flex-row sm:gap-6">
-        <div className="relative h-[240px] w-[240px] shrink-0 overflow-visible bg-transparent sm:h-[320px] sm:w-[320px]">
+         <div className="relative h-[340px] w-[340px] shrink-0 overflow-visible bg-transparent sm:h-[480px] sm:w-[480px]">
           <Image
             src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png"
             alt="BigLog final del tutorial"
