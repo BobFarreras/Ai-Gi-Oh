@@ -11,7 +11,7 @@ import { useTutorialFlowController } from "@/components/tutorial/flow/useTutoria
 import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
 import { isMobileLayoutViewport } from "@/components/internal/layout-breakpoints";
-import { postTutorialNodeCompletion } from "@/app/hub/tutorial/internal/tutorial-node-progress-client";
+import { postTutorialNodeCompletion } from "@/services/tutorial/tutorial-node-progress-client";
 import { useTutorialMarketRuntime } from "@/app/hub/tutorial/market/internal/use-tutorial-market-runtime";
 import { resolveMarketTutorialSteps } from "@/services/tutorial/market/resolve-market-tutorial-steps";
 

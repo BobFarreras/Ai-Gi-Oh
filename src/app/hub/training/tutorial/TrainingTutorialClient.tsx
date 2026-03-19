@@ -7,7 +7,7 @@ import { TutorialBigLogOutroOverlay } from "@/components/tutorial/flow/TutorialB
 import { ICard } from "@/core/entities/ICard";
 import { EXECUTION_CARDS } from "@/core/data/mock-cards/executions";
 import { ENTITY_CARDS } from "@/core/data/mock-cards/entities";
-import { postTutorialCombatRewardClaim, postTutorialNodeCompletion } from "@/app/hub/tutorial/internal/tutorial-node-progress-client";
+import { postTutorialCombatRewardClaim, postTutorialNodeCompletion } from "@/services/tutorial/tutorial-node-progress-client";
 import { TrainingCoinTossOverlay } from "./TrainingCoinTossOverlay";
 import { createTutorialOpponentStrategy } from "@/app/hub/training/tutorial/internal/create-tutorial-opponent-strategy";
 import { CombatTutorialRewardOverlay } from "./CombatTutorialRewardOverlay";
@@ -81,8 +81,8 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
         opponentStrategyOverride={tutorialOpponentStrategy}
         duelResultRewardSummary={tutorialRewardSummary}
         resultActionLabel="Volver a selección"
-        onResultAction={() => window.location.replace("/hub/training")}
-        onExitMatch={() => window.location.replace("/hub/training")}
+        onResultAction={() => window.location.replace("/hub/academy")}
+        onExitMatch={() => window.location.replace("/hub/academy")}
         onMatchResolved={handleMatchResolved}
         onTutorialFlowFinished={() => setIsCombatTutorialFlowFinished(true)}
       />

@@ -1,4 +1,4 @@
-// src/components/hub/training/TrainingModeSelection.tsx - Renderiza selección de modo Tutorial o Entrenamiento desde el nodo training.
+// src/components/hub/training/TrainingModeSelection.tsx - Renderiza la portada de Academia con acceso a Tutorial guiado y Arena de entrenamiento.
 import Link from "next/link";
 
 interface ITrainingModeCard {
@@ -29,9 +29,9 @@ const TRAINING_MODE_CARDS: ITrainingModeCard[] = [
 export function TrainingModeSelection() {
   return (
     <section className="mx-auto w-full max-w-5xl rounded-3xl border border-slate-800/90 bg-[#040b15]/90 p-6 shadow-[0_24px_46px_rgba(2,4,12,0.8)]">
-      <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-300/85">Entrenamiento</p>
-      <h1 className="mt-2 text-4xl font-black uppercase tracking-wide text-cyan-200">Selecciona un modo</h1>
-      <p className="mt-3 max-w-3xl text-sm text-slate-300">Elige entre tutorial guiado o combates progresivos. Puedes volver aquí cuando quieras.</p>
+      <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-300/85">Academia</p>
+      <h1 className="mt-2 text-4xl font-black uppercase tracking-wide text-cyan-200">Tutorial y Entrenamiento</h1>
+      <p className="mt-3 max-w-3xl text-sm text-slate-300">Este módulo unifica onboarding guiado y práctica competitiva por tiers.</p>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         {TRAINING_MODE_CARDS.map((modeCard) => (
           <article key={modeCard.href} className={`rounded-2xl border p-4 ${modeCard.toneClassName}`}>

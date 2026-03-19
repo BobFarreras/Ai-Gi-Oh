@@ -1,4 +1,4 @@
-// src/app/hub/tutorial/internal/tutorial-node-progress-client.ts - Cliente HTTP para persistir progreso de nodos y claim de recompensa tutorial.
+// src/services/tutorial/tutorial-node-progress-client.ts - Cliente HTTP de progreso/claim del tutorial desacoplado de rutas App Router.
 import { ValidationError } from "@/core/errors/ValidationError";
 
 interface INodeCompletionResponse {

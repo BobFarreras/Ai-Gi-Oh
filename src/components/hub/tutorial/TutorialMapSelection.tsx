@@ -45,11 +45,11 @@ export function TutorialMapSelection({ nodes }: ITutorialMapSelectionProps) {
         ))}
       </ol>
       <Link
-        href="/hub/training"
-        aria-label="Volver a selección de entrenamiento"
+        href="/hub/academy"
+        aria-label="Volver a Academia"
         className="mt-5 inline-block rounded-md border border-cyan-300/35 px-4 py-2 text-xs font-black uppercase tracking-wide text-cyan-200 hover:bg-cyan-300/10"
       >
-        Volver a Training
+        Volver a Academia
       </Link>
     </section>
   );

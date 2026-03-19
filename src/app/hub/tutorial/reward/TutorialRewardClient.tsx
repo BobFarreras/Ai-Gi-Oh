@@ -2,7 +2,7 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { postTutorialRewardClaim } from "@/app/hub/tutorial/internal/tutorial-node-progress-client";
+import { postTutorialRewardClaim } from "@/services/tutorial/tutorial-node-progress-client";
 import { TutorialNodeState } from "@/core/entities/tutorial/ITutorialMapNode";
 
 interface ITutorialRewardClientProps {

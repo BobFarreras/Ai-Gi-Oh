@@ -2,7 +2,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { useTutorialFlowController } from "@/components/tutorial/flow/useTutorialFlowController";
-import { postTutorialNodeCompletion } from "@/app/hub/tutorial/internal/tutorial-node-progress-client";
+import { postTutorialNodeCompletion } from "@/services/tutorial/tutorial-node-progress-client";
 
 interface IUseTutorialArsenalProgressSyncInput {
   selectedSlotIndex: number | null;

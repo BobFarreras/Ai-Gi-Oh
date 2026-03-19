@@ -77,8 +77,8 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
         initialConfig={{ playerFusionDeck: props.fusionDeck }}
         duelResultRewardSummary={rewardSummary}
         resultActionLabel="Volver a selección"
-        onResultAction={() => window.location.replace("/hub/training")}
-        onExitMatch={() => window.location.replace("/hub/training")}
+        onResultAction={() => window.location.replace("/hub/academy")}
+        onExitMatch={() => window.location.replace("/hub/academy")}
         onMatchResolved={handleMatchResolved}
       />
     </div>

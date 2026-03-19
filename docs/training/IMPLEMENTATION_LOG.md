@@ -123,6 +123,15 @@
 4. Se añade intro de BigLog al inicio de nodos tutorial (Arsenal, Market y Combate).
 5. Commit: pendiente en esta sesión.
 
+## Fase 14 - Limpieza de fronteras App Router + naming de Academia
+
+1. Se extrae el cliente HTTP de progreso/claim tutorial fuera de `app/` hacia `services/tutorial/tutorial-node-progress-client.ts`.
+2. Se elimina el módulo legacy `app/hub/tutorial/internal/tutorial-node-progress-client.ts` para respetar separación de capas.
+3. Se define `Academia` como página canónica para la entrada conjunta de Tutorial + Entrenamiento (`/hub/academy`).
+4. `/hub/training` pasa a ser alias legacy con redirección server-side a `/hub/academy`.
+5. Se actualizan retornos de flujo (Tutorial map y cierre de Arena/Combate) para volver a `Academia`.
+6. Commit: pendiente en esta sesión.
+
 ## Validación global aplicada por fase
 
 1. `pnpm lint`
