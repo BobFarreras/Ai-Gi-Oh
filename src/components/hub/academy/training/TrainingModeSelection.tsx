@@ -13,14 +13,14 @@ const TRAINING_MODE_CARDS: ITrainingModeCard[] = [
   {
     title: "Mapa de Tutorial",
     description: "Aprende Arsenal, Combate y Market con nodos guiados por BigLog y avance por objetivos.",
-    href: "/hub/tutorial",
+    href: "/hub/academy/tutorial",
     actionLabel: "Abrir Mapa Tutorial",
     toneClassName: "border-cyan-400/40 bg-cyan-500/10",
   },
   {
     title: "Modo Entrenamiento",
     description: "Completa combates por tier para ganar Nexus, experiencia y desbloquear nuevas dificultades.",
-    href: "/hub/training/arena",
+    href: "/hub/academy/training/arena",
     actionLabel: "Ir a Entrenamiento",
     toneClassName: "border-emerald-400/40 bg-emerald-500/10",
   },

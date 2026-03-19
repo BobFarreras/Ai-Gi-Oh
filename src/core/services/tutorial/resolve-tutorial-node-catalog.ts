@@ -8,7 +8,7 @@ const DEFAULT_TUTORIAL_NODE_CATALOG: ITutorialMapNodeDefinition[] = [
     title: "Preparar Deck",
     description: "Aprende a añadir cartas, abrir detalle y gestionar evolución en una simulación guiada.",
     kind: "ARSENAL",
-    href: "/hub/tutorial/arsenal",
+    href: "/hub/academy/tutorial/arsenal",
   },
   {
     id: "tutorial-market-basics",
@@ -16,7 +16,7 @@ const DEFAULT_TUTORIAL_NODE_CATALOG: ITutorialMapNodeDefinition[] = [
     title: "Market",
     description: "Revisa filtros, compra de cartas/sobres y lectura de historial de transacciones.",
     kind: "MARKET",
-    href: "/hub/tutorial/market",
+    href: "/hub/academy/tutorial/market",
   },
   {
     id: "tutorial-combat-basics",
@@ -24,7 +24,7 @@ const DEFAULT_TUTORIAL_NODE_CATALOG: ITutorialMapNodeDefinition[] = [
     title: "Combate Base",
     description: "Domina turnos, ataque/defensa, mágicas y el flujo central del duelo.",
     kind: "COMBAT",
-    href: "/hub/training/tutorial",
+    href: "/hub/academy/training/tutorial",
   },
   {
     id: "tutorial-final-reward",
@@ -32,7 +32,7 @@ const DEFAULT_TUTORIAL_NODE_CATALOG: ITutorialMapNodeDefinition[] = [
     title: "Recompensa Final",
     description: "Completa todos los nodos para reclamar tu recompensa de onboarding.",
     kind: "REWARD",
-    href: "/hub/tutorial/reward",
+    href: "/hub/academy/tutorial/reward",
   },
 ];
 

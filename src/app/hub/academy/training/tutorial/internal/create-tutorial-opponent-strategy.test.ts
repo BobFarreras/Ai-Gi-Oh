@@ -1,6 +1,6 @@
-// src/app/hub/training/tutorial/internal/create-tutorial-opponent-strategy.test.ts - Verifica decisiones críticas de la estrategia rival del tutorial de combate.
+// src/app/hub/academy/training/tutorial/internal/create-tutorial-opponent-strategy.test.ts - Verifica decisiones críticas de la estrategia rival del tutorial de combate.
 import { describe, expect, it } from "vitest";
-import { createTutorialOpponentStrategy } from "@/app/hub/training/tutorial/internal/create-tutorial-opponent-strategy";
+import { createTutorialOpponentStrategy } from "@/app/hub/academy/training/tutorial/internal/create-tutorial-opponent-strategy";
 import { createTestBoardEntity, createTestGameState } from "@/core/use-cases/game-engine/test-support/state-fixtures";
 import { ICard } from "@/core/entities/ICard";
 

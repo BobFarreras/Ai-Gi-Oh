@@ -74,11 +74,11 @@ export function TutorialArsenalFlowOverlays(props: ITutorialArsenalFlowOverlaysP
         description="Ya dominas fundamentos de Arsenal. Elige continuar con el siguiente tutorial o volver al mapa."
         onContinue={() => {
           props.playSfx("EVOLUTION_BUTTON");
-          window.location.assign("/hub/tutorial/market");
+          window.location.assign("/hub/academy/tutorial/market");
         }}
         onExit={() => {
           props.playSfx("DIALOG_CLOSE");
-          window.location.assign("/hub/tutorial");
+          window.location.assign("/hub/academy/tutorial");
         }}
       />
     </>

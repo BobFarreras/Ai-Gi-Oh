@@ -1,4 +1,4 @@
-// src/app/hub/training/tutorial/internal/create-tutorial-combat-loadout.ts - Define mazos mock del tutorial de combate con orden estable para flujo guiado.
+// src/app/hub/academy/training/tutorial/internal/create-tutorial-combat-loadout.ts - Define mazos mock del tutorial de combate con orden estable para flujo guiado.
 import { ICard } from "@/core/entities/ICard";
 import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
 

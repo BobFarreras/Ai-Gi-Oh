@@ -1,20 +1,6 @@
-// src/app/hub/training/tutorial/page.tsx - Entry server-side del tutorial de combate usando sandbox mock estable y reproducible.
-import { HubSectionEntryBurst } from "@/components/hub/sections/HubSectionEntryBurst";
-import { TrainingTutorialClient } from "@/app/hub/training/tutorial/TrainingTutorialClient";
-import { createTutorialCombatLoadout } from "@/app/hub/training/tutorial/internal/create-tutorial-combat-loadout";
+// src/app/hub/training/tutorial/page.tsx - Ruta legacy de tutorial de combate redirigida a la ubicación canónica de Academia.
+import { redirect } from "next/navigation";
 
-export default async function TrainingTutorialPage() {
-  const loadout = createTutorialCombatLoadout();
-  return (
-    <>
-      <HubSectionEntryBurst />
-      <TrainingTutorialClient
-        deck={loadout.playerDeck}
-        fusionDeck={loadout.playerFusionDeck}
-        opponentDeck={loadout.opponentDeck}
-        opponentFusionDeck={loadout.opponentFusionDeck}
-        seed={loadout.seed}
-      />
-    </>
-  );
+export default function LegacyTrainingTutorialPage() {
+  redirect("/hub/academy/training/tutorial");
 }

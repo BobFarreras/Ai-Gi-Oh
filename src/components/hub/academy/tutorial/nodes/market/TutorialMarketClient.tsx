@@ -130,8 +130,8 @@ export function TutorialMarketClient() {
         isVisible={!isIntroVisible && tutorial.isFinished}
         title="Market Completado"
         description="Has dominado compras directas, packs aleatorios y auditoría del historial."
-        onContinue={() => window.location.assign("/hub/training/tutorial")}
-        onExit={() => window.location.assign("/hub/tutorial")}
+        onContinue={() => window.location.assign("/hub/academy/training/tutorial")}
+        onExit={() => window.location.assign("/hub/academy/tutorial")}
       />
     </>
   );

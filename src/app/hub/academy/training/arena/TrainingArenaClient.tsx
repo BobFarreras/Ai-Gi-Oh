@@ -1,4 +1,4 @@
-// src/app/hub/training/arena/TrainingArenaClient.tsx - Orquesta UI de arena training con selección de tier y cierre de partida remoto.
+// src/app/hub/academy/training/arena/TrainingArenaClient.tsx - Orquesta UI de arena training con selección de tier y cierre de partida remoto.
 "use client";
 import { useRef, useState } from "react";
 import Link from "next/link";
@@ -57,7 +57,7 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
           tier.isUnlocked ? (
             <Link
               key={tier.tier}
-              href={`/hub/training/arena?tier=${tier.tier}`}
+              href={`/hub/academy/training/arena?tier=${tier.tier}`}
               className={`pointer-events-auto rounded-md border px-2 py-1 text-[11px] font-black uppercase ${props.selectedTier === tier.tier ? "border-cyan-200 bg-cyan-500/25 text-cyan-100" : "border-cyan-300/45 bg-slate-900/70 text-cyan-200"}`}
             >
               Tier {tier.tier}

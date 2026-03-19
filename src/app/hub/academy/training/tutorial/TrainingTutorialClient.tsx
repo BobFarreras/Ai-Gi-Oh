@@ -1,4 +1,4 @@
-// src/app/hub/training/tutorial/TrainingTutorialClient.tsx - Orquesta tutorial board y sincroniza su finalización cuando el jugador gana.
+// src/app/hub/academy/training/tutorial/TrainingTutorialClient.tsx - Orquesta tutorial board y sincroniza su finalización cuando el jugador gana.
 "use client";
 import { useMemo, useRef, useState } from "react";
 import { Board } from "@/components/game/board";
@@ -9,7 +9,7 @@ import { EXECUTION_CARDS } from "@/core/data/mock-cards/executions";
 import { ENTITY_CARDS } from "@/core/data/mock-cards/entities";
 import { postTutorialCombatRewardClaim, postTutorialNodeCompletion } from "@/services/tutorial/tutorial-node-progress-client";
 import { TrainingCoinTossOverlay } from "./TrainingCoinTossOverlay";
-import { createTutorialOpponentStrategy } from "@/app/hub/training/tutorial/internal/create-tutorial-opponent-strategy";
+import { createTutorialOpponentStrategy } from "@/app/hub/academy/training/tutorial/internal/create-tutorial-opponent-strategy";
 import { CombatTutorialRewardOverlay } from "./CombatTutorialRewardOverlay";
 
 interface ITrainingTutorialClientProps {
@@ -112,7 +112,7 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
               setIsClaimingReward(false);
             }
           }}
-          onClose={() => window.location.assign("/hub/tutorial")}
+          onClose={() => window.location.assign("/hub/academy/tutorial")}
         />
       ) : null}
       <TrainingCoinTossOverlay

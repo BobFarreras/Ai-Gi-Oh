@@ -1,4 +1,4 @@
-// src/app/hub/training/tutorial/CombatTutorialRewardOverlay.tsx - Modal final para reclamar la carta de recompensa del tutorial de combate.
+// src/app/hub/academy/training/tutorial/CombatTutorialRewardOverlay.tsx - Modal final para reclamar la carta de recompensa del tutorial de combate.
 "use client";
 import { Card } from "@/components/game/card/Card";
 import { ICard } from "@/core/entities/ICard";

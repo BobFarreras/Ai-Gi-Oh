@@ -71,7 +71,7 @@ export function TutorialArsenalClient(props: IHomeDeckBuilderSceneProps) {
             canEvolve={sandbox.state.canEvolveSelectedCard}
             evolveCost={sandbox.state.copiesRequiredToEvolve}
             onEvolve={sandbox.evolveSelectedCard}
-            onBackToHub={() => window.location.assign("/hub/tutorial")}
+            onBackToHub={() => window.location.assign("/hub/academy/tutorial")}
           />
           <HomeResponsiveWorkspace
             deck={sandbox.state.deck}

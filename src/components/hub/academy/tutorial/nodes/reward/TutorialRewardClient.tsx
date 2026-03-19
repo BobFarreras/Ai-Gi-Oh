@@ -47,7 +47,7 @@ export function TutorialRewardClient({ rewardNodeState }: ITutorialRewardClientP
         >
           {isLoading ? "Reclamando..." : "Reclamar recompensa"}
         </button>
-        <Link href="/hub/tutorial" className="rounded-md border border-slate-600 px-3 py-2 text-xs font-black uppercase text-slate-200">
+        <Link href="/hub/academy/tutorial" className="rounded-md border border-slate-600 px-3 py-2 text-xs font-black uppercase text-slate-200">
           Volver al mapa
         </Link>
       </div>

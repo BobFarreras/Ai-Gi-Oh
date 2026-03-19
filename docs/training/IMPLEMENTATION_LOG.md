@@ -148,6 +148,17 @@
 4. Se actualizaron cabeceras de ruta y se añadieron comentarios de intención/JSDoc en hooks y runtime tutorial para facilitar mantenimiento junior.
 5. Commit: pendiente en esta sesión.
 
+## Fase 17 - Canonical routing: Tutorial y Training bajo Academia
+
+1. Se definieron rutas canónicas:
+   - `/hub/academy/tutorial/*`
+   - `/hub/academy/training/*`
+2. Las rutas legacy (`/hub/tutorial/*`, `/hub/training/*`) se mantienen con redirección para compatibilidad.
+3. Se movió el bloque App Router de entrenamiento (`arena` y `tutorial`) a `src/app/hub/academy/training/*`.
+4. Se actualizaron `href` internos, catálogo de nodos tutorial y sección TRAINING del hub para apuntar a rutas canónicas de Academia.
+5. Se mantuvieron quality gates en verde tras la migración.
+6. Commit: pendiente en esta sesión.
+
 ## Validación global aplicada por fase
 
 1. `pnpm lint`

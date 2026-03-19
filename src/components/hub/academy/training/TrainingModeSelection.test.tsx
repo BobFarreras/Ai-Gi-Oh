@@ -8,7 +8,7 @@ describe("TrainingModeSelection", () => {
     render(<TrainingModeSelection />);
     expect(screen.getByRole("heading", { name: "Mapa de Tutorial" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Modo Entrenamiento" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Abrir Mapa Tutorial" })).toHaveAttribute("href", "/hub/tutorial");
-    expect(screen.getByRole("link", { name: "Ir a Entrenamiento" })).toHaveAttribute("href", "/hub/training/arena");
+    expect(screen.getByRole("link", { name: "Abrir Mapa Tutorial" })).toHaveAttribute("href", "/hub/academy/tutorial");
+    expect(screen.getByRole("link", { name: "Ir a Entrenamiento" })).toHaveAttribute("href", "/hub/academy/training/arena");
   });
 });

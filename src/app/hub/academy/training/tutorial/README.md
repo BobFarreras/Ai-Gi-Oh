@@ -1,4 +1,4 @@
-<!-- src/app/hub/training/tutorial/README.md - Documenta el sandbox mock y el flujo guiado del tutorial de combate. -->
+<!-- src/app/hub/academy/training/tutorial/README.md - Documenta el sandbox mock y el flujo guiado del tutorial de combate. -->
 # Tutorial de Combate
 
 ## Objetivo

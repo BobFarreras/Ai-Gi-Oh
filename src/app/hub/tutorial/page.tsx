@@ -1,18 +1,6 @@
-// src/app/hub/tutorial/page.tsx - Página server-side del mapa tutorial por nodos guiados.
-import { HubSectionEntryBurst } from "@/components/hub/sections/HubSectionEntryBurst";
-import { TutorialMapSelection } from "@/components/hub/academy/tutorial/TutorialMapSelection";
-import { getTutorialMapRuntimeData } from "@/services/tutorial/get-tutorial-map-runtime-data";
+// src/app/hub/tutorial/page.tsx - Ruta legacy del mapa tutorial redirigida a la ubicación canónica de Academia.
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-export const fetchCache = "force-no-store";
-
-export default async function TutorialMapPage() {
-  const nodes = await getTutorialMapRuntimeData();
-  return (
-    <main className="hub-control-room-bg min-h-dvh px-4 py-8 text-slate-100 sm:px-6">
-      <HubSectionEntryBurst />
-      <TutorialMapSelection nodes={nodes} />
-    </main>
-  );
+export default function LegacyTutorialMapPage() {
+  redirect("/hub/academy/tutorial");
 }

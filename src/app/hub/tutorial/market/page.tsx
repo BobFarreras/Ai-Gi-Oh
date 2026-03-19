@@ -1,12 +1,6 @@
-// src/app/hub/tutorial/market/page.tsx - Página server-side del nodo Market usando motor guiado reutilizable.
-import { HubSectionEntryBurst } from "@/components/hub/sections/HubSectionEntryBurst";
-import { TutorialMarketClient } from "@/components/hub/academy/tutorial/nodes/market/TutorialMarketClient";
+// src/app/hub/tutorial/market/page.tsx - Ruta legacy del nodo Market redirigida a la ubicación canónica de Academia.
+import { redirect } from "next/navigation";
 
-export default function TutorialMarketPage() {
-  return (
-    <>
-      <HubSectionEntryBurst />
-      <TutorialMarketClient />
-    </>
-  );
+export default function LegacyTutorialMarketPage() {
+  redirect("/hub/academy/tutorial/market");
 }
