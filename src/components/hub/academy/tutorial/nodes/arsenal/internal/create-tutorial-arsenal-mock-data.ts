@@ -1,4 +1,4 @@
-// src/app/hub/tutorial/arsenal/internal/create-tutorial-arsenal-mock-data.ts - Genera estado mock seguro para el nodo Preparar Deck sin tocar persistencia real.
+// src/components/hub/academy/tutorial/nodes/arsenal/internal/create-tutorial-arsenal-mock-data.ts - Genera estado mock seguro para el nodo Preparar Deck sin tocar persistencia real.
 import { ICard } from "@/core/entities/ICard";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IDeck } from "@/core/entities/home/IDeck";

@@ -1,7 +1,7 @@
-// src/app/hub/tutorial/market/TutorialMarketClient.test.tsx - Valida el flujo Market tutorial usando UI real con sandbox mock.
+// src/components/hub/academy/tutorial/nodes/market/TutorialMarketClient.test.tsx - Valida el flujo Market tutorial usando UI real con sandbox mock.
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { TutorialMarketClient } from "@/app/hub/tutorial/market/TutorialMarketClient";
+import { TutorialMarketClient } from "@/components/hub/academy/tutorial/nodes/market/TutorialMarketClient";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),

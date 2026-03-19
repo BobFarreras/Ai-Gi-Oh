@@ -1,4 +1,4 @@
-// src/app/hub/tutorial/arsenal/internal/resolve-tutorial-mobile-section.ts - Decide qué sección móvil (deck/almacén) debe abrirse según el paso tutorial activo.
+// src/components/hub/academy/tutorial/nodes/arsenal/internal/resolve-tutorial-mobile-section.ts - Decide qué sección móvil (deck/almacén) debe abrirse según el paso tutorial activo.
 import { ITutorialFlowStep } from "@/core/entities/tutorial/ITutorialFlowStep";
 
 type MobileSection = "DECK" | "COLLECTION";

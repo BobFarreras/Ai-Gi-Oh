@@ -1,6 +1,6 @@
 // src/app/hub/tutorial/arsenal/page.tsx - Página server-side del nodo Preparar Deck con sandbox mock seguro para práctica guiada.
-import { TutorialArsenalClient } from "@/app/hub/tutorial/arsenal/TutorialArsenalClient";
-import { createTutorialArsenalMockData } from "@/app/hub/tutorial/arsenal/internal/create-tutorial-arsenal-mock-data";
+import { TutorialArsenalClient } from "@/components/hub/academy/tutorial/nodes/arsenal/TutorialArsenalClient";
+import { createTutorialArsenalMockData } from "@/components/hub/academy/tutorial/nodes/arsenal/internal/create-tutorial-arsenal-mock-data";
 import { HubSectionEntryBurst } from "@/components/hub/sections/HubSectionEntryBurst";
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 

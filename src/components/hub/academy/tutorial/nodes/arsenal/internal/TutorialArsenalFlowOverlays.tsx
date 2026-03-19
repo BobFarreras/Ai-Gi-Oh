@@ -1,4 +1,4 @@
-// src/app/hub/tutorial/arsenal/internal/TutorialArsenalFlowOverlays.tsx - Renderiza overlays del flujo guiado de Preparar Deck (guard, spotlight, intro, diálogo y cierre).
+// src/components/hub/academy/tutorial/nodes/arsenal/internal/TutorialArsenalFlowOverlays.tsx - Renderiza overlays del flujo guiado de Preparar Deck (guard, spotlight, intro, diálogo y cierre).
 "use client";
 import { useEffect, useState } from "react";
 import { TutorialBigLogDialog } from "@/components/tutorial/flow/TutorialBigLogDialog";

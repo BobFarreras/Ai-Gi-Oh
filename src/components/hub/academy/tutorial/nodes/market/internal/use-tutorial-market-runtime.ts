@@ -1,4 +1,4 @@
-// src/app/hub/tutorial/market/internal/use-tutorial-market-runtime.ts - Gestiona compras mock del tutorial Market sobre el mismo contrato runtime del módulo real.
+// src/components/hub/academy/tutorial/nodes/market/internal/use-tutorial-market-runtime.ts - Gestiona compras mock del tutorial Market sobre el mismo contrato runtime del módulo real.
 "use client";
 import { useMemo, useRef } from "react";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
@@ -7,7 +7,7 @@ import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
 import { IMarketCatalog } from "@/core/use-cases/market/GetMarketCatalogUseCase";
 import { IMarketPurchaseActionOverrides } from "@/components/hub/market/internal/market-tutorial-contract";
 import { IMarketRuntimeSnapshot } from "@/services/market/market-runtime-snapshot";
-import { createTutorialMarketMockData } from "@/app/hub/tutorial/market/internal/create-tutorial-market-mock-data";
+import { createTutorialMarketMockData } from "@/components/hub/academy/tutorial/nodes/market/internal/create-tutorial-market-mock-data";
 
 interface ITutorialMarketRuntime {
   initialCatalog: IMarketCatalog;
@@ -26,6 +26,7 @@ interface ITutorialMarketRuntimeRef {
 }
 
 function createTransactionId(runtime: ITutorialMarketRuntimeRef, purchasedItemId: string): string {
+  // ID incremental para mantener historial legible y determinista en tests.
   runtime.txCounter += 1;
   return `tutorial-market-tx-${purchasedItemId}-${runtime.txCounter}`;
 }

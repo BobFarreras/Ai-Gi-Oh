@@ -140,6 +140,14 @@
 4. Se ajustan cabeceras de ruta y tests co-localizados tras el movimiento.
 5. Commit: pendiente en esta sesión.
 
+## Fase 16 - App Router como entrypoint puro para nodos tutorial
+
+1. Se movieron `TutorialArsenalClient`, `TutorialMarketClient`, `TutorialRewardClient` e internos a `src/components/hub/academy/tutorial/nodes/*`.
+2. `src/app/hub/tutorial/*/page.tsx` queda como capa de entrada server-side (sin lógica cliente acoplada).
+3. Se ajustaron imports de tests co-localizados para apuntar al nuevo módulo.
+4. Se actualizaron cabeceras de ruta y se añadieron comentarios de intención/JSDoc en hooks y runtime tutorial para facilitar mantenimiento junior.
+5. Commit: pendiente en esta sesión.
+
 ## Validación global aplicada por fase
 
 1. `pnpm lint`

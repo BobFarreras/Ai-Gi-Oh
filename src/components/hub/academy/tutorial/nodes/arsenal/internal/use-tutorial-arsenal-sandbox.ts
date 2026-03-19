@@ -1,4 +1,4 @@
-// src/app/hub/tutorial/arsenal/internal/use-tutorial-arsenal-sandbox.ts - Gestiona estado local mock del Arsenal tutorial con acciones sin persistencia remota.
+// src/components/hub/academy/tutorial/nodes/arsenal/internal/use-tutorial-arsenal-sandbox.ts - Gestiona estado local mock del Arsenal tutorial con acciones sin persistencia remota.
 "use client";
 import { useCallback } from "react";
 import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
@@ -19,6 +19,7 @@ export function useTutorialArsenalSandbox(input: IUseTutorialArsenalSandboxInput
   const { play } = useHubModuleSfx();
 
   const insertSelectedCard = useCallback(async () => {
+    // Regla docente: las cartas FUSION del tutorial deben ir siempre al bloque de fusión, nunca al deck principal.
     if (!state.selectedCollectionCardId) return { ok: false, message: "Selecciona una carta del almacén." };
     const selectedEntry = state.collectionState.find((entry) => entry.card.id === state.selectedCollectionCardId) ?? null;
     if (!selectedEntry) return { ok: false, message: "No se encontró la carta seleccionada en el almacén." };
@@ -54,6 +55,7 @@ export function useTutorialArsenalSandbox(input: IUseTutorialArsenalSandboxInput
   }, [input.tutorial, play, state]);
 
   const removeSelectedCard = useCallback(async () => {
+    // Permitimos remover desde ambos orígenes (deck/fusión) para que el flujo guiado sea coherente en desktop y móvil.
     if (state.selectedSlotIndex === null && state.selectedFusionSlotIndex === null) {
       return { ok: false, message: "Selecciona una carta del deck o del bloque de fusión para remover." };
     }
@@ -81,6 +83,7 @@ export function useTutorialArsenalSandbox(input: IUseTutorialArsenalSandboxInput
   }, [input.tutorial, play, state]);
 
   const evolveSelectedCard = useCallback(async () => {
+    // La evolución en tutorial consume copias y replica la misma señal visual que el modo real para evitar discrepancias de aprendizaje.
     if (!state.selectedCardId || !state.canEvolveSelectedCard || !state.copiesRequiredToEvolve) {
       return { ok: false, message: "Selecciona una carta evolvable del almacén." };
     }

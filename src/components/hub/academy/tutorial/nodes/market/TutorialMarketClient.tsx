@@ -1,4 +1,4 @@
-// src/app/hub/tutorial/market/TutorialMarketClient.tsx - Ejecuta nodo Market tutorial sobre la UI real del Market con datos mock controlados.
+// src/components/hub/academy/tutorial/nodes/market/TutorialMarketClient.tsx - Ejecuta nodo Market tutorial sobre la UI real del Market con datos mock controlados.
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MarketScene } from "@/components/hub/market/MarketScene";
@@ -12,7 +12,7 @@ import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
 import { isMobileLayoutViewport } from "@/components/internal/layout-breakpoints";
 import { postTutorialNodeCompletion } from "@/services/tutorial/tutorial-node-progress-client";
-import { useTutorialMarketRuntime } from "@/app/hub/tutorial/market/internal/use-tutorial-market-runtime";
+import { useTutorialMarketRuntime } from "@/components/hub/academy/tutorial/nodes/market/internal/use-tutorial-market-runtime";
 import { resolveMarketTutorialSteps } from "@/services/tutorial/market/resolve-market-tutorial-steps";
 
 export function TutorialMarketClient() {
@@ -28,6 +28,7 @@ export function TutorialMarketClient() {
   const [autoBuyPackRequestId, setAutoBuyPackRequestId] = useState(0);
   const hasSyncedCompletionRef = useRef(false);
   const currentStepId = tutorial.currentStep?.id ?? null;
+  // Pasos donde fijamos el diálogo arriba para no tapar acciones críticas (comprar/pack/resultado).
   const isPinnedTopStep =
     currentStepId === "market-buy-card" ||
     currentStepId === "market-buy-card-result-warehouse" ||
@@ -52,6 +53,7 @@ export function TutorialMarketClient() {
     currentStepId === "market-open-history";
 
   useEffect(() => {
+    // Persistencia idempotente: solo marcamos completion cuando realmente se finaliza el flujo.
     if (!tutorial.isFinished || hasSyncedCompletionRef.current) return;
     hasSyncedCompletionRef.current = true;
     postTutorialNodeCompletion("tutorial-market-basics").catch(() => {

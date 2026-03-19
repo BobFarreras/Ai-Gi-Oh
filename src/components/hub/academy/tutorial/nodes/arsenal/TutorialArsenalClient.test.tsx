@@ -1,7 +1,7 @@
-// src/app/hub/tutorial/arsenal/TutorialArsenalClient.test.tsx - Verifica flujo guiado de Preparar Deck sobre el layout real de Arsenal.
+// src/components/hub/academy/tutorial/nodes/arsenal/TutorialArsenalClient.test.tsx - Verifica flujo guiado de Preparar Deck sobre el layout real de Arsenal.
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { TutorialArsenalClient } from "@/app/hub/tutorial/arsenal/TutorialArsenalClient";
+import { TutorialArsenalClient } from "@/components/hub/academy/tutorial/nodes/arsenal/TutorialArsenalClient";
 
 vi.mock("@/components/hub/home/HomeDeckActionBar", () => ({
   HomeDeckActionBar: (props: { onInsert: () => Promise<unknown>; onRemove: () => Promise<unknown>; onEvolve: () => Promise<unknown> }) => (

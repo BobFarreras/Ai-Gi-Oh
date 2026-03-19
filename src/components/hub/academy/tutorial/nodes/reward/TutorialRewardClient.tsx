@@ -1,4 +1,4 @@
-// src/app/hub/tutorial/reward/TutorialRewardClient.tsx - UI cliente para reclamar recompensa final del tutorial con feedback de estado.
+// src/components/hub/academy/tutorial/nodes/reward/TutorialRewardClient.tsx - UI cliente para reclamar recompensa final del tutorial con feedback de estado.
 "use client";
 import Link from "next/link";
 import { useState } from "react";
@@ -20,6 +20,7 @@ export function TutorialRewardClient({ rewardNodeState }: ITutorialRewardClientP
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleClaim() {
+    // El claim es idempotente: si ya fue aplicado mantenemos mensaje claro para evitar duplicados/confusión.
     setIsLoading(true);
     try {
       const result = await postTutorialRewardClaim();

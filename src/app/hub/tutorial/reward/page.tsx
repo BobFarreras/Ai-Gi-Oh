@@ -1,6 +1,6 @@
 // src/app/hub/tutorial/reward/page.tsx - Nodo final del tutorial con claim idempotente de recompensa y feedback al jugador.
 import { HubSectionEntryBurst } from "@/components/hub/sections/HubSectionEntryBurst";
-import { TutorialRewardClient } from "@/app/hub/tutorial/reward/TutorialRewardClient";
+import { TutorialRewardClient } from "@/components/hub/academy/tutorial/nodes/reward/TutorialRewardClient";
 import { getTutorialMapRuntimeData } from "@/services/tutorial/get-tutorial-map-runtime-data";
 
 export const dynamic = "force-dynamic";

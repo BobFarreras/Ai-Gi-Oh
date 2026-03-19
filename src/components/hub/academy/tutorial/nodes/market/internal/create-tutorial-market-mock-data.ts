@@ -1,4 +1,4 @@
-// src/app/hub/tutorial/market/internal/create-tutorial-market-mock-data.ts - Construye catálogo mock estable para enseñar Market sin tocar persistencia real.
+// src/components/hub/academy/tutorial/nodes/market/internal/create-tutorial-market-mock-data.ts - Construye catálogo mock estable para enseñar Market sin tocar persistencia real.
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
 import { IMarketPackDefinition } from "@/core/entities/market/IMarketPackDefinition";

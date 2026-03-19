@@ -1,4 +1,4 @@
-// src/app/hub/tutorial/arsenal/TutorialArsenalClient.tsx - Ejecuta Preparar Deck con sandbox mock sobre UI real de Arsenal y flujo guiado seguro.
+// src/components/hub/academy/tutorial/nodes/arsenal/TutorialArsenalClient.tsx - Ejecuta Preparar Deck con sandbox mock sobre UI real de Arsenal y flujo guiado seguro.
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { HomeDeckActionBar } from "@/components/hub/home/HomeDeckActionBar";
@@ -9,10 +9,10 @@ import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { useTutorialFlowController } from "@/components/tutorial/flow/useTutorialFlowController";
 import { isMobileLayoutViewport } from "@/components/internal/layout-breakpoints";
 import { IHomeDeckBuilderSceneProps } from "@/components/hub/home/internal/types/home-deck-builder-types";
-import { useTutorialArsenalSandbox } from "@/app/hub/tutorial/arsenal/internal/use-tutorial-arsenal-sandbox";
-import { useTutorialArsenalProgressSync } from "@/app/hub/tutorial/arsenal/internal/use-tutorial-arsenal-progress-sync";
-import { TutorialArsenalFlowOverlays } from "@/app/hub/tutorial/arsenal/internal/TutorialArsenalFlowOverlays";
-import { resolveTutorialMobileSection } from "@/app/hub/tutorial/arsenal/internal/resolve-tutorial-mobile-section";
+import { useTutorialArsenalSandbox } from "@/components/hub/academy/tutorial/nodes/arsenal/internal/use-tutorial-arsenal-sandbox";
+import { useTutorialArsenalProgressSync } from "@/components/hub/academy/tutorial/nodes/arsenal/internal/use-tutorial-arsenal-progress-sync";
+import { TutorialArsenalFlowOverlays } from "@/components/hub/academy/tutorial/nodes/arsenal/internal/TutorialArsenalFlowOverlays";
+import { resolveTutorialMobileSection } from "@/components/hub/academy/tutorial/nodes/arsenal/internal/resolve-tutorial-mobile-section";
 import { resolveArsenalTutorialSteps } from "@/services/tutorial/arsenal/resolve-arsenal-tutorial-steps";
 
 export function TutorialArsenalClient(props: IHomeDeckBuilderSceneProps) {

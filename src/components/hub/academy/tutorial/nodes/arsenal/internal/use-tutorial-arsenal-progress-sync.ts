@@ -1,4 +1,4 @@
-// src/app/hub/tutorial/arsenal/internal/use-tutorial-arsenal-progress-sync.ts - Sincroniza avance de pasos y persistencia de completado del nodo Preparar Deck.
+// src/components/hub/academy/tutorial/nodes/arsenal/internal/use-tutorial-arsenal-progress-sync.ts - Sincroniza avance de pasos y persistencia de completado del nodo Preparar Deck.
 "use client";
 import { useEffect, useRef } from "react";
 import { useTutorialFlowController } from "@/components/tutorial/flow/useTutorialFlowController";
@@ -24,6 +24,7 @@ export function useTutorialArsenalProgressSync(input: IUseTutorialArsenalProgres
   useEffect(() => {
     const stepId = input.tutorial.currentStep?.id ?? null;
     if (lastStepIdRef.current !== stepId) {
+      // Reiniciamos baseline al cambiar de paso para que el avance solo cuente interacciones nuevas.
       lastStepIdRef.current = stepId;
       selectionBaselineRef.current = {
         collectionCardId: input.selectedCollectionCardId,
@@ -49,6 +50,7 @@ export function useTutorialArsenalProgressSync(input: IUseTutorialArsenalProgres
   }, [input.selectedCollectionCardId, input.selectedSlotIndex, input.tutorial]);
 
   useEffect(() => {
+    // Persistimos completion una sola vez y reintentamos en caso de fallo de red.
     if (!input.tutorial.isFinished || hasSyncedCompletionRef.current) return;
     hasSyncedCompletionRef.current = true;
     postTutorialNodeCompletion("tutorial-arsenal-basics").catch(() => {
