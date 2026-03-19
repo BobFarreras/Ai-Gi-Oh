@@ -1,25 +1,20 @@
-// src/app/hub/training/tutorial/page.tsx - Entry server-side para tutorial de combate con runtime delegado a cliente.
+// src/app/hub/training/tutorial/page.tsx - Entry server-side del tutorial de combate usando sandbox mock estable y reproducible.
 import { HubSectionEntryBurst } from "@/components/hub/sections/HubSectionEntryBurst";
-import { TrainingDeckReadyGate } from "@/components/hub/training/TrainingDeckReadyGate";
 import { TrainingTutorialClient } from "@/app/hub/training/tutorial/TrainingTutorialClient";
-import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
-import { getPlayerBoardLoadout } from "@/services/game/get-player-board-deck";
+import { createTutorialCombatLoadout } from "@/app/hub/training/tutorial/internal/create-tutorial-combat-loadout";
 
 export default async function TrainingTutorialPage() {
-  const loadout = await getPlayerBoardLoadout();
-  const isDeckReady = Boolean(loadout.deck && loadout.deck.length === HOME_DECK_SIZE);
-  if (!isDeckReady) {
-    return (
-      <>
-        <HubSectionEntryBurst />
-        <TrainingDeckReadyGate />
-      </>
-    );
-  }
+  const loadout = createTutorialCombatLoadout();
   return (
     <main className="min-h-screen bg-zinc-950">
       <HubSectionEntryBurst />
-      <TrainingTutorialClient deck={loadout.deck!} fusionDeck={loadout.fusionDeck ?? []} />
+      <TrainingTutorialClient
+        deck={loadout.playerDeck}
+        fusionDeck={loadout.playerFusionDeck}
+        opponentDeck={loadout.opponentDeck}
+        opponentFusionDeck={loadout.opponentFusionDeck}
+        seed={loadout.seed}
+      />
     </main>
   );
 }

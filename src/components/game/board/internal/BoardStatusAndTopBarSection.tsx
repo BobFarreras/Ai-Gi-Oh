@@ -15,6 +15,8 @@ export function BoardStatusAndTopBarSection({
   playerAvatarUrl,
   opponentAvatarUrl,
   onExitMatch,
+  isTurnTimerEnabled = true,
+  suppressCombatBanners = false,
 }: IBoardViewSectionProps) {
   if (screen.isResultVisible) return null;
   const pendingFusionAction =
@@ -82,6 +84,7 @@ export function BoardStatusAndTopBarSection({
         onConfirmAdvancePhase={board.confirmAdvancePhase}
         onCancelAdvancePhase={board.cancelAdvancePhase}
         externalBannerSignal={screen.autoModeBannerSignal}
+        showBattleBanners={!suppressCombatBanners}
         isFusionMaterialBrowserOpen={Boolean(pendingFusionAction)}
         fusionMaterialCandidates={fusionMaterialCandidates}
         fusionSelectedCount={board.pendingFusionSelectedEntityIds.length}
@@ -103,6 +106,7 @@ export function BoardStatusAndTopBarSection({
           isActive={board.isPlayerTurn}
           isPaused={board.isPaused}
           hasWinner={Boolean(board.winnerPlayerId)}
+          isTimerEnabled={isTurnTimerEnabled}
           onTimeUp={() => {
             board.playTimerExpired();
             board.handleTimerExpired();
@@ -118,6 +122,7 @@ export function BoardStatusAndTopBarSection({
           isPlayerTurn={board.isPlayerTurn}
           isPaused={board.isPaused}
           hasWinner={Boolean(board.winnerPlayerId)}
+          isTimerEnabled={isTurnTimerEnabled}
           onTimeUp={() => {
             board.playTimerExpired();
             board.handleTimerExpired();

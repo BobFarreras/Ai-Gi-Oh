@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 interface IBoardMobilePhaseButtonProps {
   ariaLabel: string;
+  tutorialId?: string;
   disabled: boolean;
   onClick?: () => void;
   icon: LucideIcon;
@@ -27,6 +28,7 @@ const buttonClass =
  */
 export function BoardMobilePhaseButton({
   ariaLabel,
+  tutorialId,
   disabled,
   onClick,
   icon: Icon,
@@ -48,13 +50,14 @@ export function BoardMobilePhaseButton({
   const resolvedClassName = cn(buttonClass, className);
   if (!withMotion) {
     return (
-      <button aria-label={ariaLabel} disabled={disabled} onClick={onClick} className={resolvedClassName} style={style}>
+      <button data-tutorial-id={tutorialId} aria-label={ariaLabel} disabled={disabled} onClick={onClick} className={resolvedClassName} style={style}>
         {content}
       </button>
     );
   }
   return (
     <motion.button
+      data-tutorial-id={tutorialId}
       aria-label={ariaLabel}
       disabled={disabled}
       onClick={onClick}

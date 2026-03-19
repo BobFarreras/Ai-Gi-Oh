@@ -7,6 +7,7 @@ import { IMatchMode } from "@/core/entities/match";
 import { ICreateInitialBoardStateInput } from "@/components/game/board/hooks/internal/boardInitialState";
 import { IDuelResultRewardSummary } from "./ui/internal/duel-result/duel-result-reward-summary";
 import { IMatchNarrationPack } from "./narration/types";
+import { IOpponentStrategy } from "@/core/services/opponent/types";
 import { useBoardViewportMode } from "./hooks/internal/layout/use-board-viewport-mode";
 import { countRender } from "@/services/performance/dev-performance-telemetry";
 import { useBoardScreenState } from "@/components/game/board/internal/use-board-screen-state";
@@ -33,11 +34,16 @@ interface IBoardProps {
   onResultAction?: () => void;
   onExitMatch?: () => void;
   isMatchStartLocked?: boolean;
+  disableOpponentAutomation?: boolean;
+  isTurnTimerEnabled?: boolean;
+  suppressCombatFeedback?: boolean;
+  suppressCombatBanners?: boolean;
+  opponentStrategyOverride?: IOpponentStrategy | null;
   onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string }) => void;
 }
-export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, isMatchStartLocked = false, onMatchResolved }: IBoardProps) {
+export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved }: IBoardProps) {
   countRender("Board");
-  const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme);
+  const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme, disableOpponentAutomation, opponentStrategyOverride);
   const player = board.gameState.playerA; const opponent = board.gameState.playerB;
   const { isMobile } = useBoardViewportMode();
   const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
@@ -82,6 +88,8 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
             playerAvatarUrl={playerAvatarUrl}
             opponentAvatarUrl={opponentAvatarUrl}
             onExitMatch={onExitMatch}
+            isTurnTimerEnabled={isTurnTimerEnabled}
+            suppressCombatBanners={suppressCombatBanners}
           />
           <BoardPlayersSection
             board={board}
@@ -94,13 +102,12 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
           />
         </>
       ) : null}
-      <BoardInteractiveSection board={board} screen={screen} isMobile={isMobile} />
+      <BoardInteractiveSection board={board} screen={screen} isMobile={isMobile} suppressCombatFeedback={suppressCombatFeedback} />
       {mode === "TUTORIAL" && !isMatchStartLocked ? (
         <BoardTutorialFlowOverlay
           combatLog={board.gameState.combatLog}
-          selectedCard={Boolean(board.selectedCard)}
-          isGraveyardOpen={Boolean(screen.effectiveGraveyardView)}
-          isCombatLogOpen={board.isHistoryOpen}
+          selectedCardId={board.selectedCard?.id ?? null}
+          isMuted={board.isMuted}
           hasWinner={Boolean(board.winnerPlayerId)}
         />
       ) : null}

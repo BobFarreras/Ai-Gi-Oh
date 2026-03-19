@@ -1,6 +1,7 @@
 // src/components/tutorial/flow/TutorialSpotlightOverlay.tsx - Overlay reusable que oscurece pantalla y resalta el objetivo activo del tutorial.
 "use client";
 import { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
 
 interface ITutorialSpotlightOverlayProps {
   isVisible: boolean;
@@ -97,7 +98,19 @@ export function TutorialSpotlightOverlay({ isVisible, targetId, disableAutoScrol
   if (!isVisible || !rect) return null;
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-[420]">
-      <div className="absolute rounded-xl border-2 border-cyan-300 bg-cyan-400/5 shadow-[0_0_24px_rgba(34,211,238,0.45)] transition-all duration-150" style={frameStyle} />
+      <motion.div
+        className="absolute rounded-xl border-2 border-cyan-300 bg-cyan-400/8 transition-all duration-150"
+        style={frameStyle}
+        animate={{
+          boxShadow: [
+            "0 0 0 9999px rgba(1, 7, 20, 0.78), 0 0 18px rgba(34,211,238,0.38)",
+            "0 0 0 9999px rgba(1, 7, 20, 0.78), 0 0 34px rgba(34,211,238,0.82)",
+            "0 0 0 9999px rgba(1, 7, 20, 0.78), 0 0 18px rgba(34,211,238,0.38)",
+          ],
+          x: [0, -1.5, 1.5, -1.5, 0],
+        }}
+        transition={{ duration: 0.85, repeat: Infinity, ease: "easeInOut" }}
+      />
     </div>
   );
 }

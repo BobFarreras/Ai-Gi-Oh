@@ -46,6 +46,7 @@ interface BoardStatusOverlaysProps {
   onConfirmAdvancePhase: (disableHelp: boolean) => void;
   onCancelAdvancePhase: () => void;
   externalBannerSignal?: { id: string; left: string; right: string } | null;
+  showBattleBanners?: boolean;
   isFusionMaterialBrowserOpen?: boolean;
   fusionMaterialCandidates?: IFusionMaterialCandidate[];
   fusionSelectedCount?: number;
@@ -84,6 +85,7 @@ export function BoardStatusOverlays({
   onConfirmAdvancePhase,
   onCancelAdvancePhase,
   externalBannerSignal = null,
+  showBattleBanners = true,
   isFusionMaterialBrowserOpen = false,
   fusionMaterialCandidates = [],
   fusionSelectedCount = 0,
@@ -108,14 +110,16 @@ export function BoardStatusOverlays({
         />
       )}
 
-      <BattleBannerCenter
-        events={combatLog}
-        playerAId={playerAId}
-        playerAName={playerAName}
-        playerBId={playerBId}
-        playerBName={playerBName}
-        externalBannerSignal={externalBannerSignal}
-      />
+      {showBattleBanners ? (
+        <BattleBannerCenter
+          events={combatLog}
+          playerAId={playerAId}
+          playerAName={playerAName}
+          playerBId={playerBId}
+          playerBName={playerBName}
+          externalBannerSignal={externalBannerSignal}
+        />
+      ) : null}
       <PauseOverlay isPaused={isPaused} onResume={onResumePause} onExit={onExitPause} />
       <TurnAdvanceGuardOverlay
         warning={pendingAdvanceWarning}

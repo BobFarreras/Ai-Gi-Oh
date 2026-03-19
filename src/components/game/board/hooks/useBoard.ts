@@ -1,10 +1,11 @@
 // src/components/game/board/hooks/useBoard.ts - Compone runtime, estado UI, progresión y audio del duelo en un contrato único para la capa visual.
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
 import { GameEngine } from "@/core/use-cases/GameEngine";
 import { ICampaignProgress } from "@/core/services/opponent/difficulty/types";
+import { IOpponentStrategy } from "@/core/services/opponent/types";
 import { createMatchSeed } from "@/core/services/random/create-match-seed";
 import { createInitialBoardState, ICreateInitialBoardStateInput } from "./internal/boardInitialState";
 import { sleep } from "./internal/sleep";
@@ -20,6 +21,8 @@ export function useBoard(
   initialConfig?: ICreateInitialBoardStateInput,
   isMatchStartLocked = false,
   disableBaseSoundtrack = false,
+  disableOpponentAutomation = false,
+  opponentStrategyOverride: IOpponentStrategy | null = null,
 ) {
   const [campaignProgress] = useState<ICampaignProgress>({ chapterIndex: 1, duelIndex: 1, victories: 0 });
   const [matchSeed] = useState(() => createMatchSeed());
@@ -30,7 +33,19 @@ export function useBoard(
   const gameStateRef = useRef<GameState>(createInitialState());
   const uiState = useMatchUiState({ gameStateRef, createInitialState });
   const winnerPlayerId = useMemo(() => resolveWinnerPlayerId(uiState.gameState), [uiState.gameState]);
-  const runtime = useMatchRuntime({ campaignProgress, gameStateRef, uiState, winnerPlayerId, isMatchStartLocked });
+  useEffect(() => {
+    if (mode !== "TUTORIAL" || !uiState.isAutoPhaseEnabled) return;
+    uiState.setIsAutoPhaseEnabled(false);
+  }, [mode, uiState]);
+  const runtime = useMatchRuntime({
+    campaignProgress,
+    gameStateRef,
+    uiState,
+    winnerPlayerId,
+    isMatchStartLocked,
+    disableOpponentAutomation,
+    opponentStrategyOverride,
+  });
   const progression = useMatchProgression({
     mode,
     gameState: uiState.gameState,

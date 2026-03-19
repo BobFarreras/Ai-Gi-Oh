@@ -5,8 +5,13 @@ import { resolveCombatTutorialSteps } from "@/services/tutorial/combat/resolve-c
 describe("resolveCombatTutorialSteps", () => {
   it("incluye pasos clave del combate con orden estable", () => {
     const steps = resolveCombatTutorialSteps();
-    expect(steps[0]?.id).toBe("combat-first-turn-rule");
-    expect(steps.some((step) => step.id === "combat-log")).toBe(true);
-    expect(steps.at(-1)?.id).toBe("combat-win-condition");
+    expect(steps[0]?.id).toBe("combat-ui-history");
+    expect(steps.some((step) => step.id === "combat-ui-mute" && step.completionType === "USER_ACTION")).toBe(true);
+    expect(steps.some((step) => step.targetId === "tutorial-board-phase-invoke-button")).toBe(true);
+    expect(steps.some((step) => step.targetId === "tutorial-board-phase-battle-button")).toBe(true);
+    expect(steps.some((step) => step.targetId === "tutorial-board-phase-pass-button")).toBe(true);
+    expect(steps.some((step) => step.id === "combat-rules")).toBe(true);
+    expect(steps.some((step) => step.id === "combat-draw-and-fusion")).toBe(true);
+    expect(steps.at(-1)?.id).toBe("combat-defense-attack-example");
   });
 });

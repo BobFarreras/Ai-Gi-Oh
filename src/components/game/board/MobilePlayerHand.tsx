@@ -61,6 +61,7 @@ export function MobilePlayerHand({
               <motion.button
                 key={`${card.runtimeId ?? card.id}-${index}`}
                 type="button"
+                data-tutorial-id={`tutorial-board-hand-card-${card.id}`}
                 aria-label={`Carta ${card.name}`}
                 initial={false}
                 animate={{ y: isSelected ? -8 : 0 }}
@@ -77,8 +78,23 @@ export function MobilePlayerHand({
                   onCardClick(card, event);
                 }}
               >
-                <div
-                  className={mandatory ? "rounded-xl ring-4 ring-amber-400/85 shadow-[0_0_18px_rgba(251,191,36,0.62)]" : ""}
+                <motion.div
+                  animate={
+                    mandatory
+                      ? {
+                          scale: [1, 1.04, 1],
+                          x: [0, -1.4, 1.4, 0],
+                          y: [0, -1, 0],
+                          boxShadow: [
+                            "0 0 18px rgba(251,191,36,0.62)",
+                            "0 0 30px rgba(251,191,36,0.9)",
+                            "0 0 18px rgba(251,191,36,0.62)",
+                          ],
+                        }
+                      : { scale: 1, x: 0, y: 0, boxShadow: "0 0 0 rgba(0,0,0,0)" }
+                  }
+                  transition={mandatory ? { duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : { duration: 0.2 }}
+                  className={mandatory ? "rounded-xl ring-4 ring-amber-400/95" : ""}
                   style={{ width: "260px", height: "380px", transform: `scale(${metrics.scale})`, transformOrigin: "top left" }}
                 >
                   <Card
@@ -88,7 +104,7 @@ export function MobilePlayerHand({
                     disableDefaultShadow
                     isPerformanceMode
                   />
-                </div>
+                </motion.div>
               </motion.button>
             );
           })}

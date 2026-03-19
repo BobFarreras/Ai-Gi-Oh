@@ -1,21 +1,26 @@
 // src/app/hub/training/tutorial/TrainingTutorialClient.tsx - Orquesta tutorial board y sincroniza su finalización cuando el jugador gana.
 "use client";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Board } from "@/components/game/board";
 import { ICard } from "@/core/entities/ICard";
 import { postTutorialNodeCompletion } from "@/app/hub/tutorial/internal/tutorial-node-progress-client";
 import { TrainingCoinTossOverlay } from "./TrainingCoinTossOverlay";
+import { createTutorialOpponentStrategy } from "@/app/hub/training/tutorial/internal/create-tutorial-opponent-strategy";
 
 interface ITrainingTutorialClientProps {
   deck: ICard[];
   fusionDeck: ICard[];
+  opponentDeck: ICard[];
+  opponentFusionDeck: ICard[];
+  seed: string;
 }
 
 export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
+  const tutorialOpponentStrategy = useMemo(() => createTutorialOpponentStrategy(), []);
   const hasPostedRef = useRef(false);
   const [status, setStatus] = useState<string | null>(null);
   const [isCoinTossVisible, setIsCoinTossVisible] = useState(true);
-  const [starterSide] = useState<"PLAYER" | "OPPONENT">(() => (Math.random() >= 0.5 ? "PLAYER" : "OPPONENT"));
+  const starterSide: "PLAYER" | "OPPONENT" = "PLAYER";
 
   async function handleMatchResolved(result: { winnerPlayerId: string | "DRAW"; playerId: string }) {
     if (result.winnerPlayerId !== result.playerId || hasPostedRef.current) {
@@ -39,8 +44,22 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
       <Board
         mode="TUTORIAL"
         initialPlayerDeck={props.deck}
-        initialConfig={{ playerFusionDeck: props.fusionDeck, starterPlayerId: starterSide === "PLAYER" ? "player-local" : "opponent-local" }}
+        initialConfig={{
+          playerFusionDeck: props.fusionDeck,
+          opponentDeck: props.opponentDeck,
+          opponentFusionDeck: props.opponentFusionDeck,
+          starterPlayerId: starterSide === "PLAYER" ? "player-local" : "opponent-local",
+          seed: props.seed,
+          preserveDeckOrder: true,
+          openingHandSize: 4,
+        }}
+        playerAvatarUrl="/assets/story/player/bob.png"
+        opponentAvatarUrl="/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png"
         isMatchStartLocked={isCoinTossVisible}
+        isTurnTimerEnabled={false}
+        suppressCombatFeedback={false}
+        suppressCombatBanners={false}
+        opponentStrategyOverride={tutorialOpponentStrategy}
         resultActionLabel="Volver a selección"
         onResultAction={() => window.location.replace("/hub/training")}
         onExitMatch={() => window.location.replace("/hub/training")}

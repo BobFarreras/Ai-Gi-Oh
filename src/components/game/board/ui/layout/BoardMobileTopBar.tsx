@@ -14,6 +14,7 @@ interface BoardMobileTopBarProps {
   isActive: boolean;
   isPaused: boolean;
   hasWinner: boolean;
+  isTimerEnabled?: boolean;
   phase: string;
   pendingActionType: string | null;
   pendingActionPlayerId: string | null;
@@ -27,6 +28,7 @@ export function BoardMobileTopBar({
   isActive,
   isPaused,
   hasWinner,
+  isTimerEnabled = true,
   phase,
   pendingActionType,
   pendingActionPlayerId,
@@ -74,13 +76,17 @@ export function BoardMobileTopBar({
                 <p className="mb-0.5 truncate text-[7px] font-black uppercase tracking-widest text-cyan-300">{phaseLabel}</p>
                 <div className="flex items-center gap-0.5">
                   <Clock className="h-3 w-3 text-cyan-300" />
-                  <TurnTimer
-                    key={`${turn}-${phase}-${pendingActionType ?? "NONE"}-${pendingActionPlayerId ?? "NONE"}`}
-                    onTimeUp={onTimeUp}
-                    onWarning={onWarning}
-                    isActive={isActive && !isPaused && !hasWinner}
-                    compact
-                  />
+                  {isTimerEnabled ? (
+                    <TurnTimer
+                      key={`${turn}-${phase}-${pendingActionType ?? "NONE"}-${pendingActionPlayerId ?? "NONE"}`}
+                      onTimeUp={onTimeUp}
+                      onWarning={onWarning}
+                      isActive={isActive && !isPaused && !hasWinner}
+                      compact
+                    />
+                  ) : (
+                    <span className="text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">--</span>
+                  )}
                 </div>
               </div>
             </div>

@@ -1,4 +1,4 @@
-// src/components/game/board/internal/HudPhaseControls.tsx
+// src/components/game/board/internal/HudPhaseControls.tsx - Panel de subturnos desktop con indicadores y acciones de avance.
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -40,6 +40,7 @@ export function HudPhaseControls({ phase, isVisible, onAdvancePhase }: HudPhaseC
       {/* 1. INDICADOR: INVOCAR */}
       {/* flex-1: Se expande u encoge según el espacio disponible sin romper el diseño */}
       <motion.button
+        data-tutorial-id="tutorial-board-phase-invoke-button"
         disabled
         layout
         initial={{ y: 20, opacity: 0 }}
@@ -70,6 +71,7 @@ export function HudPhaseControls({ phase, isVisible, onAdvancePhase }: HudPhaseC
 
       {/* 2. BOTÓN: COMBATE */}
       <motion.button
+        data-tutorial-id="tutorial-board-phase-battle-button"
         layout
         disabled={!isMainPhase || !onAdvancePhase}
         onClick={() => onAdvancePhase?.()}
@@ -107,6 +109,7 @@ export function HudPhaseControls({ phase, isVisible, onAdvancePhase }: HudPhaseC
 
       {/* 3. BOTÓN: PASAR TURNO */}
       <motion.button
+        data-tutorial-id="tutorial-board-phase-pass-button"
         layout
         disabled={!isEndTurnEnabled}
         onClick={() => onAdvancePhase?.()}

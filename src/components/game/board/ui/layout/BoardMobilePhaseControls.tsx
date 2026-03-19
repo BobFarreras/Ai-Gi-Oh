@@ -50,6 +50,7 @@ export function BoardMobilePhaseControls({
       >
         <BoardMobilePhaseButton
           ariaLabel="Fase invocar"
+          tutorialId="tutorial-board-phase-invoke-button"
           disabled
           icon={Shield}
           text={isMain ? "Invocar" : undefined}
@@ -62,6 +63,7 @@ export function BoardMobilePhaseControls({
         />
         <BoardMobilePhaseButton
           ariaLabel="Pasar a combate"
+          tutorialId="tutorial-board-phase-battle-button"
           disabled={!canAdvance || !isMain}
           onClick={onAdvancePhase}
           icon={Swords}
@@ -75,6 +77,7 @@ export function BoardMobilePhaseControls({
         />
         <BoardMobilePhaseButton
           ariaLabel="Pasar turno"
+          tutorialId="tutorial-board-phase-pass-button"
           disabled={!canAdvance || !isBattle}
           onClick={onAdvancePhase}
           icon={SkipForward}
@@ -108,6 +111,7 @@ export function BoardMobilePhaseControls({
       </AnimatePresence>
       <BoardMobilePhaseButton
         ariaLabel="Fase invocar"
+        tutorialId="tutorial-board-phase-invoke-button"
         disabled
         icon={Shield}
         text={isMain ? "Invocar" : undefined}
@@ -120,6 +124,7 @@ export function BoardMobilePhaseControls({
       />
       <BoardMobilePhaseButton
         ariaLabel="Pasar a combate"
+        tutorialId="tutorial-board-phase-battle-button"
         disabled={!canAdvance || !isMain}
         onClick={onAdvancePhase}
         icon={Swords}
@@ -133,6 +138,7 @@ export function BoardMobilePhaseControls({
       />
       <BoardMobilePhaseButton
         ariaLabel="Pasar turno"
+        tutorialId="tutorial-board-phase-pass-button"
         disabled={!canAdvance || !isBattle}
         onClick={onAdvancePhase}
         icon={SkipForward}

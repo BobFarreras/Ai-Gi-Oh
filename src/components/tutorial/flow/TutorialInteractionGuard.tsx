@@ -7,10 +7,13 @@ interface ITutorialInteractionGuardProps {
   allowedTargetIds: string[];
 }
 
+const ALWAYS_ALLOWED_TARGET_IDS = ["tutorial-board-actions-menu", "tutorial-board-mute-button"];
+
 function isInsideAllowedTarget(target: EventTarget | null, allowedTargetIds: string[]): boolean {
   if (!(target instanceof Element)) return false;
   if (target.closest("[data-tutorial-overlay='true']")) return true;
-  return allowedTargetIds.some((targetId) => Boolean(target.closest(`[data-tutorial-id="${targetId}"]`)));
+  const effectiveAllowedIds = [...ALWAYS_ALLOWED_TARGET_IDS, ...allowedTargetIds];
+  return effectiveAllowedIds.some((targetId) => Boolean(target.closest(`[data-tutorial-id="${targetId}"]`)));
 }
 
 export function TutorialInteractionGuard({ isEnabled, allowedTargetIds }: ITutorialInteractionGuardProps) {

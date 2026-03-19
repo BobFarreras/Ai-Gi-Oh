@@ -26,15 +26,15 @@ export function PlayerHandActionPopover({ isBlocked, isEntityOrFusion, isFusion,
         <span className="text-red-400 font-mono text-xs px-4 py-2 uppercase tracking-widest font-bold bg-red-950/40 rounded border border-red-500/20">Límite Alcanzado</span>
       ) : isEntityOrFusion ? (
         <>
-          <button onClick={(e) => onPlayAction("ATTACK", e)} className="flex items-center gap-1.5 px-4 py-2 bg-red-950/40 hover:bg-red-900 border border-red-500/50 text-red-400 text-xs font-black rounded-lg transition-all"><Sword size={16} /> {isFusion ? "FUSIÓN ATQ" : "ATAQUE"}</button>
-          <button onClick={(e) => onPlayAction("DEFENSE", e)} className="flex items-center gap-1.5 px-4 py-2 bg-blue-950/40 hover:bg-blue-900 border border-blue-500/50 text-blue-400 text-xs font-black rounded-lg transition-all"><Shield size={16} /> {isFusion ? "FUSIÓN DEF" : "DEFENSA"}</button>
+          <button data-tutorial-id="tutorial-board-action-attack" onClick={(e) => onPlayAction("ATTACK", e)} className="flex items-center gap-1.5 px-4 py-2 bg-red-950/40 hover:bg-red-900 border border-red-500/50 text-red-400 text-xs font-black rounded-lg transition-all"><Sword size={16} /> {isFusion ? "FUSIÓN ATQ" : "ATAQUE"}</button>
+          <button data-tutorial-id="tutorial-board-action-defense" onClick={(e) => onPlayAction("DEFENSE", e)} className="flex items-center gap-1.5 px-4 py-2 bg-blue-950/40 hover:bg-blue-900 border border-blue-500/50 text-blue-400 text-xs font-black rounded-lg transition-all"><Shield size={16} /> {isFusion ? "FUSIÓN DEF" : "DEFENSA"}</button>
         </>
       ) : isTrap ? (
-        <button onClick={(e) => onPlayAction("SET", e)} className="flex items-center gap-1.5 px-4 py-2 bg-purple-950/40 hover:bg-purple-900 border border-purple-500/50 text-purple-300 text-xs font-black rounded-lg transition-all"><Box size={16} /> ARMAR TRAMPA</button>
+        <button data-tutorial-id="tutorial-board-action-set-trap" onClick={(e) => onPlayAction("SET", e)} className="flex items-center gap-1.5 px-4 py-2 bg-purple-950/40 hover:bg-purple-900 border border-purple-500/50 text-purple-300 text-xs font-black rounded-lg transition-all"><Box size={16} /> ARMAR TRAMPA</button>
       ) : (
         <>
-          <button onClick={(e) => onPlayAction("ACTIVATE", e)} className="flex items-center gap-1.5 px-4 py-2 bg-cyan-950/40 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-400 text-xs font-black rounded-lg transition-all"><Zap size={16} /> ACTIVAR</button>
-          <button onClick={(e) => onPlayAction("SET", e)} className="flex items-center gap-1.5 px-4 py-2 bg-purple-950/40 hover:bg-purple-900 border border-purple-500/50 text-purple-400 text-xs font-black rounded-lg transition-all"><Box size={16} /> SET (OCULTAR)</button>
+          <button data-tutorial-id="tutorial-board-action-activate-execution" onClick={(e) => onPlayAction("ACTIVATE", e)} className="flex items-center gap-1.5 px-4 py-2 bg-cyan-950/40 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-400 text-xs font-black rounded-lg transition-all"><Zap size={16} /> ACTIVAR</button>
+          <button data-tutorial-id="tutorial-board-action-set-execution" onClick={(e) => onPlayAction("SET", e)} className="flex items-center gap-1.5 px-4 py-2 bg-purple-950/40 hover:bg-purple-900 border border-purple-500/50 text-purple-400 text-xs font-black rounded-lg transition-all"><Box size={16} /> SET (OCULTAR)</button>
         </>
       )}
     </motion.div>

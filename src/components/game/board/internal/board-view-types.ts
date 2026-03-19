@@ -14,4 +14,6 @@ export interface IBoardViewSectionProps {
   playerAvatarUrl: string | null;
   opponentAvatarUrl: string | null;
   onExitMatch?: () => void;
+  isTurnTimerEnabled?: boolean;
+  suppressCombatBanners?: boolean;
 }

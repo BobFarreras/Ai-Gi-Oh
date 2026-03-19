@@ -43,6 +43,7 @@ export function BoardActionButtons({
         </button>
       )}
       <button
+        data-tutorial-id="tutorial-board-pause-button"
         aria-label={isPaused ? "Reanudar partida" : "Pausar partida"}
         onClick={(event) => {
           event.stopPropagation();
@@ -53,6 +54,7 @@ export function BoardActionButtons({
         {isPaused ? <Play size={24} /> : <Pause size={24} />}
       </button>
       <button
+        data-tutorial-id="tutorial-board-auto-button"
         aria-label={isAutoPhaseEnabled ? "Desactivar modo automático de turnos" : "Activar modo automático de turnos"}
         onClick={(event) => {
           event.stopPropagation();
@@ -63,6 +65,7 @@ export function BoardActionButtons({
         <Bot size={24} />
       </button>
       <button
+        data-tutorial-id="tutorial-board-mute-button"
         aria-label={isMuted ? "Activar sonido" : "Silenciar sonido"}
         onClick={(event) => {
           event.stopPropagation();
