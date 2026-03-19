@@ -9,6 +9,9 @@ interface ITutorialBigLogOutroOverlayProps {
   description: string;
   onContinue: () => void;
   onExit: () => void;
+  continueLabel?: string;
+  exitLabel?: string;
+  hideExitButton?: boolean;
 }
 
 export function TutorialBigLogOutroOverlay({
@@ -17,6 +20,9 @@ export function TutorialBigLogOutroOverlay({
   description,
   onContinue,
   onExit,
+  continueLabel = "Siguiente Tutorial",
+  exitLabel = "Volver a Tutoriales",
+  hideExitButton = false,
 }: ITutorialBigLogOutroOverlayProps) {
   useEffect(() => {
     if (!isVisible) return;
@@ -57,16 +63,18 @@ export function TutorialBigLogOutroOverlay({
               onClick={onContinue}
               className="rounded-md border border-black/60 px-4 py-2 text-xs font-black uppercase tracking-[0.12em]"
             >
-              Siguiente Tutorial
+              {continueLabel}
             </button>
-            <button
-              type="button"
-              data-tutorial-overlay="true"
-              onClick={onExit}
-              className="rounded-md border border-black/35 px-4 py-2 text-xs font-black uppercase tracking-[0.12em]"
-            >
-              Volver a Tutoriales
-            </button>
+            {!hideExitButton ? (
+              <button
+                type="button"
+                data-tutorial-overlay="true"
+                onClick={onExit}
+                className="rounded-md border border-black/35 px-4 py-2 text-xs font-black uppercase tracking-[0.12em]"
+              >
+                {exitLabel}
+              </button>
+            ) : null}
           </div>
           <span className="absolute left-[-7px] top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border-b-2 border-r-2 border-black bg-white" />
         </article>

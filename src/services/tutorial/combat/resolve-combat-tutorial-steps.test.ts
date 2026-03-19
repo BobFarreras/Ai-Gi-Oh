@@ -16,6 +16,8 @@ describe("resolveCombatTutorialSteps", () => {
     expect(steps.some((step) => step.id === "combat-fusion-direct-attack" && step.targetId === "tutorial-board-opponent-zone-1")).toBe(true);
     expect(steps.some((step) => step.id === "combat-rules")).toBe(true);
     expect(steps.some((step) => step.id === "combat-activate-fusion-magic")).toBe(true);
-    expect(steps.at(-1)?.id).toBe("combat-defense-attack-example");
+    expect(steps.some((step) => step.id === "combat-result-overview" && step.targetId === "tutorial-board-duel-result-overlay")).toBe(true);
+    expect(steps.some((step) => step.id === "combat-result-experience" && step.targetId === "tutorial-board-duel-result-experience")).toBe(true);
+    expect(steps.at(-1)?.id).toBe("combat-result-next-steps");
   });
 });

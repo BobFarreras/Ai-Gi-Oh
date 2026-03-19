@@ -40,8 +40,9 @@ interface IBoardProps {
   suppressCombatBanners?: boolean;
   opponentStrategyOverride?: IOpponentStrategy | null;
   onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string }) => void;
+  onTutorialFlowFinished?: () => void;
 }
-export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved }: IBoardProps) {
+export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished }: IBoardProps) {
   countRender("Board");
   const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme, disableOpponentAutomation, opponentStrategyOverride);
   const player = board.gameState.playerA; const opponent = board.gameState.playerB;
@@ -108,9 +109,12 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
           combatLog={board.gameState.combatLog}
           selectedCardId={board.selectedCard?.id ?? null}
           phase={board.gameState.phase}
+          isGraveyardOpen={Boolean(screen.effectiveGraveyardView)}
+          isFusionCinematicActive={board.isFusionCinematicActive}
           fusionSelectedCount={board.pendingFusionSelectedEntityIds.length}
           isFusionBrowserOpen={board.gameState.pendingTurnAction?.type === "SELECT_FUSION_MATERIALS"}
           hasWinner={Boolean(board.winnerPlayerId)}
+          onFlowFinished={onTutorialFlowFinished}
         />
       ) : null}
       {!isMatchStartLocked ? (

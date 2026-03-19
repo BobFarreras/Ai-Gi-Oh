@@ -11,6 +11,11 @@ interface IRewardClaimResponse {
   rewardNexus: number;
 }
 
+interface ICombatRewardClaimResponse {
+  applied: boolean;
+  rewardCardId: string;
+}
+
 /**
  * Registra completion idempotente de un nodo tutorial.
  */
@@ -36,4 +41,17 @@ export async function postTutorialRewardClaim(): Promise<IRewardClaimResponse> {
   });
   if (!response.ok) throw new ValidationError("No se pudo reclamar la recompensa final del tutorial.");
   return response.json() as Promise<IRewardClaimResponse>;
+}
+
+/**
+ * Reclama recompensa de carta del nodo de combate tutorial.
+ */
+export async function postTutorialCombatRewardClaim(): Promise<ICombatRewardClaimResponse> {
+  const response = await fetch("/api/tutorial/combat/reward/claim", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!response.ok) throw new ValidationError("No se pudo reclamar la carta de recompensa del tutorial de combate.");
+  return response.json() as Promise<ICombatRewardClaimResponse>;
 }
