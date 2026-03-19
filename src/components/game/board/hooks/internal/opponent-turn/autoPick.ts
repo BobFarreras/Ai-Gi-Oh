@@ -7,7 +7,7 @@ function scoreCardForDiscard(card: ICard): number {
   if (card.type === "ENTITY") {
     return (card.attack ?? 0) + (card.defense ?? 0) - card.cost * 180;
   }
-  const effectValue = card.effect && "value" in card.effect ? card.effect.value : 0;
+  const effectValue = card.effect && "value" in card.effect && typeof card.effect.value === "number" ? card.effect.value : 0;
   return effectValue - card.cost * 140;
 }
 

@@ -22,8 +22,7 @@ export function HomeMobileDeckPanel({ props, cardById, deckSlotsForView, onSelec
       <div data-tutorial-id="tutorial-home-deck" className="grid grid-cols-4 gap-1 pb-3 pt-1">
         {deckSlotsForView.map((slot) => {
           const card = slot.cardId ? (cardById.get(slot.cardId) ?? null) : null;
-          const shouldHighlightRecipe =
-            Boolean(card) && fusionRecipeCardIds.has(card.id) && !highlightedRecipeCardIds.has(card.id);
+          const shouldHighlightRecipe = card ? fusionRecipeCardIds.has(card.id) && !highlightedRecipeCardIds.has(card.id) : false;
           if (shouldHighlightRecipe && card) highlightedRecipeCardIds.add(card.id);
           const progress = slot.cardId ? (props.cardProgressById.get(slot.cardId) ?? null) : null;
           const isSelected = props.selectedSlotIndex === slot.index || (slot.cardId !== null && slot.cardId === props.selectedCardId);

@@ -10,7 +10,7 @@ function findHandCardRuntimeId(state: GameState, cardId: string): string | null 
 function pickAttacker(state: GameState): string | null {
   const attackables = state.playerB.activeEntities.filter((entity) => entity.mode === "ATTACK" && !entity.hasAttackedThisTurn);
   if (attackables.length === 0) return null;
-  return [...attackables].sort((a, b) => b.card.attack - a.card.attack)[0]?.instanceId ?? null;
+  return [...attackables].sort((a, b) => (b.card.attack ?? 0) - (a.card.attack ?? 0))[0]?.instanceId ?? null;
 }
 
 /**
@@ -39,7 +39,7 @@ export function createTutorialOpponentStrategy(): IOpponentStrategy {
       if (!attackerInstanceId) return null;
       const defender = state.playerA.activeEntities
         .filter((entity) => entity.mode === "ATTACK" || entity.mode === "DEFENSE")
-        .sort((a, b) => a.card.attack - b.card.attack)[0];
+        .sort((a, b) => (a.card.attack ?? 0) - (b.card.attack ?? 0))[0];
       return defender ? { attackerInstanceId, defenderInstanceId: defender.instanceId } : { attackerInstanceId };
     },
   };

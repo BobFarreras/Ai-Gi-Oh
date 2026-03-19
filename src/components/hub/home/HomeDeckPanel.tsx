@@ -54,8 +54,7 @@ export function HomeDeckPanel({
         <div className="grid grid-cols-[repeat(auto-fill,minmax(68px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(76px,1fr))] content-start justify-items-center gap-2 w-full pb-4">
           {deck.slots.map((slot) => {
             const card = slot.cardId ? cardById.get(slot.cardId) : null;
-            const shouldHighlightRecipe =
-              Boolean(card) && fusionRecipeCardIds.has(card.id) && !highlightedRecipeCardIds.has(card.id);
+            const shouldHighlightRecipe = card ? fusionRecipeCardIds.has(card.id) && !highlightedRecipeCardIds.has(card.id) : false;
             if (shouldHighlightRecipe && card) highlightedRecipeCardIds.add(card.id);
             const isSelected = selectedSlotIndex === slot.index || (slot.cardId !== null && slot.cardId === selectedCardId);
             const progress = slot.cardId ? cardProgressById.get(slot.cardId) : null;

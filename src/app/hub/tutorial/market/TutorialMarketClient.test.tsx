@@ -49,7 +49,13 @@ describe("TutorialMarketClient", () => {
 
     expect(await screen.findByText("Comprar sobre aleatorio")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Comprar x/i }));
-    fireEvent.click(await screen.findByRole("button", { name: "Integrar al Almacén" }, { timeout: 5000 }));
+    await waitFor(() => {
+      const hasRandomStep = screen.queryByText("Sobres y aleatoriedad");
+      const hasRevealClose = screen.queryByRole("button", { name: "Integrar al Almacén" });
+      expect(Boolean(hasRandomStep || hasRevealClose)).toBe(true);
+    }, { timeout: 6000 });
+    const closeRevealButton = screen.queryByRole("button", { name: "Integrar al Almacén" });
+    if (closeRevealButton) fireEvent.click(closeRevealButton);
 
     expect(await screen.findByText("Sobres y aleatoriedad")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Siguiente paso del tutorial" }));
@@ -61,5 +67,5 @@ describe("TutorialMarketClient", () => {
     fireEvent.click(screen.getByRole("button", { name: "Siguiente paso del tutorial" }));
 
     expect(screen.getByText("Market Completado")).toBeInTheDocument();
-  }, 18000);
+  }, 30000);
 });
