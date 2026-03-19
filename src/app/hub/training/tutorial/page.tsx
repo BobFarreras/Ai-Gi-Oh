@@ -6,7 +6,7 @@ import { createTutorialCombatLoadout } from "@/app/hub/training/tutorial/interna
 export default async function TrainingTutorialPage() {
   const loadout = createTutorialCombatLoadout();
   return (
-    <main className="min-h-screen bg-zinc-950">
+    <>
       <HubSectionEntryBurst />
       <TrainingTutorialClient
         deck={loadout.playerDeck}
@@ -15,6 +15,6 @@ export default async function TrainingTutorialPage() {
         opponentFusionDeck={loadout.opponentFusionDeck}
         seed={loadout.seed}
       />
-    </main>
+    </>
   );
 }

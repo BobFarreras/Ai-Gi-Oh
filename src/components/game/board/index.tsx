@@ -108,6 +108,8 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
           combatLog={board.gameState.combatLog}
           selectedCardId={board.selectedCard?.id ?? null}
           phase={board.gameState.phase}
+          fusionSelectedCount={board.pendingFusionSelectedEntityIds.length}
+          isFusionBrowserOpen={board.gameState.pendingTurnAction?.type === "SELECT_FUSION_MATERIALS"}
           hasWinner={Boolean(board.winnerPlayerId)}
         />
       ) : null}

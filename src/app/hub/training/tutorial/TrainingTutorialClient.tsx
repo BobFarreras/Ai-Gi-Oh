@@ -39,7 +39,7 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
   }
 
   return (
-    <main className="relative min-h-screen bg-zinc-950">
+    <div className="relative h-screen overflow-hidden bg-zinc-950">
       {status ? <p className="absolute left-3 top-3 z-[320] rounded-md bg-cyan-950/80 px-3 py-2 text-xs font-bold text-cyan-100">{status}</p> : null}
       <Board
         mode="TUTORIAL"
@@ -71,6 +71,6 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
         starterSide={starterSide}
         onContinue={() => setIsCoinTossVisible(false)}
       />
-    </main>
+    </div>
   );
 }

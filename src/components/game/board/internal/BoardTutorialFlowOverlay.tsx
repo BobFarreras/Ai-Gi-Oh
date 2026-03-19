@@ -14,11 +14,13 @@ interface IBoardTutorialFlowOverlayProps {
   combatLog: ICombatLogEvent[];
   selectedCardId: string | null;
   phase: string;
+  fusionSelectedCount: number;
+  isFusionBrowserOpen: boolean;
   hasWinner: boolean;
 }
 
 export function BoardTutorialFlowOverlay(props: IBoardTutorialFlowOverlayProps) {
-  const { combatLog, selectedCardId, phase, hasWinner } = props;
+  const { combatLog, selectedCardId, phase, fusionSelectedCount, isFusionBrowserOpen, hasWinner } = props;
   const steps = useMemo(() => resolveCombatTutorialSteps(), []);
   const tutorial = useTutorialFlowController(steps);
   const [isIntroVisible, setIsIntroVisible] = useState(true);
@@ -84,14 +86,17 @@ export function BoardTutorialFlowOverlay(props: IBoardTutorialFlowOverlayProps) 
     if (currentStepId === "combat-direct-attack-gemini" && playerDirectDamageCount >= 2) queueStepAction("combat-direct-attack-gemini", "PLAYER_DIRECT_ATTACK_2_DONE");
     if (currentStepId === "combat-pass-opponent-set" && hasOpponentSetCard) queueStepAction("combat-pass-opponent-set", "OPPONENT_SET_DONE", 800);
     if (currentStepId === "combat-select-fusion-magic" && hasFusionMagicSelected) queueStepAction("combat-select-fusion-magic", "SELECT_FUSION_MAGIC");
-    if (currentStepId === "combat-activate-fusion-magic" && hasFusionSummon) queueStepAction("combat-activate-fusion-magic", "FUSION_SUMMON", 1000);
+    if (currentStepId === "combat-activate-fusion-magic" && isFusionBrowserOpen) queueStepAction("combat-activate-fusion-magic", "FUSION_BROWSER_OPEN", 200);
+    if (currentStepId === "combat-fusion-material-1" && fusionSelectedCount >= 1) queueStepAction("combat-fusion-material-1", "FUSION_MATERIAL_1_SELECTED");
+    if (currentStepId === "combat-fusion-material-2" && fusionSelectedCount >= 2) queueStepAction("combat-fusion-material-2", "FUSION_MATERIAL_2_SELECTED");
+    if (currentStepId === "combat-fusion-summon-animation" && hasFusionSummon) queueStepAction("combat-fusion-summon-animation", "FUSION_SUMMON", 1000);
     if (currentStepId === "combat-fusion-battle-phase" && phase === "BATTLE") queueStepAction("combat-fusion-battle-phase", "TURN_TO_BATTLE_AFTER_FUSION");
     if (currentStepId === "combat-fusion-direct-attack" && hasOpponentDefenseCard) queueStepAction("combat-fusion-direct-attack", "OPPONENT_DEFENSE_READY", 900);
     if (currentStepId === "combat-select-python" && selectedCardId === "entity-python") queueStepAction("combat-select-python", "SELECT_PYTHON");
     if (currentStepId === "combat-summon-python" && hasPythonAttackSummon) queueStepAction("combat-summon-python", "SUMMON_PYTHON_ATTACK");
     if (currentStepId === "combat-python-battle-phase" && phase === "BATTLE") queueStepAction("combat-python-battle-phase", "TURN_TO_BATTLE_PYTHON");
     if (currentStepId === "combat-defense-attack-example" && hasWinner) queueStepAction("combat-defense-attack-example", "MATCH_WON");
-  }, [hasBoostActivated, hasChatgptAttackSummon, hasEnergyRestoreActivated, hasFusionSummon, hasFusionMagicSelected, hasGeminiAttackSummon, hasOpponentDefenseCard, hasOpponentSetCard, hasOpponentTurn, hasPlayerToBattle, hasPythonAttackSummon, hasTrapDefenseResolved, hasTutorialTrapSet, hasWinner, phase, playerDirectDamageCount, queueStepAction, selectedCardId, tutorial]);
+  }, [fusionSelectedCount, hasBoostActivated, hasChatgptAttackSummon, hasEnergyRestoreActivated, hasFusionSummon, hasFusionMagicSelected, hasGeminiAttackSummon, hasOpponentDefenseCard, hasOpponentSetCard, hasOpponentTurn, hasPlayerToBattle, hasPythonAttackSummon, hasTrapDefenseResolved, hasTutorialTrapSet, hasWinner, isFusionBrowserOpen, phase, playerDirectDamageCount, queueStepAction, selectedCardId, tutorial]);
 
   const isExecutionShowcaseStep =
     tutorial.currentStep?.id === "combat-activate-boost" ||
