@@ -77,7 +77,7 @@ async function runStep(page, label, selectors) {
 }
 
 function buildCandidatePaths(rawPath) {
-  const defaults = ["/hub/training", "/hub/story/chapter/1/duel/1", "/hub/story/chapter/1/duel/0"];
+  const defaults = ["/hub/academy/training/arena", "/hub/story/chapter/1/duel/1", "/hub/story/chapter/1/duel/0"];
   if (!rawPath) return defaults;
   return [rawPath, ...defaults.filter((item) => item !== rawPath)];
 }
