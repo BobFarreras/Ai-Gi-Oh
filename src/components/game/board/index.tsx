@@ -65,6 +65,8 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
     opponentName: opponent.name,
     playerGraveyard: player.graveyard,
     opponentGraveyard: opponent.graveyard,
+    playerFusionDeck: player.fusionDeck ?? [],
+    opponentFusionDeck: opponent.fusionDeck ?? [],
     playerDestroyed: player.destroyedPile ?? [],
     opponentDestroyed: opponent.destroyedPile ?? [],
     playerActiveEntities: player.activeEntities,

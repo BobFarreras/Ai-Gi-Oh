@@ -33,6 +33,9 @@ interface BoardStatusOverlaysProps {
   graveyardOwnerName: string;
   graveyardCards: ICard[];
   graveyardSelectableCardRefs?: string[];
+  fusionDeckView?: "player" | "opponent" | null;
+  fusionDeckOwnerName?: string;
+  fusionDeckCards?: ICard[];
   destroyedView?: "player" | "opponent" | null;
   destroyedOwnerName?: string;
   destroyedCards?: ICard[];
@@ -40,6 +43,7 @@ interface BoardStatusOverlaysProps {
   onConfirmEntityReplacement: () => void;
   onCancelEntityReplacement: () => void;
   onCloseGraveyard: () => void;
+  onCloseFusionDeck?: () => void;
   onCloseDestroyed?: () => void;
   onPreviewCard: (card: ICard) => void;
   pendingAdvanceWarning: "MAIN_SKIP_ACTIONS" | "BATTLE_SKIP_ATTACKS" | null;
@@ -72,6 +76,9 @@ export function BoardStatusOverlays({
   graveyardOwnerName,
   graveyardCards,
   graveyardSelectableCardRefs = [],
+  fusionDeckView = null,
+  fusionDeckOwnerName = "",
+  fusionDeckCards = [],
   destroyedView = null,
   destroyedOwnerName = "",
   destroyedCards = [],
@@ -79,6 +86,7 @@ export function BoardStatusOverlays({
   onConfirmEntityReplacement,
   onCancelEntityReplacement,
   onCloseGraveyard,
+  onCloseFusionDeck = () => undefined,
   onCloseDestroyed = () => undefined,
   onPreviewCard,
   pendingAdvanceWarning,
@@ -96,9 +104,9 @@ export function BoardStatusOverlays({
       <BoardErrorOverlay error={lastError} onClose={onCloseError} />
 
       {pendingActionHint && (
-        <div className="absolute top-28 left-1/2 -translate-x-1/2 z-130 w-[92%] max-w-3xl bg-amber-950/85 border border-amber-400/50 text-amber-100 px-5 py-3 rounded-xl shadow-[0_0_35px_rgba(251,191,36,0.25)]">
-          <p className="text-xs font-black tracking-wider uppercase text-amber-300">Acción obligatoria</p>
-          <p className="text-sm font-semibold">{pendingActionHint}</p>
+        <div className="absolute left-1/2 top-1/2 z-[155] w-[94%] max-w-4xl -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-amber-300/60 bg-amber-950/90 px-6 py-5 text-amber-100 shadow-[0_0_45px_rgba(251,191,36,0.3)] pointer-events-none">
+          <p className="text-sm font-black tracking-[0.16em] uppercase text-amber-300">Acción obligatoria</p>
+          <p className="mt-1 text-lg font-black leading-tight sm:text-2xl">{pendingActionHint}</p>
         </div>
       )}
       {pendingEntityReplacement && pendingEntityReplacementTargetCard && (
@@ -146,10 +154,14 @@ export function BoardStatusOverlays({
         graveyardOwnerName={graveyardOwnerName}
         graveyardCards={graveyardCards}
         graveyardSelectableCardRefs={graveyardSelectableCardRefs}
+        fusionDeckView={fusionDeckView}
+        fusionDeckOwnerName={fusionDeckOwnerName}
+        fusionDeckCards={fusionDeckCards}
         destroyedView={destroyedView}
         destroyedOwnerName={destroyedOwnerName}
         destroyedCards={destroyedCards}
         onCloseGraveyard={onCloseGraveyard}
+        onCloseFusionDeck={onCloseFusionDeck}
         onCloseDestroyed={onCloseDestroyed}
         onPreviewCard={onPreviewCard}
       />

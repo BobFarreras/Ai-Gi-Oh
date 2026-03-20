@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { IBattleBannerMessage, resolveLatestBannerMessage } from "./internal/banner/banner-message-policy";
-import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 
 interface BattleBannerCenterProps {
   events: ICombatLogEvent[];
@@ -26,7 +25,6 @@ export function BattleBannerCenter({
   externalBannerSignal = null,
 }: BattleBannerCenterProps) {
   const [activeMessage, setActiveMessage] = useState<IBattleBannerMessage | null>(null);
-  const { isMobileViewport, shouldReduceCombatEffects } = useBoardPerformanceProfile();
   const processedCountRef = useRef(0);
   const processedExternalIdRef = useRef<string | null>(null);
   const labels = useMemo(() => ({ playerAId, playerAName, playerBId, playerBName }), [playerAId, playerAName, playerBId, playerBName]);
@@ -55,76 +53,35 @@ export function BattleBannerCenter({
     return null;
   }
 
-  if (shouldReduceCombatEffects) {
-    return (
-      <div className="absolute top-[42%] left-1/2 z-[145] -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-        <div className="flex items-center gap-2 rounded-xl border border-cyan-300/55 bg-black/70 px-4 py-2">
-          <p className={`text-sm font-black uppercase tracking-wide ${isAutoModeMessage ? "text-violet-100" : "text-cyan-100"}`}>{activeMessage.left}</p>
-          <span className="text-cyan-300/60">|</span>
-          <p className={`text-sm font-black uppercase tracking-wide ${isAutoModeMessage ? "text-violet-100" : "text-red-100"}`}>{activeMessage.right}</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="absolute top-[42%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[145] pointer-events-none">
       <AnimatePresence mode="wait">
-        {isMobileViewport ? (
+        <motion.div
+          key={activeMessage.id}
+          initial={{ opacity: 0, scale: 0.7 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 1.12 }}
+          className="flex items-center gap-3"
+        >
           <motion.div
-            key={activeMessage.id}
-            initial={{ opacity: 0, scale: 0.88 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.06 }}
-            className="flex flex-col items-center gap-1.5"
+            initial={{ x: -120, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -80, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 220, damping: 20 }}
+            className={`px-8 py-5 rounded-l-2xl border ${isAutoModeMessage ? "border-violet-300/70 bg-violet-500/18 shadow-[0_0_45px_rgba(167,139,250,0.55)]" : "border-cyan-300/60 bg-cyan-500/15 shadow-[0_0_45px_rgba(6,182,212,0.45)]"}`}
           >
-            <motion.div
-              initial={{ x: -120, y: -16, opacity: 0 }}
-              animate={{ x: 0, y: 0, opacity: 1 }}
-              exit={{ x: -90, y: -14, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 220, damping: 20 }}
-              className={`border px-5 py-3 ${isAutoModeMessage ? "border-violet-300/70 bg-violet-500/18 shadow-[0_0_36px_rgba(167,139,250,0.55)]" : "border-cyan-300/60 bg-cyan-500/15 shadow-[0_0_36px_rgba(6,182,212,0.45)]"} [clip-path:polygon(0_0,100%_0,94%_100%,6%_100%)]`}
-            >
-              <p className={`text-lg font-black uppercase tracking-wider ${isAutoModeMessage ? "text-violet-100" : "text-cyan-100"}`}>{activeMessage.left}</p>
-            </motion.div>
-            <motion.div
-              initial={{ x: 120, y: 16, opacity: 0 }}
-              animate={{ x: 0, y: 0, opacity: 1 }}
-              exit={{ x: 90, y: 14, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 220, damping: 20, delay: 0.07 }}
-              className={`border px-5 py-3 ${isAutoModeMessage ? "border-violet-300/70 bg-violet-500/18 shadow-[0_0_36px_rgba(167,139,250,0.55)]" : "border-red-300/60 bg-red-500/15 shadow-[0_0_36px_rgba(239,68,68,0.45)]"} [clip-path:polygon(6%_0,94%_0,100%_100%,0_100%)]`}
-            >
-              <p className={`text-lg font-black uppercase tracking-wider ${isAutoModeMessage ? "text-violet-100" : "text-red-100"}`}>{activeMessage.right}</p>
-            </motion.div>
+            <p className={`text-2xl font-black uppercase tracking-wider ${isAutoModeMessage ? "text-violet-100" : "text-cyan-100"}`}>{activeMessage.left}</p>
           </motion.div>
-        ) : (
           <motion.div
-            key={activeMessage.id}
-            initial={{ opacity: 0, scale: 0.7 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.12 }}
-            className="flex items-center gap-3"
+            initial={{ x: 120, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 80, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 220, damping: 20, delay: 0.07 }}
+            className={`px-8 py-5 rounded-r-2xl border ${isAutoModeMessage ? "border-violet-300/70 bg-violet-500/18 shadow-[0_0_45px_rgba(167,139,250,0.55)]" : "border-red-300/60 bg-red-500/15 shadow-[0_0_45px_rgba(239,68,68,0.45)]"}`}
           >
-            <motion.div
-              initial={{ x: -120, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -80, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 220, damping: 20 }}
-              className={`px-8 py-5 rounded-l-2xl border ${isAutoModeMessage ? "border-violet-300/70 bg-violet-500/18 shadow-[0_0_45px_rgba(167,139,250,0.55)]" : "border-cyan-300/60 bg-cyan-500/15 shadow-[0_0_45px_rgba(6,182,212,0.45)]"}`}
-            >
-              <p className={`text-2xl font-black uppercase tracking-wider ${isAutoModeMessage ? "text-violet-100" : "text-cyan-100"}`}>{activeMessage.left}</p>
-            </motion.div>
-            <motion.div
-              initial={{ x: 120, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 80, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 220, damping: 20, delay: 0.07 }}
-              className={`px-8 py-5 rounded-r-2xl border ${isAutoModeMessage ? "border-violet-300/70 bg-violet-500/18 shadow-[0_0_45px_rgba(167,139,250,0.55)]" : "border-red-300/60 bg-red-500/15 shadow-[0_0_45px_rgba(239,68,68,0.45)]"}`}
-            >
-              <p className={`text-2xl font-black uppercase tracking-wider ${isAutoModeMessage ? "text-violet-100" : "text-red-100"}`}>{activeMessage.right}</p>
-            </motion.div>
+            <p className={`text-2xl font-black uppercase tracking-wider ${isAutoModeMessage ? "text-violet-100" : "text-red-100"}`}>{activeMessage.right}</p>
           </motion.div>
-        )}
+        </motion.div>
       </AnimatePresence>
     </div>
   );

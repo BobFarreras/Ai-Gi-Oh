@@ -20,9 +20,12 @@ export function GraveyardPile({ isOpponentSide, topGraveCard, graveyardCount, on
       type="button"
       data-tutorial-id={isOpponentSide ? undefined : "tutorial-board-graveyard-player"}
       aria-label={`Abrir cementerio ${isOpponentSide ? "rival" : "jugador"}`}
-      onClick={() => onClick(isOpponentSide ? "opponent" : "player")}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick(isOpponentSide ? "opponent" : "player");
+      }}
       className={cn(
-        "relative w-24 h-36 border-2 border-dashed rounded-lg flex flex-col items-center justify-center shadow-[inset_0_0_20px_rgba(6,182,212,0.2)] overflow-hidden transition-colors hover:border-cyan-300/70",
+        "relative z-20 pointer-events-auto w-24 h-36 border-2 border-dashed rounded-lg flex flex-col items-center justify-center shadow-[inset_0_0_20px_rgba(6,182,212,0.2)] overflow-hidden transition-colors hover:border-cyan-300/70",
         accentClass,
       )}
     >
@@ -60,9 +63,40 @@ export function DeckPile({ deckCount }: { deckCount: number }) {
   );
 }
 
-export function FusionDeckPile({ fusionDeckCount }: { fusionDeckCount: number }) {
+interface FusionDeckPileProps {
+  fusionDeckCount: number;
+  isOpponentSide: boolean;
+  onClick: (side: "player" | "opponent") => void;
+}
+
+export function FusionDeckPile({ fusionDeckCount, isOpponentSide, onClick }: FusionDeckPileProps) {
+  if (isOpponentSide) {
+    return (
+      <div className="relative z-10 w-24 h-36 border-2 border-fuchsia-500/25 rounded-lg shadow-[0_0_24px_rgba(192,132,252,0.16)] flex flex-col items-center justify-center bg-fuchsia-950/15 overflow-hidden">
+        {fusionDeckCount > 0 && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="scale-[0.25] origin-center opacity-60">
+              <CardBack />
+            </div>
+          </div>
+        )}
+        <span className="relative z-10 bg-black/85 px-2.5 py-1 rounded-md text-fuchsia-300/80 font-mono text-xs border border-fuchsia-900/70">
+          FUS {fusionDeckCount}
+        </span>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative w-24 h-36 border-2 border-fuchsia-500/40 rounded-lg shadow-[0_0_28px_rgba(192,132,252,0.26)] flex flex-col items-center justify-center bg-fuchsia-950/20 overflow-hidden">
+    <button
+      type="button"
+      aria-label="Abrir deck de fusión jugador"
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick("player");
+      }}
+      className="relative z-20 pointer-events-auto w-24 h-36 border-2 border-fuchsia-500/40 rounded-lg shadow-[0_0_28px_rgba(192,132,252,0.26)] flex flex-col items-center justify-center bg-fuchsia-950/20 overflow-hidden transition-colors hover:border-fuchsia-300/70"
+    >
       {fusionDeckCount > 0 && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="scale-[0.25] origin-center opacity-80">
@@ -73,7 +107,7 @@ export function FusionDeckPile({ fusionDeckCount }: { fusionDeckCount: number })
       <span className="relative z-10 bg-black/90 px-2.5 py-1 rounded-md text-fuchsia-300 font-mono text-xs border border-fuchsia-900/80">
         FUS {fusionDeckCount}
       </span>
-    </div>
+    </button>
   );
 }
 
@@ -89,8 +123,11 @@ export function DestroyedPile({ isOpponentSide, destroyedCount, onClick }: Destr
     <button
       type="button"
       aria-label={`Abrir zona destruida ${isOpponentSide ? "rival" : "jugador"}`}
-      onClick={() => onClick(side)}
-      className="relative w-24 h-36 border-2 border-amber-500/40 rounded-lg shadow-[0_0_28px_rgba(245,158,11,0.24)] flex flex-col items-center justify-center bg-amber-950/20 overflow-hidden transition-colors hover:border-amber-300/70"
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick(side);
+      }}
+      className="relative z-20 pointer-events-auto w-24 h-36 border-2 border-amber-500/40 rounded-lg shadow-[0_0_28px_rgba(245,158,11,0.24)] flex flex-col items-center justify-center bg-amber-950/20 overflow-hidden transition-colors hover:border-amber-300/70"
     >
       <span className="relative z-10 bg-black/90 px-2 py-1 rounded-md text-amber-300 font-mono text-[11px] border border-amber-900/80">
         DEST {destroyedCount}

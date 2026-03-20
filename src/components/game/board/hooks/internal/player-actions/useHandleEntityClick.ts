@@ -53,6 +53,7 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
       if (!isOpponent) {
         const result = await handleOwnEntityClick({
           entity,
+          event,
           activeAttackerId: params.activeAttackerId,
           applyTransition: params.applyTransition,
           clearSelection: params.clearSelection,

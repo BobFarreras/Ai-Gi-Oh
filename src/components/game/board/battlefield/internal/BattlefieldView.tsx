@@ -10,14 +10,13 @@ export function BattlefieldView(props: BattlefieldViewProps) {
   return (
     <div data-tutorial-id="tutorial-board-battlefield" className="absolute inset-0 pointer-events-auto" onWheel={props.onWheel}>
       <motion.div
-        drag={!props.isMobileLayout}
-        dragConstraints={{ left: -300, right: 300, top: -200, bottom: 200 }}
-        dragElastic={props.isMobileLayout ? 0 : 0.05}
+        drag={false}
+        dragElastic={0}
         animate={{ scale: props.zoom * props.effectiveBoardScale, y: props.isMobileLayout ? props.mobileBoardOffsetY : 0 }}
         transition={props.isMobileLayout ? { type: "tween", duration: 0.16 } : { type: "spring", stiffness: 400, damping: 40 }}
         className={cn(
           "w-full h-full flex items-center justify-center perspective-[1200px]",
-          props.isMobileLayout ? "cursor-default touch-pan-y" : "cursor-grab active:cursor-grabbing -translate-y-18 md:-translate-y-20 lg:-translate-y-22",
+          props.isMobileLayout ? "cursor-default touch-pan-y" : "cursor-default -translate-y-18 md:-translate-y-20 lg:-translate-y-22",
         )}
       >
         <div
@@ -56,6 +55,7 @@ export function BattlefieldView(props: BattlefieldViewProps) {
             canActivateSelectedExecution={false}
             onActivateSelectedExecution={props.onActivateSelectedExecution}
             onGraveyardClick={props.onGraveyardClick}
+            onFusionDeckClick={props.onFusionDeckClick}
             onDestroyedClick={props.onDestroyedClick}
             onEntityClick={props.onEntityClick}
           />
@@ -88,6 +88,7 @@ export function BattlefieldView(props: BattlefieldViewProps) {
             canActivateSelectedExecution={props.canActivateSelectedExecution}
             onActivateSelectedExecution={props.onActivateSelectedExecution}
             onGraveyardClick={props.onGraveyardClick}
+            onFusionDeckClick={props.onFusionDeckClick}
             onDestroyedClick={props.onDestroyedClick}
             onEntityClick={props.onEntityClick}
           />

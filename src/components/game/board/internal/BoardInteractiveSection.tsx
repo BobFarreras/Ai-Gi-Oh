@@ -47,6 +47,7 @@ export function BoardInteractiveSection({ board, screen, isMobile, suppressComba
       lastCardXpEventId={suppressCombatFeedback ? null : board.lastCardXpEventId}
       lastCardXpActorPlayerId={suppressCombatFeedback ? null : board.lastCardXpActorPlayerId}
       onGraveyardClick={screen.setGraveyardView}
+      onFusionDeckClick={screen.setFusionDeckView}
       onEntityClick={board.handleEntityClick}
       onMandatoryCardSelect={board.resolvePendingHandDiscard}
       onDestroyedClick={screen.setDestroyedView}

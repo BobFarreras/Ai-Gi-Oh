@@ -62,6 +62,9 @@ export function BoardStatusAndTopBarSection({
         graveyardOwnerName={screen.visibleGraveyardOwner}
         graveyardCards={screen.visibleGraveyardCards}
         graveyardSelectableCardRefs={screen.effectiveGraveyardView === "player" ? screen.pendingGraveyardSelectionRefs : []}
+        fusionDeckView={screen.fusionDeckView}
+        fusionDeckOwnerName={screen.visibleFusionDeckOwner}
+        fusionDeckCards={screen.visibleFusionDeckCards}
         destroyedView={screen.destroyedView}
         destroyedOwnerName={screen.visibleDestroyedOwner}
         destroyedCards={screen.visibleDestroyedCards}
@@ -78,6 +81,7 @@ export function BoardStatusAndTopBarSection({
           board.cancelEntityReplacement();
         }}
         onCloseGraveyard={() => screen.setGraveyardView(null)}
+        onCloseFusionDeck={() => screen.setFusionDeckView(null)}
         onCloseDestroyed={() => screen.setDestroyedView(null)}
         onPreviewCard={screen.onOverlayCardSelect}
         pendingAdvanceWarning={board.pendingAdvanceWarning}
