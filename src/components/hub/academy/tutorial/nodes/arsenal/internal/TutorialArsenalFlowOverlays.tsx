@@ -8,6 +8,7 @@ import { TutorialInteractionGuard } from "@/components/tutorial/flow/TutorialInt
 import { TutorialSpotlightOverlay } from "@/components/tutorial/flow/TutorialSpotlightOverlay";
 import { useTutorialFlowController } from "@/components/tutorial/flow/useTutorialFlowController";
 import { HubModuleSfxId } from "@/components/hub/internal/use-hub-module-sfx";
+import { ACADEMY_TUTORIAL_MAP_ROUTE, ACADEMY_TUTORIAL_MARKET_ROUTE } from "@/core/constants/routes/academy-routes";
 
 interface ITutorialArsenalFlowOverlaysProps {
   isIntroVisible: boolean;
@@ -74,11 +75,11 @@ export function TutorialArsenalFlowOverlays(props: ITutorialArsenalFlowOverlaysP
         description="Ya dominas fundamentos de Arsenal. Elige continuar con el siguiente tutorial o volver al mapa."
         onContinue={() => {
           props.playSfx("EVOLUTION_BUTTON");
-          window.location.assign("/hub/academy/tutorial/market");
+          window.location.assign(ACADEMY_TUTORIAL_MARKET_ROUTE);
         }}
         onExit={() => {
           props.playSfx("DIALOG_CLOSE");
-          window.location.assign("/hub/academy/tutorial");
+          window.location.assign(ACADEMY_TUTORIAL_MAP_ROUTE);
         }}
       />
     </>

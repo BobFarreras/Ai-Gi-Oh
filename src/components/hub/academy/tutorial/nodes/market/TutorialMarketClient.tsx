@@ -11,6 +11,7 @@ import { useTutorialFlowController } from "@/components/tutorial/flow/useTutoria
 import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
 import { isMobileLayoutViewport } from "@/components/internal/layout-breakpoints";
+import { ACADEMY_TRAINING_TUTORIAL_ROUTE, ACADEMY_TUTORIAL_MAP_ROUTE } from "@/core/constants/routes/academy-routes";
 import { resolveStepIdMembership } from "@/components/hub/academy/tutorial/nodes/internal/resolve-step-id-membership";
 import { useTutorialNodeCompletionSync } from "@/components/hub/academy/tutorial/nodes/internal/use-tutorial-node-completion-sync";
 import { MARKET_FILTER_GUIDE_STEPS, MARKET_NEXT_BUTTON_HIGHLIGHT_STEPS, MARKET_PINNED_TOP_STEPS } from "@/components/hub/academy/tutorial/nodes/market/internal/market-tutorial-step-groups";
@@ -105,8 +106,8 @@ export function TutorialMarketClient() {
         isVisible={!isIntroVisible && tutorial.isFinished}
         title="Market Completado"
         description="Has dominado compras directas, packs aleatorios y auditoría del historial."
-        onContinue={() => window.location.assign("/hub/academy/training/tutorial")}
-        onExit={() => window.location.assign("/hub/academy/tutorial")}
+        onContinue={() => window.location.assign(ACADEMY_TRAINING_TUTORIAL_ROUTE)}
+        onExit={() => window.location.assign(ACADEMY_TUTORIAL_MAP_ROUTE)}
       />
     </>
   );

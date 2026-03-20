@@ -15,6 +15,7 @@ import { TutorialArsenalFlowOverlays } from "@/components/hub/academy/tutorial/n
 import { resolveTutorialMobileSection } from "@/components/hub/academy/tutorial/nodes/arsenal/internal/resolve-tutorial-mobile-section";
 import { ARSENAL_ACTION_LAYOUT_STEPS, ARSENAL_FUSION_LAYOUT_STEPS } from "@/components/hub/academy/tutorial/nodes/arsenal/internal/arsenal-tutorial-step-groups";
 import { resolveStepIdMembership } from "@/components/hub/academy/tutorial/nodes/internal/resolve-step-id-membership";
+import { ACADEMY_TUTORIAL_MAP_ROUTE } from "@/core/constants/routes/academy-routes";
 import { resolveArsenalTutorialSteps } from "@/services/tutorial/arsenal/resolve-arsenal-tutorial-steps";
 
 export function TutorialArsenalClient(props: IHomeDeckBuilderSceneProps) {
@@ -68,7 +69,7 @@ export function TutorialArsenalClient(props: IHomeDeckBuilderSceneProps) {
             canEvolve={sandbox.state.canEvolveSelectedCard}
             evolveCost={sandbox.state.copiesRequiredToEvolve}
             onEvolve={sandbox.evolveSelectedCard}
-            onBackToHub={() => window.location.assign("/hub/academy/tutorial")}
+            onBackToHub={() => window.location.assign(ACADEMY_TUTORIAL_MAP_ROUTE)}
           />
           <HomeResponsiveWorkspace
             deck={sandbox.state.deck}

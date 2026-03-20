@@ -1,5 +1,6 @@
 // src/components/hub/academy/training/TrainingModeSelection.tsx - Renderiza la portada de Academia con acceso a Tutorial guiado y Arena de entrenamiento.
 import Link from "next/link";
+import { ACADEMY_TRAINING_ARENA_ROUTE, ACADEMY_TUTORIAL_MAP_ROUTE } from "@/core/constants/routes/academy-routes";
 
 interface ITrainingModeCard {
   title: string;
@@ -13,14 +14,14 @@ const TRAINING_MODE_CARDS: ITrainingModeCard[] = [
   {
     title: "Mapa de Tutorial",
     description: "Aprende Arsenal, Combate y Market con nodos guiados por BigLog y avance por objetivos.",
-    href: "/hub/academy/tutorial",
+    href: ACADEMY_TUTORIAL_MAP_ROUTE,
     actionLabel: "Abrir Mapa Tutorial",
     toneClassName: "border-cyan-400/40 bg-cyan-500/10",
   },
   {
     title: "Modo Entrenamiento",
     description: "Completa combates por tier para ganar Nexus, experiencia y desbloquear nuevas dificultades.",
-    href: "/hub/academy/training/arena",
+    href: ACADEMY_TRAINING_ARENA_ROUTE,
     actionLabel: "Ir a Entrenamiento",
     toneClassName: "border-emerald-400/40 bg-emerald-500/10",
   },

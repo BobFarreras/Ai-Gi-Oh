@@ -2,6 +2,7 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { ACADEMY_TUTORIAL_MAP_ROUTE } from "@/core/constants/routes/academy-routes";
 import { postTutorialRewardClaim } from "@/services/tutorial/tutorial-node-progress-client";
 import { TutorialNodeState } from "@/core/entities/tutorial/ITutorialMapNode";
 
@@ -47,7 +48,7 @@ export function TutorialRewardClient({ rewardNodeState }: ITutorialRewardClientP
         >
           {isLoading ? "Reclamando..." : "Reclamar recompensa"}
         </button>
-        <Link href="/hub/academy/tutorial" className="rounded-md border border-slate-600 px-3 py-2 text-xs font-black uppercase text-slate-200">
+        <Link href={ACADEMY_TUTORIAL_MAP_ROUTE} className="rounded-md border border-slate-600 px-3 py-2 text-xs font-black uppercase text-slate-200">
           Volver al mapa
         </Link>
       </div>

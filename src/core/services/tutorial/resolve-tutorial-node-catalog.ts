@@ -1,5 +1,6 @@
 // src/core/services/tutorial/resolve-tutorial-node-catalog.ts - Catálogo base de nodos del nuevo tutorial narrativo y progresivo.
 import { ITutorialMapNodeDefinition } from "@/core/entities/tutorial/ITutorialMapNode";
+import { ACADEMY_TRAINING_TUTORIAL_ROUTE, ACADEMY_TUTORIAL_ARSENAL_ROUTE, ACADEMY_TUTORIAL_MARKET_ROUTE, ACADEMY_TUTORIAL_REWARD_ROUTE } from "@/core/constants/routes/academy-routes";
 
 const DEFAULT_TUTORIAL_NODE_CATALOG: ITutorialMapNodeDefinition[] = [
   {
@@ -8,7 +9,7 @@ const DEFAULT_TUTORIAL_NODE_CATALOG: ITutorialMapNodeDefinition[] = [
     title: "Preparar Deck",
     description: "Aprende a añadir cartas, abrir detalle y gestionar evolución en una simulación guiada.",
     kind: "ARSENAL",
-    href: "/hub/academy/tutorial/arsenal",
+    href: ACADEMY_TUTORIAL_ARSENAL_ROUTE,
   },
   {
     id: "tutorial-market-basics",
@@ -16,7 +17,7 @@ const DEFAULT_TUTORIAL_NODE_CATALOG: ITutorialMapNodeDefinition[] = [
     title: "Market",
     description: "Revisa filtros, compra de cartas/sobres y lectura de historial de transacciones.",
     kind: "MARKET",
-    href: "/hub/academy/tutorial/market",
+    href: ACADEMY_TUTORIAL_MARKET_ROUTE,
   },
   {
     id: "tutorial-combat-basics",
@@ -24,7 +25,7 @@ const DEFAULT_TUTORIAL_NODE_CATALOG: ITutorialMapNodeDefinition[] = [
     title: "Combate Base",
     description: "Domina turnos, ataque/defensa, mágicas y el flujo central del duelo.",
     kind: "COMBAT",
-    href: "/hub/academy/training/tutorial",
+    href: ACADEMY_TRAINING_TUTORIAL_ROUTE,
   },
   {
     id: "tutorial-final-reward",
@@ -32,7 +33,7 @@ const DEFAULT_TUTORIAL_NODE_CATALOG: ITutorialMapNodeDefinition[] = [
     title: "Recompensa Final",
     description: "Completa todos los nodos para reclamar tu recompensa de onboarding.",
     kind: "REWARD",
-    href: "/hub/academy/tutorial/reward",
+    href: ACADEMY_TUTORIAL_REWARD_ROUTE,
   },
 ];
 

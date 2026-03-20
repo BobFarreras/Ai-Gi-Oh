@@ -7,6 +7,7 @@ import { TutorialBigLogOutroOverlay } from "@/components/tutorial/flow/TutorialB
 import { ICard } from "@/core/entities/ICard";
 import { EXECUTION_CARDS } from "@/core/data/mock-cards/executions";
 import { ENTITY_CARDS } from "@/core/data/mock-cards/entities";
+import { ACADEMY_HOME_ROUTE, ACADEMY_TUTORIAL_MAP_ROUTE } from "@/core/constants/routes/academy-routes";
 import { postTutorialCombatRewardClaim, postTutorialNodeCompletion } from "@/services/tutorial/tutorial-node-progress-client";
 import { TrainingCoinTossOverlay } from "./TrainingCoinTossOverlay";
 import { createTutorialOpponentStrategy } from "@/components/hub/academy/training/modes/tutorial/internal/create-tutorial-opponent-strategy";
@@ -84,8 +85,8 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
         opponentStrategyOverride={tutorialOpponentStrategy}
         duelResultRewardSummary={tutorialRewardSummary}
         resultActionLabel="Volver a selección"
-        onResultAction={() => window.location.replace("/hub/academy")}
-        onExitMatch={() => window.location.replace("/hub/academy")}
+        onResultAction={() => window.location.replace(ACADEMY_HOME_ROUTE)}
+        onExitMatch={() => window.location.replace(ACADEMY_HOME_ROUTE)}
         onMatchResolved={handleMatchResolved}
         onTutorialFlowFinished={() => setIsCombatTutorialFlowFinished(true)}
       />
@@ -115,7 +116,7 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
               setIsClaimingReward(false);
             }
           }}
-          onClose={() => window.location.assign("/hub/academy/tutorial")}
+          onClose={() => window.location.assign(ACADEMY_TUTORIAL_MAP_ROUTE)}
         />
       ) : null}
       <TrainingCoinTossOverlay

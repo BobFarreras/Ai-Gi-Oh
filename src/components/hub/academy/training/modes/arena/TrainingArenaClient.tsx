@@ -6,6 +6,7 @@ import { Board } from "@/components/game/board";
 import { ICard } from "@/core/entities/ICard";
 import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result/duel-result-reward-summary";
 import { IMatchOutcome } from "@/core/entities/match/IMatchOutcome";
+import { ACADEMY_HOME_ROUTE, ACADEMY_TRAINING_ARENA_ROUTE } from "@/core/constants/routes/academy-routes";
 import { postTrainingMatchCompletion } from "./training-match-completion-client";
 
 interface ITrainingArenaClientProps {
@@ -60,7 +61,7 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
           tier.isUnlocked ? (
             <Link
               key={tier.tier}
-              href={`/hub/academy/training/arena?tier=${tier.tier}`}
+              href={`${ACADEMY_TRAINING_ARENA_ROUTE}?tier=${tier.tier}`}
               className={`pointer-events-auto rounded-md border px-2 py-1 text-[11px] font-black uppercase ${props.selectedTier === tier.tier ? "border-cyan-200 bg-cyan-500/25 text-cyan-100" : "border-cyan-300/45 bg-slate-900/70 text-cyan-200"}`}
             >
               Tier {tier.tier}
@@ -80,8 +81,8 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
         initialConfig={{ playerFusionDeck: props.fusionDeck }}
         duelResultRewardSummary={rewardSummary}
         resultActionLabel="Volver a selección"
-        onResultAction={() => window.location.replace("/hub/academy")}
-        onExitMatch={() => window.location.replace("/hub/academy")}
+        onResultAction={() => window.location.replace(ACADEMY_HOME_ROUTE)}
+        onExitMatch={() => window.location.replace(ACADEMY_HOME_ROUTE)}
         onMatchResolved={handleMatchResolved}
       />
     </div>

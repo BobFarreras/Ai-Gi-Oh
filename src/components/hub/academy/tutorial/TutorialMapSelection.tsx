@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ITutorialMapNodeRuntime } from "@/core/entities/tutorial/ITutorialMapNode";
+import { ACADEMY_HOME_ROUTE } from "@/core/constants/routes/academy-routes";
 
 interface ITutorialMapSelectionProps {
   nodes: ITutorialMapNodeRuntime[];
@@ -45,7 +46,7 @@ export function TutorialMapSelection({ nodes }: ITutorialMapSelectionProps) {
         ))}
       </ol>
       <Link
-        href="/hub/academy"
+        href={ACADEMY_HOME_ROUTE}
         aria-label="Volver a Academia"
         className="mt-5 inline-block rounded-md border border-cyan-300/35 px-4 py-2 text-xs font-black uppercase tracking-wide text-cyan-200 hover:bg-cyan-300/10"
       >
