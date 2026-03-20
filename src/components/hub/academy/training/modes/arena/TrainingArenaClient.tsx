@@ -1,17 +1,26 @@
 // src/components/hub/academy/training/modes/arena/TrainingArenaClient.tsx - Orquesta UI de arena training con selección de tier y cierre de partida remoto.
 "use client";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Board } from "@/components/game/board";
 import { ICard } from "@/core/entities/ICard";
 import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result/duel-result-reward-summary";
 import { IMatchOutcome } from "@/core/entities/match/IMatchOutcome";
+import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
+import { OpponentDifficulty } from "@/core/services/opponent/difficulty/types";
 import { ACADEMY_HOME_ROUTE, ACADEMY_TRAINING_ARENA_ROUTE } from "@/core/constants/routes/academy-routes";
 import { postTrainingMatchCompletion } from "./training-match-completion-client";
+import { TrainingArenaLobby } from "@/components/hub/academy/training/modes/arena/internal/TrainingArenaLobby";
 
 interface ITrainingArenaClientProps {
   deck: ICard[];
   fusionDeck: ICard[];
+  opponentDeck: ICard[];
+  opponentFusionDeck: ICard[];
+  opponentName: string;
+  opponentAvatarUrl: string;
+  opponentIntroUrl: string;
+  opponentDifficulty: OpponentDifficulty;
   selectedTier: number;
   highestUnlockedTier: number;
   tiers: Array<{ tier: number; isUnlocked: boolean; missingWins: number }>;
@@ -24,9 +33,14 @@ function resolveOutcome(result: { winnerPlayerId: string | "DRAW"; playerId: str
 
 export function TrainingArenaClient(props: ITrainingArenaClientProps) {
   const [status, setStatus] = useState<string | null>(null);
+  const [isBattleStarted, setIsBattleStarted] = useState(false);
   const [rewardSummary, setRewardSummary] = useState<IDuelResultRewardSummary | null>(null);
   const [highestUnlockedTier, setHighestUnlockedTier] = useState(props.highestUnlockedTier);
   const hasPostedRef = useRef(false);
+  const opponentStrategy = useMemo(
+    () => new HeuristicOpponentStrategy({ difficulty: props.opponentDifficulty }),
+    [props.opponentDifficulty],
+  );
 
   /**
    * Sincroniza cierre de duelo una única vez para mantener idempotencia por `matchSeed`.
@@ -56,7 +70,16 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
 
   return (
     <div className="relative min-h-screen bg-zinc-950">
-      <div className="pointer-events-none absolute left-3 top-3 z-[320] flex flex-wrap gap-2">
+      {!isBattleStarted ? (
+        <TrainingArenaLobby
+          tier={props.selectedTier}
+          opponentName={props.opponentName}
+          playerIntroUrl="/assets/story/player/bob.png"
+          opponentIntroUrl={props.opponentIntroUrl}
+          onStart={() => setIsBattleStarted(true)}
+        />
+      ) : null}
+      <div className={`pointer-events-none absolute left-3 top-3 z-[320] flex flex-wrap gap-2 ${isBattleStarted ? "" : "opacity-0"}`}>
         {props.tiers.map((tier) =>
           tier.isUnlocked ? (
             <Link
@@ -73,18 +96,28 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
           ),
         )}
       </div>
-      {status ? <p className="absolute left-3 top-12 z-[320] rounded-md bg-cyan-950/80 px-3 py-2 text-xs font-bold text-cyan-100">{status}</p> : null}
-      <p className="absolute right-3 top-3 z-[320] rounded-md bg-slate-950/80 px-3 py-2 text-xs font-bold text-cyan-100">Máximo desbloqueado: T{highestUnlockedTier}</p>
-      <Board
-        mode="TRAINING"
-        initialPlayerDeck={props.deck}
-        initialConfig={{ playerFusionDeck: props.fusionDeck }}
-        duelResultRewardSummary={rewardSummary}
-        resultActionLabel="Volver a selección"
-        onResultAction={() => window.location.replace(ACADEMY_HOME_ROUTE)}
-        onExitMatch={() => window.location.replace(ACADEMY_HOME_ROUTE)}
-        onMatchResolved={handleMatchResolved}
-      />
+      {isBattleStarted && status ? <p className="absolute left-3 top-12 z-[320] rounded-md bg-cyan-950/80 px-3 py-2 text-xs font-bold text-cyan-100">{status}</p> : null}
+      {isBattleStarted ? <p className="absolute right-3 top-3 z-[320] rounded-md bg-slate-950/80 px-3 py-2 text-xs font-bold text-cyan-100">Máximo desbloqueado: T{highestUnlockedTier}</p> : null}
+      {isBattleStarted ? (
+        <Board
+          mode="TRAINING"
+          initialPlayerDeck={props.deck}
+          initialConfig={{
+            playerFusionDeck: props.fusionDeck,
+            opponentDeck: props.opponentDeck,
+            opponentFusionDeck: props.opponentFusionDeck,
+            opponentName: props.opponentName,
+          }}
+          playerAvatarUrl="/assets/story/player/bob.png"
+          opponentAvatarUrl={props.opponentAvatarUrl}
+          opponentStrategyOverride={opponentStrategy}
+          duelResultRewardSummary={rewardSummary}
+          resultActionLabel="Volver a selección"
+          onResultAction={() => window.location.replace(ACADEMY_HOME_ROUTE)}
+          onExitMatch={() => window.location.replace(ACADEMY_HOME_ROUTE)}
+          onMatchResolved={handleMatchResolved}
+        />
+      ) : null}
     </div>
   );
 }

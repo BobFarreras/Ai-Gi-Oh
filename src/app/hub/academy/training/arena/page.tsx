@@ -4,6 +4,7 @@ import { TrainingDeckReadyGate } from "@/components/hub/academy/training/Trainin
 import { TrainingArenaClient } from "@/components/hub/academy/training/modes/arena/TrainingArenaClient";
 import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
 import { getTrainingArenaRuntimeData } from "@/services/training/get-training-arena-runtime-data";
+import { resolveTrainingOpponentLoadout } from "@/services/training/resolve-training-opponent-loadout";
 
 interface TrainingArenaPageProps {
   searchParams?: Promise<{ tier?: string }>;
@@ -13,6 +14,12 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const selectedTier = Number.parseInt(resolvedSearchParams?.tier ?? "1", 10);
   const runtime = await getTrainingArenaRuntimeData(selectedTier);
+  const currentTier = runtime.tiers.find((tier) => tier.tier === runtime.effectiveTier) ?? runtime.tiers[0];
+  const opponentLoadout = resolveTrainingOpponentLoadout({
+    tier: currentTier?.tier ?? 1,
+    aiDifficulty: currentTier?.aiDifficulty ?? "EASY",
+    deckTemplateId: currentTier?.deckTemplateId ?? "training-tier-1",
+  });
   const loadout = runtime.loadout;
   const isDeckReady = Boolean(loadout.deck && loadout.deck.length === HOME_DECK_SIZE);
   if (!isDeckReady) {
@@ -29,6 +36,12 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
       <TrainingArenaClient
         deck={loadout.deck!}
         fusionDeck={loadout.fusionDeck ?? []}
+        opponentDeck={opponentLoadout.deck}
+        opponentFusionDeck={opponentLoadout.fusionDeck}
+        opponentName={opponentLoadout.displayName}
+        opponentAvatarUrl={opponentLoadout.avatarUrl}
+        opponentIntroUrl={opponentLoadout.introUrl}
+        opponentDifficulty={opponentLoadout.difficulty}
         selectedTier={runtime.effectiveTier}
         highestUnlockedTier={runtime.highestUnlockedTier}
         tiers={runtime.tiers.map((tier) => ({ tier: tier.tier, isUnlocked: tier.isUnlocked, missingWins: tier.missingWins }))}
