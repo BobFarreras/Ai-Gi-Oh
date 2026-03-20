@@ -43,10 +43,8 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
         opponentFusionDeck={opponentLoadout.fusionDeck}
         opponentName={opponentLoadout.displayName}
         opponentAvatarUrl={opponentLoadout.avatarUrl}
-        opponentDeckVariantLabel={opponentLoadout.deckVariantLabel}
         opponentDifficulty={opponentLoadout.difficulty}
         selectedTier={runtime.effectiveTier}
-        highestUnlockedTier={runtime.highestUnlockedTier}
         tiers={runtime.tiers.map((tier) => ({
           tier: tier.tier,
           code: tier.code,
