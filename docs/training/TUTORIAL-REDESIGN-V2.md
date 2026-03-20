@@ -14,10 +14,10 @@ Reemplazar el tutorial monolítico por un sistema de nodos guiados, con ritmo co
 
 ## Nodos del mapa
 
-1. `Preparar Deck` (`/hub/tutorial/arsenal`).
-2. `Market` (`/hub/tutorial/market`).
-3. `Combate Base` (`/hub/training/tutorial`).
-4. `Recompensa Final` (`/hub/tutorial/reward`).
+1. `Preparar Deck` (`/hub/academy/tutorial/arsenal`).
+2. `Market` (`/hub/academy/tutorial/market`).
+3. `Combate Base` (`/hub/academy/training/tutorial`).
+4. `Recompensa Final` (`/hub/academy/tutorial/reward`).
 
 ## Motor de pasos guiados (target)
 
@@ -40,7 +40,7 @@ La decisión final se parametrizará por configuración para balanceo sin tocar 
 
 ## Plan por fases
 
-1. Fase 1: Dominio de mapa tutorial + runtime + página `/hub/tutorial`.
+1. Fase 1: Dominio de mapa tutorial + runtime + página `/hub/academy/tutorial`.
 2. Fase 2: Motor genérico de spotlight/bloqueo y botón `Siguiente`.
 3. Fase 3: Nodo `Preparar Deck` con guía sobre la UI real de Arsenal.
 4. Fase 4: Nodo `Market` con flujo completo de filtros y compra.

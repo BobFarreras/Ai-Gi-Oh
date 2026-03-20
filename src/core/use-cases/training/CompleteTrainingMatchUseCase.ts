@@ -8,7 +8,7 @@ import { IWalletRepository } from "@/core/repositories/IWalletRepository";
 import { IPlayerProgressRepository } from "@/core/repositories/IPlayerProgressRepository";
 import { applyTrainingMatchResult } from "@/core/services/training/apply-training-match-result";
 import { createInitialTrainingProgress, resolveTrainingTierCatalog } from "@/core/services/training/resolve-training-tier-catalog";
-import { resolveMatchReward } from "@/core/services/match/rewards/match-reward-policy";
+import { resolveTrainingTierReward } from "@/core/services/training/resolve-training-tier-reward";
 import { GetOrCreatePlayerProgressUseCase } from "@/core/use-cases/player/GetOrCreatePlayerProgressUseCase";
 
 interface ICompleteTrainingMatchInput {
@@ -31,10 +31,6 @@ interface ICompleteTrainingMatchDependencies {
   trainingProgressRepository: ITrainingProgressRepository;
   walletRepository: IWalletRepository;
   playerProgressRepository: IPlayerProgressRepository;
-}
-
-function scaleReward(base: IMatchReward, multiplier: number): IMatchReward {
-  return { nexus: Math.floor(base.nexus * multiplier), playerExperience: Math.floor(base.playerExperience * multiplier) };
 }
 
 export class CompleteTrainingMatchUseCase {
@@ -63,7 +59,7 @@ export class CompleteTrainingMatchUseCase {
     });
     await this.dependencies.trainingProgressRepository.upsert(trainingResolution.nextProgress);
 
-    const reward = scaleReward(resolveMatchReward({ mode: "TRAINING", outcome: input.outcome }), tierConfig.rewardMultiplier);
+    const reward = resolveTrainingTierReward(input.outcome, tierConfig.rewardMultiplier);
     if (reward.nexus > 0) await this.dependencies.walletRepository.creditNexus(input.playerId, reward.nexus);
 
     const progressUseCase = new GetOrCreatePlayerProgressUseCase(this.dependencies.playerProgressRepository);

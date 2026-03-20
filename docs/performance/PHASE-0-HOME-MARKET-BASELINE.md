@@ -26,7 +26,7 @@ Medir una línea base reproducible antes de aplicar cambios de UI/flujo.
    - Scroll en listado.
    - Compra de carta suelta.
    - Compra de pack.
-3. Combat (`/hub/training` o Story):
+3. Combat (`/hub/academy/training/arena` o Story):
    - Selección de carta.
    - Activar ejecución.
    - Paso de fase.

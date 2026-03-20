@@ -5,9 +5,9 @@ import { ITrainingTierDefinition } from "@/core/entities/training/ITrainingTierD
 
 const DEFAULT_TRAINING_TIERS: ITrainingTierDefinition[] = [
   { tier: 1, code: "BOOT", requiredWinsInPreviousTier: 0, aiDifficulty: "EASY", deckTemplateId: "training-tier-1", rewardMultiplier: 1 },
-  { tier: 2, code: "SPARK", requiredWinsInPreviousTier: 2, aiDifficulty: "NORMAL", deckTemplateId: "training-tier-2", rewardMultiplier: 1.2 },
-  { tier: 3, code: "CORE", requiredWinsInPreviousTier: 3, aiDifficulty: "NORMAL", deckTemplateId: "training-tier-3", rewardMultiplier: 1.4 },
-  { tier: 4, code: "ASCENT", requiredWinsInPreviousTier: 4, aiDifficulty: "HARD", deckTemplateId: "training-tier-4", rewardMultiplier: 1.7 },
+  { tier: 2, code: "SPARK", requiredWinsInPreviousTier: 5, aiDifficulty: "NORMAL", deckTemplateId: "training-tier-2", rewardMultiplier: 1.2 },
+  { tier: 3, code: "CORE", requiredWinsInPreviousTier: 5, aiDifficulty: "NORMAL", deckTemplateId: "training-tier-3", rewardMultiplier: 1.4 },
+  { tier: 4, code: "ASCENT", requiredWinsInPreviousTier: 5, aiDifficulty: "HARD", deckTemplateId: "training-tier-4", rewardMultiplier: 1.7 },
   { tier: 5, code: "NEXUS", requiredWinsInPreviousTier: 5, aiDifficulty: "BOSS", deckTemplateId: "training-tier-5", rewardMultiplier: 2.1 },
 ];
 

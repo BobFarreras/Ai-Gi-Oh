@@ -9,15 +9,16 @@ export async function getTrainingArenaRuntimeData(selectedTier: number) {
   const [session, loadout] = await Promise.all([getCurrentUserSession(), getPlayerBoardLoadout()]);
   const catalog = resolveTrainingTierCatalog();
   if (!session?.user.id) {
+    const progress = createInitialTrainingProgress("local-player");
     const state = new GetTrainingArenaStateUseCase().execute({
-      progress: createInitialTrainingProgress("local-player"),
+      progress,
       selectedTier,
       catalog,
     });
-    return { loadout, ...state };
+    return { loadout, progress, ...state };
   }
   const trainingRepository = await createSupabaseTrainingProgressRepository();
   const progress = (await trainingRepository.getByPlayerId(session.user.id)) ?? createInitialTrainingProgress(session.user.id);
   const state = new GetTrainingArenaStateUseCase().execute({ progress, selectedTier, catalog });
-  return { loadout, ...state };
+  return { loadout, progress, ...state };
 }

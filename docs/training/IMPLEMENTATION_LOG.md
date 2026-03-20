@@ -1,6 +1,8 @@
 <!-- docs/training/IMPLEMENTATION_LOG.md - Bitácora de implementación por fases del módulo de entrenamiento. -->
 # Training Implementation Log
 
+> Estado canónico actual de rutas: `Tutorial` y `Training` viven exclusivamente bajo `/hub/academy/*`. Las referencias anteriores a `/hub/tutorial` o `/hub/training` se mantienen en este log solo como traza histórica de fases antiguas.
+
 ## Fase 1 - Dominio agnóstico y TDD
 
 1. Se creó el subdominio `core/services/training` con reglas puras:
@@ -122,6 +124,85 @@
 3. Se mejora el diálogo inferior de BigLog con avatar persistente y tipografía de lectura más grande.
 4. Se añade intro de BigLog al inicio de nodos tutorial (Arsenal, Market y Combate).
 5. Commit: pendiente en esta sesión.
+
+## Fase 14 - Limpieza de fronteras App Router + naming de Academia
+
+1. Se extrae el cliente HTTP de progreso/claim tutorial fuera de `app/` hacia `services/tutorial/tutorial-node-progress-client.ts`.
+2. Se elimina el módulo legacy `app/hub/tutorial/internal/tutorial-node-progress-client.ts` para respetar separación de capas.
+3. Se define `Academia` como página canónica para la entrada conjunta de Tutorial + Entrenamiento (`/hub/academy`).
+4. `/hub/training` pasa a ser alias legacy con redirección server-side a `/hub/academy`.
+5. Se actualizan retornos de flujo (Tutorial map y cierre de Arena/Combate) para volver a `Academia`.
+6. Commit: pendiente en esta sesión.
+
+## Fase 15 - Co-location de módulos Training/Tutorial bajo Academia
+
+1. Se reorganizan componentes de presentación en `src/components/hub/academy/{training,tutorial}`.
+2. Se actualizan imports desde páginas App Router para consumir el nuevo módulo `academy`.
+3. Se mantienen intactas las rutas funcionales (`/hub/tutorial`, `/hub/training`, `/hub/academy`) para no romper navegación.
+4. Se ajustan cabeceras de ruta y tests co-localizados tras el movimiento.
+5. Commit: pendiente en esta sesión.
+
+## Fase 16 - App Router como entrypoint puro para nodos tutorial
+
+1. Se movieron `TutorialArsenalClient`, `TutorialMarketClient`, `TutorialRewardClient` e internos a `src/components/hub/academy/tutorial/nodes/*`.
+2. `src/app/hub/tutorial/*/page.tsx` queda como capa de entrada server-side (sin lógica cliente acoplada).
+3. Se ajustaron imports de tests co-localizados para apuntar al nuevo módulo.
+4. Se actualizaron cabeceras de ruta y se añadieron comentarios de intención/JSDoc en hooks y runtime tutorial para facilitar mantenimiento junior.
+5. Commit: pendiente en esta sesión.
+
+## Fase 17 - Canonical routing: Tutorial y Training bajo Academia
+
+1. Se definieron rutas canónicas:
+   - `/hub/academy/tutorial/*`
+   - `/hub/academy/training/*`
+2. Las rutas legacy (`/hub/tutorial/*`, `/hub/training/*`) se mantienen con redirección para compatibilidad.
+3. Se movió el bloque App Router de entrenamiento (`arena` y `tutorial`) a `src/app/hub/academy/training/*`.
+4. Se actualizaron `href` internos, catálogo de nodos tutorial y sección TRAINING del hub para apuntar a rutas canónicas de Academia.
+5. Se mantuvieron quality gates en verde tras la migración.
+6. Commit: pendiente en esta sesión.
+
+## Fase 18 - App Router puro para Training + co-location de tutorial de combate
+
+1. Se movió la lógica cliente de `training/arena` y `training/tutorial` desde `app/` a `components/hub/academy/training/modes/*`.
+2. `src/app/hub/academy/training/*/page.tsx` quedó como entrypoint server-side sin orquestación cliente embebida.
+3. Se reubicaron mocks y estrategia del tutorial de combate en el módulo `components` con tests co-localizados.
+4. Se actualizaron imports, cabeceras de ruta y comentarios/JSDoc de intención en handlers críticos.
+5. Commit: pendiente en esta sesión.
+
+## Fase 19 - Eliminación de duplicidad de rutas legacy en `app/hub`
+
+1. Se eliminaron las carpetas `src/app/hub/tutorial/*` y `src/app/hub/training/*` para evitar duplicidad estructural con `academy`.
+2. Se retiró la capa de compatibilidad legacy y se eliminó también la redirección centralizada para evitar reglas de routing ocultas.
+3. La única jerarquía funcional para tutorial/training en App Router queda bajo `src/app/hub/academy/*` sin aliases legacy.
+4. Commit: pendiente en esta sesión.
+
+## Fase 20 - Arena progresiva con rival por tier y lobby VS
+
+1. Se implementó resolución de oponente por tier con mazo/fusión, identidad visual y dificultad base.
+2. Se añadió pantalla previa `VS` para iniciar combate desde Arena.
+3. Se conectó `HeuristicOpponentStrategy` con dificultad del tier efectivo.
+4. Se validó con tests de resolver de loadout por tier/template.
+5. Commit: `05dda82`.
+
+## Fase 21 - Rotación de rivales, arquetipos y balance de recompensas
+
+1. Se añadió rotación de rival por tier y dificultad adaptativa por `winrate` del jugador en ese tier.
+2. Se añadieron pools de mazos por arquetipo para evitar repetición de estilo de partida.
+3. Se unificó cálculo de recompensa de Training con `resolveTrainingTierReward` (backend + preview UI).
+4. Se añadió variante rival alterna en nivel inicial para evitar repeticiones consecutivas.
+5. Commits:
+   - `0af867c`
+   - `edb994a`
+   - `17865ad`
+
+## Fase 22 - Narración/audio por `opponentId` y retorno de resultado en Arena
+
+1. Se conectó Training al mismo sistema narrativo de Story (`buildStoryOpponentNarrationPack`) por `opponentId` canónico (`opp-ch1-*`).
+2. Se añadió `storyOpponentId` en presets/loadout de Training para resolver audios y diálogos correctos por carpeta.
+3. Se ajustó el CTA final de resultado para que `Volver a selección` retorne a `Arena` del nivel activo.
+4. Se aplicó regla de recompensa por derrota en Arena: 50% de Nexus/EXP respecto a victoria del mismo nivel.
+5. Tests ajustados y en verde para recompensa por nivel, loadout y acción final de resultado.
+6. Commit: pendiente en esta sesión (bloque listo para commit).
 
 ## Validación global aplicada por fase
 

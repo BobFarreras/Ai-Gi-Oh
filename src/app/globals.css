@@ -443,5 +443,8 @@ body {
   backdrop-filter: none !important;
   mix-blend-mode: normal !important;
 }
-
+@keyframes scan {
+  0% { background-position: 0 -100vh; }
+  100% { background-position: 0 100vh; }
+}
 
