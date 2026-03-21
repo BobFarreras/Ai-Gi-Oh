@@ -46,23 +46,23 @@ export function BoardMobileSelectedCardOverlay({
     <span className="rounded border border-red-400/70 bg-red-700/70 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow-[0_0_12px_rgba(248,113,113,0.6)]">Límite</span>
   ) : isEntity || isFusion ? (
     <>
-      <button aria-label="Invocar en ataque" onClick={(event) => onPlayAction("ATTACK", event)} className="flex items-center gap-1 rounded border border-red-300/80 bg-red-600/80 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_0_14px_rgba(239,68,68,0.7)]">
+      <button data-tutorial-id="tutorial-board-action-attack" aria-label="Invocar en ataque" onClick={(event) => onPlayAction("ATTACK", event)} className="flex items-center gap-1 rounded border border-red-300/80 bg-red-600/80 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_0_14px_rgba(239,68,68,0.7)]">
         <Sword size={12} /> Atq
       </button>
-      <button aria-label="Invocar en defensa" onClick={(event) => onPlayAction("DEFENSE", event)} className="flex items-center gap-1 rounded border border-sky-300/80 bg-sky-600/80 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_0_14px_rgba(56,189,248,0.7)]">
+      <button data-tutorial-id="tutorial-board-action-defense" aria-label="Invocar en defensa" onClick={(event) => onPlayAction("DEFENSE", event)} className="flex items-center gap-1 rounded border border-sky-300/80 bg-sky-600/80 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_0_14px_rgba(56,189,248,0.7)]">
         <Shield size={12} /> Def
       </button>
     </>
   ) : isTrap ? (
-    <button aria-label="Armar trampa" onClick={(event) => onPlayAction("SET", event)} className="flex items-center gap-1 rounded border border-fuchsia-300/80 bg-fuchsia-600/80 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_0_14px_rgba(217,70,239,0.7)]">
+    <button data-tutorial-id="tutorial-board-action-set-trap" aria-label="Armar trampa" onClick={(event) => onPlayAction("SET", event)} className="flex items-center gap-1 rounded border border-fuchsia-300/80 bg-fuchsia-600/80 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_0_14px_rgba(217,70,239,0.7)]">
       <Box size={12} /> Armar
     </button>
   ) : (
     <>
-      <button aria-label="Activar ejecución desde mano" onClick={(event) => onPlayAction("ACTIVATE", event)} className="flex items-center gap-1 rounded border border-cyan-300/80 bg-cyan-600/80 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_0_14px_rgba(34,211,238,0.7)]">
+      <button data-tutorial-id="tutorial-board-action-activate-execution" aria-label="Activar ejecución desde mano" onClick={(event) => onPlayAction("ACTIVATE", event)} className="flex items-center gap-1 rounded border border-cyan-300/80 bg-cyan-600/80 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_0_14px_rgba(34,211,238,0.7)]">
         <Zap size={12} /> Activar
       </button>
-      <button aria-label="Colocar ejecución en set" onClick={(event) => onPlayAction("SET", event)} className="flex items-center gap-1 rounded border border-violet-300/80 bg-violet-600/80 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_0_14px_rgba(139,92,246,0.7)]">
+      <button data-tutorial-id="tutorial-board-action-set-execution" aria-label="Colocar ejecución en set" onClick={(event) => onPlayAction("SET", event)} className="flex items-center gap-1 rounded border border-violet-300/80 bg-violet-600/80 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_0_14px_rgba(139,92,246,0.7)]">
         <Box size={12} /> Set
       </button>
     </>

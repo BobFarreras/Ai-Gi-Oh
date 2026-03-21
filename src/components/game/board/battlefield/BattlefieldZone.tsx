@@ -35,6 +35,7 @@ interface BattlefieldZoneProps {
   canActivateSelectedExecution: boolean;
   onActivateSelectedExecution: () => void;
   onGraveyardClick: (side: "player" | "opponent") => void;
+  onFusionDeckClick?: (side: "player" | "opponent") => void;
   onDestroyedClick?: (side: "player" | "opponent") => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: MouseEvent) => void;
 }
@@ -67,13 +68,14 @@ export function BattlefieldZone({
   canActivateSelectedExecution,
   onActivateSelectedExecution,
   onGraveyardClick,
+  onFusionDeckClick = () => undefined,
   onDestroyedClick = () => undefined,
   onEntityClick,
 }: BattlefieldZoneProps) {
   const isOpponentSide = side === "opponent";
   const zonePadding = isOpponentSide ? "mb-4" : "mt-4";
   const isDamageFlashing = useDamageFlash(shouldDamageFlash, damageEventId);
-  const sideStackClass = isMobileLayout ? "flex flex-col gap-2 scale-[0.86]" : "flex flex-col gap-3";
+  const sideStackClass = isMobileLayout ? "relative z-30 flex shrink-0 flex-col gap-2 scale-[0.86] pointer-events-auto" : "relative z-30 flex shrink-0 flex-col gap-3 pointer-events-auto";
 
   return (
     <div
@@ -86,7 +88,7 @@ export function BattlefieldZone({
     >
       <div className={sideStackClass}>
         <DeckPile deckCount={deckCount} />
-        <FusionDeckPile fusionDeckCount={fusionDeckCount} />
+        <FusionDeckPile fusionDeckCount={fusionDeckCount} isOpponentSide={isOpponentSide} onClick={onFusionDeckClick} />
       </div>
       <BattlefieldLanes
         isOpponentSide={isOpponentSide}

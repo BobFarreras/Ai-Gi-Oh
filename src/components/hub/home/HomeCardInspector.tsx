@@ -50,7 +50,7 @@ export function HomeCardInspector({
   }, []);
 
   return (
-    <aside className="relative flex h-full min-h-0 flex-col overflow-visible rounded-2xl border border-cyan-900/45 bg-[linear-gradient(180deg,#041325_0%,#020a14_100%)] p-4 shadow-[0_0_24px_rgba(8,145,178,0.18)]">
+    <aside data-tutorial-id="tutorial-home-inspector" className="relative flex h-full min-h-0 flex-col overflow-visible rounded-2xl border border-cyan-900/45 bg-[linear-gradient(180deg,#041325_0%,#020a14_100%)] p-4 shadow-[0_0_24px_rgba(8,145,178,0.18)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(34,211,238,0.08),transparent_50%)]" />
       <h2 className="relative mb-2 text-sm font-black uppercase tracking-widest text-cyan-200">Detalle</h2>
       {selectedCard ? (

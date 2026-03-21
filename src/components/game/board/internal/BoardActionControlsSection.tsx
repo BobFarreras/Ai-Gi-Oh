@@ -62,6 +62,7 @@ export function BoardActionControlsSection({ board, screen, isMobile }: IBoardVi
           isAutoPhaseEnabled={board.isAutoPhaseEnabled}
           isHistoryOpen={board.isHistoryOpen}
           canSetSelectedEntityToAttack={board.canSetSelectedEntityToAttack}
+          canActivateSelectedExecution={board.canActivateSelectedExecution}
           onToggleMute={() => {
             board.playButtonClick();
             board.toggleMute();
@@ -78,6 +79,10 @@ export function BoardActionControlsSection({ board, screen, isMobile }: IBoardVi
           onSetSelectedEntityToAttack={() => {
             board.playButtonClick();
             board.setSelectedEntityToAttack();
+          }}
+          onActivateSelectedExecution={() => {
+            board.playButtonClick();
+            screen.handleActivateSelectedExecution();
           }}
         />
       )}

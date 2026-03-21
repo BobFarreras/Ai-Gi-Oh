@@ -5,12 +5,14 @@ import { buyMarketCardAction, buyPackAction } from "@/services/market/market-act
 import { applyOptimisticBuyCard } from "@/components/hub/market/internal/optimistic-market-updates";
 import { MarketSceneStoreApi } from "@/components/hub/market/internal/market-scene-store";
 import { mapMarketErrorMessage } from "@/components/hub/market/internal/market-error-message";
+import { IMarketPurchaseActionOverrides } from "@/components/hub/market/internal/market-tutorial-contract";
 import { endInteraction, startInteraction } from "@/services/performance/dev-performance-telemetry";
 
 interface UseMarketPurchaseActionsInput {
   store: MarketSceneStoreApi;
   playerId: string;
   play: (id: "BUY_CARD" | "BUY_PACK") => void;
+  purchaseActionOverrides?: IMarketPurchaseActionOverrides;
 }
 
 function enqueueTask(queueRef: MutableRefObject<Promise<void>>, task: () => Promise<boolean>): Promise<boolean> {
@@ -22,7 +24,7 @@ function enqueueTask(queueRef: MutableRefObject<Promise<void>>, task: () => Prom
   return next;
 }
 
-export function useMarketPurchaseActions({ store, playerId, play }: UseMarketPurchaseActionsInput) {
+export function useMarketPurchaseActions({ store, playerId, play, purchaseActionOverrides }: UseMarketPurchaseActionsInput) {
   const cardQueueRef = useRef<Promise<void>>(Promise.resolve());
   const packQueueRef = useRef<Promise<void>>(Promise.resolve());
   const isBuyingCardRef = useRef(false);
@@ -36,7 +38,9 @@ export function useMarketPurchaseActions({ store, playerId, play }: UseMarketPur
       const optimistic = applyOptimisticBuyCard(previous.catalog, previous.collection, listingId);
       startTransition(() => store.setState({ catalog: optimistic.catalog, collection: optimistic.collection }));
       try {
-        const result = await buyMarketCardAction(playerId, listingId);
+        const result = purchaseActionOverrides?.buyCard
+          ? await purchaseActionOverrides.buyCard(playerId, listingId)
+          : await buyMarketCardAction(playerId, listingId);
         play("BUY_CARD");
         startTransition(() => store.setState({ catalog: result.catalog, transactions: result.transactions, collection: result.collection, errorMessage: null }));
         endInteraction(telemetry, "ok");
@@ -49,7 +53,7 @@ export function useMarketPurchaseActions({ store, playerId, play }: UseMarketPur
         isBuyingCardRef.current = false;
       }
     });
-  }, [playerId, play, store]);
+  }, [playerId, play, purchaseActionOverrides, store]);
 
   const handleBuyPack = useCallback(async (packId: string): Promise<boolean> =>
     enqueueTask(packQueueRef, async () => {
@@ -61,7 +65,9 @@ export function useMarketPurchaseActions({ store, playerId, play }: UseMarketPur
         startTransition(() => store.setState((current) => ({ catalog: { ...current.catalog, wallet: { ...current.catalog.wallet, nexus: current.catalog.wallet.nexus - pack.priceNexus } } })));
       }
       try {
-        const result = await buyPackAction(playerId, packId);
+        const result = purchaseActionOverrides?.buyPack
+          ? await purchaseActionOverrides.buyPack(playerId, packId)
+          : await buyPackAction(playerId, packId);
         play("BUY_PACK");
         const cardMap = new Map(result.catalog.listings.map((listing) => [listing.card.id, listing.card]));
         const openedCards = result.openedCardIds.map((cardId) => cardMap.get(cardId)).filter((card): card is ICard => Boolean(card));
@@ -75,7 +81,7 @@ export function useMarketPurchaseActions({ store, playerId, play }: UseMarketPur
       } finally {
         startTransition(() => store.setState({ isBuyingPack: false }));
       }
-    }), [playerId, play, store]);
+    }), [playerId, play, purchaseActionOverrides, store]);
 
   return { handleBuyCard, handleBuyPack };
 }

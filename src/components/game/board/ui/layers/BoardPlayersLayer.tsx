@@ -55,6 +55,7 @@ export function BoardPlayersLayer({
         healPulseKey={lastHealEventId}
         avatarUrl={opponentAvatarUrl}
         dialogueMessage={opponentDialogueMessage}
+        containerClassName="!top-[clamp(0.35rem,1.1vh,0.9rem)]"
       />
       <PlayerHUD
         isOpponent={false}

@@ -41,6 +41,6 @@ export function resolveBoardViewportMetrics(input: IBoardViewportInput): IBoardV
     handYOffsetPx: Math.round(132 + compactness * 42),
     handContainerHeightPx: Math.round(470 - compactness * 140),
     handHoverLiftPx: Math.round(34 + compactness * 44),
-    handCenterOffsetPx: Math.round(smallDesktopFactor * 76),
+    handCenterOffsetPx: Math.round(smallDesktopFactor * 36),
   };
 }

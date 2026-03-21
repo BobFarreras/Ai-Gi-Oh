@@ -13,6 +13,8 @@ interface MobileInspectorDialogShellProps {
   closeAriaLabel: string;
   overlayTopClassName: string;
   panelTopClassName: string;
+  zIndexClassName?: string;
+  overlayTintClassName?: string;
   isDismissDisabled?: boolean;
   disableMotion?: boolean;
   children: React.ReactNode;
@@ -26,6 +28,8 @@ export function MobileInspectorDialogShell({
   closeAriaLabel,
   overlayTopClassName,
   panelTopClassName,
+  zIndexClassName = "z-[220]",
+  overlayTintClassName = "bg-black/52",
   isDismissDisabled = false,
   disableMotion = false,
   children,
@@ -44,7 +48,7 @@ export function MobileInspectorDialogShell({
           animate={disableMotion ? { opacity: 1 } : { opacity: 1 }}
           exit={disableMotion ? { opacity: 0 } : { opacity: 0 }}
           onClick={isDismissDisabled ? undefined : () => requestClose("overlay")}
-          className={`fixed inset-x-0 bottom-0 z-[220] bg-black/52 xl:hidden ${overlayTopClassName}`}
+          className={`fixed inset-x-0 bottom-0 xl:hidden ${zIndexClassName} ${overlayTintClassName} ${overlayTopClassName}`}
         >
           <motion.div
             initial={disableMotion ? false : { opacity: 0, scale: 0.2, x: animationOffset.x, y: animationOffset.y }}

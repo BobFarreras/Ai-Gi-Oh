@@ -30,6 +30,7 @@ export function HomeDeckActionButtons({
     <div className="home-modern-scroll flex w-full items-center gap-2 overflow-x-auto pb-1 lg:w-auto lg:pb-0">
       <motion.button
         type="button"
+        data-tutorial-id="tutorial-home-add-button"
         aria-label="Introducir carta seleccionada en el deck"
         disabled={!canInsert}
         onClick={() => void onInsert()}
@@ -42,6 +43,7 @@ export function HomeDeckActionButtons({
       </motion.button>
       <motion.button
         type="button"
+        data-tutorial-id="tutorial-home-remove-button"
         aria-label="Sacar carta seleccionada del deck"
         disabled={!canRemove}
         onClick={() => void onRemove()}
@@ -54,6 +56,7 @@ export function HomeDeckActionButtons({
       </motion.button>
       <motion.button
         type="button"
+        data-tutorial-id="tutorial-home-evolve-button"
         aria-label="Evolucionar carta seleccionada"
         disabled={!canEvolve}
         onClick={() => void onEvolve()}

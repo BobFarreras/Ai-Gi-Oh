@@ -18,6 +18,7 @@ export interface IExecutionEffectResult {
   player: IPlayer;
   opponent: IPlayer;
   healApplied: number;
+  energyRecovered: number;
   buff: IBuffSummary;
   damageTargetPlayerId: string | null;
   damageAmount: number;
@@ -28,6 +29,7 @@ export function applyExecutionEffect(player: IPlayer, opponent: IPlayer, effect:
   let updatedPlayer = player;
   let updatedOpponent = opponent;
   let healApplied = 0;
+  let energyRecovered = 0;
   const buff: IBuffSummary = { entityIds: [], stat: null, amount: 0 };
   let damageTargetPlayerId: string | null = null;
   let damageAmount = 0;
@@ -42,6 +44,9 @@ export function applyExecutionEffect(player: IPlayer, opponent: IPlayer, effect:
       break;
     case "DRAW_CARD":
       updatedPlayer = drawCards(updatedPlayer, effect.cards);
+      break;
+    case "RESTORE_ENERGY":
+      ({ updatedPlayer, recoveredAmount: energyRecovered } = restoreEnergy(updatedPlayer, effect.value));
       break;
     case "BOOST_ATTACK_ALLIED_ENTITY":
       ({ updatedPlayer, buffIds: buff.entityIds } = boostBestAlliedAttack(updatedPlayer, effect.value));
@@ -66,7 +71,7 @@ export function applyExecutionEffect(player: IPlayer, opponent: IPlayer, effect:
       break;
   }
 
-  return { player: updatedPlayer, opponent: updatedOpponent, healApplied, buff, damageTargetPlayerId, damageAmount, systemEvents };
+  return { player: updatedPlayer, opponent: updatedOpponent, healApplied, energyRecovered, buff, damageTargetPlayerId, damageAmount, systemEvents };
 }
 
 function drawCards(player: IPlayer, amount: number): IPlayer {
@@ -95,4 +100,14 @@ function applyDamageEffect(player: IPlayer, opponent: IPlayer, value: number, ta
 function applyHealEffect(player: IPlayer, value: number): { updatedPlayer: IPlayer; healApplied: number } {
   const nextHealth = Math.min(player.maxHealthPoints, player.healthPoints + value);
   return { updatedPlayer: { ...player, healthPoints: nextHealth }, healApplied: Math.max(0, nextHealth - player.healthPoints) };
+}
+
+function restoreEnergy(player: IPlayer, requestedValue?: number): { updatedPlayer: IPlayer; recoveredAmount: number } {
+  const missingEnergy = player.maxEnergy - player.currentEnergy;
+  if (missingEnergy <= 0) return { updatedPlayer: player, recoveredAmount: 0 };
+  const recoveredAmount = requestedValue ? Math.min(missingEnergy, Math.max(0, requestedValue)) : missingEnergy;
+  return {
+    updatedPlayer: { ...player, currentEnergy: player.currentEnergy + recoveredAmount },
+    recoveredAmount,
+  };
 }

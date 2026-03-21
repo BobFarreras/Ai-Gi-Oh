@@ -33,6 +33,7 @@ export function areEqualBoardInteractiveLayerProps(previous: IBoardInteractiveLa
     previous.lastCardXpEventId === next.lastCardXpEventId &&
     previous.lastCardXpActorPlayerId === next.lastCardXpActorPlayerId &&
     previous.onGraveyardClick === next.onGraveyardClick &&
+    previous.onFusionDeckClick === next.onFusionDeckClick &&
     previous.onDestroyedClick === next.onDestroyedClick &&
     previous.onEntityClick === next.onEntityClick &&
     previous.onMandatoryCardSelect === next.onMandatoryCardSelect &&

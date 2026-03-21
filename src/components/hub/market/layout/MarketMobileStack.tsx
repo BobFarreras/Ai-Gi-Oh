@@ -15,7 +15,7 @@ import { IMarketPackDefinition } from "@/core/entities/market/IMarketPackDefinit
 import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
 import { cn } from "@/lib/utils";
 
-type MobilePanel = "LISTINGS" | "PACKS" | "VAULT";
+export type MobilePanel = "LISTINGS" | "PACKS" | "VAULT";
 
 interface MarketMobileStackProps {
   selectedCard: ICard | null;
@@ -33,6 +33,11 @@ interface MarketMobileStackProps {
   onShowFreeListings: () => void;
   onSelectListing: (listing: IMarketCardListing) => void;
   onSelectVaultCard: (card: ICard) => void;
+  onTutorialBuyPack?: () => void;
+  onVaultTabChange?: (tab: "COLLECTION" | "HISTORY") => void;
+  tutorialForcedPanel?: MobilePanel | null;
+  tutorialForceInspectorOpen?: boolean;
+  tutorialCurrentStepId?: string | null;
 }
 
 const PANEL_TABS: Array<{ id: MobilePanel; label: string }> = [
@@ -42,6 +47,7 @@ const PANEL_TABS: Array<{ id: MobilePanel; label: string }> = [
 ];
 
 export function MarketMobileStack(props: MarketMobileStackProps) {
+  const TUTORIAL_PRIMARY_PACK_ID = "tutorial-market-pack-gemgpt";
   const [activePanel, setActivePanel] = useState<MobilePanel>("LISTINGS");
   const [visitedPanels, setVisitedPanels] = useState<Record<MobilePanel, boolean>>({
     LISTINGS: true,
@@ -51,13 +57,23 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const inspectorOrigin = { x: 0, y: 0 };
   const { play } = useHubModuleSfx();
+  const effectiveActivePanel: MobilePanel = props.tutorialForcedPanel ?? activePanel;
+  const isInspectorOpenEffective = props.tutorialForceInspectorOpen ? true : isInspectorOpen;
+  const isPackTutorialStep =
+    props.tutorialCurrentStepId === "market-pack-selection" ||
+    props.tutorialCurrentStepId === "market-pack-preview-cards" ||
+    props.tutorialCurrentStepId === "market-buy-pack" ||
+    props.tutorialCurrentStepId === "market-pack-random-explanation";
+  const tutorialFallbackPackId =
+    props.packs.find((pack) => pack.id === TUTORIAL_PRIMARY_PACK_ID)?.id ?? props.packs[0]?.id ?? null;
+  const effectiveSelectedPackId = props.selectedPackId ?? (isPackTutorialStep ? tutorialFallbackPackId : null);
   const packListings = useMemo(() => {
-    if (!props.selectedPackId) return [];
-    const selectedPack = props.packs.find((pack) => pack.id === props.selectedPackId);
+    if (!effectiveSelectedPackId) return [];
+    const selectedPack = props.packs.find((pack) => pack.id === effectiveSelectedPackId);
     if (!selectedPack) return [];
     const packCardIds = new Set(selectedPack.previewCardIds);
     return props.catalogListings.filter((listing) => packCardIds.has(listing.card.id));
-  }, [props.catalogListings, props.packs, props.selectedPackId]);
+  }, [effectiveSelectedPackId, props.catalogListings, props.packs]);
 
   const handleSelectListing = (listing: IMarketCardListing) => {
     props.onSelectListing(listing);
@@ -73,17 +89,17 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
   const markPanelAsVisited = (panel: MobilePanel) => {
     setVisitedPanels((previous) => (previous[panel] ? previous : { ...previous, [panel]: true }));
   };
-
   return (
     <div className="mt-4 flex min-h-0 flex-1 flex-col gap-3">
-      <nav aria-label="Paneles del mercado" className="home-modern-scroll flex gap-2 overflow-x-auto pb-1">
+      <nav data-tutorial-id="market-mobile-sections-tabs" aria-label="Paneles del mercado" className="home-modern-scroll flex gap-2 overflow-x-auto pb-1">
         {PANEL_TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
+            data-tutorial-id={`market-mobile-tab-${tab.id.toLowerCase()}`}
             aria-label={`Mostrar ${tab.label}`}
             onClick={() => {
-              if (activePanel !== tab.id) play("SECTION_SWITCH");
+              if (effectiveActivePanel !== tab.id) play("SECTION_SWITCH");
               setActivePanel(tab.id);
               markPanelAsVisited(tab.id);
               if (tab.id === "LISTINGS") {
@@ -94,7 +110,7 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
             }}
             className={cn(
               "shrink-0 rounded-lg border px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all",
-              activePanel === tab.id
+              effectiveActivePanel === tab.id
                 ? "border-cyan-400 bg-cyan-950/70 text-cyan-100 shadow-[0_0_14px_rgba(34,211,238,0.25)]"
                 : "border-cyan-900/40 bg-[#02101f]/70 text-cyan-400/75",
             )}
@@ -105,31 +121,37 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
       </nav>
 
       <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-cyan-900/30 bg-black/40 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-        {visitedPanels.LISTINGS ? (
-          <div className={activePanel === "LISTINGS" ? "h-full" : "hidden"}>
+        {visitedPanels.LISTINGS || effectiveActivePanel === "LISTINGS" ? (
+          <div className={effectiveActivePanel === "LISTINGS" ? "h-full" : "hidden"}>
             <MarketListingsPanel listings={props.listings} isPerformanceMode={true} onSelectCard={handleSelectListing} />
           </div>
         ) : null}
-        {visitedPanels.PACKS ? (
-          <div className={activePanel === "PACKS" ? "h-full" : "hidden"}>
+        {visitedPanels.PACKS || effectiveActivePanel === "PACKS" ? (
+          <div className={effectiveActivePanel === "PACKS" ? "h-full" : "hidden"}>
             <MarketMobilePacksSection
               packs={props.packs}
-              selectedPackId={props.selectedPackId}
+              selectedPackId={effectiveSelectedPackId}
               packListings={packListings}
               isBuyingPack={props.isBuyingPack}
+              tutorialCurrentStepId={props.tutorialCurrentStepId}
               onSelectPack={props.onSelectPack}
-              onBuyPack={props.onBuyPack}
+              onBuyPack={async (packId) => {
+                const wasBought = await props.onBuyPack(packId);
+                if (wasBought) props.onTutorialBuyPack?.();
+                return wasBought;
+              }}
               onSelectPackCard={handleSelectListing}
             />
           </div>
         ) : null}
-        {visitedPanels.VAULT ? (
-          <div className={activePanel === "VAULT" ? "h-full" : "hidden"}>
+        {visitedPanels.VAULT || effectiveActivePanel === "VAULT" ? (
+          <div className={effectiveActivePanel === "VAULT" ? "h-full" : "hidden"}>
             <MarketVaultPanel
               collection={props.collection}
               transactions={props.transactions}
               catalogListings={props.catalogListings}
               isPerformanceMode={true}
+              onActiveTabChange={props.onVaultTabChange}
               onSelectCard={handleSelectVaultCard}
             />
           </div>
@@ -137,7 +159,7 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
       </div>
 
       <MobileInspectorDialogShell
-        isOpen={isInspectorOpen}
+        isOpen={isInspectorOpenEffective}
         origin={inspectorOrigin}
         disableMotion
         onClose={() => setIsInspectorOpen(false)}

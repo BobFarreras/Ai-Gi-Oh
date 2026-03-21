@@ -77,6 +77,7 @@ export function SlotGrid({
             index={index}
             entity={entity}
             isOpponentSide={isOpponentSide}
+            tutorialTargetId={isOpponentSide && laneType === "ENTITIES" ? `tutorial-board-opponent-zone-${index + 1}` : undefined}
             activeAttackerId={activeAttackerId}
             selectedCardId={selectedCardId}
             selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}

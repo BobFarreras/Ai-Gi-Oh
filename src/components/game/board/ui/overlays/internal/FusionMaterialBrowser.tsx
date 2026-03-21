@@ -29,6 +29,7 @@ export function FusionMaterialBrowser({ isOpen, candidates, selectedCount, onSel
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          data-tutorial-id="tutorial-board-fusion-browser"
           className="absolute inset-0 z-[182] flex items-center justify-center bg-black/70 backdrop-blur-sm"
         >
           <motion.div
@@ -49,6 +50,7 @@ export function FusionMaterialBrowser({ isOpen, candidates, selectedCount, onSel
                 <button
                   key={candidate.instanceId}
                   type="button"
+                  data-tutorial-id={`tutorial-board-fusion-material-${candidate.card.id}`}
                   aria-label={`Material ${candidate.card.name}`}
                   disabled={!candidate.isSelectable && !candidate.isSelected}
                   onClick={() => onSelectMaterial(candidate.instanceId)}

@@ -17,6 +17,8 @@ interface IUseBoardScreenStateInput {
   opponentName: string;
   playerGraveyard: ICard[];
   opponentGraveyard: ICard[];
+  playerFusionDeck: ICard[];
+  opponentFusionDeck: ICard[];
   playerDestroyed: ICard[];
   opponentDestroyed: ICard[];
   playerActiveEntities: ReturnType<typeof useBoard>["gameState"]["playerA"]["activeEntities"];
@@ -34,6 +36,7 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
   const onMatchResolved = input.onMatchResolved;
   const [autoModeBannerSignal, setAutoModeBannerSignal] = useState<{ id: string; left: string; right: string } | null>(null);
   const [graveyardView, setGraveyardView] = useState<"player" | "opponent" | null>(null);
+  const [fusionDeckView, setFusionDeckView] = useState<"player" | "opponent" | null>(null);
   const [destroyedView, setDestroyedView] = useState<"player" | "opponent" | null>(null);
   const resolvedWinnerRef = useRef<string | "DRAW" | null>(null);
   const effectiveGraveyardView =
@@ -48,6 +51,10 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
   const visibleDestroyedCards = useMemo(
     () => (destroyedView === "player" ? input.playerDestroyed : destroyedView === "opponent" ? input.opponentDestroyed : []),
     [destroyedView, input.opponentDestroyed, input.playerDestroyed],
+  );
+  const visibleFusionDeckCards = useMemo(
+    () => (fusionDeckView === "player" ? input.playerFusionDeck : fusionDeckView === "opponent" ? input.opponentFusionDeck : []),
+    [fusionDeckView, input.opponentFusionDeck, input.playerFusionDeck],
   );
   const pendingReplacementTargetCard = useMemo(() => {
     if (!board.pendingEntityReplacementTargetId || !board.pendingEntityReplacement) return null;
@@ -127,10 +134,12 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
     narration,
     autoModeBannerSignal,
     graveyardView,
+    fusionDeckView,
     destroyedView,
     effectiveGraveyardView,
     visibleGraveyardCards,
     visibleDestroyedCards,
+    visibleFusionDeckCards,
     pendingReplacementTargetCard,
     pendingGraveyardSelectionRefs,
     onOverlayCardSelect,
@@ -138,8 +147,10 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
     handlePlayAction,
     setAutoModeBannerSignal,
     setGraveyardView,
+    setFusionDeckView,
     setDestroyedView,
     visibleGraveyardOwner: effectiveGraveyardView === "player" ? input.playerName : input.opponentName,
+    visibleFusionDeckOwner: fusionDeckView === "player" ? input.playerName : input.opponentName,
     visibleDestroyedOwner: destroyedView === "player" ? input.playerName : input.opponentName,
     isResultVisible: Boolean(board.winnerPlayerId),
     duelResultRewardSummary: input.duelResultRewardSummary ?? null,

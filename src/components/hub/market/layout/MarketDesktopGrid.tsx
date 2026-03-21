@@ -27,6 +27,8 @@ interface MarketDesktopGridProps {
   onClearPackSelection: () => void;
   onSelectListing: (listing: IMarketCardListing) => void;
   onSelectVaultCard: (card: ICard) => void;
+  onTutorialBuyPack?: () => void;
+  onVaultTabChange?: (tab: "COLLECTION" | "HISTORY") => void;
 }
 
 export function MarketDesktopGrid(props: MarketDesktopGridProps) {
@@ -42,7 +44,7 @@ export function MarketDesktopGrid(props: MarketDesktopGridProps) {
         />
       </div>
 
-      <div className="min-h-0 min-w-0 overflow-hidden rounded-xl border border-cyan-900/30 bg-black/40 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
+      <div data-tutorial-id="market-pack-preview" className="min-h-0 min-w-0 overflow-hidden rounded-xl border border-cyan-900/30 bg-black/40 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
         <MarketListingsPanel
           listings={props.listings}
           isPerformanceMode={false}
@@ -61,6 +63,7 @@ export function MarketDesktopGrid(props: MarketDesktopGridProps) {
             onSelectPack={props.onSelectPack}
             onClearPackSelection={props.onClearPackSelection}
             onBuyPack={props.onBuyPack}
+            onTutorialBuyPack={props.onTutorialBuyPack}
           />
         </div>
         <div className="min-h-0 min-w-0 overflow-hidden rounded-xl border border-cyan-900/30 bg-black/40 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
@@ -69,6 +72,7 @@ export function MarketDesktopGrid(props: MarketDesktopGridProps) {
             transactions={props.transactions}
             catalogListings={props.catalogListings}
             isPerformanceMode={false}
+            onActiveTabChange={props.onVaultTabChange}
             onSelectCard={(card) => {
               play("DETAIL_OPEN");
               props.onSelectVaultCard(card);

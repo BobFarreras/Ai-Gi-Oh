@@ -50,7 +50,7 @@ export function HomeCollectionPanel({
   }
 
   return (
-    <section className="flex h-full min-h-0 flex-col rounded-2xl border border-cyan-800/35 bg-[#031020]/50 p-3">
+    <section data-tutorial-id="tutorial-home-collection" className="flex h-full min-h-0 flex-col rounded-2xl border border-cyan-800/35 bg-[#031020]/50 p-3">
       <h2 className="mb-3 text-sm font-black uppercase tracking-[0.2em] text-cyan-200 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
         Almacén
       </h2>
@@ -83,8 +83,8 @@ export function HomeCollectionPanel({
                 aria-label={`Seleccionar ${entry.card.name}`}
                 whileHover={canAdd ? { y: -4, scale: 1.05 } : {}}
                 whileTap={canAdd ? { scale: 0.95 } : {}}
-                animate={canEvolve ? { rotate: [0, -1.2, 1.2, -0.8, 0.8, 0] } : {}}
-                transition={canEvolve ? { duration: 0.38, repeat: Infinity, repeatDelay: 1.8 } : {}}
+                animate={canEvolve ? { rotate: [0, -1.8, 1.8, -1.2, 1.2, 0], y: [0, -1, 0], scale: [1, 1.03, 1] } : {}}
+                transition={canEvolve ? { duration: 0.52, repeat: Infinity, repeatDelay: 1.15 } : {}}
                 onClick={() => onSelectCard(entry.card.id)}
                 // REFACTOR 3: Ajustes de opacidad más drásticos para dar feedback visual claro
                 className={`relative flex flex-col items-center w-[84px] transition-opacity ${
@@ -93,7 +93,11 @@ export function HomeCollectionPanel({
                 style={
                   isMasteryTier
                     ? undefined
-                    : { contentVisibility: "auto", containIntrinsicSize: "145px 84px" }
+                    : {
+                        contentVisibility: "auto",
+                        containIntrinsicSize: "145px 84px",
+                        filter: canEvolve ? "drop-shadow(0 0 9px rgba(34, 211, 238, 0.55))" : undefined,
+                      }
                 }
               >
                 <HomeMiniCard

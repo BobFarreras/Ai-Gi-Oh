@@ -7,7 +7,12 @@ import { HomeMobileWorkspace } from "@/components/hub/home/layout/HomeMobileWork
 import { isMobileLayoutViewport } from "@/components/internal/layout-breakpoints";
 import { IHomeWorkspaceProps } from "@/components/hub/home/layout/home-workspace-types";
 
-export function HomeResponsiveWorkspace(props: IHomeWorkspaceProps) {
+interface IHomeResponsiveWorkspaceProps extends IHomeWorkspaceProps {
+  tutorialForcedMobileSection?: "DECK" | "COLLECTION" | null;
+  tutorialCurrentStepId?: string | null;
+}
+
+export function HomeResponsiveWorkspace(props: IHomeResponsiveWorkspaceProps) {
   const [isMobileLayout, setIsMobileLayout] = useState<boolean>(() =>
     typeof window === "undefined" ? false : isMobileLayoutViewport(window.innerWidth),
   );
@@ -19,6 +24,14 @@ export function HomeResponsiveWorkspace(props: IHomeWorkspaceProps) {
     return () => window.removeEventListener("resize", updateLayoutMode);
   }, []);
 
-  if (isMobileLayout) return <HomeMobileWorkspace {...props} />;
+  if (isMobileLayout) {
+    return (
+      <HomeMobileWorkspace
+        {...props}
+        tutorialForcedSection={props.tutorialForcedMobileSection ?? null}
+        tutorialCurrentStepId={props.tutorialCurrentStepId ?? null}
+      />
+    );
+  }
   return <HomeDesktopWorkspace {...props} />;
 }

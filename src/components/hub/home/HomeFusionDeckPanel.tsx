@@ -1,4 +1,4 @@
-// src/components/hub/home/HomeFusionDeckPanel.tsx
+// src/components/hub/home/HomeFusionDeckPanel.tsx - Renderiza el bloque de fusión con dos slots y soporte de selección/drag.
 import { IDeck } from "@/core/entities/home/IDeck";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
@@ -30,7 +30,7 @@ export function HomeFusionDeckPanel({
   
   return (
     // ESTILO WIREFRAME: bg-transparent, sin blur, solo bordes definidos y un levísimo resplandor interno
-    <section className="mt-3 rounded-2xl border border-cyan-500/40 bg-transparent p-3 shadow-[inset_0_0_20px_rgba(34,211,238,0.05)]">
+    <section data-tutorial-id="tutorial-home-fusion-block" className="mt-3 rounded-2xl border border-cyan-500/40 bg-transparent p-3 shadow-[inset_0_0_20px_rgba(34,211,238,0.05)]">
       
       {/* HEADER */}
       <div className="mb-2 flex items-center justify-between border-b border-cyan-900/60 pb-2">
@@ -50,7 +50,7 @@ export function HomeFusionDeckPanel({
           const isSelected = selectedFusionSlotIndex === slot.index || (slot.cardId !== null && selectedCardId === slot.cardId);
           
           return (
-            <div key={`fusion-slot-${slot.index}`} className="w-[76px]">
+            <div key={`fusion-slot-${slot.index}`} data-tutorial-id={card ? `tutorial-home-fusion-card-${card.id}` : undefined} className="w-[76px]">
               <HomeMiniCard
                 card={card}
                 isSelected={isSelected}

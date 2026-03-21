@@ -13,8 +13,14 @@ import { HomeMobileCollectionPanel } from "@/components/hub/home/layout/internal
 type IMobileSection = "DECK" | "COLLECTION";
 type ISelectedCardSource = "DECK" | "COLLECTION" | "NONE";
 
-export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
-  const [activeSection, setActiveSection] = useState<IMobileSection>("DECK");
+interface IHomeMobileWorkspaceProps extends IHomeWorkspaceProps {
+  tutorialForcedSection?: IMobileSection | null;
+  tutorialCurrentStepId?: string | null;
+}
+
+export function HomeMobileWorkspace(props: IHomeMobileWorkspaceProps) {
+  const [manualActiveSection, setManualActiveSection] = useState<IMobileSection>("DECK");
+  const activeSection = props.tutorialForcedSection ?? manualActiveSection;
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [inspectorOrigin, setInspectorOrigin] = useState<IInspectorOrigin>({ x: 0, y: 0 });
   const cardById = useMemo(() => new Map(props.collectionState.map((entry) => [entry.card.id, entry.card])), [props.collectionState]);
@@ -44,6 +50,21 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
           (props.selectedFusionSlotIndex !== null && props.deck.fusionSlots[props.selectedFusionSlotIndex]?.cardId)
         ? "DECK"
         : "NONE";
+  const forceCloseInspector = props.tutorialCurrentStepId === "arsenal-select-deck-card";
+  const forceOpenInspectorForAction =
+    (props.tutorialCurrentStepId === "arsenal-remove-deck" && selectedCardSource === "DECK") ||
+    ((props.tutorialCurrentStepId === "arsenal-add-deck" || props.tutorialCurrentStepId === "arsenal-open-evolve") &&
+      selectedCardSource === "COLLECTION");
+  const isInspectorVisible = forceCloseInspector ? false : forceOpenInspectorForAction ? true : isInspectorOpen;
+  const isTutorialActionStep = Boolean(forceOpenInspectorForAction);
+  const tutorialHighlightTargetId =
+    props.tutorialCurrentStepId === "arsenal-add-deck"
+      ? "tutorial-home-add-button"
+      : props.tutorialCurrentStepId === "arsenal-remove-deck"
+        ? "tutorial-home-remove-button"
+        : props.tutorialCurrentStepId === "arsenal-open-evolve"
+          ? "tutorial-home-evolve-button"
+          : null;
   const capturePointerOrigin = (event: PointerEvent<HTMLDivElement>) => {
     setInspectorOrigin({ x: event.clientX, y: event.clientY });
   };
@@ -64,7 +85,7 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
 
   return (
     <div className="mt-4 flex min-h-0 flex-1 flex-col gap-3" onPointerDownCapture={capturePointerOrigin}>
-      <HomeMobileSectionTabs activeSection={activeSection} onChangeSection={setActiveSection} />
+      <HomeMobileSectionTabs activeSection={activeSection} onChangeSection={setManualActiveSection} />
       <section className="min-h-0 flex-1 rounded-xl border border-cyan-900/40 bg-[#020b16]/75 p-3 shadow-[0_0_20px_rgba(6,78,100,0.2)]">
         <div className="mb-3 flex items-center justify-between border-b border-cyan-900/45 pb-2">
           <h2 className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200">
@@ -89,7 +110,7 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
         </div>
       </section>
       <HomeCardInspectorDialog
-        isOpen={isInspectorOpen}
+        isOpen={isInspectorVisible}
         origin={inspectorOrigin}
         selectedCard={props.selectedCard}
         selectedCardVersionTier={props.selectedCardVersionTier}
@@ -105,6 +126,8 @@ export function HomeMobileWorkspace(props: IHomeWorkspaceProps) {
         onRemove={props.onRemoveSelectedCard}
         onEvolve={props.onEvolveSelectedCard}
         onClose={() => setIsInspectorOpen(false)}
+        isTutorialActionStep={isTutorialActionStep}
+        tutorialHighlightTargetId={tutorialHighlightTargetId}
       />
     </div>
   );

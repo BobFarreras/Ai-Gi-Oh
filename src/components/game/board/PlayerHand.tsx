@@ -76,6 +76,7 @@ export function PlayerHand({
 
   return (
     <div
+      data-tutorial-id="tutorial-board-hand"
       className={`absolute ${isMobileLayout ? "right-0" : "left-0 w-full"} flex items-end pointer-events-none perspective-[1200px] ${isMobileLayout ? "pb-0 pr-1" : "pb-4"} ${dockRight ? "justify-end" : "justify-center"} ${handLayerClass}`}
       style={{
         height: `${containerHeightPx}px`,

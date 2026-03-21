@@ -57,6 +57,7 @@ export function PlayerHandCardItem({
     <div className="relative">
       <AnimatePresence>{showInlineActionPopover && isSelected ? <PlayerHandActionPopover isBlocked={isBlocked} isEntityOrFusion={isEntity || isFusion} isFusion={isFusion} isTrap={isTrap} onPlayAction={onPlayAction} /> : null}</AnimatePresence>
       <motion.div
+        data-tutorial-id={`tutorial-board-hand-card-${card.id}`}
         layoutId={`card-hand-${card.id}-${index}`}
         initial={{ y: 200, scale: 0.86 }}
         animate={{ y: isSelected ? (isMobileLayout ? handYOffsetPx - 8 : -40) : handYOffsetPx, rotate: isSelected ? 0 : isMobileLayout ? (index - handLength / 2) * 1.2 : (index - handLength / 2) * 2, scale: isSelected ? Math.min(1, effectiveCardScale + 0.1) : effectiveCardScale }}
@@ -72,9 +73,26 @@ export function PlayerHandCardItem({
         className={isPlayerTurn ? "cursor-pointer origin-bottom pointer-events-auto" : "origin-bottom pointer-events-auto"}
         style={{ zIndex: isSelected ? 100 : index, marginLeft: index === 0 ? 0 : -effectiveOverlapPx }}
       >
-        <div className={isMandatorySelectable ? "rounded-xl ring-4 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.65)] animate-pulse" : ""}>
+        <motion.div
+          animate={
+            isMandatorySelectable
+              ? {
+                  scale: [1, 1.035, 1],
+                  x: [0, -1.5, 1.5, 0],
+                  y: [0, -1, 0],
+                  boxShadow: [
+                    "0 0 22px rgba(251,191,36,0.62)",
+                    "0 0 34px rgba(251,191,36,0.92)",
+                    "0 0 22px rgba(251,191,36,0.62)",
+                  ],
+                }
+              : { scale: 1, x: 0, y: 0, boxShadow: "0 0 0 rgba(0,0,0,0)" }
+          }
+          transition={isMandatorySelectable ? { duration: 1.05, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : { duration: 0.2 }}
+          className={isMandatorySelectable ? "rounded-xl ring-4 ring-amber-400/95" : ""}
+        >
           <Card card={card} isSelected={isSelected} />
-        </div>
+        </motion.div>
       </motion.div>
     </div>
   );

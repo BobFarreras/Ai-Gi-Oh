@@ -58,6 +58,18 @@
 23. `public.player_story_world_state`:
    - estado compacto Story por jugador (`current_node_id`, `visited_node_ids`, `interacted_node_ids`).
    - 1 fila por usuario.
+24. `public.player_training_progress`:
+   - progreso acumulado de entrenamiento por tier y desbloqueo más alto.
+25. `public.player_training_match_claims`:
+   - idempotencia por batalla para impedir doble recompensa en entrenamiento.
+26. `public.player_tutorial_node_progress`:
+   - progreso por nodo del tutorial (`arsenal`, `combat`, `market`, `reward`).
+27. `public.player_tutorial_reward_claims`:
+   - claim único de recompensa final del onboarding tutorial.
+28. `public.starter_deck_template_slots`:
+   - plantilla persistente del deck inicial para jugadores nuevos.
+29. `public.player_progress.has_seen_academy_intro / has_skipped_tutorial`:
+   - flags de onboarding para controlar intro inicial de Academy y salto opcional de tutorial.
 
 ## Fase 2 (Perfil y Progreso)
 
@@ -278,6 +290,46 @@
 2. Resultado:
    - se elimina `public.player_story_history_events` y sus políticas/índice asociados.
    - runtime Story sigue operativo al usar solo `player_story_world_state`.
+
+## Fase T (Progresión e idempotencia de Training)
+
+1. Ejecuta `docs/supabase/sql/022_phase_training_progression.sql`.
+2. Verifica tablas:
+   - `public.player_training_progress`
+   - `public.player_training_match_claims`
+3. Verifica RLS:
+   - ambas tablas solo accesibles por propietario (`auth.uid() = player_id`).
+4. Uso previsto:
+   - endpoint `POST /api/training/matches/complete` aplica recompensa una sola vez por `battle_id`.
+
+## Fase T.1 (Progreso por nodo tutorial y recompensa final)
+
+1. Ejecuta `docs/supabase/sql/023_phase_tutorial_node_progress_and_reward.sql`.
+2. Verifica tablas:
+   - `public.player_tutorial_node_progress`
+   - `public.player_tutorial_reward_claims`
+3. Verifica RLS:
+   - ambas tablas solo accesibles por propietario (`auth.uid() = player_id`).
+4. Uso previsto:
+   - `POST /api/tutorial/nodes/complete` persiste completion idempotente de cada nodo.
+   - `POST /api/tutorial/reward/claim` aplica una sola vez la recompensa final del tutorial.
+
+## Fase O.1 (Plantilla de deck inicial onboarding)
+
+1. Ejecuta `docs/supabase/sql/024_phase_onboarding_starter_deck_template.sql`.
+2. Verifica tabla:
+   - `public.starter_deck_template_slots`.
+3. Uso previsto:
+   - `GetOrCreateStarterDeckUseCase` hidrata el deck base desde plantilla activa (`academy-starter-v1`).
+
+## Fase O.2 (Flags de intro y salto tutorial)
+
+1. Ejecuta `docs/supabase/sql/025_phase_onboarding_progress_flags.sql`.
+2. Verifica columnas:
+   - `public.player_progress.has_seen_academy_intro`
+   - `public.player_progress.has_skipped_tutorial`
+3. Uso previsto:
+   - `PATCH /api/player/onboarding` persiste decisiones de intro en Hub.
 
 ## Notas
 

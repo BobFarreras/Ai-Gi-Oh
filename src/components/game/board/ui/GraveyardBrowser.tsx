@@ -35,6 +35,7 @@ export function GraveyardBrowser({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          data-tutorial-id="tutorial-board-graveyard-browser"
           className="absolute inset-0 z-[180] bg-black/65 backdrop-blur-sm flex items-center justify-center"
         >
           <motion.div
@@ -47,7 +48,7 @@ export function GraveyardBrowser({
           >
             <div className="flex items-center justify-between mb-4 border-b border-zinc-700/70 pb-3">
               <h3 className="text-lg text-cyan-200 font-black uppercase tracking-wider">{title} de {ownerName}</h3>
-              <button aria-label="Cerrar zona de cartas" onClick={onClose} className="text-zinc-300 hover:text-white">
+              <button data-tutorial-id="tutorial-board-graveyard-close" aria-label="Cerrar zona de cartas" onClick={onClose} className="text-zinc-300 hover:text-white">
                 <X size={20} />
               </button>
             </div>
