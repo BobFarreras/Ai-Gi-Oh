@@ -3,18 +3,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
-import { GameEngine } from "@/core/use-cases/GameEngine";
 import { ICampaignProgress } from "@/core/services/opponent/difficulty/types";
 import { IOpponentStrategy } from "@/core/services/opponent/types";
 import { createMatchSeed } from "@/core/services/random/create-match-seed";
 import { createInitialBoardState, ICreateInitialBoardStateInput } from "./internal/boardInitialState";
-import { sleep } from "./internal/sleep";
 import { useMatchAudio } from "./internal/match/useMatchAudio";
 import { useMatchProgression } from "./internal/match/useMatchProgression";
 import { useMatchRuntime } from "./internal/match/useMatchRuntime";
 import { useMatchUiState } from "./internal/match/useMatchUiState";
-import { isExecutionWaitingForFusionMaterials, resolveWinnerPlayerId } from "./internal/match/board-derived-state";
-const EXECUTION_ACTIVATION_PREVIEW_MS = 720;
+import { resolveWinnerPlayerId } from "./internal/match/board-derived-state";
+import { useExecutionActivation } from "./internal/match/useExecutionActivation";
+
 export function useBoard(
   initialPlayerDeck?: ICard[],
   mode: IMatchMode = "TRAINING",
@@ -68,47 +67,16 @@ export function useBoard(
     progression.resetBattleProgression();
     uiState.restartMatch();
   }, [progression, uiState]);
-  const selectedActivatableExecution = useMemo(() => {
-    if (!uiState.selectedBoardEntityInstanceId) return null;
-    return (
-      uiState.gameState.playerA.activeExecutions.find(
-        (entity) =>
-          entity.instanceId === uiState.selectedBoardEntityInstanceId &&
-          entity.mode === "SET" &&
-          entity.card.type === "EXECUTION",
-      ) ?? null
-    );
-  }, [uiState.gameState.playerA.activeExecutions, uiState.selectedBoardEntityInstanceId]);
-  const canActivateSelectedExecution =
-    Boolean(selectedActivatableExecution) &&
-    !winnerPlayerId &&
-    uiState.isPlayerTurn &&
-    uiState.gameState.phase === "MAIN_1" &&
-    !uiState.isActionLocked &&
-    uiState.gameState.pendingTurnAction?.playerId !== uiState.gameState.playerA.id;
-  const activateSelectedExecution = useCallback(async (): Promise<"NOOP" | "ACTIVATED" | "MISSING_MATERIALS"> => {
-    if (!canActivateSelectedExecution || !selectedActivatableExecution) return "NOOP";
-    uiState.setIsAnimating(true);
-    const activated = runtime.applyTransition((state) =>
-      GameEngine.changeEntityMode(state, state.playerA.id, selectedActivatableExecution.instanceId, "ACTIVATE"),
-    );
-    if (!activated) {
-      uiState.setIsAnimating(false);
-      return "NOOP";
-    }
-    await sleep(EXECUTION_ACTIVATION_PREVIEW_MS);
-    const resolved = runtime.applyTransition((state) =>
-      GameEngine.resolveExecution(state, state.playerA.id, selectedActivatableExecution.instanceId),
-    );
-    uiState.setIsAnimating(false);
-    if (!resolved) return "NOOP";
-    if (isExecutionWaitingForFusionMaterials(resolved, selectedActivatableExecution.instanceId)) {
-      uiState.clearSelection();
-      return "MISSING_MATERIALS";
-    }
-    uiState.clearSelection();
-    return "ACTIVATED";
-  }, [canActivateSelectedExecution, runtime, selectedActivatableExecution, uiState]);
+  const { canActivateSelectedExecution, activateSelectedExecution } = useExecutionActivation({
+    gameState: uiState.gameState,
+    isPlayerTurn: uiState.isPlayerTurn,
+    isActionLocked: uiState.isActionLocked,
+    selectedBoardEntityInstanceId: uiState.selectedBoardEntityInstanceId,
+    winnerPlayerId,
+    applyTransition: runtime.applyTransition,
+    setIsAnimating: uiState.setIsAnimating,
+    clearSelection: uiState.clearSelection,
+  });
 
   return {
     gameState: uiState.gameState,
