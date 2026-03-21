@@ -204,6 +204,15 @@
 5. Tests ajustados y en verde para recompensa por nivel, loadout y acción final de resultado.
 6. Commit: pendiente en esta sesión (bloque listo para commit).
 
+## Fase 23 - Redirects legacy explícitos para cierre de contrato Academy
+
+1. Se añadieron redirects explícitos en `next.config.ts` para rutas legacy:
+   - `/hub/training/* -> /hub/academy/training/*`
+   - `/hub/tutorial/* -> /hub/academy/tutorial/*`
+2. Se mantiene `Academy` como entrada canónica y única jerarquía funcional en `app/hub/academy/*`.
+3. La compatibilidad legacy queda declarada en configuración de runtime, no duplicada en App Router.
+4. Commit: pendiente en esta sesión.
+
 ## Validación global aplicada por fase
 
 1. `pnpm lint`
