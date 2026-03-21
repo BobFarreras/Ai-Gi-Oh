@@ -1,7 +1,7 @@
 // src/components/hub/academy/training/TrainingModeSelection.tsx
-import Link from "next/link";
 import { ACADEMY_TRAINING_ARENA_ROUTE, ACADEMY_TUTORIAL_MAP_ROUTE } from "@/core/constants/routes/academy-routes";
 import { TrainingMode3DPanel, ITrainingMode3DPanelProps } from "./TrainingMode3DPanel";
+import { AcademyBackButton } from "@/components/hub/academy/AcademyBackButton";
 
 // Simulamos los iconos gigantes que harán de render 3D central
 const RenderTutorial = () => (
@@ -61,18 +61,7 @@ export function TrainingModeSelection() {
 
       {/* Botón de Retorno (Estilo Terminal HUD) */}
       <div className="mt-16 flex justify-center">
-        <Link
-          href="/hub"
-          aria-label="Volver a sala de control"
-          className="group relative flex items-center gap-3 overflow-hidden rounded-sm border border-slate-700 bg-slate-900/50 px-8 py-3 transition-colors hover:border-slate-500 hover:bg-slate-800"
-        >
-          {/* Scanline hover effect */}
-          <div className="absolute inset-0 -translate-y-full bg-slate-800/50 transition-transform duration-300 group-hover:translate-y-0" />
-          
-          <span className="relative z-10 text-xs font-bold uppercase tracking-[0.2em] text-slate-300 transition-colors group-hover:text-white">
-            [ Abortar Conexión ]
-          </span>
-        </Link>
+        <AcademyBackButton label="Volver al Menú" href="/hub" />
       </div>
     </section>
   );

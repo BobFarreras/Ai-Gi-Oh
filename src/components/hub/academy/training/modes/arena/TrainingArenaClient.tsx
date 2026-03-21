@@ -97,6 +97,7 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
           playerAvatarUrl="/assets/story/player/bob.png"
           opponentAvatarUrl={props.opponentAvatarUrl}
           onStart={() => setIsBattleStarted(true)}
+          onBack={() => window.location.replace(ACADEMY_HOME_ROUTE)}
         />
       ) : null}
       {isBattleStarted ? (

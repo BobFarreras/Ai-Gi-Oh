@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { TrainingArenaLobbyBackdrop } from "@/components/hub/academy/training/modes/arena/internal/TrainingArenaLobbyBackdrop";
+import { AcademyBackButton } from "@/components/hub/academy/AcademyBackButton";
 
 interface ITrainingArenaLobbyProps {
   level: number;
@@ -14,6 +15,7 @@ interface ITrainingArenaLobbyProps {
   playerAvatarUrl: string;
   opponentAvatarUrl: string;
   onStart: () => void;
+  onBack: () => void;
 }
 
 /**
@@ -69,6 +71,7 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
         >
           Empezar Combate
         </motion.button>
+        <AcademyBackButton label="Volver a Academy" onClick={props.onBack} className="mt-1" />
       </div>
     </section>
   );

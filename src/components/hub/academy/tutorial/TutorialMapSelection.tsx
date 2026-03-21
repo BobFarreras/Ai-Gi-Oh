@@ -1,9 +1,9 @@
 // src/components/hub/academy/tutorial/TutorialMapSelection.tsx
 import Image from "next/image";
-import Link from "next/link";
 import { ITutorialMapNodeRuntime } from "@/core/entities/tutorial/ITutorialMapNode";
 import { ACADEMY_HOME_ROUTE } from "@/core/constants/routes/academy-routes";
 import { TutorialCircuitMap } from "./TutorialCircuitMap";
+import { AcademyBackButton } from "@/components/hub/academy/AcademyBackButton";
 
 interface ITutorialMapSelectionProps {
   nodes: ITutorialMapNodeRuntime[];
@@ -56,14 +56,7 @@ export function TutorialMapSelection({ nodes }: ITutorialMapSelectionProps) {
 
         {/* Footer Minimalista */}
         <footer className="mt-6 flex justify-end border-t border-slate-800/60 pt-4">
-          <Link
-            href={ACADEMY_HOME_ROUTE}
-            className="group relative flex items-center gap-2 overflow-hidden rounded-md border border-slate-700 bg-[#040b15] px-6 py-2 transition-all hover:border-cyan-500 hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]"
-          >
-            <span className="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300 transition-colors group-hover:text-cyan-100">
-              [ Abortar ]
-            </span>
-          </Link>
+          <AcademyBackButton label="Volver a Academy" href={ACADEMY_HOME_ROUTE} />
         </footer>
       </div>
     </section>
