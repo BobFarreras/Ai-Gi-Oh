@@ -8,8 +8,8 @@ export const HUB_SECTIONS: ReadonlyArray<Omit<IHubSection, "isLocked" | "lockRea
   {
     id: "training",
     type: "TRAINING",
-    title: "Entrenamiento",
-    description: "Aprende reglas y domina tácticas.",
+    title: "Academy",
+    description: "Tutorial guiado y arena de entrenamiento progresivo.",
     href: "/hub/academy",
   },
   { id: "story", type: "STORY", title: "Historia", description: "Progresa por capítulos y consigue medallas.", href: "/hub/story" },
