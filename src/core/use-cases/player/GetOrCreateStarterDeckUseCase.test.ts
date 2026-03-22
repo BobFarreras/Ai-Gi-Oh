@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IDeck } from "@/core/entities/home/IDeck";
+import { ValidationError } from "@/core/errors/ValidationError";
 import { ICardCollectionRepository } from "@/core/repositories/ICardCollectionRepository";
 import { IDeckRepository } from "@/core/repositories/IDeckRepository";
 import { IStarterDeckTemplateRepository } from "@/core/repositories/IStarterDeckTemplateRepository";
@@ -93,5 +94,27 @@ describe("GetOrCreateStarterDeckUseCase", () => {
     expect(result.seeded).toBe(false);
     expect(deckRepository.currentDeck()).toEqual(existingDeck);
     expect(collectionRepository.addedCards).toHaveLength(0);
+  });
+
+  it("tolera carrera cuando addCards falla pero el estado final ya contiene el starter", async () => {
+    const templateCards = Array.from({ length: 20 }, (_, index) => `starter-${index}`);
+    const deckRepository = new FakeDeckRepository(createDeck("p1"));
+    const collectionRepository = new FakeCollectionRepository([]);
+    let addFailed = false;
+    collectionRepository.addCards = async () => {
+      addFailed = true;
+      throw new ValidationError("Fallo transitorio por inserción concurrente.");
+    };
+    collectionRepository.getCollection = async () => {
+      if (!addFailed) return [];
+      return templateCards.map((cardId) => createCollectionEntry(cardId, 1));
+    };
+    const templateRepository = new FakeStarterTemplateRepository(templateCards);
+    const useCase = new GetOrCreateStarterDeckUseCase(deckRepository, collectionRepository, templateRepository);
+
+    const result = await useCase.execute({ playerId: "p1" });
+
+    expect(result.seeded).toBe(true);
+    expect(deckRepository.currentDeck().slots.map((slot) => slot.cardId)).toEqual(templateCards);
   });
 });

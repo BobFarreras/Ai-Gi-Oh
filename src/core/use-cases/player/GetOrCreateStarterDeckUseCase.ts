@@ -16,6 +16,14 @@ function hasConfiguredDeck(deck: IDeck): boolean {
   return deck.slots.some((slot) => slot.cardId !== null);
 }
 
+function buildRequiredCopiesMap(cardIds: string[]): Map<string, number> {
+  const requiredCopiesByCardId = new Map<string, number>();
+  for (const cardId of cardIds) {
+    requiredCopiesByCardId.set(cardId, (requiredCopiesByCardId.get(cardId) ?? 0) + 1);
+  }
+  return requiredCopiesByCardId;
+}
+
 /**
  * Inicializa un deck base solo cuando el jugador todavía no configuró ninguno.
  */
@@ -51,7 +59,19 @@ export class GetOrCreateStarterDeckUseCase {
       missingStarterCards.push(cardId);
     }
     if (missingStarterCards.length > 0) {
-      await this.collectionRepository.addCards(input.playerId, missingStarterCards);
+      try {
+        await this.collectionRepository.addCards(input.playerId, missingStarterCards);
+      } catch (error) {
+        if (!(error instanceof ValidationError)) throw error;
+        // Mitiga carreras de primer acceso: si otra petición ya añadió las cartas, continuamos.
+        const collectionAfterFailure = await this.collectionRepository.getCollection(input.playerId);
+        const availableCopiesByCardId = new Map(collectionAfterFailure.map((entry) => [entry.card.id, entry.ownedCopies]));
+        const requiredCopiesByCardId = buildRequiredCopiesMap(missingStarterCards);
+        const stillMissing = Array.from(requiredCopiesByCardId.entries()).some(
+          ([cardId, requiredCopies]) => (availableCopiesByCardId.get(cardId) ?? 0) < requiredCopies,
+        );
+        if (stillMissing) throw error;
+      }
     }
     await this.deckRepository.saveDeck(nextDeck);
     return { seeded: true };

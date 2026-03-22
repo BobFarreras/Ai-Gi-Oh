@@ -12,6 +12,13 @@ interface ICollectionRow {
   owned_copies: number;
 }
 
+function buildDbErrorContext(error: { code?: string; message?: string; details?: string | null; hint?: string | null }): string {
+  const raw = [error.code, error.message, error.details ?? undefined, error.hint ?? undefined]
+    .filter((value) => Boolean(value))
+    .join(" | ");
+  return raw ? ` (${raw})` : "";
+}
+
 export class SupabaseCardCollectionRepository implements ICardCollectionRepository {
   constructor(private readonly client: SupabaseClient) {}
 
@@ -56,7 +63,24 @@ export class SupabaseCardCollectionRepository implements ICardCollectionReposito
           card_id: cardId,
           owned_copies: increment,
         });
-        if (insertError) throw new ValidationError("No se pudo añadir una carta al almacén.");
+        if (insertError) {
+          // Mitiga carreras: si otro request insertó justo antes, reintenta como update.
+          const { data: retryData, error: retryReadError } = await this.client
+            .from("player_collection_cards")
+            .select("player_id,card_id,owned_copies")
+            .eq("player_id", playerId)
+            .eq("card_id", cardId)
+            .maybeSingle<ICollectionRow>();
+          if (!retryReadError && retryData) {
+            const { error: retryUpdateError } = await this.client
+              .from("player_collection_cards")
+              .update({ owned_copies: retryData.owned_copies + increment })
+              .eq("player_id", playerId)
+              .eq("card_id", cardId);
+            if (!retryUpdateError) continue;
+          }
+          throw new ValidationError(`No se pudo añadir una carta al almacén.${buildDbErrorContext(insertError)}`);
+        }
         continue;
       }
       const { error: updateError } = await this.client
@@ -64,7 +88,9 @@ export class SupabaseCardCollectionRepository implements ICardCollectionReposito
         .update({ owned_copies: data.owned_copies + increment })
         .eq("player_id", playerId)
         .eq("card_id", cardId);
-      if (updateError) throw new ValidationError("No se pudo actualizar copias de carta en el almacén.");
+      if (updateError) {
+        throw new ValidationError(`No se pudo actualizar copias de carta en el almacén.${buildDbErrorContext(updateError)}`);
+      }
     }
   }
 
