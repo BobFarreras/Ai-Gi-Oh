@@ -5,11 +5,10 @@ import { ICard } from "@/core/entities/ICard";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { IBoardUiError } from "../../hooks/internal/boardError";
 import { IPendingZoneReplacement } from "../../hooks/internal/board-state/pending-replacement";
-import { BattleBannerCenter } from "../BattleBannerCenter";
 import { FusionCinematicLayer } from "../FusionCinematicLayer";
 import { PauseOverlay } from "./PauseOverlay";
-import { EntityReplacementConfirmOverlay } from "./EntityReplacementConfirmOverlay";
 import { TurnAdvanceGuardOverlay } from "./TurnAdvanceGuardOverlay";
+import { BoardActionOverlays } from "./internal/BoardActionOverlays";
 import { BoardErrorOverlay } from "./internal/BoardErrorOverlay";
 import { BoardZoneBrowsers } from "./internal/BoardZoneBrowsers";
 import { IFusionMaterialCandidate, FusionMaterialBrowser } from "./internal/FusionMaterialBrowser";
@@ -102,38 +101,22 @@ export function BoardStatusOverlays({
   return (
     <>
       <BoardErrorOverlay error={lastError} onClose={onCloseError} />
-
-      {pendingActionHint && (
-        <div className="absolute left-1/2 top-1/2 z-[155] w-[94%] max-w-4xl -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-amber-300/60 bg-amber-950/90 px-6 py-5 text-amber-100 shadow-[0_0_45px_rgba(251,191,36,0.3)] pointer-events-none">
-          <p className="text-sm font-black tracking-[0.16em] uppercase text-amber-300">Acción obligatoria</p>
-          <p className="mt-1 text-lg font-black leading-tight sm:text-2xl">{pendingActionHint}</p>
-        </div>
-      )}
-      {pendingEntityReplacement && pendingEntityReplacementTargetCard && (
-        <EntityReplacementConfirmOverlay
-          zone={pendingEntityReplacement.zone}
-          targetCard={pendingEntityReplacementTargetCard}
-          onConfirm={onConfirmEntityReplacement}
-          onCancel={onCancelEntityReplacement}
-        />
-      )}
-
-      {showBattleBanners ? (
-        <BattleBannerCenter
-          events={combatLog}
-          playerAId={playerAId}
-          playerAName={playerAName}
-          playerBId={playerBId}
-          playerBName={playerBName}
-          externalBannerSignal={externalBannerSignal}
-        />
-      ) : null}
-      <PauseOverlay isPaused={isPaused} onResume={onResumePause} onExit={onExitPause} />
-      <TurnAdvanceGuardOverlay
-        warning={pendingAdvanceWarning}
-        onConfirm={onConfirmAdvancePhase}
-        onCancel={onCancelAdvancePhase}
+      <BoardActionOverlays
+        pendingActionHint={pendingActionHint}
+        pendingEntityReplacement={pendingEntityReplacement}
+        pendingEntityReplacementTargetCard={pendingEntityReplacementTargetCard}
+        combatLog={combatLog}
+        playerAId={playerAId}
+        playerAName={playerAName}
+        playerBId={playerBId}
+        playerBName={playerBName}
+        externalBannerSignal={externalBannerSignal}
+        showBattleBanners={showBattleBanners}
+        onConfirmEntityReplacement={onConfirmEntityReplacement}
+        onCancelEntityReplacement={onCancelEntityReplacement}
       />
+      <PauseOverlay isPaused={isPaused} onResume={onResumePause} onExit={onExitPause} />
+      <TurnAdvanceGuardOverlay warning={pendingAdvanceWarning} onConfirm={onConfirmAdvancePhase} onCancel={onCancelAdvancePhase} />
       <FusionCinematicLayer
         events={combatLog}
         onActiveChange={(active) => {
@@ -148,7 +131,6 @@ export function BoardStatusOverlays({
         selectedCount={fusionSelectedCount}
         onSelectMaterial={onSelectFusionMaterial}
       />
-   
       <BoardZoneBrowsers
         graveyardView={graveyardView}
         graveyardOwnerName={graveyardOwnerName}

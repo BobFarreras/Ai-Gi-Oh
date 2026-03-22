@@ -1,12 +1,12 @@
 // src/components/game/board/internal/use-board-screen-state.ts - Encapsula estado derivado, efectos y handlers de pantalla del tablero.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
 import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result/duel-result-reward-summary";
 import { IMatchNarrationPack } from "@/components/game/board/narration/types";
 import { useMatchNarration } from "@/components/game/board/hooks/internal/match/useMatchNarration";
-import { startInteraction, endInteraction } from "@/services/performance/dev-performance-telemetry";
 import { useBoard } from "@/components/game/board/hooks/useBoard";
+import { useBoardScreenInteractions } from "./use-board-screen-interactions";
 
 interface IUseBoardScreenStateInput {
   board: ReturnType<typeof useBoard>;
@@ -61,52 +61,14 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
     const candidates = board.pendingEntityReplacement.zone === "ENTITIES" ? input.playerActiveEntities : input.playerActiveExecutions;
     return candidates.find((entity) => entity.instanceId === board.pendingEntityReplacementTargetId)?.card ?? null;
   }, [board.pendingEntityReplacement, board.pendingEntityReplacementTargetId, input.playerActiveEntities, input.playerActiveExecutions]);
-  const pendingGraveyardSelectionRefs = useMemo(() => {
-    const pending = board.gameState.pendingTurnAction;
-    if (!pending || pending.type !== "SELECT_GRAVEYARD_CARD" || pending.playerId !== playerId) return [];
-    return input.playerGraveyard.filter((card) => !pending.cardType || card.type === pending.cardType).map((card) => card.runtimeId ?? card.id);
-  }, [board.gameState.pendingTurnAction, input.playerGraveyard, playerId]);
-  const onOverlayCardSelect = useCallback(
-    (card: ICard) => {
-      const pending = board.gameState.pendingTurnAction;
-      if (pending?.type === "SELECT_GRAVEYARD_CARD" && pending.playerId === playerId) {
-        board.resolvePendingTurnAction(card.runtimeId ?? card.id);
-        setGraveyardView(null);
-        return;
-      }
-      board.previewCard(card);
-    },
-    [board, playerId],
-  );
-  const handleActivateSelectedExecution = useCallback(() => {
-    void (async () => {
-      const token = startInteraction("board.activateSelectedExecution");
-      try {
-        board.playButtonClick();
-        const result = await board.activateSelectedExecution();
-        if (result === "MISSING_MATERIALS") {
-          setAutoModeBannerSignal({ id: `fusion-missing-materials-${Date.now()}`, left: "Fusion", right: "Faltan materiales" });
-          board.playBanner();
-        }
-        endInteraction(token, "ok");
-      } catch {
-        endInteraction(token, "error");
-      }
-    })();
-  }, [board]);
-  const handlePlayAction = useCallback(
-    async (mode: "ATTACK" | "DEFENSE" | "SET" | "ACTIVATE", event: React.MouseEvent) => {
-      const token = startInteraction("board.playAction");
-      try {
-        await board.executePlayAction(mode, event);
-        endInteraction(token, "ok");
-      } catch (error) {
-        endInteraction(token, "error");
-        throw error;
-      }
-    },
-    [board],
-  );
+  const { pendingGraveyardSelectionRefs, onOverlayCardSelect, handleActivateSelectedExecution, handlePlayAction } =
+    useBoardScreenInteractions({
+      board,
+      playerId,
+      playerGraveyard: input.playerGraveyard,
+      setGraveyardView,
+      setAutoModeBannerSignal,
+    });
   useEffect(() => {
     if (!board.winnerPlayerId) {
       resolvedWinnerRef.current = null;
