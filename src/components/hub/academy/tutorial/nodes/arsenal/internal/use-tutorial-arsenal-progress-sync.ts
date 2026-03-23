@@ -7,6 +7,7 @@ import { useTutorialNodeCompletionSync } from "@/components/hub/academy/tutorial
 interface IUseTutorialArsenalProgressSyncInput {
   selectedSlotIndex: number | null;
   selectedCollectionCardId: string | null;
+  canEvolveSelectedCard: boolean;
   tutorial: ReturnType<typeof useTutorialFlowController>;
 }
 
@@ -39,13 +40,16 @@ export function useTutorialArsenalProgressSync(input: IUseTutorialArsenalProgres
     }
     if (
       (stepId === "arsenal-select-collection-card" ||
-        stepId === "arsenal-reselect-collection-card" ||
-        stepId === "arsenal-evolution-theory") &&
+        stepId === "arsenal-reselect-collection-card") &&
       input.selectedCollectionCardId &&
       input.selectedCollectionCardId !== selectionBaselineRef.current.collectionCardId
     ) {
       input.tutorial.onAction("SELECT_COLLECTION_CARD");
     }
-  }, [input.selectedCollectionCardId, input.selectedSlotIndex, input.tutorial]);
+    if (stepId === "arsenal-evolution-theory" && input.selectedCollectionCardId && input.canEvolveSelectedCard) {
+      // Si ya está seleccionada una carta vibrando/evolvable, no exigimos re-selección distinta.
+      input.tutorial.onAction("SELECT_COLLECTION_CARD");
+    }
+  }, [input.canEvolveSelectedCard, input.selectedCollectionCardId, input.selectedSlotIndex, input.tutorial]);
   useTutorialNodeCompletionSync({ tutorial: input.tutorial, nodeId: "tutorial-arsenal-basics" });
 }

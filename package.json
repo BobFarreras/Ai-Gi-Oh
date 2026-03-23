@@ -9,6 +9,9 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "quality:story": "pnpm vitest run src/core/use-cases/story src/core/services/story/world src/services/story/build-story-chapter-briefing.test.ts src/components/hub/story/internal/resolve-story-performance-profile.test.ts && pnpm lint && pnpm build",
@@ -43,6 +46,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",

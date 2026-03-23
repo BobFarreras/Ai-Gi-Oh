@@ -44,6 +44,7 @@ export function TutorialArsenalClient(props: IHomeDeckBuilderSceneProps) {
   useTutorialArsenalProgressSync({
     selectedSlotIndex: sandbox.state.selectedSlotIndex,
     selectedCollectionCardId: sandbox.state.selectedCollectionCardId,
+    canEvolveSelectedCard: sandbox.state.canEvolveSelectedCard,
     tutorial,
   });
 

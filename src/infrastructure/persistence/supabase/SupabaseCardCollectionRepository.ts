@@ -19,6 +19,12 @@ function buildDbErrorContext(error: { code?: string; message?: string; details?:
   return raw ? ` (${raw})` : "";
 }
 
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 export class SupabaseCardCollectionRepository implements ICardCollectionRepository {
   constructor(private readonly client: SupabaseClient) {}
 
@@ -64,20 +70,30 @@ export class SupabaseCardCollectionRepository implements ICardCollectionReposito
           owned_copies: increment,
         });
         if (insertError) {
-          // Mitiga carreras: si otro request insertó justo antes, reintenta como update.
-          const { data: retryData, error: retryReadError } = await this.client
-            .from("player_collection_cards")
-            .select("player_id,card_id,owned_copies")
-            .eq("player_id", playerId)
-            .eq("card_id", cardId)
-            .maybeSingle<ICollectionRow>();
-          if (!retryReadError && retryData) {
-            const { error: retryUpdateError } = await this.client
-              .from("player_collection_cards")
-              .update({ owned_copies: retryData.owned_copies + increment })
-              .eq("player_id", playerId)
-              .eq("card_id", cardId);
-            if (!retryUpdateError) continue;
+          // Mitiga carreras: si otro request insertó antes, esperamos commit y reintentamos como update.
+          if (insertError.code === "23505") {
+            let wasRecovered = false;
+            for (let attempt = 0; attempt < 3; attempt += 1) {
+              const { data: retryData, error: retryReadError } = await this.client
+                .from("player_collection_cards")
+                .select("player_id,card_id,owned_copies")
+                .eq("player_id", playerId)
+                .eq("card_id", cardId)
+                .maybeSingle<ICollectionRow>();
+              if (!retryReadError && retryData) {
+                const { error: retryUpdateError } = await this.client
+                  .from("player_collection_cards")
+                  .update({ owned_copies: retryData.owned_copies + increment })
+                  .eq("player_id", playerId)
+                  .eq("card_id", cardId);
+                if (!retryUpdateError) {
+                  wasRecovered = true;
+                  break;
+                }
+              }
+              await wait(50 * (attempt + 1));
+            }
+            if (wasRecovered) continue;
           }
           throw new ValidationError(`No se pudo añadir una carta al almacén.${buildDbErrorContext(insertError)}`);
         }

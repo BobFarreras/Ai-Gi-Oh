@@ -24,9 +24,9 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 const detailPanelClass =
-  "absolute left-0 top-[clamp(6.25rem,12vh,9.25rem)] bottom-[clamp(8.25rem,22vh,14.25rem)] w-[clamp(17rem,32vw,23rem)] bg-zinc-950/84 border-r-2 border-cyan-500/50 z-[230] p-4 md:p-5 backdrop-blur-2xl shadow-[20px_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden rounded-r-3xl min-h-0";
+  "absolute left-0 top-[clamp(6.25rem,12vh,9.25rem)] bottom-[clamp(8.25rem,22vh,14.25rem)] w-[clamp(17rem,32vw,23rem)] bg-zinc-950/84 border-r-2 border-cyan-500/50 z-[90] p-4 md:p-5 backdrop-blur-2xl shadow-[20px_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden rounded-r-3xl min-h-0";
 const historyPanelClass =
-  "absolute right-3 md:right-5 top-[clamp(5.75rem,11vh,8.5rem)] bottom-[clamp(6.75rem,18vh,11.75rem)] w-[clamp(17rem,34vw,24rem)] bg-zinc-950/88 border-l-2 border-red-500/50 z-[230] p-4 md:p-5 backdrop-blur-2xl shadow-[-20px_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden rounded-l-3xl min-h-0";
+  "absolute right-3 md:right-5 top-[clamp(5.75rem,11vh,8.5rem)] bottom-[clamp(6.75rem,18vh,11.75rem)] w-[clamp(17rem,34vw,24rem)] bg-zinc-950/88 border-l-2 border-red-500/50 z-[90] p-4 md:p-5 backdrop-blur-2xl shadow-[-20px_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden rounded-l-3xl min-h-0";
 
 export function SidePanels({ selectedCard, gameState, isHistoryOpen, onSelectCard, onCloseCard, onCloseHistory }: SidePanelsProps) {
   const [turnFilter, setTurnFilter] = useState<number | "ALL">("ALL");
