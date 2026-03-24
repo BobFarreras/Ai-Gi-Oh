@@ -15,6 +15,8 @@ export function BoardStatusAndTopBarSection({
   playerAvatarUrl,
   opponentAvatarUrl,
   onExitMatch,
+  isTurnTimerEnabled = true,
+  suppressCombatBanners = false,
 }: IBoardViewSectionProps) {
   if (screen.isResultVisible) return null;
   const pendingFusionAction =
@@ -60,6 +62,9 @@ export function BoardStatusAndTopBarSection({
         graveyardOwnerName={screen.visibleGraveyardOwner}
         graveyardCards={screen.visibleGraveyardCards}
         graveyardSelectableCardRefs={screen.effectiveGraveyardView === "player" ? screen.pendingGraveyardSelectionRefs : []}
+        fusionDeckView={screen.fusionDeckView}
+        fusionDeckOwnerName={screen.visibleFusionDeckOwner}
+        fusionDeckCards={screen.visibleFusionDeckCards}
         destroyedView={screen.destroyedView}
         destroyedOwnerName={screen.visibleDestroyedOwner}
         destroyedCards={screen.visibleDestroyedCards}
@@ -76,12 +81,14 @@ export function BoardStatusAndTopBarSection({
           board.cancelEntityReplacement();
         }}
         onCloseGraveyard={() => screen.setGraveyardView(null)}
+        onCloseFusionDeck={() => screen.setFusionDeckView(null)}
         onCloseDestroyed={() => screen.setDestroyedView(null)}
         onPreviewCard={screen.onOverlayCardSelect}
         pendingAdvanceWarning={board.pendingAdvanceWarning}
         onConfirmAdvancePhase={board.confirmAdvancePhase}
         onCancelAdvancePhase={board.cancelAdvancePhase}
         externalBannerSignal={screen.autoModeBannerSignal}
+        showBattleBanners={!suppressCombatBanners}
         isFusionMaterialBrowserOpen={Boolean(pendingFusionAction)}
         fusionMaterialCandidates={fusionMaterialCandidates}
         fusionSelectedCount={board.pendingFusionSelectedEntityIds.length}
@@ -103,6 +110,7 @@ export function BoardStatusAndTopBarSection({
           isActive={board.isPlayerTurn}
           isPaused={board.isPaused}
           hasWinner={Boolean(board.winnerPlayerId)}
+          isTimerEnabled={isTurnTimerEnabled}
           onTimeUp={() => {
             board.playTimerExpired();
             board.handleTimerExpired();
@@ -118,6 +126,7 @@ export function BoardStatusAndTopBarSection({
           isPlayerTurn={board.isPlayerTurn}
           isPaused={board.isPaused}
           hasWinner={Boolean(board.winnerPlayerId)}
+          isTimerEnabled={isTurnTimerEnabled}
           onTimeUp={() => {
             board.playTimerExpired();
             board.handleTimerExpired();

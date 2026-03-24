@@ -20,7 +20,6 @@ vi.mock("@/components/game/board/internal/BoardStatusAndTopBarSection", () => ({
     <div>
       <span>{player.name}</span>
       <span>{opponent.name}</span>
-      <span>Dificultad EASY</span>
     </div>
   ),
 }));
@@ -68,7 +67,6 @@ describe("Board HUD y fases", () => {
     render(<Board />);
     expect(screen.getByText("Boby Master")).toBeInTheDocument();
     expect(screen.getByText("AI Overlord")).toBeInTheDocument();
-    expect(screen.getByText(/dificultad easy/i)).toBeInTheDocument();
   });
 
   it("deshabilita acciones de fase cuando es turno rival", () => {

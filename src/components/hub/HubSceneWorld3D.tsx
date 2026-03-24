@@ -11,6 +11,7 @@ import { HubSceneNode3D } from "@/components/hub/HubSceneNode3D";
 import { HUB_NODE_STAGGER_DELAY } from "@/components/hub/internal/hub-entry-timings";
 import { HUB_SCENE_FLOOR_CONFIG } from "@/components/hub/internal/hub-scene-floor-config";
 import { resolveFloorConfigForProfile, resolveHubRenderProfile } from "@/components/hub/internal/hub-render-profile";
+import { useHubDeviceCapability } from "@/components/hub/internal/use-hub-device-capability";
 
 interface HubSceneWorld3DProps {
   sections: IHubSection[];
@@ -41,11 +42,15 @@ export function HubSceneWorld3D({
   activeNodeId,
   isNavigationBusy,
 }: HubSceneWorld3DProps) {
+  const capability = useHubDeviceCapability();
   const sectionsByType = useMemo(
     () => new Map<HubSectionType, IHubSection>(sections.map((section) => [section.type, section])),
     [sections],
   );
-  const renderProfile = useMemo(() => resolveHubRenderProfile(viewportWidth), [viewportWidth]);
+  const renderProfile = useMemo(
+    () => resolveHubRenderProfile(viewportWidth, capability),
+    [capability, viewportWidth],
+  );
   const floorConfig = useMemo(
     () => resolveFloorConfigForProfile(HUB_SCENE_FLOOR_CONFIG, renderProfile),
     [renderProfile],

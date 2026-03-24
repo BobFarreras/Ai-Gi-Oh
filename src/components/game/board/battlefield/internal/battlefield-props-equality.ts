@@ -40,6 +40,7 @@ export function areEqualBattlefieldProps(previous: BattlefieldProps, next: Battl
     previous.isMobileLayout === next.isMobileLayout &&
     previous.onActivateSelectedExecution === next.onActivateSelectedExecution &&
     previous.onGraveyardClick === next.onGraveyardClick &&
+    previous.onFusionDeckClick === next.onFusionDeckClick &&
     previous.onDestroyedClick === next.onDestroyedClick &&
     previous.onEntityClick === next.onEntityClick
   );

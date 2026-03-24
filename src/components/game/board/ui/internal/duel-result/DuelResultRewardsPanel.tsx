@@ -1,4 +1,4 @@
-// src/components/game/board/ui/internal/duel-result/DuelResultRewardsPanel.tsx
+// src/components/game/board/ui/internal/duel-result/DuelResultRewardsPanel.tsx - Panel visual de recompensas finales con EXP, Nexus y regalo opcional.
 "use client";
 
 import { motion } from "framer-motion";
@@ -15,7 +15,7 @@ export function DuelResultRewardsPanel({ rewardSummary, isGiftOpen, onToggleGift
   const hasGift = rewardSummary.rewardCards.length > 0;
 
   return (
-    <section className="flex flex-col gap-4 h-full">
+    <section data-tutorial-id="tutorial-board-duel-result-rewards" className="flex flex-col gap-4 h-full">
       {/* TARJETA DE EXPERIENCIA DE JUGADOR */}
       <div className="relative overflow-hidden rounded-xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/60 to-black/80 p-5 shadow-[inset_0_0_20px_rgba(34,211,238,0.1)]">
         <Zap className="absolute -right-6 -top-2 w-28 h-28 text-cyan-500/10 -rotate-12 pointer-events-none" />

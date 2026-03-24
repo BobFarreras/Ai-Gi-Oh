@@ -13,6 +13,7 @@ interface HomeInspectorActionButtonsProps {
   onInsert: () => void;
   onRemove: () => void;
   onEvolve: () => void;
+  tutorialHighlightTargetId?: string | null;
 }
 
 const actionButtonClass =
@@ -28,6 +29,7 @@ export function HomeInspectorActionButtons({
   onInsert,
   onRemove,
   onEvolve,
+  tutorialHighlightTargetId = null,
 }: HomeInspectorActionButtonsProps) {
   if (source === "NONE") return null;
   const showEvolve = source === "COLLECTION";
@@ -36,16 +38,29 @@ export function HomeInspectorActionButtons({
   const canInsertNow = canInsert && !isBusy;
   const canRemoveNow = canRemove && !isBusy;
   const canEvolveNow = canEvolve && !isBusy;
+  const addHighlightClass =
+    tutorialHighlightTargetId === "tutorial-home-add-button"
+      ? "ring-2 ring-cyan-300/95 shadow-[0_0_16px_rgba(34,211,238,0.65)]"
+      : "";
+  const removeHighlightClass =
+    tutorialHighlightTargetId === "tutorial-home-remove-button"
+      ? "ring-2 ring-cyan-300/95 shadow-[0_0_16px_rgba(34,211,238,0.65)]"
+      : "";
+  const evolveHighlightClass =
+    tutorialHighlightTargetId === "tutorial-home-evolve-button"
+      ? "ring-2 ring-cyan-300/95 shadow-[0_0_16px_rgba(34,211,238,0.65)]"
+      : "";
 
   return (
     <div className={`mt-auto gap-2 pt-3 ${layoutClass}`}>
       {source === "COLLECTION" ? (
         <button
           type="button"
+          data-tutorial-id="tutorial-home-add-button"
           aria-label="Añadir carta al deck"
           disabled={!canInsertNow}
           onClick={onInsert}
-          className={`${actionButtonClass} ${
+          className={`${actionButtonClass} ${addHighlightClass} ${
             canInsertNow
               ? "border-cyan-500/60 bg-cyan-950/35 text-cyan-200"
               : "border-zinc-800 bg-zinc-950/55 text-zinc-600"
@@ -57,10 +72,11 @@ export function HomeInspectorActionButtons({
       ) : (
         <button
           type="button"
+          data-tutorial-id="tutorial-home-remove-button"
           aria-label="Remover carta del deck"
           disabled={!canRemoveNow}
           onClick={onRemove}
-          className={`${actionButtonClass} ${
+          className={`${actionButtonClass} ${removeHighlightClass} ${
             canRemoveNow
               ? "border-red-500/55 bg-red-950/35 text-red-200"
               : "border-zinc-800 bg-zinc-950/55 text-zinc-600"
@@ -73,10 +89,11 @@ export function HomeInspectorActionButtons({
       {showEvolve ? (
         <button
           type="button"
+          data-tutorial-id="tutorial-home-evolve-button"
           aria-label="Evolucionar carta seleccionada"
           disabled={!canEvolveNow}
           onClick={onEvolve}
-          className={`${actionButtonClass} ${
+          className={`${actionButtonClass} ${evolveHighlightClass} ${
             canEvolveNow
               ? "border-amber-400/60 bg-amber-900/30 text-amber-100"
               : "border-zinc-800 bg-zinc-950/55 text-zinc-600"

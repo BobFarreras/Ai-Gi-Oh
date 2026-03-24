@@ -9,12 +9,25 @@ export interface IHubRenderProfile {
   gridDivisions: number;
 }
 
+export interface IHubRenderCapabilityInput {
+  prefersReducedMotion?: boolean;
+  isConstrainedDevice?: boolean;
+}
+
 const MOBILE_PROFILE: IHubRenderProfile = {
   dpr: [1, 1.2],
   floorBlur: [120, 28],
   floorReflectionResolution: 256,
   floorReflectionStrength: 14,
   gridDivisions: 64,
+};
+
+const DESKTOP_CONSTRAINED_PROFILE: IHubRenderProfile = {
+  dpr: [1, 1.2],
+  floorBlur: [160, 36],
+  floorReflectionResolution: 256,
+  floorReflectionStrength: 16,
+  gridDivisions: 72,
 };
 
 const DESKTOP_PROFILE: IHubRenderProfile = {
@@ -25,8 +38,12 @@ const DESKTOP_PROFILE: IHubRenderProfile = {
   gridDivisions: 90,
 };
 
-export function resolveHubRenderProfile(viewportWidth: number): IHubRenderProfile {
+export function resolveHubRenderProfile(
+  viewportWidth: number,
+  capability: IHubRenderCapabilityInput = {},
+): IHubRenderProfile {
   if (viewportWidth < 640) return MOBILE_PROFILE;
+  if (capability.prefersReducedMotion || capability.isConstrainedDevice) return DESKTOP_CONSTRAINED_PROFILE;
   return DESKTOP_PROFILE;
 }
 

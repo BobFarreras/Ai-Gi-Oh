@@ -11,6 +11,7 @@ import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
 import { IMarketCatalog } from "@/core/use-cases/market/GetMarketCatalogUseCase";
 import { useMarketPurchaseActions } from "@/components/hub/market/internal/useMarketPurchaseActions";
 import { useLocalMarketSceneStore, useMarketStoreSelector } from "@/components/hub/market/internal/market-scene-store";
+import { IMarketPurchaseActionOverrides } from "@/components/hub/market/internal/market-tutorial-contract";
 import { countRender } from "@/services/performance/dev-performance-telemetry";
 
 interface UseMarketSceneStateInput {
@@ -18,6 +19,7 @@ interface UseMarketSceneStateInput {
   initialCatalog: IMarketCatalog;
   initialTransactions: IMarketTransaction[];
   initialCollection: ICollectionCard[];
+  purchaseActionOverrides?: IMarketPurchaseActionOverrides;
 }
 
 export function useMarketSceneState(input: UseMarketSceneStateInput) {
@@ -79,7 +81,12 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     [collection, nameQuery, orderDirection, orderField, typeFilter],
   );
   useSyncSelectedListing({ selectedListing, visibleListings, setSelectedListing, setSelectedCard });
-  const { handleBuyCard, handleBuyPack } = useMarketPurchaseActions({ store, playerId: input.playerId, play });
+  const { handleBuyCard, handleBuyPack } = useMarketPurchaseActions({
+    store,
+    playerId: input.playerId,
+    play,
+    purchaseActionOverrides: input.purchaseActionOverrides,
+  });
 
   return {
     catalog,

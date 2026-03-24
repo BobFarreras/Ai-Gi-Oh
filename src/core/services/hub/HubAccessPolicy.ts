@@ -2,11 +2,26 @@
 import { HubSectionType, IHubSection } from "@/core/entities/hub/IHubSection";
 import { IPlayerHubProgress } from "@/core/entities/hub/IPlayerHubProgress";
 
-const ALWAYS_UNLOCKED_TYPES: ReadonlySet<HubSectionType> = new Set(["MARKET", "HOME", "TRAINING", "STORY"]);
+const TUTORIAL_GATE_UNLOCKED_TYPES: ReadonlySet<HubSectionType> = new Set(["TRAINING"]);
+
+function isTutorialGateActive(progress: IPlayerHubProgress): boolean {
+  return !progress.hasCompletedTutorial && !progress.hasSkippedTutorial;
+}
+
+function resolveTutorialGateLock(section: IHubSection): IHubSection {
+  if (TUTORIAL_GATE_UNLOCKED_TYPES.has(section.type)) {
+    return { ...section, isLocked: false, lockReason: null };
+  }
+  return {
+    ...section,
+    isLocked: true,
+    lockReason: "Completa el tutorial de Academy o usa 'Saltar tutorial' desde la bienvenida.",
+  };
+}
 
 export function resolveHubSectionLock(section: IHubSection, progress: IPlayerHubProgress): IHubSection {
-  if (ALWAYS_UNLOCKED_TYPES.has(section.type)) {
-    return { ...section, isLocked: false, lockReason: null };
+  if (isTutorialGateActive(progress)) {
+    return resolveTutorialGateLock(section);
   }
 
   if (section.type === "MULTIPLAYER" && progress.medals < 1) {

@@ -71,6 +71,7 @@ export function SlotCellEntity({
         isHighlighted ? "ring-4 ring-amber-400 shadow-[0_0_35px_rgba(251,191,36,0.8)] animate-pulse rounded-xl" : "",
         isSelectedMaterial ? "ring-4 ring-cyan-300 shadow-[0_0_35px_rgba(34,211,238,0.9)] rounded-xl" : "",
       )}
+      data-tutorial-id={!isOpponentSide ? `tutorial-board-player-entity-card-${entity.card.id}` : undefined}
       data-board-card-id={entity.card.id}
       data-board-entity-instance-id={entity.instanceId}
       onClick={(event) => onEntityClick(entity, isOpponentSide, event)}

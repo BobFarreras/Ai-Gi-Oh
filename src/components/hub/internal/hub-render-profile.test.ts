@@ -10,6 +10,18 @@ describe("hub-render-profile", () => {
     expect(profile.floorReflectionResolution).toBe(256);
   });
 
+  it("reduce coste en desktop con hardware limitado", () => {
+    const profile = resolveHubRenderProfile(1440, { isConstrainedDevice: true });
+    expect(profile.dpr[1]).toBe(1.2);
+    expect(profile.floorReflectionResolution).toBe(256);
+  });
+
+  it("reduce coste en desktop cuando hay reduced motion", () => {
+    const profile = resolveHubRenderProfile(1440, { prefersReducedMotion: true });
+    expect(profile.floorReflectionStrength).toBe(16);
+    expect(profile.gridDivisions).toBe(72);
+  });
+
   it("mantiene calidad alta en desktop", () => {
     const profile = resolveHubRenderProfile(1440);
     const floor = resolveFloorConfigForProfile(HUB_SCENE_FLOOR_CONFIG, profile);

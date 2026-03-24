@@ -3,8 +3,8 @@ import { vi } from "vitest";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { ICard } from "@/core/entities/ICard";
 
-export function createMouseEvent(): ReactMouseEvent {
-  return { stopPropagation: vi.fn() } as unknown as ReactMouseEvent;
+export function createMouseEvent(detail = 1): ReactMouseEvent {
+  return { stopPropagation: vi.fn(), detail } as unknown as ReactMouseEvent;
 }
 
 export const integrationEntityCard: ICard = {

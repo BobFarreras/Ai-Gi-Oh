@@ -14,6 +14,8 @@ export class SupabaseHubRepository implements IHubRepository {
     return {
       playerId,
       hasCompletedTutorial: progress?.hasCompletedTutorial ?? false,
+      hasSeenAcademyIntro: progress?.hasSeenAcademyIntro ?? false,
+      hasSkippedTutorial: progress?.hasSkippedTutorial ?? false,
       medals: progress?.medals ?? 0,
       storyChapter: progress?.storyChapter ?? 1,
     };

@@ -9,10 +9,14 @@ interface IBoardZoneBrowsersProps {
   graveyardOwnerName: string;
   graveyardCards: ICard[];
   graveyardSelectableCardRefs: string[];
+  fusionDeckView: "player" | "opponent" | null;
+  fusionDeckOwnerName: string;
+  fusionDeckCards: ICard[];
   destroyedView: "player" | "opponent" | null;
   destroyedOwnerName: string;
   destroyedCards: ICard[];
   onCloseGraveyard: () => void;
+  onCloseFusionDeck: () => void;
   onCloseDestroyed: () => void;
   onPreviewCard: (card: ICard) => void;
 }
@@ -22,10 +26,14 @@ export function BoardZoneBrowsers({
   graveyardOwnerName,
   graveyardCards,
   graveyardSelectableCardRefs,
+  fusionDeckView,
+  fusionDeckOwnerName,
+  fusionDeckCards,
   destroyedView,
   destroyedOwnerName,
   destroyedCards,
   onCloseGraveyard,
+  onCloseFusionDeck,
   onCloseDestroyed,
   onPreviewCard,
 }: IBoardZoneBrowsersProps) {
@@ -39,6 +47,15 @@ export function BoardZoneBrowsers({
         cards={graveyardCards}
         selectableCardRefs={graveyardSelectableCardRefs}
         onClose={onCloseGraveyard}
+        onSelectCard={onPreviewCard}
+      />
+      <GraveyardBrowser
+        isOpen={fusionDeckView !== null}
+        ownerName={fusionDeckOwnerName}
+        title="Deck de Fusión"
+        emptyMessage="No hay cartas en este deck de fusión."
+        cards={fusionDeckCards}
+        onClose={onCloseFusionDeck}
         onSelectCard={onPreviewCard}
       />
       <GraveyardBrowser

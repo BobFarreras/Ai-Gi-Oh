@@ -4,4 +4,6 @@ export interface IPlayerHubProgress {
   medals: number;
   storyChapter: number;
   hasCompletedTutorial: boolean;
+  hasSeenAcademyIntro?: boolean;
+  hasSkippedTutorial?: boolean;
 }

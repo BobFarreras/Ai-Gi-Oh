@@ -26,7 +26,6 @@ export function BoardPlayersSection({
         player={player}
         opponent={opponent}
         isPlayerTurn={board.isPlayerTurn}
-        opponentDifficulty={board.opponentDifficulty}
         lastDamageTargetPlayerId={board.lastDamageTargetPlayerId}
         lastDamageAmount={board.lastDamageAmount}
         lastDamageEventId={board.lastDamageEventId}
@@ -49,7 +48,6 @@ export function BoardPlayersSection({
         isOpponent={true}
         player={opponent}
         isActiveTurn={!board.isPlayerTurn}
-        badgeText={`Dificultad ${board.opponentDifficulty}`}
         wasDamagedThisAction={board.lastDamageTargetPlayerId === opponent.id}
         damageAmount={board.lastDamageAmount}
         damagePulseKey={board.lastDamageEventId}

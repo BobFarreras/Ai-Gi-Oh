@@ -4,6 +4,7 @@ import { GameState } from "@/core/use-cases/GameEngine";
 import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
 import { resolveDifficultyFromCampaign } from "@/core/services/opponent/difficulty/resolveDifficultyFromCampaign";
 import { ICampaignProgress } from "@/core/services/opponent/difficulty/types";
+import { IOpponentStrategy } from "@/core/services/opponent/types";
 import { toBoardUiError } from "../boardError";
 import { useOpponentTurn } from "../useOpponentTurn";
 import { usePlayerActions } from "../usePlayerActions";
@@ -17,11 +18,24 @@ interface IUseMatchRuntimeParams {
   uiState: IUseMatchUiStateResult;
   winnerPlayerId: string | "DRAW" | null;
   isMatchStartLocked?: boolean;
+  disableOpponentAutomation?: boolean;
+  opponentStrategyOverride?: IOpponentStrategy | null;
 }
 
-export function useMatchRuntime({ campaignProgress, gameStateRef, uiState, winnerPlayerId, isMatchStartLocked = false }: IUseMatchRuntimeParams) {
+export function useMatchRuntime({
+  campaignProgress,
+  gameStateRef,
+  uiState,
+  winnerPlayerId,
+  isMatchStartLocked = false,
+  disableOpponentAutomation = false,
+  opponentStrategyOverride = null,
+}: IUseMatchRuntimeParams) {
   const opponentDifficulty = useMemo(() => resolveDifficultyFromCampaign(campaignProgress), [campaignProgress]);
-  const opponentStrategy = useMemo(() => new HeuristicOpponentStrategy({ difficulty: opponentDifficulty }), [opponentDifficulty]);
+  const opponentStrategy = useMemo(
+    () => opponentStrategyOverride ?? new HeuristicOpponentStrategy({ difficulty: opponentDifficulty }),
+    [opponentDifficulty, opponentStrategyOverride],
+  );
 
   useEffect(() => {
     gameStateRef.current = uiState.gameState;
@@ -65,6 +79,7 @@ export function useMatchRuntime({ campaignProgress, gameStateRef, uiState, winne
     strategy: opponentStrategy,
     duelWinnerId: winnerPlayerId,
     applyTransition,
+    disableAutomation: disableOpponentAutomation,
     clearSelection: uiState.clearSelection,
     clearError: uiState.clearError,
     setIsAnimating: uiState.setIsAnimating,

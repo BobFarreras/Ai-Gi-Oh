@@ -9,6 +9,7 @@ interface IExecutionLoggingParams {
   damageTargetPlayerId: string | null;
   damageAmount: number;
   healApplied: number;
+  energyRecovered: number;
   buffStat: "ATTACK" | "DEFENSE" | null;
   buffAmount: number;
   buffEntityIds: string[];
@@ -22,6 +23,7 @@ export function appendExecutionResolutionLogs(params: IExecutionLoggingParams): 
     damageTargetPlayerId,
     damageAmount,
     healApplied,
+    energyRecovered,
     buffStat,
     buffAmount,
     buffEntityIds,
@@ -42,6 +44,12 @@ export function appendExecutionResolutionLogs(params: IExecutionLoggingParams): 
     withLog = appendCombatLogEvent(withLog, playerId, "HEAL_APPLIED", {
       targetPlayerId: playerId,
       amount: healApplied,
+    });
+  }
+  if (energyRecovered > 0) {
+    withLog = appendCombatLogEvent(withLog, playerId, "ENERGY_GAINED", {
+      amount: energyRecovered,
+      source: "EXECUTION_RESTORE_ENERGY",
     });
   }
   if (buffStat && buffEntityIds.length > 0) {

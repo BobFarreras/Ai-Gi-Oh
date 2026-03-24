@@ -9,6 +9,7 @@ import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { IInspectorOrigin } from "@/components/hub/internal/mobile-inspector-animation";
 import { MobileInspectorDialogShell } from "@/components/hub/internal/MobileInspectorDialogShell";
 import { IHomeActionResult } from "@/components/hub/home/layout/home-workspace-types";
+import { HomeInspectorStatusMessage } from "@/components/hub/home/internal/view/HomeInspectorStatusMessage";
 
 interface HomeCardInspectorDialogProps {
   isOpen: boolean;
@@ -27,6 +28,8 @@ interface HomeCardInspectorDialogProps {
   onRemove: () => Promise<IHomeActionResult>;
   onEvolve: () => Promise<IHomeActionResult>;
   onClose: () => void;
+  isTutorialActionStep?: boolean;
+  tutorialHighlightTargetId?: string | null;
 }
 
 export function HomeCardInspectorDialog({
@@ -46,6 +49,8 @@ export function HomeCardInspectorDialog({
   onRemove,
   onEvolve,
   onClose,
+  isTutorialActionStep = false,
+  tutorialHighlightTargetId = null,
 }: HomeCardInspectorDialogProps) {
   const [pendingAction, setPendingAction] = useState<"INSERT" | "REMOVE" | "EVOLVE" | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
@@ -112,6 +117,8 @@ export function HomeCardInspectorDialog({
       closeAriaLabel="Cerrar inspección de carta"
       overlayTopClassName="top-[80px]"
       panelTopClassName="top-[88px] max-h-[calc(100dvh-96px)]"
+      zIndexClassName={isTutorialActionStep ? "z-[426]" : "z-[220]"}
+      overlayTintClassName={isTutorialActionStep ? "bg-transparent" : "bg-black/52"}
       isDismissDisabled={pendingAction !== null}
     >
       <div className="flex h-full min-h-0 flex-col">
@@ -132,18 +139,9 @@ export function HomeCardInspectorDialog({
           onInsert={handleInsert}
           onRemove={handleRemove}
           onEvolve={handleEvolve}
+          tutorialHighlightTargetId={tutorialHighlightTargetId}
         />
-        {statusMessage ? (
-          <p
-            className={`mt-2 rounded px-2 py-1 text-center text-[10px] font-bold uppercase tracking-[0.12em] ${
-              statusMessage.tone === "error"
-                ? "border border-rose-400/45 bg-rose-950/35 text-rose-100"
-                : "border border-emerald-400/40 bg-emerald-950/30 text-emerald-200"
-            }`}
-          >
-            {statusMessage.text}
-          </p>
-        ) : null}
+        <HomeInspectorStatusMessage statusMessage={statusMessage} />
       </div>
     </MobileInspectorDialogShell>
   );
