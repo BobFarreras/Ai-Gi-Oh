@@ -72,7 +72,7 @@ export function SidePanels({ selectedCard, gameState, isHistoryOpen, onSelectCar
 
   return (
     <AnimatePresence>
-      {selectedCard && (
+      {selectedCard && !isHistoryOpen && (
         <motion.div key={`left-panel-${selectedCard.runtimeId ?? selectedCard.id}`} initial={{ x: "-100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "-100%", opacity: 0 }} transition={{ type: "spring", stiffness: 500, damping: 30 }} className={detailPanelClass}>
           <button aria-label="Cerrar detalle" onClick={onCloseCard} className="absolute top-4 right-4 text-cyan-500 hover:text-white z-20"><X size={24} /></button>
           <div className="relative mt-1 mb-2 flex justify-center z-10 shrink-0 h-[clamp(12rem,28vh,15rem)] overflow-hidden">

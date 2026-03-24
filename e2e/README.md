@@ -21,6 +21,10 @@
 - `e2e/auth/login-standard-user.spec.ts`
   - inicia sesión con usuario estándar reusable,
   - valida acceso a `/hub`.
+- `e2e/combat/combat-arena-core-flow.spec.ts`
+  - entra a `/hub/academy/training/arena`,
+  - valida toggles de `pause`, `mute`, `auto` y apertura/cierre de `combat log`,
+  - prueba invocación base y secuencia de ataque cuando el estado de partida lo permite.
 
 ## Credenciales y limpieza
 - Usuario estándar (para market/home/combat):

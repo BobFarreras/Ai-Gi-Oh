@@ -48,6 +48,8 @@ export function BoardActionControlsSection({ board, screen, isMobile }: IBoardVi
           onToggleAutoPhase={toggleAutoPhase}
           onToggleHistory={() => {
             board.playButtonClick();
+            // Evita doble panel lateral (detalle + log) que degrada el layout en viewports ajustados.
+            board.clearSelection();
             board.setIsHistoryOpen((previous) => !previous);
           }}
           onSetSelectedEntityToAttack={() => {
@@ -74,6 +76,8 @@ export function BoardActionControlsSection({ board, screen, isMobile }: IBoardVi
           onToggleAutoPhase={toggleAutoPhase}
           onToggleHistory={() => {
             board.playButtonClick();
+            // Evita doble panel lateral (detalle + log) que degrada el layout en viewports ajustados.
+            board.clearSelection();
             board.setIsHistoryOpen((previous) => !previous);
           }}
           onSetSelectedEntityToAttack={() => {
