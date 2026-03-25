@@ -1,8 +1,8 @@
 // src/core/use-cases/game-engine/combat/execute-attack.ts - Orquesta declaración de ataque, reacción de trampas y resolución de daño/combate.
-import { resolveTrapTrigger } from "@/core/use-cases/game-engine/effects/resolve-trap-trigger";
 import { appendDirectAttackLogs, appendEntityBattleLogs } from "@/core/use-cases/game-engine/combat/internal/attack-logging";
 import { resolveDirectAttackState, resolveEntityBattleState } from "@/core/use-cases/game-engine/combat/internal/attack-resolution";
 import { validateAttackDeclaration, validateAttackerEntity } from "@/core/use-cases/game-engine/combat/internal/attack-validation";
+import { resolveReactiveTrapEvent } from "@/core/use-cases/game-engine/effects/internal/trap-trigger-registry";
 import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
@@ -17,10 +17,7 @@ export function executeAttack(
   const { player: attacker, opponent: defender } = getPlayerPair(state, attackerPlayerId);
   validateAttackerEntity(attacker.activeEntities.find((entity) => entity.instanceId === attackerInstanceId));
 
-  const stateAfterTrap = resolveTrapTrigger(state, defender.id, "ON_OPPONENT_ATTACK_DECLARED", {
-    attackerPlayerId,
-    attackerInstanceId,
-  });
+  const stateAfterTrap = resolveReactiveTrapEvent(state, defender.id, { type: "ATTACK_DECLARED", context: { attackerPlayerId, attackerInstanceId } });
   const { player: currentAttacker, opponent: currentDefender, isPlayerA } = getPlayerPair(stateAfterTrap, attackerPlayerId);
   const currentAttackerEntity = currentAttacker.activeEntities.find((entity) => entity.instanceId === attackerInstanceId);
 
