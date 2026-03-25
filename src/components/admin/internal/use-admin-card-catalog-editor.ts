@@ -11,7 +11,9 @@ import {
   IAdminCardCatalogDraft,
   mapEntryToCard,
 } from "@/components/admin/internal/admin-card-catalog-draft";
+import { applyCardTypeTemplate } from "@/components/admin/internal/admin-card-catalog-type-template";
 import { IAdminCardCatalogEntry, IAdminCatalogSnapshot } from "@/core/entities/admin/IAdminCatalogSnapshot";
+import { CardType } from "@/core/entities/ICard";
 
 interface IUseAdminCardCatalogEditorResult {
   cards: IAdminCardCatalogEntry[];
@@ -25,6 +27,7 @@ interface IUseAdminCardCatalogEditorResult {
   feedback: string;
   selectCard: (cardId: string) => void;
   updateDraft: <K extends keyof IAdminCardCatalogDraft>(key: K, value: IAdminCardCatalogDraft[K]) => void;
+  applyTypeTemplate: (nextType: CardType, force: boolean) => void;
   beginCreate: () => void;
   beginEdit: () => void;
   cancelEdit: () => void;
@@ -90,6 +93,7 @@ export function useAdminCardCatalogEditor(initialSnapshot: IAdminCatalogSnapshot
       setFeedback("");
     },
     updateDraft: (key, value) => setDraft((current) => ({ ...current, [key]: value })),
+    applyTypeTemplate: (nextType, force) => setDraft((current) => applyCardTypeTemplate(current, nextType, force)),
     beginCreate: () => {
       setDraft(createEmptyCardDraft());
       setMode("create");

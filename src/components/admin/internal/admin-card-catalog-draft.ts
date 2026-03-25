@@ -2,7 +2,7 @@
 import { IAdminUpsertCardCatalogCommand } from "@/core/entities/admin/IAdminCatalogCommands";
 import { IAdminCardCatalogEntry } from "@/core/entities/admin/IAdminCatalogSnapshot";
 import { CardArchetype, CardType, Faction, ICard, TrapTrigger } from "@/core/entities/ICard";
-
+export const ADMIN_CARD_DEFAULT_BG_URL = "/assets/bgs/bg-tech.jpg";
 export interface IAdminCardCatalogDraft {
   id: string;
   name: string;
@@ -37,6 +37,11 @@ function parseEffectJson(effectJson: string): unknown {
     throw new Error("El JSON de efecto no es válido.");
   }
 }
+function normalizeRenderUrl(value: string): string | null {
+  const normalized = value.trim();
+  if (normalized.length === 0) return null;
+  return normalized.startsWith("/assets/renders/") ? normalized : `/assets/renders/${normalized.replace(/^\/+/, "")}`;
+}
 export function createEmptyCardDraft(): IAdminCardCatalogDraft {
   return {
     id: "",
@@ -49,7 +54,7 @@ export function createEmptyCardDraft(): IAdminCardCatalogDraft {
     defenseText: "0",
     archetype: "NONE",
     trigger: "NONE",
-    bgUrl: "",
+    bgUrl: ADMIN_CARD_DEFAULT_BG_URL,
     renderUrl: "",
     effectJson: "",
     fusionRecipeId: "",
@@ -70,7 +75,7 @@ export function createDraftFromEntry(entry: IAdminCardCatalogEntry): IAdminCardC
     defenseText: entry.defense === null ? "" : String(entry.defense),
     archetype: entry.archetype ?? "NONE",
     trigger: entry.trigger ?? "NONE",
-    bgUrl: entry.bgUrl ?? "",
+    bgUrl: ADMIN_CARD_DEFAULT_BG_URL,
     renderUrl: entry.renderUrl ?? "",
     effectJson: entry.effect ? JSON.stringify(entry.effect, null, 2) : "",
     fusionRecipeId: entry.fusionRecipeId ?? "",
@@ -93,8 +98,8 @@ export function createCommandFromDraft(draft: IAdminCardCatalogDraft): IAdminUps
     defense: parseNullableNumber(draft.defenseText),
     archetype: draft.archetype === "NONE" ? null : draft.archetype,
     trigger: draft.trigger === "NONE" ? null : draft.trigger,
-    bgUrl: draft.bgUrl.trim().length === 0 ? null : draft.bgUrl.trim(),
-    renderUrl: draft.renderUrl.trim().length === 0 ? null : draft.renderUrl.trim(),
+    bgUrl: ADMIN_CARD_DEFAULT_BG_URL,
+    renderUrl: normalizeRenderUrl(draft.renderUrl),
     effect: parseEffectJson(draft.effectJson),
     fusionRecipeId: draft.fusionRecipeId.trim().length === 0 ? null : draft.fusionRecipeId.trim(),
     fusionMaterialIds: draft.fusionMaterialIdsText.split(",").map((value) => value.trim()).filter((value) => value.length > 0),

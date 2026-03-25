@@ -1,7 +1,7 @@
 // src/components/admin/internal/AdminCardCatalogEditorPanel.tsx - Contenedor del modo edición/alta con formulario y preview en paralelo.
 "use client";
 
-import { ICard } from "@/core/entities/ICard";
+import { CardType, ICard } from "@/core/entities/ICard";
 import { IAdminCardCatalogDraft } from "@/components/admin/internal/admin-card-catalog-draft";
 import { AdminCardCatalogFormFields } from "@/components/admin/internal/AdminCardCatalogFormFields";
 import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
@@ -12,11 +12,12 @@ interface IAdminCardCatalogEditorPanelProps {
   previewCard: ICard;
   isBusy: boolean;
   onChange: <K extends keyof IAdminCardCatalogDraft>(key: K, value: IAdminCardCatalogDraft[K]) => void;
+  onApplyTypeTemplate?: (nextType: CardType, force: boolean) => void;
   onCancel: () => void;
   onSave: () => Promise<void>;
 }
 
-export function AdminCardCatalogEditorPanel({ mode, draft, previewCard, isBusy, onChange, onCancel, onSave }: IAdminCardCatalogEditorPanelProps) {
+export function AdminCardCatalogEditorPanel({ mode, draft, previewCard, isBusy, onChange, onApplyTypeTemplate, onCancel, onSave }: IAdminCardCatalogEditorPanelProps) {
   return (
     <section className="min-h-0 rounded-2xl border border-slate-700 bg-slate-900/70 p-3">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -27,7 +28,7 @@ export function AdminCardCatalogEditorPanel({ mode, draft, previewCard, isBusy, 
         </div>
       </div>
       <div className="grid min-h-0 gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <AdminCardCatalogFormFields draft={draft} isBusy={isBusy} onChange={onChange} />
+        <AdminCardCatalogFormFields draft={draft} isBusy={isBusy} onChange={onChange} onApplyTypeTemplate={onApplyTypeTemplate ?? (() => undefined)} />
         <HomeCardInspector selectedCard={previewCard} selectedCardVersionTier={0} selectedCardLevel={0} selectedCardXp={0} selectedCardMasteryPassiveSkillId={null} minCardScale={0.62} maxCardScale={0.98} />
       </div>
     </section>

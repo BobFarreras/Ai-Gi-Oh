@@ -44,7 +44,7 @@ export function AdminCatalogPanel({ initialSnapshot }: AdminCatalogPanelProps) {
                 <button type="button" aria-label="Guardar carta en catálogo" className="h-9 rounded-md border border-emerald-500 px-3 text-xs font-bold uppercase text-emerald-200 disabled:opacity-50" onClick={() => void editor.save()} disabled={editor.isBusy}>Guardar</button>
               </div>
             </div>
-            <AdminCardCatalogFormFields draft={editor.draft} isBusy={editor.isBusy} onChange={editor.updateDraft} />
+            <AdminCardCatalogFormFields draft={editor.draft} isBusy={editor.isBusy} onChange={editor.updateDraft} onApplyTypeTemplate={editor.applyTypeTemplate} />
           </section>
         ) : (
           <AdminCardCatalogWarehousePanel cards={editor.cards} selectedCardId={editor.selectedCardId} cardById={cardById} onSelectCard={editor.selectCard} />
