@@ -6,6 +6,14 @@ function isHubRoute(pathname: string): boolean {
   return pathname === "/hub" || pathname.startsWith("/hub/");
 }
 
+function isAdminPortalRoute(pathname: string): boolean {
+  return pathname === "/admin-portal" || pathname.startsWith("/admin-portal/");
+}
+
+function isAdminEntryRoute(pathname: string): boolean {
+  return pathname === "/admin" || pathname.startsWith("/admin/");
+}
+
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request });
   const pathname = request.nextUrl.pathname;
@@ -23,7 +31,8 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (isHubRoute(pathname) && !user) {
+  const requiresSession = isHubRoute(pathname) || isAdminPortalRoute(pathname) || isAdminEntryRoute(pathname);
+  if (requiresSession && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
@@ -31,5 +40,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/hub/:path*"],
+  matcher: ["/hub/:path*", "/admin/:path*", "/admin-portal/:path*"],
 };

@@ -331,6 +331,21 @@
 3. Uso previsto:
    - `PATCH /api/player/onboarding` persiste decisiones de intro en Hub.
 
+## Fase A.0 (Seguridad base para módulo admin)
+
+1. Ejecuta `docs/supabase/sql/026_phase_admin_security_foundation.sql`.
+2. Verifica tablas:
+   - `public.admin_users`
+   - `public.admin_audit_log`
+3. Verifica RLS:
+   - `admin_users`: lectura propia activa (`auth.uid() = user_id` + `is_active = true`).
+   - `admin_audit_log`: lectura/inserción solo para actor propietario.
+4. Uso previsto:
+   - `admin_users`: whitelist explícita de cuentas con acceso al panel admin.
+   - `admin_audit_log`: trazabilidad de operaciones sensibles ejecutadas por admins.
+5. Alta inicial recomendada:
+   - insertar manualmente en SQL Editor el `user_id` admin tras crear su cuenta autenticada.
+
 ## Notas
 
 1. El trigger `on_auth_user_created` solo debe existir una vez.

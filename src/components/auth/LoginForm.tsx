@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { loginWithEmail } from "@/services/auth/auth-http-client";
+import { hasCurrentAdminSession, loginWithEmail } from "@/services/auth/auth-http-client";
 import { AuthField } from "@/components/auth/internal/AuthField";
 import { authFormBeamVariants, authFormContainerVariants, buildAuthPieceVariants } from "@/components/auth/internal/formAnimation";
 import { useAuthFormSfx } from "@/components/auth/internal/useAuthFormSfx";
@@ -31,7 +31,8 @@ export function LoginForm() {
         setErrorMessage(result.message ?? "No se pudo iniciar sesión.");
         return;
       }
-      router.push("/hub");
+      const isAdminSession = await hasCurrentAdminSession();
+      router.push(isAdminSession ? "/admin" : "/hub");
       router.refresh();
     });
   }

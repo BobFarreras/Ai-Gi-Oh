@@ -1,5 +1,6 @@
 // src/services/security/api/create-api-error-response.test.ts - Verifica mapeo de errores a status HTTP y contrato de respuesta con traceId.
 import { describe, expect, it } from "vitest";
+import { AuthorizationError } from "@/core/errors/AuthorizationError";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
@@ -17,6 +18,11 @@ describe("createApiErrorResponse", () => {
   it("mapea NotFoundError a 404", async () => {
     const response = createApiErrorResponse(new NotFoundError("No existe"), "fallback");
     expect(response.status).toBe(404);
+  });
+
+  it("mapea AuthorizationError a 403", async () => {
+    const response = createApiErrorResponse(new AuthorizationError("Acceso denegado"), "fallback");
+    expect(response.status).toBe(403);
   });
 
   it("mapea error inesperado a 500 con código INTERNAL_ERROR", async () => {

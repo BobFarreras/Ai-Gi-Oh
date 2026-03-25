@@ -15,6 +15,7 @@ function resolveTraceId(): string {
 
 function mapAppErrorToStatus(code: string): number {
   if (code === "NOT_FOUND_ERROR") return 404;
+  if (code === "AUTHORIZATION_ERROR") return 403;
   if (code === "VALIDATION_ERROR" || code === "GAME_RULE_ERROR") return 400;
   return 400;
 }

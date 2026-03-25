@@ -12,6 +12,8 @@ interface HomeCardInspectorProps {
   selectedCardLevel: number;
   selectedCardXp: number;
   selectedCardMasteryPassiveSkillId: string | null;
+  minCardScale?: number;
+  maxCardScale?: number;
 }
 
 export function HomeCardInspector({
@@ -20,6 +22,8 @@ export function HomeCardInspector({
   selectedCardLevel,
   selectedCardXp,
   selectedCardMasteryPassiveSkillId,
+  minCardScale = 0.5,
+  maxCardScale = 0.9,
 }: HomeCardInspectorProps) {
   const cardViewportRef = useRef<HTMLDivElement | null>(null);
   const [cardScale, setCardScale] = useState(0.76);
@@ -35,7 +39,7 @@ export function HomeCardInspector({
 
     // Ajusta la carta al ancho real disponible para evitar recorte en resoluciones compactas.
     const syncScale = (contentWidth: number): void => {
-      const nextScale = Math.max(0.5, Math.min(0.9, contentWidth / 260));
+      const nextScale = Math.max(minCardScale, Math.min(maxCardScale, contentWidth / 260));
       setCardScale(nextScale);
     };
 
@@ -47,7 +51,7 @@ export function HomeCardInspector({
     observer.observe(viewport);
     syncScale(viewport.clientWidth);
     return () => observer.disconnect();
-  }, []);
+  }, [maxCardScale, minCardScale]);
 
   return (
     <aside data-tutorial-id="tutorial-home-inspector" className="relative flex h-full min-h-0 flex-col overflow-visible rounded-2xl border border-cyan-900/45 bg-[linear-gradient(180deg,#041325_0%,#020a14_100%)] p-4 shadow-[0_0_24px_rgba(8,145,178,0.18)]">
@@ -56,14 +60,16 @@ export function HomeCardInspector({
       {selectedCard ? (
         <div className="relative flex min-h-0 flex-1 flex-col">
           <div ref={cardViewportRef} className="mx-auto flex w-full justify-center overflow-visible">
-            <div className="origin-top" style={{ transform: `scale(${cardScale})` }}>
-            <Card
-              card={selectedCard}
-              versionTier={selectedCardVersionTier}
-              level={selectedCardLevel}
-              xp={selectedCardXp}
-              masteryPassiveLabel={masteryPassiveLabel}
-            />
+            <div className="flex justify-center overflow-visible" style={{ height: `${Math.round(380 * cardScale)}px` }}>
+              <div className="origin-top" style={{ transform: `scale(${cardScale})` }}>
+                <Card
+                  card={selectedCard}
+                  versionTier={selectedCardVersionTier}
+                  level={selectedCardLevel}
+                  xp={selectedCardXp}
+                  masteryPassiveLabel={masteryPassiveLabel}
+                />
+              </div>
             </div>
           </div>
           <p className="mt-2 pb-1 text-lg font-black uppercase text-cyan-100">{selectedCard.name}</p>
