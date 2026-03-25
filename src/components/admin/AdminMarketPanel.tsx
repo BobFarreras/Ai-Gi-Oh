@@ -1,44 +1,40 @@
-// src/components/admin/AdminMarketPanel.tsx - Panel administrativo de mercado para listados y packs separado del catálogo de cartas.
+// src/components/admin/AdminMarketPanel.tsx - Panel visual de mercado admin para gestionar listings y packs con edición guiada.
 "use client";
 
-import { useMemo, useState } from "react";
-import { fetchAdminCatalogSnapshot, saveAdminListing, saveAdminPack } from "@/components/admin/admin-catalog-api";
-import { AdminJsonCommandForm } from "@/components/admin/internal/AdminJsonCommandForm";
+import { useMemo } from "react";
+import { AdminMarketListingsWorkspace } from "@/components/admin/internal/AdminMarketListingsWorkspace";
+import { AdminMarketPacksWorkspace } from "@/components/admin/internal/AdminMarketPacksWorkspace";
+import { mapEntryToCard } from "@/components/admin/internal/admin-card-catalog-draft";
+import { useAdminMarketEditor } from "@/components/admin/internal/use-admin-market-editor";
 import { IAdminCatalogSnapshot } from "@/core/entities/admin/IAdminCatalogSnapshot";
-
-const listingTemplate = JSON.stringify({ id: "listing-example-admin", cardId: "entity-example-admin", rarity: "COMMON", priceNexus: 120, stock: null, isAvailable: true }, null, 2);
-const packTemplate = JSON.stringify({ id: "pack-example-admin", name: "Pack Admin Example", description: "Pack editado desde admin.", priceNexus: 300, cardsPerPack: 5, packPoolId: "pool-example-admin", previewCardIds: ["entity-example-admin"], isAvailable: true, poolEntries: [{ id: "pool-example-admin-1", cardId: "entity-example-admin", rarity: "COMMON", weight: 10 }] }, null, 2);
 
 interface IAdminMarketPanelProps {
   initialSnapshot: IAdminCatalogSnapshot;
 }
 
 export function AdminMarketPanel({ initialSnapshot }: IAdminMarketPanelProps) {
-  const [snapshot, setSnapshot] = useState(initialSnapshot);
-  const [feedback, setFeedback] = useState("");
-
-  async function refresh(): Promise<void> {
-    try {
-      setSnapshot(await fetchAdminCatalogSnapshot());
-      setFeedback("");
-    } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No se pudo refrescar mercado admin.");
-    }
-  }
-
-  const counts = useMemo(() => ({ listings: snapshot.listings.length, packs: snapshot.packs.length }), [snapshot]);
+  const editor = useAdminMarketEditor(initialSnapshot);
+  const cardById = useMemo(() => new Map(editor.snapshot.cards.map((entry) => [entry.id, mapEntryToCard(entry)])), [editor.snapshot.cards]);
 
   return (
-    <section className="space-y-4">
-      <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-4 text-xs text-slate-200">
+    <section className="flex h-full min-h-0 flex-1 flex-col gap-3">
+      <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p>Listados: {counts.listings} · Packs: {counts.packs}</p>
-          <button type="button" aria-label="Refrescar datos de mercado admin" onClick={() => void refresh()} className="h-9 rounded-md border border-cyan-500 px-3 font-bold uppercase text-cyan-200">Refrescar</button>
+          <p className="text-xs text-slate-200">Listings: {editor.snapshot.listings.length} · Packs: {editor.snapshot.packs.length}</p>
+          <div className="flex items-center gap-2">
+            <button type="button" aria-label="Cambiar a vista listings market" className={`h-9 rounded-md border px-3 text-xs font-bold uppercase ${editor.tab === "listings" ? "border-cyan-300 bg-cyan-500/20 text-cyan-100" : "border-slate-600 text-slate-100"}`} onClick={() => editor.setTab("listings")}>Listings</button>
+            <button type="button" aria-label="Cambiar a vista packs market" className={`h-9 rounded-md border px-3 text-xs font-bold uppercase ${editor.tab === "packs" ? "border-cyan-300 bg-cyan-500/20 text-cyan-100" : "border-slate-600 text-slate-100"}`} onClick={() => editor.setTab("packs")}>Packs</button>
+            <button type="button" aria-label="Refrescar datos de market" className="h-9 rounded-md border border-cyan-500 px-3 text-xs font-bold uppercase text-cyan-200" onClick={() => void editor.refresh()} disabled={editor.isBusy}>Refrescar</button>
+          </div>
         </div>
-        {feedback ? <p className="mt-2 text-rose-300">{feedback}</p> : null}
+        {editor.feedback ? <p className={`mt-2 rounded-md border px-3 py-2 text-xs font-semibold ${editor.feedback.toLowerCase().includes("no se pudo") || editor.feedback.toLowerCase().includes("debe") ? "border-rose-500/70 bg-rose-900/25 text-rose-100" : "border-emerald-500/70 bg-emerald-900/20 text-emerald-100"}`}>{editor.feedback}</p> : null}
       </div>
-      <AdminJsonCommandForm title="Listing" description="Crea o edita listing en market_card_listings." initialValue={listingTemplate} submitLabel="Guardar listing" onSubmitJson={async (json) => { await saveAdminListing(json); await refresh(); }} />
-      <AdminJsonCommandForm title="Pack" description="Crea o edita pack y reemplaza su pool completo." initialValue={packTemplate} submitLabel="Guardar pack" onSubmitJson={async (json) => { await saveAdminPack(json); await refresh(); }} />
+
+      {editor.tab === "listings" ? (
+        <AdminMarketListingsWorkspace cards={editor.snapshot.cards} cardById={cardById} listingByCardId={editor.listingByCardId} selectedCardId={editor.selectedCardId} draft={editor.listingDraft} isBusy={editor.isBusy} onSelectCard={editor.selectCard} onUpdateDraft={editor.updateListingDraft} onSave={editor.saveListing} />
+      ) : (
+        <AdminMarketPacksWorkspace cards={editor.snapshot.cards} cardById={cardById} packs={editor.snapshot.packs} selectedPackId={editor.selectedPackId} isEditMode={editor.isPackEditMode} isBusy={editor.isBusy} draft={editor.packDraft} onSelectPack={editor.selectPack} onBeginCreate={editor.beginCreatePack} onBeginEdit={editor.beginEditPack} onCancel={editor.cancelPackEdit} onSave={editor.savePack} onDeletePack={editor.deletePack} onUpdateDraft={editor.updatePackDraft} onUpdatePoolEntry={editor.updatePackPoolEntry} onAddPoolEntry={editor.addPackPoolEntry} onRemovePoolEntry={editor.removePackPoolEntry} onRemovePoolEntries={editor.removePackPoolEntries} />
+      )}
     </section>
   );
 }

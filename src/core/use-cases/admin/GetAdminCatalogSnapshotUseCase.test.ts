@@ -13,6 +13,7 @@ describe("GetAdminCatalogSnapshotUseCase", () => {
       upsertCard: vi.fn(),
       upsertListing: vi.fn(),
       upsertPack: vi.fn(),
+      deletePack: vi.fn(),
       replacePackPoolEntries: vi.fn(),
     };
     const useCase = new GetAdminCatalogSnapshotUseCase(repository);

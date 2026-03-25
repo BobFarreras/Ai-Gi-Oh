@@ -21,6 +21,7 @@ export interface IAdminCatalogRepository {
   upsertCard(command: IAdminUpsertCardCatalogCommand): Promise<void>;
   upsertListing(command: IAdminUpsertMarketListingCommand): Promise<void>;
   upsertPack(command: IAdminUpsertMarketPackCommand): Promise<void>;
+  deletePack(packId: string): Promise<void>;
   replacePackPoolEntries(packPoolId: string, entries: IAdminUpsertPackPoolEntryCommand[]): Promise<void>;
 }
 

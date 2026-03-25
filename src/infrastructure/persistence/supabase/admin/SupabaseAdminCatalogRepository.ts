@@ -119,6 +119,16 @@ export class SupabaseAdminCatalogRepository implements IAdminCatalogRepository {
     if (error) throw new ValidationError("No se pudo guardar la definición del pack.");
   }
 
+  async deletePack(packId: string): Promise<void> {
+    const packResult = await this.client.from("market_pack_definitions").select("pack_pool_id").eq("id", packId).maybeSingle<{ pack_pool_id: string }>();
+    if (packResult.error) throw new ValidationError("No se pudo localizar el pack a eliminar.");
+    if (!packResult.data) throw new ValidationError("El pack indicado no existe.");
+    const poolDelete = await this.client.from("market_pack_pool_entries").delete().eq("pack_pool_id", packResult.data.pack_pool_id);
+    if (poolDelete.error) throw new ValidationError("No se pudo eliminar el pool del pack.");
+    const packDelete = await this.client.from("market_pack_definitions").delete().eq("id", packId);
+    if (packDelete.error) throw new ValidationError("No se pudo eliminar el pack.");
+  }
+
   async replacePackPoolEntries(packPoolId: string, entries: IAdminUpsertPackPoolEntryCommand[]): Promise<void> {
     const deleteResult = await this.client.from("market_pack_pool_entries").delete().eq("pack_pool_id", packPoolId);
     if (deleteResult.error) throw new ValidationError("No se pudo limpiar el pool actual del pack.");

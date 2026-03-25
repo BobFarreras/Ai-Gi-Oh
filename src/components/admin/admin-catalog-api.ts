@@ -21,6 +21,11 @@ async function postJson(url: string, payload: unknown, fallbackError: string): P
   if (!response.ok) throw await parseApiError(response, fallbackError);
 }
 
+async function deleteJson(url: string, fallbackError: string): Promise<void> {
+  const response = await fetch(url, { method: "DELETE", cache: "no-store" });
+  if (!response.ok) throw await parseApiError(response, fallbackError);
+}
+
 export async function fetchAdminCatalogSnapshot(): Promise<IAdminCatalogSnapshot> {
   const response = await fetch("/api/admin/catalog/snapshot", { method: "GET", cache: "no-store" });
   if (!response.ok) throw await parseApiError(response, "No se pudo cargar snapshot de catálogo admin.");
@@ -37,4 +42,8 @@ export function saveAdminListing(command: unknown): Promise<void> {
 
 export function saveAdminPack(command: unknown): Promise<void> {
   return postJson("/api/admin/catalog/packs", command, "No se pudo guardar pack admin.");
+}
+
+export function deleteAdminPack(packId: string): Promise<void> {
+  return deleteJson(`/api/admin/catalog/packs/${encodeURIComponent(packId)}`, "No se pudo eliminar pack admin.");
 }

@@ -12,6 +12,7 @@ function createRepositoryMock(): IAdminCatalogRepository {
     upsertCard: vi.fn(),
     upsertListing: vi.fn(),
     upsertPack: vi.fn(async () => undefined),
+    deletePack: vi.fn(),
     replacePackPoolEntries: vi.fn(async () => undefined),
   };
 }
