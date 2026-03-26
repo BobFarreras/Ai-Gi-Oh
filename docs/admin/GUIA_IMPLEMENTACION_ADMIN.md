@@ -222,7 +222,10 @@ Al finalizar, tendrás un panel admin con acceso seguro basado en rol real, oper
    - auditoría persistente por acción sensible en `admin_audit_log`,
    - `Cache-Control: no-store` en contexto admin API y `robots noindex` en portal admin,
    - mejoras de UX de error visible en formularios de login/registro.
-5. Pendiente bloque de evolución:
+5. Fase E3 completada (observabilidad):
+   - endpoint `GET /api/admin/audit` con paginación y filtros (`action`, `entityType`, `actorUserId`, rango de fechas),
+   - sección visual `Audit Log` en el sidebar admin con tabla read-only y paginación,
+   - tests de API y UI para la nueva capa de auditoría.
+6. Pendiente bloque de evolución:
    - MFA obligatoria para cuentas admin en Supabase Auth,
-   - dashboard de consulta de `admin_audit_log`,
    - pruebas E2E específicas de seguridad/rate-limit admin.
