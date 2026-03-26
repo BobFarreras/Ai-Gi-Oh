@@ -1,5 +1,6 @@
 // src/app/admin-portal/[portalSlug]/layout.tsx - Protege el acceso al portal admin validando slug esperado y permisos administrativos.
 import { ReactNode } from "react";
+import { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { AuthorizationError } from "@/core/errors/AuthorizationError";
 import { AdminSidebarNav } from "@/components/admin/AdminSidebarNav";
@@ -11,6 +12,10 @@ interface AdminPortalLayoutProps {
   children: ReactNode;
   params: Promise<{ portalSlug: string }>;
 }
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, nocache: true },
+};
 
 export default async function AdminPortalLayout({ children, params }: AdminPortalLayoutProps) {
   const session = await getCurrentUserSession();
