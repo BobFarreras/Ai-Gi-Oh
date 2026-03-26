@@ -37,7 +37,7 @@ describe("story decks admin route", () => {
 
   it("POST persiste cambios y audita el deck", async () => {
     requireTrustedMutationOriginMock.mockReturnValueOnce(null);
-    readAdminSaveStoryDeckCommandMock.mockResolvedValueOnce({ deckListId: "story-deck-1", cardIds: ["entity-react"] });
+    readAdminSaveStoryDeckCommandMock.mockResolvedValueOnce({ deckListId: "story-deck-1", cardIds: ["entity-react"], duelConfig: null });
     const saveDeckUseCase = { execute: vi.fn(async () => undefined) };
     const writeAuditLogUseCase = { execute: vi.fn(async () => undefined) };
     createAdminStoryDeckContextMock.mockResolvedValueOnce({

@@ -1,6 +1,7 @@
 // src/components/admin/admin-story-deck-api.ts - Cliente HTTP para cargar/guardar mazos Story desde el panel administrativo.
 import { ICard } from "@/core/entities/ICard";
 import { IAdminStoryDeckData } from "@/core/entities/admin/IAdminStoryDeck";
+import { IAdminSaveStoryDuelConfigCommand } from "@/core/entities/admin/IAdminStoryDeckCommands";
 
 export interface IAdminStoryDeckApiResponse extends IAdminStoryDeckData {
   availableCards: ICard[];
@@ -9,6 +10,7 @@ export interface IAdminStoryDeckApiResponse extends IAdminStoryDeckData {
 interface ISaveStoryDeckPayload {
   deckListId: string;
   cardIds: string[];
+  duelConfig: IAdminSaveStoryDuelConfigCommand | null;
 }
 
 async function parseApiError(response: Response, fallback: string): Promise<Error> {

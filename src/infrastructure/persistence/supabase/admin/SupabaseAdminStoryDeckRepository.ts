@@ -7,43 +7,25 @@ import {
   IAdminStoryDuelReference,
   IAdminStoryOpponentSummary,
 } from "@/core/entities/admin/IAdminStoryDeck";
+import { IAdminStoryDuelAiProfile, IAdminStoryDuelDeckOverride } from "@/core/entities/admin/IAdminStoryDuelConfig";
+import { IAdminSaveStoryDuelConfigCommand } from "@/core/entities/admin/IAdminStoryDeckCommands";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { IAdminStoryDeckRepository } from "@/core/repositories/admin/IAdminStoryDeckRepository";
+import {
+  buildOpponentSummaries,
+  IStoryDeckCardRow,
+  IStoryDeckListRow,
+  IStoryDuelAiProfileRow,
+  IStoryDuelDeckOverrideRow,
+  IStoryDuelRow,
+  IStoryOpponentRow,
+  mapDuelAiProfileRow,
+  mapDuelDeckOverrideRow,
+  toDeckRows,
+} from "@/infrastructure/persistence/supabase/admin/internal/admin-story-deck-mappers";
 import { CARD_CATALOG_SELECT, ICardCatalogRow } from "@/infrastructure/persistence/supabase/internal/card-catalog-row";
 import { loadCardsByIds } from "@/infrastructure/persistence/supabase/internal/load-cards-by-ids";
 import { mapCardCatalogRowToCard } from "@/infrastructure/persistence/supabase/internal/map-card-catalog-row-to-card";
-
-interface IStoryDeckCardRow { slot_index: number; card_id: string; copies: number }
-interface IStoryDeckListRow { id: string; opponent_id: string; name: string; description: string | null; version: number; is_active: boolean }
-interface IStoryOpponentRow { id: string; display_name: string; avatar_url: string | null; difficulty: IAdminStoryOpponentSummary["difficulty"] }
-interface IStoryDuelRow { id: string; chapter: number; duel_index: number; title: string; deck_list_id: string }
-
-function toDeckRows(cardIds: string[]): Array<{ slot_index: number; card_id: string; copies: number }> {
-  const grouped = new Map<string, { slotIndex: number; copies: number }>();
-  cardIds.forEach((cardId, index) => {
-    const current = grouped.get(cardId);
-    if (current) grouped.set(cardId, { slotIndex: current.slotIndex, copies: current.copies + 1 });
-    else grouped.set(cardId, { slotIndex: index, copies: 1 });
-  });
-  return Array.from(grouped.entries())
-    .map(([cardId, value]) => ({ slot_index: value.slotIndex, card_id: cardId, copies: value.copies }))
-    .sort((left, right) => left.slot_index - right.slot_index)
-    .map((row, index) => ({ ...row, slot_index: index }));
-}
-
-function buildOpponentSummaries(opponents: IStoryOpponentRow[], decks: IStoryDeckListRow[], duels: IStoryDuelRow[]): IAdminStoryOpponentSummary[] {
-  return opponents.map((opponent) => {
-    const opponentDeckIds = decks.filter((deck) => deck.opponent_id === opponent.id).map((deck) => deck.id);
-    return {
-      opponentId: opponent.id,
-      displayName: opponent.display_name,
-      avatarUrl: opponent.avatar_url,
-      difficulty: opponent.difficulty,
-      deckCount: opponentDeckIds.length,
-      duelCount: duels.filter((duel) => opponentDeckIds.includes(duel.deck_list_id)).length,
-    };
-  });
-}
 
 export class SupabaseAdminStoryDeckRepository implements IAdminStoryDeckRepository {
   constructor(private readonly client: SupabaseClient) {}
@@ -70,6 +52,28 @@ export class SupabaseAdminStoryDeckRepository implements IAdminStoryDeckReposito
     return ((data ?? []) as IStoryDuelRow[]).map((row) => ({ duelId: row.id, chapter: row.chapter, duelIndex: row.duel_index, title: row.title, deckListId: row.deck_list_id }));
   }
 
+  async listDuelAiProfiles(duelIds: string[]): Promise<IAdminStoryDuelAiProfile[]> {
+    if (duelIds.length === 0) return [];
+    const { data, error } = await this.client
+      .from("story_duel_ai_profiles")
+      .select("duel_id,difficulty,ai_profile,is_active")
+      .in("duel_id", duelIds);
+    if (error) throw new ValidationError("No se pudieron cargar perfiles IA de duelos Story.");
+    return ((data ?? []) as IStoryDuelAiProfileRow[]).map(mapDuelAiProfileRow);
+  }
+
+  async listDuelDeckOverrides(duelIds: string[]): Promise<IAdminStoryDuelDeckOverride[]> {
+    if (duelIds.length === 0) return [];
+    const { data, error } = await this.client
+      .from("story_duel_deck_overrides")
+      .select("duel_id,slot_index,card_id,copies,version_tier,level,xp,attack_override,defense_override,effect_override,is_active")
+      .in("duel_id", duelIds)
+      .order("duel_id", { ascending: true })
+      .order("slot_index", { ascending: true });
+    if (error) throw new ValidationError("No se pudieron cargar overrides de mazo por duelo.");
+    return ((data ?? []) as IStoryDuelDeckOverrideRow[]).map(mapDuelDeckOverrideRow);
+  }
+
   async getDeck(deckListId: string): Promise<IAdminStoryDeck | null> {
     const [deckResult, cardsResult] = await Promise.all([
       this.client.from("story_deck_lists").select("id,opponent_id,name,description,version,is_active").eq("id", deckListId).maybeSingle<IStoryDeckListRow>(),
@@ -91,12 +95,49 @@ export class SupabaseAdminStoryDeckRepository implements IAdminStoryDeckReposito
     };
   }
 
-  async saveDeck(deckListId: string, cardIds: string[]): Promise<void> {
+  private async validateDuelBelongsToDeck(deckListId: string, duelId: string): Promise<void> {
+    const { data, error } = await this.client.from("story_duels").select("id,deck_list_id").eq("id", duelId).maybeSingle<{ id: string; deck_list_id: string }>();
+    if (error) throw new ValidationError("No se pudo validar el duelo objetivo.");
+    if (!data || data.deck_list_id !== deckListId) throw new ValidationError("El duelo no corresponde al deck seleccionado.");
+  }
+
+  private async saveDuelConfig(deckListId: string, duelConfig: IAdminSaveStoryDuelConfigCommand): Promise<void> {
+    await this.validateDuelBelongsToDeck(deckListId, duelConfig.duelId);
+    const aiUpsert = await this.client.from("story_duel_ai_profiles").upsert({
+      duel_id: duelConfig.duelId,
+      difficulty: duelConfig.difficulty,
+      ai_profile: {},
+      is_active: true,
+    }, { onConflict: "duel_id" });
+    if (aiUpsert.error) throw new ValidationError(`No se pudo guardar la dificultad del duelo. (${aiUpsert.error.message})`);
+    const deleteOverrides = await this.client.from("story_duel_deck_overrides").delete().eq("duel_id", duelConfig.duelId);
+    if (deleteOverrides.error) throw new ValidationError(`No se pudieron limpiar overrides previos. (${deleteOverrides.error.message})`);
+    if (duelConfig.slotOverrides.length === 0) return;
+    const insertOverrides = await this.client.from("story_duel_deck_overrides").insert(
+      duelConfig.slotOverrides.map((slot) => ({
+        duel_id: duelConfig.duelId,
+        slot_index: slot.slotIndex,
+        card_id: slot.cardId,
+        copies: 1,
+        version_tier: slot.versionTier,
+        level: slot.level,
+        xp: slot.xp,
+        attack_override: null,
+        defense_override: null,
+        effect_override: null,
+        is_active: true,
+      })),
+    );
+    if (insertOverrides.error) throw new ValidationError(`No se pudieron guardar overrides de duelo. (${insertOverrides.error.message})`);
+  }
+
+  async saveDeck(deckListId: string, cardIds: string[], duelConfig: IAdminSaveStoryDuelConfigCommand | null): Promise<void> {
     const deleteResult = await this.client.from("story_deck_list_cards").delete().eq("deck_list_id", deckListId);
     if (deleteResult.error) throw new ValidationError(`No se pudo limpiar el deck Story previo. (${deleteResult.error.message})`);
     const payload = toDeckRows(cardIds).map((row) => ({ deck_list_id: deckListId, ...row }));
     const insertResult = await this.client.from("story_deck_list_cards").insert(payload);
     if (insertResult.error) throw new ValidationError(`No se pudo guardar el deck Story. (${insertResult.error.message})`);
+    if (duelConfig) await this.saveDuelConfig(deckListId, duelConfig);
   }
 
   async listAvailableCards(): Promise<ICard[]> {

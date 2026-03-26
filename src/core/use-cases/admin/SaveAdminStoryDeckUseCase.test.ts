@@ -8,6 +8,8 @@ function createRepositoryMock(): IAdminStoryDeckRepository {
     listOpponents: vi.fn(),
     listDeckSummaries: vi.fn(),
     listDuelReferences: vi.fn(),
+    listDuelAiProfiles: vi.fn(),
+    listDuelDeckOverrides: vi.fn(),
     getDeck: vi.fn(),
     saveDeck: vi.fn(async () => undefined),
     listAvailableCards: vi.fn(),
@@ -18,8 +20,8 @@ describe("SaveAdminStoryDeckUseCase", () => {
   it("persiste deck cuando comando es válido", async () => {
     const repository = createRepositoryMock();
     const useCase = new SaveAdminStoryDeckUseCase(repository);
-    await useCase.execute({ deckListId: "deck-1", cardIds: ["card-1", "card-2"] });
-    expect(repository.saveDeck).toHaveBeenCalledWith("deck-1", ["card-1", "card-2"]);
+    await useCase.execute({ deckListId: "deck-1", cardIds: ["card-1", "card-2"], duelConfig: null });
+    expect(repository.saveDeck).toHaveBeenCalledWith("deck-1", ["card-1", "card-2"], null);
   });
 });
 

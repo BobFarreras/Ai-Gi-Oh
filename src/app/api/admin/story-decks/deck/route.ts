@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       action: "ADMIN_STORY_DECK_SAVED",
       entityType: "story_deck_list_cards",
       entityId: command.deckListId,
-      payload: { cardCount: command.cardIds.length },
+      payload: { cardCount: command.cardIds.length, duelId: command.duelConfig?.duelId ?? null, difficulty: command.duelConfig?.difficulty ?? null },
     });
     return NextResponse.json({ ok: true }, { status: 200, headers: context.response.headers });
   } catch (error) {

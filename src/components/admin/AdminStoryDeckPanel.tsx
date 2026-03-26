@@ -21,6 +21,7 @@ export function AdminStoryDeckPanel({ initialData }: IAdminStoryDeckPanelProps) 
   const selectedCard = (editor.selectedCollectionCardId ? cardById.get(editor.selectedCollectionCardId) ?? null : null) ?? (selectedSlotCardId ? cardById.get(selectedSlotCardId) ?? null : null);
   const selectedOpponentId = editor.data.deck?.opponentId ?? editor.data.opponents[0]?.opponentId ?? null;
   const selectedDeckDuels = editor.data.duels.filter((duel) => duel.deckListId === editor.data.deck?.deckListId);
+  const selectedSlotLevels = editor.selectedSlotIndex === null ? null : (editor.draftSlotLevels[editor.selectedSlotIndex] ?? null);
 
   function onDropOnSlot(slotIndex: number, event: DragEvent<HTMLElement>): void {
     if (!editor.isEditMode) return;
@@ -44,6 +45,28 @@ export function AdminStoryDeckPanel({ initialData }: IAdminStoryDeckPanelProps) 
           <button type="button" aria-label="Aplicar carta seleccionada al slot story" className="h-9 rounded-md border border-slate-600 px-3 text-xs font-bold uppercase text-slate-100 disabled:opacity-50" disabled={!editor.isEditMode || editor.selectedSlotIndex === null || !editor.selectedCollectionCardId} onClick={() => editor.selectedSlotIndex !== null && editor.selectedCollectionCardId ? editor.setDraftCardIdBySlot(editor.selectedSlotIndex, editor.selectedCollectionCardId) : undefined}>Poner en slot</button>
           <button type="button" aria-label="Quitar carta del slot story" className="h-9 rounded-md border border-rose-600 px-3 text-xs font-bold uppercase text-rose-200 disabled:opacity-50" disabled={!editor.isEditMode || editor.selectedSlotIndex === null} onClick={() => editor.selectedSlotIndex !== null ? editor.clearSlotCardByIndex(editor.selectedSlotIndex) : undefined}>Quitar</button>
           <button type="button" aria-label="Guardar story deck" className="h-9 rounded-md border border-emerald-500 px-3 text-xs font-bold uppercase text-emerald-200 disabled:opacity-50" onClick={() => void editor.onSave()} disabled={!editor.isEditMode || editor.isBusy || !editor.canSave}>Guardar</button>
+          <select aria-label="Seleccionar duelo story" className="h-9 rounded-md border border-slate-600 bg-slate-900 px-2 text-xs text-slate-100 disabled:opacity-50" value={editor.selectedDuelId ?? ""} onChange={(event) => editor.setSelectedDuelId(event.target.value || null)} disabled={editor.isBusy || selectedDeckDuels.length === 0}>
+            {selectedDeckDuels.map((duel) => <option key={duel.duelId} value={duel.duelId}>{`Ch${duel.chapter}-${duel.duelIndex}: ${duel.title}`}</option>)}
+          </select>
+          <select aria-label="Seleccionar dificultad del duelo" className="h-9 rounded-md border border-slate-600 bg-slate-900 px-2 text-xs text-slate-100 disabled:opacity-50" value={editor.selectedDuelDifficulty} onChange={(event) => editor.setSelectedDuelDifficulty(event.target.value as typeof editor.selectedDuelDifficulty)} disabled={editor.isBusy || !editor.selectedDuelId}>
+            <option value="ROOKIE">ROOKIE</option>
+            <option value="STANDARD">STANDARD</option>
+            <option value="ELITE">ELITE</option>
+            <option value="BOSS">BOSS</option>
+            <option value="MYTHIC">MYTHIC</option>
+          </select>
+        </div>
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-200">
+          <span className="font-bold uppercase text-cyan-200">Escalado slot seleccionado:</span>
+          <label className="flex items-center gap-1">Ver
+            <input aria-label="Version tier del slot" type="number" min={0} max={5} value={selectedSlotLevels?.versionTier ?? 0} disabled={editor.selectedSlotIndex === null} onChange={(event) => editor.selectedSlotIndex !== null ? editor.setDraftSlotLevelByIndex(editor.selectedSlotIndex, "versionTier", Number(event.target.value)) : undefined} className="h-8 w-16 rounded border border-slate-600 bg-slate-900 px-2 text-xs text-slate-100" />
+          </label>
+          <label className="flex items-center gap-1">Lvl
+            <input aria-label="Level del slot" type="number" min={0} max={30} value={selectedSlotLevels?.level ?? 0} disabled={editor.selectedSlotIndex === null} onChange={(event) => editor.selectedSlotIndex !== null ? editor.setDraftSlotLevelByIndex(editor.selectedSlotIndex, "level", Number(event.target.value)) : undefined} className="h-8 w-16 rounded border border-slate-600 bg-slate-900 px-2 text-xs text-slate-100" />
+          </label>
+          <label className="flex items-center gap-1">XP
+            <input aria-label="XP del slot" type="number" min={0} value={selectedSlotLevels?.xp ?? 0} disabled={editor.selectedSlotIndex === null} onChange={(event) => editor.selectedSlotIndex !== null ? editor.setDraftSlotLevelByIndex(editor.selectedSlotIndex, "xp", Number(event.target.value)) : undefined} className="h-8 w-20 rounded border border-slate-600 bg-slate-900 px-2 text-xs text-slate-100" />
+          </label>
         </div>
         {selectedDeckDuels.length > 0 ? <p className="mt-2 text-xs text-slate-300">Se usa en: {selectedDeckDuels.map((duel) => `Ch${duel.chapter}-${duel.duelIndex}`).join(", ")}</p> : null}
         {editor.feedback ? <p className={`mt-2 rounded-md border px-3 py-2 text-xs font-semibold ${editor.feedback.toLowerCase().includes("no se pudo") ? "border-rose-500/70 bg-rose-900/25 text-rose-100" : "border-emerald-500/70 bg-emerald-900/20 text-emerald-100"}`}>{editor.feedback}</p> : null}

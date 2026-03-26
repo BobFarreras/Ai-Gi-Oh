@@ -4,6 +4,7 @@ import { ValidationError } from "@/core/errors/ValidationError";
 
 const MAX_STORY_DECK_SIZE = 60;
 const MAX_COPIES_PER_CARD = 3;
+const DIFFICULTIES = new Set(["ROOKIE", "STANDARD", "ELITE", "BOSS", "MYTHIC"]);
 
 /**
  * Verifica formato, tamaño y copias máximas por carta para persistir un mazo Story.
@@ -18,6 +19,16 @@ export function validateAdminSaveStoryDeckCommand(command: IAdminSaveStoryDeckCo
     const nextCopies = (copiesByCardId.get(cardId) ?? 0) + 1;
     if (nextCopies > MAX_COPIES_PER_CARD) throw new ValidationError(`La carta ${cardId} supera el máximo de 3 copias.`);
     copiesByCardId.set(cardId, nextCopies);
+  }
+  if (!command.duelConfig) return;
+  if (!command.duelConfig.duelId.trim()) throw new ValidationError("duelId es obligatorio al guardar configuración de duelo.");
+  if (!DIFFICULTIES.has(command.duelConfig.difficulty)) throw new ValidationError("La dificultad del duelo no es válida.");
+  for (const slot of command.duelConfig.slotOverrides) {
+    if (!slot.cardId.trim()) throw new ValidationError("Cada override requiere cardId válido.");
+    if (slot.slotIndex < 0 || slot.slotIndex >= MAX_STORY_DECK_SIZE) throw new ValidationError("slotIndex fuera de rango.");
+    if (slot.versionTier < 0 || slot.versionTier > 5) throw new ValidationError("versionTier debe estar entre 0 y 5.");
+    if (slot.level < 0 || slot.level > 30) throw new ValidationError("level debe estar entre 0 y 30.");
+    if (slot.xp < 0) throw new ValidationError("xp no puede ser negativo.");
   }
 }
 
