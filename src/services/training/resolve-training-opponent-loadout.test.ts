@@ -97,12 +97,12 @@ describe("resolveTrainingOpponentLoadout", () => {
       tier: 5,
       aiDifficulty: "BOSS",
       deckTemplateId: "training-tier-5",
-      tierWins: 6,
-      tierMatches: 7,
+      tierWins: 0,
+      tierMatches: 0,
     });
     expect(easyLoadout.deck[0]?.level).toBe(0);
-    expect((bossLoadout.deck[0]?.level ?? 0)).toBeGreaterThan(0);
-    expect((bossLoadout.deck[0]?.versionTier ?? 0)).toBeGreaterThan(0);
+    expect(bossLoadout.deck[0]?.level).toBe(200);
+    expect(bossLoadout.deck[0]?.versionTier).toBe(2);
     expect((bossLoadout.deck[0]?.xp ?? 0)).toBeGreaterThan(0);
   });
 });

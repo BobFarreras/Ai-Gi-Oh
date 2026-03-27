@@ -11,10 +11,10 @@ interface ITrainingCardScale {
 const TRAINING_SCALE_BY_DIFFICULTY: Record<OpponentDifficulty, ITrainingCardScale> = {
   EASY: { versionTier: 0, level: 0, xp: 0 },
   NORMAL: { versionTier: 0, level: 2, xp: 260 },
-  HARD: { versionTier: 1, level: 5, xp: 980 },
-  BOSS: { versionTier: 2, level: 10, xp: 2800 },
-  MASTER: { versionTier: 3, level: 14, xp: 5600 },
-  MYTHIC: { versionTier: 4, level: 18, xp: 9800 },
+  HARD: { versionTier: 1, level: 10, xp: 980 },
+  BOSS: { versionTier: 2, level: 200, xp: 2800 },
+  MASTER: { versionTier: 3, level: 30, xp: 5600 },
+  MYTHIC: { versionTier: 5, level: 30, xp: 9800 },
 };
 
 /**
