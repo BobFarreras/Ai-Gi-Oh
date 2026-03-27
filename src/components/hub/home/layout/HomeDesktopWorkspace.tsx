@@ -8,8 +8,8 @@ import { IHomeWorkspaceProps } from "@/components/hub/home/layout/home-workspace
 
 export function HomeDesktopWorkspace(props: IHomeWorkspaceProps) {
   return (
-    <div className="mt-4 hidden min-h-0 flex-1 gap-4 xl:grid xl:grid-cols-[1fr_1.8fr_1.2fr]">
-      <div className="min-h-0 min-w-0 overflow-hidden rounded-xl border border-cyan-900/30 bg-black/40">
+    <div className="mt-4 grid min-h-0 flex-1 gap-4 grid-cols-[1fr_1.8fr_1.2fr]">
+      <div className="min-h-0 min-w-0 overflow-visible rounded-xl border border-cyan-900/30 bg-black/40">
         <HomeCardInspector
           selectedCard={props.selectedCard}
           selectedCardVersionTier={props.selectedCardVersionTier}

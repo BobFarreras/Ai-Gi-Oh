@@ -16,6 +16,7 @@ export function MarketPackCardTile({ pack, isSelected, onSelect }: MarketPackCar
   return (
     <button
       type="button"
+      data-tutorial-id={`market-pack-tile-${pack.id}`}
       aria-label={`Seleccionar ${pack.name}`}
       onClick={onSelect}
       className={`relative z-10 aspect-[3/4] w-[100px] shrink-0 overflow-hidden rounded-lg border-2 text-left transition-all duration-300 sm:w-[110px] ${

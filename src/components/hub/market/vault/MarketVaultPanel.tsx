@@ -17,6 +17,7 @@ interface MarketVaultPanelProps {
   catalogListings: IMarketCardListing[];
   onSelectCard: (card: ICard) => void;
   isPerformanceMode: boolean;
+  onActiveTabChange?: (tab: "COLLECTION" | "HISTORY") => void;
 }
 
 export function MarketVaultPanel({
@@ -25,6 +26,7 @@ export function MarketVaultPanel({
   catalogListings,
   onSelectCard,
   isPerformanceMode,
+  onActiveTabChange,
 }: MarketVaultPanelProps) {
   const [activeTab, setActiveTab] = useState<"COLLECTION" | "HISTORY">("COLLECTION");
   const { play } = useHubModuleSfx();
@@ -42,9 +44,11 @@ export function MarketVaultPanel({
         <div className="flex items-center gap-2">
           <button
             type="button"
+            data-tutorial-id="market-vault-collection-tab"
             onClick={() => {
               if (activeTab !== "COLLECTION") play("SECTION_SWITCH");
               setActiveTab("COLLECTION");
+              onActiveTabChange?.("COLLECTION");
             }}
             className={`flex-1 rounded-lg py-1.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
               activeTab === "COLLECTION"
@@ -56,9 +60,11 @@ export function MarketVaultPanel({
           </button>
           <button
             type="button"
+            data-tutorial-id="market-history-tab"
             onClick={() => {
               if (activeTab !== "HISTORY") play("SECTION_SWITCH");
               setActiveTab("HISTORY");
+              onActiveTabChange?.("HISTORY");
             }}
             className={`flex-1 rounded-lg py-1.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
               activeTab === "HISTORY"
@@ -71,7 +77,7 @@ export function MarketVaultPanel({
         </div>
       </header>
 
-      <div className="home-modern-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto pt-3 pr-2">
+      <div data-tutorial-id={activeTab === "COLLECTION" ? "market-vault-collection-panel" : "market-history-panel"} className="home-modern-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto pt-3 pr-2">
         <AnimatePresence mode="wait">
           {activeTab === "COLLECTION" ? (
             <MarketVaultCollectionTab

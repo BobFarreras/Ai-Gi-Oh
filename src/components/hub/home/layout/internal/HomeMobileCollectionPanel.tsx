@@ -11,7 +11,12 @@ interface IHomeMobileCollectionPanelProps {
 
 export function HomeMobileCollectionPanel({ props, deckCopiesByCardId, onSelectCollectionCard }: IHomeMobileCollectionPanelProps) {
   return (
-    <div className="grid grid-cols-4 gap-1 pb-6 pt-1" onDragOver={(event) => event.preventDefault()} onDrop={props.onDropOnCollectionArea}>
+    <div
+      data-tutorial-id="tutorial-home-collection"
+      className="grid grid-cols-4 gap-1 pb-6 pt-1"
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={props.onDropOnCollectionArea}
+    >
       {props.filteredCollection.map((entry) => {
         const usedCopies = deckCopiesByCardId.get(entry.card.id) ?? 0;
         const availableCopies = Math.max(0, entry.ownedCopies - usedCopies);
@@ -22,6 +27,7 @@ export function HomeMobileCollectionPanel({ props, deckCopiesByCardId, onSelectC
         return (
           <motion.div
             key={entry.card.id}
+            data-tutorial-id={`tutorial-home-card-${entry.card.id}`}
             className={`relative flex flex-col items-center transition-opacity ${canAdd ? "cursor-pointer" : "cursor-not-allowed opacity-40 grayscale-[50%]"}`}
             animate={canEvolve ? { rotate: [0, -1.2, 1.2, -0.8, 0.8, 0] } : {}}
             transition={canEvolve ? { duration: 0.38, repeat: Infinity, repeatDelay: 1.8 } : {}}

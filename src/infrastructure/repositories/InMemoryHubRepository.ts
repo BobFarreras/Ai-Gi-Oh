@@ -10,6 +10,8 @@ const DEFAULT_PROGRESS: IPlayerHubProgress = {
   medals: 0,
   storyChapter: 1,
   hasCompletedTutorial: false,
+  hasSeenAcademyIntro: false,
+  hasSkippedTutorial: false,
 };
 
 export class InMemoryHubRepository implements IHubRepository {

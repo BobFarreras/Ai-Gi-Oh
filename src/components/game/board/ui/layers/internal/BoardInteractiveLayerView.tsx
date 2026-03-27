@@ -50,6 +50,7 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
           isMobileLayout={props.isMobileLayout}
           onActivateSelectedExecution={props.onActivateSelectedExecution}
           onGraveyardClick={props.onGraveyardClick}
+          onFusionDeckClick={props.onFusionDeckClick}
           onDestroyedClick={props.onDestroyedClick}
           onEntityClick={props.onEntityClick}
         />

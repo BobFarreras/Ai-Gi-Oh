@@ -11,6 +11,7 @@ interface IUseOpponentTurnParams extends IOpponentTurnContext {
   isAnimating: boolean;
   duelWinnerId: string | null;
   isMatchStartLocked?: boolean;
+  disableAutomation?: boolean;
   strategy: IOpponentStrategy;
   gameState: GameState;
 }
@@ -28,6 +29,7 @@ export function useOpponentTurn({
   strategy,
   duelWinnerId,
   isMatchStartLocked = false,
+  disableAutomation = false,
   applyTransition,
   clearSelection,
   clearError,
@@ -36,7 +38,7 @@ export function useOpponentTurn({
   setRevealedEntities,
 }: IUseOpponentTurnParams): void {
   useEffect(() => {
-    if (isMatchStartLocked || duelWinnerId || isAnimating || gameState.activePlayerId !== gameState.playerB.id) return;
+    if (disableAutomation || isMatchStartLocked || duelWinnerId || isAnimating || gameState.activePlayerId !== gameState.playerB.id) return;
 
     const context: IOpponentTurnContext = {
       gameState,
@@ -64,6 +66,7 @@ export function useOpponentTurn({
     applyTransition,
     clearError,
     clearSelection,
+    disableAutomation,
     duelWinnerId,
     isMatchStartLocked,
     gameState,

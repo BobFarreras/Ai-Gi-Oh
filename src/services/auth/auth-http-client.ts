@@ -23,6 +23,18 @@ async function postAuth(url: string, payload?: IAuthPayload): Promise<IAuthActio
   return data;
 }
 
+/**
+ * Comprueba en servidor si la sesión actual tiene permisos administrativos activos.
+ */
+export async function hasCurrentAdminSession(): Promise<boolean> {
+  try {
+    const response = await fetch("/api/admin/session", { method: "GET", cache: "no-store" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 export function loginWithEmail(payload: IAuthPayload): Promise<IAuthActionResult> {
   return postAuth("/api/auth/login", payload);
 }

@@ -2,6 +2,8 @@
 export interface IPlayerProgress {
   playerId: string;
   hasCompletedTutorial: boolean;
+  hasSeenAcademyIntro?: boolean;
+  hasSkippedTutorial?: boolean;
   medals: number;
   storyChapter: number;
   playerExperience: number;

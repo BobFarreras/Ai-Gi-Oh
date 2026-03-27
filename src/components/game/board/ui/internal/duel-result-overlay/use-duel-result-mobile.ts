@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { isMobileLayoutViewport } from "@/components/internal/layout-breakpoints";
 
 type DuelResultMobileTab = "CARDS" | "GIFT";
 
@@ -19,7 +20,7 @@ export function useDuelResultMobileState(): IUseDuelResultMobileState {
   const [mobileTab, setMobileTab] = useState<DuelResultMobileTab>("CARDS");
 
   useEffect(() => {
-    const syncViewport = () => setIsMobile(window.innerWidth <= 1024);
+    const syncViewport = () => setIsMobile(isMobileLayoutViewport(window.innerWidth));
     syncViewport();
     window.addEventListener("resize", syncViewport);
     return () => window.removeEventListener("resize", syncViewport);

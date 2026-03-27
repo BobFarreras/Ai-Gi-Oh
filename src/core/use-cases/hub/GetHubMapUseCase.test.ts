@@ -15,7 +15,7 @@ describe("GetHubMapUseCase", () => {
     expect(map.sections.length).toBe(5);
   });
 
-  it("mantiene historia disponible aunque no se completó el tutorial", async () => {
+  it("bloquea historia mientras el tutorial de Academy no esté completado o saltado", async () => {
     const repository = new InMemoryHubRepository({
       playerId: "player-a",
       medals: 0,
@@ -27,6 +27,6 @@ describe("GetHubMapUseCase", () => {
     const map = await useCase.execute("player-a");
     const storySection = map.sections.find((section) => section.type === "STORY");
 
-    expect(storySection?.isLocked).toBe(false);
+    expect(storySection?.isLocked).toBe(true);
   });
 });

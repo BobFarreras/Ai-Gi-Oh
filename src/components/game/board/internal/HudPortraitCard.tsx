@@ -58,7 +58,12 @@ export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, b
           </div>
         </div>
         {showEnergy ? (
-          <div className={cn("mt-2 md:mt-3 flex items-center bg-zinc-950/80 border border-yellow-500/30 px-2.5 md:px-3 py-0.5 md:py-1", isOpponent ? "[clip-path:polygon(10%_0,100%_0,100%_100%,0_100%)]" : "[clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]")}>
+          <div
+            className={cn(
+              "mt-2 md:mt-3 flex items-center bg-zinc-950/80 border border-yellow-500/30 py-0.5 md:py-1",
+              isOpponent ? "pl-3.5 pr-2.5 md:pl-4 md:pr-3 [clip-path:polygon(10%_0,100%_0,100%_100%,0_100%)]" : "px-2.5 md:px-3 [clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]",
+            )}
+          >
             <Zap className="w-3.5 h-3.5 md:w-4 md:h-4 text-yellow-400 mr-1.5 md:mr-2 drop-shadow-[0_0_5px_rgba(234,179,8,0.8)]" />
             <span className="font-black text-yellow-400 text-[clamp(0.88rem,1.5vw,1.1rem)] italic drop-shadow-md">{player.currentEnergy} <span className="text-[10px] md:text-xs text-yellow-600/80 uppercase">/ {player.maxEnergy}</span></span>
           </div>

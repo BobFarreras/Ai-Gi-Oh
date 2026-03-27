@@ -6,6 +6,7 @@ export interface SlotCellProps {
   index: number;
   entity: IBoardEntity | null;
   isOpponentSide: boolean;
+  tutorialTargetId?: string;
   activeAttackerId: string | null;
   selectedCardId: string | null;
   selectedBoardEntityInstanceId: string | null;

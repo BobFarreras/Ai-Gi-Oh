@@ -5,7 +5,8 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { loginWithEmail } from "@/services/auth/auth-http-client";
+import { hasCurrentAdminSession, loginWithEmail } from "@/services/auth/auth-http-client";
+import { AuthErrorBanner } from "@/components/auth/internal/AuthErrorBanner";
 import { AuthField } from "@/components/auth/internal/AuthField";
 import { authFormBeamVariants, authFormContainerVariants, buildAuthPieceVariants } from "@/components/auth/internal/formAnimation";
 import { useAuthFormSfx } from "@/components/auth/internal/useAuthFormSfx";
@@ -31,7 +32,8 @@ export function LoginForm() {
         setErrorMessage(result.message ?? "No se pudo iniciar sesión.");
         return;
       }
-      router.push("/hub");
+      const isAdminSession = await hasCurrentAdminSession();
+      router.push(isAdminSession ? "/admin" : "/hub");
       router.refresh();
     });
   }
@@ -83,14 +85,7 @@ export function LoginForm() {
         </motion.div>
       </div>
 
-      {errorMessage && (
-        <motion.div variants={buildAuthPieceVariants(0.35)} className="relative z-10 mt-7 border border-red-500 bg-red-950/40 p-4 shadow-[0_0_20px_rgba(225,29,72,0.25)]">
-          <p className="flex items-center justify-center gap-3 font-mono text-xs font-black uppercase tracking-widest text-red-300">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-            {errorMessage}
-          </p>
-        </motion.div>
-      )}
+      {errorMessage ? <AuthErrorBanner message={errorMessage} /> : null}
 
       <motion.button
         variants={buildAuthPieceVariants(0.25)}

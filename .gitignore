@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
 
 # next.js
 /.next/
@@ -46,3 +48,6 @@ docs/performance/results/*
 !docs/performance/results/.gitkeep
 docs/performance/traces/*
 !docs/performance/traces/.gitkeep
+
+# local supabase cli artifacts
+supabase/.temp/

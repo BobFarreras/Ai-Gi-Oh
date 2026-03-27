@@ -2,6 +2,7 @@
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { GameEngine } from "@/core/use-cases/GameEngine";
 import { IUsePlayerActionsParams } from "./types";
+import { MouseEvent } from "react";
 
 interface IHandleOwnEntityClickParams extends Pick<
   IUsePlayerActionsParams,
@@ -21,10 +22,12 @@ interface IHandleOwnEntityClickParams extends Pick<
   | "setSelectedBoardEntityInstanceId"
 > {
   entity: IBoardEntity | null;
+  event: MouseEvent;
 }
 
 export async function handleOwnEntityClick({
   entity,
+  event,
   activeAttackerId,
   applyTransition,
   clearSelection,
@@ -115,12 +118,14 @@ export async function handleOwnEntityClick({
   }
   if (entity.mode !== "ATTACK") return "handled";
   if (activeAttackerId === entity.instanceId) {
-    const changedState = applyTransition((state) => GameEngine.changeEntityMode(state, state.playerA.id, entity.instanceId, "DEFENSE"));
-    if (changedState) {
-      setActiveAttackerId(null);
-      setSelectedCard(entity.card);
-      setSelectedBoardEntityInstanceId(entity.instanceId);
+    if (event.detail >= 2) {
+      const changedState = applyTransition((state) => GameEngine.changeEntityMode(state, state.playerA.id, entity.instanceId, "DEFENSE"));
+      if (changedState) {
+        setActiveAttackerId(null);
+      }
     }
+    setSelectedCard(entity.card);
+    setSelectedBoardEntityInstanceId(entity.instanceId);
     return "handled";
   }
   setActiveAttackerId((previous) => (previous === entity.instanceId ? null : entity.instanceId));

@@ -10,6 +10,7 @@ import { HubSceneFloatingActions } from "@/components/hub/HubSceneFloatingAction
 import { HubSceneHudOverlay } from "@/components/hub/HubSceneHudOverlay";
 import { HubSceneFallback2D } from "@/components/hub/HubSceneFallback2D";
 import { HubSceneWorld3D } from "@/components/hub/HubSceneWorld3D";
+import { HubOnboardingIntroOverlay } from "@/components/hub/onboarding/HubOnboardingIntroOverlay";
 import { resolveHubCameraPose, resolveHubNodeFocusPose } from "@/components/hub/internal/hub-camera-fit";
 import { applyResponsiveNodeLayout } from "@/components/hub/internal/hub-node-responsive-layout";
 import { supportsWebGL } from "@/components/hub/internal/hub-webgl-support";
@@ -62,6 +63,7 @@ export function HubScene({
 
   return (
     <section className="relative h-dvh w-full overflow-hidden">
+      <HubOnboardingIntroOverlay progress={progress} />
       <HubSceneHudOverlay
         playerLabel={playerLabel}
         progress={progress}

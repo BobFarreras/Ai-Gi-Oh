@@ -6,6 +6,9 @@ import { motion } from "framer-motion";
 import { ICard } from "@/core/entities/ICard";
 import { Card } from "@/components/game/card/Card";
 import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
+import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
+import { useHubDeviceCapability } from "@/components/hub/internal/use-hub-device-capability";
+import { isMobileLayoutViewport } from "@/components/internal/layout-breakpoints";
 
 interface HomeEvolutionOverlayProps {
   card: ICard | null;
@@ -30,37 +33,46 @@ export function HomeEvolutionOverlay({
   level,
   consumedCopies,
 }: HomeEvolutionOverlayProps) {
+  const viewportWidth = useViewportWidth();
+  const capability = useHubDeviceCapability();
+  const isMobileViewport = isMobileLayoutViewport(viewportWidth);
+  const isCompactViewport = viewportWidth < 1200;
+  const shouldUseLiteAnimation = capability.prefersReducedMotion || capability.isConstrainedDevice || isCompactViewport;
   const { play } = useHubModuleSfx();
   useEffect(() => {
     if (!card) return;
     play("EVOLUTION_OVERLAY");
   }, [card, play]);
   if (!card) return null;
-  const visualCopies = Math.max(4, Math.min(consumedCopies, 64));
+  const visualCopies = Math.max(4, Math.min(consumedCopies, shouldUseLiteAnimation ? 18 : 42));
+  const cardScaleClass = isMobileViewport ? "scale-[0.56]" : shouldUseLiteAnimation ? "scale-[0.82]" : "scale-100";
+  const pulseRepeat = shouldUseLiteAnimation ? 0 : 1;
   return (
-    <div className="pointer-events-none absolute inset-0 z-[420] flex items-center justify-center bg-black/75 px-3 py-4 backdrop-blur-md sm:px-6 sm:py-6">
+    <div className="pointer-events-none absolute inset-0 z-[420] flex items-center justify-center overflow-y-auto bg-black/75 px-3 py-4 backdrop-blur-md sm:px-6 sm:py-6">
       <motion.div
         initial={{ opacity: 0, scale: 0.7 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.25 }}
-        className="relative flex w-full max-w-xl flex-col items-center"
+        className="relative my-auto flex max-h-[92dvh] w-full max-w-xl flex-col items-center overflow-visible"
       >
         <motion.div
           initial={{ opacity: 0.4, scale: 0.8 }}
           animate={{ opacity: [0.4, 0.9, 0.3], scale: [0.8, 1.45, 1.05] }}
-          transition={{ duration: 1.2, times: [0, 0.55, 1], repeat: 1 }}
+          transition={{ duration: shouldUseLiteAnimation ? 0.9 : 1.2, times: [0, 0.55, 1], repeat: pulseRepeat }}
           className="absolute h-[280px] w-[280px] rounded-full bg-[radial-gradient(circle,rgba(251,146,60,0.35),rgba(245,158,11,0.22),transparent_70%)] blur-2xl sm:h-[460px] sm:w-[460px]"
         />
-        <motion.div
-          initial={{ opacity: 0.4, scale: 0.6 }}
-          animate={{ opacity: [0.4, 0.85, 0.45], scale: [0.6, 1.35, 1.1] }}
-          transition={{ duration: 1.4, times: [0, 0.55, 1], repeat: 1 }}
-          className="absolute h-[220px] w-[220px] rounded-full bg-[radial-gradient(circle,rgba(251,191,36,0.4),transparent_65%)] blur-2xl sm:h-[380px] sm:w-[380px]"
-        />
+        {!shouldUseLiteAnimation ? (
+          <motion.div
+            initial={{ opacity: 0.4, scale: 0.6 }}
+            animate={{ opacity: [0.4, 0.85, 0.45], scale: [0.6, 1.35, 1.1] }}
+            transition={{ duration: 1.4, times: [0, 0.55, 1], repeat: 1 }}
+            className="absolute h-[220px] w-[220px] rounded-full bg-[radial-gradient(circle,rgba(251,191,36,0.4),transparent_65%)] blur-2xl sm:h-[380px] sm:w-[380px]"
+          />
+        ) : null}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 1, 0.2] }}
-          transition={{ duration: 1.5, times: [0, 0.4, 1] }}
+          transition={{ duration: shouldUseLiteAnimation ? 1.1 : 1.5, times: [0, 0.4, 1] }}
           className="absolute inset-x-0 top-[40%] h-[120px] bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,0.35),rgba(220,38,38,0.2),transparent_65%)] blur-xl sm:top-[38%] sm:h-[180px]"
         />
         <div className="mb-3 flex flex-wrap items-center justify-center gap-2 rounded border border-cyan-500/35 bg-[#020c18]/85 px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-cyan-100 sm:mb-4 sm:gap-3 sm:px-4 sm:text-xs sm:tracking-[0.18em]">
@@ -81,30 +93,32 @@ export function HomeEvolutionOverlay({
               key={`copy-fusion-${index}`}
               initial={{ opacity: 0, y: 32, scale: 0.45, x: (index - visualCopies / 2) * 10 }}
               animate={{ opacity: [0, 1, 0], y: [32, -10, -44], scale: [0.45, 1, 0.55], x: [((index - visualCopies / 2) * 10), 0, 0] }}
-              transition={{ duration: 0.95, delay: index * 0.015 }}
+              transition={{ duration: shouldUseLiteAnimation ? 0.72 : 0.95, delay: index * (shouldUseLiteAnimation ? 0.012 : 0.015) }}
               className="absolute left-1/2 top-1/2 h-3 w-3 rounded-full border border-amber-300/80 bg-gradient-to-b from-amber-200/80 to-orange-500/40 sm:h-3.5 sm:w-3.5"
             />
           ))}
         </div>
-        <div className="pointer-events-none absolute left-1/2 top-[44%] h-36 w-52 -translate-x-1/2 sm:top-[43%] sm:h-48 sm:w-72">
-          <motion.div
-            initial={{ opacity: 0, scaleY: 0.2 }}
-            animate={{ opacity: [0, 0.9, 0.2], scaleY: [0.2, 1.1, 0.8] }}
-            transition={{ duration: 1.1, repeat: 1 }}
-            className="absolute inset-x-1/2 h-full w-1 -translate-x-1/2 rotate-6 bg-cyan-300/70 blur-[1px]"
-          />
-          <motion.div
-            initial={{ opacity: 0, scaleY: 0.2 }}
-            animate={{ opacity: [0, 0.85, 0.15], scaleY: [0.2, 1.15, 0.85] }}
-            transition={{ duration: 1.1, delay: 0.06, repeat: 1 }}
-            className="absolute inset-x-1/2 h-full w-1 -translate-x-1/2 -rotate-6 bg-sky-300/70 blur-[1px]"
-          />
-        </div>
+        {!shouldUseLiteAnimation ? (
+          <div className="pointer-events-none absolute left-1/2 top-[44%] h-36 w-52 -translate-x-1/2 sm:top-[43%] sm:h-48 sm:w-72">
+            <motion.div
+              initial={{ opacity: 0, scaleY: 0.2 }}
+              animate={{ opacity: [0, 0.9, 0.2], scaleY: [0.2, 1.1, 0.8] }}
+              transition={{ duration: 1.1, repeat: 1 }}
+              className="absolute inset-x-1/2 h-full w-1 -translate-x-1/2 rotate-6 bg-cyan-300/70 blur-[1px]"
+            />
+            <motion.div
+              initial={{ opacity: 0, scaleY: 0.2 }}
+              animate={{ opacity: [0, 0.85, 0.15], scaleY: [0.2, 1.15, 0.85] }}
+              transition={{ duration: 1.1, delay: 0.06, repeat: 1 }}
+              className="absolute inset-x-1/2 h-full w-1 -translate-x-1/2 -rotate-6 bg-sky-300/70 blur-[1px]"
+            />
+          </div>
+        ) : null}
         <motion.div
           initial={{ scale: 0.72, rotate: -2 }}
           animate={{ scale: [0.72, 1.12, 1], rotate: [-2, 2, 0] }}
-          transition={{ duration: 1.2, times: [0, 0.65, 1] }}
-          className={`origin-center scale-[0.52] sm:scale-100 ${resolveGlowClass(toVersionTier)}`}
+          transition={{ duration: shouldUseLiteAnimation ? 0.95 : 1.2, times: [0, 0.65, 1] }}
+          className={`origin-center ${cardScaleClass} ${resolveGlowClass(toVersionTier)}`}
         >
           <Card
             card={card}
@@ -115,7 +129,7 @@ export function HomeEvolutionOverlay({
             clipToFrameShape
           />
         </motion.div>
-        <p className="-mt-12 rounded border border-cyan-500/35 bg-black/65 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-cyan-100 sm:-mt-10 sm:text-xs">
+        <p className="mt-3 rounded border border-cyan-500/35 bg-black/65 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-cyan-100 sm:mt-4 sm:text-xs">
           Fusión de {consumedCopies} copias completada
         </p>
       </motion.div>

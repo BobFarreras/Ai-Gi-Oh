@@ -2,7 +2,7 @@
 import { IPlayer } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IOpponentAttackDecision, IOpponentPlayDecision, IOpponentStrategy } from "./types";
-import { getDifficultyProfile } from "./difficulty/difficultyProfiles";
+import { resolveOpponentDifficultyProfile } from "@/core/services/opponent/difficulty/resolve-opponent-difficulty-profile";
 import { IOpponentDifficultyProfile, OpponentDifficulty } from "./difficulty/types";
 import { chooseBestAttack } from "./attackEvaluator";
 import { chooseFusionMaterials } from "@/core/services/opponent/heuristic-fusion-materials";
@@ -18,13 +18,14 @@ function getPlayers(state: GameState, opponentId: string): { opponent: IPlayer; 
 
 interface IHeuristicOpponentStrategyConfig {
   difficulty?: OpponentDifficulty;
+  aiProfile?: unknown;
 }
 
 export class HeuristicOpponentStrategy implements IOpponentStrategy {
   private readonly profile: IOpponentDifficultyProfile;
 
   public constructor(config?: IHeuristicOpponentStrategyConfig) {
-    this.profile = getDifficultyProfile(config?.difficulty ?? "NORMAL");
+    this.profile = resolveOpponentDifficultyProfile({ difficulty: config?.difficulty ?? "NORMAL", aiProfile: config?.aiProfile });
   }
 
   public choosePlay(state: GameState, opponentId: string): IOpponentPlayDecision | null {

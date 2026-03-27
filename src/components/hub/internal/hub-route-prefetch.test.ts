@@ -7,12 +7,12 @@ describe("hub-route-prefetch", () => {
     const prefetch = vi.fn();
     prefetchHubRoutes(
       { prefetch },
-      ["/hub/market", "/hub/home", "/hub/market", "/login", "https://foo.bar", "/hub/training"],
+      ["/hub/market", "/hub/home", "/hub/market", "/login", "https://foo.bar", "/hub/academy"],
     );
     expect(prefetch).toHaveBeenCalledTimes(3);
     expect(prefetch).toHaveBeenNthCalledWith(1, "/hub/market");
     expect(prefetch).toHaveBeenNthCalledWith(2, "/hub/home");
-    expect(prefetch).toHaveBeenNthCalledWith(3, "/hub/training");
+    expect(prefetch).toHaveBeenNthCalledWith(3, "/hub/academy");
   });
 
   it("no revienta cuando router no expone prefetch", () => {

@@ -1,6 +1,9 @@
 // src/components/auth/LogoutConfirmDialog.tsx - Diálogo visual de confirmación para cerrar sesión con estilo del juego.
 "use client";
 
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
+
 interface LogoutConfirmDialogProps {
   isOpen: boolean;
   isPending: boolean;
@@ -9,9 +12,20 @@ interface LogoutConfirmDialogProps {
 }
 
 export function LogoutConfirmDialog({ isOpen, isPending, onCancel, onConfirm }: LogoutConfirmDialogProps) {
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      // Permite cerrar rápido el diálogo sin depender de click/tap.
+      if (event.key === "Escape" && !isPending) onCancel();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, isPending, onCancel]);
 
-  return (
+  if (!isOpen) return null;
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
       <div
         role="dialog"
@@ -48,6 +62,7 @@ export function LogoutConfirmDialog({ isOpen, isPending, onCancel, onConfirm }: 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -22,6 +22,11 @@ export interface IDrawCardEffect {
   cards: number;
 }
 
+export interface IRestoreEnergyEffect {
+  action: "RESTORE_ENERGY";
+  value?: number;
+}
+
 export interface IBoostAttackAlliedEffect {
   action: "BOOST_ATTACK_ALLIED_ENTITY";
   value: number;
@@ -81,6 +86,7 @@ export type ICardEffect =
   | IDamageEffect
   | IHealEffect
   | IDrawCardEffect
+  | IRestoreEnergyEffect
   | IBoostAttackAlliedEffect
   | IBoostDefenseByArchetypeEffect
   | IBoostAttackByArchetypeEffect

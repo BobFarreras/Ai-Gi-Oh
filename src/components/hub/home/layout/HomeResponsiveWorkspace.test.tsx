@@ -1,5 +1,5 @@
-// src/components/hub/home/layout/HomeResponsiveWorkspace.test.tsx - Verifica que el router visual del Arsenal monta layout desktop y mobile.
-import { render, screen } from "@testing-library/react";
+// src/components/hub/home/layout/HomeResponsiveWorkspace.test.tsx - Verifica selección exclusiva de layout desktop/mobile según viewport.
+import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { HomeResponsiveWorkspace } from "@/components/hub/home/layout/HomeResponsiveWorkspace";
 import { IHomeWorkspaceProps } from "@/components/hub/home/layout/home-workspace-types";
@@ -58,9 +58,31 @@ function createProps(): IHomeWorkspaceProps {
 }
 
 describe("HomeResponsiveWorkspace", () => {
-  it("monta los dos layouts y delega el responsive por CSS", () => {
+  it("renderiza desktop para resoluciones >= 900", () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1200 });
     render(<HomeResponsiveWorkspace {...createProps()} />);
     expect(screen.getByTestId("arsenal-desktop-layout")).toBeInTheDocument();
+    expect(screen.queryByTestId("arsenal-mobile-layout")).not.toBeInTheDocument();
+  });
+
+  it("renderiza mobile para resoluciones < 900", () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 899 });
+    render(<HomeResponsiveWorkspace {...createProps()} />);
     expect(screen.getByTestId("arsenal-mobile-layout")).toBeInTheDocument();
+    expect(screen.queryByTestId("arsenal-desktop-layout")).not.toBeInTheDocument();
+  });
+
+  it("actualiza el layout al redimensionar", () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 899 });
+    render(<HomeResponsiveWorkspace {...createProps()} />);
+    expect(screen.getByTestId("arsenal-mobile-layout")).toBeInTheDocument();
+
+    act(() => {
+      window.innerWidth = 1280;
+      window.dispatchEvent(new Event("resize"));
+    });
+
+    expect(screen.getByTestId("arsenal-desktop-layout")).toBeInTheDocument();
+    expect(screen.queryByTestId("arsenal-mobile-layout")).not.toBeInTheDocument();
   });
 });

@@ -17,6 +17,8 @@ export class GetOrCreatePlayerProgressUseCase {
     return this.progressRepository.create({
       playerId: input.playerId,
       hasCompletedTutorial: false,
+      hasSeenAcademyIntro: false,
+      hasSkippedTutorial: false,
       medals: 0,
       storyChapter: 1,
       playerExperience: 0,

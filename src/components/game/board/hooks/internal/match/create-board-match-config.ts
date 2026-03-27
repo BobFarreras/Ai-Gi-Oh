@@ -35,6 +35,7 @@ interface ICreateBoardMatchConfigInput {
   opponentName?: string;
   starterPlayerId?: string;
   openingHandSize?: number;
+  preserveDeckOrder?: boolean;
 }
 
 function resolveModeDefaults(mode: IMatchMode): Omit<IBoardMatchConfig, "seed" | "playerA" | "playerB" | "randomSource"> {
@@ -68,6 +69,9 @@ export function createBoardMatchConfig(input?: ICreateBoardMatchConfigInput): IB
   const opponentFusionDeckBase =
     input?.opponentFusionDeck && input.opponentFusionDeck.length > 0 ? input.opponentFusionDeck : createDefaultFusionDeck();
 
+  const preserveDeckOrder = Boolean(input?.preserveDeckOrder);
+  const cloneDeck = (deck: ICard[]): ICard[] => deck.map((card) => ({ ...card }));
+  const resolveDeck = (deck: ICard[]): ICard[] => (preserveDeckOrder ? cloneDeck(deck) : shuffleDeck(cloneDeck(deck), randomSource));
   return {
     mode: defaults.mode,
     seed,
@@ -76,13 +80,13 @@ export function createBoardMatchConfig(input?: ICreateBoardMatchConfigInput): IB
     playerA: {
       id: playerId,
       name: playerName,
-      deck: shuffleDeck(playerDeckBase.map((card) => ({ ...card })), randomSource),
+      deck: resolveDeck(playerDeckBase),
       fusionDeck: playerFusionDeckBase.map((card) => ({ ...card })),
     },
     playerB: {
       id: opponentId,
       name: opponentName,
-      deck: shuffleDeck(opponentDeckBase.map((card) => ({ ...card })), randomSource),
+      deck: resolveDeck(opponentDeckBase),
       fusionDeck: opponentFusionDeckBase.map((card) => ({ ...card })),
     },
     randomSource,

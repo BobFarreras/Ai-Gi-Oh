@@ -1,3 +1,4 @@
+<!-- MODO-HISTORIA.md - Documento narrativo base del argumento de campaña para el modo historia. -->
 # 🌐 MODO HISTORIA: LA GUERRA DEL CÓDIGO
 
 ## ACTO 1: El Sandbox (Tutorial y Recolección de Datos)

@@ -40,6 +40,7 @@ export interface BattlefieldProps {
   isMobileLayout?: boolean;
   onActivateSelectedExecution: () => void;
   onGraveyardClick: (side: "player" | "opponent") => void;
+  onFusionDeckClick?: (side: "player" | "opponent") => void;
   onDestroyedClick?: (side: "player" | "opponent") => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => void;
 }

@@ -37,7 +37,7 @@ describe("useBoard integración battle-rules", () => {
     expect(result.current.activeAttackerId).toBeNull();
   });
 
-  it("cambia a DEFENSE al pulsar dos veces la misma entidad atacante", async () => {
+  it("mantiene atacante seleccionado al pulsar dos veces la misma entidad en BATTLE", async () => {
     const forcedDeck: ICard[] = Array.from({ length: 20 }, (_, index) => ({
       ...integrationEntityCard,
       id: `${integrationEntityCard.id}-${index}`,
@@ -54,12 +54,12 @@ describe("useBoard integración battle-rules", () => {
     const summoned = result.current.gameState.playerA.activeEntities[0];
     expect(summoned).toBeDefined();
     if (!summoned) throw new Error("La entidad invocada no está disponible.");
-    await act(async () => { await result.current.handleEntityClick(summoned, false, createMouseEvent()); });
+    await act(async () => { await result.current.handleEntityClick(summoned, false, createMouseEvent(2)); });
     expect(result.current.activeAttackerId).toBe(summoned.instanceId);
     await act(async () => { await result.current.handleEntityClick(summoned, false, createMouseEvent()); });
     const updated = result.current.gameState.playerA.activeEntities.find((entity) => entity.instanceId === summoned.instanceId);
-    expect(updated?.mode).toBe("DEFENSE");
-    expect(result.current.activeAttackerId).toBeNull();
+    expect(updated?.mode).toBe("ATTACK");
+    expect(result.current.activeAttackerId).toBe(summoned.instanceId);
   });
 
   it("pasa automáticamente al rival en BATTLE si no hay atacantes", async () => {

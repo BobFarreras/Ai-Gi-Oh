@@ -15,7 +15,7 @@ Usa esta guía para capturar una línea base reproducible:
 1. Script dedicado: `pnpm perf:combat:e2e`.
 2. Auto con servidor local en dev: `pnpm perf:combat:e2e:auto:dev`.
 3. Auto con servidor local en prod: `pnpm perf:combat:e2e:auto:prod`.
-4. Ruta por defecto del benchmark: `/hub/training` (se puede sobreescribir con `--combatPath=/ruta`).
+4. Ruta por defecto del benchmark: `/hub/academy/training/arena` (se puede sobreescribir con `--combatPath=/ruta`).
 5. Reportes generados: `docs/performance/results/combat-e2e-*.json|.md`.
 6. Si combate requiere login, usar sesión de Playwright: `--storageState=playwright/.auth/user.json`.
 

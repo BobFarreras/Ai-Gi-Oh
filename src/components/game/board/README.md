@@ -58,6 +58,14 @@ Guía rápida para entender la lógica de tablero y batalla.
 2. Debes elegir 2 entidades de tu campo.
 3. El motor valida receta/energía y ejecuta `GameEngine.fuseCards`.
 4. Los materiales van al cementerio y la carta fusionada entra al campo.
+
+## Ajustes recientes de interacción
+
+1. `BattleBannerCenter` volvió al estilo clásico translúcido con animación de encuentro central.
+2. El deck de fusión rival es solo informativo (no interactivo); el deck de fusión interactivo es el del jugador.
+3. En fase de combate, mantener selección del atacante usa click simple y cambiar a defensa usa doble click sobre la misma entidad.
+4. La activación de cartas en `SET` dispone de dos entradas: botón flotante centrado sobre carta y botón `Activar` en la barra de acciones inferior derecha.
+5. Se ajustó la vertical del `PlayerHUD` rival en desktop para alinear mejor con el bloque de `TurnTimer`.
 5. Las entidades ya elegidas como material quedan marcadas visualmente con estado dedicado (`MATERIAL` + ring cian).
 6. Al confirmarse la fusión, la cinemática sigue flujo en 2 etapas:
    - vídeo de fusión,

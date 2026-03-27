@@ -14,6 +14,7 @@ interface MarketPacksPanelProps {
   onSelectPack: (packId: string) => void;
   onClearPackSelection: () => void;
   onBuyPack: (packId: string) => Promise<boolean>;
+  onTutorialBuyPack?: () => void;
 }
 
 export function MarketPacksPanel({
@@ -22,6 +23,7 @@ export function MarketPacksPanel({
   onSelectPack,
   onClearPackSelection,
   onBuyPack,
+  onTutorialBuyPack,
 }: MarketPacksPanelProps) {
   const [floatingSpendId, setFloatingSpendId] = useState(0);
   const floatingTimeoutRef = useRef<number | null>(null);
@@ -37,6 +39,7 @@ export function MarketPacksPanel({
     if (!activePack) return;
     const wasBought = await onBuyPack(activePack.id);
     if (!wasBought) return;
+    onTutorialBuyPack?.();
     setFloatingSpendId((previous) => previous + 1);
     if (floatingTimeoutRef.current !== null) window.clearTimeout(floatingTimeoutRef.current);
     floatingTimeoutRef.current = window.setTimeout(() => {
@@ -46,7 +49,7 @@ export function MarketPacksPanel({
   };
 
   return (
-    <section className="flex h-full flex-col overflow-hidden rounded-xl border border-cyan-800/35 bg-[#031020]/55 p-3">
+    <section data-tutorial-id="market-pack-selector" className="flex h-full flex-col overflow-hidden rounded-xl border border-cyan-800/35 bg-[#031020]/55 p-3">
       <div className="mb-3 flex shrink-0 items-center justify-between gap-3 border-b border-cyan-900/50 pb-2">
         <button
           type="button"
@@ -66,6 +69,7 @@ export function MarketPacksPanel({
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             type="button"
+            data-tutorial-id="market-buy-pack"
             onClick={() => void handleBuyPack()}
             className="group relative flex items-center gap-2 overflow-visible rounded-lg border border-fuchsia-400/60 bg-fuchsia-900/40 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-fuchsia-200 shadow-[0_0_15px_rgba(192,38,211,0.2)] transition-all hover:bg-fuchsia-800/60"
           >

@@ -22,6 +22,9 @@ Esta carpeta contendrá implementaciones concretas de repositorios de `core/repo
    - `create-supabase-player-story-duel-progress-repository.ts`
    - `SupabasePlayerStoryWorldRepository`
    - `create-supabase-player-story-world-repository.ts`
+7. Adaptadores de Training:
+   - `SupabaseTrainingProgressRepository`
+   - `SupabaseTrainingMatchClaimRepository`
 
 ## Reglas
 
