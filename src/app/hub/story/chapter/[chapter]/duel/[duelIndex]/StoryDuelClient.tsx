@@ -4,6 +4,10 @@ import { useMemo, useRef, useState } from "react";
 import { Board, BoardBossThemeVariant } from "@/components/game/board";
 import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result/duel-result-reward-summary";
 import { ICard } from "@/core/entities/ICard";
+import { IStoryAiProfile } from "@/core/services/opponent/difficulty/story-ai-profile";
+import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
+import { mapStoryDifficultyToOpponentDifficulty } from "@/core/services/opponent/difficulty/map-story-difficulty-to-opponent";
+import { StoryOpponentDifficulty } from "@/core/entities/opponent/IStoryDuelDefinition";
 import { StoryDuelOutcome } from "@/services/story/duel-flow/story-duel-outcome";
 import { buildStoryOpponentNarrationPack } from "@/services/story/build-story-opponent-narration-pack";
 import { resolveStoryCoinToss } from "@/services/story/duel-flow/resolve-story-coin-toss";
@@ -21,6 +25,8 @@ interface StoryDuelClientProps {
   opponentId: string;
   opponentName: string;
   opponentAvatarUrl?: string | null;
+  opponentDifficulty: StoryOpponentDifficulty;
+  opponentAiProfile: IStoryAiProfile;
   playerDeck: ICard[];
   playerFusionDeck: ICard[];
   opponentDeck: ICard[];
@@ -56,6 +62,10 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
     isBlockedByOverlay: isCoinTossVisible,
     isStopped: isBossSoundtrackStopped,
   });
+  const opponentStrategy = useMemo(
+    () => new HeuristicOpponentStrategy({ difficulty: mapStoryDifficultyToOpponentDifficulty(props.opponentDifficulty), aiProfile: props.opponentAiProfile }),
+    [props.opponentDifficulty, props.opponentAiProfile],
+  );
   const pushBackToStory = (input: { outcome: StoryDuelOutcome; duelNodeId: string; returnNodeId: string }) => {
     const query = new URLSearchParams({
       duelOutcome: input.outcome,
@@ -126,6 +136,7 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
         playerAvatarUrl={playerAvatarUrl}
         isBossTheme={props.isBossDuel}
         bossThemeVariant={bossThemeVariant}
+        opponentStrategyOverride={opponentStrategy}
         narrationPack={narrationPack}
         isMatchStartLocked={isCoinTossVisible}
         duelResultRewardSummary={rewardSummary}

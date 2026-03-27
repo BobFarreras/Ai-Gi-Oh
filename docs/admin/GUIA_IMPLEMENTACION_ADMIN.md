@@ -209,12 +209,23 @@ Cada caso de uso debe validar reglas y nunca delegar decisiones de negocio a Rea
 
 Al finalizar, tendrás un panel admin con acceso seguro basado en rol real, operaciones trazables y sin romper la arquitectura limpia del proyecto.
 
-## 12. Estado actual (2026-03-25)
+## 12. Estado actual (2026-03-26)
 
 1. Fase A completada: acceso admin por `admin_users`, guard server-side y portal privado por slug.
 2. Fase B completada: CRUD admin de catálogo/market por endpoints dedicados.
-3. Fase C (starter deck) completada en base:
+3. Fase C completada:
    - lectura/guardado de plantilla starter desde `/api/admin/starter-deck/template`,
-   - layout administrativo responsive con sidebar lateral plegable,
-   - editor visual tipo Arsenal (detalle, deck 5x4, almacén con búsqueda/filtro por tipo y drag/drop).
-4. Pendiente siguiente bloque funcional: Fase D (`story_decks` de oponentes).
+   - edición de `story_deck_lists` y `story_deck_list_cards`,
+   - layout administrativo responsive con sidebar lateral plegable y workspaces visuales.
+4. Fase D completada (hardening):
+   - `rate limit` en mutaciones `/api/admin/*` por usuario e IP (compatible con Upstash vía `security-rate-limiter`),
+   - auditoría persistente por acción sensible en `admin_audit_log`,
+   - `Cache-Control: no-store` en contexto admin API y `robots noindex` en portal admin,
+   - mejoras de UX de error visible en formularios de login/registro.
+5. Fase E3 completada (observabilidad):
+   - endpoint `GET /api/admin/audit` con paginación y filtros (`action`, `entityType`, `actorUserId`, rango de fechas),
+   - sección visual `Audit Log` en el sidebar admin con tabla read-only y paginación,
+   - tests de API y UI para la nueva capa de auditoría.
+6. Pendiente bloque de evolución:
+   - MFA obligatoria para cuentas admin en Supabase Auth,
+   - pruebas E2E específicas de seguridad/rate-limit admin.

@@ -11,7 +11,7 @@ interface IAdminSidebarNavProps {
 
 interface IAdminSidebarItem {
   href: string;
-  icon: "catalog" | "market" | "starter" | "story";
+  icon: "catalog" | "market" | "starter" | "story" | "audit";
   label: string;
 }
 
@@ -22,6 +22,7 @@ function buildItems(portalSlug: string): IAdminSidebarItem[] {
     { href: `${base}/market`, icon: "market", label: "Market" },
     { href: `${base}/starter-deck`, icon: "starter", label: "Starter Deck" },
     { href: `${base}/story-decks`, icon: "story", label: "Story Decks" },
+    { href: `${base}/audit`, icon: "audit", label: "Audit Log" },
   ];
 }
 
@@ -29,7 +30,8 @@ function AdminNavIcon({ icon }: { icon: IAdminSidebarItem["icon"] }) {
   if (icon === "catalog") return <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current"><path d="M4 5h16v14H4zM8 5v14M12 9h6M12 13h6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>;
   if (icon === "market") return <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current"><path d="M4 7h16M7 7l1 11h8l1-11M9 7V5h6v2M10 12h4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>;
   if (icon === "starter") return <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>;
-  return <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current"><path d="M5 6h14M5 12h10M5 18h14M17 10l2 2-2 2" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+  if (icon === "story") return <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current"><path d="M5 6h14M5 12h10M5 18h14M17 10l2 2-2 2" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+  return <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current"><path d="M4 6h16M4 12h16M4 18h10M16 18h4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
 
 export function AdminSidebarNav({ portalSlug }: IAdminSidebarNavProps) {

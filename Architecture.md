@@ -13,6 +13,7 @@ La arquitectura viva y detallada está en `docs/architecture/`.
 5. `docs/architecture/04-domain-hub-home-market-story.md`
 6. `docs/architecture/05-auth-persistence-security.md`
 7. `docs/architecture/06-quality-gates-and-doc-policy.md`
+8. `docs/architecture/07-game-engine-effects-extension.md`
 
 ## Nota
 

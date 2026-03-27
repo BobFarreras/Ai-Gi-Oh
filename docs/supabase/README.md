@@ -70,6 +70,10 @@
    - plantilla persistente del deck inicial para jugadores nuevos.
 29. `public.player_progress.has_seen_academy_intro / has_skipped_tutorial`:
    - flags de onboarding para controlar intro inicial de Academy y salto opcional de tutorial.
+30. `public.story_duel_ai_profiles`:
+   - dificultad y perfil IA por duelo Story (fuente data-driven por aparición).
+31. `public.story_duel_deck_overrides`:
+   - overrides estáticos por duelo/slot para variar cartas y escalado (`version_tier`, `level`, `xp`) sin progresión dinámica por repetición.
 
 ## Fase 2 (Perfil y Progreso)
 
@@ -345,6 +349,20 @@
    - `admin_audit_log`: trazabilidad de operaciones sensibles ejecutadas por admins.
 5. Alta inicial recomendada:
    - insertar manualmente en SQL Editor el `user_id` admin tras crear su cuenta autenticada.
+
+## Fase S.1 (Dificultad Story por duelo + overrides estáticos)
+
+1. Ejecuta `docs/supabase/sql/027_phase_story_duel_difficulty_profiles.sql`.
+2. Verifica tablas:
+   - `public.story_duel_ai_profiles`
+   - `public.story_duel_deck_overrides`
+3. Verifica seed inicial:
+   - cada duelo activo de `story_duels` queda con perfil inicial en `story_duel_ai_profiles`.
+4. Verifica RLS:
+   - lectura `authenticated` para filas activas (`is_active = true`),
+   - escritura reservada a `service_role`.
+5. Objetivo funcional:
+   - permitir que un mismo oponente tenga distintas dificultades y composición/escalado de cartas según duelo o misión especial.
 
 ## Notas
 

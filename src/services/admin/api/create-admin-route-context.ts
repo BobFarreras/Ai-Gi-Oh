@@ -16,6 +16,7 @@ export interface IAdminRouteContext {
  */
 export async function createAdminRouteContext(request: NextRequest): Promise<IAdminRouteContext> {
   const response = NextResponse.json({ ok: true }, { status: 200 });
+  response.headers.set("Cache-Control", "no-store");
   const client = createSupabaseRouteClient(request, response);
   const {
     data: { user },

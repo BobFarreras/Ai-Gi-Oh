@@ -1,10 +1,14 @@
 // src/infrastructure/persistence/supabase/SupabaseOpponentRepository.ts - Carga definición de duelo de historia desde Supabase sin acoplar UI a SQL.
 import { SupabaseClient } from "@supabase/supabase-js";
 import { ValidationError } from "@/core/errors/ValidationError";
-import { IStoryDuelDefinition, IStoryRewardCardDefinition, StoryOpponentDifficulty } from "@/core/entities/opponent/IStoryDuelDefinition";
+import {
+  IStoryDeckEntryDefinition,
+  IStoryDuelDefinition,
+  IStoryRewardCardDefinition,
+  StoryOpponentDifficulty,
+} from "@/core/entities/opponent/IStoryDuelDefinition";
 import { IStoryDuelSummary } from "@/core/entities/opponent/IStoryDuelSummary";
 import { IOpponentRepository } from "@/core/repositories/IOpponentRepository";
-import { mapStoryDeckCardIds } from "@/infrastructure/persistence/supabase/internal/map-story-deck-card-ids";
 
 interface IStoryDuelRow {
   id: string;
@@ -33,6 +37,7 @@ interface IStoryOpponentRow {
 interface IStoryDeckCardRow {
   card_id: string;
   copies: number;
+  slot_index: number;
 }
 
 interface IStoryRewardCardRow {
@@ -42,6 +47,23 @@ interface IStoryRewardCardRow {
   is_guaranteed: boolean;
 }
 
+interface IStoryDuelAiProfileRow {
+  difficulty: StoryOpponentDifficulty;
+  ai_profile: Record<string, unknown> | null;
+}
+
+interface IStoryDeckOverrideRow {
+  slot_index: number;
+  card_id: string;
+  copies: number;
+  version_tier: number;
+  level: number;
+  xp: number;
+  attack_override: number | null;
+  defense_override: number | null;
+  effect_override: Record<string, unknown> | null;
+}
+
 function toRewardCards(rows: IStoryRewardCardRow[]): IStoryRewardCardDefinition[] {
   return rows.map((row) => ({
     cardId: row.card_id,
@@ -49,6 +71,34 @@ function toRewardCards(rows: IStoryRewardCardRow[]): IStoryRewardCardDefinition[
     dropRate: row.drop_rate,
     isGuaranteed: row.is_guaranteed,
   }));
+}
+
+function toDeckEntries(rows: IStoryDeckCardRow[]): IStoryDeckEntryDefinition[] {
+  return rows.flatMap((row) =>
+    Array.from({ length: row.copies }, () => ({
+      cardId: row.card_id,
+      versionTier: 0,
+      level: 0,
+      xp: 0,
+      attackOverride: null,
+      defenseOverride: null,
+      effectOverride: null,
+    })),
+  );
+}
+
+function toDeckEntriesFromOverrides(rows: IStoryDeckOverrideRow[]): IStoryDeckEntryDefinition[] {
+  return rows.flatMap((row) =>
+    Array.from({ length: row.copies }, () => ({
+      cardId: row.card_id,
+      versionTier: row.version_tier,
+      level: row.level,
+      xp: row.xp,
+      attackOverride: row.attack_override,
+      defenseOverride: row.defense_override,
+      effectOverride: row.effect_override ?? null,
+    })),
+  );
 }
 
 export class SupabaseOpponentRepository implements IOpponentRepository {
@@ -108,12 +158,28 @@ export class SupabaseOpponentRepository implements IOpponentRepository {
       .single<IStoryOpponentRow>();
     if (opponentResult.error || !opponentResult.data) throw new ValidationError("No se pudo cargar el oponente de historia.");
 
-    const deckResult = await this.client
+    const [deckResult, overrideResult, aiProfileResult] = await Promise.all([
+      this.client
       .from("story_deck_list_cards")
-      .select("card_id,copies")
+      .select("slot_index,card_id,copies")
       .eq("deck_list_id", duelResult.data.deck_list_id)
-      .order("slot_index", { ascending: true });
-    if (deckResult.error) throw new ValidationError("No se pudo cargar el mazo del oponente de historia.");
+      .order("slot_index", { ascending: true }),
+      this.client
+        .from("story_duel_deck_overrides")
+        .select("slot_index,card_id,copies,version_tier,level,xp,attack_override,defense_override,effect_override")
+        .eq("duel_id", duelResult.data.id)
+        .eq("is_active", true)
+        .order("slot_index", { ascending: true }),
+      this.client
+        .from("story_duel_ai_profiles")
+        .select("difficulty,ai_profile")
+        .eq("duel_id", duelResult.data.id)
+        .eq("is_active", true)
+        .maybeSingle<IStoryDuelAiProfileRow>(),
+    ]);
+    if (deckResult.error) throw new ValidationError("No se pudo cargar el mazo base del oponente de historia.");
+    if (overrideResult.error) throw new ValidationError("No se pudieron cargar los overrides del mazo Story.");
+    if (aiProfileResult.error) throw new ValidationError("No se pudo cargar el perfil IA del duelo Story.");
 
     const rewardResult = await this.client
       .from("story_duel_reward_cards")
@@ -122,6 +188,11 @@ export class SupabaseOpponentRepository implements IOpponentRepository {
       .order("card_id", { ascending: true });
     if (rewardResult.error) throw new ValidationError("No se pudo cargar la recompensa de cartas del duelo de historia.");
 
+    const baseRows = (deckResult.data ?? []) as IStoryDeckCardRow[];
+    const overrideRows = (overrideResult.data ?? []) as IStoryDeckOverrideRow[];
+    const duelDeckEntries = overrideRows.length > 0 ? toDeckEntriesFromOverrides(overrideRows) : toDeckEntries(baseRows);
+    const opponentDifficulty = aiProfileResult.data?.difficulty ?? opponentResult.data.difficulty;
+    const opponentAiProfile = aiProfileResult.data?.ai_profile ?? {};
     return {
       id: duelResult.data.id,
       chapter: duelResult.data.chapter,
@@ -131,8 +202,10 @@ export class SupabaseOpponentRepository implements IOpponentRepository {
       opponentId: opponentResult.data.id,
       opponentName: opponentResult.data.display_name,
       opponentAvatarUrl: opponentResult.data.avatar_url,
-      opponentDifficulty: opponentResult.data.difficulty,
-      opponentDeckCardIds: mapStoryDeckCardIds((deckResult.data ?? []) as IStoryDeckCardRow[]),
+      opponentDifficulty,
+      opponentAiProfile,
+      opponentDeckCardIds: duelDeckEntries.map((entry) => entry.cardId),
+      opponentDeckEntries: duelDeckEntries,
       openingHandSize: duelResult.data.opening_hand_size,
       starterPlayer: duelResult.data.starter_player,
       rewardNexus: duelResult.data.reward_nexus,

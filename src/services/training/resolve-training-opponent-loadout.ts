@@ -3,6 +3,7 @@ import { OpponentDifficulty } from "@/core/services/opponent/difficulty/types";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { ICard } from "@/core/entities/ICard";
 import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
+import { applyTrainingCardScaling } from "@/services/training/internal/training-card-scaling";
 import { TRAINING_OPPONENT_PRESETS } from "@/services/training/internal/training-opponent-presets";
 import { TRAINING_OPPONENT_DECK_POOLS } from "@/services/training/internal/training-opponent-deck-pools";
 
@@ -32,7 +33,7 @@ function resolveCard(cardId: string): ICard {
   if (!card) throw new ValidationError(`No existe carta '${cardId}' en el catálogo local para training.`);
   return { ...card };
 }
-const DIFFICULTY_ORDER: OpponentDifficulty[] = ["EASY", "NORMAL", "HARD", "BOSS"];
+const DIFFICULTY_ORDER: OpponentDifficulty[] = ["EASY", "NORMAL", "HARD", "BOSS", "MASTER", "MYTHIC"];
 
 function clampDifficultyIndex(index: number): number {
   return Math.max(0, Math.min(DIFFICULTY_ORDER.length - 1, index));
@@ -88,16 +89,17 @@ export function resolveTrainingOpponentLoadout(input: IResolveTrainingOpponentLo
     throw new ValidationError(`No existe preset de oponente para '${selectedTemplateId}'.`);
   }
   const selectedVariant = resolveDeckVariant(selectedTemplateId, input.tierMatches);
+  const effectiveDifficulty = resolveAdaptiveDifficulty(input.aiDifficulty, input.tierWins, input.tierMatches);
   return {
     tier: input.tier,
-    difficulty: resolveAdaptiveDifficulty(input.aiDifficulty, input.tierWins, input.tierMatches),
+    difficulty: effectiveDifficulty,
     storyOpponentId: preset.storyOpponentId,
     displayName: preset.displayName,
     avatarUrl: preset.avatarUrl,
     introUrl: preset.introUrl,
     deckVariantId: selectedVariant.id,
     deckVariantLabel: toVariantLabel(selectedVariant.id),
-    deck: selectedVariant.deckCardIds.map(resolveCard),
-    fusionDeck: selectedVariant.fusionDeckCardIds.map(resolveCard),
+    deck: applyTrainingCardScaling(selectedVariant.deckCardIds.map(resolveCard), effectiveDifficulty),
+    fusionDeck: applyTrainingCardScaling(selectedVariant.fusionDeckCardIds.map(resolveCard), effectiveDifficulty),
   };
 }

@@ -8,7 +8,7 @@ export class SaveAdminStoryDeckUseCase {
 
   async execute(command: IAdminSaveStoryDeckCommand): Promise<void> {
     validateAdminSaveStoryDeckCommand(command);
-    await this.repository.saveDeck(command.deckListId, command.cardIds);
+    await this.repository.saveDeck(command.deckListId, command.cardIds, command.duelConfig, command.updateBaseDeck);
   }
 }
 

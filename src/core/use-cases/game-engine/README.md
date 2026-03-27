@@ -60,4 +60,14 @@ Casos de uso puros del motor, organizados por responsabilidad.
 1. Regla nueva: crear caso de uso en submódulo correcto.
 2. Exponerlo vía `GameEngine.ts` (fachada).
 3. Añadir test unitario + test de integración si toca flujo completo.
+4. Efectos de cartas:
+   - EXECUTION: extender `actions/internal/execution-effect-registry.ts`.
+   - TRAP: extender `effects/internal/trap-effect-registry.ts`.
+   - Triggers reactivos: extender `effects/internal/trap-trigger-registry.ts`.
+5. Mantener sincronizados contrato (`ICardEffect`) y parsing de catálogo (`map-card-catalog-row-to-card.ts`).
+
+## Documentación relacionada
+
+1. `docs/architecture/03-domain-game.md`
+2. `docs/architecture/07-game-engine-effects-extension.md`
 

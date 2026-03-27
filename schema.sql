@@ -1,6 +1,5 @@
--- schema.sql - Snapshot de esquema SQL incluyendo base de seguridad administrativa para panel interno.
 
-\restrict RuGI27aCg1BIrqcoldJJ5Dw40ADMh82ZLp2Gse5q3DdhBMOMowf9dMGKpuzLzmL
+\restrict MjDtuHLhEMsa6EnO8G4fMb7GDYxPO7VlRvciZDt6RfJVes2NqtquBZbRr02LoKc
 
 
 SET statement_timeout = 0;
@@ -82,6 +81,33 @@ ALTER FUNCTION "public"."set_updated_at"() OWNER TO "postgres";
 SET default_tablespace = '';
 
 SET default_table_access_method = "heap";
+
+
+CREATE TABLE IF NOT EXISTS "public"."admin_audit_log" (
+    "id" "text" NOT NULL,
+    "actor_user_id" "uuid" NOT NULL,
+    "action" "text" NOT NULL,
+    "entity_type" "text" NOT NULL,
+    "entity_id" "text" NOT NULL,
+    "payload" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."admin_audit_log" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."admin_users" (
+    "user_id" "uuid" NOT NULL,
+    "role" "text" DEFAULT 'ADMIN'::"text" NOT NULL,
+    "is_active" boolean DEFAULT true NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "admin_users_role_check" CHECK (("role" = ANY (ARRAY['ADMIN'::"text", 'SUPER_ADMIN'::"text"])))
+);
+
+
+ALTER TABLE "public"."admin_users" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."card_mastery_passive_map" (
@@ -445,6 +471,45 @@ CREATE TABLE IF NOT EXISTS "public"."story_deck_lists" (
 ALTER TABLE "public"."story_deck_lists" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."story_duel_ai_profiles" (
+    "duel_id" "text" NOT NULL,
+    "difficulty" "text" NOT NULL,
+    "ai_profile" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "is_active" boolean DEFAULT true NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "story_duel_ai_profiles_difficulty_check" CHECK (("difficulty" = ANY (ARRAY['ROOKIE'::"text", 'STANDARD'::"text", 'ELITE'::"text", 'BOSS'::"text", 'MYTHIC'::"text"])))
+);
+
+
+ALTER TABLE "public"."story_duel_ai_profiles" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."story_duel_deck_overrides" (
+    "duel_id" "text" NOT NULL,
+    "slot_index" integer NOT NULL,
+    "card_id" "text" NOT NULL,
+    "copies" integer DEFAULT 1 NOT NULL,
+    "version_tier" integer DEFAULT 0 NOT NULL,
+    "level" integer DEFAULT 0 NOT NULL,
+    "xp" integer DEFAULT 0 NOT NULL,
+    "attack_override" integer,
+    "defense_override" integer,
+    "effect_override" "jsonb",
+    "is_active" boolean DEFAULT true NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "story_duel_deck_overrides_attack_override_check" CHECK ((("attack_override" IS NULL) OR ("attack_override" >= 0))),
+    CONSTRAINT "story_duel_deck_overrides_copies_check" CHECK ((("copies" > 0) AND ("copies" <= 3))),
+    CONSTRAINT "story_duel_deck_overrides_defense_override_check" CHECK ((("defense_override" IS NULL) OR ("defense_override" >= 0))),
+    CONSTRAINT "story_duel_deck_overrides_level_check" CHECK ((("level" >= 0) AND ("level" <= 30))),
+    CONSTRAINT "story_duel_deck_overrides_slot_index_check" CHECK ((("slot_index" >= 0) AND ("slot_index" < 60))),
+    CONSTRAINT "story_duel_deck_overrides_version_tier_check" CHECK ((("version_tier" >= 0) AND ("version_tier" <= 5))),
+    CONSTRAINT "story_duel_deck_overrides_xp_check" CHECK (("xp" >= 0))
+);
+
+
+ALTER TABLE "public"."story_duel_deck_overrides" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."story_duel_reward_cards" (
     "duel_id" "text" NOT NULL,
     "card_id" "text" NOT NULL,
@@ -503,6 +568,16 @@ CREATE TABLE IF NOT EXISTS "public"."story_opponents" (
 
 
 ALTER TABLE "public"."story_opponents" OWNER TO "postgres";
+
+
+ALTER TABLE ONLY "public"."admin_audit_log"
+    ADD CONSTRAINT "admin_audit_log_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."admin_users"
+    ADD CONSTRAINT "admin_users_pkey" PRIMARY KEY ("user_id");
+
 
 
 ALTER TABLE ONLY "public"."card_mastery_passive_map"
@@ -625,6 +700,16 @@ ALTER TABLE ONLY "public"."story_deck_lists"
 
 
 
+ALTER TABLE ONLY "public"."story_duel_ai_profiles"
+    ADD CONSTRAINT "story_duel_ai_profiles_pkey" PRIMARY KEY ("duel_id");
+
+
+
+ALTER TABLE ONLY "public"."story_duel_deck_overrides"
+    ADD CONSTRAINT "story_duel_deck_overrides_pkey" PRIMARY KEY ("duel_id", "slot_index");
+
+
+
 ALTER TABLE ONLY "public"."story_duel_reward_cards"
     ADD CONSTRAINT "story_duel_reward_cards_pkey" PRIMARY KEY ("duel_id", "card_id");
 
@@ -642,6 +727,14 @@ ALTER TABLE ONLY "public"."story_duels"
 
 ALTER TABLE ONLY "public"."story_opponents"
     ADD CONSTRAINT "story_opponents_pkey" PRIMARY KEY ("id");
+
+
+
+CREATE INDEX "idx_admin_audit_log_actor_created" ON "public"."admin_audit_log" USING "btree" ("actor_user_id", "created_at" DESC);
+
+
+
+CREATE INDEX "idx_admin_users_active" ON "public"."admin_users" USING "btree" ("is_active");
 
 
 
@@ -709,6 +802,22 @@ CREATE INDEX "idx_story_deck_lists_opponent" ON "public"."story_deck_lists" USIN
 
 
 
+CREATE INDEX "idx_story_duel_ai_profiles_active" ON "public"."story_duel_ai_profiles" USING "btree" ("is_active");
+
+
+
+CREATE INDEX "idx_story_duel_deck_overrides_active" ON "public"."story_duel_deck_overrides" USING "btree" ("is_active");
+
+
+
+CREATE INDEX "idx_story_duel_deck_overrides_card" ON "public"."story_duel_deck_overrides" USING "btree" ("card_id");
+
+
+
+CREATE INDEX "idx_story_duel_deck_overrides_duel" ON "public"."story_duel_deck_overrides" USING "btree" ("duel_id");
+
+
+
 CREATE INDEX "idx_story_duel_reward_cards_duel" ON "public"."story_duel_reward_cards" USING "btree" ("duel_id");
 
 
@@ -722,6 +831,10 @@ CREATE INDEX "idx_story_duels_opponent" ON "public"."story_duels" USING "btree" 
 
 
 CREATE INDEX "idx_story_opponents_active" ON "public"."story_opponents" USING "btree" ("is_active");
+
+
+
+CREATE OR REPLACE TRIGGER "admin_users_set_updated_at" BEFORE UPDATE ON "public"."admin_users" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
 
 
 
@@ -801,6 +914,14 @@ CREATE OR REPLACE TRIGGER "story_deck_lists_set_updated_at" BEFORE UPDATE ON "pu
 
 
 
+CREATE OR REPLACE TRIGGER "story_duel_ai_profiles_set_updated_at" BEFORE UPDATE ON "public"."story_duel_ai_profiles" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "story_duel_deck_overrides_set_updated_at" BEFORE UPDATE ON "public"."story_duel_deck_overrides" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
+
+
+
 CREATE OR REPLACE TRIGGER "story_duel_reward_cards_set_updated_at" BEFORE UPDATE ON "public"."story_duel_reward_cards" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
 
 
@@ -810,6 +931,16 @@ CREATE OR REPLACE TRIGGER "story_duels_set_updated_at" BEFORE UPDATE ON "public"
 
 
 CREATE OR REPLACE TRIGGER "story_opponents_set_updated_at" BEFORE UPDATE ON "public"."story_opponents" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
+
+
+
+ALTER TABLE ONLY "public"."admin_audit_log"
+    ADD CONSTRAINT "admin_audit_log_actor_user_id_fkey" FOREIGN KEY ("actor_user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."admin_users"
+    ADD CONSTRAINT "admin_users_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
 
@@ -953,6 +1084,21 @@ ALTER TABLE ONLY "public"."story_deck_lists"
 
 
 
+ALTER TABLE ONLY "public"."story_duel_ai_profiles"
+    ADD CONSTRAINT "story_duel_ai_profiles_duel_id_fkey" FOREIGN KEY ("duel_id") REFERENCES "public"."story_duels"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."story_duel_deck_overrides"
+    ADD CONSTRAINT "story_duel_deck_overrides_card_id_fkey" FOREIGN KEY ("card_id") REFERENCES "public"."cards_catalog"("id") ON DELETE RESTRICT;
+
+
+
+ALTER TABLE ONLY "public"."story_duel_deck_overrides"
+    ADD CONSTRAINT "story_duel_deck_overrides_duel_id_fkey" FOREIGN KEY ("duel_id") REFERENCES "public"."story_duels"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."story_duel_reward_cards"
     ADD CONSTRAINT "story_duel_reward_cards_card_id_fkey" FOREIGN KEY ("card_id") REFERENCES "public"."cards_catalog"("id") ON DELETE RESTRICT;
 
@@ -975,6 +1121,24 @@ ALTER TABLE ONLY "public"."story_duels"
 
 ALTER TABLE ONLY "public"."story_duels"
     ADD CONSTRAINT "story_duels_unlock_requirement_duel_id_fkey" FOREIGN KEY ("unlock_requirement_duel_id") REFERENCES "public"."story_duels"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE "public"."admin_audit_log" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "admin_audit_log_insert_own" ON "public"."admin_audit_log" FOR INSERT TO "authenticated" WITH CHECK (("auth"."uid"() = "actor_user_id"));
+
+
+
+CREATE POLICY "admin_audit_log_select_own" ON "public"."admin_audit_log" FOR SELECT TO "authenticated" USING (("auth"."uid"() = "actor_user_id"));
+
+
+
+ALTER TABLE "public"."admin_users" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "admin_users_select_own_active" ON "public"."admin_users" FOR SELECT TO "authenticated" USING ((("auth"."uid"() = "user_id") AND ("is_active" = true)));
 
 
 
@@ -1250,6 +1414,20 @@ CREATE POLICY "story_deck_lists_select_public" ON "public"."story_deck_lists" FO
 
 
 
+ALTER TABLE "public"."story_duel_ai_profiles" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "story_duel_ai_profiles_select_public" ON "public"."story_duel_ai_profiles" FOR SELECT TO "authenticated" USING (("is_active" = true));
+
+
+
+ALTER TABLE "public"."story_duel_deck_overrides" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "story_duel_deck_overrides_select_public" ON "public"."story_duel_deck_overrides" FOR SELECT TO "authenticated" USING (("is_active" = true));
+
+
+
 ALTER TABLE "public"."story_duel_reward_cards" ENABLE ROW LEVEL SECURITY;
 
 
@@ -1287,6 +1465,18 @@ GRANT ALL ON FUNCTION "public"."handle_new_auth_user"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."set_updated_at"() TO "anon";
 GRANT ALL ON FUNCTION "public"."set_updated_at"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."set_updated_at"() TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."admin_audit_log" TO "anon";
+GRANT ALL ON TABLE "public"."admin_audit_log" TO "authenticated";
+GRANT ALL ON TABLE "public"."admin_audit_log" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."admin_users" TO "anon";
+GRANT ALL ON TABLE "public"."admin_users" TO "authenticated";
+GRANT ALL ON TABLE "public"."admin_users" TO "service_role";
 
 
 
@@ -1434,6 +1624,18 @@ GRANT ALL ON TABLE "public"."story_deck_lists" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."story_duel_ai_profiles" TO "anon";
+GRANT ALL ON TABLE "public"."story_duel_ai_profiles" TO "authenticated";
+GRANT ALL ON TABLE "public"."story_duel_ai_profiles" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."story_duel_deck_overrides" TO "anon";
+GRANT ALL ON TABLE "public"."story_duel_deck_overrides" TO "authenticated";
+GRANT ALL ON TABLE "public"."story_duel_deck_overrides" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."story_duel_reward_cards" TO "anon";
 GRANT ALL ON TABLE "public"."story_duel_reward_cards" TO "authenticated";
 GRANT ALL ON TABLE "public"."story_duel_reward_cards" TO "service_role";
@@ -1482,63 +1684,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
-CREATE TABLE IF NOT EXISTS "public"."admin_users" (
-    "user_id" "uuid" NOT NULL,
-    "role" "text" DEFAULT 'ADMIN'::"text" NOT NULL,
-    "is_active" boolean DEFAULT true NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "admin_users_role_check" CHECK (("role" = ANY (ARRAY['ADMIN'::"text", 'SUPER_ADMIN'::"text"])))
-);
-
-ALTER TABLE "public"."admin_users" OWNER TO "postgres";
-
-CREATE TABLE IF NOT EXISTS "public"."admin_audit_log" (
-    "id" "text" NOT NULL,
-    "actor_user_id" "uuid" NOT NULL,
-    "action" "text" NOT NULL,
-    "entity_type" "text" NOT NULL,
-    "entity_id" "text" NOT NULL,
-    "payload" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
-);
-
-ALTER TABLE "public"."admin_audit_log" OWNER TO "postgres";
-
-ALTER TABLE ONLY "public"."admin_users"
-    ADD CONSTRAINT "admin_users_pkey" PRIMARY KEY ("user_id");
-
-ALTER TABLE ONLY "public"."admin_audit_log"
-    ADD CONSTRAINT "admin_audit_log_pkey" PRIMARY KEY ("id");
-
-CREATE INDEX "idx_admin_users_active" ON "public"."admin_users" USING "btree" ("is_active");
-
-CREATE INDEX "idx_admin_audit_log_actor_created" ON "public"."admin_audit_log" USING "btree" ("actor_user_id", "created_at" DESC);
-
-CREATE OR REPLACE TRIGGER "admin_users_set_updated_at" BEFORE UPDATE ON "public"."admin_users" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
-
-ALTER TABLE ONLY "public"."admin_users"
-    ADD CONSTRAINT "admin_users_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
-
-ALTER TABLE ONLY "public"."admin_audit_log"
-    ADD CONSTRAINT "admin_audit_log_actor_user_id_fkey" FOREIGN KEY ("actor_user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
-
-ALTER TABLE "public"."admin_users" ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "admin_users_select_own_active" ON "public"."admin_users" FOR SELECT TO "authenticated" USING ((("auth"."uid"() = "user_id") AND ("is_active" = true)));
-
-ALTER TABLE "public"."admin_audit_log" ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "admin_audit_log_select_own" ON "public"."admin_audit_log" FOR SELECT TO "authenticated" USING (("auth"."uid"() = "actor_user_id"));
-
-CREATE POLICY "admin_audit_log_insert_own" ON "public"."admin_audit_log" FOR INSERT TO "authenticated" WITH CHECK (("auth"."uid"() = "actor_user_id"));
-
-GRANT SELECT ON TABLE "public"."admin_users" TO "authenticated";
-GRANT ALL ON TABLE "public"."admin_users" TO "service_role";
-GRANT SELECT, INSERT ON TABLE "public"."admin_audit_log" TO "authenticated";
-GRANT ALL ON TABLE "public"."admin_audit_log" TO "service_role";
-
-\unrestrict RuGI27aCg1BIrqcoldJJ5Dw40ADMh82ZLp2Gse5q3DdhBMOMowf9dMGKpuzLzmL
+\unrestrict MjDtuHLhEMsa6EnO8G4fMb7GDYxPO7VlRvciZDt6RfJVes2NqtquBZbRr02LoKc
 
 RESET ALL;
-

@@ -73,4 +73,36 @@ describe("resolveTrainingOpponentLoadout", () => {
       }),
     ).toThrowError();
   });
+
+  it("permite escalar dos niveles por encima de BOSS en training", () => {
+    const loadout = resolveTrainingOpponentLoadout({
+      tier: 5,
+      aiDifficulty: "BOSS",
+      deckTemplateId: "training-tier-5",
+      tierWins: 9,
+      tierMatches: 10,
+    });
+    expect(loadout.difficulty).toBe("MYTHIC");
+  });
+
+  it("escala version/level/xp de cartas según dificultad efectiva", () => {
+    const easyLoadout = resolveTrainingOpponentLoadout({
+      tier: 1,
+      aiDifficulty: "EASY",
+      deckTemplateId: "training-tier-1",
+      tierWins: 0,
+      tierMatches: 0,
+    });
+    const bossLoadout = resolveTrainingOpponentLoadout({
+      tier: 5,
+      aiDifficulty: "BOSS",
+      deckTemplateId: "training-tier-5",
+      tierWins: 0,
+      tierMatches: 0,
+    });
+    expect(easyLoadout.deck[0]?.level).toBe(0);
+    expect(bossLoadout.deck[0]?.level).toBe(200);
+    expect(bossLoadout.deck[0]?.versionTier).toBe(2);
+    expect((bossLoadout.deck[0]?.xp ?? 0)).toBeGreaterThan(0);
+  });
 });

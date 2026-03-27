@@ -5,6 +5,8 @@ import { DeleteAdminMarketPackUseCase } from "@/core/use-cases/admin/DeleteAdmin
 import { UpsertAdminCardCatalogUseCase } from "@/core/use-cases/admin/UpsertAdminCardCatalogUseCase";
 import { UpsertAdminMarketListingUseCase } from "@/core/use-cases/admin/UpsertAdminMarketListingUseCase";
 import { UpsertAdminMarketPackUseCase } from "@/core/use-cases/admin/UpsertAdminMarketPackUseCase";
+import { WriteAdminAuditLogUseCase } from "@/core/use-cases/admin/WriteAdminAuditLogUseCase";
+import { SupabaseAdminAuditLogRepository } from "@/infrastructure/persistence/supabase/admin/SupabaseAdminAuditLogRepository";
 import { SupabaseAdminCatalogRepository } from "@/infrastructure/persistence/supabase/admin/SupabaseAdminCatalogRepository";
 import { createSupabaseServiceRoleClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-service-role-client";
 import { createAdminRouteContext } from "@/services/admin/api/create-admin-route-context";
@@ -13,6 +15,7 @@ export async function createAdminCatalogContext(request: NextRequest) {
   const routeContext = await createAdminRouteContext(request);
   const client = createSupabaseServiceRoleClient();
   const repository = new SupabaseAdminCatalogRepository(client);
+  const auditRepository = new SupabaseAdminAuditLogRepository(client);
   return {
     ...routeContext,
     getSnapshotUseCase: new GetAdminCatalogSnapshotUseCase(repository),
@@ -20,5 +23,6 @@ export async function createAdminCatalogContext(request: NextRequest) {
     upsertListingUseCase: new UpsertAdminMarketListingUseCase(repository),
     upsertPackUseCase: new UpsertAdminMarketPackUseCase(repository),
     deletePackUseCase: new DeleteAdminMarketPackUseCase(repository),
+    writeAuditLogUseCase: new WriteAdminAuditLogUseCase(auditRepository),
   };
 }
