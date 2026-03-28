@@ -36,7 +36,7 @@ interface ICreateStorySceneActionsParams {
 }
 
 function resolveCollectVisual(targetNode: IStoryMapNodeRuntime): IStoryCollectVisual {
-  if (targetNode.nodeType !== "REWARD_CARD") return { assetSrc: "/assets/renders/nexus.png", assetAlt: "Nexus obtenido", tone: "NEXUS" };
+  if (targetNode.nodeType !== "REWARD_CARD") return { assetSrc: "/assets/renders/nexus.webp", assetAlt: "Nexus obtenido", tone: "NEXUS" };
   const cardVisual = resolveStoryRewardCardVisual(targetNode.rewardCardId);
   return { assetSrc: cardVisual.src, assetAlt: cardVisual.alt, tone: "CARD" };
 }

@@ -10,7 +10,7 @@ function createTrap(seed: ITrapSeed): ICard {
     ...seed,
     type: "TRAP",
     bgUrl: "/assets/bgs/bg-tech.jpg",
-    renderUrl: `/assets/renders/${seed.renderFile}.png`,
+    renderUrl: `/assets/renders/${seed.renderFile}.webp`,
   };
 }
 

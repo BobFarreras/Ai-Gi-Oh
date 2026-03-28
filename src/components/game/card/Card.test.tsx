@@ -15,7 +15,7 @@ describe('Componente UI: Card', () => {
     attack: 2500,
     defense: 2000,
     archetype: "LLM",
-    renderUrl: "/assets/renders/gemini.png",
+    renderUrl: "/assets/renders/gemini.webp",
   };
 
   it('debería renderizar la información de la carta correctamente', () => {

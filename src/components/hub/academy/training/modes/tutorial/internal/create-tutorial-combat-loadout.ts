@@ -27,7 +27,7 @@ function createTutorialTrapAttackDrain200(): ICard {
     trigger: "ON_OPPONENT_ATTACK_DECLARED",
     effect: { action: "REDUCE_OPPONENT_ATTACK", value: 200 },
     bgUrl: "/assets/bgs/bg-tech.jpg",
-    renderUrl: "/assets/renders/openclaw.png",
+    renderUrl: "/assets/renders/openclaw.webp",
   };
 }
 
@@ -41,7 +41,7 @@ function createTutorialEnergyRestoreExecution(): ICard {
     cost: 1,
     effect: { action: "RESTORE_ENERGY" },
     bgUrl: "/assets/bgs/bg-tech.jpg",
-    renderUrl: "/assets/renders/supabase.png",
+    renderUrl: "/assets/renders/supabase.webp",
   };
 }
 
@@ -55,7 +55,7 @@ function createOpponentEnergyRestoreExecution(): ICard {
     cost: 1,
     effect: { action: "RESTORE_ENERGY" },
     bgUrl: "/assets/bgs/bg-tech.jpg",
-    renderUrl: "/assets/renders/kali-linux.png",
+    renderUrl: "/assets/renders/kali-linux.webp",
   };
 }
 
@@ -71,7 +71,7 @@ function createOpponentCard(id: string, name: string, attack: number, defense: n
     defense,
     archetype: "TOOL",
     bgUrl: "/assets/bgs/bg-tech.jpg",
-    renderUrl: "/assets/renders/n8n.png",
+    renderUrl: "/assets/renders/n8n.webp",
   };
 }
 
@@ -116,7 +116,7 @@ export function createTutorialCombatLoadout(): ITutorialCombatLoadout {
       trigger: "ON_OPPONENT_ATTACK_DECLARED",
       effect: { action: "DAMAGE", target: "OPPONENT", value: 1000 },
       bgUrl: "/assets/bgs/bg-tech.jpg",
-      renderUrl: "/assets/renders/kali-linux.png",
+      renderUrl: "/assets/renders/kali-linux.webp",
     },
     resolveCard("entity-vscode"),
     resolveCard("entity-git"),

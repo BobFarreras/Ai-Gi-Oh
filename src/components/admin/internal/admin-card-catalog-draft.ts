@@ -42,6 +42,11 @@ function normalizeRenderUrl(value: string): string | null {
   if (normalized.length === 0) return null;
   return normalized.startsWith("/assets/renders/") ? normalized : `/assets/renders/${normalized.replace(/^\/+/, "")}`;
 }
+function normalizeBackgroundUrl(value: string): string | null {
+  const normalized = value.trim();
+  if (normalized.length === 0) return null;
+  return normalized;
+}
 export function createEmptyCardDraft(): IAdminCardCatalogDraft {
   return {
     id: "",
@@ -75,7 +80,7 @@ export function createDraftFromEntry(entry: IAdminCardCatalogEntry): IAdminCardC
     defenseText: entry.defense === null ? "" : String(entry.defense),
     archetype: entry.archetype ?? "NONE",
     trigger: entry.trigger ?? "NONE",
-    bgUrl: ADMIN_CARD_DEFAULT_BG_URL,
+    bgUrl: entry.bgUrl ?? "",
     renderUrl: entry.renderUrl ?? "",
     effectJson: entry.effect ? JSON.stringify(entry.effect, null, 2) : "",
     fusionRecipeId: entry.fusionRecipeId ?? "",
@@ -87,6 +92,7 @@ export function createDraftFromEntry(entry: IAdminCardCatalogEntry): IAdminCardC
 export function createCommandFromDraft(draft: IAdminCardCatalogDraft): IAdminUpsertCardCatalogCommand {
   const cost = Number(draft.costText);
   if (!Number.isFinite(cost)) throw new Error("El coste debe ser numérico.");
+  const shouldDisableBackground = draft.type === "EXECUTION" || draft.type === "TRAP";
   return {
     id: draft.id.trim(),
     name: draft.name.trim(),
@@ -98,7 +104,7 @@ export function createCommandFromDraft(draft: IAdminCardCatalogDraft): IAdminUps
     defense: parseNullableNumber(draft.defenseText),
     archetype: draft.archetype === "NONE" ? null : draft.archetype,
     trigger: draft.trigger === "NONE" ? null : draft.trigger,
-    bgUrl: ADMIN_CARD_DEFAULT_BG_URL,
+    bgUrl: shouldDisableBackground ? null : normalizeBackgroundUrl(draft.bgUrl) ?? ADMIN_CARD_DEFAULT_BG_URL,
     renderUrl: normalizeRenderUrl(draft.renderUrl),
     effect: parseEffectJson(draft.effectJson),
     fusionRecipeId: draft.fusionRecipeId.trim().length === 0 ? null : draft.fusionRecipeId.trim(),

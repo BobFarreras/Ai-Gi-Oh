@@ -16,7 +16,7 @@ export const FUSION_CARDS: ICard[] = [
     fusionEnergyRequirement: 10,
     archetype: "LLM",
     bgUrl: "/assets/bgs/bg-tech.jpg",
-    renderUrl: "/assets/renders/gemgpt.png",
+    renderUrl: "/assets/renders/gemgpt.webp",
   },
   {
     id: "fusion-kaclauli",
@@ -32,7 +32,7 @@ export const FUSION_CARDS: ICard[] = [
     fusionEnergyRequirement: 9,
     archetype: "SECURITY",
     bgUrl: "/assets/bgs/bg-tech.jpg",
-    renderUrl: "/assets/renders/kaclauli.png",
+    renderUrl: "/assets/renders/kaclauli.webp",
   },
   {
     id: "fusion-pytgress",
@@ -48,7 +48,7 @@ export const FUSION_CARDS: ICard[] = [
     fusionEnergyRequirement: 8,
     archetype: "LANGUAGE",
     bgUrl: "/assets/bgs/bg-tech.jpg",
-    renderUrl: "/assets/renders/pytgress.png",
+    renderUrl: "/assets/renders/pytgress.webp",
   },
 ];
 

@@ -6,13 +6,13 @@ interface IStoryRewardCardVisual {
 
 const STORY_REWARD_CARD_VISUAL_BY_ID: Record<string, IStoryRewardCardVisual> = {
   "trap-windows92-crash": {
-    src: "/assets/renders/windows92.png",
+    src: "/assets/renders/windows92.webp",
     alt: "Carta recompensa Windows92",
   },
 };
 
 const DEFAULT_STORY_REWARD_CARD_VISUAL: IStoryRewardCardVisual = {
-  src: "/assets/renders/wrap.png",
+  src: "/assets/renders/wrap.webp",
   alt: "Carta recompensa",
 };
 

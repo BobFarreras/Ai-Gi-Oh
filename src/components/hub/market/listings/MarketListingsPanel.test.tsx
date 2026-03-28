@@ -16,7 +16,7 @@ function createCard(id: string, name: string): ICard {
     attack: 1200,
     defense: 900,
     bgUrl: "/assets/backgrounds/card-bg-tech.webp",
-    renderUrl: "/assets/renders/python.png",
+    renderUrl: "/assets/renders/python.webp",
   };
 }
 

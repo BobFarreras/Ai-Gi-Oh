@@ -6,7 +6,7 @@ interface IExecutionSeed extends Omit<ICard, "type" | "renderUrl" | "bgUrl"> {
 }
 
 function createExecution(seed: IExecutionSeed): ICard {
-  return { ...seed, type: "EXECUTION", bgUrl: "/assets/bgs/bg-tech.jpg", renderUrl: `/assets/renders/${seed.renderFile}.png` };
+  return { ...seed, type: "EXECUTION", bgUrl: "/assets/bgs/bg-tech.jpg", renderUrl: `/assets/renders/${seed.renderFile}.webp` };
 }
 
 export const EXECUTION_CARDS: ICard[] = [

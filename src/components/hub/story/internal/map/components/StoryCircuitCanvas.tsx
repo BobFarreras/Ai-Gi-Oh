@@ -122,7 +122,7 @@ export function StoryCircuitCanvas(props: IStoryCircuitCanvasProps) {
         isVisible={Boolean(props.collectingAnchor && props.collectingRewardVisual && props.onRewardCollectAnimationComplete)}
         from={props.collectingAnchor ?? { x: 0, y: 0 }}
         to={{ x: props.avatarX.get() + props.avatarSideOffsetX, y: props.avatarY.get() }}
-        assetSrc={props.collectingRewardVisual?.assetSrc ?? "/assets/renders/nexus.png"}
+        assetSrc={props.collectingRewardVisual?.assetSrc ?? "/assets/renders/nexus.webp"}
         assetAlt={props.collectingRewardVisual?.assetAlt ?? "Recolección"}
         tone={props.collectingRewardVisual?.tone ?? "NEXUS"}
         onComplete={() => props.onRewardCollectAnimationComplete?.()}

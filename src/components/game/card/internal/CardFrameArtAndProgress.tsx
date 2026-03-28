@@ -21,11 +21,18 @@ export function CardFrameArtAndProgress({
   isPerformanceMode = false,
   showBackgroundInPerformanceMode = false,
 }: CardFrameArtAndProgressProps) {
+  const isSpellOrTrap = card.type === "EXECUTION" || card.type === "TRAP";
+  const shouldBypassImageOptimization = Boolean(card.renderUrl?.startsWith("/assets/renders/"));
   const renderImageSizes = isPerformanceMode ? "88px" : "260px";
   const renderImageQuality = isPerformanceMode ? 45 : 75;
   const backgroundImageSizes = isPerformanceMode ? "72px" : "260px";
   const backgroundImageQuality = isPerformanceMode ? 28 : 75;
-  const shouldRenderBackground = Boolean(card.bgUrl) && (!isPerformanceMode || showBackgroundInPerformanceMode);
+  const shouldRenderBackground = !isSpellOrTrap && Boolean(card.bgUrl) && (!isPerformanceMode || showBackgroundInPerformanceMode);
+  const renderClassName = isSpellOrTrap
+    ? "absolute inset-0 z-10 object-cover"
+    : isPerformanceMode
+      ? "absolute inset-0 z-10 object-contain p-1"
+      : "absolute inset-0 z-10 object-contain p-1 drop-shadow-[0_4px_6px_rgba(0,0,0,0.65)]";
   return (
     <div className="relative z-10 mt-2 flex flex-grow flex-col items-center justify-start px-3">
       <div className="group relative mb-1.5 flex h-36 w-full shrink-0 items-center justify-center overflow-hidden rounded-sm bg-black shadow-[inset_0_0_30px_rgba(0,0,0,1)]">
@@ -39,28 +46,18 @@ export function CardFrameArtAndProgress({
             className={isPerformanceMode ? "absolute inset-0 z-0 object-cover opacity-55 saturate-75" : "absolute inset-0 z-0 object-cover"}
           />
         ) : null}
-        {!isPerformanceMode ? <div className="absolute inset-0 z-0 bg-cyan-500/10 mix-blend-overlay" /> : null}
+        {!isPerformanceMode && !isSpellOrTrap ? <div className="absolute inset-0 z-0 bg-cyan-500/10 mix-blend-overlay" /> : null}
         {!isOnBoard && card.renderUrl && (
-          isPerformanceMode ? (
-            <Image
-              src={card.renderUrl}
-              alt={card.name}
-              fill
-              loading="lazy"
-              sizes={renderImageSizes}
-              quality={renderImageQuality}
-              className="absolute inset-0 z-10 object-contain p-1"
-            />
-          ) : (
-            <Image
-              src={card.renderUrl}
-              alt={card.name}
-              fill
-              sizes={renderImageSizes}
-              quality={renderImageQuality}
-              className="absolute inset-0 z-10 object-contain p-1 drop-shadow-[0_4px_6px_rgba(0,0,0,0.65)]"
-            />
-          )
+          <Image
+            src={card.renderUrl}
+            alt={card.name}
+            fill
+            loading={isPerformanceMode ? "lazy" : undefined}
+            unoptimized={shouldBypassImageOptimization}
+            sizes={renderImageSizes}
+            quality={renderImageQuality}
+            className={renderClassName}
+          />
         )}
         {!disableHoverEffects && !isPerformanceMode ? (
           <div className="absolute top-0 h-0.5 w-full bg-cyan-400/50 opacity-0 group-hover:animate-[ping_2s_infinite] group-hover:opacity-100" />

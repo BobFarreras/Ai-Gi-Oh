@@ -31,7 +31,7 @@ function createEntity(seed: EntitySeed): ICard {
     archetype: seed.archetype,
     ...statsByCost(seed.cost),
     bgUrl: "/assets/bgs/bg-tech.jpg",
-    renderUrl: `/assets/renders/${seed.renderFile}.png`,
+    renderUrl: `/assets/renders/${seed.renderFile}.webp`,
   };
 }
 

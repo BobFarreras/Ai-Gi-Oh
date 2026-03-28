@@ -8,14 +8,19 @@ function setIfEmpty(current: string, value: string, force: boolean): string {
 
 export function applyCardTypeTemplate(draft: IAdminCardCatalogDraft, nextType: CardType, force: boolean): IAdminCardCatalogDraft {
   const typeTag = nextType.toLowerCase();
+  const defaultRenderUrl = nextType === "EXECUTION"
+    ? "/assets/renders/executions/exec-example-card.webp"
+    : nextType === "TRAP"
+      ? "/assets/renders/traps/trap-example-card.webp"
+      : "/assets/renders/example-card.webp";
   const base = {
     ...draft,
     type: nextType,
-    bgUrl: ADMIN_CARD_DEFAULT_BG_URL,
+    bgUrl: nextType === "EXECUTION" || nextType === "TRAP" ? "" : ADMIN_CARD_DEFAULT_BG_URL,
     id: setIfEmpty(draft.id, `${typeTag}-example-card`, force),
     name: setIfEmpty(draft.name, `${nextType} Example`, force),
     description: setIfEmpty(draft.description, `Carta de ejemplo tipo ${nextType}.`, force),
-    renderUrl: setIfEmpty(draft.renderUrl, `/assets/renders/${typeTag}.png`, force),
+    renderUrl: setIfEmpty(draft.renderUrl, defaultRenderUrl, force),
   };
 
   if (nextType === "ENTITY") {

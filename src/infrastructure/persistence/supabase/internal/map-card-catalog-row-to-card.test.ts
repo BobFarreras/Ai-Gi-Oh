@@ -16,7 +16,7 @@ function createBaseRow(): ICardCatalogRow {
     archetype: "TOOL",
     trigger: null,
     bg_url: "/assets/bgs/bg-tech.jpg",
-    render_url: "/assets/renders/test.png",
+    render_url: "/assets/renders/test.webp",
     effect: null,
     fusion_recipe_id: null,
     fusion_material_ids: [],
@@ -30,7 +30,7 @@ describe("mapCardCatalogRowToCard", () => {
     expect(card.id).toBe("entity-test");
     expect(card.attack).toBe(1200);
     expect(card.defense).toBe(1100);
-    expect(card.renderUrl).toBe("/assets/renders/test.png");
+    expect(card.renderUrl).toBe("/assets/renders/test.webp");
   });
 
   it("mapea efecto y metadatos de fusión cuando existen", () => {
