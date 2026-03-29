@@ -80,6 +80,39 @@ export const trapCounterTrap: ICard = {
   effect: { action: "NEGATE_OPPONENT_TRAP_AND_DESTROY" },
 };
 
+export const trapCopyOpponentBuff: ICard = {
+  id: "trap-copy-opponent-buff",
+  name: "Mirror Stat Injection",
+  description: "",
+  type: "TRAP",
+  faction: "OPEN_SOURCE",
+  cost: 2,
+  trigger: "ON_OPPONENT_STAT_BUFF_APPLIED",
+  effect: { action: "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES" },
+};
+
+export const trapForceDefenseSummonToAttackLock: ICard = {
+  id: "trap-force-defense-summon",
+  name: "Forced Overclock",
+  description: "",
+  type: "TRAP",
+  faction: "BIG_TECH",
+  cost: 2,
+  trigger: "ON_OPPONENT_ENTITY_SET_PLAYED",
+  effect: { action: "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED" },
+};
+
+export const trapDrainDirectAttackerEnergy: ICard = {
+  id: "trap-drain-direct-attacker-energy",
+  name: "Nexus Reset Barrier",
+  description: "",
+  type: "TRAP",
+  faction: "NO_CODE",
+  cost: 3,
+  trigger: "ON_OPPONENT_DIRECT_ATTACK_DECLARED",
+  effect: { action: "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN" },
+};
+
 export function createTrapEntity(instanceId: string, card: ICard): IBoardEntity {
   return { instanceId, card, mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false };
 }

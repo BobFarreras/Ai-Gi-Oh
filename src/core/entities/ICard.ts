@@ -3,7 +3,13 @@
 export type CardType = "ENTITY" | "EXECUTION" | "TRAP" | "FUSION" | "ENVIRONMENT";
 export type Faction = "OPEN_SOURCE" | "BIG_TECH" | "NO_CODE" | "NEUTRAL";
 export type CardArchetype = "LLM" | "FRAMEWORK" | "DB" | "IDE" | "LANGUAGE" | "TOOL" | "SECURITY";
-export type TrapTrigger = "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED" | "ON_OPPONENT_TRAP_ACTIVATED";
+export type TrapTrigger =
+  | "ON_OPPONENT_ATTACK_DECLARED"
+  | "ON_OPPONENT_EXECUTION_ACTIVATED"
+  | "ON_OPPONENT_TRAP_ACTIVATED"
+  | "ON_OPPONENT_STAT_BUFF_APPLIED"
+  | "ON_OPPONENT_ENTITY_SET_PLAYED"
+  | "ON_OPPONENT_DIRECT_ATTACK_DECLARED";
 
 export interface IDamageEffect {
   action: "DAMAGE";
@@ -44,6 +50,16 @@ export interface IBoostAttackByArchetypeEffect {
   value: number;
 }
 
+export interface ISetDefenseByCardIdEffect {
+  action: "SET_DEFENSE_BY_CARD_ID";
+  targetCardId: string;
+  value: number;
+}
+
+export interface IDrainOpponentEnergyEffect {
+  action: "DRAIN_OPPONENT_ENERGY";
+}
+
 export interface IReduceOpponentAttackEffect {
   action: "REDUCE_OPPONENT_ATTACK";
   value: number;
@@ -56,6 +72,18 @@ export interface IReduceOpponentDefenseEffect {
 
 export interface INegateAttackAndDestroyAttackerEffect {
   action: "NEGATE_ATTACK_AND_DESTROY_ATTACKER";
+}
+
+export interface ICopyOpponentBuffToAlliedEntitiesEffect {
+  action: "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES";
+}
+
+export interface IForceSummonedDefenseToAttackLockedEffect {
+  action: "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED";
+}
+
+export interface IDirectAttackEnergyDrainAndSetSelfToTenEffect {
+  action: "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN";
 }
 
 export interface IReturnGraveyardCardToHandEffect {
@@ -90,9 +118,14 @@ export type ICardEffect =
   | IBoostAttackAlliedEffect
   | IBoostDefenseByArchetypeEffect
   | IBoostAttackByArchetypeEffect
+  | ISetDefenseByCardIdEffect
+  | IDrainOpponentEnergyEffect
   | IReduceOpponentAttackEffect
   | IReduceOpponentDefenseEffect
   | INegateAttackAndDestroyAttackerEffect
+  | ICopyOpponentBuffToAlliedEntitiesEffect
+  | IForceSummonedDefenseToAttackLockedEffect
+  | IDirectAttackEnergyDrainAndSetSelfToTenEffect
   | IReturnGraveyardCardToHandEffect
   | IReturnGraveyardCardToFieldEffect
   | IDestroyEntityOnBattleWinEffect

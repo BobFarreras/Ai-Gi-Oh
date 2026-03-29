@@ -18,6 +18,8 @@ describe("execution-effect-registry", () => {
       "BOOST_ATTACK_ALLIED_ENTITY",
       "BOOST_DEFENSE_BY_ARCHETYPE",
       "BOOST_ATTACK_BY_ARCHETYPE",
+      "SET_DEFENSE_BY_CARD_ID",
+      "DRAIN_OPPONENT_ENERGY",
     ]);
   });
 

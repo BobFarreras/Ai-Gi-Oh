@@ -98,5 +98,52 @@ describe("resolveExecution effects", () => {
     expect(healLog?.payload).toMatchObject({ targetPlayerId: "p1", amount: 500 });
     expect(state.playerA.healthPoints).toBe(7500);
   });
+
+  it("debería fijar DEF de Docker a 1000 solo durante el duelo", () => {
+    const dockerDefenseExecution: ICard = {
+      id: "exec-docker-defense",
+      name: "Docker Fortress",
+      description: "Ajusta Docker a 1000 DEF.",
+      type: "EXECUTION",
+      faction: "OPEN_SOURCE",
+      cost: 1,
+      effect: { action: "SET_DEFENSE_BY_CARD_ID", targetCardId: "entity-docker", value: 1000 },
+    };
+    let state = createResolveExecutionBaseState({
+      hand: [dockerDefenseExecution],
+      activeEntities: [
+        { instanceId: "docker-1", card: { ...createNeutralEntityCard("entity-docker", 1500, 300), id: "entity-docker" }, mode: "ATTACK", hasAttackedThisTurn: false, isNewlySummoned: false },
+        { instanceId: "other-1", card: createNeutralEntityCard("entity-react", 1400, 700), mode: "ATTACK", hasAttackedThisTurn: false, isNewlySummoned: false },
+      ],
+    });
+
+    state = GameEngine.playCard(state, "p1", "exec-docker-defense", "ACTIVATE");
+    state = GameEngine.resolveExecution(state, "p1", state.playerA.activeExecutions[0].instanceId);
+
+    const docker = state.playerA.activeEntities.find((entity) => entity.instanceId === "docker-1");
+    const other = state.playerA.activeEntities.find((entity) => entity.instanceId === "other-1");
+    expect(docker?.card.defense).toBe(1000);
+    expect(other?.card.defense).toBe(700);
+  });
+
+  it("debería dejar la energía rival a 0 con DRAIN_OPPONENT_ENERGY", () => {
+    const drainExecution: ICard = {
+      id: "exec-drain-opponent-energy",
+      name: "Energy Breach",
+      description: "Drena toda la energía rival.",
+      type: "EXECUTION",
+      faction: "OPEN_SOURCE",
+      cost: 1,
+      effect: { action: "DRAIN_OPPONENT_ENERGY" },
+    };
+    let state = createResolveExecutionBaseState({
+      hand: [drainExecution],
+    });
+    state = { ...state, playerB: { ...state.playerB, currentEnergy: 4 } };
+
+    state = GameEngine.playCard(state, "p1", "exec-drain-opponent-energy", "ACTIVATE");
+    state = GameEngine.resolveExecution(state, "p1", state.playerA.activeExecutions[0].instanceId);
+    expect(state.playerB.currentEnergy).toBe(0);
+  });
 });
 

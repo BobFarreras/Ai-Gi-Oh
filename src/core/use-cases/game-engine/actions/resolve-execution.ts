@@ -55,5 +55,11 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
     graveyard: [...effectResult.player.graveyard, executionEntity.card],
   };
   const withPlayers = assignPlayers(withTrapResolution, updatedPlayer, effectResult.opponent, isPlayerA);
-  return appendExecutionResultLogs(withPlayers, playerId, executionEntity.card.id, effectResult);
+  const withBuffTrapResolution = effectResult.buff.stat && effectResult.buff.amount > 0
+    ? resolveReactiveTrapEvent(withPlayers, effectResult.opponent.id, {
+      type: "EXECUTION_BUFF_APPLIED",
+      context: { buffSourcePlayerId: playerId, buffStat: effectResult.buff.stat, buffAmount: effectResult.buff.amount },
+    })
+    : withPlayers;
+  return appendExecutionResultLogs(withBuffTrapResolution, playerId, executionEntity.card.id, effectResult);
 }

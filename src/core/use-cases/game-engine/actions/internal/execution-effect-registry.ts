@@ -5,7 +5,16 @@ import { GameRuleError } from "@/core/errors/GameRuleError";
 import { boostArchetypeStat, boostBestAlliedAttack } from "@/core/use-cases/game-engine/actions/internal/execution-effect-buffs";
 import { IExecutionEffectResult } from "@/core/use-cases/game-engine/actions/internal/execution-effects";
 
-type ExecutionAction = "DAMAGE" | "HEAL" | "DRAW_CARD" | "RESTORE_ENERGY" | "BOOST_ATTACK_ALLIED_ENTITY" | "BOOST_DEFENSE_BY_ARCHETYPE" | "BOOST_ATTACK_BY_ARCHETYPE";
+type ExecutionAction =
+  | "DAMAGE"
+  | "HEAL"
+  | "DRAW_CARD"
+  | "RESTORE_ENERGY"
+  | "BOOST_ATTACK_ALLIED_ENTITY"
+  | "BOOST_DEFENSE_BY_ARCHETYPE"
+  | "BOOST_ATTACK_BY_ARCHETYPE"
+  | "SET_DEFENSE_BY_CARD_ID"
+  | "DRAIN_OPPONENT_ENERGY";
 type ExecutionEffect = Extract<ICardEffect, { action: ExecutionAction }>;
 
 type ExecutionHandler<K extends ExecutionAction> = (player: IPlayer, opponent: IPlayer, effect: Extract<ExecutionEffect, { action: K }>) => IExecutionEffectResult;
@@ -27,6 +36,23 @@ function drawCards(player: IPlayer, amount: number): IPlayer {
   const drawAmount = Math.max(0, Math.min(amount, player.deck.length));
   if (drawAmount === 0) return player;
   return { ...player, hand: [...player.hand, ...player.deck.slice(0, drawAmount)], deck: player.deck.slice(drawAmount) };
+}
+
+function setDefenseByCardId(player: IPlayer, targetCardId: string, value: number): { updatedPlayer: IPlayer; buffIds: string[] } {
+  const nextDefense = Math.max(0, value);
+  const buffIds = player.activeEntities.filter((entity) => entity.card.id === targetCardId).map((entity) => entity.instanceId);
+  if (buffIds.length === 0) return { updatedPlayer: player, buffIds: [] };
+  return {
+    updatedPlayer: {
+      ...player,
+      activeEntities: player.activeEntities.map((entity) => (
+        entity.card.id === targetCardId
+          ? { ...entity, card: { ...entity.card, defense: nextDefense } }
+          : entity
+      )),
+    },
+    buffIds,
+  };
 }
 
 function restoreEnergy(player: IPlayer, requestedValue?: number): { updatedPlayer: IPlayer; recoveredAmount: number } {
@@ -61,6 +87,11 @@ const executionEffectHandlers: { [K in ExecutionAction]: ExecutionHandler<K> } =
     const boosted = boostArchetypeStat(player, "ATTACK", effect.archetype as CardArchetype, effect.value);
     return { ...createBaseResult(boosted.updatedPlayer, opponent), buff: { entityIds: boosted.buffIds, stat: "ATTACK", amount: effect.value } };
   },
+  SET_DEFENSE_BY_CARD_ID: (player, opponent, effect) => {
+    const boosted = setDefenseByCardId(player, effect.targetCardId, effect.value);
+    return { ...createBaseResult(boosted.updatedPlayer, opponent), buff: { entityIds: boosted.buffIds, stat: "DEFENSE", amount: effect.value } };
+  },
+  DRAIN_OPPONENT_ENERGY: (player, opponent) => createBaseResult(player, { ...opponent, currentEnergy: 0 }),
 };
 
 /** Resuelve una acción EXECUTION registrada; devuelve null cuando la acción no pertenece al registry. */
@@ -75,6 +106,8 @@ export function resolveExecutionEffectFromRegistry(player: IPlayer, opponent: IP
   if (effect.action === "BOOST_ATTACK_ALLIED_ENTITY") return executionEffectHandlers.BOOST_ATTACK_ALLIED_ENTITY(player, opponent, effect);
   if (effect.action === "BOOST_DEFENSE_BY_ARCHETYPE") return executionEffectHandlers.BOOST_DEFENSE_BY_ARCHETYPE(player, opponent, effect);
   if (effect.action === "BOOST_ATTACK_BY_ARCHETYPE") return executionEffectHandlers.BOOST_ATTACK_BY_ARCHETYPE(player, opponent, effect);
+  if (effect.action === "SET_DEFENSE_BY_CARD_ID") return executionEffectHandlers.SET_DEFENSE_BY_CARD_ID(player, opponent, effect);
+  if (effect.action === "DRAIN_OPPONENT_ENERGY") return executionEffectHandlers.DRAIN_OPPONENT_ENERGY(player, opponent, effect);
   return null;
 }
 

@@ -7,6 +7,7 @@ import {
   createTrapBaseState,
   createTrapEntity,
   trapCounterTrap,
+  trapDrainDirectAttackerEnergy,
   trapNegateAttack,
   trapOnAttack,
 } from "@/core/use-cases/game-engine/effects/trap-triggers.test-fixtures";
@@ -75,5 +76,25 @@ describe("Trap triggers on attack", () => {
     expect(next.playerA.graveyard.some((card) => card.id === "trap-counter-trap")).toBe(true);
     expect((next.playerB.destroyedPile ?? []).some((card) => card.id === "trap-on-attack")).toBe(true);
     expect(next.playerB.graveyard.some((card) => card.id === "trap-on-attack")).toBe(false);
+  });
+
+  it("debería drenar energía del atacante y fijar energía del defensor a 10 en ataque directo", () => {
+    const base = createTrapBaseState();
+    const state: GameState = {
+      ...base,
+      playerA: {
+        ...base.playerA,
+        currentEnergy: 4,
+        activeEntities: [createTestBoardEntity("a-direct", attackerCard, "ATTACK")],
+      },
+      playerB: {
+        ...base.playerB,
+        currentEnergy: 2,
+        activeExecutions: [createTrapEntity("t-direct", trapDrainDirectAttackerEnergy)],
+      },
+    };
+    const next = GameEngine.executeAttack(state, "p1", "a-direct");
+    expect(next.playerA.currentEnergy).toBe(0);
+    expect(next.playerB.currentEnergy).toBe(10);
   });
 });

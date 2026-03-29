@@ -66,4 +66,22 @@ describe("mapCardCatalogRowToCard", () => {
     expect(recovery.effect).toEqual({ action: "RETURN_GRAVEYARD_CARD_TO_HAND", cardType: "ENTITY" });
     expect(counterTrap.effect).toEqual({ action: "NEGATE_OPPONENT_TRAP_AND_DESTROY" });
   });
+
+  it("mapea nuevos efectos de fase 1 para ejecución y trampa", () => {
+    const dockerBoost = mapCardCatalogRowToCard({
+      ...createBaseRow(),
+      id: "exec-docker-defense",
+      type: "EXECUTION",
+      effect: { action: "SET_DEFENSE_BY_CARD_ID", targetCardId: "entity-docker", value: 1000 },
+    });
+    const trapDirect = mapCardCatalogRowToCard({
+      ...createBaseRow(),
+      id: "trap-direct-energy",
+      type: "TRAP",
+      trigger: "ON_OPPONENT_DIRECT_ATTACK_DECLARED",
+      effect: { action: "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN" },
+    });
+    expect(dockerBoost.effect).toEqual({ action: "SET_DEFENSE_BY_CARD_ID", targetCardId: "entity-docker", value: 1000 });
+    expect(trapDirect.effect).toEqual({ action: "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN" });
+  });
 });

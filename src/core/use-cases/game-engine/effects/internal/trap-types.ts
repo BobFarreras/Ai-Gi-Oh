@@ -4,6 +4,11 @@ import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 export interface ITrapTriggerContext {
   attackerPlayerId?: string;
   attackerInstanceId?: string;
+  buffSourcePlayerId?: string;
+  buffStat?: "ATTACK" | "DEFENSE";
+  buffAmount?: number;
+  summonedPlayerId?: string;
+  summonedInstanceId?: string;
 }
 
 export interface ITrapResolutionResult {

@@ -3,7 +3,14 @@ import { ICardEffect } from "@/core/entities/ICard";
 import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { ITrapResolutionResult, ITrapTriggerContext } from "@/core/use-cases/game-engine/effects/internal/trap-types";
 
-type TrapAction = "DAMAGE" | "REDUCE_OPPONENT_ATTACK" | "REDUCE_OPPONENT_DEFENSE" | "NEGATE_ATTACK_AND_DESTROY_ATTACKER";
+type TrapAction =
+  | "DAMAGE"
+  | "REDUCE_OPPONENT_ATTACK"
+  | "REDUCE_OPPONENT_DEFENSE"
+  | "NEGATE_ATTACK_AND_DESTROY_ATTACKER"
+  | "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES"
+  | "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED"
+  | "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN";
 type TrapEffect = Extract<ICardEffect, { action: TrapAction }>;
 type TrapHandler<K extends TrapAction> = (player: IPlayer, opponent: IPlayer, trap: IBoardEntity, effect: Extract<TrapEffect, { action: K }>, context?: ITrapTriggerContext) => ITrapResolutionResult;
 
@@ -18,6 +25,39 @@ function reduceOpponentStat(opponent: IPlayer, stat: "attack" | "defense", value
       ...entity,
       card: { ...entity.card, [stat]: Math.max(0, (entity.card[stat] ?? 0) - value) },
     })),
+  };
+}
+
+function applyBuffToAlliedEntities(player: IPlayer, stat: "ATTACK" | "DEFENSE", value: number): IPlayer {
+  const normalizedValue = Math.max(0, value);
+  if (normalizedValue === 0) return player;
+  if (stat === "ATTACK") {
+    return {
+      ...player,
+      activeEntities: player.activeEntities.map((entity) => ({
+        ...entity,
+        card: { ...entity.card, attack: Math.max(0, (entity.card.attack ?? 0) + normalizedValue) },
+      })),
+    };
+  }
+  return {
+    ...player,
+    activeEntities: player.activeEntities.map((entity) => ({
+      ...entity,
+      card: { ...entity.card, defense: Math.max(0, (entity.card.defense ?? 0) + normalizedValue) },
+    })),
+  };
+}
+
+function forceSummonedDefenseToAttackLocked(opponent: IPlayer, context?: ITrapTriggerContext): IPlayer {
+  if (!context?.summonedPlayerId || !context.summonedInstanceId || context.summonedPlayerId !== opponent.id) return opponent;
+  return {
+    ...opponent,
+    activeEntities: opponent.activeEntities.map((entity) => (
+      entity.instanceId === context.summonedInstanceId
+        ? { ...entity, mode: "ATTACK", modeLock: "ATTACK" }
+        : entity
+    )),
   };
 }
 
@@ -45,6 +85,19 @@ const trapEffectHandlers: { [K in TrapAction]: TrapHandler<K> } = {
     const destroyed = destroyAttackerIfPresent(opponent, context);
     return { ...createNeutralResult(player, destroyed.opponent), destroyedOpponentEntityCardId: destroyed.cardId, destroyedOpponentEntityDestination: destroyed.cardId ? "DESTROYED" : null };
   },
+  COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES: (player, opponent, _trap, _effect, context) => {
+    if (!context?.buffSourcePlayerId || context.buffSourcePlayerId !== opponent.id) return createNeutralResult(player, opponent);
+    if (!context.buffStat || typeof context.buffAmount !== "number") return createNeutralResult(player, opponent);
+    return createNeutralResult(applyBuffToAlliedEntities(player, context.buffStat, context.buffAmount), opponent);
+  },
+  FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED: (player, opponent, _trap, _effect, context) => createNeutralResult(player, forceSummonedDefenseToAttackLocked(opponent, context)),
+  DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN: (player, opponent, _trap, _effect, context) => {
+    if (!context?.attackerPlayerId || context.attackerPlayerId !== opponent.id) return createNeutralResult(player, opponent);
+    return createNeutralResult(
+      { ...player, maxEnergy: Math.max(player.maxEnergy, 10), currentEnergy: 10 },
+      { ...opponent, currentEnergy: 0 },
+    );
+  },
 };
 
 /** Resuelve una trampa registrada; devuelve null cuando la acción no está soportada por el registry. */
@@ -54,6 +107,9 @@ export function resolveTrapEffectFromRegistry(player: IPlayer, opponent: IPlayer
   if (trap.card.effect.action === "REDUCE_OPPONENT_ATTACK") return trapEffectHandlers.REDUCE_OPPONENT_ATTACK(player, opponent, trap, trap.card.effect, context);
   if (trap.card.effect.action === "REDUCE_OPPONENT_DEFENSE") return trapEffectHandlers.REDUCE_OPPONENT_DEFENSE(player, opponent, trap, trap.card.effect, context);
   if (trap.card.effect.action === "NEGATE_ATTACK_AND_DESTROY_ATTACKER") return trapEffectHandlers.NEGATE_ATTACK_AND_DESTROY_ATTACKER(player, opponent, trap, trap.card.effect, context);
+  if (trap.card.effect.action === "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES") return trapEffectHandlers.COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES(player, opponent, trap, trap.card.effect, context);
+  if (trap.card.effect.action === "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED") return trapEffectHandlers.FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED(player, opponent, trap, trap.card.effect, context);
+  if (trap.card.effect.action === "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN") return trapEffectHandlers.DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN(player, opponent, trap, trap.card.effect, context);
   return null;
 }
 
