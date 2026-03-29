@@ -81,7 +81,14 @@ describe("mapCardCatalogRowToCard", () => {
       trigger: "ON_OPPONENT_DIRECT_ATTACK_DECLARED",
       effect: { action: "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN" },
     });
+    const revealSet = mapCardCatalogRowToCard({
+      ...createBaseRow(),
+      id: "exec-reveal-set",
+      type: "EXECUTION",
+      effect: { action: "REVEAL_OPPONENT_SET_CARD", zone: "ANY" },
+    });
     expect(dockerBoost.effect).toEqual({ action: "SET_DEFENSE_BY_CARD_ID", targetCardId: "entity-docker", value: 1000 });
     expect(trapDirect.effect).toEqual({ action: "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN" });
+    expect(revealSet.effect).toEqual({ action: "REVEAL_OPPONENT_SET_CARD", zone: "ANY" });
   });
 });

@@ -4,6 +4,8 @@ import {
   IDiscardForHandLimitPendingTurnAction,
   ISelectFusionMaterialsPendingTurnAction,
   ISelectGraveyardCardPendingTurnAction,
+  ISelectOpponentGraveyardCardPendingTurnAction,
+  ISelectOpponentSetCardPendingTurnAction,
 } from "@/core/use-cases/game-engine/state/types";
 
 /**
@@ -54,5 +56,37 @@ export function createGraveyardSelectionPendingAction(
     executionInstanceId,
     destination,
     cardType,
+  };
+}
+
+/**
+ * Construye la acción pendiente para seleccionar carta del cementerio rival y robarla.
+ */
+export function createOpponentGraveyardSelectionPendingAction(
+  playerId: string,
+  executionInstanceId: string,
+  cardType?: CardType,
+): ISelectOpponentGraveyardCardPendingTurnAction {
+  return {
+    type: "SELECT_OPPONENT_GRAVEYARD_CARD",
+    playerId,
+    executionInstanceId,
+    cardType,
+  };
+}
+
+/**
+ * Construye la acción pendiente para revelar una carta seteada del rival.
+ */
+export function createOpponentSetCardSelectionPendingAction(
+  playerId: string,
+  executionInstanceId: string,
+  zone: "ENTITIES" | "EXECUTIONS" | "ANY",
+): ISelectOpponentSetCardPendingTurnAction {
+  return {
+    type: "SELECT_OPPONENT_SET_CARD",
+    playerId,
+    executionInstanceId,
+    zone,
   };
 }

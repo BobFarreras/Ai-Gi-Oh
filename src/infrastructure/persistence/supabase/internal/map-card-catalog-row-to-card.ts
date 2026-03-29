@@ -16,11 +16,14 @@ import {
   IHealEffect,
   INegateOpponentTrapAndDestroyEffect,
   INegateAttackAndDestroyAttackerEffect,
+  IRevealOpponentSetCardEffect,
   IReturnGraveyardCardToFieldEffect,
   IReturnGraveyardCardToHandEffect,
   IReduceOpponentAttackEffect,
   IReduceOpponentDefenseEffect,
+  ISetCardDuelProgressEffect,
   ISetDefenseByCardIdEffect,
+  IStealOpponentGraveyardCardToHandEffect,
 } from "@/core/entities/ICard";
 import { ICardCatalogRow } from "@/infrastructure/persistence/supabase/internal/card-catalog-row";
 
@@ -59,6 +62,14 @@ function mapEffect(value: unknown): ICardEffect | undefined {
         : undefined;
     case "DRAIN_OPPONENT_ENERGY":
       return { action: "DRAIN_OPPONENT_ENERGY" } as IDrainOpponentEnergyEffect;
+    case "SET_CARD_DUEL_PROGRESS":
+      return typeof value.targetCardId === "string" && typeof value.level === "number" && typeof value.versionTier === "number"
+        ? ({ action: "SET_CARD_DUEL_PROGRESS", targetCardId: value.targetCardId, level: value.level, versionTier: value.versionTier } as ISetCardDuelProgressEffect)
+        : undefined;
+    case "REVEAL_OPPONENT_SET_CARD":
+      return { action: "REVEAL_OPPONENT_SET_CARD", zone: typeof value.zone === "string" ? value.zone : undefined } as IRevealOpponentSetCardEffect;
+    case "STEAL_OPPONENT_GRAVEYARD_CARD_TO_HAND":
+      return { action: "STEAL_OPPONENT_GRAVEYARD_CARD_TO_HAND", cardType: typeof value.cardType === "string" ? value.cardType : undefined } as IStealOpponentGraveyardCardToHandEffect;
     case "REDUCE_OPPONENT_ATTACK":
       return typeof value.value === "number"
         ? ({ action: "REDUCE_OPPONENT_ATTACK", value: value.value } as IReduceOpponentAttackEffect)

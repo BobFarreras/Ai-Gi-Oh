@@ -60,6 +60,23 @@ export interface IDrainOpponentEnergyEffect {
   action: "DRAIN_OPPONENT_ENERGY";
 }
 
+export interface ISetCardDuelProgressEffect {
+  action: "SET_CARD_DUEL_PROGRESS";
+  targetCardId: string;
+  level: number;
+  versionTier: number;
+}
+
+export interface IRevealOpponentSetCardEffect {
+  action: "REVEAL_OPPONENT_SET_CARD";
+  zone?: "ENTITIES" | "EXECUTIONS" | "ANY";
+}
+
+export interface IStealOpponentGraveyardCardToHandEffect {
+  action: "STEAL_OPPONENT_GRAVEYARD_CARD_TO_HAND";
+  cardType?: CardType;
+}
+
 export interface IReduceOpponentAttackEffect {
   action: "REDUCE_OPPONENT_ATTACK";
   value: number;
@@ -120,6 +137,9 @@ export type ICardEffect =
   | IBoostAttackByArchetypeEffect
   | ISetDefenseByCardIdEffect
   | IDrainOpponentEnergyEffect
+  | ISetCardDuelProgressEffect
+  | IRevealOpponentSetCardEffect
+  | IStealOpponentGraveyardCardToHandEffect
   | IReduceOpponentAttackEffect
   | IReduceOpponentDefenseEffect
   | INegateAttackAndDestroyAttackerEffect

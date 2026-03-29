@@ -3,6 +3,7 @@ import { GameRuleError } from "@/core/errors/GameRuleError";
 import { resolveDiscardForHandLimitAction } from "@/core/use-cases/game-engine/phases/internal/resolve-discard-for-hand-limit-action";
 import { resolveFusionMaterialsAction } from "@/core/use-cases/game-engine/phases/internal/resolve-fusion-materials-action";
 import { resolveGraveyardSelectionAction } from "@/core/use-cases/game-engine/phases/internal/resolve-graveyard-selection-action";
+import { resolveOpponentGraveyardSelectionAction, resolveOpponentSetCardSelectionAction } from "@/core/use-cases/game-engine/phases/internal/resolve-opponent-selection-actions";
 import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState, IPendingTurnAction } from "@/core/use-cases/game-engine/state/types";
 
@@ -28,6 +29,10 @@ export function resolvePendingTurnAction(state: GameState, playerId: string, sel
       return resolveFusionMaterialsAction(state, playerId, selectedId, player, pendingTurnAction);
     case "SELECT_GRAVEYARD_CARD":
       return resolveGraveyardSelectionAction(state, playerId, selectedId, player, opponent, isPlayerA, pendingTurnAction);
+    case "SELECT_OPPONENT_GRAVEYARD_CARD":
+      return resolveOpponentGraveyardSelectionAction(state, playerId, selectedId, player, opponent, isPlayerA, pendingTurnAction);
+    case "SELECT_OPPONENT_SET_CARD":
+      return resolveOpponentSetCardSelectionAction(state, playerId, selectedId, player, opponent, isPlayerA, pendingTurnAction);
     default:
       throw new GameRuleError("Tipo de acción obligatoria no soportado.");
   }

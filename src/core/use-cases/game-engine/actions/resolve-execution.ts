@@ -40,7 +40,9 @@ export function resolveExecution(state: GameState, playerId: string, executionIn
   if (
     effect.action === "FUSION_SUMMON" ||
     effect.action === "RETURN_GRAVEYARD_CARD_TO_HAND" ||
-    effect.action === "RETURN_GRAVEYARD_CARD_TO_FIELD"
+    effect.action === "RETURN_GRAVEYARD_CARD_TO_FIELD" ||
+    effect.action === "REVEAL_OPPONENT_SET_CARD" ||
+    effect.action === "STEAL_OPPONENT_GRAVEYARD_CARD_TO_HAND"
   ) {
     return resolveExecutionSpecialAction(
       { state: withTrapResolution, playerId, player, opponent, isPlayerA, executionInstanceId },

@@ -5,7 +5,12 @@ import type { IGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id
 
 export type TurnPhase = "MAIN_1" | "BATTLE";
 
-export type PendingTurnActionType = "DISCARD_FOR_HAND_LIMIT" | "SELECT_FUSION_MATERIALS" | "SELECT_GRAVEYARD_CARD";
+export type PendingTurnActionType =
+  | "DISCARD_FOR_HAND_LIMIT"
+  | "SELECT_FUSION_MATERIALS"
+  | "SELECT_GRAVEYARD_CARD"
+  | "SELECT_OPPONENT_GRAVEYARD_CARD"
+  | "SELECT_OPPONENT_SET_CARD";
 
 interface IBasePendingTurnAction {
   playerId: string;
@@ -31,10 +36,24 @@ export interface ISelectGraveyardCardPendingTurnAction extends IBasePendingTurnA
   cardType?: "ENTITY" | "EXECUTION" | "TRAP" | "FUSION" | "ENVIRONMENT";
 }
 
+export interface ISelectOpponentGraveyardCardPendingTurnAction extends IBasePendingTurnAction {
+  type: "SELECT_OPPONENT_GRAVEYARD_CARD";
+  executionInstanceId: string;
+  cardType?: "ENTITY" | "EXECUTION" | "TRAP" | "FUSION" | "ENVIRONMENT";
+}
+
+export interface ISelectOpponentSetCardPendingTurnAction extends IBasePendingTurnAction {
+  type: "SELECT_OPPONENT_SET_CARD";
+  executionInstanceId: string;
+  zone: "ENTITIES" | "EXECUTIONS" | "ANY";
+}
+
 export type IPendingTurnAction =
   | IDiscardForHandLimitPendingTurnAction
   | ISelectFusionMaterialsPendingTurnAction
-  | ISelectGraveyardCardPendingTurnAction;
+  | ISelectGraveyardCardPendingTurnAction
+  | ISelectOpponentGraveyardCardPendingTurnAction
+  | ISelectOpponentSetCardPendingTurnAction;
 
 export interface GameState {
   playerA: IPlayer;

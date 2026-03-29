@@ -145,5 +145,33 @@ describe("resolveExecution effects", () => {
     state = GameEngine.resolveExecution(state, "p1", state.playerA.activeExecutions[0].instanceId);
     expect(state.playerB.currentEnergy).toBe(0);
   });
+
+  it("debería subir versión y nivel de DuckDuckGo en todas sus copias del duelo", () => {
+    const duckProgressExecution: ICard = {
+      id: "exec-duck-progress",
+      name: "Duck Progress",
+      description: "",
+      type: "EXECUTION",
+      faction: "NO_CODE",
+      cost: 1,
+      effect: { action: "SET_CARD_DUEL_PROGRESS", targetCardId: "exec-duckduckgo-scan", level: 5, versionTier: 5 },
+    };
+    const duckInDeck = { ...drawExecution, id: "exec-duckduckgo-scan", level: 1, versionTier: 1 };
+    const duckInField = { ...drawExecution, id: "exec-duckduckgo-scan", level: 2, versionTier: 2 };
+    let state = createResolveExecutionBaseState({
+      hand: [duckProgressExecution],
+      deck: [duckInDeck],
+      activeExecutions: [{ instanceId: "duck-field", card: duckInField, mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false }],
+    });
+
+    state = GameEngine.playCard(state, "p1", "exec-duck-progress", "ACTIVATE");
+    state = GameEngine.resolveExecution(state, "p1", state.playerA.activeExecutions.find((entity) => entity.card.id === "exec-duck-progress")!.instanceId);
+
+    expect(state.playerA.deck[0].level).toBe(5);
+    expect(state.playerA.deck[0].versionTier).toBe(5);
+    const duckField = state.playerA.activeExecutions.find((entity) => entity.instanceId === "duck-field");
+    expect(duckField?.card.level).toBe(5);
+    expect(duckField?.card.versionTier).toBe(5);
+  });
 });
 

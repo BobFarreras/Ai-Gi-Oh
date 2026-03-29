@@ -14,7 +14,8 @@ type ExecutionAction =
   | "BOOST_DEFENSE_BY_ARCHETYPE"
   | "BOOST_ATTACK_BY_ARCHETYPE"
   | "SET_DEFENSE_BY_CARD_ID"
-  | "DRAIN_OPPONENT_ENERGY";
+  | "DRAIN_OPPONENT_ENERGY"
+  | "SET_CARD_DUEL_PROGRESS";
 type ExecutionEffect = Extract<ICardEffect, { action: ExecutionAction }>;
 
 type ExecutionHandler<K extends ExecutionAction> = (player: IPlayer, opponent: IPlayer, effect: Extract<ExecutionEffect, { action: K }>) => IExecutionEffectResult;
@@ -55,6 +56,25 @@ function setDefenseByCardId(player: IPlayer, targetCardId: string, value: number
   };
 }
 
+function setCardDuelProgress(player: IPlayer, targetCardId: string, level: number, versionTier: number): IPlayer {
+  const normalizedLevel = Math.max(1, Math.floor(level));
+  const normalizedVersionTier = Math.max(1, Math.floor(versionTier));
+  const updateCard = <TCard extends { id: string; level?: number; versionTier?: number }>(card: TCard): TCard => (
+    card.id === targetCardId
+      ? { ...card, level: normalizedLevel, versionTier: normalizedVersionTier }
+      : card
+  );
+  return {
+    ...player,
+    deck: player.deck.map((card) => updateCard(card)),
+    hand: player.hand.map((card) => updateCard(card)),
+    graveyard: player.graveyard.map((card) => updateCard(card)),
+    destroyedPile: (player.destroyedPile ?? []).map((card) => updateCard(card)),
+    activeEntities: player.activeEntities.map((entity) => ({ ...entity, card: updateCard(entity.card) })),
+    activeExecutions: player.activeExecutions.map((entity) => ({ ...entity, card: updateCard(entity.card) })),
+  };
+}
+
 function restoreEnergy(player: IPlayer, requestedValue?: number): { updatedPlayer: IPlayer; recoveredAmount: number } {
   const missingEnergy = player.maxEnergy - player.currentEnergy;
   if (missingEnergy <= 0) return { updatedPlayer: player, recoveredAmount: 0 };
@@ -92,12 +112,18 @@ const executionEffectHandlers: { [K in ExecutionAction]: ExecutionHandler<K> } =
     return { ...createBaseResult(boosted.updatedPlayer, opponent), buff: { entityIds: boosted.buffIds, stat: "DEFENSE", amount: effect.value } };
   },
   DRAIN_OPPONENT_ENERGY: (player, opponent) => createBaseResult(player, { ...opponent, currentEnergy: 0 }),
+  SET_CARD_DUEL_PROGRESS: (player, opponent, effect) => createBaseResult(setCardDuelProgress(player, effect.targetCardId, effect.level, effect.versionTier), opponent),
 };
 
 /** Resuelve una acción EXECUTION registrada; devuelve null cuando la acción no pertenece al registry. */
 export function resolveExecutionEffectFromRegistry(player: IPlayer, opponent: IPlayer, effect: ICardEffect): IExecutionEffectResult | null {
-  if (effect.action === "RETURN_GRAVEYARD_CARD_TO_HAND" || effect.action === "RETURN_GRAVEYARD_CARD_TO_FIELD") {
-    throw new GameRuleError("Este efecto requiere selección de cementerio y se resuelve en una acción pendiente.");
+  if (
+    effect.action === "RETURN_GRAVEYARD_CARD_TO_HAND"
+    || effect.action === "RETURN_GRAVEYARD_CARD_TO_FIELD"
+    || effect.action === "REVEAL_OPPONENT_SET_CARD"
+    || effect.action === "STEAL_OPPONENT_GRAVEYARD_CARD_TO_HAND"
+  ) {
+    throw new GameRuleError("Este efecto requiere selección manual y se resuelve en una acción pendiente.");
   }
   if (effect.action === "DAMAGE") return executionEffectHandlers.DAMAGE(player, opponent, effect);
   if (effect.action === "HEAL") return executionEffectHandlers.HEAL(player, opponent, effect);
@@ -108,6 +134,7 @@ export function resolveExecutionEffectFromRegistry(player: IPlayer, opponent: IP
   if (effect.action === "BOOST_ATTACK_BY_ARCHETYPE") return executionEffectHandlers.BOOST_ATTACK_BY_ARCHETYPE(player, opponent, effect);
   if (effect.action === "SET_DEFENSE_BY_CARD_ID") return executionEffectHandlers.SET_DEFENSE_BY_CARD_ID(player, opponent, effect);
   if (effect.action === "DRAIN_OPPONENT_ENERGY") return executionEffectHandlers.DRAIN_OPPONENT_ENERGY(player, opponent, effect);
+  if (effect.action === "SET_CARD_DUEL_PROGRESS") return executionEffectHandlers.SET_CARD_DUEL_PROGRESS(player, opponent, effect);
   return null;
 }
 
