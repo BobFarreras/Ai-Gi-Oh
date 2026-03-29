@@ -1,5 +1,6 @@
 // src/components/game/board/hooks/internal/board-state/useHandleTimerExpired.ts - Resuelve timeout de turno sin diálogos y con auto-selección en acciones obligatorias.
 import { MutableRefObject, useCallback } from "react";
+import { resolveWinnerPlayerId } from "@/core/services/turn/resolve-winner-player-id";
 import { GameState } from "@/core/use-cases/GameEngine";
 
 interface IUseHandleTimerExpiredParams {
@@ -12,7 +13,7 @@ interface IUseHandleTimerExpiredParams {
 export function useHandleTimerExpired({ gameStateRef, isAnimating, executeAdvancePhase, resolvePendingTurnAction }: IUseHandleTimerExpiredParams) {
   return useCallback(() => {
     const currentState = gameStateRef.current;
-    const hasWinnerNow = currentState.playerA.healthPoints <= 0 || currentState.playerB.healthPoints <= 0;
+    const hasWinnerNow = resolveWinnerPlayerId(currentState) !== null;
     if (hasWinnerNow || currentState.activePlayerId !== currentState.playerA.id || isAnimating) return;
     const pendingAction = currentState.pendingTurnAction;
     if (pendingAction?.playerId === currentState.playerA.id) {

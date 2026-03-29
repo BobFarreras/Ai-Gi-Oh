@@ -1,11 +1,9 @@
 // src/components/game/board/hooks/internal/match/board-derived-state.ts - Funciones puras para derivar ganador y estado de ejecución pendiente en el board.
+import { resolveWinnerPlayerId as resolveWinnerByTurnRules } from "@/core/services/turn/resolve-winner-player-id";
 import { GameState } from "@/core/use-cases/GameEngine";
 
 export function resolveWinnerPlayerId(gameState: GameState): string | "DRAW" | null {
-  if (gameState.playerA.healthPoints <= 0 && gameState.playerB.healthPoints <= 0) return "DRAW";
-  if (gameState.playerA.healthPoints <= 0) return gameState.playerB.id;
-  if (gameState.playerB.healthPoints <= 0) return gameState.playerA.id;
-  return null;
+  return resolveWinnerByTurnRules(gameState);
 }
 
 export function isExecutionWaitingForFusionMaterials(state: GameState, executionInstanceId: string): boolean {
