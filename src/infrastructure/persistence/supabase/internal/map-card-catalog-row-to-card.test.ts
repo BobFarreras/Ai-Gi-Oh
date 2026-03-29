@@ -72,7 +72,7 @@ describe("mapCardCatalogRowToCard", () => {
       ...createBaseRow(),
       id: "exec-docker-defense",
       type: "EXECUTION",
-      effect: { action: "SET_DEFENSE_BY_CARD_ID", targetCardId: "entity-docker", value: 1000 },
+      effect: { action: "BOOST_DEFENSE_BY_CARD_ID", targetCardId: "entity-docker", value: 1000 },
     });
     const trapDirect = mapCardCatalogRowToCard({
       ...createBaseRow(),
@@ -87,7 +87,7 @@ describe("mapCardCatalogRowToCard", () => {
       type: "EXECUTION",
       effect: { action: "REVEAL_OPPONENT_SET_CARD", zone: "ANY" },
     });
-    expect(dockerBoost.effect).toEqual({ action: "SET_DEFENSE_BY_CARD_ID", targetCardId: "entity-docker", value: 1000 });
+    expect(dockerBoost.effect).toEqual({ action: "BOOST_DEFENSE_BY_CARD_ID", targetCardId: "entity-docker", value: 1000 });
     expect(trapDirect.effect).toEqual({ action: "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN" });
     expect(revealSet.effect).toEqual({ action: "REVEAL_OPPONENT_SET_CARD", zone: "ANY" });
   });

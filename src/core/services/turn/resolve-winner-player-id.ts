@@ -2,7 +2,7 @@
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { GameState } from "@/core/use-cases/GameEngine";
 
-const DEFAULT_MAX_TURN_LIMIT = 20;
+const DEFAULT_MAX_TURN_LIMIT = 30;
 
 interface ILifePointReplayState {
   current: number;
@@ -81,4 +81,3 @@ export function resolveWinnerPlayerId(gameState: GameState, maxTurnLimit = DEFAU
   if (gameState.turn < maxTurnLimit) return null;
   return resolveWinnerByTurnLimit(gameState);
 }
-

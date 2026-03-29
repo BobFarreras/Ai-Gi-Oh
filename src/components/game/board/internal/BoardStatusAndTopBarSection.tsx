@@ -61,7 +61,7 @@ export function BoardStatusAndTopBarSection({
         graveyardView={screen.effectiveGraveyardView}
         graveyardOwnerName={screen.visibleGraveyardOwner}
         graveyardCards={screen.visibleGraveyardCards}
-        graveyardSelectableCardRefs={screen.effectiveGraveyardView === "player" ? screen.pendingGraveyardSelectionRefs : []}
+        graveyardSelectableCardRefs={screen.pendingGraveyardSelectionRefs}
         fusionDeckView={screen.fusionDeckView}
         fusionDeckOwnerName={screen.visibleFusionDeckOwner}
         fusionDeckCards={screen.visibleFusionDeckCards}

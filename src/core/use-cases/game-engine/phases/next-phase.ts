@@ -28,11 +28,22 @@ function resolveTurnStartForPlayer(player: IPlayer, playerId: string): { player:
   };
 }
 
-function resolveMasteryDefenseEnergyBonus(player: IPlayer): number {
+interface IMasteryEnergyBonusBreakdown {
+  defenseBonus: number;
+  attackBonus: number;
+}
+
+function resolveMasteryEnergyBonus(player: IPlayer): IMasteryEnergyBonusBreakdown {
   const hasDefensiveMasteryEntity = player.activeEntities.some(
     (entity) => entity.mode === "DEFENSE" && entity.card.masteryPassiveSkillId === "passive-defense-energy-plus-1",
   );
-  return hasDefensiveMasteryEntity ? 1 : 0;
+  const hasAttackMasteryEntity = player.activeEntities.some(
+    (entity) => entity.mode === "ATTACK" && entity.card.masteryPassiveSkillId === "passive-attack-energy-plus-1",
+  );
+  return {
+    defenseBonus: hasDefensiveMasteryEntity ? 1 : 0,
+    attackBonus: hasAttackMasteryEntity ? 1 : 0,
+  };
 }
 
 export function nextPhase(state: GameState): GameState {
@@ -56,8 +67,9 @@ export function nextPhase(state: GameState): GameState {
     const nextActivePlayerId = state.activePlayerId === state.playerA.id ? state.playerB.id : state.playerA.id;
     const isNextPlayerA = nextActivePlayerId === state.playerA.id;
     const nextActivePlayerBeforeGain = isNextPlayerA ? state.playerA : state.playerB;
-    const masteryEnergyBonus = resolveMasteryDefenseEnergyBonus(nextActivePlayerBeforeGain);
-    const turnEnergyGain = 2 + masteryEnergyBonus;
+    const masteryEnergyBonus = resolveMasteryEnergyBonus(nextActivePlayerBeforeGain);
+    const totalMasteryBonus = masteryEnergyBonus.defenseBonus + masteryEnergyBonus.attackBonus;
+    const turnEnergyGain = 2 + totalMasteryBonus;
     const previousEnergy = isNextPlayerA ? state.playerA.currentEnergy : state.playerB.currentEnergy;
     const nextPlayerA = {
       ...state.playerA,
@@ -93,7 +105,8 @@ export function nextPhase(state: GameState): GameState {
       before: previousEnergy,
       gained: Math.max(0, energyAfterGain - previousEnergy),
       after: energyAfterGain,
-      masteryDefenseBonus: masteryEnergyBonus,
+      masteryDefenseBonus: masteryEnergyBonus.defenseBonus,
+      masteryAttackBonus: masteryEnergyBonus.attackBonus,
     });
   }
 

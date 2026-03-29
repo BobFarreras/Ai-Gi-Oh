@@ -8,6 +8,7 @@ interface IUseBoardScreenInteractionsInput {
   board: ReturnType<typeof useBoard>;
   playerId: string;
   playerGraveyard: ICard[];
+  opponentGraveyard: ICard[];
   setGraveyardView: (value: "player" | "opponent" | null) => void;
   setAutoModeBannerSignal: (value: { id: string; left: string; right: string } | null) => void;
 }
@@ -16,14 +17,21 @@ export function useBoardScreenInteractions({
   board,
   playerId,
   playerGraveyard,
+  opponentGraveyard,
   setGraveyardView,
   setAutoModeBannerSignal,
 }: IUseBoardScreenInteractionsInput) {
   const pendingGraveyardSelectionRefs = useMemo(() => {
     const pending = board.gameState.pendingTurnAction;
-    if (!pending || pending.type !== "SELECT_GRAVEYARD_CARD" || pending.playerId !== playerId) return [];
-    return playerGraveyard.filter((card) => !pending.cardType || card.type === pending.cardType).map((card) => card.runtimeId ?? card.id);
-  }, [board.gameState.pendingTurnAction, playerGraveyard, playerId]);
+    if (!pending || pending.playerId !== playerId) return [];
+    if (pending.type === "SELECT_GRAVEYARD_CARD") {
+      return playerGraveyard.filter((card) => !pending.cardType || card.type === pending.cardType).map((card) => card.runtimeId ?? card.id);
+    }
+    if (pending.type === "SELECT_OPPONENT_GRAVEYARD_CARD") {
+      return opponentGraveyard.filter((card) => !pending.cardType || card.type === pending.cardType).map((card) => card.runtimeId ?? card.id);
+    }
+    return [];
+  }, [board.gameState.pendingTurnAction, opponentGraveyard, playerGraveyard, playerId]);
 
   const onOverlayCardSelect = useCallback(
     (card: ICard) => {
@@ -33,9 +41,18 @@ export function useBoardScreenInteractions({
         setGraveyardView(null);
         return;
       }
+      if (pending?.type === "SELECT_OPPONENT_GRAVEYARD_CARD" && pending.playerId === playerId) {
+        const cardRef = card.runtimeId ?? card.id;
+        const existsInOpponentGraveyard = opponentGraveyard.some((graveCard) => (graveCard.runtimeId ?? graveCard.id) === cardRef);
+        if (existsInOpponentGraveyard) {
+          board.resolvePendingTurnAction(cardRef);
+          setGraveyardView(null);
+          return;
+        }
+      }
       board.previewCard(card);
     },
-    [board, playerId, setGraveyardView],
+    [board, opponentGraveyard, playerId, setGraveyardView],
   );
 
   const handleActivateSelectedExecution = useCallback(() => {

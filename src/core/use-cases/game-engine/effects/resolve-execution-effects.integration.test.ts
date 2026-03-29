@@ -99,15 +99,15 @@ describe("resolveExecution effects", () => {
     expect(state.playerA.healthPoints).toBe(7500);
   });
 
-  it("debería fijar DEF de Docker a 1000 solo durante el duelo", () => {
+  it("debería subir +1000 DEF de Docker solo durante el duelo", () => {
     const dockerDefenseExecution: ICard = {
       id: "exec-docker-defense",
       name: "Docker Fortress",
-      description: "Ajusta Docker a 1000 DEF.",
+      description: "Sube +1000 DEF a Docker.",
       type: "EXECUTION",
       faction: "OPEN_SOURCE",
       cost: 1,
-      effect: { action: "SET_DEFENSE_BY_CARD_ID", targetCardId: "entity-docker", value: 1000 },
+      effect: { action: "BOOST_DEFENSE_BY_CARD_ID", targetCardId: "entity-docker", value: 1000 },
     };
     let state = createResolveExecutionBaseState({
       hand: [dockerDefenseExecution],
@@ -122,7 +122,7 @@ describe("resolveExecution effects", () => {
 
     const docker = state.playerA.activeEntities.find((entity) => entity.instanceId === "docker-1");
     const other = state.playerA.activeEntities.find((entity) => entity.instanceId === "other-1");
-    expect(docker?.card.defense).toBe(1000);
+    expect(docker?.card.defense).toBe(1300);
     expect(other?.card.defense).toBe(700);
   });
 
@@ -154,14 +154,14 @@ describe("resolveExecution effects", () => {
       type: "EXECUTION",
       faction: "NO_CODE",
       cost: 1,
-      effect: { action: "SET_CARD_DUEL_PROGRESS", targetCardId: "exec-duckduckgo-scan", level: 5, versionTier: 5 },
+      effect: { action: "SET_CARD_DUEL_PROGRESS", targetCardId: "entity-duckduckgo", level: 5, versionTier: 5 },
     };
-    const duckInDeck = { ...drawExecution, id: "exec-duckduckgo-scan", level: 1, versionTier: 1 };
-    const duckInField = { ...drawExecution, id: "exec-duckduckgo-scan", level: 2, versionTier: 2 };
+    const duckInDeck = { ...createNeutralEntityCard("entity-duckduckgo", 1000, 1700), level: 1, versionTier: 1 };
+    const duckInField = { ...createNeutralEntityCard("entity-duckduckgo", 1000, 1700), level: 2, versionTier: 2 };
     let state = createResolveExecutionBaseState({
       hand: [duckProgressExecution],
       deck: [duckInDeck],
-      activeExecutions: [{ instanceId: "duck-field", card: duckInField, mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false }],
+      activeEntities: [{ instanceId: "duck-field", card: duckInField, mode: "ATTACK", hasAttackedThisTurn: false, isNewlySummoned: false }],
     });
 
     state = GameEngine.playCard(state, "p1", "exec-duck-progress", "ACTIVATE");
@@ -169,9 +169,13 @@ describe("resolveExecution effects", () => {
 
     expect(state.playerA.deck[0].level).toBe(5);
     expect(state.playerA.deck[0].versionTier).toBe(5);
-    const duckField = state.playerA.activeExecutions.find((entity) => entity.instanceId === "duck-field");
+    expect(state.playerA.deck[0].masteryPassiveSkillId).toBe("passive-attack-energy-plus-1");
+    expect(state.playerA.deck[0].masteryPassiveLabel).toContain("en ataque");
+    const duckField = state.playerA.activeEntities.find((entity) => entity.instanceId === "duck-field");
     expect(duckField?.card.level).toBe(5);
     expect(duckField?.card.versionTier).toBe(5);
+    expect(duckField?.card.masteryPassiveSkillId).toBe("passive-attack-energy-plus-1");
+    expect(duckField?.card.masteryPassiveLabel).toContain("en ataque");
   });
 });
 

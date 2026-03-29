@@ -28,7 +28,7 @@ describe("resolveWinnerPlayerId", () => {
 
   it("en turno límite gana quien tiene más LP", () => {
     const state = createTestGameState({
-      turn: 20,
+      turn: 30,
       playerA: { id: "p1", healthPoints: 2100, maxHealthPoints: 8000, currentEnergy: 0, maxEnergy: 10, deck: [], hand: [], graveyard: [], destroyedPile: [], activeEntities: [], activeExecutions: [] },
       playerB: { id: "p2", healthPoints: 2000, maxHealthPoints: 8000, currentEnergy: 0, maxEnergy: 10, deck: [], hand: [], graveyard: [], destroyedPile: [], activeEntities: [], activeExecutions: [] },
     });
@@ -37,7 +37,7 @@ describe("resolveWinnerPlayerId", () => {
 
   it("si hay empate de LP al límite, pierde quien llegó antes a ese LP", () => {
     const state = createTestGameState({
-      turn: 20,
+      turn: 30,
       playerA: { id: "p1", healthPoints: 6000, maxHealthPoints: 8000, currentEnergy: 0, maxEnergy: 10, deck: [], hand: [], graveyard: [], destroyedPile: [], activeEntities: [], activeExecutions: [] },
       playerB: { id: "p2", healthPoints: 6000, maxHealthPoints: 8000, currentEnergy: 0, maxEnergy: 10, deck: [], hand: [], graveyard: [], destroyedPile: [], activeEntities: [], activeExecutions: [] },
       combatLog: [
@@ -50,11 +50,10 @@ describe("resolveWinnerPlayerId", () => {
 
   it("si ambos llegan al mismo LP al mismo tiempo, devuelve DRAW", () => {
     const state = createTestGameState({
-      turn: 20,
+      turn: 30,
       playerA: { id: "p1", healthPoints: 8000, maxHealthPoints: 8000, currentEnergy: 0, maxEnergy: 10, deck: [], hand: [], graveyard: [], destroyedPile: [], activeEntities: [], activeExecutions: [] },
       playerB: { id: "p2", healthPoints: 8000, maxHealthPoints: 8000, currentEnergy: 0, maxEnergy: 10, deck: [], hand: [], graveyard: [], destroyedPile: [], activeEntities: [], activeExecutions: [] },
     });
     expect(resolveWinnerPlayerId(state)).toBe("DRAW");
   });
 });
-

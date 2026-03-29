@@ -1,6 +1,7 @@
 // src/components/game/board/ui/GraveyardBrowser.tsx - Overlay reutilizable para navegar cartas del cementerio o zona destruida.
 "use client";
 
+import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
@@ -28,6 +29,12 @@ export function GraveyardBrowser({
   onSelectCard,
 }: GraveyardBrowserProps) {
   const hasSelectionFilter = selectableCardRefs.length > 0;
+  const [selectedCardRef, setSelectedCardRef] = useState<string | null>(null);
+  const selectedCard = useMemo(() => {
+    if (!selectedCardRef) return null;
+    return cards.find((card) => (card.runtimeId ?? card.id) === selectedCardRef) ?? null;
+  }, [cards, selectedCardRef]);
+  const detailCard = selectedCard ?? cards[0] ?? null;
   return (
     <AnimatePresence>
       {isOpen && (
@@ -53,19 +60,24 @@ export function GraveyardBrowser({
               </button>
             </div>
             {cards.length === 0 && <p className="text-zinc-400">{emptyMessage}</p>}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-[58vh] overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-500/70 [&::-webkit-scrollbar-track]:bg-transparent">
-              {cards.map((card, index) => {
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_18rem] gap-4 max-h-[58vh]">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-500/70 [&::-webkit-scrollbar-track]:bg-transparent">
+                {cards.map((card, index) => {
                 const cardRef = card.runtimeId ?? card.id;
                 const isSelectable = !hasSelectionFilter || selectableCardRefs.includes(cardRef);
+                const isSelected = detailCard ? (detailCard.runtimeId ?? detailCard.id) === cardRef : false;
                 return (
                 <button
                   key={`${card.id}-${index}`}
                   aria-label={`Ver ${card.name}`}
-                  onClick={() => isSelectable && onSelectCard(card)}
+                  onClick={() => {
+                    setSelectedCardRef(cardRef);
+                    if (isSelectable) onSelectCard(card);
+                  }}
                   disabled={!isSelectable}
                   className={`text-left rounded-xl border transition-colors p-2 ${
                     isSelectable
-                      ? "border-cyan-400/55 bg-zinc-900/80 hover:border-cyan-300 hover:bg-zinc-900 shadow-[0_0_16px_rgba(34,211,238,0.2)]"
+                      ? `${isSelected ? "border-cyan-300 bg-zinc-900 shadow-[0_0_20px_rgba(34,211,238,0.25)]" : "border-cyan-400/55 bg-zinc-900/80 hover:border-cyan-300 hover:bg-zinc-900 shadow-[0_0_16px_rgba(34,211,238,0.2)]"}`
                       : "border-zinc-700/60 bg-zinc-900/45 opacity-45 cursor-not-allowed"
                   }`}
                 >
@@ -81,7 +93,24 @@ export function GraveyardBrowser({
                   </div>
                 </button>
               );
-              })}
+                })}
+              </div>
+              <div className="hidden lg:flex h-full min-h-[22rem] flex-col rounded-xl border border-cyan-500/35 bg-zinc-900/55 p-3">
+                {detailCard ? (
+                  <>
+                    <div className="h-[13.5rem] overflow-hidden rounded-lg border border-zinc-800/80 bg-black/45 flex items-center justify-center">
+                      <div className="scale-[0.5] origin-center"><Card card={detailCard} /></div>
+                    </div>
+                    <div className="mt-2 min-h-0 flex-1 overflow-y-auto pr-1">
+                      <h4 className="text-sm font-black uppercase tracking-wider text-cyan-200">{detailCard.name}</h4>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">{detailCard.faction} · {detailCard.type}</p>
+                      <p className="mt-2 text-xs leading-relaxed text-zinc-200 whitespace-pre-line">{detailCard.description}</p>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-zinc-400 text-sm">Selecciona una carta para ver su detalle.</p>
+                )}
+              </div>
             </div>
           </motion.div>
         </motion.div>

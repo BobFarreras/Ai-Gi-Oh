@@ -8,6 +8,7 @@ import { ICard } from "@/core/entities/ICard";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { Card } from "@/components/game/card/Card";
 import { CombatLogEventRow } from "../CombatLogEventRow";
+import { resolveLiveSelectedCard } from "@/components/game/board/internal/resolve-live-selected-card";
 
 interface BoardMobilePanelsDialogProps {
   selectedCard: ICard | null;
@@ -44,19 +45,23 @@ export function BoardMobilePanelsDialog({ selectedCard, gameState, isHistoryOpen
       return turnMatches && actorMatches;
     });
   }, [actorFilter, gameState.combatLog, gameState.playerA.id, gameState.playerB.id, turnFilter]);
+  const liveSelectedCard = useMemo(
+    () => resolveLiveSelectedCard(selectedCard, gameState),
+    [gameState, selectedCard],
+  );
 
   return (
     <AnimatePresence>
-      {selectedCard && (
+      {liveSelectedCard && (
         <motion.div initial={{ x: "-100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "-100%", opacity: 0 }} transition={{ type: "spring", stiffness: 420, damping: 34 }} className="absolute left-0 right-14 top-[5.2rem] bottom-[8.2rem] z-[270] rounded-r-3xl border-r-2 border-cyan-500/60 bg-zinc-950/92 p-3 backdrop-blur-xl shadow-[14px_0_34px_rgba(0,0,0,0.72)] min-h-0 flex flex-col">
           <button aria-label="Cerrar detalle" onClick={onCloseCard} className="absolute right-3 top-3 text-cyan-300"><X size={22} /></button>
           <div className="shrink-0 h-[11rem] overflow-hidden flex items-center justify-center">
-            <div className="origin-top scale-[0.46]"><Card card={selectedCard} /></div>
+            <div className="origin-top scale-[0.46]"><Card card={liveSelectedCard} /></div>
           </div>
           <div className="mt-1 min-h-0 flex-1 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-500/70 [&::-webkit-scrollbar-track]:bg-transparent">
-            <h3 className="text-lg font-black uppercase text-cyan-300">{selectedCard.name}</h3>
-            <p className="mb-2 border-b border-zinc-800 pb-2 text-[11px] font-bold uppercase tracking-widest text-zinc-500">{selectedCard.faction} {selectedCard.type}</p>
-            <p className="text-sm leading-relaxed text-zinc-200 whitespace-pre-line">{selectedCard.description}</p>
+            <h3 className="text-lg font-black uppercase text-cyan-300">{liveSelectedCard.name}</h3>
+            <p className="mb-2 border-b border-zinc-800 pb-2 text-[11px] font-bold uppercase tracking-widest text-zinc-500">{liveSelectedCard.faction} {liveSelectedCard.type}</p>
+            <p className="text-sm leading-relaxed text-zinc-200 whitespace-pre-line">{liveSelectedCard.description}</p>
           </div>
         </motion.div>
       )}

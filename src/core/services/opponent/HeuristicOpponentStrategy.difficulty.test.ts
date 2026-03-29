@@ -5,7 +5,7 @@ import { HeuristicOpponentStrategy } from "./HeuristicOpponentStrategy";
 import { createBaseState, createBoardEntity } from "./HeuristicOpponentStrategy.test-fixtures";
 
 describe("HeuristicOpponentStrategy dificultad", () => {
-  it("debería evitar intercambios malos en HARD y permitirlos en EASY", () => {
+  it("debería evitar intercambios claramente perdedores incluso en EASY", () => {
     const hardStrategy = new HeuristicOpponentStrategy({ difficulty: "HARD" });
     const easyStrategy = new HeuristicOpponentStrategy({ difficulty: "EASY" });
     const baseState = createBaseState();
@@ -50,7 +50,7 @@ describe("HeuristicOpponentStrategy dificultad", () => {
     };
 
     expect(hardStrategy.chooseAttack(state, "p2")).toBeNull();
-    expect(easyStrategy.chooseAttack(state, "p2")).not.toBeNull();
+    expect(easyStrategy.chooseAttack(state, "p2")).toBeNull();
   });
 
   it("debería atacar para cerrar partida aunque el score base sea bajo", () => {

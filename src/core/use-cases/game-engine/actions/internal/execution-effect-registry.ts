@@ -4,6 +4,7 @@ import { IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { boostArchetypeStat, boostBestAlliedAttack } from "@/core/use-cases/game-engine/actions/internal/execution-effect-buffs";
 import { IExecutionEffectResult } from "@/core/use-cases/game-engine/actions/internal/execution-effects";
+import { resolveMasteryPassiveLabel } from "@/core/services/progression/mastery-passive-display";
 
 type ExecutionAction =
   | "DAMAGE"
@@ -14,6 +15,7 @@ type ExecutionAction =
   | "BOOST_DEFENSE_BY_ARCHETYPE"
   | "BOOST_ATTACK_BY_ARCHETYPE"
   | "SET_DEFENSE_BY_CARD_ID"
+  | "BOOST_DEFENSE_BY_CARD_ID"
   | "DRAIN_OPPONENT_ENERGY"
   | "SET_CARD_DUEL_PROGRESS";
 type ExecutionEffect = Extract<ICardEffect, { action: ExecutionAction }>;
@@ -56,14 +58,43 @@ function setDefenseByCardId(player: IPlayer, targetCardId: string, value: number
   };
 }
 
+function boostDefenseByCardId(player: IPlayer, targetCardId: string, value: number): { updatedPlayer: IPlayer; buffIds: string[] } {
+  const delta = Math.max(0, value);
+  const buffIds = player.activeEntities.filter((entity) => entity.card.id === targetCardId).map((entity) => entity.instanceId);
+  if (buffIds.length === 0 || delta === 0) return { updatedPlayer: player, buffIds: [] };
+  return {
+    updatedPlayer: {
+      ...player,
+      activeEntities: player.activeEntities.map((entity) => (
+        entity.card.id === targetCardId
+          ? { ...entity, card: { ...entity.card, defense: Math.max(0, (entity.card.defense ?? 0) + delta) } }
+          : entity
+      )),
+    },
+    buffIds,
+  };
+}
+
 function setCardDuelProgress(player: IPlayer, targetCardId: string, level: number, versionTier: number): IPlayer {
   const normalizedLevel = Math.max(1, Math.floor(level));
   const normalizedVersionTier = Math.max(1, Math.floor(versionTier));
-  const updateCard = <TCard extends { id: string; level?: number; versionTier?: number }>(card: TCard): TCard => (
-    card.id === targetCardId
-      ? { ...card, level: normalizedLevel, versionTier: normalizedVersionTier }
-      : card
-  );
+  const resolveTemporaryMasteryPassiveId = (cardId: string): string | null => {
+    if (cardId === "entity-duckduckgo") return "passive-attack-energy-plus-1";
+    return null;
+  };
+  const updateCard = <TCard extends { id: string; level?: number; versionTier?: number; masteryPassiveSkillId?: string | null; masteryPassiveLabel?: string | null }>(card: TCard): TCard => {
+    if (card.id !== targetCardId) return card;
+    const masteryPassiveSkillId = normalizedVersionTier >= 5
+      ? card.masteryPassiveSkillId ?? resolveTemporaryMasteryPassiveId(card.id)
+      : card.masteryPassiveSkillId ?? null;
+    return {
+      ...card,
+      level: normalizedLevel,
+      versionTier: normalizedVersionTier,
+      masteryPassiveSkillId,
+      masteryPassiveLabel: normalizedVersionTier >= 5 ? resolveMasteryPassiveLabel(masteryPassiveSkillId ?? "unknown-passive-id") : null,
+    };
+  };
   return {
     ...player,
     deck: player.deck.map((card) => updateCard(card)),
@@ -111,6 +142,10 @@ const executionEffectHandlers: { [K in ExecutionAction]: ExecutionHandler<K> } =
     const boosted = setDefenseByCardId(player, effect.targetCardId, effect.value);
     return { ...createBaseResult(boosted.updatedPlayer, opponent), buff: { entityIds: boosted.buffIds, stat: "DEFENSE", amount: effect.value } };
   },
+  BOOST_DEFENSE_BY_CARD_ID: (player, opponent, effect) => {
+    const boosted = boostDefenseByCardId(player, effect.targetCardId, effect.value);
+    return { ...createBaseResult(boosted.updatedPlayer, opponent), buff: { entityIds: boosted.buffIds, stat: "DEFENSE", amount: effect.value } };
+  },
   DRAIN_OPPONENT_ENERGY: (player, opponent) => createBaseResult(player, { ...opponent, currentEnergy: 0 }),
   SET_CARD_DUEL_PROGRESS: (player, opponent, effect) => createBaseResult(setCardDuelProgress(player, effect.targetCardId, effect.level, effect.versionTier), opponent),
 };
@@ -133,6 +168,7 @@ export function resolveExecutionEffectFromRegistry(player: IPlayer, opponent: IP
   if (effect.action === "BOOST_DEFENSE_BY_ARCHETYPE") return executionEffectHandlers.BOOST_DEFENSE_BY_ARCHETYPE(player, opponent, effect);
   if (effect.action === "BOOST_ATTACK_BY_ARCHETYPE") return executionEffectHandlers.BOOST_ATTACK_BY_ARCHETYPE(player, opponent, effect);
   if (effect.action === "SET_DEFENSE_BY_CARD_ID") return executionEffectHandlers.SET_DEFENSE_BY_CARD_ID(player, opponent, effect);
+  if (effect.action === "BOOST_DEFENSE_BY_CARD_ID") return executionEffectHandlers.BOOST_DEFENSE_BY_CARD_ID(player, opponent, effect);
   if (effect.action === "DRAIN_OPPONENT_ENERGY") return executionEffectHandlers.DRAIN_OPPONENT_ENERGY(player, opponent, effect);
   if (effect.action === "SET_CARD_DUEL_PROGRESS") return executionEffectHandlers.SET_CARD_DUEL_PROGRESS(player, opponent, effect);
   return null;

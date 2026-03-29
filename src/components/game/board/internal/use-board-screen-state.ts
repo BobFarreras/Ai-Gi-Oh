@@ -43,6 +43,9 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
     board.gameState.pendingTurnAction?.type === "SELECT_GRAVEYARD_CARD" &&
     board.gameState.pendingTurnAction.playerId === playerId
       ? "player"
+      : board.gameState.pendingTurnAction?.type === "SELECT_OPPONENT_GRAVEYARD_CARD" &&
+          board.gameState.pendingTurnAction.playerId === playerId
+        ? "opponent"
       : graveyardView;
   const visibleGraveyardCards = useMemo(
     () => (effectiveGraveyardView === "player" ? input.playerGraveyard : effectiveGraveyardView === "opponent" ? input.opponentGraveyard : []),
@@ -66,6 +69,7 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
       board,
       playerId,
       playerGraveyard: input.playerGraveyard,
+      opponentGraveyard: input.opponentGraveyard,
       setGraveyardView,
       setAutoModeBannerSignal,
     });

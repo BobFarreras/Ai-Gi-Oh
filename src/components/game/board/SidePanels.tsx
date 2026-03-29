@@ -9,6 +9,7 @@ import { ICard } from "@/core/entities/ICard";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { Card } from "../card/Card";
 import { CombatLogEventRow } from "./ui/CombatLogEventRow";
+import { resolveLiveSelectedCard } from "@/components/game/board/internal/resolve-live-selected-card";
 
 interface SidePanelsProps {
   selectedCard: ICard | null;
@@ -69,21 +70,25 @@ export function SidePanels({ selectedCard, gameState, isHistoryOpen, onSelectCar
       return turnMatches && actorMatches;
     });
   }, [actorFilter, gameState.combatLog, gameState.playerA.id, gameState.playerB.id, turnFilter]);
+  const liveSelectedCard = useMemo(
+    () => resolveLiveSelectedCard(selectedCard, gameState),
+    [gameState, selectedCard],
+  );
 
   return (
     <AnimatePresence>
-      {selectedCard && !isHistoryOpen && (
-        <motion.div key={`left-panel-${selectedCard.runtimeId ?? selectedCard.id}`} initial={{ x: "-100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "-100%", opacity: 0 }} transition={{ type: "spring", stiffness: 500, damping: 30 }} className={detailPanelClass}>
+      {liveSelectedCard && !isHistoryOpen && (
+        <motion.div key={`left-panel-${liveSelectedCard.runtimeId ?? liveSelectedCard.id}`} initial={{ x: "-100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "-100%", opacity: 0 }} transition={{ type: "spring", stiffness: 500, damping: 30 }} className={detailPanelClass}>
           <button aria-label="Cerrar detalle" onClick={onCloseCard} className="absolute top-4 right-4 text-cyan-500 hover:text-white z-20"><X size={24} /></button>
           <div className="relative mt-1 mb-2 flex justify-center z-10 shrink-0 h-[clamp(12rem,28vh,15rem)] overflow-hidden">
-            <div key={selectedCard.runtimeId ?? selectedCard.id} className="origin-top" style={{ transform: `scale(${detailCardScale})` }}>
-              <Card card={selectedCard} />
+            <div key={liveSelectedCard.runtimeId ?? liveSelectedCard.id} className="origin-top" style={{ transform: `scale(${detailCardScale})` }}>
+              <Card card={liveSelectedCard} />
             </div>
           </div>
           <div className="text-white pr-2 mt-1 md:mt-2 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-            <h2 className="text-xl md:text-2xl font-black text-cyan-300 uppercase tracking-tight">{selectedCard.name}</h2>
-            <span className="text-zinc-500 text-[11px] md:text-xs tracking-widest uppercase font-bold mb-3 block border-b border-zinc-800 pb-2">{selectedCard.faction} {selectedCard.type}</span>
-            <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-line">{selectedCard.description}</p>
+            <h2 className="text-xl md:text-2xl font-black text-cyan-300 uppercase tracking-tight">{liveSelectedCard.name}</h2>
+            <span className="text-zinc-500 text-[11px] md:text-xs tracking-widest uppercase font-bold mb-3 block border-b border-zinc-800 pb-2">{liveSelectedCard.faction} {liveSelectedCard.type}</span>
+            <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-line">{liveSelectedCard.description}</p>
           </div>
         </motion.div>
       )}

@@ -56,6 +56,12 @@ export interface ISetDefenseByCardIdEffect {
   value: number;
 }
 
+export interface IBoostDefenseByCardIdEffect {
+  action: "BOOST_DEFENSE_BY_CARD_ID";
+  targetCardId: string;
+  value: number;
+}
+
 export interface IDrainOpponentEnergyEffect {
   action: "DRAIN_OPPONENT_ENERGY";
 }
@@ -136,6 +142,7 @@ export type ICardEffect =
   | IBoostDefenseByArchetypeEffect
   | IBoostAttackByArchetypeEffect
   | ISetDefenseByCardIdEffect
+  | IBoostDefenseByCardIdEffect
   | IDrainOpponentEnergyEffect
   | ISetCardDuelProgressEffect
   | IRevealOpponentSetCardEffect

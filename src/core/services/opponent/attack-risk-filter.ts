@@ -7,7 +7,13 @@ function isSuicidalAttack(option: IAttackOption): boolean {
 }
 
 export function filterOptionsByRisk(options: IAttackOption[], profile: IOpponentDifficultyProfile): IAttackOption[] {
-  if (profile.key === "EASY") return options;
+  if (profile.key === "EASY") {
+    return options.filter((option) => {
+      if (option.isLethal || option.isHighValueClear) return true;
+      if (option.isLosingTrade) return false;
+      return option.damageToAttackerPlayer <= 700;
+    });
+  }
   return options.filter((option) => {
     if (option.isLethal || option.isHighValueClear) return true;
     if (isSuicidalAttack(option)) return false;
