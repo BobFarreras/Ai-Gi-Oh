@@ -15,6 +15,7 @@ interface IHandleOpponentEntityClickParams extends Pick<
   | "setActiveAttackerId"
   | "setIsAnimating"
   | "setRevealedEntities"
+  | "setSelectedCard"
 > {
   /** Entidad objetivo del rival; `null` representa intento de ataque directo. */
   entity: IBoardEntity | null;
@@ -34,6 +35,7 @@ export async function handleOpponentEntityClick({
   setActiveAttackerId,
   setIsAnimating,
   setRevealedEntities,
+  setSelectedCard,
 }: IHandleOpponentEntityClickParams): Promise<"handled" | "pass"> {
   if (!activeAttackerId) {
     if (entity) return "pass";
@@ -51,9 +53,20 @@ export async function handleOpponentEntityClick({
   }
 
   const reactiveTrap = findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_ATTACK_DECLARED");
+  const playerCounterTrap = reactiveTrap
+    ? findReactiveTrap(gameState, gameState.playerA.id, "ON_OPPONENT_TRAP_ACTIVATED")
+    : null;
   if (reactiveTrap) {
     setRevealedEntities((previous) => addRevealedId(previous, reactiveTrap.instanceId));
     setActiveAttackerId(reactiveTrap.instanceId);
+    setSelectedCard(reactiveTrap.card);
+    await sleep(PLAYER_TRAP_PREVIEW_MS);
+    setActiveAttackerId(attackerId);
+  }
+  if (playerCounterTrap) {
+    setRevealedEntities((previous) => addRevealedId(previous, playerCounterTrap.instanceId));
+    setActiveAttackerId(playerCounterTrap.instanceId);
+    setSelectedCard(playerCounterTrap.card);
     await sleep(PLAYER_TRAP_PREVIEW_MS);
     setActiveAttackerId(attackerId);
   }
@@ -67,6 +80,11 @@ export async function handleOpponentEntityClick({
     await sleep(PLAYER_POST_RESOLUTION_MS);
     setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
   }
+  if (playerCounterTrap) {
+    await sleep(PLAYER_POST_RESOLUTION_MS);
+    setRevealedEntities((previous) => removeRevealedId(previous, playerCounterTrap.instanceId));
+  }
+  setSelectedCard(null);
   setActiveAttackerId(null);
   setIsAnimating(false);
   return "handled";

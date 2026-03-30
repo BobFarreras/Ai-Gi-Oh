@@ -17,10 +17,10 @@ interface IUseOpponentTurnParams extends IOpponentTurnContext {
 }
 
 const OPPONENT_STEP_TIMINGS: IOpponentStepTimings = {
-  stepDelayMs: 950,
-  attackWindupMs: 900,
-  postResolutionMs: 650,
-  trapPreviewMs: 700,
+  stepDelayMs: 1150,
+  attackWindupMs: 1100,
+  postResolutionMs: 900,
+  trapPreviewMs: 1200,
 };
 
 export function useOpponentTurn({
@@ -36,6 +36,7 @@ export function useOpponentTurn({
   setIsAnimating,
   setActiveAttackerId,
   setRevealedEntities,
+  setSelectedCard,
 }: IUseOpponentTurnParams): void {
   useEffect(() => {
     if (disableAutomation || isMatchStartLocked || duelWinnerId || isAnimating || gameState.activePlayerId !== gameState.playerB.id) return;
@@ -49,6 +50,7 @@ export function useOpponentTurn({
       setIsAnimating,
       setActiveAttackerId,
       setRevealedEntities,
+      setSelectedCard,
     };
 
     const timeoutId = setTimeout(async () => {
@@ -74,6 +76,7 @@ export function useOpponentTurn({
     setActiveAttackerId,
     setIsAnimating,
     setRevealedEntities,
+    setSelectedCard,
     strategy,
   ]);
 }

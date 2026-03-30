@@ -13,6 +13,15 @@ function isBuffAction(action: string): boolean {
   return action === "BOOST_ATTACK_ALLIED_ENTITY" || action === "BOOST_ATTACK_BY_ARCHETYPE" || action === "BOOST_DEFENSE_BY_ARCHETYPE";
 }
 
+function resolveActionLabel(action: string): string {
+  if (action === "FUSION_SUMMON") return "FUSION";
+  if (action === "DRAW_CARD") return "DRAW";
+  if (action.includes("GRAVEYARD")) return "GRAVE";
+  if (action.includes("ENERGY")) return "ENERGY";
+  if (action.includes("SET_") || action.includes("REVEAL")) return "TACTIC";
+  return "EFFECT";
+}
+
 export function ExecutionActivationVfx({ entity, isOpponentSide }: ExecutionActivationVfxProps) {
   const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
 
@@ -84,6 +93,18 @@ export function ExecutionActivationVfx({ entity, isOpponentSide }: ExecutionActi
     );
   }
 
-  return null;
+  const label = resolveActionLabel(action);
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.75 }}
+      animate={{ opacity: [0, 1, 0], scale: [0.75, 1.12, 1] }}
+      transition={{ duration: 1.05, ease: "easeOut" }}
+      className="pointer-events-none absolute inset-0 z-[210] flex items-center justify-center"
+    >
+      <div className="rounded-lg border border-fuchsia-300/70 bg-fuchsia-500/25 px-3 py-1 shadow-[0_0_26px_rgba(217,70,239,0.55)]">
+        <span className="text-xs font-black tracking-[0.2em] text-fuchsia-100">{label}</span>
+      </div>
+    </motion.div>
+  );
 }
 

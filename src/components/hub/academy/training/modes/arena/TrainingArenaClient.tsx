@@ -19,6 +19,7 @@ interface ITrainingArenaClientProps {
   fusionDeck: ICard[];
   opponentDeck: ICard[];
   opponentFusionDeck: ICard[];
+  playerName: string;
   opponentName: string;
   opponentAvatarUrl: string;
   opponentDifficulty: OpponentDifficulty;
@@ -105,6 +106,7 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
           mode="TRAINING"
           initialPlayerDeck={props.deck}
           initialConfig={{
+            playerName: props.playerName,
             playerFusionDeck: props.fusionDeck,
             opponentDeck: props.opponentDeck,
             opponentFusionDeck: props.opponentFusionDeck,

@@ -48,13 +48,24 @@ export async function runBattlePhaseStep(context: IOpponentTurnContext, timings:
     await sleep(320);
   }
   const reactiveTrap = findReactiveTrap(gameState, gameState.playerA.id, "ON_OPPONENT_ATTACK_DECLARED");
+  const opponentCounterTrap = reactiveTrap
+    ? findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_TRAP_ACTIVATED")
+    : null;
   if (reactiveTrap) {
     context.setRevealedEntities((previous) => addRevealedId(previous, reactiveTrap.instanceId));
+    context.setSelectedCard(reactiveTrap.card);
   }
 
   await sleep(timings.attackWindupMs);
   if (reactiveTrap) {
     context.setActiveAttackerId(reactiveTrap.instanceId);
+    await sleep(timings.trapPreviewMs);
+    context.setActiveAttackerId(attackDecision.attackerInstanceId);
+  }
+  if (opponentCounterTrap) {
+    context.setRevealedEntities((previous) => addRevealedId(previous, opponentCounterTrap.instanceId));
+    context.setActiveAttackerId(opponentCounterTrap.instanceId);
+    context.setSelectedCard(opponentCounterTrap.card);
     await sleep(timings.trapPreviewMs);
     context.setActiveAttackerId(attackDecision.attackerInstanceId);
   }
@@ -67,6 +78,8 @@ export async function runBattlePhaseStep(context: IOpponentTurnContext, timings:
     context.setRevealedEntities((previous) => removeRevealedId(previous, targetEntity.instanceId));
   }
   if (reactiveTrap) context.setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
+  if (opponentCounterTrap) context.setRevealedEntities((previous) => removeRevealedId(previous, opponentCounterTrap.instanceId));
+  context.setSelectedCard(null);
   context.setActiveAttackerId(null);
   context.setIsAnimating(false);
 

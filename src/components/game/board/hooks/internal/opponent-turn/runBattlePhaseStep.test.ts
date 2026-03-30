@@ -74,6 +74,7 @@ describe("runBattlePhaseStep", () => {
       setIsAnimating: vi.fn(),
       setActiveAttackerId: vi.fn(),
       setRevealedEntities,
+      setSelectedCard: vi.fn(),
     };
     const timings = { stepDelayMs: 0, attackWindupMs: 0, postResolutionMs: 0, trapPreviewMs: 0 };
 
@@ -102,6 +103,7 @@ describe("runBattlePhaseStep", () => {
       setIsAnimating: vi.fn(),
       setActiveAttackerId,
       setRevealedEntities: vi.fn(),
+      setSelectedCard: vi.fn(),
     };
     const timings = { stepDelayMs: 0, attackWindupMs: 0, postResolutionMs: 0, trapPreviewMs: 0 };
 

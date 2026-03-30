@@ -48,6 +48,7 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
         opponentDeck={opponentLoadout.deck}
         opponentFusionDeck={opponentLoadout.fusionDeck}
         opponentName={opponentLoadout.displayName}
+        playerName={runtime.playerDisplayName}
         opponentAvatarUrl={opponentLoadout.avatarUrl}
         opponentDifficulty={opponentLoadout.difficulty}
         narrationPack={narrationPack}

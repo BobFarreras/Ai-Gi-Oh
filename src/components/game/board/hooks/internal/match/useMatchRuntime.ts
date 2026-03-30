@@ -85,6 +85,7 @@ export function useMatchRuntime({
     setIsAnimating: uiState.setIsAnimating,
     setActiveAttackerId: uiState.setActiveAttackerId,
     setRevealedEntities: uiState.setRevealedEntities,
+    setSelectedCard: uiState.setSelectedCard,
   });
 
   const turnControls = useBoardTurnControls({

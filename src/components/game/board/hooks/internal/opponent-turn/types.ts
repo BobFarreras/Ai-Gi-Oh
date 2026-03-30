@@ -13,6 +13,7 @@ export interface IOpponentTurnContext {
   setIsAnimating: (value: boolean) => void;
   setActiveAttackerId: (value: string | null) => void;
   setRevealedEntities: (value: string[] | ((prev: string[]) => string[])) => void;
+  setSelectedCard: (card: ICard | null) => void;
 }
 
 export interface IOpponentStepTimings {

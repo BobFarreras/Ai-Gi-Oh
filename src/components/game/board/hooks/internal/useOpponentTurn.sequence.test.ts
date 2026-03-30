@@ -27,13 +27,14 @@ describe("useOpponentTurn sequence", () => {
       setIsAnimating,
       setActiveAttackerId: vi.fn(),
       setRevealedEntities: vi.fn(),
+      setSelectedCard: vi.fn(),
     }));
 
-    await act(async () => { await vi.advanceTimersByTimeAsync(1349); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1549); });
     expect(applyTransition).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
     expect(applyTransition).toHaveBeenCalledTimes(1);
-    await act(async () => { await vi.advanceTimersByTimeAsync(649); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(899); });
     expect(setIsAnimating).toHaveBeenLastCalledWith(true);
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
     expect(setIsAnimating).toHaveBeenLastCalledWith(false);

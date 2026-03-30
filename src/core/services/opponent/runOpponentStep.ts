@@ -69,8 +69,6 @@ export function runOpponentStep(state: GameState, opponentId: string, strategy: 
     return state;
   }
 
-  const opponent = state.playerA.id === opponentId ? state.playerA : state.playerB;
-
   if (state.pendingTurnAction?.playerId === opponentId) {
     const selectionId = pickPendingSelectionId(state, opponentId);
     if (!selectionId) {

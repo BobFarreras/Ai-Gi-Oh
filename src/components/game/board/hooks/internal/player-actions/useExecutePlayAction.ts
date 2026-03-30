@@ -21,6 +21,7 @@ type IExecutePlayActionParams = Pick<
   | "setPendingEntityReplacementTargetId"
   | "setIsAnimating"
   | "setLastError"
+  | "setSelectedCard"
   | "setSelectedBoardEntityInstanceId"
   | "setRevealedEntities"
 >;
@@ -38,6 +39,7 @@ export function useExecutePlayAction({
   setPendingEntityReplacementTargetId,
   setIsAnimating,
   setLastError,
+  setSelectedCard,
   setSelectedBoardEntityInstanceId,
   setRevealedEntities,
 }: IExecutePlayActionParams) {
@@ -91,9 +93,19 @@ export function useExecutePlayAction({
         clearSelection();
         await sleep(1500);
         const reactiveTrap = findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
+        const playerCounterTrap = reactiveTrap
+          ? findReactiveTrap(gameState, gameState.playerA.id, "ON_OPPONENT_TRAP_ACTIVATED")
+          : null;
         if (reactiveTrap) {
           setRevealedEntities((previous) => addRevealedId(previous, reactiveTrap.instanceId));
           setActiveAttackerId(reactiveTrap.instanceId);
+          setSelectedCard(reactiveTrap.card);
+          await sleep(PLAYER_TRAP_PREVIEW_MS);
+        }
+        if (playerCounterTrap) {
+          setRevealedEntities((previous) => addRevealedId(previous, playerCounterTrap.instanceId));
+          setActiveAttackerId(playerCounterTrap.instanceId);
+          setSelectedCard(playerCounterTrap.card);
           await sleep(PLAYER_TRAP_PREVIEW_MS);
         }
         applyTransition((state) => GameEngine.resolveExecution(state, state.playerA.id, executionId));
@@ -101,6 +113,11 @@ export function useExecutePlayAction({
           await sleep(PLAYER_POST_RESOLUTION_MS);
           setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
         }
+        if (playerCounterTrap) {
+          await sleep(PLAYER_POST_RESOLUTION_MS);
+          setRevealedEntities((previous) => removeRevealedId(previous, playerCounterTrap.instanceId));
+        }
+        setSelectedCard(null);
         setActiveAttackerId(null);
         setIsAnimating(false);
         return;
@@ -122,6 +139,7 @@ export function useExecutePlayAction({
       setPendingEntityReplacementTargetId,
       setIsAnimating,
       setLastError,
+      setSelectedCard,
       setSelectedBoardEntityInstanceId,
       setRevealedEntities,
     ],

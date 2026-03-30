@@ -81,6 +81,7 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
         setActiveAttackerId: params.setActiveAttackerId,
         setIsAnimating: params.setIsAnimating,
         setRevealedEntities: params.setRevealedEntities,
+        setSelectedCard: params.setSelectedCard,
       });
       if (result === "handled") return;
 
