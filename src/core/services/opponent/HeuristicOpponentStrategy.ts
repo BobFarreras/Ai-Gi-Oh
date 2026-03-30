@@ -6,7 +6,8 @@ import { resolveOpponentDifficultyProfile } from "@/core/services/opponent/diffi
 import { IOpponentDifficultyProfile, OpponentDifficulty } from "./difficulty/types";
 import { chooseBestAttack } from "./attackEvaluator";
 import { chooseFusionMaterials } from "@/core/services/opponent/heuristic-fusion-materials";
-import { scoreEntity, scoreExecution, scoreFusion, scoreTrap } from "@/core/services/opponent/heuristic-score";
+import { IStoryAiProfile, normalizeStoryAiProfile } from "@/core/services/opponent/difficulty/story-ai-profile";
+import { buildPlayableCardDecisions } from "@/core/services/opponent/select-opponent-play";
 
 function getPlayers(state: GameState, opponentId: string): { opponent: IPlayer; target: IPlayer } {
   if (state.playerA.id === opponentId) {
@@ -23,41 +24,23 @@ interface IHeuristicOpponentStrategyConfig {
 
 export class HeuristicOpponentStrategy implements IOpponentStrategy {
   private readonly profile: IOpponentDifficultyProfile;
+  private readonly aiProfile: IStoryAiProfile;
 
   public constructor(config?: IHeuristicOpponentStrategyConfig) {
     this.profile = resolveOpponentDifficultyProfile({ difficulty: config?.difficulty ?? "NORMAL", aiProfile: config?.aiProfile });
+    this.aiProfile = config?.aiProfile ? normalizeStoryAiProfile(config.aiProfile, "STANDARD") : { style: "balanced", aggression: 0.5 };
   }
 
   public choosePlay(state: GameState, opponentId: string): IOpponentPlayDecision | null {
-    const { opponent } = getPlayers(state, opponentId);
-    const playableCards = opponent.hand.filter((card) => card.cost <= opponent.currentEnergy);
-
-    if (playableCards.length === 0) {
-      return null;
-    }
-
-    const scored = playableCards
-      .map((card) => {
-        const score =
-          card.type === "ENTITY"
-            ? scoreEntity(card, this.profile)
-            : card.type === "FUSION"
-              ? scoreFusion(card, this.profile)
-              : card.type === "TRAP"
-                ? scoreTrap(card)
-              : scoreExecution(card, this.profile);
-        return { card, score };
-      })
-      .sort((a, b) => b.score - a.score);
-
-    for (const { card } of scored) {
+    const { opponent, target } = getPlayers(state, opponentId);
+    const playable = buildPlayableCardDecisions({ opponent, target, profile: this.profile, aiProfile: this.aiProfile });
+    for (const decision of playable) {
+      const { card, mode } = decision;
       if (card.type === "FUSION") {
         const fusionMaterials = chooseFusionMaterials(opponent, card);
         if (!fusionMaterials || state.hasNormalSummonedThisTurn) {
           continue;
         }
-
-        const mode = (card.attack ?? 0) >= (card.defense ?? 0) ? "ATTACK" : "DEFENSE";
         return { cardId: card.id, mode, fusionMaterialInstanceIds: fusionMaterials };
       }
 
@@ -65,8 +48,6 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
         if (state.hasNormalSummonedThisTurn || opponent.activeEntities.length >= 3) {
           continue;
         }
-
-        const mode = (card.attack ?? 0) >= (card.defense ?? 0) ? "ATTACK" : "DEFENSE";
         return { cardId: card.id, mode };
       }
 
@@ -74,12 +55,7 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
         if (opponent.activeExecutions.length >= 3) {
           continue;
         }
-
-        if (card.effect?.action === "DAMAGE" && card.effect.target === "OPPONENT") {
-          return { cardId: card.id, mode: "ACTIVATE" };
-        }
-
-        return { cardId: card.id, mode: "SET" };
+        return { cardId: card.id, mode };
       }
 
       if (card.type === "TRAP") {

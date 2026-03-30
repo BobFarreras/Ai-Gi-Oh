@@ -26,6 +26,10 @@ Estrategias de toma de decisiones para el rival.
 3. `HeuristicOpponentStrategy.ts`
    - Implementación actual sin IA generativa.
    - Selecciona jugadas con heurísticas de valor/coste.
+   - Evalúa jugadas con contexto de tablero (`select-opponent-play.ts`) para:
+     - activar ejecuciones solo cuando tienen objetivo válido,
+     - setear ejecuciones cuando aún no conviene activarlas,
+     - priorizar cierres (`lethal`) y oportunidades de tempo.
    - Evalúa ataques por utilidad táctica:
      - daño esperado,
      - ventaja de mesa,
@@ -42,6 +46,15 @@ Estrategias de toma de decisiones para el rival.
    - `types.ts`: contratos de dificultad y progreso de campaña.
    - `difficultyProfiles.ts`: perfiles por nivel (`EASY`, `NORMAL`, `HARD`, `BOSS`).
    - `resolveDifficultyFromCampaign.ts`: resolución de nivel según progreso.
+
+5. `runOpponentStep.ts`
+   - Resuelve acciones pendientes del rival en todos los tipos soportados:
+     - `DISCARD_FOR_HAND_LIMIT`
+     - `SELECT_FUSION_MATERIALS`
+     - `SELECT_GRAVEYARD_CARD`
+     - `SELECT_OPPONENT_GRAVEYARD_CARD`
+     - `SELECT_OPPONENT_SET_CARD`
+   - Evita bloqueos cuando el rival activa ejecuciones con selección obligatoria.
 
 ## Dificultad (roadmap)
 
