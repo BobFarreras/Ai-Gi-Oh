@@ -19,7 +19,14 @@ export function mapEventToTrack(event: ICombatLogEvent): AudioTrackId | null {
   if (event.eventType === "TURN_GUARD_SHOWN") return "BANNER";
   if (event.eventType === "TURN_GUARD_CONFIRMED" || event.eventType === "TURN_GUARD_CANCELLED") return "BUTTON_CLICK";
   if (event.eventType === "ATTACK_DECLARED") return "ATTACK";
-  if (event.eventType === "TRAP_TRIGGERED") return "MAGIC_ATTACK";
+  if (event.eventType === "TRAP_TRIGGERED") {
+    const payload = typeof event.payload === "object" && event.payload !== null ? (event.payload as Record<string, unknown>) : null;
+    const effectAction = payload && typeof payload.effectAction === "string" ? payload.effectAction : "";
+    if (effectAction === "DAMAGE") return "LIFE_LOSS";
+    if (effectAction === "NEGATE_ATTACK_AND_DESTROY_ATTACKER" || effectAction === "NEGATE_OPPONENT_TRAP_AND_DESTROY") return "DAMAGE";
+    if (effectAction === "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN") return "DAMAGE";
+    return "MAGIC_ATTACK";
+  }
   if (event.eventType === "DIRECT_DAMAGE") return "LIFE_LOSS";
   if (event.eventType === "FUSION_SUMMONED") return "FUSION_SUMMON";
   if (event.eventType !== "CARD_PLAYED") return null;
@@ -27,7 +34,14 @@ export function mapEventToTrack(event: ICombatLogEvent): AudioTrackId | null {
   const payload = typeof event.payload === "object" && event.payload !== null ? (event.payload as Record<string, unknown>) : null;
   const cardType = payload && typeof payload.cardType === "string" ? payload.cardType : "";
   const mode = payload && typeof payload.mode === "string" ? payload.mode : "";
-  if (cardType === "EXECUTION" && mode === "ACTIVATE") return "MAGIC_ATTACK";
+  const effectAction = payload && typeof payload.effectAction === "string" ? payload.effectAction : "";
+  if (cardType === "EXECUTION" && mode === "ACTIVATE") {
+    if (effectAction === "DAMAGE") return "LIFE_LOSS";
+    if (effectAction === "HEAL") return "BANNER";
+    if (effectAction === "DRAW_CARD") return "DRAW_CARD";
+    if (effectAction === "FUSION_SUMMON") return "FUSION_SUMMON";
+    return "MAGIC_ATTACK";
+  }
   if (cardType === "ENTITY") return "SUMMON_CARD";
   return null;
 }

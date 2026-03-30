@@ -50,6 +50,7 @@ export function playCard(state: GameState, playerId: string, cardId: string, mod
     cardId: card.id,
     cardType: card.type,
     mode: resolvedMode,
+    effectAction: card.effect?.action ?? null,
   });
   if (card.type === "ENTITY" && resolvedMode === "SET") {
     return resolveReactiveTrapEvent(withPlayLog, opponent.id, {
