@@ -1,5 +1,5 @@
 // src/components/hub/home/internal/actions/handle-home-insert-selected-card.ts - Resuelve la inserción de carta seleccionada en deck o bloque de fusión.
-import { addCardToDeckAction, addCardToFusionDeckAction } from "@/services/home/deck-builder/deck-builder-actions";
+import { addCardToDeckAction, addCardToFusionDeckAction, readCurrentDeckAction } from "@/services/home/deck-builder/deck-builder-actions";
 import { applyOptimisticAddToDeck, applyOptimisticAddToFusionSlot } from "@/components/hub/home/internal/optimistic/optimistic-deck-updates";
 import { endInteraction, startInteraction } from "@/services/performance/dev-performance-telemetry";
 import { IHomeActionDeps } from "@/components/hub/home/internal/actions/home-action-deps";
@@ -17,8 +17,7 @@ export async function handleHomeInsertSelectedCard(input: IHandleHomeInsertSelec
     deck,
     setDeck,
     setErrorMessage,
-    beginMutation,
-    isLatestMutation,
+    enqueueDeckMutation,
     resolveActionErrorMessage,
     play,
     selectedCollectionCardId,
@@ -34,22 +33,33 @@ export async function handleHomeInsertSelectedCard(input: IHandleHomeInsertSelec
       setErrorMessage(message);
       return { ok: false, message };
     }
-    setDeck((currentDeck) => applyOptimisticAddToFusionSlot(currentDeck, targetFusionSlotIndex, selectedCollectionCardId));
-    play("ADD_CARD");
-    const mutationId = beginMutation();
-    try {
-      const updatedDeck = await addCardToFusionDeckAction(context, selectedCollectionCardId, targetFusionSlotIndex);
-      if (isLatestMutation(mutationId)) setDeck(updatedDeck);
-      setErrorMessage(null);
+    const result = await enqueueDeckMutation({
+      applyOptimistic: () => {
+        setDeck((currentDeck) => applyOptimisticAddToFusionSlot(currentDeck, targetFusionSlotIndex, selectedCollectionCardId));
+        play("ADD_CARD");
+      },
+      run: () => addCardToFusionDeckAction(context, selectedCollectionCardId, targetFusionSlotIndex),
+      onSuccess: () => {
+        setErrorMessage(null);
+      },
+      onError: async (error) => {
+        const message = resolveActionErrorMessage(error, "No se pudo equipar la carta en el bloque de fusión.");
+        setErrorMessage(message);
+        try {
+          const syncedDeck = await readCurrentDeckAction(context);
+          setDeck(syncedDeck);
+        } catch {
+          setDeck(previousDeck);
+        }
+      },
+    });
+    if (result) {
       endInteraction(telemetry, "ok");
       return { ok: true };
-    } catch (error) {
-      if (isLatestMutation(mutationId)) setDeck(previousDeck);
-      const message = resolveActionErrorMessage(error, "No se pudo equipar la carta en el bloque de fusión.");
-      setErrorMessage(message);
-      endInteraction(telemetry, "error");
-      return { ok: false, message };
     }
+    const message = "No se pudo equipar la carta en el bloque de fusión.";
+    endInteraction(telemetry, "error");
+    return { ok: false, message };
   }
   if (selectedCollectionCardType === "FUSION") {
     const message = "Esta carta solo puede añadirse al Bloque Fusiones.";
@@ -57,21 +67,32 @@ export async function handleHomeInsertSelectedCard(input: IHandleHomeInsertSelec
     endInteraction(telemetry, "error");
     return { ok: false, message };
   }
-  play("ADD_CARD");
-  setDeck((currentDeck) => applyOptimisticAddToDeck(currentDeck, selectedCollectionCardId));
-  const mutationId = beginMutation();
-  try {
-    const updatedDeck = await addCardToDeckAction(context, selectedCollectionCardId);
-    if (isLatestMutation(mutationId)) setDeck(updatedDeck);
-    setErrorMessage(null);
+  const result = await enqueueDeckMutation({
+    applyOptimistic: () => {
+      play("ADD_CARD");
+      setDeck((currentDeck) => applyOptimisticAddToDeck(currentDeck, selectedCollectionCardId));
+    },
+    run: () => addCardToDeckAction(context, selectedCollectionCardId),
+    onSuccess: () => {
+      setErrorMessage(null);
+    },
+    onError: async (error) => {
+      const message = resolveActionErrorMessage(error, "No se pudo añadir la carta al deck.");
+      setErrorMessage(message);
+      try {
+        const syncedDeck = await readCurrentDeckAction(context);
+        setDeck(syncedDeck);
+      } catch {
+        setDeck(previousDeck);
+      }
+    },
+  });
+  if (result) {
     endInteraction(telemetry, "ok");
     return { ok: true };
-  } catch (error) {
-    if (isLatestMutation(mutationId)) setDeck(previousDeck);
-    const message = resolveActionErrorMessage(error, "No se pudo añadir la carta al deck.");
-    setErrorMessage(message);
-    endInteraction(telemetry, "error");
-    return { ok: false, message };
   }
+  const message = "No se pudo añadir la carta al deck.";
+  endInteraction(telemetry, "error");
+  return { ok: false, message };
 }
 

@@ -1,6 +1,6 @@
 // src/components/hub/home/internal/dnd/handle-home-drop-on-fusion-slot.ts - Gestiona drop sobre slots del bloque de fusión.
 import { DragEvent } from "react";
-import { addCardToFusionDeckAction, removeCardFromFusionDeckAction } from "@/services/home/deck-builder/deck-builder-actions";
+import { addCardToFusionDeckAction, readCurrentDeckAction, removeCardFromFusionDeckAction } from "@/services/home/deck-builder/deck-builder-actions";
 import { applyOptimisticAddToFusionSlot, applyOptimisticRemoveFromFusion } from "@/components/hub/home/internal/optimistic/optimistic-deck-updates";
 import { IHomeDraggedCardState } from "@/components/hub/home/internal/types/home-deck-builder-types";
 import { IHomeDropHandlerDeps } from "@/components/hub/home/internal/dnd/home-drop-handler-deps";
@@ -22,8 +22,7 @@ export async function handleHomeDropOnFusionSlot(input: IHandleHomeDropOnFusionS
     collectionState,
     context,
     play,
-    beginMutation,
-    isLatestMutation,
+    enqueueDeckMutation,
     setDeck,
     setDraggedCard,
     setErrorMessage,
@@ -60,25 +59,34 @@ export async function handleHomeDropOnFusionSlot(input: IHandleHomeDropOnFusionS
       return;
     }
     const previousDeck = deck;
-    setDeck((currentDeck) => {
-      const withoutSource = applyOptimisticRemoveFromFusion(currentDeck, sourceIndex);
-      return applyOptimisticAddToFusionSlot(withoutSource, slotIndex, sourceCardId);
+    await enqueueDeckMutation({
+      applyOptimistic: () => {
+        setDeck((currentDeck) => {
+          const withoutSource = applyOptimisticRemoveFromFusion(currentDeck, sourceIndex);
+          return applyOptimisticAddToFusionSlot(withoutSource, slotIndex, sourceCardId);
+        });
+        play("ADD_CARD");
+      },
+      run: async () => {
+        const deckAfterRemove = await removeCardFromFusionDeckAction(context, sourceIndex);
+        return addCardToFusionDeckAction({ ...context, deck: deckAfterRemove }, sourceCardId, slotIndex);
+      },
+      onSuccess: () => {
+        setSelectedFusionSlotIndex(slotIndex);
+        setSelectedCollectionCardId(null);
+        setErrorMessage(null);
+      },
+      onError: async (error) => {
+        setErrorMessage(resolveActionErrorMessage(error, "No se pudo mover la carta al Bloque Fusiones."));
+        try {
+          const syncedDeck = await readCurrentDeckAction(context);
+          setDeck(syncedDeck);
+        } catch {
+          setDeck(previousDeck);
+        }
+      },
     });
-    play("ADD_CARD");
-    const mutationId = beginMutation();
-    try {
-      const deckAfterRemove = await removeCardFromFusionDeckAction(context, sourceIndex);
-      const finalDeck = await addCardToFusionDeckAction({ ...context, deck: deckAfterRemove }, sourceCardId, slotIndex);
-      if (isLatestMutation(mutationId)) setDeck(finalDeck);
-      setSelectedFusionSlotIndex(slotIndex);
-      setSelectedCollectionCardId(null);
-      setErrorMessage(null);
-    } catch (error) {
-      if (isLatestMutation(mutationId)) setDeck(previousDeck);
-      setErrorMessage(resolveActionErrorMessage(error, "No se pudo mover la carta al Bloque Fusiones."));
-    } finally {
-      setDraggedCard(null);
-    }
+    setDraggedCard(null);
     return;
   }
   const droppedCard = collectionState.find((entry) => entry.card.id === draggedCard.cardId)?.card;
@@ -97,19 +105,26 @@ export async function handleHomeDropOnFusionSlot(input: IHandleHomeDropOnFusionS
     setDraggedCard(null);
     return;
   }
-  setDeck((currentDeck) => applyOptimisticAddToFusionSlot(currentDeck, slotIndex, draggedCard.cardId));
-  play("ADD_CARD");
-  const mutationId = beginMutation();
-  try {
-    const updatedDeck = await addCardToFusionDeckAction(context, draggedCard.cardId, slotIndex);
-    if (isLatestMutation(mutationId)) setDeck(updatedDeck);
-    setSelectedCollectionCardId(draggedCard.cardId);
-    setErrorMessage(null);
-  } catch (error) {
-    if (isLatestMutation(mutationId)) setDeck(previousDeck);
-    setErrorMessage(resolveActionErrorMessage(error, "No se pudo colocar la carta en Bloque Fusiones."));
-  } finally {
-    setDraggedCard(null);
-  }
+  await enqueueDeckMutation({
+    applyOptimistic: () => {
+      setDeck((currentDeck) => applyOptimisticAddToFusionSlot(currentDeck, slotIndex, draggedCard.cardId));
+      play("ADD_CARD");
+    },
+    run: () => addCardToFusionDeckAction(context, draggedCard.cardId, slotIndex),
+    onSuccess: () => {
+      setSelectedCollectionCardId(draggedCard.cardId);
+      setErrorMessage(null);
+    },
+    onError: async (error) => {
+      setErrorMessage(resolveActionErrorMessage(error, "No se pudo colocar la carta en Bloque Fusiones."));
+      try {
+        const syncedDeck = await readCurrentDeckAction(context);
+        setDeck(syncedDeck);
+      } catch {
+        setDeck(previousDeck);
+      }
+    },
+  });
+  setDraggedCard(null);
 }
 

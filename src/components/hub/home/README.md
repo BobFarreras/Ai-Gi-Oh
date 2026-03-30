@@ -121,6 +121,14 @@ Eventos conectados vía `useHubModuleSfx`:
 3. `Deck -> Deck` y `Fusion -> Fusion` permiten recolocar cartas entre slots vacíos.
 4. Se mantiene feedback sonoro de `ADD_CARD` y `REMOVE_CARD` en desktop y mobile.
 
+## Sincronización UI/BD (Fase 2 - robustez)
+
+1. Las mutaciones de deck se serializan en cola FIFO con `use-deck-mutation-queue` para evitar carreras al hacer acciones rápidas consecutivas.
+2. El estado optimista ya no se sobrescribe con cada `success` remoto; así se evita el efecto visual de cartas que reaparecen temporalmente.
+3. En caso de error, la UI se reconcilia contra estado autoritativo usando `GET /api/home/deck/current` antes de mostrar fallback.
+4. Se mantiene cache local de sesión (`deck-state-cache`) con TTL corto para evitar remounts con snapshot antiguo tras refresh.
+5. El flujo resultante prioriza experiencia instantánea sin perder consistencia final con Supabase.
+
 ## Estructura interna (Fase 2)
 
 1. `internal/actions/`: acciones async de negocio UI (`insert/remove/evolve`).

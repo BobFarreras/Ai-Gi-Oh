@@ -22,8 +22,12 @@ export interface IHomeActionDeps {
   setCardProgressById: Dispatch<SetStateAction<Map<string, IPlayerCardProgress>>>;
   setErrorMessage: Dispatch<SetStateAction<string | null>>;
   setEvolutionOverlay: Dispatch<SetStateAction<IHomeEvolutionOverlayState | null>>;
-  beginMutation: () => number;
-  isLatestMutation: (mutationId: number) => boolean;
+  enqueueDeckMutation: <TResult>(input: {
+    applyOptimistic: () => void;
+    run: () => Promise<TResult>;
+    onSuccess: (result: TResult) => Promise<void> | void;
+    onError: (error: unknown) => Promise<void> | void;
+  }) => Promise<TResult | null>;
   resolveActionErrorMessage: (error: unknown, fallback: string) => string;
   play: (soundId: "ADD_CARD" | "REMOVE_CARD" | "EVOLUTION_BUTTON") => void;
 }
