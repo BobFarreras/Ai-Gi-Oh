@@ -28,6 +28,7 @@ describe("useOpponentTurn sequence", () => {
       setActiveAttackerId: vi.fn(),
       setRevealedEntities: vi.fn(),
       setSelectedCard: vi.fn(),
+      requestTrapActivationDecision: vi.fn(async () => true),
     }));
 
     await act(async () => { await vi.advanceTimersByTimeAsync(1549); });

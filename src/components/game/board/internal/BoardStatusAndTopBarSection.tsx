@@ -89,6 +89,9 @@ export function BoardStatusAndTopBarSection({
         onCancelAdvancePhase={board.cancelAdvancePhase}
         externalBannerSignal={screen.autoModeBannerSignal}
         showBattleBanners={!suppressCombatBanners}
+        pendingTrapActivationPrompt={board.pendingTrapActivationPrompt}
+        onActivatePendingTrap={board.activatePendingTrap}
+        onSkipPendingTrap={board.skipPendingTrap}
         isFusionMaterialBrowserOpen={Boolean(pendingFusionAction)}
         fusionMaterialCandidates={fusionMaterialCandidates}
         fusionSelectedCount={board.pendingFusionSelectedEntityIds.length}

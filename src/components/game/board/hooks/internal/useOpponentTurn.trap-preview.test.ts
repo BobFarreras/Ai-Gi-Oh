@@ -41,6 +41,7 @@ describe("useOpponentTurn trap preview", () => {
       setActiveAttackerId,
       setRevealedEntities: vi.fn(),
       setSelectedCard: vi.fn(),
+      requestTrapActivationDecision: vi.fn(async () => true),
     }));
 
     await act(async () => { await vi.advanceTimersByTimeAsync(2749); });

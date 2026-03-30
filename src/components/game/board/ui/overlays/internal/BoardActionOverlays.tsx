@@ -4,8 +4,10 @@
 import { ICard } from "@/core/entities/ICard";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { IPendingZoneReplacement } from "@/components/game/board/hooks/internal/board-state/pending-replacement";
+import { ITrapActivationPrompt } from "@/components/game/board/hooks/internal/board-state/useBoardUiState";
 import { BattleBannerCenter } from "../../BattleBannerCenter";
 import { EntityReplacementConfirmOverlay } from "../EntityReplacementConfirmOverlay";
+import { TrapActivationPromptOverlay } from "./TrapActivationPromptOverlay";
 
 interface IBoardActionOverlaysProps {
   pendingActionHint: string | null;
@@ -18,6 +20,9 @@ interface IBoardActionOverlaysProps {
   playerBName: string;
   externalBannerSignal: { id: string; left: string; right: string } | null;
   showBattleBanners: boolean;
+  pendingTrapActivationPrompt: ITrapActivationPrompt | null;
+  onActivatePendingTrap: () => void;
+  onSkipPendingTrap: () => void;
   onConfirmEntityReplacement: () => void;
   onCancelEntityReplacement: () => void;
 }
@@ -33,16 +38,26 @@ export function BoardActionOverlays({
   playerBName,
   externalBannerSignal,
   showBattleBanners,
+  pendingTrapActivationPrompt,
+  onActivatePendingTrap,
+  onSkipPendingTrap,
   onConfirmEntityReplacement,
   onCancelEntityReplacement,
 }: IBoardActionOverlaysProps) {
   return (
     <>
       {pendingActionHint ? (
-        <div className="absolute left-1/2 top-1/2 z-[155] w-[94%] max-w-4xl -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-amber-300/60 bg-amber-950/90 px-6 py-5 text-amber-100 shadow-[0_0_45px_rgba(251,191,36,0.3)] pointer-events-none">
+        <div className="absolute left-1/2 top-[34%] z-[155] w-[94%] max-w-4xl -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-amber-300/60 bg-amber-950/90 px-6 py-5 text-amber-100 shadow-[0_0_45px_rgba(251,191,36,0.3)] pointer-events-none">
           <p className="text-sm font-black tracking-[0.16em] uppercase text-amber-300">Acción obligatoria</p>
           <p className="mt-1 text-lg font-black leading-tight sm:text-2xl">{pendingActionHint}</p>
         </div>
+      ) : null}
+      {pendingTrapActivationPrompt ? (
+        <TrapActivationPromptOverlay
+          prompt={pendingTrapActivationPrompt}
+          onActivate={onActivatePendingTrap}
+          onSkip={onSkipPendingTrap}
+        />
       ) : null}
       {pendingEntityReplacement && pendingEntityReplacementTargetCard ? (
         <EntityReplacementConfirmOverlay

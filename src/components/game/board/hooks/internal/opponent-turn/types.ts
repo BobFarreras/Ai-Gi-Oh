@@ -14,6 +14,10 @@ export interface IOpponentTurnContext {
   setActiveAttackerId: (value: string | null) => void;
   setRevealedEntities: (value: string[] | ((prev: string[]) => string[])) => void;
   setSelectedCard: (card: ICard | null) => void;
+  requestTrapActivationDecision: (
+    trapCard: ICard,
+    trigger: "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED" | "ON_OPPONENT_TRAP_ACTIVATED",
+  ) => Promise<boolean>;
 }
 
 export interface IOpponentStepTimings {

@@ -5,6 +5,11 @@ import { GameState } from "@/core/use-cases/GameEngine";
 import { IBoardUiError } from "../boardError";
 import { IPendingZoneReplacement } from "./pending-replacement";
 
+export interface ITrapActivationPrompt {
+  trigger: "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED" | "ON_OPPONENT_TRAP_ACTIVATED";
+  trapCard: ICard;
+}
+
 export function useBoardUiState(
   gameStateRef: MutableRefObject<GameState>,
   createInitialState: () => GameState,
@@ -21,6 +26,7 @@ export function useBoardUiState(
   const [pendingEntityReplacement, setPendingEntityReplacement] = useState<IPendingZoneReplacement | null>(null);
   const [pendingEntityReplacementTargetId, setPendingEntityReplacementTargetId] = useState<string | null>(null);
   const [pendingFusionSummon, setPendingFusionSummon] = useState<{ cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null>(null);
+  const [pendingTrapActivationPrompt, setPendingTrapActivationPrompt] = useState<ITrapActivationPrompt | null>(null);
   const [isFusionCinematicActive, setIsFusionCinematicActive] = useState(false);
   const [isMuted, setIsMuted] = useState<boolean>(() => (typeof window !== "undefined" ? window.localStorage.getItem("board-muted") === "1" : false));
   const [isPaused, setIsPaused] = useState(false);
@@ -104,6 +110,8 @@ export function useBoardUiState(
     setPendingEntityReplacementTargetId,
     pendingFusionSummon,
     setPendingFusionSummon,
+    pendingTrapActivationPrompt,
+    setPendingTrapActivationPrompt,
     isFusionCinematicActive,
     setIsFusionCinematicActive,
     isMuted,

@@ -50,6 +50,7 @@ export function BattlefieldLanes({
   onActivateSelectedExecution,
   onEntityClick,
 }: BattlefieldLanesProps) {
+  const shouldEmphasizePlayerExecutionLane = !isOpponentSide && highlightedEntityIds.length > 0;
   const upperLaneEntities = isOpponentSide ? activeExecutions : activeEntities;
   const lowerLaneEntities = isOpponentSide ? activeEntities : activeExecutions;
   return (
@@ -79,7 +80,7 @@ export function BattlefieldLanes({
           onEntityClick={onEntityClick}
         />
       </div>
-      <div className={cn("flex gap-3", isOpponentSide ? "" : "opacity-60")} style={{ transformStyle: "preserve-3d" }}>
+      <div className={cn("flex gap-3", isOpponentSide ? "" : shouldEmphasizePlayerExecutionLane ? "opacity-100" : "opacity-60")} style={{ transformStyle: "preserve-3d" }}>
         <SlotGrid
           laneType={isOpponentSide ? "ENTITIES" : "EXECUTIONS"}
           entities={lowerLaneEntities}

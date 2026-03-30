@@ -43,6 +43,10 @@ export function useExecutePlayAction({
   setSelectedBoardEntityInstanceId,
   setRevealedEntities,
 }: IExecutePlayActionParams) {
+  function resolvePlayErrorMessage(error: unknown): string {
+    return error instanceof Error && error.message.trim().length > 0 ? error.message : "No se pudo jugar la carta.";
+  }
+
   return useCallback(
     async (mode: BattleMode, event: React.MouseEvent) => {
       event.stopPropagation();
@@ -57,6 +61,15 @@ export function useExecutePlayAction({
       setSelectedBoardEntityInstanceId(null);
       const selectedCardReference = playingCard.runtimeId ?? playingCard.id;
       if (playingCard.type === "ENTITY" && (mode === "ATTACK" || mode === "DEFENSE") && gameState.playerA.activeEntities.length >= 3) {
+        try {
+          GameEngine.playCard(gameState, gameState.playerA.id, selectedCardReference, mode);
+        } catch (error: unknown) {
+          const message = resolvePlayErrorMessage(error);
+          if (!message.includes("zona de entidades está llena")) {
+            setLastError({ code: "GAME_RULE_ERROR", message });
+            return;
+          }
+        }
         setPendingEntityReplacement({ cardId: selectedCardReference, mode, zone: "ENTITIES" });
         setPendingEntityReplacementTargetId(null);
         setLastError(null);
@@ -64,6 +77,15 @@ export function useExecutePlayAction({
       }
 
       if ((playingCard.type === "EXECUTION" || playingCard.type === "TRAP") && gameState.playerA.activeExecutions.length >= 3) {
+        try {
+          GameEngine.playCard(gameState, gameState.playerA.id, selectedCardReference, mode);
+        } catch (error: unknown) {
+          const message = resolvePlayErrorMessage(error);
+          if (!message.includes("zona de ejecuciones está llena")) {
+            setLastError({ code: "GAME_RULE_ERROR", message });
+            return;
+          }
+        }
         setPendingEntityReplacement({ cardId: selectedCardReference, mode, zone: "EXECUTIONS" });
         setPendingEntityReplacementTargetId(null);
         setLastError(null);

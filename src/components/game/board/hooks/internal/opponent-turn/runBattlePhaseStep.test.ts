@@ -75,6 +75,7 @@ describe("runBattlePhaseStep", () => {
       setActiveAttackerId: vi.fn(),
       setRevealedEntities,
       setSelectedCard: vi.fn(),
+      requestTrapActivationDecision: vi.fn(async () => true),
     };
     const timings = { stepDelayMs: 0, attackWindupMs: 0, postResolutionMs: 0, trapPreviewMs: 0 };
 
@@ -104,6 +105,7 @@ describe("runBattlePhaseStep", () => {
       setActiveAttackerId,
       setRevealedEntities: vi.fn(),
       setSelectedCard: vi.fn(),
+      requestTrapActivationDecision: vi.fn(async () => true),
     };
     const timings = { stepDelayMs: 0, attackWindupMs: 0, postResolutionMs: 0, trapPreviewMs: 0 };
 

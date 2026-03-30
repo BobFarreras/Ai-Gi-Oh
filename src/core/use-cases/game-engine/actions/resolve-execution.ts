@@ -11,6 +11,11 @@ import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/comba
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
+interface IResolveExecutionOptions {
+  skipReactivePlayerIds?: string[];
+  skipTrapEventTypes?: ("EXECUTION_ACTIVATED")[];
+}
+
 function appendExecutionResultLogs(state: GameState, playerId: string, executionCardId: string, effectResult: ReturnType<typeof applyExecutionEffect>): GameState {
   let withLogs = appendExecutionResolutionLogs({
     state,
@@ -28,8 +33,21 @@ function appendExecutionResultLogs(state: GameState, playerId: string, execution
   return withLogs;
 }
 
-export function resolveExecution(state: GameState, playerId: string, executionInstanceId: string): GameState {
-  const withTrapResolution = resolveReactiveTrapEvent(state, getPlayerPair(state, playerId).opponent.id, { type: "EXECUTION_ACTIVATED" });
+export function resolveExecution(
+  state: GameState,
+  playerId: string,
+  executionInstanceId: string,
+  options?: IResolveExecutionOptions,
+): GameState {
+  const withTrapResolution = resolveReactiveTrapEvent(
+    state,
+    getPlayerPair(state, playerId).opponent.id,
+    { type: "EXECUTION_ACTIVATED" },
+    {
+      skipReactivePlayerIds: options?.skipReactivePlayerIds,
+      skipEventTypes: options?.skipTrapEventTypes,
+    },
+  );
   const { player, opponent, isPlayerA } = getPlayerPair(withTrapResolution, playerId);
   const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
   if (!executionEntity) throw new NotFoundError("La ejecución no existe en el tablero.");
