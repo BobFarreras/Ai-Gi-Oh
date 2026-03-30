@@ -11,6 +11,7 @@ import { resolveEntityMotionState } from "@/components/game/board/battlefield/in
 import { resolveEntityVisibility } from "@/components/game/board/battlefield/internal/entity-visibility";
 import { SummonHologramVfx } from "@/components/game/board/battlefield/internal/SummonHologramVfx";
 import { ExecutionActivateButton } from "@/components/game/board/battlefield/internal/ExecutionActivateButton";
+import { DigitalBeam } from "@/components/game/board/battlefield/DigitalBeam";
 import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 
 interface ISlotCellEntityProps {
@@ -52,6 +53,8 @@ export function SlotCellEntity({
   const isExecutionSelectedForActivation =
     !isOpponentSide && entity.mode === "SET" && entity.card.type === "EXECUTION" && selectedBoardEntityInstanceId === entity.instanceId && canActivateSelectedExecution;
   const isBoardEntitySelected = selectedBoardEntityInstanceId === entity.instanceId || isSelectedByCard;
+  const isTrapActivating = entity.card.type === "TRAP" && isAttacking;
+  const showTrapDamageBeam = isTrapActivating && entity.card.effect?.action === "DAMAGE";
   const visibility = resolveEntityVisibility(entity, isRevealed);
   const motionState = resolveEntityMotionState({ isAttacking, isActivating, isOpponentSide, isHorizontal: visibility.isHorizontal });
   const targetX = -120 - index * 105;
@@ -83,8 +86,19 @@ export function SlotCellEntity({
         </div>
       ) : (
         <div className="absolute w-full h-full flex items-center justify-center">
-          <SummonHologramVfx show={Boolean(entity.isNewlySummoned && (entity.card.type === "ENTITY" || entity.card.type === "FUSION"))} />
+          <SummonHologramVfx show={Boolean(entity.isNewlySummoned && (entity.card.type === "ENTITY" || entity.card.type === "FUSION" || entity.card.type === "TRAP"))} />
           <Card card={entity.card} isSelected={selectedCardId === entity.card.id} hologramMode={isMobileLayout ? "lite" : "full"} boardMode={!visibility.isFaceDown && entity.mode === "SET" && entity.card.type === "ENTITY" ? "DEFENSE" : (entity.mode as BattleMode)} />
+          {isTrapActivating ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: [0, 1, 0], scale: [0.8, 1.25, 1] }}
+              transition={{ duration: 0.95, ease: "easeOut" }}
+              className="absolute -inset-6 rounded-2xl bg-[radial-gradient(circle,rgba(217,70,239,0.5)_0%,rgba(217,70,239,0.15)_46%,rgba(217,70,239,0)_80%)] z-40 pointer-events-none"
+            />
+          ) : null}
+          {showTrapDamageBeam ? (
+            <DigitalBeam direction={isOpponentSide ? "towards-player" : "towards-opponent"} onComplete={() => undefined} />
+          ) : null}
           {isActivating ? (
             shouldReduceCombatEffects ? (
               <div className="absolute inset-0 z-50 rounded-xl border-2 border-white/55 bg-white/20" />
