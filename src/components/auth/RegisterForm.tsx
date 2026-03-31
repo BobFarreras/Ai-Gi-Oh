@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { registerWithEmail } from "@/services/auth/auth-http-client";
+import { AuthErrorBanner } from "@/components/auth/internal/AuthErrorBanner";
 import { AuthField } from "@/components/auth/internal/AuthField";
 import { authFormBeamVariants, authFormContainerVariants, buildAuthPieceVariants } from "@/components/auth/internal/formAnimation";
 import { useAuthFormSfx } from "@/components/auth/internal/useAuthFormSfx";
@@ -99,14 +100,7 @@ export function RegisterForm() {
         </motion.div>
       </div>
 
-      {errorMessage && (
-        <motion.div variants={buildAuthPieceVariants(0.3)} className="relative z-10 mt-6 border border-red-500 bg-red-950/40 p-3 shadow-[0_0_20px_rgba(225,29,72,0.25)]">
-          <p className="flex items-center justify-center gap-2 font-mono text-[10px] font-black uppercase tracking-widest text-red-300 sm:text-xs">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500 sm:h-2 sm:w-2" />
-            {errorMessage}
-          </p>
-        </motion.div>
-      )}
+      {errorMessage ? <AuthErrorBanner message={errorMessage} /> : null}
 
       <motion.button
         variants={buildAuthPieceVariants(0.2)}

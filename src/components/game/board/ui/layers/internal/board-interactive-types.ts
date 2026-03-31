@@ -3,6 +3,7 @@ import { ICard } from "@/core/entities/ICard";
 import { BattleMode, IBoardEntity } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IBoardViewportMetrics } from "@/components/game/board/hooks/internal/layout/board-layout-metrics";
+import { ITrapActivationPrompt } from "@/components/game/board/hooks/internal/board-state/useBoardUiState";
 
 export interface IBoardLayerPlayerState {
   id: string;
@@ -32,6 +33,7 @@ export interface IBoardInteractiveLayerProps {
   isHistoryOpen: boolean;
   isPlayerTurn: boolean;
   canActivateSelectedExecution: boolean;
+  pendingTrapActivationPrompt?: ITrapActivationPrompt | null;
   canSetSelectedEntityToAttack?: boolean;
   lastDamageTargetPlayerId: string | null;
   lastDamageEventId: string | null;
@@ -44,12 +46,15 @@ export interface IBoardInteractiveLayerProps {
   lastCardXpEventId: string | null;
   lastCardXpActorPlayerId: string | null;
   onGraveyardClick: (side: "player" | "opponent") => void;
+  onFusionDeckClick?: (side: "player" | "opponent") => void;
   onDestroyedClick?: (side: "player" | "opponent") => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => Promise<void>;
   onMandatoryCardSelect: (cardId: string) => void;
   onCardClick: (card: ICard, event?: React.MouseEvent) => void;
   onPlayAction: (mode: BattleMode, event: React.MouseEvent) => Promise<void>;
   onActivateSelectedExecution: () => void;
+  onActivatePendingTrap?: () => void;
+  onSkipPendingTrap?: () => void;
   onSetSelectedEntityToAttack?: () => void;
   onSelectCard: (card: ICard) => void;
   onCloseCard: () => void;

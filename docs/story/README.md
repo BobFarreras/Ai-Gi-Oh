@@ -1,40 +1,106 @@
-<!-- docs/story/README.md - Índice de documentación del modo Story y su motor de mundo. -->
-# Modo Story - Documentación
+<!-- docs/story/README.md - Guía técnica del funcionamiento Story: mapa, duelos, progreso y rendimiento. -->
+# Story: funcionamiento y estructura
 
-## Objetivo
+## 1. Qué está hardcoded y qué está en Supabase
 
-Definir cómo se modela el mapa, desbloqueos, navegación e integración con duelos.
+### Hardcoded (código)
+- Definición visual del mapa por acto (posiciones, rutas, nodos virtuales):
+  - `src/services/story/map-definitions/act-1-map-definition.ts`
+  - `src/services/story/map-definitions/act-2-map-definition.ts`
+  - Registro: `src/services/story/map-definitions/story-map-definition-registry.ts`
+- Reglas de navegación/grafo Story (desbloqueo, orden, transiciones):
+  - `src/core/services/story/world/*`
 
-## Índice
+### Supabase (datos dinámicos)
+- Duelos y relación con deck/oponente:
+  - `story_duels`, `story_deck_lists`, `story_deck_list_cards`, `story_opponents`
+- Progreso jugador:
+  - `player_story_duel_progress`, `player_story_world_state`
+- Configuración por duelo (fase nueva):
+  - `story_duel_ai_profiles` (difficulty + ai_profile)
+  - `story_duel_deck_overrides` (card_id + version/level/xp + overrides)
 
-1. `docs/story/01-world-graph.md`: modelo de grafo de mundo, reglas de desbloqueo y movimiento.
-2. `docs/story/02-use-cases.md`: casos de uso de Story para estado, movimiento y resolución.
-3. `docs/story/03-narrative-engine.md`: motor de briefing narrativo por capítulo.
-4. `docs/story/PHASES-4-11-REPORT.md`: reporte de implementación y trazabilidad de fases.
-5. `docs/story/NARRACION_OPONENTES.md`: narrativa y personalidad de oponentes.
-6. `docs/story/OPPONENT_CONTENT_INVENTORY.md`: inventario de assets por oponente para planificar cargas faltantes.
-7. `src/services/story/map-definitions/`: layout visual editable por acto (sin tocar reglas de dominio).
-8. `docs/story/STORY_DIALOGUE_ASSETS_TEMPLATE.md`: plantilla para producción de texto/retrato/audio por nodo.
-9. `docs/story/STORY-DUEL-IMPLEMENTATION-LOG.md`: bitácora fase a fase del flujo Story <-> Duel.
-10. `docs/story/MOBILE-STORY-PHASES-1-3.md`: plan base para habilitar Story en móvil sin romper desktop.
+Conclusión: el layout visual del mapa está en código, pero el contenido jugable (duelos, decks, dificultad y progreso) sale de BD.
 
-## Estado actual
+## 2. Flujo del mapa Story
 
-1. Fase 1 implementada: grafo Story puro en `src/core/services/story/world/`.
-2. Runtime de mapa conectado al grafo en `src/services/story/get-story-map-runtime-data.ts`.
-3. Fase 2 implementada: casos de uso Story en `src/core/use-cases/story/`.
-4. Fase 3 implementada: persistencia de cursor/historial Story en Supabase.
-5. Fase 7 implementada: briefing narrativo dinámico por capítulo/acto.
-6. Fase B implementada: definiciones visuales locales por acto + merge con runtime real.
-7. Fase C implementada: nodos virtuales con interacción contextual y rutas secundarias.
-8. Fase D implementada: transición visual del avatar en movimiento y lock temporal de interacción.
-9. Fase E implementada: diálogos narrativos por nodo virtual con modal secuencial.
-10. Fase F implementada: persistencia de interacción narrativa y variantes por repetición.
-11. Fase G implementada: catálogo local de imágenes/audios para diálogos narrativos.
-12. Fase H implementada: selección directa de nodos + plataformas decorativas + bloqueo estricto por progreso completado.
-13. Fase I implementada: zoom, nodo inicial de jugador y rutas de mayor densidad con reconvergencias.
-14. Fase 0-5 (duelo Story) implementada:
-   - contrato canónico de resultado (`WON`, `LOST`, `ABANDONED`),
-   - salida de pausa Story hacia `/hub/story` con persistencia de abandono,
-   - transición visual post-duelo en mapa (retirada de rival o retroceso de jugador),
-   - coin toss previo al combate con base 50/50 y soporte de modificadores.
+1. La pantalla Story llama `getStoryMapRuntimeData`.
+2. Se cargan de Supabase:
+   - lista de duelos (`listStoryDuels`)
+   - progreso del jugador
+   - estado compacto del mundo Story
+3. Se construye grafo y desbloqueos con `buildStoryWorldGraph` + `resolveStoryUnlockedNodeIds`.
+4. Se fusiona con la definición visual local (`mergeStoryMapVisualDefinition`).
+5. Se devuelve runtime por acto activo (`nodes`, `currentNodeId`, `availableActIds`).
+
+Archivo principal:
+- `src/services/story/get-story-map-runtime-data.ts`
+
+## 3. Flujo de un combate Story
+
+1. Al entrar en `/hub/story/chapter/[chapter]/duel/[duelIndex]`, se ejecuta `getStoryDuelRuntimeData`.
+2. Se carga el duelo y oponente desde repo (`SupabaseOpponentRepository`).
+3. Se resuelve deck del oponente:
+   - base desde `story_deck_list_cards`
+   - si existen overrides activos del duelo, se usan esos (`story_duel_deck_overrides`)
+4. Se resuelve dificultad del duelo:
+   - primero `story_duel_ai_profiles.difficulty`
+   - fallback a `story_opponents.difficulty`
+5. Se resuelve perfil IA:
+   - `story_duel_ai_profiles.ai_profile` (`style`, `aggression`)
+   - normalización con defaults seguros por dificultad
+   - mezcla final en perfil heurístico del bot (`HeuristicOpponentStrategy`)
+6. Se carga deck del jugador una sola vez al inicio.
+7. Durante el combate no hay lecturas continuas de BD para el motor.
+8. Al terminar, se llama API de cierre para persistir resultado/progreso/recompensas.
+
+Archivos clave:
+- `src/services/story/get-story-duel-runtime-data.ts`
+- `src/infrastructure/persistence/supabase/SupabaseOpponentRepository.ts`
+- `src/app/api/story/duels/complete/route.ts`
+
+## 4. Rendimiento y cache
+
+Estado actual (correcto para MVP/proyecto profesional inicial):
+- Se hace carga server-side por entrada de pantalla (Story map o Duel).
+- No hay polling durante combate.
+- Se minimizan llamadas en paralelo con `Promise.all` donde aplica.
+
+¿Guardar mapa en navegador para evitar llamadas?
+- Se puede (ej. `sessionStorage`), pero no es la estrategia principal recomendada aquí.
+- Riesgo: estado obsoleto tras cambios de progreso, admin updates o multi-dispositivo.
+
+Recomendación profesional:
+1. Mantener servidor como fuente de verdad.
+2. Añadir caché corta en servidor (si hace falta):
+   - `unstable_cache`/revalidate por usuario y acto.
+3. Usar invalidación explícita tras acciones que cambian estado (`duel complete`, reset, admin).
+4. Solo usar caché cliente como optimización visual, nunca como verdad del estado.
+
+## 5. Admin Story Decks (fase actual)
+
+Ahora el panel admin permite:
+- editar deck base del oponente,
+- seleccionar duelo concreto asociado al deck,
+- editar dificultad por duelo,
+- editar escalado estático por slot (`versionTier`, `level`, `xp`).
+
+Esto permite casos como:
+- `GemNvim ROOKIE` con deck base,
+- `GemNvim ELITE` con mismo deck pero más nivel/exp/version por carta.
+
+## 6. Extensión recomendada
+
+Para seguir escalando sin romper motor:
+1. Añadir presets por duelo (botón “aplicar +N level/+N version a todos los slots”).
+2. Versionado de mapa visual en BD solo si necesitáis editor de nodos 100% dinámico.
+3. Mantener contrato estable `IStoryDuelDefinition` y adaptar por repositorio.
+
+## 7. Archivos de referencia rápida
+
+- Mapa runtime: `src/services/story/get-story-map-runtime-data.ts`
+- Mapa visual: `src/services/story/map-definitions/*`
+- Duelos repo: `src/infrastructure/persistence/supabase/SupabaseOpponentRepository.ts`
+- Runtime duelo: `src/services/story/get-story-duel-runtime-data.ts`
+- Perfil IA rival: `src/core/services/opponent/difficulty/resolve-opponent-difficulty-profile.ts`
+- UI story: `src/components/hub/story/README.md`

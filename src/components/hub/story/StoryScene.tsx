@@ -1,6 +1,6 @@
 // src/components/hub/story/StoryScene.tsx - Escena principal Story con mapa vivo y panel lateral conectado a estado persistible.
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "zustand";
 import { StorySceneDesktopLayout } from "./internal/scene/view/StorySceneDesktopLayout";
@@ -9,8 +9,10 @@ import { createStorySceneActions } from "./internal/scene/actions/create-story-s
 import { createStorySceneStore, StorySceneStore } from "./internal/scene/state/story-scene-store";
 import { resolveStorySceneCanMove } from "./internal/scene/state/resolve-story-scene-can-move";
 import { useStoryNodeInteractionDialog } from "./internal/scene/dialog/use-story-node-interaction-dialog";
+import { useStoryInteractionActions } from "./internal/scene/dialog/use-story-interaction-actions";
 import { useStorySceneSfx } from "./internal/scene/audio/use-story-scene-sfx";
 import { useStoryActEntrySequence } from "./internal/scene/transitions/use-story-act-entry-sequence";
+import { useStoryActTransitionNavigation } from "./internal/scene/transitions/use-story-act-transition-navigation";
 import { useStoryPostDuelTransition } from "./internal/scene/transitions/use-story-post-duel-transition";
 import { useStorySceneMobileMode } from "./internal/scene/view/use-story-scene-mobile-mode";
 import { IStoryMapRuntimeData } from "@/services/story/story-map-runtime-data";
@@ -83,21 +85,16 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
     requestActTransition: (actId) => setActTransitionTargetId(actId),
     startInteractionDialog: interactionDialog.start,
   });
-  useEffect(() => { if (!actTransitionTargetId) return; const timeoutId = window.setTimeout(() => router.push(`/hub/story?act=${actTransitionTargetId}`), 900); return () => window.clearTimeout(timeoutId); }, [actTransitionTargetId, router]);
-  const finalizeInteractionDialog = async () => {
-    interactionDialog.close();
-    if (!pendingCenterNodeId) return;
-    sceneSfx.playEventFinish();
-    setSelectedNodeId(pendingCenterNodeId);
-    await centerAvatarOnNode(pendingCenterNodeId);
-    setPendingCenterNodeId(null);
-    setAvatarVisualTarget(null);
-  };
-  const advanceInteractionDialog = async () => {
-    const shouldFinalize = interactionDialog.isLastLine;
-    interactionDialog.next();
-    if (shouldFinalize) await finalizeInteractionDialog();
-  };
+  useStoryActTransitionNavigation({ actTransitionTargetId, navigateTo: router.push });
+  const { finalizeInteractionDialog, advanceInteractionDialog } = useStoryInteractionActions({
+    interactionDialog,
+    pendingCenterNodeId,
+    setPendingCenterNodeId,
+    setSelectedNodeId,
+    setAvatarVisualTarget,
+    playEventFinish: sceneSfx.playEventFinish,
+    centerAvatarOnNode,
+  });
   const sidebarProps: IStorySceneSidebarViewProps = {
     briefing,
     selectedNode,
@@ -106,6 +103,10 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
     interactionFeedback,
     smartActionLabel: smartAction.label,
     canRunSmartAction: smartAction.isEnabled && !isBusy,
+    onExitToHub: () => {
+      sceneSfx.playButtonClick();
+      router.push("/hub");
+    },
     onSmartAction: () => { sceneSfx.playButtonClick(); void handleSmartAction(); },
     onDeselect: () => { sceneSfx.playButtonClick(); setSelectedNodeId(null); },
   };
@@ -133,10 +134,6 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
       sceneSfx.playButtonClick();
       setCenterRequestKey((value) => value + 1);
     },
-    onExitToHub: () => {
-      sceneSfx.playButtonClick();
-      router.push("/hub");
-    },
     onRewardCollectAnimationComplete: () => { setCollectingRewardNodeId(null); setCollectingRewardVisual(null); },
     onRetreatAnimationComplete: () => setRetreatingNodeId(null),
     dialog: {
@@ -148,8 +145,5 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
       onClose: finalizeInteractionDialog,
     },
   };
-  const mapPropsWithCenter = { ...mapProps, centerRequestKey };
-  return isMobileLayout
-    ? <StorySceneMobileLayout sidebar={sidebarProps} map={mapPropsWithCenter} />
-    : <StorySceneDesktopLayout sidebar={sidebarProps} map={mapPropsWithCenter} />;
+  return isMobileLayout ? <StorySceneMobileLayout sidebar={sidebarProps} map={{ ...mapProps, centerRequestKey }} /> : <StorySceneDesktopLayout sidebar={sidebarProps} map={{ ...mapProps, centerRequestKey }} />;
 }

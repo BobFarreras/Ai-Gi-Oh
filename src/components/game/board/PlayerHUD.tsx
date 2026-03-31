@@ -21,6 +21,9 @@ interface PlayerHUDProps {
   wasHealedThisAction?: boolean;
   healPulseKey?: string | null;
   healAmount?: number | null;
+  wasEnergyGainedThisAction?: boolean;
+  energyPulseKey?: string | null;
+  energyAmount?: number | null;
   avatarUrl?: string | null;
   dialogueMessage?: string | null;
   phase?: string;
@@ -42,6 +45,9 @@ export function PlayerHUD({
   wasHealedThisAction = false,
   healPulseKey = null,
   healAmount = null,
+  wasEnergyGainedThisAction = false,
+  energyPulseKey = null,
+  energyAmount = null,
   avatarUrl = null,
   dialogueMessage = null,
   phase = "MAIN_1",
@@ -51,13 +57,16 @@ export function PlayerHUD({
   showPhaseControls = true,
   showEnergy = true,
 }: PlayerHUDProps) {
-  const { damageTaken, healGained, isShaking } = useHudFeedback(
+  const { damageTaken, healGained, energyGained, isShaking } = useHudFeedback(
     wasDamagedThisAction,
     damagePulseKey,
     damageAmount,
     wasHealedThisAction,
     healPulseKey,
     healAmount,
+    wasEnergyGainedThisAction,
+    energyPulseKey,
+    energyAmount,
   );
 
   const shakeAnimation = isShaking ? { x: isOpponent ? [0, -8, 8, -5, 5, 0] : [0, 8, -8, 5, -5, 0] } : { x: 0 };
@@ -82,7 +91,24 @@ export function PlayerHUD({
       )}
     >
       <HudFloatingDelta value={damageTaken} sign="-" isOpponent={isOpponent} color="red" />
-      <HudFloatingDelta value={healGained} sign="+" isOpponent={isOpponent} color="blue" />
+      <HudFloatingDelta value={healGained} sign="+" isOpponent={isOpponent} color="green" />
+      <HudFloatingDelta value={energyGained} sign="+" isOpponent={isOpponent} color="yellow" />
+      {healGained ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.72 }}
+          animate={{ opacity: [0, 1, 0], scale: [0.72, 1.26, 1.02] }}
+          transition={{ duration: 1.28, ease: "easeOut" }}
+          className={cn("absolute z-[192] h-28 w-28 rounded-full bg-emerald-400/42 blur-xl", isOpponent ? "left-7 bottom-1" : "right-7 top-1")}
+        />
+      ) : null}
+      {energyGained ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.7 }}
+          animate={{ opacity: [0, 1, 0], scale: [0.7, 1.2, 1] }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className={cn("absolute z-[190] h-24 w-24 rounded-full bg-yellow-400/35 blur-xl", isOpponent ? "left-8 bottom-2" : "right-8 top-2")}
+        />
+      ) : null}
       <HudDialogueBubble isOpponent={isOpponent} message={dialogueMessage} />
       <HudPortraitCard
         isOpponent={isOpponent}

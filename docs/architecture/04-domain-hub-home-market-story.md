@@ -1,11 +1,21 @@
-<!-- docs/architecture/04-domain-hub-home-market-story.md - Mapa de subdominios funcionales del hub y su separación. -->
-# Dominio Hub, Home, Market y Story
+<!-- docs/architecture/04-domain-hub-home-market-story.md - Mapa de subdominios funcionales Hub/Home/Market/Story con entrada Academy para tutorial y training. -->
+# Dominio Hub, Academy, Home, Market y Story
 
 ## Hub
 
 1. `HubScene` y nodos 3D como capa de navegación.
 2. Reglas de acceso no se deciden en componentes, se resuelven en políticas/casos de uso.
 3. Estructura visual desacoplada por nodos y paneles.
+4. Durante el gate de tutorial (`hasCompletedTutorial=false` y `hasSkippedTutorial=false`) solo queda desbloqueado `TRAINING`; el resto se bloquea por `HubAccessPolicy`.
+
+## Academy (Tutorial + Training)
+
+1. Entrada canónica: `/hub/academy`.
+2. Selector visual: `TrainingModeSelection` con dos rutas activas:
+3. Ruta tutorial guiado: `/hub/academy/tutorial` (nodos `arsenal`, `market`, `reward`).
+4. Ruta arena de práctica: `/hub/academy/training/arena`.
+5. Tutorial de combate: `/hub/academy/training/tutorial`.
+6. La navegación y hardcodes se centralizan en `src/core/constants/routes/academy-routes.ts`.
 
 ## Home (Arsenal/Deck Builder)
 

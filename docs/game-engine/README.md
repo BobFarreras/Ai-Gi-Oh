@@ -19,6 +19,8 @@ Esta sección sustituye la documentación monolítica previa y describe el estad
    - `combatLog`, eventos de audio, overlays y cinemática.
 7. [07-roadmap-and-pending.md](./07-roadmap-and-pending.md)
    - Pendientes y diseño objetivo de siguientes fases.
+8. [09-effects-vfx-audio-inventory.md](./09-effects-vfx-audio-inventory.md)
+   - Inventario de efectos de ejecución/trampa con estado real de animación y sonido.
 
 ## Código fuente principal
 

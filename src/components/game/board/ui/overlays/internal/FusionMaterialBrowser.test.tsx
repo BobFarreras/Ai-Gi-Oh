@@ -15,7 +15,7 @@ function createCard(id: string, name: string): ICard {
     attack: 1200,
     defense: 1000,
     archetype: "LLM",
-    renderUrl: "/assets/renders/python.png",
+    renderUrl: "/assets/renders/python.webp",
   };
 }
 

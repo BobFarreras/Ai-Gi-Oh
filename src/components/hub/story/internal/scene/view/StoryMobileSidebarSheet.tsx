@@ -51,6 +51,7 @@ export function StoryMobileSidebarSheet(props: IStoryMobileSidebarSheetProps) {
                 smartActionLabel={props.smartActionLabel}
                 canRunSmartAction={props.canRunSmartAction}
                 isCompactMode
+                onExitToHub={props.onExitToHub}
                 onSmartAction={props.onSmartAction}
                 onDeselect={props.onDeselect}
               />

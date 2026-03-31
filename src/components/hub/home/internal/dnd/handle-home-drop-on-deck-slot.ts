@@ -1,6 +1,6 @@
 // src/components/hub/home/internal/dnd/handle-home-drop-on-deck-slot.ts - Gestiona drop sobre slots del deck principal en Arsenal.
 import { DragEvent } from "react";
-import { addCardToDeckSlotAction, removeCardFromDeckAction } from "@/services/home/deck-builder/deck-builder-actions";
+import { addCardToDeckSlotAction, readCurrentDeckAction, removeCardFromDeckAction } from "@/services/home/deck-builder/deck-builder-actions";
 import { applyOptimisticAddToDeckSlot, applyOptimisticRemoveFromDeck } from "@/components/hub/home/internal/optimistic/optimistic-deck-updates";
 import { IHomeDraggedCardState } from "@/components/hub/home/internal/types/home-deck-builder-types";
 import { IHomeDropHandlerDeps } from "@/components/hub/home/internal/dnd/home-drop-handler-deps";
@@ -22,8 +22,7 @@ export async function handleHomeDropOnDeckSlot(input: IHandleHomeDropOnDeckSlotI
     collectionState,
     context,
     play,
-    beginMutation,
-    isLatestMutation,
+    enqueueDeckMutation,
     setDeck,
     setDraggedCard,
     setErrorMessage,
@@ -60,25 +59,34 @@ export async function handleHomeDropOnDeckSlot(input: IHandleHomeDropOnDeckSlotI
       return;
     }
     const previousDeck = deck;
-    setDeck((currentDeck) => {
-      const withoutSource = applyOptimisticRemoveFromDeck(currentDeck, sourceIndex);
-      return applyOptimisticAddToDeckSlot(withoutSource, slotIndex, sourceCardId);
+    await enqueueDeckMutation({
+      applyOptimistic: () => {
+        setDeck((currentDeck) => {
+          const withoutSource = applyOptimisticRemoveFromDeck(currentDeck, sourceIndex);
+          return applyOptimisticAddToDeckSlot(withoutSource, slotIndex, sourceCardId);
+        });
+        play("ADD_CARD");
+      },
+      run: async () => {
+        const deckAfterRemove = await removeCardFromDeckAction(context, sourceIndex);
+        return addCardToDeckSlotAction({ ...context, deck: deckAfterRemove }, sourceCardId, slotIndex);
+      },
+      onSuccess: () => {
+        setSelectedSlotIndex(slotIndex);
+        setSelectedCollectionCardId(null);
+        setErrorMessage(null);
+      },
+      onError: async (error) => {
+        setErrorMessage(resolveActionErrorMessage(error, "No se pudo mover la carta al slot de deck."));
+        try {
+          const syncedDeck = await readCurrentDeckAction(context);
+          setDeck(syncedDeck);
+        } catch {
+          setDeck(previousDeck);
+        }
+      },
     });
-    play("ADD_CARD");
-    const mutationId = beginMutation();
-    try {
-      const deckAfterRemove = await removeCardFromDeckAction(context, sourceIndex);
-      const finalDeck = await addCardToDeckSlotAction({ ...context, deck: deckAfterRemove }, sourceCardId, slotIndex);
-      if (isLatestMutation(mutationId)) setDeck(finalDeck);
-      setSelectedSlotIndex(slotIndex);
-      setSelectedCollectionCardId(null);
-      setErrorMessage(null);
-    } catch (error) {
-      if (isLatestMutation(mutationId)) setDeck(previousDeck);
-      setErrorMessage(resolveActionErrorMessage(error, "No se pudo mover la carta al slot de deck."));
-    } finally {
-      setDraggedCard(null);
-    }
+    setDraggedCard(null);
     return;
   }
   const droppedCard = collectionState.find((entry) => entry.card.id === draggedCard.cardId)?.card;
@@ -97,19 +105,26 @@ export async function handleHomeDropOnDeckSlot(input: IHandleHomeDropOnDeckSlotI
     setDraggedCard(null);
     return;
   }
-  setDeck((currentDeck) => applyOptimisticAddToDeckSlot(currentDeck, slotIndex, draggedCard.cardId));
-  play("ADD_CARD");
-  const mutationId = beginMutation();
-  try {
-    const updatedDeck = await addCardToDeckSlotAction(context, draggedCard.cardId, slotIndex);
-    if (isLatestMutation(mutationId)) setDeck(updatedDeck);
-    setSelectedCollectionCardId(draggedCard.cardId);
-    setErrorMessage(null);
-  } catch (error) {
-    if (isLatestMutation(mutationId)) setDeck(previousDeck);
-    setErrorMessage(resolveActionErrorMessage(error, "No se pudo colocar la carta en el slot de deck."));
-  } finally {
-    setDraggedCard(null);
-  }
+  await enqueueDeckMutation({
+    applyOptimistic: () => {
+      setDeck((currentDeck) => applyOptimisticAddToDeckSlot(currentDeck, slotIndex, draggedCard.cardId));
+      play("ADD_CARD");
+    },
+    run: () => addCardToDeckSlotAction(context, draggedCard.cardId, slotIndex),
+    onSuccess: () => {
+      setSelectedCollectionCardId(draggedCard.cardId);
+      setErrorMessage(null);
+    },
+    onError: async (error) => {
+      setErrorMessage(resolveActionErrorMessage(error, "No se pudo colocar la carta en el slot de deck."));
+      try {
+        const syncedDeck = await readCurrentDeckAction(context);
+        setDeck(syncedDeck);
+      } catch {
+        setDeck(previousDeck);
+      }
+    },
+  });
+  setDraggedCard(null);
 }
 

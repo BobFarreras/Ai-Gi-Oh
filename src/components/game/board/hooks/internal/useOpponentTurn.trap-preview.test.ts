@@ -40,9 +40,11 @@ describe("useOpponentTurn trap preview", () => {
       setIsAnimating: vi.fn(),
       setActiveAttackerId,
       setRevealedEntities: vi.fn(),
+      setSelectedCard: vi.fn(),
+      requestTrapActivationDecision: vi.fn(async () => true),
     }));
 
-    await act(async () => { await vi.advanceTimersByTimeAsync(2049); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(2749); });
     expect(applyTransition).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
     expect(applyTransition).toHaveBeenCalledTimes(1);

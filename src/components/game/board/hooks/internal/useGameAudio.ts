@@ -2,7 +2,8 @@
 import { useCallback, useEffect, useRef } from "react";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { AudioTrackId } from "@/core/config/audio-catalog";
-import { createAudio, mapEventToTrack, safePlay } from "./audio/audioRuntime";
+import { resolveEffectAudioPath } from "./audio/effect-audio-registry";
+import { createAudio, createAudioFromPath, mapEventToTrack, safePlay, safePlayWithFallback } from "./audio/audioRuntime";
 
 interface UseGameAudioParams {
   combatLog: ICombatLogEvent[];
@@ -38,6 +39,22 @@ export function useGameAudio({
   const prevSelectedCardRef = useRef(hasSelectedCard);
   const prevErrorRef = useRef<string | null>(lastErrorCode);
 
+  const playCombatEventAudio = useCallback((event: ICombatLogEvent) => {
+    const effectAudioPath = resolveEffectAudioPath(event);
+    if (effectAudioPath) {
+      safePlayWithFallback(
+        createAudioFromPath(effectAudioPath, 0.76),
+        () => {
+          const fallbackTrack = mapEventToTrack(event);
+          return fallbackTrack ? createAudio(fallbackTrack, false) : null;
+        },
+      );
+      return;
+    }
+    const track = mapEventToTrack(event);
+    if (track) safePlay(createAudio(track, false));
+  }, []);
+
   useEffect(() => {
     if (disableBaseSoundtrack) {
       soundtrackRef.current?.pause();
@@ -70,10 +87,9 @@ export function useGameAudio({
     const nextEvents = combatLog.slice(processedRef.current);
     processedRef.current = combatLog.length;
     nextEvents.forEach((event) => {
-      const track = mapEventToTrack(event);
-      if (track) safePlay(createAudio(track, false));
+      playCombatEventAudio(event);
     });
-  }, [combatLog, isMuted]);
+  }, [combatLog, isMuted, playCombatEventAudio]);
 
   useEffect(() => {
     if (isMuted || !winnerPlayerId) return;

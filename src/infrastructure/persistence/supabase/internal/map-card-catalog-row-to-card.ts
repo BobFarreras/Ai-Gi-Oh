@@ -5,17 +5,26 @@ import {
   IBoostDefenseByArchetypeEffect,
   ICard,
   ICardEffect,
+  ICopyOpponentBuffToAlliedEntitiesEffect,
   IDamageEffect,
+  IDirectAttackEnergyDrainAndSetSelfToTenEffect,
+  IDrainOpponentEnergyEffect,
   IDestroyEntityOnBattleWinEffect,
   IDrawCardEffect,
+  IForceSummonedDefenseToAttackLockedEffect,
   IFusionSummonEffect,
   IHealEffect,
   INegateOpponentTrapAndDestroyEffect,
   INegateAttackAndDestroyAttackerEffect,
+  IRevealOpponentSetCardEffect,
   IReturnGraveyardCardToFieldEffect,
   IReturnGraveyardCardToHandEffect,
   IReduceOpponentAttackEffect,
   IReduceOpponentDefenseEffect,
+  ISetCardDuelProgressEffect,
+  IBoostDefenseByCardIdEffect,
+  ISetDefenseByCardIdEffect,
+  IStealOpponentGraveyardCardToHandEffect,
 } from "@/core/entities/ICard";
 import { ICardCatalogRow } from "@/infrastructure/persistence/supabase/internal/card-catalog-row";
 
@@ -48,6 +57,24 @@ function mapEffect(value: unknown): ICardEffect | undefined {
       return typeof value.archetype === "string" && typeof value.value === "number"
         ? ({ action: "BOOST_ATTACK_BY_ARCHETYPE", archetype: value.archetype, value: value.value } as IBoostAttackByArchetypeEffect)
         : undefined;
+    case "SET_DEFENSE_BY_CARD_ID":
+      return typeof value.targetCardId === "string" && typeof value.value === "number"
+        ? ({ action: "SET_DEFENSE_BY_CARD_ID", targetCardId: value.targetCardId, value: value.value } as ISetDefenseByCardIdEffect)
+        : undefined;
+    case "BOOST_DEFENSE_BY_CARD_ID":
+      return typeof value.targetCardId === "string" && typeof value.value === "number"
+        ? ({ action: "BOOST_DEFENSE_BY_CARD_ID", targetCardId: value.targetCardId, value: value.value } as IBoostDefenseByCardIdEffect)
+        : undefined;
+    case "DRAIN_OPPONENT_ENERGY":
+      return { action: "DRAIN_OPPONENT_ENERGY" } as IDrainOpponentEnergyEffect;
+    case "SET_CARD_DUEL_PROGRESS":
+      return typeof value.targetCardId === "string" && typeof value.level === "number" && typeof value.versionTier === "number"
+        ? ({ action: "SET_CARD_DUEL_PROGRESS", targetCardId: value.targetCardId, level: value.level, versionTier: value.versionTier } as ISetCardDuelProgressEffect)
+        : undefined;
+    case "REVEAL_OPPONENT_SET_CARD":
+      return { action: "REVEAL_OPPONENT_SET_CARD", zone: typeof value.zone === "string" ? value.zone : undefined } as IRevealOpponentSetCardEffect;
+    case "STEAL_OPPONENT_GRAVEYARD_CARD_TO_HAND":
+      return { action: "STEAL_OPPONENT_GRAVEYARD_CARD_TO_HAND", cardType: typeof value.cardType === "string" ? value.cardType : undefined } as IStealOpponentGraveyardCardToHandEffect;
     case "REDUCE_OPPONENT_ATTACK":
       return typeof value.value === "number"
         ? ({ action: "REDUCE_OPPONENT_ATTACK", value: value.value } as IReduceOpponentAttackEffect)
@@ -58,6 +85,12 @@ function mapEffect(value: unknown): ICardEffect | undefined {
         : undefined;
     case "NEGATE_ATTACK_AND_DESTROY_ATTACKER":
       return { action: "NEGATE_ATTACK_AND_DESTROY_ATTACKER" } as INegateAttackAndDestroyAttackerEffect;
+    case "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES":
+      return { action: "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES" } as ICopyOpponentBuffToAlliedEntitiesEffect;
+    case "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED":
+      return { action: "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED" } as IForceSummonedDefenseToAttackLockedEffect;
+    case "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN":
+      return { action: "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN" } as IDirectAttackEnergyDrainAndSetSelfToTenEffect;
     case "RETURN_GRAVEYARD_CARD_TO_HAND":
       return { action: "RETURN_GRAVEYARD_CARD_TO_HAND", cardType: typeof value.cardType === "string" ? value.cardType : undefined } as IReturnGraveyardCardToHandEffect;
     case "RETURN_GRAVEYARD_CARD_TO_FIELD":

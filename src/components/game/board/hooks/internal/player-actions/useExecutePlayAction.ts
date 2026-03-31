@@ -21,6 +21,7 @@ type IExecutePlayActionParams = Pick<
   | "setPendingEntityReplacementTargetId"
   | "setIsAnimating"
   | "setLastError"
+  | "setSelectedCard"
   | "setSelectedBoardEntityInstanceId"
   | "setRevealedEntities"
 >;
@@ -38,9 +39,14 @@ export function useExecutePlayAction({
   setPendingEntityReplacementTargetId,
   setIsAnimating,
   setLastError,
+  setSelectedCard,
   setSelectedBoardEntityInstanceId,
   setRevealedEntities,
 }: IExecutePlayActionParams) {
+  function resolvePlayErrorMessage(error: unknown): string {
+    return error instanceof Error && error.message.trim().length > 0 ? error.message : "No se pudo jugar la carta.";
+  }
+
   return useCallback(
     async (mode: BattleMode, event: React.MouseEvent) => {
       event.stopPropagation();
@@ -55,6 +61,15 @@ export function useExecutePlayAction({
       setSelectedBoardEntityInstanceId(null);
       const selectedCardReference = playingCard.runtimeId ?? playingCard.id;
       if (playingCard.type === "ENTITY" && (mode === "ATTACK" || mode === "DEFENSE") && gameState.playerA.activeEntities.length >= 3) {
+        try {
+          GameEngine.playCard(gameState, gameState.playerA.id, selectedCardReference, mode);
+        } catch (error: unknown) {
+          const message = resolvePlayErrorMessage(error);
+          if (!message.includes("zona de entidades está llena")) {
+            setLastError({ code: "GAME_RULE_ERROR", message });
+            return;
+          }
+        }
         setPendingEntityReplacement({ cardId: selectedCardReference, mode, zone: "ENTITIES" });
         setPendingEntityReplacementTargetId(null);
         setLastError(null);
@@ -62,6 +77,15 @@ export function useExecutePlayAction({
       }
 
       if ((playingCard.type === "EXECUTION" || playingCard.type === "TRAP") && gameState.playerA.activeExecutions.length >= 3) {
+        try {
+          GameEngine.playCard(gameState, gameState.playerA.id, selectedCardReference, mode);
+        } catch (error: unknown) {
+          const message = resolvePlayErrorMessage(error);
+          if (!message.includes("zona de ejecuciones está llena")) {
+            setLastError({ code: "GAME_RULE_ERROR", message });
+            return;
+          }
+        }
         setPendingEntityReplacement({ cardId: selectedCardReference, mode, zone: "EXECUTIONS" });
         setPendingEntityReplacementTargetId(null);
         setLastError(null);
@@ -91,9 +115,19 @@ export function useExecutePlayAction({
         clearSelection();
         await sleep(1500);
         const reactiveTrap = findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
+        const playerCounterTrap = reactiveTrap
+          ? findReactiveTrap(gameState, gameState.playerA.id, "ON_OPPONENT_TRAP_ACTIVATED")
+          : null;
         if (reactiveTrap) {
           setRevealedEntities((previous) => addRevealedId(previous, reactiveTrap.instanceId));
           setActiveAttackerId(reactiveTrap.instanceId);
+          setSelectedCard(reactiveTrap.card);
+          await sleep(PLAYER_TRAP_PREVIEW_MS);
+        }
+        if (playerCounterTrap) {
+          setRevealedEntities((previous) => addRevealedId(previous, playerCounterTrap.instanceId));
+          setActiveAttackerId(playerCounterTrap.instanceId);
+          setSelectedCard(playerCounterTrap.card);
           await sleep(PLAYER_TRAP_PREVIEW_MS);
         }
         applyTransition((state) => GameEngine.resolveExecution(state, state.playerA.id, executionId));
@@ -101,6 +135,11 @@ export function useExecutePlayAction({
           await sleep(PLAYER_POST_RESOLUTION_MS);
           setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
         }
+        if (playerCounterTrap) {
+          await sleep(PLAYER_POST_RESOLUTION_MS);
+          setRevealedEntities((previous) => removeRevealedId(previous, playerCounterTrap.instanceId));
+        }
+        setSelectedCard(null);
         setActiveAttackerId(null);
         setIsAnimating(false);
         return;
@@ -122,6 +161,7 @@ export function useExecutePlayAction({
       setPendingEntityReplacementTargetId,
       setIsAnimating,
       setLastError,
+      setSelectedCard,
       setSelectedBoardEntityInstanceId,
       setRevealedEntities,
     ],

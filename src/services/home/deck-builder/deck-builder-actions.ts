@@ -73,6 +73,12 @@ export async function removeCardFromFusionDeckAction(context: IDeckActionContext
   return parseDeckResponse(response);
 }
 
+export async function readCurrentDeckAction(context: IDeckActionContext): Promise<IDeck> {
+  void context;
+  const response = await fetch("/api/home/deck/current", { method: "GET", cache: "no-store" });
+  return parseDeckResponse(response);
+}
+
 export async function moveDeckCardAction(context: IDeckActionContext, fromIndex: number, toIndex: number): Promise<IDeck> {
   void context;
   void fromIndex;

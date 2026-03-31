@@ -44,11 +44,13 @@ export function BoardMobilePhaseControls({
   if (shouldReduceCombatEffects) {
     return (
       <div
+        data-tutorial-id="tutorial-board-phase-controls"
         className="absolute z-[290] flex max-w-[calc(100vw-10px)] items-center gap-1 overflow-x-auto pointer-events-auto"
         style={{ left: `${dockLeftPx}px`, bottom: `${bottomPx}px` }}
       >
         <BoardMobilePhaseButton
           ariaLabel="Fase invocar"
+          tutorialId="tutorial-board-phase-invoke-button"
           disabled
           icon={Shield}
           text={isMain ? "Invocar" : undefined}
@@ -61,6 +63,7 @@ export function BoardMobilePhaseControls({
         />
         <BoardMobilePhaseButton
           ariaLabel="Pasar a combate"
+          tutorialId="tutorial-board-phase-battle-button"
           disabled={!canAdvance || !isMain}
           onClick={onAdvancePhase}
           icon={Swords}
@@ -74,6 +77,7 @@ export function BoardMobilePhaseControls({
         />
         <BoardMobilePhaseButton
           ariaLabel="Pasar turno"
+          tutorialId="tutorial-board-phase-pass-button"
           disabled={!canAdvance || !isBattle}
           onClick={onAdvancePhase}
           icon={SkipForward}
@@ -91,6 +95,7 @@ export function BoardMobilePhaseControls({
 
   return (
     <div
+      data-tutorial-id="tutorial-board-phase-controls"
       className="absolute z-[290] flex max-w-[calc(100vw-10px)] items-center gap-1 overflow-x-auto pointer-events-auto"
       style={{ left: `${dockLeftPx}px`, bottom: `${bottomPx}px` }}
     >
@@ -106,6 +111,7 @@ export function BoardMobilePhaseControls({
       </AnimatePresence>
       <BoardMobilePhaseButton
         ariaLabel="Fase invocar"
+        tutorialId="tutorial-board-phase-invoke-button"
         disabled
         icon={Shield}
         text={isMain ? "Invocar" : undefined}
@@ -118,6 +124,7 @@ export function BoardMobilePhaseControls({
       />
       <BoardMobilePhaseButton
         ariaLabel="Pasar a combate"
+        tutorialId="tutorial-board-phase-battle-button"
         disabled={!canAdvance || !isMain}
         onClick={onAdvancePhase}
         icon={Swords}
@@ -131,6 +138,7 @@ export function BoardMobilePhaseControls({
       />
       <BoardMobilePhaseButton
         ariaLabel="Pasar turno"
+        tutorialId="tutorial-board-phase-pass-button"
         disabled={!canAdvance || !isBattle}
         onClick={onAdvancePhase}
         icon={SkipForward}

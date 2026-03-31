@@ -3,6 +3,7 @@ import { SlotCellProps } from "@/components/game/board/battlefield/internal/slot
 
 export function areEqualSlotCellProps(previous: SlotCellProps, next: SlotCellProps): boolean {
   return (
+    previous.laneType === next.laneType &&
     previous.index === next.index &&
     previous.entity === next.entity &&
     previous.isOpponentSide === next.isOpponentSide &&
@@ -20,9 +21,7 @@ export function areEqualSlotCellProps(previous: SlotCellProps, next: SlotCellPro
     previous.cardXpCardId === next.cardXpCardId &&
     previous.cardXpAmount === next.cardXpAmount &&
     previous.cardXpEventId === next.cardXpEventId &&
-    previous.canActivateSelectedExecution === next.canActivateSelectedExecution &&
     previous.isMobileLayout === next.isMobileLayout &&
-    previous.onActivateSelectedExecution === next.onActivateSelectedExecution &&
     previous.onEntityClick === next.onEntityClick
   );
 }

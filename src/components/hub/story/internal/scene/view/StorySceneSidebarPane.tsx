@@ -11,6 +11,7 @@ interface IStorySceneSidebarPaneProps {
   interactionFeedback: string | null;
   smartActionLabel: string;
   canRunSmartAction: boolean;
+  onExitToHub: () => void;
   onSmartAction: () => void;
   onDeselect: () => void;
 }
@@ -26,6 +27,7 @@ export function StorySceneSidebarPane(props: IStorySceneSidebarPaneProps) {
         interactionFeedback={props.interactionFeedback}
         smartActionLabel={props.smartActionLabel}
         canRunSmartAction={props.canRunSmartAction}
+        onExitToHub={props.onExitToHub}
         onSmartAction={props.onSmartAction}
         onDeselect={props.onDeselect}
       />

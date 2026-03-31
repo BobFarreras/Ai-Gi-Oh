@@ -9,13 +9,15 @@ interface BoardPlayersLayerProps {
   player: IPlayer;
   opponent: IPlayer;
   isPlayerTurn: boolean;
-  opponentDifficulty: string;
   lastDamageTargetPlayerId: string | null;
   lastDamageAmount: number | null;
   lastDamageEventId: string | null;
   lastHealTargetPlayerId: string | null;
   lastHealAmount: number | null;
   lastHealEventId: string | null;
+  lastEnergyTargetPlayerId: string | null;
+  lastEnergyAmount: number | null;
+  lastEnergyEventId: string | null;
   playerAvatarUrl?: string | null;
   opponentAvatarUrl?: string | null;
   playerDialogueMessage?: string | null;
@@ -28,13 +30,15 @@ export function BoardPlayersLayer({
   player,
   opponent,
   isPlayerTurn,
-  opponentDifficulty,
   lastDamageTargetPlayerId,
   lastDamageAmount,
   lastDamageEventId,
   lastHealTargetPlayerId,
   lastHealAmount,
   lastHealEventId,
+  lastEnergyTargetPlayerId,
+  lastEnergyAmount,
+  lastEnergyEventId,
   playerAvatarUrl = null,
   opponentAvatarUrl = null,
   playerDialogueMessage = null,
@@ -49,15 +53,18 @@ export function BoardPlayersLayer({
         isOpponent={true}
         player={opponent}
         isActiveTurn={!isPlayerTurn}
-        badgeText={`Dificultad ${opponentDifficulty}`}
         wasDamagedThisAction={lastDamageTargetPlayerId === opponent.id}
         damageAmount={lastDamageAmount}
         damagePulseKey={lastDamageEventId}
         wasHealedThisAction={lastHealTargetPlayerId === opponent.id}
         healAmount={lastHealAmount}
         healPulseKey={lastHealEventId}
+        wasEnergyGainedThisAction={lastEnergyTargetPlayerId === opponent.id}
+        energyAmount={lastEnergyAmount}
+        energyPulseKey={lastEnergyEventId}
         avatarUrl={opponentAvatarUrl}
         dialogueMessage={opponentDialogueMessage}
+        containerClassName="!top-[clamp(0.35rem,1.1vh,0.9rem)]"
       />
       <PlayerHUD
         isOpponent={false}
@@ -69,6 +76,9 @@ export function BoardPlayersLayer({
         wasHealedThisAction={lastHealTargetPlayerId === player.id}
         healAmount={lastHealAmount}
         healPulseKey={lastHealEventId}
+        wasEnergyGainedThisAction={lastEnergyTargetPlayerId === player.id}
+        energyAmount={lastEnergyAmount}
+        energyPulseKey={lastEnergyEventId}
         avatarUrl={playerAvatarUrl}
         dialogueMessage={playerDialogueMessage}
         phase={phase}

@@ -15,8 +15,12 @@ export interface IHomeDropHandlerDeps {
   collectionState: ICollectionCard[];
   context: IDeckBuilderActionContext;
   play: (soundId: "ADD_CARD" | "REMOVE_CARD") => void;
-  beginMutation: () => number;
-  isLatestMutation: (mutationId: number) => boolean;
+  enqueueDeckMutation: <TResult>(input: {
+    applyOptimistic: () => void;
+    run: () => Promise<TResult>;
+    onSuccess: (result: TResult) => Promise<void> | void;
+    onError: (error: unknown) => Promise<void> | void;
+  }) => Promise<TResult | null>;
   setDeck: Dispatch<SetStateAction<IDeck>>;
   setDraggedCard: Dispatch<SetStateAction<IHomeDraggedCardState | null>>;
   setErrorMessage: Dispatch<SetStateAction<string | null>>;

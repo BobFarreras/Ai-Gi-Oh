@@ -21,6 +21,7 @@ export function areEqualBoardInteractiveLayerProps(previous: IBoardInteractiveLa
     previous.isHistoryOpen === next.isHistoryOpen &&
     previous.isPlayerTurn === next.isPlayerTurn &&
     previous.canActivateSelectedExecution === next.canActivateSelectedExecution &&
+    previous.pendingTrapActivationPrompt === next.pendingTrapActivationPrompt &&
     previous.canSetSelectedEntityToAttack === next.canSetSelectedEntityToAttack &&
     previous.lastDamageTargetPlayerId === next.lastDamageTargetPlayerId &&
     previous.lastDamageEventId === next.lastDamageEventId &&
@@ -33,12 +34,15 @@ export function areEqualBoardInteractiveLayerProps(previous: IBoardInteractiveLa
     previous.lastCardXpEventId === next.lastCardXpEventId &&
     previous.lastCardXpActorPlayerId === next.lastCardXpActorPlayerId &&
     previous.onGraveyardClick === next.onGraveyardClick &&
+    previous.onFusionDeckClick === next.onFusionDeckClick &&
     previous.onDestroyedClick === next.onDestroyedClick &&
     previous.onEntityClick === next.onEntityClick &&
     previous.onMandatoryCardSelect === next.onMandatoryCardSelect &&
     previous.onCardClick === next.onCardClick &&
     previous.onPlayAction === next.onPlayAction &&
     previous.onActivateSelectedExecution === next.onActivateSelectedExecution &&
+    previous.onActivatePendingTrap === next.onActivatePendingTrap &&
+    previous.onSkipPendingTrap === next.onSkipPendingTrap &&
     previous.onSetSelectedEntityToAttack === next.onSetSelectedEntityToAttack &&
     previous.onSelectCard === next.onSelectCard &&
     previous.onCloseCard === next.onCloseCard &&

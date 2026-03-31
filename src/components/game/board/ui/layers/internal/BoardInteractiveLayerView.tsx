@@ -6,6 +6,7 @@ import { MobilePlayerHand } from "@/components/game/board/MobilePlayerHand";
 import { PlayerHand } from "@/components/game/board/PlayerHand";
 import { SidePanels } from "@/components/game/board/SidePanels";
 import { BoardMobileSelectedCardOverlay } from "@/components/game/board/ui/overlays/BoardMobileSelectedCardOverlay";
+import { DrawCardFlowVfx } from "@/components/game/board/ui/layers/internal/DrawCardFlowVfx";
 import { IBoardInteractiveLayerViewProps } from "@/components/game/board/ui/layers/internal/board-interactive-types";
 
 export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps) {
@@ -45,11 +46,10 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
           cardXpActorPlayerId={props.lastCardXpActorPlayerId}
           playerId={props.player.id}
           opponentId={props.opponent.id}
-          canActivateSelectedExecution={props.canActivateSelectedExecution}
           viewportBoardScale={props.viewport.boardScale}
           isMobileLayout={props.isMobileLayout}
-          onActivateSelectedExecution={props.onActivateSelectedExecution}
           onGraveyardClick={props.onGraveyardClick}
+          onFusionDeckClick={props.onFusionDeckClick}
           onDestroyedClick={props.onDestroyedClick}
           onEntityClick={props.onEntityClick}
         />
@@ -103,12 +103,21 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
             selectedCard={props.selectedCard}
             gameState={props.gameState}
             isHistoryOpen={props.isHistoryOpen}
+            canActivateSelectedExecution={props.canActivateSelectedExecution}
+            pendingTrapActivationPrompt={props.pendingTrapActivationPrompt ?? null}
             onSelectCard={props.onSelectCard}
             onCloseCard={props.onCloseCard}
             onCloseHistory={props.onCloseHistory}
+            onActivateSelectedExecution={props.onActivateSelectedExecution}
+            onActivatePendingTrap={props.onActivatePendingTrap}
+            onSkipPendingTrap={props.onSkipPendingTrap}
           />
         </div>
       )}
+      <DrawCardFlowVfx
+        combatLog={props.gameState.combatLog}
+        playerId={props.player.id}
+      />
     </>
   );
 }

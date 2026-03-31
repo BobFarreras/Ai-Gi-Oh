@@ -13,6 +13,7 @@ interface BoardTopBarProps {
   isPlayerTurn: boolean;
   isPaused: boolean;
   hasWinner: boolean;
+  isTimerEnabled?: boolean;
   onTimeUp: () => void;
   onWarning: () => void;
 }
@@ -35,13 +36,14 @@ export function BoardTopBar({
   isPlayerTurn,
   isPaused,
   hasWinner,
+  isTimerEnabled = true,
   onTimeUp,
   onWarning,
 }: BoardTopBarProps) {
   const phaseInfo = getPhaseDisplay(phase);
 
   return (
-    <div className="absolute top-0 left-0 z-50 flex pointer-events-auto filter drop-shadow-[0_5px_15px_rgba(6,182,212,0.35)] w-full max-w-[420px]">
+    <div data-tutorial-id="tutorial-board-turn-timer-panel" className="absolute top-0 left-0 z-50 flex pointer-events-auto filter drop-shadow-[0_5px_15px_rgba(6,182,212,0.35)] w-full max-w-[420px]">
       
       {/* Contenedor Padre (Borde) */}
       <div 
@@ -95,16 +97,20 @@ export function BoardTopBar({
                     isPlayerTurn && !isPaused ? "text-cyan-400 animate-pulse" : "text-zinc-600"
                   )} 
                 />
-                <div className={cn(
+              <div className={cn(
                   "text-3xl sm:text-4xl font-black tracking-widest leading-none drop-shadow-lg",
                   isPlayerTurn && !isPaused ? "text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" : "text-zinc-500"
                 )}>
-                  <TurnTimer
-                    key={`${turn}-${phase}-${pendingActionType ?? "NONE"}-${pendingActionPlayerId ?? "NONE"}`}
-                    onTimeUp={onTimeUp}
-                    onWarning={onWarning}
-                    isActive={isPlayerTurn && !isPaused && !hasWinner}
-                  />
+                  {isTimerEnabled ? (
+                    <TurnTimer
+                      key={`${turn}-${phase}-${pendingActionType ?? "NONE"}-${pendingActionPlayerId ?? "NONE"}`}
+                      onTimeUp={onTimeUp}
+                      onWarning={onWarning}
+                      isActive={isPlayerTurn && !isPaused && !hasWinner}
+                    />
+                  ) : (
+                    <span className="tracking-[0.16em] text-zinc-500">--</span>
+                  )}
                 </div>
               </div>
 

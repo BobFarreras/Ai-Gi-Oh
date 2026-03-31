@@ -24,6 +24,9 @@ export interface IBoardCombatFeedback {
   lastHealTargetPlayerId: string | null;
   lastHealAmount: number | null;
   lastHealEventId: string | null;
+  lastEnergyTargetPlayerId: string | null;
+  lastEnergyAmount: number | null;
+  lastEnergyEventId: string | null;
   lastBuffTargetEntityIds: string[];
   lastBuffStat: string | null;
   lastBuffAmount: number | null;
@@ -103,9 +106,11 @@ function resolveLatestCardXpFeedback(events: ICombatLogEvent[]): {
 export function buildBoardCombatFeedback(events: ICombatLogEvent[]): IBoardCombatFeedback {
   const damageEvent = findLatestEvent(events, "DIRECT_DAMAGE");
   const healEvent = findLatestEvent(events, "HEAL_APPLIED");
+  const energyEvent = findLatestEvent(events, "ENERGY_GAINED");
   const buffEvent = findLatestEvent(events, "STAT_BUFF_APPLIED");
   const damagePayload = asPayload(damageEvent);
   const healPayload = asPayload(healEvent);
+  const energyPayload = asPayload(energyEvent);
   const buffPayload = asPayload(buffEvent);
   const latestCardXpFeedback = resolveLatestCardXpFeedback(events);
 
@@ -116,6 +121,9 @@ export function buildBoardCombatFeedback(events: ICombatLogEvent[]): IBoardComba
     lastHealTargetPlayerId: typeof healPayload.targetPlayerId === "string" ? healPayload.targetPlayerId : null,
     lastHealAmount: typeof healPayload.amount === "number" ? healPayload.amount : null,
     lastHealEventId: healEvent?.id ?? null,
+    lastEnergyTargetPlayerId: energyEvent?.actorPlayerId ?? null,
+    lastEnergyAmount: typeof energyPayload.amount === "number" ? energyPayload.amount : null,
+    lastEnergyEventId: energyEvent?.id ?? null,
     lastBuffTargetEntityIds: parseTargetEntityIds(buffPayload),
     lastBuffStat: typeof buffPayload.stat === "string" ? buffPayload.stat : null,
     lastBuffAmount: typeof buffPayload.amount === "number" ? buffPayload.amount : null,

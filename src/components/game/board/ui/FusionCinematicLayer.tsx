@@ -23,9 +23,9 @@ const FUSION_VIDEO_BY_CARD_ID: Record<string, string> = {
 };
 
 const FUSION_RENDER_BY_CARD_ID: Record<string, string> = {
-  "fusion-gemgpt": "/assets/renders/gemgpt.png",
-  "fusion-kaclauli": "/assets/renders/kaclauli.png",
-  "fusion-pytgress": "/assets/renders/pytgress.png",
+  "fusion-gemgpt": "/assets/renders/gemgpt.webp",
+  "fusion-kaclauli": "/assets/renders/kaclauli.webp",
+  "fusion-pytgress": "/assets/renders/pytgress.webp",
 };
 
 const VIDEO_FALLBACK_DURATION_MS = 12000;

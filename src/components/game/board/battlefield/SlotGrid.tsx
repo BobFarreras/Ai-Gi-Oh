@@ -25,9 +25,8 @@ interface SlotGridProps {
   cardXpCardId: string | null;
   cardXpAmount: number | null;
   cardXpEventId: string | null;
-  canActivateSelectedExecution: boolean;
+  hasBlockingTrapActivation: boolean;
   isMobileLayout?: boolean;
-  onActivateSelectedExecution: () => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: React.MouseEvent) => void;
 }
 
@@ -49,9 +48,8 @@ export function SlotGrid({
   cardXpCardId,
   cardXpAmount,
   cardXpEventId,
-  canActivateSelectedExecution,
+  hasBlockingTrapActivation,
   isMobileLayout = false,
-  onActivateSelectedExecution,
   onEntityClick,
 }: SlotGridProps) {
   const pinned = useMemo(() => {
@@ -73,10 +71,12 @@ export function SlotGrid({
         const entityCardKey = entity ? (entity.card.runtimeId ?? entity.card.id) : null;
         return (
           <SlotCell
+            laneType={laneType}
             key={index}
             index={index}
             entity={entity}
             isOpponentSide={isOpponentSide}
+            tutorialTargetId={isOpponentSide && laneType === "ENTITIES" ? `tutorial-board-opponent-zone-${index + 1}` : undefined}
             activeAttackerId={activeAttackerId}
             selectedCardId={selectedCardId}
             selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}
@@ -91,9 +91,8 @@ export function SlotGrid({
             cardXpCardId={cardXpCardId}
             cardXpAmount={cardXpAmount}
             cardXpEventId={cardXpEventId}
-            canActivateSelectedExecution={canActivateSelectedExecution}
+            hasBlockingTrapActivation={hasBlockingTrapActivation}
             isMobileLayout={isMobileLayout}
-            onActivateSelectedExecution={onActivateSelectedExecution}
             onEntityClick={onEntityClick}
           />
         );

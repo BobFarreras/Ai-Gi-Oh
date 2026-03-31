@@ -21,7 +21,6 @@ interface IStorySceneMapPaneProps {
   isMobileVerticalFlow?: boolean;
   onSelectNode: (nodeId: string | null) => void;
   centerRequestKey?: number;
-  onExitToHub?: () => void;
   onRewardCollectAnimationComplete: () => void;
   onRetreatAnimationComplete: () => void;
   dialog: {
@@ -51,7 +50,6 @@ export function StorySceneMapPane(props: IStorySceneMapPaneProps) {
         shouldPlayActEntryAnimation={props.shouldPlayActEntryAnimation ?? false}
         isMobileVerticalFlow={props.isMobileVerticalFlow ?? false}
         centerRequestKey={props.centerRequestKey ?? 0}
-        onExitToHub={props.onExitToHub}
         onSelectNode={props.onSelectNode}
         onRewardCollectAnimationComplete={props.onRewardCollectAnimationComplete}
         onRetreatAnimationComplete={props.onRetreatAnimationComplete}

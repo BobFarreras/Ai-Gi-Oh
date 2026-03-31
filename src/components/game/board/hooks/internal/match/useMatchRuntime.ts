@@ -1,9 +1,11 @@
 // src/components/game/board/hooks/internal/match/useMatchRuntime.ts - Encapsula reglas de runtime del duelo y transiciones del motor.
-import { MutableRefObject, useCallback, useEffect, useMemo } from "react";
+import { MutableRefObject, useCallback, useEffect, useMemo, useRef } from "react";
 import { GameState } from "@/core/use-cases/GameEngine";
+import { ICard } from "@/core/entities/ICard";
 import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
 import { resolveDifficultyFromCampaign } from "@/core/services/opponent/difficulty/resolveDifficultyFromCampaign";
 import { ICampaignProgress } from "@/core/services/opponent/difficulty/types";
+import { IOpponentStrategy } from "@/core/services/opponent/types";
 import { toBoardUiError } from "../boardError";
 import { useOpponentTurn } from "../useOpponentTurn";
 import { usePlayerActions } from "../usePlayerActions";
@@ -17,11 +19,25 @@ interface IUseMatchRuntimeParams {
   uiState: IUseMatchUiStateResult;
   winnerPlayerId: string | "DRAW" | null;
   isMatchStartLocked?: boolean;
+  disableOpponentAutomation?: boolean;
+  opponentStrategyOverride?: IOpponentStrategy | null;
 }
 
-export function useMatchRuntime({ campaignProgress, gameStateRef, uiState, winnerPlayerId, isMatchStartLocked = false }: IUseMatchRuntimeParams) {
+export function useMatchRuntime({
+  campaignProgress,
+  gameStateRef,
+  uiState,
+  winnerPlayerId,
+  isMatchStartLocked = false,
+  disableOpponentAutomation = false,
+  opponentStrategyOverride = null,
+}: IUseMatchRuntimeParams) {
+  const trapDecisionResolverRef = useRef<((activate: boolean) => void) | null>(null);
   const opponentDifficulty = useMemo(() => resolveDifficultyFromCampaign(campaignProgress), [campaignProgress]);
-  const opponentStrategy = useMemo(() => new HeuristicOpponentStrategy({ difficulty: opponentDifficulty }), [opponentDifficulty]);
+  const opponentStrategy = useMemo(
+    () => opponentStrategyOverride ?? new HeuristicOpponentStrategy({ difficulty: opponentDifficulty }),
+    [opponentDifficulty, opponentStrategyOverride],
+  );
 
   useEffect(() => {
     gameStateRef.current = uiState.gameState;
@@ -58,6 +74,34 @@ export function useMatchRuntime({ campaignProgress, gameStateRef, uiState, winne
     return false;
   }, [gameStateRef, uiState, winnerPlayerId]);
 
+  const requestTrapActivationDecision = useCallback(
+    (trapCard: ICard, trigger: "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED" | "ON_OPPONENT_TRAP_ACTIVATED"): Promise<boolean> =>
+      new Promise<boolean>((resolve) => {
+        trapDecisionResolverRef.current = resolve;
+        uiState.setSelectedCard(trapCard);
+        uiState.setPendingTrapActivationPrompt({ trapCard, trigger });
+      }),
+    [uiState],
+  );
+
+  const resolveTrapActivationDecision = useCallback(
+    (activate: boolean) => {
+      uiState.setPendingTrapActivationPrompt(null);
+      uiState.clearSelection();
+      const resolver = trapDecisionResolverRef.current;
+      trapDecisionResolverRef.current = null;
+      resolver?.(activate);
+    },
+    [uiState],
+  );
+
+  useEffect(() => {
+    const prompt = uiState.pendingTrapActivationPrompt;
+    if (!prompt) return;
+    if (uiState.selectedCard?.id === prompt.trapCard.id) return;
+    resolveTrapActivationDecision(false);
+  }, [resolveTrapActivationDecision, uiState.pendingTrapActivationPrompt, uiState.selectedCard]);
+
   useOpponentTurn({
     gameState: uiState.gameState,
     isAnimating: uiState.isActionLocked,
@@ -65,11 +109,14 @@ export function useMatchRuntime({ campaignProgress, gameStateRef, uiState, winne
     strategy: opponentStrategy,
     duelWinnerId: winnerPlayerId,
     applyTransition,
+    disableAutomation: disableOpponentAutomation,
     clearSelection: uiState.clearSelection,
     clearError: uiState.clearError,
     setIsAnimating: uiState.setIsAnimating,
     setActiveAttackerId: uiState.setActiveAttackerId,
     setRevealedEntities: uiState.setRevealedEntities,
+    setSelectedCard: uiState.setSelectedCard,
+    requestTrapActivationDecision,
   });
 
   const turnControls = useBoardTurnControls({
@@ -134,5 +181,8 @@ export function useMatchRuntime({ campaignProgress, gameStateRef, uiState, winne
     canSetSelectedEntityToAttack: turnControls.canSetSelectedEntityToAttack,
     confirmEntityReplacement,
     cancelEntityReplacement,
+    pendingTrapActivationPrompt: uiState.pendingTrapActivationPrompt,
+    activatePendingTrap: () => resolveTrapActivationDecision(true),
+    skipPendingTrap: () => resolveTrapActivationDecision(false),
   };
 }

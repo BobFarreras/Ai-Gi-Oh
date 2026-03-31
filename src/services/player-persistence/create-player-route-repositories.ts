@@ -5,6 +5,8 @@ import { SupabaseDeckRepository } from "@/infrastructure/persistence/supabase/Su
 import { SupabaseMarketRepository } from "@/infrastructure/persistence/supabase/SupabaseMarketRepository";
 import { SupabasePlayerBattleExperienceBatchRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerBattleExperienceBatchRepository";
 import { SupabasePlayerCardProgressRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerCardProgressRepository";
+import { SupabaseTrainingMatchClaimRepository } from "@/infrastructure/persistence/supabase/SupabaseTrainingMatchClaimRepository";
+import { SupabaseTrainingProgressRepository } from "@/infrastructure/persistence/supabase/SupabaseTrainingProgressRepository";
 import { SupabaseTransactionRepository } from "@/infrastructure/persistence/supabase/SupabaseTransactionRepository";
 import { SupabaseWalletRepository } from "@/infrastructure/persistence/supabase/SupabaseWalletRepository";
 import { createSupabaseRouteClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-route-client";
@@ -22,6 +24,8 @@ export async function createPlayerRouteRepositories(request: NextRequest, respon
   const deckRepository = new SupabaseDeckRepository(client, collectionRepository);
   const playerCardProgressRepository = new SupabasePlayerCardProgressRepository(client);
   const playerBattleExperienceBatchRepository = new SupabasePlayerBattleExperienceBatchRepository(client);
+  const trainingProgressRepository = new SupabaseTrainingProgressRepository(client);
+  const trainingMatchClaimRepository = new SupabaseTrainingMatchClaimRepository(client);
   return {
     client,
     marketRepository,
@@ -31,5 +35,7 @@ export async function createPlayerRouteRepositories(request: NextRequest, respon
     deckRepository,
     playerCardProgressRepository,
     playerBattleExperienceBatchRepository,
+    trainingProgressRepository,
+    trainingMatchClaimRepository,
   };
 }

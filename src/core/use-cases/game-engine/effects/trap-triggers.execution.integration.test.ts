@@ -6,6 +6,7 @@ import {
   createTrapBaseState,
   createTrapEntity,
   executionCard,
+  trapCopyOpponentBuff,
   trapOnExecution,
   trapReduceDefenseOnExecution,
 } from "@/core/use-cases/game-engine/effects/trap-triggers.test-fixtures";
@@ -73,5 +74,37 @@ describe("Trap triggers on execution", () => {
 
     const defender = next.playerA.activeEntities.find((entity) => entity.instanceId === "p1-defender");
     expect(defender?.card.defense).toBe(1100);
+  });
+
+  it("debería copiar buff rival a todas las entidades del dueño de la trampa", () => {
+    const base = createTrapBaseState();
+    const buffExecution = {
+      id: "exec-buff-defense",
+      name: "Buff Defense",
+      description: "",
+      type: "EXECUTION" as const,
+      faction: "OPEN_SOURCE" as const,
+      cost: 1,
+      effect: { action: "BOOST_DEFENSE_BY_ARCHETYPE" as const, archetype: "TOOL" as const, value: 200 },
+    };
+    let state: GameState = {
+      ...base,
+      phase: "MAIN_1",
+      playerA: {
+        ...base.playerA,
+        hand: [buffExecution],
+        activeEntities: [createTestBoardEntity("p1-tool", { ...executionCard, id: "entity-tool-a", type: "ENTITY", attack: 900, defense: 600, archetype: "TOOL" }, "ATTACK")],
+      },
+      playerB: {
+        ...base.playerB,
+        activeEntities: [createTestBoardEntity("p2-entity", { ...executionCard, id: "entity-guardian", type: "ENTITY", attack: 800, defense: 700 }, "DEFENSE")],
+        activeExecutions: [createTrapEntity("t-copy", trapCopyOpponentBuff)],
+      },
+    };
+    state = GameEngine.playCard(state, "p1", "exec-buff-defense", "ACTIVATE");
+    const executionId = state.playerA.activeExecutions[0].instanceId;
+    const next = GameEngine.resolveExecution(state, "p1", executionId);
+    const copiedBuffEntity = next.playerB.activeEntities.find((entity) => entity.instanceId === "p2-entity");
+    expect(copiedBuffEntity?.card.defense).toBe(900);
   });
 });

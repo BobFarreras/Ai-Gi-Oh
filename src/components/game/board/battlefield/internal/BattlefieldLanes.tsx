@@ -22,9 +22,8 @@ interface BattlefieldLanesProps {
   cardXpCardId: string | null;
   cardXpAmount: number | null;
   cardXpEventId: string | null;
-  canActivateSelectedExecution: boolean;
+  hasBlockingTrapActivation: boolean;
   isMobileLayout?: boolean;
-  onActivateSelectedExecution: () => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: MouseEvent) => void;
 }
 
@@ -45,11 +44,11 @@ export function BattlefieldLanes({
   cardXpCardId,
   cardXpAmount,
   cardXpEventId,
-  canActivateSelectedExecution,
+  hasBlockingTrapActivation,
   isMobileLayout = false,
-  onActivateSelectedExecution,
   onEntityClick,
 }: BattlefieldLanesProps) {
+  const shouldEmphasizePlayerExecutionLane = !isOpponentSide && highlightedEntityIds.length > 0;
   const upperLaneEntities = isOpponentSide ? activeExecutions : activeEntities;
   const lowerLaneEntities = isOpponentSide ? activeEntities : activeExecutions;
   return (
@@ -73,13 +72,12 @@ export function BattlefieldLanes({
           cardXpCardId={cardXpCardId}
           cardXpAmount={cardXpAmount}
           cardXpEventId={cardXpEventId}
-          canActivateSelectedExecution={canActivateSelectedExecution}
+          hasBlockingTrapActivation={hasBlockingTrapActivation}
           isMobileLayout={isMobileLayout}
-          onActivateSelectedExecution={onActivateSelectedExecution}
           onEntityClick={onEntityClick}
         />
       </div>
-      <div className={cn("flex gap-3", isOpponentSide ? "" : "opacity-60")} style={{ transformStyle: "preserve-3d" }}>
+      <div className={cn("flex gap-3", isOpponentSide ? "" : shouldEmphasizePlayerExecutionLane ? "opacity-100" : "opacity-60")} style={{ transformStyle: "preserve-3d" }}>
         <SlotGrid
           laneType={isOpponentSide ? "ENTITIES" : "EXECUTIONS"}
           entities={lowerLaneEntities}
@@ -98,9 +96,8 @@ export function BattlefieldLanes({
           cardXpCardId={cardXpCardId}
           cardXpAmount={cardXpAmount}
           cardXpEventId={cardXpEventId}
-          canActivateSelectedExecution={canActivateSelectedExecution}
+          hasBlockingTrapActivation={hasBlockingTrapActivation}
           isMobileLayout={isMobileLayout}
-          onActivateSelectedExecution={onActivateSelectedExecution}
           onEntityClick={onEntityClick}
         />
       </div>

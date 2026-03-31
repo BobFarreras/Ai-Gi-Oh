@@ -18,6 +18,9 @@
 1. Validaciones de seguridad en APIs de auth (origen/rate-limit, según módulo).
 2. En lectura de sesión actual se prioriza `auth.getUser()` para datos de usuario autenticados.
 3. Errores tipados y mensajes controlados en capa de aplicación.
+4. Endpoints `api/admin/*` con autorización server-side sobre `admin_users`, mutaciones con rate-limit por usuario/IP y auditoría en `admin_audit_log`.
+5. Portal admin con `robots noindex` y respuestas API `no-store` para reducir exposición accidental.
+6. Observabilidad admin vía `GET /api/admin/audit` y panel read-only de auditoría con filtros/paginación.
 
 ## Referencias
 

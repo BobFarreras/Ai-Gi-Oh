@@ -14,7 +14,7 @@ export function DuelResultExperienceContent({
 }: IDuelResultExperienceContentProps) {
   if (isBattleExperiencePending) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div data-tutorial-id="tutorial-board-duel-result-experience" className="flex h-full items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
@@ -26,14 +26,14 @@ export function DuelResultExperienceContent({
 
   if (battleExperienceSummary.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div data-tutorial-id="tutorial-board-duel-result-experience" className="flex h-full items-center justify-center">
         <p className={emptyLabelClassName}>Sin datos de experiencia.</p>
       </div>
     );
   }
 
   return (
-    <div className={wrapperClassName}>
+    <div data-tutorial-id="tutorial-board-duel-result-experience" className={wrapperClassName}>
       <div className={gridClassName}>
         {battleExperienceSummary.map((entry, index) => {
           const card = battleExperienceCardLookup[entry.cardId];

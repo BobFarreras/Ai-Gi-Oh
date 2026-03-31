@@ -46,12 +46,13 @@ export function DuelResultOverlay({
           exit={{ opacity: 0 }}
           className="absolute inset-0 z-[170] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-8"
         >
-          <motion.div
-            initial={{ scale: 0.85, opacity: 0, y: 40 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 220, damping: 22 }}
-            className="relative flex h-full max-h-[900px] w-full max-w-[1440px] flex-col rounded-2xl border border-cyan-500/50 bg-zinc-950/90 p-6 sm:p-8 shadow-[0_0_100px_rgba(6,182,212,0.2)] overflow-hidden"
-          >
+        <motion.div
+          initial={{ scale: 0.85, opacity: 0, y: 40 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 220, damping: 22 }}
+          data-tutorial-id="tutorial-board-duel-result-overlay"
+          className="relative flex h-full max-h-[900px] w-full max-w-[1440px] flex-col rounded-2xl border border-cyan-500/50 bg-zinc-950/90 p-6 sm:p-8 shadow-[0_0_100px_rgba(6,182,212,0.2)] overflow-hidden"
+        >
             <div className="absolute inset-0 bg-[radial-gradient(#06b6d4_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.03] pointer-events-none" />
             <DuelResultFireworks isVisible={state.showFireworks} />
             <div className="relative z-10 mb-6 flex flex-row items-center justify-center gap-4 border-b border-cyan-900/50 pb-4">

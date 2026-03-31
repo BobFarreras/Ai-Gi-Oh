@@ -6,7 +6,7 @@ describe("resolveStoryRewardCardVisual", () => {
   it("devuelve imagen real para rewardCardId conocido", () => {
     const visual = resolveStoryRewardCardVisual("trap-windows92-crash");
     expect(visual).toEqual({
-      src: "/assets/renders/windows92.png",
+      src: "/assets/renders/windows92.webp",
       alt: "Carta recompensa Windows92",
     });
   });
@@ -14,7 +14,7 @@ describe("resolveStoryRewardCardVisual", () => {
   it("aplica fallback para rewardCardId desconocido", () => {
     const visual = resolveStoryRewardCardVisual("unknown-card");
     expect(visual).toEqual({
-      src: "/assets/renders/wrap.png",
+      src: "/assets/renders/wrap.webp",
       alt: "Carta recompensa",
     });
   });

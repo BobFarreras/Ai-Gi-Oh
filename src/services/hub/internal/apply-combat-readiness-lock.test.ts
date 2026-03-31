@@ -7,7 +7,7 @@ import { applyCombatReadinessLock } from "@/services/hub/internal/apply-combat-r
 const BASE_SECTIONS: IHubSection[] = [
   { id: "home", type: "HOME", title: "Arsenal", description: "", href: "/hub/home", isLocked: false, lockReason: null },
   { id: "market", type: "MARKET", title: "Mercado", description: "", href: "/hub/market", isLocked: false, lockReason: null },
-  { id: "training", type: "TRAINING", title: "Entrenamiento", description: "", href: "/hub/training", isLocked: false, lockReason: null },
+  { id: "training", type: "TRAINING", title: "Entrenamiento", description: "", href: "/hub/academy", isLocked: false, lockReason: null },
   { id: "story", type: "STORY", title: "Historia", description: "", href: "/hub/story", isLocked: false, lockReason: null },
   { id: "multiplayer", type: "MULTIPLAYER", title: "Multijugador", description: "", href: "/hub/multiplayer", isLocked: false, lockReason: null },
 ];

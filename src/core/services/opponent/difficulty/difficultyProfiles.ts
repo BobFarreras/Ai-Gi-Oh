@@ -46,6 +46,28 @@ const DIFFICULTY_PROFILES: Record<OpponentDifficulty, IOpponentDifficultyProfile
     entityTempoBias: 1.4,
     minAttackScore: 180,
   },
+  MASTER: {
+    key: "MASTER",
+    directAttackBias: 460,
+    lethalBias: 12000,
+    destroyReward: 2600,
+    attackerLossPenalty: 3900,
+    selfDamagePenaltyMultiplier: 3.1,
+    executionAggroBias: 2.05,
+    entityTempoBias: 1.55,
+    minAttackScore: 260,
+  },
+  MYTHIC: {
+    key: "MYTHIC",
+    directAttackBias: 620,
+    lethalBias: 16000,
+    destroyReward: 3100,
+    attackerLossPenalty: 4600,
+    selfDamagePenaltyMultiplier: 3.6,
+    executionAggroBias: 2.3,
+    entityTempoBias: 1.7,
+    minAttackScore: 340,
+  },
 };
 
 export function getDifficultyProfile(difficulty: OpponentDifficulty): IOpponentDifficultyProfile {

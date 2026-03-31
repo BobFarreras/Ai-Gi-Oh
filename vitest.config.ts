@@ -9,6 +9,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./setup.ts'],
     globals: true,
+    exclude: ['e2e/**', 'node_modules/**', '.next/**'],
     onConsoleLog(log) {
       if (log.includes("THREE.WARNING: Multiple instances of Three.js being imported.")) {
         return false;

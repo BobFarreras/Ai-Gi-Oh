@@ -1,26 +1,37 @@
 // src/core/use-cases/game-engine/combat/execute-attack.ts - Orquesta declaración de ataque, reacción de trampas y resolución de daño/combate.
-import { resolveTrapTrigger } from "@/core/use-cases/game-engine/effects/resolve-trap-trigger";
 import { appendDirectAttackLogs, appendEntityBattleLogs } from "@/core/use-cases/game-engine/combat/internal/attack-logging";
 import { resolveDirectAttackState, resolveEntityBattleState } from "@/core/use-cases/game-engine/combat/internal/attack-resolution";
 import { validateAttackDeclaration, validateAttackerEntity } from "@/core/use-cases/game-engine/combat/internal/attack-validation";
+import { resolveReactiveTrapEvent } from "@/core/use-cases/game-engine/effects/internal/trap-trigger-registry";
 import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
+
+interface IExecuteAttackOptions {
+  skipReactivePlayerIds?: string[];
+  skipTrapEventTypes?: ("ATTACK_DECLARED" | "DIRECT_ATTACK_DECLARED")[];
+}
 
 export function executeAttack(
   state: GameState,
   attackerPlayerId: string,
   attackerInstanceId: string,
   defenderInstanceId?: string,
+  options?: IExecuteAttackOptions,
 ): GameState {
   validateAttackDeclaration(state, attackerPlayerId);
 
   const { player: attacker, opponent: defender } = getPlayerPair(state, attackerPlayerId);
   validateAttackerEntity(attacker.activeEntities.find((entity) => entity.instanceId === attackerInstanceId));
 
-  const stateAfterTrap = resolveTrapTrigger(state, defender.id, "ON_OPPONENT_ATTACK_DECLARED", {
-    attackerPlayerId,
-    attackerInstanceId,
-  });
+  const stateAfterTrap = resolveReactiveTrapEvent(
+    state,
+    defender.id,
+    { type: "ATTACK_DECLARED", context: { attackerPlayerId, attackerInstanceId } },
+    {
+      skipReactivePlayerIds: options?.skipReactivePlayerIds,
+      skipEventTypes: options?.skipTrapEventTypes,
+    },
+  );
   const { player: currentAttacker, opponent: currentDefender, isPlayerA } = getPlayerPair(stateAfterTrap, attackerPlayerId);
   const currentAttackerEntity = currentAttacker.activeEntities.find((entity) => entity.instanceId === attackerInstanceId);
 
@@ -29,19 +40,31 @@ export function executeAttack(
   }
 
   if (!defenderInstanceId) {
+    const stateAfterDirectTrap = resolveReactiveTrapEvent(
+      stateAfterTrap,
+      currentDefender.id,
+      { type: "DIRECT_ATTACK_DECLARED", context: { attackerPlayerId, attackerInstanceId } },
+      {
+        skipReactivePlayerIds: options?.skipReactivePlayerIds,
+        skipEventTypes: options?.skipTrapEventTypes,
+      },
+    );
+    const { player: directAttacker, opponent: directDefender, isPlayerA: isPlayerADirect } = getPlayerPair(stateAfterDirectTrap, attackerPlayerId);
+    const directAttackerEntity = directAttacker.activeEntities.find((entity) => entity.instanceId === attackerInstanceId);
+    if (!directAttackerEntity) return stateAfterDirectTrap;
     const resolvedDirectAttack = resolveDirectAttackState({
-      state: stateAfterTrap,
-      attacker: currentAttacker,
-      defender: currentDefender,
-      attackerEntity: currentAttackerEntity,
+      state: stateAfterDirectTrap,
+      attacker: directAttacker,
+      defender: directDefender,
+      attackerEntity: directAttackerEntity,
       attackerInstanceId,
-      isPlayerA,
+      isPlayerA: isPlayerADirect,
     });
     return appendDirectAttackLogs(
       resolvedDirectAttack.state,
       attackerPlayerId,
-      currentAttackerEntity,
-      currentDefender.id,
+      directAttackerEntity,
+      directDefender.id,
       resolvedDirectAttack.damage,
     );
   }

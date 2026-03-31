@@ -48,6 +48,8 @@ export function BoardActionControlsSection({ board, screen, isMobile }: IBoardVi
           onToggleAutoPhase={toggleAutoPhase}
           onToggleHistory={() => {
             board.playButtonClick();
+            // Evita doble panel lateral (detalle + log) que degrada el layout en viewports ajustados.
+            board.clearSelection();
             board.setIsHistoryOpen((previous) => !previous);
           }}
           onSetSelectedEntityToAttack={() => {
@@ -62,6 +64,7 @@ export function BoardActionControlsSection({ board, screen, isMobile }: IBoardVi
           isAutoPhaseEnabled={board.isAutoPhaseEnabled}
           isHistoryOpen={board.isHistoryOpen}
           canSetSelectedEntityToAttack={board.canSetSelectedEntityToAttack}
+          canActivateSelectedExecution={false}
           onToggleMute={() => {
             board.playButtonClick();
             board.toggleMute();
@@ -73,12 +76,15 @@ export function BoardActionControlsSection({ board, screen, isMobile }: IBoardVi
           onToggleAutoPhase={toggleAutoPhase}
           onToggleHistory={() => {
             board.playButtonClick();
+            // Evita doble panel lateral (detalle + log) que degrada el layout en viewports ajustados.
+            board.clearSelection();
             board.setIsHistoryOpen((previous) => !previous);
           }}
           onSetSelectedEntityToAttack={() => {
             board.playButtonClick();
             board.setSelectedEntityToAttack();
           }}
+          onActivateSelectedExecution={() => undefined}
         />
       )}
     </>

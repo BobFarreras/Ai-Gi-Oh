@@ -32,6 +32,7 @@ export function usePlayerActions(params: IUsePlayerActionsParams): IPlayerAction
     setPendingEntityReplacementTargetId: params.setPendingEntityReplacementTargetId,
     setIsAnimating: params.setIsAnimating,
     setLastError: params.setLastError,
+    setSelectedCard: params.setSelectedCard,
     setSelectedBoardEntityInstanceId: params.setSelectedBoardEntityInstanceId,
     setRevealedEntities: params.setRevealedEntities,
   });

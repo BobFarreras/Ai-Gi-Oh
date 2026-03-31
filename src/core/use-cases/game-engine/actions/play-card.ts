@@ -8,6 +8,7 @@ import {
   createPlayedBoardEntity,
   resolveValidatedPlayMode,
 } from "@/core/use-cases/game-engine/actions/internal/play-card-resolution";
+import { resolveReactiveTrapEvent } from "@/core/use-cases/game-engine/effects/internal/trap-trigger-registry";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
@@ -45,9 +46,17 @@ export function playCard(state: GameState, playerId: string, cardId: string, mod
     playerB: isPlayerA ? opponent : updatedPlayer,
   };
 
-  return appendCombatLogEvent(nextState, playerId, "CARD_PLAYED", {
+  const withPlayLog = appendCombatLogEvent(nextState, playerId, "CARD_PLAYED", {
     cardId: card.id,
     cardType: card.type,
     mode: resolvedMode,
+    effectAction: card.effect?.action ?? null,
   });
+  if (card.type === "ENTITY" && resolvedMode === "SET") {
+    return resolveReactiveTrapEvent(withPlayLog, opponent.id, {
+      type: "ENTITY_SET_PLAYED",
+      context: { summonedPlayerId: playerId, summonedInstanceId: boardEntity.instanceId },
+    });
+  }
+  return withPlayLog;
 }

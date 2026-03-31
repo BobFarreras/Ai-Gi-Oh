@@ -8,49 +8,50 @@ import { MarketPackRevealOverlay } from "@/components/hub/market/reveal/MarketPa
 import { HubErrorDialog } from "@/components/hub/internal/HubErrorDialog";
 import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
 import { useMarketSceneState } from "@/components/hub/market/internal/useMarketSceneState";
-import { ICard } from "@/core/entities/ICard";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
 import { IMarketCatalog } from "@/core/use-cases/market/GetMarketCatalogUseCase";
-import { startTransition, useCallback } from "react";
+import { isDesktopLayoutViewport } from "@/components/internal/layout-breakpoints";
+import { IMarketPurchaseActionOverrides, IMarketTutorialActions } from "@/components/hub/market/internal/market-tutorial-contract";
+import { useMarketSceneTutorialFlow } from "@/components/hub/market/internal/use-market-scene-tutorial-flow";
 
 interface MarketSceneProps {
   playerId: string;
   initialCatalog: IMarketCatalog;
   initialTransactions: IMarketTransaction[];
   initialCollection: ICollectionCard[];
+  tutorialActions?: IMarketTutorialActions;
+  purchaseActionOverrides?: IMarketPurchaseActionOverrides;
+  tutorialCurrentStepId?: string | null;
+  tutorialAutoBuyPackRequestId?: number;
 }
 
 export function MarketScene(props: MarketSceneProps) {
-  const state = useMarketSceneState(props);
+  const state = useMarketSceneState({
+    playerId: props.playerId,
+    initialCatalog: props.initialCatalog,
+    initialTransactions: props.initialTransactions,
+    initialCollection: props.initialCollection,
+    purchaseActionOverrides: props.purchaseActionOverrides,
+  });
   const viewportWidth = useViewportWidth();
-  const isDesktopLayout = viewportWidth >= 1280;
-  /**
-   * Selección inmediata para evitar parpadeo del inspector móvil:
-   * el contenido de la carta debe estar listo antes de abrir el diálogo.
-   */
-  const handleSelectListing = useCallback((listing: (typeof state.visibleListings)[number]) => {
-    state.setSelectedListing(listing);
-    state.setSelectedCard(listing.card);
-  }, [state]);
-  const handleSelectVaultCard = useCallback((card: ICard) => {
-    const listing = state.catalog.listings.find((currentListing) => currentListing.card.id === card.id) ?? null;
-    startTransition(() => {
-      state.setNameQuery("");
-      state.setTypeFilter("ALL");
-    });
-    if (!listing) {
-      state.setSelectedPackId(null);
-    } else if (!listing.isAvailable) {
-      const matchingPack = state.catalog.packs.find((pack) => pack.previewCardIds.includes(card.id));
-      state.setSelectedPackId(matchingPack?.id ?? null);
-    } else {
-      state.setSelectedPackId(null);
-    }
-    state.setSelectedListing(listing);
-    state.setSelectedCard(card);
-  }, [state]);
-
+  const isDesktopLayout = isDesktopLayoutViewport(viewportWidth);
+  const {
+    tutorialForcedMobilePanel,
+    tutorialForceInspectorOpen,
+    tutorialForceMobileFiltersOpen,
+    handleSelectListing,
+    handleSelectVaultCard,
+    handleBuyCard,
+    handleSelectPack,
+  } = useMarketSceneTutorialFlow({
+    state,
+    tutorialActions: props.tutorialActions,
+    tutorialCurrentStepId: props.tutorialCurrentStepId,
+    tutorialAutoBuyPackRequestId: props.tutorialAutoBuyPackRequestId,
+    purchaseActionOverrides: props.purchaseActionOverrides,
+  });
+  const handleBuyPack = state.handleBuyPack;
   return (
     <main className="hub-control-room-bg relative box-border flex h-[100dvh] w-full flex-col items-center justify-center overflow-hidden px-3 py-3 text-slate-100 sm:px-5">
       <section className="mx-auto flex h-full max-h-[95dvh] w-full max-w-screen-2xl min-w-0 flex-col overflow-hidden rounded-3xl border border-cyan-900/40 bg-[#020a14]/88 p-3 shadow-[0_24px_50px_rgba(2,5,14,0.86)] backdrop-blur-xl transition-all sm:p-4">
@@ -66,6 +67,8 @@ export function MarketScene(props: MarketSceneProps) {
           onOrderDirectionToggle={() =>
             state.setOrderDirection((previous) => (previous === "ASC" ? "DESC" : "ASC"))
           }
+          tutorialActions={props.tutorialActions}
+          tutorialForceMobileFiltersOpen={props.tutorialActions ? tutorialForceMobileFiltersOpen : false}
         />
 
         {isDesktopLayout ? (
@@ -78,12 +81,18 @@ export function MarketScene(props: MarketSceneProps) {
             collection={state.visibleCollection}
             transactions={state.transactions}
             catalogListings={state.catalog.listings}
-            onBuyCard={state.handleBuyCard}
-            onBuyPack={state.handleBuyPack}
-            onSelectPack={state.setSelectedPackId}
+            onBuyCard={handleBuyCard}
+            onBuyPack={handleBuyPack}
+            onSelectPack={handleSelectPack}
             onClearPackSelection={() => state.setSelectedPackId(null)}
             onSelectListing={handleSelectListing}
             onSelectVaultCard={handleSelectVaultCard}
+            onTutorialBuyPack={props.tutorialActions?.onBuyPack}
+            onVaultTabChange={(tab) =>
+              tab === "COLLECTION"
+                ? props.tutorialActions?.onOpenVaultCollection?.()
+                : props.tutorialActions?.onOpenVaultHistory?.()
+            }
           />
         ) : (
           <MarketMobileStack
@@ -96,12 +105,21 @@ export function MarketScene(props: MarketSceneProps) {
             transactions={state.transactions}
             catalogListings={state.catalog.listings}
             isBuyingPack={state.isBuyingPack}
-            onBuyCard={state.handleBuyCard}
-            onBuyPack={state.handleBuyPack}
-            onSelectPack={state.setSelectedPackId}
+            onBuyCard={handleBuyCard}
+            onBuyPack={handleBuyPack}
+            onSelectPack={handleSelectPack}
             onShowFreeListings={() => state.setSelectedPackId(null)}
             onSelectListing={handleSelectListing}
             onSelectVaultCard={handleSelectVaultCard}
+            onTutorialBuyPack={props.tutorialActions?.onBuyPack}
+            onVaultTabChange={(tab) =>
+              tab === "COLLECTION"
+                ? props.tutorialActions?.onOpenVaultCollection?.()
+                : props.tutorialActions?.onOpenVaultHistory?.()
+            }
+            tutorialForcedPanel={props.tutorialActions ? tutorialForcedMobilePanel : null}
+            tutorialForceInspectorOpen={props.tutorialActions ? tutorialForceInspectorOpen : false}
+            tutorialCurrentStepId={props.tutorialActions ? props.tutorialCurrentStepId ?? null : null}
           />
         )}
       </section>

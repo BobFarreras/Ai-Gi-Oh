@@ -21,6 +21,9 @@ function createEntity(instanceId: string): IBoardEntity {
     },
   };
 }
+function createClickEvent(detail = 1): React.MouseEvent {
+  return { detail } as React.MouseEvent;
+}
 
 describe("handleOwnEntityClick reemplazo", () => {
   it("debe seleccionar objetivo y esperar confirmación, sin invocar todavía", async () => {
@@ -31,6 +34,7 @@ describe("handleOwnEntityClick reemplazo", () => {
 
     const result = await handleOwnEntityClick({
       entity,
+      event: createClickEvent(),
       activeAttackerId: null,
       applyTransition,
       clearSelection: vi.fn(),
@@ -85,6 +89,7 @@ describe("handleOwnEntityClick reemplazo", () => {
 
     const result = await handleOwnEntityClick({
       entity: execution,
+      event: createClickEvent(),
       activeAttackerId: null,
       applyTransition,
       clearSelection: vi.fn(),

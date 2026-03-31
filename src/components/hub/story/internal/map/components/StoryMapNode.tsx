@@ -25,10 +25,10 @@ function resolveHologramAsset(node: IStoryMapNodeRuntime): { src: string; alt: s
       alt: node.opponentName || "Oponente",
     };
   }
-  if (node.nodeType === "REWARD_NEXUS") return { src: "/assets/renders/nexus.png", alt: "Nexus" };
+  if (node.nodeType === "REWARD_NEXUS") return { src: "/assets/renders/nexus.webp", alt: "Nexus" };
   if (node.nodeType === "REWARD_CARD") return resolveStoryRewardCardVisual(node.rewardCardId);
-  if (node.nodeType === "EVENT") return { src: "/assets/renders/chatgpt.png", alt: "Evento" };
-  return { src: "/assets/renders/react.png", alt: "Nodo de movimiento" };
+  if (node.nodeType === "EVENT") return { src: "/assets/renders/chatgpt.webp", alt: "Evento" };
+  return { src: "/assets/renders/react.webp", alt: "Nodo de movimiento" };
 }
 
 export function StoryMapNode({ node, isSelected, isCurrentNode, isCollecting = false, onClick }: StoryMapNodeProps) {

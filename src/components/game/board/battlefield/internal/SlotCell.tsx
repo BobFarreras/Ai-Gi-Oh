@@ -12,9 +12,11 @@ import { areEqualSlotCellProps } from "./slot-cell-props-equality";
 import { SlotCellEntity } from "./SlotCellEntity";
 
 function SlotCellComponent({
+  laneType,
   index,
   entity,
   isOpponentSide,
+  tutorialTargetId,
   activeAttackerId,
   selectedCardId,
   selectedBoardEntityInstanceId,
@@ -29,9 +31,8 @@ function SlotCellComponent({
   cardXpCardId,
   cardXpAmount,
   cardXpEventId,
-  canActivateSelectedExecution,
+  hasBlockingTrapActivation,
   isMobileLayout = false,
-  onActivateSelectedExecution,
   onEntityClick,
 }: SlotCellProps) {
   countRender("SlotCell");
@@ -40,7 +41,14 @@ function SlotCellComponent({
   const floatingEvents = buildFloatingEvents(entity, buffEventId, buffStat, buffAmount, isBuffed, cardXpEventId, cardXpCardId, cardXpAmount);
 
   return (
-    <div data-slot-index={index} style={{ transformStyle: "preserve-3d" }} className="relative w-24 h-36 border-2 border-cyan-500/30 rounded-lg bg-cyan-950/40 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.15)_inset] group hover:border-cyan-300 transition-colors duration-300">
+    <div
+      data-slot-index={index}
+      data-board-slot-side={isOpponentSide ? "opponent" : "player"}
+      data-board-lane-type={laneType}
+      data-tutorial-id={tutorialTargetId}
+      style={{ transformStyle: "preserve-3d" }}
+      className="relative w-24 h-36 border-2 border-cyan-500/30 rounded-lg bg-cyan-950/40 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.15)_inset] group hover:border-cyan-300 transition-colors duration-300"
+    >
       {entity && <ExecutionActivationVfx entity={entity} isOpponentSide={isOpponentSide} />}
       {entity && floatingEvents.length > 0 && <CardFloatingQueueVfx entityId={entity.instanceId} events={floatingEvents} />}
       
@@ -55,13 +63,12 @@ function SlotCellComponent({
             isSelectedByCard={isSelectedByCard}
             selectedCardId={selectedCardId}
             selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}
-            canActivateSelectedExecution={canActivateSelectedExecution}
             isAttacking={isAttacking}
             isActivating={Boolean(isActivating)}
+            shouldShowBlockedLock={Boolean(isAttacking && hasBlockingTrapActivation)}
             isHighlighted={isHighlighted}
             isSelectedMaterial={isSelectedMaterial}
             onEntityClick={onEntityClick}
-            onActivateSelectedExecution={onActivateSelectedExecution}
           />
         ) : (
           <motion.span 

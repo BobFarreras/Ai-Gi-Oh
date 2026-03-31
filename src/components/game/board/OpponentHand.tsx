@@ -16,7 +16,7 @@ export function OpponentHand({ hand, className = "", cardScale = 0.35 }: Opponen
   const arcDepth = hand.length >= 5 ? 3.1 : 3.5;
 
   return (
-    <div className={`pointer-events-none relative perspective-[1000px] ${className}`}>
+    <div data-board-hand-side="opponent" className={`pointer-events-none relative perspective-[1000px] ${className}`}>
       {hand.map((_, index) => {
         const center = (hand.length - 1) / 2;
         const offset = index - center;

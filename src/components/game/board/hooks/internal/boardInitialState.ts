@@ -17,6 +17,7 @@ export interface ICreateInitialBoardStateInput {
   opponentName?: string;
   starterPlayerId?: string;
   openingHandSize?: number;
+  preserveDeckOrder?: boolean;
 }
 
 export function createInitialBoardState(input?: ICreateInitialBoardStateInput): GameState {

@@ -15,7 +15,7 @@ interface CardFloatingQueueVfxProps {
 }
 
 function resolveDurationMs(event: CardFloatingEvent): number {
-  return event.type === "XP" ? 1300 : 1400;
+  return event.type === "XP" ? 1300 : 2950;
 }
 
 export function CardFloatingQueueVfx({ entityId, events }: CardFloatingQueueVfxProps) {

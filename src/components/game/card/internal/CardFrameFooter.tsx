@@ -1,6 +1,7 @@
 // src/components/game/card/internal/CardFrameFooter.tsx - Bloque inferior con descripción fija y estadísticas de combate.
 import { Cpu, Shield, Sword, Zap } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
+import { AnimatedStatNumber } from "./AnimatedStatNumber";
 
 interface CardFrameFooterProps {
   card: ICard;
@@ -20,11 +21,11 @@ export function CardFrameFooter({ card, descriptionText }: CardFrameFooterProps)
           <>
             <div className="flex items-center space-x-2 text-2xl font-black text-red-500">
               <Sword className="h-5 w-5" />
-              <span>{card.attack ?? 0}</span>
+              <span><AnimatedStatNumber value={card.attack ?? 0} /></span>
             </div>
             <div className="flex items-center space-x-2 text-2xl font-black text-blue-500">
               <Shield className="h-5 w-5" />
-              <span>{card.defense ?? 0}</span>
+              <span><AnimatedStatNumber value={card.defense ?? 0} /></span>
             </div>
           </>
         ) : (

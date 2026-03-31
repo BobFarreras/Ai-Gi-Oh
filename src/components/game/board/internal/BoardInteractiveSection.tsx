@@ -9,12 +9,13 @@ interface IBoardInteractiveSectionProps {
   board: ReturnType<typeof useBoard>;
   screen: ReturnType<typeof useBoardScreenState>;
   isMobile: boolean;
+  suppressCombatFeedback?: boolean;
 }
 
 /**
  * Renderiza capa interactiva solo cuando no hay overlay final de duelo.
  */
-export function BoardInteractiveSection({ board, screen, isMobile }: IBoardInteractiveSectionProps) {
+export function BoardInteractiveSection({ board, screen, isMobile, suppressCombatFeedback = false }: IBoardInteractiveSectionProps) {
   if (screen.isResultVisible) return null;
   const player = board.gameState.playerA;
   const opponent = board.gameState.playerB;
@@ -35,17 +36,19 @@ export function BoardInteractiveSection({ board, screen, isMobile }: IBoardInter
       pendingFusionSelectedEntityIds={board.pendingFusionSelectedEntityIds}
       isHistoryOpen={board.isHistoryOpen}
       isPlayerTurn={board.isPlayerTurn}
-      lastDamageTargetPlayerId={board.lastDamageTargetPlayerId}
-      lastDamageEventId={board.lastDamageEventId}
-      lastBuffTargetEntityIds={board.lastBuffTargetEntityIds}
-      lastBuffStat={board.lastBuffStat}
-      lastBuffAmount={board.lastBuffAmount}
-      lastBuffEventId={board.lastBuffEventId}
-      lastCardXpCardId={board.lastCardXpCardId}
-      lastCardXpAmount={board.lastCardXpAmount}
-      lastCardXpEventId={board.lastCardXpEventId}
-      lastCardXpActorPlayerId={board.lastCardXpActorPlayerId}
+      pendingTrapActivationPrompt={board.pendingTrapActivationPrompt}
+      lastDamageTargetPlayerId={suppressCombatFeedback ? null : board.lastDamageTargetPlayerId}
+      lastDamageEventId={suppressCombatFeedback ? null : board.lastDamageEventId}
+      lastBuffTargetEntityIds={suppressCombatFeedback ? [] : board.lastBuffTargetEntityIds}
+      lastBuffStat={suppressCombatFeedback ? null : board.lastBuffStat}
+      lastBuffAmount={suppressCombatFeedback ? null : board.lastBuffAmount}
+      lastBuffEventId={suppressCombatFeedback ? null : board.lastBuffEventId}
+      lastCardXpCardId={suppressCombatFeedback ? null : board.lastCardXpCardId}
+      lastCardXpAmount={suppressCombatFeedback ? null : board.lastCardXpAmount}
+      lastCardXpEventId={suppressCombatFeedback ? null : board.lastCardXpEventId}
+      lastCardXpActorPlayerId={suppressCombatFeedback ? null : board.lastCardXpActorPlayerId}
       onGraveyardClick={screen.setGraveyardView}
+      onFusionDeckClick={screen.setFusionDeckView}
       onEntityClick={board.handleEntityClick}
       onMandatoryCardSelect={board.resolvePendingHandDiscard}
       onDestroyedClick={screen.setDestroyedView}
@@ -54,6 +57,8 @@ export function BoardInteractiveSection({ board, screen, isMobile }: IBoardInter
       onCardClick={board.toggleCardSelection}
       onPlayAction={screen.handlePlayAction}
       onActivateSelectedExecution={screen.handleActivateSelectedExecution}
+      onActivatePendingTrap={board.activatePendingTrap}
+      onSkipPendingTrap={board.skipPendingTrap}
       onSelectCard={board.previewCard}
       onCloseCard={board.clearSelection}
       onSetSelectedEntityToAttack={board.setSelectedEntityToAttack}

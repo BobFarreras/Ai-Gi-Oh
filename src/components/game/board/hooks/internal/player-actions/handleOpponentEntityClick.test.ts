@@ -79,6 +79,7 @@ describe("handleOpponentEntityClick", () => {
       setActiveAttackerId: vi.fn(),
       setIsAnimating: vi.fn(),
       setRevealedEntities,
+      setSelectedCard: vi.fn(),
     });
 
     expect(setRevealedEntities).toHaveBeenCalledTimes(2);

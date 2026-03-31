@@ -14,15 +14,31 @@ interface MarketMobilePacksSectionProps {
   selectedPackId: string | null;
   packListings: IMarketCardListing[];
   isBuyingPack: boolean;
+  tutorialCurrentStepId?: string | null;
   onSelectPack: (packId: string) => void;
   onBuyPack: (packId: string) => Promise<boolean>;
   onSelectPackCard: (listing: IMarketCardListing) => void;
 }
 
 export function MarketMobilePacksSection(props: MarketMobilePacksSectionProps) {
+  const TUTORIAL_PRIMARY_PACK_ID = "tutorial-market-pack-gemgpt";
+  const {
+    packs,
+    selectedPackId,
+    packListings,
+    isBuyingPack,
+    tutorialCurrentStepId,
+    onSelectPack,
+    onBuyPack,
+    onSelectPackCard,
+  } = props;
   const [floatingSpendId, setFloatingSpendId] = useState(0);
   const floatingTimeoutRef = useRef<number | null>(null);
-  const selectedPack = props.packs.find((pack) => pack.id === props.selectedPackId) ?? null;
+  const selectedPack = packs.find((pack) => pack.id === selectedPackId) ?? null;
+  const isTutorialBuyStep = tutorialCurrentStepId === "market-buy-pack";
+  const tutorialPrimaryPack = packs.find((pack) => pack.id === TUTORIAL_PRIMARY_PACK_ID) ?? packs[0] ?? null;
+  const effectivePack = selectedPack ?? (isTutorialBuyStep ? tutorialPrimaryPack : null);
+  const isBuyButtonEnabled = Boolean(effectivePack) && !isBuyingPack;
 
   useEffect(
     () => () => {
@@ -31,9 +47,13 @@ export function MarketMobilePacksSection(props: MarketMobilePacksSectionProps) {
     },
     [],
   );
+  useEffect(() => {
+    if (!isTutorialBuyStep || selectedPack || !tutorialPrimaryPack) return;
+    onSelectPack(tutorialPrimaryPack.id);
+  }, [isTutorialBuyStep, onSelectPack, selectedPack, tutorialPrimaryPack]);
   const handleBuyPack = async () => {
-    if (!selectedPack || props.isBuyingPack) return;
-    const wasBought = await props.onBuyPack(selectedPack.id);
+    if (!effectivePack || !isBuyButtonEnabled) return;
+    const wasBought = await onBuyPack(effectivePack.id);
     if (!wasBought) return;
     setFloatingSpendId((previous) => previous + 1);
     if (floatingTimeoutRef.current !== null) window.clearTimeout(floatingTimeoutRef.current);
@@ -45,22 +65,22 @@ export function MarketMobilePacksSection(props: MarketMobilePacksSectionProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 p-3">
-      <section className="rounded-lg border border-cyan-800/35 bg-[#031020]/55 p-2">
+      <section data-tutorial-id="market-pack-selector" className="rounded-lg border border-cyan-800/35 bg-[#031020]/55 p-2">
         <div className="home-modern-scroll flex gap-2 overflow-x-auto pb-1">
-          {props.packs.map((pack) => (
+          {packs.map((pack) => (
             <MarketPackCardTile
               key={pack.id}
               pack={pack}
-              isSelected={props.selectedPackId === pack.id}
-              onSelect={() => props.onSelectPack(pack.id)}
+              isSelected={selectedPackId === pack.id}
+              onSelect={() => onSelectPack(pack.id)}
             />
           ))}
         </div>
       </section>
 
-      <section className="min-h-0 flex-1 overflow-hidden rounded-lg border border-cyan-800/35 bg-[#031020]/55">
-        {props.selectedPackId ? (
-          <MarketListingsPanel listings={props.packListings} isPerformanceMode={true} onSelectCard={props.onSelectPackCard} />
+      <section data-tutorial-id="market-pack-preview" className="min-h-0 flex-1 overflow-hidden rounded-lg border border-cyan-800/35 bg-[#031020]/55">
+        {selectedPackId ? (
+          <MarketListingsPanel listings={packListings} isPerformanceMode={true} onSelectCard={onSelectPackCard} />
         ) : (
           <div className="flex h-full items-center justify-center text-center">
             <p className="px-4 text-xs font-black uppercase tracking-[0.16em] text-cyan-300/80">
@@ -72,16 +92,17 @@ export function MarketMobilePacksSection(props: MarketMobilePacksSectionProps) {
 
       <button
         type="button"
+        data-tutorial-id="market-buy-pack"
         aria-label="Comprar pack seleccionado"
-        disabled={!selectedPack || props.isBuyingPack}
+        disabled={!isBuyButtonEnabled}
         onClick={() => void handleBuyPack()}
         className="relative flex items-center justify-center gap-2 overflow-visible rounded-lg border border-fuchsia-500/55 bg-fuchsia-900/35 px-4 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-fuchsia-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {selectedPack ? (
-          <MarketNexusSpendFloat amount={selectedPack.priceNexus} triggerId={floatingSpendId} className="right-2 top-1" />
+        {effectivePack ? (
+          <MarketNexusSpendFloat amount={effectivePack.priceNexus} triggerId={floatingSpendId} className="right-2 top-1" />
         ) : null}
         <PackageOpen size={16} />
-        {props.isBuyingPack ? "Procesando..." : selectedPack ? `Comprar x ${selectedPack.priceNexus} NX` : "Selecciona un Pack"}
+        {isBuyingPack ? "Procesando..." : effectivePack ? `Comprar x ${effectivePack.priceNexus} NX` : "Selecciona un Pack"}
       </button>
     </div>
   );

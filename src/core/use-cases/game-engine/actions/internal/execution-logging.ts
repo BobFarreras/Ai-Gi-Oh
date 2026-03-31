@@ -9,6 +9,7 @@ interface IExecutionLoggingParams {
   damageTargetPlayerId: string | null;
   damageAmount: number;
   healApplied: number;
+  energyRecovered: number;
   buffStat: "ATTACK" | "DEFENSE" | null;
   buffAmount: number;
   buffEntityIds: string[];
@@ -22,16 +23,13 @@ export function appendExecutionResolutionLogs(params: IExecutionLoggingParams): 
     damageTargetPlayerId,
     damageAmount,
     healApplied,
+    energyRecovered,
     buffStat,
     buffAmount,
     buffEntityIds,
   } = params;
 
-  let withLog = appendCombatLogEvent(state, playerId, "CARD_TO_GRAVEYARD", {
-    cardId: executionCardId,
-    ownerPlayerId: playerId,
-    from: "EXECUTION_ZONE",
-  });
+  let withLog = state;
   if (damageTargetPlayerId && damageAmount > 0) {
     withLog = appendCombatLogEvent(withLog, playerId, "DIRECT_DAMAGE", {
       targetPlayerId: damageTargetPlayerId,
@@ -44,6 +42,12 @@ export function appendExecutionResolutionLogs(params: IExecutionLoggingParams): 
       amount: healApplied,
     });
   }
+  if (energyRecovered > 0) {
+    withLog = appendCombatLogEvent(withLog, playerId, "ENERGY_GAINED", {
+      amount: energyRecovered,
+      source: "EXECUTION_RESTORE_ENERGY",
+    });
+  }
   if (buffStat && buffEntityIds.length > 0) {
     withLog = appendCombatLogEvent(withLog, playerId, "STAT_BUFF_APPLIED", {
       ownerPlayerId: playerId,
@@ -52,6 +56,10 @@ export function appendExecutionResolutionLogs(params: IExecutionLoggingParams): 
       targetEntityIds: buffEntityIds,
     });
   }
-  return withLog;
+  return appendCombatLogEvent(withLog, playerId, "CARD_TO_GRAVEYARD", {
+    cardId: executionCardId,
+    ownerPlayerId: playerId,
+    from: "EXECUTION_ZONE",
+  });
 }
 

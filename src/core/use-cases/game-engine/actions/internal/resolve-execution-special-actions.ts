@@ -2,8 +2,10 @@
 import {
   CardType,
   IFusionSummonEffect,
+  IRevealOpponentSetCardEffect,
   IReturnGraveyardCardToFieldEffect,
   IReturnGraveyardCardToHandEffect,
+  IStealOpponentGraveyardCardToHandEffect,
 } from "@/core/entities/ICard";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
@@ -11,7 +13,11 @@ import { NotFoundError } from "@/core/errors/NotFoundError";
 import { startFusionSummonFromExecution } from "@/core/use-cases/game-engine/fusion/start-fusion-summon-from-execution";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
-import { createGraveyardSelectionPendingAction } from "@/core/use-cases/game-engine/state/pending-turn-action-factory";
+import {
+  createGraveyardSelectionPendingAction,
+  createOpponentGraveyardSelectionPendingAction,
+  createOpponentSetCardSelectionPendingAction,
+} from "@/core/use-cases/game-engine/state/pending-turn-action-factory";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 interface ISpecialActionContext {
@@ -24,9 +30,20 @@ interface ISpecialActionContext {
 }
 
 type GraveyardReturnEffect = IReturnGraveyardCardToHandEffect | IReturnGraveyardCardToFieldEffect;
+type OpponentSelectionEffect = IRevealOpponentSetCardEffect | IStealOpponentGraveyardCardToHandEffect;
 
 function hasSelectableGraveyardCard(player: IPlayer, cardType?: CardType): boolean {
   return player.graveyard.some((card) => !cardType || card.type === cardType);
+}
+
+function hasSelectableOpponentGraveyardCard(opponent: IPlayer, cardType?: CardType): boolean {
+  return opponent.graveyard.some((card) => !cardType || card.type === cardType);
+}
+
+function hasSelectableOpponentSetCard(opponent: IPlayer, zone: "ENTITIES" | "EXECUTIONS" | "ANY"): boolean {
+  const entityMatches = zone !== "EXECUTIONS" && opponent.activeEntities.some((entity) => entity.mode === "SET");
+  const executionMatches = zone !== "ENTITIES" && opponent.activeExecutions.some((entity) => entity.mode === "SET");
+  return entityMatches || executionMatches;
 }
 
 function suspendFusionExecutionUntilMaterials(context: ISpecialActionContext): GameState {
@@ -78,15 +95,38 @@ function resolveGraveyardReturnEffect(context: ISpecialActionContext, effect: Gr
   return startGraveyardSelection(context.state, context.playerId, context.executionInstanceId, "FIELD", effect.cardType);
 }
 
+function resolveOpponentSelectionEffect(context: ISpecialActionContext, effect: OpponentSelectionEffect): GameState {
+  if (effect.action === "STEAL_OPPONENT_GRAVEYARD_CARD_TO_HAND") {
+    if (!hasSelectableOpponentGraveyardCard(context.opponent, effect.cardType)) {
+      throw new GameRuleError("No hay cartas válidas en cementerio rival para este efecto.");
+    }
+    return {
+      ...context.state,
+      pendingTurnAction: createOpponentGraveyardSelectionPendingAction(context.playerId, context.executionInstanceId, effect.cardType),
+    };
+  }
+  const zone = effect.zone ?? "ANY";
+  if (!hasSelectableOpponentSetCard(context.opponent, zone)) {
+    throw new GameRuleError("No hay cartas seteadas válidas en el campo rival para este efecto.");
+  }
+  return {
+    ...context.state,
+    pendingTurnAction: createOpponentSetCardSelectionPendingAction(context.playerId, context.executionInstanceId, zone),
+  };
+}
+
 /**
  * Resuelve acciones especiales de ejecución que no siguen el pipeline estándar de `applyExecutionEffect`.
  */
 export function resolveExecutionSpecialAction(
   context: ISpecialActionContext,
-  effect: IFusionSummonEffect | GraveyardReturnEffect,
+  effect: IFusionSummonEffect | GraveyardReturnEffect | OpponentSelectionEffect,
 ): GameState {
   if (effect.action === "FUSION_SUMMON") {
     return resolveFusionEffect(context, effect);
   }
-  return resolveGraveyardReturnEffect(context, effect);
+  if (effect.action === "RETURN_GRAVEYARD_CARD_TO_HAND" || effect.action === "RETURN_GRAVEYARD_CARD_TO_FIELD") {
+    return resolveGraveyardReturnEffect(context, effect);
+  }
+  return resolveOpponentSelectionEffect(context, effect);
 }

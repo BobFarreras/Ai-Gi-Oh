@@ -1,5 +1,5 @@
 // src/core/services/opponent/difficulty/types.ts - Descripción breve del módulo.
-export type OpponentDifficulty = "EASY" | "NORMAL" | "HARD" | "BOSS";
+export type OpponentDifficulty = "EASY" | "NORMAL" | "HARD" | "BOSS" | "MASTER" | "MYTHIC";
 
 /**
  * Progreso mínimo de campaña necesario para decidir la dificultad.

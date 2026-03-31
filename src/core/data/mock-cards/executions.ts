@@ -6,14 +6,14 @@ interface IExecutionSeed extends Omit<ICard, "type" | "renderUrl" | "bgUrl"> {
 }
 
 function createExecution(seed: IExecutionSeed): ICard {
-  return { ...seed, type: "EXECUTION", bgUrl: "/assets/bgs/bg-tech.jpg", renderUrl: `/assets/renders/${seed.renderFile}.png` };
+  return { ...seed, type: "EXECUTION", bgUrl: undefined, renderUrl: `/assets/renders/executions/${seed.id}.webp` };
 }
 
 export const EXECUTION_CARDS: ICard[] = [
   createExecution({
     id: "exec-boost-atk-400",
     name: "Refactor Burst",
-    description: "Aumenta +400 el ATK de tu mejor entidad en campo.",
+    description: "Aumenta +400 ATK de tu entidad aliada con mayor ataque.",
     renderFile: "make",
     faction: "NO_CODE",
     cost: 2,
@@ -22,7 +22,7 @@ export const EXECUTION_CARDS: ICard[] = [
   createExecution({
     id: "exec-draw-1",
     name: "Knowledge Pull",
-    description: "Roba 1 carta del deck.",
+    description: "Roba 1 carta de tu deck.",
     renderFile: "openclaw",
     faction: "OPEN_SOURCE",
     cost: 2,
@@ -31,7 +31,7 @@ export const EXECUTION_CARDS: ICard[] = [
   createExecution({
     id: "exec-llm-def-300",
     name: "Prompt Shield",
-    description: "Todas tus cartas LLM ganan +300 DEF.",
+    description: "Todas tus entidades LLM ganan +300 DEF.",
     renderFile: "chatgpt",
     faction: "BIG_TECH",
     cost: 3,
@@ -40,7 +40,7 @@ export const EXECUTION_CARDS: ICard[] = [
   createExecution({
     id: "exec-framework-atk-300",
     name: "Framework Sprint",
-    description: "Todas tus cartas FRAMEWORK ganan +300 ATK.",
+    description: "Todas tus entidades FRAMEWORK ganan +300 ATK.",
     renderFile: "vercel",
     faction: "BIG_TECH",
     cost: 3,
@@ -76,7 +76,7 @@ export const EXECUTION_CARDS: ICard[] = [
   createExecution({
     id: "exec-db-def-300",
     name: "Transaction Wall",
-    description: "Todas tus cartas DB ganan +300 DEF.",
+    description: "Todas tus entidades DB ganan +300 DEF.",
     renderFile: "postgress",
     faction: "OPEN_SOURCE",
     cost: 2,
@@ -85,7 +85,7 @@ export const EXECUTION_CARDS: ICard[] = [
   createExecution({
     id: "exec-fusion-gemgpt",
     name: "Fusion Compiler",
-    description: "Inicia fusión GemGPT: selecciona 2 materiales válidos en tu campo.",
+    description: "Invoca GemGPT fusionando 2 materiales: ChatGPT + Gemini.",
     renderFile: "gemgpt",
     faction: "BIG_TECH",
     cost: 4,
@@ -94,7 +94,7 @@ export const EXECUTION_CARDS: ICard[] = [
   createExecution({
     id: "exec-fusion-kaclauli",
     name: "Fusion Compiler: KaClauli",
-    description: "Inicia fusión KaClauli: selecciona 2 materiales válidos en tu campo.",
+    description: "Invoca KaClauli fusionando 2 materiales: Claude + Kali Linux.",
     renderFile: "kaclauli",
     faction: "OPEN_SOURCE",
     cost: 4,
@@ -103,7 +103,7 @@ export const EXECUTION_CARDS: ICard[] = [
   createExecution({
     id: "exec-fusion-pytgress",
     name: "Fusion Compiler: Pytgress",
-    description: "Inicia fusión Pytgress: selecciona 2 materiales válidos en tu campo.",
+    description: "Invoca Pytgress fusionando 2 materiales: Python + Postgress.",
     renderFile: "pytgress",
     faction: "OPEN_SOURCE",
     cost: 4,

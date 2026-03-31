@@ -29,6 +29,7 @@ function resolveCounterTrapNegation(
   trappedCard: IBoardEntity,
   trapOwnerIsPlayerA: boolean,
 ): GameState {
+  const counterTrapSlotIndex = counterOwner.activeExecutions.findIndex((entity) => entity.instanceId === counterTrap.instanceId);
   const updatedCounterPlayer = {
     ...counterOwner,
     activeExecutions: counterOwner.activeExecutions.filter((entity) => entity.instanceId !== counterTrap.instanceId),
@@ -42,17 +43,18 @@ function resolveCounterTrapNegation(
   let withLogs = assignPlayers(state, updatedTrapOwner, updatedCounterPlayer, trapOwnerIsPlayerA);
   withLogs = appendCombatLogEvent(withLogs, counterOwner.id, "TRAP_TRIGGERED", {
     trapCardId: counterTrap.card.id,
+    trapSlotIndex: counterTrapSlotIndex >= 0 ? counterTrapSlotIndex : 0,
     trigger: "ON_OPPONENT_TRAP_ACTIVATED",
     effectAction: counterTrap.card.effect?.action ?? null,
   });
-  withLogs = appendCombatLogEvent(withLogs, counterOwner.id, "CARD_TO_GRAVEYARD", {
-    cardId: counterTrap.card.id,
-    ownerPlayerId: counterOwner.id,
-    from: "EXECUTION_ZONE",
-  });
-  return appendCombatLogEvent(withLogs, counterOwner.id, "CARD_TO_DESTROYED", {
+  withLogs = appendCombatLogEvent(withLogs, counterOwner.id, "CARD_TO_DESTROYED", {
     cardId: trappedCard.card.id,
     ownerPlayerId: trapOwner.id,
+    from: "EXECUTION_ZONE",
+  });
+  return appendCombatLogEvent(withLogs, counterOwner.id, "CARD_TO_GRAVEYARD", {
+    cardId: counterTrap.card.id,
+    ownerPlayerId: counterOwner.id,
     from: "EXECUTION_ZONE",
   });
 }
@@ -66,6 +68,7 @@ export function resolveTrapTrigger(
   const selectedTrap = selectTriggeredTrap(state, reactivePlayerId, trigger);
   if (!selectedTrap) return state;
   const { trap, player, opponent, isPlayerA } = selectedTrap;
+  const trapSlotIndex = player.activeExecutions.findIndex((entity) => entity.instanceId === trap.instanceId);
   const counterTrap = selectCounterTrap(opponent.activeExecutions);
   if (counterTrap) {
     return resolveCounterTrapNegation(state, player, opponent, counterTrap, trap, isPlayerA);
@@ -84,6 +87,7 @@ export function resolveTrapTrigger(
     reactivePlayerId,
     trigger,
     trap,
+    trapSlotIndex: trapSlotIndex >= 0 ? trapSlotIndex : 0,
     targetOpponentId: opponent.id,
     targetPlayerId: player.id,
     resolved,

@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Shield, Sword, Zap } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
 import { cn } from "@/lib/utils";
+import { AnimatedStatNumber } from "./AnimatedStatNumber";
 
 interface CardHologramProps {
   card: ICard;
@@ -142,7 +143,7 @@ function StatRow({ icon, value, colorClass }: { icon: React.ReactNode; value: nu
         {icon}
       </div>
       <span className={`font-black text-6xl tracking-tighter text-left ${colorClass} [text-shadow:_0_5px_20px_#000,_0_0_15px_#000,_0_0_5px_#000]`}>
-        {value}
+        <AnimatedStatNumber value={value} />
       </span>
     </div>
   );

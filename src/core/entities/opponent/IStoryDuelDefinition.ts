@@ -8,6 +8,16 @@ export interface IStoryRewardCardDefinition {
   isGuaranteed: boolean;
 }
 
+export interface IStoryDeckEntryDefinition {
+  cardId: string;
+  versionTier: number;
+  level: number;
+  xp: number;
+  attackOverride: number | null;
+  defenseOverride: number | null;
+  effectOverride: Record<string, unknown> | null;
+}
+
 export interface IStoryDuelDefinition {
   id: string;
   chapter: number;
@@ -18,7 +28,9 @@ export interface IStoryDuelDefinition {
   opponentName: string;
   opponentAvatarUrl?: string | null;
   opponentDifficulty: StoryOpponentDifficulty;
+  opponentAiProfile: Record<string, unknown>;
   opponentDeckCardIds: string[];
+  opponentDeckEntries: IStoryDeckEntryDefinition[];
   openingHandSize: number;
   starterPlayer: "PLAYER" | "OPPONENT" | "RANDOM";
   rewardNexus: number;

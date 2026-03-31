@@ -18,6 +18,7 @@ interface StorySidebarProps {
   smartActionLabel: string;
   canRunSmartAction: boolean;
   isCompactMode?: boolean;
+  onExitToHub: () => void;
   onSmartAction: () => void;
   onDeselect: () => void;
 }
@@ -29,7 +30,7 @@ export function StorySidebar(props: StorySidebarProps) {
     <aside className="relative flex h-full w-full flex-col overflow-x-hidden overflow-y-auto border-l border-cyan-500/40 bg-black/80 text-slate-100 shadow-[-15px_0_40px_rgba(6,182,212,0.08)] backdrop-blur-xl">
       <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.15)_50%)] bg-[length:100%_4px] opacity-40 mix-blend-overlay" />
       <div className="pointer-events-none absolute right-0 top-0 z-0 h-72 w-72 rounded-full bg-cyan-600/10 blur-[100px]" />
-      <StorySidebarHeader briefing={props.briefing} isCompactMode={props.isCompactMode ?? false} />
+      <StorySidebarHeader briefing={props.briefing} isCompactMode={props.isCompactMode ?? false} onExitToHub={props.onExitToHub} />
       <div className={props.isCompactMode ? "relative z-10 flex flex-1 flex-col p-4" : "relative z-10 flex flex-1 flex-col p-6"}>
         <AnimatePresence mode="wait">
           {props.selectedNode ? (

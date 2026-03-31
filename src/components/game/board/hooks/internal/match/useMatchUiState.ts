@@ -6,7 +6,7 @@ import { IBoardUiError } from "../boardError";
 import { buildBoardCombatFeedback } from "../board-state/boardCombatFeedback";
 import { buildBoardPendingUi } from "../board-state/boardPendingUi";
 import { IPendingZoneReplacement } from "../board-state/pending-replacement";
-import { useBoardUiState } from "../board-state/useBoardUiState";
+import { ITrapActivationPrompt, useBoardUiState } from "../board-state/useBoardUiState";
 
 interface IUseMatchUiStateParams {
   gameStateRef: MutableRefObject<GameState>;
@@ -44,6 +44,7 @@ export interface IUseMatchUiStateResult {
   pendingEntityReplacement: IPendingZoneReplacement | null;
   pendingEntityReplacementTargetId: string | null;
   pendingFusionSummon: { cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null;
+  pendingTrapActivationPrompt: ITrapActivationPrompt | null;
   isFusionCinematicActive: boolean;
   isMuted: boolean;
   isPaused: boolean;
@@ -65,6 +66,7 @@ export interface IUseMatchUiStateResult {
   setPendingEntityReplacement: (value: IPendingZoneReplacement | null) => void;
   setPendingEntityReplacementTargetId: (value: string | null) => void;
   setPendingFusionSummon: (value: { cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null) => void;
+  setPendingTrapActivationPrompt: (value: ITrapActivationPrompt | null) => void;
   setIsFusionCinematicActive: (value: boolean) => void;
   setIsAutoPhaseEnabled: (value: boolean | ((previous: boolean) => boolean)) => void;
   setIsTurnHelpEnabled: (value: boolean | ((previous: boolean) => boolean)) => void;

@@ -7,6 +7,10 @@ describe("mastery-passive-display", () => {
     expect(resolveMasteryPassiveLabel("passive-atk-drain-200")).toContain("reduce 200 ATK");
   });
 
+  it("resuelve la pasiva ofensiva de energía para V5", () => {
+    expect(resolveMasteryPassiveLabel("passive-attack-energy-plus-1")).toContain("en ataque");
+  });
+
   it("devuelve fallback para pasiva desconocida", () => {
     expect(resolveMasteryPassiveLabel("unknown-passive-id")).toBe("Pasiva Mastery activa en esta carta.");
   });

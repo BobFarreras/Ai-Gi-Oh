@@ -11,15 +11,16 @@ interface IUseOpponentTurnParams extends IOpponentTurnContext {
   isAnimating: boolean;
   duelWinnerId: string | null;
   isMatchStartLocked?: boolean;
+  disableAutomation?: boolean;
   strategy: IOpponentStrategy;
   gameState: GameState;
 }
 
 const OPPONENT_STEP_TIMINGS: IOpponentStepTimings = {
-  stepDelayMs: 950,
-  attackWindupMs: 900,
-  postResolutionMs: 650,
-  trapPreviewMs: 700,
+  stepDelayMs: 1150,
+  attackWindupMs: 1100,
+  postResolutionMs: 900,
+  trapPreviewMs: 1200,
 };
 
 export function useOpponentTurn({
@@ -28,15 +29,18 @@ export function useOpponentTurn({
   strategy,
   duelWinnerId,
   isMatchStartLocked = false,
+  disableAutomation = false,
   applyTransition,
   clearSelection,
   clearError,
   setIsAnimating,
   setActiveAttackerId,
   setRevealedEntities,
+  setSelectedCard,
+  requestTrapActivationDecision,
 }: IUseOpponentTurnParams): void {
   useEffect(() => {
-    if (isMatchStartLocked || duelWinnerId || isAnimating || gameState.activePlayerId !== gameState.playerB.id) return;
+    if (disableAutomation || isMatchStartLocked || duelWinnerId || isAnimating || gameState.activePlayerId !== gameState.playerB.id) return;
 
     const context: IOpponentTurnContext = {
       gameState,
@@ -47,6 +51,8 @@ export function useOpponentTurn({
       setIsAnimating,
       setActiveAttackerId,
       setRevealedEntities,
+      setSelectedCard,
+      requestTrapActivationDecision,
     };
 
     const timeoutId = setTimeout(async () => {
@@ -64,6 +70,7 @@ export function useOpponentTurn({
     applyTransition,
     clearError,
     clearSelection,
+    disableAutomation,
     duelWinnerId,
     isMatchStartLocked,
     gameState,
@@ -71,6 +78,8 @@ export function useOpponentTurn({
     setActiveAttackerId,
     setIsAnimating,
     setRevealedEntities,
+    setSelectedCard,
+    requestTrapActivationDecision,
     strategy,
   ]);
 }

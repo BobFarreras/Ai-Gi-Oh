@@ -14,6 +14,7 @@ interface BoardMobileTopBarProps {
   isActive: boolean;
   isPaused: boolean;
   hasWinner: boolean;
+  isTimerEnabled?: boolean;
   phase: string;
   pendingActionType: string | null;
   pendingActionPlayerId: string | null;
@@ -27,6 +28,7 @@ export function BoardMobileTopBar({
   isActive,
   isPaused,
   hasWinner,
+  isTimerEnabled = true,
   phase,
   pendingActionType,
   pendingActionPlayerId,
@@ -55,7 +57,7 @@ export function BoardMobileTopBar({
 
   return (
     <>
-      <div className="absolute top-0 left-0 z-[245] w-[33vw] min-w-[118px] max-w-[146px] pointer-events-auto">
+      <div data-tutorial-id="tutorial-board-turn-timer-panel" className="absolute top-0 left-0 z-[245] w-[33vw] min-w-[118px] max-w-[146px] pointer-events-auto">
         <div className={cn("w-full bg-cyan-500/70 pb-[2px] pr-[2px]", "[clip-path:polygon(0_0,100%_0,calc(100%-16px)_100%,0_100%)]")}>
           <div
             className={cn(
@@ -74,13 +76,17 @@ export function BoardMobileTopBar({
                 <p className="mb-0.5 truncate text-[7px] font-black uppercase tracking-widest text-cyan-300">{phaseLabel}</p>
                 <div className="flex items-center gap-0.5">
                   <Clock className="h-3 w-3 text-cyan-300" />
-                  <TurnTimer
-                    key={`${turn}-${phase}-${pendingActionType ?? "NONE"}-${pendingActionPlayerId ?? "NONE"}`}
-                    onTimeUp={onTimeUp}
-                    onWarning={onWarning}
-                    isActive={isActive && !isPaused && !hasWinner}
-                    compact
-                  />
+                  {isTimerEnabled ? (
+                    <TurnTimer
+                      key={`${turn}-${phase}-${pendingActionType ?? "NONE"}-${pendingActionPlayerId ?? "NONE"}`}
+                      onTimeUp={onTimeUp}
+                      onWarning={onWarning}
+                      isActive={isActive && !isPaused && !hasWinner}
+                      compact
+                    />
+                  ) : (
+                    <span className="text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">--</span>
+                  )}
                 </div>
               </div>
             </div>

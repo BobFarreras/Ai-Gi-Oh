@@ -32,7 +32,7 @@ export function HomeDeckFilterControls(props: HomeDeckFilterControlsProps) {
 
   return (
     <div className="relative z-30 flex w-full flex-col gap-2">
-      <div className="flex items-center gap-2 lg:hidden">
+      <div className="flex items-center gap-2 min-[900px]:hidden">
         <label className="flex h-[38px] w-full items-center gap-2 rounded-lg border border-cyan-500/30 bg-[#020a14]/80 px-3">
           <Search size={14} className="shrink-0 text-cyan-400" />
           <input
@@ -47,12 +47,12 @@ export function HomeDeckFilterControls(props: HomeDeckFilterControlsProps) {
           type="button"
           aria-label="Mostrar filtros del arsenal"
           onClick={() => setIsMobileFiltersOpen((previous) => !previous)}
-          className="flex h-[38px] items-center justify-center rounded-lg border border-cyan-500/40 bg-[#021426]/85 px-3 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-200 lg:hidden"
+            className="flex h-[38px] items-center justify-center rounded-lg border border-cyan-500/40 bg-[#021426]/85 px-3 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-200 min-[900px]:hidden"
         >
           Filtros
         </button>
       </div>
-      <div className="hidden w-full items-end gap-2 lg:flex">
+      <div className="hidden w-full items-end gap-2 min-[900px]:flex">
         {showDesktopSearch ? (
           <label className="flex h-[42px] min-w-0 flex-1 items-center gap-2 rounded-lg border border-cyan-500/30 bg-[#020a14]/80 px-3">
             <Search size={14} className="shrink-0 text-cyan-400" />
@@ -97,7 +97,7 @@ export function HomeDeckFilterControls(props: HomeDeckFilterControlsProps) {
         </motion.button>
       </div>
       {isMobileFiltersOpen ? (
-        <div className="grid grid-cols-[1fr_1fr_auto] gap-2 lg:hidden">
+        <div className="grid grid-cols-[1fr_1fr_auto] gap-2 min-[900px]:hidden">
           <GameSelect
             label="TIPO"
             value={props.typeFilter}

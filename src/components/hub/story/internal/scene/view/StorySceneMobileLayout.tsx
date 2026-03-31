@@ -45,11 +45,11 @@ export function StorySceneMobileLayout(props: IStorySceneMobileLayoutProps) {
           </button>
           <button
             type="button"
-            aria-label="Volver al hub"
-            onClick={() => props.map.onExitToHub?.()}
+            aria-label="Abrir detalle táctico"
+            onClick={() => setIsSidebarOpen(true)}
             className="pointer-events-auto rounded-lg border border-cyan-500/50 px-2 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-100"
           >
-            Hub
+            Táctica
           </button>
         </div>
       </div>

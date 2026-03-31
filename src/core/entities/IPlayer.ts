@@ -8,6 +8,7 @@ export interface IBoardEntity {
   instanceId: string;
   card: ICard;
   mode: BattleMode;
+  modeLock?: Extract<BattleMode, "ATTACK" | "DEFENSE"> | null;
   hasAttackedThisTurn: boolean;
   isNewlySummoned: boolean;
 }

@@ -2,14 +2,18 @@
 import { HubService } from "@/core/services/hub/HubService";
 import { GetHubMapUseCase } from "@/core/use-cases/hub/GetHubMapUseCase";
 import { GetOrCreatePlayerProfileUseCase } from "@/core/use-cases/player/GetOrCreatePlayerProfileUseCase";
+import { GetOrCreateStarterDeckUseCase } from "@/core/use-cases/player/GetOrCreateStarterDeckUseCase";
 import { GetOrCreatePlayerProgressUseCase } from "@/core/use-cases/player/GetOrCreatePlayerProgressUseCase";
 import { createSupabasePlayerProfileRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-profile-repository";
 import { createSupabasePlayerProgressRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-progress-repository";
+import { createSupabaseStarterDeckTemplateRepository } from "@/infrastructure/persistence/supabase/create-supabase-starter-deck-template-repository";
 import { InMemoryHubRepository } from "@/infrastructure/repositories/InMemoryHubRepository";
 import { SupabaseHubRepository } from "@/infrastructure/repositories/SupabaseHubRepository";
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { getPlayerBoardLoadout } from "@/services/game/get-player-board-deck";
 import { applyCombatReadinessLock } from "@/services/hub/internal/apply-combat-readiness-lock";
+import { createPlayerRuntimeRepositories } from "@/services/player-persistence/create-player-runtime-repositories";
+import { runPlayerRuntimeInitOnce } from "@/services/player-persistence/internal/player-runtime-init-gate";
 
 interface IHubRuntimeData {
   playerLabel: string;
@@ -36,7 +40,16 @@ export async function getHubRuntimeData(): Promise<IHubRuntimeData> {
     playerId: session.user.id,
     defaultNickname: resolveDefaultNickname(session.user.email),
   });
-  await new GetOrCreatePlayerProgressUseCase(progressRepository).execute({ playerId: session.user.id });
+  const runtimeRepositories = await createPlayerRuntimeRepositories();
+  const starterDeckTemplateRepository = await createSupabaseStarterDeckTemplateRepository();
+  await runPlayerRuntimeInitOnce(session.user.id, async () => {
+    await new GetOrCreatePlayerProgressUseCase(progressRepository).execute({ playerId: session.user.id });
+    await new GetOrCreateStarterDeckUseCase(
+      runtimeRepositories.deckRepository,
+      runtimeRepositories.collectionRepository,
+      starterDeckTemplateRepository,
+    ).execute({ playerId: session.user.id });
+  });
 
   const hubService = new HubService(new SupabaseHubRepository(progressRepository));
   const [hubMap, loadout] = await Promise.all([

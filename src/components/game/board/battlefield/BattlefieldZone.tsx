@@ -32,9 +32,9 @@ interface BattlefieldZoneProps {
   cardXpCardId: string | null;
   cardXpAmount: number | null;
   cardXpEventId: string | null;
-  canActivateSelectedExecution: boolean;
-  onActivateSelectedExecution: () => void;
+  hasBlockingTrapActivation: boolean;
   onGraveyardClick: (side: "player" | "opponent") => void;
+  onFusionDeckClick?: (side: "player" | "opponent") => void;
   onDestroyedClick?: (side: "player" | "opponent") => void;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: MouseEvent) => void;
 }
@@ -64,16 +64,16 @@ export function BattlefieldZone({
   cardXpCardId,
   cardXpAmount,
   cardXpEventId,
-  canActivateSelectedExecution,
-  onActivateSelectedExecution,
+  hasBlockingTrapActivation,
   onGraveyardClick,
+  onFusionDeckClick = () => undefined,
   onDestroyedClick = () => undefined,
   onEntityClick,
 }: BattlefieldZoneProps) {
   const isOpponentSide = side === "opponent";
   const zonePadding = isOpponentSide ? "mb-4" : "mt-4";
   const isDamageFlashing = useDamageFlash(shouldDamageFlash, damageEventId);
-  const sideStackClass = isMobileLayout ? "flex flex-col gap-2 scale-[0.86]" : "flex flex-col gap-3";
+  const sideStackClass = isMobileLayout ? "relative z-30 flex shrink-0 flex-col gap-2 scale-[0.86] pointer-events-auto" : "relative z-30 flex shrink-0 flex-col gap-3 pointer-events-auto";
 
   return (
     <div
@@ -85,8 +85,8 @@ export function BattlefieldZone({
       )}
     >
       <div className={sideStackClass}>
-        <DeckPile deckCount={deckCount} />
-        <FusionDeckPile fusionDeckCount={fusionDeckCount} />
+        <DeckPile deckCount={deckCount} side={isOpponentSide ? "opponent" : "player"} />
+        <FusionDeckPile fusionDeckCount={fusionDeckCount} isOpponentSide={isOpponentSide} onClick={onFusionDeckClick} />
       </div>
       <BattlefieldLanes
         isOpponentSide={isOpponentSide}
@@ -105,9 +105,8 @@ export function BattlefieldZone({
         cardXpCardId={cardXpCardId}
         cardXpAmount={cardXpAmount}
         cardXpEventId={cardXpEventId}
-        canActivateSelectedExecution={canActivateSelectedExecution}
+        hasBlockingTrapActivation={hasBlockingTrapActivation}
         isMobileLayout={isMobileLayout}
-        onActivateSelectedExecution={onActivateSelectedExecution}
         onEntityClick={onEntityClick}
       />
       <div className={sideStackClass}>

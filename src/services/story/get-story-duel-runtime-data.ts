@@ -1,6 +1,8 @@
 // src/services/story/get-story-duel-runtime-data.ts - Resuelve datos de ejecución de un duelo Story (jugador, oponente, mazos y acceso).
 import { ICard } from "@/core/entities/ICard";
 import { GetStoryWorldStateUseCase } from "@/core/use-cases/story/GetStoryWorldStateUseCase";
+import { IStoryAiProfile, normalizeStoryAiProfile } from "@/core/services/opponent/difficulty/story-ai-profile";
+import { StoryOpponentDifficulty } from "@/core/entities/opponent/IStoryDuelDefinition";
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { getPlayerBoardLoadout } from "@/services/game/get-player-board-deck";
 import { createSupabaseOpponentRepository } from "@/infrastructure/persistence/supabase/create-supabase-opponent-repository";
@@ -25,6 +27,23 @@ export interface IStoryDuelRuntimeData {
   opponentId: string;
   opponentName: string;
   opponentAvatarUrl?: string | null;
+  opponentDifficulty: StoryOpponentDifficulty;
+  opponentAiProfile: IStoryAiProfile;
+}
+
+function applyStoryDeckEntryToCard(
+  card: ICard,
+  entry: { versionTier: number; level: number; xp: number; attackOverride: number | null; defenseOverride: number | null; effectOverride: Record<string, unknown> | null },
+): ICard {
+  return {
+    ...card,
+    versionTier: entry.versionTier,
+    level: entry.level,
+    xp: entry.xp,
+    attack: entry.attackOverride ?? card.attack,
+    defense: entry.defenseOverride ?? card.defense,
+    effect: (entry.effectOverride as ICard["effect"] | null) ?? card.effect,
+  };
 }
 
 export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number): Promise<IStoryDuelRuntimeData | null> {
@@ -47,11 +66,11 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
   const isUnlocked = worldState.progress.unlockedNodeIds.includes(duel.id);
   const isCurrentNode = currentNodeId === null || currentNodeId === duel.id;
 
-  const cardsById = await loadCardsByIds(supabase, duel.opponentDeckCardIds);
-  const opponentDeck = duel.opponentDeckCardIds.flatMap((cardId) => {
-    const card = cardsById.get(cardId);
+  const cardsById = await loadCardsByIds(supabase, duel.opponentDeckEntries.map((entry) => entry.cardId));
+  const opponentDeck = duel.opponentDeckEntries.flatMap((entry) => {
+    const card = cardsById.get(entry.cardId);
     return card ? [{ ...card }] : [];
-  });
+  }).map((card, index) => applyStoryDeckEntryToCard(card, duel.opponentDeckEntries[index]));
 
   return {
     playerId: session.user.id,
@@ -69,5 +88,7 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
     opponentId: duel.opponentId,
     opponentName: duel.opponentName,
     opponentAvatarUrl: duel.opponentAvatarUrl ?? null,
+    opponentDifficulty: duel.opponentDifficulty,
+    opponentAiProfile: normalizeStoryAiProfile(duel.opponentAiProfile, duel.opponentDifficulty),
   };
 }

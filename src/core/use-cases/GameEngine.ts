@@ -56,8 +56,9 @@ export class GameEngine {
     attackerPlayerId: string,
     attackerInstanceId: string,
     defenderInstanceId?: string,
+    options?: { skipReactivePlayerIds?: string[]; skipTrapEventTypes?: ("ATTACK_DECLARED" | "DIRECT_ATTACK_DECLARED")[] },
   ): GameState {
-    return executeAttack(state, attackerPlayerId, attackerInstanceId, defenderInstanceId);
+    return executeAttack(state, attackerPlayerId, attackerInstanceId, defenderInstanceId, options);
   }
 
   /** Resuelve una invocación por fusión estándar desde carta de fusión en mano. */
@@ -87,8 +88,13 @@ export class GameEngine {
   }
 
   /** Resuelve una ejecución activa y aplica su efecto o acción pendiente derivada. */
-  public static resolveExecution(state: GameState, playerId: string, executionInstanceId: string): GameState {
-    return resolveExecution(state, playerId, executionInstanceId);
+  public static resolveExecution(
+    state: GameState,
+    playerId: string,
+    executionInstanceId: string,
+    options?: { skipReactivePlayerIds?: string[]; skipTrapEventTypes?: ("EXECUTION_ACTIVATED")[] },
+  ): GameState {
+    return resolveExecution(state, playerId, executionInstanceId, options);
   }
 
   /** Resuelve una acción obligatoria pendiente del turno activo. */

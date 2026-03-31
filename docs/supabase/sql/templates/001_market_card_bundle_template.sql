@@ -32,7 +32,7 @@ insert into public.cards_catalog (
   'LANGUAGE',                                   -- opcional: LLM | FRAMEWORK | DB | IDE | LANGUAGE | TOOL | SECURITY
   null,                                         -- TRAP: trigger; resto: null
   '/assets/bgs/bg-tech.jpg',                    -- recomendado: fondo por defecto del juego
-  '/assets/renders/sample-card.png',            -- render de carta (local o storage público)
+  '/assets/renders/sample-card.webp',            -- render de carta (local o storage público)
   null,                                         -- jsonb opcional para effect (estructura del motor)
   null,                                         -- opcional para tipo FUSION
   '{}',                                         -- opcional para tipo FUSION (array text)

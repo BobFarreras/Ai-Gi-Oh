@@ -8,7 +8,11 @@ import { GameState } from "@/core/use-cases/game-engine/state/types";
  * No valida reglas de juego; solo aplica transformación inmutable.
  */
 function updateEntityModes(entities: IBoardEntity[], instanceId: string, newMode: BattleMode): IBoardEntity[] {
-  return entities.map((entity) => (entity.instanceId === instanceId ? { ...entity, mode: newMode } : entity));
+  return entities.map((entity) => {
+    if (entity.instanceId !== instanceId) return entity;
+    if (entity.modeLock && entity.modeLock !== newMode) return entity;
+    return { ...entity, mode: newMode };
+  });
 }
 
 /**

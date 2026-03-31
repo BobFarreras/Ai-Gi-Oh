@@ -5,19 +5,21 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { BattlefieldZone } from "@/components/game/board/battlefield/BattlefieldZone";
 import { BattlefieldViewProps } from "@/components/game/board/battlefield/internal/battlefield-types";
+import { hasActiveBlockingTrap } from "@/components/game/board/battlefield/internal/trap-block-actions";
 
 export function BattlefieldView(props: BattlefieldViewProps) {
+  const hasBlockingTrapActivation = hasActiveBlockingTrap([...props.playerActiveExecutions, ...props.opponentActiveExecutions]);
+
   return (
-    <div className="absolute inset-0 pointer-events-auto" onWheel={props.onWheel}>
+    <div data-tutorial-id="tutorial-board-battlefield" className="absolute inset-0 pointer-events-auto" onWheel={props.onWheel}>
       <motion.div
-        drag={!props.isMobileLayout}
-        dragConstraints={{ left: -300, right: 300, top: -200, bottom: 200 }}
-        dragElastic={props.isMobileLayout ? 0 : 0.05}
+        drag={false}
+        dragElastic={0}
         animate={{ scale: props.zoom * props.effectiveBoardScale, y: props.isMobileLayout ? props.mobileBoardOffsetY : 0 }}
         transition={props.isMobileLayout ? { type: "tween", duration: 0.16 } : { type: "spring", stiffness: 400, damping: 40 }}
         className={cn(
           "w-full h-full flex items-center justify-center perspective-[1200px]",
-          props.isMobileLayout ? "cursor-default touch-pan-y" : "cursor-grab active:cursor-grabbing -translate-y-18 md:-translate-y-20 lg:-translate-y-22",
+          props.isMobileLayout ? "cursor-default touch-pan-y" : "cursor-default -translate-y-18 md:-translate-y-20 lg:-translate-y-22",
         )}
       >
         <div
@@ -53,9 +55,9 @@ export function BattlefieldView(props: BattlefieldViewProps) {
             cardXpCardId={props.cardXpActorPlayerId === props.opponentId ? (props.cardXpCardId ?? null) : null}
             cardXpAmount={props.cardXpActorPlayerId === props.opponentId ? (props.cardXpAmount ?? null) : null}
             cardXpEventId={props.cardXpActorPlayerId === props.opponentId ? (props.cardXpEventId ?? null) : null}
-            canActivateSelectedExecution={false}
-            onActivateSelectedExecution={props.onActivateSelectedExecution}
+            hasBlockingTrapActivation={hasBlockingTrapActivation}
             onGraveyardClick={props.onGraveyardClick}
+            onFusionDeckClick={props.onFusionDeckClick}
             onDestroyedClick={props.onDestroyedClick}
             onEntityClick={props.onEntityClick}
           />
@@ -85,9 +87,9 @@ export function BattlefieldView(props: BattlefieldViewProps) {
             cardXpCardId={props.cardXpActorPlayerId === props.playerId ? (props.cardXpCardId ?? null) : null}
             cardXpAmount={props.cardXpActorPlayerId === props.playerId ? (props.cardXpAmount ?? null) : null}
             cardXpEventId={props.cardXpActorPlayerId === props.playerId ? (props.cardXpEventId ?? null) : null}
-            canActivateSelectedExecution={props.canActivateSelectedExecution}
-            onActivateSelectedExecution={props.onActivateSelectedExecution}
+            hasBlockingTrapActivation={hasBlockingTrapActivation}
             onGraveyardClick={props.onGraveyardClick}
+            onFusionDeckClick={props.onFusionDeckClick}
             onDestroyedClick={props.onDestroyedClick}
             onEntityClick={props.onEntityClick}
           />

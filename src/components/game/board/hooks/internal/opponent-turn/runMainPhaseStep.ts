@@ -3,22 +3,7 @@ import { GameEngine } from "@/core/use-cases/GameEngine";
 import { addRevealedId, findReactiveTrap, removeRevealedId } from "../trapPreview";
 import { sleep } from "../sleep";
 import { IOpponentAutoPick, IOpponentStepTimings, IOpponentTurnContext } from "./types";
-
-function pickOpponentPendingActionId(context: IOpponentTurnContext, autoPick: IOpponentAutoPick): string | null {
-  const { gameState } = context;
-  if (!gameState.pendingTurnAction || gameState.pendingTurnAction.playerId !== gameState.playerB.id) return null;
-  if (gameState.pendingTurnAction.type === "DISCARD_FOR_HAND_LIMIT") return autoPick.chooseCardToDiscard(gameState.playerB.hand)?.id ?? null;
-  if (gameState.pendingTurnAction.type === "SELECT_FUSION_MATERIALS") {
-    const pending = gameState.pendingTurnAction;
-    return gameState.playerB.activeEntities.find((entity) => !pending.selectedMaterialInstanceIds.includes(entity.instanceId))?.instanceId ?? null;
-  }
-  if (gameState.pendingTurnAction.type === "SELECT_GRAVEYARD_CARD") {
-    const pending = gameState.pendingTurnAction;
-    const candidate = [...gameState.playerB.graveyard].reverse().find((card) => !pending.cardType || card.type === pending.cardType);
-    return candidate ? candidate.runtimeId ?? candidate.id : null;
-  }
-  return null;
-}
+import { pickOpponentPendingActionId } from "./pick-opponent-pending-action-id";
 
 export async function runMainPhaseStep(
   context: IOpponentTurnContext,
@@ -46,18 +31,41 @@ export async function runMainPhaseStep(
   const pendingExecution = gameState.playerB.activeExecutions.find((entity) => entity.mode === "ACTIVATE");
   if (pendingExecution) {
     const reactiveTrap = findReactiveTrap(gameState, gameState.playerA.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
+    const shouldActivateReactiveTrap = reactiveTrap
+      ? await context.requestTrapActivationDecision(reactiveTrap.card, "ON_OPPONENT_EXECUTION_ACTIVATED")
+      : false;
+    const opponentCounterTrap = reactiveTrap
+      ? findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_TRAP_ACTIVATED")
+      : null;
     context.setIsAnimating(true);
     context.setActiveAttackerId(pendingExecution.instanceId);
-    if (reactiveTrap) context.setRevealedEntities((previous) => addRevealedId(previous, reactiveTrap.instanceId));
+    if (reactiveTrap && shouldActivateReactiveTrap) {
+      context.setRevealedEntities((previous) => addRevealedId(previous, reactiveTrap.instanceId));
+      context.setSelectedCard(reactiveTrap.card);
+    }
     await sleep(timings.stepDelayMs);
-    if (reactiveTrap) {
+    if (reactiveTrap && shouldActivateReactiveTrap) {
       context.setActiveAttackerId(reactiveTrap.instanceId);
       await sleep(timings.trapPreviewMs);
       context.setActiveAttackerId(pendingExecution.instanceId);
     }
-    const nextState = context.applyTransition((state) => GameEngine.resolveExecution(state, opponentId, pendingExecution.instanceId));
+    if (opponentCounterTrap && shouldActivateReactiveTrap) {
+      context.setRevealedEntities((previous) => addRevealedId(previous, opponentCounterTrap.instanceId));
+      context.setActiveAttackerId(opponentCounterTrap.instanceId);
+      context.setSelectedCard(opponentCounterTrap.card);
+      await sleep(timings.trapPreviewMs);
+      context.setActiveAttackerId(pendingExecution.instanceId);
+    }
+    const nextState = context.applyTransition((state) =>
+      GameEngine.resolveExecution(state, opponentId, pendingExecution.instanceId, {
+        skipReactivePlayerIds: shouldActivateReactiveTrap ? [] : [state.playerA.id],
+        skipTrapEventTypes: shouldActivateReactiveTrap ? [] : ["EXECUTION_ACTIVATED"],
+      }),
+    );
     await sleep(timings.postResolutionMs);
-    if (reactiveTrap) context.setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
+    if (reactiveTrap && shouldActivateReactiveTrap) context.setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
+    if (opponentCounterTrap && shouldActivateReactiveTrap) context.setRevealedEntities((previous) => removeRevealedId(previous, opponentCounterTrap.instanceId));
+    context.setSelectedCard(null);
     context.setActiveAttackerId(null);
     context.setIsAnimating(false);
     if (nextState && nextState.activePlayerId === nextState.playerA.id) {

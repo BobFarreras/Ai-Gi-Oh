@@ -39,4 +39,13 @@ describe("LogoutButton", () => {
     expect(push).toHaveBeenCalledWith("/login");
     expect(refresh).toHaveBeenCalledTimes(1);
   });
+
+  it("cierra el diálogo con Escape sin ejecutar logout", async () => {
+    render(<LogoutButton confirmBeforeLogout />);
+    fireEvent.click(screen.getByRole("button", { name: "Desconectar del Hub" }));
+    expect(screen.getByRole("dialog", { name: "Confirmar Desconexión" })).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Confirmar Desconexión" })).not.toBeInTheDocument());
+    expect(logoutCurrentUser).not.toHaveBeenCalled();
+  });
 });

@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { isMobileLayoutViewport } from "@/components/internal/layout-breakpoints";
 
 export interface IBoardPerformanceProfile {
   isMobileViewport: boolean;
@@ -17,7 +18,7 @@ function detectProfile(): IBoardPerformanceProfile {
     return { isMobileViewport: false, shouldReduceCombatEffects: false };
   }
 
-  const isMobileViewport = window.innerWidth <= 1024;
+  const isMobileViewport = isMobileLayoutViewport(window.innerWidth);
   const prefersReducedMotion = hasMatchMediaApi()
     ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
     : false;

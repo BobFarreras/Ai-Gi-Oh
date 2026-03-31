@@ -11,6 +11,7 @@ export interface IStorySceneSidebarViewProps {
   interactionFeedback: string | null;
   smartActionLabel: string;
   canRunSmartAction: boolean;
+  onExitToHub: () => void;
   onSmartAction: () => void;
   onDeselect: () => void;
 }
@@ -34,7 +35,6 @@ export interface IStorySceneMapViewProps {
   onSelectNode: (nodeId: string | null) => void;
   onMoveSelectedNode?: () => void;
   onRequestCenterPlayer?: () => void;
-  onExitToHub?: () => void;
   onRewardCollectAnimationComplete: () => void;
   onRetreatAnimationComplete: () => void;
   dialog: {

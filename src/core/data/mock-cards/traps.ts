@@ -9,8 +9,8 @@ function createTrap(seed: ITrapSeed): ICard {
   return {
     ...seed,
     type: "TRAP",
-    bgUrl: "/assets/bgs/bg-tech.jpg",
-    renderUrl: `/assets/renders/${seed.renderFile}.png`,
+    bgUrl: undefined,
+    renderUrl: `/assets/renders/traps/${seed.id}.webp`,
   };
 }
 
@@ -18,7 +18,7 @@ export const TRAP_CARDS: ICard[] = [
   createTrap({
     id: "trap-counter-intrusion",
     name: "Counter Intrusion",
-    description: "Cuando el rival declara ataque, inflige 500 de daño al rival.",
+    description: "Cuando el rival declara ataque, inflige 500 de daño directo al rival.",
     renderFile: "kali-linux",
     faction: "OPEN_SOURCE",
     cost: 2,
@@ -38,7 +38,7 @@ export const TRAP_CARDS: ICard[] = [
   createTrap({
     id: "trap-kernel-panic",
     name: "Kernel Panic",
-    description: "Cuando el rival declara ataque, anula el ataque y destruye la carta atacante.",
+    description: "Cuando el rival declara ataque, niega ese ataque y destruye la entidad atacante.",
     renderFile: "kali-linux",
     faction: "OPEN_SOURCE",
     cost: 3,
@@ -48,7 +48,7 @@ export const TRAP_CARDS: ICard[] = [
   createTrap({
     id: "trap-atk-drain",
     name: "ATK Drain",
-    description: "Cuando el rival declara ataque, reduce 300 ATQ de sus entidades.",
+    description: "Cuando el rival declara ataque, reduce -300 ATK a todas sus entidades en campo.",
     renderFile: "n8n",
     faction: "NO_CODE",
     cost: 2,
@@ -58,7 +58,7 @@ export const TRAP_CARDS: ICard[] = [
   createTrap({
     id: "trap-def-fragment",
     name: "DEF Fragment",
-    description: "Cuando el rival activa ejecución, reduce 300 DEF de sus entidades.",
+    description: "Cuando el rival activa una ejecución, reduce -300 DEF a todas sus entidades en campo.",
     renderFile: "openclaw",
     faction: "BIG_TECH",
     cost: 2,
