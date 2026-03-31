@@ -46,6 +46,7 @@ export function mapEventToTrack(event: ICombatLogEvent): AudioTrackId | null {
   const mode = payload && typeof payload.mode === "string" ? payload.mode : "";
   const effectAction = payload && typeof payload.effectAction === "string" ? payload.effectAction : "";
   if (cardType === "EXECUTION" && mode === "ACTIVATE") {
+    if (effectAction === "RESTORE_ENERGY" || effectAction === "DRAIN_OPPONENT_ENERGY" || effectAction === "SET_CARD_DUEL_PROGRESS") return null;
     if (effectAction === "DAMAGE") return "LIFE_LOSS";
     if (effectAction === "HEAL") return "BANNER";
     if (effectAction === "DRAW_CARD") return "DRAW_CARD";

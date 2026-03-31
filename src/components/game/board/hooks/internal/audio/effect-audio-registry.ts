@@ -2,6 +2,16 @@
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 
 type EffectAudioSource = "execution" | "trap";
+const CHARGED_CUSTOM_AUDIO_ACTIONS = new Set(["RESTORE_ENERGY", "DRAIN_OPPONENT_ENERGY", "SET_CARD_DUEL_PROGRESS"]);
+const EFFECT_AUDIO_OVERRIDES: Record<string, string> = {
+  BOOST_ATTACK_ALLIED_ENTITY: "/audio/sfx/effects/execution/stat_up.mp3",
+  BOOST_ATTACK_BY_ARCHETYPE: "/audio/sfx/effects/execution/stat_up.mp3",
+  BOOST_DEFENSE_BY_ARCHETYPE: "/audio/sfx/effects/execution/stat_up.mp3",
+  SET_DEFENSE_BY_CARD_ID: "/audio/sfx/effects/execution/stat_up.mp3",
+  BOOST_DEFENSE_BY_CARD_ID: "/audio/sfx/effects/execution/stat_up.mp3",
+  REDUCE_OPPONENT_ATTACK: "/audio/sfx/effects/execution/bajada.mp3",
+  REDUCE_OPPONENT_DEFENSE: "/audio/sfx/effects/execution/bajada.mp3",
+};
 
 function normalizeActionToFileName(action: string): string {
   const normalized = action.trim().toLowerCase();
@@ -33,6 +43,9 @@ export function resolveEffectAudioPath(event: ICombatLogEvent): string | null {
   const source = resolveSource(event, payload);
   const action = readEffectAction(payload);
   if (!source || !action) return null;
+  if (source === "execution" && CHARGED_CUSTOM_AUDIO_ACTIONS.has(action)) return null;
+  const overridePath = EFFECT_AUDIO_OVERRIDES[action];
+  if (overridePath) return overridePath;
   const fileName = normalizeActionToFileName(action);
   if (!fileName) return null;
   return `/audio/sfx/effects/${source}/${fileName}.mp3`;

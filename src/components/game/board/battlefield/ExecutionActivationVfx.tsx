@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { DigitalBeam } from "./DigitalBeam";
 import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
+import { ExecutionChargedActionVfx } from "@/components/game/board/battlefield/internal/ExecutionChargedActionVfx";
+import { ChargeCastSfx } from "@/components/game/board/battlefield/internal/ChargeCastSfx";
 
 interface ExecutionActivationVfxProps {
   entity: IBoardEntity;
@@ -43,22 +45,31 @@ export function ExecutionActivationVfx({ entity, isOpponentSide }: ExecutionActi
   }
 
   if (action === "DAMAGE") {
-    return <DigitalBeam direction={isOpponentSide ? "towards-player" : "towards-opponent"} onComplete={() => undefined} />;
+    return (
+      <>
+        <ChargeCastSfx enabled />
+        <DigitalBeam direction={isOpponentSide ? "towards-player" : "towards-opponent"} onComplete={() => undefined} />
+      </>
+    );
+  }
+  if (action === "RESTORE_ENERGY" || action === "DRAIN_OPPONENT_ENERGY" || action === "SET_CARD_DUEL_PROGRESS") {
+    return <ExecutionChargedActionVfx action={action} isOpponentSide={isOpponentSide} />;
   }
 
   if (action === "HEAL") {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.6 }}
-        animate={{ opacity: [0, 1, 0], scale: [0.6, 1.35, 1.1] }}
-        transition={{ duration: 1.1, ease: "easeOut" }}
-        className="absolute -inset-6 rounded-full pointer-events-none z-[210] bg-[radial-gradient(circle,rgba(16,185,129,0.65)_0%,rgba(16,185,129,0.18)_45%,rgba(16,185,129,0)_80%)]"
+        initial={{ opacity: 0, scale: 0.55 }}
+        animate={{ opacity: [0, 1, 0], scale: [0.55, 1.45, 1.06] }}
+        transition={{ duration: 1.28, ease: "easeOut" }}
+        className="absolute -inset-10 rounded-full pointer-events-none z-[220] bg-[radial-gradient(circle,rgba(16,185,129,0.82)_0%,rgba(16,185,129,0.24)_42%,rgba(16,185,129,0)_82%)]"
       >
+        <ChargeCastSfx enabled path="/audio/sfx/cargar.mp3" volume={0.7} />
         <motion.div
           initial={{ y: 14, opacity: 0 }}
           animate={{ y: -48, opacity: [0, 1, 0] }}
-          transition={{ duration: 1.1, ease: "easeOut" }}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 text-4xl font-black text-emerald-200 drop-shadow-[0_0_18px_rgba(52,211,153,1)]"
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 text-5xl font-black text-emerald-100 drop-shadow-[0_0_24px_rgba(52,211,153,1)]"
         >
           HEAL
         </motion.div>
