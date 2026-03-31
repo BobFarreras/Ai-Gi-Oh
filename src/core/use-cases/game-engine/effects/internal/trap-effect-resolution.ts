@@ -4,7 +4,19 @@ import { resolveTrapEffectFromRegistry } from "@/core/use-cases/game-engine/effe
 import { ITrapResolutionResult, ITrapTriggerContext } from "@/core/use-cases/game-engine/effects/internal/trap-types";
 
 function createNeutralResult(player: IPlayer, opponent: IPlayer): ITrapResolutionResult {
-  return { player, opponent, damage: 0, destroyedOpponentEntityCardId: null, destroyedOpponentEntityDestination: null };
+  return {
+    player,
+    opponent,
+    damage: 0,
+    buffTargetEntityIds: [],
+    buffStat: null,
+    buffAmount: 0,
+    blockedTargetEntityInstanceId: null,
+    destroyedOpponentEntityCardId: null,
+    destroyedOpponentEntityInstanceId: null,
+    destroyedOpponentEntitySlotIndex: null,
+    destroyedOpponentEntityDestination: null,
+  };
 }
 
 export function resolveTrapEffect(player: IPlayer, opponent: IPlayer, trap: IBoardEntity, context?: ITrapTriggerContext): ITrapResolutionResult {
