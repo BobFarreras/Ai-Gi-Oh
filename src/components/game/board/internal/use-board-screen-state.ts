@@ -8,6 +8,7 @@ import { useMatchNarration } from "@/components/game/board/hooks/internal/match/
 import { useBoard } from "@/components/game/board/hooks/useBoard";
 import { useBoardScreenInteractions } from "./use-board-screen-interactions";
 import { useDelayedDuelResult } from "./use-delayed-duel-result";
+import { IBattleBannerMessage } from "@/components/game/board/ui/internal/banner/banner-message-policy";
 
 interface IUseBoardScreenStateInput {
   board: ReturnType<typeof useBoard>;
@@ -35,7 +36,7 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
   const playerId = input.playerId;
   const mode = input.mode;
   const onMatchResolved = input.onMatchResolved;
-  const [autoModeBannerSignal, setAutoModeBannerSignal] = useState<{ id: string; left: string; right: string } | null>(null);
+  const [autoModeBannerSignal, setAutoModeBannerSignal] = useState<IBattleBannerMessage | null>(null);
   const [graveyardView, setGraveyardView] = useState<"player" | "opponent" | null>(null);
   const [fusionDeckView, setFusionDeckView] = useState<"player" | "opponent" | null>(null);
   const [destroyedView, setDestroyedView] = useState<"player" | "opponent" | null>(null);

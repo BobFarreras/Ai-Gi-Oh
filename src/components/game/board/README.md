@@ -130,6 +130,7 @@ Guía rápida para entender la lógica de tablero y batalla.
 4. El cierre del duelo usa secuencia en dos pasos:
    - banner de fin (`Duelo finalizado` o `Turnos agotados` + ganador),
    - apertura de `DuelResultOverlay` tras un retardo de ~2s para mejorar legibilidad.
+5. Los banners externos del combate están tipados por variante (`AUTO`, `VICTORY`, `DEFEAT`, `TURN_LIMIT`) para reutilizar estilo y animación sin ifs dispersos.
 4. Cada nueva partida/reinicio crea mazos barajados para ambos jugadores.
 5. El jugador puede activar/desactivar audio global con botón `mute` junto al historial.
 6. El catálogo de audio y volúmenes está centralizado en `src/core/config/audio-catalog.ts`.

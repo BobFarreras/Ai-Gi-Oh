@@ -15,6 +15,7 @@ export function BoardActionControlsSection({ board, screen, isMobile }: IBoardVi
       id: `auto-mode-${Date.now()}-${nextEnabled ? "on" : "off"}`,
       left: "Modo Automático",
       right: nextEnabled ? "Activado" : "Desactivado",
+      variant: "AUTO",
     });
   };
 

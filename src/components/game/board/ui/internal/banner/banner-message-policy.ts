@@ -6,6 +6,7 @@ export interface IBattleBannerMessage {
   id: string;
   left: string;
   right: string;
+  variant?: "DEFAULT" | "AUTO" | "VICTORY" | "DEFEAT" | "TURN_LIMIT";
 }
 
 interface IResolveLatestBannerMessageParams {

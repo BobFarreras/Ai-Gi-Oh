@@ -1,6 +1,7 @@
 // src/components/game/board/internal/use-delayed-duel-result.ts - Retrasa la apertura del resultado final y emite banner explícito al cerrarse el duelo.
 import { useEffect, useRef, useState } from "react";
 import { useBoard } from "@/components/game/board/hooks/useBoard";
+import { IBattleBannerMessage } from "@/components/game/board/ui/internal/banner/banner-message-policy";
 
 const RESULT_OVERLAY_DELAY_MS = 2000;
 const RESULT_MAX_TURN_LIMIT = 30;
@@ -10,7 +11,7 @@ interface IUseDelayedDuelResultParams {
   playerId: string;
   playerName: string;
   opponentName: string;
-  setBannerSignal: (value: { id: string; left: string; right: string } | null) => void;
+  setBannerSignal: (value: IBattleBannerMessage | null) => void;
 }
 
 function resolveWinnerDisplayName(
@@ -51,10 +52,22 @@ export function useDelayedDuelResult({
       board.gameState.playerA.healthPoints > 0 &&
       board.gameState.playerB.healthPoints > 0;
     const winnerDisplayName = resolveWinnerDisplayName(board.winnerPlayerId, playerId, playerName, opponentName);
+    const isPlayerWinner = board.winnerPlayerId === playerId;
+    const variant: IBattleBannerMessage["variant"] =
+      board.winnerPlayerId === "DRAW" ? "TURN_LIMIT" : isPlayerWinner ? "VICTORY" : "DEFEAT";
+    const leftText = isTurnLimitWin
+      ? `Turnos agotados · ${isPlayerWinner ? "Victoria" : board.winnerPlayerId === "DRAW" ? "Empate" : "Derrota"}`
+      : isPlayerWinner
+        ? "Victoria"
+        : board.winnerPlayerId === "DRAW"
+          ? "Empate"
+          : "Derrota";
+    const rightText = board.winnerPlayerId === "DRAW" ? "Resultado: empate" : `Gana ${winnerDisplayName}`;
     setBannerSignal({
       id: `duel-end-${board.matchSeed}-${board.winnerPlayerId}-${Date.now()}`,
-      left: isTurnLimitWin ? "Turnos agotados" : "Duelo finalizado",
-      right: `Gana ${winnerDisplayName}`,
+      left: leftText,
+      right: rightText,
+      variant,
     });
     if (resultDelayTimerRef.current) window.clearTimeout(resultDelayTimerRef.current);
     resultDelayTimerRef.current = window.setTimeout(() => {

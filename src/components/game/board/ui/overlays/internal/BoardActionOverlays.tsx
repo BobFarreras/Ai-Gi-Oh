@@ -9,6 +9,7 @@ import { BattleBannerCenter } from "../../BattleBannerCenter";
 import { EntityReplacementConfirmOverlay } from "../EntityReplacementConfirmOverlay";
 import { DirectDamageBeamOverlay } from "./DirectDamageBeamOverlay";
 import { EffectTargetedOverlay } from "./EffectTargetedOverlay";
+import { IBattleBannerMessage } from "../../internal/banner/banner-message-policy";
 
 interface IBoardActionOverlaysProps {
   pendingActionHint: string | null;
@@ -20,7 +21,7 @@ interface IBoardActionOverlaysProps {
   playerAName: string;
   playerBId: string;
   playerBName: string;
-  externalBannerSignal: { id: string; left: string; right: string } | null;
+  externalBannerSignal: IBattleBannerMessage | null;
   showBattleBanners: boolean;
   onConfirmEntityReplacement: () => void;
   onCancelEntityReplacement: () => void;
