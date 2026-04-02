@@ -130,6 +130,16 @@ Criterio de salida:
 1. Cero archivos nuevos >150 líneas en dominios restringidos.
 2. Legacy >150 reducido por tandas con evidencia en PR.
 
+### Avance implementado (2026-04-02)
+
+1. Hotspots priorizados reducidos por debajo de 150 líneas:
+2. `src/components/game/board/hooks/internal/match/useMatchRuntime.ts` (93)
+3. `src/core/use-cases/game-engine/actions/internal/execution-effect-registry.ts` (102)
+4. `src/components/game/board/SidePanels.tsx` (139)
+5. `src/components/game/board/ui/overlays/internal/EffectTargetedOverlay.tsx` (76)
+6. `src/components/game/board/hooks/internal/player-actions/useExecutePlayAction.ts` (127)
+7. Extracciones SRP aplicadas en módulos `internal/*` y helpers puros sin alterar diseño/UI.
+
 ## Fase 5 - Rendimiento sin tocar diseño/UI
 
 Objetivo:
