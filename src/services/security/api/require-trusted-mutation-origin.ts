@@ -2,10 +2,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasTrustedRequestOrigin } from "@/services/security/api/validate-request-origin";
 
+interface ITrustedMutationOriginOptions {
+  allowMissingOrigin?: boolean;
+}
+
 /**
  * Devuelve una respuesta 403 si el origen no es confiable; `null` en caso válido.
  */
-export function requireTrustedMutationOrigin(request: NextRequest): NextResponse | null {
-  if (hasTrustedRequestOrigin(request)) return null;
+export function requireTrustedMutationOrigin(
+  request: NextRequest,
+  options: ITrustedMutationOriginOptions = {},
+): NextResponse | null {
+  if (hasTrustedRequestOrigin(request, options)) return null;
   return NextResponse.json({ message: "Origen de petición no confiable." }, { status: 403 });
 }

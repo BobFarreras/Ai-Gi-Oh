@@ -48,15 +48,30 @@ describe("TutorialMarketClient", () => {
     fireEvent.click(screen.getByRole("button", { name: "Siguiente paso del tutorial" }));
 
     expect(await screen.findByText("Comprar sobre aleatorio")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Siguiente paso del tutorial" }));
+    const buyPackButton = document.querySelector<HTMLElement>('[data-tutorial-id="market-buy-pack"]');
+    expect(buyPackButton).not.toBeNull();
+    if (!buyPackButton) {
+      throw new Error("No se encontró el botón de compra de pack del tutorial.");
+    }
+    fireEvent.click(buyPackButton);
+
     await waitFor(() => {
       const closeRevealButton = screen.queryByRole("button", { name: "Integrar al Almacén" });
       if (closeRevealButton) fireEvent.click(closeRevealButton);
-      const nextStepButton = screen.queryByRole("button", { name: "Siguiente paso del tutorial" });
-      if (nextStepButton) fireEvent.click(nextStepButton);
-      const isCompleted = Boolean(screen.queryByText("Market Completado"));
-      expect(isCompleted).toBe(true);
-    }, { timeout: 20000 });
+      expect(screen.queryByText("Sobres y aleatoriedad")).toBeInTheDocument();
+    }, { timeout: 15000 });
+
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente paso del tutorial" }));
+
+    expect(await screen.findByText("Bóveda: tu almacén", {}, { timeout: 10000 })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente paso del tutorial" }));
+
+    expect(await screen.findByText("Bóveda: historial", {}, { timeout: 10000 })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente paso del tutorial" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Market Completado")).toBeInTheDocument();
+    }, { timeout: 10000 });
 
     expect(screen.getByText("Market Completado")).toBeInTheDocument();
   }, 60000);
