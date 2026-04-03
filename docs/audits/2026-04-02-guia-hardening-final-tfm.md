@@ -157,6 +157,17 @@ Acciones:
 Criterio de salida:
 1. Mejora medible en baseline (TTI, scripting, frames dropped) o justificación técnica documentada si no procede.
 
+### Avance implementado (2026-04-03)
+
+1. Optimización aplicada en `market` sin cambios visuales:
+2. `useMarketSceneState` ahora reutiliza `availableListings` memoizado y evita recomputar `mobileVisibleListings` completo cuando el layout activo es desktop.
+3. `MarketScene` pasa explícitamente `isDesktopLayout` al estado para habilitar cálculo condicional.
+4. Baselines ejecutados antes/después:
+5. Antes: `baseline-mobile-2026-04-03T05-21-06-865Z`.
+6. Después: `baseline-mobile-2026-04-03T05-24-39-369Z`.
+7. Resultado: mejora en algunos escenarios (`combat realistic`, `market realistic` en INP), pero variabilidad alta en `stress`; no se puede afirmar mejora global concluyente con una sola pareja de corridas.
+8. Decisión técnica: mantener optimización por reducción de trabajo redundante y repetir benchmark en tanda de 3 ejecuciones por perfil para comparar medianas.
+
 ## Fase 6 - Cierre de seguridad operacional
 
 1. Rotar `SUPABASE_SERVICE_ROLE_KEY` si hubo exposición fuera de entorno local.
@@ -166,6 +177,18 @@ Criterio de salida:
 
 Criterio de salida:
 1. Sin secretos expuestos ni permisos sobredimensionados.
+
+### Avance implementado (2026-04-03)
+
+1. Verificación de secretos en repo:
+2. `.env.local` confirmado como ignorado por Git.
+3. No se detectan claves reales hardcodeadas; solo referencias a nombres de variables y placeholders en plantillas.
+4. Checklist operacional documentado en:
+5. `docs/security/operational-hardening-checklist.md`.
+6. Queda como acción manual de plataforma:
+7. rotación de `SUPABASE_SERVICE_ROLE_KEY` en Supabase/Vercel si hubo exposición externa.
+8. Queda como acción de cierre en entorno:
+9. validar RLS/permisos admin en proyecto Supabase productivo siguiendo checklist.
 
 ## Checklist de cierre (Definition of Done TFM)
 

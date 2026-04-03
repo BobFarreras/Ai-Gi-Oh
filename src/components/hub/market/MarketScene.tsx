@@ -27,15 +27,16 @@ interface MarketSceneProps {
 }
 
 export function MarketScene(props: MarketSceneProps) {
+  const viewportWidth = useViewportWidth();
+  const isDesktopLayout = isDesktopLayoutViewport(viewportWidth);
   const state = useMarketSceneState({
     playerId: props.playerId,
+    isDesktopLayout,
     initialCatalog: props.initialCatalog,
     initialTransactions: props.initialTransactions,
     initialCollection: props.initialCollection,
     purchaseActionOverrides: props.purchaseActionOverrides,
   });
-  const viewportWidth = useViewportWidth();
-  const isDesktopLayout = isDesktopLayoutViewport(viewportWidth);
   const {
     tutorialForcedMobilePanel,
     tutorialForceInspectorOpen,
@@ -52,6 +53,7 @@ export function MarketScene(props: MarketSceneProps) {
     purchaseActionOverrides: props.purchaseActionOverrides,
   });
   const handleBuyPack = state.handleBuyPack;
+
   return (
     <main className="hub-control-room-bg relative box-border flex h-[100dvh] w-full flex-col items-center justify-center overflow-hidden px-3 py-3 text-slate-100 sm:px-5">
       <section className="mx-auto flex h-full max-h-[95dvh] w-full max-w-screen-2xl min-w-0 flex-col overflow-hidden rounded-3xl border border-cyan-900/40 bg-[#020a14]/88 p-3 shadow-[0_24px_50px_rgba(2,5,14,0.86)] backdrop-blur-xl transition-all sm:p-4">
