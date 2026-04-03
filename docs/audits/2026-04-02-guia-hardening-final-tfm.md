@@ -185,10 +185,13 @@ Criterio de salida:
 3. No se detectan claves reales hardcodeadas; solo referencias a nombres de variables y placeholders en plantillas.
 4. Checklist operacional documentado en:
 5. `docs/security/operational-hardening-checklist.md`.
-6. Queda como acción manual de plataforma:
-7. rotación de `SUPABASE_SERVICE_ROLE_KEY` en Supabase/Vercel si hubo exposición externa.
-8. Queda como acción de cierre en entorno:
-9. validar RLS/permisos admin en proyecto Supabase productivo siguiendo checklist.
+6. Scripts SQL de cierre operativo añadidos para Supabase:
+7. `docs/security/sql/2026-04-03-supabase-least-privilege-hardening.sql` (revoca privilegios amplios y reaplica mínimo necesario).
+8. `docs/security/sql/2026-04-03-supabase-rls-verification.sql` (consulta de verificación de RLS/políticas/permisos).
+9. Queda como acción manual de plataforma:
+10. rotación de `SUPABASE_SERVICE_ROLE_KEY` en Supabase/Vercel si hubo exposición externa.
+11. Queda como acción de cierre en entorno:
+12. ejecutar SQL de hardening/verificación en Supabase productivo y guardar evidencia en PR final.
 
 ## Checklist de cierre (Definition of Done TFM)
 

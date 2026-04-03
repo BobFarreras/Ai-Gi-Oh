@@ -41,16 +41,21 @@
 
 1. Validar que solo rutas/admin jobs usan `SUPABASE_SERVICE_ROLE_KEY`.
 2. Confirmar que clientes de usuario usan `anon key` + políticas RLS.
-3. Revisar tablas de dominio crítico (perfil, progreso, inventario, mercado, historia):
+3. Aplicar endurecimiento de privilegios mínimos en SQL Editor:
+   - `docs/security/sql/2026-04-03-supabase-least-privilege-hardening.sql`
+4. Ejecutar verificación posterior:
+   - `docs/security/sql/2026-04-03-supabase-rls-verification.sql`
+5. Revisar tablas de dominio crítico (perfil, progreso, inventario, mercado, historia):
    - `SELECT`: solo filas del propietario o reglas explícitas de lectura pública.
    - `INSERT/UPDATE/DELETE`: negar por defecto y permitir por política mínima.
-4. Verificar que no hay políticas `USING (true)` o `WITH CHECK (true)` en tablas sensibles.
-5. Confirmar que funciones RPC sensibles no quedan expuestas a rol `anon`.
+6. Verificar que no hay políticas `USING (true)` o `WITH CHECK (true)` en tablas sensibles.
+7. Confirmar que funciones RPC sensibles no quedan expuestas a rol `anon`.
 
 ## Evidencia mínima para PR final
 
 1. Captura/config export de variables en Vercel sin mostrar valores.
 2. Resultado de `pnpm security:rate-limit:check:staging`.
 3. Resultado de `pnpm security:rate-limit:check:production`.
-4. Confirmación escrita de rotación de `SUPABASE_SERVICE_ROLE_KEY` (si aplica).
-5. Resultado `lint`, `test`, `build`, `audit` en verde.
+4. Resultado de ejecución de `2026-04-03-supabase-rls-verification.sql`.
+5. Confirmación escrita de rotación de `SUPABASE_SERVICE_ROLE_KEY` (si aplica).
+6. Resultado `lint`, `test`, `build`, `audit` en verde.
