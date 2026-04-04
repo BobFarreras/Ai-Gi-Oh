@@ -3,6 +3,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import { resolveStoryRewardCardVisual } from "@/services/story/resolve-story-reward-card-visual";
@@ -33,6 +34,7 @@ function resolveHologramAsset(node: IStoryMapNodeRuntime): { src: string; alt: s
 
 export function StoryMapNode({ node, isSelected, isCurrentNode, isCollecting = false, onClick }: StoryMapNodeProps) {
   const hologram = resolveHologramAsset(node);
+  const [resolvedHologramSrc, setResolvedHologramSrc] = useState<string>(hologram?.src ?? "/assets/renders/wrap.webp");
   const transitionActTarget = resolveStoryActTransitionTarget(node.id);
   const isActTransitionNode = transitionActTarget !== null;
   const isDefeatedDuel = node.isCompleted && (node.nodeType === "DUEL" || node.nodeType === "BOSS");
@@ -91,11 +93,12 @@ export function StoryMapNode({ node, isSelected, isCurrentNode, isCollecting = f
           {hologram ? (
             <div className={cn("relative h-full w-full", node.isBossDuel && "-rotate-45")}>
               <Image
-                src={hologram.src}
+                src={resolvedHologramSrc}
                 alt={hologram.alt}
                 fill
                 sizes="80px"
                 quality={55}
+                onError={() => setResolvedHologramSrc("/assets/renders/wrap.webp")}
                 className={cn(
                   "object-contain",
                   isActTransitionNode && "opacity-50 blur-[0.4px]",
