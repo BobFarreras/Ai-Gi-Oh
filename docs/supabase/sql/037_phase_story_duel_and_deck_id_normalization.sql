@@ -1,6 +1,9 @@
 -- docs/supabase/sql/037_phase_story_duel_and_deck_id_normalization.sql - Normaliza IDs de mazos y duelos Story para mantener coherencia entre acto/capítulo/índice.
 begin;
 
+alter table public.story_duels
+  drop constraint if exists story_duels_chapter_duel_index_key;
+
 with deck_map(old_id, new_id) as (
   values
     ('deck-opp-ch1-apprentice-v1', 'deck-opp-gennvim-v1'),
@@ -394,5 +397,8 @@ where id in (
   'story-ch2-duel-8',
   'story-ch2-duel-9'
 );
+
+alter table public.story_duels
+  add constraint story_duels_chapter_duel_index_key unique (chapter, duel_index);
 
 commit;
