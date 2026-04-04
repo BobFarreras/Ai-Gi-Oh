@@ -6,8 +6,8 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
     title: "Protocolo de Emergencia",
     soundtrackUrl: "/audio/story/soundtruck.mp3",
     lines: [
-      { actorId: "opp-ch1-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "Operador, no estás tarde. Estás justo antes del colapso." },
-      { actorId: "opp-ch1-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "La Entidad no destruye nodos. Los reprograma para convertirlos en zonas hostiles." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "Operador, no estás tarde. Estás justo antes del colapso." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "La Entidad no destruye nodos. Los reprograma para convertirlos en zonas hostiles." },
       { actorId: "player", side: "LEFT", visualKind: "CHARACTER", speaker: "Operador", text: "Entendido. Avanzaré por rutas estables y aseguraré recursos antes de cada combate." },
     ],
   },
@@ -21,8 +21,8 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
       loop: false,
     },
     lines: [
-      { actorId: "opp-ch1-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "Registro oculto detectado. Hay una carta táctica en la rama lateral." },
-      { actorId: "opp-ch1-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "Si fallas en esa ruta, quedará pendiente hasta que regreses con mejor mazo." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "Registro oculto detectado. Hay una carta táctica en la rama lateral." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "Si fallas en esa ruta, quedará pendiente hasta que regreses con mejor mazo." },
       { actorId: "player", side: "LEFT", visualKind: "CHARACTER", speaker: "Operador", text: "Haré el intento cuando la presión principal esté controlada." },
     ],
   },
@@ -30,14 +30,14 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
     title: "Eco Fragmentado",
     soundtrackUrl: "/audio/story/soundtruck.mp3",
     lines: [
-      { actorId: "opp-ch1-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "Esta rama tiene ruido corrupto y oponentes de respuesta agresiva." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "Esta rama tiene ruido corrupto y oponentes de respuesta agresiva." },
       { actorId: "player", side: "LEFT", visualKind: "CHARACTER", speaker: "Operador", text: "Entro, limpio el nodo y vuelvo al eje principal." },
     ],
   },
   "story-ch1-transition-to-act2": {
     title: "Puerta al Valle Visual",
     lines: [
-      { actorId: "opp-ch1-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "Ya conoces el mapa. Ahora conoce a quienes lo dominan.", autoAdvanceMs: 3200 },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "Ya conoces el mapa. Ahora conoce a quienes lo dominan.", autoAdvanceMs: 3200 },
     ],
   },
   "story-ch2-transition-to-act1": {

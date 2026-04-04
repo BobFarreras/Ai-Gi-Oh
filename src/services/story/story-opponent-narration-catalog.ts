@@ -46,8 +46,8 @@ function profile(input: IStoryOpponentNarrationProfile): IStoryOpponentNarration
 }
 
 export const STORY_OPPONENT_NARRATION_CATALOG: Record<string, IStoryOpponentNarrationProfile> = {
-  "opp-ch1-apprentice": profile({
-    opponentId: "opp-ch1-apprentice",
+  "opp-gennvim": profile({
+    opponentId: "opp-gennvim",
     assetFolder: "opp-ch1-apprentice",
     portraits: { intro: "intro-GenNvim.png", victory: "victoria-GenNvim.png", defeat: "derrota-GenNvim.png" },
     lines: {
@@ -60,8 +60,8 @@ export const STORY_OPPONENT_NARRATION_CATALOG: Record<string, IStoryOpponentNarr
       opponentDefeat: line("opponentDefeat", "La próxima vez ganaré.", "derrota-oponente.mp3"),
     },
   }),
-  "opp-ch1-biglog": profile({
-    opponentId: "opp-ch1-biglog",
+  "opp-biglog": profile({
+    opponentId: "opp-biglog",
     assetFolder: "opp-ch1-biglog",
     portraits: { intro: "intro-BigLog.png", victory: "victoria-BigLog.png", defeat: "derrota-BigLog.png" },
     lines: {
@@ -74,8 +74,8 @@ export const STORY_OPPONENT_NARRATION_CATALOG: Record<string, IStoryOpponentNarr
       opponentDefeat: line("opponentDefeat", "Esto no puede estar pasando.", "derrota-oponente.mp3"),
     },
   }),
-  "opp-ch1-jaku": profile({
-    opponentId: "opp-ch1-jaku",
+  "opp-jaku": profile({
+    opponentId: "opp-jaku",
     assetFolder: "opp-ch1-jaku",
     portraits: { intro: "intro-Jaku.png", victory: "victoria-Jaku.png", defeat: "derrota-Jaku.png" },
     lines: {
@@ -88,8 +88,8 @@ export const STORY_OPPONENT_NARRATION_CATALOG: Record<string, IStoryOpponentNarr
       opponentDefeat: line("opponentDefeat", "Esto no termina aquí.", "derrota-oponente.mp3"),
     },
   }),
-  "opp-ch1-helena": profile({
-    opponentId: "opp-ch1-helena",
+  "opp-helena": profile({
+    opponentId: "opp-helena",
     assetFolder: "opp-ch1-helena",
     portraits: { intro: "intro-Helena.png", victory: "victoria-Helena.png", defeat: "derrota-Helena.png" },
     lines: {
@@ -102,8 +102,8 @@ export const STORY_OPPONENT_NARRATION_CATALOG: Record<string, IStoryOpponentNarr
       opponentDefeat: line("opponentDefeat", "Mis cartas me han fallado.", "derrota-oponente.mp3"),
     },
   }),
-  "opp-ch1-soldier-act01": profile({
-    opponentId: "opp-ch1-soldier-act01",
+  "opp-soldier-act01": profile({
+    opponentId: "opp-soldier-act01",
     assetFolder: "opp-ch1-soldier-act01",
     portraits: { intro: "intro-Soldado-act01.png", victory: "victoria-Soldado-act01.png", defeat: "derrota-Soldado-act01.png" },
     lines: {

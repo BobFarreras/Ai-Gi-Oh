@@ -52,7 +52,7 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
   );
   const bossThemeVariant = useMemo<BoardBossThemeVariant>(() => {
     const byOpponentId: Record<string, BoardBossThemeVariant> = {
-      "opp-ch1-helena": "CRIMSON",
+      "opp-helena": "CRIMSON",
       "opp-ch2-omega": "VIOLET",
     };
     return byOpponentId[props.opponentId] ?? "CRIMSON";

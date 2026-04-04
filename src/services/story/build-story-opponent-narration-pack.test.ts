@@ -6,8 +6,8 @@ import { getStoryOpponentNarrationProfile } from "./story-opponent-narration-cat
 describe("buildStoryOpponentNarrationPack", () => {
   it("aplica overrides del primer oponente de story", () => {
     const pack = buildStoryOpponentNarrationPack({
-      opponentId: "opp-ch1-apprentice",
-      opponentName: "Apprentice Null",
+      opponentId: "opp-gennvim",
+      opponentName: "GenNvim",
       duelDescription: "Descripción base",
     });
     const startOpponent = pack.lines.find((line) => line.id === "start-opponent");
@@ -27,7 +27,7 @@ describe("buildStoryOpponentNarrationPack", () => {
 
   it("resuelve líneas nuevas para BigLog con contrato normalizado", () => {
     const pack = buildStoryOpponentNarrationPack({
-      opponentId: "opp-ch1-biglog",
+      opponentId: "opp-biglog",
       opponentName: "BigLog",
       duelDescription: "Descripción base",
     });
@@ -40,11 +40,11 @@ describe("buildStoryOpponentNarrationPack", () => {
 
   it("garantiza que todos los perfiles del catálogo tienen las 7 líneas obligatorias", () => {
     const profileIds = [
-      "opp-ch1-apprentice",
-      "opp-ch1-biglog",
-      "opp-ch1-jaku",
-      "opp-ch1-helena",
-      "opp-ch1-soldier-act01",
+      "opp-gennvim",
+      "opp-biglog",
+      "opp-jaku",
+      "opp-helena",
+      "opp-soldier-act01",
     ] as const;
     for (const profileId of profileIds) {
       const profile = getStoryOpponentNarrationProfile(profileId);
