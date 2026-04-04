@@ -5,21 +5,19 @@ interface IStoryDialogueLineMedia {
 }
 
 const DIALOGUE_MEDIA_BY_NODE_ID: Record<string, IStoryDialogueLineMedia[]> = {
-  "story-ch1-event-scout-log": [
-    {
-      portraitUrl: "/assets/story/opponents/opp-ch1-apprentice/intro-GenNvim.png",
-      // Punto de integración futuro: activar cuando exista el asset final de voz.
-      // audioUrl: "/audio/story/dialogues/story-ch1-event-scout-log-line-01.mp3",
-    },
-    {
-      portraitUrl: "/assets/story/player/bob.png",
-    },
-    {
-      portraitUrl: "/assets/story/opponents/opp-ch1-apprentice/intro-GenNvim.png",
-    },
-    {
-      portraitUrl: "/assets/story/player/bob.png",
-    },
+  "story-a1-event-biglog-briefing": [
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png" },
+    { portraitUrl: "/assets/story/player/bob.png" },
+  ],
+  "story-a1-event-special-card-signal": [
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png" },
+    { portraitUrl: "/assets/story/player/bob.png" },
+  ],
+  "story-a1-side-event-echo-fragment": [
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png" },
+    { portraitUrl: "/assets/story/player/bob.png" },
   ],
 };
 

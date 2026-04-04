@@ -163,3 +163,40 @@ Dejar trazabilidad completa de arquitectura y flujo Story/Duel para mantenimient
 
 ### Validación
 - Verificación final de `pnpm lint`, `pnpm test` (target Story) y `pnpm build`.
+
+## Fase 7 - Acto 1 BigLog + cinemática de evento + escalado Soldado
+
+### Objetivo
+Alinear Acto 1 con `MODO-HISTORIA.md`: ruta principal + rama secundaria real, evento con vídeo full-screen y boss final reutilizando `opp-ch1-soldier-act01` con dificultad progresiva.
+
+### Cambios aplicados
+1. Se rediseñó el mapa visual del Acto 1 con nodos de briefing, señal especial, rama lateral y transición final al Acto 2.
+2. Se añadió soporte de `cinematicVideo` en diálogo Story y overlay full-screen con botón flotante para interrumpir la cinemática.
+3. Se actualizó catálogo narrativo de Acto 1 (BigLog) y media de retratos por línea.
+4. Se aplicó migración SQL para escalar duelos del mismo oponente (`ROOKIE -> STANDARD -> ELITE -> BOSS`) y overrides de deck por duelo.
+
+### Archivos creados
+- `src/services/story/story-node-interaction-dialogue-types.ts`
+- `src/services/story/story-node-interaction-dialogue-catalog.ts`
+- `src/components/hub/story/internal/scene/dialog/StoryInteractionVideoOverlay.tsx`
+- `docs/supabase/sql/034_phase_story_act1_biglog_video_soldier_scaling.sql`
+
+### Archivos modificados
+- `src/services/story/map-definitions/act-1-map-definition.ts`
+- `src/services/story/resolve-story-node-interaction-dialogue.ts`
+- `src/services/story/story-node-dialogue-media.ts`
+- `src/components/hub/story/StoryScene.tsx`
+- `src/components/hub/story/internal/scene/dialog/use-story-node-interaction-dialog.ts`
+- `src/components/hub/story/internal/scene/dialog/StoryNodeInteractionDialog.tsx`
+- `src/components/hub/story/internal/scene/view/StorySceneMapPane.tsx`
+- `src/components/hub/story/internal/scene/view/story-scene-view-props.ts`
+- `src/services/story/merge-story-map-visual-definition.test.ts`
+- `src/services/story/resolve-story-world-move-mode.test.ts`
+- `src/services/story/resolve-story-world-traversal-path.test.ts`
+- `src/services/story/resolve-story-node-interaction-dialogue.test.ts`
+- `src/components/hub/story/internal/scene/dialog/StoryNodeInteractionDialog.test.tsx`
+
+### Validación
+- `pnpm lint` en verde.
+- `pnpm build` en verde.
+- Tests Story focalizados en verde (`map`, `move-mode`, `traversal`, `dialog` y `video overlay`).

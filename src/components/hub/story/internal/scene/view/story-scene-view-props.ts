@@ -1,7 +1,10 @@
 // src/components/hub/story/internal/scene/view/story-scene-view-props.ts - Contratos compartidos de presentación para layouts Story desktop/mobile.
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import { IStoryChapterBriefing } from "@/services/story/build-story-chapter-briefing";
-import { IStoryInteractionDialogueLine } from "@/services/story/resolve-story-node-interaction-dialogue";
+import {
+  IStoryInteractionCinematicVideo,
+  IStoryInteractionDialogueLine,
+} from "@/services/story/story-node-interaction-dialogue-types";
 
 export interface IStorySceneSidebarViewProps {
   briefing: IStoryChapterBriefing;
@@ -41,6 +44,7 @@ export interface IStorySceneMapViewProps {
     isOpen: boolean;
     title: string;
     soundtrackUrl: string | null;
+    cinematicVideo: IStoryInteractionCinematicVideo | null;
     line: IStoryInteractionDialogueLine | null;
     onNext: () => void;
     onClose: () => void | Promise<void>;

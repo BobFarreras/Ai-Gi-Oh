@@ -1,5 +1,11 @@
 <!-- docs/story/README.md - Guía técnica del funcionamiento Story: mapa, duelos, progreso y rendimiento. -->
 # Story: funcionamiento y estructura
+## 0. Documentación narrativa por actos
+
+1. La narrativa funcional se mantiene modular en `docs/story/acts/`.
+2. Índice de actos: `docs/story/acts/README.md`.
+3. `MODO-HISTORIA.md` queda como resumen ejecutivo y reglas globales.
+4. Cada acto documenta flujo de nodos, ramas, contenido y regla de dificultad relativa.
 
 ## 1. Qué está hardcoded y qué está en Supabase
 
@@ -104,3 +110,4 @@ Para seguir escalando sin romper motor:
 - Runtime duelo: `src/services/story/get-story-duel-runtime-data.ts`
 - Perfil IA rival: `src/core/services/opponent/difficulty/resolve-opponent-difficulty-profile.ts`
 - UI story: `src/components/hub/story/README.md`
+

@@ -140,6 +140,7 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
       isOpen: interactionDialog.isOpen,
       title: interactionDialog.dialogueTitle,
       soundtrackUrl: interactionDialog.soundtrackUrl,
+      cinematicVideo: interactionDialog.cinematicVideo,
       line: interactionDialog.currentLine,
       onNext: advanceInteractionDialog,
       onClose: finalizeInteractionDialog,
@@ -147,3 +148,5 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
   };
   return isMobileLayout ? <StorySceneMobileLayout sidebar={sidebarProps} map={{ ...mapProps, centerRequestKey }} /> : <StorySceneDesktopLayout sidebar={sidebarProps} map={{ ...mapProps, centerRequestKey }} />;
 }
+
+

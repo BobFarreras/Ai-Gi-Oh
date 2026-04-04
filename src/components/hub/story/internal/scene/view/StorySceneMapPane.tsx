@@ -3,7 +3,10 @@ import { StoryCircuitMap } from "@/components/hub/story/StoryCircuitMap";
 import { StoryNodeInteractionDialog } from "@/components/hub/story/internal/scene/dialog/StoryNodeInteractionDialog";
 import { StoryActTransitionOverlay } from "@/components/hub/story/internal/scene/view/StoryActTransitionOverlay";
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
-import { IStoryInteractionDialogueLine } from "@/services/story/resolve-story-node-interaction-dialogue";
+import {
+  IStoryInteractionCinematicVideo,
+  IStoryInteractionDialogueLine,
+} from "@/services/story/story-node-interaction-dialogue-types";
 
 interface IStorySceneMapPaneProps {
   nodes: IStoryMapNodeRuntime[];
@@ -27,6 +30,7 @@ interface IStorySceneMapPaneProps {
     isOpen: boolean;
     title: string;
     soundtrackUrl: string | null;
+    cinematicVideo: IStoryInteractionCinematicVideo | null;
     line: IStoryInteractionDialogueLine | null;
     onNext: () => void;
     onClose: () => void | Promise<void>;
@@ -58,6 +62,7 @@ export function StorySceneMapPane(props: IStorySceneMapPaneProps) {
         isOpen={props.dialog.isOpen}
         title={props.dialog.title}
         soundtrackUrl={props.dialog.soundtrackUrl}
+        cinematicVideo={props.dialog.cinematicVideo}
         line={props.dialog.line}
         onNext={props.dialog.onNext}
         onClose={props.dialog.onClose}

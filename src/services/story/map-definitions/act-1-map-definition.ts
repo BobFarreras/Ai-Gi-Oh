@@ -1,4 +1,4 @@
-// src/services/story/map-definitions/act-1-map-definition.ts - Definición visual editable del acto 1 del mapa Story.
+// src/services/story/map-definitions/act-1-map-definition.ts - Definición visual del Acto 1 con ruta principal, bifurcación secundaria y cierre contra Soldado Acto 01.
 import {
   IStoryActMapDefinition,
   IStoryMapVirtualNodeDefinition,
@@ -18,56 +18,50 @@ function v(input: Omit<IStoryMapVirtualNodeDefinition, "chapter" | "difficulty" 
 }
 
 /**
- * Acto 1 real con bifurcaciones y cierre en BOSS para desbloquear entrada al acto 2.
+ * Acto 1 actualizado:
+ * briefing BigLog -> ruta principal -> duelos escalados -> boss Soldado -> transición a Acto 2.
  */
 export const storyAct1MapDefinition: IStoryActMapDefinition = {
   act: 1,
   nodes: [
-    { id: "story-ch1-duel-1", unlockRequirementNodeId: "story-ch1-path-upper-a", position: { x: 1560, y: 760 } },
-    { id: "story-ch1-duel-2", unlockRequirementNodeId: "story-ch1-path-lower-b", position: { x: 1820, y: 1220 } },
-    { id: "story-ch1-duel-3", unlockRequirementNodeId: "story-ch1-path-upper-branch-2", position: { x: 2860, y: 1000 } },
-    { id: "story-ch2-duel-3", unlockRequirementNodeId: "story-ch1-path-lower-branch-nexus", position: { x: 3120, y: 1420 } },
-    { id: "story-ch2-duel-4", unlockRequirementNodeId: "story-ch1-path-lower-final-blank", position: { x: 3640, y: 1420 } },
+    { id: "story-ch1-duel-1", unlockRequirementNodeId: "story-a1-event-special-card-signal", position: { x: 1560, y: 980 } },
+    { id: "story-ch1-duel-2", unlockRequirementNodeId: "story-a1-side-move-scraper-path", position: { x: 1300, y: 700 } },
+    { id: "story-ch1-duel-3", unlockRequirementNodeId: "story-a1-move-main-bridge", position: { x: 2340, y: 980 } },
+    { id: "story-ch2-duel-3", unlockRequirementNodeId: "story-ch1-duel-3", position: { x: 2600, y: 980 } },
+    { id: "story-ch2-duel-4", unlockRequirementNodeId: "story-ch2-duel-3", position: { x: 2860, y: 980 } },
   ],
   virtualNodes: [
-    v({ id: "story-ch1-player-start", duelIndex: 90, nodeType: "MOVE", title: "Plataforma Inicial", unlockRequirementNodeId: null, position: { x: 260, y: 980 } }),
-    v({ id: "story-ch1-path-blank-1", duelIndex: 91, nodeType: "MOVE", title: "Paso", unlockRequirementNodeId: "story-ch1-player-start", position: { x: 520, y: 980 } }),
-    v({ id: "story-ch1-reward-card-alpha", duelIndex: 92, nodeType: "REWARD_CARD", title: "Carta", rewardCardId: "trap-atk-drain", unlockRequirementNodeId: "story-ch1-path-blank-1", position: { x: 780, y: 980 } }),
-    v({ id: "story-ch1-path-branch-1", duelIndex: 93, nodeType: "MOVE", title: "Bifurcación", unlockRequirementNodeId: "story-ch1-reward-card-alpha", position: { x: 1040, y: 980 } }),
-    v({ id: "story-ch1-path-upper-a", duelIndex: 94, nodeType: "MOVE", title: "Ruta Superior", unlockRequirementNodeId: "story-ch1-path-branch-1", position: { x: 1300, y: 760 } }),
-    v({ id: "story-ch1-reward-nexus-upper", duelIndex: 95, nodeType: "REWARD_NEXUS", title: "Moneda", rewardNexus: 160, unlockRequirementNodeId: "story-ch1-duel-1", position: { x: 1820, y: 760 } }),
-    v({ id: "story-ch1-path-lower-a", duelIndex: 96, nodeType: "MOVE", title: "Ruta Inferior", unlockRequirementNodeId: "story-ch1-path-branch-1", position: { x: 1300, y: 1220 } }),
-    v({ id: "story-ch1-path-lower-b", duelIndex: 97, nodeType: "MOVE", title: "Tramo Inferior", unlockRequirementNodeId: "story-ch1-path-lower-a", position: { x: 1560, y: 1220 } }),
-    v({ id: "story-ch1-reward-nexus-lower", duelIndex: 98, nodeType: "REWARD_NEXUS", title: "Moneda", rewardNexus: 220, unlockRequirementNodeId: "story-ch1-duel-2", position: { x: 2080, y: 1220 } }),
-    v({ id: "story-ch1-event-scout-log", duelIndex: 99, nodeType: "EVENT", title: "Evento", unlockRequirementNodeId: "story-ch1-reward-nexus-lower", position: { x: 2340, y: 1220 } }),
-    v({ id: "story-ch1-path-branch-2", duelIndex: 100, nodeType: "MOVE", title: "Bifurcación", unlockRequirementNodeId: "story-ch1-event-scout-log", position: { x: 2600, y: 1220 } }),
-    v({ id: "story-ch1-path-upper-branch-2", duelIndex: 101, nodeType: "MOVE", title: "Ruta Superior", unlockRequirementNodeId: "story-ch1-path-branch-2", position: { x: 2600, y: 1000 } }),
-    v({ id: "story-ch1-reward-card-elite", duelIndex: 102, nodeType: "REWARD_CARD", title: "Carta", rewardCardId: "trap-kernel-panic", unlockRequirementNodeId: "story-ch1-duel-3", position: { x: 3120, y: 1000 } }),
-    v({ id: "story-ch1-path-lower-branch-nexus", duelIndex: 103, nodeType: "REWARD_NEXUS", title: "Moneda", rewardNexus: 280, unlockRequirementNodeId: "story-ch1-path-branch-2", position: { x: 2860, y: 1420 } }),
-    v({ id: "story-ch1-path-lower-final-blank", duelIndex: 104, nodeType: "MOVE", title: "Tramo Final", unlockRequirementNodeId: "story-ch2-duel-3", position: { x: 3380, y: 1420 } }),
-    v({ id: "story-ch1-transition-to-act2", duelIndex: 105, nodeType: "EVENT", title: "Puerta de Acto", unlockRequirementNodeId: "story-ch2-duel-4", position: { x: 3900, y: 1420 } }),
+    v({ id: "story-ch1-player-start", duelIndex: 90, nodeType: "MOVE", title: "SafeHub", unlockRequirementNodeId: null, position: { x: 260, y: 980 } }),
+    v({ id: "story-a1-event-biglog-briefing", duelIndex: 91, nodeType: "EVENT", title: "Briefing BigLog", unlockRequirementNodeId: "story-ch1-player-start", position: { x: 520, y: 980 } }),
+    v({ id: "story-a1-move-transit", duelIndex: 92, nodeType: "MOVE", title: "Tránsito", unlockRequirementNodeId: "story-a1-event-biglog-briefing", position: { x: 780, y: 980 } }),
+
+    v({ id: "story-a1-reward-nexus-cache", duelIndex: 93, nodeType: "REWARD_NEXUS", title: "Cache Nexus", rewardNexus: 180, unlockRequirementNodeId: "story-a1-move-transit", position: { x: 1040, y: 980 } }),
+    v({ id: "story-a1-event-special-card-signal", duelIndex: 94, nodeType: "EVENT", title: "Señal Especial", unlockRequirementNodeId: "story-a1-reward-nexus-cache", position: { x: 1300, y: 980 } }),
+    v({ id: "story-a1-reward-card-guardian", duelIndex: 95, nodeType: "REWARD_CARD", title: "Carta Guardián", rewardCardId: "trap-atk-drain", unlockRequirementNodeId: "story-ch1-duel-1", position: { x: 1820, y: 980 } }),
+    v({ id: "story-a1-move-main-bridge", duelIndex: 96, nodeType: "MOVE", title: "Puente Principal", unlockRequirementNodeId: "story-a1-reward-card-guardian", position: { x: 2080, y: 980 } }),
+
+    v({ id: "story-a1-side-event-echo-fragment", duelIndex: 97, nodeType: "EVENT", title: "Eco Fragmentado", unlockRequirementNodeId: "story-a1-move-transit", position: { x: 780, y: 700 } }),
+    v({ id: "story-a1-side-move-scraper-path", duelIndex: 98, nodeType: "MOVE", title: "Ruta Scraper", unlockRequirementNodeId: "story-a1-side-event-echo-fragment", position: { x: 1040, y: 700 } }),
+    v({ id: "story-a1-side-reward-card", duelIndex: 99, nodeType: "REWARD_CARD", title: "Recompensa Lateral", rewardCardId: "trap-kernel-panic", unlockRequirementNodeId: "story-ch1-duel-2", position: { x: 1560, y: 700 } }),
+
+    v({ id: "story-ch1-transition-to-act2", duelIndex: 100, nodeType: "EVENT", title: "Puerta de Acto", unlockRequirementNodeId: "story-ch2-duel-4", position: { x: 3120, y: 980 } }),
   ],
   platforms: [
     { id: "act1-p-1", position: { x: 260, y: 980 }, size: 170, style: "METAL" },
-    { id: "act1-p-2", position: { x: 520, y: 980 }, size: 170, style: "METAL" },
+    { id: "act1-p-2", position: { x: 520, y: 980 }, size: 170, style: "RUIN" },
     { id: "act1-p-3", position: { x: 780, y: 980 }, size: 170, style: "NEON" },
-    { id: "act1-p-4", position: { x: 1040, y: 980 }, size: 170, style: "RUIN" },
-    { id: "act1-p-5", position: { x: 1300, y: 760 }, size: 170, style: "METAL" },
-    { id: "act1-p-6", position: { x: 1560, y: 760 }, size: 170, style: "NEON" },
-    { id: "act1-p-7", position: { x: 1820, y: 760 }, size: 170, style: "RUIN" },
-    { id: "act1-p-8", position: { x: 1300, y: 1220 }, size: 170, style: "METAL" },
-    { id: "act1-p-9", position: { x: 1560, y: 1220 }, size: 170, style: "RUIN" },
-    { id: "act1-p-10", position: { x: 1820, y: 1220 }, size: 170, style: "NEON" },
-    { id: "act1-p-11", position: { x: 2080, y: 1220 }, size: 170, style: "RUIN" },
-    { id: "act1-p-12", position: { x: 2340, y: 1220 }, size: 170, style: "METAL" },
-    { id: "act1-p-13", position: { x: 2600, y: 1220 }, size: 170, style: "NEON" },
-    { id: "act1-p-14", position: { x: 2600, y: 1000 }, size: 170, style: "METAL" },
-    { id: "act1-p-15", position: { x: 2860, y: 1000 }, size: 170, style: "RUIN" },
-    { id: "act1-p-16", position: { x: 3120, y: 1000 }, size: 170, style: "METAL" },
-    { id: "act1-p-17", position: { x: 2860, y: 1420 }, size: 170, style: "RUIN" },
-    { id: "act1-p-18", position: { x: 3120, y: 1420 }, size: 170, style: "METAL" },
-    { id: "act1-p-19", position: { x: 3380, y: 1420 }, size: 170, style: "RUIN" },
-    { id: "act1-p-20", position: { x: 3640, y: 1420 }, size: 170, style: "NEON" },
-    { id: "act1-p-21", position: { x: 3900, y: 1420 }, size: 170, style: "METAL" },
+    { id: "act1-p-4", position: { x: 1040, y: 980 }, size: 170, style: "METAL" },
+    { id: "act1-p-5", position: { x: 1300, y: 980 }, size: 170, style: "RUIN" },
+    { id: "act1-p-6", position: { x: 1560, y: 980 }, size: 170, style: "NEON" },
+    { id: "act1-p-7", position: { x: 1820, y: 980 }, size: 170, style: "METAL" },
+    { id: "act1-p-8", position: { x: 2080, y: 980 }, size: 170, style: "RUIN" },
+    { id: "act1-p-9", position: { x: 2340, y: 980 }, size: 170, style: "NEON" },
+    { id: "act1-p-10", position: { x: 2600, y: 980 }, size: 170, style: "METAL" },
+    { id: "act1-p-11", position: { x: 2860, y: 980 }, size: 170, style: "RUIN" },
+    { id: "act1-p-12", position: { x: 3120, y: 980 }, size: 170, style: "NEON" },
+    { id: "act1-p-13", position: { x: 780, y: 700 }, size: 170, style: "RUIN" },
+    { id: "act1-p-14", position: { x: 1040, y: 700 }, size: 170, style: "METAL" },
+    { id: "act1-p-15", position: { x: 1300, y: 700 }, size: 170, style: "NEON" },
+    { id: "act1-p-16", position: { x: 1560, y: 700 }, size: 170, style: "RUIN" },
   ],
 };
