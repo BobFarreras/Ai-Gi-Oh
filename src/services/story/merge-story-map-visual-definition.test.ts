@@ -94,8 +94,8 @@ describe("mergeStoryMapVisualDefinition", () => {
   });
 
   it("muestra nodo de transición al Acto 2 tras completar el boss del Acto 1", () => {
-    const nodes = [createRuntimeNode({ id: "story-ch2-duel-4", chapter: 1, duelIndex: 5, isCompleted: true, isUnlocked: true })];
-    const merged = mergeStoryMapVisualDefinition(nodes, { currentNodeId: "story-ch2-duel-4", visitedNodeIds: ["story-ch2-duel-4"] });
+    const nodes = [createRuntimeNode({ id: "story-ch1-duel-5", chapter: 1, duelIndex: 5, isCompleted: true, isUnlocked: true })];
+    const merged = mergeStoryMapVisualDefinition(nodes, { currentNodeId: "story-ch1-duel-5", visitedNodeIds: ["story-ch1-duel-5"] });
     const transitionNode = merged.find((node) => node.id === "story-ch1-transition-to-act2");
     expect(transitionNode?.isUnlocked).toBe(true);
     expect(transitionNode?.nodeType).toBe("EVENT");

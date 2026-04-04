@@ -27,8 +27,8 @@ export const storyAct1MapDefinition: IStoryActMapDefinition = {
     { id: "story-ch1-duel-1", unlockRequirementNodeId: "story-a1-event-special-card-signal", position: { x: 1560, y: 980 } },
     { id: "story-ch1-duel-2", unlockRequirementNodeId: "story-a1-side-move-scraper-path", position: { x: 1300, y: 700 } },
     { id: "story-ch1-duel-3", unlockRequirementNodeId: "story-a1-move-main-bridge", position: { x: 2340, y: 980 } },
-    { id: "story-ch2-duel-3", unlockRequirementNodeId: "story-ch1-duel-3", position: { x: 2600, y: 980 } },
-    { id: "story-ch2-duel-4", unlockRequirementNodeId: "story-ch2-duel-3", position: { x: 2860, y: 980 } },
+    { id: "story-ch1-duel-4", unlockRequirementNodeId: "story-ch1-duel-3", position: { x: 2600, y: 980 } },
+    { id: "story-ch1-duel-5", unlockRequirementNodeId: "story-ch1-duel-4", position: { x: 2860, y: 980 } },
   ],
   virtualNodes: [
     v({ id: "story-ch1-player-start", duelIndex: 90, nodeType: "MOVE", title: "SafeHub", unlockRequirementNodeId: null, position: { x: 260, y: 980 } }),
@@ -44,7 +44,7 @@ export const storyAct1MapDefinition: IStoryActMapDefinition = {
     v({ id: "story-a1-side-move-scraper-path", duelIndex: 98, nodeType: "MOVE", title: "Ruta Scraper", unlockRequirementNodeId: "story-a1-side-event-echo-fragment", position: { x: 1040, y: 700 } }),
     v({ id: "story-a1-side-reward-card", duelIndex: 99, nodeType: "REWARD_CARD", title: "Recompensa Lateral", rewardCardId: "trap-kernel-panic", unlockRequirementNodeId: "story-ch1-duel-2", position: { x: 1560, y: 700 } }),
 
-    v({ id: "story-ch1-transition-to-act2", duelIndex: 100, nodeType: "EVENT", title: "Puerta de Acto", unlockRequirementNodeId: "story-ch2-duel-4", position: { x: 3120, y: 980 } }),
+    v({ id: "story-ch1-transition-to-act2", duelIndex: 100, nodeType: "EVENT", title: "Puerta de Acto", unlockRequirementNodeId: "story-ch1-duel-5", position: { x: 3120, y: 980 } }),
   ],
   platforms: [
     { id: "act1-p-1", position: { x: 260, y: 980 }, size: 170, style: "METAL" },

@@ -26,11 +26,11 @@ export const storyAct2MapDefinition: IStoryActMapDefinition = {
   nodes: [
     { id: "story-ch2-duel-1", unlockRequirementNodeId: "story-ch2-branch-top-a", position: { x: 3900, y: 700 } },
     { id: "story-ch2-duel-2", unlockRequirementNodeId: "story-ch2-branch-center-b", position: { x: 3900, y: 980 } },
-    { id: "story-ch2-duel-5", unlockRequirementNodeId: "story-ch2-duel-2", position: { x: 4160, y: 980 } },
-    { id: "story-ch2-duel-6", unlockRequirementNodeId: "story-ch2-branch-bottom-c", position: { x: 3900, y: 1260 } },
-    { id: "story-ch2-duel-7", unlockRequirementNodeId: "story-ch2-branch-lower-up-event", position: { x: 4420, y: 1120 } },
-    { id: "story-ch2-duel-8", unlockRequirementNodeId: "story-ch2-duel-7", position: { x: 4680, y: 980 } },
-    { id: "story-ch2-duel-9", unlockRequirementNodeId: "story-ch2-boss-bridge", position: { x: 5200, y: 1260 } },
+    { id: "story-ch2-duel-3", unlockRequirementNodeId: "story-ch2-duel-2", position: { x: 4160, y: 980 } },
+    { id: "story-ch2-duel-4", unlockRequirementNodeId: "story-ch2-branch-bottom-c", position: { x: 3900, y: 1260 } },
+    { id: "story-ch2-duel-5", unlockRequirementNodeId: "story-ch2-branch-lower-up-event", position: { x: 4420, y: 1120 } },
+    { id: "story-ch2-duel-6", unlockRequirementNodeId: "story-ch2-duel-5", position: { x: 4680, y: 980 } },
+    { id: "story-ch2-duel-7", unlockRequirementNodeId: "story-ch2-boss-bridge", position: { x: 5200, y: 1260 } },
   ],
   virtualNodes: [
     v({ id: "story-ch2-player-start", duelIndex: 199, nodeType: "MOVE", title: "Plataforma Inicial", unlockRequirementNodeId: "story-ch1-transition-to-act2", position: { x: 2600, y: 980 } }),
@@ -49,15 +49,15 @@ export const storyAct2MapDefinition: IStoryActMapDefinition = {
     v({ id: "story-ch2-branch-bottom-a", duelIndex: 209, nodeType: "MOVE", title: "Ruta Inferior", unlockRequirementNodeId: "story-ch2-event-core", position: { x: 3640, y: 1260 } }),
     v({ id: "story-ch2-branch-bottom-b", duelIndex: 210, nodeType: "MOVE", title: "Paso", unlockRequirementNodeId: "story-ch2-branch-bottom-a", position: { x: 3900, y: 1260 } }),
     v({ id: "story-ch2-branch-bottom-c", duelIndex: 211, nodeType: "REWARD_NEXUS", title: "Moneda", rewardNexus: 320, unlockRequirementNodeId: "story-ch2-branch-bottom-b", position: { x: 4160, y: 1260 } }),
-    v({ id: "story-ch2-branch-lower-fork", duelIndex: 212, nodeType: "MOVE", title: "Bifurcación", unlockRequirementNodeId: "story-ch2-duel-6", position: { x: 4420, y: 1260 } }),
+    v({ id: "story-ch2-branch-lower-fork", duelIndex: 212, nodeType: "MOVE", title: "Bifurcación", unlockRequirementNodeId: "story-ch2-duel-4", position: { x: 4420, y: 1260 } }),
 
     v({ id: "story-ch2-branch-lower-up-event", duelIndex: 213, nodeType: "EVENT", title: "Evento", unlockRequirementNodeId: "story-ch2-branch-lower-fork", position: { x: 4420, y: 1120 } }),
-    v({ id: "story-ch2-branch-lower-up-link", duelIndex: 214, nodeType: "MOVE", title: "Paso", unlockRequirementNodeId: "story-ch2-duel-7", position: { x: 4680, y: 1120 } }),
+    v({ id: "story-ch2-branch-lower-up-link", duelIndex: 214, nodeType: "MOVE", title: "Paso", unlockRequirementNodeId: "story-ch2-duel-5", position: { x: 4680, y: 1120 } }),
 
     v({ id: "story-ch2-branch-lower-down-a", duelIndex: 215, nodeType: "MOVE", title: "Paso", unlockRequirementNodeId: "story-ch2-branch-lower-fork", position: { x: 4680, y: 1260 } }),
     v({ id: "story-ch2-branch-lower-down-b", duelIndex: 216, nodeType: "REWARD_NEXUS", title: "Moneda", rewardNexus: 360, unlockRequirementNodeId: "story-ch2-branch-lower-down-a", position: { x: 4940, y: 1260 } }),
     // Puente visual: no se puede activar sin derrotar la segunda Helena.
-    v({ id: "story-ch2-boss-bridge", duelIndex: 217, nodeType: "MOVE", title: "Puente", unlockRequirementNodeId: "story-ch2-duel-8", position: { x: 5200, y: 1120 } }),
+    v({ id: "story-ch2-boss-bridge", duelIndex: 217, nodeType: "MOVE", title: "Puente", unlockRequirementNodeId: "story-ch2-duel-6", position: { x: 5200, y: 1120 } }),
   ],
   platforms: [
     { id: "act2-p-0", position: { x: 2340, y: 980 }, size: 170, style: "RUIN" },

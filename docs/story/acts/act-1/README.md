@@ -19,8 +19,8 @@
 | `story-a1-reward-card-guardian` | `REWARD_CARD` | Carta táctica base. | Carta |
 | `story-a1-move-main-bridge` | `MOVE` | Puente al tramo final. | - |
 | `story-ch1-duel-3` | `DUEL` | Filtro de presión media. | Nexus + XP |
-| `story-ch2-duel-3` | `DUEL` | Pre-cierre de acto. | Nexus + XP |
-| `story-ch2-duel-4` | `BOSS` | Cierre de acto. | Recompensa de acto |
+| `story-ch1-duel-4` | `DUEL` | Pre-cierre de acto. | Nexus + XP |
+| `story-ch1-duel-5` | `BOSS` | Cierre de acto. | Recompensa de acto |
 | `story-ch1-transition-to-act2` | `EVENT` | Transición al acto siguiente. | Desbloqueo Acto 2 |
 
 ## Rama secundaria
@@ -37,8 +37,8 @@
    - `story-ch1-duel-1`: `ROOKIE`
    - `story-ch1-duel-2`: `STANDARD`
    - `story-ch1-duel-3`: `ELITE`
-   - `story-ch2-duel-3`: `ELITE`
-   - `story-ch2-duel-4`: `BOSS`
+   - `story-ch1-duel-4`: `ELITE`
+   - `story-ch1-duel-5`: `BOSS`
 3. El escalado por duelo se materializa en `story_duel_ai_profiles` y `story_duel_deck_overrides`.
 
 ## Cinemática
