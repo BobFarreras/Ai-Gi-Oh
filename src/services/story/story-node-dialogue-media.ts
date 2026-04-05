@@ -6,17 +6,18 @@ interface IStoryDialogueLineMedia {
 
 const DIALOGUE_MEDIA_BY_NODE_ID: Record<string, IStoryDialogueLineMedia[]> = {
   "story-a1-event-biglog-briefing": [
-    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png" },
-    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
     { portraitUrl: "/assets/story/player/bob.png" },
   ],
   "story-a1-event-special-card-signal": [
-    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png" },
-    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
     { portraitUrl: "/assets/story/player/bob.png" },
   ],
   "story-a1-side-event-echo-fragment": [
-    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
     { portraitUrl: "/assets/story/player/bob.png" },
   ],
 };

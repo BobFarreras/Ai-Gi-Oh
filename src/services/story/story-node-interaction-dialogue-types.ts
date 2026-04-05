@@ -3,6 +3,7 @@ export interface IStoryInteractionDialogueLine {
   actorId?: string;
   side?: "LEFT" | "RIGHT";
   visualKind?: "CHARACTER" | "CARD" | "MONSTER" | "OBJECT";
+  presentationMode?: "TERMINAL" | "DIRECT";
   speaker: string;
   text: string;
   portraitUrl?: string;
