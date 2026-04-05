@@ -17,9 +17,9 @@ interface IFusionPlaybackItem {
 }
 
 const FUSION_VIDEO_BY_CARD_ID: Record<string, string> = {
-  "fusion-gemgpt": "/assets/videos/gemgpt.mp4",
-  "fusion-kaclauli": "/assets/videos/kaclouli.mp4",
-  "fusion-pytgress": "/assets/videos/pytgress.mp4",
+  "fusion-gemgpt": "/assets/videos/fusion/gemgpt.mp4",
+  "fusion-kaclauli": "/assets/videos/fusion/kaclouli.mp4",
+  "fusion-pytgress": "/assets/videos/fusion/pytgress.mp4",
 };
 
 const FUSION_RENDER_BY_CARD_ID: Record<string, string> = {

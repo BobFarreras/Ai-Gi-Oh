@@ -51,12 +51,12 @@ describe("resolveStoryNodeInteractionDialogue", () => {
     expect(dialogue?.lines[0]?.text).toContain("Registro recurrente");
   });
 
-  it("expone metadatos de vídeo para el evento especial", () => {
+  it("expone metadatos de vídeo para el primer evento del acto", () => {
     const dialogue = resolveStoryNodeInteractionDialogue(
-      createNode({ id: "story-a1-event-special-card-signal", title: "Señal" }),
+      createNode({ id: "story-a1-event-biglog-briefing", title: "Briefing" }),
     );
 
-    expect(dialogue?.cinematicVideo?.videoUrl).toContain("gemgpt.mp4");
+    expect(dialogue?.cinematicVideo?.videoUrl).toContain("intro-act-1.mp4");
     expect(dialogue?.lines[0]?.portraitUrl).toContain("BigLog");
   });
 
