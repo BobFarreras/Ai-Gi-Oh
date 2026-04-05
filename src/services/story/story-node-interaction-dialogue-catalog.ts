@@ -12,9 +12,9 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
       loop: false,
     },
     lines: [
-      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "Operador, no estás tarde. Estás justo antes del colapso." },
-      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "La Entidad no destruye nodos. Los reprograma para convertirlos en zonas hostiles." },
-      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", speaker: "Operador", text: "Entendido. Avanzaré por rutas estables y aseguraré recursos antes de cada combate." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "Prompt Master, escúchame. La Entidad está reescribiendo la infraestructura crítica." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", speaker: "BigLog", text: "Tienes que reconstruir las rutas, derrotar a los líderes de facción y entrar al Core." },
+      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", speaker: "Operador", text: "Recibido. Activo protocolo de recuperación y empiezo la ofensiva." },
     ],
   },
   "story-a1-event-special-card-signal": {

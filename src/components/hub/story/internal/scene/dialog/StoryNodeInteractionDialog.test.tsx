@@ -1,5 +1,5 @@
 // src/components/hub/story/internal/scene/dialog/StoryNodeInteractionDialog.test.tsx - Verifica secuencia manual, autoavance y overlay de vídeo narrativo Story.
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { StoryNodeInteractionDialog } from "@/components/hub/story/internal/scene/dialog/StoryNodeInteractionDialog";
 
@@ -43,6 +43,7 @@ describe("StoryNodeInteractionDialog", () => {
   });
 
   it("permite interrumpir la cinemática full-screen", () => {
+    vi.useFakeTimers();
     const onClose = vi.fn();
     render(
       <StoryNodeInteractionDialog
@@ -57,6 +58,11 @@ describe("StoryNodeInteractionDialog", () => {
     );
 
     fireEvent.click(screen.getByLabelText(/interrumpir vídeo/i));
+    expect(onClose).toHaveBeenCalledTimes(0);
+    act(() => {
+      vi.advanceTimersByTime(350);
+    });
     expect(onClose).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
   });
 });
