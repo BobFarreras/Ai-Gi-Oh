@@ -8,7 +8,7 @@ function resolveAxisDelta(node: IStoryMapNodeRuntime | null): { x: number; y: nu
 }
 
 /**
- * Devuelve la dirección predominante del movimiento para colocar el avatar al lado correcto del nodo.
+ * Devuelve el lado de llegada al nodo destino (opuesto al vector de avance) para no sobrepasar el objetivo.
  */
 export function resolveStoryAvatarSideDirection(
   fromNode: IStoryMapNodeRuntime | null,
@@ -19,6 +19,6 @@ export function resolveStoryAvatarSideDirection(
   if (!from || !to) return "LEFT";
   const deltaX = to.x - from.x;
   const deltaY = to.y - from.y;
-  if (Math.abs(deltaX) >= Math.abs(deltaY)) return deltaX >= 0 ? "RIGHT" : "LEFT";
-  return deltaY >= 0 ? "DOWN" : "UP";
+  if (Math.abs(deltaX) >= Math.abs(deltaY)) return deltaX >= 0 ? "LEFT" : "RIGHT";
+  return deltaY >= 0 ? "UP" : "DOWN";
 }

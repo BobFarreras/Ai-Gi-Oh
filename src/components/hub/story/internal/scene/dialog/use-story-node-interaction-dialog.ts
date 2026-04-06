@@ -46,7 +46,6 @@ export function useStoryNodeInteractionDialog() {
   return {
     isOpen: Boolean(state.dialogue),
     dialogueTitle: state.dialogue?.title ?? "",
-    soundtrackUrl: state.dialogue?.soundtrackUrl ?? null,
     cinematicVideo: state.dialogue?.cinematicVideo ?? null,
     isLastLine: Boolean(state.dialogue) && state.index >= (state.dialogue?.lines.length ?? 1) - 1,
     currentLine,

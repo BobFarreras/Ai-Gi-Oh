@@ -67,6 +67,25 @@ describe("story world graph", () => {
     ]);
   });
 
+  it("desbloquea de inicio nodos sin dependencia explícita aunque no sean el primero por índice", () => {
+    const graph = buildStoryWorldGraph([
+      ...STORY_SEED,
+      {
+        id: "duel-4",
+        chapter: 1,
+        duelIndex: 4,
+        title: "Rama Libre",
+        opponentName: "Scout",
+        opponentDifficulty: "STANDARD",
+        rewardNexus: 18,
+        rewardPlayerExperience: 30,
+        unlockRequirementDuelId: null,
+        isBossDuel: false,
+      },
+    ]);
+    expect(resolveStoryUnlockedNodeIds(graph, [])).toEqual(["duel-1", "duel-4"]);
+  });
+
   it("permite moverse solo a nodos conectados y desbloqueados", () => {
     const graph = buildStoryWorldGraph(STORY_SEED);
     const unlocked = ["duel-1", "duel-2"];

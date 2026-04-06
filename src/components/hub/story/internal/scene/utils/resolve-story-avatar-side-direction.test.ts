@@ -23,20 +23,20 @@ function buildNode(id: string, x: number, y: number): IStoryMapNodeRuntime {
 }
 
 describe("resolveStoryAvatarSideDirection", () => {
-  it("resuelve RIGHT cuando el vector dominante es horizontal positivo", () => {
-    expect(resolveStoryAvatarSideDirection(buildNode("a", 0, 0), buildNode("b", 2, 1))).toBe("RIGHT");
+  it("resuelve LEFT cuando avanza hacia la derecha para quedar delante del nodo", () => {
+    expect(resolveStoryAvatarSideDirection(buildNode("a", 0, 0), buildNode("b", 2, 1))).toBe("LEFT");
   });
 
-  it("resuelve LEFT cuando el vector dominante es horizontal negativo", () => {
-    expect(resolveStoryAvatarSideDirection(buildNode("a", 5, 0), buildNode("b", 1, 1))).toBe("LEFT");
+  it("resuelve RIGHT cuando avanza hacia la izquierda para quedar delante del nodo", () => {
+    expect(resolveStoryAvatarSideDirection(buildNode("a", 5, 0), buildNode("b", 1, 1))).toBe("RIGHT");
   });
 
-  it("resuelve DOWN cuando el vector dominante es vertical positivo", () => {
-    expect(resolveStoryAvatarSideDirection(buildNode("a", 0, 1), buildNode("b", 1, 4))).toBe("DOWN");
+  it("resuelve UP cuando avanza hacia abajo para quedar delante del nodo", () => {
+    expect(resolveStoryAvatarSideDirection(buildNode("a", 0, 1), buildNode("b", 1, 4))).toBe("UP");
   });
 
-  it("resuelve UP cuando el vector dominante es vertical negativo", () => {
-    expect(resolveStoryAvatarSideDirection(buildNode("a", 0, 5), buildNode("b", 1, 1))).toBe("UP");
+  it("resuelve DOWN cuando avanza hacia arriba para quedar delante del nodo", () => {
+    expect(resolveStoryAvatarSideDirection(buildNode("a", 0, 5), buildNode("b", 1, 1))).toBe("DOWN");
   });
 
   it("cae en LEFT cuando faltan coordenadas", () => {

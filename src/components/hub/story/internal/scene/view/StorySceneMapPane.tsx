@@ -25,12 +25,13 @@ interface IStorySceneMapPaneProps {
   isMobileVerticalFlow?: boolean;
   onSelectNode: (nodeId: string | null) => void;
   centerRequestKey?: number;
+  isSoundtrackMuted?: boolean;
+  onToggleSoundtrackMute?: () => void;
   onRewardCollectAnimationComplete: () => void;
   onRetreatAnimationComplete: () => void;
   dialog: {
     isOpen: boolean;
     title: string;
-    soundtrackUrl: string | null;
     cinematicVideo: IStoryInteractionCinematicVideo | null;
     line: IStoryInteractionDialogueLine | null;
     onNext: () => void;
@@ -55,6 +56,8 @@ export function StorySceneMapPane(props: IStorySceneMapPaneProps) {
         shouldPlayActEntryAnimation={props.shouldPlayActEntryAnimation ?? false}
         isMobileVerticalFlow={props.isMobileVerticalFlow ?? false}
         centerRequestKey={props.centerRequestKey ?? 0}
+        isSoundtrackMuted={props.isSoundtrackMuted ?? false}
+        onToggleSoundtrackMute={props.onToggleSoundtrackMute}
         onSelectNode={props.onSelectNode}
         onRewardCollectAnimationComplete={props.onRewardCollectAnimationComplete}
         onRetreatAnimationComplete={props.onRetreatAnimationComplete}
@@ -62,7 +65,6 @@ export function StorySceneMapPane(props: IStorySceneMapPaneProps) {
       <StoryNodeInteractionDialog
         isOpen={props.dialog.isOpen}
         title={props.dialog.title}
-        soundtrackUrl={props.dialog.soundtrackUrl}
         cinematicVideo={props.dialog.cinematicVideo}
         line={props.dialog.line}
         onNext={props.dialog.onNext}

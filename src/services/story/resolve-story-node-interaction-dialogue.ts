@@ -17,7 +17,6 @@ function buildFallbackDialogue(node: IStoryMapNodeRuntime): IStoryNodeInteractio
     return {
       title: node.title,
       lines: [{ side: "RIGHT", visualKind: "CHARACTER", speaker: "Evento", text: "Se ejecuta una interacción narrativa sin combate." }],
-      soundtrackUrl: "/audio/story/soundtracks/act-1/act-1-main-theme.mp3",
     };
   }
   if (node.nodeType === "REWARD_CARD" || node.nodeType === "REWARD_NEXUS") {
@@ -43,7 +42,6 @@ function withMultimedia(nodeId: string, dialogue: IStoryNodeInteractionDialogue)
 function buildRecurringSummary(firstDialogue: IStoryNodeInteractionDialogue, interactionCount: number): IStoryNodeInteractionDialogue {
   return {
     title: firstDialogue.title,
-    soundtrackUrl: firstDialogue.soundtrackUrl,
     cinematicVideo: firstDialogue.cinematicVideo,
     lines: [
       {

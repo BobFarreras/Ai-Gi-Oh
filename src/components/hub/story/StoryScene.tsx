@@ -11,6 +11,7 @@ import { resolveStorySceneCanMove } from "./internal/scene/state/resolve-story-s
 import { useStoryNodeInteractionDialog } from "./internal/scene/dialog/use-story-node-interaction-dialog";
 import { useStoryInteractionActions } from "./internal/scene/dialog/use-story-interaction-actions";
 import { useStorySceneSfx } from "./internal/scene/audio/use-story-scene-sfx";
+import { useStoryMapSoundtrack } from "./internal/scene/audio/use-story-map-soundtrack";
 import { useStoryActEntrySequence } from "./internal/scene/transitions/use-story-act-entry-sequence";
 import { useStoryActTransitionNavigation } from "./internal/scene/transitions/use-story-act-transition-navigation";
 import { useStoryPostDuelTransition } from "./internal/scene/transitions/use-story-post-duel-transition";
@@ -49,6 +50,7 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
   const [interactionFeedback, setInteractionFeedback] = useState<string | null>(null);
   const interactionDialog = useStoryNodeInteractionDialog();
   const sceneSfx = useStorySceneSfx();
+  const { isMuted: isMapSoundtrackMuted, toggleMute: toggleMapSoundtrackMute } = useStoryMapSoundtrack(runtime.activeActId);
   const { entryAvatarVisualTarget, isActEntrySequenceRunning } = useStoryActEntrySequence({ nodes: runtime.nodes, activeActId: runtime.activeActId, currentNodeId: runtime.currentNodeId, shouldPlayActEntryAnimation });
   const selectedNode = selectedNodeId ? nodesById[selectedNodeId] ?? null : null;
   const sceneNodes = useMemo(() => Object.values(nodesById).sort((left, right) => (left.chapter !== right.chapter ? left.chapter - right.chapter : left.duelIndex - right.duelIndex)), [nodesById]);
@@ -135,12 +137,16 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
       sceneSfx.playButtonClick();
       setCenterRequestKey((value) => value + 1);
     },
+    isSoundtrackMuted: isMapSoundtrackMuted,
+    onToggleSoundtrackMute: () => {
+      sceneSfx.playButtonClick();
+      toggleMapSoundtrackMute();
+    },
     onRewardCollectAnimationComplete: () => { setCollectingRewardNodeId(null); setCollectingRewardVisual(null); },
     onRetreatAnimationComplete: () => setRetreatingNodeId(null),
     dialog: {
       isOpen: interactionDialog.isOpen,
       title: interactionDialog.dialogueTitle,
-      soundtrackUrl: interactionDialog.soundtrackUrl,
       cinematicVideo: interactionDialog.cinematicVideo,
       line: interactionDialog.currentLine,
       onNext: advanceInteractionDialog,

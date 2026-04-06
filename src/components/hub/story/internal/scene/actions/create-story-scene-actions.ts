@@ -8,6 +8,7 @@ import { IStoryAvatarVisualTarget } from "@/components/hub/story/internal/scene/
 import { resolveStoryAvatarSideDirection } from "@/components/hub/story/internal/scene/utils/resolve-story-avatar-side-direction";
 
 interface IStoryInteractResponse { interactionCountForNode: number; }
+interface IStoryApiErrorResponse { message?: string; }
 type StoryRewardTone = "NEXUS" | "CARD";
 type StorySmartActionMode = "MOVE" | "PRIMARY" | "MOVE_AND_PRIMARY" | "DISABLED";
 interface IStoryCollectVisual { assetSrc: string; assetAlt: string; tone: StoryRewardTone; }
@@ -44,6 +45,15 @@ function resolveCollectVisual(targetNode: IStoryMapNodeRuntime): IStoryCollectVi
 }
 
 function wait(ms: number): Promise<void> { return new Promise((resolve) => window.setTimeout(resolve, ms)); }
+async function readApiErrorMessage(response: Response, fallbackMessage: string): Promise<string> {
+  try {
+    const payload = (await response.json()) as IStoryApiErrorResponse;
+    if (typeof payload.message === "string" && payload.message.trim().length > 0) return payload.message;
+    return fallbackMessage;
+  } catch {
+    return fallbackMessage;
+  }
+}
 export function createStorySceneActions(params: ICreateStorySceneActionsParams) {
   const showFloatingReward = (label: string, tone: StoryRewardTone): void => {
     params.setFloatingReward({ label, tone });
@@ -67,7 +77,7 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
     params.setInteractionFeedback(null);
     try {
       const response = await fetch("/api/story/world/move", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ nodeId: params.selectedNodeId }) });
-      if (!response.ok) throw new Error("Movimiento inválido.");
+      if (!response.ok) throw new Error(await readApiErrorMessage(response, "No se pudo mover al nodo seleccionado."));
       const payload = (await response.json()) as { currentNodeId: string | null; pathNodeIds?: string[] };
       const travelPathNodeIds = payload.pathNodeIds ?? (payload.currentNodeId ? [payload.currentNodeId] : []);
       if (travelPathNodeIds.length > 0) {
@@ -85,8 +95,8 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
       if (triggerActionAfterMove && targetNodeForAction && targetNodeForAction.nodeType !== "MOVE") {
         await handlePrimaryAction(targetNodeForAction, true);
       }
-    } catch {
-      params.setMovementError("No se pudo mover al nodo seleccionado.");
+    } catch (error) {
+      params.setMovementError(error instanceof Error ? error.message : "No se pudo mover al nodo seleccionado.");
     } finally {
       params.setIsMoving(false);
     }

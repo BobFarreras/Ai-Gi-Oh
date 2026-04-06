@@ -39,12 +39,13 @@ export interface IStorySceneMapViewProps {
   onSelectNode: (nodeId: string | null) => void;
   onMoveSelectedNode?: () => void;
   onRequestCenterPlayer?: () => void;
+  isSoundtrackMuted?: boolean;
+  onToggleSoundtrackMute?: () => void;
   onRewardCollectAnimationComplete: () => void;
   onRetreatAnimationComplete: () => void;
   dialog: {
     isOpen: boolean;
     title: string;
-    soundtrackUrl: string | null;
     cinematicVideo: IStoryInteractionCinematicVideo | null;
     line: IStoryInteractionDialogueLine | null;
     onNext: () => void;

@@ -10,7 +10,6 @@ describe("StoryNodeInteractionDialog", () => {
       <StoryNodeInteractionDialog
         isOpen
         title="Evento de prueba"
-        soundtrackUrl={null}
         cinematicVideo={null}
         line={{ speaker: "GenNvim", text: "Mensaje de prueba", side: "RIGHT" }}
         onNext={onNext}
@@ -29,7 +28,6 @@ describe("StoryNodeInteractionDialog", () => {
       <StoryNodeInteractionDialog
         isOpen
         title="Evento de prueba"
-        soundtrackUrl={null}
         cinematicVideo={null}
         line={{ speaker: "Sistema", text: "Autoavance", side: "LEFT", autoAdvanceMs: 1000 }}
         onNext={onNext}
@@ -49,7 +47,6 @@ describe("StoryNodeInteractionDialog", () => {
       <StoryNodeInteractionDialog
         isOpen
         title="Evento con vídeo"
-        soundtrackUrl={null}
         cinematicVideo={{ videoUrl: "/assets/videos/story/act-1/intro-act-1.mp4", skipLabel: "Interrumpir vídeo" }}
         line={{ speaker: "BigLog", text: "Prueba de vídeo", side: "RIGHT" }}
         onNext={() => undefined}

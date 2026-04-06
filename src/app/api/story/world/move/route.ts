@@ -55,6 +55,10 @@ export async function POST(request: NextRequest) {
     if (!moveMode.isAllowed) {
       throw new ValidationError(moveMode.validationMessage ?? "Movimiento Story inválido.");
     }
+    const targetDuelNode = worldState.graph.nodes.find((node) => node.id === nodeId) ?? null;
+    if (targetDuelNode && !worldState.progress.unlockedNodeIds.includes(nodeId)) {
+      throw new ValidationError("Ese duelo sigue bloqueado. Completa su requisito de desbloqueo antes de entrar.");
+    }
     const traversalPath = resolveStoryWorldTraversalPath({
       currentNodeId: effectiveCurrentNodeId,
       targetNodeId: nodeId,

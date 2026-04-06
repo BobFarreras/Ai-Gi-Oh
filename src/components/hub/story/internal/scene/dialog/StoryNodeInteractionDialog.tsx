@@ -14,7 +14,6 @@ import {
 interface IStoryNodeInteractionDialogProps {
   isOpen: boolean;
   title: string;
-  soundtrackUrl: string | null;
   cinematicVideo: IStoryInteractionCinematicVideo | null;
   line: IStoryInteractionDialogueLine | null;
   onNext: () => void;
@@ -26,7 +25,6 @@ const DEFAULT_AUTO_ADVANCE_MS = 7000;
 export function StoryNodeInteractionDialog({
   isOpen,
   title,
-  soundtrackUrl,
   cinematicVideo,
   line,
   onNext,
@@ -52,18 +50,6 @@ export function StoryNodeInteractionDialog({
     const timeoutId = window.setTimeout(onNext, autoAdvanceMs);
     return () => window.clearTimeout(timeoutId);
   }, [isOpen, isVideoOpen, autoAdvanceMs, onNext]);
-
-  useEffect(() => {
-    if (!isOpen || !soundtrackUrl || typeof Audio === "undefined") return;
-    const soundtrack = new Audio(soundtrackUrl);
-    soundtrack.loop = true;
-    soundtrack.volume = 0.35;
-    void soundtrack.play().catch(() => undefined);
-    return () => {
-      soundtrack.pause();
-      soundtrack.currentTime = 0;
-    };
-  }, [isOpen, soundtrackUrl]);
 
   return (
     <AnimatePresence>

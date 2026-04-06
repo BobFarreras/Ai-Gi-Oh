@@ -64,7 +64,7 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
     createSupabaseServerClient(),
   ]);
   const isUnlocked = worldState.progress.unlockedNodeIds.includes(duel.id);
-  const isCurrentNode = currentNodeId === null || currentNodeId === duel.id;
+  const isCurrentNode = currentNodeId === duel.id;
 
   const cardsById = await loadCardsByIds(supabase, duel.opponentDeckEntries.map((entry) => entry.cardId));
   const opponentDeck = duel.opponentDeckEntries.flatMap((entry) => {

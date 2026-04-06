@@ -21,7 +21,6 @@ export interface IStoryInteractionCinematicVideo {
 
 export interface IStoryNodeInteractionDialogue {
   title: string;
-  soundtrackUrl?: string;
   cinematicVideo?: IStoryInteractionCinematicVideo;
   lines: IStoryInteractionDialogueLine[];
 }

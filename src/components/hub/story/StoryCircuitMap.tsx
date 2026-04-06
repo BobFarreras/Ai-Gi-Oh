@@ -30,6 +30,8 @@ interface StoryCircuitMapProps {
   isInteractionLocked?: boolean;
   isMobileVerticalFlow?: boolean;
   centerRequestKey?: number;
+  isSoundtrackMuted?: boolean;
+  onToggleSoundtrackMute?: () => void;
   onSelectNode: (nodeId: string | null) => void;
   onRewardCollectAnimationComplete?: () => void;
   onRetreatAnimationComplete?: () => void;
@@ -62,6 +64,8 @@ export function StoryCircuitMap({
   isInteractionLocked,
   isMobileVerticalFlow = false,
   centerRequestKey = 0,
+  isSoundtrackMuted = false,
+  onToggleSoundtrackMute,
   onSelectNode,
   onRewardCollectAnimationComplete,
   onRetreatAnimationComplete,
@@ -156,7 +160,13 @@ export function StoryCircuitMap({
         onCameraDrag={applyCameraBounds}
         onRetreatAnimationComplete={onRetreatAnimationComplete}
       />
-      {!isMobileVerticalFlow ? <StoryMapZoomControls onCenterPlayerNode={centerCameraOnAvatarNode} /> : null}
+      {!isMobileVerticalFlow ? (
+        <StoryMapZoomControls
+          onCenterPlayerNode={centerCameraOnAvatarNode}
+          isSoundtrackMuted={isSoundtrackMuted}
+          onToggleSoundtrackMute={onToggleSoundtrackMute ?? (() => undefined)}
+        />
+      ) : null}
     </div>
   );
 }
