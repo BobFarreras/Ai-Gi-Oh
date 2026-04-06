@@ -6,6 +6,7 @@ import { StoryOpponentDifficulty } from "@/core/entities/opponent/IStoryDuelDefi
 
 export interface IUseAdminStoryDeckEditorResult {
   data: IAdminStoryDeckApiResponse;
+  selectedOpponentId: string | null;
   selectedSlotIndex: number | null;
   setSelectedSlotIndex: (slotIndex: number | null) => void;
   selectedCollectionCardId: string | null;
@@ -33,6 +34,8 @@ export interface IUseAdminStoryDeckEditorResult {
   feedback: string;
   canSave: boolean;
   onSelectOpponent: (opponentId: string) => Promise<void>;
+  onSelectDuelReference: (duelId: string) => Promise<void>;
+  cloneFromDuel: (duelId: string) => void;
   onSelectDeck: (deckListId: string) => Promise<void>;
   onRefresh: () => Promise<void>;
   onSave: () => Promise<void>;
