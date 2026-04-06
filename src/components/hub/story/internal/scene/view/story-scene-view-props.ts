@@ -5,6 +5,7 @@ import {
   IStoryInteractionCinematicVideo,
   IStoryInteractionDialogueLine,
 } from "@/services/story/story-node-interaction-dialogue-types";
+import { IStoryAvatarVisualTarget } from "@/components/hub/story/internal/scene/types/story-avatar-visual-target";
 
 export interface IStorySceneSidebarViewProps {
   briefing: IStoryChapterBriefing;
@@ -23,7 +24,7 @@ export interface IStorySceneMapViewProps {
   nodes: IStoryMapNodeRuntime[];
   currentNodeId: string | null;
   selectedNodeId: string | null;
-  avatarVisualTarget: { nodeId: string; stance: "CENTER" | "SIDE" | "PORTAL" } | null;
+  avatarVisualTarget: IStoryAvatarVisualTarget | null;
   duelFocusNodeId: string | null;
   floatingReward: { label: string; tone: "NEXUS" | "CARD" } | null;
   collectingRewardNodeId: string | null;

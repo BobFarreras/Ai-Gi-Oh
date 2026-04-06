@@ -21,6 +21,7 @@ import { IStoryPostDuelTransition } from "@/services/story/duel-flow/story-post-
 import { resolveStoryPrimaryAction } from "@/services/story/resolve-story-primary-action";
 import { resolveStorySmartAction } from "@/services/story/resolve-story-smart-action";
 import { IStorySceneMapViewProps, IStorySceneSidebarViewProps } from "./internal/scene/view/story-scene-view-props";
+import { IStoryAvatarVisualTarget } from "./internal/scene/types/story-avatar-visual-target";
 interface IStorySceneProps { runtime: IStoryMapRuntimeData; briefing: IStoryChapterBriefing; postDuelTransition?: IStoryPostDuelTransition | null; shouldPlayActEntryAnimation?: boolean; }
 interface IStoryCollectVisual { assetSrc: string; assetAlt: string; tone: "NEXUS" | "CARD"; }
 export function StoryScene({ runtime, briefing, postDuelTransition = null, shouldPlayActEntryAnimation = false }: IStorySceneProps) {
@@ -35,7 +36,7 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
   const markNodeCompleted = useStore(store, (state) => state.markNodeCompleted);
   const [isMoving, setIsMoving] = useState(false);
   const [isInteracting, setIsInteracting] = useState(false);
-  const [avatarVisualTarget, setAvatarVisualTarget] = useState<{ nodeId: string; stance: "CENTER" | "SIDE" | "PORTAL" } | null>(null);
+  const [avatarVisualTarget, setAvatarVisualTarget] = useState<IStoryAvatarVisualTarget | null>(null);
   const [duelFocusNodeId, setDuelFocusNodeId] = useState<string | null>(null);
   const [floatingReward, setFloatingReward] = useState<{ label: string; tone: "NEXUS" | "CARD" } | null>(null);
   const [collectingRewardNodeId, setCollectingRewardNodeId] = useState<string | null>(null);

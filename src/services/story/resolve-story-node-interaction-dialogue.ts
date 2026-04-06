@@ -17,7 +17,7 @@ function buildFallbackDialogue(node: IStoryMapNodeRuntime): IStoryNodeInteractio
     return {
       title: node.title,
       lines: [{ side: "RIGHT", visualKind: "CHARACTER", speaker: "Evento", text: "Se ejecuta una interacción narrativa sin combate." }],
-      soundtrackUrl: "/audio/story/soundtruck.mp3",
+      soundtrackUrl: "/audio/story/soundtracks/act-1/act-1-main-theme.mp3",
     };
   }
   if (node.nodeType === "REWARD_CARD" || node.nodeType === "REWARD_NEXUS") {

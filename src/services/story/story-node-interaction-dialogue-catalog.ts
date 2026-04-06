@@ -4,7 +4,7 @@ import { IStoryNodeInteractionDialogue } from "@/services/story/story-node-inter
 export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNodeInteractionDialogue> = {
   "story-a1-event-biglog-briefing": {
     title: "Protocolo de Emergencia",
-    soundtrackUrl: "/audio/story/soundtruck.mp3",
+    soundtrackUrl: "/audio/story/soundtracks/act-1/act-1-main-theme.mp3",
     cinematicVideo: {
       videoUrl: "/assets/videos/story/act-1/intro-act-1.mp4",
       skipLabel: "Interrumpir vídeo",
@@ -19,7 +19,7 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
   },
   "story-a1-event-special-card-signal": {
     title: "Señal de Carta Especial",
-    soundtrackUrl: "/audio/story/soundtruck.mp3",
+    soundtrackUrl: "/audio/story/soundtracks/act-1/act-1-main-theme.mp3",
     lines: [
       { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "El nodo Nexus abrió un archivo de misión: la carta especial contiene una firma de acceso al Core." },
       { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "No es loot opcional. Es una pieza de la llave que necesitaremos para romper el blindaje final." },
@@ -28,7 +28,7 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
   },
   "story-a1-side-event-echo-fragment": {
     title: "Eco Fragmentado",
-    soundtrackUrl: "/audio/story/soundtruck.mp3",
+    soundtrackUrl: "/audio/story/soundtracks/act-1/act-1-main-theme.mp3",
     lines: [
       { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Atento: esta subruta guarda contenido especial, pero la patrullan oponentes más fuertes que en el eje principal." },
       { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Puede que tengas que hacerte más fuerte para avanzar por esta ruta. Vuelve, mejora tu deck y revienta su defensa." },

@@ -14,12 +14,13 @@ import { useStoryCircuitMotion } from "./internal/map/hooks/use-story-circuit-mo
 import { resolveStoryNodeSideOffsetPx } from "./internal/map/constants/story-map-geometry";
 import { resolveStoryRetreatTrail } from "./internal/map/layout/resolve-story-retreat-trail";
 import { resolveStoryOpponentAvatarUrl } from "./internal/map/story-opponent-avatar";
+import { IStoryAvatarVisualTarget, StoryAvatarSideDirection } from "@/components/hub/story/internal/scene/types/story-avatar-visual-target";
 
 interface StoryCircuitMapProps {
   nodes: IStoryMapNodeRuntime[];
   currentNodeId: string | null;
   selectedNodeId: string | null;
-  avatarVisualTarget?: { nodeId: string; stance: "CENTER" | "SIDE" | "PORTAL" } | null;
+  avatarVisualTarget?: IStoryAvatarVisualTarget | null;
   shouldPlayActEntryAnimation?: boolean;
   duelFocusNodeId?: string | null;
   floatingReward?: { label: string; tone: "NEXUS" | "CARD" } | null;
@@ -32,6 +33,19 @@ interface StoryCircuitMapProps {
   onSelectNode: (nodeId: string | null) => void;
   onRewardCollectAnimationComplete?: () => void;
   onRetreatAnimationComplete?: () => void;
+}
+
+function resolveAvatarSideOffset(
+  visualStance: "CENTER" | "SIDE" | "PORTAL",
+  sideDirection: StoryAvatarSideDirection | undefined,
+): { x: number; y: number } {
+  if (visualStance !== "SIDE") return { x: 0, y: 0 };
+  const offset = resolveStoryNodeSideOffsetPx();
+  const direction = sideDirection ?? "LEFT";
+  if (direction === "RIGHT") return { x: offset, y: 0 };
+  if (direction === "UP") return { x: 0, y: -offset };
+  if (direction === "DOWN") return { x: 0, y: offset };
+  return { x: -offset, y: 0 };
 }
 
 export function StoryCircuitMap({
@@ -66,9 +80,9 @@ export function StoryCircuitMap({
   const currentNodeAnchor = currentNodeId ? resolveStoryNodeTokenAnchor(currentNodeId, positionMap) : null;
   const visualStance = avatarVisualTarget?.stance ?? "CENTER";
   const avatarPos = avatarNode ? resolveStoryNodeTokenAnchor(avatarNode.id, positionMap) : { x: 1000, y: 1000 };
-  const avatarSideOffsetX = visualStance === "SIDE" ? -resolveStoryNodeSideOffsetPx() : 0;
-  const avatarAnchorX = avatarPos.x + avatarSideOffsetX;
-  const avatarAnchorY = avatarPos.y;
+  const avatarSideOffset = resolveAvatarSideOffset(visualStance, avatarVisualTarget?.sideDirection);
+  const avatarAnchorX = avatarPos.x + avatarSideOffset.x;
+  const avatarAnchorY = avatarPos.y + avatarSideOffset.y;
   const collectingAnchor = collectingRewardNodeId ? resolveStoryNodeTokenAnchor(collectingRewardNodeId, positionMap) : null;
   const retreatTrail = useMemo(
     () => resolveStoryRetreatTrail({ retreatingNodeId: retreatingNodeId ?? null, nodes, positionMap }),
@@ -128,7 +142,8 @@ export function StoryCircuitMap({
         avatarY={avatarY}
         avatarScale={avatarScale}
         avatarStance={visualStance}
-        avatarSideOffsetX={avatarSideOffsetX}
+        avatarSideOffsetX={avatarSideOffset.x}
+        avatarSideOffsetY={avatarSideOffset.y}
         collectingAnchor={collectingAnchor}
         collectingRewardVisual={collectingRewardVisual}
         onRewardCollectAnimationComplete={onRewardCollectAnimationComplete}

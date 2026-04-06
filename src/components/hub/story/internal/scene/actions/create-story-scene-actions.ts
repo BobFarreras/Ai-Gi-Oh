@@ -4,6 +4,8 @@ import { resolveStoryPrimaryAction } from "@/services/story/resolve-story-primar
 import { resolveStoryRewardCardVisual } from "@/services/story/resolve-story-reward-card-visual";
 import { animateStoryAvatarPath } from "@/components/hub/story/internal/scene/actions/animate-story-avatar-path";
 import { resolveStoryActTransitionTarget } from "@/services/story/resolve-story-act-transition-target";
+import { IStoryAvatarVisualTarget } from "@/components/hub/story/internal/scene/types/story-avatar-visual-target";
+import { resolveStoryAvatarSideDirection } from "@/components/hub/story/internal/scene/utils/resolve-story-avatar-side-direction";
 
 interface IStoryInteractResponse { interactionCountForNode: number; }
 type StoryRewardTone = "NEXUS" | "CARD";
@@ -22,7 +24,7 @@ interface ICreateStorySceneActionsParams {
   setMovementError: (value: string | null) => void;
   setInteractionFeedback: (value: string | null) => void;
   setCurrentNodeId: (nodeId: string) => void;
-  setAvatarVisualTarget: (value: { nodeId: string; stance: "CENTER" | "SIDE" | "PORTAL" } | null) => void;
+  setAvatarVisualTarget: (value: IStoryAvatarVisualTarget | null) => void;
   setDuelFocusNodeId: (value: string | null) => void;
   setFloatingReward: (value: { label: string; tone: StoryRewardTone } | null) => void;
   setCollectingRewardNodeId: (value: string | null) => void;
@@ -72,6 +74,7 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
         params.sceneSfx.playMove();
         await animateStoryAvatarPath({
           pathNodeIds: travelPathNodeIds,
+          startNodeId: params.currentNodeId,
           nodesById: params.nodesById,
           setCurrentNodeId: params.setCurrentNodeId,
           setAvatarVisualTarget: params.setAvatarVisualTarget,
@@ -94,7 +97,13 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
     const targetMode = resolveStoryPrimaryAction(targetNode);
     if (targetMode.mode === "DISABLED") return;
     if (targetMode.mode === "ROUTE" && targetNode.id !== params.currentNodeId && !skipRouteMoveCheck) return handleMove(true, targetNode);
-    params.setAvatarVisualTarget({ nodeId: targetNode.id, stance: targetMode.mode === "VIRTUAL_INTERACTION" ? "CENTER" : "SIDE" });
+    const currentNode = params.currentNodeId ? params.nodesById[params.currentNodeId] ?? null : null;
+    const sideDirection = resolveStoryAvatarSideDirection(currentNode, targetNode);
+    params.setAvatarVisualTarget(
+      targetMode.mode === "VIRTUAL_INTERACTION"
+        ? { nodeId: targetNode.id, stance: "CENTER" }
+        : { nodeId: targetNode.id, stance: "SIDE", sideDirection },
+    );
     await wait(420);
     if (targetMode.mode === "ROUTE") {
       params.setDuelFocusNodeId(targetNode.id);

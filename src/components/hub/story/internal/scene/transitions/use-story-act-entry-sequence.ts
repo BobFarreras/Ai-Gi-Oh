@@ -3,17 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import { resolveStoryActTransitionNodeId } from "@/services/story/resolve-story-act-transition-node-id";
+import { IStoryAvatarVisualTarget } from "@/components/hub/story/internal/scene/types/story-avatar-visual-target";
 
 interface IUseStoryActEntrySequenceInput {
   nodes: IStoryMapNodeRuntime[];
   activeActId: number;
   currentNodeId: string | null;
   shouldPlayActEntryAnimation: boolean;
-}
-
-interface IStoryAvatarVisualTarget {
-  nodeId: string;
-  stance: "CENTER" | "SIDE" | "PORTAL";
 }
 
 /**

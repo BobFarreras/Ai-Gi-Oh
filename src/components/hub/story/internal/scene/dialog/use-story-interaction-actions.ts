@@ -2,6 +2,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { IStoryAvatarVisualTarget } from "@/components/hub/story/internal/scene/types/story-avatar-visual-target";
 
 interface IStoryInteractionDialogApi {
   isLastLine: boolean;
@@ -14,7 +15,7 @@ interface IUseStoryInteractionActionsInput {
   pendingCenterNodeId: string | null;
   setPendingCenterNodeId: (nodeId: string | null) => void;
   setSelectedNodeId: (nodeId: string | null) => void;
-  setAvatarVisualTarget: (target: { nodeId: string; stance: "CENTER" | "SIDE" | "PORTAL" } | null) => void;
+  setAvatarVisualTarget: (target: IStoryAvatarVisualTarget | null) => void;
   playEventFinish: () => void;
   centerAvatarOnNode: (nodeId: string) => Promise<void>;
 }
