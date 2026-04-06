@@ -15,11 +15,11 @@ function clampAggression(value: number): number {
 }
 
 export function resolveDefaultStoryAiProfile(difficulty: StoryOpponentDifficulty): IStoryAiProfile {
-  if (difficulty === "ROOKIE") return { style: "balanced", aggression: 0.41 };
-  if (difficulty === "STANDARD") return { style: "aggressive", aggression: 0.62 };
-  if (difficulty === "ELITE") return { style: "combo", aggression: 0.66 };
-  if (difficulty === "BOSS") return { style: "combo", aggression: 0.68 };
-  return { style: "combo", aggression: 0.78 };
+  if (difficulty === "ROOKIE") return { style: "control", aggression: 0.34 };
+  if (difficulty === "STANDARD") return { style: "aggressive", aggression: 0.56 };
+  if (difficulty === "ELITE") return { style: "combo", aggression: 0.64 };
+  if (difficulty === "BOSS") return { style: "combo", aggression: 0.72 };
+  return { style: "combo", aggression: 0.84 };
 }
 
 export function normalizeStoryAiProfile(value: unknown, difficulty: StoryOpponentDifficulty): IStoryAiProfile {

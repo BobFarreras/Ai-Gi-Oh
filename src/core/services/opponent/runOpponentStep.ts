@@ -116,6 +116,12 @@ export function runOpponentStep(state: GameState, opponentId: string, strategy: 
     }
     case "BATTLE": {
       const attackDecision = strategy.chooseAttack(state, opponentId);
+      if (!attackDecision && strategy.chooseModeChange) {
+        const modeChange = strategy.chooseModeChange(state, opponentId);
+        if (modeChange) {
+          return GameEngine.changeEntityMode(state, opponentId, modeChange.instanceId, modeChange.newMode);
+        }
+      }
       if (!attackDecision) {
         return GameEngine.nextPhase(state);
       }

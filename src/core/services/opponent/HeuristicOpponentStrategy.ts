@@ -8,6 +8,9 @@ import { chooseBestAttack } from "./attackEvaluator";
 import { chooseFusionMaterials } from "@/core/services/opponent/heuristic-fusion-materials";
 import { IStoryAiProfile, normalizeStoryAiProfile } from "@/core/services/opponent/difficulty/story-ai-profile";
 import { buildPlayableCardDecisions } from "@/core/services/opponent/select-opponent-play";
+import { shouldHoldFragileFrontline } from "@/core/services/opponent/opponent-tactical-context";
+import { IOpponentModeChangeDecision } from "@/core/services/opponent/types";
+import { shouldSkipPlayForEnergy } from "@/core/services/opponent/opponent-energy-plan";
 
 function getPlayers(state: GameState, opponentId: string): { opponent: IPlayer; target: IPlayer } {
   if (state.playerA.id === opponentId) {
@@ -34,8 +37,14 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
   public choosePlay(state: GameState, opponentId: string): IOpponentPlayDecision | null {
     const { opponent, target } = getPlayers(state, opponentId);
     const playable = buildPlayableCardDecisions({ opponent, target, profile: this.profile, aiProfile: this.aiProfile });
+    if (shouldSkipPlayForEnergy({ opponent, target, profile: this.profile, aiProfile: this.aiProfile, playableDecisions: playable })) {
+      return null;
+    }
     for (const decision of playable) {
       const { card, mode } = decision;
+      if (shouldHoldFragileFrontline({ card, mode, opponent, target, profile: this.profile, aiProfile: this.aiProfile })) {
+        continue;
+      }
       if (card.type === "FUSION") {
         const fusionMaterials = chooseFusionMaterials(opponent, card);
         if (!fusionMaterials || state.hasNormalSummonedThisTurn) {
@@ -80,5 +89,33 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
     };
 
     return chooseBestAttack(normalizedOpponent, target, this.profile);
+  }
+
+  public chooseModeChange(state: GameState, opponentId: string): IOpponentModeChangeDecision | null {
+    const { opponent, target } = getPlayers(state, opponentId);
+    const defenders = opponent.activeEntities.filter((entity) =>
+      (entity.mode === "DEFENSE" || entity.mode === "SET") &&
+      !entity.hasAttackedThisTurn &&
+      !entity.isNewlySummoned &&
+      (!entity.modeLock || entity.modeLock === "ATTACK"),
+    );
+    if (defenders.length === 0) return null;
+    const targetStats = target.activeEntities.map((entity) =>
+      entity.mode === "DEFENSE" || entity.mode === "SET" ? (entity.card.defense ?? 0) : (entity.card.attack ?? 0));
+    const canPressureSet = target.activeEntities.some((entity) => entity.mode === "SET");
+    const bestRivalStat = targetStats.length > 0 ? Math.max(...targetStats) : 0;
+    const orderedDefenders = [...defenders].sort((left, right) => (right.card.attack ?? 0) - (left.card.attack ?? 0));
+    for (const defender of orderedDefenders) {
+      const attack = defender.card.attack ?? 0;
+      const canWinTrade = targetStats.some((stat) => attack >= stat);
+      if (canWinTrade) return { instanceId: defender.instanceId, newMode: "ATTACK" };
+      if (target.activeEntities.length === 0 && attack >= 1200) return { instanceId: defender.instanceId, newMode: "ATTACK" };
+      if ((this.profile.key === "MASTER" || this.profile.key === "MYTHIC") && canPressureSet && attack >= 1700) {
+        return { instanceId: defender.instanceId, newMode: "ATTACK" };
+      }
+      const controlHold = this.aiProfile.style === "control" && this.aiProfile.aggression < 0.5 && attack < bestRivalStat;
+      if (controlHold) continue;
+    }
+    return null;
   }
 }

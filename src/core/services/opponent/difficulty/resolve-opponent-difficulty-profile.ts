@@ -30,11 +30,19 @@ function toAggressionFactor(aggression: number): number {
   return 1 + centered * 0.6;
 }
 
+function resolveDifficultyAggressionFloor(difficulty: OpponentDifficulty): number {
+  if (difficulty === "MYTHIC") return 1.2;
+  if (difficulty === "MASTER") return 1.14;
+  if (difficulty === "BOSS") return 1.08;
+  if (difficulty === "HARD") return 1.02;
+  return 0.85;
+}
+
 export function resolveOpponentDifficultyProfile(input: { difficulty: OpponentDifficulty; aiProfile?: unknown }): IOpponentDifficultyProfile {
   const base = getDifficultyProfile(input.difficulty);
   const normalizedAi = normalizeStoryAiProfile(input.aiProfile, "STANDARD");
   const style = STYLE_TUNING[normalizedAi.style];
-  const aggressionFactor = toAggressionFactor(normalizedAi.aggression);
+  const aggressionFactor = Math.max(toAggressionFactor(normalizedAi.aggression), resolveDifficultyAggressionFloor(input.difficulty));
   const riskAverseFactor = 1 / aggressionFactor;
   return {
     key: base.key,
