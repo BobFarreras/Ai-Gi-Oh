@@ -82,6 +82,23 @@ describe("buildStoryNodePositionMap", () => {
     }
   });
 
+  it("evita coordenadas solapadas en el acto 2 para evitar selección incorrecta de nodo", () => {
+    const act2 = listStoryActMapDefinitions().find((definition) => definition.act === 2);
+    expect(act2).toBeDefined();
+    const allPositions = [...(act2?.nodes ?? []), ...(act2?.virtualNodes ?? [])].map(
+      (node) => node.position,
+    );
+    const minDistance = 40;
+    for (let index = 0; index < allPositions.length; index += 1) {
+      for (let next = index + 1; next < allPositions.length; next += 1) {
+        const deltaX = allPositions[index].x - allPositions[next].x;
+        const deltaY = allPositions[index].y - allPositions[next].y;
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        expect(distance).toBeGreaterThan(minDistance);
+      }
+    }
+  });
+
   it("oculta el hilo del puente principal hasta completar la submission de activación", () => {
     const nodes: IStoryMapNodeRuntime[] = [
       {

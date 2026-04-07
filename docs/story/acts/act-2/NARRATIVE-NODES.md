@@ -9,13 +9,12 @@
 ## Nodos de evento activos
 | nodeId | Formato | Intención narrativa | Resultado de gameplay |
 |---|---|---|---|
-| `story-ch2-event-core` | Diálogo terminal (BigLog + Jugador) | Presentar el Valle Visual, amenaza de Helena y objetivo de limpiar ramas. | Abre comprensión del acto y marca prioridades tácticas. |
+| `story-ch2-event-core` | Vídeo + diálogo terminal (BigLog + Jugador) | Presentar el Valle Visual, amenaza de Helena y objetivo de limpiar ramas. | Abre comprensión del acto y marca prioridades tácticas. |
 | `story-ch2-branch-lower-up-event` | Diálogo terminal | Introducir la primera mitad de la llave de pasarela. | Justifica que el puente principal siga bloqueado. |
 | `story-ch2-bridge-submission` | Diálogo terminal | Confirmar handshake y submission final de enlace. | Desbloquea el puente en la ruta principal. |
 | `story-ch2-transition-to-act1` | Mensaje sistema corto | Retorno táctico al acto previo. | Cambia a Acto 1. |
 | `story-ch2-transition-to-act3` | Mensaje sistema corto | Cierre del sector Helena y salto al siguiente teatro. | Cambia a Acto 3. |
 
-## Nota sobre vídeo del primer evento
-1. Si se quiere versión cinemática para `story-ch2-event-core`, usar asset:
+## Vídeo del primer evento
+1. Asset activo de `story-ch2-event-core`:
    `public/assets/videos/story/act-2/intro-act-2.mp4`.
-2. Mientras no exista ese archivo, mantener el formato de diálogo terminal actual para evitar pantalla vacía o cortes.

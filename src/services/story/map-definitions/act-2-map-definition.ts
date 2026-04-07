@@ -49,11 +49,11 @@ export const storyAct2MapDefinition: IStoryActMapDefinition = {
     v({ id: "story-ch2-branch-center-b", duelIndex: 208, nodeType: "MOVE", title: "Paso", unlockRequirementNodeId: "story-ch2-branch-center-a", position: { x: 3900, y: 840 } }),
 
     v({ id: "story-ch2-branch-bottom-a", duelIndex: 209, nodeType: "MOVE", title: "Ruta Inferior", unlockRequirementNodeId: "story-ch2-event-core", position: { x: 3640, y: 1260 } }),
-    v({ id: "story-ch2-branch-bottom-b", duelIndex: 210, nodeType: "MOVE", title: "Paso", unlockRequirementNodeId: "story-ch2-branch-bottom-a", position: { x: 3900, y: 1260 } }),
+    v({ id: "story-ch2-branch-bottom-b", duelIndex: 210, nodeType: "MOVE", title: "Paso", unlockRequirementNodeId: "story-ch2-branch-bottom-a", position: { x: 3770, y: 1260 } }),
     v({ id: "story-ch2-branch-bottom-c", duelIndex: 211, nodeType: "REWARD_NEXUS", title: "Moneda", rewardNexus: 320, unlockRequirementNodeId: "story-ch2-branch-bottom-b", position: { x: 4160, y: 1260 } }),
     v({ id: "story-ch2-branch-lower-fork", duelIndex: 212, nodeType: "MOVE", title: "Bifurcación", unlockRequirementNodeId: "story-ch2-duel-4", position: { x: 4420, y: 1260 } }),
 
-    v({ id: "story-ch2-branch-lower-up-event", duelIndex: 213, nodeType: "EVENT", title: "Evento", unlockRequirementNodeId: "story-ch2-branch-lower-fork", position: { x: 4420, y: 1120 } }),
+    v({ id: "story-ch2-branch-lower-up-event", duelIndex: 213, nodeType: "EVENT", title: "Evento", unlockRequirementNodeId: "story-ch2-branch-lower-fork", position: { x: 4290, y: 1120 } }),
     v({ id: "story-ch2-branch-lower-up-link", duelIndex: 214, nodeType: "MOVE", title: "Paso", unlockRequirementNodeId: "story-ch2-duel-5", position: { x: 4680, y: 1120 } }),
 
     v({ id: "story-ch2-branch-lower-down-a", duelIndex: 215, nodeType: "MOVE", title: "Paso", unlockRequirementNodeId: "story-ch2-branch-lower-fork", position: { x: 4680, y: 1260 } }),
@@ -77,10 +77,10 @@ export const storyAct2MapDefinition: IStoryActMapDefinition = {
     { id: "act2-p-9", position: { x: 3900, y: 980 }, size: 170, style: "METAL" },
     { id: "act2-p-10", position: { x: 4160, y: 980 }, size: 170, style: "NEON" },
     { id: "act2-p-11", position: { x: 3640, y: 1260 }, size: 170, style: "RUIN" },
-    { id: "act2-p-12", position: { x: 3900, y: 1260 }, size: 170, style: "METAL" },
+    { id: "act2-p-12", position: { x: 3770, y: 1260 }, size: 170, style: "METAL" },
     { id: "act2-p-13", position: { x: 4160, y: 1260 }, size: 170, style: "NEON" },
     { id: "act2-p-14", position: { x: 4420, y: 1260 }, size: 170, style: "RUIN" },
-    { id: "act2-p-15", position: { x: 4420, y: 1120 }, size: 170, style: "METAL" },
+    { id: "act2-p-15", position: { x: 4290, y: 1120 }, size: 170, style: "METAL" },
     { id: "act2-p-16", position: { x: 4680, y: 1120 }, size: 170, style: "NEON" },
     { id: "act2-p-17", position: { x: 4680, y: 1260 }, size: 170, style: "RUIN" },
     { id: "act2-p-18", position: { x: 4940, y: 1260 }, size: 170, style: "METAL" },

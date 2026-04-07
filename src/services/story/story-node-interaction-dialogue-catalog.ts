@@ -46,6 +46,12 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
   },
   "story-ch2-event-core": {
     title: "Diagnóstico del Valle",
+    cinematicVideo: {
+      videoUrl: "/assets/videos/story/act-2/intro-act-2.mp4",
+      skipLabel: "Interrumpir vídeo",
+      autoPlay: true,
+      loop: false,
+    },
     lines: [
       { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Entraste en el Valle Visual. Helena blindó el sector con plantillas corruptas y rutas espejadas." },
       { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Debes limpiar tres ramas operativas y cortar la telemetría de facción antes del puente." },
