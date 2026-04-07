@@ -31,6 +31,15 @@
    - el puente debe estar en flujo principal,
    - el hilo visual del puente debe permanecer oculto hasta activación.
 4. No usar iconografía genérica no temática en teletransporte de actos.
+5. Secuencia de teletransporte obligatoria:
+   - avatar se reduce hasta desaparecer en nodo origen,
+   - aparece en nodo de teletransporte del acto destino desde escala mínima,
+   - recupera escala normal,
+   - avanza un nodo en dirección narrativa (`forward` derecha, `backward` izquierda).
+6. Implementación de referencia:
+   - entrada: `use-story-act-entry-sequence.ts`,
+   - navegación entre actos: `use-story-act-transition-navigation.ts`,
+   - movimiento/cámara avatar: `use-story-circuit-motion.ts`.
 
 ## Reglas de backend (Supabase)
 1. `story_duels` define orden de duelo, oponente y desbloqueo backend.

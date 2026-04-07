@@ -1,6 +1,6 @@
 // src/components/hub/story/StoryScene.tsx - Escena principal Story con mapa vivo y panel lateral conectado a estado persistible.
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "zustand";
 import { StorySceneDesktopLayout } from "./internal/scene/view/StorySceneDesktopLayout";
@@ -23,12 +23,16 @@ import { resolveStoryPrimaryAction } from "@/services/story/resolve-story-primar
 import { resolveStorySmartAction } from "@/services/story/resolve-story-smart-action";
 import { IStorySceneMapViewProps, IStorySceneSidebarViewProps } from "./internal/scene/view/story-scene-view-props";
 import { IStoryAvatarVisualTarget } from "./internal/scene/types/story-avatar-visual-target";
-interface IStorySceneProps { runtime: IStoryMapRuntimeData; briefing: IStoryChapterBriefing; postDuelTransition?: IStoryPostDuelTransition | null; shouldPlayActEntryAnimation?: boolean; }
+type StoryActEntryDirection = "forward" | "backward" | null;
+interface IStorySceneProps { runtime: IStoryMapRuntimeData; briefing: IStoryChapterBriefing; postDuelTransition?: IStoryPostDuelTransition | null; shouldPlayActEntryAnimation?: boolean; actEntryDirection?: StoryActEntryDirection; }
 interface IStoryCollectVisual { assetSrc: string; assetAlt: string; tone: "NEXUS" | "CARD"; }
-export function StoryScene({ runtime, briefing, postDuelTransition = null, shouldPlayActEntryAnimation = false }: IStorySceneProps) {
+export function StoryScene({ runtime, briefing, postDuelTransition = null, shouldPlayActEntryAnimation = false, actEntryDirection = null }: IStorySceneProps) {
   const router = useRouter();
   const isMobileLayout = useStorySceneMobileMode();
   const [store] = useState<StorySceneStore>(() => createStorySceneStore({ nodes: runtime.nodes, currentNodeId: runtime.currentNodeId }));
+  useEffect(() => {
+    store.getState().hydrateFromRuntime({ nodes: runtime.nodes, currentNodeId: runtime.currentNodeId });
+  }, [store, runtime.activeActId, runtime.currentNodeId, runtime.nodes]);
   const selectedNodeId = useStore(store, (state) => state.selectedNodeId);
   const currentNodeId = useStore(store, (state) => state.currentNodeId);
   const nodesById = useStore(store, (state) => state.nodesById);
@@ -51,7 +55,18 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
   const interactionDialog = useStoryNodeInteractionDialog();
   const sceneSfx = useStorySceneSfx();
   const { isMuted: isMapSoundtrackMuted, toggleMute: toggleMapSoundtrackMute } = useStoryMapSoundtrack(runtime.activeActId);
-  const { entryAvatarVisualTarget, isActEntrySequenceRunning } = useStoryActEntrySequence({ nodes: runtime.nodes, activeActId: runtime.activeActId, currentNodeId: runtime.currentNodeId, shouldPlayActEntryAnimation });
+  const { entryAvatarVisualTarget, isActEntrySequenceRunning, entryResolvedNodeId } = useStoryActEntrySequence({
+    nodes: runtime.nodes,
+    activeActId: runtime.activeActId,
+    currentNodeId: runtime.currentNodeId,
+    shouldPlayActEntryAnimation,
+    direction: actEntryDirection,
+  });
+  useEffect(() => {
+    if (!entryResolvedNodeId) return;
+    setCurrentNodeId(entryResolvedNodeId);
+    setSelectedNodeId(entryResolvedNodeId);
+  }, [entryResolvedNodeId, setCurrentNodeId, setSelectedNodeId]);
   const selectedNode = selectedNodeId ? nodesById[selectedNodeId] ?? null : null;
   const sceneNodes = useMemo(() => Object.values(nodesById).sort((left, right) => (left.chapter !== right.chapter ? left.chapter - right.chapter : left.duelIndex - right.duelIndex)), [nodesById]);
   const primaryAction = resolveStoryPrimaryAction(selectedNode);
@@ -88,7 +103,12 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
     requestActTransition: (actId) => setActTransitionTargetId(actId),
     startInteractionDialog: interactionDialog.start,
   });
-  useStoryActTransitionNavigation({ actTransitionTargetId, navigateTo: router.push });
+  useStoryActTransitionNavigation({
+    actTransitionTargetId,
+    activeActId: runtime.activeActId,
+    navigateTo: router.push,
+    clearTransition: () => setActTransitionTargetId(null),
+  });
   const { finalizeInteractionDialog, advanceInteractionDialog } = useStoryInteractionActions({
     interactionDialog,
     pendingCenterNodeId,

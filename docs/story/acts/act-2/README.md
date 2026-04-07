@@ -1,6 +1,21 @@
 <!-- docs/story/acts/act-2/README.md - Especificación funcional del Acto 2 con rutas de facción, nodos críticos y progresión de dificultad intermedia. -->
 # Acto 2 - Valle Visual (Helena)
 
+## Guion de soporte
+1. [Guion por nodos de evento](./NARRATIVE-NODES.md)
+
+## Secuencia de teletransporte
+1. Al activar transición de acto: centrar cámara en nodo teletransporte destino.
+2. Spawn del avatar en escala mínima sobre ese nodo.
+3. Crecimiento animado hasta escala normal.
+4. Avance automático de 1 plataforma lateral:
+   - `forward`: derecha,
+   - `backward`: izquierda.
+5. El `currentNodeId` debe sincronizarse con ese nodo de llegada para evitar rebotes visuales.
+
+## Soundtrack
+1. Música de mapa del Acto 2: `public/audio/story/soundtracks/act-2/Chromed Horizon.mp3`.
+
 ## Resumen narrativo
 1. Helena protege el valle y cuestiona al jugador.
 2. La Entidad contamina plantillas y bloqueos visuales.

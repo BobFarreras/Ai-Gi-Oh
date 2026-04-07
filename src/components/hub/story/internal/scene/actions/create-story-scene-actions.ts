@@ -124,6 +124,14 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
       return;
     }
     if (targetMode.mode !== "VIRTUAL_INTERACTION") return;
+    const actTransitionTarget = resolveStoryActTransitionTarget(targetNode.id);
+    if (actTransitionTarget) {
+      params.markNodeCompleted(targetNode.id);
+      await portalAvatarOnNode(targetNode.id);
+      params.requestActTransition(actTransitionTarget);
+      params.setInteractionFeedback(`Transición iniciada hacia Acto ${actTransitionTarget}.`);
+      return;
+    }
     try {
       params.setIsInteracting(true);
       const interactionPayload = buildStoryNodeInteractionPayload(targetNode);
@@ -146,13 +154,6 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
         await runRewardCollectAnimation(targetNode);
       }
       params.markNodeCompleted(targetNode.id);
-      const actTransitionTarget = resolveStoryActTransitionTarget(targetNode.id);
-      if (actTransitionTarget) {
-        await portalAvatarOnNode(targetNode.id);
-        params.requestActTransition(actTransitionTarget);
-        params.setInteractionFeedback(`Transición iniciada hacia Acto ${actTransitionTarget}.`);
-        return;
-      }
       if (targetNode.nodeType === "EVENT" || targetNode.nodeType === "REWARD_CARD" || targetNode.nodeType === "REWARD_NEXUS") {
         await portalAvatarOnNode(targetNode.id);
       }

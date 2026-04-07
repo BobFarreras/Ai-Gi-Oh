@@ -93,16 +93,6 @@ export function StoryMapNode({ node, isSelected, isCurrentNode, isCollecting = f
               <div aria-hidden className="absolute inset-4 rounded-full border border-violet-200/60 bg-black shadow-[inset_0_0_22px_rgba(76,29,149,0.95)]" />
             </>
           ) : null}
-          {isActTransitionNode ? (
-            <div
-              aria-hidden
-              className="relative z-10 flex h-full w-full items-center justify-center text-[10px] font-black tracking-[0.24em] text-violet-100"
-            >
-              <span className="rounded border border-violet-200/70 bg-black/70 px-2 py-1 shadow-[0_0_14px_rgba(139,92,246,0.7)]">
-                ACT
-              </span>
-            </div>
-          ) : null}
           {hologram ? (
             <div className={cn("relative h-full w-full", node.isBossDuel && "-rotate-45")}>
               <Image
