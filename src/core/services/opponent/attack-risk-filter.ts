@@ -6,16 +6,22 @@ function isSuicidalAttack(option: IAttackOption): boolean {
   return option.attackerDestroyed && !option.defenderDestroyed && option.damageToAttackerPlayer > 0;
 }
 
+function isKnownDefenseLoss(option: IAttackOption): boolean {
+  return Boolean(option.defender && option.defender.mode === "DEFENSE" && !option.defenderDestroyed && option.damageToAttackerPlayer > 0);
+}
+
 export function filterOptionsByRisk(options: IAttackOption[], profile: IOpponentDifficultyProfile): IAttackOption[] {
   if (profile.key === "EASY") {
     return options.filter((option) => {
       if (option.isLethal || option.isHighValueClear) return true;
+      if (isKnownDefenseLoss(option)) return false;
       if (option.isLosingTrade) return false;
       return option.damageToAttackerPlayer <= 700;
     });
   }
   return options.filter((option) => {
     if (option.isLethal || option.isHighValueClear) return true;
+    if (isKnownDefenseLoss(option)) return false;
     if (isSuicidalAttack(option)) return false;
     if (profile.key === "NORMAL") return option.damageToAttackerPlayer <= 900;
     return option.damageToAttackerPlayer <= 250 && !option.isLosingTrade;

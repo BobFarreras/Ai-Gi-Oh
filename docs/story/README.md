@@ -90,6 +90,8 @@ Ahora el panel admin permite:
 - seleccionar duelo concreto asociado al deck,
 - editar dificultad por duelo,
 - editar escalado estático por slot (`versionTier`, `level`, `xp`).
+- navegar por catálogo de duelos del oponente en panel lateral con retorno rápido a catálogo de oponentes.
+- clonar configuración entre duelos (deck de duelo + dificultad + perfil IA + escalado por slot) antes de guardar.
 
 Esto permite casos como:
 - `GemNvim ROOKIE` con deck base,
@@ -110,4 +112,5 @@ Para seguir escalando sin romper motor:
 - Runtime duelo: `src/services/story/get-story-duel-runtime-data.ts`
 - Perfil IA rival: `src/core/services/opponent/difficulty/resolve-opponent-difficulty-profile.ts`
 - UI story: `src/components/hub/story/README.md`
+- Admin Story Decks (controles): `docs/story/admin-story-decks-controls.md`
 

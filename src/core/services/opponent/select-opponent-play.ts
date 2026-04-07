@@ -4,6 +4,7 @@ import { ICard } from "@/core/entities/ICard";
 import { IOpponentDifficultyProfile } from "@/core/services/opponent/difficulty/types";
 import { IStoryAiProfile } from "@/core/services/opponent/difficulty/story-ai-profile";
 import { scoreEntity, scoreExecution, scoreFusion, scoreTrap } from "@/core/services/opponent/heuristic-score";
+import { resolveTacticalCardBonus } from "@/core/services/opponent/opponent-tactical-context";
 
 export interface IPlayableCardDecision {
   card: ICard;
@@ -11,10 +12,25 @@ export interface IPlayableCardDecision {
   mode: BattleMode;
 }
 
-function resolveEntityMode(card: ICard, target: IPlayer): BattleMode {
+function resolveEntityMode(
+  card: ICard,
+  opponent: IPlayer,
+  target: IPlayer,
+  profile: IOpponentDifficultyProfile,
+  aiProfile: IStoryAiProfile,
+): BattleMode {
   const attack = card.attack ?? 0;
   const defense = card.defense ?? 0;
   const rivalBestAttack = target.activeEntities.reduce((best, entity) => Math.max(best, entity.card.attack ?? 0), 0);
+  const hasOwnAttacker = opponent.activeEntities.some((entity) => entity.mode === "ATTACK" && !entity.isNewlySummoned);
+  const hasHiddenTarget = target.activeEntities.some((entity) => entity.mode === "SET");
+  const shouldForcePressure =
+    !hasOwnAttacker &&
+    (aiProfile.style === "aggressive" || aiProfile.style === "combo" || aiProfile.aggression >= 0.58) &&
+    attack >= Math.max(1200, Math.trunc(defense * 0.85));
+  if (shouldForcePressure) return "ATTACK";
+  if ((profile.key === "MASTER" || profile.key === "MYTHIC") && rivalBestAttack > attack && defense >= rivalBestAttack) return "DEFENSE";
+  if (hasHiddenTarget && attack >= 1700 && aiProfile.aggression >= 0.5) return "ATTACK";
   if (defense > attack && defense >= rivalBestAttack) return "DEFENSE";
   return attack >= defense ? "ATTACK" : "DEFENSE";
 }
@@ -34,6 +50,7 @@ function canActivateExecutionNow(card: ICard, opponent: IPlayer, target: IPlayer
   const effect = card.effect;
   if (!effect) return false;
   if (effect.action === "DAMAGE" || effect.action === "DRAW_CARD" || effect.action === "RESTORE_ENERGY" || effect.action === "DRAIN_OPPONENT_ENERGY") return true;
+  if (effect.action === "REDUCE_OPPONENT_ATTACK" || effect.action === "REDUCE_OPPONENT_DEFENSE") return target.activeEntities.length > 0;
   if (effect.action === "HEAL") return opponent.healthPoints < opponent.maxHealthPoints;
   if (effect.action === "BOOST_ATTACK_ALLIED_ENTITY") return opponent.activeEntities.length > 0;
   if (effect.action === "BOOST_DEFENSE_BY_ARCHETYPE" || effect.action === "BOOST_ATTACK_BY_ARCHETYPE") return hasArchetypeEntity(opponent, effect.archetype);
@@ -54,6 +71,7 @@ function canActivateExecutionNow(card: ICard, opponent: IPlayer, target: IPlayer
     const setExecutions = effect.zone !== "ENTITIES" && target.activeExecutions.some((entity) => entity.mode === "SET");
     return setEntities || setExecutions;
   }
+  if (effect.action === "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN") return target.activeEntities.length === 0;
   if (effect.action === "FUSION_SUMMON") return opponent.activeEntities.length >= 2;
   return false;
 }
@@ -91,6 +109,10 @@ function scoreCardWithContext(
     const lowHpBonus = opponent.healthPoints <= Math.floor(opponent.maxHealthPoints * 0.45) ? 650 : 0;
     return base + activateBonus + lowHpBonus;
   }
+  if (effect.action === "REVEAL_OPPONENT_SET_CARD") {
+    const hasTargets = target.activeEntities.some((entity) => entity.mode === "SET") || target.activeExecutions.some((entity) => entity.mode === "SET");
+    return base + activateBonus + (hasTargets ? 720 : -280);
+  }
   return base + activateBonus;
 }
 
@@ -103,14 +125,18 @@ export function buildPlayableCardDecisions(input: {
 }): IPlayableCardDecision[] {
   const playableCards = input.opponent.hand.filter((card) => card.cost <= input.opponent.currentEnergy);
   return playableCards
-    .map((card) => ({
-      card,
-      score: scoreCardWithContext(card, input.opponent, input.target, input.profile, input.aiProfile),
-      mode: card.type === "ENTITY" || card.type === "FUSION"
-        ? resolveEntityMode(card, input.target)
+    .map((card) => {
+      const mode = card.type === "ENTITY" || card.type === "FUSION"
+        ? resolveEntityMode(card, input.opponent, input.target, input.profile, input.aiProfile)
         : card.type === "EXECUTION"
           ? resolveExecutionMode(card, input.opponent, input.target)
-          : "SET",
-    }))
+          : "SET";
+      return {
+        card,
+        mode,
+        score: scoreCardWithContext(card, input.opponent, input.target, input.profile, input.aiProfile)
+          + resolveTacticalCardBonus({ card, mode, opponent: input.opponent, target: input.target, aiProfile: input.aiProfile }),
+      };
+    })
     .sort((a, b) => b.score - a.score);
 }

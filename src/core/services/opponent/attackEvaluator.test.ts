@@ -20,7 +20,7 @@ function createPlayer(id: string): IPlayer {
   };
 }
 
-function createEntity(instanceId: string, attack: number, defense: number) {
+function createEntity(instanceId: string, attack: number, defense: number, mode: "ATTACK" | "DEFENSE" | "SET" = "ATTACK") {
   return {
     instanceId,
     card: {
@@ -33,7 +33,7 @@ function createEntity(instanceId: string, attack: number, defense: number) {
       attack,
       defense,
     },
-    mode: "ATTACK" as const,
+    mode,
     hasAttackedThisTurn: false,
     isNewlySummoned: false,
   };
@@ -70,6 +70,37 @@ describe("attackEvaluator", () => {
     const decision = chooseBestAttack(opponent, target, getDifficultyProfile("HARD"));
     expect(decision).not.toBeNull();
     expect(decision?.defenderInstanceId).toBe("p1-threat");
+  });
+
+  it("mantiene presión atacando objetivos SET cuando no es un suicidio claro", () => {
+    const opponent = createPlayer("p2");
+    const target = createPlayer("p1");
+    opponent.activeEntities = [createEntity("p2-prober", 2100, 1300)];
+    target.activeEntities = [createEntity("p1-hidden", 1200, 1800, "SET")];
+
+    const decision = chooseBestAttack(opponent, target, getDifficultyProfile("MYTHIC"));
+    expect(decision).not.toBeNull();
+    expect(decision?.defenderInstanceId).toBe("p1-hidden");
+  });
+
+  it("evita presión contra SET si el intercambio sería suicida total", () => {
+    const opponent = createPlayer("p2");
+    const target = createPlayer("p1");
+    opponent.activeEntities = [createEntity("p2-weak", 1200, 900)];
+    target.activeEntities = [createEntity("p1-hidden-tank", 500, 4200, "SET")];
+
+    const decision = chooseBestAttack(opponent, target, getDifficultyProfile("MYTHIC"));
+    expect(decision).toBeNull();
+  });
+
+  it("no ataca una DEFENSE visible si solo perdería LP y no rompe defensa", () => {
+    const opponent = createPlayer("p2");
+    const target = createPlayer("p1");
+    opponent.activeEntities = [createEntity("p2-front", 1500, 900)];
+    target.activeEntities = [createEntity("p1-wall-defense", 1900, 1900, "DEFENSE")];
+
+    const decision = chooseBestAttack(opponent, target, getDifficultyProfile("EASY"));
+    expect(decision).toBeNull();
   });
 });
 

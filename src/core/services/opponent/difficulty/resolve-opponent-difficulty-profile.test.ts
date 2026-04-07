@@ -22,4 +22,18 @@ describe("resolveOpponentDifficultyProfile", () => {
     expect(aggressive.executionAggroBias).toBeGreaterThan(control.executionAggroBias);
     expect(aggressive.attackerLossPenalty).toBeLessThan(control.attackerLossPenalty);
   });
+
+  it("mantiene presión mínima en dificultades altas aunque ai_profile sea pasivo", () => {
+    const hardPassive = resolveOpponentDifficultyProfile({
+      difficulty: "HARD",
+      aiProfile: { style: "control", aggression: 0.1 },
+    });
+    const mythicPassive = resolveOpponentDifficultyProfile({
+      difficulty: "MYTHIC",
+      aiProfile: { style: "control", aggression: 0.1 },
+    });
+    expect(mythicPassive.directAttackBias).toBeGreaterThan(hardPassive.directAttackBias);
+    expect(mythicPassive.executionAggroBias).toBeGreaterThan(hardPassive.executionAggroBias);
+    expect(mythicPassive.minAttackScore).toBeGreaterThan(hardPassive.minAttackScore);
+  });
 });
