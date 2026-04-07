@@ -68,9 +68,13 @@ export function createStorySceneStore(input: {
     setCurrentNodeId: (currentNodeId) =>
       set((state) => {
         if (!currentNodeId) return { currentNodeId };
+        const previousNode = state.currentNodeId ? state.nodesById[state.currentNodeId] ?? null : null;
         const currentNode = state.nodesById[currentNodeId];
         const nextNodesById = {
           ...state.nodesById,
+          ...(previousNode?.nodeType === "MOVE"
+            ? { [previousNode.id]: { ...previousNode, isCompleted: true } }
+            : {}),
           ...(currentNode?.nodeType === "MOVE"
             ? { [currentNodeId]: { ...currentNode, isCompleted: true } }
             : {}),

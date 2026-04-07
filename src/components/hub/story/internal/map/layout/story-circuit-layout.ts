@@ -138,12 +138,29 @@ export function resolveStoryPathSegments(
     const to = resolveEdgeAnchor(toNodeId, fromNodeId);
     segments.push({ from, to });
   };
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const shouldRenderUnlockSegment = (requirementNodeId: string, targetNodeId: string): boolean => {
+    const requirementNode = nodeById.get(requirementNodeId);
+    if (!requirementNode) return false;
+    if (targetNodeId === "story-ch2-boss-bridge") return requirementNode.isCompleted;
+    return true;
+  };
+  const shouldRenderLinkedSegment = (fromNodeId: string, targetNodeId: string): boolean => {
+    if (fromNodeId === "story-ch2-branch-lower-down-b" && targetNodeId === "story-ch2-boss-bridge") {
+      return nodeById.get("story-ch2-bridge-submission")?.isCompleted ?? false;
+    }
+    return true;
+  };
   for (const node of nodes) {
     if (node.unlockRequirementNodeId && nodeIdSet.has(node.unlockRequirementNodeId)) {
-      pushSegment(node.unlockRequirementNodeId, node.id);
+      if (shouldRenderUnlockSegment(node.unlockRequirementNodeId, node.id)) {
+        pushSegment(node.unlockRequirementNodeId, node.id);
+      }
     }
     for (const linkedNodeId of node.pathLinkFromNodeIds ?? []) {
-      if (nodeIdSet.has(linkedNodeId)) pushSegment(linkedNodeId, node.id);
+      if (nodeIdSet.has(linkedNodeId) && shouldRenderLinkedSegment(linkedNodeId, node.id)) {
+        pushSegment(linkedNodeId, node.id);
+      }
     }
   }
   return segments;

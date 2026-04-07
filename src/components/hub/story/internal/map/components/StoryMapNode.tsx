@@ -28,7 +28,10 @@ function resolveHologramAsset(node: IStoryMapNodeRuntime): { src: string; alt: s
   }
   if (node.nodeType === "REWARD_NEXUS") return { src: "/assets/renders/nexus.webp", alt: "Nexus" };
   if (node.nodeType === "REWARD_CARD") return resolveStoryRewardCardVisual(node.rewardCardId);
-  if (node.nodeType === "EVENT") return { src: "/assets/renders/chatgpt.webp", alt: "Evento" };
+  if (node.nodeType === "EVENT") {
+    if (resolveStoryActTransitionTarget(node.id) !== null) return null;
+    return { src: "/assets/renders/chatgpt.webp", alt: "Evento" };
+  }
   return { src: "/assets/renders/react.webp", alt: "Nodo de movimiento" };
 }
 
@@ -41,7 +44,7 @@ export function StoryMapNode({ node, isSelected, isCurrentNode, isCollecting = f
   const shouldShowTitle = node.nodeType === "DUEL" || node.nodeType === "BOSS";
   // Un nodo resuelto debe quedar como plataforma vacía, excepto transiciones de acto para permitir reuso.
   const shouldHideCompletedToken = node.isCompleted && node.nodeType !== "MOVE" && !isActTransitionNode;
-  const shouldRenderToken = Boolean(hologram) && !isCollecting && !shouldHideCompletedToken;
+  const shouldRenderToken = !isCollecting && !shouldHideCompletedToken && (Boolean(hologram) || isActTransitionNode);
 
   return (
     <motion.button
@@ -89,6 +92,16 @@ export function StoryMapNode({ node, isSelected, isCurrentNode, isCollecting = f
               />
               <div aria-hidden className="absolute inset-4 rounded-full border border-violet-200/60 bg-black shadow-[inset_0_0_22px_rgba(76,29,149,0.95)]" />
             </>
+          ) : null}
+          {isActTransitionNode ? (
+            <div
+              aria-hidden
+              className="relative z-10 flex h-full w-full items-center justify-center text-[10px] font-black tracking-[0.24em] text-violet-100"
+            >
+              <span className="rounded border border-violet-200/70 bg-black/70 px-2 py-1 shadow-[0_0_14px_rgba(139,92,246,0.7)]">
+                ACT
+              </span>
+            </div>
           ) : null}
           {hologram ? (
             <div className={cn("relative h-full w-full", node.isBossDuel && "-rotate-45")}>

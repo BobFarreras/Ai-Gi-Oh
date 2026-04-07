@@ -3,6 +3,30 @@ import { describe, expect, it } from "vitest";
 import { resolveStoryWorldTraversalPath } from "@/services/story/resolve-story-world-traversal-path";
 
 describe("resolveStoryWorldTraversalPath", () => {
+  it("permite volver al nodo de retorno del acto 2 cuando existe conexión al inicio del acto", () => {
+    const path = resolveStoryWorldTraversalPath({
+      currentNodeId: "story-ch2-event-core",
+      targetNodeId: "story-ch2-transition-to-act1",
+      visitedNodeIds: [
+        "story-ch2-player-start",
+        "story-ch2-path-entry",
+        "story-ch2-path-blank-a",
+        "story-ch2-reward-nexus-a",
+        "story-ch2-event-core",
+      ],
+      completedNodeIds: [],
+      interactedNodeIds: ["story-ch2-reward-nexus-a", "story-ch2-event-core"],
+    });
+    expect(path).toEqual([
+      "story-ch2-event-core",
+      "story-ch2-reward-nexus-a",
+      "story-ch2-path-blank-a",
+      "story-ch2-path-entry",
+      "story-ch2-player-start",
+      "story-ch2-transition-to-act1",
+    ]);
+  });
+
   it("resuelve ruta de rama secundaria a principal pasando por nodos intermedios", () => {
     const path = resolveStoryWorldTraversalPath({
       currentNodeId: "story-a1-side-move-scraper-path",

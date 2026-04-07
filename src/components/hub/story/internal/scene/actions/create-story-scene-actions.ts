@@ -6,6 +6,7 @@ import { animateStoryAvatarPath } from "@/components/hub/story/internal/scene/ac
 import { resolveStoryActTransitionTarget } from "@/services/story/resolve-story-act-transition-target";
 import { IStoryAvatarVisualTarget } from "@/components/hub/story/internal/scene/types/story-avatar-visual-target";
 import { resolveStoryAvatarSideDirection } from "@/components/hub/story/internal/scene/utils/resolve-story-avatar-side-direction";
+import { buildStoryNodeInteractionPayload } from "@/components/hub/story/internal/scene/actions/story-node-interaction-request";
 
 interface IStoryInteractResponse { interactionCountForNode: number; }
 interface IStoryApiErrorResponse { message?: string; }
@@ -125,7 +126,13 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
     if (targetMode.mode !== "VIRTUAL_INTERACTION") return;
     try {
       params.setIsInteracting(true);
-      const response = await fetch("/api/story/world/interact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ nodeId: targetNode.id }) });
+      const interactionPayload = buildStoryNodeInteractionPayload(targetNode);
+      if (!interactionPayload) {
+        params.setInteractionFeedback("Submission cancelada. El puente sigue bloqueado.");
+        return;
+      }
+      const requestBody = JSON.stringify(interactionPayload);
+      const response = await fetch("/api/story/world/interact", { method: "POST", headers: { "content-type": "application/json" }, body: requestBody });
       if (!response.ok) throw new Error("Interacción inválida.");
       const payload = (await response.json()) as IStoryInteractResponse;
       if (targetNode.nodeType === "REWARD_NEXUS") {

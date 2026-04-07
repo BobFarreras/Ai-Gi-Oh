@@ -44,4 +44,34 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
       { speaker: "Sistema", text: "Canal inverso estable. Regresando al Acto 1.", autoAdvanceMs: 2600 },
     ],
   },
+  "story-ch2-event-core": {
+    title: "Diagnóstico del Valle",
+    lines: [
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Entraste en el Valle Visual. Helena blindó el sector con plantillas corruptas y rutas espejadas." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Debes limpiar tres ramas operativas y cortar la telemetría de facción antes del puente." },
+      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "Operador", text: "Recibido. Prioridad: limpiar nodos críticos, estabilizar recursos y forzar el paso al núcleo del acto." },
+    ],
+  },
+  "story-ch2-branch-lower-up-event": {
+    title: "Clave de Enlace",
+    lines: [
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Detecté la primera mitad de la llave de pasarela. Sin ella, el puente principal no aceptará sincronización." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Cierra esta ruta y conserva la señal. La siguiente Helena tendrá la segunda mitad del handshake." },
+      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "Operador", text: "Perfecto. Aseguro la clave y continúo con el cierre táctico para abrir el enlace final." },
+    ],
+  },
+  "story-ch2-bridge-submission": {
+    title: "Submission de Pasarela",
+    lines: [
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Handshake completo recibido. Preparando submission para sincronizar ambas pasarelas." },
+      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "Operador", text: "Envío la firma de enlace y bloqueo el canal de interferencia de Helena." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Submission aceptada. Puente principal desbloqueado. Avanza al boss y cierra el acto." },
+    ],
+  },
+  "story-ch2-transition-to-act3": {
+    title: "Tránsito al Acto 3",
+    lines: [
+      { speaker: "Sistema", text: "Sector Helena neutralizado. Abriendo tránsito seguro al Acto 3.", autoAdvanceMs: 2800 },
+    ],
+  },
 };

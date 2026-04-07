@@ -11,6 +11,10 @@ describe("resolveStoryActTransitionTarget", () => {
     expect(resolveStoryActTransitionTarget("story-ch2-transition-to-act1")).toBe(1);
   });
 
+  it("resuelve transición de Acto 2 a Acto 3", () => {
+    expect(resolveStoryActTransitionTarget("story-ch2-transition-to-act3")).toBe(3);
+  });
+
   it("devuelve null para nodos normales", () => {
     expect(resolveStoryActTransitionTarget("story-ch2-duel-2")).toBeNull();
   });

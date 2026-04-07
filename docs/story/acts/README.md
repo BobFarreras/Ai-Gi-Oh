@@ -7,11 +7,13 @@
 3. Evitar que un único documento concentre demasiadas responsabilidades.
 
 ## Estructura
-1. [Acto 1](./act-1/README.md)
-2. [Acto 2](./act-2/README.md)
-3. [Acto 3](./act-3/README.md)
-4. [Acto 4](./act-4/README.md)
-5. [Acto 5](./act-5/README.md)
+1. [Guía de construcción](./ACT-BUILD-GUIDE.md)
+2. [Plantilla README de acto](./ACT-README-TEMPLATE.md)
+3. [Acto 1](./act-1/README.md)
+4. [Acto 2](./act-2/README.md)
+5. [Acto 3](./act-3/README.md)
+6. [Acto 4](./act-4/README.md)
+7. [Acto 5](./act-5/README.md)
 
 ## Convención de nodos
 1. `MOVE`: tránsito y posicionamiento.

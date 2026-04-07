@@ -81,4 +81,32 @@ describe("buildStoryNodePositionMap", () => {
       }
     }
   });
+
+  it("oculta el hilo del puente principal hasta completar la submission de activación", () => {
+    const nodes: IStoryMapNodeRuntime[] = [
+      {
+        ...buildNode("story-ch2-branch-lower-down-b", null, { x: 1000, y: 1200 }),
+        nodeType: "REWARD_NEXUS",
+      },
+      {
+        ...buildNode("story-ch2-bridge-submission", "story-ch2-duel-8", { x: 900, y: 1000 }),
+        nodeType: "EVENT",
+        isCompleted: false,
+      },
+      {
+        ...buildNode("story-ch2-boss-bridge", "story-ch2-bridge-submission", { x: 1300, y: 1200 }),
+        nodeType: "MOVE",
+        pathLinkFromNodeIds: ["story-ch2-branch-lower-down-b"],
+      },
+    ];
+    const positionMap = buildStoryNodePositionMap(nodes);
+    const hiddenSegments = resolveStoryPathSegments(nodes, positionMap);
+    expect(hiddenSegments).toHaveLength(0);
+
+    const submittedNodes = nodes.map((node) =>
+      node.id === "story-ch2-bridge-submission" ? { ...node, isCompleted: true } : node,
+    );
+    const visibleSegments = resolveStoryPathSegments(submittedNodes, positionMap);
+    expect(visibleSegments).toHaveLength(2);
+  });
 });
