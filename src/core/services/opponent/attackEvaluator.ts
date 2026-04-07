@@ -7,8 +7,7 @@ import { IAttackOption } from "@/core/services/opponent/attack-options";
 
 function isProbePressureOption(option: IAttackOption, profile: IOpponentDifficultyProfile): boolean {
   if (!option.defender) return false;
-  const isHiddenOrDefensiveTarget = option.defender.mode === "SET" || option.defender.mode === "DEFENSE";
-  if (!isHiddenOrDefensiveTarget) return false;
+  if (option.defender.mode !== "SET") return false;
   if (option.isLethal || option.isHighValueClear) return true;
   if (option.attackerDestroyed && !option.defenderDestroyed) return false;
   const maxProbeDamage = Math.trunc(900 + profile.destroyReward * 0.25);

@@ -92,5 +92,15 @@ describe("attackEvaluator", () => {
     const decision = chooseBestAttack(opponent, target, getDifficultyProfile("MYTHIC"));
     expect(decision).toBeNull();
   });
+
+  it("no ataca una DEFENSE visible si solo perdería LP y no rompe defensa", () => {
+    const opponent = createPlayer("p2");
+    const target = createPlayer("p1");
+    opponent.activeEntities = [createEntity("p2-front", 1500, 900)];
+    target.activeEntities = [createEntity("p1-wall-defense", 1900, 1900, "DEFENSE")];
+
+    const decision = chooseBestAttack(opponent, target, getDifficultyProfile("EASY"));
+    expect(decision).toBeNull();
+  });
 });
 
