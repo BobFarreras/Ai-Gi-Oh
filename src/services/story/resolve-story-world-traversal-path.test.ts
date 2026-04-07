@@ -87,4 +87,33 @@ describe("resolveStoryWorldTraversalPath", () => {
     });
     expect(path).toBeNull();
   });
+
+  it("permite transición inmediata entre actos desde nodo de teletransporte aunque no esté en interacted", () => {
+    const path = resolveStoryWorldTraversalPath({
+      currentNodeId: "story-ch1-transition-to-act2",
+      targetNodeId: "story-ch2-player-start",
+      visitedNodeIds: [
+        "story-ch1-player-start",
+        "story-a1-event-biglog-briefing",
+        "story-a1-move-transit",
+        "story-a1-reward-nexus-cache",
+        "story-a1-event-special-card-signal",
+        "story-ch1-duel-1",
+        "story-a1-reward-card-guardian",
+        "story-a1-move-main-bridge",
+        "story-ch1-duel-3",
+        "story-ch1-duel-4",
+        "story-ch1-duel-5",
+        "story-ch1-transition-to-act2",
+      ],
+      completedNodeIds: ["story-ch1-duel-1", "story-ch1-duel-3", "story-ch1-duel-4", "story-ch1-duel-5"],
+      interactedNodeIds: [
+        "story-a1-event-biglog-briefing",
+        "story-a1-event-special-card-signal",
+        "story-a1-reward-nexus-cache",
+        "story-a1-reward-card-guardian",
+      ],
+    });
+    expect(path).toEqual(["story-ch1-transition-to-act2", "story-ch2-player-start"]);
+  });
 });

@@ -65,6 +65,20 @@ interface IStoryDeckOverrideRow {
   effect_override: Record<string, unknown> | null;
 }
 
+function resolveCanonicalStoryDuelIdentity(input: { id: string; chapter: number; duelIndex: number }): {
+  chapter: number;
+  duelIndex: number;
+} {
+  const match = /^story-ch(\d+)-duel-(\d+)$/i.exec(input.id);
+  if (!match) return { chapter: input.chapter, duelIndex: input.duelIndex };
+  const chapter = Number.parseInt(match[1] ?? "", 10);
+  const duelIndex = Number.parseInt(match[2] ?? "", 10);
+  if (!Number.isFinite(chapter) || !Number.isFinite(duelIndex)) {
+    return { chapter: input.chapter, duelIndex: input.duelIndex };
+  }
+  return { chapter, duelIndex };
+}
+
 function toRewardCards(rows: IStoryRewardCardRow[]): IStoryRewardCardDefinition[] {
   return rows.map((row) => ({
     cardId: row.card_id,
@@ -136,10 +150,15 @@ export class SupabaseOpponentRepository implements IOpponentRepository {
     return duels.flatMap((duel) => {
       const opponent = opponentById.get(duel.opponent_id);
       if (!opponent) return [];
-      return [{
+      const identity = resolveCanonicalStoryDuelIdentity({
         id: duel.id,
         chapter: duel.chapter,
         duelIndex: duel.duel_index,
+      });
+      return [{
+        id: duel.id,
+        chapter: identity.chapter,
+        duelIndex: identity.duelIndex,
         title: duel.title,
         opponentId: opponent.id,
         opponentName: opponent.display_name,
@@ -163,12 +182,25 @@ export class SupabaseOpponentRepository implements IOpponentRepository {
       .eq("is_active", true)
       .maybeSingle<IStoryDuelRow>();
     if (duelResult.error) throw new ValidationError("No se pudo cargar el duelo de historia.");
-    if (!duelResult.data) return null;
+    const fallbackDuelId = `story-ch${chapter}-duel-${duelIndex}`;
+    const duelRow = duelResult.data
+      ? duelResult.data
+      : await this.client
+          .from("story_duels")
+          .select("id,chapter,duel_index,title,description,opponent_id,deck_list_id,opening_hand_size,starter_player,reward_nexus,reward_player_experience,unlock_requirement_duel_id,is_boss_duel,is_active")
+          .eq("id", fallbackDuelId)
+          .eq("is_active", true)
+          .maybeSingle<IStoryDuelRow>()
+          .then((result) => {
+            if (result.error) throw new ValidationError("No se pudo cargar el duelo de historia por id canónico.");
+            return result.data;
+          });
+    if (!duelRow) return null;
 
     const opponentResult = await this.client
       .from("story_opponents")
       .select("id,display_name,avatar_url,difficulty")
-      .eq("id", duelResult.data.opponent_id)
+      .eq("id", duelRow.opponent_id)
       .eq("is_active", true)
       .single<IStoryOpponentRow>();
     if (opponentResult.error || !opponentResult.data) throw new ValidationError("No se pudo cargar el oponente de historia.");
@@ -177,18 +209,18 @@ export class SupabaseOpponentRepository implements IOpponentRepository {
       this.client
       .from("story_deck_list_cards")
       .select("slot_index,card_id,copies")
-      .eq("deck_list_id", duelResult.data.deck_list_id)
+      .eq("deck_list_id", duelRow.deck_list_id)
       .order("slot_index", { ascending: true }),
       this.client
         .from("story_duel_deck_overrides")
         .select("slot_index,card_id,copies,version_tier,level,xp,attack_override,defense_override,effect_override")
-        .eq("duel_id", duelResult.data.id)
+        .eq("duel_id", duelRow.id)
         .eq("is_active", true)
         .order("slot_index", { ascending: true }),
       this.client
         .from("story_duel_ai_profiles")
         .select("difficulty,ai_profile")
-        .eq("duel_id", duelResult.data.id)
+        .eq("duel_id", duelRow.id)
         .eq("is_active", true)
         .maybeSingle<IStoryDuelAiProfileRow>(),
     ]);
@@ -199,7 +231,7 @@ export class SupabaseOpponentRepository implements IOpponentRepository {
     const rewardResult = await this.client
       .from("story_duel_reward_cards")
       .select("card_id,copies,drop_rate,is_guaranteed")
-      .eq("duel_id", duelResult.data.id)
+      .eq("duel_id", duelRow.id)
       .order("card_id", { ascending: true });
     if (rewardResult.error) throw new ValidationError("No se pudo cargar la recompensa de cartas del duelo de historia.");
 
@@ -208,12 +240,17 @@ export class SupabaseOpponentRepository implements IOpponentRepository {
     const duelDeckEntries = overrideRows.length > 0 ? toDeckEntriesFromOverrides(overrideRows) : toDeckEntries(baseRows);
     const opponentDifficulty = aiProfileResult.data?.difficulty ?? opponentResult.data.difficulty;
     const opponentAiProfile = aiProfileResult.data?.ai_profile ?? {};
+    const identity = resolveCanonicalStoryDuelIdentity({
+      id: duelRow.id,
+      chapter: duelRow.chapter,
+      duelIndex: duelRow.duel_index,
+    });
     return {
-      id: duelResult.data.id,
-      chapter: duelResult.data.chapter,
-      duelIndex: duelResult.data.duel_index,
-      title: duelResult.data.title,
-      description: duelResult.data.description,
+      id: duelRow.id,
+      chapter: identity.chapter,
+      duelIndex: identity.duelIndex,
+      title: duelRow.title,
+      description: duelRow.description,
       opponentId: opponentResult.data.id,
       opponentName: opponentResult.data.display_name,
       opponentAvatarUrl: opponentResult.data.avatar_url,
@@ -221,12 +258,12 @@ export class SupabaseOpponentRepository implements IOpponentRepository {
       opponentAiProfile,
       opponentDeckCardIds: duelDeckEntries.map((entry) => entry.cardId),
       opponentDeckEntries: duelDeckEntries,
-      openingHandSize: duelResult.data.opening_hand_size,
-      starterPlayer: duelResult.data.starter_player,
-      rewardNexus: duelResult.data.reward_nexus,
-      rewardPlayerExperience: duelResult.data.reward_player_experience,
+      openingHandSize: duelRow.opening_hand_size,
+      starterPlayer: duelRow.starter_player,
+      rewardNexus: duelRow.reward_nexus,
+      rewardPlayerExperience: duelRow.reward_player_experience,
       rewardCards: toRewardCards((rewardResult.data ?? []) as IStoryRewardCardRow[]),
-      isBossDuel: duelResult.data.is_boss_duel,
+      isBossDuel: duelRow.is_boss_duel,
     };
   }
 }
