@@ -7,6 +7,7 @@ import { resolveStoryActTransitionTarget } from "@/services/story/resolve-story-
 import { IStoryAvatarVisualTarget } from "@/components/hub/story/internal/scene/types/story-avatar-visual-target";
 import { resolveStoryAvatarSideDirection } from "@/components/hub/story/internal/scene/utils/resolve-story-avatar-side-direction";
 import { resolveStoryNodeSubmissionPrompt } from "@/services/story/story-node-submission-rules";
+import { resolveStoryEventNodeVisual } from "@/services/story/resolve-story-event-node-visual";
 
 interface IStoryInteractResponse { interactionCountForNode: number; }
 interface IStoryApiErrorResponse { message?: string; }
@@ -43,6 +44,10 @@ interface ICreateStorySceneActionsParams {
 }
 
 function resolveCollectVisual(targetNode: IStoryMapNodeRuntime): IStoryCollectVisual {
+  if (targetNode.nodeType === "EVENT") {
+    const eventVisual = resolveStoryEventNodeVisual(targetNode.id);
+    return { assetSrc: eventVisual.assetSrc, assetAlt: eventVisual.assetAlt, tone: "CARD" };
+  }
   if (targetNode.nodeType !== "REWARD_CARD") return { assetSrc: "/assets/renders/nexus.webp", assetAlt: "Nexus obtenido", tone: "NEXUS" };
   const cardVisual = resolveStoryRewardCardVisual(targetNode.rewardCardId);
   return { assetSrc: cardVisual.src, assetAlt: cardVisual.alt, tone: "CARD" };

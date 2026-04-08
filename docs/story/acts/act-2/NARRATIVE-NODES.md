@@ -20,3 +20,10 @@
 ## Vídeo del primer evento
 1. Asset activo de `story-ch2-event-core`:
    `public/assets/videos/story/act-2/intro-act-2.mp4`.
+
+## Visuales de nodos EVENT
+1. Se elimina icono hardcode genérico de ChatGPT en nodos EVENT.
+2. `story-ch2-branch-lower-up-event` usa `public/assets/story/llave-1.webp`.
+3. `story-ch2-link-recovered-event` usa `public/assets/story/llave-2.webp`.
+4. Resto de eventos usan icono genérico de diálogo/evento.
+5. En nodos `EVENT` narrativos, al cerrar diálogo se dispara animación de recogida (el icono se contrae hacia el avatar del jugador).

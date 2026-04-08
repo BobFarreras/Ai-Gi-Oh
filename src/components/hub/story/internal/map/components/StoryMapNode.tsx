@@ -9,6 +9,7 @@ import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import { resolveStoryRewardCardVisual } from "@/services/story/resolve-story-reward-card-visual";
 import { resolveStoryOpponentAvatarUrl } from "@/components/hub/story/internal/map/story-opponent-avatar";
 import { resolveStoryActTransitionTarget } from "@/services/story/resolve-story-act-transition-target";
+import { resolveStoryEventNodeVisual } from "@/services/story/resolve-story-event-node-visual";
 
 interface StoryMapNodeProps {
   node: IStoryMapNodeRuntime;
@@ -30,7 +31,8 @@ function resolveHologramAsset(node: IStoryMapNodeRuntime): { src: string; alt: s
   if (node.nodeType === "REWARD_CARD") return resolveStoryRewardCardVisual(node.rewardCardId);
   if (node.nodeType === "EVENT") {
     if (resolveStoryActTransitionTarget(node.id) !== null) return null;
-    return { src: "/assets/renders/chatgpt.webp", alt: "Evento" };
+    const eventVisual = resolveStoryEventNodeVisual(node.id);
+    return { src: eventVisual.assetSrc, alt: eventVisual.assetAlt };
   }
   return { src: "/assets/renders/react.webp", alt: "Nodo de movimiento" };
 }

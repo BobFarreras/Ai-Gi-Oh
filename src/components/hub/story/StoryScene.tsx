@@ -24,6 +24,7 @@ import { resolveStorySmartAction } from "@/services/story/resolve-story-smart-ac
 import { IStorySceneMapViewProps, IStorySceneSidebarViewProps } from "./internal/scene/view/story-scene-view-props";
 import { IStoryAvatarVisualTarget } from "./internal/scene/types/story-avatar-visual-target";
 import { resolveStoryNodeSubmissionPrompt } from "@/services/story/story-node-submission-rules";
+import { resolveStoryEventNodeVisual, shouldPlayStoryEventCollectAnimation } from "@/services/story/resolve-story-event-node-visual";
 type StoryActEntryDirection = "forward" | "backward" | null;
 interface IStorySceneProps { runtime: IStoryMapRuntimeData; briefing: IStoryChapterBriefing; postDuelTransition?: IStoryPostDuelTransition | null; shouldPlayActEntryAnimation?: boolean; actEntryDirection?: StoryActEntryDirection; }
 interface IStoryCollectVisual { assetSrc: string; assetAlt: string; tone: "NEXUS" | "CARD"; }
@@ -33,6 +34,9 @@ interface IStorySubmissionDialogState {
   hint: string;
   placeholder: string;
   resolve: (value: string | null) => void;
+}
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 export function StoryScene({ runtime, briefing, postDuelTransition = null, shouldPlayActEntryAnimation = false, actEntryDirection = null }: IStorySceneProps) {
   const router = useRouter();
@@ -143,6 +147,18 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
     setAvatarVisualTarget,
     playEventFinish: sceneSfx.playEventFinish,
     centerAvatarOnNode,
+    shouldPlayCollectAnimationForNode: shouldPlayStoryEventCollectAnimation,
+    playCollectAnimationForNode: async (nodeId) => {
+      if (!shouldPlayStoryEventCollectAnimation(nodeId)) return;
+      const eventVisual = resolveStoryEventNodeVisual(nodeId);
+      setCollectingRewardNodeId(nodeId);
+      setCollectingRewardVisual({
+        assetSrc: eventVisual.assetSrc,
+        assetAlt: eventVisual.assetAlt,
+        tone: "CARD",
+      });
+      await wait(620);
+    },
   });
   const sidebarProps: IStorySceneSidebarViewProps = {
     briefing,

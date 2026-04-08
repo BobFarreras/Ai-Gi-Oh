@@ -18,6 +18,8 @@ interface IUseStoryInteractionActionsInput {
   setAvatarVisualTarget: (target: IStoryAvatarVisualTarget | null) => void;
   playEventFinish: () => void;
   centerAvatarOnNode: (nodeId: string) => Promise<void>;
+  shouldPlayCollectAnimationForNode: (nodeId: string) => boolean;
+  playCollectAnimationForNode: (nodeId: string) => Promise<void>;
 }
 
 interface IUseStoryInteractionActionsOutput {
@@ -37,6 +39,8 @@ export function useStoryInteractionActions(input: IUseStoryInteractionActionsInp
     setAvatarVisualTarget,
     playEventFinish,
     centerAvatarOnNode,
+    shouldPlayCollectAnimationForNode,
+    playCollectAnimationForNode,
   } = input;
 
   const finalizeInteractionDialog = useCallback(async () => {
@@ -44,6 +48,9 @@ export function useStoryInteractionActions(input: IUseStoryInteractionActionsInp
     if (!pendingCenterNodeId) return;
     playEventFinish();
     setSelectedNodeId(pendingCenterNodeId);
+    if (shouldPlayCollectAnimationForNode(pendingCenterNodeId)) {
+      await playCollectAnimationForNode(pendingCenterNodeId);
+    }
     await centerAvatarOnNode(pendingCenterNodeId);
     setPendingCenterNodeId(null);
     setAvatarVisualTarget(null);
@@ -51,10 +58,12 @@ export function useStoryInteractionActions(input: IUseStoryInteractionActionsInp
     centerAvatarOnNode,
     interactionDialog,
     pendingCenterNodeId,
+    playCollectAnimationForNode,
     playEventFinish,
     setAvatarVisualTarget,
     setPendingCenterNodeId,
     setSelectedNodeId,
+    shouldPlayCollectAnimationForNode,
   ]);
 
   const advanceInteractionDialog = useCallback(async () => {
