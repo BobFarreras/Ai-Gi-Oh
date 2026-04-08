@@ -213,6 +213,65 @@
 3. La compatibilidad legacy queda declarada en configuración de runtime, no duplicada en App Router.
 4. Commit: pendiente en esta sesión.
 
+## Fase 24 - Rediseño visual Academy + robustez responsive
+
+1. Se rediseñó `/hub/academy` con estética más alineada a Hub (capas `hub-control-*`, panel HUD y jerarquía visual más marcada).
+2. Se cambió el contenedor principal a `overflow-y-auto` con `safe-area` inferior para evitar recortes en dispositivos con altura reducida.
+3. El CTA `Volver al Menú` pasa a footer `sticky` en mobile para mantener salida visible durante todo el scroll.
+4. Los paneles de modos (`Tutorial`/`Arena`) adoptan alturas adaptativas y composición visual más clara en pantallas pequeñas.
+5. Validación aplicada en esta fase:
+   - `pnpm vitest src/components/hub/academy/training/TrainingModeSelection.test.tsx`
+   - `pnpm eslint src/app/hub/academy/page.tsx src/components/hub/academy/training/TrainingModeSelection.tsx src/components/hub/academy/training/TrainingMode3DPanel.tsx`
+6. Commit: pendiente en esta sesión.
+
+## Fase 25 - Academy fullscreen profesional (desktop + mobile)
+
+1. Se rediseña `/hub/academy` como escena `fullscreen` real en desktop, eliminando márgenes/padding extra en `lg`.
+2. El selector usa dos paneles tácticos que ocupan el alto disponible del viewport en desktop.
+3. En mobile se mantiene stack vertical con scroll en el cuerpo de paneles para asegurar acceso completo.
+4. Se integran imágenes temáticas por modo:
+   - Tutorial: `intro-BigLog`.
+   - Arena: `intro-Soldado-act01`.
+5. El efecto de brillo horizontal queda restringido a interacción `hover` (sin animación continua).
+6. Validación aplicada:
+   - `pnpm vitest src/components/hub/academy/training/TrainingModeSelection.test.tsx`
+   - `pnpm eslint src/app/hub/academy/page.tsx src/components/hub/academy/training/TrainingModeSelection.tsx src/components/hub/academy/training/TrainingMode3DPanel.tsx`
+7. Commit: pendiente en esta sesión.
+
+## Fase 26 - Ajuste de espaciado y jerarquía visual en Academy
+
+1. Se incrementa separación entre bloques de `header`, paneles y footer para evitar solapamiento visual del CTA principal con `Volver al Menú`.
+2. Se amplía escala tipográfica y centrado de `title/subtitle/description` dentro de cada panel para mejorar legibilidad y densidad visual.
+3. El panel de Tutorial usa imagen `tutorial-BigLog`.
+4. El panel de Arena usa collage con intros de rivales (`intro-*`) para reforzar identidad de enfrentamientos.
+5. Se ajusta el `object-position` vertical de artes para bajar el encuadre y evitar corte de rostro.
+6. Validación aplicada:
+   - `pnpm vitest src/components/hub/academy/training/TrainingModeSelection.test.tsx`
+   - `pnpm eslint src/components/hub/academy/training/TrainingModeSelection.tsx src/components/hub/academy/training/TrainingMode3DPanel.tsx src/app/hub/academy/page.tsx`
+7. Commit: pendiente en esta sesión.
+
+## Fase 27 - Refinado visual de paneles Academy (tipografía, arte y marco)
+
+1. Se incrementa escala tipográfica en desktop para `subtitle/title/description` dentro de cada panel.
+2. El arte de Tutorial pasa a `tutorial-BigLog` con menor zoom (`object-contain`) para evitar recorte facial.
+3. El arte de Arena pasa de mosaico a columnas por oponente (`intro-*`), mostrando cada imagen completa dentro de su columna.
+4. Se añade marco futurista a los paneles con doble borde, esquinas acentuadas y glow táctico.
+5. Validación aplicada:
+   - `pnpm vitest src/components/hub/academy/training/TrainingModeSelection.test.tsx`
+   - `pnpm eslint src/components/hub/academy/training/TrainingMode3DPanel.tsx src/components/hub/academy/training/TrainingModeSelection.tsx src/app/hub/academy/page.tsx`
+6. Commit: pendiente en esta sesión.
+
+## Fase 28 - Limpieza de banners y fix de clipping en hover
+
+1. Se retiran los banners superiores (`PROTOCOLO` y `ARENA`) de las cards de Academy.
+2. Se corrige recorte del borde superior al hacer hover en desktop:
+   - el área de cards en `lg` pasa a `overflow-visible`,
+   - se añade margen interior superior para la animación (`lg:pt-2`),
+   - se reduce ligeramente escala/offset del hover para evitar clipping residual.
+3. Validación aplicada:
+   - `pnpm eslint src/components/hub/academy/training/TrainingMode3DPanel.tsx src/components/hub/academy/training/TrainingModeSelection.tsx`
+4. Commit: pendiente en esta sesión.
+
 ## Validación global aplicada por fase
 
 1. `pnpm lint`
