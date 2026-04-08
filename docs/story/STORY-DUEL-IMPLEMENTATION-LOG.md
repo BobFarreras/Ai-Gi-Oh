@@ -200,3 +200,32 @@ Alinear Acto 1 con `MODO-HISTORIA.md`: ruta principal + rama secundaria real, ev
 - `pnpm lint` en verde.
 - `pnpm build` en verde.
 - Tests Story focalizados en verde (`map`, `move-mode`, `traversal`, `dialog` y `video overlay`).
+
+## Fase 8 - Hardening de retorno post-duelo y consistencia canónica de duelos
+
+### Objetivo
+Eliminar desvíos de retorno a nodos de actos anteriores al cerrar combate y blindar resolución de duelos frente a datos legacy en BD.
+
+### Cambios aplicados
+1. `resolveStoryDuelReturnNode` ya no usa `unlockRequirementNodeId` como fallback en `LOST/ABANDONED`; retorna al mismo nodo de duelo cerrado.
+2. Se añadió test de regresión para evitar retorno incorrecto a `story-ch1-duel-5` en duelos del Acto 2.
+3. Se endureció `SupabaseOpponentRepository` con identidad canónica por `id` (`story-chX-duel-Y`):
+   - canonicalización de `chapter/duelIndex` en listados,
+   - fallback de lectura por `id` canónico si falla consulta por `chapter/duel_index`.
+4. Se robusteció `POST /api/story/world/move` para resolver `currentNodeId` efectivo cuando el estado compacto está desincronizado.
+5. Se añadió excepción explícita en traversal para transición entre actos desde nodo `*-transition-to-act*` sin exigir `interacted`.
+
+### Archivos creados
+- `src/app/api/story/duels/complete/internal/resolve-story-duel-return-node.test.ts`
+
+### Archivos modificados
+- `src/app/api/story/duels/complete/internal/resolve-story-duel-return-node.ts`
+- `src/infrastructure/persistence/supabase/SupabaseOpponentRepository.ts`
+- `src/app/api/story/world/move/route.ts`
+- `src/services/story/resolve-story-world-traversal-path.ts`
+- `src/services/story/resolve-story-world-traversal-path.test.ts`
+- `src/components/hub/story/README.md`
+
+### Validación
+- `pnpm vitest src/app/api/story/duels/complete/internal/resolve-story-duel-return-node.test.ts src/services/story/resolve-story-world-traversal-path.test.ts` en verde.
+- `pnpm lint` en verde.

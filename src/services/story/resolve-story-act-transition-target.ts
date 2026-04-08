@@ -2,6 +2,7 @@
 const STORY_ACT_TRANSITION_TARGET_BY_NODE_ID: Record<string, number> = {
   "story-ch1-transition-to-act2": 2,
   "story-ch2-transition-to-act1": 1,
+  "story-ch2-transition-to-act3": 3,
 };
 
 /**

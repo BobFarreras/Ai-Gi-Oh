@@ -8,6 +8,7 @@ import { createApiErrorResponse } from "@/services/security/api/create-api-error
 import { requireTrustedMutationOrigin } from "@/services/security/api/require-trusted-mutation-origin";
 import { readJsonObjectBody, readRequiredStringField } from "@/services/security/api/request-body-parser";
 import { createStoryWorldInteractionRouteContext } from "@/services/story/api/create-story-world-interaction-route-context";
+import { assertStoryNodeSubmissionRequirements, assertStoryNodeSubmissionValid } from "@/services/story/story-node-submission-rules";
 
 function canInteractVirtualNode(input: {
   requiredNodeId: string | null;
@@ -27,12 +28,20 @@ export async function POST(request: NextRequest) {
     const context = await createStoryWorldInteractionRouteContext(request);
     const payload = await readJsonObjectBody(request, "Payload inválido para interacción Story.");
     const nodeId = readRequiredStringField(payload, "nodeId", "Nodo de interacción inválido.");
+    const rawSubmissionAnswer = payload.submissionAnswer;
+    const submissionAnswer = typeof rawSubmissionAnswer === "string" ? rawSubmissionAnswer : null;
     assertValidStoryNodeId(nodeId);
     const virtualNode = findStoryVirtualNodeDefinition(nodeId);
     if (!virtualNode) throw new ValidationError("Solo se permiten nodos virtuales de interacción Story.");
 
     const worldState = await context.worldStateUseCase.execute({ playerId: context.playerId });
     const compactState = await context.storyWorldRepository.getCompactStateByPlayerId(context.playerId);
+    assertStoryNodeSubmissionRequirements({
+      nodeId,
+      completedNodeIds: worldState.progress.completedNodeIds,
+      interactedNodeIds: compactState.interactedNodeIds,
+    });
+    assertStoryNodeSubmissionValid(nodeId, submissionAnswer);
 
     const unlocked = canInteractVirtualNode({
       requiredNodeId: virtualNode.unlockRequirementNodeId,

@@ -11,12 +11,28 @@ import { createPlayerRouteRepositories } from "@/services/player-persistence/cre
 import { resolveStoryWorldMoveMode } from "@/services/story/resolve-story-world-move-mode";
 import { resolveStoryWorldTraversalPath } from "@/services/story/resolve-story-world-traversal-path";
 import { applyStoryTraversalToCompactState } from "@/services/story/story-compact-state";
+import { resolveStoryActByNodeId } from "@/services/story/map-definitions/story-map-definition-registry";
 import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
 import { requireTrustedMutationOrigin } from "@/services/security/api/require-trusted-mutation-origin";
 import { readJsonObjectBody, readRequiredStringField } from "@/services/security/api/request-body-parser";
 
-function resolveEffectiveCurrentNodeId(currentNodeId: string | null): string {
-  return currentNodeId ?? "story-ch1-player-start";
+function resolveEffectiveCurrentNodeId(input: {
+  currentNodeId: string | null;
+  targetNodeId: string;
+  visitedNodeIds: string[];
+  unlockedNodeIds: string[];
+}): string {
+  if (
+    input.currentNodeId &&
+    (input.visitedNodeIds.includes(input.currentNodeId) ||
+      input.unlockedNodeIds.includes(input.currentNodeId))
+  ) {
+    return input.currentNodeId;
+  }
+  const targetActId = resolveStoryActByNodeId(input.targetNodeId) ?? 1;
+  const targetActStartNodeId = `story-ch${targetActId}-player-start`;
+  if (input.unlockedNodeIds.includes(targetActStartNodeId)) return targetActStartNodeId;
+  return "story-ch1-player-start";
 }
 
 export async function POST(request: NextRequest) {
@@ -35,7 +51,12 @@ export async function POST(request: NextRequest) {
     const worldStateUseCase = new GetStoryWorldStateUseCase(opponentRepository, duelProgressRepository);
     const worldState = await worldStateUseCase.execute({ playerId });
     const compactState = await worldRepository.getCompactStateByPlayerId(playerId);
-    const effectiveCurrentNodeId = resolveEffectiveCurrentNodeId(compactState.currentNodeId);
+    const effectiveCurrentNodeId = resolveEffectiveCurrentNodeId({
+      currentNodeId: compactState.currentNodeId,
+      targetNodeId: nodeId,
+      visitedNodeIds: compactState.visitedNodeIds,
+      unlockedNodeIds: worldState.progress.unlockedNodeIds,
+    });
     if (nodeId === effectiveCurrentNodeId) {
       return NextResponse.json(
         {

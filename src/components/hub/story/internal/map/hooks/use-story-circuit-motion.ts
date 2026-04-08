@@ -43,6 +43,7 @@ export function useStoryCircuitMotion(input: IUseStoryCircuitMotionInput) {
   const hasInitializedAvatarRef = useRef(false);
   const hasPlayedActSpawnRef = useRef(false);
   const hasAppliedCenterRequestRef = useRef(0);
+  const hasAppliedActEntryCenterRef = useRef(false);
   const avatarAnimRef = useRef<{ x: AnimationPlaybackControls | null; y: AnimationPlaybackControls | null }>({ x: null, y: null });
   const cameraAnimRef = useRef<{ x: AnimationPlaybackControls | null; y: AnimationPlaybackControls | null }>({ x: null, y: null });
   const cameraX = useMotionValue(0);
@@ -77,6 +78,30 @@ export function useStoryCircuitMotion(input: IUseStoryCircuitMotionInput) {
     }
   }, [avatarAnchor, cameraX, cameraY, cinematicScale, currentNodeAnchor, mapContainerRef, setZoom, zoom]);
 
+  const centerCameraOnPortalNode = useCallback((zoomValue = zoom.get(), resetZoom = true, animated = true) => {
+    if (!mapContainerRef.current) return;
+    const effectiveZoom = resetZoom ? 1 : zoomValue;
+    const target = resolveStoryCameraCenterTarget({
+      containerWidth: mapContainerRef.current.clientWidth,
+      containerHeight: mapContainerRef.current.clientHeight,
+      nodePosition: avatarAnchor,
+      scale: effectiveZoom * cinematicScale.get(),
+    });
+    cameraAnimRef.current.x?.stop();
+    cameraAnimRef.current.y?.stop();
+    if (animated) {
+      cameraAnimRef.current.x = animate(cameraX, target.x, { duration: 0.4, ease: "easeInOut" });
+      cameraAnimRef.current.y = animate(cameraY, target.y, { duration: 0.4, ease: "easeInOut" });
+    } else {
+      cameraX.set(target.x);
+      cameraY.set(target.y);
+    }
+    if (resetZoom) {
+      setZoom(1);
+      animate(cinematicScale, 1, { duration: 0.3, ease: "easeOut" });
+    }
+  }, [avatarAnchor, cameraX, cameraY, cinematicScale, mapContainerRef, setZoom, zoom]);
+
   const keepCameraCenterOnZoom = useCallback((previousZoom: number, nextZoom: number) => {
     if (!mapContainerRef.current) return;
     const previousScale = previousZoom * cinematicScale.get();
@@ -98,7 +123,14 @@ export function useStoryCircuitMotion(input: IUseStoryCircuitMotionInput) {
 
   useEffect(() => {
     if (!hasInitializedAvatarRef.current) return;
-    const duration = Math.min(0.7, Math.max(0.24, Math.hypot(avatarPos.x - avatarX.get(), avatarPos.y - avatarY.get()) / 760));
+    if (visualStance === "PORTAL") {
+      avatarAnimRef.current.x?.stop();
+      avatarAnimRef.current.y?.stop();
+      avatarX.set(avatarPos.x);
+      avatarY.set(avatarPos.y);
+      return;
+    }
+    const duration = Math.min(1.0, Math.max(0.38, Math.hypot(avatarPos.x - avatarX.get(), avatarPos.y - avatarY.get()) / 640));
     avatarAnimRef.current.x?.stop();
     avatarAnimRef.current.y?.stop();
     avatarAnimRef.current.x = animate(avatarX, avatarPos.x, { duration, ease: "easeInOut" });
@@ -115,10 +147,10 @@ export function useStoryCircuitMotion(input: IUseStoryCircuitMotionInput) {
       cameraAnimRef.current.x = animate(cameraX, target.x, { duration, ease: "easeInOut" });
       cameraAnimRef.current.y = animate(cameraY, target.y, { duration, ease: "easeInOut" });
     }
-  }, [avatarAnchor, avatarPos, avatarX, avatarY, cameraX, cameraY, cinematicScale, duelFocusNodeId, mapContainerRef, zoom]);
+  }, [avatarAnchor, avatarPos, avatarX, avatarY, cameraX, cameraY, cinematicScale, duelFocusNodeId, mapContainerRef, visualStance, zoom]);
 
   useEffect(() => {
-    const controls = animate(avatarScale, visualStance === "PORTAL" ? 0.5 : 1, { duration: 0.22, ease: "easeInOut" });
+    const controls = animate(avatarScale, visualStance === "PORTAL" ? 0.02 : 1, { duration: 0.52, ease: "easeInOut" });
     return () => controls.stop();
   }, [avatarScale, visualStance]);
 
@@ -133,17 +165,23 @@ export function useStoryCircuitMotion(input: IUseStoryCircuitMotionInput) {
   useEffect(() => {
     if (!duelFocusNodeId || !mapContainerRef.current) return;
     const focus = resolveStoryNodeTokenAnchor(duelFocusNodeId, positionMap);
+    const midpoint = currentNodeAnchor
+      ? {
+          x: (focus.x + currentNodeAnchor.x) / 2,
+          y: (focus.y + currentNodeAnchor.y) / 2,
+        }
+      : focus;
     const target = resolveStoryCameraCenterTarget({
       containerWidth: mapContainerRef.current.clientWidth,
       containerHeight: mapContainerRef.current.clientHeight,
-      nodePosition: focus,
+      nodePosition: midpoint,
       scale: zoom.get() * cinematicScale.get(),
     });
     const xControls = animate(cameraX, target.x, { duration: 0.38, ease: "easeInOut" });
     const yControls = animate(cameraY, target.y, { duration: 0.38, ease: "easeInOut" });
-    const scaleControls = animate(cinematicScale, 1.2, { duration: 0.35, ease: "easeOut" });
+    const scaleControls = animate(cinematicScale, 1.08, { duration: 0.35, ease: "easeOut" });
     return () => { xControls.stop(); yControls.stop(); scaleControls.stop(); };
-  }, [cameraX, cameraY, cinematicScale, duelFocusNodeId, mapContainerRef, positionMap, zoom]);
+  }, [cameraX, cameraY, cinematicScale, currentNodeAnchor, duelFocusNodeId, mapContainerRef, positionMap, zoom]);
 
   useEffect(() => {
     if (!mapContainerRef.current || hasCenteredCamera.current) return;
@@ -158,6 +196,16 @@ export function useStoryCircuitMotion(input: IUseStoryCircuitMotionInput) {
     hasAppliedCenterRequestRef.current = nextCenterRequestKey;
     centerCameraOnAvatarNode();
   }, [centerCameraOnAvatarNode, centerRequestKey]);
+
+  useEffect(() => {
+    if (!shouldPlayActEntryAnimation) {
+      hasAppliedActEntryCenterRef.current = false;
+      return;
+    }
+    if (visualStance !== "PORTAL" || hasAppliedActEntryCenterRef.current) return;
+    hasAppliedActEntryCenterRef.current = true;
+    centerCameraOnPortalNode(zoom.get(), true, true);
+  }, [centerCameraOnPortalNode, shouldPlayActEntryAnimation, visualStance, zoom]);
 
   return { cameraX, cameraY, cinematicScale, avatarX, avatarY, avatarScale, centerCameraOnAvatarNode, keepCameraCenterOnZoom };
 }

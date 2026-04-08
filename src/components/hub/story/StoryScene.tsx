@@ -1,6 +1,6 @@
 // src/components/hub/story/StoryScene.tsx - Escena principal Story con mapa vivo y panel lateral conectado a estado persistible.
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "zustand";
 import { StorySceneDesktopLayout } from "./internal/scene/view/StorySceneDesktopLayout";
@@ -16,19 +16,48 @@ import { useStoryActEntrySequence } from "./internal/scene/transitions/use-story
 import { useStoryActTransitionNavigation } from "./internal/scene/transitions/use-story-act-transition-navigation";
 import { useStoryPostDuelTransition } from "./internal/scene/transitions/use-story-post-duel-transition";
 import { useStorySceneMobileMode } from "./internal/scene/view/use-story-scene-mobile-mode";
-import { IStoryMapRuntimeData } from "@/services/story/story-map-runtime-data";
+import { IStoryMapNodeRuntime, IStoryMapRuntimeData } from "@/services/story/story-map-runtime-data";
 import { IStoryChapterBriefing } from "@/services/story/build-story-chapter-briefing";
 import { IStoryPostDuelTransition } from "@/services/story/duel-flow/story-post-duel-transition";
 import { resolveStoryPrimaryAction } from "@/services/story/resolve-story-primary-action";
 import { resolveStorySmartAction } from "@/services/story/resolve-story-smart-action";
 import { IStorySceneMapViewProps, IStorySceneSidebarViewProps } from "./internal/scene/view/story-scene-view-props";
 import { IStoryAvatarVisualTarget } from "./internal/scene/types/story-avatar-visual-target";
-interface IStorySceneProps { runtime: IStoryMapRuntimeData; briefing: IStoryChapterBriefing; postDuelTransition?: IStoryPostDuelTransition | null; shouldPlayActEntryAnimation?: boolean; }
+import { resolveStoryNodeSubmissionPrompt } from "@/services/story/story-node-submission-rules";
+import { resolveStoryEventNodeVisual, shouldPlayStoryEventCollectAnimation } from "@/services/story/resolve-story-event-node-visual";
+type StoryActEntryDirection = "forward" | "backward" | null;
+interface IStorySceneProps { runtime: IStoryMapRuntimeData; briefing: IStoryChapterBriefing; postDuelTransition?: IStoryPostDuelTransition | null; shouldPlayActEntryAnimation?: boolean; actEntryDirection?: StoryActEntryDirection; }
 interface IStoryCollectVisual { assetSrc: string; assetAlt: string; tone: "NEXUS" | "CARD"; }
-export function StoryScene({ runtime, briefing, postDuelTransition = null, shouldPlayActEntryAnimation = false }: IStorySceneProps) {
+interface IStorySubmissionDialogState {
+  nodeId: string;
+  title: string;
+  hint: string;
+  placeholder: string;
+  activationLabel: string;
+  generatedCode: string;
+  requiredKeys: Array<{ id: string; label: string; isCollected: boolean }>;
+  resolve: (value: string | null) => void;
+}
+const ACT2_BOSS_DUEL_NODE_ID = "story-ch2-duel-7";
+const ACT2_BOSS_POST_WIN_DIALOG_NODE_ID = "story-ch2-duel-7-post-win";
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+function buildTransientDialogueNode(input: { id: string; sourceNode: IStoryMapNodeRuntime }): IStoryMapNodeRuntime {
+  return {
+    ...input.sourceNode,
+    id: input.id,
+    title: input.sourceNode.title,
+    href: "#",
+  };
+}
+export function StoryScene({ runtime, briefing, postDuelTransition = null, shouldPlayActEntryAnimation = false, actEntryDirection = null }: IStorySceneProps) {
   const router = useRouter();
   const isMobileLayout = useStorySceneMobileMode();
   const [store] = useState<StorySceneStore>(() => createStorySceneStore({ nodes: runtime.nodes, currentNodeId: runtime.currentNodeId }));
+  useEffect(() => {
+    store.getState().hydrateFromRuntime({ nodes: runtime.nodes, currentNodeId: runtime.currentNodeId });
+  }, [store, runtime.activeActId, runtime.currentNodeId, runtime.nodes]);
   const selectedNodeId = useStore(store, (state) => state.selectedNodeId);
   const currentNodeId = useStore(store, (state) => state.currentNodeId);
   const nodesById = useStore(store, (state) => state.nodesById);
@@ -48,10 +77,26 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
   const [pendingCenterNodeId, setPendingCenterNodeId] = useState<string | null>(null);
   const [movementError, setMovementError] = useState<string | null>(null);
   const [interactionFeedback, setInteractionFeedback] = useState<string | null>(null);
+  const [submissionDialog, setSubmissionDialog] = useState<IStorySubmissionDialogState | null>(null);
+  const [preDuelDialogSeenNodeIds, setPreDuelDialogSeenNodeIds] = useState<string[]>([]);
+  const [pendingAutoStartDuelNodeId, setPendingAutoStartDuelNodeId] = useState<string | null>(null);
+  const [pendingPostWinRetreatNodeId, setPendingPostWinRetreatNodeId] = useState<string | null>(null);
+  const [consumedPostBossWinTransitionIds, setConsumedPostBossWinTransitionIds] = useState<string[]>([]);
   const interactionDialog = useStoryNodeInteractionDialog();
   const sceneSfx = useStorySceneSfx();
   const { isMuted: isMapSoundtrackMuted, toggleMute: toggleMapSoundtrackMute } = useStoryMapSoundtrack(runtime.activeActId);
-  const { entryAvatarVisualTarget, isActEntrySequenceRunning } = useStoryActEntrySequence({ nodes: runtime.nodes, activeActId: runtime.activeActId, currentNodeId: runtime.currentNodeId, shouldPlayActEntryAnimation });
+  const { entryAvatarVisualTarget, isActEntrySequenceRunning, entryResolvedNodeId } = useStoryActEntrySequence({
+    nodes: runtime.nodes,
+    activeActId: runtime.activeActId,
+    currentNodeId: runtime.currentNodeId,
+    shouldPlayActEntryAnimation,
+    direction: actEntryDirection,
+  });
+  useEffect(() => {
+    if (!entryResolvedNodeId) return;
+    setCurrentNodeId(entryResolvedNodeId);
+    setSelectedNodeId(entryResolvedNodeId);
+  }, [entryResolvedNodeId, setCurrentNodeId, setSelectedNodeId]);
   const selectedNode = selectedNodeId ? nodesById[selectedNodeId] ?? null : null;
   const sceneNodes = useMemo(() => Object.values(nodesById).sort((left, right) => (left.chapter !== right.chapter ? left.chapter - right.chapter : left.duelIndex - right.duelIndex)), [nodesById]);
   const primaryAction = resolveStoryPrimaryAction(selectedNode);
@@ -63,7 +108,14 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
   });
   const smartAction = resolveStorySmartAction({ selectedNode, canMove: canMoveSelectedNode, primaryAction });
   const isBusy = isMoving || isInteracting || isActEntrySequenceRunning || interactionDialog.isOpen || Boolean(actTransitionTargetId);
-  useStoryPostDuelTransition({ transition: postDuelTransition, currentNodeId, setAvatarVisualTarget, setRetreatingNodeId });
+  const shouldDelayBossRetreatForPostDialogue =
+    postDuelTransition?.outcome === "WON" && postDuelTransition.duelNodeId === ACT2_BOSS_DUEL_NODE_ID;
+  useStoryPostDuelTransition({
+    transition: shouldDelayBossRetreatForPostDialogue ? null : postDuelTransition,
+    currentNodeId,
+    setAvatarVisualTarget,
+    setRetreatingNodeId,
+  });
   const { centerAvatarOnNode, handleSmartAction } = createStorySceneActions({
     selectedNodeId,
     selectedNode,
@@ -87,8 +139,64 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
     navigateTo: router.push,
     requestActTransition: (actId) => setActTransitionTargetId(actId),
     startInteractionDialog: interactionDialog.start,
+    requestNodeSubmission: async (nodeId) => {
+      const prompt = resolveStoryNodeSubmissionPrompt(nodeId);
+      if (!prompt) return null;
+      return await new Promise<string | null>((resolve) => {
+        setSubmissionDialog({
+          nodeId,
+          title: prompt.title,
+          hint: prompt.hint,
+          placeholder: prompt.placeholder,
+          activationLabel: prompt.activationLabel,
+          generatedCode: prompt.generatedCode,
+          requiredKeys: prompt.requiredNodeIds.map((requiredNodeId) => ({
+            id: requiredNodeId,
+            label: nodesById[requiredNodeId]?.title ?? requiredNodeId,
+            isCollected: Boolean(nodesById[requiredNodeId]?.isCompleted),
+          })),
+          resolve,
+        });
+      });
+    },
+    hasSeenPreDuelDialogue: (nodeId) => preDuelDialogSeenNodeIds.includes(nodeId),
+    markPreDuelDialogueSeen: (nodeId) =>
+      setPreDuelDialogSeenNodeIds((prev) => (prev.includes(nodeId) ? prev : [...prev, nodeId])),
+    scheduleAutoStartDuelAfterDialogue: (nodeId) => setPendingAutoStartDuelNodeId(nodeId),
   });
-  useStoryActTransitionNavigation({ actTransitionTargetId, navigateTo: router.push });
+  useStoryActTransitionNavigation({
+    actTransitionTargetId,
+    activeActId: runtime.activeActId,
+    navigateTo: router.push,
+    clearTransition: () => setActTransitionTargetId(null),
+  });
+  useEffect(() => {
+    if (!shouldDelayBossRetreatForPostDialogue || !postDuelTransition) return;
+    if (consumedPostBossWinTransitionIds.includes(postDuelTransition.returnNodeId)) return;
+    const sourceNode = nodesById[ACT2_BOSS_DUEL_NODE_ID];
+    if (!sourceNode || interactionDialog.isOpen) return;
+    const opened = interactionDialog.start(
+      buildTransientDialogueNode({ id: ACT2_BOSS_POST_WIN_DIALOG_NODE_ID, sourceNode }),
+      1,
+    );
+    if (!opened) {
+      window.setTimeout(() => {
+        setRetreatingNodeId(ACT2_BOSS_DUEL_NODE_ID);
+        setConsumedPostBossWinTransitionIds((prev) => [...prev, postDuelTransition.returnNodeId]);
+      }, 0);
+      return;
+    }
+    window.setTimeout(() => {
+      setPendingPostWinRetreatNodeId(ACT2_BOSS_DUEL_NODE_ID);
+      setConsumedPostBossWinTransitionIds((prev) => [...prev, postDuelTransition.returnNodeId]);
+    }, 0);
+  }, [
+    consumedPostBossWinTransitionIds,
+    interactionDialog,
+    nodesById,
+    postDuelTransition,
+    shouldDelayBossRetreatForPostDialogue,
+  ]);
   const { finalizeInteractionDialog, advanceInteractionDialog } = useStoryInteractionActions({
     interactionDialog,
     pendingCenterNodeId,
@@ -97,6 +205,34 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
     setAvatarVisualTarget,
     playEventFinish: sceneSfx.playEventFinish,
     centerAvatarOnNode,
+    shouldPlayCollectAnimationForNode: shouldPlayStoryEventCollectAnimation,
+    playCollectAnimationForNode: async (nodeId) => {
+      if (!shouldPlayStoryEventCollectAnimation(nodeId)) return;
+      const eventVisual = resolveStoryEventNodeVisual(nodeId);
+      setCollectingRewardNodeId(nodeId);
+      setCollectingRewardVisual({
+        assetSrc: eventVisual.assetSrc,
+        assetAlt: eventVisual.assetAlt,
+        tone: "CARD",
+      });
+      await wait(620);
+    },
+    onAfterFinalize: async () => {
+      if (pendingAutoStartDuelNodeId) {
+        const duelNode = nodesById[pendingAutoStartDuelNodeId];
+        if (duelNode) {
+          setDuelFocusNodeId(duelNode.id);
+          sceneSfx.playDuelStart();
+          await wait(520);
+          router.push(duelNode.href);
+        }
+        setPendingAutoStartDuelNodeId(null);
+        return;
+      }
+      if (!pendingPostWinRetreatNodeId) return;
+      setRetreatingNodeId(pendingPostWinRetreatNodeId);
+      setPendingPostWinRetreatNodeId(null);
+    },
   });
   const sidebarProps: IStorySceneSidebarViewProps = {
     briefing,
@@ -151,6 +287,25 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
       line: interactionDialog.currentLine,
       onNext: advanceInteractionDialog,
       onClose: finalizeInteractionDialog,
+    },
+    submission: {
+      isOpen: Boolean(submissionDialog),
+      title: submissionDialog?.title ?? "Submission",
+      hint: submissionDialog?.hint ?? "",
+      placeholder: submissionDialog?.placeholder ?? "",
+      activationLabel: submissionDialog?.activationLabel ?? "Conectar",
+      generatedCode: submissionDialog?.generatedCode ?? "",
+      requiredKeys: submissionDialog?.requiredKeys ?? [],
+      onCancel: () => {
+        if (!submissionDialog) return;
+        submissionDialog.resolve(null);
+        setSubmissionDialog(null);
+      },
+      onSubmit: (value) => {
+        if (!submissionDialog) return;
+        submissionDialog.resolve(value);
+        setSubmissionDialog(null);
+      },
     },
   };
   return isMobileLayout ? <StorySceneMobileLayout sidebar={sidebarProps} map={{ ...mapProps, centerRequestKey }} /> : <StorySceneDesktopLayout sidebar={sidebarProps} map={{ ...mapProps, centerRequestKey }} />;

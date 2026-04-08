@@ -36,14 +36,16 @@ export function StoryNodeInteractionDialog({
   const autoAdvanceMs = line?.autoAdvanceMs ?? DEFAULT_AUTO_ADVANCE_MS;
   const activeSpeaker = line?.speaker ?? "Interlocutor";
   const portraitUrl = line?.portraitUrl ?? "";
+  const counterpartPortraitUrl = line?.counterpartPortraitUrl ?? "";
   const actorId = line?.actorId ?? "system";
   const isPlayerSpeaker = actorId === "player";
+  const defaultOpponentPortraitUrl = "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png";
 
   // El jugador se fija abajo-izquierda y el interlocutor arriba-derecha para lectura estable.
-  const playerPortraitUrl = isPlayerSpeaker ? portraitUrl : "/assets/story/player/bob.png";
+  const playerPortraitUrl = isPlayerSpeaker ? (portraitUrl || "/assets/story/player/bob.png") : "/assets/story/player/bob.png";
   const opponentPortraitUrl = isPlayerSpeaker
-    ? "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png"
-    : (portraitUrl || "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png");
+    ? (counterpartPortraitUrl || defaultOpponentPortraitUrl)
+    : (portraitUrl || defaultOpponentPortraitUrl);
 
   useEffect(() => {
     if (!isOpen || isVideoOpen) return;

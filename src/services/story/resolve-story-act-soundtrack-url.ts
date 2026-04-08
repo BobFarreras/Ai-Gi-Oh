@@ -1,6 +1,7 @@
 // src/services/story/resolve-story-act-soundtrack-url.ts - Resuelve la música de fondo global según el acto activo del modo Story.
 const STORY_ACT_SOUNDTRACKS: Record<number, string> = {
   1: "/audio/story/soundtracks/act-1/act-1-main-theme.mp3",
+  2: "/audio/story/soundtracks/act-2/Chromed%20Horizon.mp3",
   5: "/audio/story/soundtracks/act-5/act-5-main-theme.mp3",
 };
 

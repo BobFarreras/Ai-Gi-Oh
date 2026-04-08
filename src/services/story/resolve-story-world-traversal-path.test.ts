@@ -3,6 +3,30 @@ import { describe, expect, it } from "vitest";
 import { resolveStoryWorldTraversalPath } from "@/services/story/resolve-story-world-traversal-path";
 
 describe("resolveStoryWorldTraversalPath", () => {
+  it("permite volver al nodo de retorno del acto 2 cuando existe conexión al inicio del acto", () => {
+    const path = resolveStoryWorldTraversalPath({
+      currentNodeId: "story-ch2-event-core",
+      targetNodeId: "story-ch2-transition-to-act1",
+      visitedNodeIds: [
+        "story-ch2-player-start",
+        "story-ch2-path-entry",
+        "story-ch2-path-blank-a",
+        "story-ch2-reward-nexus-a",
+        "story-ch2-event-core",
+      ],
+      completedNodeIds: [],
+      interactedNodeIds: ["story-ch2-reward-nexus-a", "story-ch2-event-core"],
+    });
+    expect(path).toEqual([
+      "story-ch2-event-core",
+      "story-ch2-reward-nexus-a",
+      "story-ch2-path-blank-a",
+      "story-ch2-path-entry",
+      "story-ch2-player-start",
+      "story-ch2-transition-to-act1",
+    ]);
+  });
+
   it("resuelve ruta de rama secundaria a principal pasando por nodos intermedios", () => {
     const path = resolveStoryWorldTraversalPath({
       currentNodeId: "story-a1-side-move-scraper-path",
@@ -62,5 +86,34 @@ describe("resolveStoryWorldTraversalPath", () => {
       interactedNodeIds: ["story-a1-event-biglog-briefing"],
     });
     expect(path).toBeNull();
+  });
+
+  it("permite transición inmediata entre actos desde nodo de teletransporte aunque no esté en interacted", () => {
+    const path = resolveStoryWorldTraversalPath({
+      currentNodeId: "story-ch1-transition-to-act2",
+      targetNodeId: "story-ch2-player-start",
+      visitedNodeIds: [
+        "story-ch1-player-start",
+        "story-a1-event-biglog-briefing",
+        "story-a1-move-transit",
+        "story-a1-reward-nexus-cache",
+        "story-a1-event-special-card-signal",
+        "story-ch1-duel-1",
+        "story-a1-reward-card-guardian",
+        "story-a1-move-main-bridge",
+        "story-ch1-duel-3",
+        "story-ch1-duel-4",
+        "story-ch1-duel-5",
+        "story-ch1-transition-to-act2",
+      ],
+      completedNodeIds: ["story-ch1-duel-1", "story-ch1-duel-3", "story-ch1-duel-4", "story-ch1-duel-5"],
+      interactedNodeIds: [
+        "story-a1-event-biglog-briefing",
+        "story-a1-event-special-card-signal",
+        "story-a1-reward-nexus-cache",
+        "story-a1-reward-card-guardian",
+      ],
+    });
+    expect(path).toEqual(["story-ch1-transition-to-act2", "story-ch2-player-start"]);
   });
 });

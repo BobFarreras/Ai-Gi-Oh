@@ -9,6 +9,7 @@ import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import { resolveStoryRewardCardVisual } from "@/services/story/resolve-story-reward-card-visual";
 import { resolveStoryOpponentAvatarUrl } from "@/components/hub/story/internal/map/story-opponent-avatar";
 import { resolveStoryActTransitionTarget } from "@/services/story/resolve-story-act-transition-target";
+import { resolveStoryEventNodeVisual } from "@/services/story/resolve-story-event-node-visual";
 
 interface StoryMapNodeProps {
   node: IStoryMapNodeRuntime;
@@ -28,7 +29,11 @@ function resolveHologramAsset(node: IStoryMapNodeRuntime): { src: string; alt: s
   }
   if (node.nodeType === "REWARD_NEXUS") return { src: "/assets/renders/nexus.webp", alt: "Nexus" };
   if (node.nodeType === "REWARD_CARD") return resolveStoryRewardCardVisual(node.rewardCardId);
-  if (node.nodeType === "EVENT") return { src: "/assets/renders/chatgpt.webp", alt: "Evento" };
+  if (node.nodeType === "EVENT") {
+    if (resolveStoryActTransitionTarget(node.id) !== null) return null;
+    const eventVisual = resolveStoryEventNodeVisual(node.id);
+    return { src: eventVisual.assetSrc, alt: eventVisual.assetAlt };
+  }
   return { src: "/assets/renders/react.webp", alt: "Nodo de movimiento" };
 }
 
@@ -41,7 +46,7 @@ export function StoryMapNode({ node, isSelected, isCurrentNode, isCollecting = f
   const shouldShowTitle = node.nodeType === "DUEL" || node.nodeType === "BOSS";
   // Un nodo resuelto debe quedar como plataforma vacía, excepto transiciones de acto para permitir reuso.
   const shouldHideCompletedToken = node.isCompleted && node.nodeType !== "MOVE" && !isActTransitionNode;
-  const shouldRenderToken = Boolean(hologram) && !isCollecting && !shouldHideCompletedToken;
+  const shouldRenderToken = !isCollecting && !shouldHideCompletedToken && (Boolean(hologram) || isActTransitionNode);
 
   return (
     <motion.button

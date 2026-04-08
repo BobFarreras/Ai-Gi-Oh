@@ -51,4 +51,15 @@ export interface IStorySceneMapViewProps {
     onNext: () => void;
     onClose: () => void | Promise<void>;
   };
+  submission: {
+    isOpen: boolean;
+    title: string;
+    hint: string;
+    placeholder: string;
+    activationLabel: string;
+    generatedCode: string;
+    requiredKeys: Array<{ id: string; label: string; isCollected: boolean }>;
+    onCancel: () => void;
+    onSubmit: (value: string) => void;
+  };
 }
