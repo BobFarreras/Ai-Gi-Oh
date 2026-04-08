@@ -165,7 +165,7 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
         ...(submissionAnswer ? { submissionAnswer } : {}),
       });
       const response = await fetch("/api/story/world/interact", { method: "POST", headers: { "content-type": "application/json" }, body: requestBody });
-      if (!response.ok) throw new Error("Interacción inválida.");
+      if (!response.ok) throw new Error(await readApiErrorMessage(response, "Interacción inválida."));
       const payload = (await response.json()) as IStoryInteractResponse;
       if (targetNode.nodeType === "REWARD_NEXUS") {
         params.sceneSfx.playRewardNexus();

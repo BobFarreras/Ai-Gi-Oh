@@ -33,6 +33,9 @@ interface IStorySubmissionDialogState {
   title: string;
   hint: string;
   placeholder: string;
+  activationLabel: string;
+  generatedCode: string;
+  requiredKeys: Array<{ id: string; label: string; isCollected: boolean }>;
   resolve: (value: string | null) => void;
 }
 function wait(ms: number): Promise<void> {
@@ -125,6 +128,13 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
           title: prompt.title,
           hint: prompt.hint,
           placeholder: prompt.placeholder,
+          activationLabel: prompt.activationLabel,
+          generatedCode: prompt.generatedCode,
+          requiredKeys: prompt.requiredNodeIds.map((requiredNodeId) => ({
+            id: requiredNodeId,
+            label: nodesById[requiredNodeId]?.title ?? requiredNodeId,
+            isCollected: Boolean(nodesById[requiredNodeId]?.isCompleted),
+          })),
           resolve,
         });
       });
@@ -219,6 +229,9 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
       title: submissionDialog?.title ?? "Submission",
       hint: submissionDialog?.hint ?? "",
       placeholder: submissionDialog?.placeholder ?? "",
+      activationLabel: submissionDialog?.activationLabel ?? "Conectar",
+      generatedCode: submissionDialog?.generatedCode ?? "",
+      requiredKeys: submissionDialog?.requiredKeys ?? [],
       onCancel: () => {
         if (!submissionDialog) return;
         submissionDialog.resolve(null);
