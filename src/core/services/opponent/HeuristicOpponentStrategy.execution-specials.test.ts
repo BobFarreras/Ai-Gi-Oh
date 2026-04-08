@@ -224,6 +224,69 @@ describe("HeuristicOpponentStrategy ejecuciones especiales", () => {
     expect(decision).toEqual({ cardId: "entity-gemini", mode: "ATTACK" });
   });
 
+  it("activa ejecución de fusión desde mano cuando receta/materiales/fusionDeck son válidos", () => {
+    const strategy = new HeuristicOpponentStrategy({ difficulty: "NORMAL" });
+    const base = createBaseState();
+    const state = {
+      ...base,
+      playerB: {
+        ...base.playerB,
+        fusionDeck: [
+          {
+            id: "fusion-gemgpt",
+            name: "GemGPT",
+            description: "",
+            type: "FUSION" as const,
+            faction: "BIG_TECH" as const,
+            cost: 6,
+            attack: 2800,
+            defense: 2100,
+          },
+        ],
+        hand: [createFusionExecutionCard("fusion-gemgpt")],
+        activeEntities: [
+          {
+            instanceId: "mat-chatgpt",
+            card: {
+              id: "entity-chatgpt",
+              name: "ChatGPT",
+              description: "",
+              type: "ENTITY" as const,
+              faction: "BIG_TECH" as const,
+              cost: 5,
+              attack: 1800,
+              defense: 1600,
+              archetype: "LLM" as const,
+            },
+            mode: "ATTACK" as const,
+            hasAttackedThisTurn: false,
+            isNewlySummoned: false,
+          },
+          {
+            instanceId: "mat-gemini",
+            card: {
+              id: "entity-gemini",
+              name: "Gemini",
+              description: "",
+              type: "ENTITY" as const,
+              faction: "BIG_TECH" as const,
+              cost: 5,
+              attack: 1700,
+              defense: 1500,
+              archetype: "LLM" as const,
+            },
+            mode: "ATTACK" as const,
+            hasAttackedThisTurn: false,
+            isNewlySummoned: false,
+          },
+        ],
+      },
+    };
+
+    const decision = strategy.choosePlay(state, "p2");
+    expect(decision).toEqual({ cardId: "exec-fusion", mode: "ACTIVATE" });
+  });
+
   it("activa una ejecución de fusión ya seteada cuando los materiales son válidos", () => {
     const strategy = new HeuristicOpponentStrategy({ difficulty: "NORMAL" });
     const base = createBaseState();

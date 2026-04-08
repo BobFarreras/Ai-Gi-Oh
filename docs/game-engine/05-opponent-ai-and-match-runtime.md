@@ -10,11 +10,15 @@
    - `BATTLE`: seleccionar mejor ataque viable.
 4. Inteligencia de fusión por ejecución (sin depender de dificultad):
    - Nunca activa `FUSION_SUMMON` si faltan materiales reales de receta.
+   - Si el duelo Story no define `story_duel_fusion_cards`, el runtime infiere cartas de fusión desde `recipeId` presentes en el mazo rival.
    - Si tiene mágica de fusión y falta material, prioriza invocar el material faltante.
    - Si la zona de entidades está llena y falta material, reemplaza la entidad menos valiosa no crítica para la receta.
    - Si la zona de ejecuciones está llena y necesita setear la mágica de fusión, reemplaza una slot no activada de menor valor.
    - Si no puede activar aún, prioriza setear la ejecución para turno de preparación.
    - Si una ejecución seteada pasa a ser válida, el bot la cambia a `ACTIVATE` antes de cerrar `MAIN_1`.
+5. Descarte por límite de mano:
+   - El rival ya resuelve `DISCARD_FOR_HAND_LIMIT`.
+   - Prioriza conservar ejecuciones de fusión y materiales relevantes de receta frente a cartas de bajo impacto.
 5. Selección automática de materiales pendientes:
    - Para `SELECT_FUSION_MATERIALS`, el bot selecciona entidades válidas por receta en vez de elegir cualquier carta de campo.
 
