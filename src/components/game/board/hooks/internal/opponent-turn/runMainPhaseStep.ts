@@ -102,6 +102,17 @@ export async function runMainPhaseStep(
               playDecision.replaceEntityInstanceId!,
             ),
           )
+      : playDecision.replaceExecutionInstanceId
+        ? context.applyTransition((state) =>
+            GameEngine.playCardWithZoneReplacement(
+              state,
+              opponentId,
+              playDecision.cardId,
+              playDecision.mode,
+              playDecision.replaceExecutionInstanceId!,
+              "EXECUTIONS",
+            ),
+          )
       : context.applyTransition((state) => GameEngine.playCard(state, opponentId, playDecision.cardId, playDecision.mode));
     if (!playDecision.fusionMaterialInstanceIds && playDecision.mode === "ACTIVATE" && nextState) {
       const activatedExecution = [...nextState.playerB.activeExecutions].reverse().find((entity) => entity.card.id === playDecision.cardId);

@@ -41,6 +41,21 @@ function chooseEntityToReplace(opponent: IPlayer, recipeId: string): string | nu
     scoreEntitySacrifice(current) < scoreEntitySacrifice(worst) ? current : worst).instanceId;
 }
 
+function scoreExecutionSacrifice(entity: IBoardEntity): number {
+  const card = entity.card;
+  const triggerBonus = card.type === "TRAP" && card.trigger ? 450 : 0;
+  const fusionBonus = card.type === "EXECUTION" && card.effect?.action === "FUSION_SUMMON" ? 400 : 0;
+  const modePenalty = entity.mode === "ACTIVATE" ? 10_000 : 0;
+  return (card.cost * 120) + triggerBonus + fusionBonus + modePenalty;
+}
+
+function chooseExecutionToReplace(opponent: IPlayer): string | null {
+  const candidates = opponent.activeExecutions.filter((entity) => entity.mode !== "ACTIVATE");
+  if (candidates.length === 0) return null;
+  return candidates.reduce((worst, current) =>
+    scoreExecutionSacrifice(current) < scoreExecutionSacrifice(worst) ? current : worst).instanceId;
+}
+
 /**
  * Prioriza jugadas de setup de materiales/ejecución para completar fusión en turnos siguientes.
  */
@@ -60,6 +75,11 @@ export function chooseFusionSetupPlay(state: GameState, opponent: IPlayer, playa
     }
   }
   const setupExecution = findFusionExecutionSetupCard(playable);
-  if (!setupExecution || opponent.activeExecutions.length >= 3) return null;
+  if (!setupExecution) return null;
+  if (opponent.activeExecutions.length >= 3) {
+    const replaceExecutionInstanceId = chooseExecutionToReplace(opponent);
+    if (!replaceExecutionInstanceId) return null;
+    return { cardId: setupExecution.card.id, mode: "SET", replaceExecutionInstanceId };
+  }
   return { cardId: setupExecution.card.id, mode: "SET" };
 }

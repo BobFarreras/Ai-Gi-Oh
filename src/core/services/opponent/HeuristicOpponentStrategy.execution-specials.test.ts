@@ -497,4 +497,52 @@ describe("HeuristicOpponentStrategy ejecuciones especiales", () => {
     expect(decision?.cardId).toBe("entity-gemini");
     expect(decision?.replaceEntityInstanceId === "filler-1" || decision?.replaceEntityInstanceId === "filler-2").toBe(true);
   });
+
+  it("si la zona de ejecuciones está llena, reemplaza una slot para setear la mágica de fusión", () => {
+    const strategy = new HeuristicOpponentStrategy({ difficulty: "EASY" });
+    const base = createBaseState();
+    const state = {
+      ...base,
+      playerB: {
+        ...base.playerB,
+        hand: [createFusionExecutionCard("fusion-gemgpt")],
+        activeExecutions: [
+          {
+            instanceId: "slot-trap",
+            card: {
+              id: "trap-lite",
+              name: "Trap Lite",
+              description: "",
+              type: "TRAP" as const,
+              faction: "NO_CODE" as const,
+              cost: 1,
+              trigger: "ON_OPPONENT_ATTACK_DECLARED" as const,
+              effect: { action: "NEGATE_ATTACK_AND_DESTROY_ATTACKER" as const },
+            },
+            mode: "SET" as const,
+            hasAttackedThisTurn: false,
+            isNewlySummoned: false,
+          },
+          {
+            instanceId: "slot-exec",
+            card: createStealExecutionCard(),
+            mode: "SET" as const,
+            hasAttackedThisTurn: false,
+            isNewlySummoned: false,
+          },
+          {
+            instanceId: "slot-fusion",
+            card: createFusionExecutionCard("fusion-gemgpt"),
+            mode: "SET" as const,
+            hasAttackedThisTurn: false,
+            isNewlySummoned: false,
+          },
+        ],
+      },
+    };
+
+    const decision = strategy.choosePlay(state, "p2");
+    expect(decision?.cardId).toBe("exec-fusion");
+    expect(Boolean(decision?.replaceExecutionInstanceId)).toBe(true);
+  });
 });

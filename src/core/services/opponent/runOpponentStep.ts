@@ -69,6 +69,15 @@ export function runOpponentStep(state: GameState, opponentId: string, strategy: 
           playDecision.mode,
           playDecision.replaceEntityInstanceId,
         )
+        : playDecision.replaceExecutionInstanceId
+          ? GameEngine.playCardWithZoneReplacement(
+            state,
+            opponentId,
+            playDecision.cardId,
+            playDecision.mode,
+            playDecision.replaceExecutionInstanceId,
+            "EXECUTIONS",
+          )
         : GameEngine.playCard(state, opponentId, playDecision.cardId, playDecision.mode);
 
       if (playDecision.mode === "ACTIVATE") {

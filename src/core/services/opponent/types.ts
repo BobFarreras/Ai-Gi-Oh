@@ -7,6 +7,7 @@ export interface IOpponentPlayDecision {
   mode: BattleMode;
   fusionMaterialInstanceIds?: [string, string];
   replaceEntityInstanceId?: string;
+  replaceExecutionInstanceId?: string;
 }
 
 export interface IOpponentAttackDecision {
