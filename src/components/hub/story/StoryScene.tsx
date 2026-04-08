@@ -23,9 +23,17 @@ import { resolveStoryPrimaryAction } from "@/services/story/resolve-story-primar
 import { resolveStorySmartAction } from "@/services/story/resolve-story-smart-action";
 import { IStorySceneMapViewProps, IStorySceneSidebarViewProps } from "./internal/scene/view/story-scene-view-props";
 import { IStoryAvatarVisualTarget } from "./internal/scene/types/story-avatar-visual-target";
+import { resolveStoryNodeSubmissionPrompt } from "@/services/story/story-node-submission-rules";
 type StoryActEntryDirection = "forward" | "backward" | null;
 interface IStorySceneProps { runtime: IStoryMapRuntimeData; briefing: IStoryChapterBriefing; postDuelTransition?: IStoryPostDuelTransition | null; shouldPlayActEntryAnimation?: boolean; actEntryDirection?: StoryActEntryDirection; }
 interface IStoryCollectVisual { assetSrc: string; assetAlt: string; tone: "NEXUS" | "CARD"; }
+interface IStorySubmissionDialogState {
+  nodeId: string;
+  title: string;
+  hint: string;
+  placeholder: string;
+  resolve: (value: string | null) => void;
+}
 export function StoryScene({ runtime, briefing, postDuelTransition = null, shouldPlayActEntryAnimation = false, actEntryDirection = null }: IStorySceneProps) {
   const router = useRouter();
   const isMobileLayout = useStorySceneMobileMode();
@@ -52,6 +60,8 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
   const [pendingCenterNodeId, setPendingCenterNodeId] = useState<string | null>(null);
   const [movementError, setMovementError] = useState<string | null>(null);
   const [interactionFeedback, setInteractionFeedback] = useState<string | null>(null);
+  const [submissionDialog, setSubmissionDialog] = useState<IStorySubmissionDialogState | null>(null);
+  const [preDuelDialogSeenNodeIds, setPreDuelDialogSeenNodeIds] = useState<string[]>([]);
   const interactionDialog = useStoryNodeInteractionDialog();
   const sceneSfx = useStorySceneSfx();
   const { isMuted: isMapSoundtrackMuted, toggleMute: toggleMapSoundtrackMute } = useStoryMapSoundtrack(runtime.activeActId);
@@ -102,6 +112,22 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
     navigateTo: router.push,
     requestActTransition: (actId) => setActTransitionTargetId(actId),
     startInteractionDialog: interactionDialog.start,
+    requestNodeSubmission: async (nodeId) => {
+      const prompt = resolveStoryNodeSubmissionPrompt(nodeId);
+      if (!prompt) return null;
+      return await new Promise<string | null>((resolve) => {
+        setSubmissionDialog({
+          nodeId,
+          title: prompt.title,
+          hint: prompt.hint,
+          placeholder: prompt.placeholder,
+          resolve,
+        });
+      });
+    },
+    hasSeenPreDuelDialogue: (nodeId) => preDuelDialogSeenNodeIds.includes(nodeId),
+    markPreDuelDialogueSeen: (nodeId) =>
+      setPreDuelDialogSeenNodeIds((prev) => (prev.includes(nodeId) ? prev : [...prev, nodeId])),
   });
   useStoryActTransitionNavigation({
     actTransitionTargetId,
@@ -171,6 +197,22 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
       line: interactionDialog.currentLine,
       onNext: advanceInteractionDialog,
       onClose: finalizeInteractionDialog,
+    },
+    submission: {
+      isOpen: Boolean(submissionDialog),
+      title: submissionDialog?.title ?? "Submission",
+      hint: submissionDialog?.hint ?? "",
+      placeholder: submissionDialog?.placeholder ?? "",
+      onCancel: () => {
+        if (!submissionDialog) return;
+        submissionDialog.resolve(null);
+        setSubmissionDialog(null);
+      },
+      onSubmit: (value) => {
+        if (!submissionDialog) return;
+        submissionDialog.resolve(value);
+        setSubmissionDialog(null);
+      },
     },
   };
   return isMobileLayout ? <StorySceneMobileLayout sidebar={sidebarProps} map={{ ...mapProps, centerRequestKey }} /> : <StorySceneDesktopLayout sidebar={sidebarProps} map={{ ...mapProps, centerRequestKey }} />;

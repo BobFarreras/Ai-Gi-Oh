@@ -6,7 +6,7 @@ import { animateStoryAvatarPath } from "@/components/hub/story/internal/scene/ac
 import { resolveStoryActTransitionTarget } from "@/services/story/resolve-story-act-transition-target";
 import { IStoryAvatarVisualTarget } from "@/components/hub/story/internal/scene/types/story-avatar-visual-target";
 import { resolveStoryAvatarSideDirection } from "@/components/hub/story/internal/scene/utils/resolve-story-avatar-side-direction";
-import { buildStoryNodeInteractionPayload } from "@/components/hub/story/internal/scene/actions/story-node-interaction-request";
+import { resolveStoryNodeSubmissionPrompt } from "@/services/story/story-node-submission-rules";
 
 interface IStoryInteractResponse { interactionCountForNode: number; }
 interface IStoryApiErrorResponse { message?: string; }
@@ -37,6 +37,9 @@ interface ICreateStorySceneActionsParams {
   navigateTo: (href: string) => void;
   requestActTransition: (actId: number) => void;
   startInteractionDialog: (node: IStoryMapNodeRuntime, interactionCountForNode: number) => boolean;
+  requestNodeSubmission: (nodeId: string) => Promise<string | null>;
+  hasSeenPreDuelDialogue: (nodeId: string) => boolean;
+  markPreDuelDialogueSeen: (nodeId: string) => void;
 }
 
 function resolveCollectVisual(targetNode: IStoryMapNodeRuntime): IStoryCollectVisual {
@@ -117,6 +120,14 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
     );
     await wait(420);
     if (targetMode.mode === "ROUTE") {
+      if (targetNode.id === "story-ch2-duel-8" && !params.hasSeenPreDuelDialogue(targetNode.id)) {
+        const opened = params.startInteractionDialog(targetNode, 1);
+        params.markPreDuelDialogueSeen(targetNode.id);
+        if (opened) {
+          params.setInteractionFeedback("Briefing de evaluación de BigLog completado.");
+          return;
+        }
+      }
       params.setDuelFocusNodeId(targetNode.id);
       params.sceneSfx.playDuelStart();
       await wait(520);
@@ -134,12 +145,20 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
     }
     try {
       params.setIsInteracting(true);
-      const interactionPayload = buildStoryNodeInteractionPayload(targetNode);
-      if (!interactionPayload) {
-        params.setInteractionFeedback("Submission cancelada. El puente sigue bloqueado.");
-        return;
+      const submissionPrompt = resolveStoryNodeSubmissionPrompt(targetNode.id);
+      let submissionAnswer: string | undefined;
+      if (submissionPrompt) {
+        const answer = await params.requestNodeSubmission(targetNode.id);
+        if (!answer || !answer.trim()) {
+          params.setInteractionFeedback("Submission cancelada. El puente sigue bloqueado.");
+          return;
+        }
+        submissionAnswer = answer.trim();
       }
-      const requestBody = JSON.stringify(interactionPayload);
+      const requestBody = JSON.stringify({
+        nodeId: targetNode.id,
+        ...(submissionAnswer ? { submissionAnswer } : {}),
+      });
       const response = await fetch("/api/story/world/interact", { method: "POST", headers: { "content-type": "application/json" }, body: requestBody });
       if (!response.ok) throw new Error("Interacción inválida.");
       const payload = (await response.json()) as IStoryInteractResponse;

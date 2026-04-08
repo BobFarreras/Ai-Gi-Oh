@@ -1,6 +1,7 @@
 // src/components/hub/story/internal/scene/view/StorySceneMapPane.tsx - Contenedor del mapa Story y diálogo narrativo desacoplado de StoryScene.
 import { StoryCircuitMap } from "@/components/hub/story/StoryCircuitMap";
 import { StoryNodeInteractionDialog } from "@/components/hub/story/internal/scene/dialog/StoryNodeInteractionDialog";
+import { StorySubmissionTerminalDialog } from "@/components/hub/story/internal/scene/dialog/StorySubmissionTerminalDialog";
 import { StoryActTransitionOverlay } from "@/components/hub/story/internal/scene/view/StoryActTransitionOverlay";
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import {
@@ -69,6 +70,14 @@ export function StorySceneMapPane(props: IStorySceneMapPaneProps) {
         line={props.dialog.line}
         onNext={props.dialog.onNext}
         onClose={props.dialog.onClose}
+      />
+      <StorySubmissionTerminalDialog
+        isOpen={props.submission.isOpen}
+        title={props.submission.title}
+        hint={props.submission.hint}
+        placeholder={props.submission.placeholder}
+        onCancel={props.submission.onCancel}
+        onSubmit={props.submission.onSubmit}
       />
       <StoryActTransitionOverlay targetActId={props.actTransitionTargetId} />
     </div>

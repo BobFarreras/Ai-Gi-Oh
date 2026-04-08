@@ -30,6 +30,7 @@
 6. Submission de sincronización para abrir el puente principal.
 7. Duelo de cierre y transición al siguiente acto (`story-ch2-transition-to-act3`).
 8. El jugador vuelve desde la subruta al eje principal para cruzar el puente ya activado.
+9. Tras vencer a Helena en el tramo avanzado, se dispara evento de recuperación de link (`story-ch2-link-recovered-event`).
 
 ## Contenido del acto
 1. `MOVE` para recorrido y bifurcaciones.

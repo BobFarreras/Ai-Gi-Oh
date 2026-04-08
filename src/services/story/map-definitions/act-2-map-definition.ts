@@ -55,6 +55,7 @@ export const storyAct2MapDefinition: IStoryActMapDefinition = {
 
     v({ id: "story-ch2-branch-lower-up-event", duelIndex: 213, nodeType: "EVENT", title: "Evento", unlockRequirementNodeId: "story-ch2-branch-lower-fork", position: { x: 4290, y: 1120 } }),
     v({ id: "story-ch2-branch-lower-up-link", duelIndex: 214, nodeType: "MOVE", title: "Paso", unlockRequirementNodeId: "story-ch2-duel-5", position: { x: 4680, y: 1120 } }),
+    v({ id: "story-ch2-link-recovered-event", duelIndex: 2141, nodeType: "EVENT", title: "Recuperar Link", unlockRequirementNodeId: "story-ch2-duel-6", position: { x: 4940, y: 980 } }),
 
     v({ id: "story-ch2-branch-lower-down-a", duelIndex: 215, nodeType: "MOVE", title: "Paso", unlockRequirementNodeId: "story-ch2-branch-lower-fork", position: { x: 4680, y: 1260 } }),
     v({ id: "story-ch2-branch-lower-down-b", duelIndex: 216, nodeType: "REWARD_NEXUS", title: "Moneda", rewardNexus: 360, unlockRequirementNodeId: "story-ch2-branch-lower-down-a", position: { x: 4940, y: 1260 } }),
@@ -82,6 +83,7 @@ export const storyAct2MapDefinition: IStoryActMapDefinition = {
     { id: "act2-p-14", position: { x: 4420, y: 1260 }, size: 170, style: "RUIN" },
     { id: "act2-p-15", position: { x: 4290, y: 1120 }, size: 170, style: "METAL" },
     { id: "act2-p-16", position: { x: 4680, y: 1120 }, size: 170, style: "NEON" },
+    { id: "act2-p-27", position: { x: 4940, y: 980 }, size: 170, style: "RUIN" },
     { id: "act2-p-17", position: { x: 4680, y: 1260 }, size: 170, style: "RUIN" },
     { id: "act2-p-18", position: { x: 4940, y: 1260 }, size: 170, style: "METAL" },
     { id: "act2-p-19", position: { x: 5200, y: 1260 }, size: 170, style: "NEON" },

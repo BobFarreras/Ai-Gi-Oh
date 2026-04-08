@@ -165,17 +165,23 @@ export function useStoryCircuitMotion(input: IUseStoryCircuitMotionInput) {
   useEffect(() => {
     if (!duelFocusNodeId || !mapContainerRef.current) return;
     const focus = resolveStoryNodeTokenAnchor(duelFocusNodeId, positionMap);
+    const midpoint = currentNodeAnchor
+      ? {
+          x: (focus.x + currentNodeAnchor.x) / 2,
+          y: (focus.y + currentNodeAnchor.y) / 2,
+        }
+      : focus;
     const target = resolveStoryCameraCenterTarget({
       containerWidth: mapContainerRef.current.clientWidth,
       containerHeight: mapContainerRef.current.clientHeight,
-      nodePosition: focus,
+      nodePosition: midpoint,
       scale: zoom.get() * cinematicScale.get(),
     });
     const xControls = animate(cameraX, target.x, { duration: 0.38, ease: "easeInOut" });
     const yControls = animate(cameraY, target.y, { duration: 0.38, ease: "easeInOut" });
-    const scaleControls = animate(cinematicScale, 1.2, { duration: 0.35, ease: "easeOut" });
+    const scaleControls = animate(cinematicScale, 1.08, { duration: 0.35, ease: "easeOut" });
     return () => { xControls.stop(); yControls.stop(); scaleControls.stop(); };
-  }, [cameraX, cameraY, cinematicScale, duelFocusNodeId, mapContainerRef, positionMap, zoom]);
+  }, [cameraX, cameraY, cinematicScale, currentNodeAnchor, duelFocusNodeId, mapContainerRef, positionMap, zoom]);
 
   useEffect(() => {
     if (!mapContainerRef.current || hasCenteredCamera.current) return;

@@ -66,6 +66,22 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
       { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "Operador", text: "Perfecto. Aseguro la clave y continúo con el cierre táctico para abrir el enlace final." },
     ],
   },
+  "story-ch2-link-recovered-event": {
+    title: "Link Recuperado",
+    lines: [
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Confirmado. Helena cayó y acabas de extraer la segunda mitad del link de pasarela." },
+      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "Operador", text: "Link ensamblado. Lo llevo al nodo de submission para activar el puente principal." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Perfecto. Sincronízalo y entra al cierre del acto." },
+    ],
+  },
+  "story-ch2-duel-8": {
+    title: "Evaluación de BigLog",
+    lines: [
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Antes de abrirte el puente, quiero ver lo que has aprendido en combate real." },
+      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "Operador", text: "Entendido. Te demostraré control de tempo, recursos y cierre táctico." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Entonces combate. Si pasas la evaluación, firmaré tu acceso." },
+    ],
+  },
   "story-ch2-bridge-submission": {
     title: "Submission de Pasarela",
     lines: [

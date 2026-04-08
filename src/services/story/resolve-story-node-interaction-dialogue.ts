@@ -62,10 +62,17 @@ export function resolveStoryNodeInteractionDialogue(
   node: IStoryMapNodeRuntime,
   interactionCount = 1,
 ): IStoryNodeInteractionDialogue | null {
-  if (!node.isVirtualNode && node.nodeType !== "EVENT" && node.nodeType !== "REWARD_CARD" && node.nodeType !== "REWARD_NEXUS") {
+  const explicitDialogue = STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID[node.id] ?? null;
+  if (
+    !explicitDialogue &&
+    !node.isVirtualNode &&
+    node.nodeType !== "EVENT" &&
+    node.nodeType !== "REWARD_CARD" &&
+    node.nodeType !== "REWARD_NEXUS"
+  ) {
     return null;
   }
-  const baseDialogue = STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID[node.id] ?? buildFallbackDialogue(node);
+  const baseDialogue = explicitDialogue ?? buildFallbackDialogue(node);
   const firstDialogue = withMultimedia(node.id, baseDialogue);
   if (interactionCount <= 1) return firstDialogue;
   return buildRecurringSummary(firstDialogue, interactionCount);
