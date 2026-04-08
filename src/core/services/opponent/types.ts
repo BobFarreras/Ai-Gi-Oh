@@ -6,6 +6,7 @@ export interface IOpponentPlayDecision {
   cardId: string;
   mode: BattleMode;
   fusionMaterialInstanceIds?: [string, string];
+  replaceEntityInstanceId?: string;
 }
 
 export interface IOpponentAttackDecision {

@@ -48,6 +48,7 @@ function hasArchetypeEntity(opponent: IPlayer, archetype?: ICard["archetype"]): 
 }
 
 export function canActivateExecutionNow(card: ICard, opponent: IPlayer, target: IPlayer): boolean {
+  if (card.type !== "EXECUTION") return false;
   const effect = card.effect;
   if (!effect) return false;
   if (effect.action === "DAMAGE" || effect.action === "DRAW_CARD" || effect.action === "RESTORE_ENERGY" || effect.action === "DRAIN_OPPONENT_ENERGY") return true;

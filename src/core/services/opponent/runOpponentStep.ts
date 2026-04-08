@@ -61,16 +61,24 @@ export function runOpponentStep(state: GameState, opponentId: string, strategy: 
         return hasAnotherPlayAfterFusion ? stateAfterFusion : GameEngine.nextPhase(stateAfterFusion);
       }
 
-      const stateAfterPlay = GameEngine.playCard(state, opponentId, playDecision.cardId, playDecision.mode);
+      const stateAfterResolvedPlay = playDecision.replaceEntityInstanceId
+        ? GameEngine.playCardWithEntityReplacement(
+          state,
+          opponentId,
+          playDecision.cardId,
+          playDecision.mode,
+          playDecision.replaceEntityInstanceId,
+        )
+        : GameEngine.playCard(state, opponentId, playDecision.cardId, playDecision.mode);
 
       if (playDecision.mode === "ACTIVATE") {
-        return stateAfterPlay;
+        return stateAfterResolvedPlay;
       }
 
       const hasAnotherPlay =
-        strategy.choosePlay(stateAfterPlay, opponentId) !== null ||
-        findActivatableSetExecutionInstanceId(stateAfterPlay, opponentId) !== null;
-      return hasAnotherPlay ? stateAfterPlay : GameEngine.nextPhase(stateAfterPlay);
+        strategy.choosePlay(stateAfterResolvedPlay, opponentId) !== null ||
+        findActivatableSetExecutionInstanceId(stateAfterResolvedPlay, opponentId) !== null;
+      return hasAnotherPlay ? stateAfterResolvedPlay : GameEngine.nextPhase(stateAfterResolvedPlay);
     }
     case "BATTLE": {
       const attackDecision = strategy.chooseAttack(state, opponentId);

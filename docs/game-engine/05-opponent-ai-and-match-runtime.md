@@ -11,6 +11,7 @@
 4. Inteligencia de fusión por ejecución (sin depender de dificultad):
    - Nunca activa `FUSION_SUMMON` si faltan materiales reales de receta.
    - Si tiene mágica de fusión y falta material, prioriza invocar el material faltante.
+   - Si la zona de entidades está llena y falta material, reemplaza la entidad menos valiosa no crítica para la receta.
    - Si no puede activar aún, prioriza setear la ejecución para turno de preparación.
    - Si una ejecución seteada pasa a ser válida, el bot la cambia a `ACTIVATE` antes de cerrar `MAIN_1`.
 5. Selección automática de materiales pendientes:

@@ -41,6 +41,19 @@ function createFusionExecutionCard(recipeId: string): ICard {
   };
 }
 
+function createExecutionReactiveTrap(): ICard {
+  return {
+    id: "trap-def-fragment",
+    name: "DEF Fragment",
+    description: "",
+    type: "TRAP",
+    faction: "BIG_TECH",
+    cost: 2,
+    trigger: "ON_OPPONENT_EXECUTION_ACTIVATED",
+    effect: { action: "REDUCE_OPPONENT_DEFENSE", value: 300 },
+  };
+}
+
 describe("HeuristicOpponentStrategy ejecuciones especiales", () => {
   it("activa STEAL_OPPONENT_GRAVEYARD_CARD_TO_HAND cuando hay objetivo válido", () => {
     const strategy = new HeuristicOpponentStrategy({ difficulty: "HARD" });
@@ -356,5 +369,132 @@ describe("HeuristicOpponentStrategy ejecuciones especiales", () => {
     const next = runOpponentStep(state, "p2", strategy);
     expect(next.pendingTurnAction?.type).toBe("SELECT_FUSION_MATERIALS");
     expect(next.pendingTurnAction?.selectedMaterialInstanceIds).toEqual(["mat-chatgpt"]);
+  });
+
+  it("no auto-activa trampas seteadas aunque su efecto use acción de ejecución", () => {
+    const strategy = new HeuristicOpponentStrategy({ difficulty: "NORMAL" });
+    const base = createBaseState();
+    const state = {
+      ...base,
+      playerB: {
+        ...base.playerB,
+        hand: [],
+        activeExecutions: [
+          {
+            instanceId: "trap-set",
+            card: createExecutionReactiveTrap(),
+            mode: "SET" as const,
+            hasAttackedThisTurn: false,
+            isNewlySummoned: false,
+          },
+        ],
+      },
+      playerA: {
+        ...base.playerA,
+        activeEntities: [
+          {
+            instanceId: "p1-entity",
+            card: {
+              id: "p1-card",
+              name: "P1",
+              description: "",
+              type: "ENTITY" as const,
+              faction: "OPEN_SOURCE" as const,
+              cost: 2,
+              attack: 900,
+              defense: 900,
+            },
+            mode: "ATTACK" as const,
+            hasAttackedThisTurn: false,
+            isNewlySummoned: false,
+          },
+        ],
+      },
+    };
+
+    const next = runOpponentStep(state, "p2", strategy);
+    expect(next.playerB.activeExecutions[0].mode).toBe("SET");
+  });
+
+  it("si el campo está lleno, reemplaza una entidad no material para preparar fusión", () => {
+    const strategy = new HeuristicOpponentStrategy({ difficulty: "EASY" });
+    const base = createBaseState();
+    const state = {
+      ...base,
+      playerB: {
+        ...base.playerB,
+        activeEntities: [
+          {
+            instanceId: "mat-chatgpt",
+            card: {
+              id: "entity-chatgpt",
+              name: "ChatGPT",
+              description: "",
+              type: "ENTITY" as const,
+              faction: "BIG_TECH" as const,
+              cost: 5,
+              attack: 1800,
+              defense: 1600,
+              archetype: "LLM" as const,
+            },
+            mode: "ATTACK" as const,
+            hasAttackedThisTurn: false,
+            isNewlySummoned: false,
+          },
+          {
+            instanceId: "filler-1",
+            card: {
+              id: "entity-fill-1",
+              name: "Filler 1",
+              description: "",
+              type: "ENTITY" as const,
+              faction: "OPEN_SOURCE" as const,
+              cost: 1,
+              attack: 300,
+              defense: 400,
+              archetype: "TOOL" as const,
+            },
+            mode: "ATTACK" as const,
+            hasAttackedThisTurn: false,
+            isNewlySummoned: false,
+          },
+          {
+            instanceId: "filler-2",
+            card: {
+              id: "entity-fill-2",
+              name: "Filler 2",
+              description: "",
+              type: "ENTITY" as const,
+              faction: "OPEN_SOURCE" as const,
+              cost: 2,
+              attack: 600,
+              defense: 500,
+              archetype: "TOOL" as const,
+            },
+            mode: "ATTACK" as const,
+            hasAttackedThisTurn: false,
+            isNewlySummoned: false,
+          },
+        ],
+        hand: [
+          createFusionExecutionCard("fusion-gemgpt"),
+          {
+            id: "entity-gemini",
+            name: "Gemini",
+            description: "",
+            type: "ENTITY" as const,
+            faction: "BIG_TECH" as const,
+            cost: 5,
+            attack: 1700,
+            defense: 1500,
+            archetype: "LLM" as const,
+          },
+        ],
+      },
+    };
+
+    const decision = strategy.choosePlay(state, "p2");
+    expect(decision?.cardId).toBe("entity-gemini");
+    expect(decision?.replaceEntityInstanceId === "filler-1" || decision?.replaceEntityInstanceId === "filler-2").toBe(true);
   });
 });
