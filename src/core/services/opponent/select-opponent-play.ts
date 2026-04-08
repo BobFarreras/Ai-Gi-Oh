@@ -4,6 +4,7 @@ import { ICard } from "@/core/entities/ICard";
 import { IOpponentDifficultyProfile } from "@/core/services/opponent/difficulty/types";
 import { IStoryAiProfile } from "@/core/services/opponent/difficulty/story-ai-profile";
 import { scoreEntity, scoreExecution, scoreFusion, scoreTrap } from "@/core/services/opponent/heuristic-score";
+import { canActivateFusionExecutionNow } from "@/core/services/opponent/opponent-fusion-execution";
 import { resolveTacticalCardBonus } from "@/core/services/opponent/opponent-tactical-context";
 
 export interface IPlayableCardDecision {
@@ -46,7 +47,7 @@ function hasArchetypeEntity(opponent: IPlayer, archetype?: ICard["archetype"]): 
   return opponent.activeEntities.some((entity) => entity.card.archetype === archetype);
 }
 
-function canActivateExecutionNow(card: ICard, opponent: IPlayer, target: IPlayer): boolean {
+export function canActivateExecutionNow(card: ICard, opponent: IPlayer, target: IPlayer): boolean {
   const effect = card.effect;
   if (!effect) return false;
   if (effect.action === "DAMAGE" || effect.action === "DRAW_CARD" || effect.action === "RESTORE_ENERGY" || effect.action === "DRAIN_OPPONENT_ENERGY") return true;
@@ -72,7 +73,7 @@ function canActivateExecutionNow(card: ICard, opponent: IPlayer, target: IPlayer
     return setEntities || setExecutions;
   }
   if (effect.action === "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN") return target.activeEntities.length === 0;
-  if (effect.action === "FUSION_SUMMON") return opponent.activeEntities.length >= 2;
+  if (effect.action === "FUSION_SUMMON") return canActivateFusionExecutionNow(opponent, card);
   return false;
 }
 

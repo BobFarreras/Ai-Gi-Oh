@@ -8,6 +8,13 @@
 3. Decisión por fase:
    - `MAIN_1`: jugar mejor carta válida,
    - `BATTLE`: seleccionar mejor ataque viable.
+4. Inteligencia de fusión por ejecución (sin depender de dificultad):
+   - Nunca activa `FUSION_SUMMON` si faltan materiales reales de receta.
+   - Si tiene mágica de fusión y falta material, prioriza invocar el material faltante.
+   - Si no puede activar aún, prioriza setear la ejecución para turno de preparación.
+   - Si una ejecución seteada pasa a ser válida, el bot la cambia a `ACTIVATE` antes de cerrar `MAIN_1`.
+5. Selección automática de materiales pendientes:
+   - Para `SELECT_FUSION_MATERIALS`, el bot selecciona entidades válidas por receta en vez de elegir cualquier carta de campo.
 
 ## Runtime de match desacoplado (Fase 0)
 

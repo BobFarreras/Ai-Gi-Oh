@@ -26,6 +26,7 @@
 2. `resolveExecution` crea acción pendiente `SELECT_FUSION_MATERIALS`.
 3. Seleccionar dos materiales del campo propio.
 4. Resolver fusión y crear entidad fusionada.
+5. Si la ejecución se activa sin materiales válidos, se suspende a `SET` con evento `FUSION_WAITING_MATERIALS`.
 
 ### Reglas
 
@@ -34,6 +35,7 @@
 3. Receta válida en `fusion-recipes.ts`.
 4. Energía validada por receta y jugador.
 5. Si el bloque está configurado, la carta final debe existir en `fusionDeck`.
+6. La selección de materiales debe cumplir `requiredMaterialIds` y/o `requiredArchetypes`.
 
 ### Resultado
 

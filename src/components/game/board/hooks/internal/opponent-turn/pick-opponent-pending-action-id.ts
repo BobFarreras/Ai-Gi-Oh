@@ -1,6 +1,7 @@
 // src/components/game/board/hooks/internal/opponent-turn/pick-opponent-pending-action-id.ts - Resuelve selección automática robusta para acciones pendientes del rival.
 import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
+import { pickPendingFusionMaterialInstanceId } from "@/core/services/opponent/opponent-pending-fusion-material";
 import { IOpponentAutoPick, IOpponentTurnContext } from "./types";
 
 function scoreSetCardThreat(entity: IBoardEntity): number {
@@ -40,7 +41,11 @@ export function pickOpponentPendingActionId(context: IOpponentTurnContext, autoP
   if (gameState.pendingTurnAction.type === "DISCARD_FOR_HAND_LIMIT") return autoPick.chooseCardToDiscard(gameState.playerB.hand)?.id ?? null;
   if (gameState.pendingTurnAction.type === "SELECT_FUSION_MATERIALS") {
     const pending = gameState.pendingTurnAction;
-    return gameState.playerB.activeEntities.find((entity) => !pending.selectedMaterialInstanceIds.includes(entity.instanceId))?.instanceId ?? null;
+    return pickPendingFusionMaterialInstanceId({
+      activeEntities: gameState.playerB.activeEntities,
+      selectedMaterialInstanceIds: pending.selectedMaterialInstanceIds,
+      recipeId: pending.fusionFromExecutionRecipeId ?? pending.fusionCardId,
+    });
   }
   if (gameState.pendingTurnAction.type === "SELECT_GRAVEYARD_CARD") {
     return pickLatestOwnGraveyardCard(gameState.playerB.graveyard, gameState.pendingTurnAction.cardType);

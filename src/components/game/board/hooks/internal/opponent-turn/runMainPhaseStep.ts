@@ -1,5 +1,6 @@
 // src/components/game/board/hooks/internal/opponent-turn/runMainPhaseStep.ts - Ejecuta el paso principal del turno rival resolviendo pendientes y acciones jugables.
 import { GameEngine } from "@/core/use-cases/GameEngine";
+import { canActivateExecutionNow } from "@/core/services/opponent/select-opponent-play";
 import { addRevealedId, findReactiveTrap, removeRevealedId } from "../trapPreview";
 import { sleep } from "../sleep";
 import { IOpponentAutoPick, IOpponentStepTimings, IOpponentTurnContext } from "./types";
@@ -72,6 +73,15 @@ export async function runMainPhaseStep(
       context.clearSelection();
       context.clearError();
     }
+    return true;
+  }
+  const setExecutionToActivate = gameState.playerB.activeExecutions.find((entity) =>
+    entity.mode === "SET" && canActivateExecutionNow(entity.card, gameState.playerB, gameState.playerA));
+  if (setExecutionToActivate) {
+    context.setIsAnimating(true);
+    await sleep(timings.stepDelayMs);
+    context.applyTransition((state) => GameEngine.changeEntityMode(state, opponentId, setExecutionToActivate.instanceId, "ACTIVATE"));
+    context.setIsAnimating(false);
     return true;
   }
 

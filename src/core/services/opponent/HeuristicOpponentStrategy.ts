@@ -11,6 +11,7 @@ import { buildPlayableCardDecisions } from "@/core/services/opponent/select-oppo
 import { shouldHoldFragileFrontline } from "@/core/services/opponent/opponent-tactical-context";
 import { IOpponentModeChangeDecision } from "@/core/services/opponent/types";
 import { shouldSkipPlayForEnergy } from "@/core/services/opponent/opponent-energy-plan";
+import { chooseFusionSetupPlay } from "@/core/services/opponent/opponent-fusion-plan";
 
 function getPlayers(state: GameState, opponentId: string): { opponent: IPlayer; target: IPlayer } {
   if (state.playerA.id === opponentId) {
@@ -37,6 +38,10 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
   public choosePlay(state: GameState, opponentId: string): IOpponentPlayDecision | null {
     const { opponent, target } = getPlayers(state, opponentId);
     const playable = buildPlayableCardDecisions({ opponent, target, profile: this.profile, aiProfile: this.aiProfile });
+    const fusionSetupPlay = chooseFusionSetupPlay(state, opponent, playable);
+    if (fusionSetupPlay) {
+      return fusionSetupPlay;
+    }
     if (shouldSkipPlayForEnergy({ opponent, target, profile: this.profile, aiProfile: this.aiProfile, playableDecisions: playable })) {
       return null;
     }
