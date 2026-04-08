@@ -272,6 +272,63 @@
    - `pnpm eslint src/components/hub/academy/training/TrainingMode3DPanel.tsx src/components/hub/academy/training/TrainingModeSelection.tsx`
 4. Commit: pendiente en esta sesión.
 
+## Fase 29 - Rediseño UI del mapa Tutorial (fullscreen + estética videojuego)
+
+1. Se adapta `/hub/academy/tutorial` a `h-dvh` con comportamiento responsive:
+   - desktop: escena fullscreen sin scroll global,
+   - mobile: scroll vertical seguro para no bloquear navegación.
+2. Se reorganiza `TutorialMapSelection` en layout de tres filas (`header`, grid de nodos, footer) para ajustar altura por viewport.
+3. Se rediseñan cards de nodo con marco HUD futurista, tipografía más legible y mejor jerarquía visual.
+4. Se incorpora arte temático por nodo:
+   - `ARSENAL`: mosaico de tipos de carta,
+   - `MARKET`: render de Nexus,
+   - `COMBAT`: columnas con intros de rivales,
+   - `REWARD`: composición visual de premio con foco Nexus.
+5. Validación aplicada:
+   - `pnpm vitest src/components/hub/academy/tutorial/TutorialMapSelection.test.tsx`
+   - `pnpm eslint src/app/hub/academy/tutorial/page.tsx src/components/hub/academy/tutorial/TutorialMapSelection.tsx src/components/hub/academy/tutorial/TutorialCircuitMap.tsx src/components/hub/academy/tutorial/TutorialNodeCard.tsx src/components/hub/academy/tutorial/internal/TutorialNodeCardMedia.tsx`
+6. Commit: pendiente en esta sesión.
+
+## Fase 30 - Ajuste de arte tutorial por nodo y jerarquía tipográfica
+
+1. Nodo `Preparar Deck` cambia a composición de cartas reales del juego en formato “montón” desordenado.
+2. Nodo `Combate` usa captura base real del tablero (`/assets/tutorial-combate.webp`).
+3. Nodo `Recompensa final` deja de usar Nexus y pasa a iconografía de misterio (`?` + estrellas).
+4. Se incrementa tamaño de `title/description` en cards y se centra el bloque de texto.
+5. El header con BigLog se centra completamente (avatar + textos), con escala tipográfica superior.
+6. Validación aplicada:
+   - `pnpm vitest src/components/hub/academy/tutorial/TutorialMapSelection.test.tsx`
+   - `pnpm eslint src/components/hub/academy/tutorial/internal/TutorialNodeCardMedia.tsx src/components/hub/academy/tutorial/TutorialNodeCard.tsx src/components/hub/academy/tutorial/TutorialMapSelection.tsx src/components/hub/academy/tutorial/TutorialCircuitMap.tsx src/app/hub/academy/tutorial/page.tsx`
+7. Commit: pendiente en esta sesión.
+
+## Fase 31 - Ajustes de usabilidad visual del mapa tutorial
+
+1. Se corrige densidad del header para reducir altura vertical:
+   - layout horizontal (avatar a un lado, texto al otro),
+   - se elimina la línea `UPLINK // BIGLOG`.
+2. Se incrementa padding en mobile para evitar contenedores pegados al borde.
+3. El CTA `Volver a Academy` queda centrado en todos los viewports.
+4. Nodo `Preparar Deck` pasa a usar cartas reales con componente `Card.tsx` (no simulación visual).
+5. Se ajusta escala tipográfica de títulos/descripciones para evitar cortes de texto manteniendo lectura centrada.
+6. Validación aplicada:
+   - `pnpm vitest src/components/hub/academy/tutorial/TutorialMapSelection.test.tsx`
+   - `pnpm eslint src/components/hub/academy/tutorial/TutorialMapSelection.tsx src/components/hub/academy/tutorial/TutorialCircuitMap.tsx src/components/hub/academy/tutorial/TutorialNodeCard.tsx src/components/hub/academy/tutorial/internal/TutorialNodeCardMedia.tsx src/app/hub/academy/tutorial/page.tsx`
+7. Commit: pendiente en esta sesión.
+
+## Fase 32 - Cards reales en Preparar Deck y nuevo visual de Combate
+
+1. Nodo `Preparar Deck` ahora renderiza cartas reales con `Card.tsx` (entidades + ejecuciones) para mostrar arte y fondo auténticos.
+2. Nodo `Combate` reemplaza captura base por composición:
+   - `intro-Jugador` a la izquierda,
+   - `intro-BigLog` a la derecha,
+   - `VS` centrado.
+3. Se ajusta escala de título/descripcion para evitar recortes de texto en cards.
+4. Se reduce ligeramente la escala del título principal del header para compactar altura.
+5. Validación aplicada:
+   - `pnpm vitest src/components/hub/academy/tutorial/TutorialMapSelection.test.tsx`
+   - `pnpm eslint src/components/hub/academy/tutorial/internal/TutorialNodeCardMedia.tsx src/components/hub/academy/tutorial/TutorialNodeCard.tsx src/components/hub/academy/tutorial/TutorialMapSelection.tsx src/components/hub/academy/tutorial/TutorialCircuitMap.tsx src/app/hub/academy/tutorial/page.tsx`
+6. Commit: pendiente en esta sesión.
+
 ## Validación global aplicada por fase
 
 1. `pnpm lint`

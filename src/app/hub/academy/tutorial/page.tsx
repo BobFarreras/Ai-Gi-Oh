@@ -13,7 +13,7 @@ export default async function TutorialMapPage() {
   const nodes = await getTutorialMapRuntimeData();
   const shouldGuidePrepareDeck = resolvePrepareDeckGuideVisibility(nodes);
   return (
-    <main className="hub-control-room-bg min-h-dvh px-4 py-8 text-slate-100 sm:px-6">
+    <main className="hub-control-room-bg relative h-dvh overflow-y-auto px-2 py-2 text-slate-100 sm:px-3 sm:py-3 lg:overflow-hidden lg:p-0">
       <HubSectionEntryBurst />
       <TutorialMapGuideOverlay isVisible={shouldGuidePrepareDeck} />
       <TutorialMapSelection nodes={nodes} />

@@ -1,10 +1,11 @@
-// src/components/hub/academy/tutorial/TutorialNodeCard.tsx - Tarjeta visual de nodo tutorial con estados y soporte de selección forzada.
+// src/components/hub/academy/tutorial/TutorialNodeCard.tsx - Tarjeta de nodo tutorial con estilo HUD, arte contextual y estados guiados.
 "use client";
 
-import Link from "next/link";
 import { motion, Transition } from "framer-motion";
-import { ITutorialMapNodeRuntime } from "@/core/entities/tutorial/ITutorialMapNode";
+import Link from "next/link";
 import { ONBOARDING_AUDIO_CATALOG } from "@/components/hub/onboarding/internal/onboarding-audio-catalog";
+import { TutorialNodeCardMedia } from "@/components/hub/academy/tutorial/internal/TutorialNodeCardMedia";
+import { ITutorialMapNodeRuntime } from "@/core/entities/tutorial/ITutorialMapNode";
 
 interface ITutorialNodeCardProps {
   node: ITutorialMapNodeRuntime;
@@ -12,8 +13,7 @@ interface ITutorialNodeCardProps {
   isForcedDisabled?: boolean;
 }
 
-// Físicas de resorte para interacciones "snappy"
-const snappySpring: Transition = { type: "spring", stiffness: 400, damping: 25 };
+const snappySpring: Transition = { type: "spring", stiffness: 360, damping: 24 };
 
 function playCardClickSfx(): void {
   const audio = new Audio(ONBOARDING_AUDIO_CATALOG.buttonClick);
@@ -26,72 +26,59 @@ export function TutorialNodeCard({ node, isForcedSelectable = false, isForcedDis
   const isAvailable = !isForcedDisabled && (isForcedSelectable || node.state === "AVAILABLE");
   const isLocked = isForcedDisabled || node.state === "LOCKED";
 
-  // Estilos condicionales basados en el estado del nodo
   const borderTone = isCompleted
-    ? "border-emerald-500/50"
+    ? "border-emerald-500/65"
     : isForcedSelectable
-      ? "border-cyan-300 shadow-[0_0_34px_rgba(34,211,238,0.6)]"
+      ? "border-cyan-300 shadow-[0_0_34px_rgba(34,211,238,0.5)]"
       : isAvailable
-        ? "border-cyan-400/80 shadow-[0_0_20px_rgba(34,211,238,0.25)]"
+        ? "border-cyan-400/75"
         : "border-slate-800/80";
-  const bgTone = isCompleted ? "bg-emerald-950/20" : isAvailable ? "bg-[#061428]/80" : "bg-slate-900/30 grayscale opacity-50";
+  const bgTone = isCompleted ? "bg-emerald-950/20" : isAvailable ? "bg-[#061428]/85" : "bg-slate-900/45 grayscale opacity-55";
   const textTone = isCompleted ? "text-emerald-100" : isAvailable ? "text-cyan-100" : "text-slate-500";
-  const glowDot = isCompleted
-    ? "bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.8)]"
-    : isForcedSelectable
-      ? "bg-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.9)] animate-pulse"
-      : isAvailable
-        ? "bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)] animate-pulse"
-        : "bg-slate-700";
+  const accentTone = isCompleted ? "text-emerald-300" : "text-cyan-300";
 
   return (
     <motion.article
-      whileHover={isLocked ? {} : { scale: 1.03, y: -4 }}
-      whileTap={isLocked ? {} : { scale: 0.97 }}
+      whileHover={isLocked ? {} : { scale: 1.01, y: -3 }}
+      whileTap={isLocked ? {} : { scale: 0.985 }}
       transition={snappySpring}
-      className={`relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border p-5 backdrop-blur-xl transition-colors duration-300 ${borderTone} ${bgTone} ${isForcedSelectable ? "ring-2 ring-cyan-300/70 animate-pulse" : ""} ${isLocked ? "" : "cursor-pointer"}`}
+      className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border ${borderTone} ${bgTone} backdrop-blur-sm ${isLocked ? "" : "cursor-pointer"}`}
     >
-      {!isLocked ? (
-        <Link
-          aria-label={`Abrir ${node.title}`}
-          href={node.href}
-          onClick={() => playCardClickSfx()}
-          className="absolute inset-0 z-20"
-        />
-      ) : null}
-      {/* Scanlines internos sutiles */}
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:100%_4px] opacity-30" />
+      {!isLocked ? <Link aria-label={`Abrir ${node.title}`} href={node.href} onClick={() => playCardClickSfx()} className="absolute inset-0 z-20" /> : null}
+      <div className="pointer-events-none absolute inset-[2px] rounded-[14px] border border-cyan-300/10" />
+      <div className="pointer-events-none absolute left-2 top-2 h-4 w-4 border-l border-t border-cyan-300/50" />
+      <div className="pointer-events-none absolute bottom-2 right-2 h-4 w-4 border-b border-r border-cyan-300/50" />
 
-      <div>
-        <header className="flex items-center justify-between">
-          <p className={`text-[10px] font-black uppercase tracking-[0.25em] ${isCompleted ? 'text-emerald-400' : 'text-cyan-500'}`}>
-            SYS.{node.kind}
-          </p>
-          {/* LED de Estado del Circuito */}
-          <div className={`h-2.5 w-2.5 rounded-full ${glowDot}`} />
-        </header>
-
-        <h2 className={`mt-2 text-lg font-black uppercase tracking-wide md:text-xl ${textTone}`}>
-          {node.title}
-        </h2>
-        <p className="mt-2 text-xs font-medium leading-relaxed text-slate-300 md:text-sm">
-          {node.description}
-        </p>
+      <div className="relative h-[36%] min-h-[108px] w-full overflow-hidden border-b border-slate-700/75">
+        <TutorialNodeCardMedia node={node} />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#020b16] via-[#031322]/35 to-transparent" />
       </div>
 
-      <footer className="mt-4 border-t border-slate-700/50 pt-3">
-        {isLocked ? (
-            <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-between p-3 sm:p-4 lg:p-5">
+        <div className="text-center">
+          <header className="flex items-center justify-between gap-2">
+            <p className={`text-[10px] font-black uppercase tracking-[0.22em] lg:text-[11px] ${accentTone}`}>SYS.{node.kind}</p>
+            <div className={`h-2 w-2 rounded-full ${isCompleted ? "bg-emerald-300" : "bg-cyan-300"} shadow-[0_0_10px_currentColor]`} />
+          </header>
+
+          <h2 className={`mt-2 text-2xl font-black uppercase tracking-[0.05em] sm:text-3xl lg:text-[1.75rem] ${textTone}`}>{node.title}</h2>
+          <p className="mx-auto mt-2 max-w-[38ch] text-base font-semibold leading-relaxed text-slate-200 sm:text-lg lg:text-base">{node.description}</p>
+        </div>
+
+        <footer className="mt-3 border-t border-slate-700/60 pt-2.5 lg:pt-3">
+          {isLocked ? (
+            <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-            {isForcedDisabled ? "En espera del tutorial" : "Acceso Bloqueado"}
+              {isForcedDisabled ? "En espera del tutorial" : "Acceso bloqueado"}
             </span>
-        ) : (
-          <span className={`group flex w-full items-center justify-between rounded-md bg-white/5 px-3 py-2 text-xs font-bold uppercase tracking-widest transition-colors hover:bg-white/10 ${isCompleted ? "text-emerald-300" : "text-cyan-300"}`}>
-            <span>{isCompleted ? "Revisar Datos" : "Iniciar Infiltración"}</span>
-            <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-          </span>
-        )}
-      </footer>
+          ) : (
+            <span className={`flex items-center justify-between rounded-md bg-white/5 px-3 py-2 text-xs font-black uppercase tracking-[0.16em] transition-colors group-hover:bg-white/10 ${accentTone}`}>
+              <span>{isCompleted ? "Revisar nodo" : "Iniciar nodo"}</span>
+              <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+            </span>
+          )}
+        </footer>
+      </div>
     </motion.article>
   );
 }
