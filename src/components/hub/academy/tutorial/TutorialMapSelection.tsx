@@ -15,27 +15,47 @@ export function TutorialMapSelection({ nodes }: ITutorialMapSelectionProps) {
   const guidedNodeId = shouldGuidePrepareDeck ? "tutorial-arsenal-basics" : null;
 
   return (
-    <section className="relative grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-3 px-2 pb-2 text-cyan-100 sm:px-3 lg:gap-5 lg:overflow-hidden lg:px-4 lg:py-4">
-      <header className="rounded-2xl border border-cyan-500/30 bg-[#041425]/78 px-3 py-3 backdrop-blur-sm sm:px-4 lg:px-6 lg:py-4">
-        <div className="flex items-center justify-center gap-4 text-left">
-          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-cyan-300/50 bg-slate-950 lg:h-20 lg:w-20">
-            <Image src="/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png" alt="BigLog Academy" fill className="object-contain object-top p-1" />
+    <section className="relative h-full min-h-0 px-2 pb-2 text-cyan-100 sm:px-3 lg:flex lg:flex-col lg:gap-4 lg:px-4 lg:py-4">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-center pt-0 lg:hidden">
+        <header className="w-full max-w-4xl rounded-2xl border border-cyan-500/30 bg-[#041425]/78 px-3 py-3 backdrop-blur-sm sm:px-4 lg:px-6 lg:py-4">
+          <div className="flex items-center justify-center gap-4 text-left">
+            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-cyan-300/50 bg-slate-950 lg:h-20 lg:w-20">
+              <Image src="/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png" alt="BigLog Academy" fill className="object-contain object-top p-1" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-2xl font-black uppercase tracking-[0.06em] text-white sm:text-3xl lg:text-4xl">Ruta de Tutorial</h1>
+              <p className="mt-1 text-base font-semibold text-slate-200 lg:text-lg">Completa los 4 nodos para desbloquear tu recompensa final.</p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <h1 className="text-2xl font-black uppercase tracking-[0.06em] text-white sm:text-3xl lg:text-4xl">Ruta de Tutorial</h1>
-            <p className="mt-1 text-base font-semibold text-slate-200 lg:text-lg">Completa los 4 nodos para desbloquear tu recompensa final.</p>
-          </div>
-        </div>
-      </header>
+        </header>
+      </div>
 
-      <div className="min-h-0 overflow-y-auto lg:overflow-visible lg:pt-2">
+      <div className="hidden justify-center lg:flex">
+        <header className="w-full max-w-4xl rounded-2xl border border-cyan-500/30 bg-[#041425]/78 px-6 py-4 backdrop-blur-sm">
+          <div className="flex items-center justify-center gap-4 text-left">
+            <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-cyan-300/50 bg-slate-950">
+              <Image src="/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png" alt="BigLog Academy" fill className="object-contain object-top p-1" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-4xl font-black uppercase tracking-[0.06em] text-white">Ruta de Tutorial</h1>
+              <p className="mt-1 text-lg font-semibold text-slate-200">Completa los 4 nodos para desbloquear tu recompensa final.</p>
+            </div>
+          </div>
+        </header>
+      </div>
+
+      <div className="h-full min-h-0 overflow-y-auto pt-[8.3rem] pb-[calc(4.2rem+env(safe-area-inset-bottom))] sm:pt-[9rem] lg:flex-1 lg:overflow-visible lg:pt-0 lg:pb-0">
         <TutorialCircuitMap nodes={nodes} guidedNodeId={guidedNodeId} />
       </div>
 
-      <footer className="pb-[max(0.4rem,env(safe-area-inset-bottom))] lg:pb-0">
-        <div className="flex justify-center">
+      <footer className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center pb-[max(0.4rem,env(safe-area-inset-bottom))] lg:hidden">
+        <div className="pointer-events-auto inline-flex">
           <AcademyBackButton label="Volver a Academy" href={ACADEMY_HOME_ROUTE} className="w-full max-w-xs lg:w-auto" />
         </div>
+      </footer>
+
+      <footer className="hidden justify-center lg:flex">
+        <AcademyBackButton label="Volver a Academy" href={ACADEMY_HOME_ROUTE} className="w-auto" />
       </footer>
     </section>
   );

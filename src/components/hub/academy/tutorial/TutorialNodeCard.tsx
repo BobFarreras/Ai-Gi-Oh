@@ -62,7 +62,7 @@ export function TutorialNodeCard({ node, isForcedSelectable = false, isForcedDis
           </header>
 
           <h2 className={`mt-2 text-2xl font-black uppercase tracking-[0.05em] sm:text-3xl lg:text-[1.75rem] ${textTone}`}>{node.title}</h2>
-          <p className="mx-auto mt-2 max-w-[38ch] text-base font-semibold leading-relaxed text-slate-200 sm:text-lg lg:text-base">{node.description}</p>
+          <p className="mx-auto mt-2 max-w-[40ch] text-sm font-semibold leading-relaxed text-slate-200 sm:text-base lg:text-sm">{node.description}</p>
         </div>
 
         <footer className="mt-3 border-t border-slate-700/60 pt-2.5 lg:pt-3">

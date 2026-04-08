@@ -329,6 +329,17 @@
    - `pnpm eslint src/components/hub/academy/tutorial/internal/TutorialNodeCardMedia.tsx src/components/hub/academy/tutorial/TutorialNodeCard.tsx src/components/hub/academy/tutorial/TutorialMapSelection.tsx src/components/hub/academy/tutorial/TutorialCircuitMap.tsx src/app/hub/academy/tutorial/page.tsx`
 6. Commit: pendiente en esta sesión.
 
+## Fase 33 - Scroll por capas en mobile y ajuste desktop de contenedores
+
+1. En mobile, `header` y `Volver a Academy` pasan a overlays para que solo se superpongan sus cápsulas (no toda la franja horizontal).
+2. El scroll queda limitado al bloque central de nodos, con `padding` superior/inferior para evitar solapes.
+3. En desktop se elimina el footer flotante y se restaura como sección fija al final del layout.
+4. Se añade margen/padding general en desktop para evitar contacto directo con bordes de pantalla.
+5. Se reduce tamaño de descripciones para evitar recortes de texto en cards.
+6. Validación aplicada:
+   - `pnpm eslint src/app/hub/academy/tutorial/page.tsx src/components/hub/academy/tutorial/TutorialMapSelection.tsx src/components/hub/academy/tutorial/TutorialNodeCard.tsx`
+7. Commit: pendiente en esta sesión.
+
 ## Validación global aplicada por fase
 
 1. `pnpm lint`
