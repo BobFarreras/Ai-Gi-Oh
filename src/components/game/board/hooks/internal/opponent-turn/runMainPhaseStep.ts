@@ -1,5 +1,6 @@
 // src/components/game/board/hooks/internal/opponent-turn/runMainPhaseStep.ts - Ejecuta el paso principal del turno rival resolviendo pendientes y acciones jugables.
 import { GameEngine } from "@/core/use-cases/GameEngine";
+import { canActivateExecutionNow } from "@/core/services/opponent/select-opponent-play";
 import { addRevealedId, findReactiveTrap, removeRevealedId } from "../trapPreview";
 import { sleep } from "../sleep";
 import { IOpponentAutoPick, IOpponentStepTimings, IOpponentTurnContext } from "./types";
@@ -74,6 +75,15 @@ export async function runMainPhaseStep(
     }
     return true;
   }
+  const setExecutionToActivate = gameState.playerB.activeExecutions.find((entity) =>
+    entity.mode === "SET" && canActivateExecutionNow(entity.card, gameState.playerB, gameState.playerA));
+  if (setExecutionToActivate) {
+    context.setIsAnimating(true);
+    await sleep(timings.stepDelayMs);
+    context.applyTransition((state) => GameEngine.changeEntityMode(state, opponentId, setExecutionToActivate.instanceId, "ACTIVATE"));
+    context.setIsAnimating(false);
+    return true;
+  }
 
   const playDecision = context.strategy.choosePlay(gameState, opponentId);
   if (playDecision) {
@@ -82,6 +92,27 @@ export async function runMainPhaseStep(
       ? context.applyTransition((state) =>
           GameEngine.fuseCards(state, opponentId, playDecision.cardId, playDecision.fusionMaterialInstanceIds!, playDecision.mode === "DEFENSE" ? "DEFENSE" : "ATTACK"),
         )
+      : playDecision.replaceEntityInstanceId
+        ? context.applyTransition((state) =>
+            GameEngine.playCardWithEntityReplacement(
+              state,
+              opponentId,
+              playDecision.cardId,
+              playDecision.mode,
+              playDecision.replaceEntityInstanceId!,
+            ),
+          )
+      : playDecision.replaceExecutionInstanceId
+        ? context.applyTransition((state) =>
+            GameEngine.playCardWithZoneReplacement(
+              state,
+              opponentId,
+              playDecision.cardId,
+              playDecision.mode,
+              playDecision.replaceExecutionInstanceId!,
+              "EXECUTIONS",
+            ),
+          )
       : context.applyTransition((state) => GameEngine.playCard(state, opponentId, playDecision.cardId, playDecision.mode));
     if (!playDecision.fusionMaterialInstanceIds && playDecision.mode === "ACTIVATE" && nextState) {
       const activatedExecution = [...nextState.playerB.activeExecutions].reverse().find((entity) => entity.card.id === playDecision.cardId);

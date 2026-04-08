@@ -1,30 +1,34 @@
-// src/components/hub/story/internal/map/components/StoryMapZoomControls.tsx - Botón rápido para centrar cámara en el nodo actual del jugador.
+// src/components/hub/story/internal/map/components/StoryMapZoomControls.tsx - Controles flotantes Story para centrar cámara y mutear soundtrack del mapa.
+import { LocateFixed, Volume2, VolumeX } from "lucide-react";
+
 interface IStoryMapZoomControlsProps {
   onCenterPlayerNode: () => void;
+  isSoundtrackMuted: boolean;
+  onToggleSoundtrackMute: () => void;
 }
 
-export function StoryMapZoomControls({ onCenterPlayerNode }: IStoryMapZoomControlsProps) {
+export function StoryMapZoomControls({
+  onCenterPlayerNode,
+  isSoundtrackMuted,
+  onToggleSoundtrackMute,
+}: IStoryMapZoomControlsProps) {
   return (
-    <div className="absolute right-3 top-3 z-50 flex items-center gap-1 rounded border border-cyan-500/40 bg-black/70 p-1 text-cyan-100 backdrop-blur-sm">
+    <div className="absolute bottom-6 right-6 z-50 flex items-center gap-3">
+      <button
+        type="button"
+        aria-label={isSoundtrackMuted ? "Activar sonido del mapa" : "Silenciar sonido del mapa"}
+        onClick={onToggleSoundtrackMute}
+        className="bg-zinc-950/90 border-2 border-cyan-500/50 text-cyan-300 p-4 rounded-full hover:bg-cyan-950 hover:shadow-[0_0_20px_rgba(34,211,238,0.6)] transition-all"
+      >
+        {isSoundtrackMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+      </button>
       <button
         type="button"
         aria-label="Centrar en el jugador"
         onClick={onCenterPlayerNode}
-        className="rounded border border-cyan-500/40 p-2 text-[10px] font-black uppercase tracking-wider"
+        className="bg-zinc-950/90 border-2 border-emerald-500/60 text-emerald-300 p-4 rounded-full hover:bg-emerald-950 hover:shadow-[0_0_20px_rgba(16,185,129,0.6)] transition-all"
       >
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 24 24"
-          className="h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="3" />
-          <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-        </svg>
+        <LocateFixed size={24} />
       </button>
     </div>
   );

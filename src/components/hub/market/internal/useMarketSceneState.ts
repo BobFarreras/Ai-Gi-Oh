@@ -16,6 +16,7 @@ import { countRender } from "@/services/performance/dev-performance-telemetry";
 
 interface UseMarketSceneStateInput {
   playerId: string;
+  isDesktopLayout: boolean;
   initialCatalog: IMarketCatalog;
   initialTransactions: IMarketTransaction[];
   initialCollection: ICollectionCard[];
@@ -61,20 +62,27 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
   );
   const setErrorMessage = useCallback((value: string | null) => store.setState({ errorMessage: value }), [store]);
   const setIsPackRevealOpen = useCallback((value: boolean) => store.setState({ isPackRevealOpen: value }), [store]);
+  // Reutiliza listados disponibles para evitar filtros repetidos en desktop/mobile.
+  const availableListings = useMemo(
+    () => catalog.listings.filter((listing) => listing.isAvailable),
+    [catalog.listings],
+  );
   const scopedListings = useMemo(() => {
-    if (!selectedPackId) return catalog.listings.filter((listing) => listing.isAvailable);
+    if (!selectedPackId) return availableListings;
     const selectedPack = catalog.packs.find((pack) => pack.id === selectedPackId);
-    if (!selectedPack) return catalog.listings.filter((listing) => listing.isAvailable);
+    if (!selectedPack) return availableListings;
     const previewSet = new Set(selectedPack.previewCardIds);
     return catalog.listings.filter((listing) => previewSet.has(listing.card.id));
-  }, [catalog.listings, catalog.packs, selectedPackId]);
+  }, [availableListings, catalog.listings, catalog.packs, selectedPackId]);
   const visibleListings = useMemo(
     () => buildMarketListingView({ listings: scopedListings, nameQuery, typeFilter, orderField, orderDirection }),
     [nameQuery, orderDirection, orderField, scopedListings, typeFilter],
   );
   const mobileVisibleListings = useMemo(
-    () => buildMarketListingView({ listings: catalog.listings.filter((listing) => listing.isAvailable), nameQuery, typeFilter, orderField, orderDirection }),
-    [catalog.listings, nameQuery, orderDirection, orderField, typeFilter],
+    () => (input.isDesktopLayout
+      ? visibleListings
+      : buildMarketListingView({ listings: availableListings, nameQuery, typeFilter, orderField, orderDirection })),
+    [availableListings, input.isDesktopLayout, nameQuery, orderDirection, orderField, typeFilter, visibleListings],
   );
   const visibleCollection = useMemo(
     () => buildMarketVaultCollectionView({ collection, nameQuery, typeFilter, orderField, orderDirection }),

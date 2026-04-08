@@ -42,6 +42,7 @@ interface IStoryCircuitCanvasProps {
   avatarScale: MotionValue<number>;
   avatarStance: "CENTER" | "SIDE" | "PORTAL";
   avatarSideOffsetX: number;
+  avatarSideOffsetY: number;
   collectingAnchor: IPathSegmentPoint | null;
   collectingRewardVisual?: { assetSrc: string; assetAlt: string; tone: "NEXUS" | "CARD" } | null;
   onRewardCollectAnimationComplete?: () => void;
@@ -105,7 +106,7 @@ export function StoryCircuitCanvas(props: IStoryCircuitCanvasProps) {
       <motion.div
         className="pointer-events-none absolute z-40 -translate-x-1/2 -translate-y-1/2"
         initial={false}
-        style={{ top: props.avatarY, left: props.avatarX, x: props.avatarSideOffsetX, scale: props.avatarScale, width: STORY_NODE_TOKEN_SIZE, height: STORY_NODE_TOKEN_SIZE }}
+        style={{ top: props.avatarY, left: props.avatarX, x: props.avatarSideOffsetX, y: props.avatarSideOffsetY, scale: props.avatarScale, width: STORY_NODE_TOKEN_SIZE, height: STORY_NODE_TOKEN_SIZE }}
       >
         <Image
           src="/assets/story/player/bob.png"
@@ -121,7 +122,7 @@ export function StoryCircuitCanvas(props: IStoryCircuitCanvasProps) {
       <StoryRewardCollectEffect
         isVisible={Boolean(props.collectingAnchor && props.collectingRewardVisual && props.onRewardCollectAnimationComplete)}
         from={props.collectingAnchor ?? { x: 0, y: 0 }}
-        to={{ x: props.avatarX.get() + props.avatarSideOffsetX, y: props.avatarY.get() }}
+        to={{ x: props.avatarX.get() + props.avatarSideOffsetX, y: props.avatarY.get() + props.avatarSideOffsetY }}
         assetSrc={props.collectingRewardVisual?.assetSrc ?? "/assets/renders/nexus.webp"}
         assetAlt={props.collectingRewardVisual?.assetAlt ?? "Recolección"}
         tone={props.collectingRewardVisual?.tone ?? "NEXUS"}
@@ -131,7 +132,7 @@ export function StoryCircuitCanvas(props: IStoryCircuitCanvasProps) {
         isVisible={Boolean(props.floatingReward)}
         label={props.floatingReward?.label ?? ""}
         tone={props.floatingReward?.tone}
-        at={{ x: props.avatarX.get() + props.avatarSideOffsetX, y: props.avatarY.get() }}
+        at={{ x: props.avatarX.get() + props.avatarSideOffsetX, y: props.avatarY.get() + props.avatarSideOffsetY }}
       />
       <StoryNodeRetreatEffect
         isVisible={Boolean(props.retreatingNodeId)}

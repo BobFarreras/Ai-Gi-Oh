@@ -30,6 +30,7 @@ interface StoryDuelClientProps {
   playerDeck: ICard[];
   playerFusionDeck: ICard[];
   opponentDeck: ICard[];
+  opponentFusionDeck: ICard[];
 }
 export function StoryDuelClient(props: StoryDuelClientProps) {
   const [status, setStatus] = useState<string | null>(null);
@@ -52,7 +53,7 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
   );
   const bossThemeVariant = useMemo<BoardBossThemeVariant>(() => {
     const byOpponentId: Record<string, BoardBossThemeVariant> = {
-      "opp-ch1-helena": "CRIMSON",
+      "opp-helena": "CRIMSON",
       "opp-ch2-omega": "VIOLET",
     };
     return byOpponentId[props.opponentId] ?? "CRIMSON";
@@ -129,6 +130,7 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
           opponentId: props.opponentId,
           opponentName: props.opponentName,
           opponentDeck: props.opponentDeck,
+          opponentFusionDeck: props.opponentFusionDeck,
           starterPlayerId: coinToss.starterPlayerId,
           openingHandSize: 4,
         }}

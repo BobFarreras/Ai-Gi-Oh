@@ -2,11 +2,12 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { IStoryPostDuelTransition } from "@/services/story/duel-flow/story-post-duel-transition";
+import { IStoryAvatarVisualTarget } from "@/components/hub/story/internal/scene/types/story-avatar-visual-target";
 
 interface IUseStoryPostDuelTransitionInput {
   transition: IStoryPostDuelTransition | null;
   currentNodeId: string | null;
-  setAvatarVisualTarget: (value: { nodeId: string; stance: "CENTER" | "SIDE" | "PORTAL" } | null) => void;
+  setAvatarVisualTarget: (value: IStoryAvatarVisualTarget | null) => void;
   setRetreatingNodeId: (nodeId: string | null) => void;
 }
 

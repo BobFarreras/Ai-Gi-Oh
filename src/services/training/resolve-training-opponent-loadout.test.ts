@@ -15,7 +15,7 @@ describe("resolveTrainingOpponentLoadout", () => {
     expect(loadout.deck).toHaveLength(20);
     expect(loadout.fusionDeck.length).toBeGreaterThan(0);
     expect(loadout.difficulty).toBe("NORMAL");
-    expect(loadout.storyOpponentId).toBe("opp-ch1-jaku");
+    expect(loadout.storyOpponentId).toBe("opp-jaku");
     expect(loadout.deckVariantId).toBe("fusion-pressure");
     expect(loadout.deckVariantLabel).toBe("Fusion Pressure");
   });

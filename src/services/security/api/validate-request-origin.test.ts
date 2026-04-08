@@ -19,7 +19,11 @@ describe("hasTrustedRequestOrigin", () => {
     expect(hasTrustedRequestOrigin(createRequest("https://evil.example"))).toBe(false);
   });
 
-  it("acepta cuando no hay origin", () => {
-    expect(hasTrustedRequestOrigin(createRequest(null))).toBe(true);
+  it("rechaza cuando no hay origin en modo estricto por defecto", () => {
+    expect(hasTrustedRequestOrigin(createRequest(null))).toBe(false);
+  });
+
+  it("acepta cuando no hay origin si se habilita compatibilidad explícita", () => {
+    expect(hasTrustedRequestOrigin(createRequest(null), { allowMissingOrigin: true })).toBe(true);
   });
 });

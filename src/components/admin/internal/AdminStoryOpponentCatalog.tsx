@@ -15,13 +15,13 @@ export function AdminStoryOpponentCatalog({ opponents, selectedOpponentId, onSel
   const [isExpanded, setIsExpanded] = useState(true);
 
   return (
-    <section className={`${isExpanded ? "w-72" : "w-16"} flex h-full min-h-0 shrink-0 flex-col rounded-2xl border border-cyan-800/35 bg-[#031020]/50 p-2 transition-all`}>
+    <section className={`${isExpanded ? "w-72" : "w-16"} flex h-full min-h-0 shrink-0 flex-col rounded-2xl border border-cyan-500/35 bg-[linear-gradient(165deg,rgba(8,22,38,0.9),rgba(3,10,18,0.95))] p-2 shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all`}>
       <div className="mb-2 flex items-center justify-between gap-2">
         {isExpanded ? <h2 className="text-sm font-black uppercase tracking-[0.2em] text-cyan-200">Oponentes Story</h2> : null}
         <button
           type="button"
           aria-label={isExpanded ? "Plegar catálogo de oponentes" : "Desplegar catálogo de oponentes"}
-          className="h-8 rounded-md border border-slate-600 px-2 text-xs font-bold uppercase text-slate-100"
+          className="h-8 rounded-md border border-cyan-700/70 bg-slate-950/70 px-2 text-xs font-bold uppercase text-cyan-100"
           onClick={() => setIsExpanded((current) => !current)}
         >
           {isExpanded ? "<<" : ">>"}
@@ -34,7 +34,7 @@ export function AdminStoryOpponentCatalog({ opponents, selectedOpponentId, onSel
               key={opponent.opponentId}
               type="button"
               aria-label={`Seleccionar oponente ${opponent.displayName}`}
-              className={`w-full rounded-md border p-2 text-left ${selectedOpponentId === opponent.opponentId ? "border-cyan-300 bg-cyan-500/20 text-cyan-100" : "border-slate-600 bg-slate-900/70 text-slate-100 hover:border-cyan-500"}`}
+              className={`w-full rounded-md border p-2 text-left ${selectedOpponentId === opponent.opponentId ? "border-cyan-300 bg-cyan-500/20 text-cyan-100" : "border-slate-700 bg-slate-950/65 text-slate-100 hover:border-cyan-500"}`}
               onClick={() => onSelectOpponent(opponent.opponentId)}
             >
               <div className="flex items-center gap-2">

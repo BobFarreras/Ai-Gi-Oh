@@ -1,7 +1,11 @@
 // src/components/hub/story/internal/scene/view/story-scene-view-props.ts - Contratos compartidos de presentación para layouts Story desktop/mobile.
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import { IStoryChapterBriefing } from "@/services/story/build-story-chapter-briefing";
-import { IStoryInteractionDialogueLine } from "@/services/story/resolve-story-node-interaction-dialogue";
+import {
+  IStoryInteractionCinematicVideo,
+  IStoryInteractionDialogueLine,
+} from "@/services/story/story-node-interaction-dialogue-types";
+import { IStoryAvatarVisualTarget } from "@/components/hub/story/internal/scene/types/story-avatar-visual-target";
 
 export interface IStorySceneSidebarViewProps {
   briefing: IStoryChapterBriefing;
@@ -20,7 +24,7 @@ export interface IStorySceneMapViewProps {
   nodes: IStoryMapNodeRuntime[];
   currentNodeId: string | null;
   selectedNodeId: string | null;
-  avatarVisualTarget: { nodeId: string; stance: "CENTER" | "SIDE" | "PORTAL" } | null;
+  avatarVisualTarget: IStoryAvatarVisualTarget | null;
   duelFocusNodeId: string | null;
   floatingReward: { label: string; tone: "NEXUS" | "CARD" } | null;
   collectingRewardNodeId: string | null;
@@ -35,14 +39,27 @@ export interface IStorySceneMapViewProps {
   onSelectNode: (nodeId: string | null) => void;
   onMoveSelectedNode?: () => void;
   onRequestCenterPlayer?: () => void;
+  isSoundtrackMuted?: boolean;
+  onToggleSoundtrackMute?: () => void;
   onRewardCollectAnimationComplete: () => void;
   onRetreatAnimationComplete: () => void;
   dialog: {
     isOpen: boolean;
     title: string;
-    soundtrackUrl: string | null;
+    cinematicVideo: IStoryInteractionCinematicVideo | null;
     line: IStoryInteractionDialogueLine | null;
     onNext: () => void;
     onClose: () => void | Promise<void>;
+  };
+  submission: {
+    isOpen: boolean;
+    title: string;
+    hint: string;
+    placeholder: string;
+    activationLabel: string;
+    generatedCode: string;
+    requiredKeys: Array<{ id: string; label: string; isCollected: boolean }>;
+    onCancel: () => void;
+    onSubmit: (value: string) => void;
   };
 }

@@ -131,4 +131,49 @@ describe("HeuristicOpponentStrategy BATTLE flow", () => {
     const nextState = runOpponentStep(state, "p2", strategy);
     expect(nextState.playerA.healthPoints).toBe(6100);
   });
+
+  it("debería cambiar de DEFENSE a ATTACK antes de pasar turno si puede presionar", () => {
+    const strategy = new HeuristicOpponentStrategy({ difficulty: "MYTHIC" });
+    const baseState = createBaseState();
+    let state: GameState = {
+      ...baseState,
+      phase: "BATTLE",
+      playerA: {
+        ...baseState.playerA,
+        activeEntities: [
+          createBoardEntity("p1-guard", {
+            id: "p1-guard-card",
+            name: "Guard",
+            description: "Defensa media",
+            type: "ENTITY",
+            faction: "OPEN_SOURCE",
+            cost: 2,
+            attack: 1200,
+            defense: 1400,
+          }),
+        ],
+      },
+      playerB: {
+        ...baseState.playerB,
+        hand: [],
+        activeEntities: [
+          createBoardEntity("p2-def", {
+            id: "p2-def-card",
+            name: "Defender Bot",
+            description: "Puede girar para presionar",
+            type: "ENTITY",
+            faction: "BIG_TECH",
+            cost: 3,
+            attack: 2200,
+            defense: 1900,
+          }, "DEFENSE"),
+        ],
+      },
+    };
+
+    state = runOpponentStep(state, "p2", strategy);
+    expect(state.playerB.activeEntities[0]?.mode).toBe("ATTACK");
+    state = runOpponentStep(state, "p2", strategy);
+    expect(state.playerA.activeEntities).toHaveLength(0);
+  });
 });

@@ -4,13 +4,17 @@ import { DragEvent } from "react";
 const DRAG_CARD_PREFIX = "card:";
 const DRAG_SLOT_PREFIX = "slot:";
 
-export type AdminStarterDeckDragData = { type: "card"; cardId: string } | { type: "slot"; slotIndex: number };
+type AdminDragSlotScope = "DECK" | "FUSION" | "REWARD";
+
+export type AdminStarterDeckDragData = { type: "card"; cardId: string } | { type: "slot"; slotIndex: number; scope?: AdminDragSlotScope };
 
 /**
  * Serializa origen de arrastre para soportar mover carta desde almacén o slot del deck.
  */
 export function writeAdminStarterDeckDragData(event: DragEvent<HTMLElement>, payload: AdminStarterDeckDragData): void {
-  const raw = payload.type === "card" ? `${DRAG_CARD_PREFIX}${payload.cardId}` : `${DRAG_SLOT_PREFIX}${payload.slotIndex}`;
+  const raw = payload.type === "card"
+    ? `${DRAG_CARD_PREFIX}${payload.cardId}`
+    : `${DRAG_SLOT_PREFIX}${payload.scope ?? "DECK"}:${payload.slotIndex}`;
   event.dataTransfer.setData("text/plain", raw);
   event.dataTransfer.effectAllowed = "move";
 }
@@ -27,8 +31,11 @@ export function readAdminStarterDeckDragData(event: DragEvent<HTMLElement>): Adm
   }
   if (raw.startsWith(DRAG_SLOT_PREFIX)) {
     const slotValue = raw.slice(DRAG_SLOT_PREFIX.length).trim();
-    const slotIndex = Number(slotValue);
-    if (Number.isInteger(slotIndex) && slotIndex >= 0) return { type: "slot", slotIndex };
+    const [scopeOrSlot, maybeSlotIndex] = slotValue.split(":");
+    const hasScope = maybeSlotIndex !== undefined;
+    const scope = hasScope ? scopeOrSlot : "DECK";
+    const slotIndex = Number(hasScope ? maybeSlotIndex : scopeOrSlot);
+    if (Number.isInteger(slotIndex) && slotIndex >= 0 && (scope === "DECK" || scope === "FUSION" || scope === "REWARD")) return { type: "slot", scope, slotIndex };
     return null;
   }
   return null;

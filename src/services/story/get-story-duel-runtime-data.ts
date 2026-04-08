@@ -24,6 +24,7 @@ export interface IStoryDuelRuntimeData {
   playerDeck: ICard[];
   playerFusionDeck: ICard[];
   opponentDeck: ICard[];
+  opponentFusionDeck: ICard[];
   opponentId: string;
   opponentName: string;
   opponentAvatarUrl?: string | null;
@@ -46,6 +47,17 @@ function applyStoryDeckEntryToCard(
   };
 }
 
+function collectFusionRecipeIdsFromDeck(deck: ICard[]): string[] {
+  return Array.from(
+    new Set(
+      deck.flatMap((card) =>
+        card.type === "EXECUTION" && card.effect?.action === "FUSION_SUMMON"
+          ? [card.effect.recipeId]
+          : []),
+    ),
+  );
+}
+
 export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number): Promise<IStoryDuelRuntimeData | null> {
   const session = await getCurrentUserSession();
   if (!session) return null;
@@ -64,13 +76,22 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
     createSupabaseServerClient(),
   ]);
   const isUnlocked = worldState.progress.unlockedNodeIds.includes(duel.id);
-  const isCurrentNode = currentNodeId === null || currentNodeId === duel.id;
+  const isCurrentNode = currentNodeId === duel.id;
 
-  const cardsById = await loadCardsByIds(supabase, duel.opponentDeckEntries.map((entry) => entry.cardId));
+  const opponentFusionDeckCardIds = duel.opponentFusionDeckCardIds ?? [];
+  const cardsById = await loadCardsByIds(supabase, [...duel.opponentDeckEntries.map((entry) => entry.cardId), ...opponentFusionDeckCardIds]);
   const opponentDeck = duel.opponentDeckEntries.flatMap((entry) => {
     const card = cardsById.get(entry.cardId);
     return card ? [{ ...card }] : [];
   }).map((card, index) => applyStoryDeckEntryToCard(card, duel.opponentDeckEntries[index]));
+  const inferredFusionRecipeIds = collectFusionRecipeIdsFromDeck(opponentDeck);
+  const missingInCatalog = inferredFusionRecipeIds.filter((id) => !cardsById.has(id));
+  const inferredFusionCardsById = missingInCatalog.length > 0 ? await loadCardsByIds(supabase, missingInCatalog) : new Map<string, ICard>();
+  const resolvedFusionIds = Array.from(new Set([...opponentFusionDeckCardIds, ...inferredFusionRecipeIds]));
+  const opponentFusionDeck = resolvedFusionIds.flatMap((cardId) => {
+    const card = cardsById.get(cardId) ?? inferredFusionCardsById.get(cardId);
+    return card ? [{ ...card }] : [];
+  });
 
   return {
     playerId: session.user.id,
@@ -85,6 +106,7 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
     playerDeck,
     playerFusionDeck,
     opponentDeck,
+    opponentFusionDeck,
     opponentId: duel.opponentId,
     opponentName: duel.opponentName,
     opponentAvatarUrl: duel.opponentAvatarUrl ?? null,

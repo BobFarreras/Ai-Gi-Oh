@@ -1,39 +1,11 @@
 // src/components/hub/story/internal/scene/view/StorySceneMapPane.tsx - Contenedor del mapa Story y diálogo narrativo desacoplado de StoryScene.
 import { StoryCircuitMap } from "@/components/hub/story/StoryCircuitMap";
 import { StoryNodeInteractionDialog } from "@/components/hub/story/internal/scene/dialog/StoryNodeInteractionDialog";
+import { StorySubmissionTerminalDialog } from "@/components/hub/story/internal/scene/dialog/StorySubmissionTerminalDialog";
 import { StoryActTransitionOverlay } from "@/components/hub/story/internal/scene/view/StoryActTransitionOverlay";
-import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
-import { IStoryInteractionDialogueLine } from "@/services/story/resolve-story-node-interaction-dialogue";
+import { IStorySceneMapViewProps } from "@/components/hub/story/internal/scene/view/story-scene-view-props";
 
-interface IStorySceneMapPaneProps {
-  nodes: IStoryMapNodeRuntime[];
-  currentNodeId: string | null;
-  selectedNodeId: string | null;
-  avatarVisualTarget: { nodeId: string; stance: "CENTER" | "SIDE" | "PORTAL" } | null;
-  duelFocusNodeId: string | null;
-  floatingReward: { label: string; tone: "NEXUS" | "CARD" } | null;
-  collectingRewardNodeId: string | null;
-  collectingRewardVisual: { assetSrc: string; assetAlt: string; tone: "NEXUS" | "CARD" } | null;
-  retreatingNodeId: string | null;
-  isBusy: boolean;
-  actTransitionTargetId: number | null;
-  shouldPlayActEntryAnimation?: boolean;
-  isMobileVerticalFlow?: boolean;
-  onSelectNode: (nodeId: string | null) => void;
-  centerRequestKey?: number;
-  onRewardCollectAnimationComplete: () => void;
-  onRetreatAnimationComplete: () => void;
-  dialog: {
-    isOpen: boolean;
-    title: string;
-    soundtrackUrl: string | null;
-    line: IStoryInteractionDialogueLine | null;
-    onNext: () => void;
-    onClose: () => void | Promise<void>;
-  };
-}
-
-export function StorySceneMapPane(props: IStorySceneMapPaneProps) {
+export function StorySceneMapPane(props: IStorySceneMapViewProps) {
   return (
     <div className="relative z-0 flex-1 overflow-hidden bg-[#050810]">
       <StoryCircuitMap
@@ -50,6 +22,8 @@ export function StorySceneMapPane(props: IStorySceneMapPaneProps) {
         shouldPlayActEntryAnimation={props.shouldPlayActEntryAnimation ?? false}
         isMobileVerticalFlow={props.isMobileVerticalFlow ?? false}
         centerRequestKey={props.centerRequestKey ?? 0}
+        isSoundtrackMuted={props.isSoundtrackMuted ?? false}
+        onToggleSoundtrackMute={props.onToggleSoundtrackMute}
         onSelectNode={props.onSelectNode}
         onRewardCollectAnimationComplete={props.onRewardCollectAnimationComplete}
         onRetreatAnimationComplete={props.onRetreatAnimationComplete}
@@ -57,10 +31,21 @@ export function StorySceneMapPane(props: IStorySceneMapPaneProps) {
       <StoryNodeInteractionDialog
         isOpen={props.dialog.isOpen}
         title={props.dialog.title}
-        soundtrackUrl={props.dialog.soundtrackUrl}
+        cinematicVideo={props.dialog.cinematicVideo}
         line={props.dialog.line}
         onNext={props.dialog.onNext}
         onClose={props.dialog.onClose}
+      />
+      <StorySubmissionTerminalDialog
+        isOpen={props.submission.isOpen}
+        title={props.submission.title}
+        hint={props.submission.hint}
+        placeholder={props.submission.placeholder}
+        activationLabel={props.submission.activationLabel}
+        generatedCode={props.submission.generatedCode}
+        requiredKeys={props.submission.requiredKeys}
+        onCancel={props.submission.onCancel}
+        onSubmit={props.submission.onSubmit}
       />
       <StoryActTransitionOverlay targetActId={props.actTransitionTargetId} />
     </div>

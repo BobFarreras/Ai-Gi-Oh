@@ -38,7 +38,14 @@ export async function POST(request: NextRequest) {
       action: "ADMIN_STORY_DECK_SAVED",
       entityType: "story_deck_list_cards",
       entityId: command.deckListId,
-      payload: { cardCount: command.cardIds.length, duelId: command.duelConfig?.duelId ?? null, difficulty: command.duelConfig?.difficulty ?? null, updateBaseDeck: command.updateBaseDeck },
+      payload: {
+        cardCount: command.cardIds.length,
+        duelId: command.duelConfig?.duelId ?? null,
+        difficulty: command.duelConfig?.difficulty ?? null,
+        fusionCardIds: command.duelConfig?.fusionCardIds ?? [],
+        rewardCardIds: command.duelConfig?.rewardCardIds ?? [],
+        updateBaseDeck: command.updateBaseDeck,
+      },
     });
     return NextResponse.json({ ok: true }, { status: 200, headers: context.response.headers });
   } catch (error) {

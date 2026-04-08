@@ -48,6 +48,7 @@ pnpm typecheck
 pnpm test
 pnpm test:coverage
 pnpm build
+pnpm security:rate-limit:check
 pnpm quality:check
 ```
 
@@ -111,6 +112,7 @@ Regla de dependencia: `components -> services/use-cases -> core`.
 
 1. [docs/security/auth-hardening.md](./docs/security/auth-hardening.md)
 2. [docs/supabase/README.md](./docs/supabase/README.md)
+3. [docs/security/rate-limit-rollout.md](./docs/security/rate-limit-rollout.md)
 
 ### Refactor y deuda técnica
 

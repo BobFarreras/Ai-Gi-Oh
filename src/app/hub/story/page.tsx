@@ -16,9 +16,15 @@ interface IStoryPageProps {
 export default async function StoryPage({ searchParams }: IStoryPageProps) {
   const resolvedSearchParams = await searchParams;
   const rawActParam = resolvedSearchParams.act;
+  const rawDirectionParam = resolvedSearchParams.dir;
   const preferredActValue = Array.isArray(rawActParam) ? rawActParam[0] : rawActParam;
+  const actEntryDirectionValue = Array.isArray(rawDirectionParam) ? rawDirectionParam[0] : rawDirectionParam;
   const preferredActId = preferredActValue ? Number.parseInt(preferredActValue, 10) : null;
   const shouldPlayActEntryAnimation = Boolean(preferredActValue && Number.isFinite(preferredActId));
+  const actEntryDirection =
+    actEntryDirectionValue === "forward" || actEntryDirectionValue === "backward"
+      ? actEntryDirectionValue
+      : null;
   const runtime = await getStoryMapRuntimeData({
     preferredActId: Number.isFinite(preferredActId) ? preferredActId : null,
   });
@@ -47,10 +53,12 @@ export default async function StoryPage({ searchParams }: IStoryPageProps) {
   return (
     <main className="flex h-[100dvh] w-full flex-col overflow-hidden bg-black">
       <StoryScene
+        key={`story-scene-act-${runtime.activeActId}`}
         runtime={runtime}
         briefing={briefing}
         postDuelTransition={postDuelTransition}
         shouldPlayActEntryAnimation={shouldPlayActEntryAnimation}
+        actEntryDirection={actEntryDirection}
       />
     </main>
   );

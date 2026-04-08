@@ -39,18 +39,14 @@ async function resolveVictoryReturnNode(params: IResolveStoryDuelReturnNodeParam
 }
 
 async function resolveDefeatReturnNode(params: IResolveStoryDuelReturnNodeParams): Promise<string> {
-  const worldStateUseCase = new GetStoryWorldStateUseCase(params.opponentRepository, params.storyProgressRepository);
-  const worldState = await worldStateUseCase.execute({ playerId: params.playerId });
-  const node = worldState.graph.nodes.find((entry) => entry.id === params.duelNodeId);
-  const fallbackNodeId = node?.unlockRequirementNodeId ?? "story-ch1-player-start";
   const compactState = await params.storyWorldRepository.getCompactStateByPlayerId(params.playerId);
   const nextState = applyStoryMoveToCompactState({
     state: compactState,
     fromNodeId: compactState.currentNodeId ?? params.duelNodeId,
-    targetNodeId: fallbackNodeId,
+    targetNodeId: params.duelNodeId,
   });
   await params.storyWorldRepository.saveCompactStateByPlayerId(params.playerId, nextState);
-  return nextState.currentNodeId ?? fallbackNodeId;
+  return nextState.currentNodeId ?? params.duelNodeId;
 }
 
 /**

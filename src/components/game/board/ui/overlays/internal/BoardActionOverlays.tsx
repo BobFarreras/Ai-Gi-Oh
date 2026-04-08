@@ -5,6 +5,7 @@ import { ICard } from "@/core/entities/ICard";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { IPendingZoneReplacement } from "@/components/game/board/hooks/internal/board-state/pending-replacement";
 import { ITrapActivationPrompt } from "@/components/game/board/hooks/internal/board-state/useBoardUiState";
+import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 import { BattleBannerCenter } from "../../BattleBannerCenter";
 import { EntityReplacementConfirmOverlay } from "../EntityReplacementConfirmOverlay";
 import { DirectDamageBeamOverlay } from "./DirectDamageBeamOverlay";
@@ -42,10 +43,13 @@ export function BoardActionOverlays({
   onConfirmEntityReplacement,
   onCancelEntityReplacement,
 }: IBoardActionOverlaysProps) {
+  const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
+  const hasCombatEvents = combatLog.length > 0;
+
   return (
     <>
-      <EffectTargetedOverlay events={combatLog} playerAId={playerAId} />
-      <DirectDamageBeamOverlay events={combatLog} playerAId={playerAId} />
+      {hasCombatEvents && !shouldReduceCombatEffects ? <EffectTargetedOverlay events={combatLog} playerAId={playerAId} /> : null}
+      {hasCombatEvents ? <DirectDamageBeamOverlay events={combatLog} playerAId={playerAId} /> : null}
       {pendingTrapActivationPrompt ? (
         <div className="absolute left-1/2 top-[24%] z-[165] w-[94%] max-w-3xl -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-fuchsia-300/65 bg-fuchsia-950/92 px-6 py-4 text-fuchsia-100 shadow-[0_0_40px_rgba(217,70,239,0.32)] pointer-events-none">
           <p className="text-xs font-black tracking-[0.16em] uppercase text-fuchsia-200">Decisión de trampa</p>

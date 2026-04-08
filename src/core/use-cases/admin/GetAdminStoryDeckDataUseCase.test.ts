@@ -10,6 +10,8 @@ function createRepositoryMock(): IAdminStoryDeckRepository {
     listDuelReferences: vi.fn(async () => [{ duelId: "duel-1", chapter: 1, duelIndex: 1, title: "Duel", deckListId: "deck-1" }]),
     listDuelAiProfiles: vi.fn(async () => [{ duelId: "duel-1", difficulty: "ROOKIE" as const, aiProfile: { style: "balanced" as const, aggression: 0.41 }, isActive: true }]),
     listDuelDeckOverrides: vi.fn(async () => []),
+    listDuelFusionCards: vi.fn(async () => []),
+    listDuelRewardCards: vi.fn(async () => []),
     getDeck: vi.fn(async () => ({ deckListId: "deck-1", opponentId: "opp-1", name: "Deck", description: null, version: 1, isActive: true, slots: [] })),
     saveDeck: vi.fn(),
     listAvailableCards: vi.fn(),

@@ -30,6 +30,7 @@ export interface IStoryDuelDefinition {
   opponentDifficulty: StoryOpponentDifficulty;
   opponentAiProfile: Record<string, unknown>;
   opponentDeckCardIds: string[];
+  opponentFusionDeckCardIds?: string[];
   opponentDeckEntries: IStoryDeckEntryDefinition[];
   openingHandSize: number;
   starterPlayer: "PLAYER" | "OPPONENT" | "RANDOM";
