@@ -4,6 +4,10 @@ import { resolveStoryPrimaryAction } from "@/services/story/resolve-story-primar
 import { resolveStoryRewardCardVisual } from "@/services/story/resolve-story-reward-card-visual";
 import { animateStoryAvatarPath } from "@/components/hub/story/internal/scene/actions/animate-story-avatar-path";
 import { resolveStoryActTransitionTarget } from "@/services/story/resolve-story-act-transition-target";
+import {
+  isStoryActTransitionAvailable,
+  resolveStoryActTransitionUnavailableMessage,
+} from "@/services/story/resolve-story-act-transition-availability";
 import { IStoryAvatarVisualTarget } from "@/components/hub/story/internal/scene/types/story-avatar-visual-target";
 import { resolveStoryAvatarSideDirection } from "@/components/hub/story/internal/scene/utils/resolve-story-avatar-side-direction";
 import { resolveStoryNodeSubmissionPrompt } from "@/services/story/story-node-submission-rules";
@@ -148,6 +152,17 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
     if (targetMode.mode !== "VIRTUAL_INTERACTION") return;
     const actTransitionTarget = resolveStoryActTransitionTarget(targetNode.id);
     if (actTransitionTarget) {
+      if (!isStoryActTransitionAvailable(targetNode.id)) {
+        await portalAvatarOnNode(targetNode.id);
+        const opened = params.startInteractionDialog(targetNode, 1);
+        params.setPendingCenterNodeId(targetNode.id);
+        params.setInteractionFeedback(
+          opened
+            ? "Transición temporalmente deshabilitada por reconstrucción de nodos."
+            : (resolveStoryActTransitionUnavailableMessage(targetNode.id) ?? "Transición temporalmente no disponible."),
+        );
+        return;
+      }
       params.markNodeCompleted(targetNode.id);
       await portalAvatarOnNode(targetNode.id);
       params.requestActTransition(actTransitionTarget);

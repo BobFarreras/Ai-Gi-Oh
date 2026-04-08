@@ -107,9 +107,10 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
     ],
   },
   "story-ch2-transition-to-act3": {
-    title: "Tránsito al Acto 3",
+    title: "Nodo en Reconstrucción",
     lines: [
-      { speaker: "Sistema", text: "Sector Helena neutralizado. Abriendo tránsito seguro al Acto 3.", autoAdvanceMs: 2800 },
+      { speaker: "Sistema", presentationMode: "TERMINAL", text: "Canal de tránsito detectado, pero el Acto 3 sigue en fase de reconstrucción.", autoAdvanceMs: 3200 },
+      { speaker: "Sistema", presentationMode: "TERMINAL", text: "Vuelve más tarde. Los nodos del siguiente sector aún no están operativos.", autoAdvanceMs: 3200 },
     ],
   },
 };
