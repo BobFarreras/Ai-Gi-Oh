@@ -16,6 +16,7 @@ import {
 } from "@/components/game/board/internal/board-tutorial-flow-events";
 
 export interface IBoardTutorialFlowSignals {
+  hasTrapActivationPrompt: boolean;
   hasFusionSummon: boolean;
   hasChatgptAttackSummon: boolean;
   hasGeminiAttackSummon: boolean;
@@ -40,6 +41,7 @@ export interface IBoardTutorialFlowSignals {
 interface IResolveBoardTutorialFlowSignalsInput {
   combatLog: ICombatLogEvent[];
   selectedCardId: string | null;
+  hasPendingTrapPrompt: boolean;
 }
 
 /**
@@ -47,6 +49,7 @@ interface IResolveBoardTutorialFlowSignalsInput {
  */
 export function resolveBoardTutorialFlowSignals(input: IResolveBoardTutorialFlowSignalsInput): IBoardTutorialFlowSignals {
   return {
+    hasTrapActivationPrompt: input.hasPendingTrapPrompt,
     hasFusionSummon: hasEvent(input.combatLog, "FUSION_SUMMONED"),
     hasChatgptAttackSummon: hasCardPlayed(input.combatLog, "entity-chatgpt", "ATTACK"),
     hasGeminiAttackSummon: hasCardPlayed(input.combatLog, "entity-gemini", "ATTACK"),

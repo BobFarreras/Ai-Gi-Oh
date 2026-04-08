@@ -21,6 +21,7 @@ import { syncBoardTutorialStep } from "@/components/game/board/internal/board-tu
 interface IBoardTutorialFlowOverlayProps {
   combatLog: ICombatLogEvent[];
   selectedCardId: string | null;
+  hasPendingTrapPrompt: boolean;
   phase: string;
   isGraveyardOpen: boolean;
   isFusionCinematicActive: boolean;
@@ -31,7 +32,7 @@ interface IBoardTutorialFlowOverlayProps {
 }
 
 export function BoardTutorialFlowOverlay(props: IBoardTutorialFlowOverlayProps) {
-  const { combatLog, selectedCardId, phase, isGraveyardOpen, isFusionCinematicActive, fusionSelectedCount, isFusionBrowserOpen, hasWinner, onFlowFinished } = props;
+  const { combatLog, selectedCardId, hasPendingTrapPrompt, phase, isGraveyardOpen, isFusionCinematicActive, fusionSelectedCount, isFusionBrowserOpen, hasWinner, onFlowFinished } = props;
   const steps = useMemo(() => resolveCombatTutorialSteps(), []);
   const tutorial = useTutorialFlowController(steps);
   const [isIntroVisible, setIsIntroVisible] = useState(true);
@@ -39,7 +40,7 @@ export function BoardTutorialFlowOverlay(props: IBoardTutorialFlowOverlayProps) 
   const passTurnStepOpponentPlaysRef = useRef<number | null>(null);
   const passTurnStepPlayerTurnsRef = useRef<number | null>(null);
   const hasNotifiedFlowFinishedRef = useRef(false);
-  const signals = useMemo(() => resolveBoardTutorialFlowSignals({ combatLog, selectedCardId }), [combatLog, selectedCardId]);
+  const signals = useMemo(() => resolveBoardTutorialFlowSignals({ combatLog, selectedCardId, hasPendingTrapPrompt }), [combatLog, hasPendingTrapPrompt, selectedCardId]);
   const opponentCardPlayedCount = signals.opponentCardPlayedCount;
   const playerTurnStartedCount = countTurnStartedByActor(combatLog, "player-local");
 

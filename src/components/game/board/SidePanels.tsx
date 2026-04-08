@@ -2,6 +2,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
@@ -42,6 +43,7 @@ export function SidePanels({
   const [turnFilter, setTurnFilter] = useState<number | "ALL">("ALL");
   const [actorFilter, setActorFilter] = useState<"ALL" | "PLAYER" | "OPPONENT">("ALL");
   const detailCardScale = useDetailCardScale();
+  const pathname = usePathname();
   const cardLookup = useCardLookup(gameState);
   const visibleEvents = useVisibleCombatEvents(gameState, turnFilter, actorFilter);
   const liveSelectedCard = useMemo(
@@ -51,6 +53,7 @@ export function SidePanels({
   const isTrapPromptForSelectedCard = Boolean(
     liveSelectedCard && pendingTrapActivationPrompt && pendingTrapActivationPrompt.trapCard.id === liveSelectedCard.id,
   );
+  const isTutorialTrapPromptLocked = isTrapPromptForSelectedCard && pathname?.includes("/hub/academy/training/tutorial");
 
   return (
     <AnimatePresence>
@@ -73,7 +76,9 @@ export function SidePanels({
           ) : null}
           <button
             aria-label="Cerrar detalle"
-            onClick={isTrapPromptForSelectedCard ? onSkipPendingTrap : onCloseCard}
+            data-tutorial-id={isTrapPromptForSelectedCard ? "tutorial-board-action-skip-trap-prompt" : undefined}
+            onClick={isTutorialTrapPromptLocked ? () => undefined : (isTrapPromptForSelectedCard ? onSkipPendingTrap : onCloseCard)}
+            disabled={isTutorialTrapPromptLocked}
             className="absolute top-4 right-4 text-cyan-500 hover:text-white z-20"
           >
             <X size={24} />
@@ -92,6 +97,7 @@ export function SidePanels({
                 <button
                   type="button"
                   aria-label="Confirmar activación de carta seleccionada"
+                  data-tutorial-id={isTrapPromptForSelectedCard ? "tutorial-board-action-activate-trap-prompt" : undefined}
                   onClick={isTrapPromptForSelectedCard ? onActivatePendingTrap : onActivateSelectedExecution}
                   className="rounded-lg border border-emerald-300/70 bg-emerald-700/35 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-emerald-100 hover:bg-emerald-700/50"
                 >
@@ -100,8 +106,10 @@ export function SidePanels({
                 <button
                   type="button"
                   aria-label="Cancelar activación de carta seleccionada"
-                  onClick={isTrapPromptForSelectedCard ? onSkipPendingTrap : onCloseCard}
-                  className="rounded-lg border border-zinc-500/60 bg-zinc-900/75 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-zinc-100 hover:border-zinc-300"
+                  data-tutorial-id={isTrapPromptForSelectedCard ? "tutorial-board-action-skip-trap-prompt" : undefined}
+                  onClick={isTutorialTrapPromptLocked ? () => undefined : (isTrapPromptForSelectedCard ? onSkipPendingTrap : onCloseCard)}
+                  disabled={isTutorialTrapPromptLocked}
+                  className="rounded-lg border border-zinc-500/60 bg-zinc-900/75 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-zinc-100 hover:border-zinc-300 disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   Cancelar
                 </button>
