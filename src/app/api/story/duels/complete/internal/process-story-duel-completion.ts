@@ -33,6 +33,18 @@ function mapRewardCards(cardsById: Map<string, ICard>, rewardCardIds: string[]):
   });
 }
 
+function resolveBossRepeatRewardCardIds(duel: IStoryDuelDefinition): string[] {
+  const guaranteedRewards = duel.rewardCards.filter((entry) => entry.isGuaranteed);
+  if (guaranteedRewards.length > 0) {
+    return guaranteedRewards.flatMap((entry) =>
+      Array.from({ length: Math.max(1, entry.copies) }, () => entry.cardId),
+    );
+  }
+  const fallbackReward = duel.rewardCards[0];
+  if (!fallbackReward) return [];
+  return [fallbackReward.cardId];
+}
+
 async function resolveDuelFromPayload(payload: Record<string, unknown>, opponentRepository: IOpponentRepository): Promise<IStoryDuelDefinition> {
   const input = resolveStoryDuelCompletionInput(payload);
   if (!input) throw new ValidationError("El resultado del duelo Story es inválido.");
@@ -52,6 +64,8 @@ export async function processStoryDuelCompletion(params: IProcessStoryDuelComple
   const previous = await params.storyProgressRepository.getByPlayerAndDuelId(params.playerId, duel.id);
   const duelProgress = await params.storyProgressRepository.registerDuelResult(params.playerId, duel.id, didWin);
   const firstVictory = didWin && previous?.bestResult !== "WON";
+  const shouldGrantStandardRewards = firstVictory;
+  const shouldGrantBossRepeatCardReward = didWin && duel.isBossDuel && !firstVictory;
   const returnNodeId = await resolveStoryDuelReturnNode({
     playerId: params.playerId,
     duelNodeId: duel.id,
@@ -60,28 +74,36 @@ export async function processStoryDuelCompletion(params: IProcessStoryDuelComple
     storyProgressRepository: params.storyProgressRepository,
     storyWorldRepository: params.storyWorldRepository,
   });
-  if (!firstVictory) {
+  if (!shouldGrantStandardRewards && !shouldGrantBossRepeatCardReward) {
     return { duelProgress, rewarded: false, rewardNexus: 0, rewardPlayerExperience: 0, rewardCardIds: [], rewardCards: [], outcome: input.outcome, duelNodeId: duel.id, returnNodeId };
   }
-  const rewardCardIds = resolveStoryRewardCards(duel.rewardCards);
-  if (duel.rewardNexus > 0) await params.walletRepository.creditNexus(params.playerId, duel.rewardNexus);
+  const rewardCardIds = shouldGrantBossRepeatCardReward
+    ? resolveBossRepeatRewardCardIds(duel)
+    : resolveStoryRewardCards(duel.rewardCards);
+  const rewardNexus = shouldGrantStandardRewards ? duel.rewardNexus : 0;
+  const rewardPlayerExperience = shouldGrantStandardRewards ? duel.rewardPlayerExperience : 0;
+  if (rewardNexus > 0) await params.walletRepository.creditNexus(params.playerId, rewardNexus);
   if (rewardCardIds.length > 0) await params.collectionRepository.addCards(params.playerId, rewardCardIds);
   const cardsById = rewardCardIds.length > 0 ? await params.loadCardsByIds(rewardCardIds) : new Map<string, ICard>();
   const rewardCards = mapRewardCards(cardsById, rewardCardIds);
-  const progressUseCase = new GetOrCreatePlayerProgressUseCase(params.playerProgressRepository);
-  const currentPlayerProgress = await progressUseCase.execute({ playerId: params.playerId });
-  const playerProgress = await params.playerProgressRepository.update({
-    playerId: params.playerId,
-    playerExperience: currentPlayerProgress.playerExperience + duel.rewardPlayerExperience,
-  });
+  const playerProgress = rewardPlayerExperience > 0
+    ? await (async () => {
+        const progressUseCase = new GetOrCreatePlayerProgressUseCase(params.playerProgressRepository);
+        const currentPlayerProgress = await progressUseCase.execute({ playerId: params.playerId });
+        return params.playerProgressRepository.update({
+          playerId: params.playerId,
+          playerExperience: currentPlayerProgress.playerExperience + rewardPlayerExperience,
+        });
+      })()
+    : null;
   return {
     duelProgress,
     rewarded: true,
-    rewardNexus: duel.rewardNexus,
-    rewardPlayerExperience: duel.rewardPlayerExperience,
+    rewardNexus,
+    rewardPlayerExperience,
     rewardCardIds,
     rewardCards,
-    playerProgress,
+    ...(playerProgress ? { playerProgress } : {}),
     outcome: input.outcome,
     duelNodeId: duel.id,
     returnNodeId,

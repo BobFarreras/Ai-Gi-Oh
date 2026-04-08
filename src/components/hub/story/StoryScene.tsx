@@ -16,7 +16,7 @@ import { useStoryActEntrySequence } from "./internal/scene/transitions/use-story
 import { useStoryActTransitionNavigation } from "./internal/scene/transitions/use-story-act-transition-navigation";
 import { useStoryPostDuelTransition } from "./internal/scene/transitions/use-story-post-duel-transition";
 import { useStorySceneMobileMode } from "./internal/scene/view/use-story-scene-mobile-mode";
-import { IStoryMapRuntimeData } from "@/services/story/story-map-runtime-data";
+import { IStoryMapNodeRuntime, IStoryMapRuntimeData } from "@/services/story/story-map-runtime-data";
 import { IStoryChapterBriefing } from "@/services/story/build-story-chapter-briefing";
 import { IStoryPostDuelTransition } from "@/services/story/duel-flow/story-post-duel-transition";
 import { resolveStoryPrimaryAction } from "@/services/story/resolve-story-primary-action";
@@ -38,8 +38,18 @@ interface IStorySubmissionDialogState {
   requiredKeys: Array<{ id: string; label: string; isCollected: boolean }>;
   resolve: (value: string | null) => void;
 }
+const ACT2_BOSS_DUEL_NODE_ID = "story-ch2-duel-7";
+const ACT2_BOSS_POST_WIN_DIALOG_NODE_ID = "story-ch2-duel-7-post-win";
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+function buildTransientDialogueNode(input: { id: string; sourceNode: IStoryMapNodeRuntime }): IStoryMapNodeRuntime {
+  return {
+    ...input.sourceNode,
+    id: input.id,
+    title: input.sourceNode.title,
+    href: "#",
+  };
 }
 export function StoryScene({ runtime, briefing, postDuelTransition = null, shouldPlayActEntryAnimation = false, actEntryDirection = null }: IStorySceneProps) {
   const router = useRouter();
@@ -69,6 +79,9 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
   const [interactionFeedback, setInteractionFeedback] = useState<string | null>(null);
   const [submissionDialog, setSubmissionDialog] = useState<IStorySubmissionDialogState | null>(null);
   const [preDuelDialogSeenNodeIds, setPreDuelDialogSeenNodeIds] = useState<string[]>([]);
+  const [pendingAutoStartDuelNodeId, setPendingAutoStartDuelNodeId] = useState<string | null>(null);
+  const [pendingPostWinRetreatNodeId, setPendingPostWinRetreatNodeId] = useState<string | null>(null);
+  const [consumedPostBossWinTransitionIds, setConsumedPostBossWinTransitionIds] = useState<string[]>([]);
   const interactionDialog = useStoryNodeInteractionDialog();
   const sceneSfx = useStorySceneSfx();
   const { isMuted: isMapSoundtrackMuted, toggleMute: toggleMapSoundtrackMute } = useStoryMapSoundtrack(runtime.activeActId);
@@ -95,7 +108,14 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
   });
   const smartAction = resolveStorySmartAction({ selectedNode, canMove: canMoveSelectedNode, primaryAction });
   const isBusy = isMoving || isInteracting || isActEntrySequenceRunning || interactionDialog.isOpen || Boolean(actTransitionTargetId);
-  useStoryPostDuelTransition({ transition: postDuelTransition, currentNodeId, setAvatarVisualTarget, setRetreatingNodeId });
+  const shouldDelayBossRetreatForPostDialogue =
+    postDuelTransition?.outcome === "WON" && postDuelTransition.duelNodeId === ACT2_BOSS_DUEL_NODE_ID;
+  useStoryPostDuelTransition({
+    transition: shouldDelayBossRetreatForPostDialogue ? null : postDuelTransition,
+    currentNodeId,
+    setAvatarVisualTarget,
+    setRetreatingNodeId,
+  });
   const { centerAvatarOnNode, handleSmartAction } = createStorySceneActions({
     selectedNodeId,
     selectedNode,
@@ -142,6 +162,7 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
     hasSeenPreDuelDialogue: (nodeId) => preDuelDialogSeenNodeIds.includes(nodeId),
     markPreDuelDialogueSeen: (nodeId) =>
       setPreDuelDialogSeenNodeIds((prev) => (prev.includes(nodeId) ? prev : [...prev, nodeId])),
+    scheduleAutoStartDuelAfterDialogue: (nodeId) => setPendingAutoStartDuelNodeId(nodeId),
   });
   useStoryActTransitionNavigation({
     actTransitionTargetId,
@@ -149,6 +170,33 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
     navigateTo: router.push,
     clearTransition: () => setActTransitionTargetId(null),
   });
+  useEffect(() => {
+    if (!shouldDelayBossRetreatForPostDialogue || !postDuelTransition) return;
+    if (consumedPostBossWinTransitionIds.includes(postDuelTransition.returnNodeId)) return;
+    const sourceNode = nodesById[ACT2_BOSS_DUEL_NODE_ID];
+    if (!sourceNode || interactionDialog.isOpen) return;
+    const opened = interactionDialog.start(
+      buildTransientDialogueNode({ id: ACT2_BOSS_POST_WIN_DIALOG_NODE_ID, sourceNode }),
+      1,
+    );
+    if (!opened) {
+      window.setTimeout(() => {
+        setRetreatingNodeId(ACT2_BOSS_DUEL_NODE_ID);
+        setConsumedPostBossWinTransitionIds((prev) => [...prev, postDuelTransition.returnNodeId]);
+      }, 0);
+      return;
+    }
+    window.setTimeout(() => {
+      setPendingPostWinRetreatNodeId(ACT2_BOSS_DUEL_NODE_ID);
+      setConsumedPostBossWinTransitionIds((prev) => [...prev, postDuelTransition.returnNodeId]);
+    }, 0);
+  }, [
+    consumedPostBossWinTransitionIds,
+    interactionDialog,
+    nodesById,
+    postDuelTransition,
+    shouldDelayBossRetreatForPostDialogue,
+  ]);
   const { finalizeInteractionDialog, advanceInteractionDialog } = useStoryInteractionActions({
     interactionDialog,
     pendingCenterNodeId,
@@ -168,6 +216,22 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
         tone: "CARD",
       });
       await wait(620);
+    },
+    onAfterFinalize: async () => {
+      if (pendingAutoStartDuelNodeId) {
+        const duelNode = nodesById[pendingAutoStartDuelNodeId];
+        if (duelNode) {
+          setDuelFocusNodeId(duelNode.id);
+          sceneSfx.playDuelStart();
+          await wait(520);
+          router.push(duelNode.href);
+        }
+        setPendingAutoStartDuelNodeId(null);
+        return;
+      }
+      if (!pendingPostWinRetreatNodeId) return;
+      setRetreatingNodeId(pendingPostWinRetreatNodeId);
+      setPendingPostWinRetreatNodeId(null);
     },
   });
   const sidebarProps: IStorySceneSidebarViewProps = {

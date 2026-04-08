@@ -41,6 +41,7 @@ interface ICreateStorySceneActionsParams {
   requestNodeSubmission: (nodeId: string) => Promise<string | null>;
   hasSeenPreDuelDialogue: (nodeId: string) => boolean;
   markPreDuelDialogueSeen: (nodeId: string) => void;
+  scheduleAutoStartDuelAfterDialogue: (nodeId: string) => void;
 }
 
 function resolveCollectVisual(targetNode: IStoryMapNodeRuntime): IStoryCollectVisual {
@@ -125,11 +126,16 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
     );
     await wait(420);
     if (targetMode.mode === "ROUTE") {
-      if (targetNode.id === "story-ch2-duel-8" && !params.hasSeenPreDuelDialogue(targetNode.id)) {
+      if ((targetNode.id === "story-ch2-duel-8" || targetNode.id === "story-ch2-duel-7") && !params.hasSeenPreDuelDialogue(targetNode.id)) {
         const opened = params.startInteractionDialog(targetNode, 1);
         params.markPreDuelDialogueSeen(targetNode.id);
         if (opened) {
-          params.setInteractionFeedback("Briefing de evaluación de BigLog completado.");
+          if (targetNode.id === "story-ch2-duel-7") params.scheduleAutoStartDuelAfterDialogue(targetNode.id);
+          params.setInteractionFeedback(
+            targetNode.id === "story-ch2-duel-8"
+              ? "Briefing de evaluación de BigLog completado."
+              : "Canal de amenaza de Helena registrado.",
+          );
           return;
         }
       }

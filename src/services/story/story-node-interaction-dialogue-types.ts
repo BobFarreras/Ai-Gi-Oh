@@ -7,6 +7,7 @@ export interface IStoryInteractionDialogueLine {
   speaker: string;
   text: string;
   portraitUrl?: string;
+  counterpartPortraitUrl?: string;
   audioUrl?: string;
   autoAdvanceMs?: number;
 }

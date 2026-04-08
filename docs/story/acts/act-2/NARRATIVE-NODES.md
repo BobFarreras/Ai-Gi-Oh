@@ -14,6 +14,8 @@
 | `story-ch2-link-recovered-event` | Diálogo terminal | Confirmar la recuperación de la segunda mitad del link tras combatir a Helena. | Cierra el arco narrativo de adquisición del link. |
 | `story-ch2-bridge-submission` | Diálogo terminal | Confirmar handshake y submission final de enlace. | Desbloquea el puente en la ruta principal. |
 | `story-ch2-duel-8` | Diálogo terminal pre-duelo | BigLog evalúa al jugador antes de permitir el avance al puente. | Se ejecuta briefing antes de iniciar el combate. |
+| `story-ch2-duel-7` | Diálogo directo pre-duelo (Helena + Jugador) | Amenaza inmediata antes del boss final del acto. | Se ejecuta antes de entrar al combate del boss. |
+| `story-ch2-duel-7-post-win` | Diálogo directo post-victoria (Helena + Jugador) | Rendición de Helena tras la derrota. | Se ejecuta antes de la animación de retirada del nodo boss. |
 | `story-ch2-transition-to-act1` | Mensaje sistema corto | Retorno táctico al acto previo. | Cambia a Acto 1. |
 | `story-ch2-transition-to-act3` | Mensaje sistema corto | Cierre del sector Helena y salto al siguiente teatro. | Cambia a Acto 3. |
 

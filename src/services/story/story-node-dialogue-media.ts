@@ -40,6 +40,16 @@ const DIALOGUE_MEDIA_BY_NODE_ID: Record<string, IStoryDialogueLineMedia[]> = {
     { portraitUrl: "/assets/story/player/bob.png" },
     { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
   ],
+  "story-ch2-duel-7": [
+    { portraitUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png" },
+    { portraitUrl: "/assets/story/player/bob.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png" },
+  ],
+  "story-ch2-duel-7-post-win": [
+    { portraitUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png" },
+    { portraitUrl: "/assets/story/player/bob.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png" },
+  ],
   "story-ch2-duel-8": [
     { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
     { portraitUrl: "/assets/story/player/bob.png" },

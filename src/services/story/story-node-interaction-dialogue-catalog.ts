@@ -90,6 +90,22 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
       { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Submission aceptada. Puente principal desbloqueado. Avanza al boss y cierra el acto." },
     ],
   },
+  "story-ch2-duel-7": {
+    title: "Canal Intervenido: Helena",
+    lines: [
+      { actorId: "opp-helena", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "DIRECT", speaker: "Helena", portraitUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png", text: "Te acercaste demasiado, operador. Este sector termina aquí, bajo mi control." },
+      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "DIRECT", speaker: "Operador", portraitUrl: "/assets/story/player/bob.png", counterpartPortraitUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png", text: "Tu control cae hoy. Cruzo el puente, te derroto y libero el núcleo del valle." },
+      { actorId: "opp-helena", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "DIRECT", speaker: "Helena", portraitUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png", text: "Entonces ven. Te haré retroceder nodo por nodo." },
+    ],
+  },
+  "story-ch2-duel-7-post-win": {
+    title: "Helena Derrotada",
+    lines: [
+      { actorId: "opp-helena", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "DIRECT", speaker: "Helena", portraitUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png", text: "Basta... me rindo. Retiro mis bloqueos del valle." },
+      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "DIRECT", speaker: "Operador", portraitUrl: "/assets/story/player/bob.png", counterpartPortraitUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png", text: "Mantén tu palabra. Entrega la ruta limpia y corta toda interferencia con La Entidad." },
+      { actorId: "opp-helena", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "DIRECT", speaker: "Helena", portraitUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png", text: "Hecho. El canal queda abierto. Sigue... antes de que el Core vuelva a cerrarse." },
+    ],
+  },
   "story-ch2-transition-to-act3": {
     title: "Tránsito al Acto 3",
     lines: [

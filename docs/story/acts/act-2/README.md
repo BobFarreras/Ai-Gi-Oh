@@ -28,9 +28,11 @@
 4. Evento crítico de corrupción.
 5. Subruta de evaluación contra BigLog (`story-ch2-duel-8`).
 6. Submission de sincronización para abrir el puente principal.
-7. Duelo de cierre y transición al siguiente acto (`story-ch2-transition-to-act3`).
-8. El jugador vuelve desde la subruta al eje principal para cruzar el puente ya activado.
-9. Tras vencer a Helena en el tramo avanzado, se dispara evento de recuperación de link (`story-ch2-link-recovered-event`).
+7. Duelo de cierre de facción (`story-ch2-duel-7`) con narrativa previa de amenaza de Helena.
+8. Tras ganar el boss se ejecuta diálogo de rendición antes de la retirada visual del nodo.
+9. Transición al siguiente acto (`story-ch2-transition-to-act3`).
+10. El jugador vuelve desde la subruta al eje principal para cruzar el puente ya activado.
+11. Tras vencer a Helena en el tramo avanzado, se dispara evento de recuperación de link (`story-ch2-link-recovered-event`).
 
 ## Contenido del acto
 1. `MOVE` para recorrido y bifurcaciones.
