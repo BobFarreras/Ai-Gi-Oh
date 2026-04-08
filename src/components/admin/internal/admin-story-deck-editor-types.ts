@@ -20,6 +20,13 @@ export interface IUseAdminStoryDeckEditorResult {
   setDuelAiStyle: (value: StoryAiStyle) => void;
   duelAiAggression: number;
   setDuelAiAggression: (value: number) => void;
+  draftFusionCardIds: string[];
+  setDraftFusionCardIdBySlot: (slotIndex: number, cardId: string) => void;
+  clearDraftFusionCardBySlot: (slotIndex: number) => void;
+  swapDraftFusionCards: (fromSlotIndex: number, toSlotIndex: number) => void;
+  draftRewardCardIds: string[];
+  setDraftRewardCardId: (cardId: string | null) => void;
+  clearDraftRewardCard: () => void;
   draftSlotLevels: IStorySlotLevelDraft[];
   setDraftSlotLevelByIndex: (slotIndex: number, key: "versionTier" | "level" | "xp", value: number) => void;
   applyMassSlotLevels: (input: { versionTier: number; level: number; xp: number }) => void;
@@ -32,6 +39,7 @@ export interface IUseAdminStoryDeckEditorResult {
   setIsBaseDeckMode: (value: boolean) => void;
   isBusy: boolean;
   feedback: string;
+  setFeedbackMessage: (message: string) => void;
   canSave: boolean;
   onSelectOpponent: (opponentId: string) => Promise<void>;
   onSelectDuelReference: (duelId: string) => Promise<void>;

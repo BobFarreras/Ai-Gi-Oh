@@ -5,6 +5,8 @@ import { StoryOpponentDifficulty } from "@/core/entities/opponent/IStoryDuelDefi
 import {
   IStorySlotLevelDraft,
   resolveDraftByDuel,
+  resolveDraftFusionCardIds,
+  resolveDraftRewardCardIds,
   resolveDraftSlotLevels,
   resolveDuelAiProfile,
   resolveDuelDifficulty,
@@ -17,6 +19,8 @@ export interface IStoryDeckLoadSnapshot {
   duelAiProfile: IStoryAiProfile;
   draftCardIds: Array<string | null>;
   draftSlotLevels: IStorySlotLevelDraft[];
+  draftFusionCardIds: string[];
+  draftRewardCardIds: string[];
   isBaseDeckMode: boolean;
 }
 
@@ -35,6 +39,8 @@ export function buildStoryDeckLoadSnapshot(data: IAdminStoryDeckApiResponse, pre
     duelAiProfile,
     draftCardIds: resolveDraftByDuel(data, selectedDuelId),
     draftSlotLevels: resolveDraftSlotLevels(data, selectedDuelId),
+    draftFusionCardIds: resolveDraftFusionCardIds(data, selectedDuelId),
+    draftRewardCardIds: resolveDraftRewardCardIds(data, selectedDuelId),
     isBaseDeckMode: selectedDuelId === null,
   };
 }

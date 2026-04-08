@@ -12,6 +12,8 @@ interface IExecuteAdminStoryDeckLoadInput {
   setDuelAiStyle: (value: "balanced" | "aggressive" | "combo" | "control") => void;
   setDuelAiAggression: (value: number) => void;
   setDraftSlotLevels: (value: Array<{ versionTier: number; level: number; xp: number }>) => void;
+  setDraftFusionCardIds: (value: string[]) => void;
+  setDraftRewardCardIds: (value: string[]) => void;
   setIsBaseDeckMode: (value: boolean) => void;
   setSelectedSlotIndex: (value: number | null) => void;
   setSelectedCollectionCardId: (value: string | null) => void;
@@ -33,6 +35,8 @@ export async function executeAdminStoryDeckLoad(input: IExecuteAdminStoryDeckLoa
   input.setDuelAiStyle(snapshot.duelAiProfile.style);
   input.setDuelAiAggression(snapshot.duelAiProfile.aggression);
   input.setDraftSlotLevels(snapshot.draftSlotLevels);
+  input.setDraftFusionCardIds(snapshot.draftFusionCardIds);
+  input.setDraftRewardCardIds(snapshot.draftRewardCardIds);
   input.setIsBaseDeckMode(snapshot.isBaseDeckMode);
   input.setSelectedSlotIndex(0);
   input.setSelectedCollectionCardId(null);

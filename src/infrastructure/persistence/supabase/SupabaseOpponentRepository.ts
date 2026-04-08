@@ -53,6 +53,11 @@ interface IStoryDuelAiProfileRow {
   ai_profile: Record<string, unknown> | null;
 }
 
+interface IStoryDuelFusionCardRow {
+  slot_index: number;
+  card_id: string;
+}
+
 interface IStoryDeckOverrideRow {
   slot_index: number;
   card_id: string;
@@ -63,6 +68,12 @@ interface IStoryDeckOverrideRow {
   attack_override: number | null;
   defense_override: number | null;
   effect_override: Record<string, unknown> | null;
+}
+
+function isMissingFusionTableError(error: { message?: string; code?: string } | null): boolean {
+  if (!error) return false;
+  const message = error.message ?? "";
+  return error.code === "PGRST205" || message.includes("story_duel_fusion_cards") && message.includes("schema cache");
 }
 
 function resolveCanonicalStoryDuelIdentity(input: { id: string; chapter: number; duelIndex: number }): {
@@ -205,7 +216,7 @@ export class SupabaseOpponentRepository implements IOpponentRepository {
       .single<IStoryOpponentRow>();
     if (opponentResult.error || !opponentResult.data) throw new ValidationError("No se pudo cargar el oponente de historia.");
 
-    const [deckResult, overrideResult, aiProfileResult] = await Promise.all([
+    const [deckResult, overrideResult, aiProfileResult, fusionResult] = await Promise.all([
       this.client
       .from("story_deck_list_cards")
       .select("slot_index,card_id,copies")
@@ -223,10 +234,17 @@ export class SupabaseOpponentRepository implements IOpponentRepository {
         .eq("duel_id", duelRow.id)
         .eq("is_active", true)
         .maybeSingle<IStoryDuelAiProfileRow>(),
+      this.client
+        .from("story_duel_fusion_cards")
+        .select("slot_index,card_id")
+        .eq("duel_id", duelRow.id)
+        .eq("is_active", true)
+        .order("slot_index", { ascending: true }),
     ]);
     if (deckResult.error) throw new ValidationError("No se pudo cargar el mazo base del oponente de historia.");
     if (overrideResult.error) throw new ValidationError("No se pudieron cargar los overrides del mazo Story.");
     if (aiProfileResult.error) throw new ValidationError("No se pudo cargar el perfil IA del duelo Story.");
+    if (fusionResult.error && !isMissingFusionTableError(fusionResult.error)) throw new ValidationError("No se pudo cargar el deck de fusión del duelo Story.");
 
     const rewardResult = await this.client
       .from("story_duel_reward_cards")
@@ -257,6 +275,9 @@ export class SupabaseOpponentRepository implements IOpponentRepository {
       opponentDifficulty,
       opponentAiProfile,
       opponentDeckCardIds: duelDeckEntries.map((entry) => entry.cardId),
+      opponentFusionDeckCardIds: isMissingFusionTableError(fusionResult.error)
+        ? []
+        : ((fusionResult.data ?? []) as IStoryDuelFusionCardRow[]).map((row) => row.card_id),
       opponentDeckEntries: duelDeckEntries,
       openingHandSize: duelRow.opening_hand_size,
       starterPlayer: duelRow.starter_player,

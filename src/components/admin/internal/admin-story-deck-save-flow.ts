@@ -14,6 +14,8 @@ interface IExecuteAdminStoryDeckSaveInput {
   duelAiAggression: number;
   draftCardIds: Array<string | null>;
   draftSlotLevels: IStorySlotLevelDraft[];
+  draftFusionCardIds: string[];
+  draftRewardCardIds: string[];
   isBaseDeckMode: boolean;
   load: (input: { opponentId?: string; deckListId?: string; preferredDuelId?: string | null }) => Promise<void>;
 }
@@ -30,6 +32,8 @@ export async function executeAdminStoryDeckSave(input: IExecuteAdminStoryDeckSav
       duelId: input.selectedDuelId,
       difficulty: input.selectedDuelDifficulty,
       aiProfile: { style: input.duelAiStyle, aggression: input.duelAiAggression },
+      fusionCardIds: input.draftFusionCardIds.filter((cardId) => cardId.trim().length > 0),
+      rewardCardIds: input.draftRewardCardIds.filter((cardId) => cardId.trim().length > 0),
       slotOverrides: input.draftCardIds.flatMap((cardId, slotIndex) => {
         if (!cardId) return [];
         const levels = input.draftSlotLevels[slotIndex] ?? { versionTier: 0, level: 0, xp: 0 };

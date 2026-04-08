@@ -21,11 +21,22 @@ export class GetAdminStoryDeckDataUseCase {
     const duels = targetOpponentId ? allDuels.filter((duel) => allDecks.find((deck) => deck.deckListId === duel.deckListId)?.opponentId === targetOpponentId) : allDuels;
     const targetDeckListId = input.deckListId ?? decks.find((deck) => deck.isActive)?.deckListId ?? decks[0]?.deckListId;
     const duelIds = duels.map((duel) => duel.duelId);
-    const [duelAiProfiles, duelDeckOverrides] = await Promise.all([
+    const [duelAiProfiles, duelDeckOverrides, duelFusionCards, duelRewardCards] = await Promise.all([
       this.repository.listDuelAiProfiles(duelIds),
       this.repository.listDuelDeckOverrides(duelIds),
+      this.repository.listDuelFusionCards(duelIds),
+      this.repository.listDuelRewardCards(duelIds),
     ]);
-    return { opponents, decks, duels, duelAiProfiles, duelDeckOverrides, deck: targetDeckListId ? await this.repository.getDeck(targetDeckListId) : null };
+    return {
+      opponents,
+      decks,
+      duels,
+      duelAiProfiles,
+      duelDeckOverrides,
+      duelFusionCards,
+      duelRewardCards,
+      deck: targetDeckListId ? await this.repository.getDeck(targetDeckListId) : null,
+    };
   }
 }
 

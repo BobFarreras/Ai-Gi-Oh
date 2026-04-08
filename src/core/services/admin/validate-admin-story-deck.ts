@@ -4,6 +4,7 @@ import { ValidationError } from "@/core/errors/ValidationError";
 
 const MAX_STORY_DECK_SIZE = 60;
 const MAX_COPIES_PER_CARD = 3;
+const STORY_FUSION_DECK_SIZE = 2;
 const DIFFICULTIES = new Set(["ROOKIE", "STANDARD", "ELITE", "BOSS", "MYTHIC"]);
 
 /**
@@ -28,6 +29,11 @@ export function validateAdminSaveStoryDeckCommand(command: IAdminSaveStoryDeckCo
   if (!DIFFICULTIES.has(command.duelConfig.difficulty)) throw new ValidationError("La dificultad del duelo no es válida.");
   if (!command.duelConfig.aiProfile.style.trim()) throw new ValidationError("El perfil IA requiere style.");
   if (command.duelConfig.aiProfile.aggression < 0 || command.duelConfig.aiProfile.aggression > 1) throw new ValidationError("La agresividad IA debe estar entre 0 y 1.");
+  if (command.duelConfig.fusionCardIds.length !== STORY_FUSION_DECK_SIZE) throw new ValidationError("El duelo requiere exactamente 2 cartas de fusión.");
+  if (command.duelConfig.fusionCardIds.some((cardId) => !cardId.trim())) throw new ValidationError("Las cartas de fusión del duelo requieren cardId válido.");
+  if (new Set(command.duelConfig.fusionCardIds).size !== command.duelConfig.fusionCardIds.length) throw new ValidationError("No se puede repetir carta en el bloque de fusión del duelo.");
+  if (command.duelConfig.rewardCardIds.some((cardId) => !cardId.trim())) throw new ValidationError("Las cartas de recompensa requieren cardId válido.");
+  if (new Set(command.duelConfig.rewardCardIds).size !== command.duelConfig.rewardCardIds.length) throw new ValidationError("No se pueden duplicar cartas de recompensa en un mismo duelo.");
   for (const slot of command.duelConfig.slotOverrides) {
     if (!slot.cardId.trim()) throw new ValidationError("Cada override requiere cardId válido.");
     if (slot.slotIndex < 0 || slot.slotIndex >= MAX_STORY_DECK_SIZE) throw new ValidationError("slotIndex fuera de rango.");

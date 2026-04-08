@@ -74,6 +74,9 @@
    - dificultad y perfil IA por duelo Story (fuente data-driven por aparición).
 31. `public.story_duel_deck_overrides`:
    - overrides estáticos por duelo/slot para variar cartas y escalado (`version_tier`, `level`, `xp`) sin progresión dinámica por repetición.
+32. `public.story_duel_fusion_cards`:
+   - bloque de 2 slots de fusión por duelo Story (`slot_index` 0..1).
+   - permite definir rival con deck de fusión data-driven por duelo.
 
 ## Fase 2 (Perfil y Progreso)
 
@@ -363,6 +366,20 @@
    - escritura reservada a `service_role`.
 5. Objetivo funcional:
    - permitir que un mismo oponente tenga distintas dificultades y composición/escalado de cartas según duelo o misión especial.
+
+## Fase S.2 (Deck de fusión por duelo Story)
+
+1. Ejecuta `docs/supabase/sql/038_phase_story_duel_fusion_cards.sql`.
+2. Verifica tabla:
+   - `public.story_duel_fusion_cards`.
+3. Verifica constraints:
+   - PK (`duel_id`, `slot_index`),
+   - `slot_index` en rango `0..1`.
+4. Verifica RLS:
+   - lectura pública autenticada para filas activas (`is_active = true`),
+   - escritura reservada a `service_role`.
+5. Objetivo funcional:
+   - permitir edición/admin de `Fusion 1` y `Fusion 2` por duelo y cargarlas en runtime de combate Story.
 
 ## Notas
 

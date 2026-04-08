@@ -14,6 +14,8 @@ export interface IAdminSaveStoryDuelConfigCommand {
   duelId: string;
   difficulty: StoryOpponentDifficulty;
   aiProfile: IStoryAiProfile;
+  fusionCardIds: string[];
+  rewardCardIds: string[];
   slotOverrides: IAdminSaveStoryDuelDeckOverrideCommand[];
 }
 

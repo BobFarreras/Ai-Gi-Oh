@@ -1,6 +1,11 @@
 // src/core/entities/admin/IAdminStoryDeck.ts - Contratos admin para catálogo de oponentes Story y edición de decks versionados.
 import { ICard } from "@/core/entities/ICard";
-import { IAdminStoryDuelAiProfile, IAdminStoryDuelDeckOverride } from "@/core/entities/admin/IAdminStoryDuelConfig";
+import {
+  IAdminStoryDuelAiProfile,
+  IAdminStoryDuelDeckOverride,
+  IAdminStoryDuelFusionCard,
+  IAdminStoryDuelRewardCard,
+} from "@/core/entities/admin/IAdminStoryDuelConfig";
 import { StoryOpponentDifficulty } from "@/core/entities/opponent/IStoryDuelDefinition";
 
 export interface IAdminStoryOpponentSummary {
@@ -50,6 +55,8 @@ export interface IAdminStoryDeckData {
   duels: IAdminStoryDuelReference[];
   duelAiProfiles: IAdminStoryDuelAiProfile[];
   duelDeckOverrides: IAdminStoryDuelDeckOverride[];
+  duelFusionCards: IAdminStoryDuelFusionCard[];
+  duelRewardCards: IAdminStoryDuelRewardCard[];
   deck: IAdminStoryDeck | null;
 }
 

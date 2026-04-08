@@ -1,6 +1,5 @@
 // src/components/admin/AdminStoryDeckPanel.tsx - Panel principal para administrar mazos Story por oponente con edición visual y guardado seguro.
 "use client";
-
 import { DragEvent, useMemo, useState } from "react";
 import { IAdminStoryDeckApiResponse } from "@/components/admin/admin-story-deck-api";
 import { AdminStarterDeckCollectionPanel } from "@/components/admin/internal/AdminStarterDeckCollectionPanel";
@@ -10,11 +9,9 @@ import { AdminStoryOpponentCatalog } from "@/components/admin/internal/AdminStor
 import { readAdminStarterDeckDragData, writeAdminStarterDeckDragData } from "@/components/admin/internal/admin-starter-deck-dnd";
 import { useAdminStoryDeckEditor } from "@/components/admin/internal/use-admin-story-deck-editor";
 import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
-
 interface IAdminStoryDeckPanelProps {
   initialData: IAdminStoryDeckApiResponse;
 }
-
 export function AdminStoryDeckPanel({ initialData }: IAdminStoryDeckPanelProps) {
   const editor = useAdminStoryDeckEditor(initialData);
   const [leftPanelMode, setLeftPanelMode] = useState<"opponents" | "duels">("opponents");
@@ -29,17 +26,19 @@ export function AdminStoryDeckPanel({ initialData }: IAdminStoryDeckPanelProps) 
   const cloneCandidateDuels = editor.data.duels.filter((duel) => duel.duelId !== editor.selectedDuelId);
   const [cloneSourceDuelId, setCloneSourceDuelId] = useState<string>("");
   const selectedSlotLevels = editor.selectedSlotIndex === null ? null : (editor.draftSlotLevels[editor.selectedSlotIndex] ?? null);
-
   function onDropOnSlot(slotIndex: number, event: DragEvent<HTMLElement>): void {
     if (!editor.isEditMode) return;
     event.preventDefault();
     const payload = readAdminStarterDeckDragData(event);
     if (!payload) return;
     if (payload.type === "card") editor.setDraftCardIdBySlot(slotIndex, payload.cardId);
-    if (payload.type === "slot" && payload.slotIndex !== slotIndex) editor.swapSlots(payload.slotIndex, slotIndex);
+    if (payload.type === "slot" && (payload.scope ?? "DECK") === "DECK" && payload.slotIndex !== slotIndex) editor.swapSlots(payload.slotIndex, slotIndex);
     editor.setSelectedSlotIndex(slotIndex);
   }
-
+  function onInvalidFusionCardDrop(cardId: string): void {
+    const cardName = cardById.get(cardId)?.name ?? cardId;
+    editor.setFeedbackMessage(`Solo puedes colocar cartas FUSION en estos slots. Intentaste usar: ${cardName}.`);
+  }
   return (
     <section className="flex h-full min-h-0 flex-1 flex-col gap-3">
       <div className="rounded-lg border border-cyan-900/60 bg-[linear-gradient(160deg,rgba(4,12,24,0.92),rgba(2,8,16,0.95))] p-3 shadow-[0_0_20px_rgba(6,182,212,0.18)]">
@@ -97,10 +96,19 @@ export function AdminStoryDeckPanel({ initialData }: IAdminStoryDeckPanelProps) 
         {leftPanelMode === "opponents"
           ? <AdminStoryOpponentCatalog opponents={editor.data.opponents} selectedOpponentId={selectedOpponentId} onSelectOpponent={(opponentId) => { void editor.onSelectOpponent(opponentId); setLeftPanelMode("duels"); }} />
           : <AdminStoryDuelCatalog duels={editor.data.duels} selectedDuelId={editor.selectedDuelId} selectedDeckListId={editor.data.deck?.deckListId ?? null} isBusy={editor.isBusy} onBackToOpponents={() => setLeftPanelMode("opponents")} onSelectDuel={(duelId) => void editor.onSelectDuelReference(duelId)} />}
-        <div className="flex min-h-0 justify-center xl:justify-start">
-          <AdminStoryDeckSlotsPanel draftCardIds={editor.draftCardIds} cardById={cardById} selectedSlotIndex={editor.selectedSlotIndex} isEditMode={editor.isEditMode} onSelectSlot={(slotIndex) => { editor.setSelectedSlotIndex(slotIndex); editor.setSelectedCollectionCardId(null); }} onDropOnSlot={onDropOnSlot} onStartDragSlot={(slotIndex, event) => editor.isEditMode && editor.draftCardIds[slotIndex] ? writeAdminStarterDeckDragData(event, { type: "slot", slotIndex }) : undefined} />
+        <div className="flex min-h-0 flex-col justify-start xl:justify-start">
+          <AdminStoryDeckSlotsPanel draftCardIds={editor.draftCardIds} draftFusionCardIds={editor.draftFusionCardIds} draftRewardCardIds={editor.draftRewardCardIds} cardById={cardById} selectedSlotIndex={editor.selectedSlotIndex} isEditMode={editor.isEditMode} isBusy={editor.isBusy} isBaseDeckMode={editor.isBaseDeckMode} selectedDuelId={editor.selectedDuelId} onSelectSlot={(slotIndex) => { editor.setSelectedSlotIndex(slotIndex); editor.setSelectedCollectionCardId(null); }} onDropOnSlot={onDropOnSlot} onStartDragSlot={(slotIndex, event) => editor.isEditMode && editor.draftCardIds[slotIndex] ? writeAdminStarterDeckDragData(event, { type: "slot", scope: "DECK", slotIndex }) : undefined} onSetFusionCard={editor.setDraftFusionCardIdBySlot} onSwapFusionCards={editor.swapDraftFusionCards} onClearFusionCard={editor.clearDraftFusionCardBySlot} onSetRewardCard={editor.setDraftRewardCardId} onClearRewardCard={editor.clearDraftRewardCard} onInvalidFusionCardDrop={onInvalidFusionCardDrop} />
         </div>
-        <AdminStarterDeckCollectionPanel availableCards={editor.data.availableCards} selectedCardId={editor.selectedCollectionCardId} isEditMode={editor.isEditMode} onSelectCard={(cardId) => { editor.setSelectedCollectionCardId(cardId); editor.setSelectedSlotIndex(null); }} onDropToCollection={(event) => { if (!editor.isEditMode) return; event.preventDefault(); const payload = readAdminStarterDeckDragData(event); if (payload?.type === "slot") editor.clearSlotCardByIndex(payload.slotIndex); }} onStartDragCard={(cardId, event) => writeAdminStarterDeckDragData(event, { type: "card", cardId })} />
+        <AdminStarterDeckCollectionPanel availableCards={editor.data.availableCards} selectedCardId={editor.selectedCollectionCardId} isEditMode={editor.isEditMode} onSelectCard={(cardId) => { editor.setSelectedCollectionCardId(cardId); editor.setSelectedSlotIndex(null); }} onDropToCollection={(event) => {
+          if (!editor.isEditMode) return;
+          event.preventDefault();
+          const payload = readAdminStarterDeckDragData(event);
+          if (payload?.type !== "slot") return;
+          const scope = payload.scope ?? "DECK";
+          if (scope === "DECK") editor.clearSlotCardByIndex(payload.slotIndex);
+          if (scope === "FUSION") editor.clearDraftFusionCardBySlot(payload.slotIndex);
+          if (scope === "REWARD") editor.clearDraftRewardCard();
+        }} onStartDragCard={(cardId, event) => writeAdminStarterDeckDragData(event, { type: "card", cardId })} />
         <div className="flex min-h-0 flex-col gap-2">
           <HomeCardInspector selectedCard={selectedCard} selectedCardVersionTier={selectedSlotLevels?.versionTier ?? 0} selectedCardLevel={selectedSlotLevels?.level ?? 0} selectedCardXp={selectedSlotLevels?.xp ?? 0} selectedCardMasteryPassiveSkillId={null} minCardScale={0.62} maxCardScale={0.95} />
           <section className="rounded-xl border border-cyan-800/35 bg-[#031020]/55 p-3 text-xs text-slate-200">

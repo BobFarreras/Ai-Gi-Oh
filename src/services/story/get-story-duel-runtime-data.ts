@@ -24,6 +24,7 @@ export interface IStoryDuelRuntimeData {
   playerDeck: ICard[];
   playerFusionDeck: ICard[];
   opponentDeck: ICard[];
+  opponentFusionDeck: ICard[];
   opponentId: string;
   opponentName: string;
   opponentAvatarUrl?: string | null;
@@ -66,11 +67,16 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
   const isUnlocked = worldState.progress.unlockedNodeIds.includes(duel.id);
   const isCurrentNode = currentNodeId === duel.id;
 
-  const cardsById = await loadCardsByIds(supabase, duel.opponentDeckEntries.map((entry) => entry.cardId));
+  const opponentFusionDeckCardIds = duel.opponentFusionDeckCardIds ?? [];
+  const cardsById = await loadCardsByIds(supabase, [...duel.opponentDeckEntries.map((entry) => entry.cardId), ...opponentFusionDeckCardIds]);
   const opponentDeck = duel.opponentDeckEntries.flatMap((entry) => {
     const card = cardsById.get(entry.cardId);
     return card ? [{ ...card }] : [];
   }).map((card, index) => applyStoryDeckEntryToCard(card, duel.opponentDeckEntries[index]));
+  const opponentFusionDeck = opponentFusionDeckCardIds.flatMap((cardId) => {
+    const card = cardsById.get(cardId);
+    return card ? [{ ...card }] : [];
+  });
 
   return {
     playerId: session.user.id,
@@ -85,6 +91,7 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
     playerDeck,
     playerFusionDeck,
     opponentDeck,
+    opponentFusionDeck,
     opponentId: duel.opponentId,
     opponentName: duel.opponentName,
     opponentAvatarUrl: duel.opponentAvatarUrl ?? null,

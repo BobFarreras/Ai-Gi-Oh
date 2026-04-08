@@ -22,6 +22,8 @@ export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse)
   const [selectedDuelDifficulty, setSelectedDuelDifficulty] = useState<StoryOpponentDifficulty>(initialSnapshot.selectedDuelDifficulty);
   const [duelAiStyle, setDuelAiStyle] = useState<StoryAiStyle>(initialSnapshot.duelAiProfile.style);
   const [duelAiAggression, setDuelAiAggression] = useState<number>(initialSnapshot.duelAiProfile.aggression);
+  const [draftFusionCardIds, setDraftFusionCardIds] = useState<string[]>(initialSnapshot.draftFusionCardIds);
+  const [draftRewardCardIds, setDraftRewardCardIds] = useState<string[]>(initialSnapshot.draftRewardCardIds);
   const [draftSlotLevels, setDraftSlotLevels] = useState<IStorySlotLevelDraft[]>(initialSnapshot.draftSlotLevels);
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(0);
   const [selectedCollectionCardId, setSelectedCollectionCardId] = useState<string | null>(null);
@@ -29,7 +31,12 @@ export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse)
   const [isBaseDeckMode, setIsBaseDeckMode] = useState(initialSnapshot.isBaseDeckMode);
   const [isBusy, setIsBusy] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const canSave = useMemo(() => draftCardIds.filter((cardId) => typeof cardId === "string").length > 0, [draftCardIds]);
+  const fusionCardById = useMemo(() => new Map(data.availableCards.filter((card) => card.type === "FUSION").map((card) => [card.id, card])), [data.availableCards]);
+  const canSave = useMemo(() => {
+    const hasBaseCards = draftCardIds.some((cardId) => typeof cardId === "string");
+    const hasValidFusionDeck = draftFusionCardIds.length === 2 && draftFusionCardIds.every((cardId) => cardId.trim().length > 0 && fusionCardById.has(cardId));
+    return isBaseDeckMode || !selectedDuelId ? hasBaseCards : hasBaseCards && hasValidFusionDeck;
+  }, [draftCardIds, isBaseDeckMode, selectedDuelId, draftFusionCardIds, fusionCardById]);
 
   async function load(input: { opponentId?: string; deckListId?: string; preferredDuelId?: string | null }): Promise<void> {
     setIsBusy(true);
@@ -42,8 +49,7 @@ export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse)
         setSelectedDuelId,
         setSelectedDuelDifficulty,
         setDuelAiStyle,
-        setDuelAiAggression,
-        setDraftSlotLevels,
+        setDuelAiAggression, setDraftSlotLevels, setDraftFusionCardIds, setDraftRewardCardIds,
         setIsBaseDeckMode,
         setSelectedSlotIndex,
         setSelectedCollectionCardId,
@@ -65,13 +71,26 @@ export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse)
     setSelectedCollectionCardId,
     draftCardIds,
     selectedDuelId,
-    setSelectedDuelId: (duelId) => applyDuelSelection({ data, duelId, isBaseDeckMode, setSelectedDuelId, setDraftCardIds, setSelectedDuelDifficulty, setDuelAiStyle, setDuelAiAggression, setDraftSlotLevels }),
+    setSelectedDuelId: (duelId) => applyDuelSelection({ data, duelId, isBaseDeckMode, setSelectedDuelId, setDraftCardIds, setSelectedDuelDifficulty, setDuelAiStyle, setDuelAiAggression, setDraftSlotLevels, setDraftFusionCardIds, setDraftRewardCardIds }),
     selectedDuelDifficulty,
     setSelectedDuelDifficulty: (difficulty) => applyDuelDifficultyPreset(difficulty, setSelectedDuelDifficulty, setDuelAiStyle, setDuelAiAggression),
     duelAiStyle,
     setDuelAiStyle,
     duelAiAggression,
     setDuelAiAggression: (value) => setDuelAiAggression(Math.max(0, Math.min(1, Number.isFinite(value) ? value : 0))),
+    draftFusionCardIds,
+    setDraftFusionCardIdBySlot: (slotIndex, cardId) => setDraftFusionCardIds((current) => { const next = current.length >= 2 ? [...current] : ["", ""]; next[slotIndex] = cardId; return next; }),
+    clearDraftFusionCardBySlot: (slotIndex) => setDraftFusionCardIds((current) => current.map((cardId, index) => (index === slotIndex ? "" : cardId))),
+    swapDraftFusionCards: (fromSlotIndex, toSlotIndex) => setDraftFusionCardIds((current) => {
+      const next = current.length >= 2 ? [...current] : ["", ""];
+      const source = next[fromSlotIndex] ?? "";
+      next[fromSlotIndex] = next[toSlotIndex] ?? "";
+      next[toSlotIndex] = source;
+      return next;
+    }),
+    draftRewardCardIds,
+    setDraftRewardCardId: (cardId) => setDraftRewardCardIds(cardId ? [cardId] : []),
+    clearDraftRewardCard: () => setDraftRewardCardIds([]),
     draftSlotLevels,
     setDraftSlotLevelByIndex: (slotIndex, key, value) => setDraftSlotLevels((current) => applySlotLevelToSameCards(current, draftCardIds, slotIndex, key, value)),
     applyMassSlotLevels: (input) => setDraftSlotLevels((current) => applyMassLevels(current, draftCardIds, input)),
@@ -84,19 +103,14 @@ export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse)
       });
     },
     clearSlotCardByIndex: (slotIndex) => setDraftCardIds((current) => current.map((value, index) => (index === slotIndex ? null : value))),
-    swapSlots: (fromSlotIndex, toSlotIndex) => setDraftCardIds((current) => {
-      const next = [...current];
-      const source = next[fromSlotIndex] ?? null;
-      next[fromSlotIndex] = next[toSlotIndex] ?? null;
-      next[toSlotIndex] = source;
-      return next;
-    }),
+    swapSlots: (fromSlotIndex, toSlotIndex) => setDraftCardIds((current) => { const next = [...current]; const source = next[fromSlotIndex] ?? null; next[fromSlotIndex] = next[toSlotIndex] ?? null; next[toSlotIndex] = source; return next; }),
     isEditMode,
     setIsEditMode,
     isBaseDeckMode,
-    setIsBaseDeckMode: (value) => applyDeckModeSelection(value, data, selectedDuelId, setIsBaseDeckMode, setDraftCardIds, setDraftSlotLevels),
+    setIsBaseDeckMode: (value) => applyDeckModeSelection(value, data, selectedDuelId, setIsBaseDeckMode, setDraftCardIds, setDraftSlotLevels, setDraftFusionCardIds, setDraftRewardCardIds),
     isBusy,
     feedback,
+    setFeedbackMessage: setFeedback,
     canSave,
     onSelectOpponent: async (opponentId) => load({ opponentId }),
     onSelectDuelReference: async (duelId) => {
@@ -106,16 +120,7 @@ export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse)
       setIsBaseDeckMode(false);
     },
     cloneFromDuel: (duelId) => {
-      cloneFromSourceDuel({
-        data,
-        sourceDuelId: duelId,
-        setSelectedDuelDifficulty,
-        setDuelAiStyle,
-        setDuelAiAggression,
-        setDraftCardIds,
-        setDraftSlotLevels,
-        setIsBaseDeckMode,
-      });
+      cloneFromSourceDuel({ data, sourceDuelId: duelId, setSelectedDuelDifficulty, setDuelAiStyle, setDuelAiAggression, setDraftCardIds, setDraftSlotLevels, setDraftFusionCardIds, setDraftRewardCardIds, setIsBaseDeckMode });
       setIsEditMode(true);
       setFeedback("Configuración clonada en borrador. Pulsa Guardar para persistir.");
     },
@@ -125,19 +130,7 @@ export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse)
       if (!data.deck || !canSave) return;
       setIsBusy(true);
       try {
-        await executeAdminStoryDeckSave({
-          deckListId: data.deck.deckListId,
-          deckOpponentId: data.deck.opponentId,
-          selectedOpponentId,
-          selectedDuelId,
-          selectedDuelDifficulty,
-          duelAiStyle,
-          duelAiAggression,
-          draftCardIds,
-          draftSlotLevels,
-          isBaseDeckMode,
-          load,
-        });
+        await executeAdminStoryDeckSave({ deckListId: data.deck.deckListId, deckOpponentId: data.deck.opponentId, selectedOpponentId, selectedDuelId, selectedDuelDifficulty, duelAiStyle, duelAiAggression, draftCardIds, draftSlotLevels, draftFusionCardIds, draftRewardCardIds, isBaseDeckMode, load });
         setFeedback(isBaseDeckMode ? "Deck base Story guardado correctamente." : "Configuración de duelo guardada correctamente.");
       } catch (error) {
         setFeedback(error instanceof Error ? error.message : "No se pudo guardar Story Deck.");

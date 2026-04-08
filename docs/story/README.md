@@ -49,16 +49,19 @@ Archivo principal:
 3. Se resuelve deck del oponente:
    - base desde `story_deck_list_cards`
    - si existen overrides activos del duelo, se usan esos (`story_duel_deck_overrides`)
-4. Se resuelve dificultad del duelo:
+4. Se resuelve deck de fusión del oponente:
+   - desde `story_duel_fusion_cards` (2 slots por duelo).
+   - si no hay datos, se usa fallback vacío y el motor aplica defaults internos.
+5. Se resuelve dificultad del duelo:
    - primero `story_duel_ai_profiles.difficulty`
    - fallback a `story_opponents.difficulty`
-5. Se resuelve perfil IA:
+6. Se resuelve perfil IA:
    - `story_duel_ai_profiles.ai_profile` (`style`, `aggression`)
    - normalización con defaults seguros por dificultad
    - mezcla final en perfil heurístico del bot (`HeuristicOpponentStrategy`)
-6. Se carga deck del jugador una sola vez al inicio.
-7. Durante el combate no hay lecturas continuas de BD para el motor.
-8. Al terminar, se llama API de cierre para persistir resultado/progreso/recompensas.
+7. Se carga deck del jugador una sola vez al inicio.
+8. Durante el combate no hay lecturas continuas de BD para el motor.
+9. Al terminar, se llama API de cierre para persistir resultado/progreso/recompensas.
 
 Archivos clave:
 - `src/services/story/get-story-duel-runtime-data.ts`
@@ -90,8 +93,10 @@ Ahora el panel admin permite:
 - seleccionar duelo concreto asociado al deck,
 - editar dificultad por duelo,
 - editar escalado estático por slot (`versionTier`, `level`, `xp`).
+- editar 2 slots de fusión por duelo (`Fusion 1`, `Fusion 2`) con validación de tipo `FUSION`.
+- editar carta de recompensa por duelo (`Reward`) en el mismo contenedor visual del deck.
 - navegar por catálogo de duelos del oponente en panel lateral con retorno rápido a catálogo de oponentes.
-- clonar configuración entre duelos (deck de duelo + dificultad + perfil IA + escalado por slot) antes de guardar.
+- clonar configuración entre duelos (deck de duelo + dificultad + perfil IA + escalado por slot + fusión/recompensa) antes de guardar.
 
 Esto permite casos como:
 - `GemNvim ROOKIE` con deck base,

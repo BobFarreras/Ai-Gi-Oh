@@ -13,6 +13,11 @@ function readStringArray(payload: JsonObject, key: string): string[] {
   return value;
 }
 
+function readOptionalStringArray(payload: JsonObject, key: string): string[] {
+  if (payload[key] === undefined || payload[key] === null) return [];
+  return readStringArray(payload, key);
+}
+
 function readOptionalDuelConfig(payload: JsonObject): IAdminSaveStoryDeckCommand["duelConfig"] {
   const value = payload.duelConfig;
   if (value === undefined || value === null) return null;
@@ -24,6 +29,8 @@ function readOptionalDuelConfig(payload: JsonObject): IAdminSaveStoryDeckCommand
     duelId: String(config.duelId ?? ""),
     difficulty: String(config.difficulty ?? "") as IAdminSaveStoryDuelConfigCommand["difficulty"],
     aiProfile: normalizeStoryAiProfile(config.aiProfile, String(config.difficulty ?? "") as IAdminSaveStoryDuelConfigCommand["difficulty"]),
+    fusionCardIds: readOptionalStringArray(config, "fusionCardIds"),
+    rewardCardIds: readOptionalStringArray(config, "rewardCardIds"),
     slotOverrides: slotOverrides.map((entry) => {
       if (!entry || typeof entry !== "object" || Array.isArray(entry)) throw new ValidationError("slotOverrides contiene entradas inválidas.");
       const slot = entry as JsonObject;

@@ -10,6 +10,8 @@ function createRepositoryMock(): IAdminStoryDeckRepository {
     listDuelReferences: vi.fn(),
     listDuelAiProfiles: vi.fn(),
     listDuelDeckOverrides: vi.fn(),
+    listDuelFusionCards: vi.fn(),
+    listDuelRewardCards: vi.fn(),
     getDeck: vi.fn(),
     saveDeck: vi.fn(async () => undefined),
     listAvailableCards: vi.fn(),
@@ -31,7 +33,14 @@ describe("SaveAdminStoryDeckUseCase", () => {
       deckListId: "deck-1",
       cardIds: [],
       updateBaseDeck: false,
-      duelConfig: { duelId: "story-ch2-duel-7", difficulty: "ELITE", aiProfile: { style: "combo", aggression: 0.66 }, slotOverrides: [{ slotIndex: 0, cardId: "entity-python", versionTier: 2, level: 12, xp: 1400 }] },
+      duelConfig: {
+        duelId: "story-ch2-duel-7",
+        difficulty: "ELITE",
+        aiProfile: { style: "combo", aggression: 0.66 },
+        fusionCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
+        rewardCardIds: ["entity-python"],
+        slotOverrides: [{ slotIndex: 0, cardId: "entity-python", versionTier: 2, level: 12, xp: 1400 }],
+      },
     });
     expect(repository.saveDeck).toHaveBeenCalledWith("deck-1", [], expect.any(Object), false);
   });

@@ -1,4 +1,4 @@
-<!-- docs/story/admin-story-decks-controls.md - Referencia funcional de botones y selectores del panel Admin Story Decks. -->
+<!-- docs/story/admin-story-decks-controls.md - Referencia funcional de controles del panel Admin Story Decks con slots visuales de fusión y recompensa. -->
 # Admin Story Decks: controles y acciones
 
 ## Archivo de la barra superior
@@ -27,7 +27,7 @@ La barra superior con botones/selectores está en:
 
 6. `Guardar`
 - Persiste cambios de deck base y/o configuración por duelo.
-- Si estás en modo `Deck duelo`, guarda también dificultad, perfil IA y escalado por slot.
+- Si estás en modo `Deck duelo`, guarda también dificultad, perfil IA, escalado por slot, 2 slots de fusión y recompensa de carta.
 
 7. `Modo: Deck base / Modo: Deck duelo`
 - Selector único de modo de edición.
@@ -58,6 +58,25 @@ La barra superior con botones/selectores está en:
 13. `Masiva duelo` (`Ver`, `Lvl`, `XP`, `Aplicar a todas`)
 - Aplica escalado uniforme a todas las cartas del borrador de duelo.
 - Está integrada en la misma sección superior de configuración para ahorrar espacio.
+
+## Slots visuales dentro de Story Deck
+
+En el mismo grid del mazo, al final se muestran 3 slots extra:
+
+1. `Fusion 1`
+2. `Fusion 2`
+3. `Reward`
+
+Comportamiento:
+- Usan mini carta visual (`HomeMiniCard`) del mismo tamaño que los slots del deck.
+- Soportan drag & drop desde colección.
+- Soportan limpieza (botón `Quitar`) y vaciado arrastrando de vuelta a colección.
+- `Fusion 1` y `Fusion 2` también permiten swap entre sí por drag & drop.
+
+Regla de validación de fusión:
+- Solo aceptan cartas `type = FUSION`.
+- Si se intenta soltar una carta no `FUSION`, se muestra banner de feedback y no se aplica el cambio.
+- El guardado en modo duelo exige los 2 slots de fusión válidos.
 
 ## Navegación lateral
 
