@@ -25,9 +25,10 @@ function scoreCardForDiscard(card: ICard, player: IPlayer): number {
     return score;
   }
 
-  let effectValue = card.effect && "value" in card.effect && typeof card.effect.value === "number" ? card.effect.value : 0;
-  if (card.type === "EXECUTION" && card.effect?.action === "FUSION_SUMMON") {
-    const hasFusionCard = player.fusionDeck?.some((fusionCard) => fusionCard.id === card.effect.recipeId) ?? false;
+  const effect = card.effect;
+  let effectValue = effect && "value" in effect && typeof effect.value === "number" ? effect.value : 0;
+  if (card.type === "EXECUTION" && effect?.action === "FUSION_SUMMON") {
+    const hasFusionCard = player.fusionDeck?.some((fusionCard) => fusionCard.id === effect.recipeId) ?? false;
     effectValue += hasFusionCard ? 1800 : 600;
   }
   return effectValue - card.cost * 140;

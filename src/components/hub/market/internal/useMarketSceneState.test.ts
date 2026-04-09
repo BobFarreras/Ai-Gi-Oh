@@ -65,6 +65,7 @@ describe("useMarketSceneState", () => {
     const { result } = renderHook(() =>
       useMarketSceneState({
         playerId: "player-1",
+        isDesktopLayout: true,
         initialCatalog: CATALOG,
         initialTransactions: TRANSACTIONS,
         initialCollection: COLLECTION,

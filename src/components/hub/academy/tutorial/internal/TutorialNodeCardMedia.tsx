@@ -1,5 +1,6 @@
 // src/components/hub/academy/tutorial/internal/TutorialNodeCardMedia.tsx - Renderiza arte temático por tipo de nodo tutorial para reforzar identidad visual.
 import Image from "next/image";
+import { ReactElement } from "react";
 import { Card } from "@/components/game/card/Card";
 import { ENTITY_CARDS } from "@/core/data/mock-cards/entities";
 import { EXECUTION_CARDS } from "@/core/data/mock-cards/executions";
@@ -18,7 +19,7 @@ const ARSENAL_CARD_STACK = [
   { card: EXECUTION_CARDS[4], className: "left-[76%] top-[8%] rotate-[11deg]" },
 ];
 
-function renderArsenalMosaic(): JSX.Element {
+function renderArsenalMosaic(): ReactElement {
   return (
     <div className="relative h-full w-full overflow-hidden bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.16),transparent_45%),linear-gradient(180deg,rgba(2,11,22,0.68),rgba(2,11,22,0.94))]">
       <div className="absolute inset-0 bg-[linear-gradient(rgba(56,189,248,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.08)_1px,transparent_1px)] bg-[size:18px_18px] opacity-35" />
@@ -31,7 +32,7 @@ function renderArsenalMosaic(): JSX.Element {
   );
 }
 
-function renderMarketNexus(): JSX.Element {
+function renderMarketNexus(): ReactElement {
   return (
     <div className="relative h-full w-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.15),transparent_65%)]">
       <Image src="/assets/renders/nexus.webp" alt="Nexus" fill className="object-contain p-2" sizes="(max-width: 1024px) 50vw, 25vw" />
@@ -39,7 +40,7 @@ function renderMarketNexus(): JSX.Element {
   );
 }
 
-function renderCombatPreview(): JSX.Element {
+function renderCombatPreview(): ReactElement {
   return (
     <div className="relative grid h-full w-full grid-cols-[1fr_auto_1fr] overflow-hidden bg-[#04111d]">
       <div className="relative">
@@ -54,7 +55,7 @@ function renderCombatPreview(): JSX.Element {
   );
 }
 
-function renderRewardPreview(): JSX.Element {
+function renderRewardPreview(): ReactElement {
   return (
     <div className="relative flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_50%_35%,rgba(250,204,21,0.2),transparent_70%)]">
       <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_18%,rgba(250,204,21,0.22)_50%,transparent_82%)]" />

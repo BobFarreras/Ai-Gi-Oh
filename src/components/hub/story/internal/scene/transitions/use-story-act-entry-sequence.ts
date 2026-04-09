@@ -38,23 +38,24 @@ function resolveFirstStepNodeFromTransition(input: {
 }): string | null {
   const transitionNode = input.nodes.find((node) => node.id === input.transitionNodeId);
   if (!transitionNode?.position) return null;
+  const transitionPosition = transitionNode.position;
   const candidates = input.nodes.filter(
     (node) => node.id !== input.transitionNodeId && Boolean(node.position),
   );
   if (candidates.length === 0) return null;
   const directionalCandidates = candidates.filter((node) => {
-    const deltaX = (node.position?.x ?? 0) - transitionNode.position.x;
+    const deltaX = (node.position?.x ?? 0) - transitionPosition.x;
     if (input.direction === "forward") return deltaX > 0;
     if (input.direction === "backward") return deltaX < 0;
     return true;
   });
   const pool = directionalCandidates.length > 0 ? directionalCandidates : candidates;
   const sorted = [...pool].sort((left, right) => {
-    const leftDx = Math.abs((left.position?.x ?? 0) - transitionNode.position.x);
-    const rightDx = Math.abs((right.position?.x ?? 0) - transitionNode.position.x);
+    const leftDx = Math.abs((left.position?.x ?? 0) - transitionPosition.x);
+    const rightDx = Math.abs((right.position?.x ?? 0) - transitionPosition.x);
     if (leftDx !== rightDx) return leftDx - rightDx;
-    const leftDy = Math.abs((left.position?.y ?? 0) - transitionNode.position.y);
-    const rightDy = Math.abs((right.position?.y ?? 0) - transitionNode.position.y);
+    const leftDy = Math.abs((left.position?.y ?? 0) - transitionPosition.y);
+    const rightDy = Math.abs((right.position?.y ?? 0) - transitionPosition.y);
     return leftDy - rightDy;
   });
   return sorted[0]?.id ?? null;

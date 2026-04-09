@@ -18,16 +18,14 @@ function createStoryProgressRepositoryStub(): IPlayerStoryDuelProgressRepository
     listByPlayerId: async () => [],
     getByPlayerAndDuelId: async () => null,
     registerDuelResult: async () => ({
-      id: "progress-row",
       playerId: "player-test",
       duelId: "story-ch2-duel-4",
+      wins: 0,
+      losses: 1,
       bestResult: "LOST",
-      attempts: 1,
-      victories: 0,
-      firstWonAt: null,
-      lastPlayedAt: "2026-04-07T00:00:00.000Z",
-      createdAt: "2026-04-07T00:00:00.000Z",
-      updatedAt: "2026-04-07T00:00:00.000Z",
+      firstClearedAtIso: null,
+      lastPlayedAtIso: "2026-04-07T00:00:00.000Z",
+      updatedAtIso: "2026-04-07T00:00:00.000Z",
     }),
   };
 }

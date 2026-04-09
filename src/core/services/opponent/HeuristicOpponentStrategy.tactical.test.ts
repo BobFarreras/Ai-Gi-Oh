@@ -25,7 +25,7 @@ describe("HeuristicOpponentStrategy táctico", () => {
         ...base.playerB,
         hand: [
           { id: "bot-fragile", name: "Fragile", description: "", type: "ENTITY" as const, faction: "OPEN_SOURCE" as const, cost: 3, attack: 1700, defense: 1000 },
-          { id: "bot-trap", name: "Mirror", description: "", type: "TRAP" as const, faction: "NO_CODE" as const, cost: 1, trigger: "ON_OPPONENT_ATTACK_DECLARED", effect: { action: "NEGATE_ATTACK_AND_DESTROY_ATTACKER" } },
+          { id: "bot-trap", name: "Mirror", description: "", type: "TRAP" as const, faction: "NO_CODE" as const, cost: 1, trigger: "ON_OPPONENT_ATTACK_DECLARED" as const, effect: { action: "NEGATE_ATTACK_AND_DESTROY_ATTACKER" as const } },
         ],
       },
     };
