@@ -35,10 +35,9 @@ jobs:
         with:
           node-version: 24
 
-      - name: Setup pnpm via Corepack
+      - name: Setup pnpm
         run: |
-          corepack enable
-          corepack prepare pnpm@10 --activate
+          npm install --global pnpm@10
           pnpm --version
 
       - name: Resolve pnpm store path

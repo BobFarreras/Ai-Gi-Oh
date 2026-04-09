@@ -17,7 +17,7 @@ Sin estos cinco en verde no se considera listo para merge.
 2. Usa permisos mínimos por defecto:
    - `permissions: contents: read`
 3. Usa `concurrency` para cancelar ejecuciones antiguas de la misma PR/rama.
-4. Configura Node `24` y `pnpm@10` con Corepack.
+4. Configura Node `24` e instala `pnpm@10` global en el runner.
 5. Aplica cache del store de `pnpm` (`actions/cache`) por `pnpm-lock.yaml`.
 6. Instala dependencias con `pnpm install --frozen-lockfile`.
 7. Ejecuta `gitleaks` como gate de seguridad.
@@ -26,7 +26,7 @@ Sin estos cinco en verde no se considera listo para merge.
 ## Por qué fallaba `pnpm` en Actions
 
 1. `actions/setup-node` con `cache: pnpm` requiere que `pnpm` ya exista en `PATH`.
-2. Si `pnpm` se instala después (Corepack), el job puede fallar con:
+2. Si `pnpm` no está disponible en `PATH` al arrancar el job, puede fallar con:
    - `Unable to locate executable file: pnpm`
 3. Solución aplicada:
    - quitar `cache: pnpm` de `setup-node`,
