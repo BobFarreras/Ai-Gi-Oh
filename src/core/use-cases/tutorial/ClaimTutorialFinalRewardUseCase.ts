@@ -5,7 +5,6 @@ import { ITutorialNodeProgressRepository } from "@/core/repositories/ITutorialNo
 import { ITutorialRewardClaimRepository } from "@/core/repositories/ITutorialRewardClaimRepository";
 import { IWalletRepository } from "@/core/repositories/IWalletRepository";
 import { resolveTutorialFinalReward } from "@/core/services/tutorial/resolve-tutorial-final-reward";
-import { resolveTutorialNodeCatalog } from "@/core/services/tutorial/resolve-tutorial-node-catalog";
 import { GetOrCreatePlayerProgressUseCase } from "@/core/use-cases/player/GetOrCreatePlayerProgressUseCase";
 
 interface IClaimTutorialFinalRewardInput {
@@ -26,7 +25,7 @@ interface IClaimTutorialFinalRewardOutput {
 }
 
 function resolveRequiredNodeIds(): string[] {
-  return resolveTutorialNodeCatalog().filter((node) => node.kind !== "REWARD").map((node) => node.id);
+  return ["tutorial-combat-basics"];
 }
 
 export class ClaimTutorialFinalRewardUseCase {

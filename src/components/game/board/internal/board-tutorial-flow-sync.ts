@@ -28,6 +28,7 @@ export function syncBoardTutorialStep(input: ISyncBoardTutorialStepInput): void 
   if (stepId === "combat-set-trap" && input.signals.hasTutorialTrapSet) input.queueStepAction("combat-set-trap", "SET_TUTORIAL_TRAP");
   if (stepId === "combat-subturns-battle" && input.signals.hasPlayerToBattle) input.queueStepAction("combat-subturns-battle", "TURN_TO_BATTLE");
   if (stepId === "combat-subturns-pass" && input.signals.hasOpponentTurn) input.queueStepAction("combat-subturns-pass", "TURN_PASSED_TO_OPPONENT");
+  if (stepId === "combat-opponent-trap-prompt" && input.signals.hasTrapActivationPrompt) input.queueStepAction("combat-opponent-trap-prompt", "TRAP_PROMPT_VISIBLE");
   if (stepId === "combat-opponent-trap-resolution" && input.signals.hasTrapDefenseResolved) input.queueStepAction("combat-opponent-trap-resolution", "TRAP_DEFENSE_RESOLVED", 1450);
   if (stepId === "combat-energy-restored" && input.selectedCardId === "entity-gemini") input.queueStepAction("combat-energy-restored", "SELECT_GEMINI");
   if (stepId === "combat-select-energy-restore" && input.selectedCardId === "tutorial-exec-energy-restore") input.queueStepAction("combat-select-energy-restore", "SELECT_ENERGY_RESTORE");

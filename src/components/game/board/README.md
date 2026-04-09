@@ -71,6 +71,9 @@ Guía rápida para entender la lógica de tablero y batalla.
    - escudo: pasar a `DEFENSE`.
 7. Las entidades ya elegidas como material quedan marcadas visualmente con estado dedicado (`MATERIAL` + ring cian).
 8. Cuando existe decisión pendiente de trampa (`activar/cancelar`), el panel de detalle entra en estado resaltado y se muestra banner contextual de decisión para evitar pérdida de foco del jugador.
+9. En modo `TUTORIAL`, el aviso de salto de fase (`Aún puedes jugar cartas`) se desactiva para no bloquear el flujo guiado de combate.
+10. El tutorial de combate ahora incluye paso explícito de decisión de trampa del jugador (prompt `Activar/Cancelar`) antes de resolver el ataque rival.
+11. Durante ese paso guiado de tutorial se deshabilita `Cancelar` para forzar el camino didáctico y evitar bloqueo del flujo.
 6. Al confirmarse la fusión, la cinemática sigue flujo en 2 etapas:
    - vídeo de fusión,
    - transición de carta invocada desde centro a slot final.

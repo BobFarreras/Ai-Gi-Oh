@@ -213,6 +213,133 @@
 3. La compatibilidad legacy queda declarada en configuración de runtime, no duplicada en App Router.
 4. Commit: pendiente en esta sesión.
 
+## Fase 24 - Rediseño visual Academy + robustez responsive
+
+1. Se rediseñó `/hub/academy` con estética más alineada a Hub (capas `hub-control-*`, panel HUD y jerarquía visual más marcada).
+2. Se cambió el contenedor principal a `overflow-y-auto` con `safe-area` inferior para evitar recortes en dispositivos con altura reducida.
+3. El CTA `Volver al Menú` pasa a footer `sticky` en mobile para mantener salida visible durante todo el scroll.
+4. Los paneles de modos (`Tutorial`/`Arena`) adoptan alturas adaptativas y composición visual más clara en pantallas pequeñas.
+5. Validación aplicada en esta fase:
+   - `pnpm vitest src/components/hub/academy/training/TrainingModeSelection.test.tsx`
+   - `pnpm eslint src/app/hub/academy/page.tsx src/components/hub/academy/training/TrainingModeSelection.tsx src/components/hub/academy/training/TrainingMode3DPanel.tsx`
+6. Commit: pendiente en esta sesión.
+
+## Fase 25 - Academy fullscreen profesional (desktop + mobile)
+
+1. Se rediseña `/hub/academy` como escena `fullscreen` real en desktop, eliminando márgenes/padding extra en `lg`.
+2. El selector usa dos paneles tácticos que ocupan el alto disponible del viewport en desktop.
+3. En mobile se mantiene stack vertical con scroll en el cuerpo de paneles para asegurar acceso completo.
+4. Se integran imágenes temáticas por modo:
+   - Tutorial: `intro-BigLog`.
+   - Arena: `intro-Soldado-act01`.
+5. El efecto de brillo horizontal queda restringido a interacción `hover` (sin animación continua).
+6. Validación aplicada:
+   - `pnpm vitest src/components/hub/academy/training/TrainingModeSelection.test.tsx`
+   - `pnpm eslint src/app/hub/academy/page.tsx src/components/hub/academy/training/TrainingModeSelection.tsx src/components/hub/academy/training/TrainingMode3DPanel.tsx`
+7. Commit: pendiente en esta sesión.
+
+## Fase 26 - Ajuste de espaciado y jerarquía visual en Academy
+
+1. Se incrementa separación entre bloques de `header`, paneles y footer para evitar solapamiento visual del CTA principal con `Volver al Menú`.
+2. Se amplía escala tipográfica y centrado de `title/subtitle/description` dentro de cada panel para mejorar legibilidad y densidad visual.
+3. El panel de Tutorial usa imagen `tutorial-BigLog`.
+4. El panel de Arena usa collage con intros de rivales (`intro-*`) para reforzar identidad de enfrentamientos.
+5. Se ajusta el `object-position` vertical de artes para bajar el encuadre y evitar corte de rostro.
+6. Validación aplicada:
+   - `pnpm vitest src/components/hub/academy/training/TrainingModeSelection.test.tsx`
+   - `pnpm eslint src/components/hub/academy/training/TrainingModeSelection.tsx src/components/hub/academy/training/TrainingMode3DPanel.tsx src/app/hub/academy/page.tsx`
+7. Commit: pendiente en esta sesión.
+
+## Fase 27 - Refinado visual de paneles Academy (tipografía, arte y marco)
+
+1. Se incrementa escala tipográfica en desktop para `subtitle/title/description` dentro de cada panel.
+2. El arte de Tutorial pasa a `tutorial-BigLog` con menor zoom (`object-contain`) para evitar recorte facial.
+3. El arte de Arena pasa de mosaico a columnas por oponente (`intro-*`), mostrando cada imagen completa dentro de su columna.
+4. Se añade marco futurista a los paneles con doble borde, esquinas acentuadas y glow táctico.
+5. Validación aplicada:
+   - `pnpm vitest src/components/hub/academy/training/TrainingModeSelection.test.tsx`
+   - `pnpm eslint src/components/hub/academy/training/TrainingMode3DPanel.tsx src/components/hub/academy/training/TrainingModeSelection.tsx src/app/hub/academy/page.tsx`
+6. Commit: pendiente en esta sesión.
+
+## Fase 28 - Limpieza de banners y fix de clipping en hover
+
+1. Se retiran los banners superiores (`PROTOCOLO` y `ARENA`) de las cards de Academy.
+2. Se corrige recorte del borde superior al hacer hover en desktop:
+   - el área de cards en `lg` pasa a `overflow-visible`,
+   - se añade margen interior superior para la animación (`lg:pt-2`),
+   - se reduce ligeramente escala/offset del hover para evitar clipping residual.
+3. Validación aplicada:
+   - `pnpm eslint src/components/hub/academy/training/TrainingMode3DPanel.tsx src/components/hub/academy/training/TrainingModeSelection.tsx`
+4. Commit: pendiente en esta sesión.
+
+## Fase 29 - Rediseño UI del mapa Tutorial (fullscreen + estética videojuego)
+
+1. Se adapta `/hub/academy/tutorial` a `h-dvh` con comportamiento responsive:
+   - desktop: escena fullscreen sin scroll global,
+   - mobile: scroll vertical seguro para no bloquear navegación.
+2. Se reorganiza `TutorialMapSelection` en layout de tres filas (`header`, grid de nodos, footer) para ajustar altura por viewport.
+3. Se rediseñan cards de nodo con marco HUD futurista, tipografía más legible y mejor jerarquía visual.
+4. Se incorpora arte temático por nodo:
+   - `ARSENAL`: mosaico de tipos de carta,
+   - `MARKET`: render de Nexus,
+   - `COMBAT`: columnas con intros de rivales,
+   - `REWARD`: composición visual de premio con foco Nexus.
+5. Validación aplicada:
+   - `pnpm vitest src/components/hub/academy/tutorial/TutorialMapSelection.test.tsx`
+   - `pnpm eslint src/app/hub/academy/tutorial/page.tsx src/components/hub/academy/tutorial/TutorialMapSelection.tsx src/components/hub/academy/tutorial/TutorialCircuitMap.tsx src/components/hub/academy/tutorial/TutorialNodeCard.tsx src/components/hub/academy/tutorial/internal/TutorialNodeCardMedia.tsx`
+6. Commit: pendiente en esta sesión.
+
+## Fase 30 - Ajuste de arte tutorial por nodo y jerarquía tipográfica
+
+1. Nodo `Preparar Deck` cambia a composición de cartas reales del juego en formato “montón” desordenado.
+2. Nodo `Combate` usa captura base real del tablero (`/assets/tutorial-combate.webp`).
+3. Nodo `Recompensa final` deja de usar Nexus y pasa a iconografía de misterio (`?` + estrellas).
+4. Se incrementa tamaño de `title/description` en cards y se centra el bloque de texto.
+5. El header con BigLog se centra completamente (avatar + textos), con escala tipográfica superior.
+6. Validación aplicada:
+   - `pnpm vitest src/components/hub/academy/tutorial/TutorialMapSelection.test.tsx`
+   - `pnpm eslint src/components/hub/academy/tutorial/internal/TutorialNodeCardMedia.tsx src/components/hub/academy/tutorial/TutorialNodeCard.tsx src/components/hub/academy/tutorial/TutorialMapSelection.tsx src/components/hub/academy/tutorial/TutorialCircuitMap.tsx src/app/hub/academy/tutorial/page.tsx`
+7. Commit: pendiente en esta sesión.
+
+## Fase 31 - Ajustes de usabilidad visual del mapa tutorial
+
+1. Se corrige densidad del header para reducir altura vertical:
+   - layout horizontal (avatar a un lado, texto al otro),
+   - se elimina la línea `UPLINK // BIGLOG`.
+2. Se incrementa padding en mobile para evitar contenedores pegados al borde.
+3. El CTA `Volver a Academy` queda centrado en todos los viewports.
+4. Nodo `Preparar Deck` pasa a usar cartas reales con componente `Card.tsx` (no simulación visual).
+5. Se ajusta escala tipográfica de títulos/descripciones para evitar cortes de texto manteniendo lectura centrada.
+6. Validación aplicada:
+   - `pnpm vitest src/components/hub/academy/tutorial/TutorialMapSelection.test.tsx`
+   - `pnpm eslint src/components/hub/academy/tutorial/TutorialMapSelection.tsx src/components/hub/academy/tutorial/TutorialCircuitMap.tsx src/components/hub/academy/tutorial/TutorialNodeCard.tsx src/components/hub/academy/tutorial/internal/TutorialNodeCardMedia.tsx src/app/hub/academy/tutorial/page.tsx`
+7. Commit: pendiente en esta sesión.
+
+## Fase 32 - Cards reales en Preparar Deck y nuevo visual de Combate
+
+1. Nodo `Preparar Deck` ahora renderiza cartas reales con `Card.tsx` (entidades + ejecuciones) para mostrar arte y fondo auténticos.
+2. Nodo `Combate` reemplaza captura base por composición:
+   - `intro-Jugador` a la izquierda,
+   - `intro-BigLog` a la derecha,
+   - `VS` centrado.
+3. Se ajusta escala de título/descripcion para evitar recortes de texto en cards.
+4. Se reduce ligeramente la escala del título principal del header para compactar altura.
+5. Validación aplicada:
+   - `pnpm vitest src/components/hub/academy/tutorial/TutorialMapSelection.test.tsx`
+   - `pnpm eslint src/components/hub/academy/tutorial/internal/TutorialNodeCardMedia.tsx src/components/hub/academy/tutorial/TutorialNodeCard.tsx src/components/hub/academy/tutorial/TutorialMapSelection.tsx src/components/hub/academy/tutorial/TutorialCircuitMap.tsx src/app/hub/academy/tutorial/page.tsx`
+6. Commit: pendiente en esta sesión.
+
+## Fase 33 - Scroll por capas en mobile y ajuste desktop de contenedores
+
+1. En mobile, `header` y `Volver a Academy` pasan a overlays para que solo se superpongan sus cápsulas (no toda la franja horizontal).
+2. El scroll queda limitado al bloque central de nodos, con `padding` superior/inferior para evitar solapes.
+3. En desktop se elimina el footer flotante y se restaura como sección fija al final del layout.
+4. Se añade margen/padding general en desktop para evitar contacto directo con bordes de pantalla.
+5. Se reduce tamaño de descripciones para evitar recortes de texto en cards.
+6. Validación aplicada:
+   - `pnpm eslint src/app/hub/academy/tutorial/page.tsx src/components/hub/academy/tutorial/TutorialMapSelection.tsx src/components/hub/academy/tutorial/TutorialNodeCard.tsx`
+7. Commit: pendiente en esta sesión.
+
 ## Validación global aplicada por fase
 
 1. `pnpm lint`

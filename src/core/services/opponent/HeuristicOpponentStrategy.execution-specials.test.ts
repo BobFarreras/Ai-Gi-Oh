@@ -431,7 +431,10 @@ describe("HeuristicOpponentStrategy ejecuciones especiales", () => {
 
     const next = runOpponentStep(state, "p2", strategy);
     expect(next.pendingTurnAction?.type).toBe("SELECT_FUSION_MATERIALS");
-    expect(next.pendingTurnAction?.selectedMaterialInstanceIds).toEqual(["mat-chatgpt"]);
+    if (next.pendingTurnAction?.type !== "SELECT_FUSION_MATERIALS") {
+      throw new Error("Se esperaba una acción pendiente de selección de materiales de fusión.");
+    }
+    expect(next.pendingTurnAction.selectedMaterialInstanceIds).toEqual(["mat-chatgpt"]);
   });
 
   it("no auto-activa trampas seteadas aunque su efecto use acción de ejecución", () => {

@@ -29,15 +29,14 @@ export function TutorialCircuitMap({ nodes, guidedNodeId = null }: ITutorialCirc
       variants={gridVariants}
       initial="hidden"
       animate="show"
-      className="relative z-10 w-full"
+      className="relative z-10 h-full w-full"
     >
-      {/* Grid 2x2 estricto en desktop, 1 columna en móvil */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
+      <div className="grid h-full grid-cols-1 gap-3 px-1 sm:gap-4 lg:grid-cols-2 lg:auto-rows-fr lg:gap-5 lg:px-0">
         {nodes.map((node) => (
           <motion.div
             key={node.id}
             variants={cardVariants}
-            className={`h-full ${guidedNodeId && node.id !== guidedNodeId ? "pointer-events-none opacity-45" : ""}`}
+            className={`h-full min-h-[250px] lg:min-h-0 ${guidedNodeId && node.id !== guidedNodeId ? "pointer-events-none opacity-45" : ""}`}
           >
             <TutorialNodeCard
               node={node}

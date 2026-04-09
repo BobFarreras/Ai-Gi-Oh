@@ -37,6 +37,7 @@ export function useBoard(
     uiState.setIsAutoPhaseEnabled(false);
   }, [mode, uiState]);
   const runtime = useMatchRuntime({
+    mode,
     campaignProgress,
     gameStateRef,
     uiState,

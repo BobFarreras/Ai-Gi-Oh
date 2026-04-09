@@ -1,9 +1,11 @@
 // src/components/game/board/hooks/internal/board-state/useAdvancePhaseGuard.ts - Encapsula confirmaciones de avance de fase y preferencia de ayuda persistente.
 import { useCallback, useState } from "react";
+import { IMatchMode } from "@/core/entities/match";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { resolveAdvanceWarning } from "./turn-guard";
 
 interface IUseAdvancePhaseGuardParams {
+  mode: IMatchMode;
   gameState: GameState;
   winnerPlayerId: string | "DRAW" | null;
   isAnimating: boolean;
@@ -17,6 +19,7 @@ interface IUseAdvancePhaseGuardParams {
 }
 
 export function useAdvancePhaseGuard({
+  mode,
   gameState,
   winnerPlayerId,
   isAnimating,
@@ -35,14 +38,14 @@ export function useAdvancePhaseGuard({
       executeAdvancePhase();
       return;
     }
-    const warning = resolveAdvanceWarning(gameState);
+    const warning = resolveAdvanceWarning(gameState, mode);
     if (!warning) {
       executeAdvancePhase();
       return;
     }
     onGuardShown(warning);
     setPendingAdvanceWarning(warning);
-  }, [assertPlayerTurn, executeAdvancePhase, gameState, isAnimating, isTurnHelpEnabled, onGuardShown, winnerPlayerId]);
+  }, [assertPlayerTurn, executeAdvancePhase, gameState, isAnimating, isTurnHelpEnabled, mode, onGuardShown, winnerPlayerId]);
   const confirmAdvancePhase = useCallback(
     (shouldDisableHelp: boolean) => {
       if (shouldDisableHelp) disableTurnHelp();

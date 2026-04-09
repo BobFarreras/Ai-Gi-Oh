@@ -1,6 +1,7 @@
 // src/components/game/board/hooks/internal/match/useMatchRuntime.ts - Encapsula reglas de runtime del duelo y transiciones del motor.
 import { MutableRefObject, useMemo } from "react";
 import { GameState } from "@/core/use-cases/GameEngine";
+import { IMatchMode } from "@/core/entities/match";
 import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
 import { resolveDifficultyFromCampaign } from "@/core/services/opponent/difficulty/resolveDifficultyFromCampaign";
 import { ICampaignProgress } from "@/core/services/opponent/difficulty/types";
@@ -14,6 +15,7 @@ import { buildMatchRuntimeResult, buildOpponentTurnParams, buildPlayerActionsPar
 import { useApplyTransition, useAssertPlayerTurn, useAutoClearBoardError, useAutoSyncGameStateRef, useTrapDecisionManager } from "./useMatchRuntime.internal";
 
 interface IUseMatchRuntimeParams {
+  mode: IMatchMode;
   campaignProgress: ICampaignProgress;
   gameStateRef: MutableRefObject<GameState>;
   uiState: IUseMatchUiStateResult;
@@ -24,6 +26,7 @@ interface IUseMatchRuntimeParams {
 }
 
 export function useMatchRuntime({
+  mode,
   campaignProgress,
   gameStateRef,
   uiState,
@@ -55,6 +58,7 @@ export function useMatchRuntime({
   }));
 
   const turnControls = useBoardTurnControls({
+    mode,
     gameState: uiState.gameState,
     gameStateRef,
     selectedCard: uiState.selectedCard,

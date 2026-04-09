@@ -1,6 +1,7 @@
 // src/components/game/board/hooks/internal/board-state/useBoardTurnControls.ts - Centraliza controles de fase, timer y resolución de acciones pendientes del jugador.
 import { MutableRefObject, useCallback } from "react";
 import { ICard } from "@/core/entities/ICard";
+import { IMatchMode } from "@/core/entities/match";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { useAutoAdvanceBattle } from "./useAutoAdvanceBattle";
 import { useAdvancePhaseGuard } from "./useAdvancePhaseGuard";
@@ -9,6 +10,7 @@ import { useSelectedEntityModeActions } from "./useSelectedEntityModeActions";
 import { useTurnTelemetry } from "./useTurnTelemetry";
 
 interface IUseBoardTurnControlsParams {
+  mode: IMatchMode;
   gameState: GameState;
   gameStateRef: MutableRefObject<GameState>;
   selectedCard: ICard | null;
@@ -41,6 +43,7 @@ interface IUseBoardTurnControlsResult {
 }
 
 export function useBoardTurnControls({
+  mode,
   gameState,
   gameStateRef,
   selectedCard,
@@ -91,6 +94,7 @@ export function useBoardTurnControls({
     clearError();
   }, [applyTransition, assertPlayerTurn, clearError, clearSelection, isAnimating, winnerPlayerId]);
   const { advancePhase, confirmAdvancePhase, cancelAdvancePhase, pendingAdvanceWarning } = useAdvancePhaseGuard({
+    mode,
     gameState,
     winnerPlayerId,
     isAnimating,
@@ -104,6 +108,7 @@ export function useBoardTurnControls({
   });
 
   useAutoAdvanceBattle({
+    mode,
     gameState,
     gameStateRef,
     winnerPlayerId,
