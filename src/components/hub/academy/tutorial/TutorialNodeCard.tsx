@@ -15,9 +15,15 @@ interface ITutorialNodeCardProps {
 
 const snappySpring: Transition = { type: "spring", stiffness: 360, damping: 24 };
 
-function playCardClickSfx(): void {
+function playCardHoverSfx(): void {
   const audio = new Audio(ONBOARDING_AUDIO_CATALOG.buttonClick);
-  audio.volume = 0.62;
+  audio.volume = 0.52;
+  void audio.play().catch(() => undefined);
+}
+
+function playCardOpenSfx(): void {
+  const audio = new Audio(ONBOARDING_AUDIO_CATALOG.movement);
+  audio.volume = 0.56;
   void audio.play().catch(() => undefined);
 }
 
@@ -42,9 +48,20 @@ export function TutorialNodeCard({ node, isForcedSelectable = false, isForcedDis
       whileHover={isLocked ? {} : { scale: 1.01, y: -3 }}
       whileTap={isLocked ? {} : { scale: 0.985 }}
       transition={snappySpring}
+      onMouseEnter={() => {
+        if (!isLocked) playCardHoverSfx();
+      }}
       className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border ${borderTone} ${bgTone} backdrop-blur-sm ${isLocked ? "" : "cursor-pointer"}`}
     >
-      {!isLocked ? <Link aria-label={`Abrir ${node.title}`} href={node.href} onClick={() => playCardClickSfx()} className="absolute inset-0 z-20" /> : null}
+      {!isLocked ? (
+        <Link
+          aria-label={`Abrir ${node.title}`}
+          href={node.href}
+          onFocus={() => playCardHoverSfx()}
+          onClick={() => playCardOpenSfx()}
+          className="absolute inset-0 z-20"
+        />
+      ) : null}
       <div className="pointer-events-none absolute inset-[2px] rounded-[14px] border border-cyan-300/10" />
       <div className="pointer-events-none absolute left-2 top-2 h-4 w-4 border-l border-t border-cyan-300/50" />
       <div className="pointer-events-none absolute bottom-2 right-2 h-4 w-4 border-b border-r border-cyan-300/50" />

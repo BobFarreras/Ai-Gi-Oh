@@ -4,6 +4,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { ONBOARDING_AUDIO_CATALOG } from "@/components/hub/onboarding/internal/onboarding-audio-catalog";
 
 export interface ITrainingMode3DPanelProps {
   title: string;
@@ -18,6 +19,18 @@ export interface ITrainingMode3DPanelProps {
 
 const hoverSpring = { type: "spring", stiffness: 280, damping: 24 } as const;
 
+function playContainerHoverSfx(): void {
+  const audio = new Audio(ONBOARDING_AUDIO_CATALOG.buttonClick);
+  audio.volume = 0.52;
+  void audio.play().catch(() => undefined);
+}
+
+function playContainerClickSfx(): void {
+  const audio = new Audio(ONBOARDING_AUDIO_CATALOG.movement);
+  audio.volume = 0.56;
+  void audio.play().catch(() => undefined);
+}
+
 export function TrainingMode3DPanel(props: ITrainingMode3DPanelProps) {
   // Mantiene codificación por color para identificar rápidamente cada modo.
   const isTutorial = props.theme === "tutorial";
@@ -31,6 +44,9 @@ export function TrainingMode3DPanel(props: ITrainingMode3DPanelProps) {
       href={props.href}
       className="group relative block h-full min-h-[248px] w-full outline-none lg:min-h-0 lg:hover:z-20"
       aria-label={props.title}
+      onMouseEnter={() => playContainerHoverSfx()}
+      onFocus={() => playContainerHoverSfx()}
+      onClick={() => playContainerClickSfx()}
     >
       <motion.article
         whileHover={{ y: -3, scale: 1.004 }}
