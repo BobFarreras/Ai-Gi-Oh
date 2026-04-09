@@ -13,7 +13,7 @@ Sin estos cinco en verde no se considera listo para merge.
 
 ## Flujo CI actual (`.github/workflows/quality-gates.yml`)
 
-1. Ejecuta en `pull_request`, `push` a ramas protegidas de trabajo y `workflow_dispatch`.
+1. Ejecuta en `pull_request`, `push` a ramas protegidas (`main`, `develop`) y `workflow_dispatch`.
 2. Usa permisos mínimos por defecto:
    - `permissions: contents: read`
 3. Usa `concurrency` para cancelar ejecuciones antiguas de la misma PR/rama.
