@@ -14,8 +14,10 @@ const ORBS = [
 export function TrainingArenaLobbyBackdrop() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.16),transparent_52%),radial-gradient(circle_at_bottom,rgba(244,114,182,0.12),transparent_55%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(transparent_0%,rgba(8,47,73,0.4)_48%,transparent_100%)] opacity-60" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,211,238,0.18),transparent_50%),radial-gradient(circle_at_100%_100%,rgba(16,185,129,0.12),transparent_55%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(3,15,29,0.96)_0%,rgba(5,23,44,0.92)_42%,rgba(32,9,22,0.9)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(56,189,248,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.06)_1px,transparent_1px)] bg-[size:22px_22px] opacity-35" />
+      <div className="absolute inset-y-0 left-1/2 w-[1px] -translate-x-1/2 bg-cyan-300/20 blur-[1px]" />
       {ORBS.map((orb) => (
         <motion.span
           key={orb.className}
