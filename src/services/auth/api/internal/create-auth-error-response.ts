@@ -2,12 +2,14 @@
 import { NextResponse } from "next/server";
 import { ValidationError } from "@/core/errors/ValidationError";
 
-type AuthAction = "LOGIN" | "REGISTER" | "LOGOUT";
+type AuthAction = "LOGIN" | "REGISTER" | "LOGOUT" | "RECOVER_PASSWORD" | "UPDATE_PASSWORD";
 
 function defaultMessage(action: AuthAction): string {
   if (action === "LOGIN") return "No se pudo iniciar sesión.";
   if (action === "REGISTER") return "No se pudo registrar la cuenta.";
-  return "No se pudo cerrar sesión.";
+  if (action === "LOGOUT") return "No se pudo cerrar sesión.";
+  if (action === "RECOVER_PASSWORD") return "No se pudo iniciar la recuperación de contraseña.";
+  return "No se pudo actualizar la contraseña.";
 }
 
 export function createAuthErrorResponse(action: AuthAction, error: unknown): NextResponse {

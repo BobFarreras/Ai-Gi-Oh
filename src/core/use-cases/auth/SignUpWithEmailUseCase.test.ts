@@ -15,6 +15,8 @@ function createAuthRepositoryStub(): IAuthRepository {
       expiresAtIso: new Date().toISOString(),
       user: { id: "user-1", email: "user@aigi.io", displayName: "User" },
     })),
+    requestPasswordRecovery: vi.fn(async () => undefined),
+    updatePassword: vi.fn(async () => undefined),
     signOut: vi.fn(async () => undefined),
     getCurrentSession: vi.fn(async () => null),
   };
