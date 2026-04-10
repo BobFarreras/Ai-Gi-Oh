@@ -7,8 +7,8 @@ describe('HeroCards Component', () => {
   it('ha de renderitzar les cartes del lore correctament', () => {
     render(<HeroCards />);
     
-    expect(screen.getByText("Gemini 1.5 Pro")).toBeInTheDocument();
-    expect(screen.getByText("Ollama Local")).toBeInTheDocument();
-    expect(screen.getByText("Bucle Infinito n8n")).toBeInTheDocument();
+    expect(screen.getByText("Gemini")).toBeInTheDocument();
+    expect(screen.getByText("ChatGPT")).toBeInTheDocument();
+    expect(screen.getByText("Kernel Panic")).toBeInTheDocument();
   });
 });
