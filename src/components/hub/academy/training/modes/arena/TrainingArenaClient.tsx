@@ -59,7 +59,10 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
     if (!selectedTierMeta) return "Sin datos de progreso";
     const nextTier = props.tiers.find((tier) => tier.tier === selectedTierMeta.tier + 1);
     if (!nextTier) return "Último nivel disponible";
-    return `Siguiente nivel: ${nextTier.winsInPreviousTier}/${nextTier.requiredWinsInPreviousTier} victorias`;
+    if (nextTier.winsInPreviousTier >= nextTier.requiredWinsInPreviousTier) {
+      return `Siguiente nivel desbloqueado (${nextTier.code})`;
+    }
+    return `Siguiente nivel (${nextTier.code}): ${nextTier.winsInPreviousTier}/${nextTier.requiredWinsInPreviousTier} victorias`;
   }, [props.tiers, selectedTierMeta]);
 
   /**
