@@ -60,9 +60,10 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
     const nextTier = props.tiers.find((tier) => tier.tier === selectedTierMeta.tier + 1);
     if (!nextTier) return "Último nivel disponible";
     if (nextTier.winsInPreviousTier >= nextTier.requiredWinsInPreviousTier) {
-      return `Siguiente nivel desbloqueado (${nextTier.code})`;
+      return `Nivel ${nextTier.tier} desbloqueado. Puedes cambiarlo desde la selección de nivel.`;
     }
-    return `Siguiente nivel (${nextTier.code}): ${nextTier.winsInPreviousTier}/${nextTier.requiredWinsInPreviousTier} victorias`;
+    const winsMissing = nextTier.requiredWinsInPreviousTier - nextTier.winsInPreviousTier;
+    return `Te faltan ${winsMissing} victorias para desbloquear Nivel ${nextTier.tier}.`;
   }, [props.tiers, selectedTierMeta]);
 
   /**
@@ -97,6 +98,12 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
           tierDifficultyLabel={selectedTierMeta?.aiDifficulty ?? "EASY"}
           tierRewardPreview={tierRewardPreview}
           nextTierRequirementLabel={nextTierRequirementLabel}
+          tierOptions={props.tiers.map((tier) => ({
+            tier: tier.tier,
+            isUnlocked: tier.isUnlocked,
+            isSelected: tier.tier === props.selectedTier,
+          }))}
+          onSelectTier={(tier) => window.location.replace(`/hub/academy/training/arena?tier=${tier}`)}
           opponentName={props.opponentName}
           playerAvatarUrl="/assets/story/player/bob.png"
           opponentAvatarUrl={props.opponentAvatarUrl}

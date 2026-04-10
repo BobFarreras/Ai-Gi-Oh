@@ -11,6 +11,8 @@ interface ITrainingArenaLobbyProps {
   tierDifficultyLabel: string;
   tierRewardPreview: { nexus: number; playerExperience: number };
   nextTierRequirementLabel: string;
+  tierOptions: Array<{ tier: number; isUnlocked: boolean; isSelected: boolean }>;
+  onSelectTier: (tier: number) => void;
   opponentName: string;
   playerAvatarUrl: string;
   opponentAvatarUrl: string;
@@ -64,6 +66,26 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
           </div>
           <div className="relative mt-1 text-center text-[11px] font-semibold tracking-[0.08em] text-cyan-100/85 md:text-[12px] lg:text-[13px]">
             {props.nextTierRequirementLabel}
+          </div>
+          <div className="relative mt-2 flex flex-wrap items-center justify-center gap-1.5">
+            {props.tierOptions.map((tierOption) => (
+              <button
+                key={tierOption.tier}
+                type="button"
+                disabled={!tierOption.isUnlocked || tierOption.isSelected}
+                aria-label={`Seleccionar nivel ${tierOption.tier}`}
+                onClick={() => props.onSelectTier(tierOption.tier)}
+                className={`rounded border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] transition md:text-[11px] ${
+                  tierOption.isSelected
+                    ? "border-emerald-300/65 bg-emerald-500/20 text-emerald-100"
+                    : tierOption.isUnlocked
+                      ? "border-cyan-300/45 bg-cyan-500/10 text-cyan-100 hover:bg-cyan-500/20"
+                      : "cursor-not-allowed border-slate-600/45 bg-slate-900/45 text-slate-500"
+                }`}
+              >
+                Nivel {tierOption.tier}
+              </button>
+            ))}
           </div>
         </motion.header>
         <div className="grid min-h-0 flex-1 grid-cols-1 items-stretch gap-2 md:w-full md:flex-none md:grid-cols-[1fr_auto_1fr] md:gap-4">
