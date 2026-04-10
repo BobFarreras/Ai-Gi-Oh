@@ -24,11 +24,11 @@ export function resolveHubSectionLock(section: IHubSection, progress: IPlayerHub
     return resolveTutorialGateLock(section);
   }
 
-  if (section.type === "MULTIPLAYER" && progress.medals < 1) {
+  if (section.type === "MULTIPLAYER") {
     return {
       ...section,
       isLocked: true,
-      lockReason: "Consigue al menos 1 medalla para desbloquear multijugador.",
+      lockReason: "Multijugador en proceso de creación. Próximamente disponible.",
     };
   }
 

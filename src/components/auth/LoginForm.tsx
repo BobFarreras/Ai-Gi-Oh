@@ -83,6 +83,11 @@ export function LoginForm() {
             onChange={setPassword}
           />
         </motion.div>
+        <motion.p variants={buildAuthPieceVariants(0.3)} className="-mt-3 text-right font-mono text-[11px] uppercase tracking-[0.15em] text-cyan-500/80">
+          <Link href="/recover-password" onClick={playButtonClick} className="font-black text-cyan-400 transition-colors hover:text-white hover:drop-shadow-[0_0_12px_rgba(6,182,212,0.9)]">
+            ¿Olvidaste la contraseña?
+          </Link>
+        </motion.p>
       </div>
 
       {errorMessage ? <AuthErrorBanner message={errorMessage} /> : null}

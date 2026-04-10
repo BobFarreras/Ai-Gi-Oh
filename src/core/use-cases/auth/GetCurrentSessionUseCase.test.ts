@@ -8,6 +8,8 @@ describe("GetCurrentSessionUseCase", () => {
     const repository: IAuthRepository = {
       signInWithEmail: vi.fn(),
       signUpWithEmail: vi.fn(),
+      requestPasswordRecovery: vi.fn(),
+      updatePassword: vi.fn(),
       signOut: vi.fn(),
       getCurrentSession: vi.fn(async () => ({
         accessToken: "token",

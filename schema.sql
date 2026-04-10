@@ -1,5 +1,5 @@
 
-\restrict MjDtuHLhEMsa6EnO8G4fMb7GDYxPO7VlRvciZDt6RfJVes2NqtquBZbRr02LoKc
+\restrict 1nqw4tWO03zS5pkwRGgLiTcPJuIp01rjGkJL2qqTmpvvuvANyEwq3RiOe4YNOxE
 
 
 SET statement_timeout = 0;
@@ -510,6 +510,19 @@ CREATE TABLE IF NOT EXISTS "public"."story_duel_deck_overrides" (
 ALTER TABLE "public"."story_duel_deck_overrides" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."story_duel_fusion_cards" (
+    "duel_id" "text" NOT NULL,
+    "slot_index" smallint NOT NULL,
+    "card_id" "text" NOT NULL,
+    "is_active" boolean DEFAULT true NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "story_duel_fusion_cards_slot_index_check" CHECK ((("slot_index" >= 0) AND ("slot_index" < 2)))
+);
+
+
+ALTER TABLE "public"."story_duel_fusion_cards" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."story_duel_reward_cards" (
     "duel_id" "text" NOT NULL,
     "card_id" "text" NOT NULL,
@@ -710,6 +723,11 @@ ALTER TABLE ONLY "public"."story_duel_deck_overrides"
 
 
 
+ALTER TABLE ONLY "public"."story_duel_fusion_cards"
+    ADD CONSTRAINT "story_duel_fusion_cards_pkey" PRIMARY KEY ("duel_id", "slot_index");
+
+
+
 ALTER TABLE ONLY "public"."story_duel_reward_cards"
     ADD CONSTRAINT "story_duel_reward_cards_pkey" PRIMARY KEY ("duel_id", "card_id");
 
@@ -818,6 +836,10 @@ CREATE INDEX "idx_story_duel_deck_overrides_duel" ON "public"."story_duel_deck_o
 
 
 
+CREATE INDEX "idx_story_duel_fusion_cards_duel" ON "public"."story_duel_fusion_cards" USING "btree" ("duel_id");
+
+
+
 CREATE INDEX "idx_story_duel_reward_cards_duel" ON "public"."story_duel_reward_cards" USING "btree" ("duel_id");
 
 
@@ -919,6 +941,10 @@ CREATE OR REPLACE TRIGGER "story_duel_ai_profiles_set_updated_at" BEFORE UPDATE 
 
 
 CREATE OR REPLACE TRIGGER "story_duel_deck_overrides_set_updated_at" BEFORE UPDATE ON "public"."story_duel_deck_overrides" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "story_duel_fusion_cards_set_updated_at" BEFORE UPDATE ON "public"."story_duel_fusion_cards" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
 
 
 
@@ -1096,6 +1122,16 @@ ALTER TABLE ONLY "public"."story_duel_deck_overrides"
 
 ALTER TABLE ONLY "public"."story_duel_deck_overrides"
     ADD CONSTRAINT "story_duel_deck_overrides_duel_id_fkey" FOREIGN KEY ("duel_id") REFERENCES "public"."story_duels"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."story_duel_fusion_cards"
+    ADD CONSTRAINT "story_duel_fusion_cards_card_id_fkey" FOREIGN KEY ("card_id") REFERENCES "public"."cards_catalog"("id") ON DELETE RESTRICT;
+
+
+
+ALTER TABLE ONLY "public"."story_duel_fusion_cards"
+    ADD CONSTRAINT "story_duel_fusion_cards_duel_id_fkey" FOREIGN KEY ("duel_id") REFERENCES "public"."story_duels"("id") ON DELETE CASCADE;
 
 
 
@@ -1428,6 +1464,13 @@ CREATE POLICY "story_duel_deck_overrides_select_public" ON "public"."story_duel_
 
 
 
+ALTER TABLE "public"."story_duel_fusion_cards" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "story_duel_fusion_cards_select_public" ON "public"."story_duel_fusion_cards" FOR SELECT TO "authenticated" USING (true);
+
+
+
 ALTER TABLE "public"."story_duel_reward_cards" ENABLE ROW LEVEL SECURITY;
 
 
@@ -1468,189 +1511,164 @@ GRANT ALL ON FUNCTION "public"."set_updated_at"() TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."admin_audit_log" TO "anon";
-GRANT ALL ON TABLE "public"."admin_audit_log" TO "authenticated";
 GRANT ALL ON TABLE "public"."admin_audit_log" TO "service_role";
+GRANT SELECT,INSERT ON TABLE "public"."admin_audit_log" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."admin_users" TO "anon";
-GRANT ALL ON TABLE "public"."admin_users" TO "authenticated";
 GRANT ALL ON TABLE "public"."admin_users" TO "service_role";
+GRANT SELECT ON TABLE "public"."admin_users" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."card_mastery_passive_map" TO "anon";
-GRANT ALL ON TABLE "public"."card_mastery_passive_map" TO "authenticated";
 GRANT ALL ON TABLE "public"."card_mastery_passive_map" TO "service_role";
+GRANT SELECT ON TABLE "public"."card_mastery_passive_map" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."card_passive_skills" TO "anon";
-GRANT ALL ON TABLE "public"."card_passive_skills" TO "authenticated";
 GRANT ALL ON TABLE "public"."card_passive_skills" TO "service_role";
+GRANT SELECT ON TABLE "public"."card_passive_skills" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."cards_catalog" TO "anon";
-GRANT ALL ON TABLE "public"."cards_catalog" TO "authenticated";
 GRANT ALL ON TABLE "public"."cards_catalog" TO "service_role";
+GRANT SELECT ON TABLE "public"."cards_catalog" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."market_card_listings" TO "anon";
-GRANT ALL ON TABLE "public"."market_card_listings" TO "authenticated";
 GRANT ALL ON TABLE "public"."market_card_listings" TO "service_role";
+GRANT SELECT ON TABLE "public"."market_card_listings" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."market_pack_definitions" TO "anon";
-GRANT ALL ON TABLE "public"."market_pack_definitions" TO "authenticated";
 GRANT ALL ON TABLE "public"."market_pack_definitions" TO "service_role";
+GRANT SELECT ON TABLE "public"."market_pack_definitions" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."market_pack_pool_entries" TO "anon";
-GRANT ALL ON TABLE "public"."market_pack_pool_entries" TO "authenticated";
 GRANT ALL ON TABLE "public"."market_pack_pool_entries" TO "service_role";
+GRANT SELECT ON TABLE "public"."market_pack_pool_entries" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."market_transactions" TO "anon";
-GRANT ALL ON TABLE "public"."market_transactions" TO "authenticated";
 GRANT ALL ON TABLE "public"."market_transactions" TO "service_role";
+GRANT SELECT,INSERT ON TABLE "public"."market_transactions" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."player_card_progress" TO "anon";
-GRANT ALL ON TABLE "public"."player_card_progress" TO "authenticated";
 GRANT ALL ON TABLE "public"."player_card_progress" TO "service_role";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."player_card_progress" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."player_card_xp_batches" TO "anon";
-GRANT ALL ON TABLE "public"."player_card_xp_batches" TO "authenticated";
 GRANT ALL ON TABLE "public"."player_card_xp_batches" TO "service_role";
+GRANT SELECT,INSERT ON TABLE "public"."player_card_xp_batches" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."player_collection_cards" TO "anon";
-GRANT ALL ON TABLE "public"."player_collection_cards" TO "authenticated";
 GRANT ALL ON TABLE "public"."player_collection_cards" TO "service_role";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."player_collection_cards" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."player_deck_slots" TO "anon";
-GRANT ALL ON TABLE "public"."player_deck_slots" TO "authenticated";
 GRANT ALL ON TABLE "public"."player_deck_slots" TO "service_role";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."player_deck_slots" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."player_fusion_deck_slots" TO "anon";
-GRANT ALL ON TABLE "public"."player_fusion_deck_slots" TO "authenticated";
 GRANT ALL ON TABLE "public"."player_fusion_deck_slots" TO "service_role";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."player_fusion_deck_slots" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."player_profiles" TO "anon";
-GRANT ALL ON TABLE "public"."player_profiles" TO "authenticated";
 GRANT ALL ON TABLE "public"."player_profiles" TO "service_role";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."player_profiles" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."player_progress" TO "anon";
-GRANT ALL ON TABLE "public"."player_progress" TO "authenticated";
 GRANT ALL ON TABLE "public"."player_progress" TO "service_role";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."player_progress" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."player_story_duel_progress" TO "anon";
-GRANT ALL ON TABLE "public"."player_story_duel_progress" TO "authenticated";
 GRANT ALL ON TABLE "public"."player_story_duel_progress" TO "service_role";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."player_story_duel_progress" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."player_story_world_state" TO "anon";
-GRANT ALL ON TABLE "public"."player_story_world_state" TO "authenticated";
 GRANT ALL ON TABLE "public"."player_story_world_state" TO "service_role";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."player_story_world_state" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."player_training_match_claims" TO "anon";
-GRANT ALL ON TABLE "public"."player_training_match_claims" TO "authenticated";
 GRANT ALL ON TABLE "public"."player_training_match_claims" TO "service_role";
+GRANT SELECT,INSERT ON TABLE "public"."player_training_match_claims" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."player_training_progress" TO "anon";
-GRANT ALL ON TABLE "public"."player_training_progress" TO "authenticated";
 GRANT ALL ON TABLE "public"."player_training_progress" TO "service_role";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."player_training_progress" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."player_tutorial_node_progress" TO "anon";
-GRANT ALL ON TABLE "public"."player_tutorial_node_progress" TO "authenticated";
 GRANT ALL ON TABLE "public"."player_tutorial_node_progress" TO "service_role";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."player_tutorial_node_progress" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."player_tutorial_reward_claims" TO "anon";
-GRANT ALL ON TABLE "public"."player_tutorial_reward_claims" TO "authenticated";
 GRANT ALL ON TABLE "public"."player_tutorial_reward_claims" TO "service_role";
+GRANT SELECT,INSERT ON TABLE "public"."player_tutorial_reward_claims" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."player_wallets" TO "anon";
-GRANT ALL ON TABLE "public"."player_wallets" TO "authenticated";
 GRANT ALL ON TABLE "public"."player_wallets" TO "service_role";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."player_wallets" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."starter_deck_template_slots" TO "anon";
-GRANT ALL ON TABLE "public"."starter_deck_template_slots" TO "authenticated";
 GRANT ALL ON TABLE "public"."starter_deck_template_slots" TO "service_role";
+GRANT SELECT ON TABLE "public"."starter_deck_template_slots" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."story_deck_list_cards" TO "anon";
-GRANT ALL ON TABLE "public"."story_deck_list_cards" TO "authenticated";
 GRANT ALL ON TABLE "public"."story_deck_list_cards" TO "service_role";
+GRANT SELECT ON TABLE "public"."story_deck_list_cards" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."story_deck_lists" TO "anon";
-GRANT ALL ON TABLE "public"."story_deck_lists" TO "authenticated";
 GRANT ALL ON TABLE "public"."story_deck_lists" TO "service_role";
+GRANT SELECT ON TABLE "public"."story_deck_lists" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."story_duel_ai_profiles" TO "anon";
-GRANT ALL ON TABLE "public"."story_duel_ai_profiles" TO "authenticated";
 GRANT ALL ON TABLE "public"."story_duel_ai_profiles" TO "service_role";
+GRANT SELECT ON TABLE "public"."story_duel_ai_profiles" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."story_duel_deck_overrides" TO "anon";
-GRANT ALL ON TABLE "public"."story_duel_deck_overrides" TO "authenticated";
 GRANT ALL ON TABLE "public"."story_duel_deck_overrides" TO "service_role";
+GRANT SELECT ON TABLE "public"."story_duel_deck_overrides" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."story_duel_reward_cards" TO "anon";
-GRANT ALL ON TABLE "public"."story_duel_reward_cards" TO "authenticated";
+GRANT ALL ON TABLE "public"."story_duel_fusion_cards" TO "anon";
+GRANT ALL ON TABLE "public"."story_duel_fusion_cards" TO "authenticated";
+GRANT ALL ON TABLE "public"."story_duel_fusion_cards" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."story_duel_reward_cards" TO "service_role";
+GRANT SELECT ON TABLE "public"."story_duel_reward_cards" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."story_duels" TO "anon";
-GRANT ALL ON TABLE "public"."story_duels" TO "authenticated";
 GRANT ALL ON TABLE "public"."story_duels" TO "service_role";
+GRANT SELECT ON TABLE "public"."story_duels" TO "authenticated";
 
 
 
-GRANT ALL ON TABLE "public"."story_opponents" TO "anon";
-GRANT ALL ON TABLE "public"."story_opponents" TO "authenticated";
 GRANT ALL ON TABLE "public"."story_opponents" TO "service_role";
+GRANT SELECT ON TABLE "public"."story_opponents" TO "authenticated";
 
 
 
@@ -1684,6 +1702,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
-\unrestrict MjDtuHLhEMsa6EnO8G4fMb7GDYxPO7VlRvciZDt6RfJVes2NqtquBZbRr02LoKc
+\unrestrict 1nqw4tWO03zS5pkwRGgLiTcPJuIp01rjGkJL2qqTmpvvuvANyEwq3RiOe4YNOxE
 
 RESET ALL;

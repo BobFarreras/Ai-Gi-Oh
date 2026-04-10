@@ -52,6 +52,20 @@ export class SupabaseAuthRepository implements IAuthRepository {
     return mapSession(data.session);
   }
 
+  async requestPasswordRecovery(email: string, redirectTo: string): Promise<void> {
+    const { error } = await this.client.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) {
+      throw new ValidationError("No se pudo iniciar la recuperación de contraseña.");
+    }
+  }
+
+  async updatePassword(password: string): Promise<void> {
+    const { error } = await this.client.auth.updateUser({ password });
+    if (error) {
+      throw new ValidationError("No se pudo actualizar la contraseña.");
+    }
+  }
+
   async getCurrentSession(): Promise<IAuthSession | null> {
     const [{ data: sessionData, error: sessionError }, { data: userData, error: userError }] = await Promise.all([
       this.client.auth.getSession(),

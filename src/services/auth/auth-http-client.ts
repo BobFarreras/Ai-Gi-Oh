@@ -5,8 +5,8 @@ interface IAuthActionResult {
 }
 
 interface IAuthPayload {
-  email: string;
-  password: string;
+  email?: string;
+  password?: string;
 }
 
 async function postAuth(url: string, payload?: IAuthPayload): Promise<IAuthActionResult> {
@@ -45,4 +45,12 @@ export function registerWithEmail(payload: IAuthPayload): Promise<IAuthActionRes
 
 export function logoutCurrentUser(): Promise<IAuthActionResult> {
   return postAuth("/api/auth/logout");
+}
+
+export function requestPasswordRecovery(email: string): Promise<IAuthActionResult> {
+  return postAuth("/api/auth/recover", { email });
+}
+
+export function updateCurrentPassword(password: string): Promise<IAuthActionResult> {
+  return postAuth("/api/auth/update-password", { password });
 }
