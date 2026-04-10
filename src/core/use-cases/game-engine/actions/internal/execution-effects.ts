@@ -15,6 +15,8 @@ export interface IExecutionEffectResult {
   opponent: IPlayer;
   healApplied: number;
   energyRecovered: number;
+  energyDrainedTargetPlayerId: string | null;
+  energyDrainedAmount: number;
   buff: IBuffSummary;
   damageTargetPlayerId: string | null;
   damageAmount: number;
@@ -27,6 +29,8 @@ function createNeutralResult(player: IPlayer, opponent: IPlayer): IExecutionEffe
     opponent,
     healApplied: 0,
     energyRecovered: 0,
+    energyDrainedTargetPlayerId: null,
+    energyDrainedAmount: 0,
     buff: { entityIds: [], stat: null, amount: 0 },
     damageTargetPlayerId: null,
     damageAmount: 0,

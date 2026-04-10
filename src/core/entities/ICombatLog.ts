@@ -5,6 +5,7 @@ export type CombatLogEventType =
   | "TURN_STARTED"
   | "PHASE_CHANGED"
   | "ENERGY_GAINED"
+  | "ENERGY_LOST"
   | "CARD_PLAYED"
   | "ATTACK_DECLARED"
   | "BATTLE_RESOLVED"

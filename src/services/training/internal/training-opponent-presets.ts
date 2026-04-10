@@ -15,7 +15,7 @@ function toDeck(cardIds: readonly string[]): string[] {
 
 export const TRAINING_OPPONENT_PRESETS: Record<string, ITrainingOpponentPreset> = {
   "training-tier-1": {
-    storyOpponentId: "opp-ch1-apprentice",
+    storyOpponentId: "opp-gennvim",
     codeName: "gen-nvim",
     displayName: "GenNvim",
     avatarUrl: "/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.png",
@@ -30,7 +30,7 @@ export const TRAINING_OPPONENT_PRESETS: Record<string, ITrainingOpponentPreset> 
     fusionDeckCardIds: ["fusion-pytgress", "fusion-gemgpt"],
   },
   "training-tier-1-alt": {
-    storyOpponentId: "opp-ch1-helena",
+    storyOpponentId: "opp-helena",
     codeName: "nano-ops",
     displayName: "NanoOps",
     avatarUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png",
@@ -45,7 +45,7 @@ export const TRAINING_OPPONENT_PRESETS: Record<string, ITrainingOpponentPreset> 
     fusionDeckCardIds: ["fusion-pytgress", "fusion-gemgpt"],
   },
   "training-tier-2": {
-    storyOpponentId: "opp-ch1-helena",
+    storyOpponentId: "opp-helena",
     codeName: "helena",
     displayName: "Helena",
     avatarUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png",
@@ -60,7 +60,7 @@ export const TRAINING_OPPONENT_PRESETS: Record<string, ITrainingOpponentPreset> 
     fusionDeckCardIds: ["fusion-gemgpt", "fusion-pytgress"],
   },
   "training-tier-3": {
-    storyOpponentId: "opp-ch1-jaku",
+    storyOpponentId: "opp-jaku",
     codeName: "jaku",
     displayName: "Jaku",
     avatarUrl: "/assets/story/opponents/opp-ch1-jaku/avatar-Jaku.png",
@@ -75,7 +75,7 @@ export const TRAINING_OPPONENT_PRESETS: Record<string, ITrainingOpponentPreset> 
     fusionDeckCardIds: ["fusion-kaclauli", "fusion-gemgpt"],
   },
   "training-tier-4": {
-    storyOpponentId: "opp-ch1-biglog",
+    storyOpponentId: "opp-biglog",
     codeName: "biglog",
     displayName: "BigLog",
     avatarUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png",
@@ -90,7 +90,7 @@ export const TRAINING_OPPONENT_PRESETS: Record<string, ITrainingOpponentPreset> 
     fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
   },
   "training-tier-5": {
-    storyOpponentId: "opp-ch1-soldier-act01",
+    storyOpponentId: "opp-soldier-act01",
     codeName: "sentinel",
     displayName: "Sentinel Prime",
     avatarUrl: "/assets/story/opponents/opp-ch1-soldier-act01/avatar-Soldado-act01.png",

@@ -5,6 +5,8 @@ import { ICard } from "@/core/entities/ICard";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { IBoardUiError } from "../../hooks/internal/boardError";
 import { IPendingZoneReplacement } from "../../hooks/internal/board-state/pending-replacement";
+import { ITrapActivationPrompt } from "../../hooks/internal/board-state/useBoardUiState";
+import { IBattleBannerMessage } from "../internal/banner/banner-message-policy";
 import { FusionCinematicLayer } from "../FusionCinematicLayer";
 import { PauseOverlay } from "./PauseOverlay";
 import { TurnAdvanceGuardOverlay } from "./TurnAdvanceGuardOverlay";
@@ -16,6 +18,7 @@ import { IFusionMaterialCandidate, FusionMaterialBrowser } from "./internal/Fusi
 interface BoardStatusOverlaysProps {
   lastError: IBoardUiError | null;
   pendingActionHint: string | null;
+  pendingTrapActivationPrompt?: ITrapActivationPrompt | null;
   pendingEntityReplacement: IPendingZoneReplacement | null;
   pendingEntityReplacementTargetCard: ICard | null;
   combatLog: ICombatLogEvent[];
@@ -48,7 +51,7 @@ interface BoardStatusOverlaysProps {
   pendingAdvanceWarning: "MAIN_SKIP_ACTIONS" | "BATTLE_SKIP_ATTACKS" | null;
   onConfirmAdvancePhase: (disableHelp: boolean) => void;
   onCancelAdvancePhase: () => void;
-  externalBannerSignal?: { id: string; left: string; right: string } | null;
+  externalBannerSignal?: IBattleBannerMessage | null;
   showBattleBanners?: boolean;
   isFusionMaterialBrowserOpen?: boolean;
   fusionMaterialCandidates?: IFusionMaterialCandidate[];
@@ -59,6 +62,7 @@ interface BoardStatusOverlaysProps {
 export function BoardStatusOverlays({
   lastError,
   pendingActionHint,
+  pendingTrapActivationPrompt = null,
   pendingEntityReplacement,
   pendingEntityReplacementTargetCard,
   combatLog,
@@ -103,6 +107,7 @@ export function BoardStatusOverlays({
       <BoardErrorOverlay error={lastError} onClose={onCloseError} />
       <BoardActionOverlays
         pendingActionHint={pendingActionHint}
+        pendingTrapActivationPrompt={pendingTrapActivationPrompt}
         pendingEntityReplacement={pendingEntityReplacement}
         pendingEntityReplacementTargetCard={pendingEntityReplacementTargetCard}
         combatLog={combatLog}

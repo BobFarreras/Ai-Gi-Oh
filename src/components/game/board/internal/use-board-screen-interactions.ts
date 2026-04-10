@@ -2,6 +2,7 @@
 import { MouseEvent, useCallback, useMemo } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { useBoard } from "@/components/game/board/hooks/useBoard";
+import { IBattleBannerMessage } from "@/components/game/board/ui/internal/banner/banner-message-policy";
 import { endInteraction, startInteraction } from "@/services/performance/dev-performance-telemetry";
 
 interface IUseBoardScreenInteractionsInput {
@@ -10,7 +11,7 @@ interface IUseBoardScreenInteractionsInput {
   playerGraveyard: ICard[];
   opponentGraveyard: ICard[];
   setGraveyardView: (value: "player" | "opponent" | null) => void;
-  setAutoModeBannerSignal: (value: { id: string; left: string; right: string } | null) => void;
+  setAutoModeBannerSignal: (value: IBattleBannerMessage | null) => void;
 }
 
 export function useBoardScreenInteractions({

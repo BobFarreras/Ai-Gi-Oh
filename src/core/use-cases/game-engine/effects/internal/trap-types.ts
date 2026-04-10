@@ -15,6 +15,10 @@ export interface ITrapResolutionResult {
   player: IPlayer;
   opponent: IPlayer;
   damage: number;
+  energyLostTargetPlayerId: string | null;
+  energyLostAmount: number;
+  energyGainTargetPlayerId: string | null;
+  energyGainAmount: number;
   buffTargetEntityIds: string[];
   buffStat: "ATTACK" | "DEFENSE" | null;
   buffAmount: number;

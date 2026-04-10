@@ -5,21 +5,55 @@ interface IStoryDialogueLineMedia {
 }
 
 const DIALOGUE_MEDIA_BY_NODE_ID: Record<string, IStoryDialogueLineMedia[]> = {
-  "story-ch1-event-scout-log": [
-    {
-      portraitUrl: "/assets/story/opponents/opp-ch1-apprentice/intro-GenNvim.png",
-      // Punto de integración futuro: activar cuando exista el asset final de voz.
-      // audioUrl: "/audio/story/dialogues/story-ch1-event-scout-log-line-01.mp3",
-    },
-    {
-      portraitUrl: "/assets/story/player/bob.png",
-    },
-    {
-      portraitUrl: "/assets/story/opponents/opp-ch1-apprentice/intro-GenNvim.png",
-    },
-    {
-      portraitUrl: "/assets/story/player/bob.png",
-    },
+  "story-a1-event-biglog-briefing": [
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/player/bob.png" },
+  ],
+  "story-a1-event-special-card-signal": [
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/player/bob.png" },
+  ],
+  "story-a1-side-event-echo-fragment": [
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/player/bob.png" },
+  ],
+  "story-ch2-event-core": [
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/player/bob.png" },
+  ],
+  "story-ch2-branch-lower-up-event": [
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/player/bob.png" },
+  ],
+  "story-ch2-bridge-submission": [
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/player/bob.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+  ],
+  "story-ch2-link-recovered-event": [
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/player/bob.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+  ],
+  "story-ch2-duel-7": [
+    { portraitUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png" },
+    { portraitUrl: "/assets/story/player/bob.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png" },
+  ],
+  "story-ch2-duel-7-post-win": [
+    { portraitUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png" },
+    { portraitUrl: "/assets/story/player/bob.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png" },
+  ],
+  "story-ch2-duel-8": [
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
+    { portraitUrl: "/assets/story/player/bob.png" },
+    { portraitUrl: "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" },
   ],
 };
 

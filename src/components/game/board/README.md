@@ -66,7 +66,14 @@ Guía rápida para entender la lógica de tablero y batalla.
 3. En fase de combate, mantener selección del atacante usa click simple y cambiar a defensa usa doble click sobre la misma entidad.
 4. La activación de cartas en `SET` dispone de dos entradas: botón flotante centrado sobre carta y botón `Activar` en la barra de acciones inferior derecha.
 5. Se ajustó la vertical del `PlayerHUD` rival en desktop para alinear mejor con el bloque de `TurnTimer`.
-5. Las entidades ya elegidas como material quedan marcadas visualmente con estado dedicado (`MATERIAL` + ring cian).
+6. Se añadió atajo explícito para cambio de postura en combate desde la barra de acciones:
+   - espada: pasar a `ATTACK`,
+   - escudo: pasar a `DEFENSE`.
+7. Las entidades ya elegidas como material quedan marcadas visualmente con estado dedicado (`MATERIAL` + ring cian).
+8. Cuando existe decisión pendiente de trampa (`activar/cancelar`), el panel de detalle entra en estado resaltado y se muestra banner contextual de decisión para evitar pérdida de foco del jugador.
+9. En modo `TUTORIAL`, el aviso de salto de fase (`Aún puedes jugar cartas`) se desactiva para no bloquear el flujo guiado de combate.
+10. El tutorial de combate ahora incluye paso explícito de decisión de trampa del jugador (prompt `Activar/Cancelar`) antes de resolver el ataque rival.
+11. Durante ese paso guiado de tutorial se deshabilita `Cancelar` para forzar el camino didáctico y evitar bloqueo del flujo.
 6. Al confirmarse la fusión, la cinemática sigue flujo en 2 etapas:
    - vídeo de fusión,
    - transición de carta invocada desde centro a slot final.
@@ -101,23 +108,32 @@ Guía rápida para entender la lógica de tablero y batalla.
 1. `PlayerHUD` solo parpadea en rojo para el jugador realmente dañado en la última acción.
 2. La zona del tablero del jugador dañado también recibe flash rojo localizado.
 3. Las curaciones muestran texto flotante azul `+LP` en el HUD del objetivo.
-4. Los buffs de estadísticas muestran aura temporal en cartas afectadas (ATK rojo, DEF azul).
-5. Las ejecuciones `ACTIVATE` usan VFX por tipo de efecto:
+4. Los deltas flotantes nacen desde su zona de origen del HUD:
+   - LP (`HEALTH`) para daño/curación.
+   - energía (`ENERGY`) para ganancia/pérdida de energía.
+5. Los deltas se reinician por `eventId` (`pulseKey`) para no perder animación cuando se repite el mismo valor.
+6. El HUD fuera de turno mantiene estado atenuado, pero recupera color completo durante feedback activo.
+7. Los buffs de estadísticas muestran aura temporal en cartas afectadas (ATK rojo, DEF azul).
+8. Las ejecuciones `ACTIVATE` usan VFX por tipo de efecto:
    - daño directo: haz ofensivo,
    - curación: pulso azul,
    - buff de estadísticas: impacto energético rojo/azul y número `+valor` grande sobre entidad objetivo.
-6. El HUD consume deltas (`damageAmount`/`healAmount`) solo por `eventId`, evitando mezclar daño antiguo con curación nueva.
-7. `SidePanels` incluye filtros por turno y actor para depurar partidas.
-8. `BattleBannerCenter` muestra solo turno y subturno (fase), con transición de entrada/salida.
-9. `GraveyardTransitionLayer` anima cualquier evento `CARD_TO_GRAVEYARD` (descarte, sacrificio, destrucción, fusión).
-10. `GraveyardBrowser` permite abrir el cementerio desde el tablero y previsualizar cualquier carta en el panel lateral.
-11. Para QA de fusión, `initialDeckFactory` usa mazos mock con más consistencia de materiales + cartas mágicas de fusión para ambos lados.
+9. El HUD consume deltas (`damageAmount`/`healAmount`) solo por `eventId`, evitando mezclar daño antiguo con curación nueva.
+10. `SidePanels` incluye filtros por turno y actor para depurar partidas.
+11. `BattleBannerCenter` muestra solo turno y subturno (fase), con transición de entrada/salida.
+12. `GraveyardTransitionLayer` anima cualquier evento `CARD_TO_GRAVEYARD` (descarte, sacrificio, destrucción, fusión).
+13. `GraveyardBrowser` permite abrir el cementerio desde el tablero y previsualizar cualquier carta en el panel lateral.
+14. Para QA de fusión, `initialDeckFactory` usa mazos mock con más consistencia de materiales + cartas mágicas de fusión para ambos lados.
 
 ## Sonido y resultado
 
 1. `useGameAudio` reproduce efectos según `combatLog`.
 2. El fin de partida muestra `DuelResultOverlay` central y bloquea acciones.
 3. Al finalizar duelo se detiene y reinicia el soundtrack base antes de reproducir resultado.
+4. El cierre del duelo usa secuencia en dos pasos:
+   - banner de fin (`Duelo finalizado` o `Turnos agotados` + ganador),
+   - apertura de `DuelResultOverlay` tras un retardo de ~2s para mejorar legibilidad.
+5. Los banners externos del combate están tipados por variante (`AUTO`, `VICTORY`, `DEFEAT`, `TURN_LIMIT`) para reutilizar estilo y animación sin ifs dispersos.
 4. Cada nueva partida/reinicio crea mazos barajados para ambos jugadores.
 5. El jugador puede activar/desactivar audio global con botón `mute` junto al historial.
 6. El catálogo de audio y volúmenes está centralizado en `src/core/config/audio-catalog.ts`.
@@ -128,6 +144,9 @@ Guía rápida para entender la lógica de tablero y batalla.
    - aviso de 5 segundos y fin de temporizador,
    - apertura/cierre de sidebars,
    - victoria/derrota/empate.
+8. `mute` y `pause` aplican corte global de audio:
+   - no se encolan nuevos SFX/VO,
+   - los audios activos se detienen y se reinician (`currentTime = 0`).
 
 ## Narración reactiva
 

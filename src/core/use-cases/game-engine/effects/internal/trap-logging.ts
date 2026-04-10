@@ -32,6 +32,23 @@ export function appendTrapResolutionLogs(params: ITrapLoggingParams): GameState 
     withLogs = appendCombatLogEvent(withLogs, reactivePlayerId, "DIRECT_DAMAGE", {
       targetPlayerId: trap.card.effect.target === "OPPONENT" ? targetOpponentId : targetPlayerId,
       amount: resolved.damage,
+      sourceCardId: trap.card.id,
+      sourceSlotIndex: trapSlotIndex,
+      sourceLaneType: "EXECUTIONS",
+    });
+  }
+  if (resolved.energyLostTargetPlayerId && resolved.energyLostAmount > 0) {
+    withLogs = appendCombatLogEvent(withLogs, reactivePlayerId, "ENERGY_LOST", {
+      targetPlayerId: resolved.energyLostTargetPlayerId,
+      amount: resolved.energyLostAmount,
+      source: "TRAP_DRAIN_ENERGY",
+    });
+  }
+  if (resolved.energyGainTargetPlayerId && resolved.energyGainAmount > 0) {
+    withLogs = appendCombatLogEvent(withLogs, reactivePlayerId, "ENERGY_GAINED", {
+      targetPlayerId: resolved.energyGainTargetPlayerId,
+      amount: resolved.energyGainAmount,
+      source: "TRAP_SET_ENERGY_TO_TEN",
     });
   }
   if (resolved.buffTargetEntityIds.length > 0 && resolved.buffStat && resolved.buffAmount !== 0) {

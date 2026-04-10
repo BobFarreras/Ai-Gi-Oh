@@ -37,3 +37,5 @@
 4. Desbloqueo y navegación del mapa mediante grafo puro en `core/services/story/world`.
 5. Orquestación de estado/movimiento/resolución en `core/use-cases/story`.
 6. Persistencia compacta de Story en `player_story_world_state` (`current_node_id`, `visited_node_ids`, `interacted_node_ids`).
+7. Configuración de duelo data-driven por BD: `story_duel_ai_profiles`, `story_duel_deck_overrides`, `story_duel_fusion_cards`, `story_duel_reward_cards`.
+8. Admin Story Decks edita deck base + slots visuales de `Fusion 1`, `Fusion 2` y `Reward` dentro del mismo contenedor de mazo.

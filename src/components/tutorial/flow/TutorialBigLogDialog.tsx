@@ -98,7 +98,7 @@ export function TutorialBigLogDialog({
     <aside
       ref={containerRef}
       data-tutorial-overlay="true"
-      className={`pointer-events-auto fixed left-1/2 z-[430] w-[min(96vw,960px)] -translate-x-1/2 rounded-2xl border border-cyan-300/45 bg-slate-950/95 p-4 shadow-[0_10px_38px_rgba(0,0,0,0.6)] transition-all duration-300 ${positionClass}`}
+      className={`pointer-events-auto fixed left-1/2 z-[430] w-[min(96vw,960px)] -translate-x-1/2 rounded-2xl border border-cyan-300/40 bg-slate-950/82 p-4 shadow-[0_10px_38px_rgba(0,0,0,0.45)] backdrop-blur-[2px] transition-all duration-300 ${positionClass}`}
     >
       <div className="flex items-start gap-3">
         <Image src="/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" alt="Avatar de BigLog" width={74} height={74} className="rounded-xl border border-cyan-300/35" />

@@ -1,6 +1,11 @@
 // src/infrastructure/persistence/supabase/admin/internal/admin-story-deck-mappers.ts - Mapeadores y tipos de fila para repositorio admin de Story Decks.
 import { IAdminStoryOpponentSummary } from "@/core/entities/admin/IAdminStoryDeck";
-import { IAdminStoryDuelAiProfile, IAdminStoryDuelDeckOverride } from "@/core/entities/admin/IAdminStoryDuelConfig";
+import {
+  IAdminStoryDuelAiProfile,
+  IAdminStoryDuelDeckOverride,
+  IAdminStoryDuelFusionCard,
+  IAdminStoryDuelRewardCard,
+} from "@/core/entities/admin/IAdminStoryDuelConfig";
 import { normalizeStoryAiProfile } from "@/core/services/opponent/difficulty/story-ai-profile";
 
 export interface IStoryDeckCardRow { slot_index: number; card_id: string; copies: number }
@@ -20,6 +25,19 @@ export interface IStoryDuelDeckOverrideRow {
   defense_override: number | null;
   effect_override: Record<string, unknown> | null;
   is_active: boolean;
+}
+export interface IStoryDuelFusionCardRow {
+  duel_id: string;
+  slot_index: number;
+  card_id: string;
+  is_active: boolean;
+}
+export interface IStoryDuelRewardCardRow {
+  duel_id: string;
+  card_id: string;
+  copies: number;
+  drop_rate: number;
+  is_guaranteed: boolean;
 }
 
 export function toDeckRows(cardIds: string[]): Array<{ slot_index: number; card_id: string; copies: number }> {
@@ -66,4 +84,12 @@ export function mapDuelDeckOverrideRow(row: IStoryDuelDeckOverrideRow): IAdminSt
     effectOverride: row.effect_override,
     isActive: row.is_active,
   };
+}
+
+export function mapDuelFusionCardRow(row: IStoryDuelFusionCardRow): IAdminStoryDuelFusionCard {
+  return { duelId: row.duel_id, slotIndex: row.slot_index, cardId: row.card_id, isActive: row.is_active };
+}
+
+export function mapDuelRewardCardRow(row: IStoryDuelRewardCardRow): IAdminStoryDuelRewardCard {
+  return { duelId: row.duel_id, cardId: row.card_id, copies: row.copies, dropRate: row.drop_rate, isGuaranteed: row.is_guaranteed };
 }

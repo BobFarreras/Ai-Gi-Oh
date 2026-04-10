@@ -5,7 +5,7 @@ import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 
 function createNode(overrides: Partial<IStoryMapNodeRuntime> = {}): IStoryMapNodeRuntime {
   return {
-    id: "story-ch1-event-briefing",
+    id: "story-a1-event-biglog-briefing",
     chapter: 1,
     duelIndex: 100,
     title: "Nodo",
@@ -26,10 +26,11 @@ function createNode(overrides: Partial<IStoryMapNodeRuntime> = {}): IStoryMapNod
 
 describe("resolveStoryNodeInteractionDialogue", () => {
   it("resuelve diálogo específico por nodeId", () => {
-    const dialogue = resolveStoryNodeInteractionDialogue(createNode({ id: "story-ch1-event-briefing" }));
+    const dialogue = resolveStoryNodeInteractionDialogue(createNode({ id: "story-a1-event-biglog-briefing" }));
 
-    expect(dialogue?.title).toContain("Terminal");
+    expect(dialogue?.title).toContain("Emergencia");
     expect(dialogue?.lines.length).toBeGreaterThan(1);
+    expect(dialogue?.lines[0]?.speaker).toBe("BigLog");
   });
 
   it("aplica fallback para nodos virtuales sin plantilla dedicada", () => {
@@ -43,27 +44,20 @@ describe("resolveStoryNodeInteractionDialogue", () => {
 
   it("devuelve variante resumida cuando el nodo ya fue interactuado", () => {
     const dialogue = resolveStoryNodeInteractionDialogue(
-      createNode({ id: "story-ch1-event-briefing" }),
+      createNode({ id: "story-a1-event-biglog-briefing" }),
       3,
     );
 
     expect(dialogue?.lines[0]?.text).toContain("Registro recurrente");
   });
 
-  it("resuelve evento scout con puesta en escena y aviso de trampas", () => {
+  it("expone metadatos de vídeo para el primer evento del acto", () => {
     const dialogue = resolveStoryNodeInteractionDialogue(
-      createNode({ id: "story-ch1-event-scout-log", title: "Evento Scout" }),
+      createNode({ id: "story-a1-event-biglog-briefing", title: "Briefing" }),
     );
 
-    expect(dialogue?.title).toContain("Reconocimiento");
-    expect(dialogue?.lines.length).toBe(4);
-    expect(dialogue?.lines[0]?.side).toBe("RIGHT");
-    expect(dialogue?.lines[0]?.text).toContain("cartas trampa muy poderosas");
-    expect(dialogue?.lines[0]?.portraitUrl).toContain("intro-GenNvim");
-    expect(dialogue?.lines[1]?.portraitUrl).toContain("player/bob.png");
-    expect(dialogue?.lines[2]?.speaker).toBe("GenNvim");
-    expect(dialogue?.lines[3]?.speaker).toBe("Operador");
-    expect(dialogue?.lines[1]?.autoAdvanceMs).toBeGreaterThan(0);
+    expect(dialogue?.cinematicVideo?.videoUrl).toContain("intro-act-1.mp4");
+    expect(dialogue?.lines[0]?.portraitUrl).toContain("BigLog");
   });
 
   it("no genera diálogo para nodo de duelo real", () => {

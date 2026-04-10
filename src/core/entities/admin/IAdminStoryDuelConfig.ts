@@ -22,3 +22,18 @@ export interface IAdminStoryDuelDeckOverride {
   effectOverride: Record<string, unknown> | null;
   isActive: boolean;
 }
+
+export interface IAdminStoryDuelFusionCard {
+  duelId: string;
+  slotIndex: number;
+  cardId: string;
+  isActive: boolean;
+}
+
+export interface IAdminStoryDuelRewardCard {
+  duelId: string;
+  cardId: string;
+  copies: number;
+  dropRate: number;
+  isGuaranteed: boolean;
+}

@@ -2,11 +2,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
 import { GameState } from "@/core/use-cases/GameEngine";
+import { useCardLookup, detailPanelClass, historyPanelClass, useDetailCardScale, useVisibleCombatEvents } from "@/components/game/board/internal/side-panels-state";
 import { Card } from "../card/Card";
 import { CombatLogEventRow } from "./ui/CombatLogEventRow";
 import { resolveLiveSelectedCard } from "@/components/game/board/internal/resolve-live-selected-card";
@@ -26,15 +27,6 @@ interface SidePanelsProps {
   onSkipPendingTrap?: () => void;
 }
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
-const detailPanelClass =
-  "absolute left-0 top-[clamp(6.25rem,12vh,9.25rem)] bottom-[clamp(8.25rem,22vh,14.25rem)] w-[clamp(17rem,32vw,23rem)] bg-zinc-950/84 border-r-2 border-cyan-500/50 z-[90] p-4 md:p-5 backdrop-blur-2xl shadow-[20px_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden rounded-r-3xl min-h-0";
-const historyPanelClass =
-  "absolute right-3 md:right-5 top-[clamp(5.75rem,11vh,8.5rem)] bottom-[clamp(6.75rem,18vh,11.75rem)] w-[clamp(17rem,34vw,24rem)] bg-zinc-950/88 border-l-2 border-red-500/50 z-[90] p-4 md:p-5 backdrop-blur-2xl shadow-[-20px_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden rounded-l-3xl min-h-0";
-
 export function SidePanels({
   selectedCard,
   gameState,
@@ -50,44 +42,10 @@ export function SidePanels({
 }: SidePanelsProps) {
   const [turnFilter, setTurnFilter] = useState<number | "ALL">("ALL");
   const [actorFilter, setActorFilter] = useState<"ALL" | "PLAYER" | "OPPONENT">("ALL");
-  const [detailCardScale, setDetailCardScale] = useState(0.6);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const updateScale = () => {
-      const panelWidth = clamp(window.innerWidth * 0.32, 272, 368);
-      const panelHeight = clamp(window.innerHeight * 0.28, 192, 240);
-      const widthRatio = (panelWidth - 24) / 260;
-      const heightRatio = (panelHeight - 12) / 380;
-      setDetailCardScale(clamp(Math.min(widthRatio, heightRatio), 0.38, 0.66));
-    };
-    updateScale();
-    window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
-  }, []);
-
-  const cardLookup = useMemo(() => {
-    const cards = [
-      ...gameState.playerA.deck, ...gameState.playerB.deck, ...gameState.playerA.hand, ...gameState.playerB.hand,
-      ...gameState.playerA.graveyard, ...gameState.playerB.graveyard,
-      ...gameState.playerA.activeEntities.map((entity) => entity.card), ...gameState.playerB.activeEntities.map((entity) => entity.card),
-      ...gameState.playerA.activeExecutions.map((entity) => entity.card), ...gameState.playerB.activeExecutions.map((entity) => entity.card),
-    ];
-    return cards.reduce<Record<string, ICard>>((acc, card) => {
-      acc[card.id] = card;
-      return acc;
-    }, {});
-  }, [gameState]);
-
-  const visibleEvents = useMemo(() => {
-    const actorToId = { PLAYER: gameState.playerA.id, OPPONENT: gameState.playerB.id } as const;
-    return gameState.combatLog.filter((event) => {
-      if (event.eventType === "ATTACK_DECLARED") return false;
-      const turnMatches = turnFilter === "ALL" || event.turn === turnFilter;
-      const actorMatches = actorFilter === "ALL" || event.actorPlayerId === actorToId[actorFilter];
-      return turnMatches && actorMatches;
-    });
-  }, [actorFilter, gameState.combatLog, gameState.playerA.id, gameState.playerB.id, turnFilter]);
+  const detailCardScale = useDetailCardScale();
+  const pathname = usePathname();
+  const cardLookup = useCardLookup(gameState);
+  const visibleEvents = useVisibleCombatEvents(gameState, turnFilter, actorFilter);
   const liveSelectedCard = useMemo(
     () => resolveLiveSelectedCard(selectedCard, gameState),
     [gameState, selectedCard],
@@ -95,6 +53,7 @@ export function SidePanels({
   const isTrapPromptForSelectedCard = Boolean(
     liveSelectedCard && pendingTrapActivationPrompt && pendingTrapActivationPrompt.trapCard.id === liveSelectedCard.id,
   );
+  const isTutorialTrapPromptLocked = isTrapPromptForSelectedCard && pathname?.includes("/hub/academy/training/tutorial");
 
   return (
     <AnimatePresence>
@@ -105,11 +64,21 @@ export function SidePanels({
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: "-100%", opacity: 0 }}
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          className={`${detailPanelClass} ${isTrapPromptForSelectedCard ? "ring-2 ring-fuchsia-300/75 shadow-[0_0_34px_rgba(217,70,239,0.45)] animate-pulse" : ""}`}
+          className={`${detailPanelClass} ${isTrapPromptForSelectedCard ? "ring-2 ring-fuchsia-300/80 shadow-[0_0_40px_rgba(217,70,239,0.55)]" : ""}`}
         >
+          {isTrapPromptForSelectedCard ? (
+            <motion.div
+              initial={{ opacity: 0.4, boxShadow: "0 0 18px rgba(217,70,239,0.32)" }}
+              animate={{ opacity: [0.42, 0.86, 0.42], boxShadow: ["0 0 18px rgba(217,70,239,0.32)", "0 0 34px rgba(217,70,239,0.58)", "0 0 18px rgba(217,70,239,0.32)"] }}
+              transition={{ duration: 1.15, repeat: Infinity, ease: "easeInOut" }}
+              className="pointer-events-none absolute inset-0 rounded-r-3xl border-2 border-fuchsia-300/65"
+            />
+          ) : null}
           <button
             aria-label="Cerrar detalle"
-            onClick={isTrapPromptForSelectedCard ? onSkipPendingTrap : onCloseCard}
+            data-tutorial-id={isTrapPromptForSelectedCard ? "tutorial-board-action-skip-trap-prompt" : undefined}
+            onClick={isTutorialTrapPromptLocked ? () => undefined : (isTrapPromptForSelectedCard ? onSkipPendingTrap : onCloseCard)}
+            disabled={isTutorialTrapPromptLocked}
             className="absolute top-4 right-4 text-cyan-500 hover:text-white z-20"
           >
             <X size={24} />
@@ -128,6 +97,7 @@ export function SidePanels({
                 <button
                   type="button"
                   aria-label="Confirmar activación de carta seleccionada"
+                  data-tutorial-id={isTrapPromptForSelectedCard ? "tutorial-board-action-activate-trap-prompt" : undefined}
                   onClick={isTrapPromptForSelectedCard ? onActivatePendingTrap : onActivateSelectedExecution}
                   className="rounded-lg border border-emerald-300/70 bg-emerald-700/35 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-emerald-100 hover:bg-emerald-700/50"
                 >
@@ -136,8 +106,10 @@ export function SidePanels({
                 <button
                   type="button"
                   aria-label="Cancelar activación de carta seleccionada"
-                  onClick={isTrapPromptForSelectedCard ? onSkipPendingTrap : onCloseCard}
-                  className="rounded-lg border border-zinc-500/60 bg-zinc-900/75 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-zinc-100 hover:border-zinc-300"
+                  data-tutorial-id={isTrapPromptForSelectedCard ? "tutorial-board-action-skip-trap-prompt" : undefined}
+                  onClick={isTutorialTrapPromptLocked ? () => undefined : (isTrapPromptForSelectedCard ? onSkipPendingTrap : onCloseCard)}
+                  disabled={isTutorialTrapPromptLocked}
+                  className="rounded-lg border border-zinc-500/60 bg-zinc-900/75 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-zinc-100 hover:border-zinc-300 disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   Cancelar
                 </button>

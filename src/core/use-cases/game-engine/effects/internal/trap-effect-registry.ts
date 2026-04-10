@@ -8,7 +8,23 @@ type TrapEffect = Extract<ICardEffect, { action: TrapAction }>;
 type TrapHandler<K extends TrapAction> = (player: IPlayer, opponent: IPlayer, trap: IBoardEntity, effect: Extract<TrapEffect, { action: K }>, context?: ITrapTriggerContext) => ITrapResolutionResult;
 
 function createNeutralResult(player: IPlayer, opponent: IPlayer): ITrapResolutionResult {
-  return { player, opponent, damage: 0, buffTargetEntityIds: [], buffStat: null, buffAmount: 0, blockedTargetEntityInstanceId: null, destroyedOpponentEntityCardId: null, destroyedOpponentEntityInstanceId: null, destroyedOpponentEntitySlotIndex: null, destroyedOpponentEntityDestination: null };
+  return {
+    player,
+    opponent,
+    damage: 0,
+    energyLostTargetPlayerId: null,
+    energyLostAmount: 0,
+    energyGainTargetPlayerId: null,
+    energyGainAmount: 0,
+    buffTargetEntityIds: [],
+    buffStat: null,
+    buffAmount: 0,
+    blockedTargetEntityInstanceId: null,
+    destroyedOpponentEntityCardId: null,
+    destroyedOpponentEntityInstanceId: null,
+    destroyedOpponentEntitySlotIndex: null,
+    destroyedOpponentEntityDestination: null,
+  };
 }
 
 function reduceOpponentStat(opponent: IPlayer, stat: "attack" | "defense", value: number): { opponent: IPlayer; targetIds: string[] } {
@@ -77,7 +93,18 @@ const trapEffectHandlers: { [K in TrapAction]: TrapHandler<K> } = {
   FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED: (player, opponent, _trap, _effect, context) => ({ ...createNeutralResult(player, forceSummonedDefenseToAttackLocked(opponent, context)), blockedTargetEntityInstanceId: resolveBlockedTargetEntityInstanceId(context) }),
   DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN: (player, opponent, _trap, _effect, context) => {
     if (!context?.attackerPlayerId || context.attackerPlayerId !== opponent.id) return createNeutralResult(player, opponent);
-    return createNeutralResult({ ...player, maxEnergy: Math.max(player.maxEnergy, 10), currentEnergy: 10 }, { ...opponent, currentEnergy: 0 });
+    const energyLostAmount = Math.max(0, opponent.currentEnergy);
+    const energyGainAmount = Math.max(0, 10 - player.currentEnergy);
+    return {
+      ...createNeutralResult(
+        { ...player, maxEnergy: Math.max(player.maxEnergy, 10), currentEnergy: 10 },
+        { ...opponent, currentEnergy: 0 },
+      ),
+      energyLostTargetPlayerId: opponent.id,
+      energyLostAmount,
+      energyGainTargetPlayerId: player.id,
+      energyGainAmount,
+    };
   },
 };
 

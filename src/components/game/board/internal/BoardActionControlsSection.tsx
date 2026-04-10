@@ -15,6 +15,7 @@ export function BoardActionControlsSection({ board, screen, isMobile }: IBoardVi
       id: `auto-mode-${Date.now()}-${nextEnabled ? "on" : "off"}`,
       left: "Modo Automático",
       right: nextEnabled ? "Activado" : "Desactivado",
+      variant: "AUTO",
     });
   };
 
@@ -37,6 +38,7 @@ export function BoardActionControlsSection({ board, screen, isMobile }: IBoardVi
           isAutoPhaseEnabled={board.isAutoPhaseEnabled}
           isHistoryOpen={board.isHistoryOpen}
           canSetSelectedEntityToAttack={board.canSetSelectedEntityToAttack}
+          canSetSelectedEntityToDefense={board.canSetSelectedEntityToDefense}
           onToggleMute={() => {
             board.playButtonClick();
             board.toggleMute();
@@ -56,6 +58,10 @@ export function BoardActionControlsSection({ board, screen, isMobile }: IBoardVi
             board.playButtonClick();
             board.setSelectedEntityToAttack();
           }}
+          onSetSelectedEntityToDefense={() => {
+            board.playButtonClick();
+            board.setSelectedEntityToDefense();
+          }}
         />
       ) : (
         <BoardActionButtons
@@ -64,6 +70,7 @@ export function BoardActionControlsSection({ board, screen, isMobile }: IBoardVi
           isAutoPhaseEnabled={board.isAutoPhaseEnabled}
           isHistoryOpen={board.isHistoryOpen}
           canSetSelectedEntityToAttack={board.canSetSelectedEntityToAttack}
+          canSetSelectedEntityToDefense={board.canSetSelectedEntityToDefense}
           canActivateSelectedExecution={false}
           onToggleMute={() => {
             board.playButtonClick();
@@ -83,6 +90,10 @@ export function BoardActionControlsSection({ board, screen, isMobile }: IBoardVi
           onSetSelectedEntityToAttack={() => {
             board.playButtonClick();
             board.setSelectedEntityToAttack();
+          }}
+          onSetSelectedEntityToDefense={() => {
+            board.playButtonClick();
+            board.setSelectedEntityToDefense();
           }}
           onActivateSelectedExecution={() => undefined}
         />

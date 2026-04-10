@@ -31,7 +31,7 @@ function toWorldNode(node: StoryWorldSeedNode): IStoryWorldNode {
 }
 
 /**
- * Crea el grafo base con enlaces explícitos y secuenciales de fallback.
+ * Crea el grafo base usando únicamente dependencias explícitas (`unlockRequirementDuelId`).
  */
 export function buildStoryWorldGraph(seedNodes: StoryWorldSeedNode[]): IStoryWorldGraph {
   const sortedSeedNodes = sortSeedNodes(seedNodes);
@@ -39,15 +39,11 @@ export function buildStoryWorldGraph(seedNodes: StoryWorldSeedNode[]): IStoryWor
   const nodeIdSet = new Set(nodes.map((node) => node.id));
   const edgeMap = new Map<string, IStoryWorldEdge>();
 
-  nodes.forEach((node, index) => {
-    const previous = nodes[index - 1];
-    const fallbackFrom = previous?.id ?? null;
+  nodes.forEach((node) => {
     const explicitFrom = node.unlockRequirementNodeId;
-    const fromNodeId =
-      explicitFrom && nodeIdSet.has(explicitFrom) ? explicitFrom : fallbackFrom;
-    if (!fromNodeId) return;
-    const edgeKey = `${fromNodeId}->${node.id}`;
-    edgeMap.set(edgeKey, { fromNodeId, toNodeId: node.id });
+    if (!explicitFrom || !nodeIdSet.has(explicitFrom)) return;
+    const edgeKey = `${explicitFrom}->${node.id}`;
+    edgeMap.set(edgeKey, { fromNodeId: explicitFrom, toNodeId: node.id });
   });
 
   return { nodes, edges: [...edgeMap.values()] };

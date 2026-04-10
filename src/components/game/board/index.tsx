@@ -110,6 +110,7 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
         <BoardTutorialFlowOverlay
           combatLog={board.gameState.combatLog}
           selectedCardId={board.selectedCard?.id ?? null}
+          hasPendingTrapPrompt={Boolean(board.pendingTrapActivationPrompt)}
           phase={board.gameState.phase}
           isGraveyardOpen={Boolean(screen.effectiveGraveyardView)}
           isFusionCinematicActive={board.isFusionCinematicActive}
@@ -131,7 +132,7 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
         />
       ) : null}
       <DuelResultOverlay
-        winnerPlayerId={board.winnerPlayerId}
+        winnerPlayerId={screen.resultWinnerPlayerId}
         playerA={player}
         playerB={opponent}
         battleExperienceSummary={board.battleExperienceSummary}

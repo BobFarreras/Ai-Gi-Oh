@@ -2,52 +2,56 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import Image from "next/image";
 import { useEffect } from "react";
-import { cn } from "@/lib/utils";
-import { IStoryInteractionDialogueLine } from "@/services/story/resolve-story-node-interaction-dialogue";
+import { StoryInteractionVideoOverlay } from "@/components/hub/story/internal/scene/dialog/StoryInteractionVideoOverlay";
+import { StoryDialogPortraitPanel } from "@/components/hub/story/internal/scene/dialog/internal/StoryDialogPortraitPanel";
+import { StoryDialogSpeechBubble } from "@/components/hub/story/internal/scene/dialog/internal/StoryDialogSpeechBubble";
+import {
+  IStoryInteractionCinematicVideo,
+  IStoryInteractionDialogueLine,
+} from "@/services/story/story-node-interaction-dialogue-types";
 
 interface IStoryNodeInteractionDialogProps {
   isOpen: boolean;
   title: string;
-  soundtrackUrl: string | null;
+  cinematicVideo: IStoryInteractionCinematicVideo | null;
   line: IStoryInteractionDialogueLine | null;
   onNext: () => void;
   onClose: () => void;
 }
 
+const DEFAULT_AUTO_ADVANCE_MS = 7000;
+
 export function StoryNodeInteractionDialog({
   isOpen,
   title,
-  soundtrackUrl,
+  cinematicVideo,
   line,
   onNext,
   onClose,
 }: IStoryNodeInteractionDialogProps) {
-  const activeSide = line?.side ?? "RIGHT";
-  const activePortraitUrl = line?.portraitUrl ?? "";
+  const isVideoOpen = Boolean(isOpen && cinematicVideo);
+  const presentationMode = line?.presentationMode ?? "DIRECT";
+  const isTerminalMode = presentationMode === "TERMINAL";
+  const autoAdvanceMs = line?.autoAdvanceMs ?? DEFAULT_AUTO_ADVANCE_MS;
   const activeSpeaker = line?.speaker ?? "Interlocutor";
-  const autoAdvanceMs = line?.autoAdvanceMs ?? 4200;
-  const showLeftSpeaker = Boolean(line?.portraitUrl) && activeSide === "LEFT";
-  const showRightSpeaker = Boolean(line?.portraitUrl) && activeSide === "RIGHT";
+  const portraitUrl = line?.portraitUrl ?? "";
+  const counterpartPortraitUrl = line?.counterpartPortraitUrl ?? "";
+  const actorId = line?.actorId ?? "system";
+  const isPlayerSpeaker = actorId === "player";
+  const defaultOpponentPortraitUrl = "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png";
+
+  // El jugador se fija abajo-izquierda y el interlocutor arriba-derecha para lectura estable.
+  const playerPortraitUrl = isPlayerSpeaker ? (portraitUrl || "/assets/story/player/bob.png") : "/assets/story/player/bob.png";
+  const opponentPortraitUrl = isPlayerSpeaker
+    ? (counterpartPortraitUrl || defaultOpponentPortraitUrl)
+    : (portraitUrl || defaultOpponentPortraitUrl);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || isVideoOpen) return;
     const timeoutId = window.setTimeout(onNext, autoAdvanceMs);
     return () => window.clearTimeout(timeoutId);
-  }, [isOpen, autoAdvanceMs, onNext]);
-
-  useEffect(() => {
-    if (!isOpen || !soundtrackUrl || typeof Audio === "undefined") return;
-    const soundtrack = new Audio(soundtrackUrl);
-    soundtrack.loop = true;
-    soundtrack.volume = 0.35;
-    void soundtrack.play().catch(() => undefined);
-    return () => {
-      soundtrack.pause();
-      soundtrack.currentTime = 0;
-    };
-  }, [isOpen, soundtrackUrl]);
+  }, [isOpen, isVideoOpen, autoAdvanceMs, onNext]);
 
   return (
     <AnimatePresence>
@@ -64,53 +68,39 @@ export function StoryNodeInteractionDialog({
               <h3 className="mt-1 text-base font-black uppercase tracking-wider text-fuchsia-100 sm:text-xl">{title}</h3>
             </header>
             <div className="relative min-h-0 flex-1 px-4 pb-24 sm:px-8">
-              {showLeftSpeaker ? (
-                <motion.div initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} className="pointer-events-none absolute bottom-0 left-0 h-[72%] w-[52%]">
-                  <Image src={activePortraitUrl} alt={`Retrato de ${activeSpeaker}`} fill sizes="(max-width: 768px) 100vw, 52vw" quality={55} className="object-contain object-bottom-left drop-shadow-[0_0_22px_rgba(34,211,238,0.25)]" />
-                </motion.div>
-              ) : null}
-              {showRightSpeaker ? (
-                <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} className="pointer-events-none absolute bottom-0 right-0 h-[72%] w-[52%]">
-                  <Image src={activePortraitUrl} alt={`Retrato de ${activeSpeaker}`} fill sizes="(max-width: 768px) 100vw, 52vw" quality={55} className="object-contain object-bottom-right drop-shadow-[0_0_22px_rgba(34,211,238,0.25)]" />
-                </motion.div>
-              ) : null}
-              <motion.article
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 14 }}
-                className={cn(
-                  "pointer-events-auto absolute bottom-24 z-20 w-[min(92vw,640px)] rounded-xl border border-cyan-400/45 bg-slate-950/97 p-5 shadow-[0_0_30px_rgba(6,182,212,0.25)]",
-                  activeSide === "RIGHT" ? "right-4 sm:right-8" : "left-4 sm:left-8",
-                )}
-              >
-                <p className="text-sm font-black uppercase tracking-[0.14em] text-cyan-200 drop-shadow-[0_0_10px_rgba(34,211,238,0.25)]">
-                  {line?.speaker ?? "Sistema"}
-                </p>
-                <p className="mt-2 text-base font-semibold leading-relaxed text-white sm:text-lg [text-shadow:0_2px_10px_rgba(0,0,0,0.7)]">
-                  {line?.text ?? "Sin contenido narrativo."}
-                </p>
-                {line?.audioUrl ? (
-                  <audio key={line.audioUrl} controls preload="none" className="mt-3 w-full" src={line.audioUrl} />
-                ) : null}
-                <p className="mt-2 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-400">Autoavance activo</p>
-              </motion.article>
+              <StoryDialogPortraitPanel
+                src={playerPortraitUrl}
+                alt="Retrato del jugador"
+                side="LEFT"
+                terminalMode={isTerminalMode}
+              />
+              <StoryDialogPortraitPanel
+                src={opponentPortraitUrl}
+                alt={`Retrato de ${activeSpeaker}`}
+                side="RIGHT"
+                terminalMode={isTerminalMode}
+              />
+              <AnimatePresence mode="wait">
+                <StoryDialogSpeechBubble
+                  key={`${line?.speaker ?? "system"}-${line?.text ?? "empty"}`}
+                  line={line}
+                  isPlayerSpeaker={isPlayerSpeaker}
+                  terminalMode={isTerminalMode}
+                />
+              </AnimatePresence>
             </div>
-            <div className="pointer-events-none absolute inset-x-0 bottom-5 z-30 flex items-center justify-center gap-2 px-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="pointer-events-auto rounded border border-slate-700 bg-black/70 px-3 py-2 text-xs font-black uppercase tracking-wider text-slate-200"
-              >
-                Cerrar
-              </button>
-              <button
-                type="button"
-                onClick={onNext}
-                className="pointer-events-auto rounded-full border border-cyan-400/70 bg-cyan-950/80 px-5 py-3 text-xs font-black uppercase tracking-[0.18em] text-cyan-100 shadow-[0_0_20px_rgba(34,211,238,0.3)]"
-              >
-                Siguiente diálogo
-              </button>
-            </div>
+            <button type="button" onClick={onClose} className="absolute bottom-5 left-4 z-30 rounded border border-slate-700 bg-black/70 px-3 py-2 text-xs font-black uppercase tracking-wider text-slate-200 sm:left-8">Cerrar</button>
+            <motion.button
+              type="button"
+              aria-label="Siguiente diálogo"
+              onClick={onNext}
+              animate={{ scale: [1, 1.08, 1] }}
+              transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
+              className="absolute bottom-6 right-4 z-30 rounded-full border-2 border-cyan-300 bg-cyan-950/95 px-6 py-3 text-xs font-black uppercase tracking-[0.18em] text-cyan-50 shadow-[0_0_24px_rgba(34,211,238,0.35)] sm:right-8"
+            >
+              Siguiente
+            </motion.button>
+            <StoryInteractionVideoOverlay isOpen={isVideoOpen} cinematicVideo={cinematicVideo} onClose={onClose} />
           </div>
         </motion.div>
       ) : null}

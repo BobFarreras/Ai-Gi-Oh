@@ -27,6 +27,7 @@ interface ISlotCellEntityProps {
   shouldShowBlockedLock: boolean;
   isHighlighted: boolean;
   isSelectedMaterial: boolean;
+  isInteractionLocked?: boolean;
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: MouseEvent) => void;
 }
 
@@ -44,11 +45,12 @@ export function SlotCellEntity({
   shouldShowBlockedLock,
   isHighlighted,
   isSelectedMaterial,
+  isInteractionLocked = false,
   onEntityClick,
 }: ISlotCellEntityProps) {
   const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
   const isBoardEntitySelected = selectedBoardEntityInstanceId === entity.instanceId || isSelectedByCard;
-  const isTrapActivating = entity.card.type === "TRAP" && isAttacking;
+  const isTrapActivating = entity.card.type === "TRAP" && (isAttacking || isActivating);
   const visibility = resolveEntityVisibility(entity, isRevealed);
   const forceTrapReveal = isTrapActivating && entity.card.type === "TRAP";
   const resolvedBoardMode: BattleMode =
@@ -78,7 +80,10 @@ export function SlotCellEntity({
       data-tutorial-id={!isOpponentSide ? `tutorial-board-player-entity-card-${entity.card.id}` : undefined}
       data-board-card-id={entity.card.id}
       data-board-entity-instance-id={entity.instanceId}
-      onClick={(event) => onEntityClick(entity, isOpponentSide, event)}
+      onClick={(event) => {
+        if (isInteractionLocked) return;
+        onEntityClick(entity, isOpponentSide, event);
+      }}
     >
       {visibility.isFaceDown && !forceTrapReveal ? (
         <div className="absolute w-full h-full flex items-center justify-center">

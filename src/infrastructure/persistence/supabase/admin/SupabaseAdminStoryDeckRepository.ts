@@ -7,7 +7,12 @@ import {
   IAdminStoryDuelReference,
   IAdminStoryOpponentSummary,
 } from "@/core/entities/admin/IAdminStoryDeck";
-import { IAdminStoryDuelAiProfile, IAdminStoryDuelDeckOverride } from "@/core/entities/admin/IAdminStoryDuelConfig";
+import {
+  IAdminStoryDuelAiProfile,
+  IAdminStoryDuelDeckOverride,
+  IAdminStoryDuelFusionCard,
+  IAdminStoryDuelRewardCard,
+} from "@/core/entities/admin/IAdminStoryDuelConfig";
 import { IAdminSaveStoryDuelConfigCommand } from "@/core/entities/admin/IAdminStoryDeckCommands";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { IAdminStoryDeckRepository } from "@/core/repositories/admin/IAdminStoryDeckRepository";
@@ -17,15 +22,25 @@ import {
   IStoryDeckListRow,
   IStoryDuelAiProfileRow,
   IStoryDuelDeckOverrideRow,
+  IStoryDuelFusionCardRow,
+  IStoryDuelRewardCardRow,
   IStoryDuelRow,
   IStoryOpponentRow,
   mapDuelAiProfileRow,
   mapDuelDeckOverrideRow,
+  mapDuelFusionCardRow,
+  mapDuelRewardCardRow,
   toDeckRows,
 } from "@/infrastructure/persistence/supabase/admin/internal/admin-story-deck-mappers";
 import { CARD_CATALOG_SELECT, ICardCatalogRow } from "@/infrastructure/persistence/supabase/internal/card-catalog-row";
 import { loadCardsByIds } from "@/infrastructure/persistence/supabase/internal/load-cards-by-ids";
 import { mapCardCatalogRowToCard } from "@/infrastructure/persistence/supabase/internal/map-card-catalog-row-to-card";
+
+function isMissingFusionTableError(error: { message?: string; code?: string } | null): boolean {
+  if (!error) return false;
+  const message = error.message ?? "";
+  return error.code === "PGRST205" || message.includes("story_duel_fusion_cards") && message.includes("schema cache");
+}
 
 export class SupabaseAdminStoryDeckRepository implements IAdminStoryDeckRepository {
   constructor(private readonly client: SupabaseClient) {}
@@ -74,6 +89,33 @@ export class SupabaseAdminStoryDeckRepository implements IAdminStoryDeckReposito
     return ((data ?? []) as IStoryDuelDeckOverrideRow[]).map(mapDuelDeckOverrideRow);
   }
 
+  async listDuelFusionCards(duelIds: string[]): Promise<IAdminStoryDuelFusionCard[]> {
+    if (duelIds.length === 0) return [];
+    const { data, error } = await this.client
+      .from("story_duel_fusion_cards")
+      .select("duel_id,slot_index,card_id,is_active")
+      .in("duel_id", duelIds)
+      .order("duel_id", { ascending: true })
+      .order("slot_index", { ascending: true });
+    if (error) {
+      if (isMissingFusionTableError(error)) return [];
+      throw new ValidationError(`No se pudieron cargar cartas de fusión por duelo. (${error.message})`);
+    }
+    return ((data ?? []) as IStoryDuelFusionCardRow[]).map(mapDuelFusionCardRow);
+  }
+
+  async listDuelRewardCards(duelIds: string[]): Promise<IAdminStoryDuelRewardCard[]> {
+    if (duelIds.length === 0) return [];
+    const { data, error } = await this.client
+      .from("story_duel_reward_cards")
+      .select("duel_id,card_id,copies,drop_rate,is_guaranteed")
+      .in("duel_id", duelIds)
+      .order("duel_id", { ascending: true })
+      .order("card_id", { ascending: true });
+    if (error) throw new ValidationError("No se pudieron cargar cartas de recompensa por duelo.");
+    return ((data ?? []) as IStoryDuelRewardCardRow[]).map(mapDuelRewardCardRow);
+  }
+
   async getDeck(deckListId: string): Promise<IAdminStoryDeck | null> {
     const [deckResult, cardsResult] = await Promise.all([
       this.client.from("story_deck_lists").select("id,opponent_id,name,description,version,is_active").eq("id", deckListId).maybeSingle<IStoryDeckListRow>(),
@@ -112,6 +154,39 @@ export class SupabaseAdminStoryDeckRepository implements IAdminStoryDeckReposito
     if (aiUpsert.error) throw new ValidationError(`No se pudo guardar la dificultad del duelo. (${aiUpsert.error.message})`);
     const deleteOverrides = await this.client.from("story_duel_deck_overrides").delete().eq("duel_id", duelConfig.duelId);
     if (deleteOverrides.error) throw new ValidationError(`No se pudieron limpiar overrides previos. (${deleteOverrides.error.message})`);
+    const deleteFusion = await this.client.from("story_duel_fusion_cards").delete().eq("duel_id", duelConfig.duelId);
+    if (deleteFusion.error) {
+      if (isMissingFusionTableError(deleteFusion.error)) throw new ValidationError("Falta la migración de story_duel_fusion_cards en Supabase. Debes crear esa tabla antes de guardar fusiones por duelo.");
+      throw new ValidationError(`No se pudieron limpiar cartas de fusión previas. (${deleteFusion.error.message})`);
+    }
+    const deleteRewards = await this.client.from("story_duel_reward_cards").delete().eq("duel_id", duelConfig.duelId);
+    if (deleteRewards.error) throw new ValidationError(`No se pudieron limpiar recompensas de cartas previas. (${deleteRewards.error.message})`);
+    if (duelConfig.fusionCardIds.length > 0) {
+      const insertFusion = await this.client.from("story_duel_fusion_cards").insert(
+        duelConfig.fusionCardIds.map((cardId, slotIndex) => ({
+          duel_id: duelConfig.duelId,
+          slot_index: slotIndex,
+          card_id: cardId,
+          is_active: true,
+        })),
+      );
+      if (insertFusion.error) {
+        if (isMissingFusionTableError(insertFusion.error)) throw new ValidationError("Falta la migración de story_duel_fusion_cards en Supabase. Debes crear esa tabla antes de guardar fusiones por duelo.");
+        throw new ValidationError(`No se pudieron guardar cartas de fusión del duelo. (${insertFusion.error.message})`);
+      }
+    }
+    if (duelConfig.rewardCardIds.length > 0) {
+      const insertRewards = await this.client.from("story_duel_reward_cards").insert(
+        duelConfig.rewardCardIds.map((cardId) => ({
+          duel_id: duelConfig.duelId,
+          card_id: cardId,
+          copies: 1,
+          drop_rate: 1,
+          is_guaranteed: true,
+        })),
+      );
+      if (insertRewards.error) throw new ValidationError(`No se pudieron guardar recompensas de cartas del duelo. (${insertRewards.error.message})`);
+    }
     if (duelConfig.slotOverrides.length === 0) return;
     const insertOverrides = await this.client.from("story_duel_deck_overrides").insert(
       duelConfig.slotOverrides.map((slot) => ({

@@ -4,6 +4,7 @@ import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { AudioTrackId } from "@/core/config/audio-catalog";
 import { resolveEffectAudioPath } from "./audio/effect-audio-registry";
 import { createAudio, createAudioFromPath, mapEventToTrack, safePlay, safePlayWithFallback } from "./audio/audioRuntime";
+import { setAudioPlaybackBlocked } from "./audio/audio-gate";
 
 interface UseGameAudioParams {
   combatLog: ICombatLogEvent[];
@@ -39,6 +40,10 @@ export function useGameAudio({
   const prevSelectedCardRef = useRef(hasSelectedCard);
   const prevErrorRef = useRef<string | null>(lastErrorCode);
 
+  useEffect(() => {
+    setAudioPlaybackBlocked(isMuted || isPaused);
+  }, [isMuted, isPaused]);
+
   const playCombatEventAudio = useCallback((event: ICombatLogEvent) => {
     const effectAudioPath = resolveEffectAudioPath(event);
     if (effectAudioPath) {
@@ -61,12 +66,14 @@ export function useGameAudio({
       soundtrackRef.current = null;
       return;
     }
-    if (!soundtrackRef.current) soundtrackRef.current = createAudio("SOUNDTRACK", true);
+    if (!soundtrackRef.current && !isMuted && !isPaused) {
+      soundtrackRef.current = createAudio("SOUNDTRACK", true);
+    }
     return () => {
       soundtrackRef.current?.pause();
       soundtrackRef.current = null;
     };
-  }, [disableBaseSoundtrack]);
+  }, [disableBaseSoundtrack, isMuted, isPaused]);
 
   useEffect(() => {
     const soundtrack = soundtrackRef.current;
@@ -80,7 +87,7 @@ export function useGameAudio({
   }, [isMuted, isPaused, winnerPlayerId]);
 
   useEffect(() => {
-    if (isMuted) {
+    if (isMuted || isPaused) {
       processedRef.current = combatLog.length;
       return;
     }
@@ -89,17 +96,17 @@ export function useGameAudio({
     nextEvents.forEach((event) => {
       playCombatEventAudio(event);
     });
-  }, [combatLog, isMuted, playCombatEventAudio]);
+  }, [combatLog, isMuted, isPaused, playCombatEventAudio]);
 
   useEffect(() => {
-    if (isMuted || !winnerPlayerId) return;
+    if (isMuted || isPaused || !winnerPlayerId) return;
     const track = resolveDuelEndTrack(winnerPlayerId, playerId);
     safePlay(createAudio(track, false));
     if (track === "DUEL_WIN") safePlay(createAudio("VICTORY_STINGER", false));
-  }, [isMuted, playerId, winnerPlayerId]);
+  }, [isMuted, isPaused, playerId, winnerPlayerId]);
 
   useEffect(() => {
-    if (isMuted) {
+    if (isMuted || isPaused) {
       prevHistoryOpenRef.current = isHistoryOpen;
       return;
     }
@@ -107,10 +114,10 @@ export function useGameAudio({
       safePlay(createAudio(isHistoryOpen ? "SIDEBAR_OPEN" : "SIDEBAR_CLOSE", false));
       prevHistoryOpenRef.current = isHistoryOpen;
     }
-  }, [isHistoryOpen, isMuted]);
+  }, [isHistoryOpen, isMuted, isPaused]);
 
   useEffect(() => {
-    if (isMuted) {
+    if (isMuted || isPaused) {
       prevSelectedCardRef.current = hasSelectedCard;
       return;
     }
@@ -118,10 +125,10 @@ export function useGameAudio({
       safePlay(createAudio(hasSelectedCard ? "SIDEBAR_OPEN" : "SIDEBAR_CLOSE", false));
       prevSelectedCardRef.current = hasSelectedCard;
     }
-  }, [hasSelectedCard, isMuted]);
+  }, [hasSelectedCard, isMuted, isPaused]);
 
   useEffect(() => {
-    if (isMuted) {
+    if (isMuted || isPaused) {
       prevErrorRef.current = lastErrorCode;
       return;
     }
@@ -129,22 +136,22 @@ export function useGameAudio({
       safePlay(createAudio("ERROR_ACTION", false));
     }
     prevErrorRef.current = lastErrorCode;
-  }, [isMuted, lastErrorCode]);
+  }, [isMuted, isPaused, lastErrorCode]);
 
   const playTimerExpired = useCallback(() => {
-    if (!isMuted) safePlay(createAudio("TIMER_END", false));
-  }, [isMuted]);
+    if (!isMuted && !isPaused) safePlay(createAudio("TIMER_END", false));
+  }, [isMuted, isPaused]);
 
   const playTimerWarning = useCallback(() => {
-    if (!isMuted) safePlay(createAudio("TIMER_WARNING", false));
-  }, [isMuted]);
+    if (!isMuted && !isPaused) safePlay(createAudio("TIMER_WARNING", false));
+  }, [isMuted, isPaused]);
 
   const playButtonClick = useCallback(() => {
-    if (!isMuted) safePlay(createAudio("BUTTON_CLICK", false));
-  }, [isMuted]);
+    if (!isMuted && !isPaused) safePlay(createAudio("BUTTON_CLICK", false));
+  }, [isMuted, isPaused]);
   const playBanner = useCallback(() => {
-    if (!isMuted) safePlay(createAudio("BANNER", false));
-  }, [isMuted]);
+    if (!isMuted && !isPaused) safePlay(createAudio("BANNER", false));
+  }, [isMuted, isPaused]);
 
   return { playTimerExpired, playTimerWarning, playButtonClick, playBanner };
 }

@@ -36,6 +36,14 @@ Render del campo de batalla, slots y VFX de acciones de combate/ejecución.
 3. `SlotGrid` pinta cartas y resaltados por acción.
 4. VFX se sincronizan con eventos de `combatLog`.
 
+## Cola de efectos (regla obligatoria)
+
+1. Si una trampa se activa durante un ataque o efecto, el flujo visual/sonoro prioriza la trampa antes de continuar la acción original.
+2. El orden de resolución visible es de más reciente a más antigua cuando hay cadena de respuestas (counter trap).
+3. Ningún `DIRECT_DAMAGE` por efecto debe arrancar antes de que termine la fase de bloqueo/objetivo del evento de trampa anterior.
+4. Las cartas removidas del slot se mantienen de forma temporal (`sticky`) para evitar que vayan al cementerio visualmente antes de cerrar su VFX.
+5. `cargar.mp3` está reservado a activaciones de trampa y se protege con deduplicación para evitar dobles disparos por re-render.
+
 ## Invariantes
 
 1. El módulo no modifica reglas de combate.

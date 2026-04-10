@@ -271,7 +271,7 @@ Conectar los nuevos oponentes al flujo real de mapa/duelo para validar progresi�
 2. `StoryMapNode` deja de usar un único avatar fijo y consume avatar por nodo cuando existe.
 3. Migración de duelos ampliada:
    - `docs/supabase/sql/018_phase_5_3_story_duel_rotation_expansion.sql`.
-4. Layout visual de acto 2 extendido con nodos de `story-ch2-duel-3` a `story-ch2-duel-6` y nodos virtuales intermedios.
+4. Layout visual de acto 2 extendido con nodos de `story-ch2-duel-3` a `story-ch2-duel-7` y nodos virtuales intermedios.
 
 ## Fase 5 (nueva) - Identidad BOSS en duelo (audio + tema visual)
 

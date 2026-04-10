@@ -1,6 +1,7 @@
 // src/components/game/board/hooks/useBoard.battle-position.integration.test.ts - Comprueba cambio de posición en batalla desde SET/DEFENSE hacia ATTACK.
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { ENTITY_CARDS } from "@/core/data/mock-cards/entities";
 import { useBoard } from "./useBoard";
 
 function createMouseEvent(): React.MouseEvent {
@@ -10,12 +11,14 @@ function createMouseEvent(): React.MouseEvent {
 describe("useBoard cambio de posición en batalla", () => {
   it("no debería pasar automáticamente una entidad en SET a ATTACK al hacer click", async () => {
     window.localStorage.setItem("board-auto-phase", "0");
-    const { result } = renderHook(() => useBoard());
-    let entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
-    for (let attempt = 0; attempt < 8 && !entityCard; attempt += 1) {
-      act(() => result.current.restartMatch());
-      entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
-    }
+    const deterministicDeck = ENTITY_CARDS.slice(0, 8).map((card) => ({ ...card }));
+    const { result } = renderHook(() =>
+      useBoard(deterministicDeck, "TRAINING", {
+        preserveDeckOrder: true,
+        openingHandSize: 4,
+      }),
+    );
+    const entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
     expect(entityCard).toBeDefined();
     if (!entityCard) {
       throw new Error("Se requiere una entidad en mano para esta prueba.");

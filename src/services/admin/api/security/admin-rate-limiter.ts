@@ -8,6 +8,18 @@ interface IAdminRateLimitFingerprint {
   userKey: string;
 }
 
+function isStrictRateLimitFlagEnabled(value: string | undefined): boolean {
+  return value?.trim().toLowerCase() === "true";
+}
+
+// Permite activar políticas fail-closed por entorno para mutaciones administrativas.
+function resolveAdminRateLimitOptions(): { requireDistributedBackend: boolean; failClosedOnDistributedError: boolean } {
+  return {
+    requireDistributedBackend: isStrictRateLimitFlagEnabled(process.env.ADMIN_RATE_LIMIT_REQUIRE_DISTRIBUTED),
+    failClosedOnDistributedError: isStrictRateLimitFlagEnabled(process.env.ADMIN_RATE_LIMIT_FAIL_CLOSED),
+  };
+}
+
 function buildFingerprint(request: NextRequest, userId: string): IAdminRateLimitFingerprint {
   return { ip: resolveRequestClientIp(request), userKey: userId.trim().toLowerCase() };
 }
@@ -18,8 +30,14 @@ function buildFingerprint(request: NextRequest, userId: string): IAdminRateLimit
 export async function consumeAdminMutationRateLimit(request: NextRequest, userId: string, operation: string): Promise<boolean> {
   const fingerprint = buildFingerprint(request, userId);
   const normalizedOperation = operation.trim().toLowerCase();
-  const userAllowed = await consumeSecurityRateLimit(`admin:mutation:user:${normalizedOperation}:${fingerprint.userKey}`, 45, 60_000);
+  const rateLimitOptions = resolveAdminRateLimitOptions();
+  const userAllowed = await consumeSecurityRateLimit(
+    `admin:mutation:user:${normalizedOperation}:${fingerprint.userKey}`,
+    45,
+    60_000,
+    rateLimitOptions,
+  );
   if (!userAllowed) return false;
-  return consumeSecurityRateLimit(`admin:mutation:ip:${normalizedOperation}:${fingerprint.ip}`, 80, 60_000);
+  return consumeSecurityRateLimit(`admin:mutation:ip:${normalizedOperation}:${fingerprint.ip}`, 80, 60_000, rateLimitOptions);
 }
 

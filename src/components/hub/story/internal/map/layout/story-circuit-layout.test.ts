@@ -81,4 +81,49 @@ describe("buildStoryNodePositionMap", () => {
       }
     }
   });
+
+  it("evita coordenadas solapadas en el acto 2 para evitar selección incorrecta de nodo", () => {
+    const act2 = listStoryActMapDefinitions().find((definition) => definition.act === 2);
+    expect(act2).toBeDefined();
+    const allPositions = [...(act2?.nodes ?? []), ...(act2?.virtualNodes ?? [])].map(
+      (node) => node.position,
+    );
+    const minDistance = 40;
+    for (let index = 0; index < allPositions.length; index += 1) {
+      for (let next = index + 1; next < allPositions.length; next += 1) {
+        const deltaX = allPositions[index].x - allPositions[next].x;
+        const deltaY = allPositions[index].y - allPositions[next].y;
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        expect(distance).toBeGreaterThan(minDistance);
+      }
+    }
+  });
+
+  it("oculta el hilo del puente principal hasta completar la submission de activación", () => {
+    const nodes: IStoryMapNodeRuntime[] = [
+      {
+        ...buildNode("story-ch2-branch-lower-down-b", null, { x: 1000, y: 1200 }),
+        nodeType: "REWARD_NEXUS",
+      },
+      {
+        ...buildNode("story-ch2-bridge-submission", "story-ch2-duel-8", { x: 900, y: 1000 }),
+        nodeType: "EVENT",
+        isCompleted: false,
+      },
+      {
+        ...buildNode("story-ch2-boss-bridge", "story-ch2-bridge-submission", { x: 1300, y: 1200 }),
+        nodeType: "MOVE",
+        pathLinkFromNodeIds: ["story-ch2-branch-lower-down-b"],
+      },
+    ];
+    const positionMap = buildStoryNodePositionMap(nodes);
+    const hiddenSegments = resolveStoryPathSegments(nodes, positionMap);
+    expect(hiddenSegments).toHaveLength(0);
+
+    const submittedNodes = nodes.map((node) =>
+      node.id === "story-ch2-bridge-submission" ? { ...node, isCompleted: true } : node,
+    );
+    const visibleSegments = resolveStoryPathSegments(submittedNodes, positionMap);
+    expect(visibleSegments).toHaveLength(2);
+  });
 });

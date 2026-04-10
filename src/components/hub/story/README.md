@@ -102,12 +102,13 @@ story/
 4. Si aplica, `POST /api/story/world/interact` registra interacción narrativa.
 5. En duelos, la ruta de resultado (`/api/story/duels/complete`) actualiza progreso.
 6. Al volver de duelo, `StoryScene` consume query de transición (`duelOutcome`, `duelNodeId`, `returnNodeId`).
-7. Si el duelo se gana, el nodo rival se retira visualmente recorriendo nodos/plataformas del flujo.
-8. En recompensas de carta, nodo + animación usan visual real según `rewardCardId` (servicio `resolve-story-reward-card-visual`).
-9. Persistencia Story usa estado compacto: `currentNodeId + visitedNodeIds + interactedNodeIds`.
-10. Antes de iniciar combate Story se ejecuta coin toss y su resultado define `starterPlayerId`.
-11. En nodos `EVENT`, la escena reproduce `soundtrack` del evento durante el diálogo y, al cerrar, dispara SFX de finalización (`finish-event`).
-12. En transición entre actos, el avatar aparece en el nodo portal del acto, hace animación de escala y luego se mueve al nodo objetivo (inicio al avanzar, último progreso al retroceder).
+7. En `LOST`/`ABANDONED`, el retorno funcional queda fijado al nodo del duelo cerrado (evita saltos cross-acto por `unlockRequirementDuelId`).
+8. Si el duelo se gana, el nodo rival se retira visualmente recorriendo nodos/plataformas del flujo.
+9. En recompensas de carta, nodo + animación usan visual real según `rewardCardId` (servicio `resolve-story-reward-card-visual`).
+10. Persistencia Story usa estado compacto: `currentNodeId + visitedNodeIds + interactedNodeIds`.
+11. Antes de iniciar combate Story se ejecuta coin toss y su resultado define `starterPlayerId`.
+12. En nodos `EVENT`, la escena reproduce `soundtrack` del evento durante el diálogo y, al cerrar, dispara SFX de finalización (`finish-event`).
+13. En transición entre actos, el avatar aparece en el nodo portal del acto, hace animación de escala y luego se mueve al nodo objetivo (inicio al avanzar, último progreso al retroceder).
 
 ## Herramientas de depuración
 - `POST /api/story/world/reset`: reinicia cursor Story al nodo inicial y limpia estado compacto (visitados/interacciones) para reproducir pruebas del mapa.

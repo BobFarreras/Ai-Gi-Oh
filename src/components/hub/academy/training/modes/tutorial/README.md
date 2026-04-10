@@ -39,7 +39,7 @@ Bloques del flujo:
 6. Ataques directos guiados: selección de entidad atacante y zona rival cuando no hay entidades enemigas.
 7. Cierre técnico: fusión contra defensa y cierre con ataque directo de Python.
 8. Post-duelo guiado: explicación del panel final (EXP de cartas, EXP jugador, Nexus y regalo si aplica).
-9. Claim final del nodo: contenedor de cierre con botón `Recompensa Final` y diálogo de carta.
+9. Claim final del nodo: contenedor de cierre con botón `Recompensa Final` y diálogo unificado (carta + Nexus).
 
 ## Reglas de UX del Tutorial
 
@@ -61,6 +61,8 @@ Reglas:
 1. Requiere tener completado `tutorial-combat-basics`.
 2. Es idempotente por marcador de progreso `tutorial-combat-reward-gemgpt`.
 3. Inserta en almacén la carta `exec-fusion-gemgpt` mediante `ICardCollectionRepository`.
+4. El mismo diálogo final reclama también la recompensa Nexus (`POST /api/tutorial/reward/claim`) para cerrar el tutorial en un solo flujo.
+5. En el prompt de trampa del tutorial se fuerza acción positiva (`Activar`) y se deshabilita `Cancelar` para evitar desvíos del guion guiado.
 
 ## Notas de Mantenibilidad
 

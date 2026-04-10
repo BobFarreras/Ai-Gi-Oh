@@ -6,6 +6,7 @@ import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { buildDefaultMatchNarrationPack } from "@/components/game/board/narration/build-default-match-narration-pack";
 import { selectNarrationActionForResult, selectNarrationActionsFromEvents } from "@/components/game/board/narration/select-narration-actions";
 import { IMatchNarrationPack, IResolvedNarrationAction } from "@/components/game/board/narration/types";
+import { createAudioFromPath, safePlay } from "@/components/game/board/hooks/internal/audio/audioRuntime";
 
 interface UseMatchNarrationParams {
   combatLog: ICombatLogEvent[];
@@ -13,6 +14,7 @@ interface UseMatchNarrationParams {
   playerId: string;
   opponentId: string;
   isMuted: boolean;
+  isPaused: boolean;
   narrationPack?: IMatchNarrationPack | null;
   isLocked?: boolean;
 }
@@ -54,7 +56,7 @@ function reducer(state: IMatchNarrationState, action: MatchNarrationAction): IMa
   return { ...state, activeAction: null };
 }
 
-export function useMatchNarration({ combatLog, winnerPlayerId, playerId, opponentId, isMuted, narrationPack, isLocked = false }: UseMatchNarrationParams) {
+export function useMatchNarration({ combatLog, winnerPlayerId, playerId, opponentId, isMuted, isPaused, narrationPack, isLocked = false }: UseMatchNarrationParams) {
   const pack = useMemo(() => narrationPack ?? buildDefaultMatchNarrationPack(), [narrationPack]);
   const processedRef = useRef(0);
   const queuedIntroRef = useRef(false);
@@ -112,18 +114,15 @@ export function useMatchNarration({ combatLog, winnerPlayerId, playerId, opponen
     const audioDelay = activeAction.line.channel === "CINEMATIC" ? CINEMATIC_ENTRY_DELAY_MS : 0;
     let audioTimeout: number | null = null;
     let retryTimeout: number | null = null;
-    if (!isMuted && activeAction.line.audioUrl) {
+    if (!isMuted && !isPaused && activeAction.line.audioUrl) {
       audioTimeout = window.setTimeout(() => {
         audioRef.current?.pause();
-        audioRef.current = new Audio(activeAction.line.audioUrl!);
-        audioRef.current.volume = 0.7;
-        void audioRef.current.play().catch(() => {
-          // Reintento breve para navegadores que bloquean el primer intento tras transición visual.
-          retryTimeout = window.setTimeout(() => {
-            if (!audioRef.current) return;
-            void audioRef.current.play().catch(() => undefined);
-          }, 220);
-        });
+        audioRef.current = createAudioFromPath(activeAction.line.audioUrl!, 0.7);
+        safePlay(audioRef.current);
+        retryTimeout = window.setTimeout(() => {
+          if (!audioRef.current) return;
+          safePlay(audioRef.current);
+        }, 220);
       }, audioDelay);
     }
     const clearDelay = activeAction.line.channel === "CINEMATIC" ? CINEMATIC_ENTRY_DELAY_MS : 0;
@@ -135,7 +134,13 @@ export function useMatchNarration({ combatLog, winnerPlayerId, playerId, opponen
       if (retryTimeout) window.clearTimeout(retryTimeout);
       window.clearTimeout(timeout);
     };
-  }, [isMuted, state.activeAction]);
+  }, [isMuted, isPaused, state.activeAction]);
+
+  useEffect(() => {
+    if (!isMuted && !isPaused) return;
+    audioRef.current?.pause();
+    if (audioRef.current) audioRef.current.currentTime = 0;
+  }, [isMuted, isPaused]);
 
   useEffect(() => () => audioRef.current?.pause(), []);
 

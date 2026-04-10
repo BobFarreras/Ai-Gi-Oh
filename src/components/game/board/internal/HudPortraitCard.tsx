@@ -6,6 +6,7 @@ import { Zap } from "lucide-react";
 import Image from "next/image";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
+import { useAnimatedHudValue } from "@/components/game/board/hooks/internal/useAnimatedHudValue";
 
 interface HudPortraitCardProps {
   isOpponent: boolean;
@@ -17,6 +18,10 @@ interface HudPortraitCardProps {
 }
 
 export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, badgeText, showEnergy = true }: HudPortraitCardProps) {
+  // Animamos LP para que el impacto visual no sea instantáneo.
+  const displayedHealthPoints = useAnimatedHudValue(player.healthPoints, 980, 220);
+  const healthRatio = Math.max(0, Math.min(1, displayedHealthPoints / Math.max(1, player.maxHealthPoints)));
+
   return (
     <div
       className={cn(
@@ -45,13 +50,13 @@ export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, b
         {badgeText ? <span className="mb-1 text-[8px] md:text-[9px] px-1.5 md:px-2 py-0.5 bg-zinc-800/80 text-zinc-300 rounded-sm uppercase tracking-widest font-black border border-zinc-600/50 shadow-sm">{badgeText}</span> : null}
         <div className={cn("flex flex-col w-full", isOpponent ? "items-start" : "items-end")}>
           <div className="flex items-baseline gap-2 drop-shadow-md">
-            <span className="text-[clamp(1.35rem,2.7vw,2.25rem)] font-black italic tracking-tighter text-white">{player.healthPoints}</span>
+            <span className="text-[clamp(1.35rem,2.7vw,2.25rem)] font-black italic tracking-tighter text-white">{displayedHealthPoints}</span>
             <span className="text-[clamp(0.82rem,1.45vw,1.25rem)] font-bold text-zinc-400">/ {player.maxHealthPoints} LP</span>
           </div>
           <div className={cn("w-[clamp(9.5rem,15vw,15rem)] h-2 md:h-2.5 bg-zinc-900/90 mt-1 relative overflow-hidden shadow-inner", isOpponent ? "[clip-path:polygon(4%_0,100%_0,100%_100%,0_100%)]" : "[clip-path:polygon(0_0,100%_0,96%_100%,0_100%)]")}>
             <motion.div
               initial={false}
-              animate={{ width: `${Math.max(0, (player.healthPoints / player.maxHealthPoints) * 100)}%` }}
+              animate={{ width: `${healthRatio * 100}%` }}
               transition={{ type: "spring", stiffness: 100, damping: 20 }}
               className={cn("absolute top-0 bottom-0", isOpponent ? "left-0 bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]" : "right-0 bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]")}
             />

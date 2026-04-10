@@ -1,7 +1,7 @@
 // src/components/game/board/ui/layout/BoardActionButtons.tsx - Acciones rápidas del tablero (pausa, audio, historial, auto-turno y atajos de combate).
 "use client";
 
-import { Bot, History, Pause, Play, Power, Swords, Volume2, VolumeX } from "lucide-react";
+import { Bot, History, Pause, Play, Power, Shield, Swords, Volume2, VolumeX } from "lucide-react";
 
 interface BoardActionButtonsProps {
   isMuted: boolean;
@@ -9,12 +9,14 @@ interface BoardActionButtonsProps {
   isAutoPhaseEnabled: boolean;
   isHistoryOpen: boolean;
   canSetSelectedEntityToAttack: boolean;
+  canSetSelectedEntityToDefense: boolean;
   canActivateSelectedExecution: boolean;
   onToggleMute: () => void;
   onTogglePause: () => void;
   onToggleAutoPhase: () => void;
   onToggleHistory: () => void;
   onSetSelectedEntityToAttack: () => void;
+  onSetSelectedEntityToDefense: () => void;
   onActivateSelectedExecution: () => void;
 }
 
@@ -24,12 +26,14 @@ export function BoardActionButtons({
   isAutoPhaseEnabled,
   isHistoryOpen,
   canSetSelectedEntityToAttack,
+  canSetSelectedEntityToDefense,
   canActivateSelectedExecution,
   onToggleMute,
   onTogglePause,
   onToggleAutoPhase,
   onToggleHistory,
   onSetSelectedEntityToAttack,
+  onSetSelectedEntityToDefense,
   onActivateSelectedExecution,
 }: BoardActionButtonsProps) {
   return (
@@ -56,6 +60,18 @@ export function BoardActionButtons({
           className="bg-zinc-950/90 border-2 border-amber-500/60 text-amber-300 p-4 rounded-full hover:bg-amber-950 hover:shadow-[0_0_20px_rgba(251,191,36,0.6)] transition-all"
         >
           <Swords size={24} />
+        </button>
+      )}
+      {canSetSelectedEntityToDefense && (
+        <button
+          aria-label="Cambiar entidad seleccionada a defensa"
+          onClick={(event) => {
+            event.stopPropagation();
+            onSetSelectedEntityToDefense();
+          }}
+          className="bg-zinc-950/90 border-2 border-sky-500/60 text-sky-300 p-4 rounded-full hover:bg-sky-950 hover:shadow-[0_0_20px_rgba(56,189,248,0.6)] transition-all"
+        >
+          <Shield size={24} />
         </button>
       )}
       <button

@@ -8,10 +8,11 @@ import { ICard } from "@/core/entities/ICard";
 import { EXECUTION_CARDS } from "@/core/data/mock-cards/executions";
 import { ENTITY_CARDS } from "@/core/data/mock-cards/entities";
 import { ACADEMY_HOME_ROUTE, ACADEMY_TUTORIAL_MAP_ROUTE } from "@/core/constants/routes/academy-routes";
-import { postTutorialCombatRewardClaim, postTutorialNodeCompletion } from "@/services/tutorial/tutorial-node-progress-client";
+import { postTutorialCombatRewardClaim, postTutorialRewardClaim } from "@/services/tutorial/tutorial-node-progress-client";
 import { TrainingCoinTossOverlay } from "./TrainingCoinTossOverlay";
 import { createTutorialOpponentStrategy } from "@/components/hub/academy/training/modes/tutorial/internal/create-tutorial-opponent-strategy";
 import { CombatTutorialRewardOverlay } from "./CombatTutorialRewardOverlay";
+import { ensureCombatNodeCompletion } from "@/components/hub/academy/training/modes/tutorial/internal/ensure-combat-node-completion";
 
 interface ITrainingTutorialClientProps {
   deck: ICard[];
@@ -22,12 +23,13 @@ interface ITrainingTutorialClientProps {
 }
 
 export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
+  const FINAL_TUTORIAL_NEXUS_REWARD = 600;
   const tutorialOpponentStrategy = useMemo(() => createTutorialOpponentStrategy(), []);
   const tutorialRewardSummary = useMemo<IDuelResultRewardSummary>(() => {
-    const mockRewardCard = ENTITY_CARDS.find((card) => card.id === "entity-python") ?? ENTITY_CARDS[0] ?? props.deck[0];
+    const mockRewardCard = EXECUTION_CARDS.find((card) => card.id === "exec-fusion-gemgpt") ?? ENTITY_CARDS[0] ?? props.deck[0];
     return {
       rewardPlayerExperience: 180,
-      rewardNexus: 260,
+      rewardNexus: FINAL_TUTORIAL_NEXUS_REWARD,
       rewardCards: mockRewardCard ? [{ ...mockRewardCard }] : [],
     };
   }, [props.deck]);
@@ -37,7 +39,9 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
   const [isCombatTutorialFlowFinished, setIsCombatTutorialFlowFinished] = useState(false);
   const [isRewardDialogVisible, setIsRewardDialogVisible] = useState(false);
   const [isClaimingReward, setIsClaimingReward] = useState(false);
-  const [rewardClaimStatus, setRewardClaimStatus] = useState("Pulsa reclamar para añadir la carta al almacén de Supabase.");
+  const [hasRewardClaimCompleted, setHasRewardClaimCompleted] = useState(false);
+  const [rewardClaimStatus, setRewardClaimStatus] = useState("Pulsa reclamar para añadir la carta y los Nexus finales.");
+  const [resolvedRewardNexus, setResolvedRewardNexus] = useState(FINAL_TUTORIAL_NEXUS_REWARD);
   const starterSide: "PLAYER" | "OPPONENT" = "PLAYER";
   const tutorialRewardCard = useMemo(() => EXECUTION_CARDS.find((card) => card.id === "exec-fusion-gemgpt") ?? props.deck[0], [props.deck]);
 
@@ -52,8 +56,9 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
     hasPostedRef.current = true;
     setStatus("Registrando progreso del nodo de combate...");
     try {
-      await postTutorialNodeCompletion("tutorial-combat-basics");
-      setStatus("Nodo de combate completado y sincronizado.");
+      const synced = await ensureCombatNodeCompletion();
+      setStatus(synced ? "Nodo de combate completado y sincronizado." : "No se pudo sincronizar el nodo de combate.");
+      if (!synced) hasPostedRef.current = false;
     } catch {
       setStatus("No se pudo sincronizar el nodo de combate.");
       hasPostedRef.current = false;
@@ -103,20 +108,36 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
         <CombatTutorialRewardOverlay
           isVisible={isRewardDialogVisible}
           rewardCard={tutorialRewardCard}
+          rewardNexus={resolvedRewardNexus}
           isLoading={isClaimingReward}
+          hideClaimButton={hasRewardClaimCompleted}
           status={rewardClaimStatus}
           onClaimReward={async () => {
             setIsClaimingReward(true);
             try {
-              const result = await postTutorialCombatRewardClaim();
-              setRewardClaimStatus(result.applied ? "Carta reclamada y añadida al almacén correctamente." : "La carta ya estaba reclamada en tu almacén.");
+              await ensureCombatNodeCompletion();
+              const [cardResult, nexusResult] = await Promise.all([
+                postTutorialCombatRewardClaim(),
+                postTutorialRewardClaim(),
+              ]);
+              setResolvedRewardNexus(nexusResult.rewardNexus);
+              const cardText = cardResult.applied ? "carta añadida" : "carta ya reclamada";
+              const nexusText = nexusResult.applied ? `+${nexusResult.rewardNexus} Nexus aplicados` : "Nexus ya reclamados";
+              setRewardClaimStatus(`Recompensa final completada: ${cardText}, ${nexusText}.`);
+              setHasRewardClaimCompleted(true);
+              window.setTimeout(() => {
+                window.location.assign(ACADEMY_HOME_ROUTE);
+              }, 700);
             } catch {
-              setRewardClaimStatus("No se pudo reclamar la carta ahora. Inténtalo de nuevo.");
+              setRewardClaimStatus("No se pudo reclamar la recompensa final ahora. Inténtalo de nuevo.");
             } finally {
               setIsClaimingReward(false);
             }
           }}
-          onClose={() => window.location.assign(ACADEMY_TUTORIAL_MAP_ROUTE)}
+          onClose={async () => {
+            await ensureCombatNodeCompletion();
+            window.location.assign(`${ACADEMY_TUTORIAL_MAP_ROUTE}?refresh=${Date.now()}`);
+          }}
         />
       ) : null}
       <TrainingCoinTossOverlay

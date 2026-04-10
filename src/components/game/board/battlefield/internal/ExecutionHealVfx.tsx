@@ -2,7 +2,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ChargeCastSfx } from "@/components/game/board/battlefield/internal/ChargeCastSfx";
 
 interface IExecutionHealVfxProps {
   isOpponentSide: boolean;
@@ -15,7 +14,6 @@ export function ExecutionHealVfx({ isOpponentSide }: IExecutionHealVfxProps) {
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[220]">
-      <ChargeCastSfx enabled path="/audio/sfx/cargar.mp3" volume={0.7} />
       {ringAngles.map((angle, index) => {
         const radians = (angle * Math.PI) / 180;
         const radius = 42;

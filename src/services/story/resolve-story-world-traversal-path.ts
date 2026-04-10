@@ -69,6 +69,13 @@ function canEnterNode(nodeId: string, fromNodeId: string, state: IResolveStoryWo
   if (node.unlockRequirementNodeId === fromNodeId) {
     const requirementNode = nodeById.get(node.unlockRequirementNodeId);
     if (requirementNode?.nodeType === "MOVE") return true;
+    // Excepción explícita para teletransporte entre actos: el nodo transición no necesita interacted/completed.
+    if (
+      requirementNode?.nodeType === "EVENT" &&
+      requirementNode.id.includes("-transition-to-act")
+    ) {
+      return true;
+    }
     return isRequirementSatisfied(node.unlockRequirementNodeId, state, nodeById);
   }
   return isRequirementSatisfied(node.unlockRequirementNodeId, state, nodeById);

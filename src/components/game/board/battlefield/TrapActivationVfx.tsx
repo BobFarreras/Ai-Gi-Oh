@@ -6,6 +6,7 @@ import { IBoardEntity } from "@/core/entities/IPlayer";
 import { DigitalBeam } from "./DigitalBeam";
 import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 import { ChargeCastSfx } from "@/components/game/board/battlefield/internal/ChargeCastSfx";
+import { ChargeCastVfx } from "@/components/game/board/battlefield/internal/ChargeCastVfx";
 
 interface ITrapActivationVfxProps {
   entity: IBoardEntity;
@@ -27,12 +28,21 @@ function resolveTrapLabel(action: string): string {
 export function TrapActivationVfx({ entity, isOpponentSide, isTrapActivating }: ITrapActivationVfxProps) {
   const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
   const action = entity.card.effect?.action;
+  const chargePlayKey = `${entity.instanceId}:${action ?? "none"}:charge`;
+  const blockPlayKey = `${entity.instanceId}:${action ?? "none"}:block`;
   if (!isTrapActivating || entity.card.type !== "TRAP" || !action) return null;
   const isBlockAction = action === "NEGATE_ATTACK_AND_DESTROY_ATTACKER" || action === "NEGATE_OPPONENT_TRAP_AND_DESTROY" || action === "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED";
 
   if (shouldReduceCombatEffects) {
     return (
-      <div className="pointer-events-none absolute inset-0 z-[210] flex items-center justify-center">
+      <div className="pointer-events-none absolute inset-0 z-[260] flex items-center justify-center">
+        <ChargeCastSfx enabled playKey={chargePlayKey} path="/audio/sfx/effects/execution/cargar.mp3" volume={0.76} />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.82 }}
+          animate={{ opacity: [0, 0.88, 0], scale: [0.82, 1.16, 0.98] }}
+          transition={{ duration: 0.72, ease: "easeOut" }}
+          className="absolute inset-4 rounded-2xl bg-[radial-gradient(circle,rgba(217,70,239,0.44)_0%,rgba(217,70,239,0.12)_48%,rgba(217,70,239,0)_84%)]"
+        />
         <div className="rounded border border-fuchsia-300/60 bg-black/70 px-3 py-1">
           <span className="text-xs font-black tracking-wider text-fuchsia-200">{resolveTrapLabel(action)}</span>
         </div>
@@ -43,14 +53,18 @@ export function TrapActivationVfx({ entity, isOpponentSide, isTrapActivating }: 
   if (action === "DAMAGE") {
     return (
       <>
-        <ChargeCastSfx enabled />
+        <ChargeCastSfx enabled playKey={chargePlayKey} path="/audio/sfx/effects/execution/cargar.mp3" volume={0.76} />
+        <ChargeCastVfx tone="red" />
         <DigitalBeam direction={isOpponentSide ? "towards-player" : "towards-opponent"} onComplete={() => undefined} />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: [0, 1, 0], scale: [0.8, 1.24, 1] }}
-          transition={{ duration: 0.9, ease: "easeOut" }}
-          className="absolute -inset-7 z-[210] rounded-3xl bg-[radial-gradient(circle,rgba(248,113,113,0.55)_0%,rgba(248,113,113,0.15)_46%,rgba(248,113,113,0)_82%)]"
-        />
+      </>
+    );
+  }
+  if (action === "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN") {
+    return (
+      <>
+        <ChargeCastSfx enabled playKey={chargePlayKey} path="/audio/sfx/effects/execution/cargar.mp3" volume={0.76} />
+        <ChargeCastVfx tone="violet" />
+        <DigitalBeam direction={isOpponentSide ? "towards-player" : "towards-opponent"} onComplete={() => undefined} />
       </>
     );
   }
@@ -68,9 +82,11 @@ export function TrapActivationVfx({ entity, isOpponentSide, isTrapActivating }: 
       initial={{ opacity: 0, scale: 0.72 }}
       animate={{ opacity: [0, 1, 0], scale: [0.72, 1.32, 1] }}
       transition={{ duration: 1.05, ease: "easeOut" }}
-      className={`pointer-events-none absolute -inset-8 z-[210] rounded-3xl ${gradient}`}
+      className={`pointer-events-none absolute -inset-8 z-[260] rounded-3xl ${gradient}`}
     >
-      {isBlockAction ? <ChargeCastSfx enabled path="/audio/sfx/effects/execution/block.mp3" volume={0.78} /> : null}
+      <ChargeCastSfx enabled playKey={chargePlayKey} path="/audio/sfx/effects/execution/cargar.mp3" volume={0.76} />
+      <ChargeCastVfx tone={isDebuff ? "violet" : isNegate ? "red" : "fuchsia"} zIndexClass="z-[261]" />
+      {isBlockAction ? <ChargeCastSfx enabled playKey={blockPlayKey} path="/audio/sfx/effects/execution/block.mp3" volume={0.78} /> : null}
       <div className="absolute inset-0 flex items-center justify-center">
         <span className="rounded-md border border-fuchsia-300/70 bg-fuchsia-950/65 px-3 py-1 text-xs font-black tracking-[0.16em] text-fuchsia-100">
           {resolveTrapLabel(action)}

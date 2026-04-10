@@ -24,6 +24,9 @@ interface PlayerHUDProps {
   wasEnergyGainedThisAction?: boolean;
   energyPulseKey?: string | null;
   energyAmount?: number | null;
+  wasEnergyLostThisAction?: boolean;
+  energyLossPulseKey?: string | null;
+  energyLossAmount?: number | null;
   avatarUrl?: string | null;
   dialogueMessage?: string | null;
   phase?: string;
@@ -48,6 +51,9 @@ export function PlayerHUD({
   wasEnergyGainedThisAction = false,
   energyPulseKey = null,
   energyAmount = null,
+  wasEnergyLostThisAction = false,
+  energyLossPulseKey = null,
+  energyLossAmount = null,
   avatarUrl = null,
   dialogueMessage = null,
   phase = "MAIN_1",
@@ -57,7 +63,7 @@ export function PlayerHUD({
   showPhaseControls = true,
   showEnergy = true,
 }: PlayerHUDProps) {
-  const { damageTaken, healGained, energyGained, isShaking } = useHudFeedback(
+  const { damageTaken, healGained, energyGained, energyLost, isShaking } = useHudFeedback(
     wasDamagedThisAction,
     damagePulseKey,
     damageAmount,
@@ -67,32 +73,38 @@ export function PlayerHUD({
     wasEnergyGainedThisAction,
     energyPulseKey,
     energyAmount,
+    wasEnergyLostThisAction,
+    energyLossPulseKey,
+    energyLossAmount,
   );
+  // Si hay feedback activo, el HUD recupera color aunque no sea su turno.
+  const hasActiveFeedback = Boolean(damageTaken || healGained || energyGained || energyLost);
+  const shouldDim = !isActiveTurn && !hasActiveFeedback;
 
   const shakeAnimation = isShaking ? { x: isOpponent ? [0, -8, 8, -5, 5, 0] : [0, 8, -8, 5, -5, 0] } : { x: 0 };
 
   return (
     <motion.div
       initial={{ x: isOpponent ? 100 : -100, y: isOpponent ? -50 : 50, opacity: 0 }}
-      // EFECTO DIMMING: Si no es su turno, se vuelve gris y se apaga levemente
       animate={{ 
         ...shakeAnimation, 
-        opacity: isActiveTurn ? 1 : 0.65, 
-        filter: isActiveTurn ? "grayscale(0%) brightness(1)" : "grayscale(80%) brightness(0.6)",
+        opacity: shouldDim ? 0.65 : 1,
+        filter: shouldDim ? "grayscale(80%) brightness(0.6)" : "grayscale(0%) brightness(1)",
         x: 0, 
         y: 0 
       }}
       transition={{ type: "spring", stiffness: 200, damping: 20 }}
       style={containerStyle}
       className={cn(
-        "absolute z-[100] flex w-[clamp(18rem,30vw,26.25rem)] h-[clamp(6.9rem,12vh,9.5rem)] md:h-[clamp(7.6rem,13vh,10.4rem)] transition-all duration-300 pointer-events-none",
+        "absolute z-[100] flex w-[clamp(18rem,30vw,26.25rem)] h-[120px] xl:h-[140px] transition-all duration-300 pointer-events-none",
         isOpponent ? "top-0 right-0 justify-start" : "bottom-0 left-0 justify-end",
         containerClassName,
       )}
     >
-      <HudFloatingDelta value={damageTaken} sign="-" isOpponent={isOpponent} color="red" />
-      <HudFloatingDelta value={healGained} sign="+" isOpponent={isOpponent} color="green" />
-      <HudFloatingDelta value={energyGained} sign="+" isOpponent={isOpponent} color="yellow" />
+      <HudFloatingDelta value={damageTaken} sign="-" isOpponent={isOpponent} color="red" pulseKey={damagePulseKey} anchor="HEALTH" />
+      <HudFloatingDelta value={healGained} sign="+" isOpponent={isOpponent} color="green" pulseKey={healPulseKey} anchor="HEALTH" />
+      <HudFloatingDelta value={energyGained} sign="+" isOpponent={isOpponent} color="yellow" pulseKey={energyPulseKey} anchor="ENERGY" />
+      <HudFloatingDelta value={energyLost} sign="-" isOpponent={isOpponent} color="purple" pulseKey={energyLossPulseKey} anchor="ENERGY" />
       {healGained ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.72 }}
@@ -108,6 +120,22 @@ export function PlayerHUD({
           transition={{ duration: 1.2, ease: "easeOut" }}
           className={cn("absolute z-[190] h-24 w-24 rounded-full bg-yellow-400/35 blur-xl", isOpponent ? "left-8 bottom-2" : "right-8 top-2")}
         />
+      ) : null}
+      {energyLost ? (
+        <>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.66 }}
+            animate={{ opacity: [0, 1, 0], scale: [0.66, 1.22, 1.04] }}
+            transition={{ duration: 1.7, ease: "easeOut" }}
+            className={cn("absolute z-[190] h-28 w-28 rounded-full bg-violet-400/44 blur-xl", isOpponent ? "left-8 bottom-2" : "right-8 top-2")}
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.72 }}
+            animate={{ opacity: [0, 0.95, 0], y: [10, -18, -46], scale: [0.72, 1.08, 0.94] }}
+            transition={{ duration: 1.55, ease: "easeOut" }}
+            className={cn("absolute z-[191] h-16 w-10 rounded-full bg-violet-300/72 blur-md", isOpponent ? "left-11 bottom-4" : "right-11 top-4")}
+          />
+        </>
       ) : null}
       <HudDialogueBubble isOpponent={isOpponent} message={dialogueMessage} />
       <HudPortraitCard

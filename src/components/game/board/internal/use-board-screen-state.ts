@@ -7,6 +7,8 @@ import { IMatchNarrationPack } from "@/components/game/board/narration/types";
 import { useMatchNarration } from "@/components/game/board/hooks/internal/match/useMatchNarration";
 import { useBoard } from "@/components/game/board/hooks/useBoard";
 import { useBoardScreenInteractions } from "./use-board-screen-interactions";
+import { useDelayedDuelResult } from "./use-delayed-duel-result";
+import { IBattleBannerMessage } from "@/components/game/board/ui/internal/banner/banner-message-policy";
 
 interface IUseBoardScreenStateInput {
   board: ReturnType<typeof useBoard>;
@@ -34,7 +36,7 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
   const playerId = input.playerId;
   const mode = input.mode;
   const onMatchResolved = input.onMatchResolved;
-  const [autoModeBannerSignal, setAutoModeBannerSignal] = useState<{ id: string; left: string; right: string } | null>(null);
+  const [autoModeBannerSignal, setAutoModeBannerSignal] = useState<IBattleBannerMessage | null>(null);
   const [graveyardView, setGraveyardView] = useState<"player" | "opponent" | null>(null);
   const [fusionDeckView, setFusionDeckView] = useState<"player" | "opponent" | null>(null);
   const [destroyedView, setDestroyedView] = useState<"player" | "opponent" | null>(null);
@@ -87,12 +89,20 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
     if (!board.winnerPlayerId) return;
     board.setIsHistoryOpen(false);
   }, [board]);
+  const resultWinnerPlayerId = useDelayedDuelResult({
+    board,
+    playerId,
+    playerName: input.playerName,
+    opponentName: input.opponentName,
+    setBannerSignal: setAutoModeBannerSignal,
+  });
   const narration = useMatchNarration({
     combatLog: board.gameState.combatLog,
     winnerPlayerId: board.winnerPlayerId,
     playerId,
     opponentId: input.opponentId,
     isMuted: board.isMuted,
+    isPaused: board.isPaused,
     narrationPack: input.narrationPack,
     isLocked: input.isNarrationLocked ?? false,
   });
@@ -118,7 +128,8 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
     visibleGraveyardOwner: effectiveGraveyardView === "player" ? input.playerName : input.opponentName,
     visibleFusionDeckOwner: fusionDeckView === "player" ? input.playerName : input.opponentName,
     visibleDestroyedOwner: destroyedView === "player" ? input.playerName : input.opponentName,
-    isResultVisible: Boolean(board.winnerPlayerId),
+    isResultVisible: Boolean(resultWinnerPlayerId),
+    resultWinnerPlayerId,
     duelResultRewardSummary: input.duelResultRewardSummary ?? null,
   };
 }

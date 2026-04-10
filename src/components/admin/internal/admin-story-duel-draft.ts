@@ -9,6 +9,8 @@ export interface IStorySlotLevelDraft {
   xp: number;
 }
 
+const STORY_DUEL_FUSION_SLOTS = 2;
+
 export function resolveDraft(data: IAdminStoryDeckApiResponse): Array<string | null> {
   return data.deck?.slots.map((slot) => slot.cardId) ?? [];
 }
@@ -46,4 +48,17 @@ export function resolveDraftSlotLevels(data: IAdminStoryDeckApiResponse, duelId:
     const override = data.duelDeckOverrides.find((row) => row.duelId === duelId && row.slotIndex === slotIndex);
     return { versionTier: override?.versionTier ?? 0, level: override?.level ?? 0, xp: override?.xp ?? 0 };
   });
+}
+
+export function resolveDraftFusionCardIds(data: IAdminStoryDeckApiResponse, duelId: string | null): string[] {
+  if (!duelId) return [];
+  const rows = data.duelFusionCards
+    .filter((row) => row.duelId === duelId && row.isActive)
+    .sort((left, right) => left.slotIndex - right.slotIndex);
+  return Array.from({ length: STORY_DUEL_FUSION_SLOTS }, (_, index) => rows[index]?.cardId ?? "");
+}
+
+export function resolveDraftRewardCardIds(data: IAdminStoryDeckApiResponse, duelId: string | null): string[] {
+  if (!duelId) return [];
+  return data.duelRewardCards.filter((row) => row.duelId === duelId).map((row) => row.cardId);
 }

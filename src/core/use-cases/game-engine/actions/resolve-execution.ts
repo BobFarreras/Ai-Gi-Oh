@@ -16,15 +16,24 @@ interface IResolveExecutionOptions {
   skipTrapEventTypes?: ("EXECUTION_ACTIVATED")[];
 }
 
-function appendExecutionResultLogs(state: GameState, playerId: string, executionCardId: string, effectResult: ReturnType<typeof applyExecutionEffect>): GameState {
+function appendExecutionResultLogs(
+  state: GameState,
+  playerId: string,
+  executionCardId: string,
+  executionSlotIndex: number,
+  effectResult: ReturnType<typeof applyExecutionEffect>,
+): GameState {
   let withLogs = appendExecutionResolutionLogs({
     state,
     playerId,
     executionCardId,
+    executionSlotIndex,
     damageTargetPlayerId: effectResult.damageTargetPlayerId,
     damageAmount: effectResult.damageAmount,
     healApplied: effectResult.healApplied,
     energyRecovered: effectResult.energyRecovered,
+    energyDrainedTargetPlayerId: effectResult.energyDrainedTargetPlayerId,
+    energyDrainedAmount: effectResult.energyDrainedAmount,
     buffStat: effectResult.buff.stat,
     buffAmount: effectResult.buff.amount,
     buffEntityIds: effectResult.buff.entityIds,
@@ -50,6 +59,7 @@ export function resolveExecution(
   );
   const { player, opponent, isPlayerA } = getPlayerPair(withTrapResolution, playerId);
   const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
+  const executionSlotIndex = player.activeExecutions.findIndex((entity) => entity.instanceId === executionInstanceId);
   if (!executionEntity) throw new NotFoundError("La ejecución no existe en el tablero.");
   if (!executionEntity.card.effect) throw new GameRuleError("Esta carta no tiene un efecto programado.");
   if (executionEntity.card.type !== "EXECUTION") throw new ValidationError("Solo las ejecuciones activadas pueden resolverse con esta acción.");
@@ -81,5 +91,11 @@ export function resolveExecution(
       context: { buffSourcePlayerId: playerId, buffStat: effectResult.buff.stat, buffAmount: effectResult.buff.amount },
     })
     : withPlayers;
-  return appendExecutionResultLogs(withBuffTrapResolution, playerId, executionEntity.card.id, effectResult);
+  return appendExecutionResultLogs(
+    withBuffTrapResolution,
+    playerId,
+    executionEntity.card.id,
+    executionSlotIndex >= 0 ? executionSlotIndex : 0,
+    effectResult,
+  );
 }

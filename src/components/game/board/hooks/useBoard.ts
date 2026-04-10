@@ -37,6 +37,7 @@ export function useBoard(
     uiState.setIsAutoPhaseEnabled(false);
   }, [mode, uiState]);
   const runtime = useMatchRuntime({
+    mode,
     campaignProgress,
     gameStateRef,
     uiState,
@@ -119,7 +120,9 @@ export function useBoard(
     resolvePendingTurnAction: runtime.resolvePendingTurnAction,
     resolvePendingHandDiscard: runtime.resolvePendingHandDiscard,
     setSelectedEntityToAttack: runtime.setSelectedEntityToAttack,
+    setSelectedEntityToDefense: runtime.setSelectedEntityToDefense,
     canSetSelectedEntityToAttack: runtime.canSetSelectedEntityToAttack,
+    canSetSelectedEntityToDefense: runtime.canSetSelectedEntityToDefense,
     activateSelectedExecution,
     canActivateSelectedExecution,
     battleExperienceSummary: progression.battleExperienceSummary,

@@ -10,6 +10,7 @@ import { SlotCellProps } from "./slot-cell-types";
 import { buildFloatingEvents } from "./slot-cell-floating-events";
 import { areEqualSlotCellProps } from "./slot-cell-props-equality";
 import { SlotCellEntity } from "./SlotCellEntity";
+import { useStickySlotEntity } from "./useStickySlotEntity";
 
 function SlotCellComponent({
   laneType,
@@ -37,8 +38,9 @@ function SlotCellComponent({
 }: SlotCellProps) {
   countRender("SlotCell");
   const isAttacking = entity?.instanceId === activeAttackerId;
-  const isActivating = entity?.mode === "ACTIVATE";
-  const floatingEvents = buildFloatingEvents(entity, buffEventId, buffStat, buffAmount, isBuffed, cardXpEventId, cardXpCardId, cardXpAmount);
+  const { entity: renderedEntity, isSticky } = useStickySlotEntity(laneType, entity);
+  const isActivating = renderedEntity?.mode === "ACTIVATE";
+  const floatingEvents = buildFloatingEvents(renderedEntity, buffEventId, buffStat, buffAmount, isBuffed, cardXpEventId, cardXpCardId, cardXpAmount);
 
   return (
     <div
@@ -49,13 +51,13 @@ function SlotCellComponent({
       style={{ transformStyle: "preserve-3d" }}
       className="relative w-24 h-36 border-2 border-cyan-500/30 rounded-lg bg-cyan-950/40 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.15)_inset] group hover:border-cyan-300 transition-colors duration-300"
     >
-      {entity && <ExecutionActivationVfx entity={entity} isOpponentSide={isOpponentSide} />}
-      {entity && floatingEvents.length > 0 && <CardFloatingQueueVfx entityId={entity.instanceId} events={floatingEvents} />}
+      {renderedEntity && <ExecutionActivationVfx entity={renderedEntity} isOpponentSide={isOpponentSide} />}
+      {renderedEntity && floatingEvents.length > 0 && <CardFloatingQueueVfx entityId={renderedEntity.instanceId} events={floatingEvents} />}
       
       <AnimatePresence>
-        {entity ? (
+        {renderedEntity ? (
           <SlotCellEntity
-            entity={entity}
+            entity={renderedEntity}
             index={index}
             isOpponentSide={isOpponentSide}
             isRevealed={isRevealed}
@@ -63,11 +65,12 @@ function SlotCellComponent({
             isSelectedByCard={isSelectedByCard}
             selectedCardId={selectedCardId}
             selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}
-            isAttacking={isAttacking}
+            isAttacking={Boolean(renderedEntity.instanceId === activeAttackerId || isSticky)}
             isActivating={Boolean(isActivating)}
             shouldShowBlockedLock={Boolean(isAttacking && hasBlockingTrapActivation)}
             isHighlighted={isHighlighted}
             isSelectedMaterial={isSelectedMaterial}
+            isInteractionLocked={isSticky}
             onEntityClick={onEntityClick}
           />
         ) : (

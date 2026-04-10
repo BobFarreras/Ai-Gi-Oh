@@ -26,6 +26,18 @@ export async function runBattlePhaseStep(context: IOpponentTurnContext, timings:
   const attackDecision = context.strategy.chooseAttack(gameState, opponentId);
 
   if (!attackDecision) {
+    const modeChangeDecision = context.strategy.chooseModeChange?.(gameState, opponentId);
+    if (modeChangeDecision) {
+      context.setIsAnimating(true);
+      context.setActiveAttackerId(modeChangeDecision.instanceId);
+      await sleep(Math.max(180, Math.trunc(timings.stepDelayMs * 0.6)));
+      context.applyTransition((state) =>
+        GameEngine.changeEntityMode(state, opponentId, modeChangeDecision.instanceId, modeChangeDecision.newMode),
+      );
+      context.setIsAnimating(false);
+      context.setActiveAttackerId(null);
+      return true;
+    }
     context.setIsAnimating(true);
     await sleep(500);
     const nextState = context.applyTransition((state) => GameEngine.nextPhase(state));

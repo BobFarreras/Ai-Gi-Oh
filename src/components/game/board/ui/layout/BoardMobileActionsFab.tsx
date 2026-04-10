@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bot, History, Menu, Pause, Play, Swords, Volume2, VolumeX, X } from "lucide-react";
+import { Bot, History, Menu, Pause, Play, Shield, Swords, Volume2, VolumeX, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BoardMobileActionsFabProps {
@@ -11,11 +11,13 @@ interface BoardMobileActionsFabProps {
   isAutoPhaseEnabled: boolean;
   isHistoryOpen: boolean;
   canSetSelectedEntityToAttack: boolean;
+  canSetSelectedEntityToDefense: boolean;
   onToggleMute: () => void;
   onTogglePause: () => void;
   onToggleAutoPhase: () => void;
   onToggleHistory: () => void;
   onSetSelectedEntityToAttack: () => void;
+  onSetSelectedEntityToDefense: () => void;
 }
 
 export function BoardMobileActionsFab({
@@ -24,11 +26,13 @@ export function BoardMobileActionsFab({
   isAutoPhaseEnabled,
   isHistoryOpen,
   canSetSelectedEntityToAttack,
+  canSetSelectedEntityToDefense,
   onToggleMute,
   onTogglePause,
   onToggleAutoPhase,
   onToggleHistory,
   onSetSelectedEntityToAttack,
+  onSetSelectedEntityToDefense,
 }: BoardMobileActionsFabProps) {
   const [isOpen, setIsOpen] = useState(false);
   return (
@@ -40,6 +44,7 @@ export function BoardMobileActionsFab({
         <div className="rounded-2xl border border-cyan-500/40 bg-zinc-950/92 p-2 backdrop-blur-xl shadow-[0_0_30px_rgba(6,182,212,0.25)]">
           <div className="flex flex-col gap-1.5">
             {canSetSelectedEntityToAttack && <button aria-label="Cambiar a ataque" onClick={onSetSelectedEntityToAttack} className="rounded-xl border border-amber-500/50 p-2 text-amber-300"><Swords size={18} /></button>}
+            {canSetSelectedEntityToDefense && <button aria-label="Cambiar a defensa" onClick={onSetSelectedEntityToDefense} className="rounded-xl border border-sky-500/50 p-2 text-sky-300"><Shield size={18} /></button>}
             <button data-tutorial-id="tutorial-board-pause-button" aria-label={isPaused ? "Reanudar" : "Pausar"} onClick={onTogglePause} className="rounded-xl border border-emerald-500/50 p-2 text-emerald-300">{isPaused ? <Play size={18} /> : <Pause size={18} />}</button>
             <button data-tutorial-id="tutorial-board-auto-button" aria-label={isAutoPhaseEnabled ? "Desactivar automático" : "Activar automático"} onClick={onToggleAutoPhase} className={cn("rounded-xl border p-2", isAutoPhaseEnabled ? "border-violet-400/60 text-violet-200" : "border-zinc-600 text-zinc-300")}><Bot size={18} /></button>
             <button data-tutorial-id="tutorial-board-mute-button" aria-label={isMuted ? "Activar sonido" : "Silenciar"} onClick={onToggleMute} className="rounded-xl border border-cyan-500/50 p-2 text-cyan-300">{isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>

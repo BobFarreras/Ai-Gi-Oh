@@ -4,8 +4,17 @@ import { resolveStoryPrimaryAction } from "@/services/story/resolve-story-primar
 import { resolveStoryRewardCardVisual } from "@/services/story/resolve-story-reward-card-visual";
 import { animateStoryAvatarPath } from "@/components/hub/story/internal/scene/actions/animate-story-avatar-path";
 import { resolveStoryActTransitionTarget } from "@/services/story/resolve-story-act-transition-target";
+import {
+  isStoryActTransitionAvailable,
+  resolveStoryActTransitionUnavailableMessage,
+} from "@/services/story/resolve-story-act-transition-availability";
+import { IStoryAvatarVisualTarget } from "@/components/hub/story/internal/scene/types/story-avatar-visual-target";
+import { resolveStoryAvatarSideDirection } from "@/components/hub/story/internal/scene/utils/resolve-story-avatar-side-direction";
+import { resolveStoryNodeSubmissionPrompt } from "@/services/story/story-node-submission-rules";
+import { resolveStoryEventNodeVisual } from "@/services/story/resolve-story-event-node-visual";
 
 interface IStoryInteractResponse { interactionCountForNode: number; }
+interface IStoryApiErrorResponse { message?: string; }
 type StoryRewardTone = "NEXUS" | "CARD";
 type StorySmartActionMode = "MOVE" | "PRIMARY" | "MOVE_AND_PRIMARY" | "DISABLED";
 interface IStoryCollectVisual { assetSrc: string; assetAlt: string; tone: StoryRewardTone; }
@@ -22,7 +31,7 @@ interface ICreateStorySceneActionsParams {
   setMovementError: (value: string | null) => void;
   setInteractionFeedback: (value: string | null) => void;
   setCurrentNodeId: (nodeId: string) => void;
-  setAvatarVisualTarget: (value: { nodeId: string; stance: "CENTER" | "SIDE" | "PORTAL" } | null) => void;
+  setAvatarVisualTarget: (value: IStoryAvatarVisualTarget | null) => void;
   setDuelFocusNodeId: (value: string | null) => void;
   setFloatingReward: (value: { label: string; tone: StoryRewardTone } | null) => void;
   setCollectingRewardNodeId: (value: string | null) => void;
@@ -33,15 +42,32 @@ interface ICreateStorySceneActionsParams {
   navigateTo: (href: string) => void;
   requestActTransition: (actId: number) => void;
   startInteractionDialog: (node: IStoryMapNodeRuntime, interactionCountForNode: number) => boolean;
+  requestNodeSubmission: (nodeId: string) => Promise<string | null>;
+  hasSeenPreDuelDialogue: (nodeId: string) => boolean;
+  markPreDuelDialogueSeen: (nodeId: string) => void;
+  scheduleAutoStartDuelAfterDialogue: (nodeId: string) => void;
 }
 
 function resolveCollectVisual(targetNode: IStoryMapNodeRuntime): IStoryCollectVisual {
+  if (targetNode.nodeType === "EVENT") {
+    const eventVisual = resolveStoryEventNodeVisual(targetNode.id);
+    return { assetSrc: eventVisual.assetSrc, assetAlt: eventVisual.assetAlt, tone: "CARD" };
+  }
   if (targetNode.nodeType !== "REWARD_CARD") return { assetSrc: "/assets/renders/nexus.webp", assetAlt: "Nexus obtenido", tone: "NEXUS" };
   const cardVisual = resolveStoryRewardCardVisual(targetNode.rewardCardId);
   return { assetSrc: cardVisual.src, assetAlt: cardVisual.alt, tone: "CARD" };
 }
 
 function wait(ms: number): Promise<void> { return new Promise((resolve) => window.setTimeout(resolve, ms)); }
+async function readApiErrorMessage(response: Response, fallbackMessage: string): Promise<string> {
+  try {
+    const payload = (await response.json()) as IStoryApiErrorResponse;
+    if (typeof payload.message === "string" && payload.message.trim().length > 0) return payload.message;
+    return fallbackMessage;
+  } catch {
+    return fallbackMessage;
+  }
+}
 export function createStorySceneActions(params: ICreateStorySceneActionsParams) {
   const showFloatingReward = (label: string, tone: StoryRewardTone): void => {
     params.setFloatingReward({ label, tone });
@@ -65,13 +91,14 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
     params.setInteractionFeedback(null);
     try {
       const response = await fetch("/api/story/world/move", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ nodeId: params.selectedNodeId }) });
-      if (!response.ok) throw new Error("Movimiento inválido.");
+      if (!response.ok) throw new Error(await readApiErrorMessage(response, "No se pudo mover al nodo seleccionado."));
       const payload = (await response.json()) as { currentNodeId: string | null; pathNodeIds?: string[] };
       const travelPathNodeIds = payload.pathNodeIds ?? (payload.currentNodeId ? [payload.currentNodeId] : []);
       if (travelPathNodeIds.length > 0) {
         params.sceneSfx.playMove();
         await animateStoryAvatarPath({
           pathNodeIds: travelPathNodeIds,
+          startNodeId: params.currentNodeId,
           nodesById: params.nodesById,
           setCurrentNodeId: params.setCurrentNodeId,
           setAvatarVisualTarget: params.setAvatarVisualTarget,
@@ -82,8 +109,8 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
       if (triggerActionAfterMove && targetNodeForAction && targetNodeForAction.nodeType !== "MOVE") {
         await handlePrimaryAction(targetNodeForAction, true);
       }
-    } catch {
-      params.setMovementError("No se pudo mover al nodo seleccionado.");
+    } catch (error) {
+      params.setMovementError(error instanceof Error ? error.message : "No se pudo mover al nodo seleccionado.");
     } finally {
       params.setIsMoving(false);
     }
@@ -94,9 +121,28 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
     const targetMode = resolveStoryPrimaryAction(targetNode);
     if (targetMode.mode === "DISABLED") return;
     if (targetMode.mode === "ROUTE" && targetNode.id !== params.currentNodeId && !skipRouteMoveCheck) return handleMove(true, targetNode);
-    params.setAvatarVisualTarget({ nodeId: targetNode.id, stance: targetMode.mode === "VIRTUAL_INTERACTION" ? "CENTER" : "SIDE" });
+    const currentNode = params.currentNodeId ? params.nodesById[params.currentNodeId] ?? null : null;
+    const sideDirection = resolveStoryAvatarSideDirection(currentNode, targetNode);
+    params.setAvatarVisualTarget(
+      targetMode.mode === "VIRTUAL_INTERACTION"
+        ? { nodeId: targetNode.id, stance: "CENTER" }
+        : { nodeId: targetNode.id, stance: "SIDE", sideDirection },
+    );
     await wait(420);
     if (targetMode.mode === "ROUTE") {
+      if ((targetNode.id === "story-ch2-duel-8" || targetNode.id === "story-ch2-duel-7") && !params.hasSeenPreDuelDialogue(targetNode.id)) {
+        const opened = params.startInteractionDialog(targetNode, 1);
+        params.markPreDuelDialogueSeen(targetNode.id);
+        if (opened) {
+          if (targetNode.id === "story-ch2-duel-7") params.scheduleAutoStartDuelAfterDialogue(targetNode.id);
+          params.setInteractionFeedback(
+            targetNode.id === "story-ch2-duel-8"
+              ? "Briefing de evaluación de BigLog completado."
+              : "Canal de amenaza de Helena registrado.",
+          );
+          return;
+        }
+      }
       params.setDuelFocusNodeId(targetNode.id);
       params.sceneSfx.playDuelStart();
       await wait(520);
@@ -104,10 +150,43 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
       return;
     }
     if (targetMode.mode !== "VIRTUAL_INTERACTION") return;
+    const actTransitionTarget = resolveStoryActTransitionTarget(targetNode.id);
+    if (actTransitionTarget) {
+      if (!isStoryActTransitionAvailable(targetNode.id)) {
+        await portalAvatarOnNode(targetNode.id);
+        const opened = params.startInteractionDialog(targetNode, 1);
+        params.setPendingCenterNodeId(targetNode.id);
+        params.setInteractionFeedback(
+          opened
+            ? "Transición temporalmente deshabilitada por reconstrucción de nodos."
+            : (resolveStoryActTransitionUnavailableMessage(targetNode.id) ?? "Transición temporalmente no disponible."),
+        );
+        return;
+      }
+      params.markNodeCompleted(targetNode.id);
+      await portalAvatarOnNode(targetNode.id);
+      params.requestActTransition(actTransitionTarget);
+      params.setInteractionFeedback(`Transición iniciada hacia Acto ${actTransitionTarget}.`);
+      return;
+    }
     try {
       params.setIsInteracting(true);
-      const response = await fetch("/api/story/world/interact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ nodeId: targetNode.id }) });
-      if (!response.ok) throw new Error("Interacción inválida.");
+      const submissionPrompt = resolveStoryNodeSubmissionPrompt(targetNode.id);
+      let submissionAnswer: string | undefined;
+      if (submissionPrompt) {
+        const answer = await params.requestNodeSubmission(targetNode.id);
+        if (!answer || !answer.trim()) {
+          params.setInteractionFeedback("Submission cancelada. El puente sigue bloqueado.");
+          return;
+        }
+        submissionAnswer = answer.trim();
+      }
+      const requestBody = JSON.stringify({
+        nodeId: targetNode.id,
+        ...(submissionAnswer ? { submissionAnswer } : {}),
+      });
+      const response = await fetch("/api/story/world/interact", { method: "POST", headers: { "content-type": "application/json" }, body: requestBody });
+      if (!response.ok) throw new Error(await readApiErrorMessage(response, "Interacción inválida."));
       const payload = (await response.json()) as IStoryInteractResponse;
       if (targetNode.nodeType === "REWARD_NEXUS") {
         params.sceneSfx.playRewardNexus();
@@ -120,13 +199,6 @@ export function createStorySceneActions(params: ICreateStorySceneActionsParams) 
         await runRewardCollectAnimation(targetNode);
       }
       params.markNodeCompleted(targetNode.id);
-      const actTransitionTarget = resolveStoryActTransitionTarget(targetNode.id);
-      if (actTransitionTarget) {
-        await portalAvatarOnNode(targetNode.id);
-        params.requestActTransition(actTransitionTarget);
-        params.setInteractionFeedback(`Transición iniciada hacia Acto ${actTransitionTarget}.`);
-        return;
-      }
       if (targetNode.nodeType === "EVENT" || targetNode.nodeType === "REWARD_CARD" || targetNode.nodeType === "REWARD_NEXUS") {
         await portalAvatarOnNode(targetNode.id);
       }

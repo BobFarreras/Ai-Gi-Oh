@@ -1,9 +1,11 @@
 // src/components/game/board/hooks/internal/audio/audioRuntime.ts - Descripción breve del módulo.
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { AUDIO_CATALOG, AUDIO_CHANNEL_VOLUME, AudioTrackId } from "@/core/config/audio-catalog";
+import { isAudioPlaybackBlocked, registerManagedAudio } from "./audio-gate";
 
 export function createAudio(trackId: AudioTrackId, isMusic: boolean): HTMLAudioElement | null {
   if (typeof window === "undefined" || typeof window.Audio === "undefined") return null;
+  if (isAudioPlaybackBlocked()) return null;
   const track = AUDIO_CATALOG[trackId];
   const audio = new Audio(track.path);
   audio.preload = "auto";
@@ -15,6 +17,7 @@ export function createAudio(trackId: AudioTrackId, isMusic: boolean): HTMLAudioE
 /** Crea instancia de audio por ruta directa (útil para efectos por acción). */
 export function createAudioFromPath(path: string, volume = 0.75): HTMLAudioElement | null {
   if (typeof window === "undefined" || typeof window.Audio === "undefined" || path.trim().length === 0) return null;
+  if (isAudioPlaybackBlocked()) return null;
   const audio = new Audio(path);
   audio.preload = "auto";
   audio.loop = false;
@@ -58,6 +61,8 @@ export function mapEventToTrack(event: ICombatLogEvent): AudioTrackId | null {
 }
 
 export function safePlay(audio: HTMLAudioElement | null): void {
+  if (!audio || isAudioPlaybackBlocked()) return;
+  registerManagedAudio(audio);
   const playPromise = audio?.play();
   if (playPromise && typeof playPromise.catch === "function") {
     playPromise.catch(() => undefined);
@@ -66,6 +71,8 @@ export function safePlay(audio: HTMLAudioElement | null): void {
 
 /** Reproduce audio principal y, si falla, intenta fallback para no perder feedback sonoro. */
 export function safePlayWithFallback(audio: HTMLAudioElement | null, buildFallback: () => HTMLAudioElement | null): void {
+  if (isAudioPlaybackBlocked()) return;
+  if (audio) registerManagedAudio(audio);
   const playPromise = audio?.play();
   if (!playPromise || typeof playPromise.catch !== "function") {
     safePlay(buildFallback());

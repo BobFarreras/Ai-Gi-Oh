@@ -46,46 +46,56 @@ function resolveSourceCardId(events: ICombatLogEvent[], fromIndex: number, actor
   return null;
 }
 
+export function resolveStatSignalAt(events: ICombatLogEvent[], index: number, playerAId: string): ITargetedStatSignal | null {
+  const event = events[index];
+  if (!event || event.eventType !== "STAT_BUFF_APPLIED") return null;
+  const payload = asPayload(event);
+  if (!payload) return null;
+  const amount = typeof payload.amount === "number" ? payload.amount : 0;
+  const targetEntityIds = readStringArray(payload.targetEntityIds);
+  if (amount === 0 || targetEntityIds.length === 0) return null;
+  return {
+    id: event.id,
+    sourceCardId: resolveSourceCardId(events, index, event.actorPlayerId),
+    actorIsPlayerA: event.actorPlayerId === playerAId,
+    amount,
+    targetEntityIds,
+  };
+}
+
 export function resolveLatestStatSignal(events: ICombatLogEvent[], playerAId: string): ITargetedStatSignal | null {
   for (let index = events.length - 1; index >= 0; index -= 1) {
-    const event = events[index];
-    if (event.eventType !== "STAT_BUFF_APPLIED") continue;
-    const payload = asPayload(event);
-    if (!payload) continue;
-    const amount = typeof payload.amount === "number" ? payload.amount : 0;
-    const targetEntityIds = readStringArray(payload.targetEntityIds);
-    if (amount === 0 || targetEntityIds.length === 0) continue;
-    return {
-      id: event.id,
-      sourceCardId: resolveSourceCardId(events, index, event.actorPlayerId),
-      actorIsPlayerA: event.actorPlayerId === playerAId,
-      amount,
-      targetEntityIds,
-    };
+    const signal = resolveStatSignalAt(events, index, playerAId);
+    if (signal) return signal;
   }
   return null;
 }
 
+export function resolveTrapBlockSignalAt(events: ICombatLogEvent[], index: number, playerAId: string): ITrapBlockSignal | null {
+  const event = events[index];
+  if (!event || event.eventType !== "TRAP_TRIGGERED") return null;
+  const payload = asPayload(event);
+  if (!payload || typeof payload.trapCardId !== "string" || typeof payload.effectAction !== "string") return null;
+  const action = payload.effectAction;
+  const isBlock = action === "NEGATE_ATTACK_AND_DESTROY_ATTACKER" || action === "NEGATE_OPPONENT_TRAP_AND_DESTROY" || action === "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED";
+  if (!isBlock) return null;
+  return {
+    id: event.id,
+    trapCardId: payload.trapCardId,
+    trapSlotIndex: typeof payload.trapSlotIndex === "number" ? payload.trapSlotIndex : 0,
+    action,
+    actorIsPlayerA: event.actorPlayerId === playerAId,
+    targetIsPlayerA: event.actorPlayerId !== playerAId,
+    blockedTargetEntityInstanceId: typeof payload.blockedTargetEntityInstanceId === "string" ? payload.blockedTargetEntityInstanceId : null,
+    destroyedTargetEntityInstanceId: typeof payload.destroyedOpponentEntityInstanceId === "string" ? payload.destroyedOpponentEntityInstanceId : null,
+    destroyedTargetEntitySlotIndex: typeof payload.destroyedOpponentEntitySlotIndex === "number" ? payload.destroyedOpponentEntitySlotIndex : null,
+  };
+}
+
 export function resolveLatestTrapBlockSignal(events: ICombatLogEvent[], playerAId: string): ITrapBlockSignal | null {
   for (let index = events.length - 1; index >= 0; index -= 1) {
-    const event = events[index];
-    if (event.eventType !== "TRAP_TRIGGERED") continue;
-    const payload = asPayload(event);
-    if (!payload || typeof payload.trapCardId !== "string" || typeof payload.effectAction !== "string") continue;
-    const action = payload.effectAction;
-    const isBlock = action === "NEGATE_ATTACK_AND_DESTROY_ATTACKER" || action === "NEGATE_OPPONENT_TRAP_AND_DESTROY" || action === "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED";
-    if (!isBlock) continue;
-    return {
-      id: event.id,
-      trapCardId: payload.trapCardId,
-      trapSlotIndex: typeof payload.trapSlotIndex === "number" ? payload.trapSlotIndex : 0,
-      action,
-      actorIsPlayerA: event.actorPlayerId === playerAId,
-      targetIsPlayerA: event.actorPlayerId !== playerAId,
-      blockedTargetEntityInstanceId: typeof payload.blockedTargetEntityInstanceId === "string" ? payload.blockedTargetEntityInstanceId : null,
-      destroyedTargetEntityInstanceId: typeof payload.destroyedOpponentEntityInstanceId === "string" ? payload.destroyedOpponentEntityInstanceId : null,
-      destroyedTargetEntitySlotIndex: typeof payload.destroyedOpponentEntitySlotIndex === "number" ? payload.destroyedOpponentEntitySlotIndex : null,
-    };
+    const signal = resolveTrapBlockSignalAt(events, index, playerAId);
+    if (signal) return signal;
   }
   return null;
 }

@@ -28,7 +28,7 @@ describe("mergeStoryMapVisualDefinition", () => {
 
     const merged = mergeStoryMapVisualDefinition(nodes, {});
 
-    expect(merged[0]?.position).toEqual({ x: 1560, y: 760 });
+    expect(merged[0]?.position).toEqual({ x: 1560, y: 980 });
   });
 
   it("mantiene nodos sin cambios si no hay definición visual", () => {
@@ -41,20 +41,12 @@ describe("mergeStoryMapVisualDefinition", () => {
   });
 
   it("agrega nodos virtuales desbloqueados cuando su dependencia está completada", () => {
-    const nodes = [
-      createRuntimeNode({ id: "story-ch1-duel-1", isCompleted: true, isUnlocked: true }),
-      createRuntimeNode({
-        id: "story-ch1-duel-2",
-        isCompleted: false,
-        isUnlocked: true,
-        unlockRequirementNodeId: "story-ch1-duel-1",
-      }),
-    ];
+    const nodes = [createRuntimeNode({ id: "story-ch1-duel-1", isCompleted: true, isUnlocked: true })];
 
     const merged = mergeStoryMapVisualDefinition(nodes, {
       visitedNodeIds: ["story-ch1-duel-1"],
     });
-    const virtualNode = merged.find((node) => node.id === "story-ch1-reward-nexus-upper");
+    const virtualNode = merged.find((node) => node.id === "story-a1-reward-card-guardian");
 
     expect(virtualNode?.isVirtualNode).toBe(true);
     expect(virtualNode?.isUnlocked).toBe(true);
@@ -63,7 +55,7 @@ describe("mergeStoryMapVisualDefinition", () => {
   it("mantiene nodo virtual bloqueado si su dependencia no está completada", () => {
     const nodes = [createRuntimeNode({ id: "story-ch1-duel-1", isCompleted: false, isUnlocked: true })];
     const merged = mergeStoryMapVisualDefinition(nodes, {});
-    const virtualNode = merged.find((node) => node.id === "story-ch1-reward-nexus-upper");
+    const virtualNode = merged.find((node) => node.id === "story-a1-reward-card-guardian");
 
     expect(virtualNode?.isUnlocked).toBe(false);
   });
@@ -71,75 +63,39 @@ describe("mergeStoryMapVisualDefinition", () => {
   it("mantiene desbloqueado un nodo visitado aunque su regla actual lo bloqueara", () => {
     const nodes = [createRuntimeNode({ id: "story-ch1-duel-1", isCompleted: false, isUnlocked: true })];
     const merged = mergeStoryMapVisualDefinition(nodes, {
-      visitedNodeIds: ["story-ch1-reward-nexus-upper"],
+      visitedNodeIds: ["story-a1-reward-card-guardian"],
     });
-    const virtualNode = merged.find((node) => node.id === "story-ch1-reward-nexus-upper");
+    const virtualNode = merged.find((node) => node.id === "story-a1-reward-card-guardian");
 
     expect(virtualNode?.isUnlocked).toBe(true);
   });
 
-  it("desbloquea el siguiente nodo MOVE cuando la dependencia MOVE es el nodo actual", () => {
+  it("desbloquea el briefing cuando el jugador está en la plataforma inicial", () => {
     const nodes = [createRuntimeNode({ id: "story-ch1-duel-1", isCompleted: false, isUnlocked: true })];
     const merged = mergeStoryMapVisualDefinition(nodes, {
       currentNodeId: "story-ch1-player-start",
     });
-    const moveNode = merged.find((node) => node.id === "story-ch1-path-blank-1");
+    const eventNode = merged.find((node) => node.id === "story-a1-event-biglog-briefing");
 
-    expect(moveNode?.nodeType).toBe("MOVE");
-    expect(moveNode?.isUnlocked).toBe(true);
+    expect(eventNode?.nodeType).toBe("EVENT");
+    expect(eventNode?.isUnlocked).toBe(true);
   });
 
-  it("mantiene bloqueado el duelo si no se ha alcanzado la plataforma previa", () => {
+  it("mantiene bloqueado el primer duelo sin resolver el evento de señal", () => {
     const nodes = [createRuntimeNode({ id: "story-ch1-duel-1", isCompleted: false, isUnlocked: true })];
     const merged = mergeStoryMapVisualDefinition(nodes, {
-      currentNodeId: "story-ch1-player-start",
+      currentNodeId: "story-a1-reward-nexus-cache",
+      visitedNodeIds: ["story-ch1-player-start", "story-a1-event-biglog-briefing", "story-a1-move-transit", "story-a1-reward-nexus-cache"],
+      interactedNodeIds: ["story-a1-event-biglog-briefing", "story-a1-reward-nexus-cache"],
     });
     const duelNode = merged.find((node) => node.id === "story-ch1-duel-1");
 
     expect(duelNode?.isUnlocked).toBe(false);
   });
 
-  it("mantiene bloqueado GenNvim normal hasta visitar la plataforma superior intermedia", () => {
-    const nodes = [createRuntimeNode({ id: "story-ch1-duel-3", isCompleted: false, isUnlocked: true })];
-    const mergedWithoutUpperGateway = mergeStoryMapVisualDefinition(nodes, {
-      currentNodeId: "story-ch1-path-branch-2",
-      visitedNodeIds: ["story-ch1-path-branch-2"],
-    });
-    const duelNodeLocked = mergedWithoutUpperGateway.find((node) => node.id === "story-ch1-duel-3");
-    expect(duelNodeLocked?.isUnlocked).toBe(false);
-
-    const mergedWithUpperGatewayVisited = mergeStoryMapVisualDefinition(nodes, {
-      currentNodeId: "story-ch1-path-upper-branch-2",
-      visitedNodeIds: ["story-ch1-path-branch-2", "story-ch1-path-upper-branch-2"],
-    });
-    const duelNodeUnlocked = mergedWithUpperGatewayVisited.find((node) => node.id === "story-ch1-duel-3");
-    expect(duelNodeUnlocked?.isUnlocked).toBe(true);
-  });
-
-  it("bloquea boss de acto 2 hasta activar el puente tras la segunda Helena", () => {
-    const nodes = [
-      createRuntimeNode({ id: "story-ch2-duel-8", chapter: 2, duelIndex: 6, isCompleted: true, isUnlocked: true }),
-      createRuntimeNode({ id: "story-ch2-duel-9", chapter: 2, duelIndex: 7, isCompleted: false, isUnlocked: true }),
-    ];
-
-    const mergedLocked = mergeStoryMapVisualDefinition(nodes, {
-      currentNodeId: "story-ch2-branch-lower-down-b",
-      visitedNodeIds: ["story-ch2-branch-lower-down-b"],
-    });
-    const bossLocked = mergedLocked.find((node) => node.id === "story-ch2-duel-9");
-    expect(bossLocked?.isUnlocked).toBe(false);
-
-    const mergedUnlocked = mergeStoryMapVisualDefinition(nodes, {
-      currentNodeId: "story-ch2-boss-bridge",
-      visitedNodeIds: ["story-ch2-branch-lower-down-b", "story-ch2-boss-bridge"],
-    });
-    const bossUnlocked = mergedUnlocked.find((node) => node.id === "story-ch2-duel-9");
-    expect(bossUnlocked?.isUnlocked).toBe(true);
-  });
-
   it("muestra nodo de transición al Acto 2 tras completar el boss del Acto 1", () => {
-    const nodes = [createRuntimeNode({ id: "story-ch2-duel-4", chapter: 1, duelIndex: 5, isCompleted: true, isUnlocked: true })];
-    const merged = mergeStoryMapVisualDefinition(nodes, { currentNodeId: "story-ch2-duel-4", visitedNodeIds: ["story-ch2-duel-4"] });
+    const nodes = [createRuntimeNode({ id: "story-ch1-duel-5", chapter: 1, duelIndex: 5, isCompleted: true, isUnlocked: true })];
+    const merged = mergeStoryMapVisualDefinition(nodes, { currentNodeId: "story-ch1-duel-5", visitedNodeIds: ["story-ch1-duel-5"] });
     const transitionNode = merged.find((node) => node.id === "story-ch1-transition-to-act2");
     expect(transitionNode?.isUnlocked).toBe(true);
     expect(transitionNode?.nodeType).toBe("EVENT");

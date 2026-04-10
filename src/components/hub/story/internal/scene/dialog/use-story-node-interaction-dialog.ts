@@ -2,11 +2,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { resolveStoryNodeInteractionDialogue } from "@/services/story/resolve-story-node-interaction-dialogue";
 import {
-  IStoryNodeInteractionDialogue,
   IStoryInteractionDialogueLine,
-  resolveStoryNodeInteractionDialogue,
-} from "@/services/story/resolve-story-node-interaction-dialogue";
+  IStoryNodeInteractionDialogue,
+} from "@/services/story/story-node-interaction-dialogue-types";
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 
 interface IStoryNodeInteractionDialogState {
@@ -46,7 +46,7 @@ export function useStoryNodeInteractionDialog() {
   return {
     isOpen: Boolean(state.dialogue),
     dialogueTitle: state.dialogue?.title ?? "",
-    soundtrackUrl: state.dialogue?.soundtrackUrl ?? null,
+    cinematicVideo: state.dialogue?.cinematicVideo ?? null,
     isLastLine: Boolean(state.dialogue) && state.index >= (state.dialogue?.lines.length ?? 1) - 1,
     currentLine,
     start,

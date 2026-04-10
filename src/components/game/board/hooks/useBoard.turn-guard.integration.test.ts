@@ -56,4 +56,15 @@ describe("useBoard turn-guard integración", () => {
     expect(result.current.pendingAdvanceWarning).toBeNull();
     expect(result.current.gameState.phase).toBe("BATTLE");
   });
+
+  it("no muestra aviso de salto de fase en modo tutorial", () => {
+    const deck = Array.from({ length: 20 }, () => LOW_COST_ENTITY);
+    const { result } = renderHook(() => useBoard(deck, "TUTORIAL"));
+    expect(result.current.gameState.phase).toBe("MAIN_1");
+    act(() => {
+      result.current.advancePhase();
+    });
+    expect(result.current.pendingAdvanceWarning).toBeNull();
+    expect(result.current.gameState.phase).toBe("BATTLE");
+  });
 });

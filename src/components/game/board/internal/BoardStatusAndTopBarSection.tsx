@@ -43,6 +43,7 @@ export function BoardStatusAndTopBarSection({
       <BoardStatusOverlays
         lastError={board.lastError}
         pendingActionHint={board.pendingActionHint}
+        pendingTrapActivationPrompt={board.pendingTrapActivationPrompt}
         pendingEntityReplacement={board.pendingEntityReplacement}
         pendingEntityReplacementTargetCard={screen.pendingReplacementTargetCard}
         combatLog={board.gameState.combatLog}

@@ -9,11 +9,21 @@ interface IStorySceneState {
   setSelectedNodeId: (nodeId: string | null) => void;
   setCurrentNodeId: (nodeId: string | null) => void;
   markNodeCompleted: (nodeId: string) => void;
+  hydrateFromRuntime: (input: { nodes: IStoryMapNodeRuntime[]; currentNodeId: string | null }) => void;
 }
 
 function createNodesById(nodes: IStoryMapNodeRuntime[]): Record<string, IStoryMapNodeRuntime> {
   // Normaliza por id para lecturas O(1) desde paneles y acciones.
   return Object.fromEntries(nodes.map((node) => [node.id, node]));
+}
+
+function resolveDefaultNodeId(input: { nodes: IStoryMapNodeRuntime[]; currentNodeId: string | null }): string | null {
+  return (
+    input.currentNodeId ??
+    input.nodes.find((node) => node.id === "story-ch1-player-start")?.id ??
+    input.nodes[0]?.id ??
+    null
+  );
 }
 
 function resolveNodeUnlocked(
@@ -55,11 +65,7 @@ export function createStorySceneStore(input: {
   nodes: IStoryMapNodeRuntime[];
   currentNodeId: string | null;
 }) {
-  const defaultNodeId =
-    input.currentNodeId ??
-    input.nodes.find((node) => node.id === "story-ch1-player-start")?.id ??
-    input.nodes[0]?.id ??
-    null;
+  const defaultNodeId = resolveDefaultNodeId(input);
   return create<IStorySceneState>((set) => ({
     selectedNodeId: defaultNodeId,
     currentNodeId: defaultNodeId,
@@ -68,9 +74,13 @@ export function createStorySceneStore(input: {
     setCurrentNodeId: (currentNodeId) =>
       set((state) => {
         if (!currentNodeId) return { currentNodeId };
+        const previousNode = state.currentNodeId ? state.nodesById[state.currentNodeId] ?? null : null;
         const currentNode = state.nodesById[currentNodeId];
         const nextNodesById = {
           ...state.nodesById,
+          ...(previousNode?.nodeType === "MOVE"
+            ? { [previousNode.id]: { ...previousNode, isCompleted: true } }
+            : {}),
           ...(currentNode?.nodeType === "MOVE"
             ? { [currentNodeId]: { ...currentNode, isCompleted: true } }
             : {}),
@@ -90,6 +100,20 @@ export function createStorySceneStore(input: {
         };
         return {
           nodesById: recalculateNodeUnlocks(nextNodesById, state.currentNodeId),
+        };
+      }),
+    hydrateFromRuntime: (runtime) =>
+      set((state) => {
+        const nextCurrentNodeId = resolveDefaultNodeId(runtime);
+        const nextNodesById = recalculateNodeUnlocks(createNodesById(runtime.nodes), nextCurrentNodeId);
+        const selectedNodeId =
+          state.selectedNodeId && nextNodesById[state.selectedNodeId]
+            ? state.selectedNodeId
+            : nextCurrentNodeId;
+        return {
+          currentNodeId: nextCurrentNodeId,
+          selectedNodeId,
+          nodesById: nextNodesById,
         };
       }),
   }));
