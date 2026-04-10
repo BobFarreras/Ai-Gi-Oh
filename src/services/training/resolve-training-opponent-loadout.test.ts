@@ -128,7 +128,7 @@ describe("resolveTrainingOpponentLoadout", () => {
       tierMatches: 0,
     });
     expect(easyLoadout.deck[0]?.level).toBe(0);
-    expect(bossLoadout.deck[0]?.level).toBe(200);
+    expect(bossLoadout.deck[0]?.level).toBe(20);
     expect(bossLoadout.deck[0]?.versionTier).toBe(2);
     expect((bossLoadout.deck[0]?.xp ?? 0)).toBeGreaterThan(0);
   });

@@ -29,6 +29,19 @@
    - Tier 5: `BOSS`
 2. Además, el oponente aplica ajuste adaptativo por rendimiento en el tier (`resolve-training-opponent-loadout.ts`).
 
+## Escalado de cartas por dificultad (version/level/xp)
+
+1. `EASY`: `versionTier=0`, `level=0`, `xp=0`
+2. `NORMAL`: `versionTier=0`, `level=2`, `xp=260`
+3. `HARD`: `versionTier=1`, `level=10`, `xp=980`
+4. `BOSS`: `versionTier=2`, `level=20`, `xp=2800`
+5. `MASTER`: `versionTier=3`, `level=30`, `xp=5600`
+6. `MYTHIC`: `versionTier=5`, `level=30`, `xp=9800`
+
+Implementación:
+
+1. `src/services/training/internal/training-card-scaling.ts`
+
 ## Rotación de oponentes
 
 1. Tier 1 usa roster ampliado de showcase para variedad:
