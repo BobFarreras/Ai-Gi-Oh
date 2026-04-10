@@ -40,6 +40,20 @@ Aplicación local:
 1. `http://localhost:3000/`
 2. `http://localhost:3000/hub`
 
+## Configuración de recuperación de contraseña (Supabase)
+
+Para que el flujo de recuperación funcione en local y en producción:
+
+1. `Site URL`:
+   - desarrollo: `http://localhost:3000`
+   - producción: dominio principal de la app (ej. `https://ai-gi-ho.vercel.app`)
+2. `Redirect URLs` (allow list):
+   - `http://localhost:3000/auth/callback`
+   - `https://ai-gi-ho.vercel.app/auth/callback`
+3. Confirmar en despliegue que `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` apunten al proyecto correcto.
+
+Nota: el flujo implementado usa `GET /auth/callback` para canjear el `code` de recuperación y redirigir de forma segura a `/reset-password`.
+
 ## Comandos de ingeniería
 
 ```bash

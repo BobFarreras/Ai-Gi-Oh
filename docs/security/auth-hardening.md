@@ -19,6 +19,9 @@ Reducir superficie de ataque en login/registro/logout antes de integrar base de 
    - `POST /api/auth/login`
    - `POST /api/auth/register`
    - `POST /api/auth/logout`
+   - `POST /api/auth/recover`
+   - `POST /api/auth/update-password`
+   - `GET /auth/callback` (canje server-side de código de recuperación)
 2. Validación de origen:
    - Se compara `Origin` con `Host`/`x-forwarded-host`.
    - Si no coincide, se responde `403`.
@@ -38,10 +41,13 @@ Reducir superficie de ataque en login/registro/logout antes de integrar base de 
 
 1. En desarrollo local puede usarse `http://localhost`.
 2. En producción se exige HTTPS (TLS) para cifrado de credenciales en tránsito.
-3. En despliegues multi-instancia debe configurarse backend distribuido:
+3. Configurar callback de recuperación en Supabase Auth:
+   - `http://localhost:3000/auth/callback`
+   - `https://ai-gi-ho.vercel.app/auth/callback`
+4. En despliegues multi-instancia debe configurarse backend distribuido:
    - `UPSTASH_REDIS_REST_URL`
    - `UPSTASH_REDIS_REST_TOKEN`
-4. Variables de endurecimiento:
+5. Variables de endurecimiento:
    - `AUTH_RATE_LIMIT_REQUIRE_DISTRIBUTED`
    - `AUTH_RATE_LIMIT_FAIL_CLOSED`
    - `ADMIN_RATE_LIMIT_REQUIRE_DISTRIBUTED`
