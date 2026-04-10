@@ -24,6 +24,9 @@ const cardVariants: Variants = {
 };
 
 export function TutorialCircuitMap({ nodes, guidedNodeId = null }: ITutorialCircuitMapProps) {
+  const compactDesktopGridClasses = "[@media(min-width:1024px)_and_(max-height:900px)]:gap-3";
+  const compactDesktopCardClasses = "[@media(min-width:1024px)_and_(max-height:900px)]:min-h-[220px]";
+
   return (
     <motion.div
       variants={gridVariants}
@@ -31,12 +34,12 @@ export function TutorialCircuitMap({ nodes, guidedNodeId = null }: ITutorialCirc
       animate="show"
       className="relative z-10 h-full w-full"
     >
-      <div className="grid h-full grid-cols-1 gap-3 px-1 sm:gap-4 lg:grid-cols-2 lg:auto-rows-fr lg:gap-5 lg:px-0">
+      <div className={`grid h-full grid-cols-1 gap-3 px-1 sm:gap-4 lg:grid-cols-2 lg:auto-rows-fr lg:gap-5 lg:px-0 ${compactDesktopGridClasses}`}>
         {nodes.map((node) => (
           <motion.div
             key={node.id}
             variants={cardVariants}
-            className={`h-full min-h-[250px] lg:min-h-0 ${guidedNodeId && node.id !== guidedNodeId ? "pointer-events-none opacity-45" : ""}`}
+            className={`h-full min-h-[250px] lg:min-h-0 ${compactDesktopCardClasses} ${guidedNodeId && node.id !== guidedNodeId ? "pointer-events-none opacity-45" : ""}`}
           >
             <TutorialNodeCard
               node={node}

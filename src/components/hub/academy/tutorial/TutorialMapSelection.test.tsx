@@ -16,4 +16,17 @@ describe("TutorialMapSelection", () => {
     const targetLink = screen.getByRole("link", { name: /Abrir Preparar Deck/i });
     expect(targetLink).toHaveAttribute("href", "/a");
   });
+
+  it("mantiene layout base sin inyectar scroll extra para desktop compacto", () => {
+    render(
+      <TutorialMapSelection
+        nodes={[
+          { id: "tutorial-arsenal-basics", order: 1, title: "Preparar Deck", description: "Desc A", kind: "ARSENAL", href: "/a", state: "AVAILABLE" },
+        ]}
+      />,
+    );
+    const scrollContainer = screen.getByTestId("tutorial-map-scroll-container");
+    expect(scrollContainer.className).toContain("overflow-y-auto");
+    expect(scrollContainer.className).not.toContain("max-height:900px");
+  });
 });
