@@ -13,6 +13,7 @@ import { TrainingCoinTossOverlay } from "./TrainingCoinTossOverlay";
 import { createTutorialOpponentStrategy } from "@/components/hub/academy/training/modes/tutorial/internal/create-tutorial-opponent-strategy";
 import { CombatTutorialRewardOverlay } from "./CombatTutorialRewardOverlay";
 import { ensureCombatNodeCompletion } from "@/components/hub/academy/training/modes/tutorial/internal/ensure-combat-node-completion";
+import { ACADEMY_POST_TUTORIAL_OVERLAY_QUERY } from "@/components/hub/academy/internal/AcademyPostTutorialBigLogOverlay";
 
 interface ITrainingTutorialClientProps {
   deck: ICard[];
@@ -126,7 +127,7 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
               setRewardClaimStatus(`Recompensa final completada: ${cardText}, ${nexusText}.`);
               setHasRewardClaimCompleted(true);
               window.setTimeout(() => {
-                window.location.assign(ACADEMY_HOME_ROUTE);
+                window.location.assign(`${ACADEMY_HOME_ROUTE}?${ACADEMY_POST_TUTORIAL_OVERLAY_QUERY.key}=${ACADEMY_POST_TUTORIAL_OVERLAY_QUERY.value}`);
               }, 700);
             } catch {
               setRewardClaimStatus("No se pudo reclamar la recompensa final ahora. Inténtalo de nuevo.");
