@@ -5,52 +5,21 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/game/card/Card";
 import type { ICard } from "@/core/entities/ICard";
+import { ENTITY_CARDS } from "@/core/data/mock-cards/entities";
+import { TRAP_CARDS } from "@/core/data/mock-cards/traps";
+
+function getCardOrThrow(cards: ICard[], cardId: string): ICard {
+  const card = cards.find((candidate) => candidate.id === cardId);
+  if (!card) {
+    throw new Error(`No se encontró la carta requerida para landing: ${cardId}.`);
+  }
+  return card;
+}
 
 const LORE_CARDS: ICard[] = [
-  {
-    id: "sys-001",
-    name: "Gemini 1.5 Pro",
-    description: "Visión Multimodal: Analiza el tablero completo. Aumenta el ataque de todas las entidades aliadas. Ideal para estrategias de control total.",
-    type: "ENTITY",
-    faction: "BIG_TECH",
-    archetype: "LLM",
-    cost: 8,
-    attack: 3000,
-    defense: 2500,
-    bgUrl: "/assets/bgs/bg-tech.jpg",
-    renderUrl: "/assets/renders/gemini.webp",
-    versionTier: 1,
-    level: 5,
-  },
-  {
-    id: "sys-002",
-    name: "Ollama Local",
-    description: "Escudo de Privacidad: Inmune a las Cartas de Ejecución (Trampas) del oponente. No requiere conexión externa para operar.",
-    type: "ENTITY",
-    faction: "OPEN_SOURCE",
-    archetype: "LLM",
-    cost: 4,
-    attack: 1500,
-    defense: 2800,
-    bgUrl: "/assets/bgs/bg-tech.jpg",
-    renderUrl: "/assets/renders/ollama.webp",
-    versionTier: 1,
-    level: 4,
-  },
-  {
-    id: "sys-003",
-    name: "Bucle Infinito n8n",
-    description: "Atrapa el proceso del rival. Cuando el oponente ataca, su ataque es anulado y pierde el turno indefinidamente.",
-    type: "TRAP",
-    faction: "NO_CODE",
-    archetype: "TOOL",
-    trigger: "ON_OPPONENT_ATTACK_DECLARED",
-    cost: 2,
-    bgUrl: "/assets/bgs/bg-tech.jpg",
-    renderUrl: "/assets/renders/n8n.webp",
-    versionTier: 1,
-    level: 1,
-  }
+  getCardOrThrow(ENTITY_CARDS, "entity-gemini"),
+  getCardOrThrow(ENTITY_CARDS, "entity-chatgpt"),
+  getCardOrThrow(TRAP_CARDS, "trap-kernel-panic"),
 ];
 
 function resolveViewportMode() {
@@ -75,7 +44,8 @@ export function HeroCards({ onCardReveal }: { onCardReveal?: (d: number) => void
 
   const fanOffset = viewportMode === "mobile" ? 142 : viewportMode === "tablet" ? 182 : 230;
   const centerYOffset = viewportMode === "mobile" ? -8 : -16;
-  const centerScale = viewportMode === "mobile" ? 0.86 : 0.94;
+  const centerScale = viewportMode === "mobile" ? 0.94 : viewportMode === "tablet" ? 1 : 1.04;
+  const sideScale = viewportMode === "mobile" ? 0.84 : viewportMode === "tablet" ? 0.9 : 0.94;
   const wrapperScale = viewportMode === "mobile" ? "scale-[0.5]" : viewportMode === "tablet" ? "scale-[0.62]" : "scale-[0.84]";
 
   // Estilo para arreglar el desenfoque (Anti-aliasing fix)
@@ -91,8 +61,8 @@ export function HeroCards({ onCardReveal }: { onCardReveal?: (d: number) => void
       {/* Carta Izquierda */}
       <motion.div
         style={crispStyle}
-        initial={{ opacity: 0, x: -150, rotateY: -30, rotateZ: -10 }}
-        animate={{ opacity: 1, x: -fanOffset, rotateY: -20, rotateZ: -16 }}
+        initial={{ opacity: 0, x: -150, rotateY: -30, rotateZ: -10, scale: sideScale }}
+        animate={{ opacity: 1, x: -fanOffset, rotateY: -20, rotateZ: -16, scale: sideScale }}
         transition={{ type: "spring", stiffness: 80, damping: 15, delay: 0.2 }}
         className="absolute z-10"
       >
@@ -113,8 +83,8 @@ export function HeroCards({ onCardReveal }: { onCardReveal?: (d: number) => void
       {/* Carta Derecha */}
       <motion.div
         style={crispStyle}
-        initial={{ opacity: 0, x: 150, rotateY: 30, rotateZ: 10 }}
-        animate={{ opacity: 1, x: fanOffset, rotateY: 20, rotateZ: 16 }}
+        initial={{ opacity: 0, x: 150, rotateY: 30, rotateZ: 10, scale: sideScale }}
+        animate={{ opacity: 1, x: fanOffset, rotateY: 20, rotateZ: 16, scale: sideScale }}
         transition={{ type: "spring", stiffness: 80, damping: 15, delay: 0.8 }}
         className="absolute z-20"
       >
