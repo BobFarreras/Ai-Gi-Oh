@@ -21,7 +21,7 @@ describe("HeuristicOpponentStrategy energy planning", () => {
             faction: "NEUTRAL" as const,
             cost: 2,
             trigger: "ON_OPPONENT_ATTACK_DECLARED" as const,
-            effect: { action: "NEGATE_ATTACK" as const },
+            effect: { action: "NEGATE_ATTACK_AND_DESTROY_ATTACKER" as const },
           },
           {
             id: "fusion-overmind",
