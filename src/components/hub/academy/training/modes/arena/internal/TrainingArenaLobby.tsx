@@ -23,9 +23,9 @@ interface ITrainingArenaLobbyProps {
  */
 export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
   return (
-    <section className="relative mx-auto flex min-h-dvh w-full items-center justify-center overflow-x-hidden px-3 py-4 text-cyan-100 md:px-6 md:py-6">
+    <section className="relative mx-auto flex min-h-dvh w-full items-center justify-center overflow-hidden px-3 py-4 text-cyan-100 md:overflow-y-visible md:px-6 md:py-6">
       <TrainingArenaLobbyBackdrop />
-      <div className="relative z-10 flex w-full max-w-6xl flex-col gap-4 md:gap-5">
+      <div className="relative z-10 flex h-[calc(100dvh-2rem)] w-full max-w-6xl flex-col gap-4 pb-24 md:h-auto md:gap-5 md:pb-0">
         <motion.header
           initial={{ y: -22, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -66,25 +66,25 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
             {props.nextTierRequirementLabel}
           </div>
         </motion.header>
-        <div className="grid w-full items-stretch gap-3 md:grid-cols-[1fr_auto_1fr] md:gap-4">
+        <div className="grid min-h-0 flex-1 grid-cols-1 items-stretch gap-2 md:w-full md:flex-none md:grid-cols-[1fr_auto_1fr] md:gap-4">
           <motion.article
             initial={{ x: -34, y: 20, opacity: 0 }}
             animate={{ x: 0, y: 0, opacity: 1 }}
             transition={{ duration: 0.46, ease: "easeOut", delay: 0.08 }}
-            className="relative rounded-2xl border border-cyan-300/45 bg-[#05192d]/90 p-2.5 shadow-[0_0_24px_rgba(34,211,238,0.28)] md:p-3"
+            className="relative order-1 flex min-h-0 flex-col rounded-2xl border border-cyan-300/45 bg-[#05192d]/90 p-2.5 shadow-[0_0_24px_rgba(34,211,238,0.28)] md:order-none md:block md:p-3"
           >
             <div className="pointer-events-none absolute left-2 top-2 h-4 w-4 border-l border-t border-cyan-300/55" />
             <div className="pointer-events-none absolute bottom-2 right-2 h-4 w-4 border-b border-r border-cyan-300/55" />
             <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-300">Jugador</p>
-            <div className="mt-2 rounded-xl border border-cyan-200/30 bg-[linear-gradient(160deg,rgba(7,35,57,0.92),rgba(4,16,30,0.88))] p-1.5">
-              <div className="aspect-[4/3] w-full overflow-hidden rounded-lg border border-cyan-100/25 bg-[#020a13] sm:aspect-[16/11] md:aspect-[4/3]">
+            <div className="mt-2 flex min-h-0 flex-1 rounded-xl border border-cyan-200/30 bg-[linear-gradient(160deg,rgba(7,35,57,0.92),rgba(4,16,30,0.88))] p-1.5 md:block">
+              <div className="h-full w-full overflow-hidden rounded-lg border border-cyan-100/25 bg-[#020a13] md:aspect-[4/3] md:h-auto">
                 <Image src={props.playerAvatarUrl} alt="Avatar del jugador" width={540} height={720} className="h-full w-full object-cover object-center" priority />
               </div>
             </div>
           </motion.article>
-          <div className="mx-auto flex flex-col items-center justify-center gap-1 self-center px-1 text-center md:px-2">
+          <div className="mx-auto order-2 flex flex-col items-center justify-center gap-1 self-center px-0.5 text-center md:order-none md:px-2">
             <motion.p
-              className="text-4xl font-black uppercase tracking-[0.15em] text-cyan-100 md:text-5xl"
+              className="text-3xl font-black uppercase tracking-[0.12em] text-cyan-100 md:text-5xl"
               animate={{ scale: [1, 1.08, 1], opacity: [0.85, 1, 0.85] }}
               transition={{ duration: 1.8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
             >
@@ -95,13 +95,13 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
             initial={{ x: 34, y: 20, opacity: 0 }}
             animate={{ x: 0, y: 0, opacity: 1 }}
             transition={{ duration: 0.46, ease: "easeOut", delay: 0.14 }}
-            className="relative rounded-2xl border border-rose-300/45 bg-[#230b17]/90 p-2.5 shadow-[0_0_24px_rgba(251,113,133,0.25)] md:p-3"
+            className="relative order-3 flex min-h-0 flex-col rounded-2xl border border-rose-300/45 bg-[#230b17]/90 p-2.5 shadow-[0_0_24px_rgba(251,113,133,0.25)] md:order-none md:block md:p-3"
           >
             <div className="pointer-events-none absolute left-2 top-2 h-4 w-4 border-l border-t border-rose-300/55" />
             <div className="pointer-events-none absolute bottom-2 right-2 h-4 w-4 border-b border-r border-rose-300/55" />
             <p className="text-xs font-black uppercase tracking-[0.18em] text-rose-200">{props.opponentName}</p>
-            <div className="mt-2 rounded-xl border border-rose-200/35 bg-[linear-gradient(160deg,rgba(62,18,40,0.9),rgba(30,8,20,0.9))] p-1.5">
-              <div className="aspect-[4/3] w-full overflow-hidden rounded-lg border border-rose-100/25 bg-[#13040d] sm:aspect-[16/11] md:aspect-[4/3]">
+            <div className="mt-2 flex min-h-0 flex-1 rounded-xl border border-rose-200/35 bg-[linear-gradient(160deg,rgba(62,18,40,0.9),rgba(30,8,20,0.9))] p-1.5 md:block">
+              <div className="h-full w-full overflow-hidden rounded-lg border border-rose-100/25 bg-[#13040d] md:aspect-[4/3] md:h-auto">
                 <Image src={props.opponentAvatarUrl} alt={`Avatar de ${props.opponentName}`} width={540} height={720} className="h-full w-full object-cover object-center" priority />
               </div>
             </div>
@@ -111,7 +111,7 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
           initial={{ y: 18, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.42, ease: "easeOut", delay: 0.22 }}
-          className="flex flex-col items-center gap-2"
+          className="hidden flex-col items-center gap-2 md:flex"
         >
           <motion.button
             type="button"
@@ -127,6 +127,24 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
           <AcademyBackButton label="Volver a Academy" onClick={props.onBack} />
         </motion.div>
       </div>
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.35, ease: "easeOut", delay: 0.24 }}
+        className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[calc(env(safe-area-inset-bottom)+10px)] pt-2 md:hidden"
+      >
+        <div className="mx-auto flex w-full max-w-md flex-col items-center gap-2">
+          <motion.button
+            type="button"
+            onClick={props.onStart}
+            whileTap={{ scale: 0.98 }}
+            className="w-full rounded-xl border border-emerald-300/70 bg-emerald-500/20 px-6 py-2.5 text-sm font-black uppercase tracking-[0.14em] text-emerald-100"
+          >
+            Empezar Combate
+          </motion.button>
+          <AcademyBackButton label="Volver a Academy" onClick={props.onBack} className="w-full" />
+        </div>
+      </motion.div>
     </section>
   );
 }
