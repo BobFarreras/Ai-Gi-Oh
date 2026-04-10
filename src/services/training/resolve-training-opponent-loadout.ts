@@ -34,6 +34,13 @@ function resolveCard(cardId: string): ICard {
   return { ...card };
 }
 const DIFFICULTY_ORDER: OpponentDifficulty[] = ["EASY", "NORMAL", "HARD", "BOSS", "MASTER", "MYTHIC"];
+const TRAINING_TIER_ONE_SHOWCASE_ROSTER = [
+  "training-tier-1",
+  "training-tier-1-alt",
+  "training-tier-3",
+  "training-tier-4",
+  "training-tier-5",
+];
 
 function clampDifficultyIndex(index: number): number {
   return Math.max(0, Math.min(DIFFICULTY_ORDER.length - 1, index));
@@ -53,8 +60,9 @@ function resolveRosterTemplateIds(tier: number, deckTemplateId: string): string[
   if (!TRAINING_OPPONENT_PRESETS[deckTemplateId]) {
     throw new ValidationError(`No existe preset base de oponente para '${deckTemplateId}'.`);
   }
-  if (tier === 1 && TRAINING_OPPONENT_PRESETS["training-tier-1-alt"]) {
-    return [deckTemplateId, "training-tier-1-alt"];
+  if (tier === 1) {
+    const showcaseRoster = TRAINING_TIER_ONE_SHOWCASE_ROSTER.filter((templateId) => Boolean(TRAINING_OPPONENT_PRESETS[templateId]));
+    return showcaseRoster.length > 0 ? showcaseRoster : [deckTemplateId];
   }
   const previousTemplates = Array.from({ length: Math.max(0, tier - 1) }, (_, index) => `training-tier-${tier - (index + 1)}`)
     .filter((templateId) => Boolean(TRAINING_OPPONENT_PRESETS[templateId]));
