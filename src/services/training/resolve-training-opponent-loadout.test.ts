@@ -47,8 +47,35 @@ describe("resolveTrainingOpponentLoadout", () => {
       tierMatches: 1,
     });
     expect(first.displayName).toBe("GenNvim");
-    expect(second.displayName).toBe("NanoOps");
+    expect(second.displayName).toBe("Helena");
     expect(first.deckVariantId).not.toBe(second.deckVariantId);
+  });
+
+  it("incluye roster ampliado en tier 1 con rivales veteranos", () => {
+    const jaku = resolveTrainingOpponentLoadout({
+      tier: 1,
+      aiDifficulty: "NORMAL",
+      deckTemplateId: "training-tier-1",
+      tierWins: 1,
+      tierMatches: 2,
+    });
+    const bigLog = resolveTrainingOpponentLoadout({
+      tier: 1,
+      aiDifficulty: "NORMAL",
+      deckTemplateId: "training-tier-1",
+      tierWins: 1,
+      tierMatches: 3,
+    });
+    const sentinel = resolveTrainingOpponentLoadout({
+      tier: 1,
+      aiDifficulty: "NORMAL",
+      deckTemplateId: "training-tier-1",
+      tierWins: 1,
+      tierMatches: 4,
+    });
+    expect(jaku.displayName).toBe("Jaku");
+    expect(bigLog.displayName).toBe("BigLog");
+    expect(sentinel.displayName).toBe("Soldado");
   });
 
   it("sube dificultad cuando el winrate del tier es alto", () => {

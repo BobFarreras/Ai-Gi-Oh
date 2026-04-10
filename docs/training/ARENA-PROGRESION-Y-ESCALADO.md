@@ -29,6 +29,12 @@
    - Tier 5: `BOSS`
 2. Además, el oponente aplica ajuste adaptativo por rendimiento en el tier (`resolve-training-opponent-loadout.ts`).
 
+## Rotación de oponentes
+
+1. Tier 1 usa roster ampliado de showcase para variedad:
+   - GenNvim, Helena, Jaku, BigLog y Soldado.
+2. En tiers superiores, la rotación prioriza el preset del tier actual y mezcla presets anteriores válidos.
+
 ## Recompensas
 
 1. Se calculan por tier con `rewardMultiplier`.

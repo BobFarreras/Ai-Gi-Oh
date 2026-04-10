@@ -31,8 +31,8 @@ export const TRAINING_OPPONENT_PRESETS: Record<string, ITrainingOpponentPreset> 
   },
   "training-tier-1-alt": {
     storyOpponentId: "opp-helena",
-    codeName: "nano-ops",
-    displayName: "NanoOps",
+    codeName: "helena-alt",
+    displayName: "Helena",
     avatarUrl: "/assets/story/opponents/opp-ch1-helena/avatar-Helena.png",
     introUrl: "/assets/story/opponents/opp-ch1-helena/intro-Helena.png",
     deckCardIds: toDeck([
@@ -91,8 +91,8 @@ export const TRAINING_OPPONENT_PRESETS: Record<string, ITrainingOpponentPreset> 
   },
   "training-tier-5": {
     storyOpponentId: "opp-soldier-act01",
-    codeName: "sentinel",
-    displayName: "Sentinel Prime",
+    codeName: "soldado",
+    displayName: "Soldado",
     avatarUrl: "/assets/story/opponents/opp-ch1-soldier-act01/avatar-Soldado-act01.png",
     introUrl: "/assets/story/opponents/opp-ch1-soldier-act01/intro-Soldado-act01.png",
     deckCardIds: toDeck([
