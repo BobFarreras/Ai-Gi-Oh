@@ -6,12 +6,15 @@ import { GetOrCreateStarterDeckUseCase } from "@/core/use-cases/player/GetOrCrea
 import { GetOrCreatePlayerProgressUseCase } from "@/core/use-cases/player/GetOrCreatePlayerProgressUseCase";
 import { createSupabasePlayerProfileRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-profile-repository";
 import { createSupabasePlayerProgressRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-progress-repository";
+import { createSupabasePlayerStoryWorldRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-story-world-repository";
 import { createSupabaseStarterDeckTemplateRepository } from "@/infrastructure/persistence/supabase/create-supabase-starter-deck-template-repository";
+import { createSupabaseTrainingProgressRepository } from "@/infrastructure/persistence/supabase/create-supabase-training-progress-repository";
 import { InMemoryHubRepository } from "@/infrastructure/repositories/InMemoryHubRepository";
 import { SupabaseHubRepository } from "@/infrastructure/repositories/SupabaseHubRepository";
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { getPlayerBoardLoadout } from "@/services/game/get-player-board-deck";
 import { applyCombatReadinessLock } from "@/services/hub/internal/apply-combat-readiness-lock";
+import { resolveHubRuntimeProgress } from "@/services/hub/internal/resolve-hub-runtime-progress";
 import { createPlayerRuntimeRepositories } from "@/services/player-persistence/create-player-runtime-repositories";
 import { runPlayerRuntimeInitOnce } from "@/services/player-persistence/internal/player-runtime-init-gate";
 
@@ -52,12 +55,32 @@ export async function getHubRuntimeData(): Promise<IHubRuntimeData> {
   });
 
   const hubService = new HubService(new SupabaseHubRepository(progressRepository));
-  const [hubMap, loadout] = await Promise.all([
+  const [hubMap, loadout, storyWorldRepository, trainingProgressRepository] = await Promise.all([
     new GetHubMapUseCase(hubService).execute(session.user.id),
     getPlayerBoardLoadout(),
+    createSupabasePlayerStoryWorldRepository(),
+    createSupabaseTrainingProgressRepository(),
   ]);
+  const [storyCurrentNodeId, trainingProgress] = await Promise.all([
+    storyWorldRepository.getCurrentNodeIdByPlayerId(session.user.id),
+    trainingProgressRepository.getByPlayerId(session.user.id),
+  ]);
+  const runtimeProgress = resolveHubRuntimeProgress({
+    fallbackStoryChapter: hubMap.progress.storyChapter,
+    fallbackMedals: hubMap.progress.medals,
+    storyCurrentNodeId,
+    trainingTotalWins: trainingProgress?.totalWins ?? null,
+  });
   return {
     playerLabel: profile.nickname || session.user.email || "Operador",
-    hubMap: { ...hubMap, sections: applyCombatReadinessLock(hubMap.sections, loadout) },
+    hubMap: {
+      ...hubMap,
+      progress: {
+        ...hubMap.progress,
+        storyChapter: runtimeProgress.storyChapter,
+        medals: runtimeProgress.medals,
+      },
+      sections: applyCombatReadinessLock(hubMap.sections, loadout),
+    },
   };
 }

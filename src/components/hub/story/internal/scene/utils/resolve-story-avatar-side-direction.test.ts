@@ -11,7 +11,7 @@ function buildNode(id: string, x: number, y: number): IStoryMapNodeRuntime {
     title: id,
     opponentName: "Test",
     nodeType: "MOVE",
-    difficulty: "EASY",
+    difficulty: "ROOKIE",
     rewardNexus: 0,
     rewardPlayerExperience: 0,
     isBossDuel: false,

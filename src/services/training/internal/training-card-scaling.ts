@@ -12,7 +12,7 @@ const TRAINING_SCALE_BY_DIFFICULTY: Record<OpponentDifficulty, ITrainingCardScal
   EASY: { versionTier: 0, level: 0, xp: 0 },
   NORMAL: { versionTier: 0, level: 2, xp: 260 },
   HARD: { versionTier: 1, level: 10, xp: 980 },
-  BOSS: { versionTier: 2, level: 200, xp: 2800 },
+  BOSS: { versionTier: 2, level: 20, xp: 2800 },
   MASTER: { versionTier: 3, level: 30, xp: 5600 },
   MYTHIC: { versionTier: 5, level: 30, xp: 9800 },
 };

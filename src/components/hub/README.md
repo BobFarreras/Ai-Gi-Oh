@@ -35,6 +35,12 @@ La UI del Hub representa un centro de control interactivo en 3D, manteniendo:
 2. Si está desbloqueado: navega con `router.push(section.href)`.
 3. Si está bloqueado: muestra `lockReason` en el panel del nodo.
 
+## Fuente de métricas HUD
+
+1. `Capítulo`: se deriva del nodo Story actual persistido (`player_story_world_state.current_node_id`).
+2. `Medallas`: se deriva de victorias reales de Arena (`player_training_progress.total_wins`).
+3. Si alguno de esos datos todavía no existe para el jugador, se usa fallback de `player_progress`.
+
 ## Rendimiento
 
 1. Un único `Canvas` para toda la escena.

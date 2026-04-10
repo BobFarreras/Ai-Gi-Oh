@@ -1,4 +1,4 @@
-// src/core/services/hub/HubAccessPolicy.test.ts - Pruebas de bloqueo del hub según estado de tutorial y medallas.
+// src/core/services/hub/HubAccessPolicy.test.ts - Pruebas de bloqueo del hub según estado de tutorial y disponibilidad de módulos.
 import { describe, expect, it } from "vitest";
 import { IHubSection } from "@/core/entities/hub/IHubSection";
 import { IPlayerHubProgress } from "@/core/entities/hub/IPlayerHubProgress";
@@ -39,9 +39,10 @@ describe("resolveHubSectionLock", () => {
     expect(market.isLocked).toBe(false);
   });
 
-  it("mantiene multijugador bloqueado sin medallas tras tutorial", () => {
-    const progress = { ...BASE_PROGRESS, hasCompletedTutorial: true };
+  it("mantiene multijugador bloqueado tras tutorial por estado de implementación", () => {
+    const progress = { ...BASE_PROGRESS, hasCompletedTutorial: true, medals: 9 };
     const multiplayer = resolveHubSectionLock(createSection("MULTIPLAYER"), progress);
     expect(multiplayer.isLocked).toBe(true);
+    expect(multiplayer.lockReason).toContain("proceso de creación");
   });
 });

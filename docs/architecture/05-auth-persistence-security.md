@@ -5,7 +5,10 @@
 
 1. Contrato de auth en `core/repositories/IAuthRepository`.
 2. Implementación Supabase en `infrastructure/persistence/supabase`.
-3. La UI consume acciones/casos de uso, no SDK directo.
+3. La UI consume cliente HTTP (`services/auth/auth-http-client`) y casos de uso, no SDK directo.
+4. Recuperación de contraseña en dos pasos:
+   - `POST /api/auth/recover` para emitir enlace.
+   - `GET /auth/callback` para canjear `code` y fijar sesión antes de `/reset-password`.
 
 ## Persistencia
 

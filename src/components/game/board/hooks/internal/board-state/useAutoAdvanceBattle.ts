@@ -1,11 +1,13 @@
 // src/components/game/board/hooks/internal/board-state/useAutoAdvanceBattle.ts - Ejecuta auto-pase en BATTLE cuando no quedan acciones del jugador.
 import { MutableRefObject, useEffect } from "react";
 import { GameState } from "@/core/use-cases/GameEngine";
+import { IMatchMode } from "@/core/entities/match";
 import { canAutoAdvanceBattle } from "@/core/services/turn/turn-decision";
 import { resolveWinnerPlayerId } from "@/core/services/turn/resolve-winner-player-id";
 import { resolveAdvanceWarning } from "./turn-guard";
 
 interface IUseAutoAdvanceBattleParams {
+  mode: IMatchMode;
   gameState: GameState;
   gameStateRef: MutableRefObject<GameState>;
   winnerPlayerId: string | "DRAW" | null;
@@ -16,10 +18,10 @@ interface IUseAutoAdvanceBattleParams {
   onAutoAdvanced: () => void;
 }
 
-export function useAutoAdvanceBattle({ gameState, gameStateRef, winnerPlayerId, isAnimating, isPlayerTurn, isAutoPhaseEnabled, advancePhase, onAutoAdvanced }: IUseAutoAdvanceBattleParams) {
+export function useAutoAdvanceBattle({ mode, gameState, gameStateRef, winnerPlayerId, isAnimating, isPlayerTurn, isAutoPhaseEnabled, advancePhase, onAutoAdvanced }: IUseAutoAdvanceBattleParams) {
   useEffect(() => {
     if (!isAutoPhaseEnabled) return;
-    if (resolveAdvanceWarning(gameState) === "BATTLE_SKIP_ATTACKS") return;
+    if (resolveAdvanceWarning(gameState, mode) === "BATTLE_SKIP_ATTACKS") return;
     if (
       !canAutoAdvanceBattle({
         phase: gameState.phase,
@@ -37,7 +39,7 @@ export function useAutoAdvanceBattle({ gameState, gameStateRef, winnerPlayerId, 
       const latestState = gameStateRef.current;
       const latestWinner = resolveWinnerPlayerId(latestState);
       const latestIsPlayerTurn = latestState.activePlayerId === latestState.playerA.id;
-      if (resolveAdvanceWarning(latestState) === "BATTLE_SKIP_ATTACKS") return;
+      if (resolveAdvanceWarning(latestState, mode) === "BATTLE_SKIP_ATTACKS") return;
       const canAdvanceNow = canAutoAdvanceBattle({
         phase: latestState.phase,
         winnerPlayerId: latestWinner,
@@ -63,6 +65,7 @@ export function useAutoAdvanceBattle({ gameState, gameStateRef, winnerPlayerId, 
     isAnimating,
     isPlayerTurn,
     isAutoPhaseEnabled,
+    mode,
     onAutoAdvanced,
     winnerPlayerId,
   ]);

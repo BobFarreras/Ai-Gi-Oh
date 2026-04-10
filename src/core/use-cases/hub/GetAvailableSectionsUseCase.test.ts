@@ -20,7 +20,7 @@ describe("GetAvailableSectionsUseCase", () => {
     expect(hasMultiplayer).toBe(false);
   });
 
-  it("incluye multijugador cuando el jugador ya tiene medallas", async () => {
+  it("mantiene multijugador oculto aunque el jugador tenga medallas", async () => {
     const repository = new InMemoryHubRepository({
       playerId: "player-a",
       medals: 2,
@@ -32,6 +32,6 @@ describe("GetAvailableSectionsUseCase", () => {
     const sections = await useCase.execute("player-a");
     const hasMultiplayer = sections.some((section) => section.type === "MULTIPLAYER");
 
-    expect(hasMultiplayer).toBe(true);
+    expect(hasMultiplayer).toBe(false);
   });
 });

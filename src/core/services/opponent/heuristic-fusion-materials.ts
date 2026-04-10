@@ -32,7 +32,8 @@ function matchesRecipeByArchetype(materials: [IBoardEntity, IBoardEntity], recip
 }
 
 function matchesRecipeByEnergy(materials: [IBoardEntity, IBoardEntity], recipe: IFusionRecipe): boolean {
-  if (recipe.requiredEnergyPerMaterial !== undefined && materials.some((material) => material.card.cost < recipe.requiredEnergyPerMaterial)) {
+  const requiredEnergyPerMaterial = recipe.requiredEnergyPerMaterial ?? null;
+  if (requiredEnergyPerMaterial !== null && materials.some((material) => material.card.cost < requiredEnergyPerMaterial)) {
     return false;
   }
   if (recipe.requiredTotalEnergy) {

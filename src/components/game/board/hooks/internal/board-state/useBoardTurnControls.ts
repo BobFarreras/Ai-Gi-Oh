@@ -108,6 +108,7 @@ export function useBoardTurnControls({
   });
 
   useAutoAdvanceBattle({
+    mode,
     gameState,
     gameStateRef,
     winnerPlayerId,
