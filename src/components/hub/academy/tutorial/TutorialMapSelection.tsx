@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { AcademyBackButton } from "@/components/hub/academy/AcademyBackButton";
 import { TutorialCircuitMap } from "@/components/hub/academy/tutorial/TutorialCircuitMap";
+import { TutorialMobileFloatingPanel } from "@/components/hub/academy/tutorial/internal/TutorialMobileFloatingPanel";
 import { TutorialQuickCompleteAction } from "@/components/hub/academy/tutorial/internal/TutorialQuickCompleteAction";
 import { resolvePrepareDeckGuideVisibility } from "@/components/hub/academy/tutorial/internal/resolve-prepare-deck-guide-visibility";
 import { ACADEMY_HOME_ROUTE } from "@/core/constants/routes/academy-routes";
@@ -47,16 +48,11 @@ export function TutorialMapSelection({ nodes }: ITutorialMapSelectionProps) {
         </header>
       </div>
 
-      <div data-testid="tutorial-map-scroll-container" className="h-full min-h-0 overflow-y-auto pt-[8.3rem] pb-[calc(4.2rem+env(safe-area-inset-bottom))] sm:pt-[9rem] lg:flex-1 lg:overflow-visible lg:pt-0 lg:pb-0">
+      <div data-testid="tutorial-map-scroll-container" className="h-full min-h-0 overflow-y-auto pt-[8.3rem] pb-[calc(15.2rem+env(safe-area-inset-bottom))] sm:pt-[9rem] lg:flex-1 lg:overflow-visible lg:pt-0 lg:pb-0">
         <TutorialCircuitMap nodes={nodes} guidedNodeId={guidedNodeId} />
       </div>
 
-      <footer className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center pb-[max(0.4rem,env(safe-area-inset-bottom))] lg:hidden">
-        <div className="pointer-events-auto flex flex-col items-center gap-2">
-          <TutorialQuickCompleteAction isAlreadyCompleted={isTutorialAlreadyCompleted} />
-          <AcademyBackButton label="Volver a Academy" href={ACADEMY_HOME_ROUTE} className="w-full max-w-xs lg:w-auto" />
-        </div>
-      </footer>
+      <TutorialMobileFloatingPanel isTutorialAlreadyCompleted={isTutorialAlreadyCompleted} />
 
       <footer className="hidden items-end justify-center gap-3 lg:flex">
         <TutorialQuickCompleteAction isAlreadyCompleted={isTutorialAlreadyCompleted} />

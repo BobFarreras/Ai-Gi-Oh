@@ -17,7 +17,7 @@ export default async function TutorialMapPage() {
     <main className="hub-control-room-bg relative h-dvh overflow-hidden px-2 py-2 text-slate-100 sm:px-3 sm:py-3 lg:px-6 lg:py-5">
       <HubSectionEntryBurst />
       <TutorialMapGuideOverlay isVisible={shouldGuidePrepareDeck} />
-      <TutorialFirstRunSoundtrackSeed shouldActivate={shouldGuidePrepareDeck} />
+      <TutorialFirstRunSoundtrackSeed shouldActivate />
       <TutorialMapSelection nodes={nodes} />
     </main>
   );
