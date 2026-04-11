@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { AcademyBackButton } from "@/components/hub/academy/AcademyBackButton";
 import { TutorialCircuitMap } from "@/components/hub/academy/tutorial/TutorialCircuitMap";
+import { TutorialQuickCompleteAction } from "@/components/hub/academy/tutorial/internal/TutorialQuickCompleteAction";
 import { resolvePrepareDeckGuideVisibility } from "@/components/hub/academy/tutorial/internal/resolve-prepare-deck-guide-visibility";
 import { ACADEMY_HOME_ROUTE } from "@/core/constants/routes/academy-routes";
 import { ITutorialMapNodeRuntime } from "@/core/entities/tutorial/ITutorialMapNode";
@@ -13,6 +14,8 @@ interface ITutorialMapSelectionProps {
 export function TutorialMapSelection({ nodes }: ITutorialMapSelectionProps) {
   const shouldGuidePrepareDeck = resolvePrepareDeckGuideVisibility(nodes);
   const guidedNodeId = shouldGuidePrepareDeck ? "tutorial-arsenal-basics" : null;
+  const rewardNode = nodes.find((node) => node.id === "tutorial-final-reward");
+  const isTutorialAlreadyCompleted = rewardNode?.state === "COMPLETED";
 
   return (
     <section className="relative h-full min-h-0 px-2 pb-2 text-cyan-100 sm:px-3 lg:flex lg:flex-col lg:gap-4 lg:px-4 lg:py-4">
@@ -49,12 +52,14 @@ export function TutorialMapSelection({ nodes }: ITutorialMapSelectionProps) {
       </div>
 
       <footer className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center pb-[max(0.4rem,env(safe-area-inset-bottom))] lg:hidden">
-        <div className="pointer-events-auto inline-flex">
+        <div className="pointer-events-auto flex flex-col items-center gap-2">
+          <TutorialQuickCompleteAction isAlreadyCompleted={isTutorialAlreadyCompleted} />
           <AcademyBackButton label="Volver a Academy" href={ACADEMY_HOME_ROUTE} className="w-full max-w-xs lg:w-auto" />
         </div>
       </footer>
 
-      <footer className="hidden justify-center lg:flex">
+      <footer className="hidden items-end justify-center gap-3 lg:flex">
+        <TutorialQuickCompleteAction isAlreadyCompleted={isTutorialAlreadyCompleted} />
         <AcademyBackButton label="Volver a Academy" href={ACADEMY_HOME_ROUTE} className="w-auto" />
       </footer>
     </section>
