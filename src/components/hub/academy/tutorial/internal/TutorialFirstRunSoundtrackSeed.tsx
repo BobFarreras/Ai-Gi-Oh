@@ -9,7 +9,7 @@ interface ITutorialFirstRunSoundtrackSeedProps {
 }
 
 /**
- * Si la guía inicial está activa, sembramos estado de primera vuelta para mantener música en todo el flujo.
+ * Si se entra al flujo tutorial y no está finalizado, activa estado de soundtrack de primera vuelta.
  */
 export function TutorialFirstRunSoundtrackSeed({ shouldActivate }: ITutorialFirstRunSoundtrackSeedProps) {
   useEffect(() => {

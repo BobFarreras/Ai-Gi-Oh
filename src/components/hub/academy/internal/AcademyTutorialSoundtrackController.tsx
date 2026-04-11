@@ -6,8 +6,9 @@ import { usePathname } from "next/navigation";
 import { ONBOARDING_AUDIO_CATALOG } from "@/components/hub/onboarding/internal/onboarding-audio-catalog";
 import { isTutorialSoundtrackFirstRunActive, TUTORIAL_SOUNDTRACK_STATE_EVENT } from "@/components/hub/academy/tutorial/internal/tutorial-soundtrack-session";
 
-function isTutorialRoute(pathname: string): boolean {
-  return pathname.startsWith("/hub/academy/tutorial") || pathname.startsWith("/hub/academy/training/tutorial");
+function shouldPlayTutorialSoundtrack(pathname: string): boolean {
+  if (pathname.startsWith("/hub/academy/training/tutorial")) return false;
+  return pathname === "/hub/academy/tutorial" || pathname.startsWith("/hub/academy/tutorial/arsenal") || pathname.startsWith("/hub/academy/tutorial/market");
 }
 
 /**
@@ -17,7 +18,7 @@ export function AcademyTutorialSoundtrackController() {
   const pathname = usePathname();
   const soundtrackRef = useRef<HTMLAudioElement | null>(null);
   const [isFirstRunActive, setIsFirstRunActive] = useState(false);
-  const shouldPlay = useMemo(() => isTutorialRoute(pathname) && isFirstRunActive, [isFirstRunActive, pathname]);
+  const shouldPlay = useMemo(() => shouldPlayTutorialSoundtrack(pathname) && isFirstRunActive, [isFirstRunActive, pathname]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

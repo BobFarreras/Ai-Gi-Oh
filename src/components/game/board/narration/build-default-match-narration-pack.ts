@@ -16,8 +16,8 @@ export function buildDefaultMatchNarrationPack(): IMatchNarrationPack {
       line({ id: "trap-opponent", trigger: "OPPONENT_TRAP_TRIGGERED", channel: "HUD", actor: "OPPONENT", text: "Has caído en mi trampa." }, 1900, "/audio/sfx/magic-attack.mp3"),
       line({ id: "fusion-player", trigger: "FUSION_SUMMONED", channel: "HUD", actor: "PLAYER", text: "¡DOS PODERES SE CONVIERTEN EN UNO!" }, 2200, "/audio/story/player/fusion.mp3"),
       line({ id: "fusion-opponent", trigger: "FUSION_SUMMONED", channel: "CINEMATIC", actor: "OPPONENT", text: "Tu estructura colapsará ante esta fusión." }, 3200, "/audio/sfx/fusion-summon.mp3"),
-      line({ id: "win-opponent-defeat", trigger: "PLAYER_WIN", channel: "CINEMATIC", actor: "OPPONENT", text: "La próxima vez ganaré." }, 3600, "/audio/sfx/game-over.mp3"),
-      line({ id: "lose-player", trigger: "PLAYER_LOSE", channel: "CINEMATIC", actor: "OPPONENT", text: "Se acabó, he ganado." }, 3600, "/audio/sfx/victory-stinger.mp3"),
+      line({ id: "win-opponent-defeat", trigger: "PLAYER_WIN", channel: "CINEMATIC", actor: "OPPONENT", text: "La próxima vez ganaré." }, 3600, "/audio/sfx/victory-stinger.mp3"),
+      line({ id: "lose-player", trigger: "PLAYER_LOSE", channel: "CINEMATIC", actor: "OPPONENT", text: "Se acabó, he ganado." }, 3600, "/audio/sfx/game-over.mp3"),
     ],
   };
 }
