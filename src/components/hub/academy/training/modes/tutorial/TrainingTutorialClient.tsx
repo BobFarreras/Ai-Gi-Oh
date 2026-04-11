@@ -14,6 +14,7 @@ import { createTutorialOpponentStrategy } from "@/components/hub/academy/trainin
 import { CombatTutorialRewardOverlay } from "./CombatTutorialRewardOverlay";
 import { ensureCombatNodeCompletion } from "@/components/hub/academy/training/modes/tutorial/internal/ensure-combat-node-completion";
 import { ACADEMY_POST_TUTORIAL_OVERLAY_QUERY } from "@/components/hub/academy/internal/AcademyPostTutorialBigLogOverlay";
+import { markTutorialSoundtrackFirstRunFinished } from "@/components/hub/academy/tutorial/internal/tutorial-soundtrack-session";
 
 interface ITrainingTutorialClientProps {
   deck: ICard[];
@@ -126,6 +127,7 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
               const nexusText = nexusResult.applied ? `+${nexusResult.rewardNexus} Nexus aplicados` : "Nexus ya reclamados";
               setRewardClaimStatus(`Recompensa final completada: ${cardText}, ${nexusText}.`);
               setHasRewardClaimCompleted(true);
+              markTutorialSoundtrackFirstRunFinished();
               window.setTimeout(() => {
                 window.location.assign(`${ACADEMY_HOME_ROUTE}?${ACADEMY_POST_TUTORIAL_OVERLAY_QUERY.key}=${ACADEMY_POST_TUTORIAL_OVERLAY_QUERY.value}`);
               }, 700);
