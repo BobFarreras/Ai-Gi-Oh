@@ -4,11 +4,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ONBOARDING_AUDIO_CATALOG } from "@/components/hub/onboarding/internal/onboarding-audio-catalog";
-import { isTutorialSoundtrackFirstRunActive, TUTORIAL_SOUNDTRACK_STATE_EVENT } from "@/components/hub/academy/tutorial/internal/tutorial-soundtrack-session";
+import {
+  isTutorialSoundtrackFirstRunActive,
+  markTutorialSoundtrackFirstRunStarted,
+  TUTORIAL_SOUNDTRACK_STATE_EVENT,
+} from "@/components/hub/academy/tutorial/internal/tutorial-soundtrack-session";
 
-function shouldPlayTutorialSoundtrack(pathname: string): boolean {
+function isTutorialNarrativeRoute(pathname: string): boolean {
   if (pathname.startsWith("/hub/academy/training/tutorial")) return false;
-  return pathname === "/hub/academy/tutorial" || pathname.startsWith("/hub/academy/tutorial/arsenal") || pathname.startsWith("/hub/academy/tutorial/market");
+  if (pathname.startsWith("/hub/academy/tutorial/reward")) return false;
+  return pathname.startsWith("/hub/academy/tutorial");
 }
 
 /**
@@ -18,7 +23,7 @@ export function AcademyTutorialSoundtrackController() {
   const pathname = usePathname();
   const soundtrackRef = useRef<HTMLAudioElement | null>(null);
   const [isFirstRunActive, setIsFirstRunActive] = useState(false);
-  const shouldPlay = useMemo(() => shouldPlayTutorialSoundtrack(pathname) && isFirstRunActive, [isFirstRunActive, pathname]);
+  const shouldPlay = useMemo(() => isTutorialNarrativeRoute(pathname) && isFirstRunActive, [isFirstRunActive, pathname]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -31,6 +36,11 @@ export function AcademyTutorialSoundtrackController() {
       window.removeEventListener("storage", syncState);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isTutorialNarrativeRoute(pathname)) return;
+    markTutorialSoundtrackFirstRunStarted();
+  }, [pathname]);
 
   useEffect(() => {
     if (!shouldPlay) {
