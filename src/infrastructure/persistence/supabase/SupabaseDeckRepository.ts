@@ -32,6 +32,22 @@ function createDefaultFusionDeckSlots(playerId: string): IFusionDeckSlotRow[] {
   return Array.from({ length: 2 }, (_, index) => ({ player_id: playerId, slot_index: index, card_id: null }));
 }
 
+function resolveMissingDeckCopies(deck: IDeck, collection: ICollectionCard[]): string[] {
+  const requiredByCardId = new Map<string, number>();
+  for (const slot of deck.slots) {
+    if (!slot.cardId) continue;
+    requiredByCardId.set(slot.cardId, (requiredByCardId.get(slot.cardId) ?? 0) + 1);
+  }
+  const availableByCardId = new Map(collection.map((entry) => [entry.card.id, entry.ownedCopies]));
+  const missingCardIds: string[] = [];
+  for (const [cardId, requiredCopies] of requiredByCardId.entries()) {
+    const availableCopies = availableByCardId.get(cardId) ?? 0;
+    if (availableCopies >= requiredCopies) continue;
+    missingCardIds.push(...Array.from({ length: requiredCopies - availableCopies }, () => cardId));
+  }
+  return missingCardIds;
+}
+
 export class SupabaseDeckRepository implements IDeckRepository {
   constructor(
     private readonly client: SupabaseClient,
@@ -106,6 +122,13 @@ export class SupabaseDeckRepository implements IDeckRepository {
   }
 
   async getCollection(playerId: string): Promise<ICollectionCard[]> {
+    const [collection, deck] = await Promise.all([
+      this.collectionRepository.getCollection(playerId),
+      this.getDeck(playerId),
+    ]);
+    const missingCardIds = resolveMissingDeckCopies(deck, collection);
+    if (missingCardIds.length === 0) return collection;
+    await this.collectionRepository.addCards(playerId, missingCardIds);
     return this.collectionRepository.getCollection(playerId);
   }
 }

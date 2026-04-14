@@ -17,7 +17,7 @@ describe("HubScene fallback", () => {
       render(
         <HubScene
           forceFallbackForTests
-          sections={[{ id: "home", type: "HOME", title: "Arsenal", description: "Gestiona mazos.", href: "/hub/home", isLocked: false, lockReason: null }]}
+          sections={[{ id: "home", type: "HOME", title: "Arsenal", description: "Gestiona mazos.", href: "/hub/arsenal", isLocked: false, lockReason: null }]}
           nodes={[{ id: "n1", sectionType: "HOME", districtLabel: "Distrito", positionX: 50, positionY: 50 }]}
         />,
       );
@@ -25,9 +25,10 @@ describe("HubScene fallback", () => {
       await act(async () => {
         await vi.advanceTimersByTimeAsync(HUB_NODE_TARGETING_MS + 50);
       });
-      expect(push).toHaveBeenCalledWith("/hub/home");
+      expect(push).toHaveBeenCalledWith("/hub/arsenal");
     } finally {
       vi.useRealTimers();
     }
   });
 });
+

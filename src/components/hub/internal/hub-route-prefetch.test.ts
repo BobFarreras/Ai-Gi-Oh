@@ -7,11 +7,11 @@ describe("hub-route-prefetch", () => {
     const prefetch = vi.fn();
     prefetchHubRoutes(
       { prefetch },
-      ["/hub/market", "/hub/home", "/hub/market", "/login", "https://foo.bar", "/hub/academy"],
+      ["/hub/market", "/hub/arsenal", "/hub/market", "/login", "https://foo.bar", "/hub/academy"],
     );
     expect(prefetch).toHaveBeenCalledTimes(3);
     expect(prefetch).toHaveBeenNthCalledWith(1, "/hub/market");
-    expect(prefetch).toHaveBeenNthCalledWith(2, "/hub/home");
+    expect(prefetch).toHaveBeenNthCalledWith(2, "/hub/arsenal");
     expect(prefetch).toHaveBeenNthCalledWith(3, "/hub/academy");
   });
 
@@ -19,3 +19,4 @@ describe("hub-route-prefetch", () => {
     expect(() => prefetchHubRoutes({}, ["/hub/market"])).not.toThrow();
   });
 });
+

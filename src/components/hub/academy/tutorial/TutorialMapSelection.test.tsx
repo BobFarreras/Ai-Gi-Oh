@@ -1,7 +1,11 @@
 // src/components/hub/academy/tutorial/TutorialMapSelection.test.tsx - Comprueba guía inicial de BigLog y selección exclusiva de Preparar Deck.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { TutorialMapSelection } from "@/components/hub/academy/tutorial/TutorialMapSelection";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
 
 describe("TutorialMapSelection", () => {
   it("fuerza guía inicial dejando solo un nodo seleccionable", () => {
@@ -15,5 +19,18 @@ describe("TutorialMapSelection", () => {
     );
     const targetLink = screen.getByRole("link", { name: /Abrir Preparar Deck/i });
     expect(targetLink).toHaveAttribute("href", "/a");
+  });
+
+  it("mantiene layout base sin inyectar scroll extra para desktop compacto", () => {
+    render(
+      <TutorialMapSelection
+        nodes={[
+          { id: "tutorial-arsenal-basics", order: 1, title: "Preparar Deck", description: "Desc A", kind: "ARSENAL", href: "/a", state: "AVAILABLE" },
+        ]}
+      />,
+    );
+    const scrollContainer = screen.getByTestId("tutorial-map-scroll-container");
+    expect(scrollContainer.className).toContain("overflow-y-auto");
+    expect(scrollContainer.className).not.toContain("max-height:900px");
   });
 });

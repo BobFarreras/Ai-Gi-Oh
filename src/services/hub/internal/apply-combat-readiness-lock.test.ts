@@ -5,7 +5,7 @@ import { IHubSection } from "@/core/entities/hub/IHubSection";
 import { applyCombatReadinessLock } from "@/services/hub/internal/apply-combat-readiness-lock";
 
 const BASE_SECTIONS: IHubSection[] = [
-  { id: "home", type: "HOME", title: "Arsenal", description: "", href: "/hub/home", isLocked: false, lockReason: null },
+  { id: "home", type: "HOME", title: "Arsenal", description: "", href: "/hub/arsenal", isLocked: false, lockReason: null },
   { id: "market", type: "MARKET", title: "Mercado", description: "", href: "/hub/market", isLocked: false, lockReason: null },
   { id: "training", type: "TRAINING", title: "Entrenamiento", description: "", href: "/hub/academy", isLocked: false, lockReason: null },
   { id: "story", type: "STORY", title: "Historia", description: "", href: "/hub/story", isLocked: false, lockReason: null },
@@ -37,3 +37,4 @@ describe("applyCombatReadinessLock", () => {
     expect(sections.every((section) => section.isLocked === false)).toBe(true);
   });
 });
+

@@ -20,7 +20,7 @@ describe("use-hub-node-navigation", () => {
     const { result } = renderHook(() => useHubNodeNavigation({ router: { push } }));
     act(() => {
       result.current.requestNavigation("market", "/hub/market");
-      result.current.requestNavigation("home", "/hub/home");
+      result.current.requestNavigation("home", "/hub/arsenal");
     });
     await waitFor(() => {
       expect(push).toHaveBeenCalledTimes(1);
@@ -28,3 +28,4 @@ describe("use-hub-node-navigation", () => {
     });
   });
 });
+

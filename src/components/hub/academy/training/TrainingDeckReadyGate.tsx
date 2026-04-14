@@ -7,10 +7,11 @@ export function TrainingDeckReadyGate() {
       <div className="rounded-xl border border-rose-300/45 bg-rose-950/40 p-4 text-center">
         <p className="text-sm font-black uppercase text-rose-100">Deck incompleto</p>
         <p className="mt-1 text-sm text-rose-100/90">Necesitas 20 cartas en Arsenal para entrar al combate de entrenamiento.</p>
-        <Link href="/hub/home" className="mt-3 inline-block rounded-md border border-rose-200/45 px-3 py-2 text-xs font-bold uppercase">
+        <Link href="/hub/arsenal" className="mt-3 inline-block rounded-md border border-rose-200/45 px-3 py-2 text-xs font-bold uppercase">
           Ir a Arsenal
         </Link>
       </div>
     </main>
   );
 }
+
