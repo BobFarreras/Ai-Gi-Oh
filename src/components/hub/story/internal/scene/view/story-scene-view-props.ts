@@ -31,6 +31,8 @@ export interface IStorySceneMapViewProps {
   collectingRewardVisual: { assetSrc: string; assetAlt: string; tone: "NEXUS" | "CARD" } | null;
   retreatingNodeId: string | null;
   isBusy: boolean;
+  smartActionLabel?: string;
+  canRunSmartAction?: boolean;
   canMoveSelectedNode?: boolean;
   actTransitionTargetId: number | null;
   shouldPlayActEntryAnimation?: boolean;

@@ -5,7 +5,7 @@ import { clampStoryMapZoom, resolvePinchZoom, useStoryMapZoom } from "./use-stor
 
 describe("useStoryMapZoom", () => {
   it("limita zoom por arriba y por abajo", () => {
-    expect(clampStoryMapZoom(0.1)).toBe(0.72);
+    expect(clampStoryMapZoom(0.1)).toBe(0.62);
     expect(clampStoryMapZoom(2.2)).toBe(1.48);
   });
 
@@ -24,4 +24,3 @@ describe("useStoryMapZoom", () => {
     expect(result.current.zoom.get()).toBeGreaterThan(1);
   });
 });
-

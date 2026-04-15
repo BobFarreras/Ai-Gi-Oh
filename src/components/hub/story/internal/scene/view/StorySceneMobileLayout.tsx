@@ -4,6 +4,7 @@ import { useState } from "react";
 import { StorySceneMapPane } from "@/components/hub/story/internal/scene/view/StorySceneMapPane";
 import { StoryMobileSidebarSheet } from "@/components/hub/story/internal/scene/view/StoryMobileSidebarSheet";
 import { IStorySceneMapViewProps, IStorySceneSidebarViewProps } from "./story-scene-view-props";
+import { resolveStoryMobileDetailAvailability } from "./resolve-story-mobile-detail-availability";
 
 interface IStorySceneMobileLayoutProps {
   sidebar: IStorySceneSidebarViewProps;
@@ -12,6 +13,11 @@ interface IStorySceneMobileLayoutProps {
 
 export function StorySceneMobileLayout(props: IStorySceneMobileLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const isDetailAvailable = resolveStoryMobileDetailAvailability(props.sidebar.selectedNode);
+  const mobilePrimaryActionLabel = props.map.smartActionLabel ?? "Moverse a nodo";
+  const canRunMobilePrimaryAction =
+    (props.map.canRunSmartAction ?? props.map.canMoveSelectedNode ?? false) && !props.map.isBusy;
+
   return (
     <div className="relative flex h-full w-full flex-1 overflow-hidden border-t border-cyan-900/50 bg-black font-sans">
       <StorySceneMapPane {...props.map} isMobileVerticalFlow />
@@ -23,19 +29,20 @@ export function StorySceneMobileLayout(props: IStorySceneMobileLayoutProps) {
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              aria-label="Mover al nodo seleccionado"
+              aria-label={mobilePrimaryActionLabel}
               onClick={() => props.map.onMoveSelectedNode?.()}
-              disabled={!props.map.canMoveSelectedNode || props.map.isBusy}
+              disabled={!canRunMobilePrimaryAction}
               className="pointer-events-auto rounded-xl border border-emerald-400/65 px-2 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100 disabled:cursor-not-allowed disabled:border-emerald-700/40 disabled:text-emerald-200/40"
             >
-              Mover
+              {mobilePrimaryActionLabel}
             </button>
             <button
               type="button"
               aria-label={isSidebarOpen ? "Cerrar detalle del nodo" : "Abrir detalle del nodo"}
               aria-expanded={isSidebarOpen}
+              disabled={!isDetailAvailable}
               onClick={() => setIsSidebarOpen((value) => !value)}
-              className="pointer-events-auto rounded-xl border border-cyan-400/65 px-2 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-100"
+              className="pointer-events-auto rounded-xl border border-cyan-400/65 px-2 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-100 disabled:cursor-not-allowed disabled:border-cyan-900/50 disabled:text-cyan-100/40"
             >
               Detalle
             </button>
@@ -44,7 +51,7 @@ export function StorySceneMobileLayout(props: IStorySceneMobileLayoutProps) {
       </div>
       <StoryMobileSidebarSheet
         {...props.sidebar}
-        isOpen={isSidebarOpen}
+        isOpen={isDetailAvailable && isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
     </div>

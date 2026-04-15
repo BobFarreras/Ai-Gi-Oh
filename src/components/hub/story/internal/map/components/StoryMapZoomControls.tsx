@@ -1,5 +1,5 @@
 // src/components/hub/story/internal/map/components/StoryMapZoomControls.tsx - Controles flotantes Story para centrar cámara y mutear soundtrack del mapa.
-import { DoorOpen, LocateFixed, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, LocateFixed, Volume2, VolumeX } from "lucide-react";
 
 interface IStoryMapZoomControlsProps {
   onCenterPlayerNode: () => void;
@@ -23,10 +23,9 @@ export function StoryMapZoomControls({
           type="button"
           aria-label="Salir al hub"
           onClick={onExitToHub}
-          className="flex h-10 items-center gap-1.5 rounded-lg border border-rose-400/65 bg-zinc-950/90 px-3 text-[10px] font-black uppercase tracking-[0.16em] text-rose-100 shadow-[0_0_14px_rgba(244,63,94,0.3)]"
+          className="rounded-lg border border-rose-400/65 bg-zinc-950/90 p-2.5 text-rose-100 shadow-[0_0_14px_rgba(244,63,94,0.3)]"
         >
-          <DoorOpen size={15} />
-          Salir
+          <ArrowLeft size={18} />
         </button>
         <button
           type="button"

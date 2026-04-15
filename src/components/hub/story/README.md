@@ -89,6 +89,8 @@ story/
 - `internal/scene/view/*`: layouts de presentación Story.
   En mobile se usa sidebar desplegable lateral (entrada desde la derecha), proyección visual vertical del mapa y separación de controles:
   barra superior (`salir`, `mute`, `centrar`) + barra inferior (`mover`, `detalle`) con safe-area.
+  El botón principal inferior reutiliza la acción inteligente (`smart action`) y cambia texto según el nodo seleccionado.
+  `Detalle` se deshabilita automáticamente en plataformas de tránsito (`MOVE`) sin contenido táctico.
 
 ## Reglas de mantenimiento
 - Mantener SRP: un archivo = un motivo de cambio.

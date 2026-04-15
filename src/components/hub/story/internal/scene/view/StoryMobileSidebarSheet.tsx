@@ -39,7 +39,7 @@ export function StoryMobileSidebarSheet(props: IStoryMobileSidebarSheetProps) {
               onDragEnd={(_, info) => {
                 if (shouldCloseByDrag(info)) props.onClose();
               }}
-              className="absolute bottom-[calc(env(safe-area-inset-bottom)+94px)] right-0 top-[calc(env(safe-area-inset-top)+56px)] z-[55] w-[min(86vw,420px)] overflow-hidden rounded-l-2xl border-l border-cyan-400/50 bg-black/95 pb-[env(safe-area-inset-bottom)] touch-pan-x"
+              className="absolute bottom-[calc(env(safe-area-inset-bottom)+112px)] right-0 top-[calc(env(safe-area-inset-top)+56px)] z-[55] w-[min(86vw,420px)] overflow-hidden rounded-l-2xl border-l border-cyan-400/50 bg-black/95 pb-[env(safe-area-inset-bottom)] touch-pan-x"
             >
               <div className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-cyan-300/55" />
               <StorySidebar

@@ -261,6 +261,8 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
     collectingRewardVisual,
     retreatingNodeId,
     isBusy,
+    smartActionLabel: smartAction.label,
+    canRunSmartAction: smartAction.isEnabled && !isBusy,
     canMoveSelectedNode,
     actTransitionTargetId,
     shouldPlayActEntryAnimation,

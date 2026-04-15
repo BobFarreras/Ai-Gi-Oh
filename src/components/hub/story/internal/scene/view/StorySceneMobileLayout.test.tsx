@@ -36,6 +36,8 @@ const baseMap: IStorySceneMapViewProps = {
   collectingRewardVisual: null,
   retreatingNodeId: null,
   isBusy: false,
+  smartActionLabel: "Interactuar con nodo",
+  canRunSmartAction: true,
   canMoveSelectedNode: true,
   actTransitionTargetId: null,
   onSelectNode: () => undefined,
@@ -57,13 +59,54 @@ const baseMap: IStorySceneMapViewProps = {
 };
 
 describe("StorySceneMobileLayout", () => {
-  it("elimina botón táctico duplicado y mantiene detalle funcional", () => {
-    render(<StorySceneMobileLayout sidebar={baseSidebar} map={baseMap} />);
+  it("elimina botón táctico duplicado, mantiene CTA dinámico y detalle funcional", () => {
+    const sidebarWithDuel = {
+      ...baseSidebar,
+      selectedNode: {
+        id: "story-duel-1",
+        chapter: 1,
+        duelIndex: 1,
+        title: "Duelo 1",
+        opponentName: "Rival",
+        nodeType: "DUEL" as const,
+        difficulty: "STANDARD" as const,
+        rewardNexus: 0,
+        rewardPlayerExperience: 0,
+        isBossDuel: false,
+        isCompleted: false,
+        isUnlocked: true,
+        href: "/hub/story/chapter/1/duel/1",
+      },
+    };
+    render(<StorySceneMobileLayout sidebar={sidebarWithDuel} map={baseMap} />);
     expect(screen.queryByRole("button", { name: "Abrir detalle táctico" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Centrar en el jugador" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Interactuar con nodo" })).toBeInTheDocument();
     expect(screen.getByText("sheet-closed")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Abrir detalle del nodo" }));
     expect(screen.getByText("sheet-open")).toBeInTheDocument();
   });
-});
 
+  it("deshabilita detalle en plataforma MOVE sin contenido", () => {
+    const sidebarWithMove = {
+      ...baseSidebar,
+      selectedNode: {
+        id: "story-move-1",
+        chapter: 1,
+        duelIndex: 0,
+        title: "Plataforma",
+        opponentName: "",
+        nodeType: "MOVE" as const,
+        difficulty: "STANDARD" as const,
+        rewardNexus: 0,
+        rewardPlayerExperience: 0,
+        isBossDuel: false,
+        isCompleted: false,
+        isUnlocked: true,
+        href: "#",
+      },
+    };
+    render(<StorySceneMobileLayout sidebar={sidebarWithMove} map={baseMap} />);
+    expect(screen.getByRole("button", { name: "Abrir detalle del nodo" })).toBeDisabled();
+  });
+});
