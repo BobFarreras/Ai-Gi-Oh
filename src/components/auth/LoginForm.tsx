@@ -101,7 +101,7 @@ export function LoginForm() {
         className="group relative z-10 mt-10 flex h-16 w-full items-center justify-center overflow-hidden bg-cyan-600 px-8 font-mono text-sm font-black uppercase tracking-[0.25em] text-black transition-all hover:bg-cyan-400 hover:shadow-[0_0_35px_rgba(6,182,212,0.7)] disabled:cursor-not-allowed disabled:bg-cyan-900/60 disabled:text-cyan-600 disabled:opacity-70"
         style={{ WebkitClipPath: "polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px)" }}
       >
-        <div className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/40 transition-transform duration-500 ease-out group-hover:translate-x-full" />
+        <span aria-hidden className="auth-cta-shine" />
         <span className="relative z-10 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">{isPending ? "Conectando al Core..." : "Entrar al Hub"}</span>
       </motion.button>
 
