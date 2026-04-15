@@ -42,7 +42,7 @@ export function RecoverPasswordForm() {
       {errorMessage ? <AuthErrorBanner message={errorMessage} /> : null}
       {feedbackMessage ? <p className="mt-6 border border-cyan-800/70 bg-cyan-950/40 p-3 font-mono text-xs uppercase tracking-[0.12em] text-cyan-200">{feedbackMessage}</p> : null}
       <motion.button variants={buildAuthPieceVariants(0.25)} type="submit" aria-label="Enviar enlace de recuperación" disabled={isPending} className="group relative z-10 mt-8 flex h-14 w-full items-center justify-center overflow-hidden bg-cyan-600 px-8 font-mono text-sm font-black uppercase tracking-[0.22em] text-black transition-all hover:bg-cyan-400 hover:shadow-[0_0_35px_rgba(6,182,212,0.7)] disabled:cursor-not-allowed disabled:bg-cyan-900/60 disabled:text-cyan-600 disabled:opacity-70">
-        <div className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/40 transition-transform duration-500 ease-out group-hover:translate-x-full" />
+        <span aria-hidden className="auth-cta-shine" />
         <span className="relative z-10">{isPending ? "Enviando..." : "Enviar enlace"}</span>
       </motion.button>
       <motion.p variants={buildAuthPieceVariants(0.1)} className="mt-7 text-center font-mono text-xs uppercase tracking-widest text-cyan-500/70">

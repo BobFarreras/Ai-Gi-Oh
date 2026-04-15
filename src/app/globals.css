@@ -73,6 +73,20 @@
   100% { transform: translateY(-120%); opacity: 0; }
 }
 
+@keyframes landingButtonShine {
+  0% { transform: translateX(-210%) skewX(-18deg); opacity: 0; }
+  18% { opacity: 0.72; }
+  82% { opacity: 0.72; }
+  100% { transform: translateX(230%) skewX(-18deg); opacity: 0; }
+}
+
+@keyframes authButtonShine {
+  0% { transform: translateX(-220%) skewX(-16deg); opacity: 0; }
+  16% { opacity: 0.9; }
+  78% { opacity: 0.9; }
+  100% { transform: translateX(235%) skewX(-16deg); opacity: 0; }
+}
+
 body {
   background:
     radial-gradient(circle at 18% 22%, rgba(56, 189, 248, 0.24), transparent 46%),
@@ -313,6 +327,58 @@ body {
   background: linear-gradient(180deg, rgba(34, 211, 238, 0.95), rgba(59, 130, 246, 0.9));
   border-radius: 999px;
   border: 1px solid rgba(8, 145, 178, 0.35);
+}
+
+.landing-cta-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.landing-cta-shine::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -55%;
+  width: 46%;
+  opacity: 0;
+}
+
+.landing-cta-primary::before {
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.72) 50%, transparent 100%);
+}
+
+.landing-cta-secondary::before {
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+}
+
+.group:hover .landing-cta-shine::before {
+  animation: landingButtonShine 720ms ease-out;
+}
+
+.auth-cta-shine {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.auth-cta-shine::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -52%;
+  width: 42%;
+  opacity: 0;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.82) 50%, transparent 100%);
+  filter: blur(0.2px);
+}
+
+.group:hover .auth-cta-shine::before {
+  animation: authButtonShine 920ms ease-out infinite;
 }
 
 

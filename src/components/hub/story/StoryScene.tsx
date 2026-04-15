@@ -234,6 +234,10 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
       setPendingPostWinRetreatNodeId(null);
     },
   });
+  const exitToHub = (): void => {
+    sceneSfx.playButtonClick();
+    router.push("/hub");
+  };
   const sidebarProps: IStorySceneSidebarViewProps = {
     briefing,
     selectedNode,
@@ -242,10 +246,7 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
     interactionFeedback,
     smartActionLabel: smartAction.label,
     canRunSmartAction: smartAction.isEnabled && !isBusy,
-    onExitToHub: () => {
-      sceneSfx.playButtonClick();
-      router.push("/hub");
-    },
+    onExitToHub: exitToHub,
     onSmartAction: () => { sceneSfx.playButtonClick(); void handleSmartAction(); },
     onDeselect: () => { sceneSfx.playButtonClick(); setSelectedNodeId(null); },
   };
@@ -260,6 +261,8 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
     collectingRewardVisual,
     retreatingNodeId,
     isBusy,
+    smartActionLabel: smartAction.label,
+    canRunSmartAction: smartAction.isEnabled && !isBusy,
     canMoveSelectedNode,
     actTransitionTargetId,
     shouldPlayActEntryAnimation,
@@ -273,6 +276,7 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
       sceneSfx.playButtonClick();
       setCenterRequestKey((value) => value + 1);
     },
+    onExitToHub: exitToHub,
     isSoundtrackMuted: isMapSoundtrackMuted,
     onToggleSoundtrackMute: () => {
       sceneSfx.playButtonClick();

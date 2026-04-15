@@ -66,30 +66,30 @@ export function TutorialNodeCard({ node, isForcedSelectable = false, isForcedDis
       <div className="pointer-events-none absolute left-2 top-2 h-4 w-4 border-l border-t border-cyan-300/50" />
       <div className="pointer-events-none absolute bottom-2 right-2 h-4 w-4 border-b border-r border-cyan-300/50" />
 
-      <div className="relative h-[36%] min-h-[108px] w-full overflow-hidden border-b border-slate-700/75">
+      <div className="relative h-[36%] min-h-[108px] w-full overflow-hidden border-b border-slate-700/75 [@media(min-width:1024px)_and_(max-height:900px)]:h-[28%] [@media(min-width:1024px)_and_(max-height:900px)]:min-h-[76px]">
         <TutorialNodeCardMedia node={node} />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#020b16] via-[#031322]/35 to-transparent" />
       </div>
 
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-between p-3 sm:p-4 lg:p-5">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-between p-3 sm:p-4 lg:p-5 [@media(min-width:1024px)_and_(max-height:900px)]:p-3">
         <div className="text-center">
           <header className="flex items-center justify-between gap-2">
             <p className={`text-[10px] font-black uppercase tracking-[0.22em] lg:text-[11px] ${accentTone}`}>SYS.{node.kind}</p>
             <div className={`h-2 w-2 rounded-full ${isCompleted ? "bg-emerald-300" : "bg-cyan-300"} shadow-[0_0_10px_currentColor]`} />
           </header>
 
-          <h2 className={`mt-2 text-2xl font-black uppercase tracking-[0.05em] sm:text-3xl lg:text-[1.75rem] ${textTone}`}>{node.title}</h2>
-          <p className="mx-auto mt-2 max-w-[40ch] text-sm font-semibold leading-relaxed text-slate-200 sm:text-base lg:text-sm">{node.description}</p>
+          <h2 className={`mt-2 text-2xl font-black uppercase tracking-[0.05em] sm:text-3xl lg:text-[1.75rem] [@media(min-width:1024px)_and_(max-height:900px)]:mt-1 [@media(min-width:1024px)_and_(max-height:900px)]:text-xl ${textTone}`}>{node.title}</h2>
+          <p className="mx-auto mt-2 max-w-[40ch] text-sm font-semibold leading-relaxed text-slate-200 sm:text-base lg:text-sm [@media(min-width:1024px)_and_(max-height:900px)]:mt-1 [@media(min-width:1024px)_and_(max-height:900px)]:text-xs [@media(min-width:1024px)_and_(max-height:900px)]:leading-tight [@media(min-width:1024px)_and_(max-height:900px)]:max-h-[1.1rem] [@media(min-width:1024px)_and_(max-height:900px)]:overflow-hidden [@media(min-width:1024px)_and_(max-height:900px)]:text-ellipsis [@media(min-width:1024px)_and_(max-height:900px)]:whitespace-nowrap [@media(min-width:1024px)_and_(max-height:780px)]:hidden">{node.description}</p>
         </div>
 
-        <footer className="mt-3 border-t border-slate-700/60 pt-2.5 lg:pt-3">
+        <footer className="mt-3 border-t border-slate-700/60 pt-2.5 lg:pt-3 [@media(min-width:1024px)_and_(max-height:900px)]:mt-2 [@media(min-width:1024px)_and_(max-height:900px)]:pt-2">
           {isLocked ? (
-            <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+            <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-500 [@media(min-width:1024px)_and_(max-height:900px)]:text-[10px]">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
               {isForcedDisabled ? "En espera del tutorial" : "Acceso bloqueado"}
             </span>
           ) : (
-            <span className={`flex items-center justify-between rounded-md bg-white/5 px-3 py-2 text-xs font-black uppercase tracking-[0.16em] transition-colors group-hover:bg-white/10 ${accentTone}`}>
+            <span className={`flex items-center justify-between rounded-md bg-white/5 px-3 py-2 text-xs font-black uppercase tracking-[0.16em] transition-colors group-hover:bg-white/10 [@media(min-width:1024px)_and_(max-height:900px)]:px-2.5 [@media(min-width:1024px)_and_(max-height:900px)]:py-1.5 [@media(min-width:1024px)_and_(max-height:900px)]:text-[10px] ${accentTone}`}>
               <span>{isCompleted ? "Revisar nodo" : "Iniciar nodo"}</span>
               <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
             </span>

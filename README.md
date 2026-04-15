@@ -133,6 +133,10 @@ Regla de dependencia: `components -> services/use-cases -> core`.
 1. [docs/refactor/GUIA-REFAC-STEP-BY-STEP.md](./docs/refactor/GUIA-REFAC-STEP-BY-STEP.md)
 2. [docs/DEUDA_TECNICA.md](./docs/DEUDA_TECNICA.md)
 
+### Operación y releases
+
+1. [docs/GUIA_FLUJO_PRODUCCION.md](./docs/GUIA_FLUJO_PRODUCCION.md)
+
 ### Guías por módulo en `src/`
 
 1. [src/app/README.md](./src/app/README.md)

@@ -9,7 +9,7 @@ function createSection(overrides?: Partial<IHubSection>): IHubSection {
     type: "HOME",
     title: "Arsenal",
     description: "Gestiona mazos.",
-    href: "/hub/home",
+    href: "/hub/arsenal",
     isLocked: false,
     lockReason: null,
     ...overrides,
@@ -18,10 +18,11 @@ function createSection(overrides?: Partial<IHubSection>): IHubSection {
 
 describe("hub-node-interaction", () => {
   it("resuelve navegación cuando la sección está desbloqueada", () => {
-    expect(resolveHubNodeInteraction(createSection())).toEqual({ kind: "navigate", href: "/hub/home" });
+    expect(resolveHubNodeInteraction(createSection())).toEqual({ kind: "navigate", href: "/hub/arsenal" });
   });
 
   it("resuelve bloqueo cuando la sección está cerrada", () => {
     expect(resolveHubNodeInteraction(createSection({ isLocked: true }))).toEqual({ kind: "locked" });
   });
 });
+

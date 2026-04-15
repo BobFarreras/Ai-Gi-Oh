@@ -8,7 +8,7 @@ import { buildStoryNodePositionMap, resolveStoryPathSegments, resolveStoryNodeTo
 import { rotateStoryPositionMapForMobile, resolveStoryCanvasSize } from "@/components/hub/story/internal/map/layout/story-circuit-map-geometry";
 import { StoryMapZoomControls } from "./internal/map/components/StoryMapZoomControls";
 import { StoryCircuitCanvas } from "./internal/map/components/StoryCircuitCanvas";
-import { useStoryMapZoom } from "./internal/map/hooks/use-story-map-zoom";
+import { clampStoryMapZoom, useStoryMapZoom } from "./internal/map/hooks/use-story-map-zoom";
 import { useStoryCameraBounds } from "./internal/map/hooks/use-story-camera-bounds";
 import { useStoryCircuitMotion } from "./internal/map/hooks/use-story-circuit-motion";
 import { resolveStoryNodeSideOffsetPx } from "./internal/map/constants/story-map-geometry";
@@ -32,9 +32,15 @@ interface StoryCircuitMapProps {
   centerRequestKey?: number;
   isSoundtrackMuted?: boolean;
   onToggleSoundtrackMute?: () => void;
+  onExitToHub?: () => void;
   onSelectNode: (nodeId: string | null) => void;
   onRewardCollectAnimationComplete?: () => void;
   onRetreatAnimationComplete?: () => void;
+}
+
+interface IStoryTouchListLike {
+  length: number;
+  item: (index: number) => { clientX: number; clientY: number } | null;
 }
 
 function resolveAvatarSideOffset(
@@ -66,18 +72,20 @@ export function StoryCircuitMap({
   centerRequestKey = 0,
   isSoundtrackMuted = false,
   onToggleSoundtrackMute,
+  onExitToHub,
   onSelectNode,
   onRewardCollectAnimationComplete,
   onRetreatAnimationComplete,
 }: StoryCircuitMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const pinchDistanceRef = useRef<number | null>(null);
   const basePositionMap = useMemo(() => buildStoryNodePositionMap(nodes), [nodes]);
   const positionMap = useMemo(
     () => (isMobileVerticalFlow ? rotateStoryPositionMapForMobile(basePositionMap) : basePositionMap),
     [basePositionMap, isMobileVerticalFlow],
   );
   const canvasSize = useMemo(() => resolveStoryCanvasSize(positionMap), [positionMap]);
-  const { zoom, setZoom, applyWheelZoom } = useStoryMapZoom();
+  const { zoom, setZoom, applyWheelZoom, applyPinchZoom } = useStoryMapZoom();
   const segments = useMemo(() => resolveStoryPathSegments(nodes, positionMap), [nodes, positionMap]);
   const avatarTargetNodeId = avatarVisualTarget?.nodeId ?? currentNodeId;
   const avatarNode = nodes.find((node) => node.id === avatarTargetNodeId) ?? nodes.find((node) => node.id === currentNodeId) ?? nodes.find((node) => node.id === `story-ch${nodes[0]?.chapter ?? 1}-player-start`) ?? nodes.find((node) => node.isUnlocked) ?? nodes[0];
@@ -113,15 +121,46 @@ export function StoryCircuitMap({
   });
   const mapScale = useTransform(() => zoom.get() * cinematicScale.get());
   const applyCameraBounds = useStoryCameraBounds({ mapContainerRef, canvasWidth: canvasSize.width, canvasHeight: canvasSize.height, getScale: () => zoom.get() * cinematicScale.get(), cameraX, cameraY });
+
+  /**
+   * Permite zoom nativo con dos dedos en móvil sin tocar la lógica de movimiento/selección.
+   */
+  const handlePinchZoom = (touches: IStoryTouchListLike): void => {
+    if (touches.length !== 2) {
+      pinchDistanceRef.current = null;
+      return;
+    }
+    const [firstTouch, secondTouch] = [touches.item(0), touches.item(1)];
+    if (!firstTouch || !secondTouch) return;
+    const currentDistance = Math.hypot(firstTouch.clientX - secondTouch.clientX, firstTouch.clientY - secondTouch.clientY);
+    const previousDistance = pinchDistanceRef.current;
+    pinchDistanceRef.current = currentDistance;
+    if (!previousDistance) return;
+    const previousZoom = zoom.get();
+    const nextZoom = applyPinchZoom(previousDistance, currentDistance);
+    keepCameraCenterOnZoom(previousZoom, clampStoryMapZoom(nextZoom));
+    applyCameraBounds();
+  };
+
   return (
     <div
       ref={mapContainerRef}
       className="relative h-full w-full cursor-grab overflow-hidden active:cursor-grabbing"
+      style={isMobileVerticalFlow ? { touchAction: "none" } : undefined}
       onWheel={(event) => {
         const previousZoom = zoom.get();
         const nextZoom = applyWheelZoom(event.deltaY);
         keepCameraCenterOnZoom(previousZoom, nextZoom);
         applyCameraBounds();
+      }}
+      onTouchStart={(event) => handlePinchZoom(event.touches)}
+      onTouchMove={(event) => {
+        if (event.touches.length === 2) event.preventDefault();
+        handlePinchZoom(event.touches);
+      }}
+      onTouchEnd={(event) => handlePinchZoom(event.touches)}
+      onTouchCancel={() => {
+        pinchDistanceRef.current = null;
       }}
       onClick={() => {
         if (!isInteractionLocked) onSelectNode(null);
@@ -160,13 +199,13 @@ export function StoryCircuitMap({
         onCameraDrag={applyCameraBounds}
         onRetreatAnimationComplete={onRetreatAnimationComplete}
       />
-      {!isMobileVerticalFlow ? (
-        <StoryMapZoomControls
-          onCenterPlayerNode={centerCameraOnAvatarNode}
-          isSoundtrackMuted={isSoundtrackMuted}
-          onToggleSoundtrackMute={onToggleSoundtrackMute ?? (() => undefined)}
-        />
-      ) : null}
+      <StoryMapZoomControls
+        onCenterPlayerNode={centerCameraOnAvatarNode}
+        isSoundtrackMuted={isSoundtrackMuted}
+        onToggleSoundtrackMute={onToggleSoundtrackMute ?? (() => undefined)}
+        isMobileVerticalFlow={isMobileVerticalFlow}
+        onExitToHub={onExitToHub}
+      />
     </div>
   );
 }

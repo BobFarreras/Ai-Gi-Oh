@@ -9,10 +9,16 @@ function unique(values: string[]): string[] {
   return Array.from(new Set(values));
 }
 
-export async function loadCardsByIds(client: SupabaseClient, cardIds: string[]): Promise<Map<string, ICard>> {
+interface ILoadCardsByIdsOptions {
+  onlyActive?: boolean;
+}
+
+export async function loadCardsByIds(client: SupabaseClient, cardIds: string[], options: ILoadCardsByIdsOptions = {}): Promise<Map<string, ICard>> {
   const normalizedIds = unique(cardIds);
   if (normalizedIds.length === 0) return new Map<string, ICard>();
-  const { data, error } = await client.from("cards_catalog").select(CARD_CATALOG_SELECT).in("id", normalizedIds).eq("is_active", true);
+  const onlyActive = options.onlyActive ?? true;
+  const query = client.from("cards_catalog").select(CARD_CATALOG_SELECT).in("id", normalizedIds);
+  const { data, error } = onlyActive ? await query.eq("is_active", true) : await query;
   if (error) throw new ValidationError("No se pudo cargar el catálogo de cartas.");
   const rows = (data ?? []) as ICardCatalogRow[];
   return new Map<string, ICard>(rows.map((row) => [row.id, mapCardCatalogRowToCard(row)]));

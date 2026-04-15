@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ACADEMY_TUTORIAL_MAP_ROUTE } from "@/core/constants/routes/academy-routes";
 import { postTutorialRewardClaim } from "@/services/tutorial/tutorial-node-progress-client";
 import { TutorialNodeState } from "@/core/entities/tutorial/ITutorialMapNode";
+import { markTutorialSoundtrackFirstRunFinished } from "@/components/hub/academy/tutorial/internal/tutorial-soundtrack-session";
 
 interface ITutorialRewardClientProps {
   rewardNodeState: TutorialNodeState;
@@ -25,6 +26,7 @@ export function TutorialRewardClient({ rewardNodeState }: ITutorialRewardClientP
     setIsLoading(true);
     try {
       const result = await postTutorialRewardClaim();
+      if (result.applied) markTutorialSoundtrackFirstRunFinished();
       setStatus(result.applied ? `Recompensa aplicada: +${result.rewardNexus} Nexus.` : "La recompensa ya estaba reclamada.");
     } catch {
       setStatus("No se pudo reclamar la recompensa final.");
