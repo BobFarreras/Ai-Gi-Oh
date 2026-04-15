@@ -10,7 +10,7 @@ interface IStoryMobileSidebarSheetProps extends IStorySceneSidebarViewProps {
 }
 
 function shouldCloseByDrag(info: PanInfo): boolean {
-  return info.offset.y > 120 || info.velocity.y > 520;
+  return info.offset.x > 96 || info.velocity.x > 460;
 }
 
 export function StoryMobileSidebarSheet(props: IStoryMobileSidebarSheetProps) {
@@ -26,20 +26,20 @@ export function StoryMobileSidebarSheet(props: IStoryMobileSidebarSheetProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 z-40 bg-black/55"
+              className="absolute inset-0 z-[45] bg-black/45"
             />
             <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 320, damping: 30 }}
-              drag="y"
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={{ top: 0, bottom: 0.22 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={{ left: 0, right: 0.2 }}
               onDragEnd={(_, info) => {
                 if (shouldCloseByDrag(info)) props.onClose();
               }}
-              className="absolute inset-x-0 bottom-0 z-50 h-[min(78dvh,820px)] overflow-hidden rounded-t-2xl border-t border-cyan-400/50 bg-black/95 pb-[env(safe-area-inset-bottom)] touch-pan-y"
+              className="absolute bottom-[calc(env(safe-area-inset-bottom)+94px)] right-0 top-[calc(env(safe-area-inset-top)+56px)] z-[55] w-[min(86vw,420px)] overflow-hidden rounded-l-2xl border-l border-cyan-400/50 bg-black/95 pb-[env(safe-area-inset-bottom)] touch-pan-x"
             >
               <div className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-cyan-300/55" />
               <StorySidebar
@@ -51,6 +51,7 @@ export function StoryMobileSidebarSheet(props: IStoryMobileSidebarSheetProps) {
                 smartActionLabel={props.smartActionLabel}
                 canRunSmartAction={props.canRunSmartAction}
                 isCompactMode
+                shouldShowExitButton={false}
                 onExitToHub={props.onExitToHub}
                 onSmartAction={props.onSmartAction}
                 onDeselect={props.onDeselect}
