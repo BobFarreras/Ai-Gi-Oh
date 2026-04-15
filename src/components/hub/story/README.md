@@ -87,7 +87,10 @@ story/
 - `internal/scene/transitions/*`: transición visual post-duelo al volver desde combate.
   Incluye entrada por portal al cambiar de acto (spawn pequeño -> crecer -> desplazamiento al nodo destino del acto).
 - `internal/scene/view/*`: layouts de presentación Story.
-  En mobile se usa sidebar desplegable y proyección visual vertical del mapa con el mismo motor.
+  En mobile se usa sidebar desplegable lateral (entrada desde la derecha), proyección visual vertical del mapa y separación de controles:
+  barra superior (`salir`, `mute`, `centrar`) + barra inferior (`mover`, `detalle`) con safe-area.
+  El botón principal inferior reutiliza la acción inteligente (`smart action`) y cambia texto según el nodo seleccionado.
+  `Detalle` se deshabilita automáticamente en plataformas de tránsito (`MOVE`) sin contenido táctico.
 
 ## Reglas de mantenimiento
 - Mantener SRP: un archivo = un motivo de cambio.
@@ -109,6 +112,7 @@ story/
 11. Antes de iniciar combate Story se ejecuta coin toss y su resultado define `starterPlayerId`.
 12. En nodos `EVENT`, la escena reproduce `soundtrack` del evento durante el diálogo y, al cerrar, dispara SFX de finalización (`finish-event`).
 13. En transición entre actos, el avatar aparece en el nodo portal del acto, hace animación de escala y luego se mueve al nodo objetivo (inicio al avanzar, último progreso al retroceder).
+14. En móvil, el zoom del mapa soporta gesto `pinch` con dos dedos manteniendo el encuadre de cámara.
 
 ## Herramientas de depuración
 - `POST /api/story/world/reset`: reinicia cursor Story al nodo inicial y limpia estado compacto (visitados/interacciones) para reproducir pruebas del mapa.

@@ -6,7 +6,7 @@ import { IHubSection } from "@/core/entities/hub/IHubSection";
 import { HubSceneFallback2D } from "./HubSceneFallback2D";
 
 const SECTIONS: IHubSection[] = [
-  { id: "home", type: "HOME", title: "Arsenal", description: "Gestiona mazos y perfil.", href: "/hub/home", isLocked: false, lockReason: null },
+  { id: "home", type: "HOME", title: "Arsenal", description: "Gestiona mazos y perfil.", href: "/hub/arsenal", isLocked: false, lockReason: null },
   {
     id: "story",
     type: "STORY",
@@ -28,7 +28,7 @@ describe("HubSceneFallback2D", () => {
     const onNavigate = vi.fn();
     render(<HubSceneFallback2D sections={SECTIONS} nodes={NODES} onNavigate={onNavigate} activeNodeId={null} isNavigationBusy={false} />);
     fireEvent.click(screen.getByRole("button", { name: "Abrir Arsenal" }));
-    expect(onNavigate).toHaveBeenCalledWith("home-node", "/hub/home");
+    expect(onNavigate).toHaveBeenCalledWith("home-node", "/hub/arsenal");
   });
 
   it("muestra lockReason al interactuar con sección bloqueada", () => {
@@ -39,3 +39,4 @@ describe("HubSceneFallback2D", () => {
     expect(onNavigate).not.toHaveBeenCalled();
   });
 });
+

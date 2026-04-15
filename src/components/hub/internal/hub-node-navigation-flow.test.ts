@@ -27,7 +27,7 @@ describe("hub-node-navigation-flow", () => {
     const next = reduceHubNodeNavigation(state, {
       type: "NODE_SELECTED",
       nodeId: "home",
-      href: "/hub/home",
+      href: "/hub/arsenal",
     });
     expect(next).toEqual(state);
   });
@@ -83,9 +83,10 @@ describe("hub-node-navigation-flow", () => {
     const state = reduceHubNodeNavigation(createIdleHubNavigationState(), {
       type: "NODE_SELECTED",
       nodeId: "home",
-      href: "/hub/home",
+      href: "/hub/arsenal",
     });
     const next = reduceHubNodeNavigation(state, { type: "RESET" });
     expect(next).toEqual(createIdleHubNavigationState());
   });
 });
+

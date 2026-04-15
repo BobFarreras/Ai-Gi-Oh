@@ -1,17 +1,52 @@
 // src/components/hub/story/internal/map/components/StoryMapZoomControls.tsx - Controles flotantes Story para centrar cámara y mutear soundtrack del mapa.
-import { LocateFixed, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, LocateFixed, Volume2, VolumeX } from "lucide-react";
 
 interface IStoryMapZoomControlsProps {
   onCenterPlayerNode: () => void;
   isSoundtrackMuted: boolean;
   onToggleSoundtrackMute: () => void;
+  isMobileVerticalFlow?: boolean;
+  onExitToHub?: () => void;
 }
 
 export function StoryMapZoomControls({
   onCenterPlayerNode,
   isSoundtrackMuted,
   onToggleSoundtrackMute,
+  isMobileVerticalFlow = false,
+  onExitToHub,
 }: IStoryMapZoomControlsProps) {
+  if (isMobileVerticalFlow) {
+    return (
+      <div className="absolute left-3 top-[calc(env(safe-area-inset-top)+10px)] z-[60] flex items-center gap-2">
+        <button
+          type="button"
+          aria-label="Salir al hub"
+          onClick={onExitToHub}
+          className="rounded-lg border border-rose-400/65 bg-zinc-950/90 p-2.5 text-rose-100 shadow-[0_0_14px_rgba(244,63,94,0.3)]"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <button
+          type="button"
+          aria-label={isSoundtrackMuted ? "Activar sonido del mapa" : "Silenciar sonido del mapa"}
+          onClick={onToggleSoundtrackMute}
+          className="rounded-lg border border-cyan-500/55 bg-zinc-950/90 p-2.5 text-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.25)]"
+        >
+          {isSoundtrackMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+        </button>
+        <button
+          type="button"
+          aria-label="Centrar en el jugador"
+          onClick={onCenterPlayerNode}
+          className="rounded-lg border border-emerald-500/60 bg-zinc-950/90 p-2.5 text-emerald-200 shadow-[0_0_12px_rgba(16,185,129,0.25)]"
+        >
+          <LocateFixed size={18} />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="absolute bottom-6 right-6 z-50 flex items-center gap-3">
       <button

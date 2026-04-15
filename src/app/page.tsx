@@ -84,10 +84,11 @@ export default function HomePage() {
 
                 <motion.footer variants={itemVariants} className="flex w-full max-w-3xl flex-shrink-0 flex-col items-center justify-center gap-4 sm:flex-row">
                   <Link href="/register" onClick={playButtonClick} className="group relative flex h-14 w-full items-center justify-center overflow-hidden bg-cyan-500 px-4 font-mono text-xs font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-cyan-400 hover:shadow-[0_0_30px_rgba(6,182,212,0.8)] sm:h-16 sm:w-1/2 sm:px-8 sm:text-sm" style={{ clipPath: "polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)" }}>
-                    <div className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/40 transition-transform duration-500 ease-out group-hover:translate-x-full" />
+                    <span aria-hidden className="landing-cta-shine landing-cta-primary" />
                     <span>Compilar ID</span>
                   </Link>
-                  <Link href="/login" onClick={playButtonClick} className="relative flex h-14 w-full items-center justify-center border border-cyan-500/50 bg-black/60 px-4 font-mono text-xs font-bold uppercase tracking-[0.2em] text-cyan-400 backdrop-blur-md transition-all hover:border-cyan-300 hover:bg-cyan-900/40 hover:text-cyan-200 sm:h-16 sm:w-1/2 sm:px-8 sm:text-sm" style={{ clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))" }}>
+                  <Link href="/login" onClick={playButtonClick} className="group relative flex h-14 w-full items-center justify-center overflow-hidden border border-cyan-500/50 bg-black/60 px-4 font-mono text-xs font-bold uppercase tracking-[0.2em] text-cyan-400 backdrop-blur-md transition-all hover:border-cyan-300 hover:bg-cyan-900/40 hover:text-cyan-200 sm:h-16 sm:w-1/2 sm:px-8 sm:text-sm" style={{ clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))" }}>
+                    <span aria-hidden className="landing-cta-shine landing-cta-secondary" />
                     Conexión Red
                   </Link>
                 </motion.footer>

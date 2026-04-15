@@ -10,7 +10,7 @@ function createSection(overrides?: Partial<IHubSection>): IHubSection {
     type: "HOME",
     title: "Arsenal",
     description: "Gestiona mazos y perfil.",
-    href: "/hub/home",
+    href: "/hub/arsenal",
     isLocked: false,
     lockReason: null,
     ...overrides,
@@ -68,3 +68,4 @@ describe("HubNodeActionPanel", () => {
     expect(button).toBeDisabled();
   });
 });
+

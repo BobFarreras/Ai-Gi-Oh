@@ -39,6 +39,7 @@ export class SupabaseCardCollectionRepository implements ICardCollectionReposito
     const cardsById = await loadCardsByIds(
       this.client,
       collectionRows.map((row) => row.card_id),
+      { onlyActive: false },
     );
     return collectionRows
       .map((row) => {

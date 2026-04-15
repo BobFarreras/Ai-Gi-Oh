@@ -3,8 +3,9 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ONBOARDING_AUDIO_CATALOG } from "@/components/hub/onboarding/internal/onboarding-audio-catalog";
+import { TUTORIAL_QUICK_COMPLETE_OPENED_EVENT } from "@/components/hub/academy/tutorial/internal/tutorial-quick-complete-events";
 
 interface ITutorialMapGuideOverlayProps {
   isVisible: boolean;
@@ -20,14 +21,23 @@ function playGuideMovementSfx(): void {
  * Guía inicial: obliga al usuario a iniciar por Preparar Deck para arrancar el flujo tutorial.
  */
 export function TutorialMapGuideOverlay({ isVisible }: ITutorialMapGuideOverlayProps) {
+  const [isDismissedByQuickComplete, setIsDismissedByQuickComplete] = useState(false);
+
   useEffect(() => {
     if (!isVisible) return;
     playGuideMovementSfx();
   }, [isVisible]);
 
-  if (!isVisible) return null;
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const dismissGuide = () => setIsDismissedByQuickComplete(true);
+    window.addEventListener(TUTORIAL_QUICK_COMPLETE_OPENED_EVENT, dismissGuide);
+    return () => window.removeEventListener(TUTORIAL_QUICK_COMPLETE_OPENED_EVENT, dismissGuide);
+  }, []);
+
+  if (!isVisible || isDismissedByQuickComplete) return null;
   return (
-    <aside className="pointer-events-none fixed inset-x-0 bottom-3 z-[120] flex justify-center px-3 sm:justify-end sm:px-6">
+    <aside className="pointer-events-none fixed inset-x-0 bottom-[calc(8.6rem+env(safe-area-inset-bottom))] z-[180] flex justify-center px-3 lg:bottom-3 lg:z-[120] lg:justify-end lg:px-6">
       <div className="flex w-full max-w-[min(96vw,740px)] flex-col items-center sm:max-w-[min(44vw,640px)]">
         <motion.div
           initial={{ opacity: 0, x: 160, scale: 0.88 }}
