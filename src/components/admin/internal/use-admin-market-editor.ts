@@ -4,26 +4,15 @@
 import { useMemo, useState } from "react";
 import { deleteAdminPack, fetchAdminCatalogSnapshot, saveAdminListing, saveAdminPack } from "@/components/admin/admin-catalog-api";
 import { addPoolEntry, createEmptyPackDraft, createListingCommand, createListingDraft, createPackCommand, createPackDraft, IAdminMarketListingDraft, IAdminMarketPackDraft } from "@/components/admin/internal/admin-market-drafts";
+import { resolveFirstCardId, resolveFirstPackId, toPreviewIdsText } from "@/components/admin/internal/admin-market-editor-helpers";
 import { IAdminCatalogSnapshot } from "@/core/entities/admin/IAdminCatalogSnapshot";
-
-function firstCardId(snapshot: IAdminCatalogSnapshot): string {
-  return snapshot.cards[0]?.id ?? "";
-}
-
-function firstPackId(snapshot: IAdminCatalogSnapshot): string {
-  return snapshot.packs[0]?.id ?? "";
-}
-
-function toPreviewIdsText(poolEntries: IAdminMarketPackDraft["poolEntries"]): string {
-  return poolEntries.map((entry) => entry.cardId).filter((cardId) => cardId.trim().length > 0).join(",");
-}
 
 export function useAdminMarketEditor(initialSnapshot: IAdminCatalogSnapshot) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [tab, setTab] = useState<"listings" | "packs">("listings");
-  const [selectedCardId, setSelectedCardId] = useState(firstCardId(initialSnapshot));
-  const [selectedPackId, setSelectedPackId] = useState(firstPackId(initialSnapshot));
-  const [listingDraft, setListingDraft] = useState<IAdminMarketListingDraft>(() => createListingDraft(firstCardId(initialSnapshot), initialSnapshot.listings.find((entry) => entry.cardId === firstCardId(initialSnapshot)) ?? null));
+  const [selectedCardId, setSelectedCardId] = useState(resolveFirstCardId(initialSnapshot));
+  const [selectedPackId, setSelectedPackId] = useState(resolveFirstPackId(initialSnapshot));
+  const [listingDraft, setListingDraft] = useState<IAdminMarketListingDraft>(() => createListingDraft(resolveFirstCardId(initialSnapshot), initialSnapshot.listings.find((entry) => entry.cardId === resolveFirstCardId(initialSnapshot)) ?? null));
   const [packDraft, setPackDraft] = useState<IAdminMarketPackDraft>(() => initialSnapshot.packs[0] ? createPackDraft(initialSnapshot.packs[0]) : createEmptyPackDraft());
   const [isPackEditMode, setIsPackEditMode] = useState(initialSnapshot.packs.length === 0);
   const [isBusy, setIsBusy] = useState(false);
@@ -37,8 +26,8 @@ export function useAdminMarketEditor(initialSnapshot: IAdminCatalogSnapshot) {
     try {
       const next = await fetchAdminCatalogSnapshot();
       setSnapshot(next);
-      const nextCardId = next.cards.some((card) => card.id === selectedCardId) ? selectedCardId : firstCardId(next);
-      const nextPackId = next.packs.some((pack) => pack.id === selectedPackId) ? selectedPackId : firstPackId(next);
+      const nextCardId = next.cards.some((card) => card.id === selectedCardId) ? selectedCardId : resolveFirstCardId(next);
+      const nextPackId = next.packs.some((pack) => pack.id === selectedPackId) ? selectedPackId : resolveFirstPackId(next);
       setSelectedCardId(nextCardId);
       setSelectedPackId(nextPackId);
       setListingDraft(createListingDraft(nextCardId, next.listings.find((entry) => entry.cardId === nextCardId) ?? null));
