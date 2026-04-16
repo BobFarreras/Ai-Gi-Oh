@@ -4,7 +4,6 @@ import { useMemo, useRef, useState } from "react";
 import { Board } from "@/components/game/board";
 import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result/duel-result-reward-summary";
 import { TutorialBigLogOutroOverlay } from "@/components/tutorial/flow/TutorialBigLogOutroOverlay";
-import { ICard } from "@/core/entities/ICard";
 import { EXECUTION_CARDS } from "@/core/data/mock-cards/executions";
 import { ENTITY_CARDS } from "@/core/data/mock-cards/entities";
 import { ACADEMY_HOME_ROUTE, ACADEMY_TUTORIAL_MAP_ROUTE } from "@/core/constants/routes/academy-routes";
@@ -15,14 +14,7 @@ import { CombatTutorialRewardOverlay } from "./CombatTutorialRewardOverlay";
 import { ensureCombatNodeCompletion } from "@/components/hub/academy/training/modes/tutorial/internal/ensure-combat-node-completion";
 import { ACADEMY_POST_TUTORIAL_OVERLAY_QUERY } from "@/components/hub/academy/internal/AcademyPostTutorialBigLogOverlay";
 import { markTutorialSoundtrackFirstRunFinished } from "@/components/hub/academy/tutorial/internal/tutorial-soundtrack-session";
-
-interface ITrainingTutorialClientProps {
-  deck: ICard[];
-  fusionDeck: ICard[];
-  opponentDeck: ICard[];
-  opponentFusionDeck: ICard[];
-  seed: string;
-}
+import { ITrainingTutorialClientProps } from "@/components/hub/academy/training/modes/tutorial/internal/training-tutorial-client.types";
 
 export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
   const FINAL_TUTORIAL_NEXUS_REWARD = 600;
