@@ -5,14 +5,14 @@ import { clampStoryMapZoom, resolvePinchZoom, useStoryMapZoom } from "./use-stor
 
 describe("useStoryMapZoom", () => {
   it("limita zoom por arriba y por abajo", () => {
-    expect(clampStoryMapZoom(0.1)).toBe(0.62);
-    expect(clampStoryMapZoom(2.2)).toBe(1.48);
+    expect(clampStoryMapZoom(0.1)).toBe(0.52);
+    expect(clampStoryMapZoom(2.2)).toBe(1.72);
   });
 
   it("aplica pinch-in y pinch-out sin salir de límites", () => {
     expect(resolvePinchZoom(1, 0.8)).toBeLessThan(1);
     expect(resolvePinchZoom(1, 1.25)).toBeGreaterThan(1);
-    expect(resolvePinchZoom(1.45, 1.4)).toBe(1.48);
+    expect(resolvePinchZoom(1.68, 1.4)).toBe(1.72);
   });
 
   it("actualiza el motion value al aplicar pinch", () => {

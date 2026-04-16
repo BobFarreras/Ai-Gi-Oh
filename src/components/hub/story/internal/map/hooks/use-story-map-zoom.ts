@@ -3,10 +3,10 @@
 
 import { useMotionValue } from "framer-motion";
 
-const MIN_ZOOM = 0.62;
-const MAX_ZOOM = 1.48;
-const WHEEL_ZOOM_STEP = 0.05;
-const PINCH_ZOOM_SENSITIVITY = 0.92;
+const MIN_ZOOM = 0.52;
+const MAX_ZOOM = 1.72;
+const WHEEL_ZOOM_STEP = 0.07;
+const PINCH_ZOOM_SENSITIVITY = 1.04;
 
 export function clampStoryMapZoom(value: number): number {
   return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, value));
