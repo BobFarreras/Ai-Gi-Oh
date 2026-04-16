@@ -9,18 +9,9 @@ import { StoryMapNode } from "@/components/hub/story/internal/map/components/Sto
 import { StoryRewardCollectEffect } from "@/components/hub/story/internal/map/components/StoryRewardCollectEffect";
 import { StoryRewardFloatingText } from "@/components/hub/story/internal/map/components/StoryRewardFloatingText";
 import { StoryNodeRetreatEffect } from "@/components/hub/story/internal/map/components/StoryNodeRetreatEffect";
+import type { IStoryCircuitPosition, IStoryCircuitSegment } from "@/components/hub/story/internal/map/layout/story-circuit-layout";
 import { resolveStoryNodePosition } from "@/components/hub/story/internal/map/layout/story-circuit-layout";
 import { STORY_NODE_TOKEN_SIZE } from "@/components/hub/story/internal/map/constants/story-map-geometry";
-
-interface IPathSegmentPoint {
-  x: number;
-  y: number;
-}
-
-interface IStoryPathSegment {
-  from: IPathSegmentPoint;
-  to: IPathSegmentPoint;
-}
 
 interface IStoryCircuitCanvasProps {
   width: number;
@@ -30,8 +21,8 @@ interface IStoryCircuitCanvasProps {
   cameraY: MotionValue<number>;
   mapScale: MotionValue<number>;
   nodes: IStoryMapNodeRuntime[];
-  segments: IStoryPathSegment[];
-  positionMap: Record<string, IPathSegmentPoint>;
+  segments: IStoryCircuitSegment[];
+  positionMap: Record<string, IStoryCircuitPosition>;
   selectedNodeId: string | null;
   currentNodeId: string | null;
   collectingRewardNodeId?: string | null;
@@ -43,12 +34,12 @@ interface IStoryCircuitCanvasProps {
   avatarStance: "CENTER" | "SIDE" | "PORTAL";
   avatarSideOffsetX: number;
   avatarSideOffsetY: number;
-  collectingAnchor: IPathSegmentPoint | null;
+  collectingAnchor: IStoryCircuitPosition | null;
   collectingRewardVisual?: { assetSrc: string; assetAlt: string; tone: "NEXUS" | "CARD" } | null;
   onRewardCollectAnimationComplete?: () => void;
   floatingReward?: { label: string; tone: "NEXUS" | "CARD" } | null;
   retreatingNodeId?: string | null;
-  retreatTrail: IPathSegmentPoint[];
+  retreatTrail: IStoryCircuitPosition[];
   retreatingAvatarUrl: string;
   retreatingAvatarAlt: string;
   isCameraDragEnabled: boolean;

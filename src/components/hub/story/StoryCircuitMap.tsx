@@ -2,7 +2,6 @@
 "use client";
 import { useRef } from "react";
 import { useTransform } from "framer-motion";
-import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import { StoryMapZoomControls } from "./internal/map/components/StoryMapZoomControls";
 import { StoryCircuitCanvas } from "./internal/map/components/StoryCircuitCanvas";
 import { useStoryMapZoom } from "./internal/map/hooks/use-story-map-zoom";
@@ -11,29 +10,7 @@ import { useStoryCircuitMotion } from "./internal/map/hooks/use-story-circuit-mo
 import { useStoryCircuitMapRuntime } from "./internal/map/hooks/use-story-circuit-map-runtime";
 import { useStoryMapGestureControls } from "./internal/map/hooks/use-story-map-gesture-controls";
 import { resolveStoryAvatarSideOffset } from "./internal/map/layout/resolve-story-avatar-side-offset";
-import { IStoryAvatarVisualTarget } from "@/components/hub/story/internal/scene/types/story-avatar-visual-target";
-
-interface StoryCircuitMapProps {
-  nodes: IStoryMapNodeRuntime[];
-  currentNodeId: string | null;
-  selectedNodeId: string | null;
-  avatarVisualTarget?: IStoryAvatarVisualTarget | null;
-  shouldPlayActEntryAnimation?: boolean;
-  duelFocusNodeId?: string | null;
-  floatingReward?: { label: string; tone: "NEXUS" | "CARD" } | null;
-  collectingRewardNodeId?: string | null;
-  collectingRewardVisual?: { assetSrc: string; assetAlt: string; tone: "NEXUS" | "CARD" } | null;
-  retreatingNodeId?: string | null;
-  isInteractionLocked?: boolean;
-  isMobileVerticalFlow?: boolean;
-  centerRequestKey?: number;
-  isSoundtrackMuted?: boolean;
-  onToggleSoundtrackMute?: () => void;
-  onExitToHub?: () => void;
-  onSelectNode: (nodeId: string | null) => void;
-  onRewardCollectAnimationComplete?: () => void;
-  onRetreatAnimationComplete?: () => void;
-}
+import { StoryCircuitMapProps } from "./internal/map/types/story-circuit-map.types";
 
 export function StoryCircuitMap({
   nodes,
