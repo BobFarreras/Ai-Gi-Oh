@@ -123,6 +123,8 @@ export function useStoryCircuitMotion(input: IUseStoryCircuitMotionInput) {
 
   useEffect(() => {
     if (!hasInitializedAvatarRef.current) return;
+    const avatarAnchorX = avatarAnchor.x;
+    const avatarAnchorY = avatarAnchor.y;
     if (visualStance === "PORTAL") {
       avatarAnimRef.current.x?.stop();
       avatarAnimRef.current.y?.stop();
@@ -130,7 +132,9 @@ export function useStoryCircuitMotion(input: IUseStoryCircuitMotionInput) {
       avatarY.set(avatarPos.y);
       return;
     }
-    const duration = Math.min(1.0, Math.max(0.38, Math.hypot(avatarPos.x - avatarX.get(), avatarPos.y - avatarY.get()) / 640));
+    const avatarTravelDistance = Math.hypot(avatarPos.x - avatarX.get(), avatarPos.y - avatarY.get());
+    if (avatarTravelDistance < 0.75) return;
+    const duration = Math.min(1.0, Math.max(0.38, avatarTravelDistance / 640));
     avatarAnimRef.current.x?.stop();
     avatarAnimRef.current.y?.stop();
     avatarAnimRef.current.x = animate(avatarX, avatarPos.x, { duration, ease: "easeInOut" });
@@ -139,7 +143,7 @@ export function useStoryCircuitMotion(input: IUseStoryCircuitMotionInput) {
       const target = resolveStoryCameraCenterTarget({
         containerWidth: mapContainerRef.current.clientWidth,
         containerHeight: mapContainerRef.current.clientHeight,
-        nodePosition: avatarAnchor,
+        nodePosition: { x: avatarAnchorX, y: avatarAnchorY },
         scale: zoom.get() * cinematicScale.get(),
       });
       cameraAnimRef.current.x?.stop();
@@ -147,7 +151,21 @@ export function useStoryCircuitMotion(input: IUseStoryCircuitMotionInput) {
       cameraAnimRef.current.x = animate(cameraX, target.x, { duration, ease: "easeInOut" });
       cameraAnimRef.current.y = animate(cameraY, target.y, { duration, ease: "easeInOut" });
     }
-  }, [avatarAnchor, avatarPos, avatarX, avatarY, cameraX, cameraY, cinematicScale, duelFocusNodeId, mapContainerRef, visualStance, zoom]);
+  }, [
+    avatarAnchor.x,
+    avatarAnchor.y,
+    avatarPos.x,
+    avatarPos.y,
+    avatarX,
+    avatarY,
+    cameraX,
+    cameraY,
+    cinematicScale,
+    duelFocusNodeId,
+    mapContainerRef,
+    visualStance,
+    zoom,
+  ]);
 
   useEffect(() => {
     const controls = animate(avatarScale, visualStance === "PORTAL" ? 0.02 : 1, { duration: 0.52, ease: "easeInOut" });
