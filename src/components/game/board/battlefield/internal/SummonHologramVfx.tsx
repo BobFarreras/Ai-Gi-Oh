@@ -1,4 +1,4 @@
-// src/components/game/board/battlefield/internal/SummonHologramVfx.tsx
+// src/components/game/board/battlefield/internal/SummonHologramVfx.tsx - Efecto holográfico de invocación con perfilado por rendimiento.
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";

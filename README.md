@@ -40,6 +40,40 @@ Aplicación local:
 1. `http://localhost:3000/`
 2. `http://localhost:3000/hub`
 
+## Estructura del proyecto
+
+```text
+src/app                 -> Rutas App Router y endpoints API
+src/components          -> UI, layout y composición visual
+src/services            -> Orquestación de flujos de aplicación
+src/core/use-cases      -> Casos de uso y reglas de aplicación
+src/core/services       -> Reglas puras de dominio reutilizables
+src/core/entities       -> Entidades, contratos y tipos de dominio
+src/infrastructure      -> Adaptadores de persistencia y servicios externos
+docs                    -> Arquitectura, seguridad, rendimiento y operación
+```
+
+## Funcionalidades principales
+
+1. Hub principal con navegación a Home, Market, Story, Academy y Multiplayer.
+2. Motor táctico de combate por turnos con fases, efectos, fusión y `combatLog`.
+3. Progresión de cartas y recompensas por duelo (NEXUS, experiencia y cartas).
+4. Mercado con compra de packs/cartas y registro de transacciones.
+5. Modo Story con mapa interactivo, nodos, eventos y duelos por capítulos.
+6. Módulo admin para catálogo, packs, mazos Story, starter deck y auditoría.
+7. Autenticación completa con registro, login, recuperación y cambio de contraseña.
+
+## Despliegue público
+
+1. URL de la aplicación: `https://ai-gi-ho.vercel.app`
+2. Callback de auth: `https://ai-gi-ho.vercel.app/auth/callback`
+3. Guía operativa: [docs/GUIA_DESPLIEGUE_PROFESIONAL.md](./docs/GUIA_DESPLIEGUE_PROFESIONAL.md)
+
+## Presentación del proyecto
+
+1. URL de slides: `PENDIENTE_DE_PUBLICAR`
+2. Sustituir el valor anterior por un enlace compartible (Google Slides, Canva o equivalente).
+
 ## Configuración de recuperación de contraseña (Supabase)
 
 Para que el flujo de recuperación funcione en local y en producción:

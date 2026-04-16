@@ -1,4 +1,4 @@
-// src/components/hub/nodes/HubNodeDecorStory.tsx
+// src/components/hub/nodes/HubNodeDecorStory.tsx - Decorador visual del nodo Story en la escena 3D del hub.
 "use client";
 
 import { useRef } from "react";

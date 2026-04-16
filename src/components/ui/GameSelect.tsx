@@ -1,4 +1,4 @@
-// src/components/ui/GameSelect.tsx
+// src/components/ui/GameSelect.tsx - Selector visual reutilizable para elegir opciones de juego desde UI cliente.
 "use client";
 
 import { useState, useRef, useEffect } from "react";
