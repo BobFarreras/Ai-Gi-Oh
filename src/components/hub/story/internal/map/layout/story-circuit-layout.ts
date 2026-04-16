@@ -1,5 +1,6 @@
 // src/components/hub/story/internal/map/layout/story-circuit-layout.ts - Calcula posiciones y segmentos de nodos Story de forma dinámica según dependencias.
 import { IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
+import { buildStoryPathSegments } from "./internal/story-circuit-path-segments";
 
 export interface IStoryCircuitPosition {
   x: number;
@@ -13,8 +14,6 @@ export interface IStoryCircuitSegment {
 
 const STORY_NODE_PLATFORM_OFFSET_Y = 56;
 const STORY_NODE_TOKEN_OFFSET_Y = 8;
-const STORY_PLATFORM_RADIUS_X = 48;
-const STORY_PLATFORM_RADIUS_Y = 10;
 
 function sortNodes(nodes: IStoryMapNodeRuntime[]): IStoryMapNodeRuntime[] {
   return [...nodes].sort((left, right) => {
@@ -114,54 +113,5 @@ export function resolveStoryPathSegments(
   nodes: IStoryMapNodeRuntime[],
   positionMap: Record<string, IStoryCircuitPosition>,
 ): IStoryCircuitSegment[] {
-  const segments: IStoryCircuitSegment[] = [];
-  const nodeIdSet = new Set(nodes.map((node) => node.id));
-  const resolveEdgeAnchor = (
-    sourceNodeId: string,
-    targetNodeId: string,
-  ): IStoryCircuitPosition => {
-    const source = resolveStoryNodePlatformAnchor(sourceNodeId, positionMap);
-    const target = resolveStoryNodePlatformAnchor(targetNodeId, positionMap);
-    const deltaX = target.x - source.x;
-    const deltaY = target.y - source.y;
-    const distance = Math.hypot(deltaX, deltaY);
-    if (distance === 0) return source;
-    const nx = deltaX / distance;
-    const ny = deltaY / distance;
-    return {
-      x: source.x + nx * STORY_PLATFORM_RADIUS_X,
-      y: source.y + ny * STORY_PLATFORM_RADIUS_Y,
-    };
-  };
-  const pushSegment = (fromNodeId: string, toNodeId: string) => {
-    const from = resolveEdgeAnchor(fromNodeId, toNodeId);
-    const to = resolveEdgeAnchor(toNodeId, fromNodeId);
-    segments.push({ from, to });
-  };
-  const nodeById = new Map(nodes.map((node) => [node.id, node]));
-  const shouldRenderUnlockSegment = (requirementNodeId: string, targetNodeId: string): boolean => {
-    const requirementNode = nodeById.get(requirementNodeId);
-    if (!requirementNode) return false;
-    if (targetNodeId === "story-ch2-boss-bridge") return requirementNode.isCompleted;
-    return true;
-  };
-  const shouldRenderLinkedSegment = (fromNodeId: string, targetNodeId: string): boolean => {
-    if (fromNodeId === "story-ch2-branch-lower-down-b" && targetNodeId === "story-ch2-boss-bridge") {
-      return nodeById.get("story-ch2-bridge-submission")?.isCompleted ?? false;
-    }
-    return true;
-  };
-  for (const node of nodes) {
-    if (node.unlockRequirementNodeId && nodeIdSet.has(node.unlockRequirementNodeId)) {
-      if (shouldRenderUnlockSegment(node.unlockRequirementNodeId, node.id)) {
-        pushSegment(node.unlockRequirementNodeId, node.id);
-      }
-    }
-    for (const linkedNodeId of node.pathLinkFromNodeIds ?? []) {
-      if (nodeIdSet.has(linkedNodeId) && shouldRenderLinkedSegment(linkedNodeId, node.id)) {
-        pushSegment(linkedNodeId, node.id);
-      }
-    }
-  }
-  return segments;
+  return buildStoryPathSegments({ nodes, positionMap, resolvePlatformAnchor: resolveStoryNodePlatformAnchor });
 }

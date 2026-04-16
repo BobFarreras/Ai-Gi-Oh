@@ -1,63 +1,14 @@
 // src/components/game/board/ui/overlays/BoardStatusOverlays.tsx - Agrupa overlays de estado global del tablero: errores, acciones pendientes, pausa, fusión, cementerio y confirmaciones.
 "use client";
 
-import { ICard } from "@/core/entities/ICard";
-import { ICombatLogEvent } from "@/core/entities/ICombatLog";
-import { IBoardUiError } from "../../hooks/internal/boardError";
-import { IPendingZoneReplacement } from "../../hooks/internal/board-state/pending-replacement";
-import { ITrapActivationPrompt } from "../../hooks/internal/board-state/useBoardUiState";
-import { IBattleBannerMessage } from "../internal/banner/banner-message-policy";
 import { FusionCinematicLayer } from "../FusionCinematicLayer";
 import { PauseOverlay } from "./PauseOverlay";
 import { TurnAdvanceGuardOverlay } from "./TurnAdvanceGuardOverlay";
 import { BoardActionOverlays } from "./internal/BoardActionOverlays";
 import { BoardErrorOverlay } from "./internal/BoardErrorOverlay";
 import { BoardZoneBrowsers } from "./internal/BoardZoneBrowsers";
-import { IFusionMaterialCandidate, FusionMaterialBrowser } from "./internal/FusionMaterialBrowser";
-
-interface BoardStatusOverlaysProps {
-  lastError: IBoardUiError | null;
-  pendingActionHint: string | null;
-  pendingTrapActivationPrompt?: ITrapActivationPrompt | null;
-  pendingEntityReplacement: IPendingZoneReplacement | null;
-  pendingEntityReplacementTargetCard: ICard | null;
-  combatLog: ICombatLogEvent[];
-  playerAId: string;
-  playerAName: string;
-  playerBId: string;
-  playerBName: string;
-  isPaused: boolean;
-  onResumePause: () => void;
-  onExitPause?: () => void;
-  isFusionCinematicActive?: boolean;
-  setIsFusionCinematicActive?: (value: boolean) => void;
-  graveyardView: "player" | "opponent" | null;
-  graveyardOwnerName: string;
-  graveyardCards: ICard[];
-  graveyardSelectableCardRefs?: string[];
-  fusionDeckView?: "player" | "opponent" | null;
-  fusionDeckOwnerName?: string;
-  fusionDeckCards?: ICard[];
-  destroyedView?: "player" | "opponent" | null;
-  destroyedOwnerName?: string;
-  destroyedCards?: ICard[];
-  onCloseError: () => void;
-  onConfirmEntityReplacement: () => void;
-  onCancelEntityReplacement: () => void;
-  onCloseGraveyard: () => void;
-  onCloseFusionDeck?: () => void;
-  onCloseDestroyed?: () => void;
-  onPreviewCard: (card: ICard) => void;
-  pendingAdvanceWarning: "MAIN_SKIP_ACTIONS" | "BATTLE_SKIP_ATTACKS" | null;
-  onConfirmAdvancePhase: (disableHelp: boolean) => void;
-  onCancelAdvancePhase: () => void;
-  externalBannerSignal?: IBattleBannerMessage | null;
-  showBattleBanners?: boolean;
-  isFusionMaterialBrowserOpen?: boolean;
-  fusionMaterialCandidates?: IFusionMaterialCandidate[];
-  fusionSelectedCount?: number;
-  onSelectFusionMaterial?: (instanceId: string) => void;
-}
+import { FusionMaterialBrowser } from "./internal/FusionMaterialBrowser";
+import { BoardStatusOverlaysProps } from "./internal/board-status-overlays.types";
 
 export function BoardStatusOverlays({
   lastError,
