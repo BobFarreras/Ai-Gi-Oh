@@ -14,9 +14,27 @@ interface IWalletMutationError {
   message?: string;
 }
 
+function resolveWalletRpcRow(data: unknown): IWalletRow | null {
+  if (Array.isArray(data)) {
+    const first = data[0];
+    if (!first || typeof first !== "object") return null;
+    const row = first as Partial<IWalletRow>;
+    if (typeof row.player_id !== "string" || typeof row.nexus !== "number") return null;
+    return { player_id: row.player_id, nexus: row.nexus };
+  }
+  if (!data || typeof data !== "object") return null;
+  const row = data as Partial<IWalletRow>;
+  if (typeof row.player_id !== "string" || typeof row.nexus !== "number") return null;
+  return { player_id: row.player_id, nexus: row.nexus };
+}
+
 function isMissingRpcError(error: IWalletMutationError | null): boolean {
   const normalizedMessage = error?.message?.toLowerCase() ?? "";
   return error?.code === "42883" || normalizedMessage.includes("function") || normalizedMessage.includes("rpc");
+}
+
+function isBusinessRuleRpcError(error: IWalletMutationError | null): boolean {
+  return error?.code === "PGRST116" || error?.code === "22023" || error?.code === "P0001";
 }
 
 export class SupabaseWalletRepository implements IWalletRepository {
@@ -48,18 +66,24 @@ export class SupabaseWalletRepository implements IWalletRepository {
       p_amount: amount,
     });
     if (!rpcResult.error && rpcResult.data) {
-      const row = (rpcResult.data as IWalletRow[])[0];
-      if (!row) throw new ValidationError("No se pudo actualizar el monedero del jugador.");
-      return { playerId: row.player_id, nexus: row.nexus };
+      const row = resolveWalletRpcRow(rpcResult.data);
+      if (row) return { playerId: row.player_id, nexus: row.nexus };
     }
-    if (rpcResult.error && !isMissingRpcError(rpcResult.error)) {
+    if (rpcResult.error && isBusinessRuleRpcError(rpcResult.error)) {
       if (rpcResult.error.code === "PGRST116" || rpcResult.error.code === "22023" || rpcResult.error.code === "P0001") {
         throw new ValidationError(rpcResult.error.message ?? "Saldo Nexus insuficiente para completar el débito.");
       }
-      throw new ValidationError("No se pudo actualizar el monedero del jugador.");
+    }
+    if (rpcResult.error && !isMissingRpcError(rpcResult.error)) {
+      const message = rpcResult.error.message?.toLowerCase() ?? "";
+      if (message.includes("insuficiente") || message.includes("debito") || message.includes("débito")) {
+        throw new ValidationError(rpcResult.error.message ?? "Saldo Nexus insuficiente para completar el débito.");
+      }
+      // Fallback legacy para entornos donde la RPC existe pero falla por grants/contexto.
     }
 
-    // Fallback temporal para entornos donde la RPC atómica aún no fue desplegada.
+    // Fallback temporal para entornos donde la RPC atómica aún no fue desplegada
+    // o no se puede ejecutar por permisos/contexto de sesión.
     const current = await this.getWallet(playerId);
     if (current.nexus < amount) throw new ValidationError("Saldo Nexus insuficiente para completar el débito.");
     const { data, error } = await this.client
@@ -79,18 +103,24 @@ export class SupabaseWalletRepository implements IWalletRepository {
       p_amount: amount,
     });
     if (!rpcResult.error && rpcResult.data) {
-      const row = (rpcResult.data as IWalletRow[])[0];
-      if (!row) throw new ValidationError("No se pudo actualizar el monedero del jugador.");
-      return { playerId: row.player_id, nexus: row.nexus };
+      const row = resolveWalletRpcRow(rpcResult.data);
+      if (row) return { playerId: row.player_id, nexus: row.nexus };
     }
-    if (rpcResult.error && !isMissingRpcError(rpcResult.error)) {
+    if (rpcResult.error && isBusinessRuleRpcError(rpcResult.error)) {
       if (rpcResult.error.code === "22023" || rpcResult.error.code === "P0001") {
         throw new ValidationError(rpcResult.error.message ?? "No se pudo acreditar Nexus.");
       }
-      throw new ValidationError("No se pudo actualizar el monedero del jugador.");
+    }
+    if (rpcResult.error && !isMissingRpcError(rpcResult.error)) {
+      const message = rpcResult.error.message?.toLowerCase() ?? "";
+      if (message.includes("crédito") || message.includes("credito")) {
+        throw new ValidationError(rpcResult.error.message ?? "No se pudo acreditar Nexus.");
+      }
+      // Fallback legacy para entornos donde la RPC existe pero falla por grants/contexto.
     }
 
-    // Fallback temporal para entornos donde la RPC atómica aún no fue desplegada.
+    // Fallback temporal para entornos donde la RPC atómica aún no fue desplegada
+    // o no se puede ejecutar por permisos/contexto de sesión.
     const current = await this.getWallet(playerId);
     const { data, error } = await this.client
       .from("player_wallets")

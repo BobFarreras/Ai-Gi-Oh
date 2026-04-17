@@ -33,6 +33,15 @@ describe("SupabaseWalletRepository", () => {
     expect(fromMock).not.toHaveBeenCalled();
   });
 
+  it("acepta respuesta RPC en formato objeto", async () => {
+    const { client } = createClientMock({
+      rpcResult: { data: { player_id: "player-1", nexus: 875 }, error: null },
+    });
+    const repository = new SupabaseWalletRepository(client);
+    const result = await repository.debitNexus("player-1", 125);
+    expect(result).toEqual({ playerId: "player-1", nexus: 875 });
+  });
+
   it("cae a fallback legacy cuando la RPC no existe", async () => {
     const { client } = createClientMock({
       rpcResult: { data: null, error: { code: "42883", message: "function wallet_debit_nexus does not exist" } },
@@ -42,6 +51,17 @@ describe("SupabaseWalletRepository", () => {
     const repository = new SupabaseWalletRepository(client);
     const result = await repository.debitNexus("player-1", 100);
     expect(result).toEqual({ playerId: "player-1", nexus: 900 });
+  });
+
+  it("cae a fallback legacy cuando la RPC falla por permisos/contexto", async () => {
+    const { client } = createClientMock({
+      rpcResult: { data: null, error: { code: "42501", message: "No autorizado para debitar este monedero." } },
+      selectResult: { data: { player_id: "player-1", nexus: 1000 }, error: null },
+      updateResult: { data: { player_id: "player-1", nexus: 925 }, error: null },
+    });
+    const repository = new SupabaseWalletRepository(client);
+    const result = await repository.debitNexus("player-1", 75);
+    expect(result).toEqual({ playerId: "player-1", nexus: 925 });
   });
 
   it("propaga error de saldo insuficiente cuando la RPC lo reporta", async () => {
