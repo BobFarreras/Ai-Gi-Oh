@@ -40,6 +40,35 @@ Aplicación local:
 1. `http://localhost:3000/`
 2. `http://localhost:3000/hub`
 
+## Contribución open source (sin keys privadas)
+
+El proyecto usa Supabase local con Docker para que cualquier contributor pueda ejecutar el juego sin acceder a credenciales del mantenedor.
+
+Bootstrap recomendado:
+
+```bash
+pnpm install
+pnpm supabase:bootstrap:local
+pnpm supabase:env:apply
+pnpm dev
+```
+
+Comandos útiles:
+
+```bash
+pnpm supabase:start
+pnpm supabase:stop
+pnpm supabase:db:reset:local
+pnpm supabase:env:local
+pnpm supabase:env:apply
+pnpm supabase:env:restore
+```
+
+Guía completa de contribución:
+
+1. [CONTRIBUTING.md](./CONTRIBUTING.md)
+2. [docs/supabase/README.md](./docs/supabase/README.md)
+
 ## Estructura del proyecto
 
 ```text

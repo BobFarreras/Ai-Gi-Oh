@@ -7,6 +7,7 @@ import { postStoryDuelCompletion } from "../story-duel-completion-client";
 interface IStoryDuelResultSyncInput {
   chapter: number;
   duelIndex: number;
+  completionTicket: string;
 }
 
 interface IStoryDuelTransition {
@@ -58,6 +59,7 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
         chapter: input.chapter,
         duelIndex: input.duelIndex,
         outcome,
+        completionTicket: input.completionTicket,
       });
       setResultTransition({
         outcome,
@@ -86,6 +88,7 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
         chapter: input.chapter,
         duelIndex: input.duelIndex,
         outcome: "ABANDONED",
+        completionTicket: input.completionTicket,
       });
       pushBackToStory({
         outcome: "ABANDONED",

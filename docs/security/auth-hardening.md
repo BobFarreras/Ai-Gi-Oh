@@ -22,6 +22,7 @@ Reducir superficie de ataque en login/registro/logout antes de integrar base de 
    - `POST /api/auth/recover`
    - `POST /api/auth/update-password`
    - `GET /auth/callback` (canje server-side de código de recuperación)
+   - hardening del callback: `next` solo acepta rutas internas seguras (`/ruta`), bloqueando `//`, `\` y saltos de línea.
 2. Validación de origen:
    - Se compara `Origin` con `Host`/`x-forwarded-host`.
    - Si no coincide, se responde `403`.

@@ -6,6 +6,9 @@ function resolveSafeNextPath(nextPath: string | null): string {
   if (!nextPath || !nextPath.startsWith("/")) {
     return "/hub";
   }
+  if (nextPath.startsWith("//") || nextPath.includes("\\") || nextPath.includes("\n") || nextPath.includes("\r")) {
+    return "/hub";
+  }
   return nextPath;
 }
 

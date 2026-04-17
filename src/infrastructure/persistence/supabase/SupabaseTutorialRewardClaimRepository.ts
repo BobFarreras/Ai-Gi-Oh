@@ -12,6 +12,16 @@ interface ITutorialRewardClaimRow {
 
 interface IPostgrestErrorShape {
   code?: string;
+  message?: string;
+}
+
+interface ITutorialAtomicClaimRow {
+  applied: boolean;
+}
+
+function isMissingRpcFunction(error: IPostgrestErrorShape | null): boolean {
+  const normalizedMessage = error?.message?.toLowerCase() ?? "";
+  return error?.code === "42883" || normalizedMessage.includes("function") || normalizedMessage.includes("rpc");
 }
 
 function toEntity(row: ITutorialRewardClaimRow): ITutorialRewardClaimResult {
@@ -40,5 +50,32 @@ export class SupabaseTutorialRewardClaimRepository implements ITutorialRewardCla
     if (!error) return true;
     if ((error as IPostgrestErrorShape).code === "23505") return false;
     throw new ValidationError("No se pudo reservar el claim de recompensa tutorial.");
+  }
+
+  async tryClaimAndApplyNexusReward(playerId: string, rewardNexus: number): Promise<boolean> {
+    const rpcResult = await this.client.rpc("tutorial_claim_final_reward_nexus", {
+      p_player_id: playerId,
+      p_reward_nexus: rewardNexus,
+    });
+    if (!rpcResult.error) {
+      const row = (rpcResult.data as ITutorialAtomicClaimRow[] | null)?.[0];
+      if (row && typeof row.applied === "boolean") return row.applied;
+      return rpcResult.data === true;
+    }
+    if (!isMissingRpcFunction(rpcResult.error as IPostgrestErrorShape)) {
+      throw new ValidationError("No se pudo aplicar la recompensa final del tutorial.");
+    }
+
+    // Fallback temporal para entornos sin la función atómica desplegada.
+    const claimed = await this.tryClaimNexusReward(playerId, rewardNexus);
+    if (!claimed) return false;
+    const walletCreditResult = await this.client.rpc("wallet_credit_nexus", {
+      p_player_id: playerId,
+      p_amount: rewardNexus,
+    });
+    if (walletCreditResult.error) {
+      throw new ValidationError("No se pudo aplicar la recompensa final del tutorial.");
+    }
+    return true;
   }
 }

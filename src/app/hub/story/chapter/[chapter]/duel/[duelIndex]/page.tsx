@@ -3,6 +3,7 @@ import Link from "next/link";
 import { StoryDuelClient } from "@/app/hub/story/chapter/[chapter]/duel/[duelIndex]/StoryDuelClient";
 import { getStoryDuelRuntimeData } from "@/services/story/get-story-duel-runtime-data";
 import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
+import { issueStoryCompletionTicket } from "@/services/security/duel-completion-ticket";
 
 interface StoryDuelPageProps {
   params: Promise<{ chapter: string; duelIndex: string }>;
@@ -67,5 +68,10 @@ export default async function StoryDuelPage({ params }: StoryDuelPageProps) {
       </main>
     );
   }
-  return <StoryDuelClient {...runtime} />;
+  const completionTicket = issueStoryCompletionTicket({
+    playerId: runtime.playerId,
+    chapter: runtime.chapter,
+    duelIndex: runtime.duelIndex,
+  });
+  return <StoryDuelClient {...runtime} completionTicket={completionTicket} />;
 }

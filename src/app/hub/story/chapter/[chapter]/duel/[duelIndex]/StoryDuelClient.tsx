@@ -32,6 +32,7 @@ interface StoryDuelClientProps {
   playerFusionDeck: ICard[];
   opponentDeck: ICard[];
   opponentFusionDeck: ICard[];
+  completionTicket: string;
 }
 
 export function StoryDuelClient(props: StoryDuelClientProps) {
@@ -46,6 +47,7 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
   } = useStoryDuelResultSync({
     chapter: props.chapter,
     duelIndex: props.duelIndex,
+    completionTicket: props.completionTicket,
   });
   const presentationRuntime = useMemo(
     () => createStoryDuelPresentationRuntime(props.opponentId, props.opponentAvatarUrl),

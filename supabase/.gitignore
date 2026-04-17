@@ -1,0 +1,5 @@
+# supabase/.gitignore - Ignora artefactos locales de Supabase y migraciones generadas durante bootstrap.
+.temp/
+.branches/
+.cache/
+migrations/
