@@ -128,13 +128,12 @@ export function useBoardTurnControls({
 
   const resolvePendingHandDiscard = useCallback(
     (cardId: string) => {
-      if (gameState.pendingTurnAction?.playerId !== gameState.playerA.id || gameState.pendingTurnAction.type !== "DISCARD_FOR_HAND_LIMIT") {
-        return;
-      }
+      if (gameState.pendingTurnAction?.playerId !== gameState.playerA.id || gameState.pendingTurnAction.type !== "DISCARD_FOR_HAND_LIMIT") return;
       resolvePendingTurnAction(cardId);
     },
     [gameState.pendingTurnAction, gameState.playerA.id, resolvePendingTurnAction],
   );
+
   return {
     advancePhase,
     confirmAdvancePhase,

@@ -15,6 +15,24 @@ interface IStoryProgressRow {
   updated_at: string;
 }
 
+interface IStoryResultRpcRow extends IStoryProgressRow {
+  first_victory?: boolean;
+}
+
+interface IPostgrestErrorShape {
+  code?: string;
+  message?: string;
+}
+
+function resolveStoryResultRpcRow(data: unknown): IStoryResultRpcRow | null {
+  if (Array.isArray(data)) {
+    const row = data[0];
+    return row && typeof row === "object" ? (row as IStoryResultRpcRow) : null;
+  }
+  if (data && typeof data === "object") return data as IStoryResultRpcRow;
+  return null;
+}
+
 function toEntity(row: IStoryProgressRow): IPlayerStoryDuelProgress {
   return {
     playerId: row.player_id,
@@ -30,6 +48,11 @@ function toEntity(row: IStoryProgressRow): IPlayerStoryDuelProgress {
 
 export class SupabasePlayerStoryDuelProgressRepository implements IPlayerStoryDuelProgressRepository {
   constructor(private readonly client: SupabaseClient) {}
+
+  private static isMissingRpcFunction(error: IPostgrestErrorShape | null): boolean {
+    const normalizedMessage = error?.message?.toLowerCase() ?? "";
+    return error?.code === "42883" || normalizedMessage.includes("function") || normalizedMessage.includes("rpc");
+  }
 
   async listByPlayerId(playerId: string): Promise<IPlayerStoryDuelProgress[]> {
     const { data, error } = await this.client
@@ -52,6 +75,20 @@ export class SupabasePlayerStoryDuelProgressRepository implements IPlayerStoryDu
   }
 
   async registerDuelResult(playerId: string, duelId: string, didWin: boolean): Promise<IPlayerStoryDuelProgress> {
+    const rpcResult = await this.client.rpc("story_register_duel_result", {
+      p_player_id: playerId,
+      p_duel_id: duelId,
+      p_did_win: didWin,
+    });
+    if (!rpcResult.error) {
+      const row = resolveStoryResultRpcRow(rpcResult.data);
+      if (row) return toEntity(row);
+    }
+    if (rpcResult.error && !SupabasePlayerStoryDuelProgressRepository.isMissingRpcFunction(rpcResult.error as IPostgrestErrorShape)) {
+      // Fallback para entornos donde la RPC existe pero falla por permisos/contexto.
+    }
+
+    // Fallback temporal para entornos sin función atómica desplegada.
     const current = await this.getByPlayerAndDuelId(playerId, duelId);
     const nowIso = new Date().toISOString();
     const nextWins = (current?.wins ?? 0) + (didWin ? 1 : 0);

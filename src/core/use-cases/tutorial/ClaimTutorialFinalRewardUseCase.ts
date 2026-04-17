@@ -3,7 +3,6 @@ import { ValidationError } from "@/core/errors/ValidationError";
 import { IPlayerProgressRepository } from "@/core/repositories/IPlayerProgressRepository";
 import { ITutorialNodeProgressRepository } from "@/core/repositories/ITutorialNodeProgressRepository";
 import { ITutorialRewardClaimRepository } from "@/core/repositories/ITutorialRewardClaimRepository";
-import { IWalletRepository } from "@/core/repositories/IWalletRepository";
 import { resolveTutorialFinalReward } from "@/core/services/tutorial/resolve-tutorial-final-reward";
 import { GetOrCreatePlayerProgressUseCase } from "@/core/use-cases/player/GetOrCreatePlayerProgressUseCase";
 
@@ -14,7 +13,6 @@ interface IClaimTutorialFinalRewardInput {
 interface IClaimTutorialFinalRewardDependencies {
   nodeProgressRepository: ITutorialNodeProgressRepository;
   rewardClaimRepository: ITutorialRewardClaimRepository;
-  walletRepository: IWalletRepository;
   playerProgressRepository: IPlayerProgressRepository;
 }
 
@@ -41,10 +39,9 @@ export class ClaimTutorialFinalRewardUseCase {
     const hasAllRequiredNodes = resolveRequiredNodeIds().every((nodeId) => completedNodeIds.has(nodeId));
     if (!hasAllRequiredNodes) throw new ValidationError("Debes completar todos los nodos del tutorial antes de reclamar la recompensa final.");
 
-    const claimed = await this.dependencies.rewardClaimRepository.tryClaimNexusReward(input.playerId, reward.nexus);
+    const claimed = await this.dependencies.rewardClaimRepository.tryClaimAndApplyNexusReward(input.playerId, reward.nexus);
     if (!claimed) return { applied: false, rewardKind: "NEXUS", rewardNexus: reward.nexus };
 
-    await this.dependencies.walletRepository.creditNexus(input.playerId, reward.nexus);
     await this.dependencies.nodeProgressRepository.markNodeCompleted(input.playerId, "tutorial-final-reward");
 
     const progressUseCase = new GetOrCreatePlayerProgressUseCase(this.dependencies.playerProgressRepository);

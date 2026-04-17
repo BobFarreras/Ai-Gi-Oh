@@ -1,4 +1,4 @@
-// src/components/hub/academy/training/TrainingModeCard.tsx
+// src/components/hub/academy/training/TrainingModeCard.tsx - Tarjeta navegable de modo training con variante visual y metadata de acceso.
 "use client";
 
 import Link from "next/link";

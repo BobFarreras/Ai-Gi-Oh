@@ -2,23 +2,10 @@
 "use client";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { TrainingArenaLobbyBackdrop } from "@/components/hub/academy/training/modes/arena/internal/TrainingArenaLobbyBackdrop";
 import { AcademyBackButton } from "@/components/hub/academy/AcademyBackButton";
-
-interface ITrainingArenaLobbyProps {
-  level: number;
-  tierCode: string;
-  tierDifficultyLabel: string;
-  tierRewardPreview: { nexus: number; playerExperience: number };
-  nextTierRequirementLabel: string;
-  tierOptions: Array<{ tier: number; isUnlocked: boolean; isSelected: boolean }>;
-  onSelectTier: (tier: number) => void;
-  opponentName: string;
-  playerAvatarUrl: string;
-  opponentAvatarUrl: string;
-  onStart: () => void;
-  onBack: () => void;
-}
+import { TrainingArenaLobbyBackdrop } from "@/components/hub/academy/training/modes/arena/internal/TrainingArenaLobbyBackdrop";
+import { TrainingArenaLobbyActions } from "@/components/hub/academy/training/modes/arena/internal/TrainingArenaLobbyActions";
+import { ITrainingArenaLobbyProps } from "@/components/hub/academy/training/modes/arena/internal/training-arena-lobby.types";
 
 /**
  * Presenta el duelo antes de cargar el tablero para reforzar identidad de tier y rival.
@@ -129,25 +116,7 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
             </div>
           </motion.article>
         </div>
-        <motion.div
-          initial={{ y: 18, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.42, ease: "easeOut", delay: 0.22 }}
-          className="hidden flex-col items-center gap-2 md:flex"
-        >
-          <motion.button
-            type="button"
-            onClick={props.onStart}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.98 }}
-            animate={{ boxShadow: ["0 0 0 rgba(16,185,129,0.0)", "0 0 24px rgba(16,185,129,0.45)", "0 0 0 rgba(16,185,129,0.0)"] }}
-            transition={{ duration: 1.8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-            className="w-full max-w-md rounded-xl border border-emerald-300/70 bg-emerald-500/20 px-7 py-2.5 text-sm font-black uppercase tracking-[0.15em] text-emerald-100 hover:bg-emerald-400/30"
-          >
-            Empezar Combate
-          </motion.button>
-          <AcademyBackButton label="Volver a Academy" onClick={props.onBack} />
-        </motion.div>
+        <TrainingArenaLobbyActions onStart={props.onStart} onBack={props.onBack} />
       </div>
       <motion.div
         initial={{ y: 20, opacity: 0 }}

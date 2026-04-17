@@ -9,7 +9,7 @@ interface IBoardMobilePhaseLayoutInput {
   hasWinner: boolean;
 }
 
-interface IBoardMobilePhaseSizing {
+export interface IBoardMobilePhaseSizing {
   height: number;
   compactWidth: number;
   activeWidth: number;

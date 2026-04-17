@@ -23,6 +23,10 @@ function resolveDuelEndTrack(winnerPlayerId: string, playerId: string): AudioTra
   return winnerPlayerId === playerId ? "DUEL_WIN" : "GAME_OVER";
 }
 
+function playAudioCue(track: AudioTrackId, isMuted: boolean, isPaused: boolean): void {
+  if (!isMuted && !isPaused) safePlay(createAudio(track, false));
+}
+
 export function useGameAudio({
   combatLog,
   winnerPlayerId,
@@ -93,9 +97,7 @@ export function useGameAudio({
     }
     const nextEvents = combatLog.slice(processedRef.current);
     processedRef.current = combatLog.length;
-    nextEvents.forEach((event) => {
-      playCombatEventAudio(event);
-    });
+    nextEvents.forEach((event) => playCombatEventAudio(event));
   }, [combatLog, isMuted, isPaused, playCombatEventAudio]);
 
   useEffect(() => {
@@ -138,20 +140,10 @@ export function useGameAudio({
     prevErrorRef.current = lastErrorCode;
   }, [isMuted, isPaused, lastErrorCode]);
 
-  const playTimerExpired = useCallback(() => {
-    if (!isMuted && !isPaused) safePlay(createAudio("TIMER_END", false));
-  }, [isMuted, isPaused]);
-
-  const playTimerWarning = useCallback(() => {
-    if (!isMuted && !isPaused) safePlay(createAudio("TIMER_WARNING", false));
-  }, [isMuted, isPaused]);
-
-  const playButtonClick = useCallback(() => {
-    if (!isMuted && !isPaused) safePlay(createAudio("BUTTON_CLICK", false));
-  }, [isMuted, isPaused]);
-  const playBanner = useCallback(() => {
-    if (!isMuted && !isPaused) safePlay(createAudio("BANNER", false));
-  }, [isMuted, isPaused]);
+  const playTimerExpired = useCallback(() => playAudioCue("TIMER_END", isMuted, isPaused), [isMuted, isPaused]);
+  const playTimerWarning = useCallback(() => playAudioCue("TIMER_WARNING", isMuted, isPaused), [isMuted, isPaused]);
+  const playButtonClick = useCallback(() => playAudioCue("BUTTON_CLICK", isMuted, isPaused), [isMuted, isPaused]);
+  const playBanner = useCallback(() => playAudioCue("BANNER", isMuted, isPaused), [isMuted, isPaused]);
 
   return { playTimerExpired, playTimerWarning, playButtonClick, playBanner };
 }

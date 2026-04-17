@@ -25,6 +25,10 @@
   - entra a `/hub/academy/training/arena`,
   - valida toggles de `pause`, `mute`, `auto` y apertura/cierre de `combat log`,
   - prueba invocación base y secuencia de ataque cuando el estado de partida lo permite.
+- `e2e/story/story-resilience.spec.ts`
+  - valida que no aparezca `Hydration failed` al cargar Story con `story-map-muted`,
+  - verifica persistencia de toggle `mute` tras reload sin mismatch SSR/CSR,
+  - valida abandono de duelo Story comprobando `POST /api/story/duels/complete` en `200`.
 
 ## Credenciales y limpieza
 - Usuario estándar (para market/home/combat):

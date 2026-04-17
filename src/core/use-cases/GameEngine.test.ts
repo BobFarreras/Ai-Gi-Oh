@@ -1,4 +1,4 @@
-// src/core/use-cases/GameEngine.test.ts
+// src/core/use-cases/GameEngine.test.ts - Pruebas de integración del GameEngine para reglas base de ejecución.
 import { describe, it, expect } from 'vitest';
 import { GameEngine, GameState } from './GameEngine';
 import { IBoardEntity } from '../entities/IPlayer';

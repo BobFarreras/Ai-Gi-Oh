@@ -25,6 +25,8 @@ interface ITrainingArenaClientProps {
   opponentDifficulty: OpponentDifficulty;
   narrationPack: IMatchNarrationPack;
   selectedTier: number;
+  completionTicket: string;
+  completionBattleId: string;
   tiers: Array<{
     tier: number;
     code: string;
@@ -74,9 +76,10 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
     hasPostedRef.current = true;
     try {
       const payload = await postTrainingMatchCompletion({
-        battleId: result.matchSeed,
+        battleId: props.completionBattleId,
         tier: props.selectedTier,
         outcome: resolveOutcome(result),
+        completionTicket: props.completionTicket,
       });
       setRewardSummary({
         rewardNexus: payload.reward.nexus,

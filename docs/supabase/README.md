@@ -1,6 +1,26 @@
 <!-- docs/supabase/README.md - Guía operativa para ejecutar scripts SQL de Supabase por fases del proyecto. -->
 # Supabase SQL por Fases
 
+## Entorno local para contributors (Docker + Supabase CLI)
+
+1. Ejecuta bootstrap completo:
+   - `pnpm supabase:bootstrap:local`
+2. Este flujo hace:
+   - genera `supabase/migrations` desde `docs/supabase/sql`,
+   - levanta Supabase local en Docker,
+   - aplica todo el esquema con `supabase db reset --local`,
+   - genera `.env.local.supabase` con keys locales.
+3. Para activar ese entorno en tu app actual sin perder tu configuración previa:
+   - `pnpm supabase:env:apply` (crea backup en `.env.local.backup`)
+4. Para volver al entorno anterior:
+   - `pnpm supabase:env:restore`
+5. Comandos equivalentes paso a paso:
+   - `pnpm supabase:prepare:migrations`
+   - `pnpm supabase:start`
+   - `pnpm supabase:db:reset:local`
+   - `pnpm supabase:env:local`
+   - `pnpm supabase:env:apply`
+
 ## Diccionario de tablas
 
 1. `public.player_profiles`:
@@ -101,6 +121,28 @@
 4. Registra un usuario nuevo y valida bootstrap automático:
    - `player_wallets` con `nexus = 1000`,
    - 20 filas en `player_deck_slots` (índices 0..19).
+
+## Fase 3.1 (Mutaciones atómicas de wallet)
+
+1. Ejecuta `docs/supabase/sql/042_phase_wallet_atomic_mutations.sql`.
+2. Verifica funciones:
+   - `public.wallet_debit_nexus(uuid, integer)`
+   - `public.wallet_credit_nexus(uuid, integer)`
+3. Objetivo:
+   - evitar condiciones de carrera en compras/recompensas concurrentes.
+4. Nota:
+   - el repositorio mantiene fallback legacy temporal si la RPC aún no está desplegada.
+
+## Fase 3.2 (Hotfix RPC wallet vinculada al actor autenticado)
+
+1. Ejecuta `docs/supabase/sql/044_phase_wallet_rpc_actor_bound_fix.sql`.
+2. Objetivo:
+   - evitar falsos negativos por mismatch de `p_player_id` vs contexto de sesión,
+   - forzar que la RPC opere siempre sobre `auth.uid()` como identidad fuente de verdad.
+3. Compatibilidad:
+   - mantiene la misma firma `wallet_debit_nexus(uuid, integer)` / `wallet_credit_nexus(uuid, integer)`.
+4. Nota operativa:
+   - el fallback legacy en app se mantiene activo como red de seguridad si la RPC falla por entorno/permisos.
 
 ## Fase 4 (Catálogo de Mercado)
 
@@ -320,6 +362,18 @@
 4. Uso previsto:
    - `POST /api/tutorial/nodes/complete` persiste completion idempotente de cada nodo.
    - `POST /api/tutorial/reward/claim` aplica una sola vez la recompensa final del tutorial.
+
+## Fase T.2 + S.3 (Mutaciones atómicas de recompensa tutorial y resultado Story)
+
+1. Ejecuta `docs/supabase/sql/043_phase_story_tutorial_atomic_rewards.sql`.
+2. Verifica funciones:
+   - `public.story_register_duel_result(uuid, text, boolean)`
+   - `public.tutorial_claim_final_reward_nexus(uuid, integer)`
+3. Objetivo:
+   - evitar doble recompensa de primera victoria Story en concurrencia,
+   - evitar estados parciales en claim tutorial (claim guardado sin crédito Nexus).
+4. Nota:
+   - la app mantiene fallback temporal legacy si la función aún no está desplegada.
 
 ## Fase O.1 (Plantilla de deck inicial onboarding)
 

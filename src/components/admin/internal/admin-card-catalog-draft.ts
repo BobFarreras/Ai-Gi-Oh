@@ -2,6 +2,7 @@
 import { IAdminUpsertCardCatalogCommand } from "@/core/entities/admin/IAdminCatalogCommands";
 import { IAdminCardCatalogEntry } from "@/core/entities/admin/IAdminCatalogSnapshot";
 import { CardArchetype, CardType, Faction, ICard, TrapTrigger } from "@/core/entities/ICard";
+import { mapAdminCardCatalogEntryToCard } from "./admin-card-catalog-entry-mapper";
 export const ADMIN_CARD_DEFAULT_BG_URL = "/assets/bgs/bg-tech.jpg";
 export interface IAdminCardCatalogDraft {
   id: string;
@@ -135,22 +136,5 @@ export function createPreviewCardFromDraft(draft: IAdminCardCatalogDraft): ICard
   };
 }
 export function mapEntryToCard(entry: IAdminCardCatalogEntry): ICard {
-  return {
-    id: entry.id,
-    name: entry.name,
-    description: entry.description,
-    type: entry.type,
-    faction: entry.faction,
-    cost: entry.cost,
-    attack: entry.attack ?? undefined,
-    defense: entry.defense ?? undefined,
-    archetype: entry.archetype ?? undefined,
-    trigger: entry.trigger ?? undefined,
-    bgUrl: entry.bgUrl ?? undefined,
-    renderUrl: entry.renderUrl ?? undefined,
-    effect: entry.effect as ICard["effect"],
-    fusionRecipeId: entry.fusionRecipeId ?? undefined,
-    fusionMaterials: entry.fusionMaterialIds,
-    fusionEnergyRequirement: entry.fusionEnergyRequirement ?? undefined,
-  };
+  return mapAdminCardCatalogEntryToCard(entry);
 }

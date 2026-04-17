@@ -1,6 +1,5 @@
 // src/components/game/board/hooks/internal/match/useMatchNarration.ts - Runtime de narración en cliente sincronizado con combatLog, cola visual y audio local.
 "use client";
-
 import { useEffect, useMemo, useReducer, useRef } from "react";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { buildDefaultMatchNarrationPack } from "@/components/game/board/narration/build-default-match-narration-pack";
@@ -31,8 +30,7 @@ type MatchNarrationAction =
   | { type: "CLEAR_ACTIVE" };
 
 const initialState: IMatchNarrationState = { queue: [], activeAction: null, hudDialogueByPlayerId: {} };
-const RESULT_NARRATION_DELAY_MS = 1900;
-const CINEMATIC_ENTRY_DELAY_MS = 320;
+const RESULT_NARRATION_DELAY_MS = 1900, CINEMATIC_ENTRY_DELAY_MS = 320;
 
 function reducer(state: IMatchNarrationState, action: MatchNarrationAction): IMatchNarrationState {
   if (action.type === "ENQUEUE") {

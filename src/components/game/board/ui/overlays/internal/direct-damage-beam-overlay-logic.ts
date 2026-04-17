@@ -1,5 +1,13 @@
 // src/components/game/board/ui/overlays/internal/direct-damage-beam-overlay-logic.ts - Lógica de señal y trayectoria para rayo de daño directo por efecto.
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
+import {
+  readSourceCardId,
+  readSourceLaneType,
+  readSourceSlotIndex,
+  readTargetPlayerId,
+  resolveSourceCardId,
+  resolveTrapContextSignal,
+} from "./direct-damage-beam-overlay-readers";
 
 export interface IDirectDamageSignal {
   id: string;
@@ -13,65 +21,6 @@ export interface IDirectDamageSignal {
 
 export interface IPoint { x: number; y: number; }
 export interface ITrajectory { source: IPoint; control: IPoint; target: IPoint; }
-
-function readTargetPlayerId(event: ICombatLogEvent): string | null {
-  const payload = typeof event.payload === "object" && event.payload !== null ? (event.payload as Record<string, unknown>) : null;
-  return payload && typeof payload.targetPlayerId === "string" ? payload.targetPlayerId : null;
-}
-
-function readCardIdFromPayload(event: ICombatLogEvent, key: "trapCardId" | "cardId"): string | null {
-  const payload = typeof event.payload === "object" && event.payload !== null ? (event.payload as Record<string, unknown>) : null;
-  return payload && typeof payload[key] === "string" ? (payload[key] as string) : null;
-}
-
-function resolveSourceCardId(events: ICombatLogEvent[], fromIndex: number, actorPlayerId: string): string | null {
-  for (let index = fromIndex - 1; index >= 0 && fromIndex - index <= 6; index -= 1) {
-    const event = events[index];
-    if (event.actorPlayerId !== actorPlayerId) continue;
-    if (event.eventType === "TRAP_TRIGGERED") return readCardIdFromPayload(event, "trapCardId");
-    if (event.eventType === "CARD_PLAYED") {
-      const payload = typeof event.payload === "object" && event.payload !== null ? (event.payload as Record<string, unknown>) : null;
-      const isExecutionActivation = payload?.cardType === "EXECUTION" && payload?.mode === "ACTIVATE";
-      if (isExecutionActivation && typeof payload.cardId === "string") return payload.cardId;
-    }
-    if (event.eventType !== "CARD_TO_GRAVEYARD") continue;
-    const payload = typeof event.payload === "object" && event.payload !== null ? (event.payload as Record<string, unknown>) : null;
-    if (payload && payload.from === "EXECUTION_ZONE" && typeof payload.cardId === "string") return payload.cardId;
-  }
-  return null;
-}
-
-interface ITrapContextSignal {
-  fromTrap: boolean;
-  trapAction: string | null;
-}
-
-function resolveTrapContextSignal(events: ICombatLogEvent[], fromIndex: number, actorPlayerId: string): ITrapContextSignal {
-  for (let index = fromIndex - 1; index >= 0 && fromIndex - index <= 6; index -= 1) {
-    const event = events[index];
-    if (event.actorPlayerId !== actorPlayerId) continue;
-    if (event.eventType !== "TRAP_TRIGGERED") continue;
-    const payload = typeof event.payload === "object" && event.payload !== null ? (event.payload as Record<string, unknown>) : null;
-    const trapAction = payload && typeof payload.effectAction === "string" ? payload.effectAction : null;
-    return { fromTrap: true, trapAction };
-  }
-  return { fromTrap: false, trapAction: null };
-}
-
-function readSourceCardId(event: ICombatLogEvent): string | null {
-  const payload = typeof event.payload === "object" && event.payload !== null ? (event.payload as Record<string, unknown>) : null;
-  return payload && typeof payload.sourceCardId === "string" ? payload.sourceCardId : null;
-}
-
-function readSourceSlotIndex(event: ICombatLogEvent): number | null {
-  const payload = typeof event.payload === "object" && event.payload !== null ? (event.payload as Record<string, unknown>) : null;
-  return payload && typeof payload.sourceSlotIndex === "number" ? payload.sourceSlotIndex : null;
-}
-
-function readSourceLaneType(event: ICombatLogEvent): "EXECUTIONS" | "ENTITIES" | null {
-  const payload = typeof event.payload === "object" && event.payload !== null ? (event.payload as Record<string, unknown>) : null;
-  return payload && (payload.sourceLaneType === "EXECUTIONS" || payload.sourceLaneType === "ENTITIES") ? payload.sourceLaneType : null;
-}
 
 export function resolveEffectDamageSignalAt(events: ICombatLogEvent[], index: number, playerAId: string): IDirectDamageSignal | null {
   const event = events[index];

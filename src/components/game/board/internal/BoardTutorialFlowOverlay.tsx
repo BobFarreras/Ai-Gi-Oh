@@ -1,35 +1,20 @@
 // src/components/game/board/internal/BoardTutorialFlowOverlay.tsx - Overlay narrativo de BigLog para tutorial de combate con avance por eventos reales.
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { TutorialBigLogDialog } from "@/components/tutorial/flow/TutorialBigLogDialog";
 import { TutorialBigLogIntroOverlay } from "@/components/tutorial/flow/TutorialBigLogIntroOverlay";
 import { TutorialInteractionGuard } from "@/components/tutorial/flow/TutorialInteractionGuard";
 import { TutorialSpotlightOverlay } from "@/components/tutorial/flow/TutorialSpotlightOverlay";
 import { useTutorialFlowController } from "@/components/tutorial/flow/useTutorialFlowController";
 import { resolveCombatTutorialSteps } from "@/services/tutorial/combat/resolve-combat-tutorial-steps";
-import {
-  countTurnStartedByActor,
-} from "@/components/game/board/internal/board-tutorial-flow-events";
+import { countTurnStartedByActor } from "@/components/game/board/internal/board-tutorial-flow-events";
 import {
   isBoardTutorialDirectAttackGuidedStep,
   isBoardTutorialExecutionShowcaseStep,
   resolveBoardTutorialFlowSignals,
 } from "@/components/game/board/internal/board-tutorial-flow-signals";
 import { syncBoardTutorialStep } from "@/components/game/board/internal/board-tutorial-flow-sync";
-
-interface IBoardTutorialFlowOverlayProps {
-  combatLog: ICombatLogEvent[];
-  selectedCardId: string | null;
-  hasPendingTrapPrompt: boolean;
-  phase: string;
-  isGraveyardOpen: boolean;
-  isFusionCinematicActive: boolean;
-  fusionSelectedCount: number;
-  isFusionBrowserOpen: boolean;
-  hasWinner: boolean;
-  onFlowFinished?: () => void;
-}
+import { IBoardTutorialFlowOverlayProps } from "@/components/game/board/internal/board-tutorial-flow-overlay.types";
 
 export function BoardTutorialFlowOverlay(props: IBoardTutorialFlowOverlayProps) {
   const { combatLog, selectedCardId, hasPendingTrapPrompt, phase, isGraveyardOpen, isFusionCinematicActive, fusionSelectedCount, isFusionBrowserOpen, hasWinner, onFlowFinished } = props;

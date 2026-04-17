@@ -1,0 +1,1 @@
+-- supabase/seed.sql - Seed local opcional; se mantiene vacío porque el bootstrap usa migraciones de docs/supabase/sql.

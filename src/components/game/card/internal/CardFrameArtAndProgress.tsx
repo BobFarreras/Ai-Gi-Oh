@@ -10,6 +10,7 @@ interface CardFrameArtAndProgressProps {
   disableHoverEffects?: boolean;
   isPerformanceMode?: boolean;
   showBackgroundInPerformanceMode?: boolean;
+  prioritizeMediaLoading?: boolean;
 }
 
 export function CardFrameArtAndProgress({
@@ -20,6 +21,7 @@ export function CardFrameArtAndProgress({
   disableHoverEffects = false,
   isPerformanceMode = false,
   showBackgroundInPerformanceMode = false,
+  prioritizeMediaLoading = false,
 }: CardFrameArtAndProgressProps) {
   const isSpellOrTrap = card.type === "EXECUTION" || card.type === "TRAP";
   const shouldBypassImageOptimization = Boolean(card.renderUrl?.startsWith("/assets/renders/"));
@@ -43,6 +45,8 @@ export function CardFrameArtAndProgress({
             fill
             sizes={backgroundImageSizes}
             quality={backgroundImageQuality}
+            loading={prioritizeMediaLoading ? "eager" : undefined}
+            priority={prioritizeMediaLoading}
             className={isPerformanceMode ? "absolute inset-0 z-0 object-cover opacity-55 saturate-75" : "absolute inset-0 z-0 object-cover"}
           />
         ) : null}
@@ -52,7 +56,8 @@ export function CardFrameArtAndProgress({
             src={card.renderUrl}
             alt={card.name}
             fill
-            loading={isPerformanceMode ? "lazy" : undefined}
+            loading={isPerformanceMode ? "lazy" : prioritizeMediaLoading ? "eager" : undefined}
+            priority={prioritizeMediaLoading}
             unoptimized={shouldBypassImageOptimization}
             sizes={renderImageSizes}
             quality={renderImageQuality}

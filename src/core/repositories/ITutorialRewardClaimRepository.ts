@@ -8,4 +8,5 @@ export interface ITutorialRewardClaimResult {
 export interface ITutorialRewardClaimRepository {
   getClaimByPlayerId(playerId: string): Promise<ITutorialRewardClaimResult | null>;
   tryClaimNexusReward(playerId: string, rewardNexus: number): Promise<boolean>;
+  tryClaimAndApplyNexusReward(playerId: string, rewardNexus: number): Promise<boolean>;
 }

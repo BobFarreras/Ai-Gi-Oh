@@ -1,18 +1,6 @@
 // src/components/admin/AdminAuditPanel.tsx - Panel read-only de auditoría admin con filtros y paginación navegable.
-import { IAdminAuditLogPage, IAdminAuditLogPageQuery } from "@/core/entities/admin/IAdminAuditLog";
-
-interface IAdminAuditCardVisual {
-  cardId: string;
-  cardName: string;
-  renderUrl: string | null;
-}
-
-interface IAdminAuditPanelProps {
-  portalSlug: string;
-  page: IAdminAuditLogPage;
-  query: IAdminAuditLogPageQuery;
-  cardVisualById: Record<string, IAdminAuditCardVisual>;
-}
+import { IAdminAuditLogPageQuery } from "@/core/entities/admin/IAdminAuditLog";
+import { IAdminAuditPanelProps } from "@/components/admin/internal/admin-audit-panel.types";
 
 function buildHref(portalSlug: string, query: IAdminAuditLogPageQuery): string {
   const search = new URLSearchParams();

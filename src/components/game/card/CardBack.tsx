@@ -1,4 +1,4 @@
-// src/components/game/CardBack.tsx
+// src/components/game/card/CardBack.tsx - Cara trasera de carta para estados ocultos y placeholders de render.
 import { cn } from "@/lib/utils";
 
 interface CardBackProps {

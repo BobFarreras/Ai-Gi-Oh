@@ -2,9 +2,8 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Shield, SkipForward, Swords } from "lucide-react";
 import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
-import { BoardMobilePhaseButton } from "@/components/game/board/ui/layout/internal/BoardMobilePhaseButton";
+import { BoardMobilePhaseButtons } from "@/components/game/board/ui/layout/internal/BoardMobilePhaseButtons";
 import { resolveBoardMobilePhaseClasses } from "@/components/game/board/ui/layout/internal/resolve-board-mobile-phase-classes";
 import { useBoardMobilePhaseLayout } from "@/components/game/board/ui/layout/internal/use-board-mobile-phase-layout";
 
@@ -48,46 +47,17 @@ export function BoardMobilePhaseControls({
         className="absolute z-[290] flex max-w-[calc(100vw-10px)] items-center gap-1 overflow-x-auto pointer-events-auto"
         style={{ left: `${dockLeftPx}px`, bottom: `${bottomPx}px` }}
       >
-        <BoardMobilePhaseButton
-          ariaLabel="Fase invocar"
-          tutorialId="tutorial-board-phase-invoke-button"
-          disabled
-          icon={Shield}
-          text={isMain ? "Invocar" : undefined}
-          className={classes.invoke}
-          heightPx={sizing.height}
-          widthPx={invocarWidth}
-          fontSizePx={sizing.fontSize}
+        <BoardMobilePhaseButtons
+          isMain={isMain}
+          isBattle={isBattle}
+          canAdvance={canAdvance}
+          onAdvancePhase={onAdvancePhase}
+          classes={classes}
+          sizing={sizing}
+          invocarWidth={invocarWidth}
+          combateWidth={combateWidth}
+          pasarWidth={pasarWidth}
           withMotion={false}
-          isActive={isMain}
-        />
-        <BoardMobilePhaseButton
-          ariaLabel="Pasar a combate"
-          tutorialId="tutorial-board-phase-battle-button"
-          disabled={!canAdvance || !isMain}
-          onClick={onAdvancePhase}
-          icon={Swords}
-          text={isBattle ? "Combate" : undefined}
-          className={classes.battle}
-          heightPx={sizing.height}
-          widthPx={combateWidth}
-          fontSizePx={sizing.fontSize}
-          withMotion={false}
-          isActive={isBattle}
-        />
-        <BoardMobilePhaseButton
-          ariaLabel="Pasar turno"
-          tutorialId="tutorial-board-phase-pass-button"
-          disabled={!canAdvance || !isBattle}
-          onClick={onAdvancePhase}
-          icon={SkipForward}
-          text={!isMain && !isBattle ? "Pasar" : undefined}
-          className={classes.pass}
-          heightPx={sizing.height}
-          widthPx={pasarWidth}
-          fontSizePx={sizing.fontSize}
-          withMotion={false}
-          isActive={!isMain && !isBattle}
         />
       </div>
     );
@@ -109,46 +79,17 @@ export function BoardMobilePhaseControls({
           className="pointer-events-none absolute inset-y-0 left-0 z-[310] w-8 bg-white/70 mix-blend-overlay"
         />
       </AnimatePresence>
-      <BoardMobilePhaseButton
-        ariaLabel="Fase invocar"
-        tutorialId="tutorial-board-phase-invoke-button"
-        disabled
-        icon={Shield}
-        text={isMain ? "Invocar" : undefined}
-        className={classes.invoke}
-        heightPx={sizing.height}
-        widthPx={invocarWidth}
-        fontSizePx={sizing.fontSize}
+      <BoardMobilePhaseButtons
+        isMain={isMain}
+        isBattle={isBattle}
+        canAdvance={canAdvance}
+        onAdvancePhase={onAdvancePhase}
+        classes={classes}
+        sizing={sizing}
+        invocarWidth={invocarWidth}
+        combateWidth={combateWidth}
+        pasarWidth={pasarWidth}
         withMotion
-        isActive={isMain}
-      />
-      <BoardMobilePhaseButton
-        ariaLabel="Pasar a combate"
-        tutorialId="tutorial-board-phase-battle-button"
-        disabled={!canAdvance || !isMain}
-        onClick={onAdvancePhase}
-        icon={Swords}
-        text={isBattle ? "Combate" : undefined}
-        className={classes.battle}
-        heightPx={sizing.height}
-        widthPx={combateWidth}
-        fontSizePx={sizing.fontSize}
-        withMotion
-        isActive={isBattle}
-      />
-      <BoardMobilePhaseButton
-        ariaLabel="Pasar turno"
-        tutorialId="tutorial-board-phase-pass-button"
-        disabled={!canAdvance || !isBattle}
-        onClick={onAdvancePhase}
-        icon={SkipForward}
-        text={!isMain && !isBattle ? "Pasar" : undefined}
-        className={classes.pass}
-        heightPx={sizing.height}
-        widthPx={pasarWidth}
-        fontSizePx={sizing.fontSize}
-        withMotion
-        isActive={!isMain && !isBattle}
       />
     </div>
   );

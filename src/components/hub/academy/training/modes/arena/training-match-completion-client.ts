@@ -5,6 +5,7 @@ interface IPostTrainingMatchCompletionInput {
   battleId: string;
   tier: number;
   outcome: IMatchOutcome;
+  completionTicket: string;
 }
 
 export interface IPostTrainingMatchCompletionOutput {

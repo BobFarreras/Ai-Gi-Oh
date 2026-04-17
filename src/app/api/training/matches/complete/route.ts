@@ -5,7 +5,8 @@ import { getAuthenticatedUserId } from "@/services/auth/api/internal/get-authent
 import { createPlayerRouteRepositories } from "@/services/player-persistence/create-player-route-repositories";
 import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
 import { requireTrustedMutationOrigin } from "@/services/security/api/require-trusted-mutation-origin";
-import { readJsonObjectBody } from "@/services/security/api/request-body-parser";
+import { readJsonObjectBody, readRequiredStringField } from "@/services/security/api/request-body-parser";
+import { verifyTrainingCompletionTicket } from "@/services/security/duel-completion-ticket";
 import { processTrainingMatchCompletion } from "./internal/process-training-match-completion";
 
 export async function POST(request: NextRequest) {
@@ -16,9 +17,19 @@ export async function POST(request: NextRequest) {
     const repositories = await createPlayerRouteRepositories(request, response);
     const playerId = await getAuthenticatedUserId(repositories.client);
     const payload = await readJsonObjectBody(request, "Payload inválido para cierre de entrenamiento.");
+    const completionTicket = readRequiredStringField(
+      payload,
+      "completionTicket",
+      "Falta el ticket de cierre de entrenamiento.",
+    );
+    const validatedTicket = verifyTrainingCompletionTicket(completionTicket, playerId);
     const result = await processTrainingMatchCompletion({
       playerId,
-      payload,
+      payload: {
+        battleId: validatedTicket.battleId,
+        tier: validatedTicket.tier,
+        outcome: payload.outcome,
+      },
       dependencies: {
         claimRepository: repositories.trainingMatchClaimRepository,
         trainingProgressRepository: repositories.trainingProgressRepository,

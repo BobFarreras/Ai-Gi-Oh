@@ -1,0 +1,40 @@
+name: sync-main-into-develop
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  open-sync-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure no duplicate sync PR exists
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          existing_count=$(gh pr list --base develop --head main --state open --json number --jq 'length')
+          echo "existing_count=$existing_count" >> "$GITHUB_OUTPUT"
+
+      - name: Open sync PR main -> develop
+        if: steps.check.outputs.existing_count == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          gh pr create \
+            --base develop \
+            --head main \
+            --title "chore(sync): merge main back into develop" \
+            --body "PR automática para mantener \`develop\` alineada con \`main\` y reducir conflictos en PRs futuras."
+          status=$?
+          if [ $status -ne 0 ]; then
+            echo "No se pudo abrir PR (posible ausencia de cambios entre ramas o PR ya existente)."
+            exit 0
+          fi

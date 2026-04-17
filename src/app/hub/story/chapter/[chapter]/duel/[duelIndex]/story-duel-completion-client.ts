@@ -6,6 +6,7 @@ interface IPostStoryDuelCompletionInput {
   chapter: number;
   duelIndex: number;
   outcome: StoryDuelOutcome;
+  completionTicket: string;
 }
 
 export interface IPostStoryDuelCompletionOutput {

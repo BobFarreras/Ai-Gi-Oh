@@ -27,4 +27,19 @@ describe("deck-state-cache", () => {
     expect(resolved.playerId).toBe("p1");
     expect(resolved.slots[0]?.cardId).toBeNull();
   });
+
+  it("prioriza snapshot server cuando el fallback ya trae deck configurado", () => {
+    const fallback = createDeck("p1");
+    const fallbackConfigured: IDeck = {
+      ...fallback,
+      slots: fallback.slots.map((slot) => (slot.index === 0 ? { ...slot, cardId: "trap-hydra-counter" } : slot)),
+    };
+    const staleCached: IDeck = {
+      ...fallback,
+      slots: fallback.slots.map((slot) => (slot.index === 0 ? { ...slot, cardId: "entity-python" } : slot)),
+    };
+    writeCachedDeck("p1", staleCached);
+    const resolved = readCachedDeck("p1", fallbackConfigured);
+    expect(resolved.slots[0]?.cardId).toBe("trap-hydra-counter");
+  });
 });

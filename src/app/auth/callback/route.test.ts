@@ -27,4 +27,12 @@ describe("GET /auth/callback", () => {
     const response = await GET(request);
     expect(response.headers.get("location")).toContain("/login?error=missing_auth_code");
   });
+
+  it("bloquea next protocol-relative y usa fallback interno", async () => {
+    exchangeCodeForSessionMock.mockResolvedValueOnce({ data: { session: { access_token: "token" } }, error: null });
+    const request = new NextRequest("http://localhost:3000/auth/callback?code=abc123&next=//evil.example");
+    const response = await GET(request);
+    expect(response.headers.get("location")).toContain("/hub");
+    expect(response.headers.get("location")).not.toContain("evil.example");
+  });
 });

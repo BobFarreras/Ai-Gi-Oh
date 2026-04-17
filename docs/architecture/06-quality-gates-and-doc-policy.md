@@ -5,11 +5,12 @@
 
 1. `pnpm lint`
 2. `pnpm typecheck`
-3. `pnpm test`
-4. `pnpm build`
-5. Escaneo de secretos con `gitleaks`
+3. `pnpm test:coverage`
+4. `pnpm security:audit:prod`
+5. `pnpm build`
+6. Escaneo de secretos con `gitleaks` (en CI)
 
-Sin estos cinco en verde no se considera listo para merge.
+Sin estos seis en verde no se considera listo para merge.
 
 ## Flujo CI actual (`.github/workflows/quality-gates.yml`)
 
@@ -21,7 +22,7 @@ Sin estos cinco en verde no se considera listo para merge.
 5. Aplica cache del store de `pnpm` (`actions/cache`) por `pnpm-lock.yaml`.
 6. Instala dependencias con `pnpm install --frozen-lockfile`.
 7. Ejecuta `gitleaks` como gate de seguridad.
-8. Ejecuta `pnpm quality:check` como gate de calidad funcional/técnica.
+8. Ejecuta `pnpm quality:check` como gate de calidad funcional/técnica (`lint + typecheck + test:coverage + audit + build`).
 
 ## Por qué fallaba `pnpm` en Actions
 

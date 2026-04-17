@@ -15,5 +15,6 @@ export interface ICardFrameProps {
   level: number;
   xp: number;
   masteryPassiveLabel?: string | null;
+  prioritizeMediaLoading?: boolean;
 }
 

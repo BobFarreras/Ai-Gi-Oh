@@ -1,6 +1,5 @@
 // src/components/game/board/PlayerHUD.tsx - HUD principal desacoplado para jugador/oponente con feedback, retrato y control de fases.
 "use client";
-
 import { motion } from "framer-motion";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
@@ -86,13 +85,7 @@ export function PlayerHUD({
   return (
     <motion.div
       initial={{ x: isOpponent ? 100 : -100, y: isOpponent ? -50 : 50, opacity: 0 }}
-      animate={{ 
-        ...shakeAnimation, 
-        opacity: shouldDim ? 0.65 : 1,
-        filter: shouldDim ? "grayscale(80%) brightness(0.6)" : "grayscale(0%) brightness(1)",
-        x: 0, 
-        y: 0 
-      }}
+      animate={{ ...shakeAnimation, opacity: shouldDim ? 0.65 : 1, filter: shouldDim ? "grayscale(80%) brightness(0.6)" : "grayscale(0%) brightness(1)", x: 0, y: 0 }}
       transition={{ type: "spring", stiffness: 200, damping: 20 }}
       style={containerStyle}
       className={cn(
