@@ -6,6 +6,8 @@ on:
     branches:
       - main
       - develop
+  schedule:
+    - cron: "0 3 * * *"
   workflow_dispatch:
 
 permissions:
@@ -64,8 +66,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/develop') ||
-      (github.event_name == 'pull_request' && github.base_ref == 'develop')
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule'
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       E2E_STANDARD_EMAIL: a@test.com
@@ -139,7 +141,7 @@ jobs:
         run: pnpm test:e2e:story:resilience
 
       - name: Upload Playwright report
-        if: always()
+        if: always() && hashFiles('playwright-report/**') != ''
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-story-resilience
