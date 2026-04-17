@@ -11,8 +11,11 @@ describe("processTutorialRewardClaim", () => {
           listCompletedNodeIds: vi.fn().mockResolvedValue(["tutorial-arsenal-basics", "tutorial-combat-basics", "tutorial-market-basics"]),
           markNodeCompleted: vi.fn(),
         },
-        rewardClaimRepository: { getClaimByPlayerId: vi.fn(), tryClaimNexusReward: vi.fn().mockResolvedValue(true) },
-        walletRepository: { getWallet: vi.fn(), debitNexus: vi.fn(), creditNexus: vi.fn().mockResolvedValue({ playerId: "p1", nexus: 1600 }) },
+        rewardClaimRepository: {
+          getClaimByPlayerId: vi.fn(),
+          tryClaimNexusReward: vi.fn().mockResolvedValue(true),
+          tryClaimAndApplyNexusReward: vi.fn().mockResolvedValue(true),
+        },
         playerProgressRepository: {
           getByPlayerId: vi.fn().mockResolvedValue({ playerId: "p1", hasCompletedTutorial: false, medals: 0, storyChapter: 1, playerExperience: 0, updatedAtIso: "2026-03-18T10:00:00.000Z" }),
           create: vi.fn(),

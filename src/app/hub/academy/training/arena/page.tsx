@@ -6,6 +6,7 @@ import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
 import { getTrainingArenaRuntimeData } from "@/services/training/get-training-arena-runtime-data";
 import { resolveTrainingOpponentLoadout } from "@/services/training/resolve-training-opponent-loadout";
 import { buildStoryOpponentNarrationPack } from "@/services/story/build-story-opponent-narration-pack";
+import { issueTrainingCompletionTicket } from "@/services/security/duel-completion-ticket";
 
 interface TrainingArenaPageProps {
   searchParams?: Promise<{ tier?: string }>;
@@ -31,6 +32,12 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
   });
   const loadout = runtime.loadout;
   const isDeckReady = Boolean(loadout.deck && loadout.deck.length === HOME_DECK_SIZE);
+  const completionBattleId = crypto.randomUUID();
+  const completionTicket = issueTrainingCompletionTicket({
+    playerId: runtime.playerId,
+    tier: runtime.effectiveTier,
+    battleId: completionBattleId,
+  });
   if (!isDeckReady) {
     return (
       <>
@@ -52,6 +59,8 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
         opponentAvatarUrl={opponentLoadout.avatarUrl}
         opponentDifficulty={opponentLoadout.difficulty}
         narrationPack={narrationPack}
+        completionTicket={completionTicket}
+        completionBattleId={completionBattleId}
         selectedTier={runtime.effectiveTier}
         tiers={runtime.tiers.map((tier) => ({
           tier: tier.tier,

@@ -6,6 +6,9 @@ import { TutorialMarketClient } from "@/components/hub/academy/tutorial/nodes/ma
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
+vi.mock("@/components/hub/market/internal/usePackRevealPhase", () => ({
+  usePackRevealPhase: () => ({ phase: "REVEALED", resetPhase: vi.fn() }),
+}));
 
 describe("TutorialMarketClient", () => {
   beforeAll(() => {
@@ -55,11 +58,9 @@ describe("TutorialMarketClient", () => {
     }
     fireEvent.click(buyPackButton);
 
-    await waitFor(() => {
-      const closeRevealButton = screen.queryByRole("button", { name: "Integrar al Almacén" });
-      if (closeRevealButton) fireEvent.click(closeRevealButton);
-      expect(screen.queryByText("Sobres y aleatoriedad")).toBeInTheDocument();
-    }, { timeout: 15000 });
+    const closeRevealButton = await screen.findByRole("button", { name: "Integrar al Almacén" }, { timeout: 15000 });
+    fireEvent.click(closeRevealButton);
+    expect(await screen.findByText("Sobres y aleatoriedad", {}, { timeout: 15000 })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Siguiente paso del tutorial" }));
 

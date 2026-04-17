@@ -16,6 +16,7 @@
 4. Ruta arena de práctica: `/hub/academy/training/arena`.
 5. Tutorial de combate: `/hub/academy/training/tutorial`.
 6. La navegación y hardcodes se centralizan en `src/core/constants/routes/academy-routes.ts`.
+7. El cierre de combate en training se valida con `completionTicket` emitido server-side para evitar manipulación de `tier`/`battleId` desde cliente.
 
 ## Home (Arsenal/Deck Builder)
 
@@ -39,3 +40,4 @@
 6. Persistencia compacta de Story en `player_story_world_state` (`current_node_id`, `visited_node_ids`, `interacted_node_ids`).
 7. Configuración de duelo data-driven por BD: `story_duel_ai_profiles`, `story_duel_deck_overrides`, `story_duel_fusion_cards`, `story_duel_reward_cards`.
 8. Admin Story Decks edita deck base + slots visuales de `Fusion 1`, `Fusion 2` y `Reward` dentro del mismo contenedor de mazo.
+9. El cierre de duelo Story se valida con `completionTicket` firmado en servidor para restringir `chapter`/`duelIndex` al contexto activo del jugador.

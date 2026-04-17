@@ -7,6 +7,7 @@ import { getPlayerBoardLoadout } from "@/services/game/get-player-board-deck";
 
 export async function getTrainingArenaRuntimeData(selectedTier: number) {
   const [session, loadout] = await Promise.all([getCurrentUserSession(), getPlayerBoardLoadout()]);
+  const playerId = session?.user.id ?? "local-player";
   const playerDisplayName = session?.user.email ?? session?.user.displayName ?? "Arquitecto";
   const catalog = resolveTrainingTierCatalog();
   if (!session?.user.id) {
@@ -16,10 +17,10 @@ export async function getTrainingArenaRuntimeData(selectedTier: number) {
       selectedTier,
       catalog,
     });
-    return { loadout, progress, playerDisplayName, ...state };
+    return { loadout, progress, playerId, playerDisplayName, ...state };
   }
   const trainingRepository = await createSupabaseTrainingProgressRepository();
   const progress = (await trainingRepository.getByPlayerId(session.user.id)) ?? createInitialTrainingProgress(session.user.id);
   const state = new GetTrainingArenaStateUseCase().execute({ progress, selectedTier, catalog });
-  return { loadout, progress, playerDisplayName, ...state };
+  return { loadout, progress, playerId, playerDisplayName, ...state };
 }

@@ -15,6 +15,15 @@ interface IStoryProgressRow {
   updated_at: string;
 }
 
+interface IStoryResultRpcRow extends IStoryProgressRow {
+  first_victory?: boolean;
+}
+
+interface IPostgrestErrorShape {
+  code?: string;
+  message?: string;
+}
+
 function toEntity(row: IStoryProgressRow): IPlayerStoryDuelProgress {
   return {
     playerId: row.player_id,
@@ -30,6 +39,11 @@ function toEntity(row: IStoryProgressRow): IPlayerStoryDuelProgress {
 
 export class SupabasePlayerStoryDuelProgressRepository implements IPlayerStoryDuelProgressRepository {
   constructor(private readonly client: SupabaseClient) {}
+
+  private static isMissingRpcFunction(error: IPostgrestErrorShape | null): boolean {
+    const normalizedMessage = error?.message?.toLowerCase() ?? "";
+    return error?.code === "42883" || normalizedMessage.includes("function") || normalizedMessage.includes("rpc");
+  }
 
   async listByPlayerId(playerId: string): Promise<IPlayerStoryDuelProgress[]> {
     const { data, error } = await this.client
@@ -52,6 +66,21 @@ export class SupabasePlayerStoryDuelProgressRepository implements IPlayerStoryDu
   }
 
   async registerDuelResult(playerId: string, duelId: string, didWin: boolean): Promise<IPlayerStoryDuelProgress> {
+    const rpcResult = await this.client.rpc("story_register_duel_result", {
+      p_player_id: playerId,
+      p_duel_id: duelId,
+      p_did_win: didWin,
+    });
+    if (!rpcResult.error) {
+      const row = (rpcResult.data as IStoryResultRpcRow[] | null)?.[0];
+      if (!row) throw new ValidationError("No se pudo registrar el resultado del duelo Story.");
+      return toEntity(row);
+    }
+    if (!SupabasePlayerStoryDuelProgressRepository.isMissingRpcFunction(rpcResult.error as IPostgrestErrorShape)) {
+      throw new ValidationError("No se pudo registrar el resultado del duelo Story.");
+    }
+
+    // Fallback temporal para entornos sin función atómica desplegada.
     const current = await this.getByPlayerAndDuelId(playerId, duelId);
     const nowIso = new Date().toISOString();
     const nextWins = (current?.wins ?? 0) + (didWin ? 1 : 0);

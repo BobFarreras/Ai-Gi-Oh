@@ -102,6 +102,17 @@
    - `player_wallets` con `nexus = 1000`,
    - 20 filas en `player_deck_slots` (índices 0..19).
 
+## Fase 3.1 (Mutaciones atómicas de wallet)
+
+1. Ejecuta `docs/supabase/sql/042_phase_wallet_atomic_mutations.sql`.
+2. Verifica funciones:
+   - `public.wallet_debit_nexus(uuid, integer)`
+   - `public.wallet_credit_nexus(uuid, integer)`
+3. Objetivo:
+   - evitar condiciones de carrera en compras/recompensas concurrentes.
+4. Nota:
+   - el repositorio mantiene fallback legacy temporal si la RPC aún no está desplegada.
+
 ## Fase 4 (Catálogo de Mercado)
 
 1. Ejecuta `docs/supabase/sql/003_phase_4_market_catalog.sql`.
@@ -320,6 +331,18 @@
 4. Uso previsto:
    - `POST /api/tutorial/nodes/complete` persiste completion idempotente de cada nodo.
    - `POST /api/tutorial/reward/claim` aplica una sola vez la recompensa final del tutorial.
+
+## Fase T.2 + S.3 (Mutaciones atómicas de recompensa tutorial y resultado Story)
+
+1. Ejecuta `docs/supabase/sql/043_phase_story_tutorial_atomic_rewards.sql`.
+2. Verifica funciones:
+   - `public.story_register_duel_result(uuid, text, boolean)`
+   - `public.tutorial_claim_final_reward_nexus(uuid, integer)`
+3. Objetivo:
+   - evitar doble recompensa de primera victoria Story en concurrencia,
+   - evitar estados parciales en claim tutorial (claim guardado sin crédito Nexus).
+4. Nota:
+   - la app mantiene fallback temporal legacy si la función aún no está desplegada.
 
 ## Fase O.1 (Plantilla de deck inicial onboarding)
 

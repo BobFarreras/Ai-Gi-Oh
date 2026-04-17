@@ -24,6 +24,11 @@
 4. Endpoints `api/admin/*` con autorización server-side sobre `admin_users`, mutaciones con rate-limit por usuario/IP y auditoría en `admin_audit_log`.
 5. Portal admin con `robots noindex` y respuestas API `no-store` para reducir exposición accidental.
 6. Observabilidad admin vía `GET /api/admin/audit` y panel read-only de auditoría con filtros/paginación.
+7. `GET /auth/callback` sanitiza `next` y bloquea rutas protocol-relative (`//`), barras invertidas y saltos de línea para evitar open redirect.
+8. Cierre de duelos `Story/Training` protegido con `completionTicket` firmado en servidor y validado en API para impedir payloads arbitrarios de recompensa.
+9. Mutaciones de saldo Nexus migradas a RPC atómicas (`wallet_debit_nexus`, `wallet_credit_nexus`) para reducir carreras en compras/recompensas concurrentes.
+10. Registro de resultado Story endurecido con RPC atómica (`story_register_duel_result`) para evitar doble recompensa de primera victoria en concurrencia.
+11. Claim final tutorial endurecido con RPC atómica (`tutorial_claim_final_reward_nexus`) para evitar estado parcial (claim persistido sin crédito aplicado).
 
 ## Referencias
 

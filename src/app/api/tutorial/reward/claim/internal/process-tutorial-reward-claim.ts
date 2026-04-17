@@ -2,7 +2,6 @@
 import { IPlayerProgressRepository } from "@/core/repositories/IPlayerProgressRepository";
 import { ITutorialNodeProgressRepository } from "@/core/repositories/ITutorialNodeProgressRepository";
 import { ITutorialRewardClaimRepository } from "@/core/repositories/ITutorialRewardClaimRepository";
-import { IWalletRepository } from "@/core/repositories/IWalletRepository";
 import { ClaimTutorialFinalRewardUseCase } from "@/core/use-cases/tutorial/ClaimTutorialFinalRewardUseCase";
 
 interface IProcessTutorialRewardClaimInput {
@@ -10,7 +9,6 @@ interface IProcessTutorialRewardClaimInput {
   dependencies: {
     nodeProgressRepository: ITutorialNodeProgressRepository;
     rewardClaimRepository: ITutorialRewardClaimRepository;
-    walletRepository: IWalletRepository;
     playerProgressRepository: IPlayerProgressRepository;
   };
 }

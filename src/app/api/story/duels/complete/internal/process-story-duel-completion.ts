@@ -61,9 +61,11 @@ export async function processStoryDuelCompletion(params: IProcessStoryDuelComple
   if (!input) throw new ValidationError("El resultado del duelo Story es inválido.");
   const didWin = didWinFromStoryOutcome(input.outcome);
   const duel = await resolveDuelFromPayload(params.payload, params.opponentRepository);
-  const previous = await params.storyProgressRepository.getByPlayerAndDuelId(params.playerId, duel.id);
   const duelProgress = await params.storyProgressRepository.registerDuelResult(params.playerId, duel.id, didWin);
-  const firstVictory = didWin && previous?.bestResult !== "WON";
+  const firstVictory = didWin
+    && duelProgress.firstClearedAtIso !== null
+    && duelProgress.lastPlayedAtIso !== null
+    && duelProgress.firstClearedAtIso === duelProgress.lastPlayedAtIso;
   const shouldGrantStandardRewards = firstVictory;
   const shouldGrantBossRepeatCardReward = didWin && duel.isBossDuel && !firstVictory;
   const returnNodeId = await resolveStoryDuelReturnNode({

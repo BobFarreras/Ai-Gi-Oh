@@ -21,7 +21,6 @@ export async function POST(request: NextRequest) {
       dependencies: {
         nodeProgressRepository: new SupabaseTutorialNodeProgressRepository(repositories.client),
         rewardClaimRepository: new SupabaseTutorialRewardClaimRepository(repositories.client),
-        walletRepository: repositories.walletRepository,
         playerProgressRepository: new SupabasePlayerProgressRepository(repositories.client),
       },
     });
