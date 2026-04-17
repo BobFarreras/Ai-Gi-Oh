@@ -48,7 +48,7 @@ export function StoryInteractionVideoOverlay({
           exit={{ opacity: 0 }}
           className="absolute inset-0 z-[70] bg-black/95 md:bg-black/90 md:backdrop-blur-sm"
         >
-          <div className="absolute inset-0 flex items-center justify-center p-0 md:p-8">
+          <div className="absolute inset-0 flex items-center justify-center p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-[calc(env(safe-area-inset-top)+12px)] md:p-8">
             <motion.div
               animate={{
                 scaleY: isClosing ? 0.04 : 1,
@@ -56,7 +56,7 @@ export function StoryInteractionVideoOverlay({
               }}
               transition={{ duration: 0.34, ease: "easeInOut" }}
               initial={{ scaleY: 0.04, opacity: 0.72 }}
-              className="relative h-full w-full origin-center overflow-hidden border-cyan-300/45 bg-zinc-950 md:h-auto md:max-h-[88vh] md:max-w-[1280px] md:rounded-2xl md:border md:shadow-[0_0_60px_rgba(34,211,238,0.3)]"
+              className="relative aspect-video w-[min(94vw,900px)] origin-center overflow-hidden rounded-xl border border-cyan-300/45 bg-zinc-950 md:max-h-[88vh] md:max-w-[1280px] md:rounded-2xl md:shadow-[0_0_60px_rgba(34,211,238,0.3)]"
             >
               <motion.div
                 aria-hidden
@@ -71,7 +71,7 @@ export function StoryInteractionVideoOverlay({
               </div>
               <div className="pointer-events-none absolute inset-0 z-10 opacity-[0.17] [background-image:linear-gradient(to_bottom,rgba(34,211,238,0.15)_1px,transparent_1px)] [background-size:100%_3px]" />
               <video
-                className="h-full w-full object-cover md:aspect-video md:h-auto md:max-h-[calc(88vh-2.25rem)]"
+                className="h-full w-full bg-black object-contain md:aspect-video md:h-auto md:max-h-[calc(88vh-2.25rem)]"
                 src={cinematicVideo.videoUrl}
                 poster={cinematicVideo.posterUrl}
                 autoPlay={cinematicVideo.autoPlay ?? true}

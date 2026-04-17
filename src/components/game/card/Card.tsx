@@ -23,6 +23,7 @@ interface CardProps {
   level?: number;
   xp?: number;
   masteryPassiveLabel?: string | null;
+  prioritizeMediaLoading?: boolean;
 }
 
 function isBoardMode(mode?: BattleMode): boolean {
@@ -45,6 +46,7 @@ export function Card({
   level,
   xp,
   masteryPassiveLabel,
+  prioritizeMediaLoading = false,
 }: CardProps) {
   const isOnBoard = isBoardMode(boardMode);
   const isDefense = boardMode === "DEFENSE";
@@ -71,6 +73,7 @@ export function Card({
         level={resolvedLevel}
         xp={resolvedXp}
         masteryPassiveLabel={resolvedMasteryPassiveLabel}
+        prioritizeMediaLoading={prioritizeMediaLoading}
       />
       {shouldRenderHologram && <CardHologram card={card} isDefense={isDefense} mode={hologramMode} />}
     </div>

@@ -128,6 +128,7 @@ Eventos conectados vía `useHubModuleSfx`:
 3. En caso de error, la UI se reconcilia contra estado autoritativo usando `GET /api/home/deck/current` antes de mostrar fallback.
 4. Se mantiene cache local de sesión (`deck-state-cache`) con TTL corto para evitar remounts con snapshot antiguo tras refresh.
 5. El flujo resultante prioriza experiencia instantánea sin perder consistencia final con Supabase.
+6. Si el snapshot server ya llega con cartas configuradas (caso alta reciente de jugador), ese estado tiene prioridad sobre cache de `sessionStorage` para evitar inconsistencias visuales de deck vacío con slots ocupados.
 
 ## Estructura interna (Fase 2)
 

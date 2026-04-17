@@ -19,9 +19,16 @@ function isDeckShapeCompatible(candidate: IDeck, reference: IDeck): boolean {
     && candidate.fusionSlots.length === reference.fusionSlots.length;
 }
 
+function hasConfiguredCards(deck: IDeck): boolean {
+  return deck.slots.some((slot) => slot.cardId !== null)
+    || deck.fusionSlots.some((slot) => slot.cardId !== null);
+}
+
 /** Lee deck cacheado en cliente si es reciente y compatible con el shape actual. */
 export function readCachedDeck(playerId: string, fallback: IDeck): IDeck {
   if (typeof window === "undefined") return fallback;
+  // El snapshot server-side es fuente de verdad cuando ya contiene cartas configuradas.
+  if (hasConfiguredCards(fallback)) return fallback;
   try {
     const raw = window.sessionStorage.getItem(getCacheKey(playerId));
     if (!raw) return fallback;
