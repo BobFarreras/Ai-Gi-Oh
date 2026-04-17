@@ -1,6 +1,26 @@
 <!-- docs/supabase/README.md - Guía operativa para ejecutar scripts SQL de Supabase por fases del proyecto. -->
 # Supabase SQL por Fases
 
+## Entorno local para contributors (Docker + Supabase CLI)
+
+1. Ejecuta bootstrap completo:
+   - `pnpm supabase:bootstrap:local`
+2. Este flujo hace:
+   - genera `supabase/migrations` desde `docs/supabase/sql`,
+   - levanta Supabase local en Docker,
+   - aplica todo el esquema con `supabase db reset --local`,
+   - genera `.env.local.supabase` con keys locales.
+3. Para activar ese entorno en tu app actual sin perder tu configuración previa:
+   - `pnpm supabase:env:apply` (crea backup en `.env.local.backup`)
+4. Para volver al entorno anterior:
+   - `pnpm supabase:env:restore`
+5. Comandos equivalentes paso a paso:
+   - `pnpm supabase:prepare:migrations`
+   - `pnpm supabase:start`
+   - `pnpm supabase:db:reset:local`
+   - `pnpm supabase:env:local`
+   - `pnpm supabase:env:apply`
+
 ## Diccionario de tablas
 
 1. `public.player_profiles`:
