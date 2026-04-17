@@ -66,7 +66,7 @@ export function HeroCards({ onCardReveal }: { onCardReveal?: (d: number) => void
         transition={{ type: "spring", stiffness: 80, damping: 15, delay: 0.2 }}
         className="absolute z-10"
       >
-        <Card card={LORE_CARDS[1]} disableHoverEffects />
+        <Card card={LORE_CARDS[1]} disableHoverEffects prioritizeMediaLoading />
       </motion.div>
 
       {/* Carta Centro */}
@@ -77,7 +77,7 @@ export function HeroCards({ onCardReveal }: { onCardReveal?: (d: number) => void
         transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.5 }}
         className="absolute z-30"
       >
-        <Card card={LORE_CARDS[0]} disableHoverEffects clipToFrameShape disableDefaultShadow />
+        <Card card={LORE_CARDS[0]} disableHoverEffects clipToFrameShape disableDefaultShadow prioritizeMediaLoading />
       </motion.div>
 
       {/* Carta Derecha */}
@@ -88,7 +88,7 @@ export function HeroCards({ onCardReveal }: { onCardReveal?: (d: number) => void
         transition={{ type: "spring", stiffness: 80, damping: 15, delay: 0.8 }}
         className="absolute z-20"
       >
-        <Card card={LORE_CARDS[2]} disableHoverEffects />
+        <Card card={LORE_CARDS[2]} disableHoverEffects prioritizeMediaLoading />
       </motion.div>
     </div>
   );

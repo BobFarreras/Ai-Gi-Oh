@@ -20,8 +20,8 @@ export function StoryDialogPortraitPanel({
 }: IStoryDialogPortraitPanelProps) {
   const sideClassName =
     side === "LEFT"
-      ? "bottom-4 left-3 h-[208px] w-[162px] sm:bottom-6 sm:left-6 sm:h-[252px] sm:w-[196px]"
-      : "right-3 top-2 h-[200px] w-[154px] sm:right-6 sm:top-6 sm:h-[242px] sm:w-[186px]";
+      ? "bottom-[calc(env(safe-area-inset-bottom)+70px)] left-2 h-[154px] w-[120px] md:bottom-6 md:left-6 md:h-[252px] md:w-[196px]"
+      : "right-2 top-[calc(env(safe-area-inset-top)+10px)] h-[146px] w-[112px] md:right-6 md:top-6 md:h-[242px] md:w-[186px]";
 
   return (
     <motion.div

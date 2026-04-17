@@ -22,6 +22,7 @@ export function CardFrame({
   level,
   xp,
   masteryPassiveLabel,
+  prioritizeMediaLoading = false,
 }: ICardFrameProps) {
   const levelMetrics = getCardLevelProgressMetrics(level, xp);
   const levelProgressWidth = `${Math.round(levelMetrics.progressRatio * 100)}%`;
@@ -58,6 +59,7 @@ export function CardFrame({
             disableHoverEffects={disableHoverEffects}
             isPerformanceMode={isPerformanceMode}
             showBackgroundInPerformanceMode={showBackgroundInPerformanceMode}
+            prioritizeMediaLoading={prioritizeMediaLoading}
           />
           <CardFrameFooter card={card} descriptionText={descriptionText} />
         </div>

@@ -109,4 +109,27 @@ describe("StorySceneMobileLayout", () => {
     render(<StorySceneMobileLayout sidebar={sidebarWithMove} map={baseMap} />);
     expect(screen.getByRole("button", { name: "Abrir detalle del nodo" })).toBeDisabled();
   });
+
+  it("reemplaza detalle por siguiente cuando el diálogo está abierto", () => {
+    const onNext = vi.fn();
+    render(
+      <StorySceneMobileLayout
+        sidebar={baseSidebar}
+        map={{
+          ...baseMap,
+          dialog: {
+            ...baseMap.dialog,
+            isOpen: true,
+            line: { speaker: "Sistema", text: "Línea activa", side: "LEFT" },
+            onNext,
+          },
+        }}
+      />,
+    );
+
+    const nextButton = screen.getByRole("button", { name: "Siguiente" });
+    expect(nextButton).toBeEnabled();
+    fireEvent.click(nextButton);
+    expect(onNext).toHaveBeenCalledTimes(1);
+  });
 });

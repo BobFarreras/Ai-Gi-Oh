@@ -14,9 +14,23 @@ interface IStorySceneMobileLayoutProps {
 export function StorySceneMobileLayout(props: IStorySceneMobileLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isDetailAvailable = resolveStoryMobileDetailAvailability(props.sidebar.selectedNode);
+  const isInteractionDialogOpen = props.map.dialog.isOpen;
   const mobilePrimaryActionLabel = props.map.smartActionLabel ?? "Moverse a nodo";
   const canRunMobilePrimaryAction =
     (props.map.canRunSmartAction ?? props.map.canMoveSelectedNode ?? false) && !props.map.isBusy;
+  const mobileSecondaryActionLabel = isInteractionDialogOpen
+    ? "Siguiente"
+    : isSidebarOpen
+      ? "Cerrar detalle del nodo"
+      : "Abrir detalle del nodo";
+  const canRunMobileSecondaryAction = isInteractionDialogOpen || isDetailAvailable;
+  const handleMobileSecondaryAction = (): void => {
+    if (isInteractionDialogOpen) {
+      props.map.dialog.onNext();
+      return;
+    }
+    setIsSidebarOpen((value) => !value);
+  };
 
   return (
     <div className="relative flex h-full w-full flex-1 overflow-hidden border-t border-cyan-900/50 bg-black font-sans">
@@ -38,13 +52,13 @@ export function StorySceneMobileLayout(props: IStorySceneMobileLayoutProps) {
             </button>
             <button
               type="button"
-              aria-label={isSidebarOpen ? "Cerrar detalle del nodo" : "Abrir detalle del nodo"}
-              aria-expanded={isSidebarOpen}
-              disabled={!isDetailAvailable}
-              onClick={() => setIsSidebarOpen((value) => !value)}
+              aria-label={mobileSecondaryActionLabel}
+              aria-expanded={!isInteractionDialogOpen && isSidebarOpen}
+              disabled={!canRunMobileSecondaryAction}
+              onClick={handleMobileSecondaryAction}
               className="pointer-events-auto rounded-xl border border-cyan-400/65 px-2 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-100 disabled:cursor-not-allowed disabled:border-cyan-900/50 disabled:text-cyan-100/40"
             >
-              Detalle
+              {mobileSecondaryActionLabel}
             </button>
           </div>
         </div>

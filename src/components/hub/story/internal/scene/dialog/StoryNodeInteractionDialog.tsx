@@ -96,7 +96,7 @@ export function StoryNodeInteractionDialog({
               onClick={onNext}
               animate={{ scale: [1, 1.08, 1] }}
               transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
-              className="absolute bottom-6 right-4 z-30 rounded-full border-2 border-cyan-300 bg-cyan-950/95 px-6 py-3 text-xs font-black uppercase tracking-[0.18em] text-cyan-50 shadow-[0_0_24px_rgba(34,211,238,0.35)] sm:right-8"
+              className="absolute bottom-[calc(env(safe-area-inset-bottom)+10px)] left-1/2 z-30 w-[min(90vw,360px)] -translate-x-1/2 rounded-2xl border-2 border-cyan-300 bg-cyan-950/95 px-6 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-50 shadow-[0_0_24px_rgba(34,211,238,0.35)] md:bottom-6 md:left-auto md:right-8 md:w-auto md:translate-x-0 md:rounded-full md:text-xs"
             >
               Siguiente
             </motion.button>
