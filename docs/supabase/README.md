@@ -113,6 +113,17 @@
 4. Nota:
    - el repositorio mantiene fallback legacy temporal si la RPC aún no está desplegada.
 
+## Fase 3.2 (Hotfix RPC wallet vinculada al actor autenticado)
+
+1. Ejecuta `docs/supabase/sql/044_phase_wallet_rpc_actor_bound_fix.sql`.
+2. Objetivo:
+   - evitar falsos negativos por mismatch de `p_player_id` vs contexto de sesión,
+   - forzar que la RPC opere siempre sobre `auth.uid()` como identidad fuente de verdad.
+3. Compatibilidad:
+   - mantiene la misma firma `wallet_debit_nexus(uuid, integer)` / `wallet_credit_nexus(uuid, integer)`.
+4. Nota operativa:
+   - el fallback legacy en app se mantiene activo como red de seguridad si la RPC falla por entorno/permisos.
+
 ## Fase 4 (Catálogo de Mercado)
 
 1. Ejecuta `docs/supabase/sql/003_phase_4_market_catalog.sql`.
