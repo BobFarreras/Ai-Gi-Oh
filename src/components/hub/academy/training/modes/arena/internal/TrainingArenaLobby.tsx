@@ -117,6 +117,24 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
         </div>
         <TrainingArenaLobbyActions onStart={props.onStart} onBack={props.onBack} />
       </div>
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.35, ease: "easeOut", delay: 0.24 }}
+        className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[calc(env(safe-area-inset-bottom)+10px)] pt-2 md:hidden"
+      >
+        <div className="mx-auto flex w-full max-w-md flex-col items-center gap-2">
+          <motion.button
+            type="button"
+            onClick={props.onStart}
+            whileTap={{ scale: 0.98 }}
+            className="w-full rounded-xl border border-emerald-300/70 bg-emerald-500/20 px-6 py-2.5 text-sm font-black uppercase tracking-[0.14em] text-emerald-100"
+          >
+            Empezar Combate
+          </motion.button>
+          <AcademyBackButton label="Volver a Academy" onClick={props.onBack} className="w-full" />
+        </div>
+      </motion.div>
     </section>
   );
 }

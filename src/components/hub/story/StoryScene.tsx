@@ -71,6 +71,30 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
     setPendingRetreatNodeId: local.setPendingPostWinRetreatNodeId,
     setRetreatingNodeId: local.setRetreatingNodeId,
     startInteractionDialog: interactionDialog.start,
+    requestNodeSubmission: async (nodeId) => {
+      const prompt = resolveStoryNodeSubmissionPrompt(nodeId);
+      if (!prompt) return null;
+      return await new Promise<string | null>((resolve) => {
+        setSubmissionDialog({
+          nodeId,
+          title: prompt.title,
+          hint: prompt.hint,
+          placeholder: prompt.placeholder,
+          activationLabel: prompt.activationLabel,
+          generatedCode: prompt.generatedCode,
+          requiredKeys: prompt.requiredNodeIds.map((requiredNodeId) => ({
+            id: requiredNodeId,
+            label: nodesById[requiredNodeId]?.title ?? requiredNodeId,
+            isCollected: Boolean(nodesById[requiredNodeId]?.isCompleted),
+          })),
+          resolve,
+        });
+      });
+    },
+    hasSeenPreDuelDialogue: (nodeId) => preDuelDialogSeenNodeIds.includes(nodeId),
+    markPreDuelDialogueSeen: (nodeId) =>
+      setPreDuelDialogSeenNodeIds((prev) => (prev.includes(nodeId) ? prev : [...prev, nodeId])),
+    scheduleAutoStartDuelAfterDialogue: (nodeId) => setPendingAutoStartDuelNodeId(nodeId),
   });
 
   const { centerAvatarOnNode, handleSmartAction } = createStorySceneActions({
