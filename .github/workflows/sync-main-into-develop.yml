@@ -19,7 +19,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+<<<<<<< HEAD
           existing_count=$(gh pr list --repo "$GITHUB_REPOSITORY" --base develop --head main --state open --json number --jq 'length')
+=======
+          existing_count=$(gh pr list --base develop --head main --state open --json number --jq 'length')
+>>>>>>> origin/main
           echo "existing_count=$existing_count" >> "$GITHUB_OUTPUT"
 
       - name: Open sync PR main -> develop
@@ -29,7 +33,10 @@ jobs:
         run: |
           set +e
           gh pr create \
+<<<<<<< HEAD
             --repo "$GITHUB_REPOSITORY" \
+=======
+>>>>>>> origin/main
             --base develop \
             --head main \
             --title "chore(sync): merge main back into develop" \
