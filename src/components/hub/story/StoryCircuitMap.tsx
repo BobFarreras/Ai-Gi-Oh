@@ -4,31 +4,13 @@ import { useRef } from "react";
 import { useTransform } from "framer-motion";
 import { StoryMapZoomControls } from "./internal/map/components/StoryMapZoomControls";
 import { StoryCircuitCanvas } from "./internal/map/components/StoryCircuitCanvas";
-import { clampStoryMapZoom, useStoryMapZoom } from "./internal/map/hooks/use-story-map-zoom";
+import { useStoryMapZoom } from "./internal/map/hooks/use-story-map-zoom";
 import { useStoryCameraBounds } from "./internal/map/hooks/use-story-camera-bounds";
 import { useStoryCircuitMotion } from "./internal/map/hooks/use-story-circuit-motion";
 import { useStoryCircuitMapRuntime } from "./internal/map/hooks/use-story-circuit-map-runtime";
 import { useStoryMapGestureControls } from "./internal/map/hooks/use-story-map-gesture-controls";
 import { resolveStoryAvatarSideOffset } from "./internal/map/layout/resolve-story-avatar-side-offset";
 import { StoryCircuitMapProps } from "./internal/map/types/story-circuit-map.types";
-
-interface IStoryTouchListLike {
-  length: number;
-  item: (index: number) => { clientX: number; clientY: number } | null;
-}
-
-function resolveAvatarSideOffset(
-  visualStance: "CENTER" | "SIDE" | "PORTAL",
-  sideDirection: StoryAvatarSideDirection | undefined,
-): { x: number; y: number } {
-  if (visualStance !== "SIDE") return { x: 0, y: 0 };
-  const offset = resolveStoryNodeSideOffsetPx();
-  const direction = sideDirection ?? "LEFT";
-  if (direction === "RIGHT") return { x: offset, y: 0 };
-  if (direction === "UP") return { x: 0, y: -offset };
-  if (direction === "DOWN") return { x: 0, y: offset };
-  return { x: -offset, y: 0 };
-}
 
 export function StoryCircuitMap({
   nodes,

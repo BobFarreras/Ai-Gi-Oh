@@ -2,6 +2,7 @@
 "use client";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { AcademyBackButton } from "@/components/hub/academy/AcademyBackButton";
 import { TrainingArenaLobbyBackdrop } from "@/components/hub/academy/training/modes/arena/internal/TrainingArenaLobbyBackdrop";
 import { TrainingArenaLobbyActions } from "@/components/hub/academy/training/modes/arena/internal/TrainingArenaLobbyActions";
 import { ITrainingArenaLobbyProps } from "@/components/hub/academy/training/modes/arena/internal/training-arena-lobby.types";
