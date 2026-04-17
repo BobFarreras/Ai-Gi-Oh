@@ -38,11 +38,6 @@ import { mapCardCatalogRowToCard } from "@/infrastructure/persistence/supabase/i
 import { saveStoryDuelConfig } from "@/infrastructure/persistence/supabase/admin/internal/admin-story-deck-save-duel-config";
 function isMissingFusionTableError(error: { message?: string; code?: string } | null): boolean {
   if (!error) return false;
-  return error.code === "PGRST205" || (error.message ?? "").includes("story_duel_fusion_cards") && (error.message ?? "").includes("schema cache");
-}
-
-function isMissingFusionTableError(error: { message?: string; code?: string } | null): boolean {
-  if (!error) return false;
   const message = error.message ?? "";
   return error.code === "PGRST205" || message.includes("story_duel_fusion_cards") && message.includes("schema cache");
 }
