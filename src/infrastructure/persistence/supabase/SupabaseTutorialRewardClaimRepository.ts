@@ -2,6 +2,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { ITutorialRewardClaimRepository, ITutorialRewardClaimResult } from "@/core/repositories/ITutorialRewardClaimRepository";
+import { SupabaseWalletRepository } from "@/infrastructure/persistence/supabase/SupabaseWalletRepository";
 
 interface ITutorialRewardClaimRow {
   player_id: string;
@@ -24,12 +25,33 @@ function isMissingRpcFunction(error: IPostgrestErrorShape | null): boolean {
   return error?.code === "42883" || normalizedMessage.includes("function") || normalizedMessage.includes("rpc");
 }
 
+function isTutorialAtomicBusinessRuleError(error: IPostgrestErrorShape | null): boolean {
+  return error?.code === "22023";
+}
+
+function resolveAtomicAppliedFlag(data: unknown): boolean | null {
+  if (typeof data === "boolean") return data;
+  if (Array.isArray(data)) {
+    const row = data[0] as ITutorialAtomicClaimRow | undefined;
+    return row && typeof row.applied === "boolean" ? row.applied : null;
+  }
+  if (data && typeof data === "object") {
+    const row = data as Partial<ITutorialAtomicClaimRow>;
+    return typeof row.applied === "boolean" ? row.applied : null;
+  }
+  return null;
+}
+
 function toEntity(row: ITutorialRewardClaimRow): ITutorialRewardClaimResult {
   return { claimedAtIso: row.claimed_at, rewardKind: row.reward_kind, rewardNexus: row.reward_nexus };
 }
 
 export class SupabaseTutorialRewardClaimRepository implements ITutorialRewardClaimRepository {
-  constructor(private readonly client: SupabaseClient) {}
+  private readonly walletRepository: SupabaseWalletRepository;
+
+  constructor(private readonly client: SupabaseClient) {
+    this.walletRepository = new SupabaseWalletRepository(client);
+  }
 
   async getClaimByPlayerId(playerId: string): Promise<ITutorialRewardClaimResult | null> {
     const { data, error } = await this.client
@@ -58,24 +80,20 @@ export class SupabaseTutorialRewardClaimRepository implements ITutorialRewardCla
       p_reward_nexus: rewardNexus,
     });
     if (!rpcResult.error) {
-      const row = (rpcResult.data as ITutorialAtomicClaimRow[] | null)?.[0];
-      if (row && typeof row.applied === "boolean") return row.applied;
-      return rpcResult.data === true;
+      const applied = resolveAtomicAppliedFlag(rpcResult.data);
+      if (applied !== null) return applied;
     }
-    if (!isMissingRpcFunction(rpcResult.error as IPostgrestErrorShape)) {
+    if (rpcResult.error && isTutorialAtomicBusinessRuleError(rpcResult.error as IPostgrestErrorShape)) {
       throw new ValidationError("No se pudo aplicar la recompensa final del tutorial.");
+    }
+    if (rpcResult.error && !isMissingRpcFunction(rpcResult.error as IPostgrestErrorShape)) {
+      // Fallback para entornos con RPC desplegada pero con fallos de contexto/permisos.
     }
 
     // Fallback temporal para entornos sin la función atómica desplegada.
     const claimed = await this.tryClaimNexusReward(playerId, rewardNexus);
     if (!claimed) return false;
-    const walletCreditResult = await this.client.rpc("wallet_credit_nexus", {
-      p_player_id: playerId,
-      p_amount: rewardNexus,
-    });
-    if (walletCreditResult.error) {
-      throw new ValidationError("No se pudo aplicar la recompensa final del tutorial.");
-    }
+    await this.walletRepository.creditNexus(playerId, rewardNexus);
     return true;
   }
 }

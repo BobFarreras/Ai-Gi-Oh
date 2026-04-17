@@ -24,6 +24,15 @@ interface IPostgrestErrorShape {
   message?: string;
 }
 
+function resolveStoryResultRpcRow(data: unknown): IStoryResultRpcRow | null {
+  if (Array.isArray(data)) {
+    const row = data[0];
+    return row && typeof row === "object" ? (row as IStoryResultRpcRow) : null;
+  }
+  if (data && typeof data === "object") return data as IStoryResultRpcRow;
+  return null;
+}
+
 function toEntity(row: IStoryProgressRow): IPlayerStoryDuelProgress {
   return {
     playerId: row.player_id,
@@ -72,12 +81,11 @@ export class SupabasePlayerStoryDuelProgressRepository implements IPlayerStoryDu
       p_did_win: didWin,
     });
     if (!rpcResult.error) {
-      const row = (rpcResult.data as IStoryResultRpcRow[] | null)?.[0];
-      if (!row) throw new ValidationError("No se pudo registrar el resultado del duelo Story.");
-      return toEntity(row);
+      const row = resolveStoryResultRpcRow(rpcResult.data);
+      if (row) return toEntity(row);
     }
-    if (!SupabasePlayerStoryDuelProgressRepository.isMissingRpcFunction(rpcResult.error as IPostgrestErrorShape)) {
-      throw new ValidationError("No se pudo registrar el resultado del duelo Story.");
+    if (rpcResult.error && !SupabasePlayerStoryDuelProgressRepository.isMissingRpcFunction(rpcResult.error as IPostgrestErrorShape)) {
+      // Fallback para entornos donde la RPC existe pero falla por permisos/contexto.
     }
 
     // Fallback temporal para entornos sin función atómica desplegada.
