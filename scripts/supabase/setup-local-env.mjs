@@ -7,20 +7,42 @@ const repositoryRoot = process.cwd();
 const targetArg = process.argv.find((entry) => entry.startsWith("--target="));
 const targetFilename = targetArg ? targetArg.slice("--target=".length).trim() : ".env.local.supabase";
 const envPath = path.join(repositoryRoot, targetFilename);
+const statusRetryAttempts = 30;
+const statusRetryDelayMs = 2000;
 
-function runSupabaseStatusEnv() {
+function runSupabaseStatusEnvOnce() {
   const result = spawnSync("pnpm", ["exec", "supabase", "status", "-o", "env"], {
     cwd: repositoryRoot,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
+    shell: process.platform === "win32",
   });
-  if (result.status !== 0) {
-    throw new Error(
-      "No se pudo leer `supabase status -o env`. Asegura Docker activo y ejecuta primero `pnpm supabase:start`.\n" +
-        (result.stderr || result.stdout || ""),
-    );
+  return result;
+}
+
+function sleep(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function runSupabaseStatusEnv() {
+  let latestErrorOutput = "";
+  for (let attempt = 1; attempt <= statusRetryAttempts; attempt += 1) {
+    const result = runSupabaseStatusEnvOnce();
+    if (result.status === 0) {
+      return result.stdout;
+    }
+    latestErrorOutput =
+      result.error?.message || result.stderr || result.stdout || "Sin salida de error disponible.";
+    if (attempt < statusRetryAttempts) {
+      // Espera breve para cubrir el reinicio de servicios tras `supabase db reset`.
+      await sleep(statusRetryDelayMs);
+    }
   }
-  return result.stdout;
+
+  throw new Error(
+    "No se pudo leer `supabase status -o env` tras varios reintentos. Asegura Docker activo y ejecuta primero `pnpm supabase:start`.\n" +
+      latestErrorOutput,
+  );
 }
 
 function parseEnvLines(raw) {
@@ -63,8 +85,8 @@ function buildEnvFileContent(existingEntries, overrides) {
   return `${header}\n${body}\n`;
 }
 
-function main() {
-  const statusEnvOutput = runSupabaseStatusEnv();
+async function main() {
+  const statusEnvOutput = await runSupabaseStatusEnv();
   const localSupabase = parseEnvLines(statusEnvOutput);
   const apiUrl = localSupabase.get("API_URL");
   const anonKey = localSupabase.get("ANON_KEY");
