@@ -59,3 +59,89 @@ jobs:
 
       - name: Run quality gates
         run: pnpm quality:check
+
+  e2e-story-resilience:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/develop') ||
+      (github.event_name == 'pull_request' && github.base_ref == 'develop')
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      E2E_STANDARD_EMAIL: a@test.com
+      E2E_STANDARD_PASSWORD: "12345678"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Setup pnpm
+        run: |
+          npm install --global pnpm@10
+          pnpm --version
+
+      - name: Resolve pnpm store path
+        run: |
+          echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PNPM_STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Bootstrap local Supabase
+        run: pnpm supabase:bootstrap:local
+
+      - name: Apply local env
+        run: pnpm supabase:env:apply
+
+      - name: Ensure standard E2E user exists in local Supabase
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .env.local
+          payload=$(cat <<'JSON'
+          {
+            "email": "a@test.com",
+            "password": "12345678",
+            "email_confirm": true
+          }
+          JSON
+          )
+          response=$(curl -sS -X POST "${NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "$payload")
+          if echo "$response" | grep -qiE "already|exists|registered"; then
+            echo "Usuario E2E estándar ya existía."
+          else
+            echo "Usuario E2E estándar creado."
+          fi
+
+      - name: Run Story resilience E2E suite
+        run: pnpm test:e2e:story:resilience
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-story-resilience
+          path: playwright-report
+          retention-days: 7
