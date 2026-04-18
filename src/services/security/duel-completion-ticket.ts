@@ -31,6 +31,8 @@ const DEV_FALLBACK_SECRET = "dev-only-duel-completion-secret-change-me";
 function resolveTicketSecret(): string {
   const value = process.env.DUEL_COMPLETION_TOKEN_SECRET?.trim();
   if (value) return value;
+  const serviceRoleFallback = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (serviceRoleFallback) return serviceRoleFallback;
   if (process.env.NODE_ENV !== "production") return DEV_FALLBACK_SECRET;
   throw new ValidationError("Falta DUEL_COMPLETION_TOKEN_SECRET para validar cierres de duelo.");
 }

@@ -33,19 +33,23 @@ export function AcademyPostTutorialBigLogOverlay() {
 
   function closeOverlay(): void {
     playSfx(ONBOARDING_AUDIO_CATALOG.buttonClick, 0.62);
-    // Limpiamos query para evitar mostrar el mensaje de nuevo al refrescar Academy.
-    router.replace(pathname);
+    // Limpiamos solo la query del reward manteniendo el resto de parámetros de navegación.
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete(ACADEMY_POST_TUTORIAL_QUERY);
+    const nextQuery = nextParams.toString();
+    const nextUrl = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+    router.replace(nextUrl, { scroll: false });
   }
 
   if (!isVisible) return null;
   return (
-    <aside className="pointer-events-none fixed inset-x-0 bottom-3 z-[140] flex justify-center px-3 sm:justify-end sm:px-6">
+    <aside className="pointer-events-auto fixed inset-x-0 bottom-3 z-[260] flex justify-center px-3 sm:justify-end sm:px-6">
       <div className="flex w-full max-w-[min(96vw,760px)] flex-col items-center sm:max-w-[min(46vw,680px)]">
         <motion.div
           initial={{ opacity: 0, x: 160, scale: 0.88 }}
           animate={{ opacity: 1, x: 0, scale: 1 }}
           transition={{ type: "spring", stiffness: 170, damping: 20 }}
-          className="relative h-[220px] w-[220px] sm:h-[320px] sm:w-[320px]"
+          className="pointer-events-none relative h-[220px] w-[220px] sm:h-[320px] sm:w-[320px]"
         >
           <Image
             src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png"
