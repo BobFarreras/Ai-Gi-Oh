@@ -100,8 +100,8 @@ docs                    -> Arquitectura, seguridad, rendimiento y operación
 
 ## Presentación del proyecto
 
-1. URL de slides: `PENDIENTE_DE_PUBLICAR`
-2. Sustituir el valor anterior por un enlace compartible (Google Slides, Canva o equivalente).
+1. URL de presentación web (TFM): `/presentacion-tfm`
+2. Publicación recomendada: `https://ai-gi-ho.vercel.app/presentacion-tfm`
 
 ## Configuración de recuperación de contraseña (Supabase)
 
@@ -199,6 +199,8 @@ Regla de dependencia: `components -> services/use-cases -> core`.
 ### Operación y releases
 
 1. [docs/GUIA_FLUJO_PRODUCCION.md](./docs/GUIA_FLUJO_PRODUCCION.md)
+2. [docs/GUIA_RELEASES.md](./docs/GUIA_RELEASES.md)
+3. [CHANGELOG.md](./CHANGELOG.md)
 
 ### Guías por módulo en `src/`
 
