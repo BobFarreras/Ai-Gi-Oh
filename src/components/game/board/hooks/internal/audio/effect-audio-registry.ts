@@ -11,6 +11,8 @@ const EFFECT_AUDIO_OVERRIDES: Record<string, string> = {
   BOOST_DEFENSE_BY_CARD_ID: "/audio/sfx/effects/execution/stat_up.mp3",
   REDUCE_OPPONENT_ATTACK: "/audio/sfx/effects/execution/bajada.mp3",
   REDUCE_OPPONENT_DEFENSE: "/audio/sfx/effects/execution/bajada.mp3",
+  FUSION_SUMMON: "/audio/sfx/fusion-summon.mp3",
+  DAMAGE: "/audio/sfx/effects/execution/damage.mp3",
 };
 
 function normalizeActionToFileName(action: string): string {

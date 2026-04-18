@@ -1,50 +1,105 @@
-<!-- README.md - Guía principal del proyecto AI-GI-OH con arquitectura, calidad y rutas de documentación activas. -->
-# AI-GI-OH!
+<!-- README.md - Guía principal profesional de AI-GI-OH como producto en producción v1.0.0. -->
+# AI-GI-OH
 
-<div align="center">
+<p align="center">
+  <strong>Producto en producción · v1.0.0</strong><br/>
+  Juego táctico de cartas con motor desacoplado, arquitectura por capas y flujo profesional de calidad.
+</p>
 
-Juego táctico de cartas en **Next.js 16 + React 19 + TypeScript estricto**,
-con motor desacoplado, reglas de dominio tipadas y foco en rendimiento móvil.
+<p align="center">
+  <a href="https://ai-gi-oh.vercel.app"><strong>🌐 App en producción</strong></a> ·
+  <a href="./CONTRIBUTING.md"><strong>🤝 Contribuir</strong></a> ·
+  <a href="./docs/GUIA_DESPLIEGUE_PROFESIONAL.md"><strong>🚀 Deploy</strong></a> ·
+  <a href="./docs/architecture/README.md"><strong>🏗️ Arquitectura</strong></a>
+</p>
 
-</div>
+<p align="center">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-06b6d4">
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black">
+  <img alt="React" src="https://img.shields.io/badge/React-19-149eca">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-Strict-3178c6">
+  <img alt="CI" src="https://img.shields.io/badge/quality-gates-in%20CI-22c55e">
+</p>
 
-## Estado del proyecto
+## Tabla de contenidos
 
-| Área | Estado actual | Fuente |
-| --- | --- | --- |
-| Arquitectura modular | Activa por capas (`components -> services/use-cases -> core`) | `docs/architecture/*` |
-| Motor de juego | Documentación dividida por subdominios | `docs/game-engine/*` |
-| Rendimiento móvil | Baseline automatizable (dev/prod) + fases iterativas | `docs/performance/*` |
-| Seguridad auth/persistencia | Hardening aplicado en sesión/usuario | `docs/security/auth-hardening.md` |
-| Calidad de merge | Gates obligatorios en CI/local | `Agents.md` |
+1. [Qué es AI-GI-OH](#qué-es-ai-gi-oh)
+2. [Vista rápida del producto](#vista-rápida-del-producto)
+3. [Stack tecnológico](#stack-tecnológico)
+4. [Inicio rápido local (5 min)](#inicio-rápido-local-5-min)
+5. [Contribución profesional](#contribución-profesional)
+6. [Despliegue profesional](#despliegue-profesional)
+7. [Variables de entorno](#variables-de-entorno)
+8. [Scripts de ingeniería](#scripts-de-ingeniería)
+9. [Arquitectura y estructura](#arquitectura-y-estructura)
+10. [Módulos funcionales](#módulos-funcionales)
+11. [Calidad y merge](#calidad-y-merge)
+12. [Presentación TFM](#presentación-tfm)
+13. [Mapa de documentación](#mapa-de-documentación)
 
-## Stack técnico
+## Qué es AI-GI-OH
 
-1. Next.js 16 (App Router)
-2. React 19
-3. TypeScript estricto
-4. Zustand (estado UI reactivo por slices)
-5. Vitest + React Testing Library
-6. ESLint
-7. Supabase (`@supabase/ssr` + `@supabase/supabase-js`)
+AI-GI-OH es un juego táctico de cartas desarrollado como producto real, no demo técnica.
 
-## Arranque rápido
+Incluye:
 
-```bash
-pnpm install
-pnpm dev
-```
+- Combate por turnos con fases, efectos y fusión.
+- `combatLog` como fuente canónica de historial, UI y feedback.
+- Persistencia de progreso, economía y narrativa en Supabase.
+- Hub con módulos `Home`, `Market`, `Story`, `Academy` y `Multiplayer`.
+- Panel admin para gestionar contenido sin tocar código.
 
-Aplicación local:
+Producción actual:
 
-1. `http://localhost:3000/`
-2. `http://localhost:3000/hub`
+- App: `https://ai-gi-oh.vercel.app`
+- Callback auth: `https://ai-gi-oh.vercel.app/auth/callback`
 
-## Contribución open source (sin keys privadas)
+## Vista rápida del producto
 
-El proyecto usa Supabase local con Docker para que cualquier contributor pueda ejecutar el juego sin acceder a credenciales del mantenedor.
+<table>
+  <tr>
+    <td align="center"><strong>Hub UI</strong></td>
+  </tr>
+  <tr>
+    <td><img src="./public/assets/readme/hub-ui-overview.webp" alt="Interfaz principal del Hub AI-GI-OH" width="980"></td>
+  </tr>
+</table>
 
-Bootstrap recomendado:
+<table>
+  <tr>
+    <td align="center"><strong>Render carta</strong></td>
+    <td align="center"><strong>Carta técnica</strong></td>
+    <td align="center"><strong>Oponente</strong></td>
+    <td align="center"><strong>Fusión</strong></td>
+  </tr>
+  <tr>
+    <td><img src="./public/assets/readme/card-render-showcase.webp" alt="Render de carta AI-GI-OH" width="240"></td>
+    <td><img src="./public/assets/readme/technical-architecture-overview.webp" alt="Carta técnica AI-GI-OH" width="240"></td>
+    <td><img src="./public/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png" alt="Oponente BigLog" width="240"></td>
+    <td><img src="./public/assets/renders/executions/exec-fusion-gemgpt.webp" alt="Fusión GemGPT" width="240"></td>
+  </tr>
+</table>
+
+## Stack tecnológico
+
+- Next.js 16 (App Router)
+- React 19
+- TypeScript estricto
+- Zustand
+- Supabase (`@supabase/ssr`, `@supabase/supabase-js`)
+- Vitest + React Testing Library
+- Playwright E2E
+- ESLint
+
+## Inicio rápido local (5 min)
+
+Requisitos:
+
+- Node.js 20+
+- pnpm
+- Docker Desktop
+
+Arranque recomendado:
 
 ```bash
 pnpm install
@@ -53,71 +108,83 @@ pnpm supabase:env:apply
 pnpm dev
 ```
 
-Comandos útiles:
+URLs locales:
+
+- App: `http://localhost:3000`
+- Hub: `http://localhost:3000/hub`
+- Supabase Studio: `http://127.0.0.1:54323`
+
+## Contribución profesional
+
+Antes de tocar código, debes seguir la guía oficial:
+
+- [CONTRIBUTING.md](./CONTRIBUTING.md)
+
+Flujo estándar de contribución:
+
+1. Crear branch desde `develop`.
+2. Implementar cambio con tests co-localizados.
+3. Ejecutar gates locales.
+4. Abrir PR `develop -> main` cuando corresponda release.
+
+Validación mínima previa a PR:
 
 ```bash
-pnpm supabase:start
-pnpm supabase:stop
-pnpm supabase:db:reset:local
-pnpm supabase:env:local
-pnpm supabase:env:apply
-pnpm supabase:env:restore
+pnpm lint
+pnpm typecheck
+pnpm test:coverage
+pnpm build
 ```
 
-Guía completa de contribución:
+## Despliegue profesional
 
-1. [CONTRIBUTING.md](./CONTRIBUTING.md)
-2. [docs/supabase/README.md](./docs/supabase/README.md)
+Guía completa:
 
-## Estructura del proyecto
+- [docs/GUIA_DESPLIEGUE_PROFESIONAL.md](./docs/GUIA_DESPLIEGUE_PROFESIONAL.md)
 
-```text
-src/app                 -> Rutas App Router y endpoints API
-src/components          -> UI, layout y composición visual
-src/services            -> Orquestación de flujos de aplicación
-src/core/use-cases      -> Casos de uso y reglas de aplicación
-src/core/services       -> Reglas puras de dominio reutilizables
-src/core/entities       -> Entidades, contratos y tipos de dominio
-src/infrastructure      -> Adaptadores de persistencia y servicios externos
-docs                    -> Arquitectura, seguridad, rendimiento y operación
-```
+Onboarding técnico obligatorio para contributors:
 
-## Funcionalidades principales
+- [CONTRIBUTING.md](./CONTRIBUTING.md)
 
-1. Hub principal con navegación a Home, Market, Story, Academy y Multiplayer.
-2. Motor táctico de combate por turnos con fases, efectos, fusión y `combatLog`.
-3. Progresión de cartas y recompensas por duelo (NEXUS, experiencia y cartas).
-4. Mercado con compra de packs/cartas y registro de transacciones.
-5. Modo Story con mapa interactivo, nodos, eventos y duelos por capítulos.
-6. Módulo admin para catálogo, packs, mazos Story, starter deck y auditoría.
-7. Autenticación completa con registro, login, recuperación y cambio de contraseña.
+Checklist resumida:
 
-## Despliegue público
+1. Configurar variables de entorno en Vercel y Supabase.
+2. Verificar callbacks de auth (`/auth/callback`).
+3. Confirmar que quality gates están en verde.
+4. Publicar cambios vía flujo de PR y merge.
+5. Crear release/tag desde versión de `package.json`.
 
-1. URL de la aplicación: `https://ai-gi-ho.vercel.app`
-2. Callback de auth: `https://ai-gi-ho.vercel.app/auth/callback`
-3. Guía operativa: [docs/GUIA_DESPLIEGUE_PROFESIONAL.md](./docs/GUIA_DESPLIEGUE_PROFESIONAL.md)
+Documentación relacionada:
 
-## Presentación del proyecto
+- [docs/GUIA_FLUJO_PRODUCCION.md](./docs/GUIA_FLUJO_PRODUCCION.md)
+- [docs/GUIA_RELEASES.md](./docs/GUIA_RELEASES.md)
+- [CHANGELOG.md](./CHANGELOG.md)
 
-1. URL de presentación web (TFM): `/presentacion-tfm`
-2. Publicación recomendada: `https://ai-gi-ho.vercel.app/presentacion-tfm`
+## Variables de entorno
 
-## Configuración de recuperación de contraseña (Supabase)
+Plantilla base:
 
-Para que el flujo de recuperación funcione en local y en producción:
+- [`.env.example`](./.env.example)
 
-1. `Site URL`:
-   - desarrollo: `http://localhost:3000`
-   - producción: dominio principal de la app (ej. `https://ai-gi-ho.vercel.app`)
-2. `Redirect URLs` (allow list):
-   - `http://localhost:3000/auth/callback`
-   - `https://ai-gi-ho.vercel.app/auth/callback`
-3. Confirmar en despliegue que `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` apunten al proyecto correcto.
+Críticas para funcionamiento:
 
-Nota: el flujo implementado usa `GET /auth/callback` para canjear el `code` de recuperación y redirigir de forma segura a `/reset-password`.
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
 
-## Comandos de ingeniería
+Hardening recomendado en staging/prod:
+
+- `AUTH_RATE_LIMIT_REQUIRE_DISTRIBUTED`
+- `AUTH_RATE_LIMIT_FAIL_CLOSED`
+- `ADMIN_RATE_LIMIT_REQUIRE_DISTRIBUTED`
+- `ADMIN_RATE_LIMIT_FAIL_CLOSED`
+- `PLAYER_PROFILE_RATE_LIMIT_REQUIRE_DISTRIBUTED`
+- `PLAYER_PROFILE_RATE_LIMIT_FAIL_CLOSED`
+- `SECURITY_RATE_LIMIT_DISTRIBUTED_TIMEOUT_MS`
+
+## Scripts de ingeniería
+
+Calidad:
 
 ```bash
 pnpm lint
@@ -125,98 +192,126 @@ pnpm typecheck
 pnpm test
 pnpm test:coverage
 pnpm build
-pnpm security:rate-limit:check
 pnpm quality:check
 ```
 
-## Memoria Engram (obligatorio)
-
-Para evitar pérdida de contexto entre sesiones, el uso de Engram es obligatorio en tareas de refactor, bugfix y decisiones de arquitectura.
-
-Flujo mínimo por bloque de trabajo:
+E2E:
 
 ```bash
-engram context
-engram search "tema-del-bloque"
-engram save "topic_key" "decisión/cambio validado y archivos tocados"
+pnpm test:e2e
+pnpm test:e2e:story:resilience
 ```
 
-Guía completa:
+Seguridad:
 
-1. [docs/engram/engram-guia.md](./docs/engram/engram-guia.md)
-2. [skills/engram-memory-protocol/SKILL.md](./skills/engram-memory-protocol/SKILL.md)
+```bash
+pnpm security:rate-limit:check
+pnpm security:audit:prod
+```
 
-## Comandos de baseline de rendimiento
+Rendimiento:
 
 ```bash
 pnpm perf:baseline:mobile
 pnpm perf:baseline:mobile:realistic
 pnpm perf:baseline:mobile:stress
-pnpm perf:baseline:mobile:auto
-pnpm perf:baseline:mobile:auto:prod
 ```
 
-## Arquitectura en una vista
+Releases:
+
+```bash
+pnpm release:tag
+pnpm release:tag:push
+```
+
+## Arquitectura y estructura
+
+Dependencia permitida:
 
 ```text
-src/components        -> UI y eventos
-src/services          -> orquestación de aplicación
-src/core/use-cases    -> flujos/reglas de aplicación
-src/core/entities     -> contratos de dominio
-src/infrastructure    -> adaptadores externos (Supabase, repositorios)
+components/app -> services/use-cases -> core
+infrastructure implementa contratos de core
 ```
 
-Regla de dependencia: `components -> services/use-cases -> core`.
+Estructura principal:
+
+```text
+src/app                 -> Rutas App Router y endpoints API
+src/components          -> UI y composición visual
+src/services            -> Orquestación de aplicación
+src/core/use-cases      -> Casos de uso
+src/core/services       -> Reglas de dominio puras
+src/core/entities       -> Entidades y contratos
+src/infrastructure      -> Adaptadores externos
+docs                    -> Arquitectura, seguridad, performance y operación
+```
+
+Referencias:
+
+- [Architecture.md](./Architecture.md)
+- [docs/architecture/README.md](./docs/architecture/README.md)
+
+## Módulos funcionales
+
+- Hub principal de navegación.
+- Home (colección, deck, evolución y fusión).
+- Market (packs, listings y compra).
+- Story (mapa, nodos, eventos y duelos).
+- Academy (tutorial y training).
+- Multiplayer (entrypoint en evolución).
+- Admin dashboard de contenido.
+
+## Calidad y merge
+
+Gates obligatorios:
+
+1. `pnpm lint`
+2. `pnpm typecheck`
+3. `pnpm test:coverage`
+4. `pnpm build`
+
+Criterios adicionales:
+
+- Sin warnings nuevos.
+- Tests junto al código (`co-location`).
+- Documentación en español actualizada.
+- Cumplimiento de [Agents.md](./Agents.md).
+
+## Presentación TFM
+
+- Ruta interna: `/presentacion-tfm`
+- URL pública: `https://ai-gi-oh.vercel.app/presentacion-tfm`
+- Guía: [docs/GUIA_PRESENTACION_TFM_WEB.md](./docs/GUIA_PRESENTACION_TFM_WEB.md)
 
 ## Mapa de documentación
 
-### Núcleo de arquitectura
+Arquitectura:
 
-1. [Architecture.md](./Architecture.md)
-2. [docs/architecture/README.md](./docs/architecture/README.md)
+- [Architecture.md](./Architecture.md)
+- [docs/architecture/README.md](./docs/architecture/README.md)
 
-### Motor de juego (nuevo índice modular)
+Motor de juego:
 
-1. [MOTOR_JUEGO.md](./MOTOR_JUEGO.md)
-2. [docs/game-engine/README.md](./docs/game-engine/README.md)
+- [MOTOR_JUEGO.md](./MOTOR_JUEGO.md)
+- [docs/game-engine/README.md](./docs/game-engine/README.md)
 
-### Rendimiento
+Seguridad y persistencia:
 
-1. [docs/performance/README.md](./docs/performance/README.md)
-2. [docs/performance/PHASE-1-BASELINE.md](./docs/performance/PHASE-1-BASELINE.md)
+- [docs/security/auth-hardening.md](./docs/security/auth-hardening.md)
+- [docs/security/rate-limit-rollout.md](./docs/security/rate-limit-rollout.md)
+- [docs/supabase/README.md](./docs/supabase/README.md)
 
-### Seguridad y persistencia
+Rendimiento:
 
-1. [docs/security/auth-hardening.md](./docs/security/auth-hardening.md)
-2. [docs/supabase/README.md](./docs/supabase/README.md)
-3. [docs/security/rate-limit-rollout.md](./docs/security/rate-limit-rollout.md)
+- [docs/performance/README.md](./docs/performance/README.md)
+- [docs/performance/PHASE-1-BASELINE.md](./docs/performance/PHASE-1-BASELINE.md)
 
-### Refactor y deuda técnica
+Refactor y deuda técnica:
 
-1. [docs/refactor/GUIA-REFAC-STEP-BY-STEP.md](./docs/refactor/GUIA-REFAC-STEP-BY-STEP.md)
-2. [docs/DEUDA_TECNICA.md](./docs/DEUDA_TECNICA.md)
+- [docs/refactor/GUIA-REFAC-STEP-BY-STEP.md](./docs/refactor/GUIA-REFAC-STEP-BY-STEP.md)
+- [docs/DEUDA_TECNICA.md](./docs/DEUDA_TECNICA.md)
 
-### Operación y releases
+Memoria Engram:
 
-1. [docs/GUIA_FLUJO_PRODUCCION.md](./docs/GUIA_FLUJO_PRODUCCION.md)
-2. [docs/GUIA_RELEASES.md](./docs/GUIA_RELEASES.md)
-3. [CHANGELOG.md](./CHANGELOG.md)
-
-### Guías por módulo en `src/`
-
-1. [src/app/README.md](./src/app/README.md)
-2. [src/components/hub/README.md](./src/components/hub/README.md)
-3. [src/components/game/board/README.md](./src/components/game/board/README.md)
-4. [src/core/use-cases/game-engine/README.md](./src/core/use-cases/game-engine/README.md)
-5. [src/services/README.md](./src/services/README.md)
-6. [src/infrastructure/README.md](./src/infrastructure/README.md)
-
-## Criterios de merge
-
-1. `pnpm lint` en verde.
-2. `pnpm typecheck` en verde.
-3. `pnpm test:coverage` en verde.
-4. `pnpm build` en verde.
-5. Sin warnings nuevos.
-6. Documentación actualizada en español cuando cambie arquitectura o comportamiento.
-7. Evidencia de uso de Engram en el PR (context/search/save y `topic_key`).
+- [docs/engram/engram-guia.md](./docs/engram/engram-guia.md)
+- [skills/engram-memory-protocol/SKILL.md](./skills/engram-memory-protocol/SKILL.md)
