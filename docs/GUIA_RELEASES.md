@@ -43,17 +43,27 @@ Formato: `MAJOR.MINOR.PATCH`
    - mover notas de `Unreleased` a nueva versión.
 4. Crear commit de release:
    - `chore(release): vX.Y.Z`
-5. Crear tag:
-   - `git tag -a vX.Y.Z -m "Release vX.Y.Z"`
-6. Push branch + tags:
-   - `git push origin main --follow-tags`
-7. Crear GitHub Release desde el tag y pegar resumen del changelog.
+5. Cambiar manualmente `package.json` (campo `version`).
+6. Crear tag leyendo versión automáticamente:
+   - `pnpm release:tag`
+7. Publicar tag:
+   - `pnpm release:tag:push`
+8. Crear GitHub Release desde el tag y pegar resumen del changelog.
 
 ## Convención de decisión rápida (qué número subo)
 
 1. Solo fixes y ajustes no disruptivos: subir `PATCH`.
 2. Funcionalidad nueva compatible: subir `MINOR`.
 3. Ruptura de compatibilidad o migración obligatoria: subir `MAJOR`.
+
+## Automatización disponible
+
+1. `pnpm release:tag`:
+   - Lee la versión de `package.json`.
+   - Crea `vX.Y.Z`.
+   - Falla si hay cambios sin commit o si el tag ya existe.
+2. `pnpm release:tag:push`:
+   - Hace lo mismo y además sube el tag a `origin`.
 
 ## Nota práctica
 
