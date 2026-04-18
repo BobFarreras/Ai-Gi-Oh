@@ -54,13 +54,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install gitleaks CLI
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | sh -s -- -b /usr/local/bin
-          gitleaks version
-
       - name: Secret scan (gitleaks)
-        run: gitleaks detect --source . --no-banner --redact --exit-code 1
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/repo" \
+            zricethezav/gitleaks:latest \
+            detect --source=/repo --no-banner --redact --exit-code 1
 
       - name: Run quality gates
         run: pnpm quality:check
