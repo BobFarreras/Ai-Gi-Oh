@@ -37,6 +37,6 @@ describe("AcademyPostTutorialBigLogOverlay", () => {
     useSearchParamsMock.mockReturnValue(new URLSearchParams("tutorialReward=core-ready"));
     render(<AcademyPostTutorialBigLogOverlay />);
     fireEvent.click(await screen.findByRole("button", { name: /cerrar mensaje de biglog/i }));
-    expect(replaceMock).toHaveBeenCalledWith("/hub/academy");
+    expect(replaceMock).toHaveBeenCalledWith("/hub/academy", { scroll: false });
   });
 });
