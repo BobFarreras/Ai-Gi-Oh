@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { IPlayerHubProgress } from "@/core/entities/hub/IPlayerHubProgress";
 import { HubProgressSection } from "@/components/hub/HubProgressSection";
 import { HubUserSection } from "@/components/hub/HubUserSection";
@@ -77,17 +77,20 @@ export function HubSceneHudOverlay({
           <HubProgressSection progress={progress} onToggleSound={onHudButtonSound} />
         </motion.div>
       ) : null}
-      <HubProfileNameDialog
-        isOpen={isProfileDialogOpen}
-        currentLabel={resolvedPlayerLabel}
-        isSaving={isSavingLabel}
-        errorMessage={labelError}
-        onClose={() => {
-          clearLabelError();
-          setIsProfileDialogOpen(false);
-        }}
-        onSave={savePlayerLabel}
-      />
+      <AnimatePresence>
+        {isProfileDialogOpen ? (
+          <HubProfileNameDialog
+            currentLabel={resolvedPlayerLabel}
+            isSaving={isSavingLabel}
+            errorMessage={labelError}
+            onClose={() => {
+              clearLabelError();
+              setIsProfileDialogOpen(false);
+            }}
+            onSave={savePlayerLabel}
+          />
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

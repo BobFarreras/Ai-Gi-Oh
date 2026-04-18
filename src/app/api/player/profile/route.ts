@@ -4,8 +4,10 @@ import { GetOrCreatePlayerProfileUseCase } from "@/core/use-cases/player/GetOrCr
 import { SupabasePlayerProfileRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerProfileRepository";
 import { getAuthenticatedUserId } from "@/services/auth/api/internal/get-authenticated-user-id";
 import { resolveDefaultNicknameFromEmail } from "@/services/player-profile/resolve-default-nickname-from-email";
+import { consumePlayerProfileRateLimit } from "@/services/player-profile/api/security/player-profile-rate-limiter";
 import { createPlayerRouteRepositories } from "@/services/player-persistence/create-player-route-repositories";
 import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
+import { resolveRequestClientIp } from "@/services/security/api/request-client-ip";
 import { readJsonObjectBody } from "@/services/security/api/request-body-parser";
 import { requireTrustedMutationOrigin } from "@/services/security/api/require-trusted-mutation-origin";
 import { readPlayerProfileUpdatePayload } from "./internal/read-player-profile-payload";
@@ -20,6 +22,15 @@ export async function PATCH(request: NextRequest) {
     const response = NextResponse.json({ ok: true }, { status: 200 });
     const repositories = await createPlayerRouteRepositories(request, response);
     const playerId = await getAuthenticatedUserId(repositories.client);
+    const clientIp = resolveRequestClientIp(request);
+    const limitByIp = await consumePlayerProfileRateLimit(`player-profile:update:ip:${clientIp}`, 20, 10 * 60 * 1000);
+    const limitByPlayer = await consumePlayerProfileRateLimit(`player-profile:update:user:${playerId}`, 8, 5 * 60 * 1000);
+    if (!limitByIp || !limitByPlayer) {
+      return NextResponse.json(
+        { message: "Demasiadas actualizaciones de perfil. Espera unos minutos e inténtalo de nuevo." },
+        { status: 429, headers: response.headers },
+      );
+    }
     const payload = await readJsonObjectBody(request, "Payload inválido para actualizar perfil.");
     const command = readPlayerProfileUpdatePayload(payload);
     const profileRepository = new SupabasePlayerProfileRepository(repositories.client);
@@ -44,4 +55,3 @@ export async function PATCH(request: NextRequest) {
     return createApiErrorResponse(error, "No se pudo actualizar el perfil del jugador.");
   }
 }
-

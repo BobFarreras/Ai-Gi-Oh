@@ -18,6 +18,7 @@ import { resolveHubRuntimeProgress } from "@/services/hub/internal/resolve-hub-r
 import { createPlayerRuntimeRepositories } from "@/services/player-persistence/create-player-runtime-repositories";
 import { runPlayerRuntimeInitOnce } from "@/services/player-persistence/internal/player-runtime-init-gate";
 import { resolveDefaultNicknameFromEmail } from "@/services/player-profile/resolve-default-nickname-from-email";
+import { resolvePlayerLabel } from "@/services/player-profile/resolve-player-label";
 
 interface IHubRuntimeData {
   playerLabel: string;
@@ -67,7 +68,12 @@ export async function getHubRuntimeData(): Promise<IHubRuntimeData> {
     trainingTotalWins: trainingProgress?.totalWins ?? null,
   });
   return {
-    playerLabel: profile.nickname || session.user.displayName || resolveDefaultNicknameFromEmail(session.user.email),
+    playerLabel: resolvePlayerLabel({
+      profileNickname: profile.nickname,
+      sessionDisplayName: session.user.displayName,
+      sessionEmail: session.user.email,
+      fallback: "Operador",
+    }),
     hubMap: {
       ...hubMap,
       progress: {

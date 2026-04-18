@@ -1,21 +1,25 @@
 // src/services/player-profile/get-player-display-name.ts - Resuelve nombre visible del jugador priorizando nickname persistido.
 import { IAuthSession } from "@/core/repositories/IAuthRepository";
 import { createSupabasePlayerProfileRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-profile-repository";
-import { resolveDefaultNicknameFromEmail } from "@/services/player-profile/resolve-default-nickname-from-email";
+import { resolvePlayerLabel } from "@/services/player-profile/resolve-player-label";
 
 /**
  * Resuelve display name de jugador usando perfil persistido y fallback seguro.
  */
 export async function getPlayerDisplayName(session: IAuthSession | null, fallback = "Operador"): Promise<string> {
   if (!session?.user.id) return fallback;
+  let profileNickname: string | null = null;
   try {
     const profileRepository = await createSupabasePlayerProfileRepository();
     const profile = await profileRepository.getByPlayerId(session.user.id);
-    if (profile?.nickname?.trim()) return profile.nickname;
+    profileNickname = profile?.nickname ?? null;
   } catch {
     // Si falla lectura de perfil, degradamos a fallback de sesión.
   }
-  return session.user.displayName?.trim()
-    || resolveDefaultNicknameFromEmail(session.user.email, fallback);
+  return resolvePlayerLabel({
+    profileNickname,
+    sessionDisplayName: session.user.displayName,
+    sessionEmail: session.user.email,
+    fallback,
+  });
 }
-
