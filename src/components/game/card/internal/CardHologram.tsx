@@ -17,6 +17,7 @@ interface CardHologramProps {
 
 export function CardHologram({ card, isDefense, mode = "full", className }: CardHologramProps) {
   const isExecution = card.type === "EXECUTION";
+  const shouldBypassImageOptimization = Boolean(card.renderUrl?.startsWith("/assets/renders/"));
 
   if (!card.renderUrl) {
     return null;
@@ -35,6 +36,7 @@ export function CardHologram({ card, isDefense, mode = "full", className }: Card
           alt={`Render de ${card.name}`}
           fill
           sizes="180px"
+          unoptimized={shouldBypassImageOptimization}
           quality={45}
           className="object-contain opacity-85 drop-shadow-[0_0px_12px_rgba(0,0,0,0.7)]"
         />
@@ -95,6 +97,8 @@ export function CardHologram({ card, isDefense, mode = "full", className }: Card
               src={card.renderUrl}
               alt={`Render de ${card.name}`}
               fill
+              sizes="420px"
+              unoptimized={shouldBypassImageOptimization}
               className="object-contain drop-shadow-[0_0px_35px_rgba(0,0,0,0.9)]"
               style={{ transform: "translateZ(40px)" }}
             />
