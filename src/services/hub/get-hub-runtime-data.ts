@@ -17,16 +17,12 @@ import { applyCombatReadinessLock } from "@/services/hub/internal/apply-combat-r
 import { resolveHubRuntimeProgress } from "@/services/hub/internal/resolve-hub-runtime-progress";
 import { createPlayerRuntimeRepositories } from "@/services/player-persistence/create-player-runtime-repositories";
 import { runPlayerRuntimeInitOnce } from "@/services/player-persistence/internal/player-runtime-init-gate";
+import { resolveDefaultNicknameFromEmail } from "@/services/player-profile/resolve-default-nickname-from-email";
+import { resolvePlayerLabel } from "@/services/player-profile/resolve-player-label";
 
 interface IHubRuntimeData {
   playerLabel: string;
   hubMap: Awaited<ReturnType<GetHubMapUseCase["execute"]>>;
-}
-
-function resolveDefaultNickname(email: string | null): string {
-  if (!email) return "Operador";
-  const candidate = email.split("@")[0]?.trim();
-  return candidate && candidate.length >= 3 ? candidate : "Operador";
 }
 
 export async function getHubRuntimeData(): Promise<IHubRuntimeData> {
@@ -41,7 +37,7 @@ export async function getHubRuntimeData(): Promise<IHubRuntimeData> {
   const progressRepository = await createSupabasePlayerProgressRepository();
   const profile = await new GetOrCreatePlayerProfileUseCase(profileRepository).execute({
     playerId: session.user.id,
-    defaultNickname: resolveDefaultNickname(session.user.email),
+    defaultNickname: resolveDefaultNicknameFromEmail(session.user.email),
   });
   const runtimeRepositories = await createPlayerRuntimeRepositories();
   const starterDeckTemplateRepository = await createSupabaseStarterDeckTemplateRepository();
@@ -72,7 +68,12 @@ export async function getHubRuntimeData(): Promise<IHubRuntimeData> {
     trainingTotalWins: trainingProgress?.totalWins ?? null,
   });
   return {
-    playerLabel: profile.nickname || session.user.email || "Operador",
+    playerLabel: resolvePlayerLabel({
+      profileNickname: profile.nickname,
+      sessionDisplayName: session.user.displayName,
+      sessionEmail: session.user.email,
+      fallback: "Operador",
+    }),
     hubMap: {
       ...hubMap,
       progress: {

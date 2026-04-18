@@ -32,6 +32,7 @@ Reducir superficie de ataque en login/registro/logout antes de integrar base de 
    - Login: límite por IP y por email.
    - Register: límite por IP y por email.
    - Logout: límite por IP.
+   - Perfil jugador (`PATCH /api/player/profile`): límite por IP y por jugador autenticado.
    - Soporte de backend distribuido (Upstash Redis REST) con timeout configurable.
    - Modo estricto opcional por entorno (`require distributed` + `fail closed`).
 4. Manejo de errores:
@@ -53,6 +54,8 @@ Reducir superficie de ataque en login/registro/logout antes de integrar base de 
    - `AUTH_RATE_LIMIT_FAIL_CLOSED`
    - `ADMIN_RATE_LIMIT_REQUIRE_DISTRIBUTED`
    - `ADMIN_RATE_LIMIT_FAIL_CLOSED`
+   - `PLAYER_PROFILE_RATE_LIMIT_REQUIRE_DISTRIBUTED`
+   - `PLAYER_PROFILE_RATE_LIMIT_FAIL_CLOSED`
    - `SECURITY_RATE_LIMIT_DISTRIBUTED_TIMEOUT_MS`
 
 ## Riesgo de fricción y mitigación (jugador)

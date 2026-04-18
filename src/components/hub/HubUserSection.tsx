@@ -5,11 +5,15 @@ import { Fingerprint } from "lucide-react";
 
 interface HubUserSectionProps {
   playerLabel: string;
+  onEditRequest?: () => void;
 }
 
-export function HubUserSection({ playerLabel }: HubUserSectionProps) {
+export function HubUserSection({ playerLabel, onEditRequest }: HubUserSectionProps) {
   return (
-    <section
+    <button
+      type="button"
+      aria-label="Editar nombre del operador"
+      onClick={onEditRequest}
       className="group relative flex w-[196px] items-center gap-2 border border-cyan-500/40 bg-[#010a14]/90 p-2 shadow-[0_0_30px_rgba(6,182,212,0.15)] backdrop-blur-md transition-all hover:border-cyan-400/80 hover:bg-[#021224]/95 sm:w-[280px] sm:gap-4 sm:p-3"
       style={{ clipPath: "polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px)" }}
     >
@@ -52,6 +56,6 @@ export function HubUserSection({ playerLabel }: HubUserSectionProps) {
         <div className="h-1 w-1 bg-cyan-500/50" />
         <div className="h-1 w-3 bg-cyan-500/80" />
       </div>
-    </section>
+    </button>
   );
 }

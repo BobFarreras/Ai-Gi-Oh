@@ -124,15 +124,6 @@ export class SupabaseCardCollectionRepository implements ICardCollectionReposito
       throw new ValidationError("No hay suficientes copias en el almacén para evolucionar.");
     }
     const nextCopies = data.owned_copies - copies;
-    if (nextCopies === 0) {
-      const { error: deleteError } = await this.client
-        .from("player_collection_cards")
-        .delete()
-        .eq("player_id", playerId)
-        .eq("card_id", cardId);
-      if (deleteError) throw new ValidationError("No se pudo consumir copias del almacén.");
-      return;
-    }
     const { error: updateError } = await this.client
       .from("player_collection_cards")
       .update({ owned_copies: nextCopies })

@@ -24,7 +24,14 @@ export function TutorialMapSelection({ nodes }: ITutorialMapSelectionProps) {
         <header className="w-full max-w-4xl rounded-2xl border border-cyan-500/30 bg-[#041425]/78 px-3 py-3 backdrop-blur-sm sm:px-4 lg:px-6 lg:py-4">
           <div className="flex items-center justify-center gap-4 text-left">
             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-cyan-300/50 bg-slate-950 lg:h-20 lg:w-20">
-              <Image src="/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png" alt="BigLog Academy" fill className="object-contain object-top p-1" />
+              <Image
+                src="/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png"
+                alt="BigLog Academy"
+                fill
+                loading="eager"
+                sizes="(max-width: 1024px) 56px, 80px"
+                className="object-contain object-top p-1"
+              />
             </div>
             <div className="min-w-0">
               <h1 className="text-2xl font-black uppercase tracking-[0.06em] text-white sm:text-3xl lg:text-4xl">Ruta de Tutorial</h1>
@@ -38,7 +45,14 @@ export function TutorialMapSelection({ nodes }: ITutorialMapSelectionProps) {
         <header className="w-full max-w-4xl rounded-2xl border border-cyan-500/30 bg-[#041425]/78 px-6 py-4 backdrop-blur-sm [@media(min-width:1024px)_and_(max-height:900px)]:px-4 [@media(min-width:1024px)_and_(max-height:900px)]:py-3">
           <div className="flex items-center justify-center gap-4 text-left">
             <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-cyan-300/50 bg-slate-950 [@media(min-width:1024px)_and_(max-height:900px)]:h-14 [@media(min-width:1024px)_and_(max-height:900px)]:w-14">
-              <Image src="/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png" alt="BigLog Academy" fill className="object-contain object-top p-1" />
+              <Image
+                src="/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png"
+                alt="BigLog Academy"
+                fill
+                loading="eager"
+                sizes="80px"
+                className="object-contain object-top p-1"
+              />
             </div>
             <div className="min-w-0">
               <h1 className="text-4xl font-black uppercase tracking-[0.06em] text-white [@media(min-width:1024px)_and_(max-height:900px)]:text-3xl">Ruta de Tutorial</h1>

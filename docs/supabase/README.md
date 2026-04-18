@@ -200,7 +200,10 @@
    - `V4 -> V5: 64`
 5. Nota de reglas:
    - las copias válidas para evolución se calculan con copias libres de almacén: `player_collection_cards.owned_copies - copias_en_player_deck_slots`.
-6. Persistencia de experiencia de cartas:
+6. Nota operativa RLS (evolución):
+   - para consumir la última copia libre, la app actualiza `owned_copies = 0` en lugar de borrar la fila.
+   - motivo: el rol `authenticated` tiene `SELECT/INSERT/UPDATE` sobre `player_collection_cards` y evita dependencia de permisos `DELETE`.
+7. Persistencia de experiencia de cartas:
    - la EXP de combate se agrega en memoria durante el duelo y se persiste en batch al finalizar, evitando escrituras por evento.
    - endpoint: `POST /api/game/progression/apply-battle-exp`.
 
