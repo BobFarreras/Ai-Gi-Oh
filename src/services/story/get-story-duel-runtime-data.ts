@@ -10,6 +10,7 @@ import { createSupabasePlayerStoryDuelProgressRepository } from "@/infrastructur
 import { createSupabasePlayerStoryWorldRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-story-world-repository";
 import { createSupabaseServerClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-server-client";
 import { loadCardsByIds } from "@/infrastructure/persistence/supabase/internal/load-cards-by-ids";
+import { getPlayerDisplayName } from "@/services/player-profile/get-player-display-name";
 
 export interface IStoryDuelRuntimeData {
   playerId: string;
@@ -61,6 +62,7 @@ function collectFusionRecipeIdsFromDeck(deck: ICard[]): string[] {
 export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number): Promise<IStoryDuelRuntimeData | null> {
   const session = await getCurrentUserSession();
   if (!session) return null;
+  const playerDisplayName = await getPlayerDisplayName(session, "Arquitecto");
   const loadout = await getPlayerBoardLoadout();
   const playerDeck = loadout.deck ?? [];
   const playerFusionDeck = loadout.fusionDeck ?? [];
@@ -95,7 +97,7 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
 
   return {
     playerId: session.user.id,
-    playerName: session.user.displayName ?? session.user.email ?? "Arquitecto",
+    playerName: playerDisplayName,
     chapter: duel.chapter,
     duelIndex: duel.duelIndex,
     duelTitle: duel.title,

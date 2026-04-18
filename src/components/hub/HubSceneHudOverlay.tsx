@@ -6,7 +6,9 @@ import { motion } from "framer-motion";
 import { IPlayerHubProgress } from "@/core/entities/hub/IPlayerHubProgress";
 import { HubProgressSection } from "@/components/hub/HubProgressSection";
 import { HubUserSection } from "@/components/hub/HubUserSection";
+import { HubProfileNameDialog } from "@/components/hub/internal/HubProfileNameDialog";
 import { HUB_HUD_ANIMATION_DURATION, HUB_HUD_START_DELAY_MS } from "@/components/hub/internal/hub-entry-timings";
+import { useHubPlayerLabel } from "@/components/hub/internal/use-hub-player-label";
 
 interface HubSceneHudOverlayProps {
   playerLabel?: string;
@@ -24,7 +26,15 @@ export function HubSceneHudOverlay({
   onHudButtonSound,
 }: HubSceneHudOverlayProps) {
   const [canShowHud, setCanShowHud] = useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const hasPlayedEntrySoundRef = useRef(false);
+  const {
+    playerLabel: resolvedPlayerLabel,
+    isSavingLabel,
+    labelError,
+    clearLabelError,
+    savePlayerLabel,
+  } = useHubPlayerLabel(playerLabel ?? "Operador");
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setCanShowHud(true), HUB_HUD_START_DELAY_MS);
@@ -39,7 +49,7 @@ export function HubSceneHudOverlay({
 
   return (
     <div className="pointer-events-none absolute inset-0 z-40">
-      {showMetaNodes && playerLabel && canShowHud ? (
+      {showMetaNodes && resolvedPlayerLabel && canShowHud ? (
         <motion.div
           initial={{ x: "120vw" }}
           animate={{ x: 0 }}
@@ -47,7 +57,13 @@ export function HubSceneHudOverlay({
           style={{ willChange: "transform" }}
           className="pointer-events-auto absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-[max(0.5rem,env(safe-area-inset-left))] sm:bottom-22 sm:left-auto sm:right-[max(1.5rem,env(safe-area-inset-right))]"
         >
-          <HubUserSection playerLabel={playerLabel} />
+          <HubUserSection
+            playerLabel={resolvedPlayerLabel}
+            onEditRequest={() => {
+              clearLabelError();
+              setIsProfileDialogOpen(true);
+            }}
+          />
         </motion.div>
       ) : null}
       {showMetaNodes && progress && canShowHud ? (
@@ -61,6 +77,17 @@ export function HubSceneHudOverlay({
           <HubProgressSection progress={progress} onToggleSound={onHudButtonSound} />
         </motion.div>
       ) : null}
+      <HubProfileNameDialog
+        isOpen={isProfileDialogOpen}
+        currentLabel={resolvedPlayerLabel}
+        isSaving={isSavingLabel}
+        errorMessage={labelError}
+        onClose={() => {
+          clearLabelError();
+          setIsProfileDialogOpen(false);
+        }}
+        onSave={savePlayerLabel}
+      />
     </div>
   );
 }

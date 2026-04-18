@@ -8,6 +8,7 @@ import { AnimatePresence, motion, Variants } from "framer-motion";
 import { CrawlText } from "@/components/landing/CrawlText";
 import { CyberBackground } from "@/components/landing/CyberBackground";
 import { HeroCards } from "@/components/landing/HeroCards";
+import { LANDING_PENDING_ACCESS_CODE_STORAGE_KEY, normalizeLandingAccessCode } from "@/components/landing/internal/landing-access-code-storage";
 import { TerminalPrompt } from "@/components/landing/TerminalPrompt";
 import { useLandingAudio } from "@/components/landing/useLandingAudio";
 
@@ -30,7 +31,9 @@ export default function HomePage() {
   }, []);
 
   const toNarrative = (code: string) => {
-    setUserCode(code);
+    const normalizedCode = normalizeLandingAccessCode(code) ?? code;
+    setUserCode(normalizedCode);
+    window.localStorage.setItem(LANDING_PENDING_ACCESS_CODE_STORAGE_KEY, normalizedCode);
     setPhase("NARRATIVE");
   };
   const toShowcase = () => {
