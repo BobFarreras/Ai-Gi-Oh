@@ -14,7 +14,7 @@ export const TFM_TECHNICAL_EVIDENCE_BLOCKS: ITFMTechnicalEvidenceBlock[] = [
     bullets: [
       "Flujo: components -> services/use-cases -> core -> infrastructure.",
       "Reglas de dominio fuera de React.",
-      "Repositorios para desacoplar Supabase del UI.",
+      "Dashboard admin para editar y añadir contenido sin tocar código del gameplay.",
     ],
   },
   {

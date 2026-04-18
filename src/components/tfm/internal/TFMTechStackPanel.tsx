@@ -27,7 +27,13 @@ export function TFMTechStackPanel() {
             className="rounded-xl border border-cyan-500/35 bg-cyan-950/20 p-4"
           >
             <div className="flex items-center gap-3">
-              <Image src={logo.imagePath} alt={logo.name} width={56} height={56} className="h-14 w-14 rounded-md object-cover" />
+              <Image
+                src={logo.imagePath}
+                alt={logo.name}
+                width={56}
+                height={56}
+                className={`h-14 w-14 rounded-md object-contain bg-black/30 p-1 ${logo.id === "docker" ? "scale-90" : ""}`}
+              />
               <p className="text-lg font-bold text-cyan-50">{logo.name}</p>
             </div>
           </motion.article>
