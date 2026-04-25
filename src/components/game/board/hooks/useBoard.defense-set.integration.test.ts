@@ -1,6 +1,7 @@
 // src/components/game/board/hooks/useBoard.defense-set.integration.test.ts - Verifica que invocar entidad en defensa desde mano la coloque en SET.
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { ENTITY_CARDS } from "@/core/data/mock-cards/entities";
 import { useBoard } from "./useBoard";
 
 function createMouseEvent(): React.MouseEvent {
@@ -9,13 +10,9 @@ function createMouseEvent(): React.MouseEvent {
 
 describe("useBoard defensa desde mano", () => {
   it("debería convertir DEFENSE en SET al jugar entidad desde mano", async () => {
-    const { result } = renderHook(() => useBoard());
-    let entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
-    for (let attempt = 0; attempt < 8 && !entityCard; attempt += 1) {
-      act(() => result.current.restartMatch());
-      entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
-    }
-
+    const deterministicDeck = ENTITY_CARDS.slice(0, 12);
+    const { result } = renderHook(() => useBoard(deterministicDeck, "TRAINING", { seed: "defense-set-test-seed" }));
+    const entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
     expect(entityCard).toBeDefined();
     if (!entityCard) {
       throw new Error("Se requiere una entidad en mano para esta prueba.");
