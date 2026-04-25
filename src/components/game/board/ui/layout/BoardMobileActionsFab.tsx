@@ -1,7 +1,7 @@
 // src/components/game/board/ui/layout/BoardMobileActionsFab.tsx - Botón flotante móvil que despliega acciones secundarias de batalla.
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bot, History, Menu, Pause, Play, Shield, Swords, Volume2, VolumeX, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +35,26 @@ export function BoardMobileActionsFab({
   onSetSelectedEntityToDefense,
 }: BoardMobileActionsFabProps) {
   const [isOpen, setIsOpen] = useState(false);
+  useEffect(() => {
+    const tutorialTargetsNeedingExpandedMenu = new Set([
+      "tutorial-board-pause-button",
+      "tutorial-board-auto-button",
+      "tutorial-board-mute-button",
+      "tutorial-board-history-button",
+    ]);
+    const syncOpenStateFromTutorialTarget = (targetId: string | null | undefined) => {
+      if (!targetId) return;
+      if (tutorialTargetsNeedingExpandedMenu.has(targetId)) setIsOpen(true);
+    };
+    syncOpenStateFromTutorialTarget(document.body.dataset.tutorialTargetId);
+    const onTutorialTargetChanged = (event: Event) => {
+      const customEvent = event as CustomEvent<{ targetId?: string }>;
+      syncOpenStateFromTutorialTarget(customEvent.detail?.targetId);
+    };
+    window.addEventListener("tutorial-target-changed", onTutorialTargetChanged);
+    return () => window.removeEventListener("tutorial-target-changed", onTutorialTargetChanged);
+  }, []);
+
   return (
     <div className="absolute top-[4.8rem] left-3 z-[260] flex flex-col items-start gap-2 pointer-events-auto">
       <button data-tutorial-id="tutorial-board-actions-menu" aria-label={isOpen ? "Cerrar acciones" : "Abrir acciones"} onClick={() => setIsOpen((v) => !v)} className="rounded-full border border-cyan-400/60 bg-zinc-950/92 p-2.5 text-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.35)]">

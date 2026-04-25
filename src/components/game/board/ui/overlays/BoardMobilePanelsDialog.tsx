@@ -100,6 +100,7 @@ export function BoardMobilePanelsDialog({
               <div className="mt-4 flex items-center gap-2 border-t border-zinc-800 pt-3">
                 <button
                   type="button"
+                  data-tutorial-id={isTrapPromptForSelectedCard ? "tutorial-board-action-activate-trap-prompt" : undefined}
                   aria-label="Activar trampa pendiente"
                   onClick={onActivatePendingTrap}
                   className="rounded-lg border border-emerald-300/70 bg-emerald-700/35 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-emerald-100 hover:bg-emerald-700/50"
@@ -108,6 +109,7 @@ export function BoardMobilePanelsDialog({
                 </button>
                 <button
                   type="button"
+                  data-tutorial-id={isTrapPromptForSelectedCard ? "tutorial-board-action-skip-trap-prompt" : undefined}
                   aria-label="Cancelar trampa pendiente"
                   onClick={isTutorialTrapPromptLocked ? () => undefined : onSkipPendingTrap}
                   disabled={isTutorialTrapPromptLocked}
