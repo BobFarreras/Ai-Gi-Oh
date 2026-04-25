@@ -6,6 +6,7 @@ import { TutorialBigLogIntroOverlay } from "@/components/tutorial/flow/TutorialB
 import { TutorialInteractionGuard } from "@/components/tutorial/flow/TutorialInteractionGuard";
 import { TutorialSpotlightOverlay } from "@/components/tutorial/flow/TutorialSpotlightOverlay";
 import { useTutorialFlowController } from "@/components/tutorial/flow/useTutorialFlowController";
+import { isMobileLayoutViewport } from "@/components/internal/layout-breakpoints";
 import { resolveCombatTutorialSteps } from "@/services/tutorial/combat/resolve-combat-tutorial-steps";
 import { countTurnStartedByActor } from "@/components/game/board/internal/board-tutorial-flow-events";
 import {
@@ -21,6 +22,7 @@ export function BoardTutorialFlowOverlay(props: IBoardTutorialFlowOverlayProps) 
   const steps = useMemo(() => resolveCombatTutorialSteps(), []);
   const tutorial = useTutorialFlowController(steps);
   const [isIntroVisible, setIsIntroVisible] = useState(true);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const scheduledStepActionsRef = useRef<Record<string, number>>({});
   const passTurnStepOpponentPlaysRef = useRef<number | null>(null);
   const passTurnStepPlayerTurnsRef = useRef<number | null>(null);
@@ -36,6 +38,13 @@ export function BoardTutorialFlowOverlay(props: IBoardTutorialFlowOverlayProps) 
     },
     [],
   );
+
+  useEffect(() => {
+    const syncViewportMode = () => setIsMobileViewport(isMobileLayoutViewport(window.innerWidth));
+    syncViewportMode();
+    window.addEventListener("resize", syncViewportMode);
+    return () => window.removeEventListener("resize", syncViewportMode);
+  }, []);
 
   useEffect(() => {
     if (tutorial.currentStep?.id === "combat-fusion-pass-turn" && passTurnStepOpponentPlaysRef.current === null) {
@@ -69,9 +78,19 @@ export function BoardTutorialFlowOverlay(props: IBoardTutorialFlowOverlayProps) 
     };
   }, [isIntroVisible, tutorial.isFinished]);
 
+  useEffect(() => {
+    const targetId = tutorial.currentStep?.targetId ?? "";
+    document.body.dataset.tutorialTargetId = targetId;
+    window.dispatchEvent(new CustomEvent("tutorial-target-changed", { detail: { targetId } }));
+    return () => {
+      delete document.body.dataset.tutorialTargetId;
+    };
+  }, [tutorial.currentStep?.targetId]);
+
   const queueStepAction = useCallback(
     (stepId: string, actionId: string, delayMs = 0): void => {
       if (tutorial.currentStep?.id !== stepId) return;
+      const resolvedDelayMs = isMobileViewport ? Math.min(220, Math.round(delayMs * 0.2)) : delayMs;
       if (delayMs <= 0) {
         tutorial.onAction(actionId);
         return;
@@ -80,9 +99,9 @@ export function BoardTutorialFlowOverlay(props: IBoardTutorialFlowOverlayProps) 
       scheduledStepActionsRef.current[stepId] = window.setTimeout(() => {
         delete scheduledStepActionsRef.current[stepId];
         tutorial.onAction(actionId);
-      }, delayMs);
+      }, resolvedDelayMs);
     },
-    [tutorial],
+    [isMobileViewport, tutorial],
   );
 
   useEffect(() => {
@@ -107,6 +126,7 @@ export function BoardTutorialFlowOverlay(props: IBoardTutorialFlowOverlayProps) 
 
   const isExecutionShowcaseStep = isBoardTutorialExecutionShowcaseStep(tutorial.currentStep?.id, isFusionCinematicActive);
   const isDirectAttackGuidedStep = isBoardTutorialDirectAttackGuidedStep(tutorial.currentStep?.id);
+  const shouldHideMobileBigLog = isMobileViewport && (hasPendingTrapPrompt || Boolean(selectedCardId));
 
   return (
     <>
@@ -123,15 +143,16 @@ export function BoardTutorialFlowOverlay(props: IBoardTutorialFlowOverlayProps) 
         description="En este duelo aprenderás turnos, ataque y defensa, mágicas, fusión, cementerio y lectura del combat log."
         onStart={() => setIsIntroVisible(false)}
       />
-      {!isIntroVisible && !isFusionCinematicActive ? (
+      {!isIntroVisible && !isFusionCinematicActive && !shouldHideMobileBigLog ? (
         <TutorialBigLogDialog
           title={tutorial.currentStep?.title ?? "Tutorial de combate completado"}
           description={tutorial.currentStep?.description ?? "Has cubierto las mecánicas base del duelo. Puedes repetir el nodo cuando quieras."}
           targetId={tutorial.currentStep?.targetId ?? null}
           canUseNext={tutorial.canUseNext}
           isFinished={tutorial.isFinished}
-          preferTopPlacement
+          preferTopPlacement={!isMobileViewport}
           disableAutoScrollWhenPinnedTop
+          isMobileCompact={isMobileViewport}
           shouldHighlightNextButton
           onNext={tutorial.onNext}
         />

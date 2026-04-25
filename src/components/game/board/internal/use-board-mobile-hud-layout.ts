@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 interface IBoardMobileHudLayout {
   opponentHudTopPx: number;
   playerHudBottomPx: number;
+  playerHudHeightPx: number;
   controlsBottomPx: number;
   energyBottomPx: number;
   dockLeftPx: number;
@@ -75,12 +76,13 @@ export function useBoardMobileHudLayout(): IBoardMobileHudLayout {
     const veryCompactHeight = snapshot.height <= 620;
     const opponentHudTopPx = snapshot.safeTop + (veryCompactHeight ? 2 : compactHeight ? 4 : 6);
     const playerHudBottomPx = snapshot.safeBottom + (veryCompactHeight ? 2 : compactHeight ? 4 : 6);
+    const playerHudHeightPx = Math.round(Math.min(114, Math.max(90, snapshot.height * 0.105)));
     const controlsBottomPx = snapshot.safeBottom + (veryCompactHeight ? 34 : compactHeight ? 38 : 46);
     const energyBottomPx = snapshot.safeBottom + (veryCompactHeight ? 4 : compactHeight ? 6 : 10);
     const hudWidthPx = Math.round(Math.min(268, Math.max(188, snapshot.width * 0.36)));
     const minDockLeft = snapshot.safeLeft + 6;
     const maxDockLeft = Math.max(minDockLeft, snapshot.width - snapshot.safeLeft - 154);
     const dockLeftPx = Math.round(Math.min(maxDockLeft, Math.max(minDockLeft, hudWidthPx - 1)));
-    return { opponentHudTopPx, playerHudBottomPx, controlsBottomPx, energyBottomPx, dockLeftPx };
+    return { opponentHudTopPx, playerHudBottomPx, playerHudHeightPx, controlsBottomPx, energyBottomPx, dockLeftPx };
   }, [snapshot]);
 }

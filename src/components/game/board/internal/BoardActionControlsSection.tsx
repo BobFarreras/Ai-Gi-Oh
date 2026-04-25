@@ -26,9 +26,12 @@ export function BoardActionControlsSection({ board, screen, isMobile }: IBoardVi
           selectedCard={null}
           gameState={board.gameState}
           isHistoryOpen={board.isHistoryOpen}
+          pendingTrapActivationPrompt={board.pendingTrapActivationPrompt}
           onSelectCard={board.previewCard}
           onCloseCard={board.clearSelection}
           onCloseHistory={() => board.setIsHistoryOpen(false)}
+          onActivatePendingTrap={board.activatePendingTrap}
+          onSkipPendingTrap={board.skipPendingTrap}
         />
       )}
       {isMobile ? (

@@ -13,20 +13,33 @@ interface IStorySceneMobileLayoutProps {
 
 export function StorySceneMobileLayout(props: IStorySceneMobileLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const hasSelectedDuelNode =
+    props.sidebar.selectedNode?.nodeType === "DUEL" || props.sidebar.selectedNode?.nodeType === "BOSS";
   const isDetailAvailable = resolveStoryMobileDetailAvailability(props.sidebar.selectedNode);
   const isInteractionDialogOpen = props.map.dialog.isOpen;
-  const mobilePrimaryActionLabel = props.map.smartActionLabel ?? "Moverse a nodo";
+  const mobilePrimaryActionLabel = props.sidebar.smartActionLabel ?? props.map.smartActionLabel ?? "Moverse a nodo";
   const canRunMobilePrimaryAction =
-    (props.map.canRunSmartAction ?? props.map.canMoveSelectedNode ?? false) && !props.map.isBusy;
+    (props.sidebar.canRunSmartAction ?? props.map.canRunSmartAction ?? props.map.canMoveSelectedNode ?? false) &&
+    !props.map.isBusy;
   const mobileSecondaryActionLabel = isInteractionDialogOpen
     ? "Siguiente"
+    : hasSelectedDuelNode
+      ? mobilePrimaryActionLabel
     : isSidebarOpen
       ? "Cerrar detalle del nodo"
       : "Abrir detalle del nodo";
-  const canRunMobileSecondaryAction = isInteractionDialogOpen || isDetailAvailable;
+  const canRunMobileSecondaryAction = isInteractionDialogOpen || (hasSelectedDuelNode ? canRunMobilePrimaryAction : isDetailAvailable);
+  const handleMobilePrimaryAction = (): void => {
+    if (!canRunMobilePrimaryAction) return;
+    props.sidebar.onSmartAction();
+  };
   const handleMobileSecondaryAction = (): void => {
     if (isInteractionDialogOpen) {
       props.map.dialog.onNext();
+      return;
+    }
+    if (hasSelectedDuelNode) {
+      handleMobilePrimaryAction();
       return;
     }
     setIsSidebarOpen((value) => !value);
@@ -44,7 +57,7 @@ export function StorySceneMobileLayout(props: IStorySceneMobileLayoutProps) {
             <button
               type="button"
               aria-label={mobilePrimaryActionLabel}
-              onClick={() => props.map.onMoveSelectedNode?.()}
+              onClick={handleMobilePrimaryAction}
               disabled={!canRunMobilePrimaryAction}
               className="pointer-events-auto rounded-xl border border-emerald-400/65 px-2 py-2.5 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100 disabled:cursor-not-allowed disabled:border-emerald-700/40 disabled:text-emerald-200/40"
             >
