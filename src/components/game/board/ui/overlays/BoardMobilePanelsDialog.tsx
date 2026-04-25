@@ -2,6 +2,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
@@ -9,19 +10,34 @@ import { GameState } from "@/core/use-cases/GameEngine";
 import { Card } from "@/components/game/card/Card";
 import { CombatLogEventRow } from "../CombatLogEventRow";
 import { resolveLiveSelectedCard } from "@/components/game/board/internal/resolve-live-selected-card";
+import { ITrapActivationPrompt } from "@/components/game/board/hooks/internal/board-state/useBoardUiState";
 
 interface BoardMobilePanelsDialogProps {
   selectedCard: ICard | null;
   gameState: GameState;
   isHistoryOpen: boolean;
+  pendingTrapActivationPrompt?: ITrapActivationPrompt | null;
   onSelectCard: (card: ICard) => void;
   onCloseCard: () => void;
   onCloseHistory: () => void;
+  onActivatePendingTrap?: () => void;
+  onSkipPendingTrap?: () => void;
 }
 
-export function BoardMobilePanelsDialog({ selectedCard, gameState, isHistoryOpen, onSelectCard, onCloseCard, onCloseHistory }: BoardMobilePanelsDialogProps) {
+export function BoardMobilePanelsDialog({
+  selectedCard,
+  gameState,
+  isHistoryOpen,
+  pendingTrapActivationPrompt = null,
+  onSelectCard,
+  onCloseCard,
+  onCloseHistory,
+  onActivatePendingTrap = () => undefined,
+  onSkipPendingTrap = () => undefined,
+}: BoardMobilePanelsDialogProps) {
   const [turnFilter, setTurnFilter] = useState<number | "ALL">("ALL");
   const [actorFilter, setActorFilter] = useState<"ALL" | "PLAYER" | "OPPONENT">("ALL");
+  const pathname = usePathname();
 
   const cardLookup = useMemo(() => {
     const cards = [
@@ -45,23 +61,62 @@ export function BoardMobilePanelsDialog({ selectedCard, gameState, isHistoryOpen
       return turnMatches && actorMatches;
     });
   }, [actorFilter, gameState.combatLog, gameState.playerA.id, gameState.playerB.id, turnFilter]);
-  const liveSelectedCard = useMemo(
-    () => resolveLiveSelectedCard(selectedCard, gameState),
-    [gameState, selectedCard],
-  );
+  const selectedCardOrTrapPromptCard = pendingTrapActivationPrompt?.trapCard ?? selectedCard;
+  const liveSelectedCard = useMemo(() => resolveLiveSelectedCard(selectedCardOrTrapPromptCard, gameState), [gameState, selectedCardOrTrapPromptCard]);
+  const isTrapPromptForSelectedCard = Boolean(liveSelectedCard && pendingTrapActivationPrompt && pendingTrapActivationPrompt.trapCard.id === liveSelectedCard.id);
+  const isTutorialTrapPromptLocked = isTrapPromptForSelectedCard && pathname?.includes("/hub/academy/training/tutorial");
+  const detailPanelTopClassName = isTrapPromptForSelectedCard ? "top-[7.4rem]" : "top-[5.2rem]";
 
   return (
     <AnimatePresence>
       {liveSelectedCard && (
-        <motion.div initial={{ x: "-100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "-100%", opacity: 0 }} transition={{ type: "spring", stiffness: 420, damping: 34 }} className="absolute left-0 right-14 top-[5.2rem] bottom-[8.2rem] z-[270] rounded-r-3xl border-r-2 border-cyan-500/60 bg-zinc-950/92 p-3 backdrop-blur-xl shadow-[14px_0_34px_rgba(0,0,0,0.72)] min-h-0 flex flex-col">
-          <button aria-label="Cerrar detalle" onClick={onCloseCard} className="absolute right-3 top-3 text-cyan-300"><X size={22} /></button>
-          <div className="shrink-0 h-[11rem] overflow-hidden flex items-center justify-center">
-            <div className="origin-top scale-[0.46]"><Card card={liveSelectedCard} /></div>
-          </div>
+        <motion.div initial={{ x: "-100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "-100%", opacity: 0 }} transition={{ type: "spring", stiffness: 420, damping: 34 }} className={`absolute left-0 right-14 ${detailPanelTopClassName} bottom-[8.2rem] z-[270] rounded-r-3xl border-r-2 border-cyan-500/60 bg-zinc-950/92 p-3 backdrop-blur-xl shadow-[14px_0_34px_rgba(0,0,0,0.72)] min-h-0 flex flex-col`}>
+          <button
+            aria-label="Cerrar detalle"
+            onClick={isTutorialTrapPromptLocked ? () => undefined : isTrapPromptForSelectedCard ? onSkipPendingTrap : onCloseCard}
+            disabled={isTutorialTrapPromptLocked}
+            className="absolute right-3 top-3 text-cyan-300 disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <X size={22} />
+          </button>
           <div className="mt-1 min-h-0 flex-1 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-500/70 [&::-webkit-scrollbar-track]:bg-transparent">
+            {isTrapPromptForSelectedCard ? (
+              <div className="mb-3 flex items-start gap-2 rounded-lg border border-fuchsia-400/45 bg-fuchsia-950/40 p-2">
+                <div className="h-[clamp(4.9rem,17vw,5.7rem)] w-[clamp(3.35rem,12vw,3.9rem)] shrink-0 overflow-hidden rounded border border-fuchsia-300/50 bg-black/60">
+                  <div style={{ width: "260px", height: "380px", transform: "scale(0.21)", transformOrigin: "top left" }}>
+                    <Card card={liveSelectedCard} disableHoverEffects disableDefaultShadow isPerformanceMode />
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-fuchsia-200">Decisión de trampa</p>
+                  <p className="mt-1 text-xs font-bold text-fuchsia-100">¿Quieres activar esta carta trampa?</p>
+                </div>
+              </div>
+            ) : null}
             <h3 className="text-lg font-black uppercase text-cyan-300">{liveSelectedCard.name}</h3>
             <p className="mb-2 border-b border-zinc-800 pb-2 text-[11px] font-bold uppercase tracking-widest text-zinc-500">{liveSelectedCard.faction} {liveSelectedCard.type}</p>
             <p className="text-sm leading-relaxed text-zinc-200 whitespace-pre-line">{liveSelectedCard.description}</p>
+            {isTrapPromptForSelectedCard ? (
+              <div className="mt-4 flex items-center gap-2 border-t border-zinc-800 pt-3">
+                <button
+                  type="button"
+                  aria-label="Activar trampa pendiente"
+                  onClick={onActivatePendingTrap}
+                  className="rounded-lg border border-emerald-300/70 bg-emerald-700/35 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-emerald-100 hover:bg-emerald-700/50"
+                >
+                  Activar
+                </button>
+                <button
+                  type="button"
+                  aria-label="Cancelar trampa pendiente"
+                  onClick={isTutorialTrapPromptLocked ? () => undefined : onSkipPendingTrap}
+                  disabled={isTutorialTrapPromptLocked}
+                  className="rounded-lg border border-zinc-500/60 bg-zinc-900/75 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-zinc-100 hover:border-zinc-300 disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  Cancelar
+                </button>
+              </div>
+            ) : null}
           </div>
         </motion.div>
       )}

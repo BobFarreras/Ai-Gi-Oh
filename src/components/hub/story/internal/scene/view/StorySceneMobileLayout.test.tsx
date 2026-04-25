@@ -59,9 +59,11 @@ const baseMap: IStorySceneMapViewProps = {
 };
 
 describe("StorySceneMobileLayout", () => {
-  it("elimina botón táctico duplicado, mantiene CTA dinámico y detalle funcional", () => {
+  it("en nodo de duelo usa la smart action también en botón secundario", () => {
+    const onSmartAction = vi.fn();
     const sidebarWithDuel = {
       ...baseSidebar,
+      onSmartAction,
       selectedNode: {
         id: "story-duel-1",
         chapter: 1,
@@ -79,12 +81,12 @@ describe("StorySceneMobileLayout", () => {
       },
     };
     render(<StorySceneMobileLayout sidebar={sidebarWithDuel} map={baseMap} />);
-    expect(screen.queryByRole("button", { name: "Abrir detalle táctico" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Centrar en el jugador" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Interactuar con nodo" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Mover" })).toHaveLength(2);
     expect(screen.getByText("sheet-closed")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Abrir detalle del nodo" }));
-    expect(screen.getByText("sheet-open")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "Mover" })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: "Mover" })[1]);
+    expect(onSmartAction).toHaveBeenCalledTimes(2);
+    expect(screen.getByText("sheet-closed")).toBeInTheDocument();
   });
 
   it("deshabilita detalle en plataforma MOVE sin contenido", () => {

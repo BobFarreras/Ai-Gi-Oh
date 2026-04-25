@@ -11,6 +11,7 @@ interface MobilePlayerHandProps {
   playingCard: ICard | null;
   isPlayerTurn: boolean;
   highlightedCardIds?: string[];
+  bottomOffsetPx?: number;
   onMandatoryCardSelect?: (cardId: string) => void;
   onCardClick: (card: ICard, event: React.MouseEvent) => void;
 }
@@ -24,6 +25,7 @@ export function MobilePlayerHand({
   playingCard,
   isPlayerTurn,
   highlightedCardIds = [],
+  bottomOffsetPx = 48,
   onMandatoryCardSelect,
   onCardClick,
 }: MobilePlayerHandProps) {
@@ -37,20 +39,29 @@ export function MobilePlayerHand({
   }, []);
 
   const metrics = useMemo(() => {
-    const availableWidth = Math.max(220, viewportWidth - 10);
+    const availableWidth = Math.max(240, viewportWidth - 2);
     const count = Math.max(1, hand.length);
-    const baseScale = count >= 5 ? 0.31 : count === 4 ? 0.34 : 0.37;
-    const sizePenalty = clamp((420 - viewportWidth) / 170, 0, 1) * 0.04;
-    const scale = clamp(baseScale - sizePenalty, 0.26, 0.39);
+    const preferredScaleByCount =
+      count >= 7 ? 0.17 : count === 6 ? 0.185 : count === 5 ? 0.205 : count === 4 ? 0.225 : 0.25;
+    const sizePenalty = clamp((420 - viewportWidth) / 170, 0, 1) * 0.02;
+    const maxScaleByWidth = (availableWidth - 8 * (count - 1)) / 260;
+    const scale = clamp(Math.min(preferredScaleByCount - sizePenalty, maxScaleByWidth), 0.16, 0.26);
     const cardWidth = Math.round(260 * scale);
     const cardHeight = Math.round(380 * scale);
-    const spacing = count <= 1 ? 0 : clamp(Math.floor((availableWidth - cardWidth) / (count - 1)), 13, cardWidth - 6);
+    const spacing =
+      count <= 1
+        ? 0
+        : clamp(Math.floor((availableWidth - cardWidth) / (count - 1)), 8, Math.max(8, cardWidth - 6));
     const containerWidth = count <= 1 ? cardWidth : cardWidth + spacing * (count - 1);
     return { availableWidth, scale, cardWidth, cardHeight, spacing, containerWidth };
   }, [hand.length, viewportWidth]);
 
   return (
-    <div data-tutorial-id="tutorial-board-hand" className="pointer-events-none absolute bottom-[90px] left-0 right-0 z-[170] flex h-[150px] items-end justify-center px-1">
+    <div
+      data-tutorial-id="tutorial-board-hand"
+      className="pointer-events-none absolute left-0 right-0 z-[170] flex h-[118px] items-end justify-center px-0"
+      style={{ bottom: `calc(env(safe-area-inset-bottom) + ${bottomOffsetPx}px)` }}
+    >
       <div className="relative h-full" style={{ width: `${metrics.availableWidth}px` }}>
         <div className="relative mx-auto h-full" style={{ width: `${metrics.containerWidth}px` }}>
           {hand.map((card, index) => {
