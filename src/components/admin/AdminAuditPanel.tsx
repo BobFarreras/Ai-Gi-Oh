@@ -114,7 +114,7 @@ export function AdminAuditPanel({ portalSlug, page, query, cardVisualById }: IAd
                   {cardVisual ? (
                     <div className="flex items-center gap-2">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={cardVisual.renderUrl ?? "/assets/bgs/bg-tech.jpg"} alt={cardVisual.cardName} className="h-10 w-8 rounded border border-slate-600 object-cover" />
+                      <img src={cardVisual.renderUrl ?? "/assets/bgs/bg-tech.webp"} alt={cardVisual.cardName} className="h-10 w-8 rounded border border-slate-600 object-cover" />
                       <div className="leading-tight">
                         <p className="font-semibold text-cyan-100">{cardVisual.cardName}</p>
                         <p className="text-[11px] text-slate-400">{cardVisual.cardId}</p>

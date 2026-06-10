@@ -15,7 +15,7 @@ function createCard(id: string, name: string): ICard {
     cost: 3,
     attack: 1200,
     defense: 900,
-    bgUrl: "/assets/backgrounds/card-bg-tech.webp",
+    bgUrl: "/assets/bgs/bg-tech.webp",
     renderUrl: "/assets/renders/python.webp",
   };
 }

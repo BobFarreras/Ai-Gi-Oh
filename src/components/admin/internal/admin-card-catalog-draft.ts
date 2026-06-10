@@ -3,7 +3,7 @@ import { IAdminUpsertCardCatalogCommand } from "@/core/entities/admin/IAdminCata
 import { IAdminCardCatalogEntry } from "@/core/entities/admin/IAdminCatalogSnapshot";
 import { CardArchetype, CardType, Faction, ICard, TrapTrigger } from "@/core/entities/ICard";
 import { mapAdminCardCatalogEntryToCard } from "./admin-card-catalog-entry-mapper";
-export const ADMIN_CARD_DEFAULT_BG_URL = "/assets/bgs/bg-tech.jpg";
+export const ADMIN_CARD_DEFAULT_BG_URL = "/assets/bgs/bg-tech.webp";
 export interface IAdminCardCatalogDraft {
   id: string;
   name: string;
