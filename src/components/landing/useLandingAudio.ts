@@ -1,7 +1,8 @@
-// src/components/landing/useLandingAudio.ts - Gestiona efectos de sonido y soundtrack de narración para la landing.
+// src/components/landing/useLandingAudio.ts - Gestiona efectos de sonido y soundtrack de narración para la landing con creación lazy de instancias Audio.
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { getAudio, pauseAllAudio } from "@/lib/audio-pool";
 
 interface IUseLandingAudioOptions {
   isNarrativeActive: boolean;
@@ -15,6 +16,22 @@ export interface ILandingAudioControls {
   stopNarrationTrack: () => void;
 }
 
+const PATHS = {
+  buttonClick: "/audio/landing/button-click.mp3",
+  terminalBoot: "/audio/landing/terminal.mp3",
+  formEntry: "/audio/landing/formulario.mp3",
+  heroDeploy: "/audio/landing/hero.mp3",
+  narrationTrack: "/audio/landing/soundtrack.mp3",
+} as const;
+
+const VOLUMES = {
+  buttonClick: 0.16,
+  terminalBoot: 0.5,
+  formEntry: 0.42,
+  heroDeploy: 0.14,
+  narrationTrack: 0.38,
+} as const;
+
 function safePlay(audio: HTMLAudioElement | null): void {
   if (!audio) return;
   audio.currentTime = 0;
@@ -25,68 +42,53 @@ function safePlay(audio: HTMLAudioElement | null): void {
 }
 
 export function useLandingAudio({ isNarrativeActive }: IUseLandingAudioOptions): ILandingAudioControls {
-  const buttonClickRef = useRef<HTMLAudioElement | null>(null);
-  const terminalBootRef = useRef<HTMLAudioElement | null>(null);
-  const formEntryRef = useRef<HTMLAudioElement | null>(null);
-  const heroDeployRef = useRef<HTMLAudioElement | null>(null);
-  const narrationTrackRef = useRef<HTMLAudioElement | null>(null);
+  const narrationRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    buttonClickRef.current = new Audio("/audio/landing/button-click.mp3");
-    buttonClickRef.current.volume = 0.16;
-    terminalBootRef.current = new Audio("/audio/landing/terminal.mp3");
-    terminalBootRef.current.volume = 0.5;
-    formEntryRef.current = new Audio("/audio/landing/formulario.mp3");
-    formEntryRef.current.volume = 0.42;
-    heroDeployRef.current = new Audio("/audio/landing/hero.mp3");
-    heroDeployRef.current.volume = 0.14;
-    narrationTrackRef.current = new Audio("/audio/landing/soundtrack.mp3");
-    narrationTrackRef.current.loop = false;
-    narrationTrackRef.current.volume = 0.38;
-
     return () => {
-      [buttonClickRef, terminalBootRef, formEntryRef, heroDeployRef, narrationTrackRef].forEach((audioRef) => {
-        if (!audioRef.current) return;
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      });
+      pauseAllAudio();
     };
   }, []);
 
   useEffect(() => {
-    const narrationAudio = narrationTrackRef.current;
-    if (!narrationAudio) return;
     if (isNarrativeActive) {
-      narrationAudio.currentTime = 0;
-      const maybePromise = narrationAudio.play();
-      if (maybePromise && typeof maybePromise.catch === "function") {
-        void maybePromise.catch(() => undefined);
+      narrationRef.current = getAudio(PATHS.narrationTrack, VOLUMES.narrationTrack);
+      if (narrationRef.current) {
+        narrationRef.current.loop = false;
+        narrationRef.current.currentTime = 0;
+        const maybePromise = narrationRef.current.play();
+        if (maybePromise && typeof maybePromise.catch === "function") {
+          void maybePromise.catch(() => undefined);
+        }
       }
       return;
     }
-    narrationAudio.pause();
-    narrationAudio.currentTime = 0;
+    if (narrationRef.current) {
+      narrationRef.current.pause();
+      narrationRef.current.currentTime = 0;
+    }
   }, [isNarrativeActive]);
 
   const playButtonClick = useCallback(() => {
-    safePlay(buttonClickRef.current);
+    safePlay(getAudio(PATHS.buttonClick, VOLUMES.buttonClick));
   }, []);
+
   const playTerminalBoot = useCallback(() => {
-    safePlay(terminalBootRef.current);
+    safePlay(getAudio(PATHS.terminalBoot, VOLUMES.terminalBoot));
   }, []);
 
   const playFormEntry = useCallback(() => {
-    safePlay(formEntryRef.current);
+    safePlay(getAudio(PATHS.formEntry, VOLUMES.formEntry));
   }, []);
 
   const playHeroCardDeploy = useCallback((delayMs = 0) => {
-    window.setTimeout(() => safePlay(heroDeployRef.current), Math.max(0, delayMs));
+    window.setTimeout(() => safePlay(getAudio(PATHS.heroDeploy, VOLUMES.heroDeploy)), Math.max(0, delayMs));
   }, []);
 
   const stopNarrationTrack = useCallback(() => {
-    if (!narrationTrackRef.current) return;
-    narrationTrackRef.current.pause();
-    narrationTrackRef.current.currentTime = 0;
+    if (!narrationRef.current) return;
+    narrationRef.current.pause();
+    narrationRef.current.currentTime = 0;
   }, []);
 
   return {

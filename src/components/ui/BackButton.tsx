@@ -1,11 +1,12 @@
-// src/components/ui/BackButton.tsx - Botón de retorno reutilizable con navegación y efecto sonoro de interacción.
+// src/components/ui/BackButton.tsx - Botón de retorno reutilizable con navegación y efecto sonoro lazy.
 "use client";
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback } from "react";
+import { playAudio } from "@/lib/audio-pool";
 
 interface BackButtonProps {
   /** Ruta opcional a la que navegar. Si no se provee, hará router.back() */
@@ -20,29 +21,9 @@ interface BackButtonProps {
 
 export function BackButton({ href, onClick, label = "Volver", className = "" }: BackButtonProps) {
   const router = useRouter();
-  const clickAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    clickAudioRef.current = new Audio("/audio/landing/button-click.mp3");
-    clickAudioRef.current.volume = 0.2;
-    return () => {
-      if (!clickAudioRef.current) return;
-      clickAudioRef.current.pause();
-      clickAudioRef.current.currentTime = 0;
-    };
-  }, []);
-
-  const playClickSound = useCallback(() => {
-    if (!clickAudioRef.current) return;
-    clickAudioRef.current.currentTime = 0;
-    const maybePromise = clickAudioRef.current.play();
-    if (maybePromise && typeof maybePromise.catch === "function") {
-      void maybePromise.catch(() => undefined);
-    }
-  }, []);
-
-  const handleAction = (e: React.MouseEvent) => {
-    playClickSound();
+  const handleAction = useCallback((e: React.MouseEvent) => {
+    playAudio("/audio/landing/button-click.mp3", 0.2);
     if (onClick) {
       e.preventDefault();
       onClick();
@@ -52,7 +33,7 @@ export function BackButton({ href, onClick, label = "Volver", className = "" }: 
       e.preventDefault();
       router.back();
     }
-  };
+  }, [href, onClick, router]);
 
   const buttonContent = (
     <motion.div
@@ -72,7 +53,6 @@ export function BackButton({ href, onClick, label = "Volver", className = "" }: 
     </motion.div>
   );
 
-  // Si nos pasan un href estricto, envolvemos en el Link de Next.js para pre-fetching óptimo
   if (href) {
     return (
       <Link href={href} passHref onClick={handleAction}>
@@ -81,7 +61,6 @@ export function BackButton({ href, onClick, label = "Volver", className = "" }: 
     );
   }
 
-  // Si no hay href, es un botón de retroceso estándar interactuando con el history de la API
   return (
     <button type="button" onClick={handleAction} aria-label="Volver atrás">
       {buttonContent}
