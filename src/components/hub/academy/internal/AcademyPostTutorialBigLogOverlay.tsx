@@ -52,7 +52,7 @@ export function AcademyPostTutorialBigLogOverlay() {
           className="pointer-events-none relative h-[220px] w-[220px] sm:h-[320px] sm:w-[320px]"
         >
           <Image
-            src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png"
+            src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.webp"
             alt="BigLog post tutorial"
             fill
             priority

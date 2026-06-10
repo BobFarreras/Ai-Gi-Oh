@@ -108,7 +108,7 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
           }))}
           onSelectTier={(tier) => window.location.replace(`/hub/academy/training/arena?tier=${tier}`)}
           opponentName={props.opponentName}
-          playerAvatarUrl="/assets/story/player/bob.png"
+          playerAvatarUrl="/assets/story/player/bob.webp"
           opponentAvatarUrl={props.opponentAvatarUrl}
           onStart={() => setIsBattleStarted(true)}
           onBack={() => window.location.replace(ACADEMY_HOME_ROUTE)}
@@ -125,7 +125,7 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
             opponentFusionDeck: props.opponentFusionDeck,
             opponentName: props.opponentName,
           }}
-          playerAvatarUrl="/assets/story/player/bob.png"
+          playerAvatarUrl="/assets/story/player/bob.webp"
           opponentAvatarUrl={props.opponentAvatarUrl}
           opponentStrategyOverride={opponentStrategy}
           narrationPack={props.narrationPack}

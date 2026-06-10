@@ -44,7 +44,7 @@ export function TutorialBigLogOutroOverlay({
       <div className="flex max-w-[min(95vw,1120px)] flex-col items-center gap-3 sm:flex-row sm:gap-6">
          <div className="relative h-[340px] w-[340px] shrink-0 overflow-visible bg-transparent sm:h-[480px] sm:w-[480px]">
           <Image
-            src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png"
+            src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.webp"
             alt="BigLog final del tutorial"
             fill
             sizes="(max-width: 640px) 240px, 320px"

@@ -46,7 +46,7 @@ export function TutorialMapGuideOverlay({ isVisible }: ITutorialMapGuideOverlayP
           className="relative h-[220px] w-[220px] sm:h-[300px] sm:w-[300px]"
         >
           <Image
-            src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png"
+            src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.webp"
             alt="BigLog Academy"
             fill
             sizes="(max-width: 640px) 220px, 300px"

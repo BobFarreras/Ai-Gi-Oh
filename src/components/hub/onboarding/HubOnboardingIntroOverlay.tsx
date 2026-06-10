@@ -48,7 +48,7 @@ const STEP_CONTENT: Record<OnboardingStep, IStepContent> = {
 };
 
 function resolveActorImage(actor: "biglog" | "player"): string {
-  return actor === "biglog" ? "/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png" : "/assets/story/player/intro-Jugador.png";
+  return actor === "biglog" ? "/assets/story/opponents/opp-ch1-biglog/intro-BigLog.webp" : "/assets/story/player/intro-Jugador.webp";
 }
 function resolveActorSide(actor: "biglog" | "player"): "left" | "right" {
   return actor === "biglog" ? "right" : "left";

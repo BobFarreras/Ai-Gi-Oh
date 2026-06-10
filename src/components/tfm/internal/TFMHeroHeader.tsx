@@ -18,8 +18,8 @@ export function TFMHeroHeader() {
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Image src="/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" alt="BigLog" width={164} height={164} className="h-28 w-28 rounded-xl border border-cyan-300/50 bg-black/45 object-contain p-1 sm:h-36 sm:w-36" priority />
-          <Image src="/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.png" alt="GenNvim" width={164} height={164} className="h-28 w-28 rounded-xl border border-cyan-300/50 bg-black/45 object-cover sm:h-36 sm:w-36" priority />
+          <Image src="/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.webp" alt="BigLog" width={164} height={164} className="h-28 w-28 rounded-xl border border-cyan-300/50 bg-black/45 object-contain p-1 sm:h-36 sm:w-36" priority />
+          <Image src="/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.webp" alt="GenNvim" width={164} height={164} className="h-28 w-28 rounded-xl border border-cyan-300/50 bg-black/45 object-cover sm:h-36 sm:w-36" priority />
         </div>
       </div>
     </header>

@@ -39,10 +39,10 @@ export function StoryNodeInteractionDialog({
   const counterpartPortraitUrl = line?.counterpartPortraitUrl ?? "";
   const actorId = line?.actorId ?? "system";
   const isPlayerSpeaker = actorId === "player";
-  const defaultOpponentPortraitUrl = "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png";
+  const defaultOpponentPortraitUrl = "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.webp";
 
   // El jugador se fija abajo-izquierda y el interlocutor arriba-derecha para lectura estable.
-  const playerPortraitUrl = isPlayerSpeaker ? (portraitUrl || "/assets/story/player/bob.png") : "/assets/story/player/bob.png";
+  const playerPortraitUrl = isPlayerSpeaker ? (portraitUrl || "/assets/story/player/bob.webp") : "/assets/story/player/bob.webp";
   const opponentPortraitUrl = isPlayerSpeaker
     ? (counterpartPortraitUrl || defaultOpponentPortraitUrl)
     : (portraitUrl || defaultOpponentPortraitUrl);

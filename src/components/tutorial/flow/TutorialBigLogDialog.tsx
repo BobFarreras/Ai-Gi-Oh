@@ -98,7 +98,7 @@ export function TutorialBigLogDialog({
       className={`pointer-events-auto fixed left-1/2 z-[430] -translate-x-1/2 rounded-2xl border border-cyan-300/40 bg-slate-950/82 shadow-[0_10px_38px_rgba(0,0,0,0.45)] backdrop-blur-[2px] transition-all duration-300 ${isMobileCompact ? "w-[min(94vw,34rem)] p-3" : "w-[min(96vw,960px)] p-4"} ${positionClass}`}
     >
       <div className="flex items-start gap-3">
-        <Image src="/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" alt="Avatar de BigLog" width={isMobileCompact ? 58 : 74} height={isMobileCompact ? 58 : 74} className="rounded-xl border border-cyan-300/35" />
+        <Image src="/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.webp" alt="Avatar de BigLog" width={isMobileCompact ? 58 : 74} height={isMobileCompact ? 58 : 74} className="rounded-xl border border-cyan-300/35" />
         <div className="min-w-0 flex-1">
           <p className={`${isMobileCompact ? "text-[10px] tracking-[0.2em]" : "text-[11px] tracking-[0.24em]"} font-black uppercase text-cyan-300`}>BigLog Tutorial</p>
           <h3 className={`mt-1 font-black uppercase leading-tight text-cyan-100 ${isMobileCompact ? "text-[0.9rem]" : "text-base sm:text-lg"}`}>{title}</h3>
