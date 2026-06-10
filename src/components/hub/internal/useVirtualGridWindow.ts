@@ -1,4 +1,4 @@
-// src/components/hub/internal/useVirtualGridWindow.ts - Sincroniza scroll/resize del contenedor y expone la ventana virtual visible.
+// src/components/hub/internal/useVirtualGridWindow.ts - Sincroniza scroll/resize del contenedor y expone la ventana virtual visible con throttle por rAF.
 "use client";
 
 import { RefObject, useEffect, useState } from "react";
@@ -44,27 +44,34 @@ export function useVirtualGridWindow(input: IUseVirtualGridWindowInput): IVirtua
     const element = input.containerRef.current;
     if (!element) return;
 
-    const updateWindow = () => {
-      setWindowState(
-        computeVirtualGridWindow({
-          itemCount: input.itemCount,
-          containerWidth: element.clientWidth,
-          containerHeight: element.clientHeight,
-          scrollTop: element.scrollTop,
-          itemMinWidth: input.itemMinWidth,
-          itemHeight: input.itemHeight,
-          gap: input.gap,
-          overscanRows: input.overscanRows,
-        }),
-      );
+    let rafId: number | null = null;
+
+    const scheduleUpdate = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        setWindowState(
+          computeVirtualGridWindow({
+            itemCount: input.itemCount,
+            containerWidth: element.clientWidth,
+            containerHeight: element.clientHeight,
+            scrollTop: element.scrollTop,
+            itemMinWidth: input.itemMinWidth,
+            itemHeight: input.itemHeight,
+            gap: input.gap,
+            overscanRows: input.overscanRows,
+          }),
+        );
+      });
     };
 
-    updateWindow();
-    element.addEventListener("scroll", updateWindow, { passive: true });
-    const resizeObserver = new ResizeObserver(updateWindow);
+    scheduleUpdate();
+    element.addEventListener("scroll", scheduleUpdate, { passive: true });
+    const resizeObserver = new ResizeObserver(scheduleUpdate);
     resizeObserver.observe(element);
     return () => {
-      element.removeEventListener("scroll", updateWindow);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      element.removeEventListener("scroll", scheduleUpdate);
       resizeObserver.disconnect();
     };
   }, [input.containerRef, input.gap, input.itemCount, input.itemHeight, input.itemMinWidth, input.overscanRows]);
