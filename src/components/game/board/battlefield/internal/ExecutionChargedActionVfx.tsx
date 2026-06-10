@@ -35,9 +35,9 @@ function resolveEnergyTarget(action: ChargedExecutionAction, isOpponentSide: boo
 export function ExecutionChargedActionVfx({ action, isOpponentSide }: IExecutionChargedActionVfxProps) {
   useEffect(() => {
     const releaseTimer = window.setTimeout(() => {
-      if (action === "RESTORE_ENERGY") playAudio(["/audio/sfx/effects/execution/restore_energy.mp3", "/audio/sfx/damage.mp3"], 0.78);
-      if (action === "DRAIN_OPPONENT_ENERGY") playAudio(["/audio/sfx/effects/execution/bajada.mp3"], 0.78);
-      if (action === "SET_CARD_DUEL_PROGRESS") playAudio(["/audio/hub/arsenal/evolution.mp3"], 0.76);
+      if (action === "RESTORE_ENERGY") playAudio(["/audio/sfx/effects/execution/restore_energy.m4a", "/audio/sfx/damage.m4a"], 0.78);
+      if (action === "DRAIN_OPPONENT_ENERGY") playAudio(["/audio/sfx/effects/execution/bajada.m4a"], 0.78);
+      if (action === "SET_CARD_DUEL_PROGRESS") playAudio(["/audio/hub/arsenal/evolution.m4a"], 0.76);
     }, CHARGE_MS);
     return () => {
       window.clearTimeout(releaseTimer);

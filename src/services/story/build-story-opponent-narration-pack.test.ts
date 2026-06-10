@@ -12,7 +12,7 @@ describe("buildStoryOpponentNarrationPack", () => {
     });
     const startOpponent = pack.lines.find((line) => line.id === "start-opponent");
     expect(startOpponent?.portraitUrl).toContain("opp-ch1-apprentice/intro-GenNvim");
-    expect(startOpponent?.audioUrl).toContain("intro.mp3");
+    expect(startOpponent?.audioUrl).toContain("intro.m4a");
   });
 
   it("usa fallback de descripción en oponentes sin override", () => {
@@ -33,7 +33,7 @@ describe("buildStoryOpponentNarrationPack", () => {
     });
     const startOpponent = pack.lines.find((line) => line.id === "start-opponent");
     const losePlayer = pack.lines.find((line) => line.id === "lose-player");
-    expect(startOpponent?.audioUrl).toContain("/audio/story/opp-ch1-biglog/intro.mp3");
+    expect(startOpponent?.audioUrl).toContain("/audio/story/opp-ch1-biglog/intro.m4a");
     expect(losePlayer?.text).toBe("Este duelo fue mío desde el principio.");
     expect(losePlayer?.portraitUrl).toContain("victoria-BigLog.png");
   });

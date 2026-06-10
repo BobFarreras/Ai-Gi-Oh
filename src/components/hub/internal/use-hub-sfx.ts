@@ -26,15 +26,15 @@ export function useHubSfx(): IHubSfxControls {
     const now = performance.now();
     if (now - lastHoverAtRef.current < 120) return;
     lastHoverAtRef.current = now;
-    safeReplay(getAudio("/audio/landing/button-click.mp3", 0.12));
+    safeReplay(getAudio("/audio/landing/button-click.m4a", 0.12));
   }, []);
 
   const playHudEntry = useCallback(() => {
-    safeReplay(getAudio("/audio/landing/formulario.mp3", 0.32));
+    safeReplay(getAudio("/audio/landing/formulario.m4a", 0.32));
   }, []);
 
   const playUiClick = useCallback(() => {
-    safeReplay(getAudio("/audio/landing/button-click.mp3", 0.22));
+    safeReplay(getAudio("/audio/landing/button-click.m4a", 0.22));
   }, []);
 
   return { playNodeHover, playHudEntry, playUiClick };

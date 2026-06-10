@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 
 const BOSS_SOUNDTRACK_CANDIDATES = [
-  "/audio/story/effects/boss-soundtrack.mp3",
+  "/audio/story/effects/boss-soundtrack.m4a",
 ];
 
 /**

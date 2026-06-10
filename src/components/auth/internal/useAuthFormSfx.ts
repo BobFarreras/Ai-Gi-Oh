@@ -15,11 +15,11 @@ function safePlay(audio: HTMLAudioElement | null): void {
 
 export function useAuthFormSfx() {
   const playButtonClick = useCallback(() => {
-    safePlay(getAudio("/audio/landing/button-click.mp3", 0.2));
+    safePlay(getAudio("/audio/landing/button-click.m4a", 0.2));
   }, []);
 
   const playFormEntry = useCallback(() => {
-    safePlay(getAudio("/audio/landing/formulario.mp3", 0.42));
+    safePlay(getAudio("/audio/landing/formulario.m4a", 0.42));
   }, []);
 
   return { playButtonClick, playFormEntry };

@@ -23,7 +23,7 @@ export function TrainingCoinTossOverlay({ isVisible, starterSide, onContinue }: 
 
   useEffect(() => {
     if (!isVisible || phase !== "INTRO") return;
-    const audio = new Audio("/audio/sfx/banner.mp3");
+    const audio = new Audio("/audio/sfx/banner.m4a");
     audio.volume = 0.6;
     void audio.play().catch(() => undefined);
     return () => {
@@ -43,7 +43,7 @@ export function TrainingCoinTossOverlay({ isVisible, starterSide, onContinue }: 
     const sleep = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
     const runSequence = async () => {
       await controls.set({ x: 0, y: dropStartY, scale: 0.96, rotateY: 90, opacity: 1 });
-      playSfx("/audio/story/effects/intro-coinToss.mp3");
+      playSfx("/audio/story/effects/intro-coinToss.m4a");
       await controls.start({
         x: 0,
         y: [dropStartY, 30, 0],
@@ -53,7 +53,7 @@ export function TrainingCoinTossOverlay({ isVisible, starterSide, onContinue }: 
       });
       if (isCancelled) return;
       setIsResultVisible(true);
-      playSfx("/audio/story/effects/final-coinToss.mp3");
+      playSfx("/audio/story/effects/final-coinToss.m4a");
       await sleep(900);
       if (!isCancelled) onContinue();
     };

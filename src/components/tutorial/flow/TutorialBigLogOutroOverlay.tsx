@@ -26,7 +26,7 @@ export function TutorialBigLogOutroOverlay({
 }: ITutorialBigLogOutroOverlayProps) {
   useEffect(() => {
     if (!isVisible) return;
-    const audio = new Audio("/audio/sfx/banner.mp3");
+    const audio = new Audio("/audio/sfx/banner.m4a");
     audio.volume = 0.6;
     void audio.play().catch(() => undefined);
     return () => {

@@ -17,11 +17,11 @@ export interface ILandingAudioControls {
 }
 
 const PATHS = {
-  buttonClick: "/audio/landing/button-click.mp3",
-  terminalBoot: "/audio/landing/terminal.mp3",
-  formEntry: "/audio/landing/formulario.mp3",
-  heroDeploy: "/audio/landing/hero.mp3",
-  narrationTrack: "/audio/landing/soundtrack.mp3",
+  buttonClick: "/audio/landing/button-click.m4a",
+  terminalBoot: "/audio/landing/terminal.m4a",
+  formEntry: "/audio/landing/formulario.m4a",
+  heroDeploy: "/audio/landing/hero.m4a",
+  narrationTrack: "/audio/landing/soundtrack.m4a",
 } as const;
 
 const VOLUMES = {

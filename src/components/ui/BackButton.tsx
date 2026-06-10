@@ -23,7 +23,7 @@ export function BackButton({ href, onClick, label = "Volver", className = "" }: 
   const router = useRouter();
 
   const handleAction = useCallback((e: React.MouseEvent) => {
-    playAudio("/audio/landing/button-click.mp3", 0.2);
+    playAudio("/audio/landing/button-click.m4a", 0.2);
     if (onClick) {
       e.preventDefault();
       onClick();

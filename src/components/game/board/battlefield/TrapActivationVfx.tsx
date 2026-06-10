@@ -36,7 +36,7 @@ export function TrapActivationVfx({ entity, isOpponentSide, isTrapActivating }: 
   if (shouldReduceCombatEffects) {
     return (
       <div className="pointer-events-none absolute inset-0 z-[260] flex items-center justify-center">
-        <ChargeCastSfx enabled playKey={chargePlayKey} path="/audio/sfx/effects/execution/cargar.mp3" volume={0.76} />
+        <ChargeCastSfx enabled playKey={chargePlayKey} path="/audio/sfx/effects/execution/cargar.m4a" volume={0.76} />
         <motion.div
           initial={{ opacity: 0, scale: 0.82 }}
           animate={{ opacity: [0, 0.88, 0], scale: [0.82, 1.16, 0.98] }}
@@ -53,7 +53,7 @@ export function TrapActivationVfx({ entity, isOpponentSide, isTrapActivating }: 
   if (action === "DAMAGE") {
     return (
       <>
-        <ChargeCastSfx enabled playKey={chargePlayKey} path="/audio/sfx/effects/execution/cargar.mp3" volume={0.76} />
+        <ChargeCastSfx enabled playKey={chargePlayKey} path="/audio/sfx/effects/execution/cargar.m4a" volume={0.76} />
         <ChargeCastVfx tone="red" />
         <DigitalBeam direction={isOpponentSide ? "towards-player" : "towards-opponent"} onComplete={() => undefined} />
       </>
@@ -62,7 +62,7 @@ export function TrapActivationVfx({ entity, isOpponentSide, isTrapActivating }: 
   if (action === "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN") {
     return (
       <>
-        <ChargeCastSfx enabled playKey={chargePlayKey} path="/audio/sfx/effects/execution/cargar.mp3" volume={0.76} />
+        <ChargeCastSfx enabled playKey={chargePlayKey} path="/audio/sfx/effects/execution/cargar.m4a" volume={0.76} />
         <ChargeCastVfx tone="violet" />
         <DigitalBeam direction={isOpponentSide ? "towards-player" : "towards-opponent"} onComplete={() => undefined} />
       </>
@@ -84,9 +84,9 @@ export function TrapActivationVfx({ entity, isOpponentSide, isTrapActivating }: 
       transition={{ duration: 1.05, ease: "easeOut" }}
       className={`pointer-events-none absolute -inset-8 z-[260] rounded-3xl ${gradient}`}
     >
-      <ChargeCastSfx enabled playKey={chargePlayKey} path="/audio/sfx/effects/execution/cargar.mp3" volume={0.76} />
+      <ChargeCastSfx enabled playKey={chargePlayKey} path="/audio/sfx/effects/execution/cargar.m4a" volume={0.76} />
       <ChargeCastVfx tone={isDebuff ? "violet" : isNegate ? "red" : "fuchsia"} zIndexClass="z-[261]" />
-      {isBlockAction ? <ChargeCastSfx enabled playKey={blockPlayKey} path="/audio/sfx/effects/execution/block.mp3" volume={0.78} /> : null}
+      {isBlockAction ? <ChargeCastSfx enabled playKey={blockPlayKey} path="/audio/sfx/effects/execution/block.m4a" volume={0.78} /> : null}
       <div className="absolute inset-0 flex items-center justify-center">
         <span className="rounded-md border border-fuchsia-300/70 bg-fuchsia-950/65 px-3 py-1 text-xs font-black tracking-[0.16em] text-fuchsia-100">
           {resolveTrapLabel(action)}

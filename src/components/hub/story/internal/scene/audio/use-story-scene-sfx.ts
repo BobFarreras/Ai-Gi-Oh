@@ -14,13 +14,13 @@ interface IStorySceneSfxMap {
 }
 
 const STORY_SCENE_SFX_PATHS: IStorySceneSfxMap = {
-  NODE_SELECT: "/audio/hub/arsenal/añadir.mp3",
-  BUTTON_CLICK: "/audio/landing/button-click.mp3",
-  MOVE: "/audio/story/effects/movimento.mp3",
-  REWARD_NEXUS: "/audio/story/effects/moneda.mp3",
-  REWARD_CARD: "/audio/story/effects/obtener-carta.mp3",
-  DUEL_START: "/audio/landing/formulario.mp3",
-  EVENT_FINISH: "/audio/story/effects/finish-event.mp3",
+  NODE_SELECT: "/audio/hub/arsenal/añadir.m4a",
+  BUTTON_CLICK: "/audio/landing/button-click.m4a",
+  MOVE: "/audio/story/effects/movimento.m4a",
+  REWARD_NEXUS: "/audio/story/effects/moneda.m4a",
+  REWARD_CARD: "/audio/story/effects/obtener-carta.m4a",
+  DUEL_START: "/audio/landing/formulario.m4a",
+  EVENT_FINISH: "/audio/story/effects/finish-event.m4a",
 };
 
 function safeReplay(audio: HTMLAudioElement | null): void {
@@ -52,7 +52,7 @@ export function useStorySceneSfx() {
     const movementAudio = audioByIdRef.current.MOVE;
     if (movementAudio) {
       movementAudio.onerror = () => {
-        movementAudio.src = "/audio/story/effects/movimiento.mp3";
+        movementAudio.src = "/audio/story/effects/movimiento.m4a";
       };
     }
     return () => {
