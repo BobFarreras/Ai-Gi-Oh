@@ -1,6 +1,7 @@
-// src/app/layout.tsx - Descripción breve del módulo.
+// src/app/layout.tsx - Layout raíz: fuentes, metadata global y botón de perfil de efectos visuales.
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { PerformanceProfileToggle } from "@/components/internal/PerformanceProfileToggle";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -43,6 +44,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <PerformanceProfileToggle />
       </body>
     </html>
   );

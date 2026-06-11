@@ -308,6 +308,12 @@ Crear `CardThumbnail` — componente simplificado de carta para listas y mosaico
 
 > **Esta es la fase más técnica. No se toca la capa visual todavía (eso es Fase 7-8). Se optimiza el estado para reducir re-renders innecesarios en el DOM actual.**
 
+> **Estado (2026-06-11) — Avance parcial adelantado:**
+> - **6.2 (parcial):** eliminados los `[...events].reverse()` de `boardCombatFeedback` (barrido hacia atrás sin clonar; ya estaba memoizado por referencia de `combatLog` en `useMatchUiState`).
+> - **6.4 Completado:** perfil de rendimiento con micro-benchmark de CPU cacheado (`cpu-render-benchmark.ts`), señales de hardware y resolver puro testeable (`resolve-board-performance-profile.ts`). Override manual en localStorage `combat-effects-profile` = `reduced` | `full`, gestionado por `src/services/performance/combat-effects-override.ts` y expuesto al jugador con el botón flotante global `PerformanceProfileToggle` (FX: Auto/Mín/Máx, montado en el layout raíz).
+> - **Gating de efectos (adelanto de 8.2):** el tablero ahora pasa `isPerformanceMode` a `<Card>` en campo (`SlotCellEntity`), mano desktop (`PlayerHandCardItem`) e inspector (`SidePanels`): en dispositivos limitados se **desmonta** `CardFrameMasteryAura` (17 animaciones infinitas con blur) y se fuerza holograma `lite`. El glow del holograma `lite` usa gradiente radial en vez de `blur-2xl` (mismo aspecto, sin coste de filtro GPU).
+> - **Pendiente:** 6.1 (Zustand slices) y 6.3 (React.memo exhaustivo).
+
 #### 6.1. Migrar estado de combate a Zustand con selectores
 
 **Estado actual:** `useBoard` → `useState<GameState>` único.
