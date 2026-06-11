@@ -1,13 +1,16 @@
-// src/components/game/board/internal/use-board-performance-profile.ts - Perfil de rendimiento visual del tablero para degradar VFX en dispositivos justos.
+// src/components/game/board/internal/use-board-performance-profile.ts - Hook cliente que recolecta señales del dispositivo y resuelve el perfil de rendimiento del tablero.
 "use client";
 
 import { useEffect, useState } from "react";
 import { isMobileLayoutViewport } from "@/components/internal/layout-breakpoints";
+import {
+  COMBAT_EFFECTS_OVERRIDE_EVENT,
+  readCombatEffectsOverride,
+} from "@/services/performance/combat-effects-override";
+import { measureIsSlowCpu } from "./cpu-render-benchmark";
+import { IBoardPerformanceProfile, resolveBoardPerformanceProfile } from "./resolve-board-performance-profile";
 
-export interface IBoardPerformanceProfile {
-  isMobileViewport: boolean;
-  shouldReduceCombatEffects: boolean;
-}
+export type { IBoardPerformanceProfile } from "./resolve-board-performance-profile";
 
 function hasMatchMediaApi(): boolean {
   return typeof window !== "undefined" && typeof window.matchMedia === "function";
@@ -18,7 +21,6 @@ function detectProfile(): IBoardPerformanceProfile {
     return { isMobileViewport: false, shouldReduceCombatEffects: false };
   }
 
-  const isMobileViewport = isMobileLayoutViewport(window.innerWidth);
   const prefersReducedMotion = hasMatchMediaApi()
     ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
     : false;
@@ -26,20 +28,15 @@ function detectProfile(): IBoardPerformanceProfile {
   const memory = typeof (navigator as Navigator & { deviceMemory?: number }).deviceMemory === "number"
     ? (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8
     : 8;
-  const isConstrainedDevice = concurrency <= 4 || memory <= 4;
 
-  const forceReduceByFlag = (() => {
-    try {
-      return window.localStorage.getItem("combat-effects-profile") === "reduced";
-    } catch {
-      return false;
-    }
-  })();
-
-  return {
-    isMobileViewport,
-    shouldReduceCombatEffects: forceReduceByFlag || prefersReducedMotion || isMobileViewport || isConstrainedDevice,
-  };
+  return resolveBoardPerformanceProfile({
+    isMobileViewport: isMobileLayoutViewport(window.innerWidth),
+    prefersReducedMotion,
+    hardwareConcurrency: concurrency,
+    deviceMemory: memory,
+    isSlowCpu: measureIsSlowCpu(),
+    effectsOverride: readCombatEffectsOverride(),
+  });
 }
 
 export function useBoardPerformanceProfile(): IBoardPerformanceProfile {
@@ -49,10 +46,13 @@ export function useBoardPerformanceProfile(): IBoardPerformanceProfile {
     const syncProfile = () => setProfile(detectProfile());
     syncProfile();
     window.addEventListener("resize", syncProfile);
+    // Re-sincroniza al instante cuando el jugador cambia el override desde el botón global.
+    window.addEventListener(COMBAT_EFFECTS_OVERRIDE_EVENT, syncProfile);
     const mediaQuery = hasMatchMediaApi() ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
     mediaQuery?.addEventListener("change", syncProfile);
     return () => {
       window.removeEventListener("resize", syncProfile);
+      window.removeEventListener(COMBAT_EFFECTS_OVERRIDE_EVENT, syncProfile);
       mediaQuery?.removeEventListener("change", syncProfile);
     };
   }, []);

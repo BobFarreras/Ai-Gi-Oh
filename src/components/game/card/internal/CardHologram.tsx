@@ -30,7 +30,8 @@ export function CardHologram({ card, isDefense, mode = "full", className }: Card
         style={{ transformStyle: "preserve-3d", transform: "translateZ(12px)" }}
       >
         <div className="absolute inset-0 rounded-xl bg-cyan-500/8" />
-        <div className="absolute left-1/2 top-[10%] h-[72%] w-[72%] -translate-x-1/2 rounded-full bg-cyan-400/20 blur-2xl" />
+        {/* Glow con gradiente radial: mismo aspecto que blur-2xl sin coste de filtro GPU. */}
+        <div className="absolute left-1/2 top-[10%] h-[72%] w-[72%] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.28)_0%,rgba(34,211,238,0.12)_55%,transparent_75%)]" />
         <Image
           src={card.renderUrl}
           alt={`Render de ${card.name}`}

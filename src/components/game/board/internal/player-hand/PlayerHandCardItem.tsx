@@ -6,6 +6,7 @@ import { ICard } from "@/core/entities/ICard";
 import { BattleMode } from "@/core/entities/IPlayer";
 import { Card } from "@/components/game/card/Card";
 import { PlayerHandActionPopover } from "@/components/game/board/internal/player-hand/PlayerHandActionPopover";
+import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 
 interface IPlayerHandCardItemProps {
   card: ICard;
@@ -48,6 +49,8 @@ export function PlayerHandCardItem({
   onHoverStartEdge,
   onHoverEndEdge,
 }: IPlayerHandCardItemProps) {
+  // Degrada el coste visual de la carta (auras mastery, sombras) en dispositivos limitados.
+  const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
   const isEntity = card.type === "ENTITY";
   const isFusion = card.type === "FUSION";
   const isTrap = card.type === "TRAP";
@@ -91,7 +94,7 @@ export function PlayerHandCardItem({
           transition={isMandatorySelectable ? { duration: 1.05, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : { duration: 0.2 }}
           className={isMandatorySelectable ? "rounded-xl ring-4 ring-amber-400/95" : ""}
         >
-          <Card card={card} isSelected={isSelected} />
+          <Card card={card} isSelected={isSelected} isPerformanceMode={shouldReduceCombatEffects} />
         </motion.div>
       </motion.div>
     </div>
