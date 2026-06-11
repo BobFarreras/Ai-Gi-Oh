@@ -1,4 +1,4 @@
-// src/components/hub/market/vault/MarketVaultCollectionTab.test.tsx - Valida la calidad visual del almacén del market según perfil de rendimiento.
+// src/components/hub/market/vault/MarketVaultCollectionTab.test.tsx - Valida que el almacén del market renderiza miniaturas estáticas con contador de copias.
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
@@ -25,7 +25,7 @@ function createCollection(card: ICard): ICollectionCard[] {
 }
 
 describe("MarketVaultCollectionTab", () => {
-  it("usa carta full quality en desktop", () => {
+  it("renderiza la miniatura estática de la carta con sus stats y copias", () => {
     const card = createCard("entity-react", "React");
     render(
       <MarketVaultCollectionTab
@@ -35,13 +35,14 @@ describe("MarketVaultCollectionTab", () => {
       />,
     );
 
-    const renderImage = screen.getByAltText("React");
-    expect(renderImage.className).toContain("drop-shadow");
+    expect(screen.getByAltText("Miniatura de React")).toBeInTheDocument();
+    expect(screen.getByText("React")).toBeInTheDocument();
+    expect(screen.getByText("x2")).toBeInTheDocument();
   });
 
-  it("usa carta lite en móvil", () => {
+  it("no monta animaciones infinitas por carta en el grid", () => {
     const card = createCard("entity-sql", "SQL");
-    render(
+    const { container } = render(
       <MarketVaultCollectionTab
         collection={createCollection(card)}
         onSelectCard={() => undefined}
@@ -49,7 +50,6 @@ describe("MarketVaultCollectionTab", () => {
       />,
     );
 
-    const renderImage = screen.getByAltText("SQL");
-    expect(renderImage.className).not.toContain("drop-shadow");
+    expect(container.querySelectorAll("[class*='animate-']")).toHaveLength(0);
   });
 });

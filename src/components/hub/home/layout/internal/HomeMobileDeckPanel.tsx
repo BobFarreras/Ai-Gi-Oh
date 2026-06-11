@@ -43,8 +43,6 @@ export function HomeMobileDeckPanel({ props, cardById, deckSlotsForView, onSelec
               size="mobileLarge"
               versionTier={progress?.versionTier ?? 0}
               level={progress?.level ?? 0}
-              xp={progress?.xp ?? 0}
-              masteryPassiveSkillId={progress?.masteryPassiveSkillId ?? null}
             />
           );
         })}
@@ -78,8 +76,6 @@ export function HomeMobileDeckPanel({ props, cardById, deckSlotsForView, onSelec
                   size="mobileLarge"
                   versionTier={progress?.versionTier ?? 0}
                   level={progress?.level ?? 0}
-                  xp={progress?.xp ?? 0}
-                  masteryPassiveSkillId={progress?.masteryPassiveSkillId ?? null}
                 />
               </div>
             );

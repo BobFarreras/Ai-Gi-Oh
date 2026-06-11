@@ -1,9 +1,8 @@
-// src/components/hub/home/HomeMiniCard.tsx - Miniatura de carta reutilizable para deck/almacén con progreso visual.
+// src/components/hub/home/HomeMiniCard.tsx - Miniatura de carta reutilizable para deck/almacén basada en CardThumbnail estático.
 "use client";
 
 import { ICard } from "@/core/entities/ICard";
-import { resolveMasteryPassiveLabel } from "@/core/services/progression/mastery-passive-display";
-import { Card } from "@/components/game/card/Card";
+import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { DragEvent } from "react";
 
 interface HomeMiniCardProps {
@@ -14,15 +13,11 @@ interface HomeMiniCardProps {
   showSlotContainer?: boolean;
   versionTier?: number;
   level?: number;
-  xp?: number;
-  masteryPassiveSkillId?: string | null;
   size?: "default" | "mobileLarge";
   isDraggable?: boolean;
   onDragStart?: (event: DragEvent<HTMLElement>) => void;
   onDragOver?: (event: DragEvent<HTMLElement>) => void;
   onDrop?: (event: DragEvent<HTMLElement>) => void;
-  isPerformanceMode?: boolean;
-  showBackgroundInPerformanceMode?: boolean;
   dataTutorialId?: string;
   dataTutorialGroup?: string;
 }
@@ -35,15 +30,11 @@ export function HomeMiniCard({
   showSlotContainer = true,
   versionTier = 0,
   level = 0,
-  xp = 0,
-  masteryPassiveSkillId = null,
   size = "default",
   isDraggable = false,
   onDragStart,
   onDragOver,
   onDrop,
-  isPerformanceMode = false,
-  showBackgroundInPerformanceMode = false,
   dataTutorialId,
   dataTutorialGroup,
 }: HomeMiniCardProps) {
@@ -63,10 +54,8 @@ export function HomeMiniCard({
     ? { type: "button" as const, "aria-label": label, onClick, draggable: isDraggable, onDragStart, onDragOver, onDrop }
     : { "aria-label": label, draggable: isDraggable, onDragStart, onDragOver, onDrop };
 
-  const cardScaleClass =
-    size === "mobileLarge"
-      ? "scale-[0.22] xs:scale-[0.24] sm:scale-[0.26] md:scale-[0.25]"
-      : "scale-[0.18] xs:scale-[0.2] sm:scale-[0.22] md:scale-[0.25]";
+  // La variante móvil grande deja menos aire alrededor de la miniatura.
+  const thumbnailPaddingClass = size === "mobileLarge" ? "p-0.5" : "p-1";
 
   if (!card) {
     return (
@@ -81,24 +70,12 @@ export function HomeMiniCard({
     );
   }
 
-  const masteryPassiveLabel = resolveMasteryPassiveLabel(masteryPassiveSkillId);
-
   return (
     <Wrapper {...wrapperProps} data-tutorial-id={dataTutorialId} data-tutorial-group={dataTutorialGroup} className={filledContainerClass}>
-      {/* Contenedor centralizado para la miniatura */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className={`${cardScaleClass} origin-center`}>
-          <Card
-            card={card}
-            versionTier={versionTier}
-            level={level}
-            xp={xp}
-            masteryPassiveLabel={masteryPassiveLabel}
-            disableHoverEffects={isPerformanceMode}
-            disableDefaultShadow={isPerformanceMode}
-            isPerformanceMode={isPerformanceMode}
-            showBackgroundInPerformanceMode={showBackgroundInPerformanceMode}
-          />
+      {/* Miniatura estática centrada: sin Card completa escalada ni animaciones. */}
+      <div className={`pointer-events-none absolute inset-0 flex items-center justify-center ${thumbnailPaddingClass}`}>
+        <div className="aspect-[13/19] h-full">
+          <CardThumbnail card={card} versionTier={versionTier} level={level} isSelected={isSelected} />
         </div>
       </div>
     </Wrapper>

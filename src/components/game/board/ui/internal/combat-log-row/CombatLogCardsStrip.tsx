@@ -1,6 +1,6 @@
-// src/components/game/board/ui/internal/combat-log-row/CombatLogCardsStrip.tsx - Descripción breve del módulo.
+// src/components/game/board/ui/internal/combat-log-row/CombatLogCardsStrip.tsx - Tiras de miniaturas de cartas para filas del combat log.
 import { Sword } from "lucide-react";
-import { Card } from "@/components/game/card/Card";
+import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { ICard } from "@/core/entities/ICard";
 
 interface CombatLogCardsStripProps {
@@ -11,8 +11,8 @@ interface CombatLogCardsStripProps {
 function CardPreviewButton({ card, onCardClick }: { card: ICard; onCardClick?: (card: ICard) => void }) {
   return (
     <button aria-label={`Ver carta ${card.name}`} onClick={() => onCardClick?.(card)} className="min-w-[76px] hover:opacity-100">
-      <div className="scale-[0.2] origin-top-left w-[52px] h-[68px]">
-        <Card card={card} />
+      <div className="h-[68px] w-[52px]">
+        <CardThumbnail card={card} />
       </div>
     </button>
   );

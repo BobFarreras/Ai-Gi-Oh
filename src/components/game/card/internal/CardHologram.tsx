@@ -2,6 +2,7 @@
 "use client";
 
 import Image from "next/image";
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { Shield, Sword, Zap } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
@@ -15,7 +16,7 @@ interface CardHologramProps {
   className?: string;
 }
 
-export function CardHologram({ card, isDefense, mode = "full", className }: CardHologramProps) {
+function CardHologramComponent({ card, isDefense, mode = "full", className }: CardHologramProps) {
   const isExecution = card.type === "EXECUTION";
   const shouldBypassImageOptimization = Boolean(card.renderUrl?.startsWith("/assets/renders/"));
 
@@ -137,6 +138,9 @@ export function CardHologram({ card, isDefense, mode = "full", className }: Card
     </div>
   );
 }
+
+/** Memoizado: el holograma solo debe re-renderizar si cambian carta, modo o postura. */
+export const CardHologram = memo(CardHologramComponent);
 
 /**
  * Grid de dos columnas que asegura que los iconos formen una línea vertical perfecta.

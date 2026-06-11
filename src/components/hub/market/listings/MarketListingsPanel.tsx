@@ -1,7 +1,7 @@
 // src/components/hub/market/listings/MarketListingsPanel.tsx - Grid de cartas de mercado con precio flotante y selección de detalle.
 "use client";
 
-import { Card } from "@/components/game/card/Card";
+import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { useVirtualGridWindow } from "@/components/hub/internal/useVirtualGridWindow";
 import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
 import { useEffect, useRef, useState } from "react";
@@ -15,7 +15,6 @@ interface MarketListingsPanelProps {
 export function MarketListingsPanel({ listings, onSelectCard, isPerformanceMode }: MarketListingsPanelProps) {
   const scrollRef = useRef<HTMLElement>(null);
   const [isInitialBatchActive, setIsInitialBatchActive] = useState(true);
-  const [isLiteBackgroundEnabled, setIsLiteBackgroundEnabled] = useState(!isPerformanceMode);
   const windowState = useVirtualGridWindow({
     containerRef: scrollRef,
     itemCount: listings.length,
@@ -27,20 +26,6 @@ export function MarketListingsPanel({ listings, onSelectCard, isPerformanceMode 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => setIsInitialBatchActive(false), isPerformanceMode ? 320 : 420);
     return () => window.clearTimeout(timeoutId);
-  }, [isPerformanceMode]);
-  useEffect(() => {
-    if (!isPerformanceMode) return;
-    const idleHandle =
-      typeof window.requestIdleCallback === "function"
-        ? window.requestIdleCallback(() => setIsLiteBackgroundEnabled(true), { timeout: 1200 })
-        : window.setTimeout(() => setIsLiteBackgroundEnabled(true), 900);
-    return () => {
-      if (typeof idleHandle === "number") {
-        window.clearTimeout(idleHandle);
-        return;
-      }
-      window.cancelIdleCallback?.(idleHandle);
-    };
   }, [isPerformanceMode]);
   const initialEndIndex = Math.min(windowState.endIndex, windowState.startIndex + (isPerformanceMode ? 3 : 5));
   const endIndex = isInitialBatchActive ? initialEndIndex : windowState.endIndex;
@@ -81,16 +66,10 @@ export function MarketListingsPanel({ listings, onSelectCard, isPerformanceMode 
               className="absolute inset-0 w-full h-full text-left"
               onClick={() => onSelectCard(listing)}
             >
-              {/* Contenedor seguro para escalar la carta sin romper el layout */}
-              <div className="absolute inset-0 flex top-4 items-center justify-center pointer-events-none">
-                <div className={isPerformanceMode ? "origin-center scale-[0.21] sm:scale-[0.24] md:scale-[0.27]" : "origin-center scale-[0.24] sm:scale-[0.28] md:scale-[0.3]"}>
-                  <Card
-                    card={listing.card}
-                    disableHoverEffects={isPerformanceMode}
-                    disableDefaultShadow={isPerformanceMode}
-                    isPerformanceMode={isPerformanceMode}
-                    showBackgroundInPerformanceMode={isLiteBackgroundEnabled}
-                  />
+              {/* Miniatura estática centrada bajo la etiqueta de precio. */}
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 top-4 flex items-center justify-center p-1">
+                <div className="aspect-[13/19] h-full max-h-[110px]">
+                  <CardThumbnail card={listing.card} />
                 </div>
               </div>
             </button>

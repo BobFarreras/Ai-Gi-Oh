@@ -182,6 +182,8 @@ Archivo: src/components/hub/internal/useVirtualGridWindow.ts
 
 > **Objetivo:** Market es la pantalla con peor ratio de nodos DOM por elemento visible (full Card a scale 0.21). Optimizar aquí da el mayor impacto por esfuerzo invertido.
 
+> **Estado (2026-06-11) — Fases 2 y 3 (núcleo) completadas:** creado `src/components/game/card/CardThumbnail.tsx` (miniatura estática memoizada, ~8 nodos DOM, 0 animaciones, reutiliza gradientes de facción y clip-paths para paridad visual). Adoptado en: `MarketListingsPanel`, `MarketPackCardTile` (mosaico de 9 cartas), `MarketVaultCollectionTab`, `HomeMiniCard` (colección/deck/fusiones, desktop y móvil), `CombatLogCardsStrip` y `GraveyardPile`. `Card` y `CardHologram` memoizados con `React.memo`. La Card completa solo se renderiza en inspectores de detalle, overlays de resultado y el tablero.
+
 #### 2.1. Card Thumbnail Component
 
 Crear `CardThumbnail` — componente simplificado de carta para listas y mosaicos:

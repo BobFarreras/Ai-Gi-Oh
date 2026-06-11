@@ -1,6 +1,7 @@
 // src/components/game/card/Card.tsx - Render de carta base con frame y holograma condicional según estado en tablero.
 "use client";
 
+import { memo } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { BattleMode } from "@/core/entities/IPlayer";
 import { CARD_CLIP_PATHS, getCardTypeStyles } from "./internal/styles";
@@ -30,7 +31,7 @@ function isBoardMode(mode?: BattleMode): boolean {
   return mode === "ATTACK" || mode === "DEFENSE" || mode === "SET" || mode === "ACTIVATE";
 }
 
-export function Card({
+function CardComponent({
   card,
   onClick,
   isSelected = false,
@@ -79,3 +80,6 @@ export function Card({
     </div>
   );
 }
+
+/** Memoizada: evita re-render cuando el padre repinta con las mismas props (frecuente en el tablero). */
+export const Card = memo(CardComponent);
