@@ -13,6 +13,7 @@ interface HomeMiniCardProps {
   showSlotContainer?: boolean;
   versionTier?: number;
   level?: number;
+  xp?: number;
   size?: "default" | "mobileLarge";
   isDraggable?: boolean;
   onDragStart?: (event: DragEvent<HTMLElement>) => void;
@@ -30,6 +31,7 @@ export function HomeMiniCard({
   showSlotContainer = true,
   versionTier = 0,
   level = 0,
+  xp = 0,
   size = "default",
   isDraggable = false,
   onDragStart,
@@ -75,7 +77,7 @@ export function HomeMiniCard({
       {/* Miniatura estática centrada: sin Card completa escalada ni animaciones. */}
       <div className={`pointer-events-none absolute inset-0 flex items-center justify-center ${thumbnailPaddingClass}`}>
         <div className="aspect-[13/19] h-full">
-          <CardThumbnail card={card} versionTier={versionTier} level={level} isSelected={isSelected} />
+          <CardThumbnail card={card} versionTier={versionTier} level={level} xp={xp} isSelected={isSelected} />
         </div>
       </div>
     </Wrapper>

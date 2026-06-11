@@ -1,6 +1,7 @@
 // src/components/hub/market/vault/MarketVaultCollectionTab.tsx - Renderiza la pestaña de almacén con cartas reales y contador de copias.
 "use client";
 
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { useProgressiveRenderLimit } from "@/components/hub/internal/useProgressiveRenderLimit";
@@ -13,7 +14,7 @@ interface MarketVaultCollectionTabProps {
   isPerformanceMode: boolean;
 }
 
-export function MarketVaultCollectionTab({ collection, onSelectCard, isPerformanceMode }: MarketVaultCollectionTabProps) {
+function MarketVaultCollectionTabComponent({ collection, onSelectCard, isPerformanceMode }: MarketVaultCollectionTabProps) {
   const renderLimit = useProgressiveRenderLimit({
     total: collection.length,
     initialLimit: isPerformanceMode ? 6 : 16,
@@ -52,3 +53,6 @@ export function MarketVaultCollectionTab({ collection, onSelectCard, isPerforman
     </motion.div>
   );
 }
+
+/** Memoizado: seleccionar una carta del almacén no debe re-renderizar el grid completo. */
+export const MarketVaultCollectionTab = memo(MarketVaultCollectionTabComponent);

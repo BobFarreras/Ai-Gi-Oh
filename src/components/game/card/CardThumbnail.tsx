@@ -1,44 +1,44 @@
-// src/components/game/card/CardThumbnail.tsx - Miniatura estática de carta para listas y mosaicos: paridad visual con Card sin animaciones ni capas pesadas.
+// src/components/game/card/CardThumbnail.tsx - Miniatura estática de carta con la anatomía visual del Card (cabecera, arte, nombre, nivel, stats) sin animaciones.
 import Image from "next/image";
 import { memo } from "react";
 import { ICard } from "@/core/entities/ICard";
+import { getCardLevelProgressMetrics } from "@/core/services/progression/card-level-rules";
 import { cn } from "@/lib/utils";
+import { resolveTypeBadge } from "./internal/card-frame-meta";
+import { CardThumbnailFooter } from "./internal/CardThumbnailFooter";
 import { CARD_CLIP_PATHS, getCardTypeStyles } from "./internal/styles";
-
-/** Etiquetas cortas en español para cartas sin stats de combate. */
-const NON_ENTITY_TYPE_LABELS: Partial<Record<ICard["type"], string>> = {
-  TRAP: "TRAMPA",
-  EXECUTION: "EJEC",
-  ENVIRONMENT: "ENTORNO",
-};
 
 interface CardThumbnailProps {
   card: ICard;
-  /** Tier de versión: a partir de V5 se muestra badge mastery (sustituye al aura animada). */
+  /** Tier de versión: se muestra como "V n" en cabecera; V5+ añade realce mastery estático. */
   versionTier?: number;
-  /** Nivel de progresión; si se aporta se muestra chip "LVL n". */
+  /** Nivel de progresión; junto a xp pinta la barra de nivel como en Card. */
   level?: number;
+  /** XP actual para el ancho de la barra de progreso de nivel. */
+  xp?: number;
   isSelected?: boolean;
   className?: string;
 }
 
 /**
- * Representación ligera de carta (~8 nodos DOM, 1 imagen, 0 animaciones).
- * Sustituye a <Card> escalada en mosaicos, listados y logs según el plan de rendimiento.
- * Llena el contenedor padre: dimensionar con width + aspect-[13/19].
+ * Representación ligera de carta (~15 nodos DOM, 0 animaciones) que replica la
+ * anatomía del Card real: cabecera (coste + versión + tipo), arte con fondo,
+ * nombre, barra de nivel y footer de stats. Llena el contenedor padre:
+ * dimensionar con width + aspect-[13/19].
  */
-function CardThumbnailComponent({ card, versionTier = 0, level, isSelected = false, className }: CardThumbnailProps) {
+function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelected = false, className }: CardThumbnailProps) {
   const factionStyles = getCardTypeStyles(card);
-  const isEntityLike = card.type === "ENTITY" || card.type === "FUSION";
   const isMasteryTier = versionTier >= 5;
   const shouldBypassImageOptimization = Boolean(card.renderUrl?.startsWith("/assets/renders/"));
+  const levelMetrics = typeof level === "number" ? getCardLevelProgressMetrics(level, xp) : null;
 
   return (
     <div
       className={cn(
-        "relative h-full w-full select-none p-[1.5px]",
+        "relative h-full w-full select-none p-px",
         factionStyles.wrapper,
         isSelected ? "ring-1 ring-yellow-400" : "",
+        isMasteryTier && !isSelected ? "ring-1 ring-amber-400/80" : "",
         className,
       )}
       style={{ clipPath: CARD_CLIP_PATHS.outer }}
@@ -48,8 +48,37 @@ function CardThumbnailComponent({ card, versionTier = 0, level, isSelected = fal
         className={cn("relative flex h-full w-full flex-col overflow-hidden bg-gradient-to-br", factionStyles.inner)}
         style={{ clipPath: CARD_CLIP_PATHS.inner }}
       >
-        {/* Zona de arte: ocupa el cuerpo superior de la miniatura. */}
-        <div className="relative w-full flex-1 overflow-hidden bg-black/60">
+        {/* Cabecera: coste (sello amarillo), versión y tipo, como CardFrameHeader. */}
+        <div className="z-10 flex w-full items-center justify-between gap-0.5 px-0.5 pt-0.5">
+          <span className="flex items-center gap-0.5">
+            <span
+              className="flex h-3.5 w-3.5 shrink-0 items-center justify-center border border-yellow-500/80 bg-black text-[8px] font-black leading-none text-yellow-400"
+              style={{ clipPath: "polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px)" }}
+            >
+              {card.cost}
+            </span>
+            {versionTier > 0 ? (
+              <span className={cn("text-[7px] font-black italic leading-none", isMasteryTier ? "text-amber-400" : "text-white")}>
+                V{versionTier}
+              </span>
+            ) : null}
+          </span>
+          <span className="truncate rounded border border-white/10 bg-black/90 px-0.5 text-[6px] font-black uppercase tracking-wider text-white/80">
+            {resolveTypeBadge(card)}
+          </span>
+        </div>
+        {/* Zona de arte: fondo de carta + render, como CardFrameArtAndProgress. */}
+        <div className="relative mx-0.5 mt-0.5 flex-1 overflow-hidden rounded-sm bg-black">
+          {card.bgUrl ? (
+            <Image
+              src={card.bgUrl}
+              alt=""
+              fill
+              sizes="96px"
+              quality={30}
+              className="object-cover opacity-70"
+            />
+          ) : null}
           {card.renderUrl ? (
             <Image
               src={card.renderUrl}
@@ -58,35 +87,26 @@ function CardThumbnailComponent({ card, versionTier = 0, level, isSelected = fal
               sizes="96px"
               quality={40}
               unoptimized={shouldBypassImageOptimization}
-              className="object-contain p-px"
+              className="z-10 object-contain p-px"
             />
           ) : null}
-          {/* Chip de coste: legible incluso a 50px de ancho. */}
-          <span className="absolute left-px top-px z-10 rounded-br bg-black/80 px-1 text-[8px] font-black leading-tight text-yellow-300">
-            {card.cost}
-          </span>
-          {isMasteryTier ? (
-            <span className="absolute right-px top-px z-10 rounded-bl bg-amber-500/90 px-1 text-[7px] font-black leading-tight text-amber-950">
-              V{versionTier}
+        </div>
+        {/* Nombre y barra de nivel. */}
+        <span className="z-10 truncate px-0.5 pt-0.5 text-center text-[7px] font-black uppercase leading-tight text-white">
+          {card.name}
+        </span>
+        {levelMetrics ? (
+          <span className="z-10 flex items-center gap-0.5 px-1 pb-0.5">
+            <span className="shrink-0 text-[6px] font-black italic leading-none text-cyan-300">L{level}</span>
+            <span className="relative h-0.5 flex-1 overflow-hidden rounded-full border border-cyan-900/50 bg-black">
+              <span
+                className="absolute left-0 top-0 h-full bg-cyan-400"
+                style={{ width: `${Math.round(levelMetrics.progressRatio * 100)}%` }}
+              />
             </span>
-          ) : null}
-        </div>
-        {/* Banda inferior: nombre y stats estáticos. */}
-        <div className="z-10 flex w-full flex-col bg-black/70 px-1 pb-0.5">
-          <span className="truncate text-center text-[7px] font-black uppercase leading-tight text-white">{card.name}</span>
-          <span className="flex items-center justify-center gap-1 text-[7px] font-black leading-tight">
-            {isEntityLike ? (
-              <>
-                <span className="text-red-400">{card.attack ?? 0}</span>
-                <span className="text-zinc-500">/</span>
-                <span className="text-blue-400">{card.defense ?? 0}</span>
-              </>
-            ) : (
-              <span className="tracking-widest text-cyan-300">{NON_ENTITY_TYPE_LABELS[card.type] ?? card.type}</span>
-            )}
-            {typeof level === "number" ? <span className="ml-0.5 text-cyan-300">L{level}</span> : null}
           </span>
-        </div>
+        ) : null}
+        <CardThumbnailFooter card={card} />
       </div>
     </div>
   );

@@ -80,6 +80,7 @@ export function HomeDeckPanel({
                   showSlotContainer={card === null}
                   versionTier={progress?.versionTier ?? 0}
                   level={progress?.level ?? 0}
+                  xp={progress?.xp ?? 0}
                 />
               </motion.div>
             );

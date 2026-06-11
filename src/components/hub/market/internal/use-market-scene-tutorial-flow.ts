@@ -46,28 +46,34 @@ export function useMarketSceneTutorialFlow(input: IUseMarketSceneTutorialFlowInp
   const previousRevealOpenRef = useRef(state.isPackRevealOpen);
   const lastAutoBuyPackRequestRef = useRef(0);
 
+  // Setters estables del store: permiten que los handlers conserven identidad entre renders
+  // y que los paneles memoizados (grid de listados, vault) no se re-rendericen al seleccionar.
+  const { setSelectedListing, setSelectedCard, setSelectedPackId, setNameQuery, setTypeFilter } = state;
+  const catalogListings = state.catalog.listings;
+  const catalogPacks = state.catalog.packs;
+
   const handleSelectListing = useCallback((listing: ReturnType<typeof useMarketSceneState>["visibleListings"][number]) => {
-    state.setSelectedListing(listing);
-    state.setSelectedCard(listing.card);
-  }, [state]);
+    setSelectedListing(listing);
+    setSelectedCard(listing.card);
+  }, [setSelectedCard, setSelectedListing]);
 
   const handleSelectVaultCard = useCallback((card: ICard) => {
-    const listing = state.catalog.listings.find((currentListing) => currentListing.card.id === card.id) ?? null;
+    const listing = catalogListings.find((currentListing) => currentListing.card.id === card.id) ?? null;
     startTransition(() => {
-      state.setNameQuery("");
-      state.setTypeFilter("ALL");
+      setNameQuery("");
+      setTypeFilter("ALL");
     });
     if (!listing) {
-      state.setSelectedPackId(null);
+      setSelectedPackId(null);
     } else if (!listing.isAvailable) {
-      const matchingPack = state.catalog.packs.find((pack) => pack.previewCardIds.includes(card.id));
-      state.setSelectedPackId(matchingPack?.id ?? null);
+      const matchingPack = catalogPacks.find((pack) => pack.previewCardIds.includes(card.id));
+      setSelectedPackId(matchingPack?.id ?? null);
     } else {
-      state.setSelectedPackId(null);
+      setSelectedPackId(null);
     }
-    state.setSelectedListing(listing);
-    state.setSelectedCard(card);
-  }, [state]);
+    setSelectedListing(listing);
+    setSelectedCard(card);
+  }, [catalogListings, catalogPacks, setNameQuery, setSelectedCard, setSelectedListing, setSelectedPackId, setTypeFilter]);
 
   const handleBuyCard = useCallback(
     async (listingId: string): Promise<boolean> => {

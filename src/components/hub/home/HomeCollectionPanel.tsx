@@ -109,6 +109,7 @@ export function HomeCollectionPanel({
                   showSlotContainer={false}
                   versionTier={progress?.versionTier ?? 0}
                   level={progress?.level ?? 0}
+                  xp={progress?.xp ?? 0}
                 />
                 
                 {/* Indicador de copias con estilo neón si está al máximo */}

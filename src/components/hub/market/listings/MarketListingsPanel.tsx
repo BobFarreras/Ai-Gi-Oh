@@ -4,7 +4,7 @@
 import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { useVirtualGridWindow } from "@/components/hub/internal/useVirtualGridWindow";
 import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 
 interface MarketListingsPanelProps {
   listings: IMarketCardListing[];
@@ -12,7 +12,7 @@ interface MarketListingsPanelProps {
   isPerformanceMode: boolean;
 }
 
-export function MarketListingsPanel({ listings, onSelectCard, isPerformanceMode }: MarketListingsPanelProps) {
+function MarketListingsPanelComponent({ listings, onSelectCard, isPerformanceMode }: MarketListingsPanelProps) {
   const scrollRef = useRef<HTMLElement>(null);
   const [isInitialBatchActive, setIsInitialBatchActive] = useState(true);
   const windowState = useVirtualGridWindow({
@@ -80,3 +80,6 @@ export function MarketListingsPanel({ listings, onSelectCard, isPerformanceMode 
     </section>
   );
 }
+
+/** Memoizado: seleccionar una carta no debe re-renderizar el grid completo de listados. */
+export const MarketListingsPanel = memo(MarketListingsPanelComponent);
