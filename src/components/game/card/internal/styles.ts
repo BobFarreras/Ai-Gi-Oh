@@ -25,6 +25,13 @@ export const CARD_CLIP_PATHS = {
   inner: "polygon(19px 0, 100% 0, 100% calc(100% - 19px), calc(100% - 19px) 100%, 0 100%, 0 19px)",
 };
 
+// Chaflán reducido para miniaturas: ~6px mantiene la proporción angular de la Card
+// real (~8% del ancho) en tamaños de 52-110px, evitando esquinas sobre-recortadas.
+export const CARD_THUMBNAIL_CLIP_PATHS = {
+  outer: "polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)",
+  inner: "polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px)",
+};
+
 function entityCostPalette(cost: number): { wrapper: string; inner: string } {
   if (cost <= 3) {
     return {

@@ -6,7 +6,7 @@ import { getCardLevelProgressMetrics } from "@/core/services/progression/card-le
 import { cn } from "@/lib/utils";
 import { resolveTypeBadge } from "./internal/card-frame-meta";
 import { CardThumbnailFooter } from "./internal/CardThumbnailFooter";
-import { CARD_CLIP_PATHS, getCardTypeStyles } from "./internal/styles";
+import { CARD_THUMBNAIL_CLIP_PATHS, getCardTypeStyles } from "./internal/styles";
 
 interface CardThumbnailProps {
   card: ICard;
@@ -35,18 +35,20 @@ function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelect
   return (
     <div
       className={cn(
-        "relative h-full w-full select-none p-px",
+        // aspect-lock + mx-auto: la miniatura siempre conserva la proporción de carta (13/19)
+        // sea cual sea la caja que la contiene; la imagen interior es la que se adapta.
+        "relative mx-auto aspect-[13/19] h-full max-h-full max-w-full select-none p-px",
         factionStyles.wrapper,
         isSelected ? "ring-1 ring-yellow-400" : "",
         isMasteryTier && !isSelected ? "ring-1 ring-amber-400/80" : "",
         className,
       )}
-      style={{ clipPath: CARD_CLIP_PATHS.outer }}
+      style={{ clipPath: CARD_THUMBNAIL_CLIP_PATHS.outer }}
       data-card-thumbnail-id={card.id}
     >
       <div
         className={cn("relative flex h-full w-full flex-col overflow-hidden bg-gradient-to-br", factionStyles.inner)}
-        style={{ clipPath: CARD_CLIP_PATHS.inner }}
+        style={{ clipPath: CARD_THUMBNAIL_CLIP_PATHS.inner }}
       >
         {/* Cabecera: coste (sello amarillo), versión y tipo, como CardFrameHeader. */}
         <div className="z-10 flex w-full items-center justify-between gap-0.5 px-0.5 pt-0.5">
