@@ -4,6 +4,7 @@ import { ICard } from "@/core/entities/ICard";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IBoardUiError } from "../boardError";
 import { IPendingZoneReplacement } from "./pending-replacement";
+import { useBoardStateSelector, useLocalBoardStateStore } from "./board-state-store";
 
 export interface ITrapActivationPrompt {
   trigger: "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED" | "ON_OPPONENT_TRAP_ACTIVATED";
@@ -14,7 +15,10 @@ export function useBoardUiState(
   gameStateRef: MutableRefObject<GameState>,
   createInitialState: () => GameState,
 ) {
-  const [gameState, setGameState] = useState<GameState>(() => createInitialState());
+  // gameState vive en un store Zustand local: habilita suscripciones por selector sin cambiar el contrato.
+  const gameStateStore = useLocalBoardStateStore(createInitialState);
+  const gameState = useBoardStateSelector(gameStateStore, (state) => state.gameState);
+  const setGameState = useCallback((value: GameState) => gameStateStore.setState({ gameState: value }), [gameStateStore]);
   const [selectedCard, setSelectedCard] = useState<ICard | null>(null);
   const [selectedBoardEntityInstanceId, setSelectedBoardEntityInstanceId] = useState<string | null>(null);
   const [playingCard, setPlayingCard] = useState<ICard | null>(null);
@@ -83,10 +87,11 @@ export function useBoardUiState(
     clearSelection();
     clearError();
     setIsPaused(false);
-  }, [clearError, clearSelection, createInitialState, gameStateRef]);
+  }, [clearError, clearSelection, createInitialState, gameStateRef, setGameState]);
 
   return {
     gameState,
+    gameStateStore,
     setGameState,
     selectedCard,
     setSelectedCard,
