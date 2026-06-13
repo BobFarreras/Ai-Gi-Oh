@@ -46,11 +46,11 @@ function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelect
       data-card-thumbnail-id={card.id}
     >
       <div
-        className={cn("relative flex h-full w-full flex-col overflow-hidden bg-gradient-to-br", factionStyles.inner)}
+        className={cn("relative flex h-full w-full min-w-0 flex-col overflow-hidden bg-gradient-to-br", factionStyles.inner)}
         style={{ clipPath: CARD_THUMBNAIL_CLIP_PATHS.inner }}
       >
         {/* Cabecera: coste (sello amarillo), versión y tipo, como CardFrameHeader. */}
-        <div className="z-10 flex w-full items-center justify-between gap-0.5 px-0.5 pt-0.5">
+        <div className="z-10 flex w-full min-w-0 items-center justify-between gap-0.5 px-0.5 pt-0.5">
           <span className="flex items-center gap-0.5">
             <span
               className="flex h-3.5 w-3.5 shrink-0 items-center justify-center border border-yellow-500/80 bg-black text-[8px] font-black leading-none text-yellow-400"
@@ -92,8 +92,8 @@ function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelect
             />
           ) : null}
         </div>
-        {/* Nombre y barra de nivel. */}
-        <span className="z-10 truncate px-0.5 pt-0.5 text-center text-[7px] font-black uppercase leading-tight text-white">
+        {/* Nombre y barra de nivel. min-w-0 + block evita que el nombre empuje el ancho de la carta. */}
+        <span className="z-10 block w-full min-w-0 truncate px-0.5 pt-0.5 text-center text-[7px] font-black uppercase leading-tight text-white">
           {card.name}
         </span>
         {levelMetrics ? (

@@ -48,7 +48,7 @@ function MarketListingsPanelComponent({ listings, onSelectCard, isPerformanceMod
                 ? "border-cyan-900/60 bg-[#081220] hover:border-cyan-400/80 cursor-pointer shadow-[0_0_10px_rgba(34,211,238,0.1)]" 
                 : "border-zinc-800 bg-zinc-950/80 grayscale-[80%] opacity-60 cursor-pointer"
             } overflow-hidden transition-all duration-300`}
-            style={{ contentVisibility: "auto", containIntrinsicSize: "140px 96px" }}
+            style={{ contentVisibility: "auto", containIntrinsicSize: "96px 140px" }}
             aria-label={`${listing.card.name} disponible por ${listing.priceNexus} Nexus`}
           >
             {/* Etiqueta de Precio */}
@@ -66,9 +66,10 @@ function MarketListingsPanelComponent({ listings, onSelectCard, isPerformanceMod
               className="absolute inset-0 w-full h-full text-left"
               onClick={() => onSelectCard(listing)}
             >
-              {/* Miniatura estática centrada bajo la etiqueta de precio. */}
+              {/* Miniatura centrada bajo el precio: ancho fijo (no derivado de la altura) -> mismo
+                  tamaño para todas las cartas sin importar la longitud del nombre. */}
               <div className="pointer-events-none absolute inset-x-0 bottom-0 top-4 flex items-center justify-center p-1">
-                <div className="aspect-[13/19] h-full max-h-[110px]">
+                <div className="aspect-[13/19] w-full max-w-[72px]">
                   <CardThumbnail card={listing.card} />
                 </div>
               </div>
