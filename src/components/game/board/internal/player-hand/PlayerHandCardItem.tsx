@@ -94,7 +94,7 @@ export function PlayerHandCardItem({
           transition={isMandatorySelectable ? { duration: 1.05, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : { duration: 0.2 }}
           className={isMandatorySelectable ? "rounded-xl ring-4 ring-amber-400/95" : ""}
         >
-          <Card card={card} isSelected={isSelected} isPerformanceMode={shouldReduceCombatEffects} />
+          <Card card={card} isSelected={isSelected} isPerformanceMode={shouldReduceCombatEffects} showBackgroundInPerformanceMode />
         </motion.div>
       </motion.div>
     </div>
