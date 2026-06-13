@@ -4,7 +4,7 @@
 import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { useVirtualGridWindow } from "@/components/hub/internal/useVirtualGridWindow";
 import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useRef } from "react";
 
 interface MarketListingsPanelProps {
   listings: IMarketCardListing[];
@@ -14,7 +14,7 @@ interface MarketListingsPanelProps {
 
 function MarketListingsPanelComponent({ listings, onSelectCard, isPerformanceMode }: MarketListingsPanelProps) {
   const scrollRef = useRef<HTMLElement>(null);
-  const [isInitialBatchActive, setIsInitialBatchActive] = useState(true);
+  // La virtualización renderiza solo la ventana visible (+ overscan); el resto se monta al hacer scroll.
   const windowState = useVirtualGridWindow({
     containerRef: scrollRef,
     itemCount: listings.length,
@@ -23,13 +23,7 @@ function MarketListingsPanelComponent({ listings, onSelectCard, isPerformanceMod
     gap: 12,
     overscanRows: isPerformanceMode ? 1 : 2,
   });
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setIsInitialBatchActive(false), isPerformanceMode ? 320 : 420);
-    return () => window.clearTimeout(timeoutId);
-  }, [isPerformanceMode]);
-  const initialEndIndex = Math.min(windowState.endIndex, windowState.startIndex + (isPerformanceMode ? 3 : 5));
-  const endIndex = isInitialBatchActive ? initialEndIndex : windowState.endIndex;
-  const visibleListings = listings.slice(windowState.startIndex, endIndex);
+  const visibleListings = listings.slice(windowState.startIndex, windowState.endIndex);
   return (
     <section
       ref={scrollRef}
