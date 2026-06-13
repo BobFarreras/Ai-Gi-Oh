@@ -28,8 +28,8 @@ export function MarketPackCardTile({ pack, isSelected, onSelect }: MarketPackCar
       <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-lg bg-[#01060d]">
         <div className="absolute inset-0 z-0">
           {MOSAIC_POSITIONS.map((position, index) => (
-            // Caja a proporción de carta (13/19); la miniatura impone su propio ratio dentro.
-            <div key={position} className={`absolute h-[68px] w-[46px] origin-top-left opacity-100 ${position}`}>
+            // Caja a proporción de carta (13/19); la miniatura la llena por completo.
+            <div key={position} className={`absolute aspect-[13/19] h-[68px] origin-top-left opacity-100 ${position}`}>
               <CardThumbnail card={MOSAIC_CARDS[index]} />
             </div>
           ))}

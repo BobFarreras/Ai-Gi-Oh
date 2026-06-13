@@ -23,8 +23,8 @@ interface CardThumbnailProps {
 /**
  * Representación ligera de carta (~15 nodos DOM, 0 animaciones) que replica la
  * anatomía del Card real: cabecera (coste + versión + tipo), arte con fondo,
- * nombre, barra de nivel y footer de stats. Llena el contenedor padre:
- * dimensionar con width + aspect-[13/19].
+ * nombre, barra de nivel y footer de stats. Llena por completo su contenedor;
+ * el contenedor debe imponer la proporción de carta (aspect-[13/19]).
  */
 function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelected = false, className }: CardThumbnailProps) {
   const factionStyles = getCardTypeStyles(card);
@@ -35,9 +35,8 @@ function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelect
   return (
     <div
       className={cn(
-        // aspect-lock + mx-auto: la miniatura siempre conserva la proporción de carta (13/19)
-        // sea cual sea la caja que la contiene; la imagen interior es la que se adapta.
-        "relative mx-auto aspect-[13/19] h-full max-h-full max-w-full select-none p-px",
+        // Llena su caja: el contenedor fija la proporción de carta y la imagen interior se adapta.
+        "relative h-full w-full select-none p-px",
         factionStyles.wrapper,
         isSelected ? "ring-1 ring-yellow-400" : "",
         isMasteryTier && !isSelected ? "ring-1 ring-amber-400/80" : "",

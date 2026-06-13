@@ -11,7 +11,7 @@ interface CombatLogCardsStripProps {
 function CardPreviewButton({ card, onCardClick }: { card: ICard; onCardClick?: (card: ICard) => void }) {
   return (
     <button aria-label={`Ver carta ${card.name}`} onClick={() => onCardClick?.(card)} className="min-w-[76px] hover:opacity-100">
-      <div className="h-[68px] w-[46px]">
+      <div className="aspect-[13/19] h-[68px]">
         <CardThumbnail card={card} />
       </div>
     </button>

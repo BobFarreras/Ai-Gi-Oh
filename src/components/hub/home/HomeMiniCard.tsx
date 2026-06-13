@@ -14,7 +14,6 @@ interface HomeMiniCardProps {
   versionTier?: number;
   level?: number;
   xp?: number;
-  size?: "default" | "mobileLarge";
   isDraggable?: boolean;
   onDragStart?: (event: DragEvent<HTMLElement>) => void;
   onDragOver?: (event: DragEvent<HTMLElement>) => void;
@@ -32,7 +31,6 @@ export function HomeMiniCard({
   versionTier = 0,
   level = 0,
   xp = 0,
-  size = "default",
   isDraggable = false,
   onDragStart,
   onDragOver,
@@ -42,22 +40,19 @@ export function HomeMiniCard({
 }: HomeMiniCardProps) {
   const filledContainerClass = showSlotContainer
     ? isSelected
-      ? "relative w-full aspect-[3/4] rounded-md sm:rounded-lg border-2 border-amber-400 bg-[#0a1320] shadow-[0_0_15px_rgba(251,191,36,0.3)] overflow-visible transition-all"
-      : "relative w-full aspect-[3/4] rounded-md sm:rounded-lg border border-cyan-900/55 bg-[#081220] overflow-visible hover:border-cyan-500/50 transition-all cursor-pointer"
+      ? "relative w-full aspect-[13/19] rounded-md sm:rounded-lg border-2 border-amber-400 bg-[#0a1320] shadow-[0_0_15px_rgba(251,191,36,0.3)] overflow-visible transition-all"
+      : "relative w-full aspect-[13/19] rounded-md sm:rounded-lg border border-cyan-900/55 bg-[#081220] overflow-visible hover:border-cyan-500/50 transition-all cursor-pointer"
     : isSelected
-      ? "relative w-full aspect-[3/4] overflow-visible transition-all ring-2 ring-amber-400/90 shadow-[0_0_16px_rgba(251,191,36,0.35)]"
-      : "relative w-full aspect-[3/4] overflow-visible transition-all cursor-pointer";
+      ? "relative w-full aspect-[13/19] overflow-visible transition-all ring-2 ring-amber-400/90 shadow-[0_0_16px_rgba(251,191,36,0.35)]"
+      : "relative w-full aspect-[13/19] overflow-visible transition-all cursor-pointer";
   const emptyContainerClass = isSelected
-    ? "relative w-full aspect-[3/4] rounded-md sm:rounded-lg border-2 border-amber-400 bg-[#0a1320] shadow-[0_0_15px_rgba(251,191,36,0.3)] overflow-visible transition-all"
-    : "relative w-full aspect-[3/4] rounded-md sm:rounded-lg border border-cyan-900/55 bg-[#081220] overflow-visible hover:border-cyan-500/50 transition-all cursor-pointer";
+    ? "relative w-full aspect-[13/19] rounded-md sm:rounded-lg border-2 border-amber-400 bg-[#0a1320] shadow-[0_0_15px_rgba(251,191,36,0.3)] overflow-visible transition-all"
+    : "relative w-full aspect-[13/19] rounded-md sm:rounded-lg border border-cyan-900/55 bg-[#081220] overflow-visible hover:border-cyan-500/50 transition-all cursor-pointer";
 
   const Wrapper = onClick ? "button" : "div";
   const wrapperProps = onClick
     ? { type: "button" as const, "aria-label": label, onClick, draggable: isDraggable, onDragStart, onDragOver, onDrop }
     : { "aria-label": label, draggable: isDraggable, onDragStart, onDragOver, onDrop };
-
-  // La variante móvil grande deja menos aire alrededor de la miniatura.
-  const thumbnailPaddingClass = size === "mobileLarge" ? "p-0.5" : "p-1";
 
   if (!card) {
     return (
@@ -74,11 +69,9 @@ export function HomeMiniCard({
 
   return (
     <Wrapper {...wrapperProps} data-tutorial-id={dataTutorialId} data-tutorial-group={dataTutorialGroup} className={filledContainerClass}>
-      {/* Miniatura estática centrada: sin Card completa escalada ni animaciones. */}
-      <div className={`pointer-events-none absolute inset-0 flex items-center justify-center ${thumbnailPaddingClass}`}>
-        <div className="aspect-[13/19] h-full">
-          <CardThumbnail card={card} versionTier={versionTier} level={level} xp={xp} isSelected={isSelected} />
-        </div>
+      {/* La miniatura llena la celda; el wrapper ya impone la proporción de carta. */}
+      <div className="pointer-events-none absolute inset-0">
+        <CardThumbnail card={card} versionTier={versionTier} level={level} xp={xp} isSelected={isSelected} />
       </div>
     </Wrapper>
   );

@@ -40,7 +40,6 @@ export function HomeMobileCollectionPanel({ props, deckCopiesByCardId, onSelectC
               isDraggable
               onDragStart={(event) => props.onStartDragCollectionCard(entry.card.id, event)}
               showSlotContainer={false}
-              size="mobileLarge"
               versionTier={progress?.versionTier ?? 0}
               level={progress?.level ?? 0}
               xp={progress?.xp ?? 0}

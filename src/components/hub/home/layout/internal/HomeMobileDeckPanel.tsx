@@ -40,7 +40,6 @@ export function HomeMobileDeckPanel({ props, cardById, deckSlotsForView, onSelec
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => props.onDropOnDeckSlot(slot.index, event)}
               showSlotContainer={card === null}
-              size="mobileLarge"
               versionTier={progress?.versionTier ?? 0}
               level={progress?.level ?? 0}
               xp={progress?.xp ?? 0}
@@ -74,7 +73,6 @@ export function HomeMobileDeckPanel({ props, cardById, deckSlotsForView, onSelec
                   onDragOver={(event) => event.preventDefault()}
                   onDrop={(event) => props.onDropOnFusionSlot(slot.index, event)}
                   showSlotContainer={card === null}
-                  size="mobileLarge"
                   versionTier={progress?.versionTier ?? 0}
                   level={progress?.level ?? 0}
                   xp={progress?.xp ?? 0}
