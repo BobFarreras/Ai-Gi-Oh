@@ -1,6 +1,7 @@
 // src/components/game/board/ui/OpponentHandFan.tsx - Renderiza la mano del oponente en abanico con cartas cerradas.
 "use client";
 
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { ICard } from "@/core/entities/ICard";
 import { CardBack } from "../../card/CardBack";
@@ -9,7 +10,7 @@ interface OpponentHandFanProps {
   hand: ICard[];
 }
 
-export function OpponentHandFan({ hand }: OpponentHandFanProps) {
+function OpponentHandFanComponent({ hand }: OpponentHandFanProps) {
   return (
     <div className="absolute top-[-20px] left-1/2 -translate-x-1/2 flex justify-center items-start z-30 pointer-events-none opacity-90">
       {hand.map((_, index) => {
@@ -31,3 +32,6 @@ export function OpponentHandFan({ hand }: OpponentHandFanProps) {
     </div>
   );
 }
+
+// Solo depende del número de cartas (muestra reversos): re-render solo si cambia la cantidad.
+export const OpponentHandFan = memo(OpponentHandFanComponent, (previous, next) => previous.hand.length === next.hand.length);
