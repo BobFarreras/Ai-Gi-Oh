@@ -42,6 +42,22 @@ function CardHologramComponent({ card, isDefense, mode = "full", className }: Ca
           quality={45}
           className="object-contain opacity-85 drop-shadow-[0_0px_12px_rgba(0,0,0,0.7)]"
         />
+        {/* Lectura estática de stats (energía/ATK/DEF): info útil de combate sin coste de animación. */}
+        <div className="absolute bottom-2 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-lg border border-white/10 bg-black/75 px-2 py-1">
+          <span className="flex items-center gap-0.5 text-sm font-black text-yellow-400">
+            <Zap className="h-4 w-4 fill-yellow-400/30" />{card.cost}
+          </span>
+          {!isExecution && (
+            <>
+              <span className="flex items-center gap-0.5 text-sm font-black text-red-500">
+                <Sword className="h-4 w-4 fill-red-500/30" />{card.attack ?? 0}
+              </span>
+              <span className="flex items-center gap-0.5 text-sm font-black text-blue-500">
+                <Shield className="h-4 w-4 fill-blue-500/30" />{card.defense ?? 0}
+              </span>
+            </>
+          )}
+        </div>
       </div>
     );
   }
