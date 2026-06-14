@@ -1,13 +1,14 @@
 // src/components/game/board/MobilePlayerHand.tsx - Mano móvil dedicada con reparto adaptativo por ancho para mostrar siempre todas las cartas.
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/game/card/Card";
 import { useBoardMobileHudLayout } from "@/components/game/board/internal/use-board-mobile-hud-layout";
 import { ICard } from "@/core/entities/ICard";
+import { areEqualMobilePlayerHandProps } from "@/components/game/board/internal/player-hand/hand-props-equality";
 
-interface MobilePlayerHandProps {
+export interface MobilePlayerHandProps {
   hand: ICard[];
   playingCard: ICard | null;
   isPlayerTurn: boolean;
@@ -21,7 +22,7 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-export function MobilePlayerHand({
+function MobilePlayerHandComponent({
   hand,
   playingCard,
   isPlayerTurn,
@@ -139,3 +140,6 @@ export function MobilePlayerHand({
     </div>
   );
 }
+
+/** Memoizada por contenido: no se re-renderiza en acciones que no cambian la mano. */
+export const MobilePlayerHand = memo(MobilePlayerHandComponent, areEqualMobilePlayerHandProps);
