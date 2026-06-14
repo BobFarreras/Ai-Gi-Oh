@@ -2,7 +2,7 @@
 import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
 import { GameState } from "@/core/use-cases/GameEngine";
-import { hasAvailableBattleActions, shouldShowAdvanceWarning } from "@/core/services/turn/turn-decision";
+import { canPlayerDeclareAttacks, hasAvailableBattleActions, shouldShowAdvanceWarning } from "@/core/services/turn/turn-decision";
 
 function canPlayCardInMain(card: ICard, gameState: GameState): boolean {
   const player = gameState.playerA;
@@ -18,7 +18,10 @@ export function resolveAdvanceWarning(gameState: GameState, mode: IMatchMode): "
     gameState.phase === "MAIN_1" &&
     gameState.pendingTurnAction?.playerId !== gameState.playerA.id &&
     gameState.playerA.hand.some((card) => canPlayCardInMain(card, gameState));
-  const hasBattleActions = gameState.phase === "BATTLE" && hasAvailableBattleActions(gameState.playerA.activeEntities);
+  // El jugador inicial en turno 1 no puede atacar: no debe mostrarse aviso de salto de combate.
+  const canAttackThisTurn = canPlayerDeclareAttacks(gameState.turn, gameState.startingPlayerId, gameState.playerA.id);
+  const hasBattleActions =
+    gameState.phase === "BATTLE" && canAttackThisTurn && hasAvailableBattleActions(gameState.playerA.activeEntities);
   return shouldShowAdvanceWarning({
     phase: gameState.phase,
     hasPlayableMainActions,

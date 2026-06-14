@@ -9,6 +9,8 @@ export interface ITurnBattleDecisionContext {
   pendingTurnActionPlayerId: string | null;
   playerId: string;
   activeEntities: ReadonlyArray<IBoardEntity>;
+  turn: number;
+  startingPlayerId: string;
 }
 
 export interface ITurnMainDecisionContext {
@@ -40,10 +42,20 @@ export function hasAvailableBattleActions(activeEntities: ReadonlyArray<IBoardEn
   return activeEntities.some((entity) => canAttackNow(entity) || canPromoteToAttack(entity));
 }
 
+/**
+ * Regla del motor (ver attack-validation): el jugador inicial no puede declarar
+ * ataques durante el turno 1, así que no hay acciones de batalla posibles.
+ */
+export function canPlayerDeclareAttacks(turn: number, startingPlayerId: string, playerId: string): boolean {
+  return !(turn === 1 && startingPlayerId === playerId);
+}
+
 export function canAutoAdvanceBattle(context: ITurnBattleDecisionContext): boolean {
   if (context.phase !== "BATTLE") return false;
   if (context.winnerPlayerId || context.isAnimating || !context.isPlayerTurn) return false;
   if (context.pendingTurnActionPlayerId === context.playerId) return false;
+  // El turno inicial no permite atacar: no hay nada que hacer en BATTLE, se auto-pasa.
+  if (!canPlayerDeclareAttacks(context.turn, context.startingPlayerId, context.playerId)) return true;
   return !hasAvailableBattleActions(context.activeEntities);
 }
 
