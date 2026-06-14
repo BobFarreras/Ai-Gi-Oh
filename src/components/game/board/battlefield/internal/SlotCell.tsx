@@ -18,7 +18,7 @@ function SlotCellComponent({
   entity,
   isOpponentSide,
   tutorialTargetId,
-  activeAttackerId,
+  isAttacking,
   selectedCardId,
   selectedBoardEntityInstanceId,
   isSelectedByCard,
@@ -37,7 +37,6 @@ function SlotCellComponent({
   onEntityClick,
 }: SlotCellProps) {
   countRender("SlotCell");
-  const isAttacking = entity?.instanceId === activeAttackerId;
   const { entity: renderedEntity, isSticky } = useStickySlotEntity(laneType, entity);
   const isActivating = renderedEntity?.mode === "ACTIVATE";
   const floatingEvents = buildFloatingEvents(renderedEntity, buffEventId, buffStat, buffAmount, isBuffed, cardXpEventId, cardXpCardId, cardXpAmount);
@@ -65,7 +64,7 @@ function SlotCellComponent({
             isSelectedByCard={isSelectedByCard}
             selectedCardId={selectedCardId}
             selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}
-            isAttacking={Boolean(renderedEntity.instanceId === activeAttackerId || isSticky)}
+            isAttacking={Boolean(isAttacking || isSticky)}
             isActivating={Boolean(isActivating)}
             shouldShowBlockedLock={Boolean(isAttacking && hasBlockingTrapActivation)}
             isHighlighted={isHighlighted}

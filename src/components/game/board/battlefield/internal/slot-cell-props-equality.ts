@@ -7,7 +7,7 @@ export function areEqualSlotCellProps(previous: SlotCellProps, next: SlotCellPro
     previous.index === next.index &&
     previous.entity === next.entity &&
     previous.isOpponentSide === next.isOpponentSide &&
-    previous.activeAttackerId === next.activeAttackerId &&
+    previous.isAttacking === next.isAttacking &&
     previous.selectedCardId === next.selectedCardId &&
     previous.selectedBoardEntityInstanceId === next.selectedBoardEntityInstanceId &&
     previous.isSelectedByCard === next.isSelectedByCard &&
