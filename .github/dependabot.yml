@@ -1,0 +1,26 @@
+# .github/dependabot.yml - Actualizaciones y alertas de seguridad automatizadas de dependencias (reemplaza el audit bloqueante en CI).
+version: 2
+updates:
+  # Dependencias de la app (npm/pnpm).
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    groups:
+      # Agrupa actualizaciones menores/patch para reducir ruido de PRs.
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Versiones de las GitHub Actions usadas en los workflows.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    labels:
+      - "ci"
