@@ -56,6 +56,7 @@ export function AcademyPostTutorialBigLogOverlay() {
             alt="BigLog post tutorial"
             fill
             priority
+            unoptimized
             sizes="(max-width: 640px) 220px, 320px"
             className="object-contain drop-shadow-[0_0_24px_rgba(34,211,238,0.45)]"
           />

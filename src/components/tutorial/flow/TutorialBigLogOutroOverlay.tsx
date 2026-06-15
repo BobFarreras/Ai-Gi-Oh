@@ -49,6 +49,7 @@ export function TutorialBigLogOutroOverlay({
             fill
             sizes="(max-width: 640px) 240px, 320px"
             priority
+            unoptimized
             className="object-contain drop-shadow-[0_0_30px_rgba(34,211,238,0.48)]"
           />
         </div>

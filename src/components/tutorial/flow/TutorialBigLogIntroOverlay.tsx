@@ -34,7 +34,7 @@ export function TutorialBigLogIntroOverlay({ isVisible, title, description, onSt
           transition={{ type: "spring", stiffness: 170, damping: 20 }}
           className="relative h-[340px] w-[340px] shrink-0 overflow-visible bg-transparent sm:h-[480px] sm:w-[480px]"
         >
-          <Image src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.webp" alt="Introducción de BigLog" fill sizes="(max-width: 640px) 240px, 380px" priority className="object-contain drop-shadow-[0_0_30px_rgba(34,211,238,0.48)]" />
+          <Image src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.webp" alt="Introducción de BigLog" fill sizes="(max-width: 640px) 240px, 380px" priority unoptimized className="object-contain drop-shadow-[0_0_30px_rgba(34,211,238,0.48)]" />
         </motion.div>
         <motion.article
           initial={{ opacity: 0, y: -34, scale: 0.4 }}
