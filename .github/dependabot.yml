@@ -1,26 +1,23 @@
-# .github/dependabot.yml - Actualizaciones y alertas de seguridad automatizadas de dependencias (reemplaza el audit bloqueante en CI).
+# .github/dependabot.yml - Actualizaciones de dependencias en bajo ruido: 1 PR/mes agrupado, sin majors. Las alertas de seguridad siguen llegando aparte (pestaña Security).
 version: 2
 updates:
-  # Dependencias de la app (npm/pnpm).
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
+      interval: "monthly"
+    open-pull-requests-limit: 1
     labels:
       - "dependencies"
     groups:
-      # Agrupa actualizaciones menores/patch para reducir ruido de PRs.
-      minor-and-patch:
+      # Una sola PR mensual con todas las actualizaciones menores/patch seguras.
+      dependencies:
+        patterns:
+          - "*"
         update-types:
           - "minor"
           - "patch"
-
-  # Versiones de las GitHub Actions usadas en los workflows.
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 3
-    labels:
-      - "ci"
+    ignore:
+      # Los majors (cambios potencialmente rompedores) se gestionan a mano cuando toque.
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
