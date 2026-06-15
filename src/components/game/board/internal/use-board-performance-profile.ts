@@ -12,6 +12,10 @@ import { IBoardPerformanceProfile, resolveBoardPerformanceProfile } from "./reso
 
 export type { IBoardPerformanceProfile } from "./resolve-board-performance-profile";
 
+// Valor por defecto SSR-seguro: debe coincidir con lo que renderiza el servidor (sin window)
+// para no provocar hydration mismatch. El valor real del dispositivo se calcula tras montar.
+const SSR_SAFE_PROFILE: IBoardPerformanceProfile = { isMobileViewport: false, shouldReduceCombatEffects: false };
+
 function hasMatchMediaApi(): boolean {
   return typeof window !== "undefined" && typeof window.matchMedia === "function";
 }
@@ -40,7 +44,8 @@ function detectProfile(): IBoardPerformanceProfile {
 }
 
 export function useBoardPerformanceProfile(): IBoardPerformanceProfile {
-  const [profile, setProfile] = useState<IBoardPerformanceProfile>(() => detectProfile());
+  // Arranca con el perfil SSR-seguro (igual en servidor y primer render cliente); el real llega en el efecto.
+  const [profile, setProfile] = useState<IBoardPerformanceProfile>(SSR_SAFE_PROFILE);
 
   useEffect(() => {
     const syncProfile = () => setProfile(detectProfile());

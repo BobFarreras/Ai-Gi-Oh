@@ -76,7 +76,7 @@ function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelect
               alt=""
               fill
               sizes="96px"
-              quality={30}
+              quality={28}
               className="object-cover opacity-70"
             />
           ) : null}
