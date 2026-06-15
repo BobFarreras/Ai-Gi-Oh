@@ -70,19 +70,24 @@ export function HubSceneWorld3D({
       <group position={[0, -0.05, 0]}>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[floorConfig.planeSize, floorConfig.planeSize]} />
-          <MeshReflectorMaterial
-            blur={floorConfig.blur}
-            resolution={floorConfig.reflectionResolution}
-            mixBlur={1}
-            mixStrength={floorConfig.reflectionStrength}
-            roughness={floorConfig.roughness}
-            depthScale={1.2}
-            minDepthThreshold={0.4}
-            maxDepthThreshold={1.4}
-            color={floorConfig.planeColor}
-            metalness={floorConfig.metalness}
-            mirror={0}
-          />
+          {renderProfile.useReflectiveFloor ? (
+            <MeshReflectorMaterial
+              blur={floorConfig.blur}
+              resolution={floorConfig.reflectionResolution}
+              mixBlur={1}
+              mixStrength={floorConfig.reflectionStrength}
+              roughness={floorConfig.roughness}
+              depthScale={1.2}
+              minDepthThreshold={0.4}
+              maxDepthThreshold={1.4}
+              color={floorConfig.planeColor}
+              metalness={floorConfig.metalness}
+              mirror={0}
+            />
+          ) : (
+            // Material plano: sin render-pass de reflejo (el mayor coste por frame del hub en gama baja).
+            <meshStandardMaterial color={floorConfig.planeColor} roughness={floorConfig.roughness} metalness={floorConfig.metalness} />
+          )}
         </mesh>
         <gridHelper
           args={[floorConfig.gridSize, floorConfig.gridDivisions, floorConfig.gridPrimaryColor, floorConfig.gridSecondaryColor]}

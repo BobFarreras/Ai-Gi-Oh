@@ -7,6 +7,8 @@ export interface IHubRenderProfile {
   floorReflectionResolution: number;
   floorReflectionStrength: number;
   gridDivisions: number;
+  /** Si false, el suelo usa material plano (sin reflejo en tiempo real): elimina el render-pass más caro. */
+  useReflectiveFloor: boolean;
 }
 
 export interface IHubRenderCapabilityInput {
@@ -20,6 +22,7 @@ const MOBILE_PROFILE: IHubRenderProfile = {
   floorReflectionResolution: 256,
   floorReflectionStrength: 14,
   gridDivisions: 64,
+  useReflectiveFloor: false,
 };
 
 const DESKTOP_CONSTRAINED_PROFILE: IHubRenderProfile = {
@@ -28,6 +31,7 @@ const DESKTOP_CONSTRAINED_PROFILE: IHubRenderProfile = {
   floorReflectionResolution: 256,
   floorReflectionStrength: 16,
   gridDivisions: 72,
+  useReflectiveFloor: false,
 };
 
 const DESKTOP_PROFILE: IHubRenderProfile = {
@@ -36,6 +40,7 @@ const DESKTOP_PROFILE: IHubRenderProfile = {
   floorReflectionResolution: 512,
   floorReflectionStrength: 22,
   gridDivisions: 90,
+  useReflectiveFloor: true,
 };
 
 export function resolveHubRenderProfile(
