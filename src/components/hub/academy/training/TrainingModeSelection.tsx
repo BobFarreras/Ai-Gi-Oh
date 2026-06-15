@@ -11,7 +11,7 @@ const TRAINING_MODULES: ITrainingMode3DPanelProps[] = [
     href: ACADEMY_TUTORIAL_MAP_ROUTE,
     actionLabel: "Ejecutar Simulación",
     theme: "tutorial",
-    coverImages: ["/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png"],
+    coverImages: ["/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.webp"],
     coverAlt: "BigLog en modo tutorial",
   },
   {
@@ -22,10 +22,10 @@ const TRAINING_MODULES: ITrainingMode3DPanelProps[] = [
     actionLabel: "Entrar a la Arena",
     theme: "arena",
     coverImages: [
-      "/assets/story/opponents/opp-ch1-soldier-act01/intro-Soldado-act01.png",
-      "/assets/story/opponents/opp-ch1-apprentice/intro-GenNvim.png",
-      "/assets/story/opponents/opp-ch1-jaku/intro-Jaku.png",
-      "/assets/story/opponents/opp-ch1-helena/intro-Helena.png",
+      "/assets/story/opponents/opp-ch1-soldier-act01/intro-Soldado-act01.webp",
+      "/assets/story/opponents/opp-ch1-apprentice/intro-GenNvim.webp",
+      "/assets/story/opponents/opp-ch1-jaku/intro-Jaku.webp",
+      "/assets/story/opponents/opp-ch1-helena/intro-Helena.webp",
     ],
     coverAlt: "Rivales de arena en modo entrenamiento",
   },

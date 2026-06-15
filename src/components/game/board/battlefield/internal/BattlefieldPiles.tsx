@@ -1,5 +1,5 @@
 // src/components/game/board/battlefield/internal/BattlefieldPiles.tsx - Renderiza pilas visuales de deck, fusión, cementerio y destrucción.
-import { Card } from "@/components/game/card/Card";
+import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { CardBack } from "@/components/game/card/CardBack";
 import { ICard } from "@/core/entities/ICard";
 import { cn } from "@/lib/utils";
@@ -30,9 +30,9 @@ export function GraveyardPile({ isOpponentSide, topGraveCard, graveyardCount, on
       )}
     >
       {topGraveCard && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="scale-[0.25] origin-center opacity-70 grayscale-[0.3]">
-            <Card card={topGraveCard} />
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-1">
+          <div className="aspect-[13/19] h-full opacity-70 grayscale-[0.3]">
+            <CardThumbnail card={topGraveCard} />
           </div>
         </div>
       )}

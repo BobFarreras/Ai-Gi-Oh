@@ -52,10 +52,11 @@ export function AcademyPostTutorialBigLogOverlay() {
           className="pointer-events-none relative h-[220px] w-[220px] sm:h-[320px] sm:w-[320px]"
         >
           <Image
-            src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png"
+            src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.webp"
             alt="BigLog post tutorial"
             fill
             priority
+            unoptimized
             sizes="(max-width: 640px) 220px, 320px"
             className="object-contain drop-shadow-[0_0_24px_rgba(34,211,238,0.45)]"
           />

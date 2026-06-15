@@ -79,11 +79,11 @@ Se separa el render por breakpoint sin alterar reglas del dominio:
 3. La vibración evita desplazamiento horizontal para no generar scroll lateral en almacén.
 4. En mobile se fuerza `overflow-x-hidden` en el contenedor de almacén para robustez visual.
 
-## Perfil visual de cartas (Fase 2 rendimiento)
+## Perfil visual de cartas (Fases 2-3 rendimiento)
 
-1. En desktop (`HomeCollectionPanel`) las mini-cartas usan render completo para conservar fondo visual.
-2. En móvil (`HomeMobileCollectionPanel`) se activa `isPerformanceMode` con fondo simplificado (`showBackgroundInPerformanceMode`) para equilibrar estética y coste.
-3. Esta separación mantiene legibilidad en desktop y estabilidad de FPS en móvil.
+1. Todas las mini-cartas de colección/deck (`HomeMiniCard`, desktop y móvil) renderizan `CardThumbnail` estático (~8 nodos DOM, sin animaciones) en lugar de la `Card` completa escalada.
+2. La `Card` completa solo se monta en el inspector de detalle (`HomeCardInspector`) y overlays de evolución.
+3. Este cambio elimina cientos de nodos DOM y animaciones infinitas del grid, manteniendo paridad visual (mismos gradientes de facción y clip-paths).
 
 ## Errores y seguridad de interacción
 

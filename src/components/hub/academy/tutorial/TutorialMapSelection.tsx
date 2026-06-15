@@ -25,7 +25,7 @@ export function TutorialMapSelection({ nodes }: ITutorialMapSelectionProps) {
           <div className="flex items-center justify-center gap-4 text-left">
             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-cyan-300/50 bg-slate-950 lg:h-20 lg:w-20">
               <Image
-                src="/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png"
+                src="/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.webp"
                 alt="BigLog Academy"
                 fill
                 loading="eager"
@@ -46,7 +46,7 @@ export function TutorialMapSelection({ nodes }: ITutorialMapSelectionProps) {
           <div className="flex items-center justify-center gap-4 text-left">
             <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-cyan-300/50 bg-slate-950 [@media(min-width:1024px)_and_(max-height:900px)]:h-14 [@media(min-width:1024px)_and_(max-height:900px)]:w-14">
               <Image
-                src="/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png"
+                src="/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.webp"
                 alt="BigLog Academy"
                 fill
                 loading="eager"

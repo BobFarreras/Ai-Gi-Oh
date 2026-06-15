@@ -1,12 +1,12 @@
 // src/components/hub/market/vault/MarketVaultCollectionTab.tsx - Renderiza la pestaña de almacén con cartas reales y contador de copias.
 "use client";
 
+import { memo } from "react";
 import { motion } from "framer-motion";
-import { Card } from "@/components/game/card/Card";
+import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { useProgressiveRenderLimit } from "@/components/hub/internal/useProgressiveRenderLimit";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { ICard } from "@/core/entities/ICard";
-import { useEffect, useState } from "react";
 
 interface MarketVaultCollectionTabProps {
   collection: ICollectionCard[];
@@ -14,8 +14,7 @@ interface MarketVaultCollectionTabProps {
   isPerformanceMode: boolean;
 }
 
-export function MarketVaultCollectionTab({ collection, onSelectCard, isPerformanceMode }: MarketVaultCollectionTabProps) {
-  const [isLiteBackgroundEnabled, setIsLiteBackgroundEnabled] = useState(!isPerformanceMode);
+function MarketVaultCollectionTabComponent({ collection, onSelectCard, isPerformanceMode }: MarketVaultCollectionTabProps) {
   const renderLimit = useProgressiveRenderLimit({
     total: collection.length,
     initialLimit: isPerformanceMode ? 6 : 16,
@@ -23,20 +22,6 @@ export function MarketVaultCollectionTab({ collection, onSelectCard, isPerforman
     intervalMs: isPerformanceMode ? 90 : 70,
   });
   const visibleCollection = collection.slice(0, renderLimit);
-  useEffect(() => {
-    if (!isPerformanceMode) return;
-    const idleHandle =
-      typeof window.requestIdleCallback === "function"
-        ? window.requestIdleCallback(() => setIsLiteBackgroundEnabled(true), { timeout: 1200 })
-        : window.setTimeout(() => setIsLiteBackgroundEnabled(true), 900);
-    return () => {
-      if (typeof idleHandle === "number") {
-        window.clearTimeout(idleHandle);
-        return;
-      }
-      window.cancelIdleCallback?.(idleHandle);
-    };
-  }, [isPerformanceMode]);
   return (
     <motion.div
       key="collection"
@@ -53,14 +38,8 @@ export function MarketVaultCollectionTab({ collection, onSelectCard, isPerforman
         >
           <div className="pointer-events-none relative h-full w-full overflow-hidden rounded">
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className={isPerformanceMode ? "origin-center scale-[0.25] sm:scale-[0.27]" : "origin-center scale-[0.31]"}>
-                <Card
-                  card={entry.card}
-                  disableHoverEffects={isPerformanceMode}
-                  disableDefaultShadow={isPerformanceMode}
-                  isPerformanceMode={isPerformanceMode}
-                  showBackgroundInPerformanceMode={isLiteBackgroundEnabled}
-                />
+              <div className="aspect-[13/19] h-full">
+                <CardThumbnail card={entry.card} />
               </div>
             </div>
           </div>
@@ -74,3 +53,6 @@ export function MarketVaultCollectionTab({ collection, onSelectCard, isPerforman
     </motion.div>
   );
 }
+
+/** Memoizado: seleccionar una carta del almacén no debe re-renderizar el grid completo. */
+export const MarketVaultCollectionTab = memo(MarketVaultCollectionTabComponent);

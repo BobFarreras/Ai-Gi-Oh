@@ -7,7 +7,7 @@ import Image from "next/image";
 export function TFMHeroHeader() {
   return (
     <header className="relative overflow-hidden rounded-2xl border border-cyan-500/45 bg-black/70 p-6 sm:p-10">
-      <Image src="/assets/bgs/bg-tech.jpg" alt="Fondo tecnológico" fill sizes="100vw" priority className="object-cover opacity-20" />
+      <Image src="/assets/bgs/bg-tech.webp" alt="Fondo tecnológico" fill sizes="100vw" priority className="object-cover opacity-20" />
       <div aria-hidden className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-blue-500/20" />
       <div className="relative grid items-center gap-8 lg:grid-cols-[1fr_auto]">
         <div>
@@ -18,8 +18,8 @@ export function TFMHeroHeader() {
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Image src="/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png" alt="BigLog" width={164} height={164} className="h-28 w-28 rounded-xl border border-cyan-300/50 bg-black/45 object-contain p-1 sm:h-36 sm:w-36" priority />
-          <Image src="/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.png" alt="GenNvim" width={164} height={164} className="h-28 w-28 rounded-xl border border-cyan-300/50 bg-black/45 object-cover sm:h-36 sm:w-36" priority />
+          <Image src="/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.webp" alt="BigLog" width={164} height={164} className="h-28 w-28 rounded-xl border border-cyan-300/50 bg-black/45 object-contain p-1 sm:h-36 sm:w-36" priority />
+          <Image src="/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.webp" alt="GenNvim" width={164} height={164} className="h-28 w-28 rounded-xl border border-cyan-300/50 bg-black/45 object-cover sm:h-36 sm:w-36" priority />
         </div>
       </div>
     </header>

@@ -15,7 +15,7 @@ function createBaseRow(): ICardCatalogRow {
     defense: 1100,
     archetype: "TOOL",
     trigger: null,
-    bg_url: "/assets/bgs/bg-tech.jpg",
+    bg_url: "/assets/bgs/bg-tech.webp",
     render_url: "/assets/renders/test.webp",
     effect: null,
     fusion_recipe_id: null,

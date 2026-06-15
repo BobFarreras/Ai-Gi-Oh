@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { COMBAT_EFFECTS_OVERRIDE_EVENT, readCombatEffectsOverride } from "@/services/performance/combat-effects-override";
 
 export interface IHubDeviceCapability {
   prefersReducedMotion: boolean;
@@ -24,10 +25,13 @@ function detectCapability(): IHubDeviceCapability {
   const memory = typeof (navigator as Navigator & { deviceMemory?: number }).deviceMemory === "number"
     ? (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8
     : 8;
+  // El toggle FX global tiene prioridad: "reduced" fuerza modo ligero, "full" fuerza completo.
+  const effectsOverride = readCombatEffectsOverride();
+  const autoConstrained = concurrency <= 4 || memory <= 4;
 
   return {
     prefersReducedMotion,
-    isConstrainedDevice: concurrency <= 4 || memory <= 4,
+    isConstrainedDevice: effectsOverride === "full" ? false : effectsOverride === "reduced" || autoConstrained,
   };
 }
 
@@ -39,7 +43,12 @@ export function useHubDeviceCapability(): IHubDeviceCapability {
     syncCapability();
     const mediaQuery = hasMatchMediaApi() ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
     mediaQuery?.addEventListener("change", syncCapability);
-    return () => mediaQuery?.removeEventListener("change", syncCapability);
+    // Re-sincroniza al cambiar el toggle FX desde el botón global.
+    window.addEventListener(COMBAT_EFFECTS_OVERRIDE_EVENT, syncCapability);
+    return () => {
+      mediaQuery?.removeEventListener("change", syncCapability);
+      window.removeEventListener(COMBAT_EFFECTS_OVERRIDE_EVENT, syncCapability);
+    };
   }, []);
 
   return capability;

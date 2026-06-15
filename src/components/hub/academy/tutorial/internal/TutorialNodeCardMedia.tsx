@@ -44,11 +44,11 @@ function renderCombatPreview(): ReactElement {
   return (
     <div className="relative grid h-full w-full grid-cols-[1fr_auto_1fr] overflow-hidden bg-[#04111d]">
       <div className="relative">
-        <Image src="/assets/story/player/intro-Jugador.png" alt="Jugador" fill className="object-contain object-bottom" sizes="(max-width: 1024px) 40vw, 20vw" />
+        <Image src="/assets/story/player/intro-Jugador.webp" alt="Jugador" fill unoptimized className="object-contain object-bottom" sizes="(max-width: 1024px) 40vw, 20vw" />
       </div>
       <div className="z-10 flex items-center justify-center px-2 text-xl font-black tracking-[0.14em] text-cyan-100 sm:text-2xl">VS</div>
       <div className="relative">
-        <Image src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png" alt="BigLog" fill className="object-contain object-bottom" sizes="(max-width: 1024px) 40vw, 20vw" />
+        <Image src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.webp" alt="BigLog" fill unoptimized className="object-contain object-bottom" sizes="(max-width: 1024px) 40vw, 20vw" />
       </div>
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(0deg,rgba(2,11,22,0.48)_0%,rgba(2,11,22,0.08)_60%)]" />
     </div>

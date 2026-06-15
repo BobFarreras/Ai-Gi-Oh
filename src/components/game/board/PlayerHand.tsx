@@ -1,12 +1,13 @@
 // src/components/game/board/PlayerHand.tsx - Renderiza la mano del jugador con selección, acciones y estados obligatorios.
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { BattleMode } from "@/core/entities/IPlayer";
 import { PlayerHandCardItem } from "@/components/game/board/internal/player-hand/PlayerHandCardItem";
+import { areEqualPlayerHandProps } from "@/components/game/board/internal/player-hand/hand-props-equality";
 
-interface PlayerHandProps {
+export interface PlayerHandProps {
   hand: ICard[]; 
   playingCard: ICard | null; 
   hasSummoned: boolean;
@@ -27,7 +28,7 @@ interface PlayerHandProps {
   onPlayAction: (mode: BattleMode, e: React.MouseEvent) => void;
 }
 
-export function PlayerHand({
+function PlayerHandComponent({
   hand,
   playingCard,
   hasSummoned,
@@ -118,3 +119,6 @@ export function PlayerHand({
     </div>
   );
 }
+
+/** Memoizada por contenido: no se re-renderiza en acciones que no cambian la mano. */
+export const PlayerHand = memo(PlayerHandComponent, areEqualPlayerHandProps);

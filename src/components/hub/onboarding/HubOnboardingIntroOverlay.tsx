@@ -48,7 +48,7 @@ const STEP_CONTENT: Record<OnboardingStep, IStepContent> = {
 };
 
 function resolveActorImage(actor: "biglog" | "player"): string {
-  return actor === "biglog" ? "/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png" : "/assets/story/player/intro-Jugador.png";
+  return actor === "biglog" ? "/assets/story/opponents/opp-ch1-biglog/intro-BigLog.webp" : "/assets/story/player/intro-Jugador.webp";
 }
 function resolveActorSide(actor: "biglog" | "player"): "left" | "right" {
   return actor === "biglog" ? "right" : "left";
@@ -99,7 +99,7 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
 
   return (
     <section className="fixed inset-0 z-[180] overflow-hidden">
-      <CyberBackground />
+      <CyberBackground lightweight />
       <div className="relative z-10 flex h-full items-center justify-center p-4">
         {isRoutingToAcademy ? (
           <div className="rounded-xl border border-cyan-300/60 bg-cyan-950/45 px-6 py-4 text-center shadow-[0_0_36px_rgba(34,211,238,0.4)]">

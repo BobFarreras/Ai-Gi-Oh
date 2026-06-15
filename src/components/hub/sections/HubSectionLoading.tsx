@@ -8,7 +8,7 @@ interface HubSectionLoadingProps {
 export function HubSectionLoading({ label }: HubSectionLoadingProps) {
   return (
     <main className="hub-control-room-bg relative flex min-h-dvh items-center justify-center overflow-hidden px-4 text-slate-100">
-      <CyberBackground />
+      <CyberBackground lightweight />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(14,165,233,0.16),transparent_56%)]" />
       <section className="relative w-full max-w-md rounded-2xl border border-cyan-700/45 bg-[#041120]/85 p-5 shadow-[0_0_32px_rgba(8,145,178,0.22)]">
         <p className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-300/90">Cargando módulo</p>

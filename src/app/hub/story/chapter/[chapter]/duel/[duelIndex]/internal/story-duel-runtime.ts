@@ -29,8 +29,8 @@ export function createStoryDuelPresentationRuntime(
   opponentAvatarUrl?: string | null,
 ): IStoryDuelPresentationRuntime {
   return {
-    playerAvatarUrl: "/assets/story/player/bob.png",
-    opponentAvatarUrl: opponentAvatarUrl ?? "/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.png",
+    playerAvatarUrl: "/assets/story/player/bob.webp",
+    opponentAvatarUrl: opponentAvatarUrl ?? "/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.webp",
     bossThemeVariant: resolveStoryBossThemeVariant(opponentId),
   };
 }

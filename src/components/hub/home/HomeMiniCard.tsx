@@ -1,9 +1,8 @@
-// src/components/hub/home/HomeMiniCard.tsx - Miniatura de carta reutilizable para deck/almacén con progreso visual.
+// src/components/hub/home/HomeMiniCard.tsx - Miniatura de carta reutilizable para deck/almacén basada en CardThumbnail estático.
 "use client";
 
 import { ICard } from "@/core/entities/ICard";
-import { resolveMasteryPassiveLabel } from "@/core/services/progression/mastery-passive-display";
-import { Card } from "@/components/game/card/Card";
+import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { DragEvent } from "react";
 
 interface HomeMiniCardProps {
@@ -15,14 +14,10 @@ interface HomeMiniCardProps {
   versionTier?: number;
   level?: number;
   xp?: number;
-  masteryPassiveSkillId?: string | null;
-  size?: "default" | "mobileLarge";
   isDraggable?: boolean;
   onDragStart?: (event: DragEvent<HTMLElement>) => void;
   onDragOver?: (event: DragEvent<HTMLElement>) => void;
   onDrop?: (event: DragEvent<HTMLElement>) => void;
-  isPerformanceMode?: boolean;
-  showBackgroundInPerformanceMode?: boolean;
   dataTutorialId?: string;
   dataTutorialGroup?: string;
 }
@@ -36,37 +31,28 @@ export function HomeMiniCard({
   versionTier = 0,
   level = 0,
   xp = 0,
-  masteryPassiveSkillId = null,
-  size = "default",
   isDraggable = false,
   onDragStart,
   onDragOver,
   onDrop,
-  isPerformanceMode = false,
-  showBackgroundInPerformanceMode = false,
   dataTutorialId,
   dataTutorialGroup,
 }: HomeMiniCardProps) {
   const filledContainerClass = showSlotContainer
     ? isSelected
-      ? "relative w-full aspect-[3/4] rounded-md sm:rounded-lg border-2 border-amber-400 bg-[#0a1320] shadow-[0_0_15px_rgba(251,191,36,0.3)] overflow-visible transition-all"
-      : "relative w-full aspect-[3/4] rounded-md sm:rounded-lg border border-cyan-900/55 bg-[#081220] overflow-visible hover:border-cyan-500/50 transition-all cursor-pointer"
+      ? "relative w-full aspect-[13/19] rounded-md sm:rounded-lg border-2 border-amber-400 bg-[#0a1320] shadow-[0_0_15px_rgba(251,191,36,0.3)] overflow-visible transition-all"
+      : "relative w-full aspect-[13/19] rounded-md sm:rounded-lg border border-cyan-900/55 bg-[#081220] overflow-visible hover:border-cyan-500/50 transition-all cursor-pointer"
     : isSelected
-      ? "relative w-full aspect-[3/4] overflow-visible transition-all ring-2 ring-amber-400/90 shadow-[0_0_16px_rgba(251,191,36,0.35)]"
-      : "relative w-full aspect-[3/4] overflow-visible transition-all cursor-pointer";
+      ? "relative w-full aspect-[13/19] overflow-visible transition-all ring-2 ring-amber-400/90 shadow-[0_0_16px_rgba(251,191,36,0.35)]"
+      : "relative w-full aspect-[13/19] overflow-visible transition-all cursor-pointer";
   const emptyContainerClass = isSelected
-    ? "relative w-full aspect-[3/4] rounded-md sm:rounded-lg border-2 border-amber-400 bg-[#0a1320] shadow-[0_0_15px_rgba(251,191,36,0.3)] overflow-visible transition-all"
-    : "relative w-full aspect-[3/4] rounded-md sm:rounded-lg border border-cyan-900/55 bg-[#081220] overflow-visible hover:border-cyan-500/50 transition-all cursor-pointer";
+    ? "relative w-full aspect-[13/19] rounded-md sm:rounded-lg border-2 border-amber-400 bg-[#0a1320] shadow-[0_0_15px_rgba(251,191,36,0.3)] overflow-visible transition-all"
+    : "relative w-full aspect-[13/19] rounded-md sm:rounded-lg border border-cyan-900/55 bg-[#081220] overflow-visible hover:border-cyan-500/50 transition-all cursor-pointer";
 
   const Wrapper = onClick ? "button" : "div";
   const wrapperProps = onClick
     ? { type: "button" as const, "aria-label": label, onClick, draggable: isDraggable, onDragStart, onDragOver, onDrop }
     : { "aria-label": label, draggable: isDraggable, onDragStart, onDragOver, onDrop };
-
-  const cardScaleClass =
-    size === "mobileLarge"
-      ? "scale-[0.22] xs:scale-[0.24] sm:scale-[0.26] md:scale-[0.25]"
-      : "scale-[0.18] xs:scale-[0.2] sm:scale-[0.22] md:scale-[0.25]";
 
   if (!card) {
     return (
@@ -81,25 +67,11 @@ export function HomeMiniCard({
     );
   }
 
-  const masteryPassiveLabel = resolveMasteryPassiveLabel(masteryPassiveSkillId);
-
   return (
     <Wrapper {...wrapperProps} data-tutorial-id={dataTutorialId} data-tutorial-group={dataTutorialGroup} className={filledContainerClass}>
-      {/* Contenedor centralizado para la miniatura */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className={`${cardScaleClass} origin-center`}>
-          <Card
-            card={card}
-            versionTier={versionTier}
-            level={level}
-            xp={xp}
-            masteryPassiveLabel={masteryPassiveLabel}
-            disableHoverEffects={isPerformanceMode}
-            disableDefaultShadow={isPerformanceMode}
-            isPerformanceMode={isPerformanceMode}
-            showBackgroundInPerformanceMode={showBackgroundInPerformanceMode}
-          />
-        </div>
+      {/* La miniatura llena la celda; el wrapper ya impone la proporción de carta. */}
+      <div className="pointer-events-none absolute inset-0">
+        <CardThumbnail card={card} versionTier={versionTier} level={level} xp={xp} isSelected={isSelected} />
       </div>
     </Wrapper>
   );

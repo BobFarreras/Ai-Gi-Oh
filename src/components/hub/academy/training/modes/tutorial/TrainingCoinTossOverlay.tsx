@@ -15,15 +15,15 @@ export function TrainingCoinTossOverlay({ isVisible, starterSide, onContinue }: 
   const [isResultVisible, setIsResultVisible] = useState(false);
   const controls = useAnimationControls();
   const winnerLabel = starterSide === "PLAYER" ? "Empiezas tú" : "Empieza BigLog";
-  const playerFace = "/assets/story/player/bob.png";
-  const opponentFace = "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png";
+  const playerFace = "/assets/story/player/bob.webp";
+  const opponentFace = "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.webp";
   const winnerFaceSrc = starterSide === "PLAYER" ? playerFace : opponentFace;
   const loserFaceSrc = starterSide === "PLAYER" ? opponentFace : playerFace;
   const dropStartY = useMemo(() => (typeof window !== "undefined" ? -Math.max(window.innerHeight * 0.72, 520) : -620), []);
 
   useEffect(() => {
     if (!isVisible || phase !== "INTRO") return;
-    const audio = new Audio("/audio/sfx/banner.mp3");
+    const audio = new Audio("/audio/sfx/banner.m4a");
     audio.volume = 0.6;
     void audio.play().catch(() => undefined);
     return () => {
@@ -43,7 +43,7 @@ export function TrainingCoinTossOverlay({ isVisible, starterSide, onContinue }: 
     const sleep = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
     const runSequence = async () => {
       await controls.set({ x: 0, y: dropStartY, scale: 0.96, rotateY: 90, opacity: 1 });
-      playSfx("/audio/story/effects/intro-coinToss.mp3");
+      playSfx("/audio/story/effects/intro-coinToss.m4a");
       await controls.start({
         x: 0,
         y: [dropStartY, 30, 0],
@@ -53,7 +53,7 @@ export function TrainingCoinTossOverlay({ isVisible, starterSide, onContinue }: 
       });
       if (isCancelled) return;
       setIsResultVisible(true);
-      playSfx("/audio/story/effects/final-coinToss.mp3");
+      playSfx("/audio/story/effects/final-coinToss.m4a");
       await sleep(900);
       if (!isCancelled) onContinue();
     };
@@ -69,7 +69,7 @@ export function TrainingCoinTossOverlay({ isVisible, starterSide, onContinue }: 
       <section data-tutorial-overlay="true" className="pointer-events-auto fixed inset-0 z-[500] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-sm">
         <div className="flex max-w-[min(95vw,1120px)] flex-col items-center gap-3 sm:flex-row sm:gap-6">
           <div className="relative h-[340px] w-[340px] shrink-0 overflow-visible bg-transparent sm:h-[480px] sm:w-[480px]">
-            <Image src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.png" alt="Introducción de BigLog" fill sizes="(max-width: 640px) 240px, 380px" priority className="object-contain drop-shadow-[0_0_30px_rgba(34,211,238,0.48)]" />
+            <Image src="/assets/story/opponents/opp-ch1-biglog/intro-BigLog.webp" alt="Introducción de BigLog" fill sizes="(max-width: 640px) 240px, 380px" priority unoptimized className="object-contain drop-shadow-[0_0_30px_rgba(34,211,238,0.48)]" />
           </div>
           <article className="relative max-w-[680px] rounded-xl border-2 border-black bg-white px-4 py-3 text-black shadow-[0_8px_0_rgba(0,0,0,0.9)] sm:px-6 sm:py-5">
             <p className="text-[11px] font-black uppercase tracking-[0.26em] text-black/70">BigLog</p>

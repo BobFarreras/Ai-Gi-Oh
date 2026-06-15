@@ -26,21 +26,21 @@ interface IHubModuleSfxConfig {
 }
 
 const HUB_MODULE_SFX_CATALOG: Record<HubModuleSfxId, IHubModuleSfxConfig> = {
-  FILTER_OPEN: { path: "/audio/hub/common/filter.mp3", volume: 0.28 },
-  FILTER_CLOSE: { path: "/audio/hub/common/cerrar-filtro.mp3", volume: 0.38 },
-  DETAIL_OPEN: { path: "/audio/hub/common/open-detall.mp3", volume: 0.45 },
-  DIALOG_CLOSE: { path: "/audio/hub/common/cerrar-dialog.mp3", volume: 0.45 },
-  ERROR_COMMON: { path: "/audio/hub/common/error-common.mp3", volume: 0.52 },
-  SECTION_SWITCH: { path: "/audio/hub/common/seccion.mp3", volume: 0.42 },
-  INSPECTOR_CLOSE: { path: "/audio/hub/common/cerrar-dialog.mp3", volume: 0.45 },
-  REMOVE_CARD: { path: "/audio/hub/arsenal/remover.mp3", volume: 0.62 },
-  ADD_CARD: { path: "/audio/hub/arsenal/añadir.mp3", volume: 0.62 },
-  EVOLUTION_OVERLAY: { path: "/audio/hub/arsenal/evolution.mp3", volume: 0.72 },
-  EVOLUTION_BUTTON: { path: "/audio/landing/button-click.mp3", volume: 0.35 },
-  BUY_CARD: { path: "/audio/hub/market/comprar-carta.mp3", volume: 0.68 },
-  BUY_PACK: { path: "/audio/hub/market/comprar-pack.mp3", volume: 0.78 },
-  PACK_REVEAL: { path: "/audio/landing/hero.mp3", volume: 0.45 },
-  PACK_CARD_REVEAL: { path: "/audio/hub/market/cartas-animacion-pack.mp3", volume: 0.58 },
+  FILTER_OPEN: { path: "/audio/hub/common/filter.m4a", volume: 0.28 },
+  FILTER_CLOSE: { path: "/audio/hub/common/cerrar-filtro.m4a", volume: 0.38 },
+  DETAIL_OPEN: { path: "/audio/hub/common/open-detall.m4a", volume: 0.45 },
+  DIALOG_CLOSE: { path: "/audio/hub/common/cerrar-dialog.m4a", volume: 0.45 },
+  ERROR_COMMON: { path: "/audio/hub/common/error-common.m4a", volume: 0.52 },
+  SECTION_SWITCH: { path: "/audio/hub/common/seccion.m4a", volume: 0.42 },
+  INSPECTOR_CLOSE: { path: "/audio/hub/common/cerrar-dialog.m4a", volume: 0.45 },
+  REMOVE_CARD: { path: "/audio/hub/arsenal/remover.m4a", volume: 0.62 },
+  ADD_CARD: { path: "/audio/hub/arsenal/añadir.m4a", volume: 0.62 },
+  EVOLUTION_OVERLAY: { path: "/audio/hub/arsenal/evolution.m4a", volume: 0.72 },
+  EVOLUTION_BUTTON: { path: "/audio/landing/button-click.m4a", volume: 0.35 },
+  BUY_CARD: { path: "/audio/hub/market/comprar-carta.m4a", volume: 0.68 },
+  BUY_PACK: { path: "/audio/hub/market/comprar-pack.m4a", volume: 0.78 },
+  PACK_REVEAL: { path: "/audio/landing/hero.m4a", volume: 0.45 },
+  PACK_CARD_REVEAL: { path: "/audio/hub/market/cartas-animacion-pack.m4a", volume: 0.58 },
 };
 
 function safeReplay(audio: HTMLAudioElement | null): void {

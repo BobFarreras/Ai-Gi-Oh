@@ -19,8 +19,8 @@ const DEDUPE_WINDOW_MS = 1800;
 export function ChargeCastSfx({
   enabled,
   playKey,
-  path = "/audio/sfx/effects/execution/cargar.mp3",
-  fallbackPath = "/audio/sfx/cargar.mp3",
+  path = "/audio/sfx/effects/execution/cargar.m4a",
+  fallbackPath = "/audio/sfx/cargar.m4a",
   volume = 0.76,
 }: IChargeCastSfxProps) {
   useEffect(() => {

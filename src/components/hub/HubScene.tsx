@@ -2,6 +2,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { IHubMapNode } from "@/core/entities/hub/IHubMapNode";
 import { IHubSection } from "@/core/entities/hub/IHubSection";
@@ -9,7 +10,6 @@ import { IPlayerHubProgress } from "@/core/entities/hub/IPlayerHubProgress";
 import { HubSceneFloatingActions } from "@/components/hub/HubSceneFloatingActions";
 import { HubSceneHudOverlay } from "@/components/hub/HubSceneHudOverlay";
 import { HubSceneFallback2D } from "@/components/hub/HubSceneFallback2D";
-import { HubSceneWorld3D } from "@/components/hub/HubSceneWorld3D";
 import { HubOnboardingIntroOverlay } from "@/components/hub/onboarding/HubOnboardingIntroOverlay";
 import { resolveHubCameraPose, resolveHubNodeFocusPose } from "@/components/hub/internal/hub-camera-fit";
 import { applyResponsiveNodeLayout } from "@/components/hub/internal/hub-node-responsive-layout";
@@ -19,6 +19,22 @@ import { useHubNodeNavigation } from "@/components/hub/internal/use-hub-node-nav
 import { useHubRoutePrefetch } from "@/components/hub/internal/use-hub-route-prefetch";
 import { useHubSfx } from "@/components/hub/internal/use-hub-sfx";
 import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
+
+// Carga diferida del mundo 3D (Three.js/R3F): el shell del hub aparece al instante
+// y el chunk pesado entra después, solo en cliente y solo si hay WebGL.
+const HubSceneWorld3D = dynamic(
+  () => import("@/components/hub/HubSceneWorld3D").then((mod) => mod.HubSceneWorld3D),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="absolute inset-0 flex items-center justify-center bg-[#010610]">
+        <div className="rounded-lg border border-cyan-500/40 bg-[#041120]/90 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-cyan-100/80">
+          Cargando mundo...
+        </div>
+      </div>
+    ),
+  },
+);
 
 interface HubSceneProps {
   playerLabel?: string;

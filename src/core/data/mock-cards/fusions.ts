@@ -15,7 +15,7 @@ export const FUSION_CARDS: ICard[] = [
     fusionMaterials: ["entity-chatgpt", "entity-gemini"],
     fusionEnergyRequirement: 10,
     archetype: "LLM",
-    bgUrl: "/assets/bgs/bg-tech.jpg",
+    bgUrl: "/assets/bgs/bg-tech.webp",
     renderUrl: "/assets/renders/gemgpt.webp",
   },
   {
@@ -31,7 +31,7 @@ export const FUSION_CARDS: ICard[] = [
     fusionMaterials: ["entity-claude", "entity-kali-linux"],
     fusionEnergyRequirement: 9,
     archetype: "SECURITY",
-    bgUrl: "/assets/bgs/bg-tech.jpg",
+    bgUrl: "/assets/bgs/bg-tech.webp",
     renderUrl: "/assets/renders/kaclauli.webp",
   },
   {
@@ -47,7 +47,7 @@ export const FUSION_CARDS: ICard[] = [
     fusionMaterials: ["entity-python", "entity-postgress"],
     fusionEnergyRequirement: 8,
     archetype: "LANGUAGE",
-    bgUrl: "/assets/bgs/bg-tech.jpg",
+    bgUrl: "/assets/bgs/bg-tech.webp",
     renderUrl: "/assets/renders/pytgress.webp",
   },
 ];

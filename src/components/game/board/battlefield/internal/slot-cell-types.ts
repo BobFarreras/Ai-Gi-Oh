@@ -8,7 +8,7 @@ export interface SlotCellProps {
   entity: IBoardEntity | null;
   isOpponentSide: boolean;
   tutorialTargetId?: string;
-  activeAttackerId: string | null;
+  isAttacking: boolean;
   selectedCardId: string | null;
   selectedBoardEntityInstanceId: string | null;
   isSelectedByCard: boolean;

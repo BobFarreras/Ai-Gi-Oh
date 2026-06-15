@@ -12,6 +12,7 @@ import { Card } from "../card/Card";
 import { CombatLogEventRow } from "./ui/CombatLogEventRow";
 import { resolveLiveSelectedCard } from "@/components/game/board/internal/resolve-live-selected-card";
 import { ITrapActivationPrompt } from "@/components/game/board/hooks/internal/board-state/useBoardUiState";
+import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 
 interface SidePanelsProps {
   selectedCard: ICard | null;
@@ -42,6 +43,8 @@ export function SidePanels({
 }: SidePanelsProps) {
   const [turnFilter, setTurnFilter] = useState<number | "ALL">("ALL");
   const [actorFilter, setActorFilter] = useState<"ALL" | "PLAYER" | "OPPONENT">("ALL");
+  // Evita montar el aura mastery (animaciones infinitas) en el inspector cuando el dispositivo es limitado.
+  const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
   const detailCardScale = useDetailCardScale();
   const pathname = usePathname();
   const cardLookup = useCardLookup(gameState);
@@ -85,7 +88,7 @@ export function SidePanels({
           </button>
           <div className="relative mt-1 mb-2 flex justify-center z-10 shrink-0 h-[clamp(12rem,28vh,15rem)] overflow-hidden">
             <div key={liveSelectedCard.runtimeId ?? liveSelectedCard.id} className="origin-top" style={{ transform: `scale(${detailCardScale})` }}>
-              <Card card={liveSelectedCard} />
+              <Card card={liveSelectedCard} isPerformanceMode={shouldReduceCombatEffects} showBackgroundInPerformanceMode />
             </div>
           </div>
           <div className="text-white pr-2 mt-1 md:mt-2 flex-1 min-h-0 overflow-y-auto custom-scrollbar">

@@ -31,6 +31,8 @@ export function useAutoAdvanceBattle({ mode, gameState, gameStateRef, winnerPlay
         pendingTurnActionPlayerId: gameState.pendingTurnAction?.playerId ?? null,
         playerId: gameState.playerA.id,
         activeEntities: gameState.playerA.activeEntities,
+        turn: gameState.turn,
+        startingPlayerId: gameState.startingPlayerId,
       })
     ) {
       return;
@@ -48,6 +50,8 @@ export function useAutoAdvanceBattle({ mode, gameState, gameStateRef, winnerPlay
         pendingTurnActionPlayerId: latestState.pendingTurnAction?.playerId ?? null,
         playerId: latestState.playerA.id,
         activeEntities: latestState.playerA.activeEntities,
+        turn: latestState.turn,
+        startingPlayerId: latestState.startingPlayerId,
       });
       if (!canAdvanceNow) return;
       onAutoAdvanced();

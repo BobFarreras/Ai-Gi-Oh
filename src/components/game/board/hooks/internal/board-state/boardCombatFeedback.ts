@@ -40,8 +40,17 @@ export interface IBoardCombatFeedback {
   lastCardXpActorPlayerId: string | null;
 }
 
+/**
+ * Busca el último evento del tipo dado recorriendo desde el final,
+ * sin clonar ni invertir el log (crece sin límite durante la partida).
+ */
 function findLatestEvent(events: ICombatLogEvent[], eventType: ICombatLogEvent["eventType"]): ICombatLogEvent | null {
-  return [...events].reverse().find((event) => event.eventType === eventType) ?? null;
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    if (events[index].eventType === eventType) {
+      return events[index];
+    }
+  }
+  return null;
 }
 
 function asPayload(event: ICombatLogEvent | null): IEventPayload {

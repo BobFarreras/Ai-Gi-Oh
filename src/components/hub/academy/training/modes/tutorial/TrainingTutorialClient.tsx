@@ -75,8 +75,8 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
           preserveDeckOrder: true,
           openingHandSize: 4,
         }}
-        playerAvatarUrl="/assets/story/player/bob.png"
-        opponentAvatarUrl="/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png"
+        playerAvatarUrl="/assets/story/player/bob.webp"
+        opponentAvatarUrl="/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.webp"
         isMatchStartLocked={isCoinTossVisible}
         isTurnTimerEnabled={false}
         suppressCombatFeedback={false}

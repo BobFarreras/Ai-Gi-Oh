@@ -61,6 +61,13 @@ function ensureTargetVisibility(targetId: string | null): void {
   element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
 }
 
+/** Evita re-render del overlay cuando el rect del objetivo no cambió (el caso común al sondear). */
+function areRectsEqual(a: IRect | null, b: IRect | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return a.top === b.top && a.left === b.left && a.width === b.width && a.height === b.height;
+}
+
 export function TutorialSpotlightOverlay({ isVisible, targetId, disableAutoScroll = false, backdropOpacity = 0.78 }: ITutorialSpotlightOverlayProps) {
   const [rect, setRect] = useState<IRect | null>(null);
   const lastAutoScrollTargetRef = useRef<string | null>(null);
@@ -68,7 +75,9 @@ export function TutorialSpotlightOverlay({ isVisible, targetId, disableAutoScrol
   useEffect(() => {
     if (!isVisible) return;
     const update = () => {
-      setRect(resolveRect(targetId));
+      const nextRect = resolveRect(targetId);
+      // Solo re-renderiza si el objetivo realmente se movió, no en cada tick del sondeo.
+      setRect((previous) => (areRectsEqual(previous, nextRect) ? previous : nextRect));
       if (!disableAutoScroll && targetId && lastAutoScrollTargetRef.current !== targetId) {
         ensureTargetVisibility(targetId);
         lastAutoScrollTargetRef.current = targetId;
@@ -77,7 +86,7 @@ export function TutorialSpotlightOverlay({ isVisible, targetId, disableAutoScrol
     update();
     window.addEventListener("resize", update);
     window.addEventListener("scroll", update, true);
-    const intervalId = window.setInterval(update, 120);
+    const intervalId = window.setInterval(update, 160);
     return () => {
       window.clearInterval(intervalId);
       window.removeEventListener("resize", update);
@@ -85,33 +94,41 @@ export function TutorialSpotlightOverlay({ isVisible, targetId, disableAutoScrol
     };
   }, [disableAutoScroll, isVisible, targetId]);
 
-  const frameStyle = useMemo(() => {
+  const positionStyle = useMemo(() => {
     if (!rect) return undefined;
     return {
       top: rect.top - 6,
       left: rect.left - 6,
       width: rect.width + 12,
       height: rect.height + 12,
-      boxShadow: `0 0 0 9999px rgba(1, 7, 20, ${backdropOpacity})`,
     } satisfies CSSProperties;
-  }, [backdropOpacity, rect]);
+  }, [rect]);
 
   if (!isVisible || !rect) return null;
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-[420]">
+      {/* El shake (x) es transform: se compone en GPU, sin repintar. */}
       <motion.div
-        className="absolute rounded-xl border-2 border-cyan-300 bg-cyan-400/8 transition-all duration-150"
-        style={frameStyle}
-        animate={{
-          boxShadow: [
-            `0 0 0 9999px rgba(1, 7, 20, ${backdropOpacity}), 0 0 18px rgba(34,211,238,0.38)`,
-            `0 0 0 9999px rgba(1, 7, 20, ${backdropOpacity}), 0 0 34px rgba(34,211,238,0.82)`,
-            `0 0 0 9999px rgba(1, 7, 20, ${backdropOpacity}), 0 0 18px rgba(34,211,238,0.38)`,
-          ],
-          x: [0, -1.5, 1.5, -1.5, 0],
-        }}
+        className="absolute transition-[top,left,width,height] duration-150"
+        style={positionStyle}
+        animate={{ x: [0, -1.5, 1.5, -1.5, 0] }}
         transition={{ duration: 0.85, repeat: Infinity, ease: "easeInOut" }}
-      />
+      >
+        {/* Backdrop estático: la sombra de 9999px ya no se anima, así que no repinta la pantalla cada frame. */}
+        <div className="absolute inset-0 rounded-xl" style={{ boxShadow: `0 0 0 9999px rgba(1, 7, 20, ${backdropOpacity})` }} />
+        {/* Marco con glow pulsante: sombra pequeña, repinta solo alrededor del recuadro. */}
+        <motion.div
+          className="absolute inset-0 rounded-xl border-2 border-cyan-300 bg-cyan-400/8"
+          animate={{
+            boxShadow: [
+              "0 0 18px rgba(34,211,238,0.38)",
+              "0 0 34px rgba(34,211,238,0.82)",
+              "0 0 18px rgba(34,211,238,0.38)",
+            ],
+          }}
+          transition={{ duration: 0.85, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </motion.div>
     </div>
   );
 }

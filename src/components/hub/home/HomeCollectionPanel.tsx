@@ -33,7 +33,7 @@ export function HomeCollectionPanel({
     containerRef: scrollRef,
     itemCount: collection.length,
     itemMinWidth: 84,
-    itemHeight: 145,
+    itemHeight: 156,
     gap: 12,
     overscanRows: 2,
   });
@@ -95,7 +95,7 @@ export function HomeCollectionPanel({
                     ? undefined
                     : {
                         contentVisibility: "auto",
-                        containIntrinsicSize: "145px 84px",
+                        containIntrinsicSize: "84px 156px",
                         filter: canEvolve ? "drop-shadow(0 0 9px rgba(34, 211, 238, 0.55))" : undefined,
                       }
                 }
@@ -110,7 +110,6 @@ export function HomeCollectionPanel({
                   versionTier={progress?.versionTier ?? 0}
                   level={progress?.level ?? 0}
                   xp={progress?.xp ?? 0}
-                  masteryPassiveSkillId={progress?.masteryPassiveSkillId ?? null}
                 />
                 
                 {/* Indicador de copias con estilo neón si está al máximo */}

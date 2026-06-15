@@ -102,10 +102,11 @@
 ## 17. Skills del Proyecto y Activación (Mandatory)
 * **Ubicación oficial:** Todas las skills del proyecto viven en `skills/<skill-name>/SKILL.md`.
 * **Formato obligatorio:** Cada skill debe incluir frontmatter YAML con `name` y `description`, además de instrucciones en español.
-* **Activación por intención:** Si la tarea implica memoria, arquitectura, testing o mejora de mantenibilidad documental/comentarios, activar respectivamente:
+* **Activación por intención:** Si la tarea implica memoria, arquitectura, testing, mejora de mantenibilidad documental/comentarios, o **rendimiento de render/UI (animaciones, listas, estado de combate, 3D, features nuevas como multijugador)**, activar respectivamente:
   * `skills/engram-memory-protocol/SKILL.md`
   * `skills/architecture-decision/SKILL.md`
   * `skills/testing-enforcement/SKILL.md`
   * `skills/commenting-intent-enforcer/SKILL.md`
+  * `skills/performance-rendering-guardrails/SKILL.md`
 * **Sin bypass de quality gates:** Las skills no pueden relajar normas de SRP, TDD, tipado estricto ni checks de `lint`, `test`, `build`.
 * **Evidencia en PR:** Cualquier cambio relevante debe reflejar qué skill fue aplicada y qué decisión técnica resultó.

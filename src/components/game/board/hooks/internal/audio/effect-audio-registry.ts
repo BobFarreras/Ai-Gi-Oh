@@ -4,15 +4,15 @@ import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 type EffectAudioSource = "execution" | "trap";
 const CHARGED_CUSTOM_AUDIO_ACTIONS = new Set(["RESTORE_ENERGY", "DRAIN_OPPONENT_ENERGY", "SET_CARD_DUEL_PROGRESS"]);
 const EFFECT_AUDIO_OVERRIDES: Record<string, string> = {
-  BOOST_ATTACK_ALLIED_ENTITY: "/audio/sfx/effects/execution/stat_up.mp3",
-  BOOST_ATTACK_BY_ARCHETYPE: "/audio/sfx/effects/execution/stat_up.mp3",
-  BOOST_DEFENSE_BY_ARCHETYPE: "/audio/sfx/effects/execution/stat_up.mp3",
-  SET_DEFENSE_BY_CARD_ID: "/audio/sfx/effects/execution/stat_up.mp3",
-  BOOST_DEFENSE_BY_CARD_ID: "/audio/sfx/effects/execution/stat_up.mp3",
-  REDUCE_OPPONENT_ATTACK: "/audio/sfx/effects/execution/bajada.mp3",
-  REDUCE_OPPONENT_DEFENSE: "/audio/sfx/effects/execution/bajada.mp3",
-  FUSION_SUMMON: "/audio/sfx/fusion-summon.mp3",
-  DAMAGE: "/audio/sfx/effects/execution/damage.mp3",
+  BOOST_ATTACK_ALLIED_ENTITY: "/audio/sfx/effects/execution/stat_up.m4a",
+  BOOST_ATTACK_BY_ARCHETYPE: "/audio/sfx/effects/execution/stat_up.m4a",
+  BOOST_DEFENSE_BY_ARCHETYPE: "/audio/sfx/effects/execution/stat_up.m4a",
+  SET_DEFENSE_BY_CARD_ID: "/audio/sfx/effects/execution/stat_up.m4a",
+  BOOST_DEFENSE_BY_CARD_ID: "/audio/sfx/effects/execution/stat_up.m4a",
+  REDUCE_OPPONENT_ATTACK: "/audio/sfx/effects/execution/bajada.m4a",
+  REDUCE_OPPONENT_DEFENSE: "/audio/sfx/effects/execution/bajada.m4a",
+  FUSION_SUMMON: "/audio/sfx/fusion-summon.m4a",
+  DAMAGE: "/audio/sfx/effects/execution/damage.m4a",
 };
 
 function normalizeActionToFileName(action: string): string {
@@ -37,8 +37,8 @@ function resolveSource(event: ICombatLogEvent, payload: Record<string, unknown> 
 /**
  * Devuelve ruta absoluta del audio específico por efecto.
  * Convención:
- * - `public/audio/sfx/effects/execution/<action_en_minusculas>.mp3`
- * - `public/audio/sfx/effects/trap/<action_en_minusculas>.mp3`
+ * - `public/audio/sfx/effects/execution/<action_en_minusculas>.m4a`
+ * - `public/audio/sfx/effects/trap/<action_en_minusculas>.m4a`
  */
 export function resolveEffectAudioPath(event: ICombatLogEvent): string | null {
   const payload = typeof event.payload === "object" && event.payload !== null ? (event.payload as Record<string, unknown>) : null;
@@ -50,5 +50,5 @@ export function resolveEffectAudioPath(event: ICombatLogEvent): string | null {
   if (overridePath) return overridePath;
   const fileName = normalizeActionToFileName(action);
   if (!fileName) return null;
-  return `/audio/sfx/effects/${source}/${fileName}.mp3`;
+  return `/audio/sfx/effects/${source}/${fileName}.m4a`;
 }

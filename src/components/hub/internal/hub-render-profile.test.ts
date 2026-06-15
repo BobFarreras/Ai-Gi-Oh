@@ -28,4 +28,10 @@ describe("hub-render-profile", () => {
     expect(profile.dpr[1]).toBe(1.5);
     expect(floor.gridDivisions).toBe(90);
   });
+
+  it("usa suelo reflectante solo en desktop pleno; lo desactiva en móvil/constrained", () => {
+    expect(resolveHubRenderProfile(1440).useReflectiveFloor).toBe(true);
+    expect(resolveHubRenderProfile(390).useReflectiveFloor).toBe(false);
+    expect(resolveHubRenderProfile(1440, { isConstrainedDevice: true }).useReflectiveFloor).toBe(false);
+  });
 });

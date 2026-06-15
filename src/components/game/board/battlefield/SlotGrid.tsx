@@ -69,6 +69,10 @@ export function SlotGrid({
       {Array.from({ length: totalSlots }).map((_, index) => {
         const entity = pinned.entitiesBySlot[index];
         const entityCardKey = entity ? (entity.card.runtimeId ?? entity.card.id) : null;
+        // Pre-cálculo por slot: cada SlotCell solo recibe lo que le concierne, de modo que
+        // un ataque/buff/xp re-renderice únicamente el slot afectado y no todo el campo.
+        const isBuffedThisSlot = Boolean(entity && buffedSet.has(entity.instanceId));
+        const hasCardXpThisSlot = Boolean(entity && cardXpCardId && entity.card.id === cardXpCardId);
         return (
           <SlotCell
             laneType={laneType}
@@ -77,20 +81,20 @@ export function SlotGrid({
             entity={entity}
             isOpponentSide={isOpponentSide}
             tutorialTargetId={isOpponentSide && laneType === "ENTITIES" ? `tutorial-board-opponent-zone-${index + 1}` : undefined}
-            activeAttackerId={activeAttackerId}
+            isAttacking={Boolean(entity && entity.instanceId === activeAttackerId)}
             selectedCardId={selectedCardId}
             selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}
             isSelectedByCard={Boolean(entity && selectedCardKey && selectedCardKey === entityCardKey)}
             isRevealed={Boolean(entity && revealedSet.has(entity.instanceId))}
             isHighlighted={Boolean(entity && highlightedSet.has(entity.instanceId))}
             isSelectedMaterial={Boolean(entity && selectedSet.has(entity.instanceId))}
-            isBuffed={Boolean(entity && buffedSet.has(entity.instanceId))}
-            buffStat={buffStat}
-            buffAmount={buffAmount}
-            buffEventId={buffEventId}
-            cardXpCardId={cardXpCardId}
-            cardXpAmount={cardXpAmount}
-            cardXpEventId={cardXpEventId}
+            isBuffed={isBuffedThisSlot}
+            buffStat={isBuffedThisSlot ? buffStat : null}
+            buffAmount={isBuffedThisSlot ? buffAmount : null}
+            buffEventId={isBuffedThisSlot ? buffEventId : null}
+            cardXpCardId={hasCardXpThisSlot ? cardXpCardId : null}
+            cardXpAmount={hasCardXpThisSlot ? cardXpAmount : null}
+            cardXpEventId={hasCardXpThisSlot ? cardXpEventId : null}
             hasBlockingTrapActivation={hasBlockingTrapActivation}
             isMobileLayout={isMobileLayout}
             onEntityClick={onEntityClick}

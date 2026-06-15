@@ -93,7 +93,14 @@ export function SlotCellEntity({
       ) : (
         <div className="absolute w-full h-full flex items-center justify-center">
           <SummonHologramVfx show={Boolean((entity.isNewlySummoned && (entity.card.type === "ENTITY" || entity.card.type === "FUSION" || entity.card.type === "TRAP")) || forceTrapReveal)} />
-          <Card card={entity.card} isSelected={selectedCardId === entity.card.id} hologramMode={isMobileLayout ? "lite" : "full"} boardMode={resolvedBoardMode} />
+          <Card
+            card={entity.card}
+            isSelected={selectedCardId === entity.card.id}
+            hologramMode={isMobileLayout || shouldReduceCombatEffects ? "lite" : "full"}
+            boardMode={resolvedBoardMode}
+            isPerformanceMode={shouldReduceCombatEffects}
+            showBackgroundInPerformanceMode
+          />
           {shouldShowBlockedLock ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.7, y: 8 }}

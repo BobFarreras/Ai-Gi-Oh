@@ -28,7 +28,7 @@ describe("resolveEffectAudioPath", () => {
         effectAction: "FUSION_SUMMON",
       },
     });
-    expect(resolveEffectAudioPath(event)).toBe("/audio/sfx/fusion-summon.mp3");
+    expect(resolveEffectAudioPath(event)).toBe("/audio/sfx/fusion-summon.m4a");
   });
 
   it("usa override de DAMAGE para evitar rutas trap inexistentes", () => {
@@ -38,7 +38,7 @@ describe("resolveEffectAudioPath", () => {
         effectAction: "DAMAGE",
       },
     });
-    expect(resolveEffectAudioPath(event)).toBe("/audio/sfx/effects/execution/damage.mp3");
+    expect(resolveEffectAudioPath(event)).toBe("/audio/sfx/effects/execution/damage.m4a");
   });
 
   it("mantiene resolución dinámica snake_case para acciones sin override", () => {
@@ -50,6 +50,6 @@ describe("resolveEffectAudioPath", () => {
         effectAction: "DRAW_CARD",
       },
     });
-    expect(resolveEffectAudioPath(event)).toBe("/audio/sfx/effects/execution/draw_card.mp3");
+    expect(resolveEffectAudioPath(event)).toBe("/audio/sfx/effects/execution/draw_card.m4a");
   });
 });

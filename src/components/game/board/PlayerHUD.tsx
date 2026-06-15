@@ -1,5 +1,6 @@
 // src/components/game/board/PlayerHUD.tsx - HUD principal desacoplado para jugador/oponente con feedback, retrato y control de fases.
 "use client";
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
@@ -8,8 +9,9 @@ import { HudDialogueBubble } from "./internal/HudDialogueBubble";
 import { useHudFeedback } from "./hooks/internal/useHudFeedback";
 import { HudPortraitCard } from "./internal/HudPortraitCard";
 import { HudPhaseControls } from "./internal/HudPhaseControls";
+import { areEqualPlayerHudProps } from "./internal/hud-props-equality";
 
-interface PlayerHUDProps {
+export interface PlayerHUDProps {
   isOpponent: boolean;
   player: IPlayer;
   isActiveTurn: boolean;
@@ -36,7 +38,7 @@ interface PlayerHUDProps {
   showEnergy?: boolean;
 }
 
-export function PlayerHUD({
+function PlayerHUDComponent({
   isOpponent,
   player,
   isActiveTurn,
@@ -143,3 +145,6 @@ export function PlayerHUD({
     </motion.div>
   );
 }
+
+/** Memoizado por contenido: el HUD no se re-renderiza en acciones que no cambian sus stats/feedback. */
+export const PlayerHUD = memo(PlayerHUDComponent, areEqualPlayerHudProps);

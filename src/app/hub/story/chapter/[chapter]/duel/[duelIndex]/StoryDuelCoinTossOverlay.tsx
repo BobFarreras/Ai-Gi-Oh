@@ -55,7 +55,7 @@ export function StoryDuelCoinTossOverlay({
 
     const runCoinTossSequence = async () => {
       await controls.set({ x: 0, y: dropStartY, scale: 0.96, rotateY: 90, opacity: 1 });
-      playSfx("/audio/story/effects/intro-coinToss.mp3");
+      playSfx("/audio/story/effects/intro-coinToss.m4a");
       await controls.start({
         x: 0,
         y: [dropStartY, 30, 0],
@@ -67,7 +67,7 @@ export function StoryDuelCoinTossOverlay({
       setIsResultVisible(true);
       await sleep(650);
       if (isCancelled) return;
-      playSfx("/audio/story/effects/final-coinToss.mp3");
+      playSfx("/audio/story/effects/final-coinToss.m4a");
       await controls.start({
         x: travelOffset.x,
         y: travelOffset.y,

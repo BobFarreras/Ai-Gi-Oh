@@ -29,7 +29,7 @@ function buildCard(
     cost,
     attack,
     defense,
-    bgUrl: "/assets/bgs/bg-tech.jpg",
+    bgUrl: "/assets/bgs/bg-tech.webp",
     renderUrl,
   };
 }

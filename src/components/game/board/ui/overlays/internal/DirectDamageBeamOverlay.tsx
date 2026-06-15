@@ -60,8 +60,8 @@ export function DirectDamageBeamOverlay({ events, playerAId }: IDirectDamageBeam
   useEffect(() => {
     if (!activeSignal) return;
     const startDelay = activeSignal.startDelayMs;
-    const beamTimer = window.setTimeout(() => play("/audio/sfx/damage.mp3", 0.82), startDelay + DIRECT_DAMAGE_BEAM_START_MS);
-    const impactTimer = window.setTimeout(() => play("/audio/sfx/damage.mp3", 0.64), startDelay + DIRECT_DAMAGE_BEAM_START_MS + DIRECT_DAMAGE_BEAM_MS);
+    const beamTimer = window.setTimeout(() => play("/audio/sfx/damage.m4a", 0.82), startDelay + DIRECT_DAMAGE_BEAM_START_MS);
+    const impactTimer = window.setTimeout(() => play("/audio/sfx/damage.m4a", 0.64), startDelay + DIRECT_DAMAGE_BEAM_START_MS + DIRECT_DAMAGE_BEAM_MS);
     return () => {
       window.clearTimeout(beamTimer);
       window.clearTimeout(impactTimer);

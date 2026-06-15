@@ -2,6 +2,7 @@
 "use client";
 
 import Image from "next/image";
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { Shield, Sword, Zap } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
@@ -15,7 +16,7 @@ interface CardHologramProps {
   className?: string;
 }
 
-export function CardHologram({ card, isDefense, mode = "full", className }: CardHologramProps) {
+function CardHologramComponent({ card, isDefense, mode = "full", className }: CardHologramProps) {
   const isExecution = card.type === "EXECUTION";
   const shouldBypassImageOptimization = Boolean(card.renderUrl?.startsWith("/assets/renders/"));
 
@@ -30,7 +31,8 @@ export function CardHologram({ card, isDefense, mode = "full", className }: Card
         style={{ transformStyle: "preserve-3d", transform: "translateZ(12px)" }}
       >
         <div className="absolute inset-0 rounded-xl bg-cyan-500/8" />
-        <div className="absolute left-1/2 top-[10%] h-[72%] w-[72%] -translate-x-1/2 rounded-full bg-cyan-400/20 blur-2xl" />
+        {/* Glow con gradiente radial: mismo aspecto que blur-2xl sin coste de filtro GPU. */}
+        <div className="absolute left-1/2 top-[10%] h-[72%] w-[72%] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.28)_0%,rgba(34,211,238,0.12)_55%,transparent_75%)]" />
         <Image
           src={card.renderUrl}
           alt={`Render de ${card.name}`}
@@ -40,6 +42,22 @@ export function CardHologram({ card, isDefense, mode = "full", className }: Card
           quality={45}
           className="object-contain opacity-85 drop-shadow-[0_0px_12px_rgba(0,0,0,0.7)]"
         />
+        {/* Lectura estática de stats (energía/ATK/DEF): info útil de combate sin coste de animación. */}
+        <div className="absolute bottom-2 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-lg border border-white/10 bg-black/75 px-2 py-1">
+          <span className="flex items-center gap-0.5 text-sm font-black text-yellow-400">
+            <Zap className="h-4 w-4 fill-yellow-400/30" />{card.cost}
+          </span>
+          {!isExecution && (
+            <>
+              <span className="flex items-center gap-0.5 text-sm font-black text-red-500">
+                <Sword className="h-4 w-4 fill-red-500/30" />{card.attack ?? 0}
+              </span>
+              <span className="flex items-center gap-0.5 text-sm font-black text-blue-500">
+                <Shield className="h-4 w-4 fill-blue-500/30" />{card.defense ?? 0}
+              </span>
+            </>
+          )}
+        </div>
       </div>
     );
   }
@@ -136,6 +154,9 @@ export function CardHologram({ card, isDefense, mode = "full", className }: Card
     </div>
   );
 }
+
+/** Memoizado: el holograma solo debe re-renderizar si cambian carta, modo o postura. */
+export const CardHologram = memo(CardHologramComponent);
 
 /**
  * Grid de dos columnas que asegura que los iconos formen una línea vertical perfecta.

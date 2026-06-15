@@ -29,7 +29,8 @@ export function MarketCardInspectorSelectedView({
         <div className="relative flex justify-center items-center w-full h-[260px] sm:h-[300px] mb-4 perspective-1000">
           <motion.div whileHover={isCompactMode ? {} : { scale: 1.05, rotateY: 5, rotateX: 5 }} transition={isCompactMode ? { duration: 0.01 } : { type: "spring", stiffness: 300, damping: 20 }} className="relative origin-center scale-[0.55] sm:scale-[0.65] md:scale-[0.70] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
             {!isCompactMode ? <div className="absolute -inset-4 bg-cyan-400/20 blur-2xl rounded-full opacity-0 hover:opacity-100 transition-opacity duration-500" /> : null}
-            <Card card={selectedCard} isPerformanceMode={isCompactMode} disableHoverEffects={isCompactMode} disableDefaultShadow={isCompactMode} />
+            {/* prioritizeMediaLoading: el arte de la carta seleccionada es el elemento LCP del Market. */}
+            <Card card={selectedCard} isPerformanceMode={isCompactMode} disableHoverEffects={isCompactMode} disableDefaultShadow={isCompactMode} prioritizeMediaLoading />
           </motion.div>
         </div>
         <h3 className="text-xl sm:text-2xl font-black uppercase text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] leading-tight">{selectedCard.name}</h3>

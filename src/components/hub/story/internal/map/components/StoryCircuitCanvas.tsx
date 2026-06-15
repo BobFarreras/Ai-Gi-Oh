@@ -100,7 +100,7 @@ export function StoryCircuitCanvas(props: IStoryCircuitCanvasProps) {
         style={{ top: props.avatarY, left: props.avatarX, x: props.avatarSideOffsetX, y: props.avatarSideOffsetY, scale: props.avatarScale, width: STORY_NODE_TOKEN_SIZE, height: STORY_NODE_TOKEN_SIZE }}
       >
         <Image
-          src="/assets/story/player/bob.png"
+          src="/assets/story/player/bob.webp"
           alt="Avatar del jugador"
           fill
           sizes="80px"
