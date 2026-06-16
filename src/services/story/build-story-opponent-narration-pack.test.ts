@@ -35,7 +35,7 @@ describe("buildStoryOpponentNarrationPack", () => {
     const losePlayer = pack.lines.find((line) => line.id === "lose-player");
     expect(startOpponent?.audioUrl).toContain("/audio/story/opp-ch1-biglog/intro.m4a");
     expect(losePlayer?.text).toBe("Este duelo fue mío desde el principio.");
-    expect(losePlayer?.portraitUrl).toContain("victoria-BigLog.png");
+    expect(losePlayer?.portraitUrl).toContain("victoria-BigLog.webp");
   });
 
   it("garantiza que todos los perfiles del catálogo tienen las 7 líneas obligatorias", () => {

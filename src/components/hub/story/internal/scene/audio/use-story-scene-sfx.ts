@@ -48,13 +48,8 @@ export function useStorySceneSfx() {
       audio.volume = id === "REWARD_NEXUS" || id === "REWARD_CARD" ? 0.5 : 0.4;
       audioByIdRef.current[id] = audio;
     }
-    // Compatibilidad con typo histórico del nombre de archivo de movimiento.
-    const movementAudio = audioByIdRef.current.MOVE;
-    if (movementAudio) {
-      movementAudio.onerror = () => {
-        movementAudio.src = "/audio/story/effects/movimiento.m4a";
-      };
-    }
+    // El archivo de movimiento se sirve con la grafía actual "movimento" (sin acento).
+    // No se configura fallback para evitar referencias a assets inexistentes.
     return () => {
       for (const id of Object.keys(audioByIdRef.current) as Array<keyof IStorySceneSfxMap>) {
         const audio = audioByIdRef.current[id];

@@ -49,7 +49,7 @@ export const STORY_OPPONENT_NARRATION_CATALOG: Record<string, IStoryOpponentNarr
   "opp-gennvim": profile({
     opponentId: "opp-gennvim",
     assetFolder: "opp-ch1-apprentice",
-    portraits: { intro: "intro-GenNvim.png", victory: "victoria-GenNvim.png", defeat: "derrota-GenNvim.png" },
+    portraits: { intro: "intro-GenNvim.webp", victory: "victoria-GenNvim.webp", defeat: "derrota-GenNvim.webp" },
     lines: {
       intro: line("intro", "Prepárate para perder.", "intro.m4a"),
       trap: line("trap", "Has caído en mi trampa.", "trampa.m4a"),
@@ -63,7 +63,7 @@ export const STORY_OPPONENT_NARRATION_CATALOG: Record<string, IStoryOpponentNarr
   "opp-biglog": profile({
     opponentId: "opp-biglog",
     assetFolder: "opp-ch1-biglog",
-    portraits: { intro: "intro-BigLog.png", victory: "victoria-BigLog.png", defeat: "derrota-BigLog.png" },
+    portraits: { intro: "intro-BigLog.webp", victory: "victoria-BigLog.webp", defeat: "derrota-BigLog.webp" },
     lines: {
       intro: line("intro", "Prepárate, no me contendré.", "intro.m4a"),
       trap: line("trap", "Justo como lo planeé.", "trampa.m4a"),
@@ -77,7 +77,7 @@ export const STORY_OPPONENT_NARRATION_CATALOG: Record<string, IStoryOpponentNarr
   "opp-jaku": profile({
     opponentId: "opp-jaku",
     assetFolder: "opp-ch1-jaku",
-    portraits: { intro: "intro-Jaku.png", victory: "victoria-Jaku.png", defeat: "derrota-Jaku.png" },
+    portraits: { intro: "intro-Jaku.webp", victory: "victoria-Jaku.webp", defeat: "derrota-Jaku.webp" },
     lines: {
       intro: line("intro", "Hmm, prepárate para perder.", "intro.m4a"),
       trap: line("trap", "No escaparás.", "trampa.m4a"),
@@ -91,7 +91,7 @@ export const STORY_OPPONENT_NARRATION_CATALOG: Record<string, IStoryOpponentNarr
   "opp-helena": profile({
     opponentId: "opp-helena",
     assetFolder: "opp-ch1-helena",
-    portraits: { intro: "intro-Helena.png", victory: "victoria-Helena.png", defeat: "derrota-Helena.png" },
+    portraits: { intro: "intro-Helena.webp", victory: "victoria-Helena.webp", defeat: "derrota-Helena.webp" },
     lines: {
       intro: line("intro", "Hoy aprenderás quién manda.", "intro.m4a"),
       trap: line("trap", "Demasiado tarde.", "trampa.m4a"),
@@ -105,7 +105,7 @@ export const STORY_OPPONENT_NARRATION_CATALOG: Record<string, IStoryOpponentNarr
   "opp-soldier-act01": profile({
     opponentId: "opp-soldier-act01",
     assetFolder: "opp-ch1-soldier-act01",
-    portraits: { intro: "intro-Soldado-act01.png", victory: "victoria-Soldado-act01.png", defeat: "derrota-Soldado-act01.png" },
+    portraits: { intro: "intro-Soldado-act01.webp", victory: "victoria-Soldado-act01.webp", defeat: "derrota-Soldado-act01.webp" },
     lines: {
       intro: line("intro", "Este campo de batalla será tu final!", "intro-combate.m4a"),
       trap: line("trap", "Era parte de mi plan.", "trampa.m4a"),

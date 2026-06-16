@@ -20,7 +20,7 @@ export function ChargeCastSfx({
   enabled,
   playKey,
   path = "/audio/sfx/effects/execution/cargar.m4a",
-  fallbackPath = "/audio/sfx/cargar.m4a",
+  fallbackPath = undefined,
   volume = 0.76,
 }: IChargeCastSfxProps) {
   useEffect(() => {

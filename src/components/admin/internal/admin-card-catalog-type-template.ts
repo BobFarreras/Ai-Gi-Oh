@@ -8,11 +8,8 @@ function setIfEmpty(current: string, value: string, force: boolean): string {
 
 export function applyCardTypeTemplate(draft: IAdminCardCatalogDraft, nextType: CardType, force: boolean): IAdminCardCatalogDraft {
   const typeTag = nextType.toLowerCase();
-  const defaultRenderUrl = nextType === "EXECUTION"
-    ? "/assets/renders/executions/exec-example-card.webp"
-    : nextType === "TRAP"
-      ? "/assets/renders/traps/trap-example-card.webp"
-      : "/assets/renders/example-card.webp";
+  // Los ejemplos no incluyen render real; el administrador debe subir el asset correspondiente.
+  const defaultRenderUrl = "";
   const base = {
     ...draft,
     type: nextType,

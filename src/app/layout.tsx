@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PerformanceProfileToggle } from "@/components/internal/PerformanceProfileToggle";
+import { shouldRenderPerformanceToggle } from "@/components/internal/should-render-performance-toggle";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -44,7 +45,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
-        <PerformanceProfileToggle />
+        {shouldRenderPerformanceToggle(process.env.NODE_ENV) ? <PerformanceProfileToggle /> : null}
       </body>
     </html>
   );
