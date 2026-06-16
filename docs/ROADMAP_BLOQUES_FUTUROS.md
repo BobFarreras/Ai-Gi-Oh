@@ -214,21 +214,26 @@ Probar un **diseño y flujo nuevos** para la primera experiencia (jugador nuevo)
 
 ## Bloque 6 — Botón "Salir al hub" inoperativo en Story (móvil)
 
-**Estado:** pendiente · **Prioridad:** alta · **Esfuerzo:** bajo
+**Estado:** completado · **Prioridad:** alta · **Esfuerzo:** bajo
 
 ### Problema
 En el mapa Story, en flujo móvil (`isMobileVerticalFlow`), el botón con flecha hacia atrás
-(`aria-label="Salir al hub"` en `StoryMapZoomControls`) no navega al hub. Parece que el callback
-`onExitToHub` no llega o no se dispara correctamente desde el componente padre en modo móvil.
+(`aria-label="Salir al hub"` en `StoryMapZoomControls`) no navega al hub. El callback
+`onExitToHub` no se propagaba desde `StoryScene` hasta `StoryMapZoomControls` porque
+`StorySceneMapPane` no lo pasaba a `StoryCircuitMap`.
 
 ### Archivos a revisar
 - `src/components/hub/story/internal/map/components/StoryMapZoomControls.tsx`
 - `src/components/hub/story/StoryScene.tsx` (donde se define `exitToHub`)
-- `src/components/hub/story/internal/scene/view/StoryMobileSidebarSheet.tsx`
+- `src/components/hub/story/internal/scene/view/StorySceneMapPane.tsx`
 
 ### Criterios de aceptación
 - Tocar el botón de salida en Story móvil redirige a `/hub`.
 - El test existente `StoryMapZoomControls.test.tsx` pasa y, si es necesario, se amplía para cubrir la acción real de navegación.
+
+### Notas de implementación
+- Se añadió `onExitToHub={props.onExitToHub}` en `StorySceneMapPane` para propagar el callback a `StoryCircuitMap` y `StoryMapZoomControls`.
+- Se amplió `StoryScene.test.tsx` con un test que simula modo móvil y verifica que `router.push("/hub")` se dispara al pulsar "Salir al hub".
 
 ---
 
@@ -324,12 +329,12 @@ en producción si pasa los checks.
 2. **Bloque 0** (rendimiento del hub, visual-neutral).
 
 ### Completados (fixes de producción)
-3. **Bloque 7** (imágenes Story rotas).
-4. **Bloque 8** (moneda del oponente soldado).
+3. **Bloque 6** (salir al hub en Story móvil).
+4. **Bloque 7** (imágenes Story rotas).
+5. **Bloque 8** (moneda del oponente soldado).
 
 ### Pendientes (fixes de producción críticos)
-5. **Bloque 9** (seguridad del deploy) — antes que cualquier nuevo código, para no romper producción.
-6. **Bloque 6** (salir al hub en Story móvil).
+6. **Bloque 9** (seguridad del deploy) — antes que cualquier nuevo código, para no romper producción.
 
 ### Pospuestos
 7. **Bloque 4** (multijugador) — se retrasa hasta estabilizar producción.
