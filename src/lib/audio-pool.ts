@@ -4,11 +4,16 @@
 
 const pool = new Map<string, HTMLAudioElement>();
 
-/** Devuelve (o crea lazy) una instancia Audio cacheada por ruta con volumen y loop configurados. */
-export function getAudio(path: string, volume = 1, loop = false): HTMLAudioElement | null {
+/** Devuelve (o crea lazy) una instancia Audio cacheada por ruta con volumen, loop y preload configurados. */
+export function getAudio(
+  path: string,
+  volume = 1,
+  loop = false,
+  preload: HTMLMediaElement["preload"] = "none",
+): HTMLAudioElement | null {
   if (typeof window === "undefined" || typeof window.Audio === "undefined") return null;
 
-  const cacheKey = `${path}|${volume.toFixed(2)}|${loop}`;
+  const cacheKey = `${path}|${volume.toFixed(2)}|${loop}|${preload}`;
   const cached = pool.get(cacheKey);
   if (cached) {
     cached.currentTime = 0;
@@ -16,7 +21,7 @@ export function getAudio(path: string, volume = 1, loop = false): HTMLAudioEleme
   }
 
   const audio = new Audio(path);
-  audio.preload = "none";
+  audio.preload = preload;
   audio.volume = Math.max(0, Math.min(1, volume));
   audio.loop = loop;
   pool.set(cacheKey, audio);
