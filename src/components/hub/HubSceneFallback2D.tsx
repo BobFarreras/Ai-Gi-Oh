@@ -17,6 +17,7 @@ interface HubSceneFallback2DProps {
   activeNodeId: string | null;
   disabledNodeIds?: readonly string[];
   isNavigationBusy: boolean;
+  tourActiveNodeId?: string | null;
 }
 
 export function HubSceneFallback2D({
@@ -28,6 +29,7 @@ export function HubSceneFallback2D({
   activeNodeId,
   disabledNodeIds = [],
   isNavigationBusy,
+  tourActiveNodeId = null,
 }: HubSceneFallback2DProps) {
   const [lockVisibleBySection, setLockVisibleBySection] = useState<Record<string, boolean>>({});
   const sectionsByType = new Map<HubSectionType, IHubSection>(sections.map((section) => [section.type, section]));
@@ -55,6 +57,7 @@ export function HubSceneFallback2D({
                 isNavigationBusy={isNavigationBusy}
                 isTargetNode={activeNodeId === node.id}
                 isDisabled={isDisabled}
+                isTourTarget={tourActiveNodeId === node.id}
                 onAction={() => {
                   if (isDisabled) return;
                   const result = resolveHubNodeInteraction(section);

@@ -78,9 +78,22 @@ export function HubScene({
   const cameraPose = useMemo(() => resolveHubCameraPose(responsiveNodes, viewportWidth), [responsiveNodes, viewportWidth]);
   const sectionHrefs = useMemo(() => sections.map((section) => section.href), [sections]);
   const activeNode = useMemo(() => {
-    const targetNodeId = tourIntegration.isTourActive ? tourIntegration.activeNodeId : navigationState.targetNodeId;
+    // Durante el tour, la cámara solo se mueve cuando el jugador hace clic y entramos en "navigating".
+    // En "guiding" o "step-intro" la cámara permanece centrada mostrando todos los nodos.
+    const isTourNavigating = tourIntegration.isTourActive && tourIntegration.tourOverlayProps.uiPhase === "navigating";
+    const targetNodeId = isTourNavigating
+      ? tourIntegration.activeNodeId
+      : !tourIntegration.isTourActive
+        ? navigationState.targetNodeId
+        : null;
     return responsiveNodes.find((node) => node.id === targetNodeId) ?? null;
-  }, [tourIntegration.isTourActive, tourIntegration.activeNodeId, navigationState.targetNodeId, responsiveNodes]);
+  }, [
+    tourIntegration.isTourActive,
+    tourIntegration.activeNodeId,
+    tourIntegration.tourOverlayProps.uiPhase,
+    navigationState.targetNodeId,
+    responsiveNodes,
+  ]);
   const activeCameraPose = useMemo(
     () => (activeNode ? resolveHubNodeFocusPose(activeNode, viewportWidth) : cameraPose),
     [activeNode, cameraPose, viewportWidth],
@@ -116,6 +129,7 @@ export function HubScene({
             activeNodeId={tourIntegration.isTourActive ? tourIntegration.activeNodeId : navigationState.targetNodeId}
             disabledNodeIds={tourIntegration.disabledNodeIds}
             isNavigationBusy={isNavigationBusy}
+            tourActiveNodeId={tourIntegration.isTourActive ? tourIntegration.activeNodeId : null}
           />
         ) : null}
         {isHydrated && canRender3D ? (
@@ -133,6 +147,7 @@ export function HubScene({
             activeNodeId={tourIntegration.isTourActive ? tourIntegration.activeNodeId : navigationState.targetNodeId}
             disabledNodeIds={tourIntegration.disabledNodeIds}
             isNavigationBusy={isNavigationBusy}
+            tourActiveNodeId={tourIntegration.isTourActive ? tourIntegration.activeNodeId : null}
           />
         ) : null}
         {isRouteSlow ? (

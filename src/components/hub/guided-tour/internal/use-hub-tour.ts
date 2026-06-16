@@ -4,7 +4,7 @@ import { HUB_TOUR_STEPS } from "@/core/services/hub/hub-tour-step-catalog";
 import { IHubTourState, resolveHubTourState } from "@/core/services/hub/resolve-hub-tour-state";
 import { IHubMapNode } from "@/core/entities/hub/IHubMapNode";
 
-export type HubTourUiPhase = "guiding" | "story-simulation" | "navigating";
+export type HubTourUiPhase = "step-intro" | "guiding" | "story-simulation" | "navigating";
 
 interface IUseHubTourInput {
   initialCompletedNodeIds: readonly string[];
@@ -24,6 +24,7 @@ export interface IUseHubTourOutput {
   onTourNodeSelect: () => void;
   onSkip: () => void;
   onRequestNodeNavigationComplete: () => void;
+  dismissStepIntro: () => void;
   openStorySimulation: () => void;
   closeStorySimulation: () => void;
   markNavigating: () => void;
@@ -44,7 +45,7 @@ export function useHubTour({ initialCompletedNodeIds, isSkipped, nodes, onSkip, 
   const [tourState] = useState<IHubTourState>(() =>
     isEnabled ? resolveHubTourState({ completedTutorialNodeIds: initialCompletedNodeIds, isSkipped }) : INACTIVE_TOUR_STATE,
   );
-  const [uiPhase, setUiPhase] = useState<HubTourUiPhase>("guiding");
+  const [uiPhase, setUiPhase] = useState<HubTourUiPhase>("step-intro");
 
   const currentStep = useMemo(
     () => HUB_TOUR_STEPS.find((step) => step.id === tourState.currentStepId) ?? null,
@@ -58,6 +59,7 @@ export function useHubTour({ initialCompletedNodeIds, isSkipped, nodes, onSkip, 
     return nodes.map((node) => node.id).filter((nodeId) => nodeId !== activeNodeId);
   }, [activeNodeId, nodes]);
 
+  const dismissStepIntro = useCallback(() => setUiPhase("guiding"), []);
   const openStorySimulation = useCallback(() => setUiPhase("story-simulation"), []);
   const closeStorySimulation = useCallback(() => setUiPhase("guiding"), []);
   const markNavigating = useCallback(() => setUiPhase("navigating"), []);
@@ -86,6 +88,7 @@ export function useHubTour({ initialCompletedNodeIds, isSkipped, nodes, onSkip, 
     onTourNodeSelect,
     onSkip,
     onRequestNodeNavigationComplete,
+    dismissStepIntro,
     openStorySimulation,
     closeStorySimulation,
     markNavigating,

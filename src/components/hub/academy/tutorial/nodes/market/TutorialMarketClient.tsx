@@ -112,6 +112,8 @@ export function TutorialMarketClient({ returnToHub = false }: ITutorialMarketCli
         description="Has dominado compras directas, packs aleatorios y auditoría del historial."
         onContinue={() => window.location.assign(returnToHub ? "/hub" : ACADEMY_TRAINING_TUTORIAL_ROUTE)}
         onExit={() => window.location.assign(returnToHub ? "/hub" : ACADEMY_TUTORIAL_MAP_ROUTE)}
+        continueLabel={returnToHub ? "Volver al Hub" : "Siguiente Tutorial"}
+        hideExitButton={returnToHub}
       />
     </>
   );

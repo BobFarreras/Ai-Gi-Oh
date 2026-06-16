@@ -36,6 +36,7 @@ interface HubSceneNode3DProps {
   isTargetNode: boolean;
   isNavigationBusy: boolean;
   isDisabled: boolean;
+  isTourTarget?: boolean;
 }
 
 function HubSceneNode3DComponent({
@@ -48,6 +49,7 @@ function HubSceneNode3DComponent({
   isTargetNode,
   isNavigationBusy,
   isDisabled,
+  isTourTarget = false,
 }: HubSceneNode3DProps) {
   const nodeRef = useRef<THREE.Group>(null);
   const baseRef = useRef<THREE.Group>(null);
@@ -144,6 +146,7 @@ function HubSceneNode3DComponent({
             isNavigationBusy={isNavigationBusy}
             isTargetNode={isTargetNode}
             isDisabled={isDisabled}
+            isTourTarget={isTourTarget}
           />
         </Html>
       ) : null}

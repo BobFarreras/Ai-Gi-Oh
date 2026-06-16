@@ -24,6 +24,7 @@ export interface IUseHubSceneTourIntegrationOutput {
     currentStep: ReturnType<typeof useHubTour>["currentStep"];
     uiPhase: ReturnType<typeof useHubTour>["uiPhase"];
     onSkip: () => void;
+    onGoFromStepIntro: () => void;
     onStartCombat: () => void;
     onCloseStorySimulation: () => void;
   };
@@ -62,6 +63,8 @@ export function useHubSceneTourIntegration({
 
   const handleNodeNavigate = useCallback(
     (nodeId: string, href: string) => {
+      // Bloquear cualquier clic mientras el buff intro está visible
+      if (tour.isActive && tour.uiPhase === "step-intro") return;
       if (tour.isActive && nodeId === tour.activeNodeId) {
         playNodeHover();
         tour.onTourNodeSelect();
@@ -88,6 +91,7 @@ export function useHubSceneTourIntegration({
       currentStep: tour.currentStep,
       uiPhase: tour.uiPhase,
       onSkip: tour.onSkip,
+      onGoFromStepIntro: tour.onTourNodeSelect,
       onStartCombat: () => {
         if (tour.currentStep) router.push(`${tour.currentStep.route}?returnTo=hub`);
       },

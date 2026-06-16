@@ -23,6 +23,8 @@ export async function postTutorialNodeCompletion(nodeId: string): Promise<INodeC
   const response = await fetch("/api/tutorial/nodes/complete", {
     method: "POST",
     credentials: "include",
+    // keepalive permite que el request sobreviva si la página navega antes de que complete.
+    keepalive: true,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ nodeId }),
   });

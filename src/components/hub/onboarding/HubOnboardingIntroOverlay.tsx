@@ -60,7 +60,7 @@ const STEP_CONTENT: Record<OnboardingStep, IStepContent> = {
   BIGLOG_DECISION: {
     actor: "biglog",
     label: "BigLog",
-    text: "Entonces comencemos. Te guiaré por los nodos del Hub: Market, Arsenal y un combate tutorial contra mí. Solo podrás interactuar con el nodo activo.",
+    text: "Vamos al Hub. Te enseñaré el flujo completo para que puedas operar con seguridad desde el primer combate.",
   },
 };
 
@@ -79,7 +79,7 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
   const [stepIndex, setStepIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [isRoutingToAcademy, setIsRoutingToAcademy] = useState(false);
+  const [isRoutingToHub, setIsRoutingToHub] = useState(false);
   const shouldShow = resolveOnboardingVisibility(progress);
   const audio = useOnboardingAudio({ isEnabled: shouldShow && !isClosing });
   const step = STEP_ORDER[stepIndex] ?? STEP_ORDER[0];
@@ -102,7 +102,7 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
     try {
       await savePlayerOnboardingAction(action);
       if (action === "mark_intro_seen") {
-        setIsRoutingToAcademy(true);
+        setIsRoutingToHub(true);
         await new Promise((resolve) => window.setTimeout(resolve, 700));
         router.refresh();
         return;
@@ -118,19 +118,20 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
     <section className="fixed inset-0 z-[180] overflow-hidden">
       <CyberBackground lightweight />
       <div className="relative z-10 flex h-full items-center justify-center p-4">
-        {isRoutingToAcademy ? (
+        {isRoutingToHub ? (
           <div className="rounded-xl border border-cyan-300/60 bg-cyan-950/45 px-6 py-4 text-center shadow-[0_0_36px_rgba(34,211,238,0.4)]">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-200">Sincronizando</p>
             <p className="mt-1 text-lg font-black uppercase tracking-[0.12em] text-cyan-50">Hub</p>
           </div>
         ) : (
-          <AnimatePresence mode="wait">
-            <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex w-full items-center justify-center">
+          <div className="flex w-full items-center justify-center">
               <OnboardingNarrationBeat
                 actorName={content.label}
                 actorImage={resolveActorImage(content.actor)}
                 actorSide={resolveActorSide(content.actor)}
                 text={content.text}
+                imageKey={content.actor}
+                textKey={step}
                 actions={step !== "BIGLOG_DECISION" ? (
                   <button type="button" onClick={moveNextStep} className="rounded-md border border-black/60 px-4 py-2 text-xs font-black uppercase tracking-[0.14em]">
                     {content.cta}
@@ -138,7 +139,7 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
                 ) : (
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <button type="button" disabled={isLoading} onClick={() => void executeAction("mark_intro_seen")} className="rounded-md border border-cyan-400/60 bg-cyan-950/80 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-cyan-100 disabled:opacity-55">
-                      Iniciar entrenamiento
+                      Ir al Hub
                     </button>
                     <button type="button" disabled={isLoading} onClick={() => void executeAction("skip_tutorial")} className="rounded-md border border-amber-400/65 bg-amber-950/75 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-amber-100 disabled:opacity-55">
                       No, voy por mi cuenta
@@ -146,8 +147,7 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
                   </div>
                 )}
               />
-            </motion.div>
-          </AnimatePresence>
+          </div>
         )}
       </div>
     </section>

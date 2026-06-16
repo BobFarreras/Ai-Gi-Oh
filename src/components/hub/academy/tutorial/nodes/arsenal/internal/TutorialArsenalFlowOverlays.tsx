@@ -82,6 +82,8 @@ export function TutorialArsenalFlowOverlays(props: ITutorialArsenalFlowOverlaysP
           props.playSfx("DIALOG_CLOSE");
           window.location.assign(props.returnToHub ? "/hub" : ACADEMY_TUTORIAL_MAP_ROUTE);
         }}
+        continueLabel={props.returnToHub ? "Volver al Hub" : "Siguiente Tutorial"}
+        hideExitButton={props.returnToHub}
       />
     </>
   );

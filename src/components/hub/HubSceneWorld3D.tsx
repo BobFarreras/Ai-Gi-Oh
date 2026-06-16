@@ -27,6 +27,7 @@ interface HubSceneWorld3DProps {
   activeNodeId: string | null;
   disabledNodeIds?: readonly string[];
   isNavigationBusy: boolean;
+  tourActiveNodeId?: string | null;
 }
 
 export function HubSceneWorld3D({
@@ -43,6 +44,7 @@ export function HubSceneWorld3D({
   activeNodeId,
   disabledNodeIds = [],
   isNavigationBusy,
+  tourActiveNodeId = null,
 }: HubSceneWorld3DProps) {
   const capability = useHubDeviceCapability();
   const sectionsByType = useMemo(
@@ -112,6 +114,7 @@ export function HubSceneWorld3D({
             isTargetNode={activeNodeId === node.id}
             isNavigationBusy={isNavigationBusy}
             isDisabled={disabledNodeIds.includes(node.id)}
+            isTourTarget={tourActiveNodeId === node.id}
           />
         );
       })}

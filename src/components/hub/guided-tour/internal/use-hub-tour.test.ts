@@ -46,6 +46,7 @@ describe("useHubTour", () => {
     const { result } = renderHook(() =>
       useHubTour({ initialCompletedNodeIds: [], isSkipped: false, nodes: NODES, onSkip: vi.fn(), isEnabled: true }),
     );
+    act(() => result.current.dismissStepIntro());
     act(() => result.current.onTourNodeSelect());
     expect(result.current.uiPhase).toBe("navigating");
   });
@@ -65,6 +66,27 @@ describe("useHubTour", () => {
     expect(result.current.uiPhase).toBe("story-simulation");
   });
 
+  it("arranca siempre en step-intro cuando el tour está activo", () => {
+    const { result } = renderHook(() =>
+      useHubTour({ initialCompletedNodeIds: [], isSkipped: false, nodes: NODES, onSkip: vi.fn(), isEnabled: true }),
+    );
+    expect(result.current.uiPhase).toBe("step-intro");
+  });
+
+  it("pasa a guiding al descartar el buff intro", () => {
+    const { result } = renderHook(() =>
+      useHubTour({
+        initialCompletedNodeIds: ["tutorial-market-basics"],
+        isSkipped: false,
+        nodes: NODES,
+        onSkip: vi.fn(),
+        isEnabled: true,
+      }),
+    );
+    act(() => result.current.dismissStepIntro());
+    expect(result.current.uiPhase).toBe("guiding");
+  });
+
   it("cierra simulación y permite volver al Hub", () => {
     const { result } = renderHook(() =>
       useHubTour({
@@ -75,6 +97,7 @@ describe("useHubTour", () => {
         isEnabled: true,
       }),
     );
+    act(() => result.current.dismissStepIntro());
     act(() => result.current.onTourNodeSelect());
     act(() => result.current.closeStorySimulation());
     expect(result.current.uiPhase).toBe("guiding");
