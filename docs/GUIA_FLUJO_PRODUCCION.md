@@ -1,121 +1,60 @@
-<!-- docs/GUIA_FLUJO_PRODUCCION.md - Protocolo operativo para publicar cambios de develop a main sin conflictos ni bloqueos de reglas. -->
+<!-- docs/GUIA_FLUJO_PRODUCCION.md - Flujo operativo de ramas, deploy y PRs tras el saneamiento de CI/CD de 2026-06. -->
 # Guía de Flujo a Producción
 
-## Objetivo
+## Modelo de ramas
+- `main` = **producción**. Vercel despliega automáticamente con cada push.
+- `develop` = **integración/staging**. Vercel genera un preview con cada push.
+- Se mantienen **sincronizadas** con el flujo fast-forward de abajo.
 
-Estandarizar un flujo simple para trabajar con `develop` y publicar a `main` sin conflictos recurrentes.
+## Dos roles, dos flujos
 
-## Reglas del repositorio (resumen)
+### 1) Mantenedor (propietario / admin) — push directo
+Tienes **bypass** del ruleset: puedes hacer `git push` directo a `develop` y `main`, **sin PR**. Los Actions (`quality`) corren igual como red de seguridad, pero **no te bloquean**.
 
-1. No se hace push directo a `develop` ni `main`.
-2. Todo entra por Pull Request.
-3. Revisión y checks obligatorios antes de merge.
-4. Historial lineal (sin merge commits en ramas protegidas).
-
-## Flujo diario recomendado
-
-1. Actualizar `develop` local:
-   ```bash
-   git checkout develop
-   git fetch origin --prune
-   git pull --ff-only origin develop
-   ```
-2. Crear rama de trabajo:
-   ```bash
-   git checkout -b features/<tema>
-   ```
-3. Trabajar y subir cambios:
-   ```bash
-   git add -A
-   git commit -m "feat: <resumen>"
-   git push -u origin features/<tema>
-   ```
-4. Abrir PR: `features/<tema> -> develop`.
-5. Mergear PR con método `Squash` o `Rebase` (no `Merge commit`).
-
-## Publicación a producción (simple)
-
-1. Asegurar `develop` actualizado:
-   ```bash
-   git checkout develop
-   git pull --ff-only origin develop
-   ```
-2. Abrir PR: `develop -> main`.
-3. Esperar checks obligatorios.
-4. Mergear PR (`Squash` o `Rebase`).
-
-## Si `develop -> main` da conflictos
-
-No mezclar `main` dentro de `develop` en una rama protegida.
-
-1. Crear rama de release desde `develop`:
-   ```bash
-   git checkout -b release/develop-to-main origin/develop
-   git fetch origin
-   ```
-2. Rebasear sobre `main`:
-   ```bash
-   git rebase origin/main
-   ```
-3. Resolver conflictos y continuar:
-   ```bash
-   git add -A
-   git rebase --continue
-   ```
-4. Subir rama y abrir PR:
-   ```bash
-   git push -u origin release/develop-to-main
-   ```
-   PR: `release/develop-to-main -> main`
-
-## Configuración correcta de fork (`origin` + `upstream`)
-
-Usar este bloque una sola vez por repositorio local:
-
+Flujo recomendado (mantiene `develop` y `main` siempre sincronizados):
 ```bash
-git remote -v
-git remote add upstream https://github.com/<owner-original>/<repo>.git
-git fetch upstream --prune
+# 1) Trabaja en develop (genera preview en Vercel)
+git checkout develop
+git pull --ff-only origin develop
+# ...cambios...
+git add -A && git commit -m "feat: <resumen>"
+git push origin develop                 # -> preview
+
+# 2) Cuando esté listo, publica a producción por FAST-FORWARD
+git push origin develop:main            # -> producción (FF, sin conflictos)
+```
+Tras el paso 2, `develop` y `main` apuntan al **mismo commit** → siempre sincronizados.
+
+> También puedes hacer `git push origin main` directo; en ese caso, resincroniza luego con `git push origin main:develop`.
+
+### 2) Contribuidor externo — PR + tu validación
+1. Hace fork, crea su rama y abre **Pull Request a `main`**.
+2. El check **`quality`** debe pasar (lint, typecheck, test, build).
+3. **Tú revisas y apruebas** — el ruleset exige **1 aprobación** del mantenedor.
+4. Merge por **Squash** o **Rebase** (historia lineal; `Merge commit` está bloqueado).
+
+## Publicar una versión (release)
+```bash
+git checkout develop
+# subir "version" en package.json siguiendo SemVer (MAJOR.MINOR.PATCH)
+git commit -am "chore(release): vX.Y.Z"
+git push origin develop:main            # despliega a producción
+gh release create vX.Y.Z --target main --title "vX.Y.Z — <resumen>" --notes "<changelog>"
 ```
 
-`origin` debe apuntar a tu fork y `upstream` al repo principal.
+## Checklist antes de publicar
+`pnpm lint` · `pnpm typecheck` · `pnpm test` (o todo junto con `pnpm quality:check`) · `pnpm build` · `git status` limpio.
 
-## Cómo mantener tu fork sincronizado sin romper ramas
+## Vercel (IMPORTANTE)
+- Producción = rama `main`; cada push despliega.
+- **"Require Verified Commits" debe estar DESACTIVADO** (Vercel → Settings → Git). Si está activado, Vercel **cancela al instante todo commit sin firma GPG/SSH** y producción deja de actualizarse (síntoma: deploys en estado `CANCELED`). Alternativa profesional: firmar los commits con GPG/SSH.
 
-1. Sincronizar `develop`:
-   ```bash
-   git checkout develop
-   git fetch upstream --prune
-   git rebase upstream/develop
-   git push origin develop
-   ```
-2. Sincronizar `main`:
-   ```bash
-   git checkout main
-   git fetch upstream --prune
-   git rebase upstream/main
-   git push origin main
-   ```
-
-## Checklist antes de abrir PR a `main`
-
-1. `pnpm lint`
-2. `pnpm typecheck`
-3. `pnpm test`
-4. `pnpm build`
-5. `git status` limpio
+## CI / Dependencias
+- `quality-gates`: corre en **PR y push** (no hay cron diario, que antes generaba fallos nocturnos).
+- `e2e-story-resilience`: solo **bajo demanda** (botón *Run workflow*), por ser pesado.
+- **Sin Dependabot**: la seguridad de dependencias se vigila con las **alertas pasivas de GitHub** (pestaña *Security*). Actualiza dependencias a mano con `pnpm update` cuando convenga; revisa vulnerabilidades con `pnpm security:audit:prod`.
 
 ## Antipatrones a evitar
-
-1. Hacer `git pull main` y luego mezclar manualmente en `develop`.
-2. Resolver conflictos en ramas protegidas con push directo.
-3. Usar merge commits cuando hay `Require linear history`.
-4. Trabajar directo en `develop` o `main`.
-
-## Limpieza post-merge
-
-1. Borrar rama remota del PR mergeado.
-2. Borrar rama local:
-   ```bash
-   git branch -D <rama>
-   ```
+1. Mezclar `main` dentro de `develop` con merge commits (rompe `Require linear history`). Usa el fast-forward de arriba.
+2. Hacer **muchos push seguidos** a la misma rama esperando que Vercel los despliegue todos: cada push nuevo **cancela el deploy en vuelo** del anterior. Agrupa los cambios y haz un push.
+3. Resolver conflictos de `develop -> main`: si aparecen, casi siempre es por divergencia de historia; reconcilia con `git push origin develop:main` (FF) tras mantener ambas ramas alineadas.

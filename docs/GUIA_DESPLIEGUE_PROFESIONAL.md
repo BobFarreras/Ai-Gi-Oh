@@ -1,6 +1,8 @@
 <!-- docs/GUIA_DESPLIEGUE_PROFESIONAL.md - Guía paso a paso para preparar y ejecutar un despliegue profesional del proyecto. -->
 # Guía de Despliegue Profesional (TFM + Producción)
 
+> **Actualización (2026-06):** el flujo operativo vigente está en [GUIA_FLUJO_PRODUCCION.md](./GUIA_FLUJO_PRODUCCION.md). Cambios respecto a este documento: el workflow real es **`quality-gates.yml`** (no `ci.yml`); **no hay cron diario**; el mantenedor hace **push directo a `develop`/`main`** (bypass del ruleset) y los contribuidores externos abren **PR a `main`** con check `quality` + **1 aprobación**. Recordatorio Vercel: **"Require Verified Commits" debe estar desactivado** o cancela los deploys sin firmar.
+
 ## 1. Objetivo del documento
 Este documento define el proceso recomendado para llevar el proyecto a un nivel de despliegue profesional, con foco en:
 - calidad técnica,

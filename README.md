@@ -2,7 +2,7 @@
 # AI-GI-OH
 
 <p align="center">
-  <strong>Producto en producción · v1.0.0</strong><br/>
+  <strong>Producto en producción · v1.1.0</strong><br/>
   Juego táctico de cartas con motor desacoplado, arquitectura por capas y flujo profesional de calidad.
 </p>
 
@@ -120,12 +120,16 @@ Antes de tocar código, debes seguir la guía oficial:
 
 - [CONTRIBUTING.md](./CONTRIBUTING.md)
 
-Flujo estándar de contribución:
+Flujo estándar (detalle completo en [docs/GUIA_FLUJO_PRODUCCION.md](./docs/GUIA_FLUJO_PRODUCCION.md)):
 
-1. Crear branch desde `develop`.
+- **Mantenedor (propietario):** push directo a `develop`/`main` (tiene bypass); despliega a producción con `git push origin develop:main` (fast-forward).
+- **Contribuidor externo:** fork → rama → **PR a `main`** → el check `quality` debe pasar → **el mantenedor aprueba** (1 review obligatoria) → merge por Squash/Rebase.
+
+Pasos de un cambio:
+1. Crear branch desde `develop` (o trabajar en `develop` si eres el mantenedor).
 2. Implementar cambio con tests co-localizados.
 3. Ejecutar gates locales.
-4. Abrir PR `develop -> main` cuando corresponda release.
+4. Publicar (push directo o PR según el rol).
 
 Validación mínima previa a PR:
 
