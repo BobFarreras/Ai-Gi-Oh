@@ -30,9 +30,7 @@ const ASSET_EXTENSIONS = new Set([
 const IGNORED_FILE_PATTERNS = [/\.(test|spec)\.(ts|tsx|js|jsx|mjs)$/, /\.md$/];
 
 // Excepciones documentadas para assets rotos preexistentes. Deben resolverse, no aumentarse.
-const DOCUMENTED_EXCEPTIONS = new Map([
-  ["/audio/sfx/duel-draw.m4a", "Asset pendiente de diseño sonoro para resultado de empate."],
-]);
+const DOCUMENTED_EXCEPTIONS = new Map([]);
 
 function shouldIgnoreFile(fileName) {
   return IGNORED_FILE_PATTERNS.some((pattern) => pattern.test(fileName));
