@@ -154,7 +154,7 @@ retratos **solo existen como `.webp`** (`intro-GenNvim.webp`, …). Resultado: i
 
 ## Bloque 4 — Multijugador profesional
 
-**Estado:** diseño · **Prioridad:** media-alta · **Esfuerzo:** alto
+**Estado:** pospuesto · **Prioridad:** media-alta · **Esfuerzo:** alto
 
 ### Objetivo
 Partidas 1v1 entre jugadores reales, **mismo diseño** del tablero actual, con el mejor flujo,
@@ -212,12 +212,113 @@ Probar un **diseño y flujo nuevos** para la primera experiencia (jugador nuevo)
 
 ---
 
+## Bloque 6 — Botón "Salir al hub" inoperativo en Story (móvil)
+
+**Estado:** pendiente · **Prioridad:** alta · **Esfuerzo:** bajo
+
+### Problema
+En el mapa Story, en flujo móvil (`isMobileVerticalFlow`), el botón con flecha hacia atrás
+(`aria-label="Salir al hub"` en `StoryMapZoomControls`) no navega al hub. Parece que el callback
+`onExitToHub` no llega o no se dispara correctamente desde el componente padre en modo móvil.
+
+### Archivos a revisar
+- `src/components/hub/story/internal/map/components/StoryMapZoomControls.tsx`
+- `src/components/hub/story/StoryScene.tsx` (donde se define `exitToHub`)
+- `src/components/hub/story/internal/scene/view/StoryMobileSidebarSheet.tsx`
+
+### Criterios de aceptación
+- Tocar el botón de salida en Story móvil redirige a `/hub`.
+- El test existente `StoryMapZoomControls.test.tsx` pasa y, si es necesario, se amplía para cubrir la acción real de navegación.
+
+---
+
+## Bloque 7 — Imágenes de duelo Story rotas en producción (formato `.webp` inexistente)
+
+**Estado:** pendiente · **Prioridad:** alta · **Esfuerzo:** bajo
+
+### Problema
+Varios assets referenciados en el flujo Story duelo/map están en `.webp` pero el archivo real no
+existe (o existe en otro formato), por lo que `next/image` muestra la imagen por defecto / fallback.
+
+### Casos detectados
+- `createStoryDuelPresentationRuntime` usa `/assets/story/player/bob.webp` como avatar del jugador.
+- `StoryCircuitCanvas` referencia `/assets/renders/nexus.webp`, `/assets/renders/react.webp`, `/assets/renders/wrap.webp`.
+- El avatar del oponente proviene de `duel.opponentAvatarUrl` (BBDD/catálogo); en el oponente "soldado" el valor apunta a un `.png` que no existe.
+
+### Enfoque
+1. Auditar qué archivos reales existen en `public/` para cada ruta.
+2. Unificar el formato real con las referencias del código (convertir o renombrar, manteniendo consistencia case-sensitive).
+3. Aprovechar `scripts/quality/check-assets.mjs` para asegurar que no queden referencias rotas.
+
+### Criterios de aceptación
+- La moneda del inicio del duelo muestra las caras del jugador y del oponente correctamente.
+- Los renders/avatars del mapa Story no caen en fallback genérico.
+- `pnpm quality:check:assets` pasa sin excepciones documentadas.
+
+---
+
+## Bloque 8 — Moneda inicial del duelo Story no muestra la cara del oponente soldado
+
+**Estado:** pendiente · **Prioridad:** alta · **Esfuerzo:** bajo
+
+### Problema
+En el overlay `StoryDuelCoinTossOverlay`, la imagen de uno de los lados de la moneda falla para el
+oponente "soldado". El avatar del oponente (`opponentAvatarUrl`) llega desde el runtime del duelo y,
+para ese oponente, parece apuntar a un archivo `.png` inexistente en lugar de al `.webp` real.
+
+### Archivos a revisar
+- `src/app/hub/story/chapter/[chapter]/duel/[duelIndex]/StoryDuelCoinTossOverlay.tsx`
+- `src/app/hub/story/chapter/[chapter]/duel/[duelIndex]/internal/story-duel-runtime.ts`
+- `src/services/story/get-story-duel-runtime-data.ts`
+- Catálogo de oponentes Story (BBDD o `story-opponent-catalog.ts` si aplica).
+
+### Criterios de aceptación
+- El lanzamiento de moneda muestra ambas caras sin error de imagen.
+- Si un oponente no tiene avatar específico, se usa un fallback explícito y documentado.
+
+---
+
+## Bloque 9 — Seguridad del pipeline de deploy en Vercel
+
+**Estado:** pendiente · **Prioridad:** alta · **Esfuerzo:** bajo (configuración)
+
+### Problema
+Actualmente cualquier `push` a cualquier rama dispara un deploy en Vercel que parece apuntar a
+producción (`main`). Esto es peligroso: una rama de feature sin mergear puede reemplazar el producto
+en producción si pasa los checks.
+
+### Posibles causas
+- El proyecto Vercel está configurado para hacer deploy automático de cualquier push.
+- GitHub Actions o la integración Vercel no limitan el deploy a la rama `main` (o a PRs mergeadas).
+- Falta protección de rama (`branch protection` / ruleset) en `main`.
+
+### Enfoque
+1. Revisar la configuración del proyecto en el dashboard de Vercel:
+   - Production Branch: debe ser `main`.
+   - Preview Deployments: solo para PRs, no para cualquier push.
+2. Revisar GitHub Actions (`.github/workflows/` si existen) para asegurar que el deploy a producción
+   solo se ejecute en `push` a `main` y tras pasar `quality:check`.
+3. Proteger `main` con ruleset: requerir PR, requerir checks en verde, bloquear push directo.
+
+### Criterios de aceptación
+- Pushear una rama `features/*` no publica en producción.
+- Solo los cambios mergeados en `main` (y que pasen los gates) generan deploy de producción.
+- Documentar el flujo en este roadmap o en `docs/DESPLIEGUE.md`.
+
+---
+
 ## Orden recomendado
 
 ### Completados (release de mantenimiento)
 1. **Bloque 1, 2, 3** (fixes de producción visibles).
 2. **Bloque 0** (rendimiento del hub, visual-neutral).
 
-### Pendientes
-3. **Bloque 4** (multijugador) — el grande; arrancar por F4.1.
-4. **Bloque 5** (onboarding) — en paralelo cuando haya capacidad.
+### Pendientes (fixes de producción críticos)
+3. **Bloque 9** (seguridad del deploy) — antes que cualquier nuevo código, para no romper producción.
+4. **Bloque 6** (salir al hub en Story móvil).
+5. **Bloque 7** (imágenes Story rotas).
+6. **Bloque 8** (moneda del oponente soldado).
+
+### Pospuestos
+7. **Bloque 4** (multijugador) — se retrasa hasta estabilizar producción.
+8. **Bloque 5** (onboarding) — en paralelo cuando haya capacidad.
