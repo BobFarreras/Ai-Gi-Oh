@@ -4,6 +4,8 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 
+const gridGeometry = new THREE.CircleGeometry(1.38, 32);
+
 export function MarketRadarGrid() {
   const texture = useMemo(() => {
     if (typeof document === "undefined") return null;
@@ -27,11 +29,13 @@ export function MarketRadarGrid() {
     return new THREE.CanvasTexture(canvas);
   }, []);
 
-  if (!texture) return null;
+  const material = useMemo(
+    () => (texture ? new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0.8, depthWrite: false }) : null),
+    [texture],
+  );
+
+  if (!material) return null;
   return (
-    <mesh position={[0, 0, 0.01]}>
-      <circleGeometry args={[1.38, 64]} />
-      <meshBasicMaterial map={texture} transparent opacity={0.8} depthWrite={false} />
-    </mesh>
+    <mesh position={[0, 0, 0.01]} geometry={gridGeometry} material={material} />
   );
 }
