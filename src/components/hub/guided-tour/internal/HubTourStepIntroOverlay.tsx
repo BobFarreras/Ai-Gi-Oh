@@ -26,7 +26,7 @@ export function HubTourStepIntroOverlay({ isOpen, objective, context, onGo, onSk
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.25, delay: 0.3 }}
           className="pointer-events-none fixed inset-0 z-[160]"
         >
           {/* Gradiente inferior para anclar a BigLog sin tapar los nodos */}
@@ -36,10 +36,10 @@ export function HubTourStepIntroOverlay({ isOpen, objective, context, onGo, onSk
           <div className="pointer-events-auto absolute inset-x-0 bottom-0 flex items-end gap-2 px-3 sm:gap-5 sm:px-8">
             {/* Imagen del personaje BigLog */}
             <motion.div
-              initial={{ x: -70, opacity: 0 }}
+              initial={{ x: -90, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -50, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 220, damping: 26 }}
+              exit={{ x: -60, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 24, delay: 0.1 }}
               className="relative h-[210px] w-[155px] shrink-0 sm:h-[290px] sm:w-[210px]"
             >
               <Image
@@ -57,7 +57,7 @@ export function HubTourStepIntroOverlay({ isOpen, objective, context, onGo, onSk
               initial={{ x: 60, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 40, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 220, damping: 26, delay: 0.07 }}
+              transition={{ type: "spring", stiffness: 200, damping: 24, delay: 0.22 }}
               className="relative mb-5 flex-1 max-w-sm rounded-xl border border-cyan-400/40 bg-[#041120]/95 px-4 py-4 shadow-[0_0_40px_rgba(34,211,238,0.22)] sm:mb-8 sm:max-w-md sm:px-5 sm:py-5"
             >
               {/* Triángulo apuntando a BigLog */}

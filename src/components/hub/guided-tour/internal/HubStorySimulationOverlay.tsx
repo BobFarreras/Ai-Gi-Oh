@@ -58,7 +58,7 @@ function StoryCircuitNode({
           style={{ cursor: isClickable ? "pointer" : "default" }}
         >
           <div
-            className={`relative flex h-full w-full items-center justify-center overflow-hidden border-2 bg-black/85 backdrop-blur-sm transition-colors duration-300 ${
+            className={`relative flex h-full w-full items-center justify-center overflow-hidden border-2 bg-[#090c14] transition-colors duration-300 ${
               isBoss
                 ? "rotate-45 rounded-lg border-fuchsia-500"
                 : active

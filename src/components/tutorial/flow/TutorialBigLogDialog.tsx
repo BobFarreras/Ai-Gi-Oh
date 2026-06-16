@@ -95,7 +95,7 @@ export function TutorialBigLogDialog({
     <aside
       ref={containerRef}
       data-tutorial-overlay="true"
-      className={`pointer-events-auto fixed left-1/2 z-[430] -translate-x-1/2 rounded-2xl border border-cyan-300/40 bg-slate-950/82 shadow-[0_10px_38px_rgba(0,0,0,0.45)] backdrop-blur-[2px] transition-all duration-300 ${isMobileCompact ? "w-[min(94vw,34rem)] p-3" : "w-[min(96vw,960px)] p-4"} ${positionClass}`}
+      className={`pointer-events-auto fixed left-1/2 z-[430] -translate-x-1/2 rounded-2xl border border-cyan-300/40 bg-slate-950 shadow-[0_10px_38px_rgba(0,0,0,0.45)] transition-all duration-300 ${isMobileCompact ? "w-[min(94vw,34rem)] p-3" : "w-[min(96vw,960px)] p-4"} ${positionClass}`}
     >
       <div className="flex items-start gap-3">
         <Image src="/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.webp" alt="Avatar de BigLog" width={isMobileCompact ? 58 : 74} height={isMobileCompact ? 58 : 74} className="rounded-xl border border-cyan-300/35" />
@@ -117,15 +117,8 @@ export function TutorialBigLogDialog({
               }`}
               animate={
                 shouldHighlightNextButton && canUseNext && !isFinished
-                  ? {
-                      scale: [1, 1.04, 1],
-                      boxShadow: [
-                        "0 0 0 rgba(34,211,238,0)",
-                        "0 0 18px rgba(34,211,238,0.85)",
-                        "0 0 0 rgba(34,211,238,0)",
-                      ],
-                    }
-                  : { scale: 1, boxShadow: "0 0 0 rgba(0,0,0,0)" }
+                  ? { scale: [1, 1.04, 1], opacity: [1, 0.78, 1] }
+                  : { scale: 1, opacity: 1 }
               }
               transition={
                 shouldHighlightNextButton && canUseNext && !isFinished

@@ -64,7 +64,7 @@ function HubNodeActionPanelComponent({
       onClick={onAction}
       disabled={isDisabled}
       onMouseEnter={onHoverStart}
-      className={`relative flex w-[182px] flex-col items-center justify-center border bg-[#030914]/84 px-2 py-2.5 shadow-lg backdrop-blur-md transition-all sm:w-[240px] sm:px-1 sm:py-3 ${
+      className={`relative flex w-[182px] flex-col items-center justify-center border bg-[#030914] px-2 py-2.5 shadow-lg transition-all sm:w-[240px] sm:px-1 sm:py-3 ${
         isDisabled
           ? "cursor-not-allowed opacity-45 grayscale"
           : "cursor-pointer hover:scale-105 hover:bg-[#051124]/92 hover:brightness-110"

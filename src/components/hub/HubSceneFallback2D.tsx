@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { IHubMapNode } from "@/core/entities/hub/IHubMapNode";
 import { HubSectionType, IHubSection } from "@/core/entities/hub/IHubSection";
 import { HubNodeActionPanel } from "@/components/hub/HubNodeActionPanel";
@@ -37,13 +38,17 @@ export function HubSceneFallback2D({
   return (
     <div className="absolute inset-0 z-20 bg-[radial-gradient(circle_at_50%_45%,rgba(8,47,73,0.55),transparent_52%),linear-gradient(180deg,rgba(1,6,16,0.88),rgba(1,6,16,0.94))]">
       <div className="absolute inset-0 bg-[linear-gradient(rgba(14,165,233,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(14,165,233,0.05)_1px,transparent_1px)] bg-[size:42px_42px]" />
-      {nodes.map((node) => {
+      {nodes.map((node, index) => {
         const section = sectionsByType.get(node.sectionType);
         if (!section) return null;
         const isDisabled = disabledNodeIds.includes(node.id);
+        const entryDelay = tourActiveNodeId !== null ? 0.06 + index * 0.1 : 0;
         return (
-          <article
+          <motion.article
             key={node.id}
+            initial={tourActiveNodeId !== null ? { opacity: 0, scale: 0.6, y: 18 } : false}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22, delay: entryDelay }}
             className="absolute z-30 -translate-x-1/2 -translate-y-1/2"
             style={{ left: `${node.positionX}%`, top: `${node.positionY}%` }}
           >
@@ -69,7 +74,7 @@ export function HubSceneFallback2D({
                 }}
               />
             ) : null}
-          </article>
+          </motion.article>
         );
       })}
     </div>

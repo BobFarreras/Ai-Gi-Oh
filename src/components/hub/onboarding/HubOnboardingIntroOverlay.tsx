@@ -80,6 +80,7 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
   const [isLoading, setIsLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [isRoutingToHub, setIsRoutingToHub] = useState(false);
+  const [isSkipConfirmed, setIsSkipConfirmed] = useState(false);
   const shouldShow = resolveOnboardingVisibility(progress);
   const audio = useOnboardingAudio({ isEnabled: shouldShow && !isClosing });
   const step = STEP_ORDER[stepIndex] ?? STEP_ORDER[0];
@@ -91,6 +92,21 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
   }, [audio, isClosing, shouldShow, step]);
 
   if (!shouldShow || isClosing) return null;
+
+  if (isSkipConfirmed) {
+    return (
+      <section className="fixed inset-0 z-[180] overflow-hidden">
+        <CyberBackground lightweight />
+        <div className="relative z-10 flex h-full items-center justify-center p-4">
+          <div className="rounded-xl border border-amber-300/60 bg-amber-950/45 px-6 py-4 text-center shadow-[0_0_36px_rgba(245,158,11,0.4)]">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-200">Hub activado</p>
+            <p className="mt-1 text-lg font-black uppercase tracking-[0.12em] text-amber-50">Acceso completo</p>
+            <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-200/70">Todos los nodos disponibles</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const moveNextStep = () => {
     audio.playButtonClick();
@@ -107,6 +123,8 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
         router.refresh();
         return;
       }
+      setIsSkipConfirmed(true);
+      await new Promise((resolve) => window.setTimeout(resolve, 1400));
       setIsClosing(true);
       router.refresh();
     } finally {
