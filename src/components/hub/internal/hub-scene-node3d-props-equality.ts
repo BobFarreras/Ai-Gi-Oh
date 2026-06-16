@@ -9,6 +9,7 @@ export interface IHubSceneNode3DComparableProps {
   showActionPanel?: boolean;
   isTargetNode: boolean;
   isNavigationBusy: boolean;
+  isDisabled: boolean;
   onNodeHoverSound?: () => void;
   onNavigate: (nodeId: string, href: string) => void;
 }
@@ -46,6 +47,7 @@ export function areHubSceneNode3DPropsEqual(
     previous.showActionPanel === next.showActionPanel &&
     previous.isTargetNode === next.isTargetNode &&
     previous.isNavigationBusy === next.isNavigationBusy &&
+    previous.isDisabled === next.isDisabled &&
     previous.onNodeHoverSound === next.onNodeHoverSound &&
     previous.onNavigate === next.onNavigate
   );

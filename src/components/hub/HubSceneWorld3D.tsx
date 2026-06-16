@@ -25,6 +25,7 @@ interface HubSceneWorld3DProps {
   onNodeHoverSound: () => void;
   onNavigate: (nodeId: string, href: string) => void;
   activeNodeId: string | null;
+  disabledNodeIds?: readonly string[];
   isNavigationBusy: boolean;
 }
 
@@ -40,6 +41,7 @@ export function HubSceneWorld3D({
   onNodeHoverSound,
   onNavigate,
   activeNodeId,
+  disabledNodeIds = [],
   isNavigationBusy,
 }: HubSceneWorld3DProps) {
   const capability = useHubDeviceCapability();
@@ -99,17 +101,18 @@ export function HubSceneWorld3D({
         const section = sectionsByType.get(node.sectionType);
         if (!section) return null;
         return (
-            <HubSceneNode3D
-              key={node.id}
-              node={node}
-              section={section}
-              nodeEntryDelay={index * HUB_NODE_STAGGER_DELAY}
-              onNodeHoverSound={onNodeHoverSound}
-              showActionPanel={areNodeLabelsVisible}
-              onNavigate={onNavigate}
-              isTargetNode={activeNodeId === node.id}
-              isNavigationBusy={isNavigationBusy}
-            />
+          <HubSceneNode3D
+            key={node.id}
+            node={node}
+            section={section}
+            nodeEntryDelay={index * HUB_NODE_STAGGER_DELAY}
+            onNodeHoverSound={onNodeHoverSound}
+            showActionPanel={areNodeLabelsVisible}
+            onNavigate={onNavigate}
+            isTargetNode={activeNodeId === node.id}
+            isNavigationBusy={isNavigationBusy}
+            isDisabled={disabledNodeIds.includes(node.id)}
+          />
         );
       })}
     </Canvas>

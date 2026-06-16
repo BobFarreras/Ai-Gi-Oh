@@ -21,6 +21,8 @@ import { useHubNodeNavigation } from "@/components/hub/internal/use-hub-node-nav
 import { useHubRoutePrefetch } from "@/components/hub/internal/use-hub-route-prefetch";
 import { useHubSfx } from "@/components/hub/internal/use-hub-sfx";
 import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
+import { HubGuidedTourOverlay } from "@/components/hub/guided-tour/HubGuidedTourOverlay";
+import { useHubSceneTourIntegration } from "@/components/hub/internal/use-hub-scene-tour-integration";
 
 // Carga diferida del mundo 3D (Three.js/R3F): el shell del hub aparece al instante
 // y el chunk pesado entra después, solo en cliente y solo si hay WebGL.
@@ -40,6 +42,7 @@ interface HubSceneProps {
   forceFallbackForTests?: boolean;
   sections: IHubSection[];
   nodes: IHubMapNode[];
+  completedTutorialNodeIds?: readonly string[];
 }
 
 export function HubScene({
@@ -49,6 +52,7 @@ export function HubScene({
   forceFallbackForTests = false,
   sections,
   nodes,
+  completedTutorialNodeIds,
 }: HubSceneProps) {
   const router = useRouter();
   const isDocumentVisible = useDocumentVisibility();
@@ -63,12 +67,20 @@ export function HubScene({
     [isHydrated, forceFallbackForTests],
   );
   const responsiveNodes = useMemo(() => applyResponsiveNodeLayout(nodes, viewportWidth), [nodes, viewportWidth]);
+  const tourIntegration = useHubSceneTourIntegration({
+    completedTutorialNodeIds,
+    hasSkippedTutorial: progress?.hasSkippedTutorial,
+    nodes: responsiveNodes,
+    requestNavigation,
+    navigationStatus: navigationState.status,
+    playNodeHover,
+  });
   const cameraPose = useMemo(() => resolveHubCameraPose(responsiveNodes, viewportWidth), [responsiveNodes, viewportWidth]);
   const sectionHrefs = useMemo(() => sections.map((section) => section.href), [sections]);
-  const activeNode = useMemo(
-    () => responsiveNodes.find((node) => node.id === navigationState.targetNodeId) ?? null,
-    [navigationState.targetNodeId, responsiveNodes],
-  );
+  const activeNode = useMemo(() => {
+    const targetNodeId = tourIntegration.isTourActive ? tourIntegration.activeNodeId : navigationState.targetNodeId;
+    return responsiveNodes.find((node) => node.id === targetNodeId) ?? null;
+  }, [tourIntegration.isTourActive, tourIntegration.activeNodeId, navigationState.targetNodeId, responsiveNodes]);
   const activeCameraPose = useMemo(
     () => (activeNode ? resolveHubNodeFocusPose(activeNode, viewportWidth) : cameraPose),
     [activeNode, cameraPose, viewportWidth],
@@ -98,10 +110,11 @@ export function HubScene({
           <HubSceneFallback2D
             sections={sections}
             nodes={responsiveNodes}
-            onNavigate={requestNavigation}
+            onNavigate={tourIntegration.handleNodeNavigate}
             onNodeHoverSound={playNodeHover}
             areNodeLabelsVisible={areNodeLabelsVisible}
-            activeNodeId={navigationState.targetNodeId}
+            activeNodeId={tourIntegration.isTourActive ? tourIntegration.activeNodeId : navigationState.targetNodeId}
+            disabledNodeIds={tourIntegration.disabledNodeIds}
             isNavigationBusy={isNavigationBusy}
           />
         ) : null}
@@ -116,8 +129,9 @@ export function HubScene({
             cameraTarget={activeCameraPose.target}
             areNodeLabelsVisible={areNodeLabelsVisible}
             onNodeHoverSound={playNodeHover}
-            onNavigate={requestNavigation}
-            activeNodeId={navigationState.targetNodeId}
+            onNavigate={tourIntegration.handleNodeNavigate}
+            activeNodeId={tourIntegration.isTourActive ? tourIntegration.activeNodeId : navigationState.targetNodeId}
+            disabledNodeIds={tourIntegration.disabledNodeIds}
             isNavigationBusy={isNavigationBusy}
           />
         ) : null}
@@ -129,6 +143,7 @@ export function HubScene({
           </div>
         ) : null}
       </div>
+      <HubGuidedTourOverlay {...tourIntegration.tourOverlayProps} />
     </section>
   );
 }

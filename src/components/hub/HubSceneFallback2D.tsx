@@ -15,6 +15,7 @@ interface HubSceneFallback2DProps {
   onNodeHoverSound?: () => void;
   areNodeLabelsVisible?: boolean;
   activeNodeId: string | null;
+  disabledNodeIds?: readonly string[];
   isNavigationBusy: boolean;
 }
 
@@ -25,6 +26,7 @@ export function HubSceneFallback2D({
   onNodeHoverSound,
   areNodeLabelsVisible = true,
   activeNodeId,
+  disabledNodeIds = [],
   isNavigationBusy,
 }: HubSceneFallback2DProps) {
   const [lockVisibleBySection, setLockVisibleBySection] = useState<Record<string, boolean>>({});
@@ -36,6 +38,7 @@ export function HubSceneFallback2D({
       {nodes.map((node) => {
         const section = sectionsByType.get(node.sectionType);
         if (!section) return null;
+        const isDisabled = disabledNodeIds.includes(node.id);
         return (
           <article
             key={node.id}
@@ -51,7 +54,9 @@ export function HubSceneFallback2D({
                 onHoverStart={onNodeHoverSound}
                 isNavigationBusy={isNavigationBusy}
                 isTargetNode={activeNodeId === node.id}
+                isDisabled={isDisabled}
                 onAction={() => {
+                  if (isDisabled) return;
                   const result = resolveHubNodeInteraction(section);
                   if (result.kind === "locked") {
                     setLockVisibleBySection((previous) => ({ ...previous, [section.id]: !previous[section.id] }));

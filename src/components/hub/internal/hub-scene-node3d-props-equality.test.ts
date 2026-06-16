@@ -36,6 +36,7 @@ function createProps(overrides?: Partial<IHubSceneNode3DComparableProps>): IHubS
     showActionPanel: true,
     isTargetNode: false,
     isNavigationBusy: false,
+    isDisabled: false,
     onNodeHoverSound: vi.fn(),
     onNavigate: vi.fn(),
     ...overrides,
@@ -73,6 +74,12 @@ describe("areHubSceneNode3DPropsEqual", () => {
   it("detecta cambio de nodo objetivo", () => {
     const previous = createProps();
     const next = createProps({ isTargetNode: true });
+    expect(areHubSceneNode3DPropsEqual(previous, next)).toBe(false);
+  });
+
+  it("detecta cambio de estado desactivado del tour", () => {
+    const previous = createProps();
+    const next = createProps({ isDisabled: true });
     expect(areHubSceneNode3DPropsEqual(previous, next)).toBe(false);
   });
 

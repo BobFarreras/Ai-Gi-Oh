@@ -15,12 +15,18 @@ import { TutorialArsenalFlowOverlays } from "@/components/hub/academy/tutorial/n
 import { resolveTutorialMobileSection } from "@/components/hub/academy/tutorial/nodes/arsenal/internal/resolve-tutorial-mobile-section";
 import { ARSENAL_ACTION_LAYOUT_STEPS, ARSENAL_FUSION_LAYOUT_STEPS } from "@/components/hub/academy/tutorial/nodes/arsenal/internal/arsenal-tutorial-step-groups";
 import { resolveStepIdMembership } from "@/components/hub/academy/tutorial/nodes/internal/resolve-step-id-membership";
+import { useTutorialArsenalSelectionHandlers } from "@/components/hub/academy/tutorial/nodes/arsenal/internal/use-tutorial-arsenal-selection-handlers";
 import { ACADEMY_TUTORIAL_MAP_ROUTE } from "@/core/constants/routes/academy-routes";
 import { resolveArsenalTutorialSteps } from "@/services/tutorial/arsenal/resolve-arsenal-tutorial-steps";
 
-export function TutorialArsenalClient(props: IHomeDeckBuilderSceneProps) {
+interface ITutorialArsenalClientProps extends IHomeDeckBuilderSceneProps {
+  returnToHub?: boolean;
+}
+
+export function TutorialArsenalClient(props: ITutorialArsenalClientProps) {
+  const { returnToHub, ...deckBuilderProps } = props;
   const tutorial = useTutorialFlowController(useMemo(() => resolveArsenalTutorialSteps(), []));
-  const sandbox = useTutorialArsenalSandbox({ ...props, tutorial });
+  const sandbox = useTutorialArsenalSandbox({ ...deckBuilderProps, tutorial });
   const { play } = useHubModuleSfx();
   const [isIntroVisible, setIsIntroVisible] = useState(true);
   const [isMobileLayout, setIsMobileLayout] = useState<boolean>(() =>
@@ -47,6 +53,7 @@ export function TutorialArsenalClient(props: IHomeDeckBuilderSceneProps) {
     canEvolveSelectedCard: sandbox.state.canEvolveSelectedCard,
     tutorial,
   });
+  const selectionHandlers = useTutorialArsenalSelectionHandlers({ sandbox, play });
 
   return (
     <>
@@ -96,30 +103,15 @@ export function TutorialArsenalClient(props: IHomeDeckBuilderSceneProps) {
             onInsertSelectedCard={sandbox.insertSelectedCard}
             onRemoveSelectedCard={sandbox.removeSelectedCard}
             onEvolveSelectedCard={sandbox.evolveSelectedCard}
-            onSelectSlot={(slotIndex) => {
-              play("DETAIL_OPEN");
-              sandbox.state.setSelectedSlotIndex(slotIndex);
-              sandbox.state.setSelectedFusionSlotIndex(null);
-              sandbox.state.setSelectedCollectionCardId(null);
-            }}
-            onSelectFusionSlot={(slotIndex) => {
-              play("DETAIL_OPEN");
-              sandbox.state.setSelectedFusionSlotIndex(slotIndex);
-              sandbox.state.setSelectedSlotIndex(null);
-              sandbox.state.setSelectedCollectionCardId(null);
-            }}
-            onSelectCollectionCard={(cardId) => {
-              play("DETAIL_OPEN");
-              sandbox.state.setSelectedCollectionCardId(cardId);
-              sandbox.state.setSelectedSlotIndex(null);
-              sandbox.state.setSelectedFusionSlotIndex(null);
-            }}
-            onStartDragCollectionCard={() => {}}
-            onStartDragDeckSlot={() => {}}
-            onStartDragFusionSlot={() => {}}
-            onDropOnDeckSlot={() => {}}
-            onDropOnFusionSlot={() => {}}
-            onDropOnCollectionArea={() => {}}
+            onSelectSlot={selectionHandlers.onSelectSlot}
+            onSelectFusionSlot={selectionHandlers.onSelectFusionSlot}
+            onSelectCollectionCard={selectionHandlers.onSelectCollectionCard}
+            onStartDragCollectionCard={selectionHandlers.dragHandlers.onStartDragCollectionCard}
+            onStartDragDeckSlot={selectionHandlers.dragHandlers.onStartDragDeckSlot}
+            onStartDragFusionSlot={selectionHandlers.dragHandlers.onStartDragFusionSlot}
+            onDropOnDeckSlot={selectionHandlers.dragHandlers.onDropOnDeckSlot}
+            onDropOnFusionSlot={selectionHandlers.dragHandlers.onDropOnFusionSlot}
+            onDropOnCollectionArea={selectionHandlers.dragHandlers.onDropOnCollectionArea}
             onClearError={() => sandbox.state.setErrorMessage(null)}
             tutorialForcedMobileSection={tutorialForcedMobileSection}
             tutorialCurrentStepId={tutorial.currentStep?.id ?? null}
@@ -143,6 +135,7 @@ export function TutorialArsenalClient(props: IHomeDeckBuilderSceneProps) {
         shouldPreferTopTutorialDialog={shouldPreferTopTutorialDialog}
         isEvolutionOverlayVisible={Boolean(sandbox.state.evolutionOverlay)}
         playSfx={play}
+        returnToHub={returnToHub}
       />
     </>
   );

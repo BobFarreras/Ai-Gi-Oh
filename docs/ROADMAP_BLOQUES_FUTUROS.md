@@ -193,22 +193,40 @@ rendimiento y robustez (anti-trampas, reconexión).
 
 ---
 
-## Bloque 5 — Nueva transición/onboarding para nuevos jugadores + tutorial
+## Bloque 5 — Tour guiado del Hub (onboarding inmersivo)
 
-**Estado:** exploración · **Prioridad:** media · **Esfuerzo:** medio-alto
+**Estado:** completado · **Prioridad:** media · **Esfuerzo:** medio-alto · **Rama:** `features/hub-guided-tutorial`
 
 ### Objetivo
-Probar un **diseño y flujo nuevos** para la primera experiencia (jugador nuevo) y el tutorial.
+Reemplazar la primera experiencia de login por un tour guiado e inmersivo: BigLog explica el
+contexto de la Entidad y la misión, y el jugador navega físicamente por los nodos reales del Hub
+(Market, Arsenal, Story) para completar el tutorial en cada ubicación real.
 
-### Enfoque
-1. Definir qué falla o se quiere mejorar del flujo actual (fricción, abandono, claridad).
-2. Prototipar el nuevo flujo **aislado y detrás de un flag**, sin romper el actual.
-3. Reutilizar el motor y el combate de tutorial existentes (no reescribir lógica de juego).
-4. Medir: tasa de finalización del tutorial y abandono por paso, antes/después.
+### Decisiones de diseño
+- **Sin tabla nueva:** el estado del tour se deriva de `player_tutorial_node_progress` usando un
+catálogo de pasos (`hub-tour-step-catalog`) y una resolución pura de estado (`resolve-hub-tour-state`).
+- **Reutilización del tutorial existente:** Market, Arsenal y combate tutorial son los mismos flujos
+actuales; el tour solo los orquesta y añade `?returnTo=hub` para volver al Hub tras completarlos.
+- **Simulación de Story antes del combate:** como el combate tutorial no pertenece al mapa Story real,
+se muestra un overlay de simulación de circuito antes de lanzar el duelo de entrenamiento.
+- **Navegación real:** el jugador hace clic en el nodo activo del Hub; la cámara realiza la
+transición de acercamiento y luego navega al tutorial correspondiente.
 
-### Preguntas abiertas para el dueño
-- ¿Qué problema concreto del onboarding actual quieres resolver?
-- ¿Dirección de diseño deseada (más guiado, más cinemático, más corto…)?
+### Archivos clave
+- `docs/adr/ADR-0002-hub-guided-tutorial.md` — decisión arquitectónica.
+- `src/core/services/hub/hub-tour-step-catalog.ts` y `resolve-hub-tour-state.ts` — catálogo y lógica pura.
+- `src/components/hub/guided-tour/HubGuidedTourOverlay.tsx` y subcomponentes internos.
+- `src/components/hub/internal/use-hub-scene-tour-integration.ts` — integración con navegación del Hub.
+- `src/components/hub/onboarding/HubOnboardingIntroOverlay.tsx` — narrativa inicial de contexto.
+- `src/components/hub/HubScene.tsx` y `HubNodeActionPanel.tsx` — soporte de nodos activos/desactivados.
+
+### Criterios de aceptación
+- El jugador nuevo ve la introducción narrativa y el tour guiado en su primer acceso al Hub.
+- Solo el nodo activo del tour es interactivo; el resto aparece desactivado visualmente.
+- Tras completar Market, Arsenal y combate tutorial, el jugador vuelve al Hub y puede reclamar la
+recompensa final desde `/hub/academy/tutorial/reward`.
+- Recompensa idempotente: solo se puede reclamar una vez.
+- Gates en verde y tests co-localizados.
 
 ---
 
@@ -333,9 +351,11 @@ en producción si pasa los checks.
 4. **Bloque 7** (imágenes Story rotas).
 5. **Bloque 8** (moneda del oponente soldado).
 
+### Completados (mejoras de experiencia)
+6. **Bloque 5** (tour guiado del Hub) — onboarding inmersivo por nodos reales.
+
 ### Pendientes (fixes de producción críticos)
-6. **Bloque 9** (seguridad del deploy) — antes que cualquier nuevo código, para no romper producción.
+7. **Bloque 9** (seguridad del deploy) — antes que cualquier nuevo código, para no romper producción.
 
 ### Pospuestos
-7. **Bloque 4** (multijugador) — se retrasa hasta estabilizar producción.
-8. **Bloque 5** (onboarding) — en paralelo cuando haya capacidad.
+8. **Bloque 4** (multijugador) — se retrasa hasta estabilizar producción.

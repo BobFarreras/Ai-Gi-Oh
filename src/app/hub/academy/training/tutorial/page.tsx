@@ -3,8 +3,14 @@ import { HubSectionEntryBurst } from "@/components/hub/sections/HubSectionEntryB
 import { TrainingTutorialClient } from "@/components/hub/academy/training/modes/tutorial/TrainingTutorialClient";
 import { createTutorialCombatLoadout } from "@/components/hub/academy/training/modes/tutorial/internal/create-tutorial-combat-loadout";
 
-export default async function TrainingTutorialPage() {
+interface ITrainingTutorialPageProps {
+  searchParams?: Promise<{ returnTo?: string }>;
+}
+
+export default async function TrainingTutorialPage({ searchParams }: ITrainingTutorialPageProps) {
   const loadout = createTutorialCombatLoadout();
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const returnToHub = resolvedSearchParams?.returnTo === "hub";
   return (
     <>
       <HubSectionEntryBurst />
@@ -14,6 +20,7 @@ export default async function TrainingTutorialPage() {
         opponentDeck={loadout.opponentDeck}
         opponentFusionDeck={loadout.opponentFusionDeck}
         seed={loadout.seed}
+        returnToHub={returnToHub}
       />
     </>
   );

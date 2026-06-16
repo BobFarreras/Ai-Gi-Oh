@@ -18,7 +18,11 @@ import { MARKET_FILTER_GUIDE_STEPS, MARKET_NEXT_BUTTON_HIGHLIGHT_STEPS, MARKET_P
 import { useTutorialMarketRuntime } from "@/components/hub/academy/tutorial/nodes/market/internal/use-tutorial-market-runtime";
 import { resolveMarketTutorialSteps } from "@/services/tutorial/market/resolve-market-tutorial-steps";
 
-export function TutorialMarketClient() {
+interface ITutorialMarketClientProps {
+  returnToHub?: boolean;
+}
+
+export function TutorialMarketClient({ returnToHub = false }: ITutorialMarketClientProps) {
   const viewportWidth = useViewportWidth();
   const isMobileLayout = isMobileLayoutViewport(viewportWidth);
   const tutorial = useTutorialFlowController(
@@ -106,8 +110,8 @@ export function TutorialMarketClient() {
         isVisible={!isIntroVisible && tutorial.isFinished}
         title="Market Completado"
         description="Has dominado compras directas, packs aleatorios y auditoría del historial."
-        onContinue={() => window.location.assign(ACADEMY_TRAINING_TUTORIAL_ROUTE)}
-        onExit={() => window.location.assign(ACADEMY_TUTORIAL_MAP_ROUTE)}
+        onContinue={() => window.location.assign(returnToHub ? "/hub" : ACADEMY_TRAINING_TUTORIAL_ROUTE)}
+        onExit={() => window.location.assign(returnToHub ? "/hub" : ACADEMY_TUTORIAL_MAP_ROUTE)}
       />
     </>
   );
