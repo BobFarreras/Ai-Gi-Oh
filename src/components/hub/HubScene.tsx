@@ -117,7 +117,10 @@ export function HubScene({
         onToggleNodeLabels={() => setAreNodeLabelsVisible((previous) => !previous)}
         onHudButtonSound={playUiClick}
       />
-      <div className="absolute inset-0 z-10 bg-[#010610]">
+      {/* sceneKey: cuando hasSeenAcademyIntro pasa de false→true (router.refresh post-narración),
+          el 2D fallback y el overlay del tour se desmontan y remontan con animaciones frescas.
+          Sin esto, las animaciones se completan mientras la narración cubre la pantalla. */}
+      <div className="absolute inset-0 z-10 bg-[#010610]" key={progress?.hasSeenAcademyIntro ? "hub-active" : "hub-pre-intro"}>
         {!isHydrated ? <HubSceneSkeleton /> : null}
         {isHydrated && !canRender3D ? (
           <HubSceneFallback2D
@@ -158,7 +161,7 @@ export function HubScene({
           </div>
         ) : null}
       </div>
-      <HubGuidedTourOverlay {...tourIntegration.tourOverlayProps} />
+      <HubGuidedTourOverlay key={progress?.hasSeenAcademyIntro ? "tour-active" : "tour-pre-intro"} {...tourIntegration.tourOverlayProps} />
     </section>
   );
 }

@@ -180,8 +180,8 @@ export function HubStorySimulationOverlay({ isOpen, onStartCombat, onClose }: IH
             {/* Circuito: jugador → BigLog */}
             <div className="flex items-center">
               <StoryCircuitNode
-                imageSrc="/assets/story/player/avatar-Jugador.webp"
-                imageAlt="Tu posición"
+                imageSrc="/assets/story/player/bob.webp"
+                imageAlt="Tu personaje"
                 label="Tú"
                 entryDelay={0.2}
               />
