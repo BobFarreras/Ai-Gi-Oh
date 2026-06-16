@@ -2,6 +2,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Fija la raíz del workspace al directorio del proyecto: evita que Turbopack elija
+  // mal la raíz si hay lockfiles sueltos en carpetas superiores (p.ej. en C:\Users\<user>).
+  turbopack: {
+    root: __dirname,
+  },
   images: {
     qualities: [28, 40, 45, 55, 75],
   },
