@@ -234,7 +234,7 @@ En el mapa Story, en flujo móvil (`isMobileVerticalFlow`), el botón con flecha
 
 ## Bloque 7 — Imágenes de duelo Story rotas en producción (formato `.webp` inexistente)
 
-**Estado:** pendiente · **Prioridad:** alta · **Esfuerzo:** bajo
+**Estado:** completado · **Prioridad:** alta · **Esfuerzo:** bajo
 
 ### Problema
 Varios assets referenciados en el flujo Story duelo/map están en `.webp` pero el archivo real no
@@ -255,11 +255,14 @@ existe (o existe en otro formato), por lo que `next/image` muestra la imagen por
 - Los renders/avatars del mapa Story no caen en fallback genérico.
 - `pnpm quality:check:assets` pasa sin excepciones documentadas.
 
+### Notas de implementación
+- Solucionado por el usuario: las rutas en base de datos seguían usando `.png`; se actualizaron a `.webp` para que coincidan con los assets reales en `public/`.
+
 ---
 
 ## Bloque 8 — Moneda inicial del duelo Story no muestra la cara del oponente soldado
 
-**Estado:** pendiente · **Prioridad:** alta · **Esfuerzo:** bajo
+**Estado:** completado · **Prioridad:** alta · **Esfuerzo:** bajo
 
 ### Problema
 En el overlay `StoryDuelCoinTossOverlay`, la imagen de uno de los lados de la moneda falla para el
@@ -275,6 +278,9 @@ para ese oponente, parece apuntar a un archivo `.png` inexistente en lugar de al
 ### Criterios de aceptación
 - El lanzamiento de moneda muestra ambas caras sin error de imagen.
 - Si un oponente no tiene avatar específico, se usa un fallback explícito y documentado.
+
+### Notas de implementación
+- Solucionado por el usuario: la ruta del avatar del oponente en base de datos estaba en `.png`; se actualizó a `.webp`.
 
 ---
 
@@ -300,6 +306,10 @@ en producción si pasa los checks.
    solo se ejecute en `push` a `main` y tras pasar `quality:check`.
 3. Proteger `main` con ruleset: requerir PR, requerir checks en verde, bloquear push directo.
 
+> **Nota:** para investigar y modificar la configuración de Vercel/GitHub se necesitan los MCPs
+> correspondientes o acceso manual al dashboard. Desde el código del repositorio solo se puede
+> auditar la parte de GitHub Actions (`.github/workflows`).
+
 ### Criterios de aceptación
 - Pushear una rama `features/*` no publica en producción.
 - Solo los cambios mergeados en `main` (y que pasen los gates) generan deploy de producción.
@@ -313,11 +323,13 @@ en producción si pasa los checks.
 1. **Bloque 1, 2, 3** (fixes de producción visibles).
 2. **Bloque 0** (rendimiento del hub, visual-neutral).
 
+### Completados (fixes de producción)
+3. **Bloque 7** (imágenes Story rotas).
+4. **Bloque 8** (moneda del oponente soldado).
+
 ### Pendientes (fixes de producción críticos)
-3. **Bloque 9** (seguridad del deploy) — antes que cualquier nuevo código, para no romper producción.
-4. **Bloque 6** (salir al hub en Story móvil).
-5. **Bloque 7** (imágenes Story rotas).
-6. **Bloque 8** (moneda del oponente soldado).
+5. **Bloque 9** (seguridad del deploy) — antes que cualquier nuevo código, para no romper producción.
+6. **Bloque 6** (salir al hub en Story móvil).
 
 ### Pospuestos
 7. **Bloque 4** (multijugador) — se retrasa hasta estabilizar producción.
