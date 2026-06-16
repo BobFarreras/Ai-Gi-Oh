@@ -31,9 +31,6 @@ const IGNORED_FILE_PATTERNS = [/\.(test|spec)\.(ts|tsx|js|jsx|mjs)$/, /\.md$/];
 
 // Excepciones documentadas para assets rotos preexistentes. Deben resolverse, no aumentarse.
 const DOCUMENTED_EXCEPTIONS = new Map([
-  ["/audio/story/effects/boss-soundtrack.m4a", "Fichero de 0 bytes pendiente de regenerar."],
-  ["/audio/hub/onboarding/soundtrack.m4a", "Fichero de 0 bytes pendiente de regenerar."],
-  ["/audio/story/soundtracks/act-1/act-1-main-theme.m4a", "Fichero de 0 bytes pendiente de regenerar."],
   ["/audio/sfx/duel-draw.m4a", "Asset pendiente de diseño sonoro para resultado de empate."],
 ]);
 

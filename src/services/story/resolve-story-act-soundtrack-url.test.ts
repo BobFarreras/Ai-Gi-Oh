@@ -12,7 +12,7 @@ describe("resolveStoryActSoundtrackUrl", () => {
   });
 
   it("resuelve pista del Acto 2", () => {
-    expect(resolveStoryActSoundtrackUrl(2)).toContain("/audio/story/soundtracks/act-2/Chromed%20Horizon.m4a");
+    expect(resolveStoryActSoundtrackUrl(2)).toContain("/audio/story/soundtracks/act-2/Chromed-Horizon.m4a");
   });
 
   it("usa fallback al Acto 1 cuando no hay pista definida", () => {
