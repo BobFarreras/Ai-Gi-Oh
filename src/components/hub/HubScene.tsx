@@ -10,7 +10,9 @@ import { IPlayerHubProgress } from "@/core/entities/hub/IPlayerHubProgress";
 import { HubSceneFloatingActions } from "@/components/hub/HubSceneFloatingActions";
 import { HubSceneHudOverlay } from "@/components/hub/HubSceneHudOverlay";
 import { HubSceneFallback2D } from "@/components/hub/HubSceneFallback2D";
+import { HubSceneSkeleton } from "@/components/hub/HubSceneSkeleton";
 import { HubOnboardingIntroOverlay } from "@/components/hub/onboarding/HubOnboardingIntroOverlay";
+import { useHubHydrationGate } from "@/components/hub/internal/use-hub-hydration-gate";
 import { resolveHubCameraPose, resolveHubNodeFocusPose } from "@/components/hub/internal/hub-camera-fit";
 import { applyResponsiveNodeLayout } from "@/components/hub/internal/hub-node-responsive-layout";
 import { supportsWebGL } from "@/components/hub/internal/hub-webgl-support";
@@ -26,13 +28,8 @@ const HubSceneWorld3D = dynamic(
   () => import("@/components/hub/HubSceneWorld3D").then((mod) => mod.HubSceneWorld3D),
   {
     ssr: false,
-    loading: () => (
-      <div className="absolute inset-0 flex items-center justify-center bg-[#010610]">
-        <div className="rounded-lg border border-cyan-500/40 bg-[#041120]/90 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-cyan-100/80">
-          Cargando mundo...
-        </div>
-      </div>
-    ),
+    // Mantiene el skeleton del hub visible mientras llega el chunk 3D; evita pantalla negra intermedia.
+    loading: () => null,
   },
 );
 
@@ -56,13 +53,14 @@ export function HubScene({
   const router = useRouter();
   const isDocumentVisible = useDocumentVisibility();
   const viewportWidth = useViewportWidth();
+  const { isHydrated } = useHubHydrationGate();
   const { playHudEntry, playNodeHover, playUiClick } = useHubSfx();
   const { navigationState, isNavigationBusy, isRouteSlow, requestNavigation } = useHubNodeNavigation({ router });
   const [cameraResetSignal, setCameraResetSignal] = useState(0);
   const [areNodeLabelsVisible, setAreNodeLabelsVisible] = useState(true);
   const canRender3D = useMemo(
-    () => (forceFallbackForTests ? false : supportsWebGL()),
-    [forceFallbackForTests],
+    () => isHydrated && !forceFallbackForTests && supportsWebGL(),
+    [isHydrated, forceFallbackForTests],
   );
   const responsiveNodes = useMemo(() => applyResponsiveNodeLayout(nodes, viewportWidth), [nodes, viewportWidth]);
   const cameraPose = useMemo(() => resolveHubCameraPose(responsiveNodes, viewportWidth), [responsiveNodes, viewportWidth]);
@@ -95,7 +93,8 @@ export function HubScene({
         onHudButtonSound={playUiClick}
       />
       <div className="absolute inset-0 z-10 bg-[#010610]">
-        {!canRender3D ? (
+        {!isHydrated ? <HubSceneSkeleton /> : null}
+        {isHydrated && !canRender3D ? (
           <HubSceneFallback2D
             sections={sections}
             nodes={responsiveNodes}
@@ -106,7 +105,7 @@ export function HubScene({
             isNavigationBusy={isNavigationBusy}
           />
         ) : null}
-        {canRender3D ? (
+        {isHydrated && canRender3D ? (
           <HubSceneWorld3D
             sections={sections}
             nodes={responsiveNodes}

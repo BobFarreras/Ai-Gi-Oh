@@ -4,11 +4,11 @@ import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 type EffectAudioSource = "execution" | "trap";
 const CHARGED_CUSTOM_AUDIO_ACTIONS = new Set(["RESTORE_ENERGY", "DRAIN_OPPONENT_ENERGY", "SET_CARD_DUEL_PROGRESS"]);
 const EFFECT_AUDIO_OVERRIDES: Record<string, string> = {
-  BOOST_ATTACK_ALLIED_ENTITY: "/audio/sfx/effects/execution/stat_up.m4a",
-  BOOST_ATTACK_BY_ARCHETYPE: "/audio/sfx/effects/execution/stat_up.m4a",
-  BOOST_DEFENSE_BY_ARCHETYPE: "/audio/sfx/effects/execution/stat_up.m4a",
-  SET_DEFENSE_BY_CARD_ID: "/audio/sfx/effects/execution/stat_up.m4a",
-  BOOST_DEFENSE_BY_CARD_ID: "/audio/sfx/effects/execution/stat_up.m4a",
+  BOOST_ATTACK_ALLIED_ENTITY: "/audio/sfx/effects/execution/boost_attack_allied_entity.m4a",
+  BOOST_ATTACK_BY_ARCHETYPE: "/audio/sfx/effects/execution/boost_attack_allied_entity.m4a",
+  BOOST_DEFENSE_BY_ARCHETYPE: "/audio/sfx/effects/execution/boost_attack_allied_entity.m4a",
+  SET_DEFENSE_BY_CARD_ID: "/audio/sfx/effects/execution/boost_attack_allied_entity.m4a",
+  BOOST_DEFENSE_BY_CARD_ID: "/audio/sfx/effects/execution/boost_attack_allied_entity.m4a",
   REDUCE_OPPONENT_ATTACK: "/audio/sfx/effects/execution/bajada.m4a",
   REDUCE_OPPONENT_DEFENSE: "/audio/sfx/effects/execution/bajada.m4a",
   FUSION_SUMMON: "/audio/sfx/fusion-summon.m4a",

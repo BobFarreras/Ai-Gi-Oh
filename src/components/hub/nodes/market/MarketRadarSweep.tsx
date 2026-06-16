@@ -6,8 +6,11 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { MARKET_SWEEP_DURATION } from "./market-radar-types";
 
+const sweepGeometry = new THREE.CircleGeometry(1.38, 32);
+
 export function MarketRadarSweep() {
   const sweepRef = useRef<THREE.Mesh>(null);
+  const timeRef = useRef(0);
   const texture = useMemo(() => {
     if (typeof document === "undefined") return null;
     const canvas = document.createElement("canvas");
@@ -25,17 +28,20 @@ export function MarketRadarSweep() {
     return new THREE.CanvasTexture(canvas);
   }, []);
 
-  useFrame((state) => {
+  const material = useMemo(
+    () => (texture ? new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, side: THREE.DoubleSide }) : null),
+    [texture],
+  );
+
+  useFrame((_, delta) => {
     if (!sweepRef.current) return;
-    const angle = ((state.clock.elapsedTime % MARKET_SWEEP_DURATION) / MARKET_SWEEP_DURATION) * (Math.PI * 2);
+    timeRef.current += delta;
+    const angle = ((timeRef.current % MARKET_SWEEP_DURATION) / MARKET_SWEEP_DURATION) * (Math.PI * 2);
     sweepRef.current.rotation.z = -angle;
   });
 
-  if (!texture) return null;
+  if (!material) return null;
   return (
-    <mesh ref={sweepRef} position={[0, 0, 0.06]}>
-      <circleGeometry args={[1.38, 64]} />
-      <meshBasicMaterial map={texture} transparent depthWrite={false} side={THREE.DoubleSide} />
-    </mesh>
+    <mesh ref={sweepRef} position={[0, 0, 0.06]} geometry={sweepGeometry} material={material} />
   );
 }

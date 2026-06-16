@@ -46,6 +46,13 @@ describe("audio-pool", () => {
     expect(audio!.volume).toBeCloseTo(0.5);
   });
 
+  it("permite configurar preload distinto para tracks largos", async () => {
+    const { getAudio } = await import("./audio-pool");
+    const audio = getAudio("/audio/narration.m4a", 0.38, false, "auto");
+    expect(audio).not.toBeNull();
+    expect(audio!.preload).toBe("auto");
+  });
+
   it("reutiliza instancia cacheada en llamadas posteriores", async () => {
     const { getAudio, clearAudioPool } = await import("./audio-pool");
     clearAudioPool();

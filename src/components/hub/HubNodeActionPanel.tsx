@@ -1,6 +1,7 @@
 // src/components/hub/HubNodeActionPanel.tsx - Panel HTML accesible para nodos 3D con navegación o estado bloqueado.
 "use client";
 
+import { memo } from "react";
 import { IHubSection } from "@/core/entities/hub/IHubSection";
 
 interface HubNodeActionPanelProps {
@@ -19,7 +20,7 @@ function withHexAlpha(color: string, alphaHex: string): string {
   return `${color}${alphaHex}`;
 }
 
-export function HubNodeActionPanel({
+function HubNodeActionPanelComponent({
   section,
   baseColor,
   isHovered = false,
@@ -68,3 +69,5 @@ export function HubNodeActionPanel({
     </button>
   );
 }
+
+export const HubNodeActionPanel = memo(HubNodeActionPanelComponent);

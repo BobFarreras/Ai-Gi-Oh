@@ -52,7 +52,8 @@ export function useLandingAudio({ isNarrativeActive }: IUseLandingAudioOptions):
 
   useEffect(() => {
     if (isNarrativeActive) {
-      narrationRef.current = getAudio(PATHS.narrationTrack, VOLUMES.narrationTrack);
+      // Preload auto para la narración: el track es largo y debe estar listo al entrar en la fase.
+      narrationRef.current = getAudio(PATHS.narrationTrack, VOLUMES.narrationTrack, false, "auto");
       if (narrationRef.current) {
         narrationRef.current.loop = false;
         narrationRef.current.currentTime = 0;

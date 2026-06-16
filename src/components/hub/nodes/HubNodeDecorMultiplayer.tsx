@@ -1,9 +1,21 @@
 // src/components/hub/nodes/HubNodeDecorMultiplayer.tsx - Núcleo 3D de la sección Multijugador con trayectorias y enlaces.
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+
+const coreGeometry = new THREE.OctahedronGeometry(0.5, 0);
+const playerGeometry = new THREE.ConeGeometry(0.15, 0.4, 4);
+const laserGeometry = new THREE.CylinderGeometry(0.015, 0.015, 1, 6);
+
+const materials = {
+  core: new THREE.MeshStandardMaterial({ color: "#10b981", wireframe: true, emissive: "#059669", emissiveIntensity: 1.5, transparent: true, opacity: 0.6 }),
+  p1: new THREE.MeshStandardMaterial({ color: "#d946ef", emissive: "#d946ef", emissiveIntensity: 3, wireframe: true }),
+  p2: new THREE.MeshStandardMaterial({ color: "#06b6d4", emissive: "#06b6d4", emissiveIntensity: 3, wireframe: true }),
+  laser1: new THREE.MeshStandardMaterial({ color: "#d946ef", emissive: "#d946ef", emissiveIntensity: 6, transparent: true, opacity: 0 }),
+  laser2: new THREE.MeshStandardMaterial({ color: "#06b6d4", emissive: "#06b6d4", emissiveIntensity: 6, transparent: true, opacity: 0 }),
+};
 
 export function MultiplayerCore3D() {
   const p1Ref = useRef<THREE.Mesh>(null);
@@ -11,11 +23,23 @@ export function MultiplayerCore3D() {
   const coreRef = useRef<THREE.Mesh>(null);
   const laser1Ref = useRef<THREE.Mesh>(null);
   const laser2Ref = useRef<THREE.Mesh>(null);
+  const timeRef = useRef(0);
 
-  const cylinderAxis = new THREE.Vector3(0, 1, 0);
+  // Vectores temporales reutilizados para evitar .clone() y allocations por frame.
+  const temp = useMemo(
+    () => ({
+      p1Pos: new THREE.Vector3(),
+      p2Pos: new THREE.Vector3(),
+      mid: new THREE.Vector3(),
+      direction: new THREE.Vector3(),
+      cylinderAxis: new THREE.Vector3(0, 1, 0),
+    }),
+    [],
+  );
 
-  useFrame((state, delta) => {
-    const t = state.clock.getElapsedTime();
+  useFrame((_, delta) => {
+    timeRef.current += delta;
+    const t = timeRef.current;
     if (coreRef.current) {
       coreRef.current.rotation.y += delta * 0.5;
       coreRef.current.rotation.z += delta * 0.2;
@@ -32,48 +56,34 @@ export function MultiplayerCore3D() {
       p1Ref.current.lookAt(p2Ref.current.position);
       p2Ref.current.lookAt(p1Ref.current.position);
 
-      const dist = p1Ref.current.position.distanceTo(p2Ref.current.position);
-      
+      temp.p1Pos.copy(p1Ref.current.position);
+      temp.p2Pos.copy(p2Ref.current.position);
+      const dist = temp.p1Pos.distanceTo(temp.p2Pos);
+
       if (laser1Ref.current) {
-        laser1Ref.current.position.copy(p1Ref.current.position).lerp(p2Ref.current.position, 0.5);
-        const direction1 = p2Ref.current.position.clone().sub(p1Ref.current.position).normalize();
-        laser1Ref.current.quaternion.setFromUnitVectors(cylinderAxis, direction1);
+        laser1Ref.current.position.copy(temp.p1Pos).lerp(temp.p2Pos, 0.5);
+        const direction1 = temp.direction.copy(temp.p2Pos).sub(temp.p1Pos).normalize();
+        laser1Ref.current.quaternion.setFromUnitVectors(temp.cylinderAxis, direction1);
         laser1Ref.current.scale.set(1, dist, 1);
-        (laser1Ref.current.material as THREE.MeshStandardMaterial).opacity = Math.random() > 0.88 ? 1 : 0;
+        materials.laser1.opacity = Math.random() > 0.88 ? 1 : 0;
       }
       if (laser2Ref.current) {
-        laser2Ref.current.position.copy(p2Ref.current.position).lerp(p1Ref.current.position, 0.5);
-        const direction2 = p1Ref.current.position.clone().sub(p2Ref.current.position).normalize();
-        laser2Ref.current.quaternion.setFromUnitVectors(cylinderAxis, direction2);
+        laser2Ref.current.position.copy(temp.p2Pos).lerp(temp.p1Pos, 0.5);
+        const direction2 = temp.direction.copy(temp.p1Pos).sub(temp.p2Pos).normalize();
+        laser2Ref.current.quaternion.setFromUnitVectors(temp.cylinderAxis, direction2);
         laser2Ref.current.scale.set(1, dist, 1);
-        (laser2Ref.current.material as THREE.MeshStandardMaterial).opacity = Math.random() > 0.92 ? 1 : 0;
+        materials.laser2.opacity = Math.random() > 0.92 ? 1 : 0;
       }
     }
   });
 
   return (
     <group scale={1.2} position={[0, 0.2, 0]}>
-      <pointLight position={[0, 0, 0]} color="#10b981" intensity={2} />
-      <mesh ref={coreRef}>
-        <octahedronGeometry args={[0.5, 0]} />
-        <meshStandardMaterial color="#10b981" wireframe emissive="#059669" emissiveIntensity={1.5} transparent opacity={0.6} />
-      </mesh>
-      <mesh ref={p1Ref}>
-        <coneGeometry args={[0.15, 0.4, 4]} />
-        <meshStandardMaterial color="#d946ef" emissive="#d946ef" emissiveIntensity={3} wireframe />
-      </mesh>
-      <mesh ref={p2Ref}>
-        <coneGeometry args={[0.15, 0.4, 4]} />
-        <meshStandardMaterial color="#06b6d4" emissive="#06b6d4" emissiveIntensity={3} wireframe />
-      </mesh>
-      <mesh ref={laser1Ref}>
-        <cylinderGeometry args={[0.015, 0.015, 1, 8]} />
-        <meshStandardMaterial color="#d946ef" emissive="#d946ef" emissiveIntensity={6} transparent opacity={0} />
-      </mesh>
-      <mesh ref={laser2Ref}>
-        <cylinderGeometry args={[0.015, 0.015, 1, 8]} />
-        <meshStandardMaterial color="#06b6d4" emissive="#06b6d4" emissiveIntensity={6} transparent opacity={0} />
-      </mesh>
+      <mesh ref={coreRef} geometry={coreGeometry} material={materials.core} />
+      <mesh ref={p1Ref} geometry={playerGeometry} material={materials.p1} />
+      <mesh ref={p2Ref} geometry={playerGeometry} material={materials.p2} />
+      <mesh ref={laser1Ref} geometry={laserGeometry} material={materials.laser1} />
+      <mesh ref={laser2Ref} geometry={laserGeometry} material={materials.laser2} />
     </group>
   );
 }

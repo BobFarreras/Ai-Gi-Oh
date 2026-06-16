@@ -18,7 +18,7 @@ por el flujo habitual (rama `features/<tema>` → gates en verde → `main`/`dev
 
 ## Bloque 0 — Rendimiento del Hub 3D (sin tocar diseño ni animaciones)
 
-**Estado:** pendiente · **Prioridad:** alta · **Rama sugerida:** `features/hub-3d-performance`
+**Estado:** completado · **Prioridad:** alta · **Rama:** `features/hub-3d-performance` · **Commit:** `feat(hub): Bloque 0 — rendimiento 3D sin cambiar diseño`
 
 ### Problema medido
 - Stutter ("trompicones") y congelación en móviles/equipos viejos.
@@ -54,6 +54,10 @@ por el flujo habitual (rama `features/<tema>` → gates en verde → `main`/`dev
 - Mejora medible de INP/LCP y menos stutter con CPU throttle.
 - Sin hydration warnings. Gates en verde.
 
+### Notas de implementación
+- Se cerró el hydration mismatch con un gate de hidratación (`useSyncExternalStore`) que mantiene 3D para todos.
+- Se añadió precarga del soundtrack de narración (`preload=auto`) y se optimizó el arranque del hub.
+
 ### Riesgos
 - Tocar el render de `<Html>` puede alterar sutilmente la posición/escala del panel: validar con
   capturas antes/después.
@@ -62,7 +66,7 @@ por el flujo habitual (rama `features/<tema>` → gates en verde → `main`/`dev
 
 ## Bloque 1 — Botón FX solo en desarrollo
 
-**Estado:** pendiente · **Prioridad:** alta · **Esfuerzo:** trivial
+**Estado:** completado · **Prioridad:** alta · **Esfuerzo:** trivial · **Commit:** `feat(quality): Bloques 1 y 3 - FX solo en dev y auditoria de assets`
 
 ### Contexto
 El botón flotante **FX: Auto/Mín/Máx** (`PerformanceProfileToggle`) se monta en el layout raíz y se
@@ -80,6 +84,10 @@ en `layout.tsx`. (`process.env.NODE_ENV` se evalúa en build → en prod el bot�
 - En `pnpm dev`: el botón sigue disponible.
 - Test que cubra el gating (o documentar por qué no aplica en jsdom).
 
+### Notas de implementación
+- Se extrajo `shouldRenderPerformanceToggle(environment)` como función pura testeable en jsdom.
+- `src/app/layout.tsx` aplica el gating y no monta `PerformanceProfileToggle` en producción.
+
 ### A decidir
 - ¿El modo "Mín/Máx" (override de efectos) debe seguir disponible para usuarios reales por algún otro
   medio, o es puramente interno? Si es interno, ocultar el botón es suficiente.
@@ -88,7 +96,7 @@ en `layout.tsx`. (`process.env.NODE_ENV` se evalúa en build → en prod el bot�
 
 ## Bloque 2 — La música de narración (landing) no suena
 
-**Estado:** pendiente · **Prioridad:** alta · **Esfuerzo:** bajo (es un asset, no código)
+**Estado:** completado · **Prioridad:** alta · **Esfuerzo:** bajo (es un asset, no código) · **Commit:** `feat(quality): Bloques 1 y 3 - FX solo en dev y auditoria de assets`
 
 ### Causa raíz (confirmada)
 `public/audio/landing/soundtrack.m4a` pesa **0 bytes** — la conversión a `.m4a` falló solo para ese
@@ -107,11 +115,15 @@ archivo (los demás `.m4a` de la carpeta tienen contenido). La ruta en código e
 ### Criterios de aceptación
 - La narración suena al entrar en el crawl, en local y en producción.
 
+### Notas de implementación
+- Se reemplazó `public/audio/landing/soundtrack.m4a` (0 bytes) por un archivo válido.
+- Se añadió soporte de `preload` opcional en `getAudio`/`audio-pool` para precargar la pista de narración con `preload=auto`.
+
 ---
 
 ## Bloque 3 — Imágenes que no se ven en producción (formato/ruta)
 
-**Estado:** pendiente · **Prioridad:** alta · **Esfuerzo:** bajo-medio
+**Estado:** completado · **Prioridad:** alta · **Esfuerzo:** bajo-medio · **Commit:** `feat(quality): Bloques 1 y 3 - FX solo en dev y auditoria de assets`
 
 ### Causa raíz (confirmada)
 Tras convertir los assets a `.webp`, el catálogo de narración sigue referenciando `.png`:
@@ -132,6 +144,11 @@ retratos **solo existen como `.webp`** (`intro-GenNvim.webp`, …). Resultado: i
 ### Criterios de aceptación
 - Todos los retratos de oponentes se ven en producción.
 - El check de assets pasa y previene futuras roturas por formato/case.
+
+### Notas de implementación
+- Se actualizaron las extensiones `.png` → `.webp` en `src/services/story/story-opponent-narration-catalog.ts`.
+- Se creó `scripts/quality/check-assets.mjs` para auditar referencias en `src/` contra `public/` (existencia, tamaño > 0, case-sensitive).
+- Se integró el check en `quality:check` vía `quality:check:assets`. Se corrigieron referencias rotas adicionales encontradas (templates admin, fallbacks de audio, typo de `movimiento.m4a`, `Chromed Horizon.m4a`).
 
 ---
 
@@ -197,7 +214,10 @@ Probar un **diseño y flujo nuevos** para la primera experiencia (jugador nuevo)
 
 ## Orden recomendado
 
-1. **Bloque 1, 2, 3** (rápidos, son fixes de producción visibles) → release de mantenimiento.
+### Completados (release de mantenimiento)
+1. **Bloque 1, 2, 3** (fixes de producción visibles).
 2. **Bloque 0** (rendimiento del hub, visual-neutral).
+
+### Pendientes
 3. **Bloque 4** (multijugador) — el grande; arrancar por F4.1.
 4. **Bloque 5** (onboarding) — en paralelo cuando haya capacidad.

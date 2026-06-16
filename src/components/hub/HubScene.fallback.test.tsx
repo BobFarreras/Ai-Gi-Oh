@@ -11,6 +11,18 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("HubScene fallback", () => {
+  it("hidrata y renderiza fallback 2D cuando se fuerza fallback", () => {
+    render(
+      <HubScene
+        forceFallbackForTests
+        sections={[{ id: "home", type: "HOME", title: "Arsenal", description: "Gestiona mazos.", href: "/hub/arsenal", isLocked: false, lockReason: null }]}
+        nodes={[{ id: "n1", sectionType: "HOME", districtLabel: "Distrito", positionX: 50, positionY: 50 }]}
+      />,
+    );
+    expect(screen.queryByText("Cargando hub...")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Abrir Arsenal" })).toBeInTheDocument();
+  });
+
   it("renderiza nodos 2D navegables cuando se fuerza fallback", async () => {
     vi.useFakeTimers();
     try {
