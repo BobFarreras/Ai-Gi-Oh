@@ -49,9 +49,11 @@ export function useHubSceneTourIntegration({
     try {
       await savePlayerOnboardingAction("skip_tutorial");
     } finally {
-      router.refresh();
+      // Reload completo para que useHubTour se reinicialice con isSkipped:true desde el servidor.
+      // router.refresh() solo actualiza props pero no reinicializa useState.
+      window.location.assign("/hub");
     }
-  }, [router]);
+  }, []);
 
   const tour = useHubTour({
     initialCompletedNodeIds: completedTutorialNodeIds ?? [],

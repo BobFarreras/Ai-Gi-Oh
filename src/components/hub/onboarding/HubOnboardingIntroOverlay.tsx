@@ -124,9 +124,8 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
         return;
       }
       setIsSkipConfirmed(true);
-      await new Promise((resolve) => window.setTimeout(resolve, 1400));
-      setIsClosing(true);
-      router.refresh();
+      await new Promise((resolve) => window.setTimeout(resolve, 1200));
+      window.location.assign("/hub");
     } finally {
       setIsLoading(false);
     }
