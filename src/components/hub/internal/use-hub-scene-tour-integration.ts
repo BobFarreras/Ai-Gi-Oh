@@ -65,15 +65,17 @@ export function useHubSceneTourIntegration({
 
   const handleNodeNavigate = useCallback(
     (nodeId: string, href: string) => {
-      // Bloquear cualquier clic mientras el buff intro está visible
-      if (tour.isActive && tour.uiPhase === "step-intro") return;
-      if (tour.isActive && nodeId === tour.activeNodeId) {
+      if (!tour.isActive) {
+        requestNavigation(nodeId, href);
+        return;
+      }
+      // Clic en el nodo objetivo = equivalente a pulsar "Ir" (funciona en step-intro y guiding)
+      if (nodeId === tour.activeNodeId) {
         playNodeHover();
         tour.onTourNodeSelect();
         return;
       }
-      if (tour.isActive) return;
-      requestNavigation(nodeId, href);
+      // Nodos no activos: bloqueados siempre durante el tour
     },
     [tour, playNodeHover, requestNavigation],
   );

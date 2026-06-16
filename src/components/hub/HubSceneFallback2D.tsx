@@ -42,13 +42,13 @@ export function HubSceneFallback2D({
         const section = sectionsByType.get(node.sectionType);
         if (!section) return null;
         const isDisabled = disabledNodeIds.includes(node.id);
-        const entryDelay = tourActiveNodeId !== null ? 0.06 + index * 0.1 : 0;
+        const entryDelay = tourActiveNodeId !== null ? 0.08 + index * 0.12 : 0;
         return (
           <motion.article
             key={node.id}
-            initial={tourActiveNodeId !== null ? { opacity: 0, scale: 0.6, y: 18 } : false}
+            initial={tourActiveNodeId !== null ? { opacity: 0, scale: 0.5, y: 28 } : false}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 260, damping: 22, delay: entryDelay }}
+            transition={{ type: "spring", stiffness: 160, damping: 18, delay: entryDelay }}
             className="absolute z-30 -translate-x-1/2 -translate-y-1/2"
             style={{ left: `${node.positionX}%`, top: `${node.positionY}%` }}
           >
