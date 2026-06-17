@@ -10,9 +10,9 @@ interface CombatLogCardsStripProps {
 
 function CardPreviewButton({ card, onCardClick }: { card: ICard; onCardClick?: (card: ICard) => void }) {
   return (
-    <button aria-label={`Ver carta ${card.name}`} onClick={() => onCardClick?.(card)} className="min-w-[76px] hover:opacity-100">
-      <div className="aspect-[13/19] h-[68px]">
-        <CardThumbnail card={card} />
+    <button aria-label={`Ver carta ${card.name}`} onClick={() => onCardClick?.(card)} className="shrink-0 transition-opacity hover:opacity-90">
+      <div className="h-[88px] w-[60px]">
+        <CardThumbnail card={card} coverRender />
       </div>
     </button>
   );
@@ -38,7 +38,7 @@ export function CombatLogBattleStrip({
         </div>
         <CardPreviewButton card={defenderCard} onCardClick={onCardClick} />
       </div>
-      {winnerText && <p className="text-[10px] text-zinc-200 mt-1 font-bold">{winnerText}.</p>}
+      {winnerText && <p className="text-xs text-zinc-200 mt-1.5 font-bold">{winnerText}.</p>}
     </div>
   );
 }
@@ -57,11 +57,11 @@ export function CombatLogDirectAttackStrip({
         <div className="flex items-center justify-center w-8 h-8 rounded-full border border-red-500/50 bg-red-950/50">
           <Sword className="w-4 h-4 text-red-300" />
         </div>
-        <div className="min-w-[76px] h-[68px] rounded-md border border-red-500/45 bg-red-950/45 flex items-center justify-center">
+        <div className="h-[88px] w-[60px] rounded-md border border-red-500/45 bg-red-950/45 flex items-center justify-center">
           <p className="text-[10px] text-red-200 font-black tracking-widest uppercase">Directo</p>
         </div>
       </div>
-      <p className="text-[10px] text-zinc-200 mt-1 font-bold">Ataque directo con {attackerCard.name}.</p>
+      <p className="text-xs text-zinc-200 mt-1.5 font-bold">Ataque directo con {attackerCard.name}.</p>
     </div>
   );
 }

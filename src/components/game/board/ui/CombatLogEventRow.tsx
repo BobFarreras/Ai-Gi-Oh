@@ -38,7 +38,7 @@ export function CombatLogEventRow({
   return (
     <div className={`border ${palette.border} rounded-xl bg-black/45 p-2`}>
       <CombatLogEventHeader event={event} actorName={actorName} actorToneClass={palette.tone} deltaText={delta?.text ?? null} deltaToneClass={deltaToneClass} />
-      <p className="text-[11px] text-zinc-100 leading-relaxed">
+      <p className="text-xs text-zinc-100 leading-relaxed">
         {formatCombatLogEvent(event, { playerAId, playerAName, playerBId, playerBName })}
       </p>
       {isBattleVersusRow && attackerCard && defenderCard ? (
