@@ -18,6 +18,8 @@ interface CardThumbnailProps {
   xp?: number;
   isSelected?: boolean;
   className?: string;
+  /** Usa object-cover para el render en lugar de object-contain. Útil en contexts compactos como el combat log. */
+  coverRender?: boolean;
 }
 
 /**
@@ -26,7 +28,7 @@ interface CardThumbnailProps {
  * nombre, barra de nivel y footer de stats. Llena por completo su contenedor;
  * el contenedor debe imponer la proporción de carta (aspect-[13/19]).
  */
-function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelected = false, className }: CardThumbnailProps) {
+function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelected = false, className, coverRender = false }: CardThumbnailProps) {
   const factionStyles = getCardTypeStyles(card);
   const isMasteryTier = versionTier >= 5;
   const shouldBypassImageOptimization = Boolean(card.renderUrl?.startsWith("/assets/renders/"));
@@ -88,7 +90,7 @@ function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelect
               sizes="96px"
               quality={40}
               unoptimized={shouldBypassImageOptimization}
-              className="z-10 object-contain p-px"
+              className={coverRender ? "z-10 object-cover object-top" : "z-10 object-contain p-px"}
             />
           ) : null}
         </div>

@@ -103,33 +103,33 @@ export function TutorialBigLogDialog({
           <p className={`${isMobileCompact ? "text-[10px] tracking-[0.2em]" : "text-[11px] tracking-[0.24em]"} font-black uppercase text-cyan-300`}>BigLog Tutorial</p>
           <h3 className={`mt-1 font-black uppercase leading-tight text-cyan-100 ${isMobileCompact ? "text-[0.9rem]" : "text-base sm:text-lg"}`}>{title}</h3>
           <p className={`mt-2 leading-relaxed text-slate-100 ${isMobileCompact ? "text-[0.78rem]" : "text-sm sm:text-base"}`}>{description}</p>
-          <div className={`mt-3 flex items-center gap-2 ${isMobileCompact ? "flex-wrap" : ""}`}>
-            <motion.button
-              type="button"
-              data-tutorial-overlay="true"
-              onClick={onNext}
-              disabled={!canUseNext || isFinished}
-              aria-label="Siguiente paso del tutorial"
-              className={`rounded-md border border-cyan-200/45 ${isMobileCompact ? "px-2.5 py-1.5 text-[10px]" : "px-3 py-2 text-xs"} font-black uppercase text-cyan-100 disabled:cursor-default disabled:opacity-45 ${
-                shouldHighlightNextButton && canUseNext && !isFinished
-                  ? "ring-2 ring-cyan-300/90 shadow-[0_0_18px_rgba(34,211,238,0.75)]"
-                  : ""
-              }`}
-              animate={
-                shouldHighlightNextButton && canUseNext && !isFinished
-                  ? { scale: [1, 1.04, 1], opacity: [1, 0.78, 1] }
-                  : { scale: 1, opacity: 1 }
-              }
-              transition={
-                shouldHighlightNextButton && canUseNext && !isFinished
-                  ? { duration: 0.95, repeat: Infinity, ease: "easeInOut" }
-                  : { duration: 0.15 }
-              }
-            >
-              Siguiente
-            </motion.button>
-            <span className={`${isMobileCompact ? "text-[9px]" : "text-[10px]"} font-bold uppercase tracking-[0.12em] text-slate-400`}>{isFinished ? "Tutorial completado" : canUseNext ? "Puedes continuar" : "Realiza la acción marcada"}</span>
-          </div>
+          {canUseNext && !isFinished ? (
+            <div className="mt-3">
+              <motion.button
+                type="button"
+                data-tutorial-overlay="true"
+                onClick={onNext}
+                aria-label="Siguiente paso del tutorial"
+                className={`rounded-md border border-cyan-200/45 ${isMobileCompact ? "px-2.5 py-1.5 text-[10px]" : "px-3 py-2 text-xs"} font-black uppercase text-cyan-100 ${
+                  shouldHighlightNextButton
+                    ? "ring-2 ring-cyan-300/90 shadow-[0_0_18px_rgba(34,211,238,0.75)]"
+                    : ""
+                }`}
+                animate={
+                  shouldHighlightNextButton
+                    ? { scale: [1, 1.04, 1], opacity: [1, 0.78, 1] }
+                    : { scale: 1, opacity: 1 }
+                }
+                transition={
+                  shouldHighlightNextButton
+                    ? { duration: 0.95, repeat: Infinity, ease: "easeInOut" }
+                    : { duration: 0.15 }
+                }
+              >
+                Siguiente
+              </motion.button>
+            </div>
+          ) : null}
         </div>
       </div>
     </aside>
