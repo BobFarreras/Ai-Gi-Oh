@@ -39,7 +39,8 @@ export async function acceptInvitation(
 
   if (invError || !invitation) return { ok: false, error: "Invitación no encontrada o expirada." };
 
-  // Crear la sesión de partida
+  // Crear la sesión de partida con seed compartido para instancias de carta deterministas
+  const seed = crypto.randomUUID();
   const { data: session, error: sessionError } = await supabase
     .from("match_sessions")
     .insert({
@@ -47,6 +48,7 @@ export async function acceptInvitation(
       player_b_id: user.id,
       deck_a_ids: invitation.deck_ids,
       deck_b_ids: myDeckIds,
+      seed,
       status: "WAITING",
     })
     .select("id")

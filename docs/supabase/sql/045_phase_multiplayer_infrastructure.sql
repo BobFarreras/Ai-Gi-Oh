@@ -12,6 +12,7 @@ create table public.match_sessions (
   winner_id         uuid references auth.users(id),
   deck_a_ids        text[] not null default '{}',
   deck_b_ids        text[] not null default '{}',
+  seed              text not null default '',
   started_at        timestamptz,
   finished_at       timestamptz,
   created_at        timestamptz not null default now()
