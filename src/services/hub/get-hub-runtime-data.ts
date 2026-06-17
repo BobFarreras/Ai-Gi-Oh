@@ -9,6 +9,7 @@ import { createSupabasePlayerProgressRepository } from "@/infrastructure/persist
 import { createSupabasePlayerStoryWorldRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-story-world-repository";
 import { createSupabaseStarterDeckTemplateRepository } from "@/infrastructure/persistence/supabase/create-supabase-starter-deck-template-repository";
 import { createSupabaseTrainingProgressRepository } from "@/infrastructure/persistence/supabase/create-supabase-training-progress-repository";
+import { createSupabaseTutorialNodeProgressRepository } from "@/infrastructure/persistence/supabase/create-supabase-tutorial-node-progress-repository";
 import { InMemoryHubRepository } from "@/infrastructure/repositories/InMemoryHubRepository";
 import { SupabaseHubRepository } from "@/infrastructure/repositories/SupabaseHubRepository";
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
@@ -23,6 +24,7 @@ import { resolvePlayerLabel } from "@/services/player-profile/resolve-player-lab
 interface IHubRuntimeData {
   playerLabel: string;
   hubMap: Awaited<ReturnType<GetHubMapUseCase["execute"]>>;
+  completedTutorialNodeIds: string[];
 }
 
 export async function getHubRuntimeData(): Promise<IHubRuntimeData> {
@@ -30,7 +32,7 @@ export async function getHubRuntimeData(): Promise<IHubRuntimeData> {
   if (!session) {
     const fallbackService = new HubService(new InMemoryHubRepository());
     const fallbackMap = await new GetHubMapUseCase(fallbackService).execute("local-player");
-    return { playerLabel: "Operador local", hubMap: fallbackMap };
+    return { playerLabel: "Operador local", hubMap: fallbackMap, completedTutorialNodeIds: [] };
   }
 
   const profileRepository = await createSupabasePlayerProfileRepository();
@@ -51,15 +53,17 @@ export async function getHubRuntimeData(): Promise<IHubRuntimeData> {
   });
 
   const hubService = new HubService(new SupabaseHubRepository(progressRepository));
-  const [hubMap, loadout, storyWorldRepository, trainingProgressRepository] = await Promise.all([
+  const [hubMap, loadout, storyWorldRepository, trainingProgressRepository, tutorialNodeRepository] = await Promise.all([
     new GetHubMapUseCase(hubService).execute(session.user.id),
     getPlayerBoardLoadout(),
     createSupabasePlayerStoryWorldRepository(),
     createSupabaseTrainingProgressRepository(),
+    createSupabaseTutorialNodeProgressRepository(),
   ]);
-  const [storyCurrentNodeId, trainingProgress] = await Promise.all([
+  const [storyCurrentNodeId, trainingProgress, completedTutorialNodeIds] = await Promise.all([
     storyWorldRepository.getCurrentNodeIdByPlayerId(session.user.id),
     trainingProgressRepository.getByPlayerId(session.user.id),
+    tutorialNodeRepository.listCompletedNodeIds(session.user.id),
   ]);
   const runtimeProgress = resolveHubRuntimeProgress({
     fallbackStoryChapter: hubMap.progress.storyChapter,
@@ -83,5 +87,6 @@ export async function getHubRuntimeData(): Promise<IHubRuntimeData> {
       },
       sections: applyCombatReadinessLock(hubMap.sections, loadout),
     },
+    completedTutorialNodeIds,
   };
 }

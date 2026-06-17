@@ -8,6 +8,7 @@ import { EXECUTION_CARDS } from "@/core/data/mock-cards/executions";
 import { ENTITY_CARDS } from "@/core/data/mock-cards/entities";
 import { ACADEMY_HOME_ROUTE, ACADEMY_TUTORIAL_MAP_ROUTE } from "@/core/constants/routes/academy-routes";
 import { postTutorialCombatRewardClaim, postTutorialRewardClaim } from "@/services/tutorial/tutorial-node-progress-client";
+
 import { TrainingCoinTossOverlay } from "./TrainingCoinTossOverlay";
 import { createTutorialOpponentStrategy } from "@/components/hub/academy/training/modes/tutorial/internal/create-tutorial-opponent-strategy";
 import { CombatTutorialRewardOverlay } from "./CombatTutorialRewardOverlay";
@@ -84,8 +85,8 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
         opponentStrategyOverride={tutorialOpponentStrategy}
         duelResultRewardSummary={tutorialRewardSummary}
         resultActionLabel="Volver a selección"
-        onResultAction={() => window.location.replace(ACADEMY_HOME_ROUTE)}
-        onExitMatch={() => window.location.replace(ACADEMY_HOME_ROUTE)}
+        onResultAction={() => window.location.replace(props.returnToHub ? "/hub" : ACADEMY_HOME_ROUTE)}
+        onExitMatch={() => window.location.replace(props.returnToHub ? "/hub" : ACADEMY_HOME_ROUTE)}
         onMatchResolved={handleMatchResolved}
         onTutorialFlowFinished={() => setIsCombatTutorialFlowFinished(true)}
       />
@@ -121,7 +122,7 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
               setHasRewardClaimCompleted(true);
               markTutorialSoundtrackFirstRunFinished();
               window.setTimeout(() => {
-                window.location.assign(`${ACADEMY_HOME_ROUTE}?${ACADEMY_POST_TUTORIAL_OVERLAY_QUERY.key}=${ACADEMY_POST_TUTORIAL_OVERLAY_QUERY.value}`);
+                window.location.assign(props.returnToHub ? "/hub" : `${ACADEMY_HOME_ROUTE}?${ACADEMY_POST_TUTORIAL_OVERLAY_QUERY.key}=${ACADEMY_POST_TUTORIAL_OVERLAY_QUERY.value}`);
               }, 700);
             } catch {
               setRewardClaimStatus("No se pudo reclamar la recompensa final ahora. Inténtalo de nuevo.");
@@ -131,7 +132,7 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
           }}
           onClose={async () => {
             await ensureCombatNodeCompletion();
-            window.location.assign(`${ACADEMY_TUTORIAL_MAP_ROUTE}?refresh=${Date.now()}`);
+            window.location.assign(props.returnToHub ? "/hub" : `${ACADEMY_TUTORIAL_MAP_ROUTE}?refresh=${Date.now()}`);
           }}
         />
       ) : null}

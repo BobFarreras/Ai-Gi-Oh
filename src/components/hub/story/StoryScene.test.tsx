@@ -5,8 +5,15 @@ import { StoryScene } from "./StoryScene";
 import { IStoryMapRuntimeData, IStoryMapNodeRuntime } from "@/services/story/story-map-runtime-data";
 import { IStoryChapterBriefing } from "@/services/story/build-story-chapter-briefing";
 
+const pushMock = vi.fn();
+let isMobileMode = false;
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: pushMock }),
+}));
+
+vi.mock("@/components/hub/story/internal/scene/view/use-story-scene-mobile-mode", () => ({
+  useStorySceneMobileMode: () => isMobileMode,
 }));
 
 function createMockNode(overrides: Partial<IStoryMapNodeRuntime>): IStoryMapNodeRuntime {
@@ -48,10 +55,24 @@ const mockBriefing: IStoryChapterBriefing = {
 };
 
 describe("StoryScene", () => {
+  beforeEach(() => {
+    isMobileMode = false;
+    pushMock.mockClear();
+  });
+
   it("selecciona nodo desbloqueado y muestra datos en sidebar", () => {
     render(<StoryScene runtime={mockRuntime} briefing={mockBriefing} />);
     const targetNode = screen.getByRole("button", { name: "Seleccionar nodo story-ch1-duel-2" });
     fireEvent.click(targetNode);
     expect(screen.getByRole("heading", { name: "Nodo Objetivo" })).toBeInTheDocument();
+  });
+
+  it("en móvil, el botón de salir al hub navega a /hub", () => {
+    isMobileMode = true;
+    render(<StoryScene runtime={mockRuntime} briefing={mockBriefing} />);
+    const exitButton = screen.getByRole("button", { name: "Salir al hub" });
+    fireEvent.click(exitButton);
+    expect(pushMock).toHaveBeenCalledOnce();
+    expect(pushMock).toHaveBeenCalledWith("/hub");
   });
 });

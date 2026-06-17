@@ -3,9 +3,15 @@ import { HubShell } from "@/components/hub/HubShell";
 import { getHubRuntimeData } from "@/services/hub/get-hub-runtime-data";
 
 export default async function HubPage() {
-  const { playerLabel, hubMap } = await getHubRuntimeData();
+  const { playerLabel, hubMap, completedTutorialNodeIds } = await getHubRuntimeData();
 
   return (
-    <HubShell playerLabel={playerLabel} progress={hubMap.progress} sections={hubMap.sections} nodes={hubMap.nodes} />
+    <HubShell
+      playerLabel={playerLabel}
+      progress={hubMap.progress}
+      sections={hubMap.sections}
+      nodes={hubMap.nodes}
+      completedTutorialNodeIds={completedTutorialNodeIds}
+    />
   );
 }

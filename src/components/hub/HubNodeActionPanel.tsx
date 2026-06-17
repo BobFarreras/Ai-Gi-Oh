@@ -11,6 +11,8 @@ interface HubNodeActionPanelProps {
   isLockReasonVisible: boolean;
   isNavigationBusy?: boolean;
   isTargetNode?: boolean;
+  isDisabled?: boolean;
+  isTourTarget?: boolean;
   onHoverStart?: () => void;
   onAction: () => void;
 }
@@ -27,29 +29,66 @@ function HubNodeActionPanelComponent({
   isLockReasonVisible,
   isNavigationBusy = false,
   isTargetNode = false,
+  isDisabled: isTourDisabled = false,
+  isTourTarget = false,
   onHoverStart,
   onAction,
 }: HubNodeActionPanelProps) {
   const isLocked = section.isLocked;
-  const isDisabled = isNavigationBusy && !isTargetNode;
-  const statusLabel = isTargetNode && isNavigationBusy ? "[ CONECTANDO ]" : isLocked ? "[ OFFLINE ]" : null;
+  const isDisabled = isTourDisabled || (isNavigationBusy && !isTargetNode);
+  const isConnecting = isTourTarget && isTargetNode && isNavigationBusy;
+  const statusLabel = isConnecting
+    ? "[ CONECTANDO ]"
+    : isTourTarget
+      ? "[ OBJETIVO ]"
+      : isTourDisabled
+        ? "[ TUTORIAL ]"
+        : isTargetNode && isNavigationBusy
+          ? "[ CONECTANDO ]"
+          : isLocked
+            ? "[ OFFLINE ]"
+            : null;
 
   return (
     <button
       type="button"
-      aria-label={isLocked ? `Mostrar bloqueo de ${section.title}` : isTargetNode ? `Conectando con ${section.title}` : `Abrir ${section.title}`}
+      aria-label={
+        isTourDisabled
+          ? `${section.title} no disponible durante el tutorial`
+          : isLocked
+            ? `Mostrar bloqueo de ${section.title}`
+            : isTargetNode && isNavigationBusy
+              ? `Conectando con ${section.title}`
+              : `Abrir ${section.title}`
+      }
       onClick={onAction}
       disabled={isDisabled}
       onMouseEnter={onHoverStart}
-      className={`flex w-[182px] cursor-pointer flex-col items-center justify-center border bg-[#030914]/84 px-2 py-2.5 shadow-lg backdrop-blur-md transition-all hover:scale-105 hover:bg-[#051124]/92 sm:w-[240px] sm:px-1 sm:py-3
-        hover:brightness-110
-      `}
+      className={`relative flex w-[182px] flex-col items-center justify-center border bg-[#030914] px-2 py-2.5 shadow-lg transition-all sm:w-[240px] sm:px-1 sm:py-3 ${
+        isDisabled
+          ? "cursor-not-allowed opacity-45 grayscale"
+          : "cursor-pointer hover:scale-105 hover:bg-[#051124]/92 hover:brightness-110"
+      }`}
       style={{
-        borderColor: withHexAlpha(baseColor, "80"),
-        boxShadow: `0 0 ${isHovered ? "24px" : "14px"} ${withHexAlpha(baseColor, isHovered ? "55" : "33")}`,
+        borderColor: isTourTarget && !isDisabled
+          ? withHexAlpha(baseColor, "dd")
+          : withHexAlpha(baseColor, isDisabled ? "30" : "80"),
+        boxShadow: isTourTarget && !isConnecting && !isDisabled
+          ? `0 0 32px ${withHexAlpha(baseColor, "aa")}, 0 0 72px ${withHexAlpha(baseColor, "55")}`
+          : isDisabled
+            ? "none"
+            : `0 0 ${isHovered ? "24px" : "14px"} ${withHexAlpha(baseColor, isHovered ? "55" : "33")}`,
         clipPath: "polygon(0 0, 85% 0, 100% 15px, 100% 100%, 15% 100%, 0 calc(100% - 15px))",
       }}
     >
+      {/* Anillo de ping para indicar que es el objetivo del tour */}
+      {isTourTarget && !isConnecting ? (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 animate-ping border-2 opacity-50"
+          style={{ borderColor: baseColor }}
+        />
+      ) : null}
       <div className="flex items-center gap-3">
         {isLocked ? <div className="h-2 w-2 animate-pulse rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,1)]" /> : null}
         <h2 className="text-center font-mono text-base font-black uppercase tracking-[0.16em] text-white drop-shadow-md sm:text-xl sm:tracking-widest" style={{ textShadow: `0 0 10px ${baseColor}80` }}>
@@ -58,7 +97,7 @@ function HubNodeActionPanelComponent({
       </div>
       {statusLabel ? (
         <p className={`mt-1 border px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] sm:mt-2 sm:tracking-widest ${
-          isTargetNode && isNavigationBusy
+          isTourTarget || (isTargetNode && isNavigationBusy)
             ? "border-cyan-400/35 bg-cyan-950/45 text-cyan-200"
             : "border-red-500/20 bg-red-950/50 text-red-400"
         }`}>{statusLabel}</p>

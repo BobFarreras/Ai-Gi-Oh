@@ -58,8 +58,8 @@ interface HubProgressSectionProps {
 }
 
 export function HubProgressSection({ progress, onToggleSound }: HubProgressSectionProps) {
-  const tutorialTone = progress.hasCompletedTutorial ? "emerald" : "orange";
-  const tutorialValue = progress.hasCompletedTutorial ? "Listo" : "Pendiente";
+  const tutorialTone = progress.hasCompletedTutorial ? "emerald" : progress.hasSkippedTutorial ? "amber" : "orange";
+  const tutorialValue = progress.hasCompletedTutorial ? "Listo" : progress.hasSkippedTutorial ? "Libre" : "Pendiente";
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (

@@ -154,7 +154,7 @@ retratos **solo existen como `.webp`** (`intro-GenNvim.webp`, …). Resultado: i
 
 ## Bloque 4 — Multijugador profesional
 
-**Estado:** diseño · **Prioridad:** media-alta · **Esfuerzo:** alto
+**Estado:** pospuesto · **Prioridad:** media-alta · **Esfuerzo:** alto
 
 ### Objetivo
 Partidas 1v1 entre jugadores reales, **mismo diseño** del tablero actual, con el mejor flujo,
@@ -193,22 +193,150 @@ rendimiento y robustez (anti-trampas, reconexión).
 
 ---
 
-## Bloque 5 — Nueva transición/onboarding para nuevos jugadores + tutorial
+## Bloque 5 — Tour guiado del Hub (onboarding inmersivo)
 
-**Estado:** exploración · **Prioridad:** media · **Esfuerzo:** medio-alto
+**Estado:** completado · **Prioridad:** media · **Esfuerzo:** medio-alto · **Rama:** `features/hub-guided-tutorial`
 
 ### Objetivo
-Probar un **diseño y flujo nuevos** para la primera experiencia (jugador nuevo) y el tutorial.
+Reemplazar la primera experiencia de login por un tour guiado e inmersivo: BigLog explica el
+contexto de la Entidad y la misión, y el jugador navega físicamente por los nodos reales del Hub
+(Market, Arsenal, Story) para completar el tutorial en cada ubicación real.
+
+### Decisiones de diseño
+- **Sin tabla nueva:** el estado del tour se deriva de `player_tutorial_node_progress` usando un
+catálogo de pasos (`hub-tour-step-catalog`) y una resolución pura de estado (`resolve-hub-tour-state`).
+- **Reutilización del tutorial existente:** Market, Arsenal y combate tutorial son los mismos flujos
+actuales; el tour solo los orquesta y añade `?returnTo=hub` para volver al Hub tras completarlos.
+- **Simulación de Story antes del combate:** como el combate tutorial no pertenece al mapa Story real,
+se muestra un overlay de simulación de circuito antes de lanzar el duelo de entrenamiento.
+- **Navegación real:** el jugador hace clic en el nodo activo del Hub; la cámara realiza la
+transición de acercamiento y luego navega al tutorial correspondiente.
+
+### Archivos clave
+- `docs/adr/ADR-0002-hub-guided-tutorial.md` — decisión arquitectónica.
+- `src/core/services/hub/hub-tour-step-catalog.ts` y `resolve-hub-tour-state.ts` — catálogo y lógica pura.
+- `src/components/hub/guided-tour/HubGuidedTourOverlay.tsx` y subcomponentes internos.
+- `src/components/hub/internal/use-hub-scene-tour-integration.ts` — integración con navegación del Hub.
+- `src/components/hub/onboarding/HubOnboardingIntroOverlay.tsx` — narrativa inicial de contexto.
+- `src/components/hub/HubScene.tsx` y `HubNodeActionPanel.tsx` — soporte de nodos activos/desactivados.
+
+### Criterios de aceptación
+- El jugador nuevo ve la introducción narrativa y el tour guiado en su primer acceso al Hub.
+- Solo el nodo activo del tour es interactivo; el resto aparece desactivado visualmente.
+- Tras completar Market, Arsenal y combate tutorial, el jugador vuelve al Hub y puede reclamar la
+recompensa final desde `/hub/academy/tutorial/reward`.
+- Recompensa idempotente: solo se puede reclamar una vez.
+- Gates en verde y tests co-localizados.
+
+---
+
+## Bloque 6 — Botón "Salir al hub" inoperativo en Story (móvil)
+
+**Estado:** completado · **Prioridad:** alta · **Esfuerzo:** bajo
+
+### Problema
+En el mapa Story, en flujo móvil (`isMobileVerticalFlow`), el botón con flecha hacia atrás
+(`aria-label="Salir al hub"` en `StoryMapZoomControls`) no navega al hub. El callback
+`onExitToHub` no se propagaba desde `StoryScene` hasta `StoryMapZoomControls` porque
+`StorySceneMapPane` no lo pasaba a `StoryCircuitMap`.
+
+### Archivos a revisar
+- `src/components/hub/story/internal/map/components/StoryMapZoomControls.tsx`
+- `src/components/hub/story/StoryScene.tsx` (donde se define `exitToHub`)
+- `src/components/hub/story/internal/scene/view/StorySceneMapPane.tsx`
+
+### Criterios de aceptación
+- Tocar el botón de salida en Story móvil redirige a `/hub`.
+- El test existente `StoryMapZoomControls.test.tsx` pasa y, si es necesario, se amplía para cubrir la acción real de navegación.
+
+### Notas de implementación
+- Se añadió `onExitToHub={props.onExitToHub}` en `StorySceneMapPane` para propagar el callback a `StoryCircuitMap` y `StoryMapZoomControls`.
+- Se amplió `StoryScene.test.tsx` con un test que simula modo móvil y verifica que `router.push("/hub")` se dispara al pulsar "Salir al hub".
+
+---
+
+## Bloque 7 — Imágenes de duelo Story rotas en producción (formato `.webp` inexistente)
+
+**Estado:** completado · **Prioridad:** alta · **Esfuerzo:** bajo
+
+### Problema
+Varios assets referenciados en el flujo Story duelo/map están en `.webp` pero el archivo real no
+existe (o existe en otro formato), por lo que `next/image` muestra la imagen por defecto / fallback.
+
+### Casos detectados
+- `createStoryDuelPresentationRuntime` usa `/assets/story/player/bob.webp` como avatar del jugador.
+- `StoryCircuitCanvas` referencia `/assets/renders/nexus.webp`, `/assets/renders/react.webp`, `/assets/renders/wrap.webp`.
+- El avatar del oponente proviene de `duel.opponentAvatarUrl` (BBDD/catálogo); en el oponente "soldado" el valor apunta a un `.png` que no existe.
 
 ### Enfoque
-1. Definir qué falla o se quiere mejorar del flujo actual (fricción, abandono, claridad).
-2. Prototipar el nuevo flujo **aislado y detrás de un flag**, sin romper el actual.
-3. Reutilizar el motor y el combate de tutorial existentes (no reescribir lógica de juego).
-4. Medir: tasa de finalización del tutorial y abandono por paso, antes/después.
+1. Auditar qué archivos reales existen en `public/` para cada ruta.
+2. Unificar el formato real con las referencias del código (convertir o renombrar, manteniendo consistencia case-sensitive).
+3. Aprovechar `scripts/quality/check-assets.mjs` para asegurar que no queden referencias rotas.
 
-### Preguntas abiertas para el dueño
-- ¿Qué problema concreto del onboarding actual quieres resolver?
-- ¿Dirección de diseño deseada (más guiado, más cinemático, más corto…)?
+### Criterios de aceptación
+- La moneda del inicio del duelo muestra las caras del jugador y del oponente correctamente.
+- Los renders/avatars del mapa Story no caen en fallback genérico.
+- `pnpm quality:check:assets` pasa sin excepciones documentadas.
+
+### Notas de implementación
+- Solucionado por el usuario: las rutas en base de datos seguían usando `.png`; se actualizaron a `.webp` para que coincidan con los assets reales en `public/`.
+
+---
+
+## Bloque 8 — Moneda inicial del duelo Story no muestra la cara del oponente soldado
+
+**Estado:** completado · **Prioridad:** alta · **Esfuerzo:** bajo
+
+### Problema
+En el overlay `StoryDuelCoinTossOverlay`, la imagen de uno de los lados de la moneda falla para el
+oponente "soldado". El avatar del oponente (`opponentAvatarUrl`) llega desde el runtime del duelo y,
+para ese oponente, parece apuntar a un archivo `.png` inexistente en lugar de al `.webp` real.
+
+### Archivos a revisar
+- `src/app/hub/story/chapter/[chapter]/duel/[duelIndex]/StoryDuelCoinTossOverlay.tsx`
+- `src/app/hub/story/chapter/[chapter]/duel/[duelIndex]/internal/story-duel-runtime.ts`
+- `src/services/story/get-story-duel-runtime-data.ts`
+- Catálogo de oponentes Story (BBDD o `story-opponent-catalog.ts` si aplica).
+
+### Criterios de aceptación
+- El lanzamiento de moneda muestra ambas caras sin error de imagen.
+- Si un oponente no tiene avatar específico, se usa un fallback explícito y documentado.
+
+### Notas de implementación
+- Solucionado por el usuario: la ruta del avatar del oponente en base de datos estaba en `.png`; se actualizó a `.webp`.
+
+---
+
+## Bloque 9 — Seguridad del pipeline de deploy en Vercel
+
+**Estado:** pendiente · **Prioridad:** alta · **Esfuerzo:** bajo (configuración)
+
+### Problema
+Actualmente cualquier `push` a cualquier rama dispara un deploy en Vercel que parece apuntar a
+producción (`main`). Esto es peligroso: una rama de feature sin mergear puede reemplazar el producto
+en producción si pasa los checks.
+
+### Posibles causas
+- El proyecto Vercel está configurado para hacer deploy automático de cualquier push.
+- GitHub Actions o la integración Vercel no limitan el deploy a la rama `main` (o a PRs mergeadas).
+- Falta protección de rama (`branch protection` / ruleset) en `main`.
+
+### Enfoque
+1. Revisar la configuración del proyecto en el dashboard de Vercel:
+   - Production Branch: debe ser `main`.
+   - Preview Deployments: solo para PRs, no para cualquier push.
+2. Revisar GitHub Actions (`.github/workflows/` si existen) para asegurar que el deploy a producción
+   solo se ejecute en `push` a `main` y tras pasar `quality:check`.
+3. Proteger `main` con ruleset: requerir PR, requerir checks en verde, bloquear push directo.
+
+> **Nota:** para investigar y modificar la configuración de Vercel/GitHub se necesitan los MCPs
+> correspondientes o acceso manual al dashboard. Desde el código del repositorio solo se puede
+> auditar la parte de GitHub Actions (`.github/workflows`).
+
+### Criterios de aceptación
+- Pushear una rama `features/*` no publica en producción.
+- Solo los cambios mergeados en `main` (y que pasen los gates) generan deploy de producción.
+- Documentar el flujo en este roadmap o en `docs/DESPLIEGUE.md`.
 
 ---
 
@@ -218,6 +346,16 @@ Probar un **diseño y flujo nuevos** para la primera experiencia (jugador nuevo)
 1. **Bloque 1, 2, 3** (fixes de producción visibles).
 2. **Bloque 0** (rendimiento del hub, visual-neutral).
 
-### Pendientes
-3. **Bloque 4** (multijugador) — el grande; arrancar por F4.1.
-4. **Bloque 5** (onboarding) — en paralelo cuando haya capacidad.
+### Completados (fixes de producción)
+3. **Bloque 6** (salir al hub en Story móvil).
+4. **Bloque 7** (imágenes Story rotas).
+5. **Bloque 8** (moneda del oponente soldado).
+
+### Completados (mejoras de experiencia)
+6. **Bloque 5** (tour guiado del Hub) — onboarding inmersivo por nodos reales.
+
+### Pendientes (fixes de producción críticos)
+7. **Bloque 9** (seguridad del deploy) — antes que cualquier nuevo código, para no romper producción.
+
+### Pospuestos
+8. **Bloque 4** (multijugador) — se retrasa hasta estabilizar producción.
