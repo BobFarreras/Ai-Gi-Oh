@@ -73,6 +73,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, reward, alreadyFinished: true }, { status: 200, headers: response.headers });
     }
 
+    // Limpiar el log de acciones: solo es útil DURANTE la partida (reconexión).
+    // Una vez FINISHED, las filas no aportan valor y se purgan para no acumular.
+    await serviceClient.from("match_actions").delete().eq("match_id", matchId);
+
     // Acreditar recompensas al jugador que llama
     const reward = resolveMatchReward({ mode: "MULTIPLAYER", outcome });
     if (reward.nexus > 0) {
