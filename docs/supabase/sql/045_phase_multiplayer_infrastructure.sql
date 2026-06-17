@@ -5,11 +5,11 @@
 -- ─────────────────────────────────────────────
 create table public.match_sessions (
   id                uuid primary key default gen_random_uuid(),
-  player_a_id       uuid not null references auth.users(id) on delete cascade,
-  player_b_id       uuid not null references auth.users(id) on delete cascade,
+  player_a_id       uuid not null references public.player_profiles(player_id) on delete cascade,
+  player_b_id       uuid not null references public.player_profiles(player_id) on delete cascade,
   status            text not null default 'WAITING'
                     check (status in ('WAITING', 'ACTIVE', 'FINISHED', 'ABANDONED')),
-  winner_id         uuid references auth.users(id),
+  winner_id         uuid references public.player_profiles(player_id),
   deck_a_ids        text[] not null default '{}',
   deck_b_ids        text[] not null default '{}',
   seed              text not null default '',
@@ -23,8 +23,10 @@ alter table public.match_sessions enable row level security;
 create policy "match_sessions_select_participants" on public.match_sessions
   for select using (auth.uid() = player_a_id or auth.uid() = player_b_id);
 
-create policy "match_sessions_insert_as_player_a" on public.match_sessions
-  for insert with check (auth.uid() = player_a_id);
+-- Cualquier participante puede crear la sesión: el jugador B (quien acepta la
+-- invitación) es quien la inserta en acceptInvitation, no el jugador A.
+create policy "match_sessions_insert_participant" on public.match_sessions
+  for insert with check (auth.uid() = player_a_id or auth.uid() = player_b_id);
 
 create policy "match_sessions_update_participants" on public.match_sessions
   for update using (auth.uid() = player_a_id or auth.uid() = player_b_id);
@@ -35,7 +37,7 @@ create policy "match_sessions_update_participants" on public.match_sessions
 create table public.match_actions (
   id          bigint generated always as identity primary key,
   match_id    uuid not null references public.match_sessions(id) on delete cascade,
-  player_id   uuid not null references auth.users(id),
+  player_id   uuid not null references public.player_profiles(player_id),
   sequence    int not null,
   action_type text not null,
   payload     jsonb not null default '{}',
@@ -70,8 +72,8 @@ create policy "match_actions_insert_own" on public.match_actions
 -- ─────────────────────────────────────────────
 create table public.player_invitations (
   id          uuid primary key default gen_random_uuid(),
-  from_id     uuid not null references auth.users(id) on delete cascade,
-  to_id       uuid not null references auth.users(id) on delete cascade,
+  from_id     uuid not null references public.player_profiles(player_id) on delete cascade,
+  to_id       uuid not null references public.player_profiles(player_id) on delete cascade,
   status      text not null default 'PENDING'
               check (status in ('PENDING', 'ACCEPTED', 'DECLINED', 'EXPIRED', 'CANCELLED')),
   match_id    uuid references public.match_sessions(id),
