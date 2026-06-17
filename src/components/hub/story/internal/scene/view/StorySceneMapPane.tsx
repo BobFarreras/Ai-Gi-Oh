@@ -24,6 +24,7 @@ export function StorySceneMapPane(props: IStorySceneMapViewProps) {
         centerRequestKey={props.centerRequestKey ?? 0}
         isSoundtrackMuted={props.isSoundtrackMuted ?? false}
         onToggleSoundtrackMute={props.onToggleSoundtrackMute}
+        onExitToHub={props.onExitToHub}
         onSelectNode={props.onSelectNode}
         onRewardCollectAnimationComplete={props.onRewardCollectAnimationComplete}
         onRetreatAnimationComplete={props.onRetreatAnimationComplete}

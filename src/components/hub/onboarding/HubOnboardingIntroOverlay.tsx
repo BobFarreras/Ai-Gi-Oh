@@ -4,7 +4,6 @@
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { ACADEMY_TUTORIAL_MAP_ROUTE } from "@/core/constants/routes/academy-routes";
 import { IPlayerHubProgress } from "@/core/entities/hub/IPlayerHubProgress";
 import { OnboardingNarrationBeat } from "@/components/hub/onboarding/internal/OnboardingNarrationBeat";
 import { savePlayerOnboardingAction } from "@/components/hub/onboarding/internal/save-player-onboarding-action";
@@ -12,7 +11,7 @@ import { resolveOnboardingVisibility } from "@/components/hub/onboarding/interna
 import { useOnboardingAudio } from "@/components/hub/onboarding/internal/use-onboarding-audio";
 import { CyberBackground } from "@/components/landing/CyberBackground";
 
-type OnboardingStep = "BIGLOG_PRESENTATION" | "PLAYER_PRESENTATION" | "BIGLOG_DECISION";
+type OnboardingStep = "CONTEXT_SYSTEM" | "CONTEXT_CONFLICT" | "CONTEXT_THREAT" | "PLAYER_READY" | "BIGLOG_DECISION";
 
 interface IHubOnboardingIntroOverlayProps {
   progress?: IPlayerHubProgress;
@@ -25,25 +24,43 @@ interface IStepContent {
   cta?: string;
 }
 
-const STEP_ORDER: readonly OnboardingStep[] = ["BIGLOG_PRESENTATION", "PLAYER_PRESENTATION", "BIGLOG_DECISION"];
+const STEP_ORDER: readonly OnboardingStep[] = [
+  "CONTEXT_SYSTEM",
+  "CONTEXT_CONFLICT",
+  "CONTEXT_THREAT",
+  "PLAYER_READY",
+  "BIGLOG_DECISION",
+];
 
 const STEP_CONTENT: Record<OnboardingStep, IStepContent> = {
-  BIGLOG_PRESENTATION: {
+  CONTEXT_SYSTEM: {
     actor: "biglog",
     label: "BigLog",
-    text: "Soy BigLog, oficial de enlace de Big Tech. Te mostraré la base del sistema: Market, Combate y Arsenal.",
+    text: "Bienvenido, operador. Soy BigLog, oficial de enlace de Big Tech. Este núcleo es lo último que queda de una red global que una vez conectó toda la información del mundo.",
     cta: "Siguiente",
   },
-  PLAYER_PRESENTATION: {
+  CONTEXT_CONFLICT: {
+    actor: "biglog",
+    label: "BigLog",
+    text: "La Entidad ha tomado el control. Reescribe reglas, corrompe sistemas y bloquea el acceso a quienes no demuestren su valor en combate.",
+    cta: "Siguiente",
+  },
+  CONTEXT_THREAT: {
+    actor: "biglog",
+    label: "BigLog",
+    text: "Tu misión es clara: dominar el Mercado para conseguir recursos, montar tu Arsenal con cartas y fusiones, y enfrentarte a la Entidad en el Archivo de Historia.",
+    cta: "Siguiente",
+  },
+  PLAYER_READY: {
     actor: "player",
     label: "Jugador",
-    text: "Gracias, BigLog. Estoy preparado para entrar en esta lucha y dominar el núcleo del sistema.",
+    text: "Entendido, BigLog. No solo quiero sobrevivir: quiero desbloquear el núcleo y devolver el control.",
     cta: "Siguiente",
   },
   BIGLOG_DECISION: {
     actor: "biglog",
     label: "BigLog",
-    text: "Vamos a Academy. Te enseñaré el flujo completo para que puedas operar con seguridad desde el primer combate.",
+    text: "Vamos al Hub. Te enseñaré el flujo completo para que puedas operar con seguridad desde el primer combate.",
   },
 };
 
@@ -62,7 +79,8 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
   const [stepIndex, setStepIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [isRoutingToAcademy, setIsRoutingToAcademy] = useState(false);
+  const [isRoutingToHub, setIsRoutingToHub] = useState(false);
+  const [isSkipConfirmed, setIsSkipConfirmed] = useState(false);
   const shouldShow = resolveOnboardingVisibility(progress);
   const audio = useOnboardingAudio({ isEnabled: shouldShow && !isClosing });
   const step = STEP_ORDER[stepIndex] ?? STEP_ORDER[0];
@@ -75,6 +93,21 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
 
   if (!shouldShow || isClosing) return null;
 
+  if (isSkipConfirmed) {
+    return (
+      <section className="fixed inset-0 z-[180] overflow-hidden">
+        <CyberBackground lightweight />
+        <div className="relative z-10 flex h-full items-center justify-center p-4">
+          <div className="rounded-xl border border-amber-300/60 bg-amber-950/45 px-6 py-4 text-center shadow-[0_0_36px_rgba(245,158,11,0.4)]">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-200">Hub activado</p>
+            <p className="mt-1 text-lg font-black uppercase tracking-[0.12em] text-amber-50">Acceso completo</p>
+            <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-200/70">Todos los nodos disponibles</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   const moveNextStep = () => {
     audio.playButtonClick();
     setStepIndex((current) => Math.min(current + 1, STEP_ORDER.length - 1));
@@ -85,13 +118,14 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
     try {
       await savePlayerOnboardingAction(action);
       if (action === "mark_intro_seen") {
-        setIsRoutingToAcademy(true);
+        setIsRoutingToHub(true);
         await new Promise((resolve) => window.setTimeout(resolve, 700));
-        router.push(ACADEMY_TUTORIAL_MAP_ROUTE);
+        router.refresh();
         return;
       }
-      setIsClosing(true);
-      router.refresh();
+      setIsSkipConfirmed(true);
+      await new Promise((resolve) => window.setTimeout(resolve, 1200));
+      window.location.assign("/hub");
     } finally {
       setIsLoading(false);
     }
@@ -101,19 +135,20 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
     <section className="fixed inset-0 z-[180] overflow-hidden">
       <CyberBackground lightweight />
       <div className="relative z-10 flex h-full items-center justify-center p-4">
-        {isRoutingToAcademy ? (
+        {isRoutingToHub ? (
           <div className="rounded-xl border border-cyan-300/60 bg-cyan-950/45 px-6 py-4 text-center shadow-[0_0_36px_rgba(34,211,238,0.4)]">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-200">Conectando</p>
-            <p className="mt-1 text-lg font-black uppercase tracking-[0.12em] text-cyan-50">Academy</p>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-200">Sincronizando</p>
+            <p className="mt-1 text-lg font-black uppercase tracking-[0.12em] text-cyan-50">Hub</p>
           </div>
         ) : (
-          <AnimatePresence mode="wait">
-            <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex w-full items-center justify-center">
+          <div className="flex w-full items-center justify-center">
               <OnboardingNarrationBeat
                 actorName={content.label}
                 actorImage={resolveActorImage(content.actor)}
                 actorSide={resolveActorSide(content.actor)}
                 text={content.text}
+                imageKey={content.actor}
+                textKey={step}
                 actions={step !== "BIGLOG_DECISION" ? (
                   <button type="button" onClick={moveNextStep} className="rounded-md border border-black/60 px-4 py-2 text-xs font-black uppercase tracking-[0.14em]">
                     {content.cta}
@@ -121,7 +156,7 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
                 ) : (
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <button type="button" disabled={isLoading} onClick={() => void executeAction("mark_intro_seen")} className="rounded-md border border-cyan-400/60 bg-cyan-950/80 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-cyan-100 disabled:opacity-55">
-                      Ir a Academy
+                      Ir al Hub
                     </button>
                     <button type="button" disabled={isLoading} onClick={() => void executeAction("skip_tutorial")} className="rounded-md border border-amber-400/65 bg-amber-950/75 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-amber-100 disabled:opacity-55">
                       No, voy por mi cuenta
@@ -129,8 +164,7 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
                   </div>
                 )}
               />
-            </motion.div>
-          </AnimatePresence>
+          </div>
         )}
       </div>
     </section>

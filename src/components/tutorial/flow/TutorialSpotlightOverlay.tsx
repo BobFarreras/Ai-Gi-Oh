@@ -86,7 +86,7 @@ export function TutorialSpotlightOverlay({ isVisible, targetId, disableAutoScrol
     update();
     window.addEventListener("resize", update);
     window.addEventListener("scroll", update, true);
-    const intervalId = window.setInterval(update, 160);
+    const intervalId = window.setInterval(update, 220);
     return () => {
       window.clearInterval(intervalId);
       window.removeEventListener("resize", update);

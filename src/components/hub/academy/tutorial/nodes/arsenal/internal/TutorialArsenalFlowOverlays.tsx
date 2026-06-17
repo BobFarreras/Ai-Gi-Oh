@@ -17,6 +17,7 @@ interface ITutorialArsenalFlowOverlaysProps {
   shouldPreferTopTutorialDialog: boolean;
   isEvolutionOverlayVisible: boolean;
   playSfx: (id: HubModuleSfxId) => void;
+  returnToHub?: boolean;
 }
 
 /**
@@ -75,12 +76,14 @@ export function TutorialArsenalFlowOverlays(props: ITutorialArsenalFlowOverlaysP
         description="Ya dominas fundamentos de Arsenal. Elige continuar con el siguiente tutorial o volver al mapa."
         onContinue={() => {
           props.playSfx("EVOLUTION_BUTTON");
-          window.location.assign(ACADEMY_TUTORIAL_MARKET_ROUTE);
+          window.location.assign(props.returnToHub ? "/hub" : ACADEMY_TUTORIAL_MARKET_ROUTE);
         }}
         onExit={() => {
           props.playSfx("DIALOG_CLOSE");
-          window.location.assign(ACADEMY_TUTORIAL_MAP_ROUTE);
+          window.location.assign(props.returnToHub ? "/hub" : ACADEMY_TUTORIAL_MAP_ROUTE);
         }}
+        continueLabel={props.returnToHub ? "Volver al Hub" : "Siguiente Tutorial"}
+        hideExitButton={props.returnToHub}
       />
     </>
   );

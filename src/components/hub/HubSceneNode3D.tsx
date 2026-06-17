@@ -35,6 +35,8 @@ interface HubSceneNode3DProps {
   onNavigate: (nodeId: string, href: string) => void;
   isTargetNode: boolean;
   isNavigationBusy: boolean;
+  isDisabled: boolean;
+  isTourTarget?: boolean;
 }
 
 function HubSceneNode3DComponent({
@@ -46,6 +48,8 @@ function HubSceneNode3DComponent({
   onNavigate,
   isTargetNode,
   isNavigationBusy,
+  isDisabled,
+  isTourTarget = false,
 }: HubSceneNode3DProps) {
   const nodeRef = useRef<THREE.Group>(null);
   const baseRef = useRef<THREE.Group>(null);
@@ -57,13 +61,14 @@ function HubSceneNode3DComponent({
   const baseMaterials = useMemo(() => createNodeBaseMaterials(baseColor), [baseColor]);
 
   const handleNodeAction = useCallback(() => {
+    if (isDisabled) return;
     const result = resolveHubNodeInteraction(section);
     if (result.kind === "locked") {
       setIsLockReasonVisible((previous) => !previous);
       return;
     }
     onNavigate(node.id, result.href);
-  }, [section, node.id, onNavigate]);
+  }, [isDisabled, section, node.id, onNavigate]);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -96,11 +101,13 @@ function HubSceneNode3DComponent({
         onPointerDown={(event) => event.stopPropagation()}
         onPointerOver={(event) => {
           event.stopPropagation();
+          if (isDisabled) return;
           if (!isHovered) onNodeHoverSound?.();
           setIsHovered(true);
         }}
         onPointerOut={(event) => {
           event.stopPropagation();
+          if (isDisabled) return;
           setIsHovered(false);
         }}
       >
@@ -138,6 +145,8 @@ function HubSceneNode3DComponent({
             onAction={handleNodeAction}
             isNavigationBusy={isNavigationBusy}
             isTargetNode={isTargetNode}
+            isDisabled={isDisabled}
+            isTourTarget={isTourTarget}
           />
         </Html>
       ) : null}

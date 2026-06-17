@@ -7,4 +7,5 @@ export interface ITrainingTutorialClientProps {
   opponentDeck: ICard[];
   opponentFusionDeck: ICard[];
   seed: string;
+  returnToHub?: boolean;
 }

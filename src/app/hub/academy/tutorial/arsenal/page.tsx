@@ -9,10 +9,16 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
-export default async function TutorialArsenalPage() {
+interface ITutorialArsenalPageProps {
+  searchParams?: Promise<{ returnTo?: string }>;
+}
+
+export default async function TutorialArsenalPage({ searchParams }: ITutorialArsenalPageProps) {
   const session = await getCurrentUserSession();
   const playerId = session?.user.id ?? "tutorial-local-player";
   const mockData = createTutorialArsenalMockData(playerId);
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const returnToHub = resolvedSearchParams?.returnTo === "hub";
   return (
     <>
       <HubSectionEntryBurst />
@@ -22,6 +28,7 @@ export default async function TutorialArsenalPage() {
         initialDeck={mockData.deck}
         collection={mockData.collection}
         initialCardProgress={mockData.cardProgress}
+        returnToHub={returnToHub}
       />
     </>
   );
