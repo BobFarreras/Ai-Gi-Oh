@@ -1,7 +1,7 @@
 // src/components/hub/multiplayer/MultiplayerMatchClient.tsx - Sala de partida multijugador: conecta Board con el motor Realtime y gestiona reconexiones y fin de partida.
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Board } from "@/components/game/board";
 import { ICard } from "@/core/entities/ICard";
@@ -9,6 +9,11 @@ import { GameState } from "@/core/use-cases/GameEngine";
 import { useMultiplayerMatchChannel } from "@/core/hooks/multiplayer/useMultiplayerMatchChannel";
 import { useRemoteOpponentTurn } from "@/core/hooks/multiplayer/useRemoteOpponentTurn";
 import { IMatchReward } from "@/core/entities/match/IMatchReward";
+import {
+  prepareMultiplayerDeck,
+  resolveMultiplayerCoinToss,
+} from "@/core/services/multiplayer/prepare-multiplayer-match";
+import { MultiplayerCoinTossOverlay } from "./MultiplayerCoinTossOverlay";
 
 interface MultiplayerMatchClientProps {
   matchId: string;
@@ -69,8 +74,29 @@ export function MultiplayerMatchClient({
   const [winnerPlayerId, setWinnerPlayerId] = useState<string | null>(null);
   const [reward, setReward] = useState<IMatchReward | null>(null);
   const [matchFinished, setMatchFinished] = useState(false);
+  const [isCoinTossVisible, setIsCoinTossVisible] = useState(true);
   const applyTransitionRef = useRef<((transition: (state: GameState) => GameState) => GameState | null) | null>(null);
   const finishCalledRef = useRef(false);
+
+  // Identidades canónicas: el invitador (player_a de la sesión) es A en AMBOS clientes.
+  const canonicalPlayerAId = isPlayerA ? localPlayerId : opponentId;
+  const canonicalPlayerBId = isPlayerA ? opponentId : localPlayerId;
+
+  // Mazos deterministas por propietario real: orden y runtimeId idénticos en ambos clientes.
+  const preparedLocalDeck = useMemo(
+    () => prepareMultiplayerDeck(localDeck, localPlayerId, seed),
+    [localDeck, localPlayerId, seed],
+  );
+  const preparedOpponentDeck = useMemo(
+    () => prepareMultiplayerDeck(opponentDeck, opponentId, seed),
+    [opponentDeck, opponentId, seed],
+  );
+
+  // Sorteo compartido: mismo ganador en ambos clientes, traducido a la perspectiva local.
+  const coinToss = useMemo(
+    () => resolveMultiplayerCoinToss({ seed, canonicalPlayerAId, canonicalPlayerBId, localPlayerId }),
+    [seed, canonicalPlayerAId, canonicalPlayerBId, localPlayerId],
+  );
 
   const { channel, channelStatus, opponentConnectionStatus, disconnectedForMs } =
     useMultiplayerMatchChannel({ matchId, localPlayerId, opponentId });
@@ -200,16 +226,27 @@ export function MultiplayerMatchClient({
           playerName: localNickname,
           opponentId,
           opponentName: opponentNickname,
-          playerDeck: localDeck,
-          opponentDeck,
+          playerDeck: preparedLocalDeck,
+          opponentDeck: preparedOpponentDeck,
           seed,
-          starterPlayerId: isPlayerA ? localPlayerId : opponentId,
+          // Orden y runtimeId ya son deterministas: no volver a barajar.
+          preserveDeckOrder: true,
+          starterPlayerId: coinToss.starterPlayerId,
         }}
         disableOpponentAutomation
         applyTransitionRef={applyTransitionRef}
         onMatchResolved={handleMatchResolved}
         onExitMatch={() => router.push("/hub/multiplayer")}
+        isMatchStartLocked={isCoinTossVisible}
         isTurnTimerEnabled={false}
+      />
+
+      <MultiplayerCoinTossOverlay
+        isVisible={isCoinTossVisible}
+        starterSide={coinToss.starterSide}
+        playerName={localNickname}
+        opponentName={opponentNickname}
+        onComplete={() => setIsCoinTossVisible(false)}
       />
     </div>
   );

@@ -1,12 +1,13 @@
 // src/components/hub/multiplayer/MultiplayerLobby.tsx - Lobby multijugador: presencia de jugadores, invitaciones y acceso a partidas.
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IOnlinePlayer } from "@/core/entities/multiplayer/IOnlinePlayer";
 import { IPlayerInvitation } from "@/core/entities/multiplayer/IPlayerInvitation";
 import { useOnlinePlayers } from "@/core/hooks/multiplayer/useOnlinePlayers";
 import { usePendingInvitations } from "@/core/hooks/multiplayer/usePendingInvitations";
+import { useOutgoingInvitationMatch } from "@/core/hooks/multiplayer/useOutgoingInvitationMatch";
 import { sendInvitation } from "@/app/hub/multiplayer/actions/send-invitation";
 import { acceptInvitation, declineInvitation } from "@/app/hub/multiplayer/actions/respond-invitation";
 import { InvitationBanner } from "./InvitationBanner";
@@ -31,6 +32,14 @@ export function MultiplayerLobby({ localPlayerId, localNickname, activeDeckIds }
 
   const { onlinePlayers } = useOnlinePlayers(localPlayer);
   const { pendingInvitations } = usePendingInvitations(localPlayerId);
+  const acceptedMatchId = useOutgoingInvitationMatch(localPlayerId);
+
+  // El invitador entra a la partida en cuanto el rival acepta.
+  useEffect(() => {
+    if (acceptedMatchId) {
+      router.push(`/hub/multiplayer/match/${acceptedMatchId}`);
+    }
+  }, [acceptedMatchId, router]);
 
   const handleInvite = useCallback(
     async (player: IOnlinePlayer) => {

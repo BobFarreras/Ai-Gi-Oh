@@ -2,6 +2,7 @@
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { createSupabaseServerClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-server-client";
 import { ICard } from "@/core/entities/ICard";
+import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
 
 interface IMatchSessionRow {
   id: string;
@@ -50,14 +51,12 @@ export async function getMatchSessionData(matchId: string): Promise<IMatchSessio
   const localDeckIds = isPlayerA ? matchSession.deck_a_ids : matchSession.deck_b_ids;
   const opponentDeckIds = isPlayerA ? matchSession.deck_b_ids : matchSession.deck_a_ids;
 
-  const allCardIds = [...new Set([...localDeckIds, ...opponentDeckIds])];
-  const { data: cardRows } = await supabase.from("cards").select("*").in("id", allCardIds);
-
-  if (!cardRows) return null;
-
-  const cardById = new Map(cardRows.map((c: unknown) => [(c as { id: string }).id, c as ICard]));
-  const localDeck = localDeckIds.map((id) => cardById.get(id)).filter((c): c is ICard => c !== undefined);
-  const opponentDeck = opponentDeckIds.map((id) => cardById.get(id)).filter((c): c is ICard => c !== undefined);
+  // Las cartas viven en el catálogo en código (no hay tabla `cards` en la DB).
+  // Resolver por ID garantiza el mismo objeto de carta en ambos clientes.
+  const resolveDeck = (ids: string[]): ICard[] =>
+    ids.map((id) => CARD_BY_ID.get(id)).filter((c): c is ICard => c !== undefined);
+  const localDeck = resolveDeck(localDeckIds);
+  const opponentDeck = resolveDeck(opponentDeckIds);
 
   return {
     matchId,
