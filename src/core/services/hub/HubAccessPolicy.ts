@@ -34,13 +34,5 @@ export function resolveHubSectionLock(section: IHubSection, progress: IPlayerHub
     return resolveTutorialGateLock(section, progress);
   }
 
-  if (section.type === "MULTIPLAYER") {
-    return {
-      ...section,
-      isLocked: true,
-      lockReason: "Multijugador en proceso de creación. Próximamente disponible.",
-    };
-  }
-
   return { ...section, isLocked: false, lockReason: null };
 }

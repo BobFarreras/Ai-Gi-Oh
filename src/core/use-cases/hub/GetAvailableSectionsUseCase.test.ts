@@ -5,7 +5,7 @@ import { InMemoryHubRepository } from "@/infrastructure/repositories/InMemoryHub
 import { GetAvailableSectionsUseCase } from "./GetAvailableSectionsUseCase";
 
 describe("GetAvailableSectionsUseCase", () => {
-  it("oculta multijugador cuando faltan medallas", async () => {
+  it("incluye multijugador cuando el tutorial está completado", async () => {
     const repository = new InMemoryHubRepository({
       playerId: "player-a",
       medals: 0,
@@ -17,10 +17,10 @@ describe("GetAvailableSectionsUseCase", () => {
     const sections = await useCase.execute("player-a");
     const hasMultiplayer = sections.some((section) => section.type === "MULTIPLAYER");
 
-    expect(hasMultiplayer).toBe(false);
+    expect(hasMultiplayer).toBe(true);
   });
 
-  it("mantiene multijugador oculto aunque el jugador tenga medallas", async () => {
+  it("incluye multijugador independientemente de las medallas del jugador", async () => {
     const repository = new InMemoryHubRepository({
       playerId: "player-a",
       medals: 2,
@@ -32,6 +32,6 @@ describe("GetAvailableSectionsUseCase", () => {
     const sections = await useCase.execute("player-a");
     const hasMultiplayer = sections.some((section) => section.type === "MULTIPLAYER");
 
-    expect(hasMultiplayer).toBe(false);
+    expect(hasMultiplayer).toBe(true);
   });
 });

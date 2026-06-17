@@ -80,6 +80,7 @@ export function useBoard(
   });
 
   return {
+    applyTransition: runtime.applyTransition,
     gameState: uiState.gameState,
     selectedCard: uiState.selectedCard,
     selectedBoardEntityInstanceId: uiState.selectedBoardEntityInstanceId,
