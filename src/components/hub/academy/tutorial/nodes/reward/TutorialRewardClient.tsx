@@ -59,7 +59,7 @@ export function TutorialRewardClient({ rewardNodeState }: ITutorialRewardClientP
       if (result.applied) markTutorialSoundtrackFirstRunFinished();
       setDisplayState("COMPLETED");
       setJustClaimed(result.applied);
-      setStatus(result.applied ? `+${result.rewardNexus} Nexus añadidos a tu cuenta.` : "La recompensa ya estaba reclamada.");
+      setStatus(result.applied ? `Recompensa aplicada: +${result.rewardNexus} Nexus.` : "La recompensa ya estaba reclamada.");
     } catch {
       setStatus("No se pudo reclamar la recompensa final.");
     } finally {
