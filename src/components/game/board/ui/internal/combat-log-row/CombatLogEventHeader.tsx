@@ -18,10 +18,10 @@ export function CombatLogEventHeader({
 }: CombatLogEventHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-2">
-      <span className={`text-[10px] px-2 py-1 uppercase tracking-widest rounded border ${actorToneClass}`}>{actorName}</span>
+      <span className={`text-[11px] px-2 py-1 uppercase tracking-widest rounded border ${actorToneClass}`}>{actorName}</span>
       <div className="flex items-center gap-2">
-        {deltaText && <span className={`text-[10px] px-2 py-1 rounded border font-bold ${deltaToneClass}`}>{deltaText}</span>}
-        <span className="text-[10px] text-zinc-400">
+        {deltaText && <span className={`text-[11px] px-2 py-1 rounded border font-bold ${deltaToneClass}`}>{deltaText}</span>}
+        <span className="text-[11px] text-zinc-400">
           T{event.turn} · {event.phase}
         </span>
       </div>
