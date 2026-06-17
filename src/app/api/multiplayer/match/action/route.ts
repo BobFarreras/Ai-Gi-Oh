@@ -17,7 +17,6 @@ interface IMatchSessionRow {
   player_a_id: string;
   player_b_id: string;
   status: string;
-  last_action_player_id: string | null;
 }
 
 export async function POST(request: NextRequest) {
@@ -43,7 +42,7 @@ export async function POST(request: NextRequest) {
     // Obtener la sesión de partida
     const { data: session, error: sessionError } = await client
       .from("match_sessions")
-      .select("player_a_id,player_b_id,status,last_action_player_id")
+      .select("player_a_id,player_b_id,status")
       .eq("id", matchId)
       .single<IMatchSessionRow>();
 
