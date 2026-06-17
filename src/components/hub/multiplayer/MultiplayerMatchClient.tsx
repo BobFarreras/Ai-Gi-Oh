@@ -29,6 +29,10 @@ interface MultiplayerMatchClientProps {
 
 type ChannelStatus = "CONNECTING" | "CONNECTED" | "DISCONNECTED";
 
+// Avatares de duelo: el jugador local usa bob-rojo, el rival bob.
+const LOCAL_AVATAR_URL = "/assets/story/player/bob-rojo.webp";
+const OPPONENT_AVATAR_URL = "/assets/story/player/bob.webp";
+
 const CONNECTION_COLORS: Record<ChannelStatus, string> = {
   CONNECTING: "bg-amber-400",
   CONNECTED: "bg-emerald-400",
@@ -235,10 +239,12 @@ export function MultiplayerMatchClient({
         }}
         disableOpponentAutomation
         applyTransitionRef={applyTransitionRef}
+        playerAvatarUrl={LOCAL_AVATAR_URL}
+        opponentAvatarUrl={OPPONENT_AVATAR_URL}
         onMatchResolved={handleMatchResolved}
         onExitMatch={() => router.push("/hub/multiplayer")}
         isMatchStartLocked={isCoinTossVisible}
-        isTurnTimerEnabled={false}
+        isTurnTimerEnabled
       />
 
       <MultiplayerCoinTossOverlay
@@ -246,6 +252,8 @@ export function MultiplayerMatchClient({
         starterSide={coinToss.starterSide}
         playerName={localNickname}
         opponentName={opponentNickname}
+        playerAvatarUrl={LOCAL_AVATAR_URL}
+        opponentAvatarUrl={OPPONENT_AVATAR_URL}
         onComplete={() => setIsCoinTossVisible(false)}
       />
     </div>

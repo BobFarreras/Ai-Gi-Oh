@@ -1,6 +1,7 @@
 // src/components/hub/multiplayer/MultiplayerCoinTossOverlay.tsx - Overlay de moneda compartida para decidir quién empieza el duelo multijugador.
 "use client";
 
+import Image from "next/image";
 import { motion, useAnimationControls } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 
@@ -9,13 +10,9 @@ interface IMultiplayerCoinTossOverlayProps {
   starterSide: "PLAYER" | "OPPONENT";
   playerName: string;
   opponentName: string;
+  playerAvatarUrl: string;
+  opponentAvatarUrl: string;
   onComplete?: () => void;
-}
-
-function initials(name: string): string {
-  const trimmed = name.trim();
-  if (!trimmed) return "?";
-  return trimmed.slice(0, 2).toUpperCase();
 }
 
 export function MultiplayerCoinTossOverlay({
@@ -23,11 +20,13 @@ export function MultiplayerCoinTossOverlay({
   starterSide,
   playerName,
   opponentName,
+  playerAvatarUrl,
+  opponentAvatarUrl,
   onComplete,
 }: IMultiplayerCoinTossOverlayProps) {
   const winnerLabel = starterSide === "PLAYER" ? playerName : opponentName;
-  const winnerInitials = initials(winnerLabel);
-  const loserInitials = initials(starterSide === "PLAYER" ? opponentName : playerName);
+  const winnerFaceSrc = starterSide === "PLAYER" ? playerAvatarUrl : opponentAvatarUrl;
+  const loserFaceSrc = starterSide === "PLAYER" ? opponentAvatarUrl : playerAvatarUrl;
   const [isResultVisible, setIsResultVisible] = useState(false);
   const controls = useAnimationControls();
   const dropStartY = useMemo(
@@ -78,11 +77,11 @@ export function MultiplayerCoinTossOverlay({
           animate={controls}
           style={{ transformStyle: "preserve-3d" }}
         >
-          <div className="absolute inset-0 flex items-center justify-center rounded-full border border-cyan-300/65 bg-cyan-950/60 text-3xl font-black text-cyan-100 shadow-[0_0_34px_rgba(34,211,238,0.45)] [backface-visibility:hidden] [transform:translateZ(1px)]">
-            {winnerInitials}
+          <div className="absolute inset-0 rounded-full border border-cyan-300/65 bg-cyan-950/55 shadow-[0_0_34px_rgba(34,211,238,0.45)] [backface-visibility:hidden] [transform:translateZ(1px)]">
+            <Image src={winnerFaceSrc} alt="Cara ganadora" fill sizes="176px" quality={60} className="rounded-full object-cover p-2" />
           </div>
-          <div className="absolute inset-0 flex items-center justify-center rounded-full border border-rose-300/65 bg-rose-950/60 text-3xl font-black text-rose-100 shadow-[0_0_34px_rgba(251,113,133,0.38)] [transform:rotateY(180deg)_translateZ(1px)] [backface-visibility:hidden]">
-            {loserInitials}
+          <div className="absolute inset-0 rounded-full border border-rose-300/65 bg-rose-950/55 shadow-[0_0_34px_rgba(251,113,133,0.38)] [transform:rotateY(180deg)_translateZ(1px)] [backface-visibility:hidden]">
+            <Image src={loserFaceSrc} alt="Cara opuesta" fill sizes="176px" quality={60} className="rounded-full object-cover p-2" />
           </div>
         </motion.div>
         <p className="mt-6 text-sm font-black uppercase tracking-[0.16em] text-cyan-100">
