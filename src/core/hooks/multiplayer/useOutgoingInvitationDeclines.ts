@@ -1,7 +1,7 @@
 // src/core/hooks/multiplayer/useOutgoingInvitationDeclines.ts - Notifica cuando una invitación enviada es rechazada o expira, para reactivar el botón de invitar.
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { createSupabaseBrowserClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-browser-client";
 
 interface IOutgoingInvitationRow {
@@ -22,7 +22,7 @@ export function useOutgoingInvitationDeclines(
   onDeclined: (toId: string) => void,
 ): void {
   const onDeclinedRef = useRef(onDeclined);
-  onDeclinedRef.current = onDeclined;
+  useLayoutEffect(() => { onDeclinedRef.current = onDeclined; });
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();

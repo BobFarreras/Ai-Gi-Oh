@@ -1,7 +1,7 @@
 // src/components/game/board/multiplayer/useRemoteOpponentAnimator.ts - Expone un aplicador de acciones del rival que reproduce su coreografía visual, serializado.
 "use client";
 
-import { MutableRefObject, useCallback, useRef } from "react";
+import { MutableRefObject, useCallback, useLayoutEffect, useRef } from "react";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IMatchActionPayload } from "@/core/entities/multiplayer/IMatchAction";
 import { animateRemoteAction, IRemoteAnimationContext } from "./animate-remote-action";
@@ -25,7 +25,7 @@ export function useRemoteOpponentAnimator(
   params: IUseRemoteOpponentAnimatorParams,
 ): (action: IMatchActionPayload) => Promise<void> {
   const paramsRef = useRef(params);
-  paramsRef.current = params;
+  useLayoutEffect(() => { paramsRef.current = params; });
   const queueRef = useRef<Promise<unknown>>(Promise.resolve());
 
   return useCallback((action: IMatchActionPayload) => {

@@ -17,6 +17,7 @@ import { BoardActionControlsSection } from "@/components/game/board/internal/Boa
 import { BoardInteractiveSection } from "@/components/game/board/internal/BoardInteractiveSection";
 import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 import { BoardTutorialFlowOverlay } from "@/components/game/board/internal/BoardTutorialFlowOverlay";
+import { useLayoutEffect } from "react";
 
 export type BoardBossThemeVariant = "CRIMSON" | "AMBER" | "VIOLET" | "CYAN";
 
@@ -49,8 +50,10 @@ interface IBoardProps {
 export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef }: IBoardProps) {
   countRender("Board");
   const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme, disableOpponentAutomation, opponentStrategyOverride);
-  if (applyTransitionRef) applyTransitionRef.current = board.applyTransition;
-  if (applyRemoteActionRef) applyRemoteActionRef.current = board.applyRemoteAction;
+  useLayoutEffect(() => {
+    if (applyTransitionRef) applyTransitionRef.current = board.applyTransition;
+    if (applyRemoteActionRef) applyRemoteActionRef.current = board.applyRemoteAction;
+  });
   const player = board.gameState.playerA; const opponent = board.gameState.playerB;
   const { isMobile } = useBoardViewportMode();
   const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
