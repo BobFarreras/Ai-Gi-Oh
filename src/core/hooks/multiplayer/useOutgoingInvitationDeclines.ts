@@ -1,7 +1,7 @@
 // src/core/hooks/multiplayer/useOutgoingInvitationDeclines.ts - Notifica cuando una invitación enviada es rechazada o expira, para reactivar el botón de invitar.
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { createSupabaseBrowserClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-browser-client";
 
 interface IOutgoingInvitationRow {
@@ -12,12 +12,17 @@ interface IOutgoingInvitationRow {
 const INACTIVE_STATUSES = new Set(["DECLINED", "EXPIRED", "CANCELLED"]);
 
 /**
- * Devuelve el to_id más reciente de una invitación saliente que ha sido rechazada,
- * expirada o cancelada. El lobby usa este valor para eliminar al jugador de
- * sentInvites y reactivar su botón de invitar.
+ * Llama a onDeclined(toId) cada vez que una invitación saliente cambia a un
+ * estado inactivo (rechazada, expirada o cancelada). Usa callback en lugar de
+ * state para garantizar que se dispare aunque el mismo to_id aparezca dos veces
+ * seguidas (ej. CANCELLED previo + DECLINED nuevo del mismo jugador).
  */
-export function useOutgoingInvitationDeclines(localPlayerId: string): string | null {
-  const [declinedPlayerId, setDeclinedPlayerId] = useState<string | null>(null);
+export function useOutgoingInvitationDeclines(
+  localPlayerId: string,
+  onDeclined: (toId: string) => void,
+): void {
+  const onDeclinedRef = useRef(onDeclined);
+  onDeclinedRef.current = onDeclined;
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -35,7 +40,7 @@ export function useOutgoingInvitationDeclines(localPlayerId: string): string | n
         (payload) => {
           const row = payload.new as IOutgoingInvitationRow;
           if (INACTIVE_STATUSES.has(row.status)) {
-            setDeclinedPlayerId(row.to_id);
+            onDeclinedRef.current(row.to_id);
           }
         },
       )
@@ -45,6 +50,4 @@ export function useOutgoingInvitationDeclines(localPlayerId: string): string | n
       supabase.removeChannel(channel);
     };
   }, [localPlayerId]);
-
-  return declinedPlayerId;
 }

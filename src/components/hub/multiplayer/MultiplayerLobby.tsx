@@ -45,7 +45,13 @@ export function MultiplayerLobby({ localPlayerId, localNickname, activeDeckIds }
   const { query: searchQuery, setQuery: setSearchQuery, filtered: filteredPlayers } = useFilteredPlayers(onlinePlayers);
   const { pendingInvitations } = usePendingInvitations(localPlayerId);
   const acceptedMatchId = useOutgoingInvitationMatch(localPlayerId);
-  const declinedPlayerId = useOutgoingInvitationDeclines(localPlayerId);
+  useOutgoingInvitationDeclines(localPlayerId, (toId) => {
+    setSentInvites((prev) => {
+      const next = new Set(prev);
+      next.delete(toId);
+      return next;
+    });
+  });
   const { status: matchmakingStatus, joinQueue, leaveQueue, matchId: matchmakingMatchId } = useMatchmakingQueue({
     localPlayerId,
     activeDeckIds,
@@ -64,16 +70,6 @@ export function MultiplayerLobby({ localPlayerId, localNickname, activeDeckIds }
   useEffect(() => {
     if (acceptedMatchId) router.push(`/hub/multiplayer/match/${acceptedMatchId}`);
   }, [acceptedMatchId, router]);
-
-  // Reactivar el botón de invitar cuando el rival rechaza o la invitación expira.
-  useEffect(() => {
-    if (!declinedPlayerId) return;
-    setSentInvites((prev) => {
-      const next = new Set(prev);
-      next.delete(declinedPlayerId);
-      return next;
-    });
-  }, [declinedPlayerId]);
 
   // Redirigir cuando el emparejamiento aleatorio encuentra partida + SFX.
   useEffect(() => {
