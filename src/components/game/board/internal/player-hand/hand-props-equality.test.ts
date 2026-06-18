@@ -37,6 +37,7 @@ describe("areEqualPlayerHandProps", () => {
     return {
       hand: [createCard("c1")],
       playingCard: null,
+      stagedCardId: null,
       hasSummoned: false,
       isPlayerTurn: true,
       highlightedCardIds: [],

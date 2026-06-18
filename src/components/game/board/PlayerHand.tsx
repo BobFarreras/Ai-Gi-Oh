@@ -10,6 +10,7 @@ import { areEqualPlayerHandProps } from "@/components/game/board/internal/player
 export interface PlayerHandProps {
   hand: ICard[]; 
   playingCard: ICard | null; 
+  stagedCardId: string | null;
   hasSummoned: boolean;
   isPlayerTurn: boolean;
   highlightedCardIds?: string[];
@@ -31,6 +32,7 @@ export interface PlayerHandProps {
 function PlayerHandComponent({
   hand,
   playingCard,
+  stagedCardId,
   hasSummoned,
   isPlayerTurn,
   highlightedCardIds = [],
@@ -89,6 +91,7 @@ function PlayerHandComponent({
       <div className="flex justify-center pointer-events-none relative">
         {hand.map((card, i) => {
           const isSelected = card.runtimeId && playingCard?.runtimeId ? playingCard.runtimeId === card.runtimeId : playingCard === card;
+          const isStaged = Boolean(stagedCardId && (card.runtimeId === stagedCardId || card.id === stagedCardId));
           const isMandatorySelectable = highlightedCardIds.includes(card.runtimeId ?? card.id);
 
           return (
@@ -98,6 +101,7 @@ function PlayerHandComponent({
               index={i}
               handLength={hand.length}
               isSelected={isSelected}
+              isStaged={isStaged}
               isPlayerTurn={isPlayerTurn}
               isMandatorySelectable={isMandatorySelectable}
               hasSummoned={hasSummoned}

@@ -13,6 +13,7 @@ interface IPlayerHandCardItemProps {
   index: number;
   handLength: number;
   isSelected: boolean;
+  isStaged: boolean;
   isPlayerTurn: boolean;
   isMandatorySelectable: boolean;
   hasSummoned: boolean;
@@ -34,6 +35,7 @@ export function PlayerHandCardItem({
   index,
   handLength,
   isSelected,
+  isStaged,
   isPlayerTurn,
   isMandatorySelectable,
   hasSummoned,
@@ -92,7 +94,7 @@ export function PlayerHandCardItem({
               : { scale: 1, x: 0, y: 0, boxShadow: "0 0 0 rgba(0,0,0,0)" }
           }
           transition={isMandatorySelectable ? { duration: 1.05, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : { duration: 0.2 }}
-          className={isMandatorySelectable ? "rounded-xl ring-4 ring-amber-400/95" : ""}
+          className={`${isMandatorySelectable ? "rounded-xl ring-4 ring-amber-400/95" : ""} ${isStaged ? "rounded-xl ring-2 ring-cyan-400/70 shadow-[0_0_12px_rgba(34,211,238,0.4)]" : ""}`}
         >
           <Card card={card} isSelected={isSelected} isPerformanceMode={shouldReduceCombatEffects} showBackgroundInPerformanceMode />
         </motion.div>

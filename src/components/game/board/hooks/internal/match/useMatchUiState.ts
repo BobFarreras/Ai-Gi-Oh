@@ -43,6 +43,7 @@ export interface IUseMatchUiStateResult {
   lastError: IBoardUiError | null;
   pendingEntityReplacement: IPendingZoneReplacement | null;
   pendingEntityReplacementTargetId: string | null;
+  stagedCardId: string | null;
   pendingFusionSummon: { cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null;
   pendingTrapActivationPrompt: ITrapActivationPrompt | null;
   isFusionCinematicActive: boolean;
@@ -65,6 +66,7 @@ export interface IUseMatchUiStateResult {
   setLastError: (value: IBoardUiError | null) => void;
   setPendingEntityReplacement: (value: IPendingZoneReplacement | null) => void;
   setPendingEntityReplacementTargetId: (value: string | null) => void;
+  setStagedCardId: (value: string | null) => void;
   setPendingFusionSummon: (value: { cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null) => void;
   setPendingTrapActivationPrompt: (value: ITrapActivationPrompt | null) => void;
   setIsFusionCinematicActive: (value: boolean) => void;

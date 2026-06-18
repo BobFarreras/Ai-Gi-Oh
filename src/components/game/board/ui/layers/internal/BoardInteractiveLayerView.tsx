@@ -58,6 +58,7 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
         <MobilePlayerHand
           hand={props.player.hand}
           playingCard={props.playingCard}
+          stagedCardId={props.stagedCardId}
           isPlayerTurn={props.isPlayerTurn}
           highlightedCardIds={props.pendingDiscardCardIds}
           onMandatoryCardSelect={props.onMandatoryCardSelect}
@@ -67,6 +68,7 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
         <PlayerHand
           hand={props.player.hand}
           playingCard={props.playingCard}
+          stagedCardId={props.stagedCardId}
           hasSummoned={props.hasNormalSummonedThisTurn}
           isPlayerTurn={props.isPlayerTurn}
           highlightedCardIds={props.pendingDiscardCardIds}

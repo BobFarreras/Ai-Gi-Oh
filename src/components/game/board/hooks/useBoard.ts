@@ -98,6 +98,7 @@ export function useBoard(
     selectedCard: uiState.selectedCard,
     selectedBoardEntityInstanceId: uiState.selectedBoardEntityInstanceId,
     playingCard: uiState.playingCard,
+    stagedCardId: uiState.stagedCardId,
     isHistoryOpen: uiState.isHistoryOpen,
     activeAttackerId: uiState.activeAttackerId,
     revealedEntities: uiState.revealedEntities,

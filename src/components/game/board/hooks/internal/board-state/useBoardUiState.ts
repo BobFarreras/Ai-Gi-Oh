@@ -29,6 +29,8 @@ export function useBoardUiState(
   const [lastError, setLastError] = useState<IBoardUiError | null>(null);
   const [pendingEntityReplacement, setPendingEntityReplacement] = useState<IPendingZoneReplacement | null>(null);
   const [pendingEntityReplacementTargetId, setPendingEntityReplacementTargetId] = useState<string | null>(null);
+  /** ID de la carta de mano staged para reemplazo de zona. Se muestra con borde sutil en vez de selección completa. */
+  const [stagedCardId, setStagedCardId] = useState<string | null>(null);
   const [pendingFusionSummon, setPendingFusionSummon] = useState<{ cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null>(null);
   const [pendingTrapActivationPrompt, setPendingTrapActivationPrompt] = useState<ITrapActivationPrompt | null>(null);
   const [isFusionCinematicActive, setIsFusionCinematicActive] = useState(false);
@@ -44,6 +46,7 @@ export function useBoardUiState(
     setActiveAttackerId(null);
     setPendingEntityReplacementTargetId(null);
     setPendingFusionSummon(null);
+    setStagedCardId(null);
   }, []);
 
   const previewCard = useCallback((card: ICard) => {
@@ -113,6 +116,8 @@ export function useBoardUiState(
     setPendingEntityReplacement,
     pendingEntityReplacementTargetId,
     setPendingEntityReplacementTargetId,
+    stagedCardId,
+    setStagedCardId,
     pendingFusionSummon,
     setPendingFusionSummon,
     pendingTrapActivationPrompt,

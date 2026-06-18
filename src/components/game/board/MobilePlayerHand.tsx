@@ -11,6 +11,7 @@ import { areEqualMobilePlayerHandProps } from "@/components/game/board/internal/
 export interface MobilePlayerHandProps {
   hand: ICard[];
   playingCard: ICard | null;
+  stagedCardId: string | null;
   isPlayerTurn: boolean;
   highlightedCardIds?: string[];
   bottomOffsetPx?: number;
@@ -25,6 +26,7 @@ function clamp(value: number, min: number, max: number): number {
 function MobilePlayerHandComponent({
   hand,
   playingCard,
+  stagedCardId,
   isPlayerTurn,
   highlightedCardIds = [],
   bottomOffsetPx = -8,
@@ -81,6 +83,7 @@ function MobilePlayerHandComponent({
         <div className="relative mx-auto h-full" style={{ width: `${metrics.containerWidth}px` }}>
           {hand.map((card, index) => {
             const isSelected = card.runtimeId && playingCard?.runtimeId ? playingCard.runtimeId === card.runtimeId : playingCard === card;
+            const isStaged = Boolean(stagedCardId && (card.runtimeId === stagedCardId || card.id === stagedCardId));
             const left = index * metrics.spacing;
             const mandatory = highlightedCardIds.includes(card.runtimeId ?? card.id);
             const cardScale = metrics.scale;
@@ -121,7 +124,7 @@ function MobilePlayerHandComponent({
                       : { scale: cardScale, x: 0, y: 0, boxShadow: "0 0 0 rgba(0,0,0,0)" }
                   }
                   transition={mandatory ? { duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } : { duration: 0.2 }}
-                  className={mandatory ? "rounded-xl ring-4 ring-amber-400/95" : ""}
+                  className={`${mandatory ? "rounded-xl ring-4 ring-amber-400/95" : ""} ${isStaged ? "rounded-xl ring-2 ring-cyan-400/70 shadow-[0_0_12px_rgba(34,211,238,0.4)]" : ""}`}
                   style={{ width: "260px", height: "380px", transformOrigin: "top left" }}
                 >
                   <Card

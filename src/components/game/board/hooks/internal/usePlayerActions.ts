@@ -30,10 +30,12 @@ export function usePlayerActions(params: IUsePlayerActionsParams): IPlayerAction
     setActiveAttackerId: params.setActiveAttackerId,
     setPendingEntityReplacement: params.setPendingEntityReplacement,
     setPendingEntityReplacementTargetId: params.setPendingEntityReplacementTargetId,
-    setIsAnimating: params.setIsAnimating,
-    setLastError: params.setLastError,
+    setPlayingCard: params.setPlayingCard,
     setSelectedCard: params.setSelectedCard,
     setSelectedBoardEntityInstanceId: params.setSelectedBoardEntityInstanceId,
+    setStagedCardId: params.setStagedCardId,
+    setIsAnimating: params.setIsAnimating,
+    setLastError: params.setLastError,
     setRevealedEntities: params.setRevealedEntities,
   });
 
