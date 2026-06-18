@@ -1,6 +1,7 @@
 // src/components/game/board/hooks/internal/player-actions/handleOpponentEntityClick.ts - Gestiona clics sobre entidades rivales cuando existe un atacante seleccionado.
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { GameEngine } from "@/core/use-cases/GameEngine";
+import { LocalActionEmitter } from "@/components/game/board/multiplayer/local-action-emitter";
 import { sleep } from "../sleep";
 import { addRevealedId, findReactiveTrap, removeRevealedId } from "../trapPreview";
 import { PLAYER_POST_RESOLUTION_MS, PLAYER_TRAP_PREVIEW_MS } from "./constants";
@@ -19,6 +20,8 @@ interface IHandleOpponentEntityClickParams extends Pick<
 > {
   /** Entidad objetivo del rival; `null` representa intento de ataque directo. */
   entity: IBoardEntity | null;
+  /** Emisor de la acción al rival en multijugador (noop en otros modos). */
+  emitLocalAction: LocalActionEmitter;
 }
 
 /**
@@ -36,6 +39,7 @@ export async function handleOpponentEntityClick({
   setIsAnimating,
   setRevealedEntities,
   setSelectedCard,
+  emitLocalAction,
 }: IHandleOpponentEntityClickParams): Promise<"handled" | "pass"> {
   if (!activeAttackerId) {
     if (entity) return "pass";
@@ -71,7 +75,10 @@ export async function handleOpponentEntityClick({
     setActiveAttackerId(attackerId);
   }
 
-  applyTransition((state) => GameEngine.executeAttack(state, state.playerA.id, attackerId, targetId));
+  const attacked = applyTransition((state) => GameEngine.executeAttack(state, state.playerA.id, attackerId, targetId));
+  if (attacked) {
+    emitLocalAction({ type: "ATTACK", payload: { attackerInstanceId: attackerId, defenderInstanceId: targetId } });
+  }
   if (shouldRevealTargetBeforeBattle && targetId) {
     await sleep(PLAYER_POST_RESOLUTION_MS);
     setRevealedEntities((previous) => removeRevealedId(previous, targetId));

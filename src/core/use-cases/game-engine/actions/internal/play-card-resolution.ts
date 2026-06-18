@@ -46,8 +46,12 @@ export function resolveValidatedPlayMode(state: GameState, player: IPlayer, card
  */
 export function createPlayedBoardEntity(state: GameState, card: ICard, mode: BattleMode): IBoardEntity {
   const idFactory = state.idFactory ?? defaultGameEngineIdFactory;
+  // Usar el runtimeId de la carta (único por copia y determinista por mazo) como
+  // clave del instanceId. En multijugador esto garantiza que ambos clientes
+  // generen el MISMO instanceId al jugar la misma carta, sin depender del lockstep
+  // del contador del idFactory. Cae a card.id solo si la carta no tuviera runtimeId.
   return {
-    instanceId: idFactory.createEntityInstanceId(card.id),
+    instanceId: idFactory.createEntityInstanceId(card.runtimeId ?? card.id),
     card,
     mode,
     hasAttackedThisTurn: false,

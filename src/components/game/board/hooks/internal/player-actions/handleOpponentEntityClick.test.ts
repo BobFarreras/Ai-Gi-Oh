@@ -80,6 +80,7 @@ describe("handleOpponentEntityClick", () => {
       setIsAnimating: vi.fn(),
       setRevealedEntities,
       setSelectedCard: vi.fn(),
+      emitLocalAction: vi.fn(),
     });
 
     expect(setRevealedEntities).toHaveBeenCalledTimes(2);

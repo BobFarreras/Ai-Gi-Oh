@@ -2,6 +2,7 @@
 import { useCallback } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
+import { useLocalActionEmitter } from "@/components/game/board/multiplayer/local-action-emitter";
 
 interface IUseSelectedEntityModeActionsParams {
   gameState: GameState;
@@ -29,6 +30,7 @@ function canToggleSelectedEntityMode(input: IUseSelectedEntityModeActionsParams)
 
 /** Resuelve acciones de cambio de modo para la carta seleccionada sin acoplar al resto de controles de turno. */
 export function useSelectedEntityModeActions(input: IUseSelectedEntityModeActionsParams): IUseSelectedEntityModeActionsResult {
+  const emitLocalAction = useLocalActionEmitter();
   const selectedDefenseEntity = input.selectedCard
     ? input.gameState.playerA.activeEntities.find((entity) => entity.card.id === input.selectedCard?.id && (entity.mode === "DEFENSE" || entity.mode === "SET") && !entity.hasAttackedThisTurn) ?? null
     : null;
@@ -46,7 +48,8 @@ export function useSelectedEntityModeActions(input: IUseSelectedEntityModeAction
     input.setActiveAttackerId(selectedDefenseEntity.instanceId);
     input.setPlayingCard(null);
     input.clearError();
-  }, [canSetSelectedEntityToAttack, selectedDefenseEntity, input]);
+    emitLocalAction({ type: "CHANGE_ENTITY_MODE", payload: { instanceId: selectedDefenseEntity.instanceId, newMode: "ATTACK" } });
+  }, [canSetSelectedEntityToAttack, selectedDefenseEntity, input, emitLocalAction]);
 
   const setSelectedEntityToDefense = useCallback(() => {
     if (!canSetSelectedEntityToDefense || !selectedAttackEntity || !input.assertPlayerTurn()) return;
@@ -55,7 +58,8 @@ export function useSelectedEntityModeActions(input: IUseSelectedEntityModeAction
     input.setActiveAttackerId(null);
     input.setPlayingCard(null);
     input.clearError();
-  }, [canSetSelectedEntityToDefense, selectedAttackEntity, input]);
+    emitLocalAction({ type: "CHANGE_ENTITY_MODE", payload: { instanceId: selectedAttackEntity.instanceId, newMode: "DEFENSE" } });
+  }, [canSetSelectedEntityToDefense, selectedAttackEntity, input, emitLocalAction]);
 
   return { canSetSelectedEntityToAttack, canSetSelectedEntityToDefense, setSelectedEntityToAttack, setSelectedEntityToDefense };
 }

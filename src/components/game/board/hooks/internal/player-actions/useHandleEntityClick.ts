@@ -1,5 +1,6 @@
 // src/components/game/board/hooks/internal/player-actions/useHandleEntityClick.ts - Orquesta clics sobre entidades propias/rivales y delega flujos según contexto de acción.
 import { useCallback } from "react";
+import { useLocalActionEmitter } from "@/components/game/board/multiplayer/local-action-emitter";
 import { IUsePlayerActionsParams } from "./types";
 import { handleOwnEntityClick } from "./handleOwnEntityClick";
 import { handleOpponentEntityClick } from "./handleOpponentEntityClick";
@@ -30,6 +31,7 @@ type IHandleEntityClickParams = Pick<
 >;
 
 export function useHandleEntityClick(params: IHandleEntityClickParams) {
+  const emitLocalAction = useLocalActionEmitter();
   return useCallback(
     async (entity: IUsePlayerActionsParams["gameState"]["playerA"]["activeEntities"][number] | null, isOpponent: boolean, event: React.MouseEvent) => {
       event.stopPropagation();
@@ -82,6 +84,7 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
         setIsAnimating: params.setIsAnimating,
         setRevealedEntities: params.setRevealedEntities,
         setSelectedCard: params.setSelectedCard,
+        emitLocalAction,
       });
       if (result === "handled") return;
 
@@ -90,6 +93,6 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
         params.setSelectedBoardEntityInstanceId(null);
       }
     },
-    [params],
+    [params, emitLocalAction],
   );
 }

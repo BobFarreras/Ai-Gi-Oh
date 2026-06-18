@@ -5,5 +5,7 @@ export interface IDuelResultRewardSummary {
   rewardNexus: number;
   rewardPlayerExperience: number;
   rewardCards: ICard[];
+  /** Cambio ELO del jugador (solo multijugador). Incluye delta y nuevo valor para animación. */
+  eloChange?: { delta: number; new: number };
 }
 

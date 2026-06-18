@@ -3,6 +3,7 @@ import { MutableRefObject, useCallback } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
+import { useLocalActionEmitter } from "@/components/game/board/multiplayer/local-action-emitter";
 import { useAutoAdvanceBattle } from "./useAutoAdvanceBattle";
 import { useAdvancePhaseGuard } from "./useAdvancePhaseGuard";
 import { useHandleTimerExpired } from "./useHandleTimerExpired";
@@ -60,6 +61,7 @@ export function useBoardTurnControls({
   setActiveAttackerId,
   setPlayingCard,
 }: IUseBoardTurnControlsParams): IUseBoardTurnControlsResult {
+  const emitLocalAction = useLocalActionEmitter();
   const telemetry = useTurnTelemetry({ applyTransition });
   const { canSetSelectedEntityToAttack, canSetSelectedEntityToDefense, setSelectedEntityToAttack, setSelectedEntityToDefense } =
     useSelectedEntityModeActions({
@@ -82,8 +84,12 @@ export function useBoardTurnControls({
       if (!nextState) return;
       clearSelection();
       clearError();
+      // Crítico para el flujo de turno: el descarte obligatorio por límite de mano
+      // (y otras selecciones) DEBE sincronizarse, o el rival se queda con la acción
+      // pendiente y el turno nunca avanza (deadlock).
+      emitLocalAction({ type: "RESOLVE_PENDING_TURN_ACTION", payload: { selectedId } });
     },
-    [applyTransition, assertPlayerTurn, clearError, clearSelection, isAnimating],
+    [applyTransition, assertPlayerTurn, clearError, clearSelection, emitLocalAction, isAnimating],
   );
 
   const executeAdvancePhase = useCallback(() => {
@@ -92,7 +98,8 @@ export function useBoardTurnControls({
     if (!nextState) return;
     clearSelection();
     clearError();
-  }, [applyTransition, assertPlayerTurn, clearError, clearSelection, isAnimating, winnerPlayerId]);
+    emitLocalAction({ type: "NEXT_PHASE", payload: {} });
+  }, [applyTransition, assertPlayerTurn, clearError, clearSelection, emitLocalAction, isAnimating, winnerPlayerId]);
   const { advancePhase, confirmAdvancePhase, cancelAdvancePhase, pendingAdvanceWarning } = useAdvancePhaseGuard({
     mode,
     gameState,
