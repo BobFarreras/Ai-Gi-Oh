@@ -2,7 +2,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 
@@ -160,7 +160,13 @@ function FusionPlaybackItem({ item, onDone }: { item: IFusionPlaybackItem; onDon
 export function FusionCinematicLayer({ events, onActiveChange }: FusionCinematicLayerProps) {
   const [queue, setQueue] = useState<IFusionPlaybackItem[]>([]);
   const processedCountRef = useRef(0);
+  const onActiveChangeRef = useRef(onActiveChange);
   const activeItem = queue[0] ?? null;
+
+  // Keep ref current so the effect below never needs onActiveChange in its deps.
+  useLayoutEffect(() => {
+    onActiveChangeRef.current = onActiveChange;
+  });
 
   useEffect(() => {
     const nextItems = events.slice(processedCountRef.current).map(toFusionItem).filter((item): item is IFusionPlaybackItem => Boolean(item));
@@ -168,16 +174,20 @@ export function FusionCinematicLayer({ events, onActiveChange }: FusionCinematic
     if (nextItems.length > 0) setQueue((previous) => [...previous, ...nextItems]);
   }, [events]);
 
+  // Only re-run when activeItem actually changes — not on every parent re-render.
   useEffect(() => {
-    onActiveChange(Boolean(activeItem));
-  }, [activeItem, onActiveChange]);
+    onActiveChangeRef.current(Boolean(activeItem));
+  }, [activeItem]);
+
+  // Stable reference so FusionPlaybackItem's summon timeout never restarts on parent re-renders.
+  const handleItemDone = useCallback(() => setQueue((previous) => previous.slice(1)), []);
 
   if (!activeItem) return null;
 
   return (
     <div className="absolute inset-0 z-[250] pointer-events-none">
       <AnimatePresence mode="wait">
-        <FusionPlaybackItem item={activeItem} onDone={() => setQueue((previous) => previous.slice(1))} />
+        <FusionPlaybackItem item={activeItem} onDone={handleItemDone} />
       </AnimatePresence>
     </div>
   );
