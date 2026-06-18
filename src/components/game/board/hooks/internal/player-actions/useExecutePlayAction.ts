@@ -2,6 +2,7 @@
 import { useCallback } from "react";
 import { BattleMode } from "@/core/entities/IPlayer";
 import { GameEngine } from "@/core/use-cases/GameEngine";
+import { useLocalActionEmitter } from "@/components/game/board/multiplayer/local-action-emitter";
 import { IUsePlayerActionsParams } from "./types";
 import { attemptZoneReplacementOnFull, executeActivationPlay } from "./useExecutePlayAction.internal";
 
@@ -41,6 +42,7 @@ export function useExecutePlayAction({
   setSelectedBoardEntityInstanceId,
   setRevealedEntities,
 }: IExecutePlayActionParams) {
+  const emitLocalAction = useLocalActionEmitter();
   return useCallback(
     async (mode: BattleMode, event: React.MouseEvent) => {
       event.stopPropagation();
@@ -104,13 +106,17 @@ export function useExecutePlayAction({
       }
 
       const played = applyTransition((state) => GameEngine.playCard(state, state.playerA.id, selectedCardReference, mode));
-      if (played) clearSelection();
+      if (played) {
+        clearSelection();
+        emitLocalAction({ type: "PLAY_CARD", payload: { cardId: selectedCardReference, mode } });
+      }
     },
     [
       applyTransition,
       assertPlayerTurn,
       clearError,
       clearSelection,
+      emitLocalAction,
       gameState,
       isAnimating,
       playingCard,

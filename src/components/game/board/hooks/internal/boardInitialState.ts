@@ -2,6 +2,7 @@
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
+import { IGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 import { createBoardMatchConfig } from "./match/create-board-match-config";
 
 export interface ICreateInitialBoardStateInput {
@@ -18,6 +19,8 @@ export interface ICreateInitialBoardStateInput {
   starterPlayerId?: string;
   openingHandSize?: number;
   preserveDeckOrder?: boolean;
+  /** Fábrica de ids determinista (multijugador) para instanceId idénticos en ambos clientes. */
+  idFactory?: IGameEngineIdFactory;
 }
 
 export function createInitialBoardState(input?: ICreateInitialBoardStateInput): GameState {
@@ -38,6 +41,7 @@ export function createInitialBoardState(input?: ICreateInitialBoardStateInput): 
     starterPlayerId: matchConfig.starterPlayerId,
     openingHandSize: matchConfig.openingHandSize,
     randomSource: matchConfig.randomSource,
+    idFactory: input?.idFactory,
   });
 
   return baseState;

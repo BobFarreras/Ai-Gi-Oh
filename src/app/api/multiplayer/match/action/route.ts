@@ -59,8 +59,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ code: "GAME_RULE_ERROR", message: "La partida ya ha terminado." }, { status: 400 });
     }
 
+    // Las escrituras usan service role: ya validamos participación arriba, y la
+    // RLS de match_actions exige status='ACTIVE', lo que bloquearía la PRIMERA
+    // acción (la sesión nace en WAITING). El servidor es la autoridad aquí.
+    const serviceClient = createSupabaseServiceRoleClient();
+
+    // Activar la sesión en el primer movimiento ANTES de insertar la acción.
+    if (session.status === "WAITING") {
+      await serviceClient
+        .from("match_sessions")
+        .update({ status: "ACTIVE", started_at: new Date().toISOString() })
+        .eq("id", matchId)
+        .eq("status", "WAITING");
+    }
+
     // Contar acciones para obtener el siguiente sequence
-    const { count } = await client
+    const { count } = await serviceClient
       .from("match_actions")
       .select("id", { count: "exact", head: true })
       .eq("match_id", matchId);
@@ -68,7 +82,7 @@ export async function POST(request: NextRequest) {
     const nextSequence = (count ?? 0) + 1;
 
     // Persistir la acción
-    const { error: insertError } = await client.from("match_actions").insert({
+    const { error: insertError } = await serviceClient.from("match_actions").insert({
       match_id: matchId,
       player_id: playerId,
       sequence: nextSequence,
@@ -80,26 +94,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ code: "INTERNAL_ERROR", message: "No se pudo registrar la acción." }, { status: 500 });
     }
 
-    // Activar sesión en el primer movimiento
-    if (session.status === "WAITING") {
-      await client
-        .from("match_sessions")
-        .update({ status: "ACTIVE", started_at: new Date().toISOString() })
-        .eq("id", matchId);
-    }
-
-    // Retransmitir al rival con service role (el canal del cliente no tiene permisos de broadcast desde servidor)
-    try {
-      const serviceClient = createSupabaseServiceRoleClient();
-      await serviceClient.channel(`match:${matchId}`).send({
-        type: "broadcast",
-        event: "match:action",
-        payload: { playerId, action },
-      });
-    } catch {
-      // El broadcast fallido no es crítico: el rival puede recuperar el estado via DB
-    }
-
+    // La entrega al rival ocurre vía Postgres Changes (INSERT en match_actions),
+    // que es fiable y respeta RLS. No se usa broadcast desde el servidor.
     return NextResponse.json({ ok: true, sequence: nextSequence }, { status: 200, headers: response.headers });
   } catch (err) {
     return createApiErrorResponse(err, "Error procesando la acción de partida.");

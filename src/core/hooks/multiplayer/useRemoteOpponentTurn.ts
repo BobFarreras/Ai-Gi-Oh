@@ -1,49 +1,55 @@
-// src/core/hooks/multiplayer/useRemoteOpponentTurn.ts - Escucha acciones del jugador rival en Realtime y las aplica al estado de partida.
+// src/core/hooks/multiplayer/useRemoteOpponentTurn.ts - Escucha las acciones del rival (Postgres Changes sobre match_actions) y las aplica al estado de partida.
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { RealtimeChannel } from "@supabase/supabase-js";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IMatchActionPayload } from "@/core/entities/multiplayer/IMatchAction";
 import { applyMatchAction } from "@/core/services/multiplayer/apply-match-action";
+import { createSupabaseBrowserClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-browser-client";
 
 interface IRemoteOpponentTurnParams {
-  channel: RealtimeChannel | null;
+  matchId: string;
   opponentId: string;
   winnerPlayerId: string | null;
   applyTransition: (transition: (state: GameState) => GameState) => GameState | null;
 }
 
-interface IOpponentActionBroadcast {
-  playerId: string;
-  action: IMatchActionPayload;
+interface IMatchActionRow {
+  player_id: string;
+  payload: IMatchActionPayload;
 }
 
-export function useRemoteOpponentTurn({ channel, opponentId, winnerPlayerId, applyTransition }: IRemoteOpponentTurnParams) {
+export function useRemoteOpponentTurn({ matchId, opponentId, winnerPlayerId, applyTransition }: IRemoteOpponentTurnParams) {
   const applyTransitionRef = useRef(applyTransition);
   applyTransitionRef.current = applyTransition;
 
   useEffect(() => {
-    if (!channel || winnerPlayerId) return;
+    if (winnerPlayerId) return;
+    const supabase = createSupabaseBrowserClient();
 
-    const subscription = channel.on(
-      "broadcast",
-      { event: "match:action" },
-      ({ payload }: { payload: IOpponentActionBroadcast }) => {
-        if (payload.playerId !== opponentId) return;
-        applyTransitionRef.current((state) => {
-          try {
-            return applyMatchAction(state, opponentId, payload.action);
-          } catch {
-            // Acción inválida del oponente: ignorar (el servidor ya la validó antes de retransmitir)
-            return state;
-          }
-        });
-      },
-    );
+    const channel = supabase
+      .channel(`match-actions:${matchId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "match_actions", filter: `match_id=eq.${matchId}` },
+        (payload) => {
+          const row = payload.new as IMatchActionRow;
+          // Ignorar las acciones propias: solo aplicamos las del rival.
+          if (row.player_id !== opponentId) return;
+          applyTransitionRef.current((state) => {
+            try {
+              return applyMatchAction(state, opponentId, row.payload);
+            } catch {
+              // Acción inválida (desfase puntual): ignorar; el servidor ya validó la autoría.
+              return state;
+            }
+          });
+        },
+      )
+      .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
-  }, [channel, opponentId, winnerPlayerId]);
+  }, [matchId, opponentId, winnerPlayerId]);
 }

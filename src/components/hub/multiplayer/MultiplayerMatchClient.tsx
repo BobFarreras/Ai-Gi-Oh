@@ -9,10 +9,13 @@ import { GameState } from "@/core/use-cases/GameEngine";
 import { useMultiplayerMatchChannel } from "@/core/hooks/multiplayer/useMultiplayerMatchChannel";
 import { useRemoteOpponentTurn } from "@/core/hooks/multiplayer/useRemoteOpponentTurn";
 import { IMatchReward } from "@/core/entities/match/IMatchReward";
+import { IMatchActionPayload } from "@/core/entities/multiplayer/IMatchAction";
+import { LocalActionEmitterProvider } from "@/components/game/board/multiplayer/local-action-emitter";
 import {
   prepareMultiplayerDeck,
   resolveMultiplayerCoinToss,
 } from "@/core/services/multiplayer/prepare-multiplayer-match";
+import { createSeededGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 import { MultiplayerCoinTossOverlay } from "./MultiplayerCoinTossOverlay";
 
 interface MultiplayerMatchClientProps {
@@ -29,9 +32,9 @@ interface MultiplayerMatchClientProps {
 
 type ChannelStatus = "CONNECTING" | "CONNECTED" | "DISCONNECTED";
 
-// Avatares de duelo: el jugador local usa bob-rojo, el rival bob.
-const LOCAL_AVATAR_URL = "/assets/story/player/bob-rojo.webp";
-const OPPONENT_AVATAR_URL = "/assets/story/player/bob.webp";
+// Avatares de duelo: cada jugador se ve a sí mismo como bob; el rival es siempre bob-rojo.
+const LOCAL_AVATAR_URL = "/assets/story/player/bob.webp";
+const OPPONENT_AVATAR_URL = "/assets/story/player/bob-rojo.webp";
 
 const CONNECTION_COLORS: Record<ChannelStatus, string> = {
   CONNECTING: "bg-amber-400",
@@ -102,11 +105,22 @@ export function MultiplayerMatchClient({
     [seed, canonicalPlayerAId, canonicalPlayerBId, localPlayerId],
   );
 
-  const { channel, channelStatus, opponentConnectionStatus, disconnectedForMs } =
+  // Fábrica de ids determinista compartida: instanceId idénticos en ambos clientes.
+  const idFactory = useMemo(() => createSeededGameEngineIdFactory(seed), [seed]);
+
+  const { channelStatus, opponentConnectionStatus, disconnectedForMs, dispatchAction } =
     useMultiplayerMatchChannel({ matchId, localPlayerId, opponentId });
 
+  // Emite cada acción del jugador local hacia el servidor, que la retransmite al rival.
+  const emitLocalAction = useCallback(
+    (action: IMatchActionPayload) => {
+      void dispatchAction(action);
+    },
+    [dispatchAction],
+  );
+
   useRemoteOpponentTurn({
-    channel,
+    matchId,
     opponentId,
     winnerPlayerId,
     applyTransition: useCallback(
@@ -147,6 +161,7 @@ export function MultiplayerMatchClient({
   const isOpponentDisconnected = opponentConnectionStatus === "DISCONNECTED";
 
   return (
+    <LocalActionEmitterProvider value={emitLocalAction}>
     <div className="relative h-screen w-full">
       {/* Indicador de conexión propia */}
       <div className="absolute left-2 top-2 z-50 flex items-center gap-1.5 rounded-full border border-slate-700/60 bg-slate-950/80 px-2.5 py-1 backdrop-blur-sm">
@@ -157,13 +172,6 @@ export function MultiplayerMatchClient({
         <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-300">
           {CONNECTION_LABELS[channelStatus]}
         </span>
-      </div>
-
-      {/* Indicadores de jugadores */}
-      <div className="absolute left-1/2 top-2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-slate-700/50 bg-slate-950/70 px-3 py-1 backdrop-blur-sm">
-        <span className="text-[10px] font-bold text-cyan-200">{localNickname}</span>
-        <span className="text-[10px] text-slate-500">vs</span>
-        <span className="text-[10px] font-bold text-red-300">{opponentNickname}</span>
       </div>
 
       {/* Overlay: rival desconectado */}
@@ -225,17 +233,18 @@ export function MultiplayerMatchClient({
 
       <Board
         mode="MULTIPLAYER"
+        initialPlayerDeck={preparedLocalDeck}
         initialConfig={{
           playerId: localPlayerId,
           playerName: localNickname,
           opponentId,
           opponentName: opponentNickname,
-          playerDeck: preparedLocalDeck,
           opponentDeck: preparedOpponentDeck,
           seed,
           // Orden y runtimeId ya son deterministas: no volver a barajar.
           preserveDeckOrder: true,
           starterPlayerId: coinToss.starterPlayerId,
+          idFactory,
         }}
         disableOpponentAutomation
         applyTransitionRef={applyTransitionRef}
@@ -257,5 +266,6 @@ export function MultiplayerMatchClient({
         onComplete={() => setIsCoinTossVisible(false)}
       />
     </div>
+    </LocalActionEmitterProvider>
   );
 }
