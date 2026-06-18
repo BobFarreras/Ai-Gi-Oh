@@ -37,7 +37,7 @@ function RankingRowComponent({ entry, isLocal }: RankingRowProps) {
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ type: "spring", stiffness: 320, damping: 28 }}
-      className={`grid grid-cols-[2.5rem_2.25rem_1fr_4rem_3.5rem_3rem] items-center gap-2 rounded-lg px-3 py-2 transition-colors ${
+      className={`grid grid-cols-[3.5rem_3.5rem_1fr_5rem_4.5rem_4rem] items-center gap-2 rounded-lg px-3 py-2 transition-colors ${
         isLocal
           ? "bg-cyan-500/12 ring-1 ring-inset ring-cyan-400/40"
           : "bg-slate-900/30 hover:bg-slate-800/40"

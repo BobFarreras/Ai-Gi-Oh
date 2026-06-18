@@ -5,21 +5,7 @@ import {
   getPodiumStyle,
   getPodiumTier,
   getLeagueStyle,
-  splitPodiumAndRest,
 } from "./tier";
-import { IRankingEntry } from "@/services/ranking/get-ranking-data";
-
-function makeEntry(rank: number, playerId: string, elo = 1200): IRankingEntry {
-  return {
-    rank,
-    playerId,
-    nickname: `Duelist${rank}`,
-    avatarUrl: null,
-    eloRating: elo,
-    wins: 0,
-    losses: 0,
-  };
-}
 
 describe("getPodiumTier", () => {
   it("devuelve gold para rank 1", () => {
@@ -83,41 +69,5 @@ describe("getPodiumStyle / getLeagueStyle", () => {
       expect(style.text).toMatch(/^text-/);
       expect(style.label.length).toBeGreaterThan(0);
     }
-  });
-});
-
-describe("splitPodiumAndRest", () => {
-  it("coloca el #1 en el centro (índice 1), #2 a la izq (índice 0), #3 a la der (índice 2)", () => {
-    const entries = [makeEntry(1, "a"), makeEntry(2, "b"), makeEntry(3, "c"), makeEntry(4, "d")];
-    const { podium, rest } = splitPodiumAndRest(entries);
-    expect(podium[0]?.playerId).toBe("b"); // plata izq
-    expect(podium[1]?.playerId).toBe("a"); // oro centro
-    expect(podium[2]?.playerId).toBe("c"); // bronce der
-    expect(rest).toHaveLength(1);
-    expect(rest[0]?.playerId).toBe("d");
-  });
-  it("rellena con null si hay menos de 3 entradas", () => {
-    const entries = [makeEntry(1, "a")];
-    const { podium, rest } = splitPodiumAndRest(entries);
-    expect(podium[0]).toBeNull();
-    expect(podium[1]?.playerId).toBe("a");
-    expect(podium[2]).toBeNull();
-    expect(rest).toEqual([]);
-  });
-  it("devuelve vacío si no hay entradas", () => {
-    const { podium, rest } = splitPodiumAndRest([]);
-    expect(podium).toEqual([null, null, null]);
-    expect(rest).toEqual([]);
-  });
-  it("preserva el orden del resto (rank 4+)", () => {
-    const entries = [
-      makeEntry(1, "a"),
-      makeEntry(2, "b"),
-      makeEntry(3, "c"),
-      makeEntry(4, "d"),
-      makeEntry(5, "e"),
-    ];
-    const { rest } = splitPodiumAndRest(entries);
-    expect(rest.map((e) => e?.playerId)).toEqual(["d", "e"]);
   });
 });

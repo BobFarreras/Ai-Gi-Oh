@@ -1,5 +1,4 @@
 // src/components/hub/ranking/internal/tier.ts - Deriva tier de podio (top 3) y liga por ELO para estilos visuales del ranking.
-import { IRankingEntry } from "@/services/ranking/get-ranking-data";
 
 /** Tier de podio para los 3 primeros clasificados. */
 export type PodiumTier = "gold" | "silver" | "bronze";
@@ -113,22 +112,4 @@ export function getPodiumStyle(tier: PodiumTier): ITierStyle {
 /** Estilos visuales para una liga de ELO dada. */
 export function getLeagueStyle(league: EloLeague): ITierStyle {
   return LEAGUE_STYLES[league];
-}
-
-/**
- * Particiona las entradas del ranking en podio (top 3) y resto, preservando
- * el orden original. Devuelve null para slots vacíos si hay menos de 3.
- */
-export function splitPodiumAndRest(entries: IRankingEntry[]): {
-  podium: Array<IRankingEntry | null>;
-  rest: IRankingEntry[];
-} {
-  const podium: Array<IRankingEntry | null> = [null, null, null];
-  // Orden del podio visual: [plata(2), oro(1), bronce(3)] para que el #1
-  // quede en el centro y más alto. Mantenemos la lógica de índices aquí.
-  const top3 = entries.slice(0, 3);
-  if (top3[0]) podium[1] = top3[0]; // oro al centro
-  if (top3[1]) podium[0] = top3[1]; // plata a la izquierda
-  if (top3[2]) podium[2] = top3[2]; // bronce a la derecha
-  return { podium, rest: entries.slice(3) };
 }
