@@ -2,12 +2,11 @@
 "use client";
 
 import { memo } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { IRankingEntry } from "@/services/ranking/get-ranking-data";
-import { getAvatarGradientClasses, getAvatarInitial } from "@/components/hub/internal/avatar-color";
 import { getPodiumStyle, getPodiumTier, PodiumTier } from "./internal/tier";
 import { areEqualRankingRowProps } from "./internal/ranking-equality";
+import { RankingTopAvatar } from "./RankingTopAvatar";
 
 interface RankingTopRowProps {
   entry: IRankingEntry;
@@ -44,8 +43,6 @@ function RankingTopRowComponent({ entry, isLocal }: RankingTopRowProps) {
   const tier = getPodiumTier(entry.rank);
   if (!tier) return null; // Salvaguarda: solo ranks 1-3.
   const style = getPodiumStyle(tier);
-  const avatar = getAvatarGradientClasses(entry.playerId);
-  const initial = getAvatarInitial(entry.nickname);
 
   return (
     <motion.div
@@ -67,16 +64,13 @@ function RankingTopRowComponent({ entry, isLocal }: RankingTopRowProps) {
         </div>
       </div>
 
-      {/* Avatar grande con ring de tier */}
-      <div className={`relative h-9 w-9 overflow-hidden rounded-full border-2 ${style.border} sm:h-12 sm:w-12`}>
-        {entry.avatarUrl ? (
-          <Image src={entry.avatarUrl} alt={entry.nickname} fill sizes="48px" className="object-cover" />
-        ) : (
-          <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${avatar.from} ${avatar.to} text-sm font-black text-white sm:text-base`}>
-            {initial}
-          </div>
-        )}
-      </div>
+      {/* Avatar del top 3 con corona y anillo rotatorio por tier */}
+      <RankingTopAvatar
+        playerId={entry.playerId}
+        nickname={entry.nickname}
+        avatarUrl={entry.avatarUrl}
+        tier={tier}
+      />
 
       {/* Nickname + etiqueta de tier (oculta en móvil para evitar cortes) */}
       <div className="flex min-w-0 flex-col">
