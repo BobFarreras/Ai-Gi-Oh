@@ -13,6 +13,7 @@ import { useMatchRuntime } from "./internal/match/useMatchRuntime";
 import { useMatchUiState } from "./internal/match/useMatchUiState";
 import { resolveWinnerPlayerId } from "./internal/match/board-derived-state";
 import { useExecutionActivation } from "./internal/match/useExecutionActivation";
+import { useRemoteOpponentAnimator } from "@/components/game/board/multiplayer/useRemoteOpponentAnimator";
 
 export function useBoard(
   initialPlayerDeck?: ICard[],
@@ -79,8 +80,20 @@ export function useBoard(
     clearSelection: uiState.clearSelection,
   });
 
+  // Aplicador de acciones del rival con coreografía visual (solo se usa en multijugador).
+  const applyRemoteAction = useRemoteOpponentAnimator({
+    gameStateRef,
+    applyTransition: runtime.applyTransition,
+    setIsAnimating: uiState.setIsAnimating,
+    setActiveAttackerId: uiState.setActiveAttackerId,
+    setRevealedEntities: uiState.setRevealedEntities,
+    clearSelection: uiState.clearSelection,
+    clearError: uiState.clearError,
+  });
+
   return {
     applyTransition: runtime.applyTransition,
+    applyRemoteAction,
     gameState: uiState.gameState,
     selectedCard: uiState.selectedCard,
     selectedBoardEntityInstanceId: uiState.selectedBoardEntityInstanceId,

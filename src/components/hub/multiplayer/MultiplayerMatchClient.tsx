@@ -87,6 +87,7 @@ export function MultiplayerMatchClient({
   const [matchFinished, setMatchFinished] = useState(false);
   const [isCoinTossVisible, setIsCoinTossVisible] = useState(true);
   const applyTransitionRef = useRef<((transition: (state: GameState) => GameState) => GameState | null) | null>(null);
+  const applyRemoteActionRef = useRef<((action: IMatchActionPayload) => Promise<void>) | null>(null);
   const finishCalledRef = useRef(false);
 
   // Identidades canónicas: el invitador (player_a de la sesión) es A en AMBOS clientes.
@@ -127,8 +128,8 @@ export function MultiplayerMatchClient({
     matchId,
     opponentId,
     winnerPlayerId,
-    applyTransition: useCallback(
-      (transition: (state: GameState) => GameState) => applyTransitionRef.current?.(transition) ?? null,
+    applyRemoteAction: useCallback(
+      (action: IMatchActionPayload) => applyRemoteActionRef.current?.(action) ?? Promise.resolve(),
       [],
     ),
   });
@@ -254,6 +255,7 @@ export function MultiplayerMatchClient({
         }}
         disableOpponentAutomation
         applyTransitionRef={applyTransitionRef}
+        applyRemoteActionRef={applyRemoteActionRef}
         playerAvatarUrl={LOCAL_AVATAR_URL}
         opponentAvatarUrl={OPPONENT_AVATAR_URL}
         onMatchResolved={handleMatchResolved}

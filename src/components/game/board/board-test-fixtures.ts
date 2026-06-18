@@ -59,6 +59,7 @@ export const boardMockGameState: GameState = {
 export function mockDefaultUseBoardReturn() {
   vi.mocked(useBoardModule.useBoard).mockReturnValue({
     applyTransition: vi.fn(),
+    applyRemoteAction: vi.fn(),
     gameState: boardMockGameState,
     selectedCard: null,
     selectedBoardEntityInstanceId: null,
