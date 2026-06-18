@@ -11,6 +11,7 @@ import { IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { startFusionSummonFromExecution } from "@/core/use-cases/game-engine/fusion/start-fusion-summon-from-execution";
+import { resolveSelectableMaterialInstanceIds } from "@/core/use-cases/game-engine/fusion/internal/selectable-material-instance-ids";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import {
@@ -66,6 +67,12 @@ function suspendFusionExecutionUntilMaterials(context: ISpecialActionContext): G
 function resolveFusionEffect(context: ISpecialActionContext, effect: IFusionSummonEffect): GameState {
   const { state, playerId, player, executionInstanceId } = context;
   if (player.activeEntities.length < 2) {
+    return suspendFusionExecutionUntilMaterials(context);
+  }
+  // Aunque haya entidades suficientes, puede que no cumplan la receta específica.
+  // En ese caso suspendemos en SET en vez de lanzar un error que deja la carta en ACTIVATE.
+  const selectableMaterials = resolveSelectableMaterialInstanceIds(player.activeEntities, effect.recipeId);
+  if (selectableMaterials.length < 2) {
     return suspendFusionExecutionUntilMaterials(context);
   }
   return startFusionSummonFromExecution(state, playerId, executionInstanceId, effect.recipeId);

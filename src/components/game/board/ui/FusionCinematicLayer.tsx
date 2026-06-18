@@ -28,9 +28,10 @@ const FUSION_RENDER_BY_CARD_ID: Record<string, string> = {
   "fusion-pytgress": "/assets/renders/pytgress.webp",
 };
 
-// Watchdog: si el vídeo no arranca (play() resuelve pero el tab está en segundo plano),
-// timeupdate nunca dispara y este timeout fuerza el salto a la fase de invocación.
+// Watchdog inicial: si timeupdate nunca llega (tab en segundo plano), salta a summon.
 const VIDEO_WATCHDOG_MS = 2500;
+// Intervalo de detección de stall: si el vídeo no avanza (frozen en desktop sin disparar onEnded), salta a summon.
+const VIDEO_STALL_CHECK_MS = 1500;
 const SUMMON_SHOW_DURATION_MS = 1150;
 const FUSION_VIDEO_VOLUME = 1;
 
@@ -68,11 +69,35 @@ function FusionPlaybackItem({ item, onDone }: { item: IFusionPlaybackItem; onDon
     if (phase !== "video" || !videoRef.current) return;
     const video = videoRef.current;
 
-    // Watchdog: si play() resuelve pero el vídeo no avanza (tab en segundo plano),
-    // timeupdate nunca llega → saltamos a summon tras VIDEO_WATCHDOG_MS.
+    // Watchdog inicial: si play() resuelve pero timeupdate nunca llega (tab en segundo plano).
     const watchdogId = setTimeout(() => setPhase("summon"), VIDEO_WATCHDOG_MS);
-    const cancelWatchdog = () => clearTimeout(watchdogId);
-    video.addEventListener("timeupdate", cancelWatchdog, { once: true });
+
+    let stallIntervalId: ReturnType<typeof setInterval> | null = null;
+
+    const onFirstProgress = () => {
+      clearTimeout(watchdogId);
+      // Detección de stall: una vez arrancado, monitoriza que el vídeo avance.
+      // En desktop, onEnded a veces no se dispara si el vídeo queda congelado.
+      let lastTime = video.currentTime;
+      stallIntervalId = setInterval(() => {
+        if (video.ended) {
+          clearInterval(stallIntervalId!);
+          stallIntervalId = null;
+          setPhase("summon");
+          return;
+        }
+        if (video.paused) return;
+        if (video.currentTime <= lastTime) {
+          clearInterval(stallIntervalId!);
+          stallIntervalId = null;
+          setPhase("summon");
+          return;
+        }
+        lastTime = video.currentTime;
+      }, VIDEO_STALL_CHECK_MS);
+    };
+
+    video.addEventListener("timeupdate", onFirstProgress, { once: true });
 
     video.volume = FUSION_VIDEO_VOLUME;
     video.muted = false;
@@ -82,8 +107,9 @@ function FusionPlaybackItem({ item, onDone }: { item: IFusionPlaybackItem; onDon
     });
 
     return () => {
-      video.removeEventListener("timeupdate", cancelWatchdog);
+      video.removeEventListener("timeupdate", onFirstProgress);
       clearTimeout(watchdogId);
+      if (stallIntervalId !== null) clearInterval(stallIntervalId);
     };
   }, [phase]);
 
