@@ -86,7 +86,10 @@ export function useExecutePlayAction({
       }
 
       if (playingCard.type === "FUSION" && (mode === "ATTACK" || mode === "DEFENSE")) {
-        applyTransition((state) => GameEngine.startFusionSummon(state, state.playerA.id, selectedCardReference, mode));
+        const started = applyTransition((state) => GameEngine.startFusionSummon(state, state.playerA.id, selectedCardReference, mode));
+        if (started) {
+          emitLocalAction({ type: "START_FUSION_SUMMON", payload: { cardId: selectedCardReference, mode } });
+        }
         return;
       }
 
@@ -101,6 +104,7 @@ export function useExecutePlayAction({
           setRevealedEntities,
           setActiveAttackerId,
           setSelectedCard,
+          emitLocalAction,
         });
         return;
       }

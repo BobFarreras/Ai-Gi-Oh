@@ -27,6 +27,8 @@ interface MultiplayerMatchClientProps {
   opponentNickname: string;
   localDeck: ICard[];
   opponentDeck: ICard[];
+  localFusionDeck: ICard[];
+  opponentFusionDeck: ICard[];
   isPlayerA: boolean;
 }
 
@@ -75,6 +77,8 @@ export function MultiplayerMatchClient({
   opponentDeck,
   localNickname,
   opponentNickname,
+  localFusionDeck,
+  opponentFusionDeck,
   isPlayerA,
 }: MultiplayerMatchClientProps) {
   const router = useRouter();
@@ -240,6 +244,8 @@ export function MultiplayerMatchClient({
           opponentId,
           opponentName: opponentNickname,
           opponentDeck: preparedOpponentDeck,
+          playerFusionDeck: localFusionDeck,
+          opponentFusionDeck,
           seed,
           // Orden y runtimeId ya son deterministas: no volver a barajar.
           preserveDeckOrder: true,

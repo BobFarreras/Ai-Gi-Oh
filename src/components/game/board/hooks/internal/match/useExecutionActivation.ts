@@ -2,6 +2,7 @@
 import { useCallback, useMemo } from "react";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { sleep } from "@/components/game/board/hooks/internal/sleep";
+import { useLocalActionEmitter } from "@/components/game/board/multiplayer/local-action-emitter";
 
 const EXECUTION_ACTIVATION_PREVIEW_MS = 720;
 
@@ -33,6 +34,7 @@ function isExecutionWaitingForFusionMaterials(state: GameState, executionInstanc
  * Aísla la lógica de activación de ejecuciones para evitar mezclarla con composición de estado principal.
  */
 export function useExecutionActivation(input: IUseExecutionActivationInput): IUseExecutionActivationOutput {
+  const emitLocalAction = useLocalActionEmitter();
   const selectedActivatableExecution = useMemo(() => {
     if (!input.selectedBoardEntityInstanceId) return null;
     return (
@@ -69,13 +71,17 @@ export function useExecutionActivation(input: IUseExecutionActivationInput): IUs
     );
     input.setIsAnimating(false);
     if (!resolved) return "NOOP";
+    // Sincronizar la resolución de la ejecución (incl. trampas reactivas y efectos)
+    // al rival. resolveExecution localiza la ejecución por instanceId (determinista),
+    // así que no hace falta sincronizar el cambio de modo (cosmético local).
+    emitLocalAction({ type: "RESOLVE_EXECUTION", payload: { instanceId: selectedActivatableExecution.instanceId } });
     if (isExecutionWaitingForFusionMaterials(resolved, selectedActivatableExecution.instanceId)) {
       input.clearSelection();
       return "MISSING_MATERIALS";
     }
     input.clearSelection();
     return "ACTIVATED";
-  }, [canActivateSelectedExecution, input, selectedActivatableExecution]);
+  }, [canActivateSelectedExecution, input, selectedActivatableExecution, emitLocalAction]);
 
   return { canActivateSelectedExecution, activateSelectedExecution };
 }

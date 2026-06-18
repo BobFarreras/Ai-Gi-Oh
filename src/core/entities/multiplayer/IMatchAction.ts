@@ -6,6 +6,7 @@ export const MATCH_ACTION_TYPES = [
   "PLAY_CARD_REPLACE_ENTITY",
   "PLAY_CARD_REPLACE_ZONE",
   "FUSE_CARDS",
+  "START_FUSION_SUMMON",
   "ATTACK",
   "NEXT_PHASE",
   "RESOLVE_EXECUTION",
@@ -18,6 +19,7 @@ export type MatchActionType =
   | "PLAY_CARD_REPLACE_ENTITY"
   | "PLAY_CARD_REPLACE_ZONE"
   | "FUSE_CARDS"
+  | "START_FUSION_SUMMON"
   | "ATTACK"
   | "NEXT_PHASE"
   | "RESOLVE_EXECUTION"
@@ -49,6 +51,11 @@ export interface IFuseCardsPayload {
   mode: "ATTACK" | "DEFENSE";
 }
 
+export interface IStartFusionSummonPayload {
+  cardId: string;
+  mode: "ATTACK" | "DEFENSE";
+}
+
 export interface IAttackPayload {
   attackerInstanceId: string;
   defenderInstanceId?: string;
@@ -72,6 +79,7 @@ export type IMatchActionPayload =
   | { type: "PLAY_CARD_REPLACE_ENTITY"; payload: IPlayCardReplaceEntityPayload }
   | { type: "PLAY_CARD_REPLACE_ZONE"; payload: IPlayCardReplaceZonePayload }
   | { type: "FUSE_CARDS"; payload: IFuseCardsPayload }
+  | { type: "START_FUSION_SUMMON"; payload: IStartFusionSummonPayload }
   | { type: "ATTACK"; payload: IAttackPayload }
   | { type: "NEXT_PHASE"; payload: Record<string, never> }
   | { type: "RESOLVE_EXECUTION"; payload: IResolveExecutionPayload }

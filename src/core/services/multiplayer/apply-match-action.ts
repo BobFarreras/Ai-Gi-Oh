@@ -31,6 +31,8 @@ export function applyMatchAction(state: GameState, playerId: string, action: IMa
         [action.payload.material1InstanceId, action.payload.material2InstanceId],
         action.payload.mode,
       );
+    case "START_FUSION_SUMMON":
+      return GameEngine.startFusionSummon(state, playerId, action.payload.cardId, action.payload.mode);
     case "ATTACK":
       return GameEngine.executeAttack(state, playerId, action.payload.attackerInstanceId, action.payload.defenderInstanceId);
     case "NEXT_PHASE":

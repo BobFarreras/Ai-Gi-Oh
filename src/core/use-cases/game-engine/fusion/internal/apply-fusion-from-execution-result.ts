@@ -24,7 +24,8 @@ export function applyFusionFromExecutionResult(params: IApplyFusionFromExecution
     activeEntities: [
       ...remainingEntities,
       {
-        instanceId: resolvedIdFactory.createFusionInstanceId(params.fusionCard.id),
+        // Clave determinista (carta + materiales) para instanceId idéntico en ambos clientes.
+        instanceId: resolvedIdFactory.createFusionInstanceId(`${params.fusionCard.id}:${materialIds.join(":")}`),
         card: params.fusionCard,
         mode: "ATTACK",
         hasAttackedThisTurn: false,

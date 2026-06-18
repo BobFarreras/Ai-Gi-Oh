@@ -37,6 +37,7 @@ export function useMultiplayerMatchChannel({
   const channelRef = useRef<RealtimeChannel | null>(null);
   const disconnectedAtRef = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const dispatchQueueRef = useRef<Promise<unknown>>(Promise.resolve());
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -125,7 +126,7 @@ export function useMultiplayerMatchChannel({
     };
   }, [matchId, localPlayerId, opponentId]);
 
-  async function dispatchAction(action: IMatchActionPayload): Promise<{ ok: boolean; error?: string }> {
+  async function sendActionToServer(action: IMatchActionPayload): Promise<{ ok: boolean; error?: string }> {
     try {
       const res = await fetch("/api/multiplayer/match/action", {
         method: "POST",
@@ -140,6 +141,20 @@ export function useMultiplayerMatchChannel({
     } catch {
       return { ok: false, error: "Sin conexión con el servidor." };
     }
+  }
+
+  // Serializa los envíos: cada acción espera a que termine la anterior. Sin esto,
+  // dos acciones rápidas (p. ej. timer expira y auto-avance encadena MAIN_1→BATTLE
+  // →cambio de turno) llegan a la vez y el servidor calcula el mismo `sequence`
+  // con un count() no atómico → viola la unique (match_id, sequence) → se pierde
+  // una acción → el turno no avanza (deadlock).
+  function dispatchAction(action: IMatchActionPayload): Promise<{ ok: boolean; error?: string }> {
+    const result = dispatchQueueRef.current.then(() => sendActionToServer(action));
+    dispatchQueueRef.current = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
   }
 
   return { channel, channelStatus, opponentConnectionStatus, disconnectedForMs, dispatchAction };

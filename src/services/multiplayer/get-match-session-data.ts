@@ -2,8 +2,8 @@
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { createSupabaseServiceRoleClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-service-role-client";
 import { SupabasePlayerCardProgressRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerCardProgressRepository";
+import { loadCardsByIds } from "@/infrastructure/persistence/supabase/internal/load-cards-by-ids";
 import { ICard } from "@/core/entities/ICard";
-import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
 import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
 
 interface IMatchSessionRow {
@@ -21,6 +21,12 @@ interface IProfileRow {
   nickname: string;
 }
 
+interface IFusionSlotRow {
+  player_id: string;
+  slot_index: number;
+  card_id: string | null;
+}
+
 export interface IMatchSessionData {
   matchId: string;
   seed: string;
@@ -30,6 +36,8 @@ export interface IMatchSessionData {
   opponentNickname: string;
   localDeck: ICard[];
   opponentDeck: ICard[];
+  localFusionDeck: ICard[];
+  opponentFusionDeck: ICard[];
   isPlayerA: boolean;
   status: string;
 }
@@ -59,6 +67,22 @@ export async function getMatchSessionData(matchId: string): Promise<IMatchSessio
   const localDeckIds = isPlayerA ? matchSession.deck_a_ids : matchSession.deck_b_ids;
   const opponentDeckIds = isPlayerA ? matchSession.deck_b_ids : matchSession.deck_a_ids;
 
+  // Mazos de fusión (2 cartas por jugador) desde player_fusion_deck_slots.
+  const { data: fusionSlotRows } = await supabase
+    .from("player_fusion_deck_slots")
+    .select("player_id, slot_index, card_id")
+    .in("player_id", [localPlayerId, opponentId])
+    .order("slot_index", { ascending: true });
+  const fusionIdsByPlayer = new Map<string, string[]>();
+  for (const row of (fusionSlotRows as IFusionSlotRow[] | null) ?? []) {
+    if (!row.card_id) continue;
+    const list = fusionIdsByPlayer.get(row.player_id) ?? [];
+    list.push(row.card_id);
+    fusionIdsByPlayer.set(row.player_id, list);
+  }
+  const localFusionIds = fusionIdsByPlayer.get(localPlayerId) ?? [];
+  const opponentFusionIds = fusionIdsByPlayer.get(opponentId) ?? [];
+
   // Perfiles (nicknames) de ambos jugadores.
   const { data: profileRows } = await supabase
     .from("player_profiles")
@@ -75,11 +99,16 @@ export async function getMatchSessionData(matchId: string): Promise<IMatchSessio
   const localProgressByCardId = new Map(localProgress.map((p) => [p.cardId, p]));
   const opponentProgressByCardId = new Map(opponentProgress.map((p) => [p.cardId, p]));
 
-  // Las cartas viven en el catálogo en código; se les aplica la progresión del propietario.
+  // Resolver las cartas desde el catálogo de la DB (cards_catalog), que es la
+  // fuente real de los mazos. El catálogo en código no contiene todas las cartas,
+  // lo que truncaba el mazo (p. ej. 11 vs 4 cartas). Luego se aplica la progresión.
+  const allCardIds = [...new Set([...localDeckIds, ...opponentDeckIds, ...localFusionIds, ...opponentFusionIds])];
+  const cardById = await loadCardsByIds(supabase, allCardIds, { onlyActive: false });
+
   const resolveDeck = (ids: string[], progressByCardId: typeof localProgressByCardId): ICard[] =>
     ids
       .map((id) => {
-        const base = CARD_BY_ID.get(id);
+        const base = cardById.get(id);
         if (!base) return null;
         return applyCardProgressionToCard(base, progressByCardId.get(id) ?? null);
       })
@@ -87,6 +116,8 @@ export async function getMatchSessionData(matchId: string): Promise<IMatchSessio
 
   const localDeck = resolveDeck(localDeckIds, localProgressByCardId);
   const opponentDeck = resolveDeck(opponentDeckIds, opponentProgressByCardId);
+  const localFusionDeck = resolveDeck(localFusionIds, localProgressByCardId);
+  const opponentFusionDeck = resolveDeck(opponentFusionIds, opponentProgressByCardId);
 
   return {
     matchId,
@@ -98,6 +129,8 @@ export async function getMatchSessionData(matchId: string): Promise<IMatchSessio
     opponentNickname: nicknameById.get(opponentId) ?? "Rival",
     localDeck,
     opponentDeck,
+    localFusionDeck,
+    opponentFusionDeck,
     status: matchSession.status,
   };
 }

@@ -56,7 +56,8 @@ export function createSeededGameEngineIdFactory(seed: string): IGameEngineIdFact
     // idFactory para logs/otros ids se desincronice. Es lo que hace que los ataques
     // (que referencian instanceId) resuelvan en el lado rival.
     createEntityInstanceId: (cardKey: string) => `mp-ent-${cardKey}`,
-    createFusionInstanceId: (cardKey: string) => `mp-fus-${cardKey}-${nextSuffix()}`,
+    // cardKey incluye los materiales (deterministas) ⇒ único; sin contador.
+    createFusionInstanceId: (cardKey: string) => `mp-fus-${cardKey}`,
     createRevivedInstanceId: (cardId: string, slotIndex: number) => `mp-rev-${cardId}-${slotIndex}-${nextSuffix()}`,
     createCombatLogEventId: (eventType) => `mp-log-${eventType}-${nextSuffix()}`,
     createTimestampIso: () => new Date(counter * 1000).toISOString(),

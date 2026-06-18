@@ -70,9 +70,16 @@ function FusionPlaybackItem({ item, onDone }: { item: IFusionPlaybackItem; onDon
 
   useEffect(() => {
     if (phase !== "video" || !videoRef.current) return;
-    videoRef.current.volume = FUSION_VIDEO_VOLUME;
-    videoRef.current.muted = false;
-    void videoRef.current.play().catch(() => undefined);
+    const video = videoRef.current;
+    video.volume = FUSION_VIDEO_VOLUME;
+    video.muted = false;
+    void video.play().catch(() => {
+      // Autoplay con sonido bloqueado (p. ej. pestaña en segundo plano o incógnito
+      // del rival): reintentar en mudo; si tampoco, saltar a la invocación para no
+      // dejar el vídeo congelado esperando el fallback de 12s.
+      video.muted = true;
+      void video.play().catch(() => setPhase("summon"));
+    });
   }, [phase]);
 
   return (

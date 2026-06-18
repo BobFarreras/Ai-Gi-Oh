@@ -31,6 +31,8 @@ export default async function MultiplayerMatchPage({ params }: MatchPageProps) {
       opponentNickname={matchData.opponentNickname}
       localDeck={matchData.localDeck}
       opponentDeck={matchData.opponentDeck}
+      localFusionDeck={matchData.localFusionDeck}
+      opponentFusionDeck={matchData.opponentFusionDeck}
       isPlayerA={matchData.isPlayerA}
     />
   );
