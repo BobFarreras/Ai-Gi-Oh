@@ -5,7 +5,7 @@ import { memo } from "react";
 import { motion } from "framer-motion";
 import { IOnlinePlayer } from "@/core/entities/multiplayer/IOnlinePlayer";
 import { OnlinePlayerStatusDot } from "./internal/OnlinePlayerStatusDot";
-import { getAvatarGradientClasses, getAvatarInitial } from "./internal/avatar-color";
+import { getAvatarGradientClasses, getAvatarInitial } from "@/components/hub/internal/avatar-color";
 import { areEqualOnlinePlayerProps } from "./internal/multiplayer-lobby-equality";
 
 const STATUS_LABEL: Record<IOnlinePlayer["status"], string> = {

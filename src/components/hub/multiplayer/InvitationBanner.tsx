@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { IPlayerInvitation } from "@/core/entities/multiplayer/IPlayerInvitation";
 import { InvitationCountdownBar } from "./internal/InvitationCountdownBar";
 import { areEqualInvitationBannerProps } from "./internal/multiplayer-lobby-equality";
-import { getAvatarGradientClasses, getAvatarInitial } from "./internal/avatar-color";
+import { getAvatarGradientClasses, getAvatarInitial } from "@/components/hub/internal/avatar-color";
 
 /**
  * Duración total estándar de una invitación (segundos). Sirve como denominador

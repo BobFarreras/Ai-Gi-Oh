@@ -1,4 +1,4 @@
-// src/components/hub/multiplayer/internal/avatar-color.ts - Deriva un par de colores de gradiente determinista a partir de un playerId estable.
+// src/components/hub/internal/avatar-color.ts - Deriva un par de colores de gradiente determinista a partir de un playerId estable (compartido por módulos del Hub).
 /**
  * Paleta de gradientes ciber/espaciales coherente con el resto del Hub.
  * Cada entrada produce un par [from, to] para fondos de avatar generados.
