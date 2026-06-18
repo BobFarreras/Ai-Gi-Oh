@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     await serviceClient.from("match_actions").delete().eq("match_id", matchId);
 
     // Actualizar ELO y estadísticas de ambos jugadores.
-    await updateEloAndStats(serviceClient, matchSession.player_a_id, matchSession.player_b_id, winnerId);
+    const eloChanges = await updateEloAndStats(serviceClient, matchSession.player_a_id, matchSession.player_b_id, winnerId);
 
     // Acreditar recompensas al jugador que llama
     const reward = resolveMatchReward({ mode: "MULTIPLAYER", outcome });
@@ -88,7 +88,11 @@ export async function POST(request: NextRequest) {
       await walletRepo.creditNexus(playerId, reward.nexus);
     }
 
-    return NextResponse.json({ ok: true, reward }, { status: 200, headers: response.headers });
+    // Devolver el cambio ELO del jugador que llama
+    const isPlayerA = matchSession.player_a_id === playerId;
+    const eloChange = isPlayerA ? eloChanges.playerA : eloChanges.playerB;
+
+    return NextResponse.json({ ok: true, reward, eloChange }, { status: 200, headers: response.headers });
   } catch (error) {
     return createApiErrorResponse(error, "No se pudo cerrar la sesión de partida multijugador.");
   }
@@ -96,22 +100,28 @@ export async function POST(request: NextRequest) {
 
 type ServiceClient = ReturnType<typeof createSupabaseServiceRoleClient>;
 
+type EloChange = { old: number; new: number };
+
 async function updateEloAndStats(
   serviceClient: ServiceClient,
   playerAId: string,
   playerBId: string,
   winnerId: string | null,
-): Promise<void> {
+): Promise<{ playerA: EloChange; playerB: EloChange }> {
   const { data: profiles } = await serviceClient
     .from("player_profiles")
     .select("player_id, elo_rating, wins, losses")
     .in("player_id", [playerAId, playerBId]);
 
-  if (!profiles || profiles.length < 2) return;
+  if (!profiles || profiles.length < 2) {
+    return { playerA: { old: 1200, new: 1200 }, playerB: { old: 1200, new: 1200 } };
+  }
 
   const profileA = profiles.find((p) => p.player_id === playerAId);
   const profileB = profiles.find((p) => p.player_id === playerBId);
-  if (!profileA || !profileB) return;
+  if (!profileA || !profileB) {
+    return { playerA: { old: 1200, new: 1200 }, playerB: { old: 1200, new: 1200 } };
+  }
 
   const ratingA = (profileA.elo_rating as number) ?? 1200;
   const ratingB = (profileB.elo_rating as number) ?? 1200;
@@ -152,4 +162,9 @@ async function updateEloAndStats(
       .update({ elo_rating: newRatingB, wins: winsB, losses: lossesB })
       .eq("player_id", playerBId),
   ]);
+
+  return {
+    playerA: { old: ratingA, new: newRatingA },
+    playerB: { old: ratingB, new: newRatingB },
+  };
 }

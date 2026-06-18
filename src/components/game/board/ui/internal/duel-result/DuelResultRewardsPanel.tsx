@@ -1,9 +1,10 @@
-// src/components/game/board/ui/internal/duel-result/DuelResultRewardsPanel.tsx - Panel visual de recompensas finales con EXP, Nexus y regalo opcional.
+// src/components/game/board/ui/internal/duel-result/DuelResultRewardsPanel.tsx - Panel visual de recompensas finales con EXP, Nexus y regalo o ELO.
 "use client";
 
 import { motion } from "framer-motion";
 import { Zap, Hexagon, Gift } from "lucide-react";
 import { IDuelResultRewardSummary } from "./duel-result-reward-summary";
+import { EloChangeDisplay } from "./EloChangeDisplay";
 
 interface DuelResultRewardsPanelProps {
   rewardSummary: IDuelResultRewardSummary;
@@ -13,6 +14,7 @@ interface DuelResultRewardsPanelProps {
 
 export function DuelResultRewardsPanel({ rewardSummary, isGiftOpen, onToggleGift }: DuelResultRewardsPanelProps) {
   const hasGift = rewardSummary.rewardCards.length > 0;
+  const hasEloChange = rewardSummary.eloChange !== undefined;
 
   return (
     <section data-tutorial-id="tutorial-board-duel-result-rewards" className="flex flex-col gap-4 h-full">
@@ -38,36 +40,43 @@ export function DuelResultRewardsPanel({ rewardSummary, isGiftOpen, onToggleGift
         </div>
       </div>
 
-      {/* TARJETA DE REGALO / DROP */}
-      <div className="relative flex-1 flex flex-col overflow-hidden rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-950/40 to-black/80 p-5">
-        <Gift className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 text-amber-500/5 pointer-events-none" />
-        
-        <p className="relative z-10 text-xs font-black uppercase tracking-[0.2em] text-amber-400 mb-4">
-          Drop Especial
-        </p>
-        
-        <div className="relative z-10 flex-1 flex flex-col justify-center items-center">
-          <motion.button
-            aria-label="Mostrar carta recompensa"
-            onClick={onToggleGift}
-            disabled={!hasGift}
-            whileHover={hasGift ? { scale: 1.05 } : {}}
-            whileTap={hasGift ? { scale: 0.95 } : {}}
-            animate={
-              hasGift && !isGiftOpen
-                ? { y: [0, -5, 0], filter: ["brightness(1)", "brightness(1.3)", "brightness(1)"] }
-                : undefined
-            }
-            transition={hasGift ? { duration: 1.5, repeat: Infinity, ease: "easeInOut" } : undefined}
-            className={`w-full h-16 flex items-center justify-center gap-3 rounded-lg border-2 font-black tracking-widest uppercase transition-all
-              ${hasGift 
-                ? "border-amber-400 bg-amber-500/20 text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:bg-amber-500/40 cursor-pointer" 
-                : "border-zinc-800 bg-zinc-900/50 text-zinc-600 cursor-not-allowed"}`}
-          >
-            {hasGift ? (isGiftOpen ? "Ocultar Carta" : "Revelar Drop") : "Sin Drop"}
-          </motion.button>
+      {/* TERCERA SECCIÓN: ELO (multijugador) o DROP (Story/Training) */}
+      {hasEloChange ? (
+        <EloChangeDisplay
+          delta={rewardSummary.eloChange!.delta}
+          newRating={rewardSummary.eloChange!.new}
+        />
+      ) : (
+        <div className="relative flex-1 flex flex-col overflow-hidden rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-950/40 to-black/80 p-5">
+          <Gift className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 text-amber-500/5 pointer-events-none" />
+          
+          <p className="relative z-10 text-xs font-black uppercase tracking-[0.2em] text-amber-400 mb-4">
+            Drop Especial
+          </p>
+          
+          <div className="relative z-10 flex-1 flex flex-col justify-center items-center">
+            <motion.button
+              aria-label="Mostrar carta recompensa"
+              onClick={onToggleGift}
+              disabled={!hasGift}
+              whileHover={hasGift ? { scale: 1.05 } : {}}
+              whileTap={hasGift ? { scale: 0.95 } : {}}
+              animate={
+                hasGift && !isGiftOpen
+                  ? { y: [0, -5, 0], filter: ["brightness(1)", "brightness(1.3)", "brightness(1)"] }
+                  : undefined
+              }
+              transition={hasGift ? { duration: 1.5, repeat: Infinity, ease: "easeInOut" } : undefined}
+              className={`w-full h-16 flex items-center justify-center gap-3 rounded-lg border-2 font-black tracking-widest uppercase transition-all
+                ${hasGift 
+                  ? "border-amber-400 bg-amber-500/20 text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:bg-amber-500/40 cursor-pointer" 
+                  : "border-zinc-800 bg-zinc-900/50 text-zinc-600 cursor-not-allowed"}`}
+            >
+              {hasGift ? (isGiftOpen ? "Ocultar Carta" : "Revelar Drop") : "Sin Drop"}
+            </motion.button>
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }

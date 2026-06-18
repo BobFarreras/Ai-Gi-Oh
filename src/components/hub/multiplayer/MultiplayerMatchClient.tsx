@@ -51,10 +51,12 @@ const CONNECTION_LABELS: Record<ChannelStatus, string> = {
   DISCONNECTED: "Sin conexión",
 };
 
+type EloChange = { old: number; new: number };
+
 async function callFinishMatch(
   matchId: string,
   outcome: "WIN" | "LOSE" | "DRAW",
-): Promise<{ ok: boolean; reward?: IMatchReward; error?: string }> {
+): Promise<{ ok: boolean; reward?: IMatchReward; eloChange?: EloChange; error?: string }> {
   try {
     const res = await fetch("/api/multiplayer/match/finish", {
       method: "POST",
@@ -63,7 +65,7 @@ async function callFinishMatch(
     });
     const body = await res.json();
     if (!res.ok) return { ok: false, error: body.message ?? "Error al cerrar la partida." };
-    return { ok: true, reward: body.reward };
+    return { ok: true, reward: body.reward, eloChange: body.eloChange };
   } catch {
     return { ok: false, error: "Sin conexión con el servidor." };
   }
@@ -85,6 +87,7 @@ export function MultiplayerMatchClient({
   const router = useRouter();
   const [winnerPlayerId, setWinnerPlayerId] = useState<string | null>(null);
   const [reward, setReward] = useState<IMatchReward | null>(null);
+  const [eloChange, setEloChange] = useState<EloChange | null>(null);
   const [matchFinished, setMatchFinished] = useState(false);
   const [isCoinTossVisible, setIsCoinTossVisible] = useState(true);
   const applyTransitionRef = useRef<((transition: (state: GameState) => GameState) => GameState | null) | null>(null);
@@ -141,6 +144,7 @@ export function MultiplayerMatchClient({
       finishCalledRef.current = true;
       const result = await callFinishMatch(matchId, outcome);
       if (result.reward) setReward(result.reward);
+      if (result.eloChange) setEloChange(result.eloChange);
       setMatchFinished(true);
     },
     [matchId],
@@ -163,14 +167,16 @@ export function MultiplayerMatchClient({
 
   // Construye el resumen de recompensas para el DuelResultOverlay del Board.
   // Se calcula cuando llega el reward del servidor; rewardCards vacío (sin drop en multijugador).
+  // eloChange se incluye para mostrar animación de puntos ganados/perdidos en el overlay.
   const duelResultRewardSummary: IDuelResultRewardSummary | null = useMemo(() => {
     if (!reward) return null;
     return {
       rewardNexus: reward.nexus,
       rewardPlayerExperience: reward.playerExperience,
       rewardCards: [],
+      eloChange: eloChange ? { delta: eloChange.new - eloChange.old, new: eloChange.new } : undefined,
     };
-  }, [reward]);
+  }, [reward, eloChange]);
 
   // Acción del botón del overlay: volver al lobby multijugador (radar).
   const handleResultAction = useCallback(() => {
