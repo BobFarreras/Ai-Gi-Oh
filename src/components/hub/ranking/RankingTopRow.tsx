@@ -1,4 +1,4 @@
-// src/components/hub/ranking/RankingTopRow.tsx - Fila destacada del top 3 con medalla holográfica, glow y estilo personalizado por tier (oro/plata/bronce).
+// src/components/hub/ranking/RankingTopRow.tsx - Fila destacada del top 3 con medalla holográfica, glow, estilo personalizado por tier y forma reciente.
 "use client";
 
 import { memo } from "react";
@@ -7,6 +7,7 @@ import { IRankingEntry } from "@/services/ranking/get-ranking-data";
 import { getPodiumStyle, getPodiumTier, PodiumTier } from "./internal/tier";
 import { areEqualRankingRowProps } from "./internal/ranking-equality";
 import { RankingTopAvatar } from "./RankingTopAvatar";
+import { PlayerFormDots } from "./internal/PlayerFormDots";
 
 interface RankingTopRowProps {
   entry: IRankingEntry;
@@ -36,8 +37,7 @@ function winRate(wins: number, losses: number): string {
 /**
  * Fila del top 3 (rank 1-3). Más alta que la compacta, con medalla
  * holográfica (número en círculo con gradiente tier), avatar grande con ring,
- * glow estático por tier y ELO destacado. Mismo grid que RankingRow para
- * alinear con la cabecera de la lista.
+ * glow estático por tier, ELO destacado y forma reciente (5 bolitas).
  */
 function RankingTopRowComponent({ entry, isLocal }: RankingTopRowProps) {
   const tier = getPodiumTier(entry.rank);
@@ -50,7 +50,7 @@ function RankingTopRowComponent({ entry, isLocal }: RankingTopRowProps) {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 280, damping: 24 }}
-      className={`relative grid grid-cols-[2.5rem_2.5rem_1fr_3.5rem_3rem] items-center gap-1.5 overflow-hidden rounded-xl border ${style.border} ${style.glow} bg-[#020a14]/70 px-2.5 py-2.5 backdrop-blur-sm sm:grid-cols-[3.5rem_3.5rem_1fr_5rem_4.5rem_4rem] sm:gap-2 sm:px-3 sm:py-3`}
+      className={`relative grid grid-cols-[2.5rem_2.5rem_1fr_3.5rem_auto_3rem] items-center gap-1.5 overflow-hidden rounded-xl border ${style.border} ${style.glow} bg-[#020a14]/70 px-2.5 py-2.5 backdrop-blur-sm sm:grid-cols-[3.5rem_3.5rem_1fr_5rem_auto_4.5rem_4rem] sm:gap-2 sm:px-3 sm:py-3`}
     >
       {/* Accent bar lateral por tier (gradiente estático, no filter) */}
       <div aria-hidden className={`absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${ACCENT_GRADIENT[tier]}`} />
@@ -83,6 +83,9 @@ function RankingTopRowComponent({ entry, isLocal }: RankingTopRowProps) {
 
       {/* ELO destacado */}
       <span className={`text-right text-base font-black tabular-nums ${style.text} sm:text-xl`}>{entry.eloRating}</span>
+
+      {/* Forma reciente (5 bolitas) */}
+      <PlayerFormDots form={entry.recentForm} />
 
       {/* V/D */}
       <span className="text-right text-xs font-bold tabular-nums sm:text-sm">

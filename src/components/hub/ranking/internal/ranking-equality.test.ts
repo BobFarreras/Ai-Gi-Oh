@@ -1,7 +1,7 @@
 // src/components/hub/ranking/internal/ranking-equality.test.ts - Tests puros del comparador de igualdad de filas del ranking.
 import { describe, expect, it } from "vitest";
 import { areEqualRankingRowProps } from "./ranking-equality";
-import { IRankingEntry } from "@/services/ranking/get-ranking-data";
+import { IRankingEntry, MatchResult } from "@/services/ranking/get-ranking-data";
 
 const entry: IRankingEntry = {
   rank: 5,
@@ -11,12 +11,13 @@ const entry: IRankingEntry = {
   eloRating: 1450,
   wins: 7,
   losses: 3,
+  recentForm: ["W", "L", "W", "W", "D"],
 };
 
 describe("areEqualRankingRowProps", () => {
   it("devuelve true si todos los campos relevantes coinciden (refs distintas)", () => {
     const prev = { entry, isLocal: false };
-    const next = { entry: { ...entry }, isLocal: false };
+    const next = { entry: { ...entry, recentForm: [...entry.recentForm] }, isLocal: false };
     expect(areEqualRankingRowProps(prev, next)).toBe(true);
   });
 
@@ -59,6 +60,18 @@ describe("areEqualRankingRowProps", () => {
   it("devuelve false si cambia el nickname", () => {
     const prev = { entry, isLocal: false };
     const next = { entry: { ...entry, nickname: "Otro" }, isLocal: false };
+    expect(areEqualRankingRowProps(prev, next)).toBe(false);
+  });
+
+  it("devuelve false si cambia recentForm", () => {
+    const prev = { entry, isLocal: false };
+    const next = { entry: { ...entry, recentForm: ["L", "W", "L", "W", "D"] as MatchResult[] }, isLocal: false };
+    expect(areEqualRankingRowProps(prev, next)).toBe(false);
+  });
+
+  it("devuelve false si recentForm tiene distinta longitud", () => {
+    const prev = { entry, isLocal: false };
+    const next = { entry: { ...entry, recentForm: ["W", "L"] as MatchResult[] }, isLocal: false };
     expect(areEqualRankingRowProps(prev, next)).toBe(false);
   });
 });

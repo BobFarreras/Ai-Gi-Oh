@@ -10,14 +10,25 @@ export function areEqualRankingRowProps(
   prev: { entry: IRankingEntry; isLocal: boolean },
   next: { entry: IRankingEntry; isLocal: boolean },
 ): boolean {
-  return (
-    prev.isLocal === next.isLocal &&
-    prev.entry.rank === next.entry.rank &&
-    prev.entry.playerId === next.entry.playerId &&
-    prev.entry.nickname === next.entry.nickname &&
-    prev.entry.avatarUrl === next.entry.avatarUrl &&
-    prev.entry.eloRating === next.entry.eloRating &&
-    prev.entry.wins === next.entry.wins &&
-    prev.entry.losses === next.entry.losses
-  );
+  if (
+    prev.isLocal !== next.isLocal ||
+    prev.entry.rank !== next.entry.rank ||
+    prev.entry.playerId !== next.entry.playerId ||
+    prev.entry.nickname !== next.entry.nickname ||
+    prev.entry.avatarUrl !== next.entry.avatarUrl ||
+    prev.entry.eloRating !== next.entry.eloRating ||
+    prev.entry.wins !== next.entry.wins ||
+    prev.entry.losses !== next.entry.losses
+  ) {
+    return false;
+  }
+
+  // Comparar recentForm por contenido (máx 5 elementos, comparación barata)
+  const prevForm = prev.entry.recentForm;
+  const nextForm = next.entry.recentForm;
+  if (prevForm.length !== nextForm.length) return false;
+  for (let i = 0; i < prevForm.length; i++) {
+    if (prevForm[i] !== nextForm[i]) return false;
+  }
+  return true;
 }

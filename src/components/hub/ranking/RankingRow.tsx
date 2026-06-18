@@ -1,4 +1,4 @@
-// src/components/hub/ranking/RankingRow.tsx - Fila memoizada de la lista de ranking (rank 4+) con avatar, liga y stats.
+// src/components/hub/ranking/RankingRow.tsx - Fila memoizada de la lista de ranking (rank 4+) con avatar, liga, stats y forma reciente.
 "use client";
 
 import { memo } from "react";
@@ -8,6 +8,7 @@ import { IRankingEntry } from "@/services/ranking/get-ranking-data";
 import { getAvatarGradientClasses, getAvatarInitial } from "@/components/hub/internal/avatar-color";
 import { getEloLeague, getLeagueStyle } from "./internal/tier";
 import { areEqualRankingRowProps } from "./internal/ranking-equality";
+import { PlayerFormDots } from "./internal/PlayerFormDots";
 
 interface RankingRowProps {
   entry: IRankingEntry;
@@ -24,6 +25,7 @@ function winRate(wins: number, losses: number): string {
  * Fila de la lista de ranking. Memoizada por contenido. La liga se deriva del
  * ELO (bronce/plata/oro/diamante/maestro) y pinta un badge con glow estático.
  * La fila del jugador local lleva un ring cian para destacarla.
+ * Incluye los últimos 5 resultados como bolitas de color (forma reciente).
  */
 function RankingRowComponent({ entry, isLocal }: RankingRowProps) {
   const league = getEloLeague(entry.eloRating);
@@ -37,7 +39,7 @@ function RankingRowComponent({ entry, isLocal }: RankingRowProps) {
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ type: "spring", stiffness: 320, damping: 28 }}
-      className={`grid grid-cols-[2.5rem_2.5rem_1fr_3.5rem_3rem] items-center gap-1.5 rounded-lg px-2.5 py-2 transition-colors sm:grid-cols-[3.5rem_3.5rem_1fr_5rem_4.5rem_4rem] sm:gap-2 sm:px-3 ${
+      className={`grid grid-cols-[2.5rem_2.5rem_1fr_3.5rem_auto_3rem] items-center gap-1.5 rounded-lg px-2.5 py-2 transition-colors sm:grid-cols-[3.5rem_3.5rem_1fr_5rem_auto_4.5rem_4rem] sm:gap-2 sm:px-3 ${
         isLocal
           ? "bg-cyan-500/12 ring-1 ring-inset ring-cyan-400/40"
           : "bg-slate-900/30 hover:bg-slate-800/40"
@@ -72,6 +74,9 @@ function RankingRowComponent({ entry, isLocal }: RankingRowProps) {
 
       {/* ELO */}
       <span className={`text-right text-sm font-black tabular-nums ${style.text}`}>{entry.eloRating}</span>
+
+      {/* Forma reciente (5 bolitas) */}
+      <PlayerFormDots form={entry.recentForm} />
 
       {/* V/D */}
       <span className="text-right text-xs font-semibold tabular-nums">

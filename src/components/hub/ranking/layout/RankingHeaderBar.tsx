@@ -1,14 +1,14 @@
-// src/components/hub/ranking/layout/RankingHeaderBar.tsx - Cabecera del ranking con BackButton a multijugador, título y stats globales.
+// src/components/hub/ranking/layout/RankingHeaderBar.tsx - Cabecera del ranking con BackButton a multijugador, título y ELO del jugador.
 import { memo } from "react";
 import Link from "next/link";
-import { Users, Crown, Home } from "lucide-react";
+import { Zap, Users, Home } from "lucide-react";
 import { BackButton } from "@/components/ui/BackButton";
 
 interface RankingHeaderBarProps {
   /** Total de duelistas clasificados en el snapshot. */
   totalDuelists: number;
-  /** ELO del líder (#1), para mostrarlo como referencia. */
-  topElo: number | null;
+  /** ELO del jugador local, o null si no está en el top. */
+  localPlayerElo: number | null;
   /** Posición del jugador local, o null si no está en el top. */
   localPlayerRank: number | null;
 }
@@ -17,8 +17,9 @@ interface RankingHeaderBarProps {
  * Cabecera del ranking. Memoizada por contenido: solo repinta cuando cambian
  * los contadores. BackButton apunta a /hub/multiplayer (flujo ranking↔multi),
  * y hay un link secundario a /hub para volver a la sala de control.
+ * Muestra el ELO del jugador local en vez de TOP para que no tenga que buscarse.
  */
-function RankingHeaderBarComponent({ totalDuelists, topElo, localPlayerRank }: RankingHeaderBarProps) {
+function RankingHeaderBarComponent({ totalDuelists, localPlayerElo, localPlayerRank }: RankingHeaderBarProps) {
   return (
     <header className="relative w-full rounded-xl border border-cyan-800/50 bg-[#041120]/90 p-2 shadow-[0_0_20px_rgba(8,145,178,0.15),inset_0_0_20px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:px-4 sm:py-2.5">
       <div
@@ -34,16 +35,18 @@ function RankingHeaderBarComponent({ totalDuelists, topElo, localPlayerRank }: R
 
         {/* Stats globales */}
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2.5">
-          <div
-            className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-[#020a14]/90 px-2.5 py-1.5 shadow-[inset_0_0_10px_rgba(0,0,0,0.6)] sm:gap-2 sm:px-3.5"
-            aria-label={`ELO del líder: ${topElo ?? "—"}`}
-          >
-            <Crown size={16} className="text-amber-400" />
-            <span className="text-sm font-black tabular-nums text-amber-300 sm:text-base">
-              {topElo ?? "—"}
-            </span>
-            <span className="hidden text-[11px] font-bold uppercase tracking-widest text-amber-600 sm:inline">top</span>
-          </div>
+          {localPlayerElo !== null && (
+            <div
+              className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-[#020a14]/90 px-2.5 py-1.5 shadow-[inset_0_0_10px_rgba(0,0,0,0.6)] sm:gap-2 sm:px-3.5"
+              aria-label={`Tu ELO: ${localPlayerElo}`}
+            >
+              <Zap size={16} className="text-amber-400" />
+              <span className="text-sm font-black tabular-nums text-amber-300 sm:text-base">
+                {localPlayerElo}
+              </span>
+              <span className="hidden text-[11px] font-bold uppercase tracking-widest text-amber-600 sm:inline">ELO</span>
+            </div>
+          )}
           <div
             className="flex items-center gap-1.5 rounded-lg border border-cyan-500/40 bg-[#020a14]/90 px-2.5 py-1.5 shadow-[inset_0_0_10px_rgba(0,0,0,0.6)] sm:gap-2 sm:px-3.5"
             aria-label={`${totalDuelists} duelistas clasificados`}

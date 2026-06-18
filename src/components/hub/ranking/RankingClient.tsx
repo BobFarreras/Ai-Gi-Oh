@@ -20,7 +20,10 @@ interface RankingClientProps {
  * navegación).
  */
 export function RankingClient({ entries, localPlayerId, localPlayerRank }: RankingClientProps) {
-  const topElo = entries.length > 0 ? entries[0].eloRating : null;
+  // ELO del jugador local para mostrar en la cabecera (evita tener que buscarse en la lista).
+  const localPlayerEntry = localPlayerId ? entries.find((e) => e.playerId === localPlayerId) : null;
+  const localPlayerElo = localPlayerEntry?.eloRating ?? null;
+
   // Buscador: filtra la lista de clasificación por nickname.
   const { query, setQuery, filtered } = useFilteredPlayers(entries);
 
@@ -28,7 +31,7 @@ export function RankingClient({ entries, localPlayerId, localPlayerRank }: Ranki
     <div className="flex h-full flex-col gap-3">
       <RankingHeaderBar
         totalDuelists={entries.length}
-        topElo={topElo}
+        localPlayerElo={localPlayerElo}
         localPlayerRank={localPlayerRank}
       />
       {/* Buscador de duelistas */}
