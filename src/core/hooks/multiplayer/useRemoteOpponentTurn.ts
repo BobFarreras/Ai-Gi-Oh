@@ -18,8 +18,14 @@ interface IMatchActionRow {
 }
 
 export function useRemoteOpponentTurn({ matchId, opponentId, winnerPlayerId, applyRemoteAction }: IRemoteOpponentTurnParams) {
+  // Patrón "latest ref": el callback puede cambiar cada render, pero el effect
+  // de suscripción solo se re-crea cuando cambian sus deps reales (matchId, etc.).
+  // Actualizamos el ref en un effect (no durante el render) para cumplir
+  // react-hooks/refs y evitar renders en cascada.
   const applyRemoteActionRef = useRef(applyRemoteAction);
-  applyRemoteActionRef.current = applyRemoteAction;
+  useEffect(() => {
+    applyRemoteActionRef.current = applyRemoteAction;
+  });
 
   useEffect(() => {
     if (winnerPlayerId) return;

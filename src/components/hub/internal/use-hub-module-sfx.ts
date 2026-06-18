@@ -18,7 +18,9 @@ export type HubModuleSfxId =
   | "BUY_CARD"
   | "BUY_PACK"
   | "PACK_REVEAL"
-  | "PACK_CARD_REVEAL";
+  | "PACK_CARD_REVEAL"
+  | "INVITE_SENT"
+  | "MATCH_FOUND";
 
 interface IHubModuleSfxConfig {
   path: string;
@@ -41,6 +43,9 @@ const HUB_MODULE_SFX_CATALOG: Record<HubModuleSfxId, IHubModuleSfxConfig> = {
   BUY_PACK: { path: "/audio/hub/market/comprar-pack.m4a", volume: 0.78 },
   PACK_REVEAL: { path: "/audio/landing/hero.m4a", volume: 0.45 },
   PACK_CARD_REVEAL: { path: "/audio/hub/market/cartas-animacion-pack.m4a", volume: 0.58 },
+  // SFX multijugador: INVITE_SENT discreto (acción de envío), MATCH_FOUND impactante (revelación de rival).
+  INVITE_SENT: { path: "/audio/hub/common/seccion.m4a", volume: 0.42 },
+  MATCH_FOUND: { path: "/audio/landing/hero.m4a", volume: 0.5 },
 };
 
 function safeReplay(audio: HTMLAudioElement | null): void {

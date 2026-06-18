@@ -7,8 +7,14 @@ import { createSupabaseBrowserClient } from "@/infrastructure/persistence/supaba
 
 export function useOnlinePlayers(localPlayer: IOnlinePlayer) {
   const [onlinePlayers, setOnlinePlayers] = useState<IOnlinePlayer[]>([]);
+  // Patrón "latest ref": localPlayer viene del servidor y es estable, pero lo
+  // mantenemos en ref para que el effect de suscripción (que se monta una vez)
+  // siempre vea el valor más reciente. Actualizado en effect, no en render,
+  // para cumplir react-hooks/refs.
   const localPlayerRef = useRef(localPlayer);
-  localPlayerRef.current = localPlayer;
+  useEffect(() => {
+    localPlayerRef.current = localPlayer;
+  });
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
