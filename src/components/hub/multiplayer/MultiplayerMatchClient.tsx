@@ -10,6 +10,7 @@ import { useMultiplayerMatchChannel } from "@/core/hooks/multiplayer/useMultipla
 import { useRemoteOpponentTurn } from "@/core/hooks/multiplayer/useRemoteOpponentTurn";
 import { IMatchReward } from "@/core/entities/match/IMatchReward";
 import { IMatchActionPayload } from "@/core/entities/multiplayer/IMatchAction";
+import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result/duel-result-reward-summary";
 import { LocalActionEmitterProvider } from "@/components/game/board/multiplayer/local-action-emitter";
 import {
   prepareMultiplayerDeck,
@@ -160,6 +161,22 @@ export function MultiplayerMatchClient({
     void finishMatch("WIN");
   }, [finishMatch]);
 
+  // Construye el resumen de recompensas para el DuelResultOverlay del Board.
+  // Se calcula cuando llega el reward del servidor; rewardCards vacío (sin drop en multijugador).
+  const duelResultRewardSummary: IDuelResultRewardSummary | null = useMemo(() => {
+    if (!reward) return null;
+    return {
+      rewardNexus: reward.nexus,
+      rewardPlayerExperience: reward.playerExperience,
+      rewardCards: [],
+    };
+  }, [reward]);
+
+  // Acción del botón del overlay: volver al lobby multijugador (radar).
+  const handleResultAction = useCallback(() => {
+    router.push("/hub/multiplayer");
+  }, [router]);
+
   const disconnectedSeconds = Math.floor(disconnectedForMs / 1000);
   const remainingSeconds = Math.max(0, 60 - disconnectedSeconds);
   const isOpponentGone = opponentConnectionStatus === "ABANDONED";
@@ -206,36 +223,6 @@ export function MultiplayerMatchClient({
         </div>
       )}
 
-      {/* Overlay: fin de partida + recompensas */}
-      {matchFinished && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-5 rounded-2xl border border-slate-700/60 bg-slate-950/95 px-10 py-8 backdrop-blur-md">
-            <span className="text-2xl font-black tracking-wide">
-              {winnerPlayerId === localPlayerId
-                ? "¡Victoria!"
-                : winnerPlayerId === "DRAW"
-                  ? "Empate"
-                  : "Derrota"}
-            </span>
-            {reward && (
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-sm text-slate-400">Recompensas obtenidas</span>
-                <div className="flex items-center gap-4">
-                  <span className="text-base font-bold text-yellow-300">+{reward.nexus} Nexus</span>
-                  <span className="text-base font-bold text-sky-300">+{reward.playerExperience} XP</span>
-                </div>
-              </div>
-            )}
-            <button
-              onClick={() => router.push("/hub/multiplayer")}
-              className="rounded-lg bg-slate-700 px-6 py-2 text-sm font-semibold text-white transition hover:bg-slate-600 active:scale-95"
-            >
-              Volver al lobby
-            </button>
-          </div>
-        </div>
-      )}
-
       <Board
         mode="MULTIPLAYER"
         initialPlayerDeck={preparedLocalDeck}
@@ -262,6 +249,9 @@ export function MultiplayerMatchClient({
         onExitMatch={() => router.push("/hub/multiplayer")}
         isMatchStartLocked={isCoinTossVisible}
         isTurnTimerEnabled
+        duelResultRewardSummary={duelResultRewardSummary}
+        resultActionLabel="Volver al lobby"
+        onResultAction={handleResultAction}
       />
 
       <MultiplayerCoinTossOverlay
