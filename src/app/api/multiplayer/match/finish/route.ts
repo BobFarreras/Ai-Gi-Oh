@@ -9,6 +9,7 @@ import { resolveMatchReward } from "@/core/services/match/rewards/match-reward-p
 import { ValidationError } from "@/core/errors/ValidationError";
 import { createSupabaseServiceRoleClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-service-role-client";
 import { SupabaseWalletRepository } from "@/infrastructure/persistence/supabase/SupabaseWalletRepository";
+import { calculateEloForBothPlayers, calculateEloForDraw } from "@/core/services/match/elo/elo-calculator";
 
 type MatchOutcome = "WIN" | "LOSE" | "DRAW";
 
@@ -77,6 +78,9 @@ export async function POST(request: NextRequest) {
     // Una vez FINISHED, las filas no aportan valor y se purgan para no acumular.
     await serviceClient.from("match_actions").delete().eq("match_id", matchId);
 
+    // Actualizar ELO y estadísticas de ambos jugadores.
+    await updateEloAndStats(serviceClient, matchSession.player_a_id, matchSession.player_b_id, winnerId);
+
     // Acreditar recompensas al jugador que llama
     const reward = resolveMatchReward({ mode: "MULTIPLAYER", outcome });
     if (reward.nexus > 0) {
@@ -88,4 +92,64 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return createApiErrorResponse(error, "No se pudo cerrar la sesión de partida multijugador.");
   }
+}
+
+type ServiceClient = ReturnType<typeof createSupabaseServiceRoleClient>;
+
+async function updateEloAndStats(
+  serviceClient: ServiceClient,
+  playerAId: string,
+  playerBId: string,
+  winnerId: string | null,
+): Promise<void> {
+  const { data: profiles } = await serviceClient
+    .from("player_profiles")
+    .select("player_id, elo_rating, wins, losses")
+    .in("player_id", [playerAId, playerBId]);
+
+  if (!profiles || profiles.length < 2) return;
+
+  const profileA = profiles.find((p) => p.player_id === playerAId);
+  const profileB = profiles.find((p) => p.player_id === playerBId);
+  if (!profileA || !profileB) return;
+
+  const ratingA = (profileA.elo_rating as number) ?? 1200;
+  const ratingB = (profileB.elo_rating as number) ?? 1200;
+
+  let newRatingA: number;
+  let newRatingB: number;
+  let winsA = (profileA.wins as number) ?? 0;
+  let lossesA = (profileA.losses as number) ?? 0;
+  let winsB = (profileB.wins as number) ?? 0;
+  let lossesB = (profileB.losses as number) ?? 0;
+
+  if (winnerId === null) {
+    // Empate
+    const draw = calculateEloForDraw(ratingA, ratingB);
+    newRatingA = draw.playerANewElo;
+    newRatingB = draw.playerBNewElo;
+  } else if (winnerId === playerAId) {
+    const result = calculateEloForBothPlayers(ratingA, ratingB);
+    newRatingA = result.winnerNewElo;
+    newRatingB = result.loserNewElo;
+    winsA += 1;
+    lossesB += 1;
+  } else {
+    const result = calculateEloForBothPlayers(ratingB, ratingA);
+    newRatingA = result.loserNewElo;
+    newRatingB = result.winnerNewElo;
+    winsB += 1;
+    lossesA += 1;
+  }
+
+  await Promise.all([
+    serviceClient
+      .from("player_profiles")
+      .update({ elo_rating: newRatingA, wins: winsA, losses: lossesA })
+      .eq("player_id", playerAId),
+    serviceClient
+      .from("player_profiles")
+      .update({ elo_rating: newRatingB, wins: winsB, losses: lossesB })
+      .eq("player_id", playerBId),
+  ]);
 }
