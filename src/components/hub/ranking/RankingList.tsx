@@ -14,13 +14,13 @@ interface RankingListProps {
 /** Cabecera de columnas compartida (mismo grid que RankingTopRow y RankingRow). */
 function ListHeader() {
   return (
-    <div className="grid grid-cols-[3.5rem_3.5rem_1fr_5rem_4.5rem_4rem] items-center gap-2 border-b border-slate-700/60 px-3 pb-2">
+    <div className="grid grid-cols-[2.5rem_2.5rem_1fr_3.5rem_3rem] items-center gap-1.5 border-b border-slate-700/60 px-2.5 pb-2 sm:grid-cols-[3.5rem_3.5rem_1fr_5rem_4.5rem_4rem] sm:gap-2 sm:px-3">
       <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">#</span>
       <span />
       <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Duelista</span>
       <span className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-500">ELO</span>
       <span className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-500">V/D</span>
-      <span className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-500">%</span>
+      <span className="hidden text-right text-[10px] font-bold uppercase tracking-widest text-slate-500 sm:block">%</span>
     </div>
   );
 }

@@ -4,6 +4,7 @@
 import { AnimatePresence } from "framer-motion";
 import { IOnlinePlayer } from "@/core/entities/multiplayer/IOnlinePlayer";
 import { IPlayerInvitation } from "@/core/entities/multiplayer/IPlayerInvitation";
+import { UserSearchInput } from "@/components/hub/internal/UserSearchInput";
 import { MatchmakingPanel, MatchmakingStatus } from "./internal/MatchmakingPanel";
 import { MultiplayerHeaderBar } from "./internal/MultiplayerHeaderBar";
 import { PresenceRadar } from "./internal/PresenceRadar";
@@ -12,6 +13,8 @@ import { OnlinePlayerCard } from "../OnlinePlayerCard";
 
 interface MultiplayerDesktopLayoutProps {
   onlinePlayers: IOnlinePlayer[];
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
   pendingInvitations: IPlayerInvitation[];
   localPlayerId: string;
   localNickname: string;
@@ -33,6 +36,8 @@ interface MultiplayerDesktopLayoutProps {
  */
 export function MultiplayerDesktopLayout({
   onlinePlayers,
+  searchQuery,
+  onSearchChange,
   pendingInvitations,
   localPlayerId,
   localNickname,
@@ -88,7 +93,7 @@ export function MultiplayerDesktopLayout({
 
           {/* Lista de jugadores online */}
           <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-slate-700/50 bg-slate-900/40 p-3">
-            <header className="mb-3 flex items-center justify-between">
+            <header className="mb-2 flex items-center justify-between">
               <h2 className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-300/85">
                 Duelistas en línea
               </h2>
@@ -98,6 +103,11 @@ export function MultiplayerDesktopLayout({
                 </span>
               )}
             </header>
+
+            {/* Buscador de jugadores */}
+            <div className="mb-2">
+              <UserSearchInput value={searchQuery} onChange={onSearchChange} placeholder="Buscar duelista…" />
+            </div>
 
             <div className="home-modern-scroll min-h-0 flex-1 overflow-y-auto pr-1">
               {onlineCount === 0 ? (

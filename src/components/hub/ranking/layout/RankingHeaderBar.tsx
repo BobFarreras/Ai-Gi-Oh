@@ -1,7 +1,7 @@
 // src/components/hub/ranking/layout/RankingHeaderBar.tsx - Cabecera del ranking con BackButton a multijugador, título y stats globales.
 import { memo } from "react";
 import Link from "next/link";
-import { Users, Crown } from "lucide-react";
+import { Users, Crown, Home } from "lucide-react";
 import { BackButton } from "@/components/ui/BackButton";
 
 interface RankingHeaderBarProps {
@@ -33,31 +33,31 @@ function RankingHeaderBarComponent({ totalDuelists, topElo, localPlayerRank }: R
         </h1>
 
         {/* Stats globales */}
-        <div className="ml-auto flex items-center gap-2.5">
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2.5">
           <div
-            className="flex items-center gap-2 rounded-lg border border-amber-500/40 bg-[#020a14]/90 px-3.5 py-1.5 shadow-[inset_0_0_10px_rgba(0,0,0,0.6)]"
+            className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-[#020a14]/90 px-2.5 py-1.5 shadow-[inset_0_0_10px_rgba(0,0,0,0.6)] sm:gap-2 sm:px-3.5"
             aria-label={`ELO del líder: ${topElo ?? "—"}`}
           >
             <Crown size={16} className="text-amber-400" />
-            <span className="text-base font-black tabular-nums text-amber-300">
+            <span className="text-sm font-black tabular-nums text-amber-300 sm:text-base">
               {topElo ?? "—"}
             </span>
             <span className="hidden text-[11px] font-bold uppercase tracking-widest text-amber-600 sm:inline">top</span>
           </div>
           <div
-            className="flex items-center gap-2 rounded-lg border border-cyan-500/40 bg-[#020a14]/90 px-3.5 py-1.5 shadow-[inset_0_0_10px_rgba(0,0,0,0.6)]"
+            className="flex items-center gap-1.5 rounded-lg border border-cyan-500/40 bg-[#020a14]/90 px-2.5 py-1.5 shadow-[inset_0_0_10px_rgba(0,0,0,0.6)] sm:gap-2 sm:px-3.5"
             aria-label={`${totalDuelists} duelistas clasificados`}
           >
             <Users size={16} className="text-cyan-400" />
-            <span className="text-base font-black tabular-nums text-cyan-300">{totalDuelists}</span>
+            <span className="text-sm font-black tabular-nums text-cyan-300 sm:text-base">{totalDuelists}</span>
             <span className="hidden text-[11px] font-bold uppercase tracking-widest text-cyan-600 sm:inline">duelistas</span>
           </div>
           {localPlayerRank && (
             <div
-              className="flex items-center gap-2 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-3.5 py-1.5 shadow-[0_0_10px_rgba(52,211,153,0.25)]"
+              className="flex items-center gap-1.5 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-2.5 py-1.5 shadow-[0_0_10px_rgba(52,211,153,0.25)] sm:gap-2 sm:px-3.5"
               aria-label={`Tu posición: ${localPlayerRank}`}
             >
-              <span className="text-base font-black tabular-nums text-emerald-300">#{localPlayerRank}</span>
+              <span className="text-sm font-black tabular-nums text-emerald-300 sm:text-base">#{localPlayerRank}</span>
               <span className="hidden text-[11px] font-bold uppercase tracking-widest text-emerald-400 sm:inline">tú</span>
             </div>
           )}
@@ -66,9 +66,10 @@ function RankingHeaderBarComponent({ totalDuelists, topElo, localPlayerRank }: R
         <Link
           href="/hub"
           aria-label="Volver a la sala de control"
-          className="flex shrink-0 items-center gap-2 rounded-lg border border-slate-600/50 bg-[#021426]/85 px-4 py-2 text-sm font-black uppercase tracking-widest text-slate-300 transition hover:border-slate-400/70 hover:bg-slate-700/40 hover:text-slate-100"
+          className="flex shrink-0 items-center gap-2 rounded-lg border border-slate-600/50 bg-[#021426]/85 px-3 py-2 text-sm font-black uppercase tracking-widest text-slate-300 transition hover:border-slate-400/70 hover:bg-slate-700/40 hover:text-slate-100 sm:px-4"
         >
-          <span>Hub</span>
+          <Home size={16} className="shrink-0" />
+          <span className="hidden sm:inline">Hub</span>
         </Link>
       </div>
     </header>

@@ -48,20 +48,6 @@ function PresenceRadarComponent({ players, localNickname, localPlayerId, onSelec
 
   return (
     <div className="relative mx-auto aspect-square w-full max-w-[340px]">
-      {/* Anillos giratorios (desmontados en modo rendimiento) */}
-      {!shouldReduceCombatEffects && (
-        <>
-          <div
-            aria-hidden
-            className="hub-control-ring absolute left-1/2 top-1/2 h-[92%] w-[92%] -translate-x-1/2 -translate-y-1/2 rounded-full"
-          />
-          <div
-            aria-hidden
-            className="hub-control-ring-slow absolute left-1/2 top-1/2 h-[74%] w-[74%] -translate-x-1/2 -translate-y-1/2 rounded-full"
-          />
-        </>
-      )}
-
       {/* Cuerpo del radar + sweep conic */}
       <div className="hub-control-radar absolute inset-[6%] rounded-full">
         {!shouldReduceCombatEffects && (

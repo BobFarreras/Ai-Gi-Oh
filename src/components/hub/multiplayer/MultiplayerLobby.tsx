@@ -12,6 +12,7 @@ import { useMatchmakingQueue } from "@/core/hooks/multiplayer/useMatchmakingQueu
 import { sendInvitation } from "@/app/hub/multiplayer/actions/send-invitation";
 import { acceptInvitation, declineInvitation } from "@/app/hub/multiplayer/actions/respond-invitation";
 import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
+import { useFilteredPlayers } from "@/components/hub/internal/use-filtered-players";
 import { isDesktopLayoutViewport } from "@/components/internal/layout-breakpoints";
 import { useMultiplayerLobbySfx } from "./internal/use-multiplayer-lobby-sfx";
 import { MultiplayerDesktopLayout } from "./layout/MultiplayerDesktopLayout";
@@ -39,6 +40,8 @@ export function MultiplayerLobby({ localPlayerId, localNickname, activeDeckIds }
   };
 
   const { onlinePlayers } = useOnlinePlayers(localPlayer);
+  // Buscador de jugadores: filtra la lista de online por nickname.
+  const { query: searchQuery, setQuery: setSearchQuery, filtered: filteredPlayers } = useFilteredPlayers(onlinePlayers);
   const { pendingInvitations } = usePendingInvitations(localPlayerId);
   const acceptedMatchId = useOutgoingInvitationMatch(localPlayerId);
   const { status: matchmakingStatus, joinQueue, leaveQueue, matchId: matchmakingMatchId } = useMatchmakingQueue({
@@ -121,7 +124,9 @@ export function MultiplayerLobby({ localPlayerId, localNickname, activeDeckIds }
   const hasDeck = activeDeckIds.length > 0;
 
   const sharedProps = {
-    onlinePlayers,
+    onlinePlayers: filteredPlayers,
+    searchQuery,
+    onSearchChange: setSearchQuery,
     pendingInvitations,
     matchmakingStatus,
     hasDeck,

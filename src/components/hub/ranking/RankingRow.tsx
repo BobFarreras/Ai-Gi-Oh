@@ -37,7 +37,7 @@ function RankingRowComponent({ entry, isLocal }: RankingRowProps) {
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ type: "spring", stiffness: 320, damping: 28 }}
-      className={`grid grid-cols-[3.5rem_3.5rem_1fr_5rem_4.5rem_4rem] items-center gap-2 rounded-lg px-3 py-2 transition-colors ${
+      className={`grid grid-cols-[2.5rem_2.5rem_1fr_3.5rem_3rem] items-center gap-1.5 rounded-lg px-2.5 py-2 transition-colors sm:grid-cols-[3.5rem_3.5rem_1fr_5rem_4.5rem_4rem] sm:gap-2 sm:px-3 ${
         isLocal
           ? "bg-cyan-500/12 ring-1 ring-inset ring-cyan-400/40"
           : "bg-slate-900/30 hover:bg-slate-800/40"
@@ -49,7 +49,7 @@ function RankingRowComponent({ entry, isLocal }: RankingRowProps) {
       </span>
 
       {/* Avatar */}
-      <div className={`relative h-8 w-8 overflow-hidden rounded-full border ${style.border}`}>
+      <div className={`relative h-7 w-7 overflow-hidden rounded-full border ${style.border} sm:h-8 sm:w-8`}>
         {entry.avatarUrl ? (
           <Image src={entry.avatarUrl} alt={entry.nickname} fill sizes="32px" className="object-cover" />
         ) : (
@@ -59,7 +59,7 @@ function RankingRowComponent({ entry, isLocal }: RankingRowProps) {
         )}
       </div>
 
-      {/* Nickname + liga */}
+      {/* Nickname + liga (badge de liga oculto en móvil) */}
       <div className="flex min-w-0 items-center gap-2">
         <span className={`truncate text-sm font-semibold ${isLocal ? "text-cyan-200" : "text-slate-200"}`}>
           {entry.nickname}
@@ -80,8 +80,8 @@ function RankingRowComponent({ entry, isLocal }: RankingRowProps) {
         <span className="text-rose-400">{entry.losses}</span>
       </span>
 
-      {/* Win rate */}
-      <span className="text-right text-xs font-semibold tabular-nums text-slate-400">
+      {/* Win rate (oculto en móvil para liberar espacio) */}
+      <span className="hidden text-right text-xs font-semibold tabular-nums text-slate-400 sm:block">
         {winRate(entry.wins, entry.losses)}
       </span>
     </motion.div>

@@ -4,6 +4,7 @@
 import { AnimatePresence } from "framer-motion";
 import { IOnlinePlayer } from "@/core/entities/multiplayer/IOnlinePlayer";
 import { IPlayerInvitation } from "@/core/entities/multiplayer/IPlayerInvitation";
+import { UserSearchInput } from "@/components/hub/internal/UserSearchInput";
 import { MatchmakingPanel, MatchmakingStatus } from "./internal/MatchmakingPanel";
 import { MultiplayerHeaderBar } from "./internal/MultiplayerHeaderBar";
 import { InvitationBanner } from "../InvitationBanner";
@@ -11,6 +12,8 @@ import { OnlinePlayerCard } from "../OnlinePlayerCard";
 
 interface MultiplayerMobileLayoutProps {
   onlinePlayers: IOnlinePlayer[];
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
   pendingInvitations: IPlayerInvitation[];
   matchmakingStatus: MatchmakingStatus;
   hasDeck: boolean;
@@ -29,6 +32,8 @@ interface MultiplayerMobileLayoutProps {
  */
 export function MultiplayerMobileLayout({
   onlinePlayers,
+  searchQuery,
+  onSearchChange,
   pendingInvitations,
   matchmakingStatus,
   hasDeck,
@@ -78,6 +83,9 @@ export function MultiplayerMobileLayout({
             </span>
           )}
         </header>
+
+        {/* Buscador de jugadores */}
+        <UserSearchInput value={searchQuery} onChange={onSearchChange} placeholder="Buscar duelista…" />
 
         {onlineCount === 0 ? (
           <div className="rounded-xl border border-slate-700/50 bg-slate-900/40 px-4 py-6 text-center">

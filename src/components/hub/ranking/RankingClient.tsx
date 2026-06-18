@@ -1,7 +1,9 @@
-// src/components/hub/ranking/RankingClient.tsx - Orquestador cliente del ranking: header + lista única de clasificación.
+// src/components/hub/ranking/RankingClient.tsx - Orquestador cliente del ranking: header + buscador + lista única de clasificación.
 "use client";
 
 import { IRankingEntry } from "@/services/ranking/get-ranking-data";
+import { useFilteredPlayers } from "@/components/hub/internal/use-filtered-players";
+import { UserSearchInput } from "@/components/hub/internal/UserSearchInput";
 import { RankingHeaderBar } from "./layout/RankingHeaderBar";
 import { RankingList } from "./RankingList";
 
@@ -12,12 +14,15 @@ interface RankingClientProps {
 }
 
 /**
- * Orquesta la composición del ranking: cabecera con stats globales y una
- * única lista de clasificación donde el top 3 recibe fila destacada. Sin
- * estado de realtime (los datos vienen del servidor en cada navegación).
+ * Orquesta la composición del ranking: cabecera con stats globales, buscador
+ * de duelistas y una única lista de clasificación donde el top 3 recibe fila
+ * destacada. Sin estado de realtime (los datos vienen del servidor en cada
+ * navegación).
  */
 export function RankingClient({ entries, localPlayerId, localPlayerRank }: RankingClientProps) {
   const topElo = entries.length > 0 ? entries[0].eloRating : null;
+  // Buscador: filtra la lista de clasificación por nickname.
+  const { query, setQuery, filtered } = useFilteredPlayers(entries);
 
   return (
     <div className="flex h-full flex-col gap-3">
@@ -26,7 +31,9 @@ export function RankingClient({ entries, localPlayerId, localPlayerRank }: Ranki
         topElo={topElo}
         localPlayerRank={localPlayerRank}
       />
-      <RankingList entries={entries} localPlayerId={localPlayerId} />
+      {/* Buscador de duelistas */}
+      <UserSearchInput value={query} onChange={setQuery} placeholder="Buscar duelista en el ranking…" />
+      <RankingList entries={filtered} localPlayerId={localPlayerId} />
     </div>
   );
 }
