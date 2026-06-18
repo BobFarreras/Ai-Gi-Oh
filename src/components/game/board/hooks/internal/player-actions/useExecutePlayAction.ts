@@ -2,6 +2,7 @@
 import { useCallback } from "react";
 import { BattleMode } from "@/core/entities/IPlayer";
 import { GameEngine } from "@/core/use-cases/GameEngine";
+import { useLocalActionEmitter } from "@/components/game/board/multiplayer/local-action-emitter";
 import { IUsePlayerActionsParams } from "./types";
 import { attemptZoneReplacementOnFull, executeActivationPlay } from "./useExecutePlayAction.internal";
 
@@ -41,6 +42,7 @@ export function useExecutePlayAction({
   setSelectedBoardEntityInstanceId,
   setRevealedEntities,
 }: IExecutePlayActionParams) {
+  const emitLocalAction = useLocalActionEmitter();
   return useCallback(
     async (mode: BattleMode, event: React.MouseEvent) => {
       event.stopPropagation();
@@ -84,7 +86,10 @@ export function useExecutePlayAction({
       }
 
       if (playingCard.type === "FUSION" && (mode === "ATTACK" || mode === "DEFENSE")) {
-        applyTransition((state) => GameEngine.startFusionSummon(state, state.playerA.id, selectedCardReference, mode));
+        const started = applyTransition((state) => GameEngine.startFusionSummon(state, state.playerA.id, selectedCardReference, mode));
+        if (started) {
+          emitLocalAction({ type: "START_FUSION_SUMMON", payload: { cardId: selectedCardReference, mode } });
+        }
         return;
       }
 
@@ -99,18 +104,23 @@ export function useExecutePlayAction({
           setRevealedEntities,
           setActiveAttackerId,
           setSelectedCard,
+          emitLocalAction,
         });
         return;
       }
 
       const played = applyTransition((state) => GameEngine.playCard(state, state.playerA.id, selectedCardReference, mode));
-      if (played) clearSelection();
+      if (played) {
+        clearSelection();
+        emitLocalAction({ type: "PLAY_CARD", payload: { cardId: selectedCardReference, mode } });
+      }
     },
     [
       applyTransition,
       assertPlayerTurn,
       clearError,
       clearSelection,
+      emitLocalAction,
       gameState,
       isAnimating,
       playingCard,

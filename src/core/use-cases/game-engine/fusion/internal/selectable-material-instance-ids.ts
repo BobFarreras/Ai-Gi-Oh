@@ -10,6 +10,14 @@ export function resolveSelectableMaterialInstanceIds(
   if (!recipe) return playerEntities.map((entity) => entity.instanceId);
 
   if (recipe.requiredMaterialIds && recipe.requiredMaterialIds.length > 0) {
+    // Verificar que cada ID requerido distinto está cubierto por al menos una entidad en campo.
+    // Sin esta comprobación, 2 copias de la misma carta harían pasar la puerta aunque
+    // faltara el otro material (ej. 2x Claude sin Kali Linux para kaclauli).
+    const allCovered = recipe.requiredMaterialIds.every((requiredId) =>
+      playerEntities.some((entity) => entity.card.id === requiredId),
+    );
+    if (!allCovered) return [];
+
     return playerEntities
       .filter((entity) => recipe.requiredMaterialIds!.includes(entity.card.id))
       .map((entity) => entity.instanceId);

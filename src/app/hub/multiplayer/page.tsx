@@ -1,16 +1,26 @@
-// src/app/hub/multiplayer/page.tsx - Renderiza la pantalla base de multijugador dentro del hub.
-import { HubSectionScreen } from "@/components/hub/sections/HubSectionScreen";
-import { getHubSectionViewModel } from "@/app/hub/internal/getHubSectionViewModel";
+// src/app/hub/multiplayer/page.tsx - Lobby multijugador: presencia online, invitaciones y acceso a partidas.
+import { redirect } from "next/navigation";
+import { MultiplayerScene } from "@/components/hub/multiplayer/MultiplayerScene";
+import { MultiplayerLobby } from "@/components/hub/multiplayer/MultiplayerLobby";
+import { getMultiplayerLobbyData } from "@/services/multiplayer/get-multiplayer-lobby-data";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function MultiplayerPage() {
-  const viewModel = await getHubSectionViewModel("MULTIPLAYER");
+  const lobbyData = await getMultiplayerLobbyData();
+
+  if (!lobbyData) {
+    redirect("/login");
+  }
 
   return (
-    <HubSectionScreen
-      title={viewModel.section.title}
-      description="Conecta con otros duelistas y participa en duelos competitivos en línea."
-      isLocked={viewModel.section.isLocked}
-      lockReason={viewModel.section.lockReason}
-    />
+    <MultiplayerScene>
+      <MultiplayerLobby
+        localPlayerId={lobbyData.playerId}
+        localNickname={lobbyData.nickname}
+        activeDeckIds={lobbyData.activeDeckIds}
+      />
+    </MultiplayerScene>
   );
 }

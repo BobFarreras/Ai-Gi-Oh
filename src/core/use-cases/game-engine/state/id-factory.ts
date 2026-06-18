@@ -1,6 +1,6 @@
 // src/core/use-cases/game-engine/state/id-factory.ts - Fábrica de identificadores y timestamps del motor para permitir ejecución determinista en tests.
 import { CombatLogEventType } from "@/core/entities/ICombatLog";
-import { RandomSource } from "@/core/services/random/seeded-rng";
+import { RandomSource, createSeededRandom } from "@/core/services/random/seeded-rng";
 
 export interface IGameEngineIdFactory {
   createEntityInstanceId: (cardId: string) => string;
@@ -35,3 +35,31 @@ export function createGameEngineIdFactory(
 }
 
 export const defaultGameEngineIdFactory = createGameEngineIdFactory();
+
+/**
+ * Fábrica determinista para multijugador: misma seed ⇒ misma secuencia de ids en
+ * ambos clientes. Sustituye Date.now()/Math.random() por un RNG sembrado y un
+ * contador monótono, de modo que re-ejecutar la misma secuencia de acciones
+ * (lockstep por turnos) produzca instanceId idénticos. Imprescindible para que los
+ * ataques y otras acciones que referencian instanceId resuelvan en ambos lados.
+ */
+export function createSeededGameEngineIdFactory(seed: string): IGameEngineIdFactory {
+  const randomSource = createSeededRandom(`${seed}:idfactory`);
+  let counter = 0;
+  const nextSuffix = () => {
+    counter += 1;
+    return `${counter}-${createRandomSuffix(randomSource, 6)}`;
+  };
+  return {
+    // El instanceId de entidad se deriva SOLO de la clave (runtimeId único de la
+    // carta), sin contador: así coincide en ambos clientes aunque el consumo del
+    // idFactory para logs/otros ids se desincronice. Es lo que hace que los ataques
+    // (que referencian instanceId) resuelvan en el lado rival.
+    createEntityInstanceId: (cardKey: string) => `mp-ent-${cardKey}`,
+    // cardKey incluye los materiales (deterministas) ⇒ único; sin contador.
+    createFusionInstanceId: (cardKey: string) => `mp-fus-${cardKey}`,
+    createRevivedInstanceId: (cardId: string, slotIndex: number) => `mp-rev-${cardId}-${slotIndex}-${nextSuffix()}`,
+    createCombatLogEventId: (eventType) => `mp-log-${eventType}-${nextSuffix()}`,
+    createTimestampIso: () => new Date(counter * 1000).toISOString(),
+  };
+}

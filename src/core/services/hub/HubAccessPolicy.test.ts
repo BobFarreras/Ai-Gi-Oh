@@ -39,10 +39,10 @@ describe("resolveHubSectionLock", () => {
     expect(market.isLocked).toBe(false);
   });
 
-  it("mantiene multijugador bloqueado tras tutorial por estado de implementación", () => {
-    const progress = { ...BASE_PROGRESS, hasCompletedTutorial: true, medals: 9 };
+  it("desbloquea multijugador tras completar el tutorial", () => {
+    const progress = { ...BASE_PROGRESS, hasCompletedTutorial: true };
     const multiplayer = resolveHubSectionLock(createSection("MULTIPLAYER"), progress);
-    expect(multiplayer.isLocked).toBe(true);
-    expect(multiplayer.lockReason).toContain("proceso de creación");
+    expect(multiplayer.isLocked).toBe(false);
+    expect(multiplayer.lockReason).toBeNull();
   });
 });

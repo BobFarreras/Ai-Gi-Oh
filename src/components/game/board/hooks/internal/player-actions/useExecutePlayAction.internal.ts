@@ -1,6 +1,7 @@
 // src/components/game/board/hooks/internal/player-actions/useExecutePlayAction.internal.ts - Encapsula reglas auxiliares de jugada para mantener el hook principal legible y con SRP.
 import { BattleMode } from "@/core/entities/IPlayer";
 import { GameState, GameEngine } from "@/core/use-cases/GameEngine";
+import { LocalActionEmitter } from "@/components/game/board/multiplayer/local-action-emitter";
 import { sleep } from "../sleep";
 import { addRevealedId, findReactiveTrap, removeRevealedId } from "../trapPreview";
 import { PLAYER_POST_RESOLUTION_MS, PLAYER_TRAP_PREVIEW_MS } from "./constants";
@@ -37,6 +38,7 @@ interface IExecuteActivationInput {
   setRevealedEntities: ISetRevealedEntities;
   setActiveAttackerId: ISetActiveAttackerId;
   setSelectedCard: ISetSelectedCard;
+  emitLocalAction: LocalActionEmitter;
 }
 
 export function resolvePlayErrorMessage(error: unknown): string {
@@ -76,6 +78,9 @@ export async function executeActivationPlay(input: IExecuteActivationInput): Pro
     return;
   }
 
+  // Sincronizar la jugada de la carta de magia/ejecución al rival.
+  input.emitLocalAction({ type: "PLAY_CARD", payload: { cardId: input.selectedCardReference, mode: "ACTIVATE" } });
+
   input.clearSelection();
   await sleep(1500);
   const reactiveTrap = findReactiveTrap(input.gameState, input.gameState.playerB.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
@@ -96,7 +101,11 @@ export async function executeActivationPlay(input: IExecuteActivationInput): Pro
     await sleep(PLAYER_TRAP_PREVIEW_MS);
   }
 
-  input.applyTransition((state) => GameEngine.resolveExecution(state, state.playerA.id, executionId));
+  const resolvedState = input.applyTransition((state) => GameEngine.resolveExecution(state, state.playerA.id, executionId));
+  if (resolvedState) {
+    // Sincronizar la RESOLUCIÓN del efecto (daño, trampas reactivas, etc.) al rival.
+    input.emitLocalAction({ type: "RESOLVE_EXECUTION", payload: { instanceId: executionId } });
+  }
   if (reactiveTrap) {
     await sleep(PLAYER_POST_RESOLUTION_MS);
     input.setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));

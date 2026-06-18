@@ -28,7 +28,9 @@ const FUSION_RENDER_BY_CARD_ID: Record<string, string> = {
   "fusion-pytgress": "/assets/renders/pytgress.webp",
 };
 
-const VIDEO_FALLBACK_DURATION_MS = 12000;
+// Watchdog: si el vídeo no arranca (play() resuelve pero el tab está en segundo plano),
+// timeupdate nunca dispara y este timeout fuerza el salto a la fase de invocación.
+const VIDEO_WATCHDOG_MS = 2500;
 const SUMMON_SHOW_DURATION_MS = 1150;
 const FUSION_VIDEO_VOLUME = 1;
 
@@ -57,12 +59,6 @@ function FusionPlaybackItem({ item, onDone }: { item: IFusionPlaybackItem; onDon
   const targetOffset = phase === "summon" ? resolveTargetOffset(item.fusionCardId) : { x: 0, y: 220, scale: 0.34 };
 
   useEffect(() => {
-    if (phase !== "video") return;
-    const timeoutId = setTimeout(() => setPhase("summon"), VIDEO_FALLBACK_DURATION_MS);
-    return () => clearTimeout(timeoutId);
-  }, [phase]);
-
-  useEffect(() => {
     if (phase !== "summon") return;
     const timeoutId = setTimeout(onDone, SUMMON_SHOW_DURATION_MS);
     return () => clearTimeout(timeoutId);
@@ -70,9 +66,25 @@ function FusionPlaybackItem({ item, onDone }: { item: IFusionPlaybackItem; onDon
 
   useEffect(() => {
     if (phase !== "video" || !videoRef.current) return;
-    videoRef.current.volume = FUSION_VIDEO_VOLUME;
-    videoRef.current.muted = false;
-    void videoRef.current.play().catch(() => undefined);
+    const video = videoRef.current;
+
+    // Watchdog: si play() resuelve pero el vídeo no avanza (tab en segundo plano),
+    // timeupdate nunca llega → saltamos a summon tras VIDEO_WATCHDOG_MS.
+    const watchdogId = setTimeout(() => setPhase("summon"), VIDEO_WATCHDOG_MS);
+    const cancelWatchdog = () => clearTimeout(watchdogId);
+    video.addEventListener("timeupdate", cancelWatchdog, { once: true });
+
+    video.volume = FUSION_VIDEO_VOLUME;
+    video.muted = false;
+    void video.play().catch(() => {
+      video.muted = true;
+      void video.play().catch(() => setPhase("summon"));
+    });
+
+    return () => {
+      video.removeEventListener("timeupdate", cancelWatchdog);
+      clearTimeout(watchdogId);
+    };
   }, [phase]);
 
   return (

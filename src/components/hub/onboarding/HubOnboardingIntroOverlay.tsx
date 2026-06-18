@@ -2,7 +2,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { IPlayerHubProgress } from "@/core/entities/hub/IPlayerHubProgress";
 import { OnboardingNarrationBeat } from "@/components/hub/onboarding/internal/OnboardingNarrationBeat";
@@ -78,20 +77,19 @@ export function HubOnboardingIntroOverlay({ progress }: IHubOnboardingIntroOverl
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
   const [isRoutingToHub, setIsRoutingToHub] = useState(false);
   const [isSkipConfirmed, setIsSkipConfirmed] = useState(false);
   const shouldShow = resolveOnboardingVisibility(progress);
-  const audio = useOnboardingAudio({ isEnabled: shouldShow && !isClosing });
+  const audio = useOnboardingAudio({ isEnabled: shouldShow });
   const step = STEP_ORDER[stepIndex] ?? STEP_ORDER[0];
   const content = STEP_CONTENT[step];
 
   useEffect(() => {
-    if (!shouldShow || isClosing) return;
+    if (!shouldShow) return;
     audio.playStepMovement();
-  }, [audio, isClosing, shouldShow, step]);
+  }, [audio, shouldShow, step]);
 
-  if (!shouldShow || isClosing) return null;
+  if (!shouldShow) return null;
 
   if (isSkipConfirmed) {
     return (

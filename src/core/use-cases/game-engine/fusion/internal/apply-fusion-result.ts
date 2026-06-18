@@ -7,7 +7,10 @@ export function applyFusionResult(context: IFusionContext): IResolvedFusionState
   const materialInstanceIds = context.materials.map((material) => material.instanceId);
   const remainingEntities = context.player.activeEntities.filter((entity) => !materialInstanceIds.includes(entity.instanceId));
   const fusionEntity = {
-    instanceId: idFactory.createFusionInstanceId(context.fusionCard.id),
+    // Clave determinista a partir de la carta + materiales (instanceIds ya
+    // deterministas), para que el ente fusionado tenga el MISMO instanceId en
+    // ambos clientes y futuras acciones (ataques, etc.) resuelvan en los dos.
+    instanceId: idFactory.createFusionInstanceId(`${context.fusionCard.id}:${materialInstanceIds.join(":")}`),
     card: context.fusionCard,
     mode: context.mode,
     hasAttackedThisTurn: false,

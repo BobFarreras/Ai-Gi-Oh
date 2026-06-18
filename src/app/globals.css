@@ -514,3 +514,73 @@ body {
   100% { background-position: 0 100vh; }
 }
 
+/* ========================================= */
+/* RANKING — Anillos rotatorios del top 3    */
+/* (transform: rotate, GPU-friendly; nunca   */
+/* animan box-shadow en bucle, regla 5 perf) */
+/* ========================================= */
+@keyframes podiumRingSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Anillo conic dorado para el #1 (Campeón). */
+.podium-ring-gold {
+  background: conic-gradient(from 0deg,
+    rgba(251, 191, 36, 0.95) 0deg,
+    rgba(253, 224, 71, 0.4) 60deg,
+    rgba(251, 191, 36, 0.95) 120deg,
+    rgba(245, 158, 11, 0.4) 180deg,
+    rgba(251, 191, 36, 0.95) 240deg,
+    rgba(253, 224, 71, 0.4) 300deg,
+    rgba(251, 191, 36, 0.95) 360deg);
+  animation: podiumRingSpin 4s linear infinite;
+}
+
+/* Anillo conic plateado para el #2 (Subcampeón). */
+.podium-ring-silver {
+  background: conic-gradient(from 0deg,
+    rgba(203, 213, 225, 0.9) 0deg,
+    rgba(241, 245, 249, 0.35) 60deg,
+    rgba(203, 213, 225, 0.9) 120deg,
+    rgba(148, 163, 184, 0.35) 180deg,
+    rgba(203, 213, 225, 0.9) 240deg,
+    rgba(241, 245, 249, 0.35) 300deg,
+    rgba(203, 213, 225, 0.9) 360deg);
+  animation: podiumRingSpin 5s linear infinite;
+}
+
+/* Anillo conic bronce para el #3 (Tercer puesto). */
+.podium-ring-bronze {
+  background: conic-gradient(from 0deg,
+    rgba(217, 119, 6, 0.9) 0deg,
+    rgba(251, 146, 60, 0.35) 60deg,
+    rgba(217, 119, 6, 0.9) 120deg,
+    rgba(180, 83, 9, 0.35) 180deg,
+    rgba(217, 119, 6, 0.9) 240deg,
+    rgba(251, 146, 60, 0.35) 300deg,
+    rgba(217, 119, 6, 0.9) 360deg);
+  animation: podiumRingSpin 6s linear infinite;
+}
+
+/* Halo radial pulsante detrás del avatar (opacity animation, barato, no repinta). */
+@keyframes podiumHaloPulse {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.08); }
+}
+
+.podium-halo-gold {
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.55) 0%, rgba(245, 158, 11, 0.2) 45%, transparent 75%);
+  animation: podiumHaloPulse 2.4s ease-in-out infinite;
+}
+
+.podium-halo-silver {
+  background: radial-gradient(circle, rgba(203, 213, 225, 0.5) 0%, rgba(148, 163, 184, 0.18) 45%, transparent 75%);
+  animation: podiumHaloPulse 2.8s ease-in-out infinite;
+}
+
+.podium-halo-bronze {
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.5) 0%, rgba(180, 83, 9, 0.18) 45%, transparent 75%);
+  animation: podiumHaloPulse 3.2s ease-in-out infinite;
+}
+
