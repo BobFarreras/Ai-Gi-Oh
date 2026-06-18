@@ -47,10 +47,14 @@ export async function POST(request: NextRequest) {
       throw new ValidationError("No eres participante de esta partida.");
     }
 
-    // Idempotencia: si ya está cerrada, devolver recompensas sin replicar
+    // Usar service role para actualizar sin problemas de RLS (solo se ejecuta server-side)
+    const serviceClient = createSupabaseServiceRoleClient();
+
+    // Idempotencia: si ya está cerrada, devolver recompensas + ELO sin replicar
     if (matchSession.status === "FINISHED" || matchSession.status === "ABANDONED") {
       const reward = resolveMatchReward({ mode: "MULTIPLAYER", outcome });
-      return NextResponse.json({ ok: true, reward, alreadyFinished: true }, { status: 200, headers: response.headers });
+      const eloChange = await readCurrentElo(serviceClient, matchSession.player_a_id, matchSession.player_b_id, playerId);
+      return NextResponse.json({ ok: true, reward, eloChange, alreadyFinished: true }, { status: 200, headers: response.headers });
     }
 
     // Determinar el winner_id a persistir
@@ -60,8 +64,6 @@ export async function POST(request: NextRequest) {
       winnerId = matchSession.player_a_id === playerId ? matchSession.player_b_id : matchSession.player_a_id;
     }
 
-    // Usar service role para actualizar sin problemas de RLS (solo se ejecuta server-side)
-    const serviceClient = createSupabaseServiceRoleClient();
     const { error: updateError } = await serviceClient
       .from("match_sessions")
       .update({ status: "FINISHED", winner_id: winnerId, finished_at: new Date().toISOString() })
@@ -71,7 +73,8 @@ export async function POST(request: NextRequest) {
     // No lanzar si falla el UPDATE (otro cliente puede haberlo cerrado antes — idempotente)
     if (updateError) {
       const reward = resolveMatchReward({ mode: "MULTIPLAYER", outcome });
-      return NextResponse.json({ ok: true, reward, alreadyFinished: true }, { status: 200, headers: response.headers });
+      const eloChange = await readCurrentElo(serviceClient, matchSession.player_a_id, matchSession.player_b_id, playerId);
+      return NextResponse.json({ ok: true, reward, eloChange, alreadyFinished: true }, { status: 200, headers: response.headers });
     }
 
     // Limpiar el log de acciones: solo es útil DURANTE la partida (reconexión).
@@ -101,6 +104,32 @@ export async function POST(request: NextRequest) {
 type ServiceClient = ReturnType<typeof createSupabaseServiceRoleClient>;
 
 type EloChange = { old: number; new: number };
+
+/**
+ * Lee el ELO actual de un jugador desde player_profiles.
+ * Usado en paths idempotentes donde el ELO ya fue calculado por otro cliente.
+ * El delta no es preciso (devuelve 0) pero permite mostrar el overlay de ELO
+ * en vez del drop de regalo para multijugador.
+ */
+async function readCurrentElo(
+  serviceClient: ServiceClient,
+  playerAId: string,
+  playerBId: string,
+  targetPlayerId: string,
+): Promise<EloChange> {
+  const { data: profiles } = await serviceClient
+    .from("player_profiles")
+    .select("player_id, elo_rating")
+    .in("player_id", [playerAId, playerBId]);
+
+  if (!profiles || profiles.length < 2) return { old: 1200, new: 1200 };
+
+  const profile = profiles.find((p) => p.player_id === targetPlayerId);
+  if (!profile) return { old: 1200, new: 1200 };
+
+  const currentElo = (profile.elo_rating as number) ?? 1200;
+  return { old: currentElo, new: currentElo };
+}
 
 async function updateEloAndStats(
   serviceClient: ServiceClient,
