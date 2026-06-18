@@ -8,6 +8,7 @@ import { IPlayerInvitation } from "@/core/entities/multiplayer/IPlayerInvitation
 import { useOnlinePlayers } from "@/core/hooks/multiplayer/useOnlinePlayers";
 import { usePendingInvitations } from "@/core/hooks/multiplayer/usePendingInvitations";
 import { useOutgoingInvitationMatch } from "@/core/hooks/multiplayer/useOutgoingInvitationMatch";
+import { useOutgoingInvitationDeclines } from "@/core/hooks/multiplayer/useOutgoingInvitationDeclines";
 import { useMatchmakingQueue } from "@/core/hooks/multiplayer/useMatchmakingQueue";
 import { sendInvitation } from "@/app/hub/multiplayer/actions/send-invitation";
 import { acceptInvitation, declineInvitation } from "@/app/hub/multiplayer/actions/respond-invitation";
@@ -44,6 +45,7 @@ export function MultiplayerLobby({ localPlayerId, localNickname, activeDeckIds }
   const { query: searchQuery, setQuery: setSearchQuery, filtered: filteredPlayers } = useFilteredPlayers(onlinePlayers);
   const { pendingInvitations } = usePendingInvitations(localPlayerId);
   const acceptedMatchId = useOutgoingInvitationMatch(localPlayerId);
+  const declinedPlayerId = useOutgoingInvitationDeclines(localPlayerId);
   const { status: matchmakingStatus, joinQueue, leaveQueue, matchId: matchmakingMatchId } = useMatchmakingQueue({
     localPlayerId,
     activeDeckIds,
@@ -62,6 +64,16 @@ export function MultiplayerLobby({ localPlayerId, localNickname, activeDeckIds }
   useEffect(() => {
     if (acceptedMatchId) router.push(`/hub/multiplayer/match/${acceptedMatchId}`);
   }, [acceptedMatchId, router]);
+
+  // Reactivar el botón de invitar cuando el rival rechaza o la invitación expira.
+  useEffect(() => {
+    if (!declinedPlayerId) return;
+    setSentInvites((prev) => {
+      const next = new Set(prev);
+      next.delete(declinedPlayerId);
+      return next;
+    });
+  }, [declinedPlayerId]);
 
   // Redirigir cuando el emparejamiento aleatorio encuentra partida + SFX.
   useEffect(() => {
