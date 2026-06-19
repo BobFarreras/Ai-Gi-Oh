@@ -22,8 +22,14 @@ describe("cli-ui", () => {
   });
 
   it("stripAnsi elimina los códigos de color", () => {
-    const colored = section("Prueba");
-    expect(colored).not.toEqual(stripAnsi(colored));
-    expect(stripAnsi(colored)).toContain("PRUEBA");
+    // Cadena ANSI explícita: el test no depende de si la terminal tiene color activado
+    // (en CI no-TTY el color se desactiva, así que no podemos asumir que section() lo emita).
+    const colored = "[36m[1mHola[0m";
+    expect(stripAnsi(colored)).toBe("Hola");
+    expect(stripAnsi(colored)).not.toContain("");
+  });
+
+  it("section devuelve el título en mayúsculas", () => {
+    expect(stripAnsi(section("Prueba"))).toContain("PRUEBA");
   });
 });
