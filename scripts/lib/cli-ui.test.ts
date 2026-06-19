@@ -1,6 +1,5 @@
 // scripts/lib/cli-ui.test.ts - Verifica el formateo del toolkit de UI de terminal.
 import { describe, it, expect } from "vitest";
-// @ts-expect-error - módulo .mjs sin tipos
 import { banner, statusLine, stripAnsi, section } from "./cli-ui.mjs";
 
 describe("cli-ui", () => {

@@ -1,7 +1,7 @@
 // scripts/lib/supabase-cli.test.ts - Verifica la resolución del CLI de Supabase y los mensajes de instalación.
 import { describe, it, expect } from "vitest";
 import path from "node:path";
-// @ts-expect-error - módulo .mjs sin tipos
+import type { PathLike } from "node:fs";
 import { resolveSupabaseCli, getSupabaseInstallHint } from "./supabase-cli.mjs";
 
 const repoRoot = "C:/repo";
@@ -12,7 +12,7 @@ describe("resolveSupabaseCli", () => {
     const result = resolveSupabaseCli({
       platform: "win32",
       repoRoot,
-      fileExists: (p: string) => p === localCmd,
+      fileExists: (p: PathLike) => p === localCmd,
       onPath: () => "C:/scoop/shims/supabase",
     });
     expect(result.found).toBe(true);
@@ -48,7 +48,7 @@ describe("resolveSupabaseCli", () => {
     const result = resolveSupabaseCli({
       platform: "linux",
       repoRoot,
-      fileExists: (p: string) => p === localBin,
+      fileExists: (p: PathLike) => p === localBin,
       onPath: () => null,
     });
     expect(result.found).toBe(true);

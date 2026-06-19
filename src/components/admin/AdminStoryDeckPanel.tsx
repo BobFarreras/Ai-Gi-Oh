@@ -1,5 +1,6 @@
 // src/components/admin/AdminStoryDeckPanel.tsx - Panel principal para administrar mazos Story por oponente con edición visual y guardado seguro.
 "use client";
+import Image from "next/image";
 import { DragEvent, memo, useMemo, useState } from "react";
 import { IAdminStoryDeckApiResponse } from "@/components/admin/admin-story-deck-api";
 import { AdminStarterDeckCollectionPanel } from "@/components/admin/internal/AdminStarterDeckCollectionPanel";
@@ -57,9 +58,9 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
         <div className="relative flex flex-wrap items-center gap-3">
           {/* Identidad oponente */}
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-cyan-800/60 bg-slate-900/80">
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-cyan-800/60 bg-slate-900/80">
               {selectedOpponent?.avatarUrl
-                ? <img src={selectedOpponent.avatarUrl} alt={selectedOpponent.displayName} className="h-full w-full object-cover" />
+                ? <Image src={selectedOpponent.avatarUrl} alt={selectedOpponent.displayName} fill className="object-cover" sizes="40px" />
                 : <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-cyan-600" strokeWidth="1.5"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>}
             </div>
             <div className="min-w-0">
