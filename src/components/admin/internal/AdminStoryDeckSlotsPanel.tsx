@@ -85,7 +85,8 @@ export function AdminStoryDeckSlotsPanel({
         <p className="rounded border border-cyan-900 bg-black/50 px-2 py-1 text-xs font-semibold text-cyan-100/85">{filledSlots}/{visibleLength}</p>
       </div>
       <div className="home-modern-scroll min-h-0 flex-1 overflow-y-auto p-2">
-        <div className="grid w-full grid-cols-5 content-start justify-items-center gap-2 pb-4">
+        {/* Slots principales del deck */}
+        <div className="grid w-full grid-cols-5 content-start justify-items-center gap-2 pb-2">
           {Array.from({ length: visibleLength }, (_, slotIndex) => {
             const cardId = draftCardIds[slotIndex] ?? null;
             return (
@@ -104,39 +105,82 @@ export function AdminStoryDeckSlotsPanel({
               </div>
             );
           })}
-          {[0, 1].map((slotIndex) => {
-            const cardId = draftFusionCardIds[slotIndex] ?? "";
-            const card = cardId ? cardById.get(cardId) ?? null : null;
-            return (
-              <div key={`fusion-${slotIndex}`} className="relative flex w-[76px] flex-col items-center gap-1">
-                <HomeMiniCard
-                  card={card}
-                  label={`Fusion ${slotIndex + 1}`}
-                  isDraggable={!isDuelExtrasDisabled && Boolean(cardId)}
-                  onDragStart={(event) => cardId ? writeAdminStarterDeckDragData(event, { type: "slot", scope: "FUSION", slotIndex }) : undefined}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={(event) => onDropOnFusion(slotIndex, event)}
-                  showSlotContainer
-                />
-                <button type="button" aria-label={`Quitar carta de fusión ${slotIndex + 1}`} className="h-5 w-full rounded border border-rose-700/70 bg-rose-900/20 text-[9px] font-bold uppercase text-rose-200 disabled:opacity-50" onClick={() => onClearFusionCard(slotIndex)} disabled={isDuelExtrasDisabled || !cardId}>
-                  Quitar
+        </div>
+
+        {/* Extras del duelo: Fusiones + Recompensa */}
+        <div className={`mt-2 rounded-xl border p-3 transition-all ${isDuelExtrasDisabled ? "border-slate-700/30 bg-slate-950/20 opacity-50" : "border-cyan-800/40 bg-[#020c18]/60"}`}>
+          <p className="mb-2 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">
+            Extras del duelo
+          </p>
+          <div className="flex flex-wrap items-start gap-4">
+
+            {/* Fusiones */}
+            <div className="flex flex-col gap-1">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400/80">Fusiones del oponente</p>
+              <div className="flex gap-2">
+                {[0, 1].map((slotIndex) => {
+                  const cardId = draftFusionCardIds[slotIndex] ?? "";
+                  const card = cardId ? cardById.get(cardId) ?? null : null;
+                  return (
+                    <div key={`fusion-${slotIndex}`} className="flex w-[76px] flex-col items-center gap-1">
+                      <div className="rounded-lg border border-violet-700/40 bg-violet-950/20 p-0.5">
+                        <HomeMiniCard
+                          card={card}
+                          label={`Fusion ${slotIndex + 1}`}
+                          isDraggable={!isDuelExtrasDisabled && Boolean(cardId)}
+                          onDragStart={(event) => cardId ? writeAdminStarterDeckDragData(event, { type: "slot", scope: "FUSION", slotIndex }) : undefined}
+                          onDragOver={(event) => event.preventDefault()}
+                          onDrop={(event) => onDropOnFusion(slotIndex, event)}
+                          showSlotContainer
+                        />
+                      </div>
+                      <p className="text-[8px] font-bold uppercase tracking-wider text-violet-400/70">Fusión {slotIndex + 1}</p>
+                      <button
+                        type="button"
+                        aria-label={`Quitar carta de fusión ${slotIndex + 1}`}
+                        className="h-4 w-full rounded border border-rose-700/60 bg-rose-950/30 text-[8px] font-bold uppercase text-rose-300 disabled:opacity-40"
+                        onClick={() => onClearFusionCard(slotIndex)}
+                        disabled={isDuelExtrasDisabled || !cardId}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Separador */}
+            <div className="self-stretch w-px bg-slate-700/40" />
+
+            {/* Recompensa */}
+            <div className="flex flex-col gap-1">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-amber-400/80">Recompensa al ganar</p>
+              <div className="flex w-[76px] flex-col items-center gap-1">
+                <div className="rounded-lg border border-amber-600/50 bg-amber-950/20 p-0.5 shadow-[0_0_10px_rgba(245,158,11,0.12)]">
+                  <HomeMiniCard
+                    card={draftRewardCardIds[0] ? cardById.get(draftRewardCardIds[0]) ?? null : null}
+                    label="Reward"
+                    isDraggable={!isDuelExtrasDisabled && Boolean(draftRewardCardIds[0])}
+                    onDragStart={(event) => draftRewardCardIds[0] ? writeAdminStarterDeckDragData(event, { type: "slot", scope: "REWARD", slotIndex: 0 }) : undefined}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={onDropOnReward}
+                    showSlotContainer
+                  />
+                </div>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-amber-400/80">Reward</p>
+                <button
+                  type="button"
+                  aria-label="Quitar carta de recompensa"
+                  className="h-4 w-full rounded border border-rose-700/60 bg-rose-950/30 text-[8px] font-bold uppercase text-rose-300 disabled:opacity-40"
+                  onClick={onClearRewardCard}
+                  disabled={isDuelExtrasDisabled || !draftRewardCardIds[0]}
+                >
+                  ✕
                 </button>
               </div>
-            );
-          })}
-          <div className="relative flex w-[76px] flex-col items-center gap-1">
-            <HomeMiniCard
-              card={draftRewardCardIds[0] ? cardById.get(draftRewardCardIds[0]) ?? null : null}
-              label="Reward"
-              isDraggable={!isDuelExtrasDisabled && Boolean(draftRewardCardIds[0])}
-              onDragStart={(event) => draftRewardCardIds[0] ? writeAdminStarterDeckDragData(event, { type: "slot", scope: "REWARD", slotIndex: 0 }) : undefined}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={onDropOnReward}
-              showSlotContainer
-            />
-            <button type="button" aria-label="Quitar carta de recompensa" className="h-5 w-full rounded border border-rose-700/70 bg-rose-900/20 text-[9px] font-bold uppercase text-rose-200 disabled:opacity-50" onClick={onClearRewardCard} disabled={isDuelExtrasDisabled || !draftRewardCardIds[0]}>
-              Quitar
-            </button>
+            </div>
+
           </div>
         </div>
       </div>
