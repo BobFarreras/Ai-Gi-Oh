@@ -2,7 +2,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 
@@ -28,9 +28,10 @@ const FUSION_RENDER_BY_CARD_ID: Record<string, string> = {
   "fusion-pytgress": "/assets/renders/pytgress.webp",
 };
 
-// Watchdog: si el vídeo no arranca (play() resuelve pero el tab está en segundo plano),
-// timeupdate nunca dispara y este timeout fuerza el salto a la fase de invocación.
+// Watchdog inicial: si timeupdate nunca llega (tab en segundo plano), salta a summon.
 const VIDEO_WATCHDOG_MS = 2500;
+// Intervalo de detección de stall: si el vídeo no avanza (frozen en desktop sin disparar onEnded), salta a summon.
+const VIDEO_STALL_CHECK_MS = 1500;
 const SUMMON_SHOW_DURATION_MS = 1150;
 const FUSION_VIDEO_VOLUME = 1;
 
@@ -68,11 +69,48 @@ function FusionPlaybackItem({ item, onDone }: { item: IFusionPlaybackItem; onDon
     if (phase !== "video" || !videoRef.current) return;
     const video = videoRef.current;
 
-    // Watchdog: si play() resuelve pero el vídeo no avanza (tab en segundo plano),
-    // timeupdate nunca llega → saltamos a summon tras VIDEO_WATCHDOG_MS.
+    // Watchdog inicial: si play() resuelve pero timeupdate nunca llega (tab en segundo plano).
     const watchdogId = setTimeout(() => setPhase("summon"), VIDEO_WATCHDOG_MS);
-    const cancelWatchdog = () => clearTimeout(watchdogId);
-    video.addEventListener("timeupdate", cancelWatchdog, { once: true });
+
+    let stallIntervalId: ReturnType<typeof setInterval> | null = null;
+
+    const onFirstProgress = () => {
+      clearTimeout(watchdogId);
+      // Detección de stall: una vez arrancado, monitoriza que el vídeo avance.
+      // En desktop, onEnded a veces no se dispara si el vídeo queda congelado.
+      // En modo incógnito o tabs en segundo plano, el navegador puede pausar el vídeo
+      // tras el primer frame; en ese caso forzamos transición a summon.
+      let lastTime = video.currentTime;
+      let pausedTicks = 0;
+      stallIntervalId = setInterval(() => {
+        if (video.ended) {
+          clearInterval(stallIntervalId!);
+          stallIntervalId = null;
+          setPhase("summon");
+          return;
+        }
+        if (video.paused) {
+          pausedTicks += 1;
+          // Si lleva 3 ticks pausado (~4.5s con VIDEO_STALL_CHECK_MS=1500), forzamos summon.
+          if (pausedTicks >= 3) {
+            clearInterval(stallIntervalId!);
+            stallIntervalId = null;
+            setPhase("summon");
+          }
+          return;
+        }
+        pausedTicks = 0;
+        if (video.currentTime <= lastTime) {
+          clearInterval(stallIntervalId!);
+          stallIntervalId = null;
+          setPhase("summon");
+          return;
+        }
+        lastTime = video.currentTime;
+      }, VIDEO_STALL_CHECK_MS);
+    };
+
+    video.addEventListener("timeupdate", onFirstProgress, { once: true });
 
     video.volume = FUSION_VIDEO_VOLUME;
     video.muted = false;
@@ -82,8 +120,9 @@ function FusionPlaybackItem({ item, onDone }: { item: IFusionPlaybackItem; onDon
     });
 
     return () => {
-      video.removeEventListener("timeupdate", cancelWatchdog);
+      video.removeEventListener("timeupdate", onFirstProgress);
       clearTimeout(watchdogId);
+      if (stallIntervalId !== null) clearInterval(stallIntervalId);
     };
   }, [phase]);
 
@@ -134,7 +173,13 @@ function FusionPlaybackItem({ item, onDone }: { item: IFusionPlaybackItem; onDon
 export function FusionCinematicLayer({ events, onActiveChange }: FusionCinematicLayerProps) {
   const [queue, setQueue] = useState<IFusionPlaybackItem[]>([]);
   const processedCountRef = useRef(0);
+  const onActiveChangeRef = useRef(onActiveChange);
   const activeItem = queue[0] ?? null;
+
+  // Keep ref current so the effect below never needs onActiveChange in its deps.
+  useLayoutEffect(() => {
+    onActiveChangeRef.current = onActiveChange;
+  });
 
   useEffect(() => {
     const nextItems = events.slice(processedCountRef.current).map(toFusionItem).filter((item): item is IFusionPlaybackItem => Boolean(item));
@@ -142,16 +187,20 @@ export function FusionCinematicLayer({ events, onActiveChange }: FusionCinematic
     if (nextItems.length > 0) setQueue((previous) => [...previous, ...nextItems]);
   }, [events]);
 
+  // Only re-run when activeItem actually changes — not on every parent re-render.
   useEffect(() => {
-    onActiveChange(Boolean(activeItem));
-  }, [activeItem, onActiveChange]);
+    onActiveChangeRef.current(Boolean(activeItem));
+  }, [activeItem]);
+
+  // Stable reference so FusionPlaybackItem's summon timeout never restarts on parent re-renders.
+  const handleItemDone = useCallback(() => setQueue((previous) => previous.slice(1)), []);
 
   if (!activeItem) return null;
 
   return (
     <div className="absolute inset-0 z-[250] pointer-events-none">
       <AnimatePresence mode="wait">
-        <FusionPlaybackItem item={activeItem} onDone={() => setQueue((previous) => previous.slice(1))} />
+        <FusionPlaybackItem item={activeItem} onDone={handleItemDone} />
       </AnimatePresence>
     </div>
   );

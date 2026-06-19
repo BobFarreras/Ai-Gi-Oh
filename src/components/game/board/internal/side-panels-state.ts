@@ -20,10 +20,10 @@ export function useDetailCardScale(): number {
     if (typeof window === "undefined") return;
     const updateScale = () => {
       const panelWidth = clamp(window.innerWidth * 0.32, 272, 368);
-      const panelHeight = clamp(window.innerHeight * 0.28, 192, 240);
+      const panelHeight = clamp(window.innerHeight * 0.24, 160, 208);
       const widthRatio = (panelWidth - 24) / 260;
       const heightRatio = (panelHeight - 12) / 380;
-      setDetailCardScale(clamp(Math.min(widthRatio, heightRatio), 0.38, 0.66));
+      setDetailCardScale(clamp(Math.min(widthRatio, heightRatio), 0.34, 0.60));
     };
     updateScale();
     window.addEventListener("resize", updateScale);

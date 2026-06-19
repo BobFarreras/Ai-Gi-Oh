@@ -78,6 +78,7 @@ export function buildPlayerActionsParams(
     setPendingEntityReplacement: uiState.setPendingEntityReplacement,
     setPendingEntityReplacementTargetId: uiState.setPendingEntityReplacementTargetId,
     setPendingFusionSummon: uiState.setPendingFusionSummon,
+    setStagedCardId: uiState.setStagedCardId,
     setLastError: uiState.setLastError,
   };
 }

@@ -86,38 +86,38 @@ export function SidePanels({
           >
             <X size={24} />
           </button>
-          <div className="relative mt-1 mb-2 flex justify-center z-10 shrink-0 h-[clamp(12rem,28vh,15rem)] overflow-hidden">
+          <div className="relative mt-1 mb-2 flex justify-center z-10 shrink-0 h-[clamp(10rem,24vh,13rem)] overflow-hidden">
             <div key={liveSelectedCard.runtimeId ?? liveSelectedCard.id} className="origin-top" style={{ transform: `scale(${detailCardScale})` }}>
               <Card card={liveSelectedCard} isPerformanceMode={shouldReduceCombatEffects} showBackgroundInPerformanceMode />
             </div>
           </div>
-          <div className="text-white pr-2 mt-1 md:mt-2 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-            <h2 className="text-xl md:text-2xl font-black text-cyan-300 uppercase tracking-tight">{liveSelectedCard.name}</h2>
-            <span className="text-zinc-500 text-[11px] md:text-xs tracking-widest uppercase font-bold mb-3 block border-b border-zinc-800 pb-2">{liveSelectedCard.faction} {liveSelectedCard.type}</span>
+          {(canActivateSelectedExecution || isTrapPromptForSelectedCard) ? (
+            <div className="shrink-0 mb-2 flex items-center gap-2 border-y border-zinc-800 py-2">
+              <button
+                type="button"
+                aria-label="Confirmar activación de carta seleccionada"
+                data-tutorial-id={isTrapPromptForSelectedCard ? "tutorial-board-action-activate-trap-prompt" : undefined}
+                onClick={isTrapPromptForSelectedCard ? onActivatePendingTrap : onActivateSelectedExecution}
+                className="rounded-lg border border-emerald-300/70 bg-emerald-700/35 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-emerald-100 hover:bg-emerald-700/50"
+              >
+                Activar
+              </button>
+              <button
+                type="button"
+                aria-label="Cancelar activación de carta seleccionada"
+                data-tutorial-id={isTrapPromptForSelectedCard ? "tutorial-board-action-skip-trap-prompt" : undefined}
+                onClick={isTutorialTrapPromptLocked ? () => undefined : (isTrapPromptForSelectedCard ? onSkipPendingTrap : onCloseCard)}
+                disabled={isTutorialTrapPromptLocked}
+                className="rounded-lg border border-zinc-500/60 bg-zinc-900/75 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-zinc-100 hover:border-zinc-300 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                Cancelar
+              </button>
+            </div>
+          ) : null}
+          <div className="text-white pr-2 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+            <h2 className="text-base md:text-lg font-black text-cyan-300 uppercase tracking-tight">{liveSelectedCard.name}</h2>
+            <span className="text-zinc-500 text-[10px] md:text-[11px] tracking-widest uppercase font-bold mb-2 block border-b border-zinc-800 pb-2">{liveSelectedCard.faction} {liveSelectedCard.type}</span>
             <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-line">{liveSelectedCard.description}</p>
-            {(canActivateSelectedExecution || isTrapPromptForSelectedCard) ? (
-              <div className="mt-4 flex items-center gap-2 border-t border-zinc-800 pt-3">
-                <button
-                  type="button"
-                  aria-label="Confirmar activación de carta seleccionada"
-                  data-tutorial-id={isTrapPromptForSelectedCard ? "tutorial-board-action-activate-trap-prompt" : undefined}
-                  onClick={isTrapPromptForSelectedCard ? onActivatePendingTrap : onActivateSelectedExecution}
-                  className="rounded-lg border border-emerald-300/70 bg-emerald-700/35 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-emerald-100 hover:bg-emerald-700/50"
-                >
-                  Activar
-                </button>
-                <button
-                  type="button"
-                  aria-label="Cancelar activación de carta seleccionada"
-                  data-tutorial-id={isTrapPromptForSelectedCard ? "tutorial-board-action-skip-trap-prompt" : undefined}
-                  onClick={isTutorialTrapPromptLocked ? () => undefined : (isTrapPromptForSelectedCard ? onSkipPendingTrap : onCloseCard)}
-                  disabled={isTutorialTrapPromptLocked}
-                  className="rounded-lg border border-zinc-500/60 bg-zinc-900/75 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-zinc-100 hover:border-zinc-300 disabled:cursor-not-allowed disabled:opacity-45"
-                >
-                  Cancelar
-                </button>
-              </div>
-            ) : null}
           </div>
         </motion.div>
       )}

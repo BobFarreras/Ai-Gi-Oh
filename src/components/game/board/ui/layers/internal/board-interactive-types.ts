@@ -25,6 +25,7 @@ export interface IBoardInteractiveLayerProps {
   selectedCard: ICard | null;
   selectedBoardEntityInstanceId: string | null;
   playingCard: ICard | null;
+  stagedCardId: string | null;
   activeAttackerId: string | null;
   revealedEntities: string[];
   pendingEntitySelectionIds: string[];

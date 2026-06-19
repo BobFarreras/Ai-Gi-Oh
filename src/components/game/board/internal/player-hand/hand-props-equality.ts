@@ -32,6 +32,7 @@ export function areEqualPlayerHandProps(previous: PlayerHandProps, next: PlayerH
     areHandsEqual(previous.hand, next.hand) &&
     areIdListsEqual(previous.highlightedCardIds, next.highlightedCardIds) &&
     previous.playingCard === next.playingCard &&
+    previous.stagedCardId === next.stagedCardId &&
     previous.hasSummoned === next.hasSummoned &&
     previous.isPlayerTurn === next.isPlayerTurn &&
     previous.cardScale === next.cardScale &&
@@ -56,6 +57,7 @@ export function areEqualMobilePlayerHandProps(previous: MobilePlayerHandProps, n
     areHandsEqual(previous.hand, next.hand) &&
     areIdListsEqual(previous.highlightedCardIds, next.highlightedCardIds) &&
     previous.playingCard === next.playingCard &&
+    previous.stagedCardId === next.stagedCardId &&
     previous.isPlayerTurn === next.isPlayerTurn &&
     previous.bottomOffsetPx === next.bottomOffsetPx &&
     previous.onMandatoryCardSelect === next.onMandatoryCardSelect &&
