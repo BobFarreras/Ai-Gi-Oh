@@ -30,6 +30,7 @@ export interface StoryCircuitMapProps {
   isSoundtrackMuted?: boolean;
   onToggleSoundtrackMute?: () => void;
   onExitToHub?: () => void;
+  isExiting?: boolean;
   onSelectNode: (nodeId: string | null) => void;
   onRewardCollectAnimationComplete?: () => void;
   onRetreatAnimationComplete?: () => void;

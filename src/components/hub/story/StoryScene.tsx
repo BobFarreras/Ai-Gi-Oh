@@ -91,14 +91,15 @@ export function StoryScene({ runtime, briefing, postDuelTransition = null, shoul
     onAfterFinalize: async () => { if (local.pendingAutoStartDuelNodeId) { const duelNode = nodesById[local.pendingAutoStartDuelNodeId]; if (duelNode) { local.setDuelFocusNodeId(duelNode.id); sceneSfx.playDuelStart(); await wait(520); router.push(duelNode.href); } local.setPendingAutoStartDuelNodeId(null); return; } if (!local.pendingPostWinRetreatNodeId) return; local.setRetreatingNodeId(local.pendingPostWinRetreatNodeId); local.setPendingPostWinRetreatNodeId(null); },
   });
 
-  const exitToHub = (): void => { sceneSfx.playButtonClick(); router.push("/hub"); };
+  const [isExiting, setIsExiting] = useState(false);
+  const exitToHub = (): void => { if (isExiting) return; setIsExiting(true); router.push("/hub"); };
   const sidebarProps = buildStorySceneSidebarProps({ briefing, selectedNode, isBusy, movementError: local.movementError, interactionFeedback: local.interactionFeedback, smartActionLabel: smartAction.label, canRunSmartAction: smartAction.isEnabled && !isBusy, onExitToHub: exitToHub, onSmartAction: () => { sceneSfx.playButtonClick(); void handleSmartAction(); }, onDeselect: () => { sceneSfx.playButtonClick(); setSelectedNodeId(null); } });
   const mapProps = buildStorySceneMapProps({
     nodes: sceneNodes, currentNodeId, selectedNodeId, avatarVisualTarget: entryAvatarVisualTarget ?? local.avatarVisualTarget, duelFocusNodeId: local.duelFocusNodeId, floatingReward: local.floatingReward, collectingRewardNodeId: local.collectingRewardNodeId, collectingRewardVisual: local.collectingRewardVisual, retreatingNodeId: local.retreatingNodeId, isBusy, smartActionLabel: smartAction.label, canRunSmartAction: smartAction.isEnabled && !isBusy, canMoveSelectedNode, actTransitionTargetId: local.actTransitionTargetId, shouldPlayActEntryAnimation, centerRequestKey: local.centerRequestKey, isSoundtrackMuted: isMapSoundtrackMuted,
     onSelectNode: (nodeId) => { if (nodeId) sceneSfx.playNodeSelect(); setSelectedNodeId(nodeId); },
     onMoveSelectedNode: () => { if (!canMoveSelectedNode || isBusy) return; sceneSfx.playButtonClick(); void handleSmartAction(); },
     onRequestCenterPlayer: () => { sceneSfx.playButtonClick(); local.setCenterRequestKey((value) => value + 1); },
-    onExitToHub: exitToHub, onToggleSoundtrackMute: () => { sceneSfx.playButtonClick(); toggleMapSoundtrackMute(); }, onRewardCollectAnimationComplete: () => { local.setCollectingRewardNodeId(null); local.setCollectingRewardVisual(null); }, onRetreatAnimationComplete: () => local.setRetreatingNodeId(null),
+    onExitToHub: exitToHub, isExiting, onToggleSoundtrackMute: () => { sceneSfx.playButtonClick(); toggleMapSoundtrackMute(); }, onRewardCollectAnimationComplete: () => { local.setCollectingRewardNodeId(null); local.setCollectingRewardVisual(null); }, onRetreatAnimationComplete: () => local.setRetreatingNodeId(null),
     dialog: { isOpen: interactionDialog.isOpen, title: interactionDialog.dialogueTitle, cinematicVideo: interactionDialog.cinematicVideo, line: interactionDialog.currentLine, onNext: advanceInteractionDialog, onClose: finalizeInteractionDialog },
     submissionDialog: local.submissionDialog,
     setSubmissionDialog: local.setSubmissionDialog,
