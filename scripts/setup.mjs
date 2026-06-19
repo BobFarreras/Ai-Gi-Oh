@@ -78,7 +78,7 @@ function checkSupabaseCli() {
   hint.commands.forEach((command) => ui.command(command));
   ui.note(hint.fallback);
   ui.print();
-  ui.note("Cuando lo tengas instalado, vuelve a ejecutar: pnpm setup");
+  ui.note("Cuando lo tengas instalado, vuelve a ejecutar: node scripts/setup.mjs");
   return false;
 }
 

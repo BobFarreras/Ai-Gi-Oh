@@ -1,6 +1,6 @@
 {
   "name": "ai-gi-oh",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -44,7 +44,7 @@
     "perf:combat:e2e:real:stress:auto:prod": "node scripts/performance/run-combat-e2e-real.mjs --profile=stress --startServer=\"pnpm start\"",
     "release:tag": "node scripts/release/create-release-tag-from-package-version.mjs",
     "release:tag:push": "node scripts/release/create-release-tag-from-package-version.mjs --push",
-    "setup": "node scripts/setup.mjs"
+    "setup:local": "node scripts/setup.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

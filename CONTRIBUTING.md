@@ -20,8 +20,12 @@ Gracias por contribuir. Este proyecto está preparado para ejecutarse en local s
 Ejecuta el asistente interactivo. Verifica prerrequisitos (incluido si Docker está corriendo) y guía cada paso con explicaciones:
 
 ```bash
-pnpm setup
+node scripts/setup.mjs
 ```
+
+> **Ojo:** usa `node scripts/setup.mjs`, **no** `pnpm setup`. `pnpm setup` es un comando interno de
+> pnpm (configura el PATH de pnpm), no ejecuta nuestro script. Ejecutarlo directamente con Node
+> también evita que pnpm intente un auto-install que falla en un clone recién hecho.
 
 Esto te acompaña por:
 1. `pnpm install` (las compilaciones nativas se aprueban solas vía `.npmrc`)
@@ -100,7 +104,7 @@ Estos puertos son fijos (definidos en `supabase/config.toml`), iguales para todo
 
 ### `supabase` command not found
 
-El CLI de Supabase no está instalado en el sistema. Instálalo (ver [paso 2](#2-instalar-el-cli-de-supabase)) y verifica con `supabase --version`. El asistente `pnpm setup` también te muestra el comando exacto para tu sistema operativo.
+El CLI de Supabase no está instalado en el sistema. Instálalo (ver [paso 2](#2-instalar-el-cli-de-supabase)) y verifica con `supabase --version`. El asistente `node scripts/setup.mjs` también te muestra el comando exacto para tu sistema operativo.
 
 ### Contenedor `supabase_db` unhealthy / `database files are incompatible`
 
