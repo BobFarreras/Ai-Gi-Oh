@@ -7,6 +7,7 @@ import { AdminStarterDeckCollectionPanel } from "@/components/admin/internal/Adm
 import { AdminStarterDeckDeckPanel } from "@/components/admin/internal/AdminStarterDeckDeckPanel";
 import { readAdminStarterDeckDragData, writeAdminStarterDeckDragData } from "@/components/admin/internal/admin-starter-deck-dnd";
 import { useAdminStarterDeckEditor } from "@/components/admin/internal/use-admin-starter-deck-editor";
+
 interface IAdminStarterDeckPanelProps {
   initialData: IAdminStarterDeckApiResponse;
 }
@@ -16,6 +17,8 @@ export function AdminStarterDeckPanel({ initialData }: IAdminStarterDeckPanelPro
   const cardById = useMemo(() => new Map(editor.data.availableCards.map((card) => [card.id, card])), [editor.data.availableCards]);
   const selectedSlotCardId = editor.selectedSlotIndex === null ? null : (editor.draftCardIds[editor.selectedSlotIndex] ?? null);
   const selectedCard = (editor.selectedCollectionCardId ? cardById.get(editor.selectedCollectionCardId) ?? null : null) ?? (selectedSlotCardId ? cardById.get(selectedSlotCardId) ?? null : null);
+  const filledSlots = editor.draftCardIds.filter((id) => typeof id === "string" && id.length > 0).length;
+  const totalSlots = editor.draftCardIds.length;
   const hasErrorFeedback = editor.feedback.toLowerCase().includes("no se pudo") || editor.feedback.toLowerCase().includes("debes ");
 
   function onDropOnSlot(slotIndex: number, event: DragEvent<HTMLElement>): void {
@@ -37,69 +40,131 @@ export function AdminStarterDeckPanel({ initialData }: IAdminStarterDeckPanelPro
   }
 
   return (
-    <section className="flex h-full min-h-0 flex-1 flex-col space-y-4">
-      <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="text-xs font-semibold uppercase tracking-wide text-slate-200">
-            Plantilla activa/objetivo
-            <select
-              aria-label="Seleccionar plantilla starter deck"
-              className="ml-2 h-9 rounded-md border border-slate-600 bg-slate-900 px-2 text-xs text-slate-100"
-              value={editor.data.template?.templateKey ?? ""}
-              disabled={editor.isBusy || editor.data.summaries.length === 0}
-              onChange={(event) => void editor.onSelectTemplate(event.target.value)}
+    <section className="flex h-full min-h-0 flex-1 flex-col gap-3">
+      {/* ── Header ── */}
+      <div className="relative overflow-hidden rounded-xl border border-cyan-800/50 bg-[linear-gradient(120deg,rgba(4,14,30,0.96),rgba(2,9,20,0.98))] px-4 py-3 shadow-[0_0_20px_rgba(6,182,212,0.12)]">
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(34,211,238,0.05),transparent_50%,rgba(59,130,246,0.04))]" />
+        <div className="relative flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-cyan-800/60 bg-slate-900/80">
+              <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-cyan-400" strokeWidth="1.6" strokeLinecap="round">
+                <rect x="5" y="3" width="14" height="18" rx="2" />
+                <line x1="8.5" y1="8" x2="15.5" y2="8" />
+                <line x1="8.5" y1="12" x2="15.5" y2="12" />
+                <line x1="8.5" y1="16" x2="12" y2="16" />
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-sm font-black uppercase tracking-widest text-cyan-100">Starter Deck</h1>
+              <div className="flex items-center gap-2">
+                <select
+                  aria-label="Seleccionar plantilla starter deck"
+                  className="h-6 rounded-md border border-cyan-800/50 bg-slate-950/80 px-2 text-[10px] font-semibold text-slate-200 focus:border-cyan-500 focus:outline-none"
+                  value={editor.data.template?.templateKey ?? ""}
+                  disabled={editor.isBusy || editor.data.summaries.length === 0}
+                  onChange={(event) => void editor.onSelectTemplate(event.target.value)}
+                >
+                  {editor.data.summaries.map((summary) => (
+                    <option key={summary.templateKey} value={summary.templateKey}>
+                      {summary.templateKey} {summary.isActive ? "✓" : ""}
+                    </option>
+                  ))}
+                </select>
+                {editor.data.template && (
+                  <span className="text-[10px] text-slate-400">
+                    {filledSlots}/{totalSlots} slots
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Refrescar starter deck"
+              className="flex h-8 items-center gap-1.5 rounded-md border border-cyan-700/50 bg-cyan-950/40 px-3 text-[10px] font-bold uppercase tracking-wider text-cyan-300 transition hover:bg-cyan-900/40 disabled:opacity-50"
+              onClick={() => void editor.onRefresh()}
+              disabled={editor.isBusy}
             >
-              {editor.data.summaries.map((summary) => (
-                <option key={summary.templateKey} value={summary.templateKey}>
-                  {summary.templateKey} {summary.isActive ? "(activo)" : ""}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button type="button" aria-label="Refrescar starter deck" className="h-9 rounded-md border border-cyan-500 px-3 text-xs font-bold uppercase text-cyan-200" onClick={() => void editor.onRefresh()} disabled={editor.isBusy}>
-            Refrescar
-          </button>
-          <button type="button" aria-label="Activar o desactivar modo edición starter deck" className="h-9 rounded-md border border-slate-600 px-3 text-xs font-bold uppercase text-slate-100" onClick={() => editor.setIsEditMode(!editor.isEditMode)} disabled={editor.isBusy || !editor.data.template}>
-            {editor.isEditMode ? "Salir de edición" : "Editar plantilla"}
-          </button>
-          <button
-            type="button"
-            aria-label="Aplicar carta seleccionada al slot activo"
-            className="h-9 rounded-md border border-slate-600 px-3 text-xs font-bold uppercase text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={!editor.isEditMode || editor.selectedSlotIndex === null || !editor.selectedCollectionCardId}
-            onClick={() => {
-              if (editor.selectedSlotIndex === null || !editor.selectedCollectionCardId) return;
-              editor.setDraftCardIdBySlot(editor.selectedSlotIndex, editor.selectedCollectionCardId);
-            }}
-          >
-            Poner en slot
-          </button>
-          <button
-            type="button"
-            aria-label="Quitar carta del slot activo"
-            className="h-9 rounded-md border border-rose-600 px-3 text-xs font-bold uppercase text-rose-200 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={!editor.isEditMode || editor.selectedSlotIndex === null}
-            onClick={() => {
-              if (editor.selectedSlotIndex === null) return;
-              editor.clearSlotCardByIndex(editor.selectedSlotIndex);
-            }}
-          >
-            Quitar del slot
-          </button>
-          <label className="inline-flex h-9 items-center gap-2 text-xs text-slate-200">
-            <input type="checkbox" checked={editor.activateOnSave} disabled={!editor.isEditMode || editor.isBusy} onChange={(event) => editor.setActivateOnSave(event.target.checked)} />
-            Activar plantilla al guardar
-          </label>
-          <button type="button" aria-label="Guardar starter deck" className="h-9 rounded-md border border-emerald-500 px-3 text-xs font-bold uppercase text-emerald-200 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => void editor.onSave()} disabled={!editor.isEditMode || editor.isBusy || !editor.data.template || !editor.canSave}>
-            Guardar
-          </button>
+              <svg viewBox="0 0 24 24" className="h-3 w-3 fill-none stroke-current" strokeWidth="2.2" strokeLinecap="round"><path d="M1 4v6h6M23 20v-6h-6" /><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" /></svg>
+              Refrescar
+            </button>
+
+            <div className="flex items-center gap-1.5 rounded-lg border border-slate-700/50 bg-slate-950/60 p-1">
+              <button
+                type="button"
+                aria-label="Activar o desactivar modo edición starter deck"
+                className={`flex h-7 items-center gap-1.5 rounded-md border px-3 text-[10px] font-bold uppercase tracking-wider transition disabled:opacity-50 ${editor.isEditMode ? "border-amber-500/60 bg-amber-950/40 text-amber-300" : "border-slate-600/50 bg-slate-900/50 text-slate-200 hover:border-cyan-600/50 hover:text-cyan-300"}`}
+                onClick={() => editor.setIsEditMode(!editor.isEditMode)}
+                disabled={editor.isBusy || !editor.data.template}
+              >
+                {editor.isEditMode ? "Salir" : "Editar"}
+              </button>
+
+              {editor.isEditMode && (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Aplicar carta seleccionada al slot activo"
+                    className="flex h-7 items-center gap-1.5 rounded-md border border-slate-600/50 bg-slate-900/50 px-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-200 transition hover:border-cyan-600/50 hover:text-cyan-300 disabled:opacity-40"
+                    disabled={editor.selectedSlotIndex === null || !editor.selectedCollectionCardId}
+                    onClick={() => {
+                      if (editor.selectedSlotIndex === null || !editor.selectedCollectionCardId) return;
+                      editor.setDraftCardIdBySlot(editor.selectedSlotIndex, editor.selectedCollectionCardId);
+                    }}
+                  >
+                    ↓ Slot
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Quitar carta del slot activo"
+                    className="flex h-7 items-center gap-1.5 rounded-md border border-rose-700/50 bg-rose-950/40 px-2.5 text-[10px] font-bold uppercase tracking-wider text-rose-300 transition hover:bg-rose-900/40 disabled:opacity-40"
+                    disabled={editor.selectedSlotIndex === null}
+                    onClick={() => {
+                      if (editor.selectedSlotIndex === null) return;
+                      editor.clearSlotCardByIndex(editor.selectedSlotIndex);
+                    }}
+                  >
+                    ✕
+                  </button>
+                </>
+              )}
+            </div>
+
+            {editor.isEditMode && (
+              <label className="flex h-8 items-center gap-1.5 rounded-md border border-slate-600/50 bg-slate-900/50 px-2.5 text-[10px] font-semibold text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={editor.activateOnSave}
+                  disabled={editor.isBusy}
+                  onChange={(event) => editor.setActivateOnSave(event.target.checked)}
+                  className="rounded"
+                />
+                Activar al guardar
+              </label>
+            )}
+
+            <button
+              type="button"
+              aria-label="Guardar starter deck"
+              className="flex h-8 items-center gap-1.5 rounded-md border border-emerald-500/70 bg-emerald-950/50 px-4 text-[10px] font-black uppercase tracking-wider text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.15)] transition hover:bg-emerald-900/50 hover:shadow-[0_0_14px_rgba(16,185,129,0.25)] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+              onClick={() => void editor.onSave()}
+              disabled={!editor.isEditMode || editor.isBusy || !editor.data.template || !editor.canSave}
+            >
+              <svg viewBox="0 0 24 24" className="h-3 w-3 fill-none stroke-current" strokeWidth="2.2" strokeLinecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
+              Guardar
+            </button>
+          </div>
         </div>
+
         {editor.feedback ? (
-          <p className={`mt-2 rounded-md border px-3 py-2 text-xs font-semibold ${hasErrorFeedback ? "border-rose-500/70 bg-rose-900/25 text-rose-100" : "border-emerald-500/70 bg-emerald-900/20 text-emerald-100"}`}>
+          <p className={`relative mt-2 rounded-lg border px-3 py-1.5 text-[11px] font-semibold ${hasErrorFeedback ? "border-rose-500/60 bg-rose-950/30 text-rose-200" : "border-emerald-500/60 bg-emerald-950/30 text-emerald-200"}`}>
             {editor.feedback}
           </p>
         ) : null}
       </div>
+
       {editor.data.template ? (
         <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[360px_470px_minmax(0,1fr)]">
           <HomeCardInspector
@@ -141,9 +206,9 @@ export function AdminStarterDeckPanel({ initialData }: IAdminStarterDeckPanelPro
           />
         </div>
       ) : (
-        <p className="rounded-lg border border-amber-500/60 bg-amber-900/20 p-3 text-xs text-amber-100">
-          No hay plantilla starter disponible todavía.
-        </p>
+        <div className="rounded-xl border border-amber-500/40 bg-amber-950/20 p-4">
+          <p className="text-sm font-semibold text-amber-200">No hay plantilla starter disponible todavía.</p>
+        </div>
       )}
     </section>
   );

@@ -31,12 +31,9 @@ export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse)
   const [isBaseDeckMode, setIsBaseDeckMode] = useState(initialSnapshot.isBaseDeckMode);
   const [isBusy, setIsBusy] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const fusionCardById = useMemo(() => new Map(data.availableCards.filter((card) => card.type === "FUSION").map((card) => [card.id, card])), [data.availableCards]);
   const canSave = useMemo(() => {
-    const hasBaseCards = draftCardIds.some((cardId) => typeof cardId === "string");
-    const hasValidFusionDeck = draftFusionCardIds.length === 2 && draftFusionCardIds.every((cardId) => cardId.trim().length > 0 && fusionCardById.has(cardId));
-    return isBaseDeckMode || !selectedDuelId ? hasBaseCards : hasBaseCards && hasValidFusionDeck;
-  }, [draftCardIds, isBaseDeckMode, selectedDuelId, draftFusionCardIds, fusionCardById]);
+    return draftCardIds.some((cardId) => typeof cardId === "string");
+  }, [draftCardIds]);
 
   async function load(input: { opponentId?: string; deckListId?: string; preferredDuelId?: string | null }): Promise<void> {
     setIsBusy(true);

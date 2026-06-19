@@ -20,36 +20,109 @@ export function AdminCatalogPanel({ initialSnapshot }: AdminCatalogPanelProps) {
   const totalCards = editor.cards.length;
   const activeCards = editor.cards.filter((entry) => entry.isActive).length;
   const detailCard = isFormMode ? editor.draftPreviewCard : editor.selectedPreviewCard;
+  const hasErrorFeedback = editor.feedback.toLowerCase().includes("no se pudo") || editor.feedback.toLowerCase().includes("válido");
 
   return (
     <section className="flex h-full min-h-0 flex-1 flex-col gap-3">
-      <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs text-slate-200">Cartas totales: {totalCards} · Activas: {activeCards}</p>
+      <div className="relative overflow-hidden rounded-xl border border-cyan-800/50 bg-[linear-gradient(120deg,rgba(4,14,30,0.96),rgba(2,9,20,0.98))] px-4 py-3 shadow-[0_0_20px_rgba(6,182,212,0.12)]">
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(34,211,238,0.05),transparent_50%,rgba(59,130,246,0.04))]" />
+        <div className="relative flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-cyan-800/60 bg-slate-900/80">
+              <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-cyan-400" strokeWidth="1.6">
+                <rect x="4" y="4" width="16" height="16" rx="2" />
+                <line x1="9" y1="4" x2="9" y2="20" />
+                <line x1="12.5" y1="9" x2="18" y2="9" strokeLinecap="round" />
+                <line x1="12.5" y1="13" x2="18" y2="13" strokeLinecap="round" />
+                <line x1="12.5" y1="17" x2="16" y2="17" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-sm font-black uppercase tracking-widest text-cyan-100">Card Catalog</h1>
+              <p className="text-[10px] text-slate-400">
+                {totalCards} cartas totales · {activeCards} activas
+              </p>
+            </div>
+          </div>
+
           <div className="flex items-center gap-2">
-            <button type="button" aria-label="Refrescar catálogo de cartas" className="h-9 rounded-md border border-cyan-500 px-3 text-xs font-bold uppercase text-cyan-200" onClick={() => void editor.refresh()} disabled={editor.isBusy}>Refrescar</button>
-            <button type="button" aria-label="Crear carta nueva" className="h-9 rounded-md border border-emerald-500 px-3 text-xs font-bold uppercase text-emerald-200" onClick={editor.beginCreate} disabled={editor.isBusy}>Crear carta</button>
+            {isFormMode ? (
+              <>
+                <button
+                  type="button"
+                  aria-label="Volver al catálogo sin guardar"
+                  className="flex h-8 items-center gap-1.5 rounded-md border border-slate-600/50 bg-slate-900/50 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-200 transition hover:border-cyan-600/50 hover:text-cyan-300 disabled:opacity-50"
+                  onClick={editor.cancelEdit}
+                  disabled={editor.isBusy}
+                >
+                  ← Volver
+                </button>
+                <button
+                  type="button"
+                  aria-label="Guardar carta en catálogo"
+                  className="flex h-8 items-center gap-1.5 rounded-md border border-emerald-500/70 bg-emerald-950/50 px-4 text-[10px] font-black uppercase tracking-wider text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.15)] transition hover:bg-emerald-900/50 disabled:opacity-50"
+                  onClick={() => void editor.save()}
+                  disabled={editor.isBusy}
+                >
+                  <svg viewBox="0 0 24 24" className="h-3 w-3 fill-none stroke-current" strokeWidth="2.2" strokeLinecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
+                  Guardar
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  aria-label="Refrescar catálogo de cartas"
+                  className="flex h-8 items-center gap-1.5 rounded-md border border-cyan-700/50 bg-cyan-950/40 px-3 text-[10px] font-bold uppercase tracking-wider text-cyan-300 transition hover:bg-cyan-900/40 disabled:opacity-50"
+                  onClick={() => void editor.refresh()}
+                  disabled={editor.isBusy}
+                >
+                  <svg viewBox="0 0 24 24" className="h-3 w-3 fill-none stroke-current" strokeWidth="2.2" strokeLinecap="round"><path d="M1 4v6h6M23 20v-6h-6" /><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" /></svg>
+                  Refrescar
+                </button>
+                <button
+                  type="button"
+                  aria-label="Crear carta nueva"
+                  className="flex h-8 items-center gap-1.5 rounded-md border border-emerald-500/70 bg-emerald-950/50 px-4 text-[10px] font-black uppercase tracking-wider text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.12)] transition hover:bg-emerald-900/50 disabled:opacity-50"
+                  onClick={editor.beginCreate}
+                  disabled={editor.isBusy}
+                >
+                  <svg viewBox="0 0 24 24" className="h-3 w-3 fill-none stroke-current" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                  Nueva carta
+                </button>
+              </>
+            )}
           </div>
         </div>
-        {editor.feedback ? <p className={`mt-2 rounded-md border px-3 py-2 text-xs font-semibold ${editor.feedback.toLowerCase().includes("no se pudo") || editor.feedback.toLowerCase().includes("válido") ? "border-rose-500/70 bg-rose-900/25 text-rose-100" : "border-emerald-500/70 bg-emerald-900/20 text-emerald-100"}`}>{editor.feedback}</p> : null}
+
+        {editor.feedback ? (
+          <p className={`relative mt-2 rounded-lg border px-3 py-1.5 text-[11px] font-semibold ${hasErrorFeedback ? "border-rose-500/60 bg-rose-950/30 text-rose-200" : "border-emerald-500/60 bg-emerald-950/30 text-emerald-200"}`}>
+            {editor.feedback}
+          </p>
+        ) : null}
       </div>
 
       <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
         {isFormMode ? (
-          <section className="flex min-h-0 flex-col rounded-2xl border border-slate-700 bg-slate-900/70 p-3">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="text-sm font-black uppercase tracking-[0.2em] text-cyan-200">{editor.mode === "create" ? "Crear Carta" : "Editar Carta"}</h2>
-              <div className="flex items-center gap-2">
-                <button type="button" aria-label="Volver al catálogo sin guardar" className="h-9 rounded-md border border-slate-600 px-3 text-xs font-bold uppercase text-slate-100" onClick={editor.cancelEdit} disabled={editor.isBusy}>Volver</button>
-                <button type="button" aria-label="Guardar carta en catálogo" className="h-9 rounded-md border border-emerald-500 px-3 text-xs font-bold uppercase text-emerald-200 disabled:opacity-50" onClick={() => void editor.save()} disabled={editor.isBusy}>Guardar</button>
-              </div>
+          <section className="flex min-h-0 flex-col rounded-2xl border border-slate-700/60 bg-[#040d1a]/80 p-3">
+            <div className="mb-3 flex items-center gap-2 border-b border-slate-700/50 pb-3">
+              <span className={`rounded-md border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${editor.mode === "create" ? "border-emerald-500/60 bg-emerald-950/50 text-emerald-300" : "border-cyan-500/60 bg-cyan-950/50 text-cyan-300"}`}>
+                {editor.mode === "create" ? "Crear carta" : "Editar carta"}
+              </span>
             </div>
             <AdminCardCatalogFormFields draft={editor.draft} isBusy={editor.isBusy} onChange={editor.updateDraft} onApplyTypeTemplate={editor.applyTypeTemplate} />
           </section>
         ) : (
           <AdminCardCatalogWarehousePanel cards={editor.cards} selectedCardId={editor.selectedCardId} cardById={cardById} onSelectCard={editor.selectCard} />
         )}
-        <AdminCardCatalogDetailPanel selectedEntry={editor.selectedEntry} selectedCard={detailCard} canEdit={editor.mode === "view" && editor.selectedEntry !== null && !editor.isBusy} onEdit={editor.beginEdit} isFormMode={isFormMode} onBack={editor.cancelEdit} />
+        <AdminCardCatalogDetailPanel
+          selectedEntry={editor.selectedEntry}
+          selectedCard={detailCard}
+          canEdit={editor.mode === "view" && editor.selectedEntry !== null && !editor.isBusy}
+          onEdit={editor.beginEdit}
+          isFormMode={isFormMode}
+          onBack={editor.cancelEdit}
+        />
       </div>
     </section>
   );
