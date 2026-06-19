@@ -8,18 +8,24 @@ Gracias por contribuir. Este proyecto está preparado para ejecutarse en local s
 1. **Node.js 20+** ([descargar](https://nodejs.org))
 2. **pnpm** ([instalación](https://pnpm.io/installation))
 3. **Docker Desktop** levantado ([descargar](https://www.docker.com/products/docker-desktop))
+4. **Supabase CLI** instalado en el sistema (ver paso 2 más abajo)
+
+> **¿Por qué el CLI aparte?** El paquete npm de Supabase descarga su binario en un postinstall que
+> falla con frecuencia en Windows (errores de certificado, red, `.EXE` no encontrado) y eso tumbaba
+> `pnpm install` entero. Para que el setup sea reproducible, instalamos el CLI de forma estándar y
+> NO lo gestionamos por npm.
 
 ## Setup rápido (recomendado)
 
-Ejecuta el asistente interactivo que verifica prerrequisitos y guía cada paso:
+Ejecuta el asistente interactivo. Verifica prerrequisitos (incluido si Docker está corriendo) y guía cada paso con explicaciones:
 
 ```bash
 pnpm setup
 ```
 
-Esto ejecuta automáticamente:
-1. `pnpm install`
-2. `pnpm approve-builds` (necesario para supabase CLI y playwright)
+Esto te acompaña por:
+1. `pnpm install` (las compilaciones nativas se aprueban solas vía `.npmrc`)
+2. Detección del CLI de Supabase (te da el comando de instalación si falta)
 3. `pnpm supabase:bootstrap:local`
 4. `pnpm supabase:env:apply`
 
@@ -33,19 +39,27 @@ Si prefieres hacerlo manualmente:
 pnpm install
 ```
 
-### 2. Aprobar builds de paquetes nativos
+No necesitas `pnpm approve-builds`: los paquetes que requieren compilación (`esbuild`, `sharp`, `unrs-resolver`) están pre-aprobados en `.npmrc`.
 
-pnpm v10+ bloquea scripts de instalación por defecto. Debes aprobar los paquetes necesarios:
+### 2. Instalar el CLI de Supabase
 
+**Windows (scoop):**
 ```bash
-pnpm approve-builds
+scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+scoop install supabase
 ```
 
-En el selector, elige todos los que aparezcan:
-- **esbuild** — build de Next.js
-- **sharp** — optimización de imágenes
-- **supabase** — necesario para el CLI de Supabase local
-- **unrs-resolver** — resolver nativo
+**macOS / Linux (Homebrew):**
+```bash
+brew install supabase/tap/supabase
+```
+
+Alternativa sin gestor de paquetes: descarga el binario desde [releases](https://github.com/supabase/cli/releases) y añádelo al `PATH`.
+
+Verifica con:
+```bash
+supabase --version
+```
 
 ### 3. Levantar Supabase local
 
@@ -55,7 +69,7 @@ pnpm supabase:bootstrap:local
 
 Esto genera migraciones, levanta contenedores Docker, aplica el esquema y crea `.env.local.supabase`.
 
-**Requisitos:** Docker Desktop corriendo. Puerto 54323 disponible.
+**Requisitos:** Docker Desktop corriendo. Puertos 54321-54324 disponibles.
 
 ### 4. Aplicar variables de entorno
 
@@ -73,30 +87,32 @@ pnpm dev
 
 ### URLs locales
 
-| Servicio | URL |
-|---|---|
-| App | `http://localhost:3000` |
-| Supabase Studio | `http://127.0.0.1:54323` |
-| Inbucket (emails auth) | `http://127.0.0.1:54324` |
+Estos puertos son fijos (definidos en `supabase/config.toml`), iguales para todo el mundo:
+
+| Servicio | URL | Para qué sirve |
+|---|---|---|
+| App | `http://localhost:3000` | La aplicación Next.js |
+| Supabase Studio | `http://127.0.0.1:54323` | UI web para inspeccionar y editar la base de datos |
+| API Supabase | `http://127.0.0.1:54321` | Endpoint REST/Auth local |
+| Inbucket (emails auth) | `http://127.0.0.1:54324` | Bandeja de correos de autenticación |
 
 ## Troubleshooting
 
-### `pnpm install` falla con `ERR_PNPM_IGNORED_BUILDS`
-
-Ejecuta `pnpm approve-builds` y selecciona los paquetes necesarios. Luego re-ejecuta `pnpm install`.
-
 ### `supabase` command not found
 
-El CLI de Supabase no se descargó. Causas posibles:
-- No ejecutaste `pnpm approve-builds`
-- Sin conexión a internet durante la instalación
-- Docker Desktop no está corriendo
+El CLI de Supabase no está instalado en el sistema. Instálalo (ver [paso 2](#2-instalar-el-cli-de-supabase)) y verifica con `supabase --version`. El asistente `pnpm setup` también te muestra el comando exacto para tu sistema operativo.
 
-Solución: `pnpm approve-builds` → `pnpm install` → reintenta bootstrap.
+### Contenedor `supabase_db` unhealthy / `database files are incompatible`
 
-### Contenedor `supabase_storage` unhealthy
+Tienes un volumen Docker antiguo con una versión de Postgres distinta. Límpialo y reintenta:
+```bash
+supabase stop --no-backup
+pnpm supabase:bootstrap:local
+```
 
-Este proyecto tiene el storage desactivado (`supabase/config.toml: [storage] enabled = false`) porque no usa almacenamiento de ficheros. Si ves este error en una versión antigua, actualiza a la última versión del repositorio.
+### Contenedor `supabase_studio` / `supabase_storage` unhealthy
+
+El bootstrap arranca con `--ignore-health-check` precisamente porque en Windows el chequeo de salud da falsos negativos (el contenedor arranca pero el CLI expira esperándolo). Si lo ves al ejecutar `supabase start` a mano, añade ese flag: `supabase start --ignore-health-check`.
 
 ### `.env.local.supabase` no existe
 

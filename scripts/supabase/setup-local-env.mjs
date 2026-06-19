@@ -2,8 +2,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { resolveSupabaseCli } from "../lib/supabase-cli.mjs";
 
 const repositoryRoot = process.cwd();
+const supabaseCli = resolveSupabaseCli({ repoRoot: repositoryRoot });
 const targetArg = process.argv.find((entry) => entry.startsWith("--target="));
 const targetFilename = targetArg ? targetArg.slice("--target=".length).trim() : ".env.local.supabase";
 const envPath = path.join(repositoryRoot, targetFilename);
@@ -11,7 +13,7 @@ const statusRetryAttempts = 30;
 const statusRetryDelayMs = 2000;
 
 function runSupabaseStatusEnvOnce() {
-  const result = spawnSync("pnpm", ["exec", "supabase", "status", "-o", "env"], {
+  const result = spawnSync(supabaseCli.command, [...supabaseCli.prefixArgs, "status", "-o", "env"], {
     cwd: repositoryRoot,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
@@ -86,6 +88,9 @@ function buildEnvFileContent(existingEntries, overrides) {
 }
 
 async function main() {
+  if (!supabaseCli.found) {
+    throw new Error("CLI de Supabase no encontrado. Instálalo (scoop/brew) y reintenta: pnpm supabase:bootstrap:local");
+  }
   const statusEnvOutput = await runSupabaseStatusEnv();
   const localSupabase = parseEnvLines(statusEnvOutput);
   const apiUrl = localSupabase.get("API_URL");

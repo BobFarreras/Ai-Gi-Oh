@@ -1,6 +1,6 @@
 {
   "name": "ai-gi-oh",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -23,9 +23,9 @@
     "security:rate-limit:check:staging": "node scripts/security/check-rate-limit-env.mjs --target=staging --env-file=.env.staging.example",
     "security:rate-limit:check:production": "node scripts/security/check-rate-limit-env.mjs --target=production --env-file=.env.production.example",
     "supabase:prepare:migrations": "node scripts/supabase/prepare-local-migrations.mjs",
-    "supabase:start": "pnpm exec supabase start",
-    "supabase:stop": "pnpm exec supabase stop",
-    "supabase:db:reset:local": "pnpm exec supabase db reset --local",
+    "supabase:start": "node scripts/supabase/run-cli.mjs start",
+    "supabase:stop": "node scripts/supabase/run-cli.mjs stop",
+    "supabase:db:reset:local": "node scripts/supabase/run-cli.mjs db reset --local",
     "supabase:env:local": "node scripts/supabase/setup-local-env.mjs",
     "supabase:env:apply": "node scripts/supabase/apply-local-env-to-dotenv-local.mjs",
     "supabase:env:restore": "node scripts/supabase/restore-dotenv-local.mjs",
@@ -79,7 +79,6 @@
     "eslint-config-next": "16.2.3",
     "jsdom": "^28.1.0",
     "playwright": "^1.54.2",
-    "supabase": "^2.84.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.0.18"
