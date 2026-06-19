@@ -78,7 +78,10 @@ function FusionPlaybackItem({ item, onDone }: { item: IFusionPlaybackItem; onDon
       clearTimeout(watchdogId);
       // Detección de stall: una vez arrancado, monitoriza que el vídeo avance.
       // En desktop, onEnded a veces no se dispara si el vídeo queda congelado.
+      // En modo incógnito o tabs en segundo plano, el navegador puede pausar el vídeo
+      // tras el primer frame; en ese caso forzamos transición a summon.
       let lastTime = video.currentTime;
+      let pausedTicks = 0;
       stallIntervalId = setInterval(() => {
         if (video.ended) {
           clearInterval(stallIntervalId!);
@@ -86,7 +89,17 @@ function FusionPlaybackItem({ item, onDone }: { item: IFusionPlaybackItem; onDon
           setPhase("summon");
           return;
         }
-        if (video.paused) return;
+        if (video.paused) {
+          pausedTicks += 1;
+          // Si lleva 3 ticks pausado (~4.5s con VIDEO_STALL_CHECK_MS=1500), forzamos summon.
+          if (pausedTicks >= 3) {
+            clearInterval(stallIntervalId!);
+            stallIntervalId = null;
+            setPhase("summon");
+          }
+          return;
+        }
+        pausedTicks = 0;
         if (video.currentTime <= lastTime) {
           clearInterval(stallIntervalId!);
           stallIntervalId = null;
