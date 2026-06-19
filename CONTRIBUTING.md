@@ -41,9 +41,13 @@ Si prefieres hacerlo manualmente:
 
 ```bash
 pnpm install
+pnpm rebuild esbuild sharp unrs-resolver
 ```
 
-No necesitas `pnpm approve-builds`: los paquetes que requieren compilación (`esbuild`, `sharp`, `unrs-resolver`) están pre-aprobados en `.npmrc`.
+El segundo comando **compila los binarios nativos**. Es necesario porque, según la versión de pnpm,
+`pnpm install` a veces ignora los build scripts (aunque estén pre-aprobados en `.npmrc`) y aborta con
+`ERR_PNPM_IGNORED_BUILDS`. `pnpm rebuild` los fuerza sin necesidad de `pnpm approve-builds`.
+El asistente `node scripts/setup.mjs` ya hace esto por ti.
 
 ### 2. Instalar el CLI de Supabase
 
@@ -101,6 +105,14 @@ Estos puertos son fijos (definidos en `supabase/config.toml`), iguales para todo
 | Inbucket (emails auth) | `http://127.0.0.1:54324` | Bandeja de correos de autenticación |
 
 ## Troubleshooting
+
+### `ERR_PNPM_IGNORED_BUILDS` (Ignored build scripts: esbuild, sharp, unrs-resolver)
+
+Según la versión de pnpm/Node, `pnpm install` puede ignorar los build scripts y abortar. Compílalos a mano:
+```bash
+pnpm rebuild esbuild sharp unrs-resolver
+```
+No uses `pnpm approve-builds` (es interactivo y depende de la versión). El asistente `node scripts/setup.mjs` ya hace este rebuild automáticamente.
 
 ### `supabase` command not found
 

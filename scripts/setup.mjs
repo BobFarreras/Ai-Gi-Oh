@@ -93,14 +93,25 @@ async function main() {
 
   // ── Instalar dependencias ──
   ui.section("Instalar dependencias");
-  ui.note("Las compilaciones nativas (esbuild, sharp, unrs-resolver) se aprueban automáticamente vía .npmrc.");
+  ui.note("Tras instalar, se compilan los binarios nativos (esbuild, sharp, unrs-resolver).");
   if (await confirm("¿Ejecutar 'pnpm install' ahora?")) {
-    if (!run("pnpm", ["install"])) {
-      ui.fail("pnpm install falló. Revisa la salida de arriba.");
+    // pnpm install puede salir con ERR_PNPM_IGNORED_BUILDS según la versión de pnpm (no
+    // siempre respeta el allowlist de .npmrc). Aun así, los paquetes quedan instalados.
+    const installOk = run("pnpm", ["install"]);
+
+    // Red de seguridad universal: `pnpm rebuild` compila los scripts nativos SIN el gate de
+    // aprobación, funcione como funcione el install. Es idempotente y no depende de la versión.
+    ui.step("Compilando binarios nativos", "esbuild, sharp, unrs-resolver");
+    const buildsOk = run("pnpm", ["rebuild", "esbuild", "sharp", "unrs-resolver"]);
+
+    if (!buildsOk) {
+      ui.fail("No se pudieron compilar los binarios nativos.");
+      if (!installOk) ui.note("El 'pnpm install' también falló: revisa tu conexión y reintenta.");
+      else ui.note("Reintenta manualmente: pnpm rebuild esbuild sharp unrs-resolver");
       rl.close();
       process.exit(1);
     }
-    ui.ok("Dependencias instaladas");
+    ui.ok("Dependencias instaladas y binarios compilados");
   }
 
   // ── CLI de Supabase ──
