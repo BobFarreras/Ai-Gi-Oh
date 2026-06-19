@@ -71,10 +71,11 @@ async function main() {
   header("Aprobar builds de paquetes nativos");
   console.log("pnpm v10+ bloquea scripts de instalación por defecto.");
   console.log("Esto es necesario para que supabase CLI se descargue correctamente.\n");
-  console.log("Se abrirá un selector interactivo. Selecciona:");
-  console.log("  - @playwright/test (si vas a usar tests e2e)");
-  console.log("  - supabase (necesario para Supabase local)");
-  console.log("  - @swc/* si aparecen (necesario para build)\n");
+  console.log("Se abrirá un selector interactivo. Selecciona todos:");
+  console.log("  - esbuild    (build de Next.js)");
+  console.log("  - sharp      (optimización de imágenes)");
+  console.log("  - supabase   (CLI de Supabase local)");
+  console.log("  - unrs-resolver (resolver nativo)\n");
 
   const approveAnswer = await ask("¿Quieres ejecutar 'pnpm approve-builds' ahora? (S/n): ");
   if (approveAnswer.toLowerCase() !== "n") {

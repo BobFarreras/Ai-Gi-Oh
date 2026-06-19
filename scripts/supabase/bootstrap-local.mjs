@@ -12,10 +12,6 @@ const steps = [
     command: ["pnpm", "exec", "supabase", "start"],
   },
   {
-    title: "Aplicando esquema local (db reset)",
-    command: ["pnpm", "exec", "supabase", "db", "reset", "--local"],
-  },
-  {
     title: "Generando .env.local.supabase",
     command: ["node", "scripts/supabase/setup-local-env.mjs"],
   },

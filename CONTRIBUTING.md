@@ -41,10 +41,11 @@ pnpm v10+ bloquea scripts de instalación por defecto. Debes aprobar los paquete
 pnpm approve-builds
 ```
 
-En el selector, elige:
+En el selector, elige todos los que aparezcan:
+- **esbuild** — build de Next.js
+- **sharp** — optimización de imágenes
 - **supabase** — necesario para el CLI de Supabase local
-- **@playwright/test** — si vas a usar tests e2e
-- **@swc/\*** — si aparecen, necesario para build
+- **unrs-resolver** — resolver nativo
 
 ### 3. Levantar Supabase local
 
@@ -95,9 +96,7 @@ Solución: `pnpm approve-builds` → `pnpm install` → reintenta bootstrap.
 
 ### Contenedor `supabase_storage` unhealthy
 
-- Verifica que Docker Desktop tiene suficientes recursos (Settings → Resources).
-- Verifica que los puertos 54321-54324 no están en uso.
-- Reinicia Docker Desktop y reintenta.
+Este proyecto tiene el storage desactivado (`supabase/config.toml: [storage] enabled = false`) porque no usa almacenamiento de ficheros. Si ves este error en una versión antigua, actualiza a la última versión del repositorio.
 
 ### `.env.local.supabase` no existe
 
