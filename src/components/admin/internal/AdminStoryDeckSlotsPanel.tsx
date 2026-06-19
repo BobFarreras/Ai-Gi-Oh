@@ -85,7 +85,8 @@ export function AdminStoryDeckSlotsPanel({
         <p className="rounded border border-cyan-900 bg-black/50 px-2 py-1 text-xs font-semibold text-cyan-100/85">{filledSlots}/{visibleLength}</p>
       </div>
       <div className="home-modern-scroll min-h-0 flex-1 overflow-y-auto p-2">
-        <div className="grid w-full grid-cols-5 content-start justify-items-center gap-2 pb-4">
+        {/* Slots principales del deck */}
+        <div className="grid w-full grid-cols-5 content-start justify-items-center gap-2 pb-2">
           {Array.from({ length: visibleLength }, (_, slotIndex) => {
             const cardId = draftCardIds[slotIndex] ?? null;
             return (
@@ -104,11 +105,22 @@ export function AdminStoryDeckSlotsPanel({
               </div>
             );
           })}
+        </div>
+
+        {/* Separador con etiqueta de extras */}
+        <div className={`my-2 flex items-center gap-2 transition-opacity ${isDuelExtrasDisabled ? "opacity-40" : ""}`}>
+          <div className="h-px flex-1 bg-slate-700/50" />
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Extras duelo</span>
+          <div className="h-px flex-1 bg-slate-700/50" />
+        </div>
+
+        {/* Fusiones + Reward — mismo tamaño que el resto, solo etiqueta de color debajo */}
+        <div className={`grid grid-cols-5 justify-items-center gap-2 pb-4 transition-opacity ${isDuelExtrasDisabled ? "opacity-40 pointer-events-none" : ""}`}>
           {[0, 1].map((slotIndex) => {
             const cardId = draftFusionCardIds[slotIndex] ?? "";
             const card = cardId ? cardById.get(cardId) ?? null : null;
             return (
-              <div key={`fusion-${slotIndex}`} className="relative flex w-[76px] flex-col items-center gap-1">
+              <div key={`fusion-${slotIndex}`} className="flex w-[76px] flex-col items-center gap-1">
                 <HomeMiniCard
                   card={card}
                   label={`Fusion ${slotIndex + 1}`}
@@ -118,13 +130,24 @@ export function AdminStoryDeckSlotsPanel({
                   onDrop={(event) => onDropOnFusion(slotIndex, event)}
                   showSlotContainer
                 />
-                <button type="button" aria-label={`Quitar carta de fusión ${slotIndex + 1}`} className="h-5 w-full rounded border border-rose-700/70 bg-rose-900/20 text-[9px] font-bold uppercase text-rose-200 disabled:opacity-50" onClick={() => onClearFusionCard(slotIndex)} disabled={isDuelExtrasDisabled || !cardId}>
+                <span className="text-[8px] font-bold uppercase tracking-wide text-violet-400">Fusión {slotIndex + 1}</span>
+                <button
+                  type="button"
+                  aria-label={`Quitar carta de fusión ${slotIndex + 1}`}
+                  className="h-5 w-full rounded border border-rose-700/70 bg-rose-900/20 text-[9px] font-bold uppercase text-rose-200 disabled:opacity-50"
+                  onClick={() => onClearFusionCard(slotIndex)}
+                  disabled={isDuelExtrasDisabled || !cardId}
+                >
                   Quitar
                 </button>
               </div>
             );
           })}
-          <div className="relative flex w-[76px] flex-col items-center gap-1">
+
+          {/* Slot vacío de separación visual */}
+          <div className="w-[76px]" />
+
+          <div className="flex w-[76px] flex-col items-center gap-1">
             <HomeMiniCard
               card={draftRewardCardIds[0] ? cardById.get(draftRewardCardIds[0]) ?? null : null}
               label="Reward"
@@ -134,10 +157,20 @@ export function AdminStoryDeckSlotsPanel({
               onDrop={onDropOnReward}
               showSlotContainer
             />
-            <button type="button" aria-label="Quitar carta de recompensa" className="h-5 w-full rounded border border-rose-700/70 bg-rose-900/20 text-[9px] font-bold uppercase text-rose-200 disabled:opacity-50" onClick={onClearRewardCard} disabled={isDuelExtrasDisabled || !draftRewardCardIds[0]}>
+            <span className="text-[8px] font-bold uppercase tracking-wide text-amber-400">Reward</span>
+            <button
+              type="button"
+              aria-label="Quitar carta de recompensa"
+              className="h-5 w-full rounded border border-rose-700/70 bg-rose-900/20 text-[9px] font-bold uppercase text-rose-200 disabled:opacity-50"
+              onClick={onClearRewardCard}
+              disabled={isDuelExtrasDisabled || !draftRewardCardIds[0]}
+            >
               Quitar
             </button>
           </div>
+
+          {/* Relleno hasta completar la fila de 5 */}
+          <div className="w-[76px]" />
         </div>
       </div>
     </section>

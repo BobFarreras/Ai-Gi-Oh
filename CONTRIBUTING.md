@@ -5,42 +5,104 @@ Gracias por contribuir. Este proyecto está preparado para ejecutarse en local s
 
 ## Requisitos
 
-1. Node.js 20+.
-2. `pnpm`.
-3. Docker Desktop levantado.
+1. **Node.js 20+** ([descargar](https://nodejs.org))
+2. **pnpm** ([instalación](https://pnpm.io/installation))
+3. **Docker Desktop** levantado ([descargar](https://www.docker.com/products/docker-desktop))
 
-## Flujo recomendado (local completo)
+## Setup rápido (recomendado)
 
-1. Instala dependencias:
+Ejecuta el asistente interactivo que verifica prerrequisitos y guía cada paso:
+
+```bash
+pnpm setup
+```
+
+Esto ejecuta automáticamente:
+1. `pnpm install`
+2. `pnpm approve-builds` (necesario para supabase CLI y playwright)
+3. `pnpm supabase:bootstrap:local`
+4. `pnpm supabase:env:apply`
+
+## Flujo manual (paso a paso)
+
+Si prefieres hacerlo manualmente:
+
+### 1. Instalar dependencias
 
 ```bash
 pnpm install
 ```
 
-2. Genera migraciones locales, levanta Supabase local, aplica esquema y sincroniza `.env.local`:
+### 2. Aprobar builds de paquetes nativos
+
+pnpm v10+ bloquea scripts de instalación por defecto. Debes aprobar los paquetes necesarios:
+
+```bash
+pnpm approve-builds
+```
+
+En el selector, elige todos los que aparezcan:
+- **esbuild** — build de Next.js
+- **sharp** — optimización de imágenes
+- **supabase** — necesario para el CLI de Supabase local
+- **unrs-resolver** — resolver nativo
+
+### 3. Levantar Supabase local
 
 ```bash
 pnpm supabase:bootstrap:local
 ```
 
-3. Aplica entorno local de Supabase sobre `.env.local` (con backup automático):
+Esto genera migraciones, levanta contenedores Docker, aplica el esquema y crea `.env.local.supabase`.
+
+**Requisitos:** Docker Desktop corriendo. Puerto 54323 disponible.
+
+### 4. Aplicar variables de entorno
 
 ```bash
 pnpm supabase:env:apply
 ```
 
-4. Arranca la app:
+Esto aplica `.env.local.supabase` sobre `.env.local` (guarda backup automático).
+
+### 5. Arrancar la app
 
 ```bash
 pnpm dev
 ```
 
-5. Accede a:
-   - App: `http://localhost:3000`
-   - Supabase Studio: `http://127.0.0.1:54323`
-   - Inbucket (emails locales de auth): `http://127.0.0.1:54324`
+### URLs locales
 
-## Flujo manual (si necesitas debug paso a paso)
+| Servicio | URL |
+|---|---|
+| App | `http://localhost:3000` |
+| Supabase Studio | `http://127.0.0.1:54323` |
+| Inbucket (emails auth) | `http://127.0.0.1:54324` |
+
+## Troubleshooting
+
+### `pnpm install` falla con `ERR_PNPM_IGNORED_BUILDS`
+
+Ejecuta `pnpm approve-builds` y selecciona los paquetes necesarios. Luego re-ejecuta `pnpm install`.
+
+### `supabase` command not found
+
+El CLI de Supabase no se descargó. Causas posibles:
+- No ejecutaste `pnpm approve-builds`
+- Sin conexión a internet durante la instalación
+- Docker Desktop no está corriendo
+
+Solución: `pnpm approve-builds` → `pnpm install` → reintenta bootstrap.
+
+### Contenedor `supabase_storage` unhealthy
+
+Este proyecto tiene el storage desactivado (`supabase/config.toml: [storage] enabled = false`) porque no usa almacenamiento de ficheros. Si ves este error en una versión antigua, actualiza a la última versión del repositorio.
+
+### `.env.local.supabase` no existe
+
+El bootstrap falló. Ejecuta: `pnpm supabase:bootstrap:local`
+
+## Flujo manual (debug paso a paso)
 
 ```bash
 pnpm supabase:prepare:migrations
@@ -53,12 +115,14 @@ pnpm dev
 
 ## Qué hace cada comando
 
-1. `supabase:prepare:migrations`: transforma `docs/supabase/sql/*.sql` en migraciones locales ejecutables por CLI.
-2. `supabase:start`: levanta contenedores locales de Supabase.
-3. `supabase:db:reset:local`: recrea la DB local y aplica todas las migraciones.
-4. `supabase:env:local`: genera `.env.local.supabase` con `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY`.
-5. `supabase:env:apply`: aplica `.env.local.supabase` sobre `.env.local` y guarda backup automático en `.env.local.backup`.
-6. `supabase:env:restore`: restaura tu `.env.local` original tras pruebas locales.
+| Comando | Descripción |
+|---|---|
+| `supabase:prepare:migrations` | Transforma `docs/supabase/sql/*.sql` en migraciones ejecutables |
+| `supabase:start` | Levanta contenedores Docker de Supabase |
+| `supabase:db:reset:local` | Recrea la DB local y aplica migraciones |
+| `supabase:env:local` | Genera `.env.local.supabase` con keys locales |
+| `supabase:env:apply` | Aplica `.env.local.supabase` sobre `.env.local` (con backup) |
+| `supabase:env:restore` | Restaura `.env.local` original |
 
 ## Seguridad de secretos
 
