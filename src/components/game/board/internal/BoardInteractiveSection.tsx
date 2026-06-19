@@ -28,6 +28,7 @@ export function BoardInteractiveSection({ board, screen, isMobile, suppressComba
       hasNormalSummonedThisTurn={board.gameState.hasNormalSummonedThisTurn}
       selectedCard={board.selectedCard}
       playingCard={board.playingCard}
+      stagedCardId={board.stagedCardId}
       activeAttackerId={board.activeAttackerId}
       selectedBoardEntityInstanceId={board.selectedBoardEntityInstanceId}
       revealedEntities={board.revealedEntities}

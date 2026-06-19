@@ -64,6 +64,7 @@ export function mockDefaultUseBoardReturn() {
     selectedCard: null,
     selectedBoardEntityInstanceId: null,
     playingCard: null,
+    stagedCardId: null,
     isHistoryOpen: false,
     activeAttackerId: null,
     revealedEntities: [],

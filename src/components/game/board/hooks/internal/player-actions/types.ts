@@ -27,6 +27,7 @@ export interface IUsePlayerActionsParams {
   setPendingEntityReplacement: (value: IPendingZoneReplacement | null) => void;
   setPendingEntityReplacementTargetId: (value: string | null) => void;
   setPendingFusionSummon: (value: { cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null) => void;
+  setStagedCardId: (value: string | null) => void;
   setLastError: (value: IBoardUiError | null) => void;
 }
 

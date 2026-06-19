@@ -18,10 +18,12 @@ type IExecutePlayActionParams = Pick<
   | "setActiveAttackerId"
   | "setPendingEntityReplacement"
   | "setPendingEntityReplacementTargetId"
-  | "setIsAnimating"
-  | "setLastError"
+  | "setPlayingCard"
   | "setSelectedCard"
   | "setSelectedBoardEntityInstanceId"
+  | "setStagedCardId"
+  | "setIsAnimating"
+  | "setLastError"
   | "setRevealedEntities"
 >;
 
@@ -36,10 +38,12 @@ export function useExecutePlayAction({
   setActiveAttackerId,
   setPendingEntityReplacement,
   setPendingEntityReplacementTargetId,
-  setIsAnimating,
-  setLastError,
+  setPlayingCard,
   setSelectedCard,
   setSelectedBoardEntityInstanceId,
+  setStagedCardId,
+  setIsAnimating,
+  setLastError,
   setRevealedEntities,
 }: IExecutePlayActionParams) {
   const emitLocalAction = useLocalActionEmitter();
@@ -58,6 +62,13 @@ export function useExecutePlayAction({
       const selectedCardReference = playingCard.runtimeId ?? playingCard.id;
 
       if (playingCard.type === "ENTITY" && (mode === "ATTACK" || mode === "DEFENSE") && gameState.playerA.activeEntities.length >= 3) {
+        // Deseleccionar la carta de mano para que no tape el diálogo de reemplazo.
+        // stagedCardId mantiene un borde sutil para que el jugador sepa cuál está jugando.
+        setSelectedCard(null);
+        setSelectedBoardEntityInstanceId(null);
+        setPlayingCard(null);
+        setActiveAttackerId(null);
+        setStagedCardId(playingCard.runtimeId ?? playingCard.id);
         attemptZoneReplacementOnFull({
           gameState,
           selectedCardReference,
@@ -72,6 +83,12 @@ export function useExecutePlayAction({
       }
 
       if ((playingCard.type === "EXECUTION" || playingCard.type === "TRAP") && gameState.playerA.activeExecutions.length >= 3) {
+        // Misma lógica: deseleccionar mano y marcar staged para zona de ejecuciones.
+        setSelectedCard(null);
+        setSelectedBoardEntityInstanceId(null);
+        setPlayingCard(null);
+        setActiveAttackerId(null);
+        setStagedCardId(playingCard.runtimeId ?? playingCard.id);
         attemptZoneReplacementOnFull({
           gameState,
           selectedCardReference,
@@ -127,10 +144,12 @@ export function useExecutePlayAction({
       setActiveAttackerId,
       setPendingEntityReplacement,
       setPendingEntityReplacementTargetId,
-      setIsAnimating,
-      setLastError,
+      setPlayingCard,
       setSelectedCard,
       setSelectedBoardEntityInstanceId,
+      setStagedCardId,
+      setIsAnimating,
+      setLastError,
       setRevealedEntities,
     ],
   );
