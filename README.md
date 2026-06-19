@@ -1,8 +1,8 @@
-<!-- README.md - Guía principal profesional de AI-GI-OH como producto en producción v1.0.0. -->
+<!-- README.md - Guía principal de AI-GI-OH como producto en producción v1.3.0. -->
 # AI-GI-OH
 
 <p align="center">
-  <strong>Producto en producción · v1.1.0</strong><br/>
+  <strong>Producto en producción · v1.3.0</strong><br/>
   Juego táctico de cartas con motor desacoplado, arquitectura por capas y flujo profesional de calidad.
 </p>
 
@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-06b6d4">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.3.0-06b6d4">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black">
   <img alt="React" src="https://img.shields.io/badge/React-19-149eca">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-Strict-3178c6">
@@ -27,15 +27,13 @@
 2. [Vista rápida del producto](#vista-rápida-del-producto)
 3. [Stack tecnológico](#stack-tecnológico)
 4. [Inicio rápido local (5 min)](#inicio-rápido-local-5-min)
-5. [Contribución profesional](#contribución-profesional)
-6. [Despliegue profesional](#despliegue-profesional)
-7. [Variables de entorno](#variables-de-entorno)
-8. [Scripts de ingeniería](#scripts-de-ingeniería)
-9. [Arquitectura y estructura](#arquitectura-y-estructura)
-10. [Módulos funcionales](#módulos-funcionales)
-11. [Calidad y merge](#calidad-y-merge)
-12. [Presentación TFM](#presentación-tfm)
-13. [Mapa de documentación](#mapa-de-documentación)
+5. [Cómo contribuir](#cómo-contribuir)
+6. [Variables de entorno](#variables-de-entorno)
+7. [Scripts de ingeniería](#scripts-de-ingeniería)
+8. [Arquitectura y estructura](#arquitectura-y-estructura)
+9. [Módulos funcionales](#módulos-funcionales)
+10. [Calidad y merge](#calidad-y-merge)
+11. [Mapa de documentación](#mapa-de-documentación)
 
 ## Qué es AI-GI-OH
 
@@ -114,24 +112,17 @@ URLs locales:
 - Hub: `http://localhost:3000/hub`
 - Supabase Studio: `http://127.0.0.1:54323`
 
-## Contribución profesional
+## Cómo contribuir
 
-Antes de tocar código, debes seguir la guía oficial:
+Lee la guía completa antes de tocar código:
 
 - [CONTRIBUTING.md](./CONTRIBUTING.md)
 
-Flujo estándar (detalle completo en [docs/GUIA_FLUJO_PRODUCCION.md](./docs/GUIA_FLUJO_PRODUCCION.md)):
+Flujo resumido:
 
-- **Mantenedor (propietario):** push directo a `develop`/`main` (tiene bypass); despliega a producción con `git push origin develop:main` (fast-forward).
-- **Contribuidor externo:** fork → rama → **PR a `main`** → el check `quality` debe pasar → **el mantenedor aprueba** (1 review obligatoria) → merge por Squash/Rebase.
-
-Pasos de un cambio:
-1. Crear branch desde `develop` (o trabajar en `develop` si eres el mantenedor).
-2. Implementar cambio con tests co-localizados.
-3. Ejecutar gates locales.
-4. Publicar (push directo o PR según el rol).
-
-Validación mínima previa a PR:
+1. Haz fork y crea una rama desde `main`.
+2. Implementa el cambio con tests co-localizados.
+3. Ejecuta los gates locales:
 
 ```bash
 pnpm lint
@@ -140,29 +131,7 @@ pnpm test:coverage
 pnpm build
 ```
 
-## Despliegue profesional
-
-Guía completa:
-
-- [docs/GUIA_DESPLIEGUE_PROFESIONAL.md](./docs/GUIA_DESPLIEGUE_PROFESIONAL.md)
-
-Onboarding técnico obligatorio para contributors:
-
-- [CONTRIBUTING.md](./CONTRIBUTING.md)
-
-Checklist resumida:
-
-1. Configurar variables de entorno en Vercel y Supabase.
-2. Verificar callbacks de auth (`/auth/callback`).
-3. Confirmar que quality gates están en verde.
-4. Publicar cambios vía flujo de PR y merge.
-5. Crear release/tag desde versión de `package.json`.
-
-Documentación relacionada:
-
-- [docs/GUIA_FLUJO_PRODUCCION.md](./docs/GUIA_FLUJO_PRODUCCION.md)
-- [docs/GUIA_RELEASES.md](./docs/GUIA_RELEASES.md)
-- [CHANGELOG.md](./CHANGELOG.md)
+4. Abre un PR a `main`. El check `quality` debe pasar y el mantenedor aprobará antes del merge.
 
 ## Variables de entorno
 
@@ -262,7 +231,7 @@ Referencias:
 - Market (packs, listings y compra).
 - Story (mapa, nodos, eventos y duelos).
 - Academy (tutorial y training).
-- Multiplayer (entrypoint en evolución).
+- Multiplayer (partidas 1v1 en tiempo real con ELO y matchmaking).
 - Admin dashboard de contenido.
 
 ## Calidad y merge
@@ -280,12 +249,6 @@ Criterios adicionales:
 - Tests junto al código (`co-location`).
 - Documentación en español actualizada.
 - Cumplimiento de [Agents.md](./Agents.md).
-
-## Presentación TFM
-
-- Ruta interna: `/presentacion-tfm`
-- URL pública: `https://ai-gi-oh.vercel.app/presentacion-tfm`
-- Guía: [docs/GUIA_PRESENTACION_TFM_WEB.md](./docs/GUIA_PRESENTACION_TFM_WEB.md)
 
 ## Mapa de documentación
 
@@ -319,3 +282,7 @@ Memoria Engram:
 
 - [docs/engram/engram-guia.md](./docs/engram/engram-guia.md)
 - [skills/engram-memory-protocol/SKILL.md](./skills/engram-memory-protocol/SKILL.md)
+
+Multiplayer:
+
+- [docs/MULTIPLAYER_GUIDE.md](./docs/MULTIPLAYER_GUIDE.md)

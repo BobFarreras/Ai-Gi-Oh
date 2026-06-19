@@ -9,14 +9,13 @@ interface IStoryTouchListLike {
 }
 
 /**
- * Aplica zoom por rueda y pinch con corrección de centro para evitar saltos de cámara.
+ * Aplica zoom por rueda y pinch notificando al caller para que centre la cámara en el jugador.
  */
 export function useStoryMapGestureControls(input: {
   getZoom: () => number;
   applyWheelZoom: (deltaY: number) => number;
   applyPinchZoom: (previousDistance: number, currentDistance: number) => number;
-  keepCameraCenterOnZoom: (previousZoom: number, nextZoom: number) => void;
-  applyCameraBounds: () => void;
+  onZoomChanged: (nextZoom: number) => void;
 }) {
   const pinchDistanceRef = useRef<number | null>(null);
 
@@ -31,18 +30,14 @@ export function useStoryMapGestureControls(input: {
     const previousDistance = pinchDistanceRef.current;
     pinchDistanceRef.current = currentDistance;
     if (!previousDistance) return;
-    const previousZoom = input.getZoom();
     const nextZoom = input.applyPinchZoom(previousDistance, currentDistance);
-    input.keepCameraCenterOnZoom(previousZoom, nextZoom);
-    input.applyCameraBounds();
+    input.onZoomChanged(nextZoom);
   };
 
   return {
     onWheel: (deltaY: number) => {
-      const previousZoom = input.getZoom();
       const nextZoom = input.applyWheelZoom(deltaY);
-      input.keepCameraCenterOnZoom(previousZoom, nextZoom);
-      input.applyCameraBounds();
+      input.onZoomChanged(nextZoom);
     },
     onTouchStart: handlePinchZoom,
     onTouchMove: handlePinchZoom,

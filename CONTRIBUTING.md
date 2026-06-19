@@ -38,6 +38,7 @@ pnpm dev
 5. Accede a:
    - App: `http://localhost:3000`
    - Supabase Studio: `http://127.0.0.1:54323`
+   - Inbucket (emails locales de auth): `http://127.0.0.1:54324`
 
 ## Flujo manual (si necesitas debug paso a paso)
 
@@ -77,5 +78,5 @@ pnpm build
 ## Notas para cambios de base de datos
 
 1. SQL canónico del proyecto: `docs/supabase/sql`.
-2. Si añades una nueva fase SQL, usa prefijo incremental (`045_...sql`, `046_...sql`, etc.).
+2. Si añades una nueva fase SQL, usa prefijo incremental (`049_...sql`, `050_...sql`, etc.). El último archivo existente es `048_phase_player_profiles_public_read.sql`.
 3. Ejecuta de nuevo `pnpm supabase:prepare:migrations` para validar que el bootstrap local sigue siendo reproducible.

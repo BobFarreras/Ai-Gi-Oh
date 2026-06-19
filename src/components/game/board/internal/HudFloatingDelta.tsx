@@ -37,7 +37,7 @@ export function HudFloatingDelta({ value, sign, isOpponent, color, pulseKey = nu
         exit={{ opacity: 0, scale: 1 }}
         transition={{ duration: 2.05, ease: "easeOut" }}
         className={cn(
-          "absolute z-[200] font-black text-6xl leading-none",
+          "absolute z-[200] font-black text-3xl sm:text-5xl md:text-6xl leading-none",
           resolveToneClass(color),
           resolveAnchorClass(isOpponent, anchor),
         )}

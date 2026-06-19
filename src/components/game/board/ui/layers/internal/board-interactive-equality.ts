@@ -1,5 +1,6 @@
 // src/components/game/board/ui/layers/internal/board-interactive-equality.ts - Comparador memoizado para evitar re-renders innecesarios del layer interactivo.
 import { IBoardInteractiveLayerProps } from "@/components/game/board/ui/layers/internal/board-interactive-types";
+import { areIdListsEqual } from "@/components/game/board/internal/player-hand/hand-props-equality";
 
 export function areEqualBoardInteractiveLayerProps(previous: IBoardInteractiveLayerProps, next: IBoardInteractiveLayerProps): boolean {
   const shouldSyncSidePanels = !next.isMobileLayout && (next.isHistoryOpen || Boolean(next.selectedCard));
@@ -15,9 +16,9 @@ export function areEqualBoardInteractiveLayerProps(previous: IBoardInteractiveLa
     previous.playingCard === next.playingCard &&
     previous.activeAttackerId === next.activeAttackerId &&
     previous.revealedEntities === next.revealedEntities &&
-    previous.pendingEntitySelectionIds === next.pendingEntitySelectionIds &&
-    previous.pendingFusionSelectedEntityIds === next.pendingFusionSelectedEntityIds &&
-    previous.pendingDiscardCardIds === next.pendingDiscardCardIds &&
+    areIdListsEqual(previous.pendingEntitySelectionIds, next.pendingEntitySelectionIds) &&
+    areIdListsEqual(previous.pendingFusionSelectedEntityIds, next.pendingFusionSelectedEntityIds) &&
+    areIdListsEqual(previous.pendingDiscardCardIds, next.pendingDiscardCardIds) &&
     previous.isHistoryOpen === next.isHistoryOpen &&
     previous.isPlayerTurn === next.isPlayerTurn &&
     previous.canActivateSelectedExecution === next.canActivateSelectedExecution &&
@@ -25,7 +26,7 @@ export function areEqualBoardInteractiveLayerProps(previous: IBoardInteractiveLa
     previous.canSetSelectedEntityToAttack === next.canSetSelectedEntityToAttack &&
     previous.lastDamageTargetPlayerId === next.lastDamageTargetPlayerId &&
     previous.lastDamageEventId === next.lastDamageEventId &&
-    previous.lastBuffTargetEntityIds === next.lastBuffTargetEntityIds &&
+    areIdListsEqual(previous.lastBuffTargetEntityIds, next.lastBuffTargetEntityIds) &&
     previous.lastBuffStat === next.lastBuffStat &&
     previous.lastBuffAmount === next.lastBuffAmount &&
     previous.lastBuffEventId === next.lastBuffEventId &&

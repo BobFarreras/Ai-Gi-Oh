@@ -97,6 +97,23 @@
 32. `public.story_duel_fusion_cards`:
    - bloque de 2 slots de fusión por duelo Story (`slot_index` 0..1).
    - permite definir rival con deck de fusión data-driven por duelo.
+33. `public.match_sessions`:
+   - sesiones de partida 1v1 (`player_a_id`, `player_b_id`, `status`, `seed`).
+   - Realtime habilitado con `REPLICA IDENTITY FULL`.
+34. `public.match_actions`:
+   - log inmutable de acciones por partida (`sequence`, `action_type`, `payload`).
+   - clave única `(match_id, sequence)` para idempotencia.
+   - Realtime habilitado.
+35. `public.player_invitations`:
+   - invitaciones entre jugadores (`from_id`, `to_id`, `status`, `deck_ids`).
+   - expiran a los 2 minutos por defecto.
+   - Realtime habilitado.
+36. `public.matchmaking_queue`:
+   - cola de emparejamiento aleatorio; `player_id` como PK (1 entrada por jugador).
+   - la función `public.find_or_create_match()` empareja atómicamente usando `FOR UPDATE SKIP LOCKED`.
+37. `public.player_profiles.elo_rating / .wins / .losses`:
+   - columnas de ranking PvP añadidas a `player_profiles`.
+   - `elo_rating` inicial 1200; índice descendente para leaderboard.
 
 ## Fase 2 (Perfil y Progreso)
 
@@ -437,6 +454,52 @@
    - escritura reservada a `service_role`.
 5. Objetivo funcional:
    - permitir edición/admin de `Fusion 1` y `Fusion 2` por duelo y cargarlas en runtime de combate Story.
+
+## Fase M.1 (Infraestructura de Base Multijugador)
+
+1. Ejecuta `docs/supabase/sql/045_phase_multiplayer_infrastructure.sql`.
+2. Verifica tablas:
+   - `public.match_sessions`
+   - `public.match_actions`
+   - `public.player_invitations`
+3. Verifica Realtime:
+   - las 3 tablas tienen `REPLICA IDENTITY FULL` y están en `supabase_realtime`.
+4. Verifica RLS:
+   - `match_sessions`: solo los participantes (`player_a_id` o `player_b_id`) pueden leer/escribir.
+   - `match_actions`: inserción solo si la partida está `ACTIVE` y el jugador es participante.
+   - `player_invitations`: el remitente inserta, el destinatario puede actualizar.
+
+## Fase M.2 (ELO y Clasificación)
+
+1. Ejecuta `docs/supabase/sql/046_phase_elo_ranking.sql`.
+2. Verifica columnas en `public.player_profiles`:
+   - `elo_rating` (integer, default 1200)
+   - `wins` (integer, default 0)
+   - `losses` (integer, default 0)
+3. Verifica índice:
+   - `idx_player_profiles_elo_rating` (descendente) para consultas de ranking.
+
+## Fase M.3 (Cola de Emparejamiento)
+
+1. Ejecuta `docs/supabase/sql/047_phase_matchmaking_queue.sql`.
+2. Verifica tabla:
+   - `public.matchmaking_queue` (PK = `player_id`, máximo 1 entrada por jugador)
+3. Verifica función atómica:
+   - `public.find_or_create_match(p_player_id uuid, p_deck_ids text[]) returns jsonb`
+   - devuelve `{ matched: false }` si no hay rival, o `{ matched: true, match_id: uuid }` si empareja.
+   - usa `FOR UPDATE SKIP LOCKED` para evitar condiciones de carrera.
+4. Endpoints app:
+   - `POST /api/multiplayer/matchmaking/join` — entra en la cola.
+   - `POST /api/multiplayer/matchmaking/leave` — abandona la cola.
+
+## Fase M.4 (Lectura Pública de Perfiles)
+
+1. Ejecuta `docs/supabase/sql/048_phase_player_profiles_public_read.sql`.
+2. Verifica política:
+   - `player_profiles_select_authenticated`: cualquier usuario autenticado puede leer perfiles de otros.
+3. Necesario para:
+   - mostrar el nickname del rival en invitaciones, lobby y ranking.
+   - sin esta fase, la lectura de perfiles ajenos estaba bloqueada por RLS.
 
 ## Notas
 

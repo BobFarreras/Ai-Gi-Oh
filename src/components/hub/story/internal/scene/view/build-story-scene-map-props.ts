@@ -31,6 +31,7 @@ export function buildStorySceneMapProps(input: {
   onMoveSelectedNode: () => void;
   onRequestCenterPlayer: () => void;
   onExitToHub: () => void;
+  isExiting?: boolean;
   onToggleSoundtrackMute: () => void;
   onRewardCollectAnimationComplete: () => void;
   onRetreatAnimationComplete: () => void;
@@ -57,6 +58,7 @@ export function buildStorySceneMapProps(input: {
     onMoveSelectedNode: input.onMoveSelectedNode,
     onRequestCenterPlayer: input.onRequestCenterPlayer,
     onExitToHub: input.onExitToHub,
+    isExiting: input.isExiting,
     isSoundtrackMuted: input.isSoundtrackMuted,
     onToggleSoundtrackMute: input.onToggleSoundtrackMute,
     onRewardCollectAnimationComplete: input.onRewardCollectAnimationComplete,
