@@ -42,6 +42,7 @@ export interface IStorySceneMapViewProps {
   onMoveSelectedNode?: () => void;
   onRequestCenterPlayer?: () => void;
   onExitToHub?: () => void;
+  isExiting?: boolean;
   isSoundtrackMuted?: boolean;
   onToggleSoundtrackMute?: () => void;
   onRewardCollectAnimationComplete: () => void;

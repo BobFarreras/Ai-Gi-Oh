@@ -29,6 +29,7 @@ export function StoryCircuitMap({
   isSoundtrackMuted = false,
   onToggleSoundtrackMute,
   onExitToHub,
+  isExiting = false,
   onSelectNode,
   onRewardCollectAnimationComplete,
   onRetreatAnimationComplete,
@@ -43,11 +44,11 @@ export function StoryCircuitMap({
     retreatingNodeId,
     isMobileVerticalFlow,
   });
-  const { zoom, setZoom, applyWheelZoom, applyPinchZoom } = useStoryMapZoom();
+  const { zoom, setZoom, applyWheelZoom, applyPinchZoom, applyStepZoom } = useStoryMapZoom(isMobileVerticalFlow);
   const visualStance = avatarVisualTarget?.stance ?? "CENTER"; const avatarSideOffset = resolveStoryAvatarSideOffset(visualStance, avatarVisualTarget?.sideDirection);
   const avatarAnchorX = mapRuntime.avatarPos.x + avatarSideOffset.x;
   const avatarAnchorY = mapRuntime.avatarPos.y + avatarSideOffset.y;
-  const { cameraX, cameraY, cinematicScale, avatarX, avatarY, avatarScale, centerCameraOnAvatarNode, keepCameraCenterOnZoom } = useStoryCircuitMotion({
+  const { cameraX, cameraY, cinematicScale, avatarX, avatarY, avatarScale, centerCameraOnAvatarNode } = useStoryCircuitMotion({
     mapContainerRef,
     avatarPos: mapRuntime.avatarPos,
     avatarAnchor: { x: avatarAnchorX, y: avatarAnchorY },
@@ -66,9 +67,17 @@ export function StoryCircuitMap({
     getZoom: zoom.get,
     applyWheelZoom,
     applyPinchZoom,
-    keepCameraCenterOnZoom,
-    applyCameraBounds,
+    // Zoom always re-centers on the player node (instant, no reset) so the avatar stays anchored.
+    onZoomChanged: (nextZoom) => centerCameraOnAvatarNode(nextZoom, false, false),
   });
+  const handleZoomIn = () => {
+    const nextZoom = applyStepZoom("in");
+    centerCameraOnAvatarNode(nextZoom, false, true);
+  };
+  const handleZoomOut = () => {
+    const nextZoom = applyStepZoom("out");
+    centerCameraOnAvatarNode(nextZoom, false, true);
+  };
   return (
     <div
       ref={mapContainerRef}
@@ -119,10 +128,13 @@ export function StoryCircuitMap({
       />
       <StoryMapZoomControls
         onCenterPlayerNode={centerCameraOnAvatarNode}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
         isSoundtrackMuted={isSoundtrackMuted}
         onToggleSoundtrackMute={onToggleSoundtrackMute ?? (() => undefined)}
         isMobileVerticalFlow={isMobileVerticalFlow}
         onExitToHub={onExitToHub}
+        isExiting={isExiting}
       />
     </div>
   );

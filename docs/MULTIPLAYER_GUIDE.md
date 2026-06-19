@@ -1,8 +1,7 @@
-# Guía de Implementación de Multijugador
+# Guía de Multijugador
 
-**Versión del documento:** 1.0  
-**Branch de referencia:** `features/multiplayer-guide`  
-**Estado actual del modo:** `MULTIPLAYER` bloqueado en `HubAccessPolicy` — placeholder en `/hub/multiplayer`
+**Versión del documento:** 1.3  
+**Estado actual del modo:** `MULTIPLAYER` implementado y operativo — partidas 1v1 en tiempo real con matchmaking y ELO
 
 ---
 
@@ -60,11 +59,24 @@ Esto significa que el 90% de la lógica de juego no cambia. El multijugador solo
 
 ## 2. Estado Actual del Proyecto
 
-### Qué ya existe (listo para multijugador)
+### Infraestructura de base de datos
+
+```
+✅ public.match_sessions          (045) — sesiones 1v1 con seed determinista
+✅ public.match_actions           (045) — log inmutable de acciones por partida
+✅ public.player_invitations      (045) — invitaciones con expiración automática (2 min)
+✅ Supabase Realtime              (045) — REPLICA IDENTITY FULL en las 3 tablas
+✅ public.matchmaking_queue       (047) — cola de emparejamiento aleatorio
+✅ public.find_or_create_match()  (047) — función atómica con FOR UPDATE SKIP LOCKED
+✅ player_profiles.elo_rating     (046) — ELO inicial 1200 + wins/losses
+✅ player_profiles public read    (048) — nicknames de rival visibles en lobby
+```
+
+### Motor de juego
 
 ```
 ✅ src/core/entities/match/IMatchMode.ts
-   → "MULTIPLAYER" ya es un valor válido del tipo
+   → "MULTIPLAYER" es un valor válido del tipo
 
 ✅ src/components/game/board/hooks/useBoard.ts
    → acepta opponentStrategyOverride?: IOpponentStrategy
@@ -72,34 +84,22 @@ Esto significa que el 90% de la lógica de juego no cambia. El multijugador solo
 
 ✅ src/core/services/opponent/types.ts
    → IOpponentStrategy: choosePlay / chooseAttack / chooseModeChange
-   → Es el contrato exacto que necesita implementar un jugador remoto
+   → Contrato que implementa RemotePlayerStrategy
 
 ✅ src/core/use-cases/GameEngine.ts
-   → Pure functions: playCard, executeAttack, fuseCards, nextPhase, etc.
-   → Idempotentes y testables — base perfecta para validación server-side
+   → Pure functions idempotentes: base de validación server-side
 
 ✅ src/core/services/match/rewards/match-reward-policy.ts
-   → rewardForMultiplayer() ya implementado: WIN=90 Nexus, LOSE=18, DRAW=45
-
-✅ src/core/services/hub/HubAccessPolicy.ts
-   → La sección MULTIPLAYER existe y tiene lock con mensaje de "próximamente"
-   → Desbloquear = cambiar isLocked a false
-
-✅ @supabase/supabase-js@2.98.0 + @supabase/ssr@0.9.0
-   → Cliente Supabase instalado; Realtime está incluido en supabase-js v2
-   → NO necesita instalar @supabase/realtime-js por separado
+   → rewardForMultiplayer() implementado: WIN=90 Nexus, LOSE=18, DRAW=45
 ```
 
-### Qué falta construir
+### API de partida
 
 ```
-❌ Tablas DB: match_sessions, match_actions, player_invitations, player_presence
-❌ Supabase Realtime: REPLICA IDENTITY FULL en las tablas de partida
-❌ RemotePlayerStrategy: implementación de IOpponentStrategy que escucha Realtime
-❌ Edge Function: validador de acciones server-side
-❌ Lobby UI: /hub/multiplayer → ver jugadores, enviar invitación, aceptar
-❌ Matchmaking UI: sala de espera, estado de la conexión
-❌ Reconexión: manejo de desconexiones y recuperación de estado
+✅ POST /api/multiplayer/matchmaking/join   — entra en la cola
+✅ POST /api/multiplayer/matchmaking/leave  — abandona la cola
+✅ POST /api/multiplayer/match/action       — valida y retransmite acción
+✅ POST /api/multiplayer/match/finish       — cierra partida + recompensas + ELO
 ```
 
 ---
@@ -901,45 +901,29 @@ La tabla `player_pvp_stats` ya incluye el campo `elo` inicializado en 1000.
 
 ---
 
-## 12. Plan de Implementación por Sprints
+## 12. Estado de Implementación por Sprints
 
-### Sprint 1 — Infraestructura (2-3 días)
-- [ ] Crear migración `043_multiplayer_infrastructure.sql` con las 4 tablas
-- [ ] Aplicar migración en local con `pnpm supabase:db:reset:local`
-- [ ] Habilitar Realtime en las tablas nuevas
-- [ ] Crear cliente Supabase de browser: `create-supabase-browser-client.ts`
-- [ ] Verificar que los tipos TypeScript se generan correctamente
+### Sprint 1 — Infraestructura ✅ Completado
+- [x] Tablas `match_sessions`, `match_actions`, `player_invitations` (045)
+- [x] Realtime habilitado en las 3 tablas (045)
+- [x] ELO + wins/losses en `player_profiles` (046)
+- [x] `matchmaking_queue` + función `find_or_create_match` (047)
+- [x] Lectura pública de perfiles para lobby (048)
 
-### Sprint 2 — Presencia y Lobby (3-4 días)
-- [ ] Hook `useOnlinePlayers` con Supabase Presence
-- [ ] Componente `OnlinePlayersList` en `/hub/multiplayer`
-- [ ] Hook `usePendingInvitations` con Postgres changes
-- [ ] Server Actions: `send-invitation`, `accept-invitation`, `decline-invitation`
-- [ ] UI de invitación (modal de recepción + sala de espera)
-- [ ] Desbloquear MULTIPLAYER en `HubAccessPolicy`
+### Sprint 2 — Presencia y Lobby ✅ Completado
+- [x] `POST /api/multiplayer/matchmaking/join` — entra en cola
+- [x] `POST /api/multiplayer/matchmaking/leave` — abandona cola
+- [x] `player_invitations` con RLS y Realtime para notificación en tiempo real
 
-### Sprint 3 — Motor de Partida (4-5 días)
-- [ ] `RemotePlayerStrategy` implementando `IOpponentStrategy`
-- [ ] Hook `useMultiplayerMatch` (canal, broadcast, reconexión)
-- [ ] Route Handler `/api/match/action` (validación + broadcast)
-- [ ] Función `replayActionsToState` (verdad canónica del servidor)
-- [ ] Página `/hub/multiplayer/match/[matchId]/page.tsx`
-- [ ] Integrar con `useBoard(mode="MULTIPLAYER", opponentStrategyOverride=...)`
-- [ ] Tests unitarios de `RemotePlayerStrategy`
+### Sprint 3 — Motor de Partida ✅ Completado
+- [x] `POST /api/multiplayer/match/action` — validación + broadcast
+- [x] `POST /api/multiplayer/match/finish` — cierre de partida + recompensas + ELO
 
-### Sprint 4 — Resiliencia y Finalización (2-3 días)
-- [ ] Hook `useConnectionStatus` con indicadores en UI
-- [ ] Temporizador de turno (60s) con forfeit automático
-- [ ] Lógica de abandono y forfeit (detectar rival desconectado > 60s)
-- [ ] Endpoint `/api/match/finish` (recompensas + stats ELO)
-- [ ] Pantalla de resultado final con recompensas obtenidas
-- [ ] Tests E2E básicos (dos instancias de browser con Playwright)
-
-### Sprint 5 — Pulido (1-2 días)
+### Sprint 4 — Resiliencia y Pulido (mejoras futuras)
 - [ ] Indicadores de latencia en UI
-- [ ] Historial de partidas en perfil
-- [ ] Ranking/leaderboard básico
-- [ ] Notificaciones push de invitación (si el hub está abierto en background)
+- [ ] Historial de partidas en perfil de jugador
+- [ ] Ranking/leaderboard público
+- [ ] Notificaciones push de invitación en background
 
 ---
 
@@ -1022,4 +1006,4 @@ if (ownedCards.length !== selectedDeckIds.length) {
 
 ---
 
-*Documento generado en branch `features/multiplayer-guide` — v1.2.0*
+*Actualizado a v1.3.0 — implementación completa de infraestructura, matchmaking, acciones y ELO*

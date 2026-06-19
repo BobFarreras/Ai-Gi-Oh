@@ -1,5 +1,5 @@
 // src/components/hub/story/internal/map/hooks/internal/use-story-circuit-motion-controls.ts - Controles de centrado y zoom de cámara para circuito Story.
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { animate } from "framer-motion";
 import { resolveStoryCameraCenterTarget } from "@/components/hub/story/internal/map/layout/story-circuit-map-geometry";
 import { IUseStoryCircuitMotionInput, IStoryCircuitMotionRefs, IStoryCircuitMotionValues } from "./use-story-circuit-motion-types";
@@ -12,6 +12,9 @@ export function useStoryCircuitMotionControls(
   refs: IStoryCircuitMotionRefs,
   values: IStoryCircuitMotionValues,
 ) {
+  const avatarAnchorRef = useRef(input.avatarAnchor);
+  avatarAnchorRef.current = input.avatarAnchor;
+
   const centerCameraOnAvatarNode = useCallback((zoomValue = input.zoom.get(), resetZoom = true, animated = true) => {
     if (!input.mapContainerRef.current) return;
     const anchor = input.currentNodeAnchor ?? input.avatarAnchor;
@@ -66,11 +69,12 @@ export function useStoryCircuitMotionControls(
     const previousScale = previousZoom * values.cinematicScale.get();
     const nextScale = nextZoom * values.cinematicScale.get();
     if (previousScale <= 0 || nextScale <= 0) return;
-    const centerX = input.mapContainerRef.current.clientWidth / 2;
-    const centerY = input.mapContainerRef.current.clientHeight / 2;
+    const anchor = avatarAnchorRef.current;
+    const anchorScreenX = anchor.x * previousScale + values.cameraX.get();
+    const anchorScreenY = anchor.y * previousScale + values.cameraY.get();
     const ratio = nextScale / previousScale;
-    values.cameraX.set(centerX - (centerX - values.cameraX.get()) * ratio);
-    values.cameraY.set(centerY - (centerY - values.cameraY.get()) * ratio);
+    values.cameraX.set(anchorScreenX - (anchorScreenX - values.cameraX.get()) * ratio);
+    values.cameraY.set(anchorScreenY - (anchorScreenY - values.cameraY.get()) * ratio);
   }, [input.mapContainerRef, values.cameraX, values.cameraY, values.cinematicScale]);
 
   return {

@@ -9,6 +9,8 @@ describe("StoryMapZoomControls", () => {
     render(
       <StoryMapZoomControls
         onCenterPlayerNode={() => undefined}
+        onZoomIn={() => undefined}
+        onZoomOut={() => undefined}
         isSoundtrackMuted={false}
         onToggleSoundtrackMute={() => undefined}
         isMobileVerticalFlow
@@ -24,6 +26,8 @@ describe("StoryMapZoomControls", () => {
     render(
       <StoryMapZoomControls
         onCenterPlayerNode={() => undefined}
+        onZoomIn={() => undefined}
+        onZoomOut={() => undefined}
         isSoundtrackMuted={false}
         onToggleSoundtrackMute={() => undefined}
       />,
