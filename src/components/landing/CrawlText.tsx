@@ -55,7 +55,8 @@ export function CrawlText({ accessCode, onSkip, onAction }: ICrawlTextProps) {
         initial={{ y: "100%" }}
         animate={{ y: "-150%" }}
         transition={{ duration: isMobile ? 30 : 45, ease: "linear" }}
-        onAnimationComplete={onSkip} // Cuando termina la animación, salta automáticamente
+        onAnimationComplete={onSkip}
+        style={{ willChange: "transform" }}
         className="w-full max-w-2xl px-6 text-center text-cyan-100 font-light tracking-wide leading-relaxed text-lg sm:text-xl pointer-events-none"
       >
         <p className="mb-12 text-2xl font-mono text-cyan-500">
