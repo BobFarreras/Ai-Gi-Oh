@@ -14,10 +14,19 @@ import path from "node:path";
  * Dependencias inyectables (para tests):
  * - platform: "win32" | "darwin" | "linux"
  * - repoRoot: raíz del repo
+ * - env: variables de entorno (para localizar scoop/brew)
  * - fileExists(path) -> boolean
  * - onPath(commandName) -> string | null  (ruta absoluta si está en PATH, null si no)
  *
- * Devuelve: { found, command, prefixArgs, source } donde source ∈ "local" | "global".
+ * Devuelve: { found, command, prefixArgs, source } donde source ∈ "local" | "global" | "system".
+ *
+ * @param {{
+ *   platform?: NodeJS.Platform,
+ *   repoRoot?: string,
+ *   env?: Record<string, string | undefined>,
+ *   fileExists?: (p: import("node:fs").PathLike) => boolean,
+ *   onPath?: (name: string) => string | null,
+ * }} [options]
  */
 export function resolveSupabaseCli({
   platform = process.platform,
@@ -55,7 +64,11 @@ export function resolveSupabaseCli({
   return { found: false, command: null, prefixArgs: [], source: null };
 }
 
-/** Rutas habituales donde scoop/brew/winget/choco dejan el binario `supabase`. */
+/**
+ * Rutas habituales donde scoop/brew/winget/choco dejan el binario `supabase`.
+ * @param {NodeJS.Platform} [platform]
+ * @param {Record<string, string | undefined>} [env]
+ */
 export function knownInstallLocations(platform = process.platform, env = process.env) {
   if (platform === "win32") {
     const home = env.USERPROFILE || env.HOME || "";
