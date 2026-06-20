@@ -36,10 +36,13 @@ export function resolveSupabaseCli({
   onPath = defaultOnPath,
 } = {}) {
   const isWindows = platform === "win32";
-  const binDir = path.join(repoRoot, "node_modules", ".bin");
+  // Usamos el módulo de path de la plataforma OBJETIVO (no la del host) para que los separadores
+  // sean correctos aunque el código corra en otro SO (p.ej. tests Windows ejecutados en CI Linux).
+  const p = isWindows ? path.win32 : path.posix;
+  const binDir = p.join(repoRoot, "node_modules", ".bin");
   const localCandidates = isWindows
-    ? [path.join(binDir, "supabase.cmd"), path.join(binDir, "supabase.CMD"), path.join(binDir, "supabase.exe"), path.join(binDir, "supabase.EXE")]
-    : [path.join(binDir, "supabase")];
+    ? [p.join(binDir, "supabase.cmd"), p.join(binDir, "supabase.CMD"), p.join(binDir, "supabase.exe"), p.join(binDir, "supabase.EXE")]
+    : [p.join(binDir, "supabase")];
 
   // 1) Binario local en node_modules/.bin.
   for (const candidate of localCandidates) {
@@ -75,17 +78,17 @@ export function knownInstallLocations(platform = process.platform, env = process
     const localAppData = env.LOCALAPPDATA || "";
     const locations = [];
     if (home) {
-      locations.push(path.join(home, "scoop", "shims", "supabase.exe"));
-      locations.push(path.join(home, "scoop", "shims", "supabase.cmd"));
-      locations.push(path.join(home, "scoop", "apps", "supabase", "current", "supabase.exe"));
+      locations.push(path.win32.join(home, "scoop", "shims", "supabase.exe"));
+      locations.push(path.win32.join(home, "scoop", "shims", "supabase.cmd"));
+      locations.push(path.win32.join(home, "scoop", "apps", "supabase", "current", "supabase.exe"));
     }
-    if (localAppData) locations.push(path.join(localAppData, "Microsoft", "WinGet", "Links", "supabase.exe"));
+    if (localAppData) locations.push(path.win32.join(localAppData, "Microsoft", "WinGet", "Links", "supabase.exe"));
     locations.push("C:\\ProgramData\\chocolatey\\bin\\supabase.exe");
     return locations;
   }
   const home = env.HOME || "";
   const locations = ["/opt/homebrew/bin/supabase", "/usr/local/bin/supabase", "/usr/bin/supabase"];
-  if (home) locations.push(path.join(home, ".local", "bin", "supabase"));
+  if (home) locations.push(path.posix.join(home, ".local", "bin", "supabase"));
   return locations;
 }
 

@@ -8,7 +8,7 @@ const repoRoot = "C:/repo";
 
 describe("resolveSupabaseCli", () => {
   it("prefiere el binario local de node_modules en Windows (.cmd)", () => {
-    const localCmd = path.join(repoRoot, "node_modules", ".bin", "supabase.cmd");
+    const localCmd = path.win32.join(repoRoot, "node_modules", ".bin", "supabase.cmd");
     const result = resolveSupabaseCli({
       platform: "win32",
       repoRoot,
@@ -33,7 +33,7 @@ describe("resolveSupabaseCli", () => {
   });
 
   it("encuentra supabase en scoop aunque NO esté en el PATH (caso del fallo real)", () => {
-    const scoopShim = "C:\\Users\\Boby\\scoop\\shims\\supabase.exe";
+    const scoopShim = path.win32.join("C:\\Users\\Boby", "scoop", "shims", "supabase.exe");
     const result = resolveSupabaseCli({
       platform: "win32",
       repoRoot,
@@ -71,7 +71,7 @@ describe("resolveSupabaseCli", () => {
   });
 
   it("resuelve el binario local sin extensión en Linux", () => {
-    const localBin = path.join(repoRoot, "node_modules", ".bin", "supabase");
+    const localBin = path.posix.join(repoRoot, "node_modules", ".bin", "supabase");
     const result = resolveSupabaseCli({
       platform: "linux",
       repoRoot,
