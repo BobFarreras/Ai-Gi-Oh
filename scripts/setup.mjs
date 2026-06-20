@@ -1,9 +1,10 @@
 // scripts/setup.mjs - Asistente interactivo de setup para contribuidores de AI-GI-OH.
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync } from "node:fs";
+import path from "node:path";
 import { createInterface } from "node:readline";
 import { ui, paint } from "./lib/cli-ui.mjs";
-import { resolveSupabaseCli, getSupabaseInstallHint } from "./lib/supabase-cli.mjs";
+import { resolveSupabaseCli, getSupabaseInstallHint, getSupabaseDownloadInfo, managedBinDir } from "./lib/supabase-cli.mjs";
 
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 
@@ -82,31 +83,65 @@ function detectPackageManager() {
   return null;
 }
 
+function downloadSupabaseCli() {
+  // Descarga el binario standalone desde GitHub releases a <repo>/.bin, sin instalar nada en el
+  // sistema. Usa curl y tar, presentes de serie en Windows 10+/macOS/Linux. Todos los SO usan .tar.gz.
+  const info = getSupabaseDownloadInfo();
+  const dir = managedBinDir();
+  mkdirSync(dir, { recursive: true });
+  const archivePath = path.join(dir, info.archiveName);
+
+  ui.step("Descargando CLI de Supabase", `v${info.version}`);
+  // En Windows, schannel suele fallar la comprobación de revocación del certificado
+  // (CRYPT_E_NO_REVOCATION_CHECK); --ssl-no-revoke la omite. En otros SO es inocuo.
+  const curlArgs = ["-fSL", "--retry", "3", "-o", archivePath, info.url];
+  if (process.platform === "win32") curlArgs.unshift("--ssl-no-revoke");
+  if (!run("curl", curlArgs)) {
+    ui.warn("No se pudo descargar el archivo (¿sin conexión o proxy/cert?).");
+    return false;
+  }
+  ui.step("Extrayendo binario");
+  if (!run("tar", ["-xzf", archivePath, "-C", dir])) {
+    ui.warn("No se pudo extraer el archivo descargado.");
+    return false;
+  }
+  try { rmSync(archivePath, { force: true }); } catch { /* no pasa nada */ }
+  return existsSync(path.join(dir, info.binaryName));
+}
+
 async function checkSupabaseCli() {
   ui.section("CLI de Supabase");
   let cli = resolveSupabaseCli();
   if (cli.found) {
-    const where = cli.source === "local" ? "en node_modules" : "instalado en el sistema";
+    const where = cli.source === "local" ? "en node_modules"
+      : cli.source === "managed" ? "descargado en .bin"
+      : "instalado en el sistema";
     ui.ok("CLI de Supabase detectado", where);
     return true;
   }
 
   ui.warn("CLI de Supabase no encontrado");
-  ui.note("Este proyecto NO descarga el binario vía npm (poco fiable en Windows).");
 
-  // Intento de instalación automática si hay un gestor de paquetes disponible.
-  const pm = detectPackageManager();
-  if (pm) {
-    ui.print();
-    ui.note(`Detectado ${pm.name}: puedo instalar el CLI de Supabase por ti.`);
-    if (await confirm(`¿Instalar el CLI de Supabase con ${pm.name} ahora?`)) {
-      for (const [command, args] of pm.commands) run(command, args);
+  // Opción universal (no instala nada en el sistema): descargar el binario a <repo>/.bin.
+  if (await confirm("¿Descargar el CLI de Supabase automáticamente? (no instala nada en el sistema)")) {
+    if (downloadSupabaseCli()) {
       cli = resolveSupabaseCli();
       if (cli.found) {
-        ui.ok("CLI de Supabase instalado correctamente");
+        ui.ok("CLI de Supabase descargado en .bin");
         return true;
       }
-      ui.warn("La instalación automática no completó. Hazlo a mano:");
+    }
+    ui.warn("La descarga automática no completó.");
+  }
+
+  // Alternativa: instalación con gestor de paquetes si está disponible.
+  const pm = detectPackageManager();
+  if (pm && (await confirm(`¿Instalar el CLI de Supabase con ${pm.name} en su lugar?`))) {
+    for (const [command, args] of pm.commands) run(command, args);
+    cli = resolveSupabaseCli();
+    if (cli.found) {
+      ui.ok("CLI de Supabase instalado correctamente");
+      return true;
     }
   }
 

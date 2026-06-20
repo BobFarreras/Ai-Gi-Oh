@@ -51,7 +51,13 @@ export function resolveSupabaseCli({
     }
   }
 
-  // 2) En el PATH (la vía normal). Si está, basta con invocar "supabase".
+  // 2) Binario descargado por el propio setup en <repo>/.bin (no requiere instalar nada en el sistema).
+  const managed = p.join(managedBinDir(repoRoot, platform), isWindows ? "supabase.exe" : "supabase");
+  if (fileExists(managed)) {
+    return { found: true, command: managed, prefixArgs: [], source: "managed" };
+  }
+
+  // 3) En el PATH (la vía normal). Si está, basta con invocar "supabase".
   if (onPath("supabase")) {
     return { found: true, command: "supabase", prefixArgs: [], source: "global" };
   }
@@ -90,6 +96,31 @@ export function knownInstallLocations(platform = process.platform, env = process
   const locations = ["/opt/homebrew/bin/supabase", "/usr/local/bin/supabase", "/usr/bin/supabase"];
   if (home) locations.push(path.posix.join(home, ".local", "bin", "supabase"));
   return locations;
+}
+
+/** Versión del CLI de Supabase que descargamos cuando no está en el sistema. */
+export const SUPABASE_CLI_VERSION = "2.107.0";
+
+/** Carpeta del repo donde dejamos el binario descargado por el setup. */
+export function managedBinDir(repoRoot = process.cwd(), platform = process.platform) {
+  const p = platform === "win32" ? path.win32 : path.posix;
+  return p.join(repoRoot, ".bin");
+}
+
+/**
+ * Calcula la URL y nombres para descargar el binario del CLI de Supabase desde GitHub releases.
+ * Todos los SO tienen `.tar.gz` (incluido Windows), y `tar`/`curl` vienen de serie en Win10+/mac/linux.
+ * @param {NodeJS.Platform} [platform]
+ * @param {string} [arch]
+ * @param {string} [version]
+ */
+export function getSupabaseDownloadInfo(platform = process.platform, arch = process.arch, version = SUPABASE_CLI_VERSION) {
+  const os = platform === "win32" ? "windows" : platform === "darwin" ? "darwin" : "linux";
+  const cpu = arch === "arm64" ? "arm64" : "amd64";
+  const archiveName = `supabase_${os}_${cpu}.tar.gz`;
+  const binaryName = platform === "win32" ? "supabase.exe" : "supabase";
+  const url = `https://github.com/supabase/cli/releases/download/v${version}/${archiveName}`;
+  return { url, archiveName, binaryName, version };
 }
 
 /** Comprobación real de PATH multiplataforma. */

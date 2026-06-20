@@ -54,3 +54,6 @@ docs/performance/traces/*
 
 # local supabase cli artifacts
 supabase/.temp/
+
+# CLI de Supabase descargado por scripts/setup.mjs (binario local, no se versiona)
+/.bin/
