@@ -1,7 +1,7 @@
 -- docs/supabase/sql/017_phase_5_2_story_opponent_roster_expansion.sql - Normaliza nombres visibles y amplía roster Story con 4 oponentes y mazos dedicados.
 insert into public.story_opponents (id, display_name, description, avatar_url, difficulty, ai_profile, is_active)
 values
-  ('opp-ch1-apprentice', 'GenNvim', 'Duelista de iniciación del capítulo 1.', '/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.png', 'ROOKIE', '{"style":"balanced","aggression":0.35}'::jsonb, true),
+  ('opp-ch1-apprentice', 'GenNvim', 'Duelista de iniciación del capítulo 1.', '/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.webp', 'ROOKIE', '{"style":"balanced","aggression":0.35}'::jsonb, true),
   ('opp-ch1-biglog', 'BigLog', 'Especialista en trampas y control de ritmo.', null, 'ELITE', '{"style":"control","aggression":0.57}'::jsonb, true),
   ('opp-ch1-jaku', 'Jaku', 'Duelista agresivo que presiona con daño directo.', null, 'STANDARD', '{"style":"aggressive","aggression":0.62}'::jsonb, true),
   ('opp-ch1-helena', 'Helena', 'Táctica de combo con cierres explosivos.', null, 'BOSS', '{"style":"combo","aggression":0.68}'::jsonb, true),

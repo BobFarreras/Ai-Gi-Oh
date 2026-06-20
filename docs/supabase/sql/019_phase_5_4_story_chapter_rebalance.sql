@@ -1,22 +1,22 @@
 -- docs/supabase/sql/019_phase_5_4_story_chapter_rebalance.sql - Rebalancea capítulos Story: oponentes nuevos en capítulo 1 y capítulo 2 resumido a pre-BOSS.
 update public.story_opponents
-set avatar_url = '/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.png'
+set avatar_url = '/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.webp'
 where id = 'opp-ch1-apprentice';
 
 update public.story_opponents
-set avatar_url = '/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.png'
+set avatar_url = '/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.webp'
 where id = 'opp-ch1-biglog';
 
 update public.story_opponents
-set avatar_url = '/assets/story/opponents/opp-ch1-jaku/avatar-Jaku.png'
+set avatar_url = '/assets/story/opponents/opp-ch1-jaku/avatar-Jaku.webp'
 where id = 'opp-ch1-jaku';
 
 update public.story_opponents
-set avatar_url = '/assets/story/opponents/opp-ch1-helena/avatar-Helena.png'
+set avatar_url = '/assets/story/opponents/opp-ch1-helena/avatar-Helena.webp'
 where id = 'opp-ch1-helena';
 
 update public.story_opponents
-set avatar_url = '/assets/story/opponents/opp-ch1-soldier-act01/avatar-Soldado-act01.png'
+set avatar_url = '/assets/story/opponents/opp-ch1-soldier-act01/avatar-Soldado-act01.webp'
 where id = 'opp-ch1-soldier-act01';
 
 update public.story_opponents
