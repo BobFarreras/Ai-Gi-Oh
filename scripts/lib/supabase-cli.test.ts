@@ -32,10 +32,37 @@ describe("resolveSupabaseCli", () => {
     expect(result.command).toBe("supabase");
   });
 
+  it("encuentra supabase en scoop aunque NO esté en el PATH (caso del fallo real)", () => {
+    const scoopShim = "C:\\Users\\Boby\\scoop\\shims\\supabase.exe";
+    const result = resolveSupabaseCli({
+      platform: "win32",
+      repoRoot,
+      env: { USERPROFILE: "C:\\Users\\Boby" },
+      fileExists: (p: PathLike) => p === scoopShim,
+      onPath: () => null, // scoop NO está en el PATH de esa terminal
+    });
+    expect(result.found).toBe(true);
+    expect(result.source).toBe("system");
+    expect(result.command).toBe(scoopShim);
+  });
+
+  it("encuentra supabase en brew (macOS) fuera del PATH", () => {
+    const result = resolveSupabaseCli({
+      platform: "darwin",
+      repoRoot,
+      env: { HOME: "/Users/boby" },
+      fileExists: (p: PathLike) => p === "/opt/homebrew/bin/supabase",
+      onPath: () => null,
+    });
+    expect(result.found).toBe(true);
+    expect(result.source).toBe("system");
+  });
+
   it("devuelve found:false cuando no hay CLI en ningún sitio", () => {
     const result = resolveSupabaseCli({
       platform: "linux",
       repoRoot,
+      env: {},
       fileExists: () => false,
       onPath: () => null,
     });

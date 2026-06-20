@@ -22,6 +22,7 @@ import path from "node:path";
 export function resolveSupabaseCli({
   platform = process.platform,
   repoRoot = process.cwd(),
+  env = process.env,
   fileExists = existsSync,
   onPath = defaultOnPath,
 } = {}) {
@@ -31,18 +32,48 @@ export function resolveSupabaseCli({
     ? [path.join(binDir, "supabase.cmd"), path.join(binDir, "supabase.CMD"), path.join(binDir, "supabase.exe"), path.join(binDir, "supabase.EXE")]
     : [path.join(binDir, "supabase")];
 
+  // 1) Binario local en node_modules/.bin.
   for (const candidate of localCandidates) {
     if (fileExists(candidate)) {
       return { found: true, command: candidate, prefixArgs: [], source: "local" };
     }
   }
 
-  const globalPath = onPath("supabase");
-  if (globalPath) {
+  // 2) En el PATH (la vía normal). Si está, basta con invocar "supabase".
+  if (onPath("supabase")) {
     return { found: true, command: "supabase", prefixArgs: [], source: "global" };
   }
 
+  // 3) Ubicaciones conocidas de instaladores (scoop/brew/winget/choco). Cubre el caso de tener
+  //    supabase instalado pero con su carpeta fuera del PATH de esa terminal — usamos la ruta absoluta.
+  for (const candidate of knownInstallLocations(platform, env)) {
+    if (fileExists(candidate)) {
+      return { found: true, command: candidate, prefixArgs: [], source: "system" };
+    }
+  }
+
   return { found: false, command: null, prefixArgs: [], source: null };
+}
+
+/** Rutas habituales donde scoop/brew/winget/choco dejan el binario `supabase`. */
+export function knownInstallLocations(platform = process.platform, env = process.env) {
+  if (platform === "win32") {
+    const home = env.USERPROFILE || env.HOME || "";
+    const localAppData = env.LOCALAPPDATA || "";
+    const locations = [];
+    if (home) {
+      locations.push(path.join(home, "scoop", "shims", "supabase.exe"));
+      locations.push(path.join(home, "scoop", "shims", "supabase.cmd"));
+      locations.push(path.join(home, "scoop", "apps", "supabase", "current", "supabase.exe"));
+    }
+    if (localAppData) locations.push(path.join(localAppData, "Microsoft", "WinGet", "Links", "supabase.exe"));
+    locations.push("C:\\ProgramData\\chocolatey\\bin\\supabase.exe");
+    return locations;
+  }
+  const home = env.HOME || "";
+  const locations = ["/opt/homebrew/bin/supabase", "/usr/local/bin/supabase", "/usr/bin/supabase"];
+  if (home) locations.push(path.join(home, ".local", "bin", "supabase"));
+  return locations;
 }
 
 /** Comprobación real de PATH multiplataforma. */

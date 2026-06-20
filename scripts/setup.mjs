@@ -62,16 +62,54 @@ function checkPrereqs() {
   return false;
 }
 
-function checkSupabaseCli() {
+function detectPackageManager() {
+  // ¿Hay scoop (Windows) o brew (mac/linux) para instalar supabase automáticamente?
+  if (process.platform === "win32") {
+    if (commandWorks("scoop", ["--version"])) {
+      return {
+        name: "scoop",
+        commands: [
+          ["scoop", ["bucket", "add", "supabase", "https://github.com/supabase/scoop-bucket.git"]],
+          ["scoop", ["install", "supabase"]],
+        ],
+      };
+    }
+    return null;
+  }
+  if (commandWorks("brew", ["--version"])) {
+    return { name: "brew", commands: [["brew", ["install", "supabase/tap/supabase"]]] };
+  }
+  return null;
+}
+
+async function checkSupabaseCli() {
   ui.section("CLI de Supabase");
-  const cli = resolveSupabaseCli();
+  let cli = resolveSupabaseCli();
   if (cli.found) {
-    ui.ok("CLI de Supabase detectado", cli.source === "global" ? "instalado en el sistema" : "en node_modules");
+    const where = cli.source === "local" ? "en node_modules" : "instalado en el sistema";
+    ui.ok("CLI de Supabase detectado", where);
     return true;
   }
+
   ui.warn("CLI de Supabase no encontrado");
   ui.note("Este proyecto NO descarga el binario vía npm (poco fiable en Windows).");
-  ui.note("Instálalo una vez con el método oficial de tu sistema:");
+
+  // Intento de instalación automática si hay un gestor de paquetes disponible.
+  const pm = detectPackageManager();
+  if (pm) {
+    ui.print();
+    ui.note(`Detectado ${pm.name}: puedo instalar el CLI de Supabase por ti.`);
+    if (await confirm(`¿Instalar el CLI de Supabase con ${pm.name} ahora?`)) {
+      for (const [command, args] of pm.commands) run(command, args);
+      cli = resolveSupabaseCli();
+      if (cli.found) {
+        ui.ok("CLI de Supabase instalado correctamente");
+        return true;
+      }
+      ui.warn("La instalación automática no completó. Hazlo a mano:");
+    }
+  }
+
   ui.print();
   const hint = getSupabaseInstallHint();
   ui.note(hint.title);
@@ -115,7 +153,7 @@ async function main() {
   }
 
   // ── CLI de Supabase ──
-  if (!checkSupabaseCli()) {
+  if (!(await checkSupabaseCli())) {
     rl.close();
     process.exit(1);
   }
