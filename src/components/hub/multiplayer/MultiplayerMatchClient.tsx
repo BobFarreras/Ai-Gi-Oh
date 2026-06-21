@@ -190,7 +190,7 @@ export function MultiplayerMatchClient({
 
   return (
     <LocalActionEmitterProvider value={emitLocalAction}>
-    <div className="relative h-screen w-full">
+    <div className="relative min-h-dvh w-full">
       {/* Indicador de conexión propia */}
       <div className="absolute left-2 top-2 z-50 flex items-center gap-1.5 rounded-full border border-slate-700/60 bg-slate-950/80 px-2.5 py-1 backdrop-blur-sm">
         <span

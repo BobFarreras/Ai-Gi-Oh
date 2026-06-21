@@ -93,7 +93,7 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
   }
 
   return (
-    <div className="relative min-h-screen bg-zinc-950">
+    <div className="relative min-h-dvh bg-zinc-950">
       {!isBattleStarted ? (
         <TrainingArenaLobby
           level={props.selectedTier}

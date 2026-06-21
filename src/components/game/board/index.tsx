@@ -18,6 +18,7 @@ import { BoardInteractiveSection } from "@/components/game/board/internal/BoardI
 import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 import { BoardTutorialFlowOverlay } from "@/components/game/board/internal/BoardTutorialFlowOverlay";
 import { useLayoutEffect } from "react";
+import { useBoardViewportMetrics } from "./hooks/internal/layout/use-board-viewport-metrics";
 
 export type BoardBossThemeVariant = "CRIMSON" | "AMBER" | "VIOLET" | "CYAN";
 
@@ -57,8 +58,10 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
   const player = board.gameState.playerA; const opponent = board.gameState.playerB;
   const { isMobile } = useBoardViewportMode();
   const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
+  const viewportMetrics = useBoardViewportMetrics();
   const bossThemeClassName = isBossTheme ? `board-boss-theme board-boss-theme--${bossThemeVariant.toLowerCase()}` : "";
-  const boardRootClassName = `board-space-bg relative w-full h-screen overflow-hidden font-sans cursor-crosshair ${bossThemeClassName} ${shouldReduceCombatEffects ? "reduced-combat-effects" : ""}`;
+  // Base CSS `h-dvh` (correcta en SSR y sin JS); el visualViewport afina el px exacto tras montar.
+  const boardRootClassName = `board-space-bg relative w-full h-dvh overflow-hidden font-sans cursor-crosshair ${bossThemeClassName} ${shouldReduceCombatEffects ? "reduced-combat-effects" : ""}`;
   const boardAmbientClassName = isBossTheme
     ? "absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(244,63,94,0.14),transparent_52%)] pointer-events-none"
     : "absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(34,211,238,0.12),transparent_52%)] pointer-events-none";
@@ -86,7 +89,7 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
     onMatchResolved,
   });
   return (
-    <div className={boardRootClassName} onClick={board.clearSelection}>
+    <div className={boardRootClassName} style={viewportMetrics.height ? { height: `${viewportMetrics.height}px` } : undefined} onClick={board.clearSelection}>
       <div className={boardAmbientClassName} />
       <div className={boardVignetteClassName} />
       {!isMatchStartLocked ? (
