@@ -4,6 +4,11 @@ import { useLocalActionEmitter } from "@/components/game/board/multiplayer/local
 import { IUsePlayerActionsParams } from "./types";
 import { handleOwnEntityClick } from "./handleOwnEntityClick";
 import { handleOpponentEntityClick } from "./handleOpponentEntityClick";
+import { sleep } from "../sleep";
+import { addRevealedId, removeRevealedId } from "../trapPreview";
+
+// Tiempo que la carta seteada revelada permanece boca arriba para que el jugador la vea.
+const OPPONENT_SET_REVEAL_MS = 2200;
 
 type IHandleEntityClickParams = Pick<
   IUsePlayerActionsParams,
@@ -38,6 +43,24 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
       if (params.isAnimating || !params.assertPlayerTurn()) return;
 
       if (params.gameState.pendingTurnAction?.playerId === params.gameState.playerA.id) {
+        const pending = params.gameState.pendingTurnAction;
+        // Revelar carta seteada del rival: a diferencia del resto de acciones obligatorias,
+        // esta se resuelve clicando una carta boca abajo del RIVAL, no una propia.
+        if (pending.type === "SELECT_OPPONENT_SET_CARD") {
+          if (isOpponent && entity && entity.mode === "SET") {
+            params.setIsAnimating(true);
+            params.setRevealedEntities((previous) => addRevealedId(previous, entity.instanceId));
+            params.setSelectedCard(entity.card);
+            params.resolvePendingTurnAction(entity.instanceId);
+            await sleep(OPPONENT_SET_REVEAL_MS);
+            params.setRevealedEntities((previous) => removeRevealedId(previous, entity.instanceId));
+            params.setSelectedCard(null);
+            params.setIsAnimating(false);
+            return;
+          }
+          params.setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una carta boca abajo (seteada) del rival para revelarla." });
+          return;
+        }
         if (!isOpponent && entity) {
           params.resolvePendingTurnAction(entity.instanceId);
           return;

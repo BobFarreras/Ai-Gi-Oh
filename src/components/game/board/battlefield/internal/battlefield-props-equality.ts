@@ -22,6 +22,7 @@ export function areEqualBattlefieldProps(previous: BattlefieldProps, next: Battl
     previous.selectedBoardEntityInstanceId === next.selectedBoardEntityInstanceId &&
     previous.revealedEntities === next.revealedEntities &&
     previous.highlightedPlayerEntityIds === next.highlightedPlayerEntityIds &&
+    previous.highlightedOpponentEntityIds === next.highlightedOpponentEntityIds &&
     previous.selectedFusionMaterialIds === next.selectedFusionMaterialIds &&
     previous.damagedPlayerId === next.damagedPlayerId &&
     previous.damageEventId === next.damageEventId &&

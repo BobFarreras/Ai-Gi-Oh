@@ -44,7 +44,7 @@ export function BattlefieldView(props: BattlefieldViewProps) {
             selectedCard={props.selectedCard}
             selectedBoardEntityInstanceId={props.selectedBoardEntityInstanceId}
             revealedEntities={props.revealedEntities ?? []}
-            highlightedEntityIds={[]}
+            highlightedEntityIds={props.highlightedOpponentEntityIds ?? []}
             selectedEntityIds={[]}
             shouldDamageFlash={props.damagedPlayerId === props.opponentId}
             damageEventId={props.damageEventId ?? null}

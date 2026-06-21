@@ -7,6 +7,7 @@ export interface IBoardPendingUi {
   pendingActionHint: string | null;
   pendingDiscardCardIds: string[];
   pendingEntitySelectionIds: string[];
+  pendingOpponentSelectionIds: string[];
   pendingFusionSelectedEntityIds: string[];
 }
 
@@ -57,10 +58,26 @@ export function buildBoardPendingUi(
       ? gameState.pendingTurnAction.selectedMaterialInstanceIds
       : [];
 
+  // Cartas seteadas del rival que el jugador puede revelar (resaltadas en el campo rival).
+  const pendingOpponentSelectionIds =
+    gameState.pendingTurnAction?.playerId === gameState.playerA.id && gameState.pendingTurnAction.type === "SELECT_OPPONENT_SET_CARD"
+      ? (() => {
+          const zone = gameState.pendingTurnAction.zone;
+          const entities = zone !== "EXECUTIONS"
+            ? gameState.playerB.activeEntities.filter((entity) => entity.mode === "SET").map((entity) => entity.instanceId)
+            : [];
+          const executions = zone !== "ENTITIES"
+            ? gameState.playerB.activeExecutions.filter((entity) => entity.mode === "SET").map((entity) => entity.instanceId)
+            : [];
+          return [...entities, ...executions];
+        })()
+      : [];
+
   return {
     pendingActionHint,
     pendingDiscardCardIds,
     pendingEntitySelectionIds,
+    pendingOpponentSelectionIds,
     pendingFusionSelectedEntityIds,
   };
 }

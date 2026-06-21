@@ -33,6 +33,7 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
           selectedBoardEntityInstanceId={props.selectedBoardEntityInstanceId}
           revealedEntities={props.revealedEntities}
           highlightedPlayerEntityIds={props.pendingEntitySelectionIds}
+          highlightedOpponentEntityIds={props.pendingOpponentSelectionIds}
           selectedFusionMaterialIds={props.pendingFusionSelectedEntityIds}
           damagedPlayerId={props.lastDamageTargetPlayerId}
           damageEventId={props.lastDamageEventId}

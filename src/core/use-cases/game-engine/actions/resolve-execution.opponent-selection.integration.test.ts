@@ -37,6 +37,30 @@ describe("resolveExecution opponent selection", () => {
     expect(state.playerA.graveyard.some((card) => card.id === "exec-reveal-opponent-set")).toBe(true);
   });
 
+  it("debería dejar la ejecución en SET (a la espera) si el rival no tiene cartas seteadas que revelar", () => {
+    const revealExecution: ICard = {
+      id: "exec-reveal-no-target",
+      name: "Reveal Set",
+      description: "",
+      type: "EXECUTION",
+      faction: "OPEN_SOURCE",
+      cost: 1,
+      effect: { action: "REVEAL_OPPONENT_SET_CARD", zone: "ANY" },
+    };
+    let state = createResolveExecutionBaseState({ hand: [revealExecution] });
+    // El rival no tiene ninguna carta seteada en el campo.
+
+    state = GameEngine.playCard(state, "p1", "exec-reveal-no-target", "ACTIVATE");
+    const executionId = state.playerA.activeExecutions.find((entity) => entity.card.id === "exec-reveal-no-target")!.instanceId;
+    state = GameEngine.resolveExecution(state, "p1", executionId);
+
+    // No se crea selección pendiente, no se lanza error y la ejecución queda en SET para reactivarse.
+    expect(state.pendingTurnAction).toBeNull();
+    const suspended = state.playerA.activeExecutions.find((entity) => entity.instanceId === executionId);
+    expect(suspended?.mode).toBe("SET");
+    expect(state.playerA.graveyard.some((card) => card.id === "exec-reveal-no-target")).toBe(false);
+  });
+
   it("debería robar una carta del cementerio rival tras selección pendiente", () => {
     const stealExecution: ICard = {
       id: "exec-steal-opponent-grave",
