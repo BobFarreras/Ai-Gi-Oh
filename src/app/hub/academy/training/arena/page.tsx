@@ -47,7 +47,7 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
     );
   }
   return (
-    <main className="min-h-screen bg-zinc-950">
+    <main className="min-h-dvh bg-zinc-950">
       <HubSectionEntryBurst />
       <TrainingArenaClient
         deck={loadout.deck!}

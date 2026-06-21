@@ -15,7 +15,7 @@ interface HubShellProps {
 
 export function HubShell({ playerLabel, progress, sections, nodes, completedTutorialNodeIds }: HubShellProps) {
   return (
-    <main className="relative min-h-screen overflow-hidden text-slate-100">
+    <main className="relative min-h-dvh overflow-hidden text-slate-100">
       <CyberBackground lightweight />
       <div className="relative z-20">
         <HubScene
