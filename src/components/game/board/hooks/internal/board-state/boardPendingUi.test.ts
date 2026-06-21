@@ -45,5 +45,40 @@ describe("boardPendingUi", () => {
     const pending = buildBoardPendingUi(state, null);
     expect(pending.pendingActionHint).toContain("seteada");
   });
+
+  it("marca como seleccionables las cartas SET del rival según la zona (ANY)", () => {
+    const base = createBaseState();
+    const state: GameState = {
+      ...base,
+      playerB: {
+        ...base.playerB,
+        activeEntities: [
+          { instanceId: "ent-set", mode: "SET", card: { id: "c1", type: "ENTITY" } },
+          { instanceId: "ent-attack", mode: "ATTACK", card: { id: "c2", type: "ENTITY" } },
+        ] as unknown as GameState["playerB"]["activeEntities"],
+        activeExecutions: [
+          { instanceId: "exec-set", mode: "SET", card: { id: "c3", type: "TRAP" } },
+        ] as unknown as GameState["playerB"]["activeExecutions"],
+      },
+      pendingTurnAction: { type: "SELECT_OPPONENT_SET_CARD", playerId: "p1", executionInstanceId: "exec-2", zone: "ANY" },
+    };
+    const pending = buildBoardPendingUi(state, null);
+    expect(pending.pendingOpponentSelectionIds).toEqual(["ent-set", "exec-set"]);
+  });
+
+  it("respeta la zona EXECUTIONS (solo ejecuciones seteadas del rival)", () => {
+    const base = createBaseState();
+    const state: GameState = {
+      ...base,
+      playerB: {
+        ...base.playerB,
+        activeEntities: [{ instanceId: "ent-set", mode: "SET", card: { id: "c1", type: "ENTITY" } }] as unknown as GameState["playerB"]["activeEntities"],
+        activeExecutions: [{ instanceId: "exec-set", mode: "SET", card: { id: "c3", type: "TRAP" } }] as unknown as GameState["playerB"]["activeExecutions"],
+      },
+      pendingTurnAction: { type: "SELECT_OPPONENT_SET_CARD", playerId: "p1", executionInstanceId: "exec-2", zone: "EXECUTIONS" },
+    };
+    const pending = buildBoardPendingUi(state, null);
+    expect(pending.pendingOpponentSelectionIds).toEqual(["exec-set"]);
+  });
 });
 

@@ -22,6 +22,7 @@ export interface BattlefieldProps {
   selectedBoardEntityInstanceId: string | null;
   revealedEntities?: string[];
   highlightedPlayerEntityIds?: string[];
+  highlightedOpponentEntityIds?: string[];
   selectedFusionMaterialIds?: string[];
   damagedPlayerId?: string | null;
   damageEventId?: string | null;

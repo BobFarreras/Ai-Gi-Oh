@@ -47,7 +47,12 @@ function hasSelectableOpponentSetCard(opponent: IPlayer, zone: "ENTITIES" | "EXE
   return entityMatches || executionMatches;
 }
 
-function suspendFusionExecutionUntilMaterials(context: ISpecialActionContext): GameState {
+/**
+ * Deja la ejecución en SET (a la espera) en vez de lanzar error cuando todavía no se cumple la
+ * condición para resolverla (faltan materiales de fusión, no hay objetivo válido, etc.). Así la
+ * carta no se queda en ACTIVATE rota y puede reactivarse en un turno posterior.
+ */
+function suspendExecutionUntilCondition(context: ISpecialActionContext, waitType: string): GameState {
   const { state, player, opponent, isPlayerA, playerId, executionInstanceId } = context;
   const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
   if (!executionEntity) throw new NotFoundError("La ejecución no existe en el tablero.");
@@ -59,7 +64,7 @@ function suspendFusionExecutionUntilMaterials(context: ISpecialActionContext): G
   };
   const withPlayers = assignPlayers(state, updatedPlayer, opponent, isPlayerA);
   return appendCombatLogEvent(withPlayers, playerId, "MANDATORY_ACTION_RESOLVED", {
-    type: "FUSION_WAITING_MATERIALS",
+    type: waitType,
     executionCardId: executionEntity.card.id,
   });
 }
@@ -67,13 +72,13 @@ function suspendFusionExecutionUntilMaterials(context: ISpecialActionContext): G
 function resolveFusionEffect(context: ISpecialActionContext, effect: IFusionSummonEffect): GameState {
   const { state, playerId, player, executionInstanceId } = context;
   if (player.activeEntities.length < 2) {
-    return suspendFusionExecutionUntilMaterials(context);
+    return suspendExecutionUntilCondition(context, "FUSION_WAITING_MATERIALS");
   }
   // Aunque haya entidades suficientes, puede que no cumplan la receta específica.
   // En ese caso suspendemos en SET en vez de lanzar un error que deja la carta en ACTIVATE.
   const selectableMaterials = resolveSelectableMaterialInstanceIds(player.activeEntities, effect.recipeId);
   if (selectableMaterials.length < 2) {
-    return suspendFusionExecutionUntilMaterials(context);
+    return suspendExecutionUntilCondition(context, "FUSION_WAITING_MATERIALS");
   }
   return startFusionSummonFromExecution(state, playerId, executionInstanceId, effect.recipeId);
 }
@@ -113,8 +118,10 @@ function resolveOpponentSelectionEffect(context: ISpecialActionContext, effect: 
     };
   }
   const zone = effect.zone ?? "ANY";
+  // Si el rival no tiene ninguna carta seteada que revelar, dejamos la ejecución a la espera
+  // (igual que la fusión sin materiales): se queda en SET y puede reactivarse en otro turno.
   if (!hasSelectableOpponentSetCard(context.opponent, zone)) {
-    throw new GameRuleError("No hay cartas seteadas válidas en el campo rival para este efecto.");
+    return suspendExecutionUntilCondition(context, "REVEAL_WAITING_TARGET");
   }
   return {
     ...context.state,

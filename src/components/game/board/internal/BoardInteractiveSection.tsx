@@ -33,6 +33,7 @@ export function BoardInteractiveSection({ board, screen, isMobile, suppressComba
       selectedBoardEntityInstanceId={board.selectedBoardEntityInstanceId}
       revealedEntities={board.revealedEntities}
       pendingEntitySelectionIds={board.pendingEntitySelectionIds}
+      pendingOpponentSelectionIds={board.pendingOpponentSelectionIds}
       pendingDiscardCardIds={board.pendingDiscardCardIds}
       pendingFusionSelectedEntityIds={board.pendingFusionSelectedEntityIds}
       isHistoryOpen={board.isHistoryOpen}
