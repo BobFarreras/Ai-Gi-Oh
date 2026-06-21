@@ -31,7 +31,13 @@ export class SupabasePlayerProfileRepository implements IPlayerProfileRepository
       .select("player_id,nickname,avatar_url,created_at,updated_at")
       .eq("player_id", playerId)
       .maybeSingle<IPlayerProfileRow>();
-    if (error) throw new ValidationError("No se pudo leer el perfil del jugador.");
+    if (error) {
+      // Registramos siempre la causa real en el servidor (RLS, tabla ausente, UUID inválido…) y
+      // solo la exponemos en el mensaje fuera de producción para no filtrar detalles internos.
+      console.error("[SupabasePlayerProfileRepository.getByPlayerId] Supabase error:", { code: error.code, message: error.message, details: error.details, hint: error.hint });
+      const detail = process.env.NODE_ENV !== "production" ? ` [${error.code ?? "?"}] ${error.message}` : "";
+      throw new ValidationError(`No se pudo leer el perfil del jugador.${detail}`);
+    }
     return data ? toEntity(data) : null;
   }
 
