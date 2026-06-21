@@ -2,7 +2,7 @@
 # AI-GI-OH
 
 <p align="center">
-  <strong>Producto en producción · v1.3.8</strong><br/>
+  <strong>Producto en producción · v1.3.9</strong><br/>
   Juego táctico de cartas con motor desacoplado, arquitectura por capas y flujo profesional de calidad.
 </p>
 
@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.3.8-06b6d4">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.3.9-06b6d4">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black">
   <img alt="React" src="https://img.shields.io/badge/React-19-149eca">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-Strict-3178c6">

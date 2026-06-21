@@ -174,5 +174,6 @@ pnpm build
 ## Notas para cambios de base de datos
 
 1. SQL canónico del proyecto: `docs/supabase/sql`.
-2. Si añades una nueva fase SQL, usa prefijo incremental (`049_...sql`, `050_...sql`, etc.). El último archivo existente es `048_phase_player_profiles_public_read.sql`.
-3. Ejecuta de nuevo `pnpm supabase:prepare:migrations` para validar que el bootstrap local sigue siendo reproducible.
+2. Si añades una nueva fase SQL, usa prefijo incremental (`050_...sql`, `051_...sql`, etc.). El último archivo existente es `049_phase_player_profiles_select_policy_version_safe.sql`.
+3. **Evita funciones de auth dependientes de versión en políticas RLS** (`auth.role()`, `auth.email()`): cambian entre versiones de Supabase y pueden hacer fallar el SELECT. Para "cualquier usuario autenticado" usa `to authenticated using (true)`; para "el dueño" usa `auth.uid() = <columna>`.
+4. Ejecuta de nuevo `pnpm supabase:prepare:migrations` para validar que el bootstrap local sigue siendo reproducible.

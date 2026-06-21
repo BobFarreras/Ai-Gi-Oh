@@ -75,6 +75,7 @@ export function mockDefaultUseBoardReturn() {
     pendingActionHint: null,
     pendingDiscardCardIds: [],
     pendingEntitySelectionIds: [],
+    pendingOpponentSelectionIds: [],
     pendingFusionSelectedEntityIds: [],
     opponentDifficulty: "EASY",
     isPlayerTurn: true,

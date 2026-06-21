@@ -17,6 +17,7 @@ export function areEqualBoardInteractiveLayerProps(previous: IBoardInteractiveLa
     previous.activeAttackerId === next.activeAttackerId &&
     previous.revealedEntities === next.revealedEntities &&
     areIdListsEqual(previous.pendingEntitySelectionIds, next.pendingEntitySelectionIds) &&
+    areIdListsEqual(previous.pendingOpponentSelectionIds, next.pendingOpponentSelectionIds) &&
     areIdListsEqual(previous.pendingFusionSelectedEntityIds, next.pendingFusionSelectedEntityIds) &&
     areIdListsEqual(previous.pendingDiscardCardIds, next.pendingDiscardCardIds) &&
     previous.isHistoryOpen === next.isHistoryOpen &&

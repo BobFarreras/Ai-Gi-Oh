@@ -29,6 +29,7 @@ export interface IBoardInteractiveLayerProps {
   activeAttackerId: string | null;
   revealedEntities: string[];
   pendingEntitySelectionIds: string[];
+  pendingOpponentSelectionIds: string[];
   pendingFusionSelectedEntityIds: string[];
   pendingDiscardCardIds: string[];
   isHistoryOpen: boolean;
