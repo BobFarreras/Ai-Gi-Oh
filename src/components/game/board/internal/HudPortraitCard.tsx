@@ -13,11 +13,12 @@ interface HudPortraitCardProps {
   player: IPlayer;
   isActiveTurn: boolean;
   avatarUrl?: string | null;
+  avatarObjectPosition?: string;
   badgeText?: string;
   showEnergy?: boolean;
 }
 
-export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, badgeText, showEnergy = true }: HudPortraitCardProps) {
+export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, avatarObjectPosition, badgeText, showEnergy = true }: HudPortraitCardProps) {
   // Animamos LP para que el impacto visual no sea instantáneo.
   const displayedHealthPoints = useAnimatedHudValue(player.healthPoints, 980, 220);
   const healthRatio = Math.max(0, Math.min(1, displayedHealthPoints / Math.max(1, player.maxHealthPoints)));
@@ -38,7 +39,7 @@ export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, b
             sizes="420px"
             className={cn(
               "absolute inset-0 w-full h-full object-cover transition-transform duration-700 scale-[1.02]",
-              isOpponent ? "object-center translate-x-1.5 -translate-y-1.5" : "object-center -translate-x-1.5 translate-y-1.5",
+              isOpponent ? (avatarObjectPosition ?? "object-center translate-x-1.5 -translate-y-1.5") : "object-center -translate-x-1.5 translate-y-1.5",
               isActiveTurn && "scale-[1.06]",
             )}
           />

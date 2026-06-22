@@ -30,6 +30,7 @@ interface IBoardProps {
   narrationPack?: IMatchNarrationPack | null;
   playerAvatarUrl?: string | null;
   opponentAvatarUrl?: string | null;
+  opponentAvatarObjectPosition?: string;
   isBossTheme?: boolean;
   bossThemeVariant?: BoardBossThemeVariant;
   resultActionLabel?: string;
@@ -55,7 +56,7 @@ interface IBoardProps {
   /** Recibe applyRemoteAction: aplica una acción del rival CON su coreografía visual (multijugador). */
   applyRemoteActionRef?: React.MutableRefObject<((action: import("@/core/entities/multiplayer/IMatchAction").IMatchActionPayload) => Promise<void>) | null>;
 }
-export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId }: IBoardProps) {
+export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, opponentAvatarObjectPosition, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId }: IBoardProps) {
   countRender("Board");
   const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme, disableOpponentAutomation, opponentStrategyOverride);
   useLayoutEffect(() => {
@@ -147,8 +148,9 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
           isMobile={isMobile}
           player={player}
           opponent={opponent}
-          playerAvatarUrl={playerAvatarUrl}
-          opponentAvatarUrl={opponentAvatarUrl}
+            playerAvatarUrl={playerAvatarUrl}
+            opponentAvatarUrl={opponentAvatarUrl}
+            opponentAvatarObjectPosition={opponentAvatarObjectPosition}
         />
       ) : null}
       <DuelResultOverlay
