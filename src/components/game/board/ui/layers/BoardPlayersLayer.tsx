@@ -23,6 +23,7 @@ interface BoardPlayersLayerProps {
   lastEnergyLossEventId: string | null;
   playerAvatarUrl?: string | null;
   opponentAvatarUrl?: string | null;
+  opponentAvatarObjectPosition?: string;
   playerDialogueMessage?: string | null;
   opponentDialogueMessage?: string | null;
   phase: string;
@@ -47,6 +48,7 @@ export function BoardPlayersLayer({
   lastEnergyLossEventId,
   playerAvatarUrl = null,
   opponentAvatarUrl = null,
+  opponentAvatarObjectPosition,
   playerDialogueMessage = null,
   opponentDialogueMessage = null,
   phase,
@@ -72,6 +74,7 @@ export function BoardPlayersLayer({
         energyLossAmount={lastEnergyLossAmount}
         energyLossPulseKey={lastEnergyLossEventId}
         avatarUrl={opponentAvatarUrl}
+        avatarObjectPosition={opponentAvatarObjectPosition}
         dialogueMessage={opponentDialogueMessage}
       />
       <PlayerHUD

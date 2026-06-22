@@ -15,7 +15,7 @@ interface BattleBannerCenterProps {
   externalBannerSignal?: IBattleBannerMessage | null;
 }
 
-const DISPLAY_MS = 3000;
+const DISPLAY_MS = 1800;
 const DISPLAY_HERO_MS = 3600;
 export function BattleBannerCenter({
   events,

@@ -78,6 +78,7 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
         }}
         playerAvatarUrl="/assets/story/player/bob.webp"
         opponentAvatarUrl="/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.webp"
+        opponentAvatarObjectPosition="center 18%"
         isMatchStartLocked={isCoinTossVisible}
         isTurnTimerEnabled={false}
         suppressCombatFeedback={false}

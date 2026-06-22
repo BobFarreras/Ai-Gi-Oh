@@ -13,11 +13,12 @@ interface HudPortraitCardProps {
   player: IPlayer;
   isActiveTurn: boolean;
   avatarUrl?: string | null;
+  avatarObjectPosition?: string;
   badgeText?: string;
   showEnergy?: boolean;
 }
 
-export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, badgeText, showEnergy = true }: HudPortraitCardProps) {
+export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, avatarObjectPosition, badgeText, showEnergy = true }: HudPortraitCardProps) {
   // Animamos LP para que el impacto visual no sea instantáneo.
   const displayedHealthPoints = useAnimatedHudValue(player.healthPoints, 980, 220);
   const healthRatio = Math.max(0, Math.min(1, displayedHealthPoints / Math.max(1, player.maxHealthPoints)));
@@ -36,9 +37,14 @@ export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, b
             alt="Avatar"
             fill
             sizes="420px"
+            // object-position por estilo inline (CSS puro): el encuadre del avatar va
+            // en un contenedor ancho y bajo, así que enmarcamos por % vertical. Inline
+            // gana al `object-center` por defecto y NO depende de que Tailwind genere
+            // una clase arbitraria (las `object-[...]` con % no se generaban).
+            style={avatarObjectPosition ? { objectPosition: avatarObjectPosition } : undefined}
             className={cn(
-              "absolute inset-0 w-full h-full object-cover transition-transform duration-700 scale-[1.02]",
-              isOpponent ? "object-center translate-x-1.5 -translate-y-1.5" : "object-center -translate-x-1.5 translate-y-1.5",
+              "absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 scale-[1.02]",
+              isOpponent ? "translate-x-1.5 -translate-y-1.5" : "-translate-x-1.5 translate-y-1.5",
               isActiveTurn && "scale-[1.06]",
             )}
           />
