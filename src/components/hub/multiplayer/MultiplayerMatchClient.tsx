@@ -17,6 +17,7 @@ import {
   resolveMultiplayerCoinToss,
 } from "@/core/services/multiplayer/prepare-multiplayer-match";
 import { createSeededGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
+import { useMultiplayerRemoteFinish } from "./internal/use-multiplayer-remote-finish";
 import { MultiplayerCoinTossOverlay } from "./MultiplayerCoinTossOverlay";
 
 interface MultiplayerMatchClientProps {
@@ -165,6 +166,34 @@ export function MultiplayerMatchClient({
     void finishMatch("WIN");
   }, [finishMatch]);
 
+  // Notificación remota de fin de partida (postgres_changes en match_sessions).
+  // Garantiza que el perdedor vea el overlay aunque se pierda la acción final.
+  const handleRemoteFinish = useCallback(
+    (outcome: "WIN" | "LOSE" | "DRAW", winnerId: string | "DRAW") => {
+      setWinnerPlayerId(winnerId);
+      void finishMatch(outcome);
+    },
+    [finishMatch],
+  );
+
+  const disconnectedSeconds = Math.floor(disconnectedForMs / 1000);
+  const remainingSeconds = Math.max(0, 60 - disconnectedSeconds);
+  const isOpponentGone = opponentConnectionStatus === "ABANDONED";
+  const isOpponentDisconnected = opponentConnectionStatus === "DISCONNECTED";
+
+  // Suprime el beacon de forfeit si ya terminó localmente, el motor declaró
+  // ganador, o el rival está abandonado (auto-victoria): evita que el ganador
+  // se penalice a sí mismo al cerrar la pestaña.
+  const suppressForfeit = matchFinished || Boolean(winnerPlayerId) || isOpponentGone;
+
+  const { remoteWinnerPlayerId } = useMultiplayerRemoteFinish({
+    matchId,
+    localPlayerId,
+    suppressForfeit,
+    opponentConnectionStatus,
+    onRemoteFinish: handleRemoteFinish,
+  });
+
   // Construye el resumen de recompensas para el DuelResultOverlay del Board.
   // Se calcula cuando llega el reward del servidor; rewardCards vacío (sin drop en multijugador).
   // eloChange se incluye para mostrar animación de puntos ganados/perdidos en el overlay.
@@ -182,11 +211,6 @@ export function MultiplayerMatchClient({
   const handleResultAction = useCallback(() => {
     router.push("/hub/multiplayer");
   }, [router]);
-
-  const disconnectedSeconds = Math.floor(disconnectedForMs / 1000);
-  const remainingSeconds = Math.max(0, 60 - disconnectedSeconds);
-  const isOpponentGone = opponentConnectionStatus === "ABANDONED";
-  const isOpponentDisconnected = opponentConnectionStatus === "DISCONNECTED";
 
   return (
     <LocalActionEmitterProvider value={emitLocalAction}>
@@ -211,10 +235,11 @@ export function MultiplayerMatchClient({
             </span>
             {isOpponentGone ? (
               <>
-                <span className="text-sm text-slate-400">El rival ha abandonado la partida.</span>
+                <span className="text-sm text-emerald-300">El rival ha abandonado. Victoria automática...</span>
                 <button
                   onClick={handleForfeitVictory}
                   className="rounded-lg bg-emerald-600 px-6 py-2 text-sm font-bold text-white transition hover:bg-emerald-500 active:scale-95"
+                  aria-label="Reclamar victoria por abandono del rival"
                 >
                   Reclamar victoria
                 </button>
@@ -258,6 +283,7 @@ export function MultiplayerMatchClient({
         duelResultRewardSummary={duelResultRewardSummary}
         resultActionLabel="Volver al lobby"
         onResultAction={handleResultAction}
+        externalWinnerPlayerId={remoteWinnerPlayerId}
       />
 
       <MultiplayerCoinTossOverlay
