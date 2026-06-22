@@ -29,6 +29,8 @@ interface IUseBoardScreenStateInput {
   narrationPack?: IMatchNarrationPack | null;
   isNarrationLocked?: boolean;
   onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string }) => void;
+  /** Ganador comunicado externamente (multijugador Realtime); prioridad si el motor local no detecta fin. */
+  externalWinnerPlayerId?: string | "DRAW" | null;
 }
 
 export function useBoardScreenState(input: IUseBoardScreenStateInput) {
@@ -95,6 +97,7 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
     playerName: input.playerName,
     opponentName: input.opponentName,
     setBannerSignal: setAutoModeBannerSignal,
+    externalWinnerPlayerId: input.externalWinnerPlayerId ?? null,
   });
   const narration = useMatchNarration({
     combatLog: board.gameState.combatLog,
