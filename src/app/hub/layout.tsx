@@ -1,5 +1,21 @@
-// src/app/hub/layout.tsx - Define un viewport fijo para todas las páginas del hub sin inyectar UI acoplada por layout.
+// src/app/hub/layout.tsx - Viewport fijo del hub + provider de presencia/invitaciones multijugador global.
+import { MultiplayerPresenceProvider } from "@/components/hub/multiplayer/MultiplayerPresenceProvider";
+import { getMultiplayerLobbyData } from "@/services/multiplayer/get-multiplayer-lobby-data";
 
-export default function HubLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <div className="relative min-h-dvh overflow-hidden">{children}</div>;
+export default async function HubLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const lobbyData = await getMultiplayerLobbyData();
+  const viewport = <div className="relative min-h-dvh overflow-hidden">{children}</div>;
+
+  // Sin sesión (p. ej. flujos de auth) no montamos presencia ni invitaciones.
+  if (!lobbyData) return viewport;
+
+  return (
+    <MultiplayerPresenceProvider
+      localPlayerId={lobbyData.playerId}
+      localNickname={lobbyData.nickname}
+      activeDeckIds={lobbyData.activeDeckIds}
+    >
+      {viewport}
+    </MultiplayerPresenceProvider>
+  );
 }

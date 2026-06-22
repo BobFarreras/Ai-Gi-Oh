@@ -65,14 +65,18 @@ export function MarketRevealCardsGrid({ cards, onClose }: MarketRevealCardsGridP
       </div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: cards.length * 0.22 + 0.8 }} className="mt-4 sm:mt-8">
-        <button
+        <motion.button
           type="button"
           onClick={onClose}
-          className="group relative flex items-center gap-2 overflow-hidden rounded-xl border border-cyan-400/60 bg-cyan-950/40 px-10 py-3 text-sm font-black uppercase tracking-[0.2em] text-cyan-100 shadow-[0_0_20px_rgba(34,211,238,0.2)] transition-all hover:border-cyan-300 hover:bg-cyan-900/60 hover:text-white hover:shadow-[0_0_40px_rgba(34,211,238,0.5)] sm:text-base"
+          data-tutorial-id="market-pack-reveal-integrate"
+          aria-label="Integrar al Almacén"
+          animate={{ scale: [1, 1.06, 1], boxShadow: ["0 0 20px rgba(34,211,238,0.2)", "0 0 40px rgba(34,211,238,0.6)", "0 0 20px rgba(34,211,238,0.2)"] }}
+          transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+          className="group relative flex items-center gap-2 overflow-hidden rounded-xl border border-cyan-400/60 bg-cyan-950/40 px-10 py-3 text-sm font-black uppercase tracking-[0.2em] text-cyan-100 transition-all hover:border-cyan-300 hover:bg-cyan-900/60 hover:text-white sm:text-base"
         >
           <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent group-hover:animate-[shine_1s_infinite]" />
           <span className="relative z-10">Integrar al Almacén</span>
-        </button>
+        </motion.button>
       </motion.div>
     </motion.div>
   );

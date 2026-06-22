@@ -5,10 +5,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IOnlinePlayer } from "@/core/entities/multiplayer/IOnlinePlayer";
 import { IPlayerInvitation } from "@/core/entities/multiplayer/IPlayerInvitation";
-import { useOnlinePlayers } from "@/core/hooks/multiplayer/useOnlinePlayers";
 import { usePendingInvitations } from "@/core/hooks/multiplayer/usePendingInvitations";
-import { useOutgoingInvitationMatch } from "@/core/hooks/multiplayer/useOutgoingInvitationMatch";
 import { useOutgoingInvitationDeclines } from "@/core/hooks/multiplayer/useOutgoingInvitationDeclines";
+import { useOnlinePlayersContext } from "./MultiplayerPresenceProvider";
 import { useMatchmakingQueue } from "@/core/hooks/multiplayer/useMatchmakingQueue";
 import { sendInvitation } from "@/app/hub/multiplayer/actions/send-invitation";
 import { acceptInvitation, declineInvitation } from "@/app/hub/multiplayer/actions/respond-invitation";
@@ -34,17 +33,14 @@ export function MultiplayerLobby({ localPlayerId, localNickname, activeDeckIds }
   const [sentInvites, setSentInvites] = useState<Set<string>>(new Set());
   const [isResponding, setIsResponding] = useState(false);
 
-  const localPlayer: IOnlinePlayer = {
-    playerId: localPlayerId,
-    nickname: localNickname,
-    status: "IDLE",
-  };
-
-  const { onlinePlayers } = useOnlinePlayers(localPlayer);
+  // La presencia la publica/lee el canal único de MultiplayerPresenceProvider
+  // (hub-wide); aquí solo consumimos la lista por contexto, sin abrir otro canal.
+  const onlinePlayers = useOnlinePlayersContext();
   // Buscador de jugadores: filtra la lista de online por nickname.
   const { query: searchQuery, setQuery: setSearchQuery, filtered: filteredPlayers } = useFilteredPlayers(onlinePlayers);
   const { pendingInvitations } = usePendingInvitations(localPlayerId);
-  const acceptedMatchId = useOutgoingInvitationMatch(localPlayerId);
+  // La redirección del invitador al aceptarse su invitación la gestiona
+  // MultiplayerPresenceProvider (hub-wide), así funciona aunque salga del lobby.
   useOutgoingInvitationDeclines(localPlayerId, (toId) => {
     setSentInvites((prev) => {
       const next = new Set(prev);
@@ -65,11 +61,6 @@ export function MultiplayerLobby({ localPlayerId, localNickname, activeDeckIds }
     }
     prevInvitationsCountRef.current = pendingInvitations.length;
   }, [pendingInvitations.length, play]);
-
-  // Redirigir al invitador cuando se acepta su invitación.
-  useEffect(() => {
-    if (acceptedMatchId) router.push(`/hub/multiplayer/match/${acceptedMatchId}`);
-  }, [acceptedMatchId, router]);
 
   // Redirigir cuando el emparejamiento aleatorio encuentra partida + SFX.
   useEffect(() => {

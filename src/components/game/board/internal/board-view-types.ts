@@ -13,6 +13,7 @@ export interface IBoardViewSectionProps {
   opponent: IBoardPlayerState;
   playerAvatarUrl: string | null;
   opponentAvatarUrl: string | null;
+  opponentAvatarObjectPosition?: string;
   onExitMatch?: () => void;
   isTurnTimerEnabled?: boolean;
   suppressCombatBanners?: boolean;

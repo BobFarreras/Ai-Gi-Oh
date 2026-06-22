@@ -45,7 +45,6 @@ export function CardFrameArtAndProgress({
             fill
             sizes={backgroundImageSizes}
             quality={backgroundImageQuality}
-            loading={prioritizeMediaLoading ? "eager" : undefined}
             priority={prioritizeMediaLoading}
             className={isPerformanceMode ? "absolute inset-0 z-0 object-cover opacity-55 saturate-75" : "absolute inset-0 z-0 object-cover"}
           />
@@ -56,7 +55,7 @@ export function CardFrameArtAndProgress({
             src={card.renderUrl}
             alt={card.name}
             fill
-            loading={isPerformanceMode ? "lazy" : prioritizeMediaLoading ? "eager" : undefined}
+            loading={prioritizeMediaLoading ? undefined : isPerformanceMode ? "lazy" : undefined}
             priority={prioritizeMediaLoading}
             unoptimized={shouldBypassImageOptimization}
             sizes={renderImageSizes}

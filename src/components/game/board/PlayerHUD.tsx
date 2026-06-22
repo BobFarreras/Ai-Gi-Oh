@@ -29,6 +29,7 @@ export interface PlayerHUDProps {
   energyLossPulseKey?: string | null;
   energyLossAmount?: number | null;
   avatarUrl?: string | null;
+  avatarObjectPosition?: string;
   dialogueMessage?: string | null;
   phase?: string;
   onAdvancePhase?: () => void;
@@ -56,6 +57,7 @@ function PlayerHUDComponent({
   energyLossPulseKey = null,
   energyLossAmount = null,
   avatarUrl = null,
+  avatarObjectPosition,
   dialogueMessage = null,
   phase = "MAIN_1",
   onAdvancePhase,
@@ -138,6 +140,7 @@ function PlayerHUDComponent({
         player={player}
         isActiveTurn={isActiveTurn}
         avatarUrl={avatarUrl}
+        avatarObjectPosition={avatarObjectPosition}
         badgeText={badgeText}
         showEnergy={showEnergy}
       />

@@ -16,6 +16,7 @@ export function BoardPlayersSection({
   opponent,
   playerAvatarUrl,
   opponentAvatarUrl,
+  opponentAvatarObjectPosition,
 }: IBoardViewSectionProps) {
   const mobileHudLayout = useBoardMobileHudLayout();
   if (screen.isResultVisible) return null;
@@ -40,6 +41,7 @@ export function BoardPlayersSection({
         lastEnergyLossEventId={board.lastEnergyLossEventId}
         playerAvatarUrl={playerAvatarUrl}
         opponentAvatarUrl={opponentAvatarUrl}
+        opponentAvatarObjectPosition={opponentAvatarObjectPosition}
         playerDialogueMessage={screen.narration.hudDialogueByPlayerId[player.id] ?? null}
         opponentDialogueMessage={screen.narration.hudDialogueByPlayerId[opponent.id] ?? null}
         phase={board.gameState.phase}
@@ -67,6 +69,7 @@ export function BoardPlayersSection({
         energyLossAmount={board.lastEnergyLossAmount}
         energyLossPulseKey={board.lastEnergyLossEventId}
         avatarUrl={opponentAvatarUrl}
+        avatarObjectPosition={opponentAvatarObjectPosition}
         dialogueMessage={screen.narration.hudDialogueByPlayerId[opponent.id] ?? null}
         containerClassName="!top-0 !right-0 !z-[280] !w-[clamp(11.8rem,35vw,16.4rem)] !h-[clamp(5.4rem,10.2vh,6.9rem)]"
         containerStyle={{ top: `${mobileHudLayout.opponentHudTopPx}px` }}
