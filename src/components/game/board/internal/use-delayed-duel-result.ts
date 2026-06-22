@@ -12,6 +12,12 @@ interface IUseDelayedDuelResultParams {
   playerName: string;
   opponentName: string;
   setBannerSignal: (value: IBattleBannerMessage | null) => void;
+  /**
+   * Ganador comunicado externamente (Realtime multijugador). Se usa solo si
+   * board.winnerPlayerId es null, para mostrar el overlay al perdedor cuando
+   * su motor local no detectó el fin (latencia/pérdida de la acción final).
+   */
+  externalWinnerPlayerId?: string | "DRAW" | null;
 }
 
 function resolveWinnerDisplayName(
@@ -31,12 +37,16 @@ export function useDelayedDuelResult({
   playerName,
   opponentName,
   setBannerSignal,
+  externalWinnerPlayerId,
 }: IUseDelayedDuelResultParams): string | "DRAW" | null {
+  // Ganador efectivo: el motor local tiene prioridad; si no detectó fin, usa
+  // el externo (notificación Realtime) para garantizar overlay al perdedor.
+  const effectiveWinnerPlayerId = board.winnerPlayerId ?? externalWinnerPlayerId ?? null;
   const [resultWinnerPlayerId, setResultWinnerPlayerId] = useState<string | "DRAW" | null>(null);
   const resultDelayTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!board.winnerPlayerId) {
+    if (!effectiveWinnerPlayerId) {
       if (resultDelayTimerRef.current) {
         window.clearTimeout(resultDelayTimerRef.current);
         resultDelayTimerRef.current = null;
@@ -46,32 +56,32 @@ export function useDelayedDuelResult({
       }, 0);
       return () => window.clearTimeout(clearTimerId);
     }
-    if (resultWinnerPlayerId === board.winnerPlayerId) return;
+    if (resultWinnerPlayerId === effectiveWinnerPlayerId) return;
     const isTurnLimitWin =
       board.gameState.turn >= RESULT_MAX_TURN_LIMIT &&
       board.gameState.playerA.healthPoints > 0 &&
       board.gameState.playerB.healthPoints > 0;
-    const winnerDisplayName = resolveWinnerDisplayName(board.winnerPlayerId, playerId, playerName, opponentName);
-    const isPlayerWinner = board.winnerPlayerId === playerId;
+    const winnerDisplayName = resolveWinnerDisplayName(effectiveWinnerPlayerId, playerId, playerName, opponentName);
+    const isPlayerWinner = effectiveWinnerPlayerId === playerId;
     const variant: IBattleBannerMessage["variant"] =
-      board.winnerPlayerId === "DRAW" ? "TURN_LIMIT" : isPlayerWinner ? "VICTORY" : "DEFEAT";
+      effectiveWinnerPlayerId === "DRAW" ? "TURN_LIMIT" : isPlayerWinner ? "VICTORY" : "DEFEAT";
     const leftText = isTurnLimitWin
-      ? `Turnos agotados · ${isPlayerWinner ? "Victoria" : board.winnerPlayerId === "DRAW" ? "Empate" : "Derrota"}`
+      ? `Turnos agotados · ${isPlayerWinner ? "Victoria" : effectiveWinnerPlayerId === "DRAW" ? "Empate" : "Derrota"}`
       : isPlayerWinner
         ? "Victoria"
-        : board.winnerPlayerId === "DRAW"
+        : effectiveWinnerPlayerId === "DRAW"
           ? "Empate"
           : "Derrota";
-    const rightText = board.winnerPlayerId === "DRAW" ? "Resultado: empate" : `Gana ${winnerDisplayName}`;
+    const rightText = effectiveWinnerPlayerId === "DRAW" ? "Resultado: empate" : `Gana ${winnerDisplayName}`;
     setBannerSignal({
-      id: `duel-end-${board.matchSeed}-${board.winnerPlayerId}-${Date.now()}`,
+      id: `duel-end-${board.matchSeed}-${effectiveWinnerPlayerId}-${Date.now()}`,
       left: leftText,
       right: rightText,
       variant,
     });
     if (resultDelayTimerRef.current) window.clearTimeout(resultDelayTimerRef.current);
     resultDelayTimerRef.current = window.setTimeout(() => {
-      setResultWinnerPlayerId(board.winnerPlayerId);
+      setResultWinnerPlayerId(effectiveWinnerPlayerId);
       resultDelayTimerRef.current = null;
     }, RESULT_OVERLAY_DELAY_MS);
   }, [
@@ -79,7 +89,7 @@ export function useDelayedDuelResult({
     board.gameState.playerB.healthPoints,
     board.gameState.turn,
     board.matchSeed,
-    board.winnerPlayerId,
+    effectiveWinnerPlayerId,
     opponentName,
     playerId,
     playerName,

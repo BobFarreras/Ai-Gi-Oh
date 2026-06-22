@@ -43,12 +43,19 @@ interface IBoardProps {
   opponentStrategyOverride?: IOpponentStrategy | null;
   onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string }) => void;
   onTutorialFlowFinished?: () => void;
+  /**
+   * Ganador comunicado por una fuente externa al motor local (ej. notificación
+   * Realtime de fin de partida en multijugador). Tiene prioridad cuando el motor
+   * local aún no ha detectado el fin (latencia/pérdida de la acción final),
+   * garantizando que el overlay de resultado se muestre al perdedor.
+   */
+  externalWinnerPlayerId?: string | "DRAW" | null;
   /** Callback que recibe applyTransition al montar el Board. Permite que clientes externos (ej. multijugador) apliquen acciones al estado de partida. */
   applyTransitionRef?: React.MutableRefObject<((transition: (state: import("@/core/use-cases/GameEngine").GameState) => import("@/core/use-cases/GameEngine").GameState) => import("@/core/use-cases/GameEngine").GameState | null) | null>;
   /** Recibe applyRemoteAction: aplica una acción del rival CON su coreografía visual (multijugador). */
   applyRemoteActionRef?: React.MutableRefObject<((action: import("@/core/entities/multiplayer/IMatchAction").IMatchActionPayload) => Promise<void>) | null>;
 }
-export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef }: IBoardProps) {
+export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId }: IBoardProps) {
   countRender("Board");
   const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme, disableOpponentAutomation, opponentStrategyOverride);
   useLayoutEffect(() => {
@@ -87,6 +94,7 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
     narrationPack,
     isNarrationLocked: isMatchStartLocked,
     onMatchResolved,
+    externalWinnerPlayerId,
   });
   return (
     <div className={boardRootClassName} style={viewportMetrics.height ? { height: `${viewportMetrics.height}px` } : undefined} onClick={board.clearSelection}>
