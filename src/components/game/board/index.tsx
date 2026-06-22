@@ -123,6 +123,7 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
             opponent={opponent}
             playerAvatarUrl={playerAvatarUrl}
             opponentAvatarUrl={opponentAvatarUrl}
+            opponentAvatarObjectPosition={opponentAvatarObjectPosition}
           />
         </>
       ) : null}
@@ -148,9 +149,8 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
           isMobile={isMobile}
           player={player}
           opponent={opponent}
-            playerAvatarUrl={playerAvatarUrl}
-            opponentAvatarUrl={opponentAvatarUrl}
-            opponentAvatarObjectPosition={opponentAvatarObjectPosition}
+          playerAvatarUrl={playerAvatarUrl}
+          opponentAvatarUrl={opponentAvatarUrl}
         />
       ) : null}
       <DuelResultOverlay
