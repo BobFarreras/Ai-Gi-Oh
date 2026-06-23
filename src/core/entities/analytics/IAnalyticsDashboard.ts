@@ -18,6 +18,29 @@ export interface IDeviceDistribution {
   count: number;
 }
 
+/** Un jugador en el ranking de actividad. */
+export interface ITopPlayer {
+  userId: string;
+  nickname: string;
+  duels: number;
+}
+
+/** Una carta con su frecuencia de uso o compra. */
+export interface ICardFrequency {
+  cardId: string;
+  cardName: string;
+  count: number;
+}
+
+/** Una entrada de la lista de usuarios conectados recientemente. */
+export interface IRecentUser {
+  userId: string;
+  nickname: string;
+  lastSession: string;
+  sessions: number;
+  deviceType: string | null;
+}
+
 /** Snapshot completo del dashboard de analytics. */
 export interface IAnalyticsDashboard {
   dau: IDailyActiveUsersPoint[];
@@ -26,4 +49,8 @@ export interface IAnalyticsDashboard {
   avgSessionDurationSeconds: number | null;
   topEvents: IEventFrequency[];
   deviceDistribution: IDeviceDistribution[];
+  topPlayers: ITopPlayer[];
+  topCardsUsed: ICardFrequency[];
+  topCardsPurchased: ICardFrequency[];
+  recentUsers: IRecentUser[];
 }

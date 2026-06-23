@@ -13,6 +13,10 @@ const EMPTY_DASHBOARD: IAnalyticsDashboard = {
   avgSessionDurationSeconds: null,
   topEvents: [],
   deviceDistribution: [],
+  topPlayers: [],
+  topCardsUsed: [],
+  topCardsPurchased: [],
+  recentUsers: [],
 };
 
 export class SupabaseAnalyticsReadRepository implements IAnalyticsReadRepository {
@@ -35,6 +39,10 @@ export class SupabaseAnalyticsReadRepository implements IAnalyticsReadRepository
       avgSessionDurationSeconds: snapshot.avgSessionDurationSeconds ?? null,
       topEvents: snapshot.topEvents ?? [],
       deviceDistribution: snapshot.deviceDistribution ?? [],
+      topPlayers: snapshot.topPlayers ?? [],
+      topCardsUsed: snapshot.topCardsUsed ?? [],
+      topCardsPurchased: snapshot.topCardsPurchased ?? [],
+      recentUsers: snapshot.recentUsers ?? [],
     };
   }
 }

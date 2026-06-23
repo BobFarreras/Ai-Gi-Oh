@@ -3,6 +3,9 @@ import { IAnalyticsDashboard } from "@/core/entities/analytics/IAnalyticsDashboa
 import { AdminAnalyticsDauChart } from "@/components/admin/internal/AdminAnalyticsDauChart";
 import { AdminAnalyticsDevicePie } from "@/components/admin/internal/AdminAnalyticsDevicePie";
 import { AdminAnalyticsTopEventsChart } from "@/components/admin/internal/AdminAnalyticsTopEventsChart";
+import { AdminAnalyticsTopPlayers } from "@/components/admin/internal/AdminAnalyticsTopPlayers";
+import { AdminAnalyticsCardRanking } from "@/components/admin/internal/AdminAnalyticsCardRanking";
+import { AdminAnalyticsUsersTable } from "@/components/admin/internal/AdminAnalyticsUsersTable";
 
 interface IAdminAnalyticsPanelProps {
   dashboard: IAnalyticsDashboard;
@@ -53,7 +56,18 @@ export function AdminAnalyticsPanel({ dashboard }: IAdminAnalyticsPanelProps) {
       <AdminAnalyticsDauChart data={dashboard.dau} />
 
       <div className="grid gap-3 md:grid-cols-2">
+        <AdminAnalyticsTopPlayers data={dashboard.topPlayers} />
+        <AdminAnalyticsCardRanking title="Cartas Más Usadas" data={dashboard.topCardsUsed} />
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <AdminAnalyticsCardRanking title="Cartas Más Compradas" data={dashboard.topCardsPurchased} />
         <AdminAnalyticsTopEventsChart data={dashboard.topEvents} />
+      </div>
+
+      <AdminAnalyticsUsersTable data={dashboard.recentUsers} />
+
+      <div className="grid gap-3 md:grid-cols-2">
         <AdminAnalyticsDevicePie data={dashboard.deviceDistribution} />
       </div>
     </section>

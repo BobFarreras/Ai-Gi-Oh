@@ -409,7 +409,15 @@ export async function POST(request: Request) {
 3. ✅ `pg_cron` para retención: job `analytics-retention-90d` (DELETE eventos/sesiones >90 días, diario 03:17 UTC).
 4. ✅ Hardening adicional: REVOKE de grants por defecto (053), saneamiento server-side de `deviceInfo`, tope de body 512KB.
 
-**Pendiente (no bloqueante):** acumular `events_count`/`page_views` por sesión (hoy se sobreescriben por batch), emitir `session_ended` en cliente, y vista de "cartas populares" cuando se añada al panel.
+**Pendiente (no bloqueante):** acumular `events_count`/`page_views` por sesión (hoy se sobreescriben por batch), emitir `session_ended` en cliente.
+
+### F5 — Insights de producto ✅ (implementada 2026-06-23)
+Paneles orientados a "cómo mejorar el juego" (migración 055 amplía `analytics_dashboard`):
+1. ✅ **Top 10 jugadores** por duelos terminados, con nickname (join `player_profiles`).
+2. ✅ **Top 10 cartas más usadas**: instrumentado `card_played`/`card_summoned` en el borde del tablero (`useExecutePlayAction`); nombre vía join a `cards_catalog`. (Muestreado al 20% → ranking representativo, conteos absolutos ≈1/5.)
+3. ✅ **Top 10 cartas más compradas**: `card_purchased` enriquecido con `cardId`+precio; sobres vía `jsonb_array_elements_text(openedCardIds)`.
+4. ✅ **Lista de usuarios conectados**: nickname, última sesión, nº de sesiones y dispositivo.
+- Componentes SVG/tabla nuevos en `components/admin/internal/` (cero deps), integrados en `AdminAnalyticsPanel`.
 
 ---
 

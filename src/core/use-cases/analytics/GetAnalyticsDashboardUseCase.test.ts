@@ -11,6 +11,10 @@ const EMPTY_DASHBOARD: IAnalyticsDashboard = {
   avgSessionDurationSeconds: null,
   topEvents: [],
   deviceDistribution: [],
+  topPlayers: [],
+  topCardsUsed: [],
+  topCardsPurchased: [],
+  recentUsers: [],
 };
 
 describe("GetAnalyticsDashboardUseCase", () => {

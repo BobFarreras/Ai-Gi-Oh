@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { BattleMode } from "@/core/entities/IPlayer";
 import { GameEngine } from "@/core/use-cases/GameEngine";
 import { useLocalActionEmitter } from "@/components/game/board/multiplayer/local-action-emitter";
+import { track } from "@/services/analytics/client/analytics-buffer";
 import { IUsePlayerActionsParams } from "./types";
 import { attemptZoneReplacementOnFull, executeActivationPlay } from "./useExecutePlayAction.internal";
 
@@ -106,6 +107,7 @@ export function useExecutePlayAction({
         const started = applyTransition((state) => GameEngine.startFusionSummon(state, state.playerA.id, selectedCardReference, mode));
         if (started) {
           emitLocalAction({ type: "START_FUSION_SUMMON", payload: { cardId: selectedCardReference, mode } });
+          track("card_summoned", "gameplay", { cardId: playingCard.id, cardType: "FUSION", mode });
         }
         return;
       }
@@ -130,6 +132,8 @@ export function useExecutePlayAction({
       if (played) {
         clearSelection();
         emitLocalAction({ type: "PLAY_CARD", payload: { cardId: selectedCardReference, mode } });
+        // Entidad jugada = invocación; ejecución/trampa = jugada. Ambos cuentan como "carta usada".
+        track(playingCard.type === "ENTITY" ? "card_summoned" : "card_played", "gameplay", { cardId: playingCard.id, cardType: playingCard.type, mode });
       }
     },
     [

@@ -36,6 +36,7 @@ export function useMarketPurchaseActions({ store, playerId, play, purchaseAction
     return enqueueTask(cardQueueRef, async () => {
       const telemetry = startInteraction("market.buyCard");
       const previous = store.getState();
+      const purchasedListing = previous.catalog.listings.find((entry) => entry.id === listingId);
       const optimistic = applyOptimisticBuyCard(previous.catalog, previous.collection, listingId);
       startTransition(() => store.setState({ catalog: optimistic.catalog, collection: optimistic.collection }));
       try {
@@ -45,7 +46,7 @@ export function useMarketPurchaseActions({ store, playerId, play, purchaseAction
         play("BUY_CARD");
         startTransition(() => store.setState({ catalog: result.catalog, transactions: result.transactions, collection: result.collection, errorMessage: null }));
         endInteraction(telemetry, "ok");
-        track("card_purchased", "shop", { listingId });
+        track("card_purchased", "shop", { listingId, cardId: purchasedListing?.card.id, price: purchasedListing?.priceNexus });
         return true;
       } catch (error) {
         startTransition(() => store.setState({ catalog: previous.catalog, transactions: previous.transactions, collection: previous.collection, errorMessage: mapMarketErrorMessage(error, "No se pudo comprar la carta en este momento.") }));
