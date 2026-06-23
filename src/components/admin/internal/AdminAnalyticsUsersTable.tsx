@@ -10,7 +10,7 @@ function formatDate(iso: string): string {
 export function AdminAnalyticsUsersTable({ data }: IRecentUsersProps) {
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
-      <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-cyan-300">Usuarios Conectados</h3>
+      <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-cyan-300">Usuarios Recientes (30 días)</h3>
       {data.length === 0 ? (
         <p className="py-4 text-center text-xs text-slate-500">Sin datos disponibles.</p>
       ) : (

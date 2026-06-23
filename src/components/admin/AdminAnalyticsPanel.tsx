@@ -6,6 +6,7 @@ import { AdminAnalyticsTopEventsChart } from "@/components/admin/internal/AdminA
 import { AdminAnalyticsTopPlayers } from "@/components/admin/internal/AdminAnalyticsTopPlayers";
 import { AdminAnalyticsCardRanking } from "@/components/admin/internal/AdminAnalyticsCardRanking";
 import { AdminAnalyticsUsersTable } from "@/components/admin/internal/AdminAnalyticsUsersTable";
+import { AdminAnalyticsOnlineUsers } from "@/components/admin/internal/AdminAnalyticsOnlineUsers";
 
 interface IAdminAnalyticsPanelProps {
   dashboard: IAnalyticsDashboard;
@@ -65,7 +66,10 @@ export function AdminAnalyticsPanel({ dashboard }: IAdminAnalyticsPanelProps) {
         <AdminAnalyticsTopEventsChart data={dashboard.topEvents} />
       </div>
 
-      <AdminAnalyticsUsersTable data={dashboard.recentUsers} />
+      <div className="grid gap-3 md:grid-cols-[minmax(0,18rem)_1fr]">
+        <AdminAnalyticsOnlineUsers />
+        <AdminAnalyticsUsersTable data={dashboard.recentUsers} />
+      </div>
 
       <div className="grid gap-3 md:grid-cols-2">
         <AdminAnalyticsDevicePie data={dashboard.deviceDistribution} />
