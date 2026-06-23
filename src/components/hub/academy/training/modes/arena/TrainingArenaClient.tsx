@@ -13,6 +13,7 @@ import { postTrainingMatchCompletion } from "./training-match-completion-client"
 import { TrainingArenaLobby } from "@/components/hub/academy/training/modes/arena/internal/TrainingArenaLobby";
 import { resolveTrainingResultAction } from "@/components/hub/academy/training/modes/arena/internal/resolve-training-result-action";
 import { resolveTrainingTierReward } from "@/core/services/training/resolve-training-tier-reward";
+import { track } from "@/services/analytics/client/analytics-buffer";
 
 interface ITrainingArenaClientProps {
   deck: ICard[];
@@ -74,6 +75,8 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
   async function handleMatchResolved(result: { winnerPlayerId: string | "DRAW"; playerId: string; matchSeed: string }) {
     if (hasPostedRef.current) return;
     hasPostedRef.current = true;
+    const outcome = resolveOutcome(result);
+    track("duel_ended", "gameplay", { mode: "TRAINING", tier: props.selectedTier, outcome, matchSeed: result.matchSeed });
     try {
       const payload = await postTrainingMatchCompletion({
         battleId: props.completionBattleId,
@@ -110,7 +113,10 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
           opponentName={props.opponentName}
           playerAvatarUrl="/assets/story/player/bob.webp"
           opponentAvatarUrl={props.opponentAvatarUrl}
-          onStart={() => setIsBattleStarted(true)}
+          onStart={() => {
+            setIsBattleStarted(true);
+            track("duel_started", "gameplay", { mode: "TRAINING", tier: props.selectedTier, difficulty: props.opponentDifficulty });
+          }}
           onBack={() => window.location.replace(ACADEMY_HOME_ROUTE)}
         />
       ) : null}

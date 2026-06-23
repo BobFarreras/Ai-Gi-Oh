@@ -17,6 +17,7 @@ import { isDesktopLayoutViewport } from "@/components/internal/layout-breakpoint
 import { useMultiplayerLobbySfx } from "./internal/use-multiplayer-lobby-sfx";
 import { MultiplayerDesktopLayout } from "./layout/MultiplayerDesktopLayout";
 import { MultiplayerMobileLayout } from "./layout/MultiplayerMobileLayout";
+import { track } from "@/services/analytics/client/analytics-buffer";
 
 interface MultiplayerLobbyProps {
   localPlayerId: string;
@@ -66,6 +67,7 @@ export function MultiplayerLobby({ localPlayerId, localNickname, activeDeckIds }
   useEffect(() => {
     if (matchmakingStatus === "matched" && matchmakingMatchId) {
       play("MATCH_FOUND");
+      track("matchmaking_completed", "social", { matchId: matchmakingMatchId });
       router.push(`/hub/multiplayer/match/${matchmakingMatchId}`);
     }
   }, [matchmakingStatus, matchmakingMatchId, router, play]);
@@ -75,6 +77,7 @@ export function MultiplayerLobby({ localPlayerId, localNickname, activeDeckIds }
       if (activeDeckIds.length === 0) return;
       setSentInvites((prev) => new Set(prev).add(player.playerId));
       play("INVITE_SENT");
+      track("hub_node_clicked", "social", { node_type: "invite_sent", toPlayerId: player.playerId });
       const result = await sendInvitation(player.playerId, activeDeckIds);
       if (!result.ok) {
         setSentInvites((prev) => {
@@ -93,6 +96,7 @@ export function MultiplayerLobby({ localPlayerId, localNickname, activeDeckIds }
       if (isResponding) return;
       setIsResponding(true);
       play("INVITATION_ACCEPTED");
+      track("hub_node_clicked", "social", { node_type: "invite_accepted", invitationId: invitation.id });
       const result = await acceptInvitation(invitation.id, activeDeckIds);
       if (result.ok && result.matchId) {
         router.push(`/hub/multiplayer/match/${result.matchId}`);
@@ -114,11 +118,13 @@ export function MultiplayerLobby({ localPlayerId, localNickname, activeDeckIds }
 
   const handleToggleQueue = useCallback(() => {
     if (matchmakingStatus === "waiting") {
+      track("matchmaking_started", "social", { action: "left" });
       void leaveQueue();
     } else if (matchmakingStatus === "idle") {
+      track("matchmaking_started", "social", { action: "joined", deckCount: activeDeckIds.length });
       void joinQueue();
     }
-  }, [matchmakingStatus, joinQueue, leaveQueue]);
+  }, [matchmakingStatus, joinQueue, leaveQueue, activeDeckIds.length]);
 
   const hasDeck = activeDeckIds.length > 0;
 

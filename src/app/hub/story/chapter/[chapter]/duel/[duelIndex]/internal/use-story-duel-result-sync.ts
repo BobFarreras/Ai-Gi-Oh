@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result/duel-result-reward-summary";
 import { StoryDuelOutcome } from "@/services/story/duel-flow/story-duel-outcome";
 import { postStoryDuelCompletion } from "../story-duel-completion-client";
+import { track } from "@/services/analytics/client/analytics-buffer";
 
 interface IStoryDuelResultSyncInput {
   chapter: number;
@@ -54,6 +55,7 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
     setIsBossSoundtrackStopped(true);
     const outcome: StoryDuelOutcome = result.winnerPlayerId === result.playerId ? "WON" : "LOST";
     setStatus(outcome === "WON" ? "Registrando victoria y recompensas..." : "Registrando derrota...");
+    track("duel_ended", "gameplay", { mode: "STORY", chapter: input.chapter, duelIndex: input.duelIndex, outcome });
     try {
       const payload = await postStoryDuelCompletion({
         chapter: input.chapter,
@@ -83,6 +85,7 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
     hasPostedResultRef.current = true;
     setIsBossSoundtrackStopped(true);
     setStatus("Sincronizando abandono y retorno al mapa Story...");
+    track("duel_ended", "gameplay", { mode: "STORY", chapter: input.chapter, duelIndex: input.duelIndex, outcome: "ABANDONED" });
     try {
       const payload = await postStoryDuelCompletion({
         chapter: input.chapter,
