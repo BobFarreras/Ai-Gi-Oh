@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
         playerProgressRepository: new SupabasePlayerProgressRepository(repositories.client),
       },
     });
-    const duelActions: ProgressionActionType[] = ["PLAY_DUEL"];
-    if (payload.outcome === "WIN") duelActions.push("WIN_DUEL");
+    const duelActions: ProgressionActionType[] = ["PLAY_DUEL", "PLAY_ARENA"];
+    if (payload.outcome === "WIN") duelActions.push("WIN_DUEL", "WIN_ARENA");
     await recordProgressionEvent(repositories.client, duelActions);
     return NextResponse.json(result, { status: 200, headers: response.headers });
   } catch (error) {

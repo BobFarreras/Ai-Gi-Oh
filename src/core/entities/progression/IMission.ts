@@ -6,11 +6,14 @@ export type MissionScope = "DAILY" | "WEEKLY";
 export type ProgressionActionType =
   | "PLAY_DUEL"
   | "WIN_DUEL"
+  | "PLAY_ARENA"
+  | "WIN_ARENA"
   | "PLAY_MP_MATCH"
   | "WIN_MP_MATCH"
   | "BUY_CARD"
   | "BUY_PACK"
-  | "EVOLVE_CARD";
+  | "EVOLVE_CARD"
+  | "SPEND_NEXUS";
 
 /** Vista de una misión con el progreso del jugador para el periodo actual. */
 export interface IMissionView {
