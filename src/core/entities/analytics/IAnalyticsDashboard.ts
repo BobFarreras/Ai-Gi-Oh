@@ -36,6 +36,7 @@ export interface ICardFrequency {
 export interface IRecentUser {
   userId: string;
   nickname: string;
+  email?: string | null;
   lastSession: string;
   sessions: number;
   deviceType: string | null;

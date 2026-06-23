@@ -19,6 +19,7 @@ export function AdminAnalyticsUsersTable({ data }: IRecentUsersProps) {
             <thead>
               <tr className="border-b border-slate-700 text-[10px] uppercase tracking-wider text-slate-500">
                 <th className="py-1 pr-2 font-semibold">Jugador</th>
+                <th className="py-1 pr-2 font-semibold">Email</th>
                 <th className="py-1 pr-2 font-semibold">Última sesión</th>
                 <th className="py-1 pr-2 text-right font-semibold">Sesiones</th>
                 <th className="py-1 font-semibold">Dispositivo</th>
@@ -28,6 +29,7 @@ export function AdminAnalyticsUsersTable({ data }: IRecentUsersProps) {
               {data.map((user) => (
                 <tr key={user.userId} className="border-b border-slate-800/60 last:border-0">
                   <td className="py-1 pr-2 font-medium text-slate-200">{user.nickname}</td>
+                  <td className="py-1 pr-2 text-slate-400">{user.email ?? "—"}</td>
                   <td className="py-1 pr-2 font-mono text-slate-400">{formatDate(user.lastSession)}</td>
                   <td className="py-1 pr-2 text-right font-mono text-slate-300">{user.sessions.toLocaleString()}</td>
                   <td className="py-1 text-slate-400">{user.deviceType ?? "—"}</td>

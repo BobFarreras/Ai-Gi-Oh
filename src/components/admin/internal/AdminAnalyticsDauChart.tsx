@@ -2,8 +2,8 @@
 import { IDauChartProps } from "@/components/admin/internal/admin-analytics-panel.types";
 
 const WIDTH = 700;
-const HEIGHT = 180;
-const PADDING = { top: 16, right: 16, bottom: 32, left: 44 };
+const HEIGHT = 110;
+const PADDING = { top: 10, right: 16, bottom: 20, left: 40 };
 
 function buildPath(data: IDauChartProps["data"]): string {
   if (data.length === 0) return "";
