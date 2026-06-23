@@ -1,9 +1,7 @@
 // src/app/hub/layout.tsx - Viewport fijo del hub + provider de presencia/invitaciones multijugador global.
 import { MultiplayerPresenceProvider } from "@/components/hub/multiplayer/MultiplayerPresenceProvider";
 import { DailyLoginGate } from "@/components/hub/progression/DailyLoginGate";
-import { MissionsLauncher } from "@/components/hub/progression/MissionsLauncher";
-import { EventLauncher } from "@/components/hub/progression/EventLauncher";
-import { NewsLauncher } from "@/components/hub/progression/NewsLauncher";
+import { ProgressionDock } from "@/components/hub/progression/ProgressionDock";
 import { getMultiplayerLobbyData } from "@/services/multiplayer/get-multiplayer-lobby-data";
 import { getDailyLoginStatus } from "@/services/progression/get-daily-login-status";
 import { getPlayerMissions } from "@/services/progression/get-player-missions";
@@ -31,9 +29,7 @@ export default async function HubLayout({ children }: Readonly<{ children: React
     >
       {viewport}
       {dailyLoginStatus ? <DailyLoginGate status={dailyLoginStatus} /> : null}
-      <MissionsLauncher missions={missions} />
-      {eventOverview ? <EventLauncher overview={eventOverview} /> : null}
-      {promotions.length > 0 ? <NewsLauncher promotions={promotions} /> : null}
+      <ProgressionDock missions={missions} eventOverview={eventOverview} promotions={promotions} />
     </MultiplayerPresenceProvider>
   );
 }
