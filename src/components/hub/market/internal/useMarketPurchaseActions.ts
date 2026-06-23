@@ -7,6 +7,7 @@ import { MarketSceneStoreApi } from "@/components/hub/market/internal/market-sce
 import { mapMarketErrorMessage } from "@/components/hub/market/internal/market-error-message";
 import { IMarketPurchaseActionOverrides } from "@/components/hub/market/internal/market-tutorial-contract";
 import { endInteraction, startInteraction } from "@/services/performance/dev-performance-telemetry";
+import { track } from "@/services/analytics/client/analytics-buffer";
 
 interface UseMarketPurchaseActionsInput {
   store: MarketSceneStoreApi;
@@ -44,10 +45,12 @@ export function useMarketPurchaseActions({ store, playerId, play, purchaseAction
         play("BUY_CARD");
         startTransition(() => store.setState({ catalog: result.catalog, transactions: result.transactions, collection: result.collection, errorMessage: null }));
         endInteraction(telemetry, "ok");
+        track("card_purchased", "shop", { listingId });
         return true;
       } catch (error) {
         startTransition(() => store.setState({ catalog: previous.catalog, transactions: previous.transactions, collection: previous.collection, errorMessage: mapMarketErrorMessage(error, "No se pudo comprar la carta en este momento.") }));
         endInteraction(telemetry, "error");
+        track("error_occurred", "system", { component: "market.buyCard", error: String(error) });
         return false;
       } finally {
         isBuyingCardRef.current = false;
@@ -73,10 +76,12 @@ export function useMarketPurchaseActions({ store, playerId, play, purchaseAction
         const openedCards = result.openedCardIds.map((cardId) => cardMap.get(cardId)).filter((card): card is ICard => Boolean(card));
         startTransition(() => store.setState({ catalog: result.catalog, transactions: result.transactions, collection: result.collection, revealedPackCards: openedCards, isPackRevealOpen: true, errorMessage: null }));
         endInteraction(telemetry, "ok");
+        track("pack_purchased", "shop", { packId, openedCardIds: result.openedCardIds });
         return true;
       } catch (error) {
         startTransition(() => store.setState({ catalog: previous.catalog, transactions: previous.transactions, collection: previous.collection, errorMessage: mapMarketErrorMessage(error, "No se pudo comprar el sobre en este momento.") }));
         endInteraction(telemetry, "error");
+        track("error_occurred", "system", { component: "market.buyPack", error: String(error) });
         return false;
       } finally {
         startTransition(() => store.setState({ isBuyingPack: false }));

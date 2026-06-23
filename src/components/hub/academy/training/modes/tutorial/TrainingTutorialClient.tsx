@@ -16,6 +16,7 @@ import { ensureCombatNodeCompletion } from "@/components/hub/academy/training/mo
 import { ACADEMY_POST_TUTORIAL_OVERLAY_QUERY } from "@/components/hub/academy/internal/AcademyPostTutorialBigLogOverlay";
 import { markTutorialSoundtrackFirstRunFinished } from "@/components/hub/academy/tutorial/internal/tutorial-soundtrack-session";
 import { ITrainingTutorialClientProps } from "@/components/hub/academy/training/modes/tutorial/internal/training-tutorial-client.types";
+import { track } from "@/services/analytics/client/analytics-buffer";
 
 export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
   const FINAL_TUTORIAL_NEXUS_REWARD = 600;
@@ -45,11 +46,15 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
    */
   async function handleMatchResolved(result: { winnerPlayerId: string | "DRAW"; playerId: string }) {
     if (result.winnerPlayerId !== result.playerId || hasPostedRef.current) {
-      if (result.winnerPlayerId !== result.playerId) setStatus("Tutorial no completado. Vuelve a intentarlo.");
+      if (result.winnerPlayerId !== result.playerId) {
+        setStatus("Tutorial no completado. Vuelve a intentarlo.");
+        track("duel_ended", "gameplay", { mode: "TUTORIAL", outcome: "LOST" });
+      }
       return;
     }
     hasPostedRef.current = true;
     setStatus("Registrando progreso del nodo de combate...");
+    track("duel_ended", "gameplay", { mode: "TUTORIAL", outcome: "WON" });
     try {
       const synced = await ensureCombatNodeCompletion();
       setStatus(synced ? "Nodo de combate completado y sincronizado." : "No se pudo sincronizar el nodo de combate.");
@@ -140,7 +145,10 @@ export function TrainingTutorialClient(props: ITrainingTutorialClientProps) {
       <TrainingCoinTossOverlay
         isVisible={isCoinTossVisible}
         starterSide={starterSide}
-        onContinue={() => setIsCoinTossVisible(false)}
+        onContinue={() => {
+          setIsCoinTossVisible(false);
+          track("duel_started", "gameplay", { mode: "TUTORIAL" });
+        }}
       />
     </div>
   );
