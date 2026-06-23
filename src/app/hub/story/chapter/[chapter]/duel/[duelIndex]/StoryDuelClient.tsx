@@ -14,6 +14,7 @@ import {
 import { useStoryDuelResultSync } from "./internal/use-story-duel-result-sync";
 import { StoryDuelCoinTossOverlay } from "./StoryDuelCoinTossOverlay";
 import { useStoryBossSoundtrack } from "./use-story-boss-soundtrack";
+import { track } from "@/services/analytics/client/analytics-buffer";
 
 interface StoryDuelClientProps {
   chapter: number;
@@ -119,7 +120,10 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
         opponentName={props.opponentName}
         playerAvatarUrl={presentationRuntime.playerAvatarUrl}
         opponentAvatarUrl={presentationRuntime.opponentAvatarUrl}
-        onComplete={() => setIsCoinTossVisible(false)}
+        onComplete={() => {
+          setIsCoinTossVisible(false);
+          track("duel_started", "gameplay", { mode: "STORY", chapter: props.chapter, duelIndex: props.duelIndex, isBossDuel: props.isBossDuel });
+        }}
       />
     </main>
   );

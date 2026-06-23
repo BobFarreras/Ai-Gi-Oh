@@ -19,6 +19,7 @@ import {
 import { createSeededGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 import { useMultiplayerRemoteFinish } from "./internal/use-multiplayer-remote-finish";
 import { MultiplayerCoinTossOverlay } from "./MultiplayerCoinTossOverlay";
+import { track } from "@/services/analytics/client/analytics-buffer";
 
 interface MultiplayerMatchClientProps {
   matchId: string;
@@ -155,25 +156,28 @@ export function MultiplayerMatchClient({
     (result: { winnerPlayerId: string | "DRAW" }) => {
       const winner = result.winnerPlayerId;
       setWinnerPlayerId(winner === "DRAW" ? "DRAW" : winner);
+      track("duel_ended", "gameplay", { mode: "MULTIPLAYER", matchId, source: "local_engine", winnerPlayerId: winner });
       if (winner === "DRAW") void finishMatch("DRAW");
       else if (winner === localPlayerId) void finishMatch("WIN");
       else void finishMatch("LOSE");
     },
-    [localPlayerId, finishMatch],
+    [localPlayerId, finishMatch, matchId],
   );
 
   const handleForfeitVictory = useCallback(() => {
+    track("duel_ended", "gameplay", { mode: "MULTIPLAYER", matchId, source: "forfeit_opponent_abandoned" });
     void finishMatch("WIN");
-  }, [finishMatch]);
+  }, [finishMatch, matchId]);
 
   // Notificación remota de fin de partida (postgres_changes en match_sessions).
   // Garantiza que el perdedor vea el overlay aunque se pierda la acción final.
   const handleRemoteFinish = useCallback(
     (outcome: "WIN" | "LOSE" | "DRAW", winnerId: string | "DRAW") => {
       setWinnerPlayerId(winnerId);
+      track("duel_ended", "gameplay", { mode: "MULTIPLAYER", matchId, source: "remote_realtime", outcome, winnerId });
       void finishMatch(outcome);
     },
-    [finishMatch],
+    [finishMatch, matchId],
   );
 
   const disconnectedSeconds = Math.floor(disconnectedForMs / 1000);
@@ -293,7 +297,10 @@ export function MultiplayerMatchClient({
         opponentName={opponentNickname}
         playerAvatarUrl={LOCAL_AVATAR_URL}
         opponentAvatarUrl={OPPONENT_AVATAR_URL}
-        onComplete={() => setIsCoinTossVisible(false)}
+        onComplete={() => {
+          setIsCoinTossVisible(false);
+          track("duel_started", "gameplay", { mode: "MULTIPLAYER", matchId });
+        }}
       />
     </div>
     </LocalActionEmitterProvider>
