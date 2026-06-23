@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { IDailyLoginClaimResult, ILoginStreakStatus } from "@/core/entities/progression/ILoginStreak";
+import { track } from "@/services/analytics/client/analytics-buffer";
 
 interface IDailyLoginModalProps {
   status: ILoginStreakStatus;
@@ -27,6 +28,9 @@ export function DailyLoginModal({ status, onClose }: IDailyLoginModalProps) {
       const data = (await response.json()) as IDailyLoginClaimResult;
       setResult(data);
       setClaimedToday(true);
+      if (data.applied) {
+        track("daily_login_claimed", "system", { dayIndex: status.pendingDayIndex, currentStreak: data.currentStreak });
+      }
     } catch {
       setError("No se pudo reclamar. Inténtalo de nuevo.");
     } finally {

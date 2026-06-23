@@ -5,6 +5,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { IEventOverview, IEventShopItem } from "@/core/entities/progression/IEvent";
 import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
+import { track } from "@/services/analytics/client/analytics-buffer";
 
 interface IEventPanelProps {
   overview: IEventOverview;
@@ -50,6 +51,7 @@ function ShopItem({
       if (!response.ok) throw new Error("redeem failed");
       const data = (await response.json()) as { balance: number };
       onRedeemed(item.itemId, data.balance);
+      track("event_item_redeemed", "shop", { itemId: item.itemId, cardId: item.cardId, costPoints: item.costPoints });
     } catch {
       setError("No se pudo canjear.");
     } finally {

@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { IMissionView } from "@/core/entities/progression/IMission";
+import { track } from "@/services/analytics/client/analytics-buffer";
 
 interface IMissionsPanelProps {
   missions: IMissionView[];
@@ -28,6 +29,7 @@ function MissionRow({ mission, onClaimed }: { mission: IMissionView; onClaimed: 
       if (!response.ok) throw new Error("claim failed");
       setClaimed(true);
       onClaimed(mission.missionId);
+      track("mission_claimed", "system", { missionId: mission.missionId, scope: mission.scope, rewardNexus: mission.rewardNexus });
     } catch {
       setError(true);
     } finally {
