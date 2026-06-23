@@ -29,6 +29,7 @@ export interface ITopPlayer {
 export interface ICardFrequency {
   cardId: string;
   cardName: string;
+  cardType?: string | null;
   count: number;
 }
 
