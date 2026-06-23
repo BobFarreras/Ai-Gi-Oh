@@ -3,17 +3,20 @@ import { MultiplayerPresenceProvider } from "@/components/hub/multiplayer/Multip
 import { DailyLoginGate } from "@/components/hub/progression/DailyLoginGate";
 import { MissionsLauncher } from "@/components/hub/progression/MissionsLauncher";
 import { EventLauncher } from "@/components/hub/progression/EventLauncher";
+import { NewsLauncher } from "@/components/hub/progression/NewsLauncher";
 import { getMultiplayerLobbyData } from "@/services/multiplayer/get-multiplayer-lobby-data";
 import { getDailyLoginStatus } from "@/services/progression/get-daily-login-status";
 import { getPlayerMissions } from "@/services/progression/get-player-missions";
 import { getEventOverview } from "@/services/progression/get-event-overview";
+import { getActivePromotions } from "@/services/progression/get-active-promotions";
 
 export default async function HubLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const [lobbyData, dailyLoginStatus, missions, eventOverview] = await Promise.all([
+  const [lobbyData, dailyLoginStatus, missions, eventOverview, promotions] = await Promise.all([
     getMultiplayerLobbyData(),
     getDailyLoginStatus(),
     getPlayerMissions(),
     getEventOverview(),
+    getActivePromotions(),
   ]);
   const viewport = <div className="relative min-h-dvh overflow-hidden">{children}</div>;
 
@@ -30,6 +33,7 @@ export default async function HubLayout({ children }: Readonly<{ children: React
       {dailyLoginStatus ? <DailyLoginGate status={dailyLoginStatus} /> : null}
       <MissionsLauncher missions={missions} />
       {eventOverview ? <EventLauncher overview={eventOverview} /> : null}
+      {promotions.length > 0 ? <NewsLauncher promotions={promotions} /> : null}
     </MultiplayerPresenceProvider>
   );
 }
