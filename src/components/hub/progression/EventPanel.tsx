@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { IEventOverview, IEventShopItem } from "@/core/entities/progression/IEvent";
 import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
-import { CardThumbnail } from "@/components/game/card/CardThumbnail";
+import { Card } from "@/components/game/card/Card";
 import { track } from "@/services/analytics/client/analytics-buffer";
 import { ProgressionDialogShell } from "./internal/ProgressionDialogShell";
 
@@ -58,9 +58,11 @@ function ShopItem({
 
   return (
     <div className="flex flex-col gap-2 border border-fuchsia-900/40 bg-[#0a0716]/80 p-2" style={{ clipPath: "polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)" }}>
-      <div className="relative mx-auto aspect-[13/19] w-full max-w-[120px]">
+      <div className="relative mx-auto h-[200px] w-[137px] overflow-hidden">
         {card ? (
-          <CardThumbnail card={card} />
+          <div style={{ width: 260, height: 380, transform: "scale(0.527)", transformOrigin: "top left" }}>
+            <Card card={card} disableHoverEffects disableHologram disableDefaultShadow />
+          </div>
         ) : (
           <div className="flex h-full w-full items-center justify-center border border-slate-700 bg-slate-900 text-[10px] text-slate-500">{item.cardId}</div>
         )}
@@ -113,7 +115,7 @@ export function EventPanel({ overview, onClose }: IEventPanelProps) {
     >
       {overview.description ? <p className="mb-3 text-sm leading-relaxed text-slate-300">{overview.description}</p> : null}
       <h3 className="mb-2.5 font-mono text-xs font-black uppercase tracking-[0.2em] text-fuchsia-400/80">Tienda de canje</h3>
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3">
         {items.map((item) => (
           <ShopItem key={item.itemId} item={item} balance={balance} onRedeemed={handleRedeemed} />
         ))}

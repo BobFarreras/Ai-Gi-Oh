@@ -58,17 +58,21 @@ export function AdminLiveOpsPanel({ data }: { data: ILiveOpsAdminData }) {
 
       <p className="border-l-2 border-cyan-500/50 bg-cyan-500/5 px-3 py-2 text-xs text-slate-300">{activeHint}</p>
 
-      <div className="home-modern-scroll min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
-        {tab === "missions" ? data.missions.map((mission) => <AdminMissionRow key={mission.id} mission={mission} />) : null}
-        {tab === "events" ? (
-          data.events.length > 0 ? data.events.map((event) => <AdminEventEditor key={event.id} event={event} />) : <p className="py-6 text-center text-sm text-slate-500">No hay eventos configurados.</p>
-        ) : null}
-        {tab === "login" ? (
-          <div className="space-y-2.5">
-            {data.loginCalendar.map((day) => <AdminLoginDayRow key={day.dayIndex} day={day} />)}
-          </div>
-        ) : null}
-        {tab === "promotions" ? data.promotions.map((promotion) => <AdminPromotionRow key={promotion.id} promotion={promotion} />) : null}
+      <div className="home-modern-scroll min-h-0 flex-1 overflow-y-auto pr-1">
+        {/* Las 4 secciones se mantienen montadas (oculto las inactivas) para no perder los
+            cambios editados/guardados al cambiar de pestaña. */}
+        <div className={tab === "missions" ? "space-y-3" : "hidden"}>
+          {data.missions.map((mission) => <AdminMissionRow key={mission.id} mission={mission} />)}
+        </div>
+        <div className={tab === "events" ? "space-y-3" : "hidden"}>
+          {data.events.length > 0 ? data.events.map((event) => <AdminEventEditor key={event.id} event={event} />) : <p className="py-6 text-center text-sm text-slate-500">No hay eventos configurados.</p>}
+        </div>
+        <div className={tab === "login" ? "space-y-2.5" : "hidden"}>
+          {data.loginCalendar.map((day) => <AdminLoginDayRow key={day.dayIndex} day={day} />)}
+        </div>
+        <div className={tab === "promotions" ? "space-y-3" : "hidden"}>
+          {data.promotions.map((promotion) => <AdminPromotionRow key={promotion.id} promotion={promotion} />)}
+        </div>
       </div>
     </section>
   );

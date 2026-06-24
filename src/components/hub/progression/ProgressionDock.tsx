@@ -1,7 +1,7 @@
 // src/components/hub/progression/ProgressionDock.tsx - Dock táctico en cluster (2 abajo + 1 encima). Solo en la escena del hub (/hub), igual que el HUD. Carga deslizando desde la izquierda; sin flotación. Labels en desktop, iconos en móvil. Diálogos que se despliegan desde el dock.
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { IMissionView } from "@/core/entities/progression/IMission";
@@ -91,15 +91,57 @@ function DockButton({
   );
 }
 
-export function ProgressionDock({ missions, eventOverview, promotions }: IProgressionDockProps) {
+export function ProgressionDock({ missions: initialMissions, eventOverview: initialEvent, promotions }: IProgressionDockProps) {
   const [panel, setPanel] = useState<DockPanel>(null);
   const [canShow, setCanShow] = useState(false);
+  const [missions, setMissions] = useState(initialMissions);
+  const [eventOverview, setEventOverview] = useState(initialEvent);
   const pathname = usePathname();
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setCanShow(true), HUB_HUD_START_DELAY_MS);
     return () => window.clearTimeout(timeout);
   }, []);
+
+  // Refresca el estado en vivo (misiones + evento) sin recargar: el SSR de layout no se
+  // re-ejecuta al navegar dentro del hub, así que el progreso quedaría obsoleto.
+  const refresh = useCallback(async () => {
+    try {
+      const response = await fetch("/api/progression/state");
+      if (!response.ok) return;
+      const data = (await response.json()) as { missions: IMissionView[]; event: IEventOverview | null };
+      setMissions(data.missions ?? []);
+      setEventOverview(data.event ?? null);
+    } catch {
+      // Silencioso: si falla, se mantiene el último estado conocido.
+    }
+  }, []);
+
+  // Al (re)entrar en el hub, refresca para reflejar duelos/compras recién hechos.
+  useEffect(() => {
+    if (pathname !== "/hub") return;
+    let active = true;
+    void (async () => {
+      try {
+        const response = await fetch("/api/progression/state");
+        if (!active || !response.ok) return;
+        const data = (await response.json()) as { missions: IMissionView[]; event: IEventOverview | null };
+        if (!active) return;
+        setMissions(data.missions ?? []);
+        setEventOverview(data.event ?? null);
+      } catch {
+        // Silencioso.
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
+
+  const handleClose = useCallback(() => {
+    setPanel(null);
+    void refresh();
+  }, [refresh]);
 
   // Solo en la escena del hub (/hub), igual que el HUD; no en market/story/academy/etc.
   if (pathname !== "/hub") return null;
@@ -172,9 +214,9 @@ export function ProgressionDock({ missions, eventOverview, promotions }: IProgre
       ) : null}
 
       <AnimatePresence>
-        {panel === "missions" ? <MissionsPanel key="missions" missions={missions} onClose={() => setPanel(null)} /> : null}
-        {panel === "event" && eventOverview ? <EventPanel key="event" overview={eventOverview} onClose={() => setPanel(null)} /> : null}
-        {panel === "news" ? <NewsPanel key="news" promotions={promotions} onClose={() => setPanel(null)} /> : null}
+        {panel === "missions" ? <MissionsPanel key="missions" missions={missions} onClose={handleClose} /> : null}
+        {panel === "event" && eventOverview ? <EventPanel key="event" overview={eventOverview} onClose={handleClose} /> : null}
+        {panel === "news" ? <NewsPanel key="news" promotions={promotions} onClose={handleClose} /> : null}
       </AnimatePresence>
     </>
   );
