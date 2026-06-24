@@ -7,7 +7,7 @@ import { readJsonObjectBody, readRequiredStringField } from "@/services/security
 import { verifyStoryCompletionTicket } from "@/services/security/duel-completion-ticket";
 import { createStoryDuelCompletionRouteContext } from "@/services/story/api/create-story-duel-completion-route-context";
 import { recordProgressionEvent } from "@/services/progression/record-progression-event";
-import { ProgressionActionType } from "@/core/entities/progression/IMission";
+import { resolveDuelProgressionActions } from "@/core/services/progression/resolve-progression-actions";
 
 export async function POST(request: NextRequest) {
   const originGuard = requireTrustedMutationOrigin(request);
@@ -32,9 +32,7 @@ export async function POST(request: NextRequest) {
       collectionRepository: context.repositories.collectionRepository,
       loadCardsByIds: context.loadCardsByIds,
     });
-    const duelActions: ProgressionActionType[] = ["PLAY_DUEL"];
-    if (result.outcome === "WON") duelActions.push("WIN_DUEL");
-    await recordProgressionEvent(context.repositories.client, duelActions);
+    await recordProgressionEvent(context.repositories.client, resolveDuelProgressionActions("STORY", result.outcome === "WON"));
     return NextResponse.json(result, { status: 200, headers: context.response.headers });
   } catch (error) {
     return createApiErrorResponse(error, "No se pudo registrar el resultado del duelo Story.");

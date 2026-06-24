@@ -8,7 +8,7 @@ import { requireTrustedMutationOrigin } from "@/services/security/api/require-tr
 import { readJsonObjectBody, readRequiredStringField } from "@/services/security/api/request-body-parser";
 import { verifyTrainingCompletionTicket } from "@/services/security/duel-completion-ticket";
 import { recordProgressionEvent } from "@/services/progression/record-progression-event";
-import { ProgressionActionType } from "@/core/entities/progression/IMission";
+import { resolveDuelProgressionActions } from "@/core/services/progression/resolve-progression-actions";
 import { processTrainingMatchCompletion } from "./internal/process-training-match-completion";
 
 export async function POST(request: NextRequest) {
@@ -39,9 +39,7 @@ export async function POST(request: NextRequest) {
         playerProgressRepository: new SupabasePlayerProgressRepository(repositories.client),
       },
     });
-    const duelActions: ProgressionActionType[] = ["PLAY_DUEL", "PLAY_ARENA"];
-    if (payload.outcome === "WIN") duelActions.push("WIN_DUEL", "WIN_ARENA");
-    await recordProgressionEvent(repositories.client, duelActions);
+    await recordProgressionEvent(repositories.client, resolveDuelProgressionActions("TRAINING", payload.outcome === "WIN"));
     return NextResponse.json(result, { status: 200, headers: response.headers });
   } catch (error) {
     return createApiErrorResponse(error, "No se pudo registrar el cierre del combate de entrenamiento.");
