@@ -29,7 +29,7 @@ export default async function HubLayout({ children }: Readonly<{ children: React
     >
       {viewport}
       {dailyLoginStatus ? <DailyLoginGate status={dailyLoginStatus} /> : null}
-      <ProgressionDock missions={missions} eventOverview={eventOverview} promotions={promotions} />
+      <ProgressionDock missions={missions} eventOverview={eventOverview} promotions={promotions} dailyLogin={dailyLoginStatus} />
     </MultiplayerPresenceProvider>
   );
 }

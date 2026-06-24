@@ -7,17 +7,20 @@ import { usePathname } from "next/navigation";
 import { IMissionView } from "@/core/entities/progression/IMission";
 import { IEventOverview } from "@/core/entities/progression/IEvent";
 import { IFeaturedPromotion } from "@/core/entities/progression/IPromotion";
+import { ILoginStreakStatus } from "@/core/entities/progression/ILoginStreak";
 import { HUB_HUD_ANIMATION_DURATION, HUB_HUD_START_DELAY_MS } from "@/components/hub/internal/hub-entry-timings";
 import { MissionsPanel } from "./MissionsPanel";
 import { EventPanel } from "./EventPanel";
 import { NewsPanel } from "./NewsPanel";
+import { DailyLoginModal } from "./DailyLoginModal";
 
-type DockPanel = "missions" | "event" | "news" | null;
+type DockPanel = "daily" | "missions" | "event" | "news" | null;
 
 interface IProgressionDockProps {
   missions: IMissionView[];
   eventOverview: IEventOverview | null;
   promotions: IFeaturedPromotion[];
+  dailyLogin: ILoginStreakStatus | null;
 }
 
 const CLIP_PATH = "polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)";
@@ -91,7 +94,7 @@ function DockButton({
   );
 }
 
-export function ProgressionDock({ missions: initialMissions, eventOverview: initialEvent, promotions }: IProgressionDockProps) {
+export function ProgressionDock({ missions: initialMissions, eventOverview: initialEvent, promotions, dailyLogin }: IProgressionDockProps) {
   const [panel, setPanel] = useState<DockPanel>(null);
   const [canShow, setCanShow] = useState(false);
   const [missions, setMissions] = useState(initialMissions);
@@ -152,6 +155,16 @@ export function ProgressionDock({ missions: initialMissions, eventOverview: init
     : false;
 
   const buttons: ReactNode[] = [];
+  if (dailyLogin) {
+    buttons.push(
+      <DockButton key="daily" label="Diaria" badge={!dailyLogin.claimedToday ? <RedeemDiamond /> : null} onClick={() => setPanel("daily")}>
+        <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="17" rx="2" />
+          <path d="M3 9h18M8 2v4M16 2v4M9 14l2 2 4-4" />
+        </svg>
+      </DockButton>,
+    );
+  }
   if (missions.length > 0) {
     buttons.push(
       <DockButton key="missions" label="Misiones" badge={claimableMissions > 0 ? <CountBadge count={claimableMissions} tone="amber" /> : null} onClick={() => setPanel("missions")}>
@@ -194,7 +207,17 @@ export function ProgressionDock({ missions: initialMissions, eventOverview: init
           style={{ willChange: "transform" }}
           className="pointer-events-none fixed z-40 bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] left-[max(0.5rem,env(safe-area-inset-left))] sm:bottom-6 sm:left-6"
         >
-          {buttons.length >= 3 ? (
+          {buttons.length >= 4 ? (
+            <div className="flex flex-col items-center gap-2.5">
+              <div className="flex gap-2.5">
+                {buttons[0]}
+                {buttons[1]}
+              </div>
+              <div className="flex gap-2.5">
+                {buttons.slice(2)}
+              </div>
+            </div>
+          ) : buttons.length === 3 ? (
             <div className="flex flex-col items-center gap-2.5">
               <div>{buttons[0]}</div>
               <div className="flex gap-2.5">
@@ -218,6 +241,8 @@ export function ProgressionDock({ missions: initialMissions, eventOverview: init
         {panel === "event" && eventOverview ? <EventPanel key="event" overview={eventOverview} onClose={handleClose} /> : null}
         {panel === "news" ? <NewsPanel key="news" promotions={promotions} onClose={handleClose} /> : null}
       </AnimatePresence>
+
+      {panel === "daily" && dailyLogin ? <DailyLoginModal status={dailyLogin} onClose={() => setPanel(null)} /> : null}
     </>
   );
 }
