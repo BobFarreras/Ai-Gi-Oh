@@ -3,84 +3,40 @@
 
 import { useState } from "react";
 import { IAdminPromotionConfig } from "@/core/entities/progression/ILiveOpsAdmin";
-
-type SaveState = "idle" | "saving" | "ok" | "error";
+import { LiveOpsField, LiveOpsToggle, LiveOpsSaveBar } from "./live-ops/live-ops-controls";
+import { saveLiveOps } from "./live-ops/save-live-ops";
 
 export function AdminPromotionRow({ promotion }: { promotion: IAdminPromotionConfig }) {
   const [draft, setDraft] = useState<IAdminPromotionConfig>(promotion);
-  const [state, setState] = useState<SaveState>("idle");
-
   function update<K extends keyof IAdminPromotionConfig>(key: K, value: IAdminPromotionConfig[K]) {
     setDraft((prev) => ({ ...prev, [key]: value }));
-    setState("idle");
-  }
-
-  async function handleSave() {
-    setState("saving");
-    try {
-      const response = await fetch("/api/admin/progression/promotions", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(draft),
-      });
-      setState(response.ok ? "ok" : "error");
-    } catch {
-      setState("error");
-    }
   }
 
   return (
-    <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
-      <div className="mb-2 flex items-center gap-2">
-        <span className="rounded bg-slate-700/70 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-slate-300">{draft.kind}</span>
-        <span className="ml-auto font-mono text-[10px] text-slate-500">{draft.id}</span>
+    <div className="border border-cyan-900/50 bg-[#03101c]/80 p-4" style={{ clipPath: "polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)" }}>
+      <div className="mb-3 flex items-center gap-2">
+        <span className="border border-cyan-700/50 bg-cyan-500/10 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-300">{draft.kind}</span>
+        <span className="ml-auto font-mono text-[10px] text-slate-600">{draft.id}</span>
       </div>
-      <div className="space-y-2">
-        <input
-          aria-label="Título"
-          className="w-full rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100"
-          value={draft.title}
-          onChange={(event) => update("title", event.target.value)}
-        />
-        <textarea
-          aria-label="Cuerpo"
-          rows={2}
-          className="w-full rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100"
-          value={draft.body ?? ""}
-          onChange={(event) => update("body", event.target.value)}
-        />
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <input
-            aria-label="Texto del botón (CTA)"
-            placeholder="Texto botón"
-            className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100"
-            value={draft.ctaLabel ?? ""}
-            onChange={(event) => update("ctaLabel", event.target.value)}
+      <div className="space-y-3">
+        <LiveOpsField label="Título" value={draft.title} onChange={(value) => update("title", value)} />
+        <label className="flex flex-col gap-1">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-500/70">Cuerpo</span>
+          <textarea
+            rows={2}
+            className="w-full border border-cyan-900/60 bg-[#03101c] px-2.5 py-1.5 text-sm text-slate-100 outline-none focus:border-cyan-400"
+            value={draft.body ?? ""}
+            onChange={(event) => update("body", event.target.value)}
           />
-          <input
-            aria-label="Enlace del botón (CTA)"
-            placeholder="/hub/market"
-            className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-100"
-            value={draft.ctaHref ?? ""}
-            onChange={(event) => update("ctaHref", event.target.value)}
-          />
+        </label>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <LiveOpsField label="Texto del botón" value={draft.ctaLabel ?? ""} onChange={(value) => update("ctaLabel", value)} placeholder="Ir al Mercado" />
+          <LiveOpsField label="Enlace" value={draft.ctaHref ?? ""} onChange={(value) => update("ctaHref", value)} placeholder="/hub/market" />
         </div>
       </div>
-      <div className="mt-2 flex items-center gap-3">
-        <button
-          type="button"
-          disabled={state === "saving"}
-          className="h-7 rounded-md bg-cyan-500 px-3 text-[11px] font-black uppercase tracking-wide text-slate-950 transition hover:bg-cyan-400 disabled:opacity-50"
-          onClick={handleSave}
-        >
-          {state === "saving" ? "Guardando…" : "Guardar"}
-        </button>
-        <label className="flex items-center gap-1 text-[10px] text-slate-400">
-          <input type="checkbox" checked={draft.isActive} onChange={(event) => update("isActive", event.target.checked)} />
-          Activa
-        </label>
-        {state === "ok" ? <span className="text-[11px] text-emerald-300">Guardado ✓</span> : null}
-        {state === "error" ? <span className="text-[11px] text-rose-300">Error al guardar</span> : null}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <LiveOpsToggle label="Promoción" checked={draft.isActive} onChange={(value) => update("isActive", value)} />
+        <LiveOpsSaveBar onSave={() => saveLiveOps("promotion", draft)} />
       </div>
     </div>
   );

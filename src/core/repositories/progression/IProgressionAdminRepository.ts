@@ -1,11 +1,21 @@
-// src/core/repositories/progression/IProgressionAdminRepository.ts - Contrato admin de lectura/escritura de definiciones de live-ops (misiones y promociones).
-import { IAdminMissionDefinition, IAdminPromotionConfig, ILiveOpsAdminData } from "@/core/entities/progression/ILiveOpsAdmin";
+// src/core/repositories/progression/IProgressionAdminRepository.ts - Contrato admin de lectura/escritura de definiciones de live-ops (misiones, eventos, login y promociones).
+import {
+  IAdminEvent,
+  IAdminEventRule,
+  IAdminEventShopItem,
+  IAdminLoginRewardDay,
+  IAdminMissionDefinition,
+  IAdminPromotionConfig,
+  ILiveOpsAdminData,
+} from "@/core/entities/progression/ILiveOpsAdmin";
 
 export interface IProgressionAdminRepository {
   /** Lee todas las definiciones de live-ops para el panel admin. */
   getLiveOps(): Promise<ILiveOpsAdminData>;
-  /** Crea o actualiza una definición de misión. */
   upsertMission(mission: IAdminMissionDefinition): Promise<void>;
-  /** Crea o actualiza una promoción/noticia. */
   upsertPromotion(promotion: IAdminPromotionConfig): Promise<void>;
+  upsertEvent(event: Omit<IAdminEvent, "rules" | "items">): Promise<void>;
+  upsertEventRule(rule: IAdminEventRule): Promise<void>;
+  upsertEventShopItem(item: IAdminEventShopItem): Promise<void>;
+  upsertLoginRewardDay(day: IAdminLoginRewardDay): Promise<void>;
 }
