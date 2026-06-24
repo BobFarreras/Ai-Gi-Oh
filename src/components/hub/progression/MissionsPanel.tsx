@@ -45,32 +45,32 @@ function MissionRow({ mission, onClaimed }: { mission: IMissionView; onClaimed: 
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-slate-100">{mission.title}</p>
-          <p className="truncate text-[11px] text-slate-400">{mission.description}</p>
+          <p className="truncate text-base font-bold text-slate-50">{mission.title}</p>
+          <p className="text-sm text-slate-300">{mission.description}</p>
         </div>
-        <span className="shrink-0 border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 font-mono text-[11px] font-black text-amber-300">+{mission.rewardNexus}</span>
+        <span className="shrink-0 border border-amber-500/50 bg-amber-500/15 px-2.5 py-1 font-mono text-sm font-black text-amber-200">+{mission.rewardNexus}</span>
       </div>
-      <div className="mt-2.5 flex items-center gap-2">
-        <div className="relative h-2 flex-1 overflow-hidden border border-cyan-900/60 bg-black/60">
+      <div className="mt-3 flex items-center gap-2.5">
+        <div className="relative h-3 flex-1 overflow-hidden border border-cyan-900/60 bg-black/60">
           <div className={`absolute inset-y-0 left-0 ${claimed ? "bg-emerald-500" : "bg-cyan-400"}`} style={{ width: `${pct}%` }} />
         </div>
-        <span className="w-12 shrink-0 text-right font-mono text-[11px] text-slate-400">{Math.min(mission.progress, mission.targetCount)}/{mission.targetCount}</span>
+        <span className="w-14 shrink-0 text-right font-mono text-sm font-bold text-slate-200">{Math.min(mission.progress, mission.targetCount)}/{mission.targetCount}</span>
       </div>
-      <div className="mt-2.5">
+      <div className="mt-3">
         {claimed ? (
-          <p className="text-center font-mono text-[11px] font-black uppercase tracking-[0.16em] text-emerald-400">Reclamada ✓</p>
+          <p className="text-center font-mono text-sm font-black uppercase tracking-[0.16em] text-emerald-400">Reclamada ✓</p>
         ) : (
           <button
             type="button"
             disabled={!canClaim || busy}
-            className="h-8 w-full bg-cyan-500 font-mono text-[11px] font-black uppercase tracking-[0.16em] text-slate-950 transition hover:bg-cyan-400 disabled:bg-slate-800 disabled:text-slate-600"
+            className="h-10 w-full bg-cyan-500 font-mono text-sm font-black uppercase tracking-[0.16em] text-slate-950 transition hover:bg-cyan-400 disabled:bg-slate-800 disabled:text-slate-600"
             style={{ clipPath: "polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)" }}
             onClick={handleClaim}
           >
             {busy ? "Reclamando…" : canClaim ? "Reclamar" : "En progreso"}
           </button>
         )}
-        {error ? <p className="mt-1 text-center text-[10px] text-rose-300">No se pudo reclamar.</p> : null}
+        {error ? <p className="mt-1.5 text-center text-xs text-rose-300">No se pudo reclamar.</p> : null}
       </div>
     </div>
   );
@@ -86,7 +86,7 @@ export function MissionsPanel({ missions, onClose }: IMissionsPanelProps) {
   const renderGroup = (title: string, list: IMissionView[]) =>
     list.length > 0 ? (
       <div className="space-y-2">
-        <h3 className="font-mono text-[10px] font-black uppercase tracking-[0.2em] text-cyan-500/70">{title}</h3>
+        <h3 className="font-mono text-xs font-black uppercase tracking-[0.2em] text-cyan-400/80">{title}</h3>
         {list.map((mission) => (
           <MissionRow key={mission.missionId} mission={{ ...mission, claimed: mission.claimed || claimedIds.has(mission.missionId) }} onClaimed={markClaimed} />
         ))}
@@ -106,7 +106,7 @@ export function MissionsPanel({ missions, onClose }: IMissionsPanelProps) {
       }
     >
       {missions.length === 0 ? (
-        <p className="py-6 text-center text-xs text-slate-500">No hay misiones disponibles.</p>
+        <p className="py-6 text-center text-sm text-slate-400">No hay misiones disponibles.</p>
       ) : (
         <div className="space-y-4">
           {renderGroup("Diarias", daily)}

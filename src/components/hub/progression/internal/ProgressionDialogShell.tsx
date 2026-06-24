@@ -43,23 +43,23 @@ export function ProgressionDialogShell({ title, subtitle, icon, accent = "cyan",
         onClick={(event) => event.stopPropagation()}
         className={`flex max-h-[88vh] w-full max-w-md flex-col border ${accentBorder} bg-[#040d18]/96 shadow-[0_0_40px_rgba(0,0,0,0.6)]`}
       >
-        <span className={`h-[3px] w-full ${accentBar}`} />
+        <span className={`h-1 w-full ${accentBar}`} />
         <div className="flex items-center gap-3 px-5 pb-3 pt-4">
-          <span className={`flex h-9 w-9 shrink-0 items-center justify-center border ${accentBorder} bg-[#03101c] ${accentText}`} style={{ clipPath: "polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)" }}>
+          <span className={`flex h-11 w-11 shrink-0 items-center justify-center border ${accentBorder} bg-[#03101c] ${accentText}`} style={{ clipPath: "polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px)" }}>
             {icon}
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className={`font-mono text-sm font-black uppercase tracking-[0.18em] ${accentText}`}>{title}</h2>
-            {subtitle ? <p className="truncate font-mono text-[10px] uppercase tracking-[0.12em] text-slate-500">{subtitle}</p> : null}
+            <h2 className={`font-mono text-lg font-black uppercase tracking-[0.16em] ${accentText}`}>{title}</h2>
+            {subtitle ? <p className="truncate font-mono text-xs uppercase tracking-[0.12em] text-slate-400">{subtitle}</p> : null}
           </div>
           <button
             type="button"
             aria-label="Cerrar"
             onClick={onClose}
-            className="flex h-7 w-7 shrink-0 items-center justify-center border border-slate-600/70 text-slate-300 transition-colors hover:border-cyan-400 hover:text-cyan-200"
-            style={{ clipPath: "polygon(4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%,0 4px)" }}
+            className="flex h-9 w-9 shrink-0 items-center justify-center border border-slate-600/70 text-slate-300 transition-colors hover:border-cyan-400 hover:text-cyan-200"
+            style={{ clipPath: "polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px)" }}
           >
-            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
         </div>
         {headerExtra ? <div className="px-5 pb-3">{headerExtra}</div> : null}

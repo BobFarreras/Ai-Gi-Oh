@@ -36,7 +36,7 @@ export function NewsPanel({ promotions, onClose }: { promotions: IFeaturedPromot
       }
     >
       {promotions.length === 0 ? (
-        <p className="py-6 text-center text-xs text-slate-500">No hay novedades por ahora.</p>
+        <p className="py-6 text-center text-sm text-slate-400">No hay novedades por ahora.</p>
       ) : (
         <div className="space-y-2.5">
           {promotions.map((promo) => (
@@ -46,17 +46,17 @@ export function NewsPanel({ promotions, onClose }: { promotions: IFeaturedPromot
                   <Image src={promo.mediaUrl} alt={promo.title} fill sizes="420px" className="object-cover" />
                 </div>
               ) : null}
-              <div className="space-y-2 p-3">
-                <span className={`inline-block border px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-[0.16em] ${KIND_ACCENT[promo.kind]}`}>
+              <div className="space-y-2.5 p-4">
+                <span className={`inline-block border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-[0.16em] ${KIND_ACCENT[promo.kind]}`}>
                   {KIND_LABEL[promo.kind]}
                 </span>
-                <h3 className="text-sm font-bold text-slate-100">{promo.title}</h3>
-                {promo.body ? <p className="text-xs leading-relaxed text-slate-400">{promo.body}</p> : null}
+                <h3 className="text-base font-bold text-slate-50">{promo.title}</h3>
+                {promo.body ? <p className="text-sm leading-relaxed text-slate-300">{promo.body}</p> : null}
                 {promo.ctaHref && promo.ctaLabel ? (
                   <Link
                     href={promo.ctaHref}
                     onClick={onClose}
-                    className="inline-flex h-8 items-center bg-cyan-500 px-3 font-mono text-[10px] font-black uppercase tracking-[0.16em] text-slate-950 transition hover:bg-cyan-400"
+                    className="inline-flex h-9 items-center bg-cyan-500 px-4 font-mono text-xs font-black uppercase tracking-[0.16em] text-slate-950 transition hover:bg-cyan-400"
                     style={{ clipPath: "polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)" }}
                   >
                     {promo.ctaLabel}

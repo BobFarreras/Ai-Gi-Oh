@@ -65,21 +65,21 @@ function ShopItem({
           <div className="flex h-full w-full items-center justify-center border border-slate-700 bg-slate-900 text-[10px] text-slate-500">{item.cardId}</div>
         )}
         {soldOut ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/65 font-mono text-[10px] font-black uppercase tracking-widest text-emerald-300">Obtenida</div>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/65 font-mono text-xs font-black uppercase tracking-widest text-emerald-300">Obtenida</div>
         ) : null}
       </div>
-      <p className="text-center font-mono text-[9px] uppercase tracking-wider text-slate-500">{item.owned}/{item.perPlayerLimit}</p>
+      <p className="text-center font-mono text-[11px] uppercase tracking-wider text-slate-400">{item.owned}/{item.perPlayerLimit}</p>
       <button
         type="button"
         disabled={busy || soldOut || !affordable}
-        className="flex h-8 w-full items-center justify-center gap-1 bg-fuchsia-600 font-mono text-[10px] font-black uppercase tracking-[0.12em] text-white transition hover:bg-fuchsia-500 disabled:bg-slate-800 disabled:text-slate-600"
+        className="flex h-9 w-full items-center justify-center gap-1 bg-fuchsia-600 font-mono text-sm font-black uppercase tracking-[0.12em] text-white transition hover:bg-fuchsia-500 disabled:bg-slate-800 disabled:text-slate-600"
         style={{ clipPath: "polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)" }}
         onClick={handleRedeem}
       >
         {soldOut ? "Agotada" : busy ? "…" : `${item.costPoints}`}
-        {!soldOut && !busy ? <span className="text-fuchsia-200/80">pts</span> : null}
+        {!soldOut && !busy ? <span className="text-[11px] text-fuchsia-200/80">pts</span> : null}
       </button>
-      {error ? <p className="text-center text-[10px] text-rose-300">{error}</p> : null}
+      {error ? <p className="text-center text-xs text-rose-300">{error}</p> : null}
     </div>
   );
 }
@@ -105,14 +105,14 @@ export function EventPanel({ overview, onClose }: IEventPanelProps) {
         </svg>
       }
       headerExtra={
-        <div className="flex items-center justify-between border border-fuchsia-700/40 bg-fuchsia-500/10 px-4 py-2" style={{ clipPath: "polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)" }}>
-          <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-fuchsia-300">{overview.currencyName}</span>
-          <span className="font-mono text-xl font-black text-fuchsia-100">{balance.toLocaleString()}</span>
+        <div className="flex items-center justify-between border border-fuchsia-700/40 bg-fuchsia-500/10 px-4 py-2.5" style={{ clipPath: "polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)" }}>
+          <span className="font-mono text-xs uppercase tracking-[0.16em] text-fuchsia-300">{overview.currencyName}</span>
+          <span className="font-mono text-2xl font-black text-fuchsia-100">{balance.toLocaleString()}</span>
         </div>
       }
     >
-      {overview.description ? <p className="mb-3 text-xs leading-relaxed text-slate-400">{overview.description}</p> : null}
-      <h3 className="mb-2 font-mono text-[10px] font-black uppercase tracking-[0.2em] text-fuchsia-500/70">Tienda de canje</h3>
+      {overview.description ? <p className="mb-3 text-sm leading-relaxed text-slate-300">{overview.description}</p> : null}
+      <h3 className="mb-2.5 font-mono text-xs font-black uppercase tracking-[0.2em] text-fuchsia-400/80">Tienda de canje</h3>
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
         {items.map((item) => (
           <ShopItem key={item.itemId} item={item} balance={balance} onRedeemed={handleRedeemed} />
