@@ -501,6 +501,21 @@
    - mostrar el nickname del rival en invitaciones, lobby y ranking.
    - sin esta fase, la lectura de perfiles ajenos estaba bloqueada por RLS.
 
+## Seed 063 (Lote de 6 entidades de IA)
+
+1. Ejecuta `docs/supabase/sql/063_seed_6_ai_entities.sql`.
+2. Cartas insertadas (todas `ENTITY`, idempotentes por `on conflict (id) do update`):
+   - `entity-aws` (BIG_TECH / TOOL, 1800/1200, cost 5),
+   - `entity-qwen` (BIG_TECH / LLM, 1800/1200, cost 5),
+   - `entity-firebase` (BIG_TECH / DB, 1200/2000, cost 4),
+   - `entity-mistral` (OPEN_SOURCE / LLM, 1500/1300, cost 4),
+   - `entity-minimax` (NEUTRAL / LLM, 1500/1300, cost 4),
+   - `entity-copilot` (BIG_TECH / LLM, 1000/1000, cost 3).
+3. Dependencias:
+   - requiere esquema `cards_catalog` previo (`004_phase_4_cards_catalog_integrity.sql`).
+4. Assets visuales:
+   - `render_url` apunta a `/assets/renders/<name>.webp` (ya presentes en el repo).
+
 ## Notas
 
 1. El trigger `on_auth_user_created` solo debe existir una vez.

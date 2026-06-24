@@ -1,11 +1,12 @@
-// src/components/hub/progression/EventPanel.tsx - Panel del evento activo: balance de moneda, countdown y tienda de canje de cartas.
+// src/components/hub/progression/EventPanel.tsx - Diálogo táctico del evento: balance de moneda, countdown y tienda de canje con miniaturas de carta del juego (CardThumbnail).
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { IEventOverview, IEventShopItem } from "@/core/entities/progression/IEvent";
 import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
+import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { track } from "@/services/analytics/client/analytics-buffer";
+import { ProgressionDialogShell } from "./internal/ProgressionDialogShell";
 
 interface IEventPanelProps {
   overview: IEventOverview;
@@ -17,18 +18,15 @@ function formatRemaining(endsAt: string): string {
   if (ms <= 0) return "Finalizado";
   const days = Math.floor(ms / 86_400_000);
   const hours = Math.floor((ms % 86_400_000) / 3_600_000);
-  if (days > 0) return `Termina en ${days}d ${hours}h`;
-  return `Termina en ${hours}h`;
+  return days > 0 ? `Termina en ${days}d ${hours}h` : `Termina en ${hours}h`;
 }
 
 function ShopItem({
   item,
-  currencyName,
   balance,
   onRedeemed,
 }: {
   item: IEventShopItem;
-  currencyName: string;
   balance: number;
   onRedeemed: (itemId: string, newBalance: number) => void;
 }) {
@@ -37,7 +35,6 @@ function ShopItem({
   const card = CARD_BY_ID.get(item.cardId);
   const soldOut = item.owned >= item.perPlayerLimit;
   const affordable = balance >= item.costPoints;
-  const imageUrl = card?.renderUrl ?? card?.bgUrl ?? null;
 
   async function handleRedeem() {
     setBusy(true);
@@ -60,21 +57,29 @@ function ShopItem({
   }
 
   return (
-    <div className="flex flex-col rounded-lg border border-slate-700 bg-slate-800/50 p-2">
-      <div className="relative mb-2 aspect-[3/4] w-full overflow-hidden rounded-md border border-slate-700 bg-slate-900">
-        {imageUrl ? <Image src={imageUrl} alt={card?.name ?? item.cardId} fill sizes="120px" className="object-cover" /> : null}
+    <div className="flex flex-col gap-2 border border-fuchsia-900/40 bg-[#0a0716]/80 p-2" style={{ clipPath: "polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)" }}>
+      <div className="relative mx-auto aspect-[13/19] w-full max-w-[120px]">
+        {card ? (
+          <CardThumbnail card={card} />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center border border-slate-700 bg-slate-900 text-[10px] text-slate-500">{item.cardId}</div>
+        )}
+        {soldOut ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/65 font-mono text-[10px] font-black uppercase tracking-widest text-emerald-300">Obtenida</div>
+        ) : null}
       </div>
-      <p className="truncate text-xs font-bold text-slate-100">{card?.name ?? item.cardId}</p>
-      <p className="mb-1 text-[10px] text-slate-400">{item.owned}/{item.perPlayerLimit} canjeada(s)</p>
+      <p className="text-center font-mono text-[9px] uppercase tracking-wider text-slate-500">{item.owned}/{item.perPlayerLimit}</p>
       <button
         type="button"
         disabled={busy || soldOut || !affordable}
-        className="h-8 w-full rounded-md bg-fuchsia-600 text-[11px] font-black uppercase tracking-wide text-white transition hover:bg-fuchsia-500 disabled:bg-slate-700 disabled:text-slate-500"
+        className="flex h-8 w-full items-center justify-center gap-1 bg-fuchsia-600 font-mono text-[10px] font-black uppercase tracking-[0.12em] text-white transition hover:bg-fuchsia-500 disabled:bg-slate-800 disabled:text-slate-600"
+        style={{ clipPath: "polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)" }}
         onClick={handleRedeem}
       >
-        {soldOut ? "Agotada" : busy ? "Canjeando…" : `${item.costPoints} ${currencyName}`}
+        {soldOut ? "Agotada" : busy ? "…" : `${item.costPoints}`}
+        {!soldOut && !busy ? <span className="text-fuchsia-200/80">pts</span> : null}
       </button>
-      {error ? <p className="mt-1 text-center text-[10px] text-rose-300">{error}</p> : null}
+      {error ? <p className="text-center text-[10px] text-rose-300">{error}</p> : null}
     </div>
   );
 }
@@ -89,30 +94,30 @@ export function EventPanel({ overview, onClose }: IEventPanelProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4" role="dialog" aria-modal="true" aria-label="Evento" onClick={onClose}>
-      <div className="flex max-h-[90vh] w-full max-w-lg flex-col gap-3 overflow-y-auto rounded-2xl border border-fuchsia-800/60 bg-slate-900 p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <h2 className="text-lg font-black uppercase tracking-widest text-fuchsia-200">{overview.name}</h2>
-            <p className="text-[11px] text-slate-400">{formatRemaining(overview.endsAt)}</p>
-          </div>
-          <button type="button" aria-label="Cerrar" className="h-7 w-7 shrink-0 rounded-md border border-slate-600 text-slate-300 hover:bg-slate-800" onClick={onClose}>✕</button>
+    <ProgressionDialogShell
+      title={overview.name}
+      subtitle={formatRemaining(overview.endsAt)}
+      accent="fuchsia"
+      onClose={onClose}
+      icon={
+        <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2l2.4 5.2L20 8l-4 4 1 6-5-2.8L7 18l1-6-4-4 5.6-.8z" />
+        </svg>
+      }
+      headerExtra={
+        <div className="flex items-center justify-between border border-fuchsia-700/40 bg-fuchsia-500/10 px-4 py-2" style={{ clipPath: "polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)" }}>
+          <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-fuchsia-300">{overview.currencyName}</span>
+          <span className="font-mono text-xl font-black text-fuchsia-100">{balance.toLocaleString()}</span>
         </div>
-
-        {overview.description ? <p className="text-xs text-slate-300">{overview.description}</p> : null}
-
-        <div className="rounded-lg border border-fuchsia-700/50 bg-fuchsia-500/10 px-4 py-2 text-center">
-          <p className="text-[10px] uppercase tracking-wider text-fuchsia-300">{overview.currencyName}</p>
-          <p className="text-2xl font-black text-fuchsia-100">{balance.toLocaleString()}</p>
-        </div>
-
-        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-300">Tienda</h3>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {items.map((item) => (
-            <ShopItem key={item.itemId} item={item} currencyName={overview.currencyName} balance={balance} onRedeemed={handleRedeemed} />
-          ))}
-        </div>
+      }
+    >
+      {overview.description ? <p className="mb-3 text-xs leading-relaxed text-slate-400">{overview.description}</p> : null}
+      <h3 className="mb-2 font-mono text-[10px] font-black uppercase tracking-[0.2em] text-fuchsia-500/70">Tienda de canje</h3>
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+        {items.map((item) => (
+          <ShopItem key={item.itemId} item={item} balance={balance} onRedeemed={handleRedeemed} />
+        ))}
       </div>
-    </div>
+    </ProgressionDialogShell>
   );
 }
