@@ -10,7 +10,22 @@ export const PROGRESSION_ACTION_LABEL: Record<string, string> = {
   BUY_PACK: "Abrir un sobre",
   EVOLVE_CARD: "Evolucionar una carta",
   SPEND_NEXUS: "Gastar Nexus",
+  // Objetivos de colección (estado): el progreso se mide contra la colección, no por acciones.
+  OWN_CARDS_AT_LEVEL: "Tener cartas a nivel ≥",
+  OWN_CARDS_AT_VERSION: "Tener cartas a versión ≥",
+  OWN_CARDS_TOTAL: "Tener cartas en el almacén",
+  OWN_DISTINCT_CARDS: "Tener cartas distintas",
 };
+
+/** Objetivos de misión disponibles para el admin (acciones + colección). */
+export const MISSION_OBJECTIVE_TYPES = [
+  "PLAY_DUEL", "WIN_DUEL", "PLAY_ARENA", "WIN_ARENA", "PLAY_MP_MATCH", "WIN_MP_MATCH",
+  "BUY_CARD", "BUY_PACK", "EVOLVE_CARD", "SPEND_NEXUS",
+  "OWN_CARDS_AT_LEVEL", "OWN_CARDS_AT_VERSION", "OWN_CARDS_TOTAL", "OWN_DISTINCT_CARDS",
+] as const;
+
+/** Objetivos de estado que requieren un umbral (objective_param). */
+export const OBJECTIVE_TYPES_WITH_PARAM = new Set(["OWN_CARDS_AT_LEVEL", "OWN_CARDS_AT_VERSION"]);
 
 /** Devuelve la etiqueta legible de una acción, o la propia clave si no está mapeada. */
 export function progressionActionLabel(actionType: string): string {

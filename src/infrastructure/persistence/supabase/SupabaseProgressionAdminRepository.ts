@@ -58,7 +58,7 @@ export class SupabaseProgressionAdminRepository implements IProgressionAdminRepo
 
   async upsertMission(mission: IAdminMissionDefinition): Promise<void> {
     const { error } = await this.client.from("mission_definitions").upsert({
-      id: mission.id, scope: mission.scope, objective_type: mission.objectiveType,
+      id: mission.id, scope: mission.scope, objective_type: mission.objectiveType, objective_param: mission.objectiveParam,
       target_count: mission.targetCount, reward_nexus: mission.rewardNexus, title: mission.title,
       description: mission.description, sort_order: mission.sortOrder, is_active: mission.isActive,
     });
@@ -106,7 +106,7 @@ export class SupabaseProgressionAdminRepository implements IProgressionAdminRepo
 }
 
 interface IMissionRow {
-  id: string; scope: string; objective_type: string; target_count: number; reward_nexus: number;
+  id: string; scope: string; objective_type: string; objective_param: number | null; target_count: number; reward_nexus: number;
   title: string; description: string | null; sort_order: number; is_active: boolean;
 }
 interface IPromotionRow {
@@ -124,8 +124,9 @@ interface ILoginRow {
 
 function toMission(row: IMissionRow): IAdminMissionDefinition {
   return {
-    id: row.id, scope: row.scope as MissionScope, objectiveType: row.objective_type, targetCount: row.target_count,
-    rewardNexus: row.reward_nexus, title: row.title, description: row.description, sortOrder: row.sort_order, isActive: row.is_active,
+    id: row.id, scope: row.scope as MissionScope, objectiveType: row.objective_type, objectiveParam: row.objective_param,
+    targetCount: row.target_count, rewardNexus: row.reward_nexus, title: row.title, description: row.description,
+    sortOrder: row.sort_order, isActive: row.is_active,
   };
 }
 function toPromotion(row: IPromotionRow): IAdminPromotionConfig {

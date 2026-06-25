@@ -7,6 +7,8 @@ export interface IAdminMissionDefinition {
   id: string;
   scope: MissionScope;
   objectiveType: string;
+  /** Umbral del objetivo de estado (nivel/versión); null en acciones y cantidades. */
+  objectiveParam: number | null;
   targetCount: number;
   rewardNexus: number;
   title: string;
