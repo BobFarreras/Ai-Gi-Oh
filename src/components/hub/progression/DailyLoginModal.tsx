@@ -14,11 +14,13 @@ interface IDailyLoginModalProps {
 }
 
 /** Glow radial estático (blur fijo) con pulso por transform/opacity. */
-function HeroGlow({ tone }: { tone: "amber" | "cyan" }) {
+function HeroGlow({ tone }: { tone: "amber" | "cyan" | "emerald" }) {
   const gradient =
-    tone === "amber"
-      ? "radial-gradient(circle,rgba(251,191,36,0.4),rgba(245,158,11,0.18),transparent 70%)"
-      : "radial-gradient(circle,rgba(34,211,238,0.4),rgba(56,189,248,0.18),transparent 70%)";
+    tone === "emerald"
+      ? "radial-gradient(circle,rgba(16,185,129,0.4),rgba(5,150,105,0.18),transparent 70%)"
+      : tone === "amber"
+        ? "radial-gradient(circle,rgba(251,191,36,0.4),rgba(245,158,11,0.18),transparent 70%)"
+        : "radial-gradient(circle,rgba(34,211,238,0.4),rgba(56,189,248,0.18),transparent 70%)";
   return (
     <motion.div
       aria-hidden
@@ -72,7 +74,8 @@ export function DailyLoginModal({ status, onClose }: IDailyLoginModalProps) {
 
   const selectedDay: ILoginRewardDay | undefined = status.calendar.find((day) => day.dayIndex === selectedDayIndex);
   const selectedCard = selectedDay?.rewardType === "CARD" && selectedDay.rewardCardId ? CARD_BY_ID.get(selectedDay.rewardCardId) : null;
-  const heroTone = selectedCard ? "cyan" : "amber";
+  const isSelectedClaimed = selectedDayIndex <= claimedThrough;
+  const heroTone: "amber" | "cyan" | "emerald" = isSelectedClaimed ? "emerald" : selectedCard ? "cyan" : "amber";
   const isViewingToday = selectedDayIndex === status.pendingDayIndex;
 
   async function handleClaim() {
@@ -127,15 +130,15 @@ export function DailyLoginModal({ status, onClose }: IDailyLoginModalProps) {
               className="relative"
             >
               {selectedCard ? (
-                <div className="relative h-[263px] w-[180px] drop-shadow-[0_0_30px_rgba(34,211,238,0.5)]">
+                <div className={`relative h-[263px] w-[180px] ${isSelectedClaimed ? "drop-shadow-[0_0_30px_rgba(16,185,129,0.5)]" : "drop-shadow-[0_0_30px_rgba(34,211,238,0.5)]"}`}>
                   <div style={{ width: 260, height: 380, transform: "scale(0.692)", transformOrigin: "top left" }}>
                     <Card card={selectedCard} disableHoverEffects disableHologram disableDefaultShadow />
                   </div>
                 </div>
               ) : (
                 <div className="relative flex flex-col items-center">
-                  <span className="font-display text-6xl font-black text-amber-200 drop-shadow-[0_0_24px_rgba(251,191,36,0.7)]">+{selectedDay?.rewardNexus ?? 0}</span>
-                  <span className="mt-1 font-display text-sm font-bold uppercase tracking-[0.3em] text-amber-300/80">Nexus</span>
+                  <span className={`font-display text-6xl font-black ${isSelectedClaimed ? "text-emerald-200 drop-shadow-[0_0_24px_rgba(16,185,129,0.7)]" : "text-amber-200 drop-shadow-[0_0_24px_rgba(251,191,36,0.7)]"}`}>+{selectedDay?.rewardNexus ?? 0}</span>
+                  <span className={`mt-1 font-display text-sm font-bold uppercase tracking-[0.3em] ${isSelectedClaimed ? "text-emerald-300/80" : "text-amber-300/80"}`}>Nexus</span>
                 </div>
               )}
             </motion.div>
@@ -148,8 +151,7 @@ export function DailyLoginModal({ status, onClose }: IDailyLoginModalProps) {
           <p className="font-display text-lg font-bold uppercase tracking-[0.18em] text-cyan-100">Día {selectedDayIndex} <span className="text-slate-500">/ 7</span></p>
         </div>
 
-        <p className="mt-3 text-center text-xs text-slate-400">Toca un día para ver su recompensa</p>
-        <div className="mt-1.5 grid grid-cols-7 gap-1.5">
+        <div className="mt-4 grid grid-cols-7 gap-1.5">
           {status.calendar.map((day) => {
             const isClaimed = day.dayIndex <= claimedThrough;
             const isToday = !claimedToday && day.dayIndex === status.pendingDayIndex;
