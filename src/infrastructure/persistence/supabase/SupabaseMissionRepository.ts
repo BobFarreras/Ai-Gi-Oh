@@ -1,7 +1,7 @@
 // src/infrastructure/persistence/supabase/SupabaseMissionRepository.ts - Lee misiones (RPC get_player_missions) y reclama recompensas (RPC claim_mission_reward).
 import { SupabaseClient } from "@supabase/supabase-js";
 import { ValidationError } from "@/core/errors/ValidationError";
-import { IMissionClaimResult, IMissionView, MissionScope } from "@/core/entities/progression/IMission";
+import { IMissionClaimResult, IMissionView, MissionRewardType, MissionScope } from "@/core/entities/progression/IMission";
 import { IMissionRepository } from "@/core/repositories/progression/IMissionRepository";
 
 interface IRawMission {
@@ -12,6 +12,9 @@ interface IRawMission {
   description: string | null;
   targetCount: number;
   rewardNexus: number;
+  rewardType: string;
+  rewardCurrency: string;
+  eventId: string | null;
   periodKey: string;
   progress: number;
   completed: boolean;
@@ -21,12 +24,15 @@ interface IRawMission {
 function toMissionView(raw: IRawMission): IMissionView {
   return {
     missionId: raw.missionId,
-    scope: (raw.scope === "WEEKLY" ? "WEEKLY" : "DAILY") as MissionScope,
+    scope: (raw.scope === "WEEKLY" ? "WEEKLY" : raw.scope === "EVENT" ? "EVENT" : "DAILY") as MissionScope,
     objectiveType: raw.objectiveType,
     title: raw.title,
     description: raw.description,
     targetCount: raw.targetCount,
     rewardNexus: raw.rewardNexus,
+    rewardType: (raw.rewardType === "EVENT_POINTS" ? "EVENT_POINTS" : "NEXUS") as MissionRewardType,
+    rewardCurrency: raw.rewardCurrency ?? "Nexus",
+    eventId: raw.eventId,
     periodKey: raw.periodKey,
     progress: raw.progress,
     completed: raw.completed,

@@ -1,6 +1,6 @@
 // src/core/entities/progression/IMission.ts - Contratos de misiones diarias/semanales y eventos de progresión.
 
-export type MissionScope = "DAILY" | "WEEKLY";
+export type MissionScope = "DAILY" | "WEEKLY" | "EVENT";
 
 /** Acciones autoritativas que hacen progresar misiones. Se emiten desde los endpoints, no desde el cliente. */
 export type ProgressionActionType =
@@ -18,6 +18,8 @@ export type ProgressionActionType =
   | "WIN_FLAWLESS_TRAINING"
   | "WIN_FLAWLESS_MP";
 
+export type MissionRewardType = "NEXUS" | "EVENT_POINTS";
+
 /** Vista de una misión con el progreso del jugador para el periodo actual. */
 export interface IMissionView {
   missionId: string;
@@ -27,6 +29,10 @@ export interface IMissionView {
   description: string | null;
   targetCount: number;
   rewardNexus: number;
+  rewardType: MissionRewardType;
+  /** Etiqueta de la moneda de recompensa ("Nexus" o el nombre de la moneda del evento). */
+  rewardCurrency: string;
+  eventId: string | null;
   periodKey: string;
   progress: number;
   completed: boolean;

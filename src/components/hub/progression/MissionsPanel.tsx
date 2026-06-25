@@ -6,6 +6,7 @@ import { IMissionView } from "@/core/entities/progression/IMission";
 import { formatResetCountdown, msUntilDailyReset, msUntilWeeklyReset } from "@/core/services/progression/reset-schedule";
 import { track } from "@/services/analytics/client/analytics-buffer";
 import { ProgressionDialogShell } from "./internal/ProgressionDialogShell";
+import { FragmentIcon } from "./internal/FragmentIcon";
 
 interface IMissionsPanelProps {
   missions: IMissionView[];
@@ -49,8 +50,9 @@ function MissionRow({ mission, onClaimed }: { mission: IMissionView; onClaimed: 
           <p className="text-base font-bold text-slate-50">{mission.title}</p>
           <p className="text-sm text-slate-400">{mission.description}</p>
         </div>
-        <span className={`shrink-0 border px-2.5 py-1 font-display text-sm font-bold ${claimed ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-300" : "border-amber-500/50 bg-amber-500/10 text-amber-200"}`}>
+        <span className={`flex shrink-0 items-center gap-1 border px-2.5 py-1 font-display text-sm font-bold ${claimed ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-300" : mission.rewardType === "EVENT_POINTS" ? "border-fuchsia-500/50 bg-fuchsia-500/10 text-fuchsia-200" : "border-amber-500/50 bg-amber-500/10 text-amber-200"}`}>
           +{mission.rewardNexus}
+          {mission.rewardType === "EVENT_POINTS" ? <FragmentIcon className="h-4 w-4" /> : null}
         </span>
       </div>
       <div className="mt-3 flex items-center gap-2.5">
@@ -79,14 +81,18 @@ function MissionRow({ mission, onClaimed }: { mission: IMissionView; onClaimed: 
   );
 }
 
-function GroupHeader({ title, countdown }: { title: string; countdown: string }) {
+function GroupHeader({ title, countdown, note }: { title: string; countdown?: string; note?: string }) {
   return (
     <div className="flex items-center justify-between gap-2">
       <h3 className="font-display text-sm font-bold uppercase tracking-[0.2em] text-cyan-300">{title}</h3>
-      <span className="flex items-center gap-1.5 font-mono text-[11px] text-slate-400">
-        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
-        Nuevas en <span className="font-display font-bold text-cyan-300">{countdown}</span>
-      </span>
+      {countdown ? (
+        <span className="flex items-center gap-1.5 font-mono text-[11px] text-slate-400">
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+          Nuevas en <span className="font-display font-bold text-cyan-300">{countdown}</span>
+        </span>
+      ) : note ? (
+        <span className="font-mono text-[11px] uppercase tracking-wider text-fuchsia-300/80">{note}</span>
+      ) : null}
     </div>
   );
 }
@@ -103,13 +109,14 @@ export function MissionsPanel({ missions, onClose }: IMissionsPanelProps) {
 
   const daily = missions.filter((mission) => mission.scope === "DAILY");
   const weekly = missions.filter((mission) => mission.scope === "WEEKLY");
+  const event = missions.filter((mission) => mission.scope === "EVENT");
   const dailyCountdown = formatResetCountdown(msUntilDailyReset(nowMs));
   const weeklyCountdown = formatResetCountdown(msUntilWeeklyReset(nowMs));
 
-  const renderGroup = (title: string, countdown: string, list: IMissionView[]) =>
+  const renderGroup = (title: string, list: IMissionView[], options: { countdown?: string; note?: string }) =>
     list.length > 0 ? (
       <div className="space-y-2.5">
-        <GroupHeader title={title} countdown={countdown} />
+        <GroupHeader title={title} countdown={options.countdown} note={options.note} />
         {list.map((mission) => (
           <MissionRow key={mission.missionId} mission={{ ...mission, claimed: mission.claimed || claimedIds.has(mission.missionId) }} onClaimed={markClaimed} />
         ))}
@@ -132,8 +139,9 @@ export function MissionsPanel({ missions, onClose }: IMissionsPanelProps) {
         <p className="py-6 text-center text-sm text-slate-400">No hay misiones disponibles.</p>
       ) : (
         <div className="space-y-5">
-          {renderGroup("Diarias", dailyCountdown, daily)}
-          {renderGroup("Semanales", weeklyCountdown, weekly)}
+          {renderGroup("Evento", event, { note: "Una sola vez" })}
+          {renderGroup("Diarias", daily, { countdown: dailyCountdown })}
+          {renderGroup("Semanales", weekly, { countdown: weeklyCountdown })}
         </div>
       )}
     </ProgressionDialogShell>

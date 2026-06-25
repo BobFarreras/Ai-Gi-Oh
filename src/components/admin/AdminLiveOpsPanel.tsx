@@ -25,6 +25,8 @@ function blankMission(order: number): IAdminMissionDefinition {
     objectiveParam: null,
     targetCount: 1,
     rewardNexus: 100,
+    rewardType: "NEXUS",
+    eventId: null,
     title: "Nueva misión",
     description: null,
     sortOrder: order,
@@ -106,7 +108,7 @@ export function AdminLiveOpsPanel({ data }: { data: ILiveOpsAdminData }) {
             <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
             Nueva misión
           </button>
-          {missions.map((mission) => <AdminMissionRow key={mission.id} mission={mission} />)}
+          {missions.map((mission) => <AdminMissionRow key={mission.id} mission={mission} events={data.events.map((entry) => ({ id: entry.id, name: entry.name }))} />)}
         </div>
         <div className={tab === "events" ? "space-y-3" : "hidden"}>
           {data.events.length > 0 ? data.events.map((event) => <AdminEventEditor key={event.id} event={event} />) : <p className="py-6 text-center text-sm text-slate-500">No hay eventos configurados.</p>}

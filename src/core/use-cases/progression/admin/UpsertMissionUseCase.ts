@@ -3,7 +3,8 @@ import { ValidationError } from "@/core/errors/ValidationError";
 import { IAdminMissionDefinition } from "@/core/entities/progression/ILiveOpsAdmin";
 import { IProgressionAdminRepository } from "@/core/repositories/progression/IProgressionAdminRepository";
 
-const VALID_SCOPES = new Set(["DAILY", "WEEKLY"]);
+const VALID_SCOPES = new Set(["DAILY", "WEEKLY", "EVENT"]);
+const VALID_REWARD_TYPES = new Set(["NEXUS", "EVENT_POINTS"]);
 
 export class UpsertMissionUseCase {
   constructor(private readonly repository: IProgressionAdminRepository) {}
@@ -19,6 +20,10 @@ export class UpsertMissionUseCase {
       throw new ValidationError("La recompensa Nexus debe ser un entero no negativo.");
     }
     if (!mission.title.trim()) throw new ValidationError("El título de la misión es obligatorio.");
+    if (!VALID_REWARD_TYPES.has(mission.rewardType)) throw new ValidationError("Tipo de recompensa inválido.");
+    if (mission.rewardType === "EVENT_POINTS" && !mission.eventId) {
+      throw new ValidationError("Las misiones de puntos de evento requieren un evento.");
+    }
     await this.repository.upsertMission(mission);
   }
 }

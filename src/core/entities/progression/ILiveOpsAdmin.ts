@@ -10,7 +10,11 @@ export interface IAdminMissionDefinition {
   /** Umbral del objetivo de estado (nivel/versión); null en acciones y cantidades. */
   objectiveParam: number | null;
   targetCount: number;
+  /** Importe de la recompensa (Nexus o puntos de evento según rewardType). */
   rewardNexus: number;
+  rewardType: "NEXUS" | "EVENT_POINTS";
+  /** Evento asociado (obligatorio si rewardType = EVENT_POINTS). */
+  eventId: string | null;
   title: string;
   description: string | null;
   sortOrder: number;
