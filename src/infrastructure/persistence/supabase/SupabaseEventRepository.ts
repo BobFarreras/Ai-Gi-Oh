@@ -1,7 +1,7 @@
 // src/infrastructure/persistence/supabase/SupabaseEventRepository.ts - Lee el evento activo (RPC get_event_overview) y canjea items (RPC redeem_event_shop_item).
 import { SupabaseClient } from "@supabase/supabase-js";
 import { ValidationError } from "@/core/errors/ValidationError";
-import { IEventOverview, IEventRedeemResult, IEventShopItem } from "@/core/entities/progression/IEvent";
+import { IEventEarnRule, IEventOverview, IEventRedeemResult, IEventShopItem } from "@/core/entities/progression/IEvent";
 import { IEventRepository } from "@/core/repositories/progression/IEventRepository";
 
 interface IRawOverview {
@@ -14,6 +14,7 @@ interface IRawOverview {
   points: number;
   spentPoints: number;
   balance: number;
+  earnRules: IEventEarnRule[];
   items: IEventShopItem[];
 }
 
@@ -34,6 +35,7 @@ export class SupabaseEventRepository implements IEventRepository {
       points: raw.points,
       spentPoints: raw.spentPoints,
       balance: raw.balance,
+      earnRules: raw.earnRules ?? [],
       items: raw.items ?? [],
     };
   }

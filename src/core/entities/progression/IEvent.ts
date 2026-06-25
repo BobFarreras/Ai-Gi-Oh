@@ -8,6 +8,12 @@ export interface IEventShopItem {
   owned: number;
 }
 
+/** Cómo se ganan puntos en el evento: una acción otorga N puntos. */
+export interface IEventEarnRule {
+  actionType: string;
+  pointsPer: number;
+}
+
 export interface IEventOverview {
   eventId: string;
   name: string;
@@ -18,6 +24,7 @@ export interface IEventOverview {
   points: number;
   spentPoints: number;
   balance: number;
+  earnRules: IEventEarnRule[];
   items: IEventShopItem[];
 }
 

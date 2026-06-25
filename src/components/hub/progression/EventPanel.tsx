@@ -5,6 +5,7 @@ import { useState } from "react";
 import { IEventOverview, IEventShopItem } from "@/core/entities/progression/IEvent";
 import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
 import { Card } from "@/components/game/card/Card";
+import { progressionActionLabel } from "@/core/services/progression/action-labels";
 import { track } from "@/services/analytics/client/analytics-buffer";
 import { ProgressionDialogShell } from "./internal/ProgressionDialogShell";
 import { FragmentIcon } from "./internal/FragmentIcon";
@@ -120,6 +121,21 @@ export function EventPanel({ overview, onClose }: IEventPanelProps) {
       }
     >
       {overview.description ? <p className="mb-4 text-sm leading-relaxed text-slate-300">{overview.description}</p> : null}
+
+      {overview.earnRules.length > 0 ? (
+        <div className="mb-5">
+          <h3 className="mb-2 font-display text-sm font-bold uppercase tracking-[0.2em] text-cyan-400/90">Cómo ganar {overview.currencyName}</h3>
+          <div className="flex flex-wrap gap-2">
+            {overview.earnRules.map((rule) => (
+              <div key={rule.actionType} className="flex items-center gap-2 border border-fuchsia-800/40 bg-fuchsia-500/5 px-3 py-1.5" style={{ clipPath: "polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)" }}>
+                <span className="text-sm text-slate-200">{progressionActionLabel(rule.actionType)}</span>
+                <span className="flex items-center gap-1 font-display text-sm font-bold text-fuchsia-200">+{rule.pointsPer}<FragmentIcon className="h-3.5 w-3.5" /></span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-[0.2em] text-fuchsia-400/90">Tienda de canje</h3>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {items.map((item) => (
