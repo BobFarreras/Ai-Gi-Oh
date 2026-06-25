@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { ILiveOpsAdminData } from "@/core/entities/progression/ILiveOpsAdmin";
+import { IAdminPromotionConfig, ILiveOpsAdminData } from "@/core/entities/progression/ILiveOpsAdmin";
 import { AdminMissionRow } from "@/components/admin/internal/AdminMissionRow";
 import { AdminPromotionRow } from "@/components/admin/internal/AdminPromotionRow";
 import { AdminEventEditor } from "@/components/admin/internal/AdminEventEditor";
@@ -17,14 +17,33 @@ const TABS: { id: Tab; label: string; hint: string }[] = [
   { id: "promotions", label: "Novedades", hint: "Banners que se muestran en el hub y enlazan a secciones." },
 ];
 
+function blankPromotion(order: number): IAdminPromotionConfig {
+  return {
+    id: `promo-${Math.random().toString(36).slice(2, 8)}`,
+    kind: "NEWS",
+    title: "Nueva novedad",
+    body: "",
+    mediaUrl: null,
+    ctaLabel: null,
+    ctaHref: null,
+    sortOrder: order,
+    isActive: false,
+  };
+}
+
 export function AdminLiveOpsPanel({ data }: { data: ILiveOpsAdminData }) {
   const [tab, setTab] = useState<Tab>("missions");
+  const [promotions, setPromotions] = useState<IAdminPromotionConfig[]>(data.promotions);
   const counts: Record<Tab, number> = {
     missions: data.missions.length,
     events: data.events.length,
     login: data.loginCalendar.length,
-    promotions: data.promotions.length,
+    promotions: promotions.length,
   };
+
+  function addPromotion() {
+    setPromotions((prev) => [blankPromotion(prev.length + 10), ...prev]);
+  }
   const activeHint = TABS.find((entry) => entry.id === tab)?.hint ?? "";
 
   return (
@@ -71,7 +90,15 @@ export function AdminLiveOpsPanel({ data }: { data: ILiveOpsAdminData }) {
           {data.loginCalendar.map((day) => <AdminLoginDayRow key={day.dayIndex} day={day} />)}
         </div>
         <div className={tab === "promotions" ? "space-y-3" : "hidden"}>
-          {data.promotions.map((promotion) => <AdminPromotionRow key={promotion.id} promotion={promotion} />)}
+          <button
+            type="button"
+            onClick={addPromotion}
+            className="flex w-full items-center justify-center gap-2 border border-dashed border-cyan-600/60 bg-cyan-500/5 py-3 font-mono text-xs font-bold uppercase tracking-[0.16em] text-cyan-300 transition-colors hover:border-cyan-400 hover:bg-cyan-500/10"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+            Nueva novedad
+          </button>
+          {promotions.map((promotion) => <AdminPromotionRow key={promotion.id} promotion={promotion} />)}
         </div>
       </div>
     </section>
