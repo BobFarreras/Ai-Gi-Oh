@@ -269,6 +269,10 @@ Seguridad y persistencia:
 - [docs/security/rate-limit-rollout.md](./docs/security/rate-limit-rollout.md)
 - [docs/supabase/README.md](./docs/supabase/README.md)
 
+Diseño y UI:
+
+- [docs/DESIGN.md](./docs/DESIGN.md)
+
 Rendimiento:
 
 - [docs/performance/README.md](./docs/performance/README.md)
