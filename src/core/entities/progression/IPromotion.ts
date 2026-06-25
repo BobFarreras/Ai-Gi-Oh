@@ -1,6 +1,6 @@
 // src/core/entities/progression/IPromotion.ts - Contrato de promoción/noticia destacada del hub.
 
-export type PromotionKind = "PACK" | "CARD" | "EVENT" | "NEWS";
+export type PromotionKind = "PACK" | "CARD" | "EVENT" | "NEWS" | "SYSTEM" | "MAINTENANCE" | "STORY";
 
 export interface IFeaturedPromotion {
   id: string;

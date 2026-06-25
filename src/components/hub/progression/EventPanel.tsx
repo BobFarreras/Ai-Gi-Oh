@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { IEventOverview, IEventShopItem } from "@/core/entities/progression/IEvent";
 import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
 import { Card } from "@/components/game/card/Card";
@@ -89,6 +90,7 @@ function ShopItem({ item, balance, onRedeemed }: { item: IEventShopItem; balance
 export function EventPanel({ overview, onClose }: IEventPanelProps) {
   const [balance, setBalance] = useState(overview.balance);
   const [items, setItems] = useState(overview.items);
+  const [showEarn, setShowEarn] = useState(false);
 
   function handleRedeemed(itemId: string, newBalance: number) {
     setBalance(newBalance);
@@ -123,16 +125,25 @@ export function EventPanel({ overview, onClose }: IEventPanelProps) {
       {overview.description ? <p className="mb-4 text-sm leading-relaxed text-slate-300">{overview.description}</p> : null}
 
       {overview.earnRules.length > 0 ? (
-        <div className="mb-5">
-          <h3 className="mb-2 font-display text-sm font-bold uppercase tracking-[0.2em] text-cyan-400/90">Cómo ganar {overview.currencyName}</h3>
-          <div className="flex flex-wrap gap-2">
-            {overview.earnRules.map((rule) => (
-              <div key={rule.actionType} className="flex items-center gap-2 border border-fuchsia-800/40 bg-fuchsia-500/5 px-3 py-1.5" style={{ clipPath: "polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)" }}>
-                <span className="text-sm text-slate-200">{progressionActionLabel(rule.actionType)}</span>
-                <span className="flex items-center gap-1 font-display text-sm font-bold text-fuchsia-200">+{rule.pointsPer}<FragmentIcon className="h-3.5 w-3.5" /></span>
-              </div>
-            ))}
-          </div>
+        <div className="mb-5 border border-cyan-900/50 bg-[#03101c]/60" style={{ clipPath: "polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)" }}>
+          <button type="button" onClick={() => setShowEarn((value) => !value)} className="flex w-full items-center justify-between px-3.5 py-2.5 text-left transition-colors hover:bg-cyan-500/5">
+            <h3 className="font-display text-sm font-bold uppercase tracking-[0.18em] text-cyan-300">Cómo ganar {overview.currencyName}</h3>
+            <svg viewBox="0 0 24 24" className={`h-4 w-4 fill-none stroke-cyan-300 transition-transform ${showEarn ? "rotate-180" : ""}`} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+          </button>
+          <AnimatePresence initial={false}>
+            {showEarn ? (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                <div className="flex flex-wrap gap-2 px-3.5 pb-3.5">
+                  {overview.earnRules.map((rule) => (
+                    <div key={rule.actionType} className="flex items-center gap-2 border border-fuchsia-800/40 bg-fuchsia-500/5 px-3 py-1.5" style={{ clipPath: "polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)" }}>
+                      <span className="text-sm text-slate-200">{progressionActionLabel(rule.actionType)}</span>
+                      <span className="flex items-center gap-1 font-display text-sm font-bold text-fuchsia-200">+{rule.pointsPer}<FragmentIcon className="h-3.5 w-3.5" /></span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
         </div>
       ) : null}
 

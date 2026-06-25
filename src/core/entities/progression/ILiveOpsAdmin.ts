@@ -20,6 +20,7 @@ export interface IAdminPromotionConfig {
   kind: PromotionKind;
   title: string;
   body: string | null;
+  mediaUrl: string | null;
   ctaLabel: string | null;
   ctaHref: string | null;
   sortOrder: number;

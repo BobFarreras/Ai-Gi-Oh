@@ -67,7 +67,7 @@ export class SupabaseProgressionAdminRepository implements IProgressionAdminRepo
 
   async upsertPromotion(promotion: IAdminPromotionConfig): Promise<void> {
     const { error } = await this.client.from("featured_promotions").upsert({
-      id: promotion.id, kind: promotion.kind, title: promotion.title, body: promotion.body,
+      id: promotion.id, kind: promotion.kind, title: promotion.title, body: promotion.body, media_url: promotion.mediaUrl,
       cta_label: promotion.ctaLabel, cta_href: promotion.ctaHref, sort_order: promotion.sortOrder, is_active: promotion.isActive,
     });
     if (error) throw new Error(`No se pudo guardar la promoción: ${error.message}`);
@@ -110,7 +110,7 @@ interface IMissionRow {
   title: string; description: string | null; sort_order: number; is_active: boolean;
 }
 interface IPromotionRow {
-  id: string; kind: string; title: string; body: string | null; cta_label: string | null; cta_href: string | null; sort_order: number; is_active: boolean;
+  id: string; kind: string; title: string; body: string | null; media_url: string | null; cta_label: string | null; cta_href: string | null; sort_order: number; is_active: boolean;
 }
 interface IEventRow {
   id: string; name: string; description: string | null; currency_name: string; starts_at: string; ends_at: string; is_active: boolean;
@@ -130,7 +130,7 @@ function toMission(row: IMissionRow): IAdminMissionDefinition {
 }
 function toPromotion(row: IPromotionRow): IAdminPromotionConfig {
   return {
-    id: row.id, kind: row.kind as PromotionKind, title: row.title, body: row.body,
+    id: row.id, kind: row.kind as PromotionKind, title: row.title, body: row.body, mediaUrl: row.media_url,
     ctaLabel: row.cta_label, ctaHref: row.cta_href, sortOrder: row.sort_order, isActive: row.is_active,
   };
 }

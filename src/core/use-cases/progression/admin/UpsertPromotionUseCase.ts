@@ -3,7 +3,7 @@ import { ValidationError } from "@/core/errors/ValidationError";
 import { IAdminPromotionConfig } from "@/core/entities/progression/ILiveOpsAdmin";
 import { IProgressionAdminRepository } from "@/core/repositories/progression/IProgressionAdminRepository";
 
-const VALID_KINDS = new Set(["PACK", "CARD", "EVENT", "NEWS"]);
+const VALID_KINDS = new Set(["PACK", "CARD", "EVENT", "NEWS", "SYSTEM", "MAINTENANCE", "STORY"]);
 
 export class UpsertPromotionUseCase {
   constructor(private readonly repository: IProgressionAdminRepository) {}

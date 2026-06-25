@@ -13,7 +13,7 @@ interface IPromotionRow {
   cta_href: string | null;
 }
 
-const VALID_KINDS: ReadonlySet<string> = new Set(["PACK", "CARD", "EVENT", "NEWS"]);
+const VALID_KINDS: ReadonlySet<string> = new Set(["PACK", "CARD", "EVENT", "NEWS", "SYSTEM", "MAINTENANCE", "STORY"]);
 
 function toPromotion(row: IPromotionRow): IFeaturedPromotion {
   return {

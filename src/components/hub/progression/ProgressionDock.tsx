@@ -239,7 +239,7 @@ export function ProgressionDock({ missions: initialMissions, eventOverview: init
       <AnimatePresence>
         {panel === "missions" ? <MissionsPanel key="missions" missions={missions} onClose={handleClose} /> : null}
         {panel === "event" && eventOverview ? <EventPanel key="event" overview={eventOverview} onClose={handleClose} /> : null}
-        {panel === "news" ? <NewsPanel key="news" promotions={promotions} onClose={handleClose} /> : null}
+        {panel === "news" ? <NewsPanel key="news" promotions={promotions} eventName={eventOverview?.name ?? null} onClose={handleClose} /> : null}
       </AnimatePresence>
 
       {panel === "daily" && dailyLogin ? <DailyLoginModal status={dailyLogin} onClose={() => setPanel(null)} /> : null}
