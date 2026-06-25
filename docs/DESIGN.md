@@ -164,6 +164,12 @@ Para efectos intensos (partículas, rayos), usa `repeat: 1` (one-shot), no infin
 ### 5.5 Hover / tap
 `whileHover={{ scale: 1.07 }} whileTap={{ scale: 0.94 }}` + cambio de borde/glow por clases CSS (no animes el box-shadow).
 
+### 5.6 Feedback de celebración (obtener recompensa)
+Para "obtener algo" (reclamar recompensa diaria/misión): **estallido one-shot** = destello radial (`scale 0.2→2.6`, `opacity→0`) + ~16 partículas que irradian (`cos/sin(angle)*r`) + pop del hero (`scale:[1,1.12,1]`). Todo `transform/opacity`, sin `repeat`. Ver `DailyLoginModal > ClaimBurst`.
+
+### 5.7 Contenido temporal y cuentas atrás
+El contenido con caducidad muestra **cuándo se regenera/termina**. La lógica de reset vive pura y testeada en `core/services/progression/reset-schedule.ts` (diaria: medianoche UTC; semanal: lunes UTC, igual que el `period_key` del backend). El componente la pinta con un tick cada 30s (`setInterval` → `setNowMs`). Mismo patrón para el countdown de eventos. Ver `MissionsPanel > GroupHeader`.
+
 ---
 
 ## 6. Guardrails de rendimiento (OBLIGATORIO)

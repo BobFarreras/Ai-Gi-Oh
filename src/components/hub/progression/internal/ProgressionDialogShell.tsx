@@ -49,7 +49,7 @@ export function ProgressionDialogShell({ title, subtitle, icon, accent = "cyan",
             {icon}
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className={`font-mono text-lg font-black uppercase tracking-[0.16em] ${accentText}`}>{title}</h2>
+            <h2 className={`font-display text-lg font-bold uppercase tracking-[0.18em] ${accentText}`}>{title}</h2>
             {subtitle ? <p className="truncate font-mono text-xs uppercase tracking-[0.12em] text-slate-400">{subtitle}</p> : null}
           </div>
           <button
