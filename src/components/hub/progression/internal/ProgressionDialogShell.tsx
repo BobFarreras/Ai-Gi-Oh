@@ -41,7 +41,7 @@ export function ProgressionDialogShell({ title, subtitle, icon, accent = "cyan",
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 14 }}
         transition={{ type: "spring", stiffness: 280, damping: 26 }}
-        style={{ transformOrigin: "left bottom", willChange: "transform", clipPath: FRAME_CLIP }}
+        style={{ transformOrigin: "left bottom", clipPath: FRAME_CLIP }}
         onClick={(event) => event.stopPropagation()}
         className={`flex max-h-[90vh] w-full ${maxWidthClass} flex-col border ${accentBorder} bg-[#040d18]/96 shadow-[0_0_40px_rgba(0,0,0,0.6)]`}
       >
@@ -65,7 +65,7 @@ export function ProgressionDialogShell({ title, subtitle, icon, accent = "cyan",
           </button>
         </div>
         {headerExtra ? <div className="px-5 pb-3">{headerExtra}</div> : null}
-        <div className="home-modern-scroll min-h-0 flex-1 overflow-y-auto px-5 pb-5">{children}</div>
+        <div className="home-modern-scroll min-h-0 flex-1 transform-gpu overflow-y-auto px-5 pb-5">{children}</div>
       </motion.div>
     </motion.div>
   );
