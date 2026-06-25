@@ -7,6 +7,7 @@ import { AdminMissionRow } from "@/components/admin/internal/AdminMissionRow";
 import { AdminPromotionRow } from "@/components/admin/internal/AdminPromotionRow";
 import { AdminEventEditor } from "@/components/admin/internal/AdminEventEditor";
 import { AdminLoginDayRow } from "@/components/admin/internal/AdminLoginDayRow";
+import { deleteLiveOps } from "@/components/admin/internal/live-ops/save-live-ops";
 
 type Tab = "missions" | "events" | "login" | "promotions";
 
@@ -62,6 +63,10 @@ export function AdminLiveOpsPanel({ data }: { data: ILiveOpsAdminData }) {
   function addMission() {
     setMissions((prev) => [blankMission(prev.length + 20), ...prev]);
   }
+  async function handleDeleteMission(id: string) {
+    await deleteLiveOps("mission", id);
+    setMissions((prev) => prev.filter((mission) => mission.id !== id));
+  }
   function addPromotion() {
     setPromotions((prev) => [blankPromotion(prev.length + 10), ...prev]);
   }
@@ -108,7 +113,7 @@ export function AdminLiveOpsPanel({ data }: { data: ILiveOpsAdminData }) {
             <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
             Nueva misión
           </button>
-          {missions.map((mission) => <AdminMissionRow key={mission.id} mission={mission} events={data.events.map((entry) => ({ id: entry.id, name: entry.name }))} />)}
+          {missions.map((mission) => <AdminMissionRow key={mission.id} mission={mission} events={data.events.map((entry) => ({ id: entry.id, name: entry.name }))} onDelete={() => handleDeleteMission(mission.id)} />)}
         </div>
         <div className={tab === "events" ? "space-y-3" : "hidden"}>
           {data.events.length > 0 ? data.events.map((event) => <AdminEventEditor key={event.id} event={event} />) : <p className="py-6 text-center text-sm text-slate-500">No hay eventos configurados.</p>}

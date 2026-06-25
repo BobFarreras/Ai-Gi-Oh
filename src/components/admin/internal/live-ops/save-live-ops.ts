@@ -11,3 +11,17 @@ export async function saveLiveOps(type: string, data: unknown): Promise<boolean>
     return false;
   }
 }
+
+/** Elimina una definición de live-ops por id (p. ej. una misión). */
+export async function deleteLiveOps(type: string, id: string): Promise<boolean> {
+  try {
+    const response = await fetch("/api/admin/progression/delete", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ type, id }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}

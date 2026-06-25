@@ -15,7 +15,7 @@ const SCOPES: { value: MissionScope; label: string }[] = [
 ];
 const SELECT_CLASS = "border border-cyan-900/60 bg-[#03101c] px-2 py-1 text-sm text-slate-100 outline-none focus:border-cyan-400";
 
-export function AdminMissionRow({ mission, events }: { mission: IAdminMissionDefinition; events: { id: string; name: string }[] }) {
+export function AdminMissionRow({ mission, events, onDelete }: { mission: IAdminMissionDefinition; events: { id: string; name: string }[]; onDelete?: () => void }) {
   const [draft, setDraft] = useState<IAdminMissionDefinition>(mission);
   function update<K extends keyof IAdminMissionDefinition>(key: K, value: IAdminMissionDefinition[K]) {
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -69,7 +69,20 @@ export function AdminMissionRow({ mission, events }: { mission: IAdminMissionDef
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <LiveOpsToggle label="Misión" checked={draft.isActive} onChange={(value) => update("isActive", value)} />
-        <LiveOpsSaveBar onSave={() => saveLiveOps("mission", draft)} />
+        <div className="flex items-center gap-2">
+          {onDelete ? (
+            <button
+              type="button"
+              aria-label="Eliminar misión"
+              onClick={onDelete}
+              className="flex h-9 items-center gap-1.5 border border-rose-700/60 px-3 font-mono text-[11px] font-bold uppercase tracking-wider text-rose-300 transition-colors hover:border-rose-500 hover:bg-rose-500/10"
+            >
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13" /></svg>
+              Eliminar
+            </button>
+          ) : null}
+          <LiveOpsSaveBar onSave={() => saveLiveOps("mission", draft)} />
+        </div>
       </div>
     </div>
   );

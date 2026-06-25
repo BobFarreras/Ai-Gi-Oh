@@ -51,7 +51,7 @@ export interface IAdminEventShopItem {
   isActive: boolean;
 }
 
-/** Evento completo con sus reglas de puntos e items de tienda. */
+/** Evento completo con sus reglas de puntos, items de tienda y misiones propias. */
 export interface IAdminEvent {
   id: string;
   name: string;
@@ -62,6 +62,7 @@ export interface IAdminEvent {
   isActive: boolean;
   rules: IAdminEventRule[];
   items: IAdminEventShopItem[];
+  missions: IAdminMissionDefinition[];
 }
 
 /** Un día del calendario de recompensas de login. */

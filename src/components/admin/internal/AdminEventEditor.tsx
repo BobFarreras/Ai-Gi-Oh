@@ -2,12 +2,13 @@
 "use client";
 
 import { useState } from "react";
-import { IAdminEvent, IAdminEventRule, IAdminEventShopItem } from "@/core/entities/progression/ILiveOpsAdmin";
+import { IAdminEvent, IAdminEventRule, IAdminEventShopItem, IAdminMissionDefinition } from "@/core/entities/progression/ILiveOpsAdmin";
 import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
 import { progressionActionLabel } from "@/core/services/progression/action-labels";
 import { CardThumbnail } from "@/components/game/card/CardThumbnail";
+import { AdminMissionRow } from "./AdminMissionRow";
 import { LiveOpsField, LiveOpsNumber, LiveOpsToggle, LiveOpsSaveBar, LiveOpsCardPicker } from "./live-ops/live-ops-controls";
-import { saveLiveOps } from "./live-ops/save-live-ops";
+import { saveLiveOps, deleteLiveOps } from "./live-ops/save-live-ops";
 
 const ACTION_TYPES = ["PLAY_DUEL", "WIN_DUEL", "PLAY_ARENA", "WIN_ARENA", "PLAY_MP_MATCH", "WIN_MP_MATCH", "WIN_FLAWLESS_STORY", "WIN_FLAWLESS_TRAINING", "WIN_FLAWLESS_MP", "BUY_CARD", "BUY_PACK", "EVOLVE_CARD", "SPEND_NEXUS"];
 
@@ -59,13 +60,16 @@ function ShopItemRow({ item }: { item: IAdminEventShopItem }) {
   );
 }
 
+type EventDraft = Omit<IAdminEvent, "rules" | "items" | "missions">;
+
 export function AdminEventEditor({ event }: { event: IAdminEvent }) {
-  const [draft, setDraft] = useState<Omit<IAdminEvent, "rules" | "items">>(event);
+  const [draft, setDraft] = useState<EventDraft>(event);
   const [rules, setRules] = useState<IAdminEventRule[]>(event.rules);
   const [items, setItems] = useState<IAdminEventShopItem[]>(event.items);
+  const [missions, setMissions] = useState<IAdminMissionDefinition[]>(event.missions);
   const [newAction, setNewAction] = useState("");
 
-  function update<K extends keyof Omit<IAdminEvent, "rules" | "items">>(key: K, value: Omit<IAdminEvent, "rules" | "items">[K]) {
+  function update<K extends keyof EventDraft>(key: K, value: EventDraft[K]) {
     setDraft((prev) => ({ ...prev, [key]: value }));
   }
 
@@ -79,6 +83,21 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
   function addItem() {
     const id = `${draft.id}-item-${Math.random().toString(36).slice(2, 7)}`;
     setItems((prev) => [...prev, { id, eventId: draft.id, cardId: "", costPoints: 100, perPlayerLimit: 1, sortOrder: prev.length + 1, isActive: true }]);
+  }
+  function addMission() {
+    const id = `${draft.id}-mission-${Math.random().toString(36).slice(2, 7)}`;
+    setMissions((prev) => [
+      ...prev,
+      {
+        id, scope: "EVENT", objectiveType: "WIN_MP_MATCH", objectiveParam: null, targetCount: 1,
+        rewardNexus: 50, rewardType: "EVENT_POINTS", eventId: draft.id,
+        title: "Nuevo reto del evento", description: null, sortOrder: prev.length + 1, isActive: false,
+      },
+    ]);
+  }
+  async function deleteMission(id: string) {
+    await deleteLiveOps("mission", id);
+    setMissions((prev) => prev.filter((mission) => mission.id !== id));
   }
 
   return (
@@ -130,6 +149,22 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
         <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
           {items.map((item) => <ShopItemRow key={item.id} item={item} />)}
         </div>
+      </div>
+
+      <div className="mt-5">
+        <div className="mb-2 flex items-center justify-between">
+          <h4 className="font-mono text-[11px] font-black uppercase tracking-[0.2em] text-cyan-400/80">Misiones del evento ({draft.currencyName})</h4>
+          <button type="button" onClick={addMission} className="h-8 border border-cyan-500/60 px-3 font-mono text-[11px] font-bold uppercase text-cyan-200 hover:bg-cyan-500/10">+ Añadir misión</button>
+        </div>
+        {missions.length === 0 ? (
+          <p className="py-3 text-center text-xs text-slate-500">Sin misiones propias. Crea retos que den {draft.currencyName} (gana sin perder LP, evoluciona cartas, etc.).</p>
+        ) : (
+          <div className="space-y-2.5">
+            {missions.map((mission) => (
+              <AdminMissionRow key={mission.id} mission={mission} events={[{ id: draft.id, name: draft.name }]} onDelete={() => deleteMission(mission.id)} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

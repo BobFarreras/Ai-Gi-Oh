@@ -14,8 +14,10 @@ export interface IProgressionAdminRepository {
   getLiveOps(): Promise<ILiveOpsAdminData>;
   upsertMission(mission: IAdminMissionDefinition): Promise<void>;
   upsertPromotion(promotion: IAdminPromotionConfig): Promise<void>;
-  upsertEvent(event: Omit<IAdminEvent, "rules" | "items">): Promise<void>;
+  upsertEvent(event: Omit<IAdminEvent, "rules" | "items" | "missions">): Promise<void>;
   upsertEventRule(rule: IAdminEventRule): Promise<void>;
   upsertEventShopItem(item: IAdminEventShopItem): Promise<void>;
   upsertLoginRewardDay(day: IAdminLoginRewardDay): Promise<void>;
+  /** Elimina una definición de misión por id. */
+  deleteMission(id: string): Promise<void>;
 }

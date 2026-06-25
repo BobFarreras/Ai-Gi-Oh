@@ -29,6 +29,7 @@ export class SupabaseProgressionAdminRepository implements IProgressionAdminRepo
 
     const ruleRows = (rules.data as { event_id: string; action_type: string; points_per: number }[] | null) ?? [];
     const itemRows = (items.data as IEventShopItemRow[] | null) ?? [];
+    const allMissions = ((missions.data as IMissionRow[] | null) ?? []).map(toMission);
 
     const adminEvents: IAdminEvent[] = ((events.data as IEventRow[] | null) ?? []).map((row) => ({
       id: row.id,
@@ -40,10 +41,11 @@ export class SupabaseProgressionAdminRepository implements IProgressionAdminRepo
       isActive: row.is_active,
       rules: ruleRows.filter((rule) => rule.event_id === row.id).map((rule) => ({ eventId: rule.event_id, actionType: rule.action_type, pointsPer: rule.points_per })),
       items: itemRows.filter((item) => item.event_id === row.id).map(toShopItem),
+      missions: allMissions.filter((mission) => mission.eventId === row.id),
     }));
 
     return {
-      missions: ((missions.data as IMissionRow[] | null) ?? []).map(toMission),
+      missions: allMissions,
       promotions: ((promotions.data as IPromotionRow[] | null) ?? []).map(toPromotion),
       events: adminEvents,
       loginCalendar: ((login.data as ILoginRow[] | null) ?? []).map((row) => ({
@@ -65,6 +67,11 @@ export class SupabaseProgressionAdminRepository implements IProgressionAdminRepo
     if (error) throw new Error(`No se pudo guardar la misión: ${error.message}`);
   }
 
+  async deleteMission(id: string): Promise<void> {
+    const { error } = await this.client.from("mission_definitions").delete().eq("id", id);
+    if (error) throw new Error(`No se pudo eliminar la misión: ${error.message}`);
+  }
+
   async upsertPromotion(promotion: IAdminPromotionConfig): Promise<void> {
     const { error } = await this.client.from("featured_promotions").upsert({
       id: promotion.id, kind: promotion.kind, title: promotion.title, body: promotion.body, media_url: promotion.mediaUrl,
@@ -73,7 +80,7 @@ export class SupabaseProgressionAdminRepository implements IProgressionAdminRepo
     if (error) throw new Error(`No se pudo guardar la promoción: ${error.message}`);
   }
 
-  async upsertEvent(event: Omit<IAdminEvent, "rules" | "items">): Promise<void> {
+  async upsertEvent(event: Omit<IAdminEvent, "rules" | "items" | "missions">): Promise<void> {
     const { error } = await this.client.from("events").upsert({
       id: event.id, name: event.name, description: event.description, currency_name: event.currencyName,
       starts_at: event.startsAt, ends_at: event.endsAt, is_active: event.isActive,
