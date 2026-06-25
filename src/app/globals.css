@@ -1,6 +1,10 @@
 /* src/app/globals.css - Tokens visuales globales y atmósfera ciber/espacial del proyecto. */
 @import "tailwindcss";
 
+/* Fuente display tecnológica (HUD/sci-fi). Úsala con la utilidad `font-display`. */
+@theme {
+  --font-display: var(--font-orbitron), ui-sans-serif, system-ui, sans-serif;
+}
 
 
 :root {

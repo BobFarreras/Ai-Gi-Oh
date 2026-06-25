@@ -56,10 +56,16 @@ background-image: repeating-linear-gradient(0deg,rgba(34,211,238,0.05) 0,rgba(34
 Estática (cero coste). Úsala en superficies táctiles destacadas (botones del dock).
 
 ### 2.5 Tipografía
-- **Etiquetas HUD**: `font-mono font-black uppercase tracking-[0.14em–0.2em]`. Tamaños `text-[10px]` (micro), `text-xs`/`text-sm` (estándar).
-- **Cuerpo de diálogo**: `text-sm`/`text-base`, `text-slate-300`.
-- **Títulos**: `text-lg`/`text-xl font-black uppercase tracking-[0.16em]`.
-- Nunca por debajo de 11px (`text-[11px]`). Números/datos en `font-mono`.
+Tres familias (registradas en `layout.tsx` + `globals.css @theme`):
+- **`font-display`** = Orbitron (sci-fi/HUD). Para **títulos, números destacados y etiquetas con alma** (hero de recompensa, "DÍA 3 / 7", contadores). Siempre en mayúsculas con `tracking` amplio (`0.14em–0.3em`). No la uses para párrafos largos.
+- **`font-mono`** = Geist Mono. Etiquetas HUD pequeñas, datos, ids, chips tácticos.
+- **`font-sans`** = Geist Sans (por defecto). Cuerpo y texto explicativo.
+
+Reglas:
+- **Etiquetas HUD**: `font-mono font-black uppercase tracking-[0.14em–0.2em]`.
+- **Títulos / cifras hero**: `font-display ... uppercase tracking-[0.18em–0.3em]`, `text-lg`–`text-6xl`.
+- **Cuerpo de diálogo**: `font-sans text-sm`/`text-base`, `text-slate-300`.
+- Nunca por debajo de 11px (`text-[11px]`).
 
 ### 2.6 Glows (siempre estáticos en reposo)
 ```css
