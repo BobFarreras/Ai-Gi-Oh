@@ -1,4 +1,4 @@
-// src/components/hub/progression/EventPanel.tsx - Diálogo táctico del evento: balance de moneda, countdown y tienda de canje con miniaturas de carta del juego (CardThumbnail).
+// src/components/hub/progression/EventPanel.tsx - Diálogo grande del evento: nombre destacado, saldo de Fragmentos con icono, countdown y tienda de canje con cartas reales.
 "use client";
 
 import { useState } from "react";
@@ -7,6 +7,7 @@ import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog"
 import { Card } from "@/components/game/card/Card";
 import { track } from "@/services/analytics/client/analytics-buffer";
 import { ProgressionDialogShell } from "./internal/ProgressionDialogShell";
+import { FragmentIcon } from "./internal/FragmentIcon";
 
 interface IEventPanelProps {
   overview: IEventOverview;
@@ -15,21 +16,13 @@ interface IEventPanelProps {
 
 function formatRemaining(endsAt: string): string {
   const ms = new Date(endsAt).getTime() - Date.now();
-  if (ms <= 0) return "Finalizado";
+  if (ms <= 0) return "Evento finalizado";
   const days = Math.floor(ms / 86_400_000);
   const hours = Math.floor((ms % 86_400_000) / 3_600_000);
   return days > 0 ? `Termina en ${days}d ${hours}h` : `Termina en ${hours}h`;
 }
 
-function ShopItem({
-  item,
-  balance,
-  onRedeemed,
-}: {
-  item: IEventShopItem;
-  balance: number;
-  onRedeemed: (itemId: string, newBalance: number) => void;
-}) {
+function ShopItem({ item, balance, onRedeemed }: { item: IEventShopItem; balance: number; onRedeemed: (itemId: string, newBalance: number) => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const card = CARD_BY_ID.get(item.cardId);
@@ -57,29 +50,35 @@ function ShopItem({
   }
 
   return (
-    <div className="flex flex-col gap-2 border border-fuchsia-900/40 bg-[#0a0716]/80 p-2" style={{ clipPath: "polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)" }}>
-      <div className="relative mx-auto h-[200px] w-[137px] overflow-hidden">
+    <div className="flex flex-col gap-2.5 border border-fuchsia-900/40 bg-[#0a0716]/70 p-3" style={{ clipPath: "polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px)" }}>
+      <div className="relative mx-auto h-[234px] w-[160px]">
         {card ? (
-          <div style={{ width: 260, height: 380, transform: "scale(0.527)", transformOrigin: "top left" }}>
-            <Card card={card} disableHoverEffects disableHologram disableDefaultShadow />
+          <div className={`h-full w-full ${soldOut ? "opacity-40 grayscale" : "drop-shadow-[0_0_18px_rgba(232,121,249,0.35)]"}`}>
+            <div style={{ width: 260, height: 380, transform: "scale(0.615)", transformOrigin: "top left" }}>
+              <Card card={card} disableHoverEffects disableHologram disableDefaultShadow />
+            </div>
           </div>
         ) : (
           <div className="flex h-full w-full items-center justify-center border border-slate-700 bg-slate-900 text-[10px] text-slate-500">{item.cardId}</div>
         )}
         {soldOut ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/65 font-mono text-xs font-black uppercase tracking-widest text-emerald-300">Obtenida</div>
+          <div className="absolute inset-0 flex items-center justify-center font-display text-sm font-bold uppercase tracking-widest text-emerald-300">Obtenida</div>
         ) : null}
       </div>
-      <p className="text-center font-mono text-[11px] uppercase tracking-wider text-slate-400">{item.owned}/{item.perPlayerLimit}</p>
+      <p className="text-center font-mono text-[11px] uppercase tracking-wider text-slate-400">{item.owned}/{item.perPlayerLimit} canjeada(s)</p>
       <button
         type="button"
         disabled={busy || soldOut || !affordable}
-        className="flex h-9 w-full items-center justify-center gap-1 bg-fuchsia-600 font-mono text-sm font-black uppercase tracking-[0.12em] text-white transition hover:bg-fuchsia-500 disabled:bg-slate-800 disabled:text-slate-600"
+        className="flex h-10 w-full items-center justify-center gap-1.5 font-display text-sm font-bold uppercase tracking-[0.1em] transition disabled:bg-slate-800 disabled:text-slate-600 enabled:bg-fuchsia-600 enabled:text-white enabled:hover:bg-fuchsia-500"
         style={{ clipPath: "polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)" }}
         onClick={handleRedeem}
       >
-        {soldOut ? "Agotada" : busy ? "…" : `${item.costPoints}`}
-        {!soldOut && !busy ? <span className="text-[11px] text-fuchsia-200/80">pts</span> : null}
+        {soldOut ? "Agotada" : busy ? "…" : (
+          <>
+            {item.costPoints}
+            <FragmentIcon className="h-4 w-4" />
+          </>
+        )}
       </button>
       {error ? <p className="text-center text-xs text-rose-300">{error}</p> : null}
     </div>
@@ -100,6 +99,7 @@ export function EventPanel({ overview, onClose }: IEventPanelProps) {
       title={overview.name}
       subtitle={formatRemaining(overview.endsAt)}
       accent="fuchsia"
+      maxWidthClass="max-w-3xl"
       onClose={onClose}
       icon={
         <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -107,15 +107,21 @@ export function EventPanel({ overview, onClose }: IEventPanelProps) {
         </svg>
       }
       headerExtra={
-        <div className="flex items-center justify-between border border-fuchsia-700/40 bg-fuchsia-500/10 px-4 py-2.5" style={{ clipPath: "polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)" }}>
-          <span className="font-mono text-xs uppercase tracking-[0.16em] text-fuchsia-300">{overview.currencyName}</span>
-          <span className="font-mono text-2xl font-black text-fuchsia-100">{balance.toLocaleString()}</span>
+        <div className="flex items-center justify-between border border-fuchsia-700/40 bg-fuchsia-500/10 px-4 py-3" style={{ clipPath: "polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)" }}>
+          <div className="flex items-center gap-3">
+            <FragmentIcon className="h-9 w-9 drop-shadow-[0_0_10px_rgba(232,121,249,0.6)]" />
+            <div>
+              <p className="font-display text-xs uppercase tracking-[0.2em] text-fuchsia-300">{overview.currencyName}</p>
+              <p className="font-mono text-[10px] uppercase tracking-wider text-slate-400">Tu saldo</p>
+            </div>
+          </div>
+          <span className="font-display text-3xl font-black text-fuchsia-100">{balance.toLocaleString()}</span>
         </div>
       }
     >
-      {overview.description ? <p className="mb-3 text-sm leading-relaxed text-slate-300">{overview.description}</p> : null}
-      <h3 className="mb-2.5 font-mono text-xs font-black uppercase tracking-[0.2em] text-fuchsia-400/80">Tienda de canje</h3>
-      <div className="grid grid-cols-2 gap-3">
+      {overview.description ? <p className="mb-4 text-sm leading-relaxed text-slate-300">{overview.description}</p> : null}
+      <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-[0.2em] text-fuchsia-400/90">Tienda de canje</h3>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {items.map((item) => (
           <ShopItem key={item.itemId} item={item} balance={balance} onRedeemed={handleRedeemed} />
         ))}

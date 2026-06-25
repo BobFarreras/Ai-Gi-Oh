@@ -13,11 +13,13 @@ interface IProgressionDialogShellProps {
   accent?: "cyan" | "fuchsia";
   /** Contenido fijo bajo la cabecera (no scrollea): balance, countdown, etc. */
   headerExtra?: ReactNode;
+  /** Ancho máximo del diálogo (Tailwind). Por defecto compacto. */
+  maxWidthClass?: string;
   children: ReactNode;
   onClose: () => void;
 }
 
-export function ProgressionDialogShell({ title, subtitle, icon, accent = "cyan", headerExtra, children, onClose }: IProgressionDialogShellProps) {
+export function ProgressionDialogShell({ title, subtitle, icon, accent = "cyan", headerExtra, maxWidthClass = "max-w-md", children, onClose }: IProgressionDialogShellProps) {
   const accentText = accent === "fuchsia" ? "text-fuchsia-200" : "text-cyan-200";
   const accentBar = accent === "fuchsia" ? "bg-fuchsia-400" : "bg-cyan-400";
   const accentBorder = accent === "fuchsia" ? "border-fuchsia-500/40" : "border-cyan-500/40";
@@ -41,7 +43,7 @@ export function ProgressionDialogShell({ title, subtitle, icon, accent = "cyan",
         transition={{ type: "spring", stiffness: 280, damping: 26 }}
         style={{ transformOrigin: "left bottom", willChange: "transform", clipPath: FRAME_CLIP }}
         onClick={(event) => event.stopPropagation()}
-        className={`flex max-h-[88vh] w-full max-w-md flex-col border ${accentBorder} bg-[#040d18]/96 shadow-[0_0_40px_rgba(0,0,0,0.6)]`}
+        className={`flex max-h-[90vh] w-full ${maxWidthClass} flex-col border ${accentBorder} bg-[#040d18]/96 shadow-[0_0_40px_rgba(0,0,0,0.6)]`}
       >
         <span className={`h-1 w-full ${accentBar}`} />
         <div className="flex items-center gap-3 px-5 pb-3 pt-4">
