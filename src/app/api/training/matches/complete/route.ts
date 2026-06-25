@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         playerProgressRepository: new SupabasePlayerProgressRepository(repositories.client),
       },
     });
-    await recordProgressionEvent(repositories.client, resolveDuelProgressionActions("TRAINING", payload.outcome === "WIN"));
+    await recordProgressionEvent(repositories.client, resolveDuelProgressionActions("TRAINING", payload.outcome === "WIN", payload.flawless === true));
     return NextResponse.json(result, { status: 200, headers: response.headers });
   } catch (error) {
     return createApiErrorResponse(error, "No se pudo registrar el cierre del combate de entrenamiento.");

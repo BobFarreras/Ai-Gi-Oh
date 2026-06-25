@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
 
     // Progresión de misiones (solo en el cierre real, no en el path idempotente, para no inflar).
     // El ganador se deriva del winnerId server-side, no del outcome del cliente.
-    await recordProgressionEvent(repositories.client, resolveDuelProgressionActions("MULTIPLAYER", winnerId === playerId));
+    await recordProgressionEvent(repositories.client, resolveDuelProgressionActions("MULTIPLAYER", winnerId === playerId, payload.flawless === true));
 
     const isPlayerA = matchSession.player_a_id === playerId;
     const eloChange = isPlayerA ? eloChanges.playerA : eloChanges.playerB;

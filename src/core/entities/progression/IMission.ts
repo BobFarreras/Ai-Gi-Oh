@@ -13,7 +13,10 @@ export type ProgressionActionType =
   | "BUY_CARD"
   | "BUY_PACK"
   | "EVOLVE_CARD"
-  | "SPEND_NEXUS";
+  | "SPEND_NEXUS"
+  | "WIN_FLAWLESS_STORY"
+  | "WIN_FLAWLESS_TRAINING"
+  | "WIN_FLAWLESS_MP";
 
 /** Vista de una misión con el progreso del jugador para el periodo actual. */
 export interface IMissionView {

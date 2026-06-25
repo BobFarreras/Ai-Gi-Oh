@@ -9,7 +9,7 @@ import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { LiveOpsField, LiveOpsNumber, LiveOpsToggle, LiveOpsSaveBar, LiveOpsCardPicker } from "./live-ops/live-ops-controls";
 import { saveLiveOps } from "./live-ops/save-live-ops";
 
-const ACTION_TYPES = ["PLAY_DUEL", "WIN_DUEL", "PLAY_ARENA", "WIN_ARENA", "PLAY_MP_MATCH", "WIN_MP_MATCH", "BUY_CARD", "BUY_PACK", "EVOLVE_CARD", "SPEND_NEXUS"];
+const ACTION_TYPES = ["PLAY_DUEL", "WIN_DUEL", "PLAY_ARENA", "WIN_ARENA", "PLAY_MP_MATCH", "WIN_MP_MATCH", "WIN_FLAWLESS_STORY", "WIN_FLAWLESS_TRAINING", "WIN_FLAWLESS_MP", "BUY_CARD", "BUY_PACK", "EVOLVE_CARD", "SPEND_NEXUS"];
 
 function isoToLocalInput(iso: string): string {
   const date = new Date(iso);

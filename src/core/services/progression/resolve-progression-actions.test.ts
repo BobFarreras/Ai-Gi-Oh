@@ -21,4 +21,14 @@ describe("resolveDuelProgressionActions", () => {
   it("MULTIPLAYER ganado añade victorias de duelo y MP", () => {
     expect(resolveDuelProgressionActions("MULTIPLAYER", true)).toEqual(["PLAY_DUEL", "PLAY_MP_MATCH", "WIN_DUEL", "WIN_MP_MATCH"]);
   });
+
+  it("flawless solo cuenta si se gana, y es específico por sección", () => {
+    expect(resolveDuelProgressionActions("STORY", true, true)).toEqual(["PLAY_DUEL", "WIN_DUEL", "WIN_FLAWLESS_STORY"]);
+    expect(resolveDuelProgressionActions("TRAINING", true, true)).toEqual(["PLAY_DUEL", "PLAY_ARENA", "WIN_DUEL", "WIN_ARENA", "WIN_FLAWLESS_TRAINING"]);
+    expect(resolveDuelProgressionActions("MULTIPLAYER", true, true)).toEqual(["PLAY_DUEL", "PLAY_MP_MATCH", "WIN_DUEL", "WIN_MP_MATCH", "WIN_FLAWLESS_MP"]);
+  });
+
+  it("flawless al perder no añade nada", () => {
+    expect(resolveDuelProgressionActions("MULTIPLAYER", false, true)).toEqual(["PLAY_DUEL", "PLAY_MP_MATCH"]);
+  });
 });

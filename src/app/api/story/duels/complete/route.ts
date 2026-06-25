@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       collectionRepository: context.repositories.collectionRepository,
       loadCardsByIds: context.loadCardsByIds,
     });
-    await recordProgressionEvent(context.repositories.client, resolveDuelProgressionActions("STORY", result.outcome === "WON"));
+    await recordProgressionEvent(context.repositories.client, resolveDuelProgressionActions("STORY", result.outcome === "WON", payload.flawless === true));
     return NextResponse.json(result, { status: 200, headers: context.response.headers });
   } catch (error) {
     return createApiErrorResponse(error, "No se pudo registrar el resultado del duelo Story.");

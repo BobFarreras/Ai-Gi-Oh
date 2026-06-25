@@ -49,7 +49,7 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
     pushBackToStory(resultTransition ?? buildFallbackTransition(input));
   };
 
-  const handleMatchResolved = async (result: { winnerPlayerId: string | "DRAW"; playerId: string }): Promise<void> => {
+  const handleMatchResolved = async (result: { winnerPlayerId: string | "DRAW"; playerId: string; flawless?: boolean }): Promise<void> => {
     if (hasPostedResultRef.current) return;
     hasPostedResultRef.current = true;
     setIsBossSoundtrackStopped(true);
@@ -62,6 +62,7 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
         duelIndex: input.duelIndex,
         outcome,
         completionTicket: input.completionTicket,
+        flawless: result.flawless ?? false,
       });
       setResultTransition({
         outcome,

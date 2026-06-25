@@ -10,6 +10,9 @@ export const PROGRESSION_ACTION_LABEL: Record<string, string> = {
   BUY_PACK: "Abrir un sobre",
   EVOLVE_CARD: "Evolucionar una carta",
   SPEND_NEXUS: "Gastar Nexus",
+  WIN_FLAWLESS_STORY: "Ganar en Story sin perder LP",
+  WIN_FLAWLESS_TRAINING: "Ganar en la arena sin perder LP",
+  WIN_FLAWLESS_MP: "Ganar en multijugador sin perder LP",
   // Objetivos de colección (estado): el progreso se mide contra la colección, no por acciones.
   OWN_CARDS_AT_LEVEL: "Tener cartas a nivel ≥",
   OWN_CARDS_AT_VERSION: "Tener cartas a versión ≥",
@@ -20,6 +23,7 @@ export const PROGRESSION_ACTION_LABEL: Record<string, string> = {
 /** Objetivos de misión disponibles para el admin (acciones + colección). */
 export const MISSION_OBJECTIVE_TYPES = [
   "PLAY_DUEL", "WIN_DUEL", "PLAY_ARENA", "WIN_ARENA", "PLAY_MP_MATCH", "WIN_MP_MATCH",
+  "WIN_FLAWLESS_STORY", "WIN_FLAWLESS_TRAINING", "WIN_FLAWLESS_MP",
   "BUY_CARD", "BUY_PACK", "EVOLVE_CARD", "SPEND_NEXUS",
   "OWN_CARDS_AT_LEVEL", "OWN_CARDS_AT_VERSION", "OWN_CARDS_TOTAL", "OWN_DISTINCT_CARDS",
 ] as const;

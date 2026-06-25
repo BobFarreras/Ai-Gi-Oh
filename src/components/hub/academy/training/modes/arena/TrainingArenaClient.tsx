@@ -72,7 +72,7 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
   /**
    * Sincroniza cierre de duelo una única vez para mantener idempotencia por `matchSeed`.
    */
-  async function handleMatchResolved(result: { winnerPlayerId: string | "DRAW"; playerId: string; matchSeed: string }) {
+  async function handleMatchResolved(result: { winnerPlayerId: string | "DRAW"; playerId: string; matchSeed: string; flawless?: boolean }) {
     if (hasPostedRef.current) return;
     hasPostedRef.current = true;
     const outcome = resolveOutcome(result);
@@ -83,6 +83,7 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
         tier: props.selectedTier,
         outcome: resolveOutcome(result),
         completionTicket: props.completionTicket,
+        flawless: result.flawless ?? false,
       });
       setRewardSummary({
         rewardNexus: payload.reward.nexus,
