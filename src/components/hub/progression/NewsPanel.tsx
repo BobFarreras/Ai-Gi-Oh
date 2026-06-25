@@ -88,7 +88,7 @@ export function NewsPanel({ promotions, eventName, onClose }: { promotions: IFea
               <div className="p-4">
                 <CategoryBadge kind={hero.kind} />
                 <h3 className="mt-2 font-display text-xl font-bold text-slate-50">{hero.title}</h3>
-                {hero.body ? <p className="mt-2 font-display text-base leading-relaxed text-slate-200">{hero.body}</p> : null}
+                {hero.body ? <p className="mt-2 text-base leading-relaxed text-slate-200">{hero.body}</p> : null}
                 <CtaLink promo={hero} onClose={onClose} />
               </div>
             </article>
@@ -103,7 +103,7 @@ export function NewsPanel({ promotions, eventName, onClose }: { promotions: IFea
                   <div className="flex min-w-0 flex-1 flex-col">
                     <CategoryBadge kind={promo.kind} size="xs" />
                     <h4 className="mt-1 truncate font-display text-base font-bold text-slate-100">{promo.title}</h4>
-                    {promo.body ? <p className="line-clamp-2 font-display text-sm leading-relaxed text-slate-300">{promo.body}</p> : null}
+                    {promo.body ? <p className="line-clamp-2 text-sm leading-relaxed text-slate-300">{promo.body}</p> : null}
                     <CtaLink promo={promo} onClose={onClose} />
                   </div>
                 </article>
