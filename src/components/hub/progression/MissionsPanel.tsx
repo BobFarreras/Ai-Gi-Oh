@@ -59,7 +59,7 @@ function MissionRow({ mission, onClaimed }: { mission: IMissionView; onClaimed: 
         <div className="relative h-3 flex-1 overflow-hidden border border-cyan-900/60 bg-black/60">
           <div className={`absolute inset-y-0 left-0 ${claimed ? "bg-emerald-500" : "bg-gradient-to-r from-cyan-500 to-cyan-300"}`} style={{ width: `${pct}%` }} />
         </div>
-        <span className="w-14 shrink-0 text-right font-display text-sm font-bold text-slate-200">{Math.min(mission.progress, mission.targetCount)}/{mission.targetCount}</span>
+        <span className="min-w-[3.25rem] shrink-0 whitespace-nowrap text-right font-display text-sm font-bold tabular-nums text-slate-200">{Math.min(mission.progress, mission.targetCount)}/{mission.targetCount}</span>
       </div>
       <div className="mt-3">
         {claimed ? (
