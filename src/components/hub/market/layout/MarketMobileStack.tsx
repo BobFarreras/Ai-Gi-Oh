@@ -88,7 +88,7 @@ export function MarketMobileStack(props: MarketMobileStackProps) {
       <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-cyan-900/30 bg-black/40 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
         {state.visitedPanels.LISTINGS || state.effectiveActivePanel === "LISTINGS" ? (
           <div className={state.effectiveActivePanel === "LISTINGS" ? "h-full" : "hidden"}>
-            <MarketListingsPanel listings={props.listings} isPerformanceMode={true} onSelectCard={state.handleSelectListing} />
+            <MarketListingsPanel listings={props.listings} onSelectCard={state.handleSelectListing} />
           </div>
         ) : null}
         {state.visitedPanels.PACKS || state.effectiveActivePanel === "PACKS" ? (

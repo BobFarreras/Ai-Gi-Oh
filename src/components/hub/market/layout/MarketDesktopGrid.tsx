@@ -47,7 +47,6 @@ export function MarketDesktopGrid(props: MarketDesktopGridProps) {
       <div data-tutorial-id="market-pack-preview" className="min-h-0 min-w-0 overflow-hidden rounded-xl border border-cyan-900/30 bg-black/40 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
         <MarketListingsPanel
           listings={props.listings}
-          isPerformanceMode={false}
           onSelectCard={(listing) => {
             play("DETAIL_OPEN");
             props.onSelectListing(listing);
