@@ -64,9 +64,9 @@ type EventDraft = Omit<IAdminEvent, "rules" | "items" | "missions">;
 
 export function AdminEventEditor({ event }: { event: IAdminEvent }) {
   const [draft, setDraft] = useState<EventDraft>(event);
-  const [rules, setRules] = useState<IAdminEventRule[]>(event.rules);
-  const [items, setItems] = useState<IAdminEventShopItem[]>(event.items);
-  const [missions, setMissions] = useState<IAdminMissionDefinition[]>(event.missions);
+  const [rules, setRules] = useState<IAdminEventRule[]>(event.rules ?? []);
+  const [items, setItems] = useState<IAdminEventShopItem[]>(event.items ?? []);
+  const [missions, setMissions] = useState<IAdminMissionDefinition[]>(event.missions ?? []);
   const [newAction, setNewAction] = useState("");
 
   function update<K extends keyof EventDraft>(key: K, value: EventDraft[K]) {
