@@ -40,6 +40,24 @@ const FUSION_RECIPES: IFusionRecipe[] = [
     requiredEnergyPerMaterial: 4,
     requiredTotalEnergy: 8,
   },
+  // 2º lote. Sin requisitos de energía por material: requiredMaterialIds ya fija el par exacto,
+  // y así la IA puede elegir los materiales aunque sean de bajo coste.
+  {
+    resultCardId: "fusion-curshost",
+    requiredMaterialIds: ["entity-cursor", "entity-hostinger"],
+  },
+  {
+    resultCardId: "fusion-kuberlinnet",
+    requiredMaterialIds: ["entity-linux", "entity-kubernetes"],
+  },
+  {
+    resultCardId: "fusion-rustyfox",
+    requiredMaterialIds: ["entity-rust", "entity-firefox"],
+  },
+  {
+    resultCardId: "fusion-super-c",
+    requiredMaterialIds: ["entity-cpp", "entity-csharp"],
+  },
 ];
 
 export function getFusionRecipeByResultId(resultCardId: string): IFusionRecipe | null {
