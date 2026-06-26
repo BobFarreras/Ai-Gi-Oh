@@ -4,6 +4,7 @@ import {
   IDiscardForHandLimitPendingTurnAction,
   ISelectFusionMaterialsPendingTurnAction,
   ISelectGraveyardCardPendingTurnAction,
+  ISelectOpponentEntityToLockPendingTurnAction,
   ISelectOpponentGraveyardCardPendingTurnAction,
   ISelectOpponentSetCardPendingTurnAction,
 } from "@/core/use-cases/game-engine/state/types";
@@ -88,5 +89,21 @@ export function createOpponentSetCardSelectionPendingAction(
     playerId,
     executionInstanceId,
     zone,
+  };
+}
+
+/**
+ * Construye la acción pendiente para elegir una entity rival a bloquear N turnos.
+ */
+export function createOpponentEntityToLockSelectionPendingAction(
+  playerId: string,
+  executionInstanceId: string,
+  turns: number,
+): ISelectOpponentEntityToLockPendingTurnAction {
+  return {
+    type: "SELECT_OPPONENT_ENTITY_TO_LOCK",
+    playerId,
+    executionInstanceId,
+    turns,
   };
 }

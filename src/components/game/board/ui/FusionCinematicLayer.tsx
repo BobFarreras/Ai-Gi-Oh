@@ -16,17 +16,18 @@ interface IFusionPlaybackItem {
   fusionCardId: string;
 }
 
-const FUSION_VIDEO_BY_CARD_ID: Record<string, string> = {
-  "fusion-gemgpt": "/assets/videos/fusion/gemgpt.mp4",
-  "fusion-kaclauli": "/assets/videos/fusion/kaclouli.mp4",
-  "fusion-pytgress": "/assets/videos/fusion/pytgress.mp4",
-};
-
-const FUSION_RENDER_BY_CARD_ID: Record<string, string> = {
-  "fusion-gemgpt": "/assets/renders/gemgpt.webp",
-  "fusion-kaclauli": "/assets/renders/kaclauli.webp",
-  "fusion-pytgress": "/assets/renders/pytgress.webp",
-};
+// Rutas del cinemático por convención (agnóstico: una fusión nueva no requiere tocar código,
+// basta con crear la carta en la BD y subir los archivos con el nombre del id sin el prefijo "fusion-").
+// El vídeo es opcional: si el archivo no existe, el <video> dispara onError y salta directo al summon.
+function fusionSlug(fusionCardId: string): string {
+  return fusionCardId.replace(/^fusion-/, "");
+}
+function fusionVideoSrc(fusionCardId: string): string {
+  return `/assets/videos/fusion/${fusionSlug(fusionCardId)}.mp4`;
+}
+function fusionRenderSrc(fusionCardId: string): string {
+  return `/assets/renders/${fusionSlug(fusionCardId)}.webp`;
+}
 
 // Watchdog inicial: si timeupdate nunca llega (tab en segundo plano), salta a summon.
 const VIDEO_WATCHDOG_MS = 2500;
@@ -53,10 +54,10 @@ function toFusionItem(event: ICombatLogEvent): IFusionPlaybackItem | null {
 }
 
 function FusionPlaybackItem({ item, onDone }: { item: IFusionPlaybackItem; onDone: () => void }) {
-  const videoSrc = FUSION_VIDEO_BY_CARD_ID[item.fusionCardId] ?? null;
-  const renderSrc = FUSION_RENDER_BY_CARD_ID[item.fusionCardId] ?? null;
+  const videoSrc = fusionVideoSrc(item.fusionCardId);
+  const renderSrc = fusionRenderSrc(item.fusionCardId);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [phase, setPhase] = useState<"video" | "summon">(() => (videoSrc ? "video" : "summon"));
+  const [phase, setPhase] = useState<"video" | "summon">("video");
   const targetOffset = phase === "summon" ? resolveTargetOffset(item.fusionCardId) : { x: 0, y: 220, scale: 0.34 };
 
   useEffect(() => {
