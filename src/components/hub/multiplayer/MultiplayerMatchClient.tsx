@@ -58,12 +58,13 @@ type EloChange = { old: number; new: number };
 async function callFinishMatch(
   matchId: string,
   outcome: "WIN" | "LOSE" | "DRAW",
+  flawless = false,
 ): Promise<{ ok: boolean; reward?: IMatchReward; eloChange?: EloChange; error?: string }> {
   try {
     const res = await fetch("/api/multiplayer/match/finish", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ matchId, outcome }),
+      body: JSON.stringify({ matchId, outcome, flawless }),
     });
     const body = await res.json();
     if (!res.ok) return { ok: false, error: body.message ?? "Error al cerrar la partida." };
@@ -141,10 +142,10 @@ export function MultiplayerMatchClient({
   });
 
   const finishMatch = useCallback(
-    async (outcome: "WIN" | "LOSE" | "DRAW") => {
+    async (outcome: "WIN" | "LOSE" | "DRAW", flawless = false) => {
       if (finishCalledRef.current) return;
       finishCalledRef.current = true;
-      const result = await callFinishMatch(matchId, outcome);
+      const result = await callFinishMatch(matchId, outcome, flawless);
       if (result.reward) setReward(result.reward);
       if (result.eloChange) setEloChange(result.eloChange);
       setMatchFinished(true);
@@ -153,12 +154,12 @@ export function MultiplayerMatchClient({
   );
 
   const handleMatchResolved = useCallback(
-    (result: { winnerPlayerId: string | "DRAW" }) => {
+    (result: { winnerPlayerId: string | "DRAW"; flawless?: boolean }) => {
       const winner = result.winnerPlayerId;
       setWinnerPlayerId(winner === "DRAW" ? "DRAW" : winner);
       track("duel_ended", "gameplay", { mode: "MULTIPLAYER", matchId, source: "local_engine", winnerPlayerId: winner });
       if (winner === "DRAW") void finishMatch("DRAW");
-      else if (winner === localPlayerId) void finishMatch("WIN");
+      else if (winner === localPlayerId) void finishMatch("WIN", result.flawless ?? false);
       else void finishMatch("LOSE");
     },
     [localPlayerId, finishMatch, matchId],

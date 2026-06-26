@@ -29,6 +29,10 @@ export const ALLOWED_EVENT_NAMES = new Set<string>([
   "tutorial_step_completed",
   "card_level_up",
   "card_xp_gained",
+  // Live-ops / retención
+  "daily_login_claimed",
+  "mission_claimed",
+  "event_item_redeemed",
   // Multiplayer
   "matchmaking_started",
   "matchmaking_completed",

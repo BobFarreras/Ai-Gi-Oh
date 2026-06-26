@@ -5,6 +5,7 @@ import { IMarketRuntimeSnapshot } from "@/services/market/market-runtime-snapsho
 import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
 import { requireTrustedMutationOrigin } from "@/services/security/api/require-trusted-mutation-origin";
 import { readJsonObjectBody, readRequiredStringField } from "@/services/security/api/request-body-parser";
+import { recordProgressionEvent } from "@/services/progression/record-progression-event";
 
 export async function POST(request: NextRequest) {
   const originGuard = requireTrustedMutationOrigin(request);
@@ -14,6 +15,7 @@ export async function POST(request: NextRequest) {
     const packId = readRequiredStringField(payload, "packId", "El packId es obligatorio.");
     const context = await createMarketRouteContext(request);
     const openedCardIds = await context.buyPackUseCase.execute({ playerId: context.playerId, packId });
+    await recordProgressionEvent(context.repositories.client, ["BUY_PACK"]);
     const [catalog, transactions, collection] = await Promise.all([
       context.getCatalogUseCase.execute(context.playerId),
       context.getTransactionsUseCase.execute(context.playerId),

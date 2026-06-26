@@ -11,7 +11,7 @@ interface IAdminSidebarNavProps {
 
 interface IAdminSidebarItem {
   href: string;
-  icon: "catalog" | "market" | "starter" | "story" | "audit" | "analytics";
+  icon: "catalog" | "market" | "starter" | "story" | "audit" | "analytics" | "liveops";
   label: string;
   description: string;
 }
@@ -25,6 +25,7 @@ function buildItems(portalSlug: string): IAdminSidebarItem[] {
     { href: `${base}/story-decks`, icon: "story", label: "Story Decks", description: "Oponentes & Duelos" },
     { href: `${base}/audit`, icon: "audit", label: "Auditoría", description: "Historial de cambios" },
     { href: `${base}/analytics`, icon: "analytics", label: "Analytics", description: "Dashboard de telemetría" },
+    { href: `${base}/live-ops`, icon: "liveops", label: "Live-Ops", description: "Misiones & Promos" },
   ];
 }
 
@@ -69,6 +70,12 @@ function AdminNavIcon({ icon, isActive }: { icon: IAdminSidebarItem["icon"]; isA
       <svg viewBox="0 0 24 24" className={cls}>
         <path d="M3 3v18h18" strokeWidth="1.6" strokeLinecap="round" />
         <path d="M7 16l4-5 4 3 5-7" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  if (icon === "liveops")
+    return (
+      <svg viewBox="0 0 24 24" className={cls}>
+        <path d="M12 2l2.4 5.2L20 8l-4 4 1 6-5-2.8L7 18l1-6-4-4 5.6-.8z" strokeWidth="1.6" strokeLinejoin="round" />
       </svg>
     );
   return (

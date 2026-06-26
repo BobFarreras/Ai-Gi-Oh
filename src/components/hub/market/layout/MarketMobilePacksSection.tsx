@@ -80,7 +80,7 @@ export function MarketMobilePacksSection(props: MarketMobilePacksSectionProps) {
 
       <section data-tutorial-id="market-pack-preview" className="min-h-0 flex-1 overflow-hidden rounded-lg border border-cyan-800/35 bg-[#031020]/55">
         {selectedPackId ? (
-          <MarketListingsPanel listings={packListings} isPerformanceMode={true} onSelectCard={onSelectPackCard} />
+          <MarketListingsPanel listings={packListings} onSelectCard={onSelectPackCard} />
         ) : (
           <div className="flex h-full items-center justify-center text-center">
             <p className="px-4 text-xs font-black uppercase tracking-[0.16em] text-cyan-300/80">

@@ -1,6 +1,6 @@
 // src/app/layout.tsx - Layout raíz: fuentes, metadata global y botón de perfil de efectos visuales.
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Orbitron } from "next/font/google";
 import { PerformanceProfileToggle } from "@/components/internal/PerformanceProfileToggle";
 import { shouldRenderPerformanceToggle } from "@/components/internal/should-render-performance-toggle";
 import { AnalyticsInitializer } from "@/services/analytics/client/AnalyticsInitializer";
@@ -13,6 +13,12 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+// Fuente display tecnológica (HUD/sci-fi) para títulos y etiquetas destacadas.
+const orbitron = Orbitron({
+  variable: "--font-orbitron",
   subsets: ["latin"],
 });
 
@@ -43,7 +49,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} antialiased`}
       >
         {children}
         <AnalyticsInitializer />

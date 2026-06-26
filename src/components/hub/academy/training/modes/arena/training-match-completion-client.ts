@@ -6,6 +6,7 @@ interface IPostTrainingMatchCompletionInput {
   tier: number;
   outcome: IMatchOutcome;
   completionTicket: string;
+  flawless?: boolean;
 }
 
 export interface IPostTrainingMatchCompletionOutput {

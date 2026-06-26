@@ -28,7 +28,7 @@ interface IUseBoardScreenStateInput {
   duelResultRewardSummary?: IDuelResultRewardSummary | null;
   narrationPack?: IMatchNarrationPack | null;
   isNarrationLocked?: boolean;
-  onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string }) => void;
+  onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string; flawless: boolean }) => void;
   /** Ganador comunicado externamente (multijugador Realtime); prioridad si el motor local no detecta fin. */
   externalWinnerPlayerId?: string | "DRAW" | null;
 }
@@ -84,9 +84,12 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
     }
     if (!onMatchResolved) return;
     if (resolvedWinnerRef.current === board.winnerPlayerId) return;
-    onMatchResolved({ winnerPlayerId: board.winnerPlayerId, playerId, mode, matchSeed: board.matchSeed });
+    // Flawless: el jugador local gana sin haber perdido LP (salud al máximo).
+    const localPlayer = board.gameState.playerA.id === playerId ? board.gameState.playerA : board.gameState.playerB;
+    const flawless = board.winnerPlayerId === playerId && localPlayer.healthPoints >= localPlayer.maxHealthPoints;
+    onMatchResolved({ winnerPlayerId: board.winnerPlayerId, playerId, mode, matchSeed: board.matchSeed, flawless });
     resolvedWinnerRef.current = board.winnerPlayerId;
-  }, [board.matchSeed, board.winnerPlayerId, mode, onMatchResolved, playerId]);
+  }, [board.matchSeed, board.winnerPlayerId, board.gameState.playerA, board.gameState.playerB, mode, onMatchResolved, playerId]);
   useEffect(() => {
     if (!board.winnerPlayerId) return;
     board.setIsHistoryOpen(false);

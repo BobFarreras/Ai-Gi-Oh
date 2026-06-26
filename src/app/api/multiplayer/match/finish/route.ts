@@ -5,6 +5,8 @@ import { requireTrustedMutationOrigin } from "@/services/security/api/require-tr
 import { readJsonObjectBody, readRequiredStringField } from "@/services/security/api/request-body-parser";
 import { getAuthenticatedUserId } from "@/services/auth/api/internal/get-authenticated-user-id";
 import { createPlayerRouteRepositories } from "@/services/player-persistence/create-player-route-repositories";
+import { recordProgressionEvent } from "@/services/progression/record-progression-event";
+import { resolveDuelProgressionActions } from "@/core/services/progression/resolve-progression-actions";
 import { resolveMatchReward } from "@/core/services/match/rewards/match-reward-policy";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { createSupabaseServiceRoleClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-service-role-client";
@@ -107,6 +109,10 @@ export async function POST(request: NextRequest) {
     if (reward.nexus > 0) {
       await new SupabaseWalletRepository(repositories.client).creditNexus(playerId, reward.nexus);
     }
+
+    // Progresión de misiones (solo en el cierre real, no en el path idempotente, para no inflar).
+    // El ganador se deriva del winnerId server-side, no del outcome del cliente.
+    await recordProgressionEvent(repositories.client, resolveDuelProgressionActions("MULTIPLAYER", winnerId === playerId, payload.flawless === true));
 
     const isPlayerA = matchSession.player_a_id === playerId;
     const eloChange = isPlayerA ? eloChanges.playerA : eloChanges.playerB;
