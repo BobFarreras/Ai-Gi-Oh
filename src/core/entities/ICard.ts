@@ -133,6 +133,18 @@ export interface IFusionSummonEffect {
   materialsRequired: number;
 }
 
+/** Destruye todas las trampas puestas del rival en el tablero. */
+export interface IDestroyAllTrapsEffect {
+  action: "DESTROY_ALL_TRAPS";
+}
+
+/** Descarta cartas de la mano del rival al cementerio (las más antiguas; determinista). */
+export interface IDiscardOpponentHandCardEffect {
+  action: "DISCARD_OPPONENT_HAND_CARD";
+  /** Cuántas cartas descartar (por defecto 1). */
+  count?: number;
+}
+
 export type ICardEffect =
   | IDamageEffect
   | IHealEffect
@@ -157,7 +169,9 @@ export type ICardEffect =
   | IReturnGraveyardCardToFieldEffect
   | IDestroyEntityOnBattleWinEffect
   | INegateOpponentTrapAndDestroyEffect
-  | IFusionSummonEffect;
+  | IFusionSummonEffect
+  | IDestroyAllTrapsEffect
+  | IDiscardOpponentHandCardEffect;
 
 export interface ICard {
   readonly id: string;
