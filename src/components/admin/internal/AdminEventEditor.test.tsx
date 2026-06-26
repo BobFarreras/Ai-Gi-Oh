@@ -61,4 +61,15 @@ describe("AdminEventEditor", () => {
 
     expect(screen.getByRole("button", { name: /Eliminar regla Ganar un duelo/i })).toBeInTheDocument();
   });
+
+  it("el selector de 'Añadir acción' ofrece el mismo catálogo que las misiones (incl. colección)", () => {
+    render(<AdminEventEditor event={event} />);
+
+    const actionSelector = screen.getByRole("combobox", { name: /Acción de la nueva regla de puntos/i });
+    const labels = Array.from(actionSelector.querySelectorAll("option")).map((option) => option.textContent);
+    expect(labels).toContain("Tener cartas en el almacén");
+    expect(labels).toContain("Tener cartas distintas");
+    // WIN_DUEL ya está usado como regla, así que no debe reaparecer como opción.
+    expect(labels).not.toContain("Ganar un duelo");
+  });
 });
