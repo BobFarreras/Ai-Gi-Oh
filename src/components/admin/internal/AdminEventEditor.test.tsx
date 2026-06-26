@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { AdminEventEditor } from "./AdminEventEditor";
 import { IAdminEvent } from "@/core/entities/progression/ILiveOpsAdmin";
+import { MISSION_OBJECTIVE_TYPES } from "@/core/services/progression/action-labels";
 
 const event: IAdminEvent = {
   id: "evt-launch",
@@ -12,7 +13,7 @@ const event: IAdminEvent = {
   startsAt: new Date().toISOString(),
   endsAt: new Date(Date.now() + 86_400_000).toISOString(),
   isActive: true,
-  rules: [],
+  rules: [{ eventId: "evt-launch", actionType: "WIN_DUEL", pointsPer: 10 }],
   items: [],
   missions: [
     {
@@ -41,9 +42,23 @@ describe("AdminEventEditor", () => {
     expect(screen.getByRole("button", { name: /Eliminar misión/i })).toBeInTheDocument();
 
     // Las nuevas modalidades de colección están disponibles en el desplegable de objetivos.
-    expect(screen.getByRole("option", { name: /Tener cartas en el almacén/i })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /Tener cartas a nivel/i })).toBeInTheDocument();
+    expect(screen.getAllByRole("option", { name: /Tener cartas en el almacén/i }).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole("option", { name: /Tener cartas a nivel/i }).length).toBeGreaterThanOrEqual(1);
     // Hay una opción flawless por sección (story/training/multiplayer).
     expect(screen.getAllByRole("option", { name: /sin perder LP/i }).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("el selector de añadir misión ofrece todas las misiones posibles del catálogo", () => {
+    render(<AdminEventEditor event={event} />);
+
+    const selector = screen.getByRole("combobox", { name: /Objetivo de la nueva misión/i });
+    // Una opción por cada objetivo posible + el placeholder.
+    expect(selector.querySelectorAll("option").length).toBe(MISSION_OBJECTIVE_TYPES.length + 1);
+  });
+
+  it("permite eliminar una regla de 'cómo se ganan puntos' con el icono de basura", () => {
+    render(<AdminEventEditor event={event} />);
+
+    expect(screen.getByRole("button", { name: /Eliminar regla Ganar un duelo/i })).toBeInTheDocument();
   });
 });

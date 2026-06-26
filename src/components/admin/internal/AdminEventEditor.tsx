@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { IAdminEvent, IAdminEventRule, IAdminEventShopItem, IAdminMissionDefinition } from "@/core/entities/progression/ILiveOpsAdmin";
 import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
-import { progressionActionLabel } from "@/core/services/progression/action-labels";
+import { MISSION_OBJECTIVE_TYPES, OBJECTIVE_TYPES_WITH_PARAM, progressionActionLabel } from "@/core/services/progression/action-labels";
 import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { AdminMissionRow } from "./AdminMissionRow";
 import { LiveOpsField, LiveOpsNumber, LiveOpsToggle, LiveOpsSaveBar, LiveOpsCardPicker } from "./live-ops/live-ops-controls";
@@ -22,7 +22,7 @@ function localInputToIso(value: string): string {
   return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
 }
 
-function RuleRow({ eventId, rule }: { eventId: string; rule: IAdminEventRule }) {
+function RuleRow({ eventId, rule, onDelete }: { eventId: string; rule: IAdminEventRule; onDelete: () => void }) {
   const [points, setPoints] = useState(rule.pointsPer);
   return (
     <div className="flex items-center gap-3 border border-cyan-900/40 bg-black/30 px-3 py-2">
@@ -30,6 +30,14 @@ function RuleRow({ eventId, rule }: { eventId: string; rule: IAdminEventRule }) 
       <input type="number" min={1} className="w-20 border border-cyan-900/60 bg-[#03101c] px-2 py-1 text-sm text-slate-100 outline-none focus:border-cyan-400" value={points} onChange={(event) => setPoints(Number(event.target.value))} />
       <span className="font-mono text-[10px] uppercase text-cyan-500/70">pts</span>
       <LiveOpsSaveBar onSave={() => saveLiveOps("eventRule", { eventId, actionType: rule.actionType, pointsPer: points })} label="OK" />
+      <button
+        type="button"
+        aria-label={`Eliminar regla ${progressionActionLabel(rule.actionType)}`}
+        onClick={onDelete}
+        className="flex h-9 w-9 shrink-0 items-center justify-center border border-rose-700/60 text-rose-300 transition-colors hover:border-rose-500 hover:bg-rose-500/10"
+      >
+        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13" /></svg>
+      </button>
     </div>
   );
 }
@@ -68,6 +76,7 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
   const [items, setItems] = useState<IAdminEventShopItem[]>(event.items ?? []);
   const [missions, setMissions] = useState<IAdminMissionDefinition[]>(event.missions ?? []);
   const [newAction, setNewAction] = useState("");
+  const [newMissionObjective, setNewMissionObjective] = useState("");
 
   function update<K extends keyof EventDraft>(key: K, value: EventDraft[K]) {
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -80,20 +89,27 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
     setRules((prev) => [...prev, { eventId: draft.id, actionType: newAction, pointsPer: 10 }]);
     setNewAction("");
   }
+  async function deleteRule(actionType: string) {
+    await deleteLiveOps("eventRule", { eventId: draft.id, actionType });
+    setRules((prev) => prev.filter((rule) => rule.actionType !== actionType));
+  }
   function addItem() {
     const id = `${draft.id}-item-${Math.random().toString(36).slice(2, 7)}`;
     setItems((prev) => [...prev, { id, eventId: draft.id, cardId: "", costPoints: 100, perPlayerLimit: 1, sortOrder: prev.length + 1, isActive: true }]);
   }
-  function addMission() {
+  function addMission(objectiveType: string) {
+    if (!objectiveType) return;
     const id = `${draft.id}-mission-${Math.random().toString(36).slice(2, 7)}`;
     setMissions((prev) => [
       ...prev,
       {
-        id, scope: "EVENT", objectiveType: "WIN_MP_MATCH", objectiveParam: null, targetCount: 1,
+        id, scope: "EVENT", objectiveType,
+        objectiveParam: OBJECTIVE_TYPES_WITH_PARAM.has(objectiveType) ? 1 : null, targetCount: 1,
         rewardNexus: 50, rewardType: "EVENT_POINTS", eventId: draft.id,
-        title: "Nuevo reto del evento", description: null, sortOrder: prev.length + 1, isActive: false,
+        title: `Nuevo reto: ${progressionActionLabel(objectiveType)}`, description: null, sortOrder: prev.length + 1, isActive: false,
       },
     ]);
+    setNewMissionObjective("");
   }
   async function deleteMission(id: string) {
     await deleteLiveOps("mission", id);
@@ -128,7 +144,7 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
       <div className="mt-5">
         <h4 className="mb-2 font-mono text-[11px] font-black uppercase tracking-[0.2em] text-cyan-400/80">Cómo se ganan puntos</h4>
         <div className="space-y-2">
-          {rules.map((rule) => <RuleRow key={rule.actionType} eventId={draft.id} rule={rule} />)}
+          {rules.map((rule) => <RuleRow key={rule.actionType} eventId={draft.id} rule={rule} onDelete={() => deleteRule(rule.actionType)} />)}
         </div>
         {availableActions.length > 0 ? (
           <div className="mt-2 flex items-center gap-2">
@@ -152,10 +168,7 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
       </div>
 
       <div className="mt-5">
-        <div className="mb-2 flex items-center justify-between">
-          <h4 className="font-mono text-[11px] font-black uppercase tracking-[0.2em] text-cyan-400/80">Misiones del evento ({draft.currencyName})</h4>
-          <button type="button" onClick={addMission} className="h-8 border border-cyan-500/60 px-3 font-mono text-[11px] font-bold uppercase text-cyan-200 hover:bg-cyan-500/10">+ Añadir misión</button>
-        </div>
+        <h4 className="mb-2 font-mono text-[11px] font-black uppercase tracking-[0.2em] text-cyan-400/80">Misiones del evento ({draft.currencyName})</h4>
         {missions.length === 0 ? (
           <p className="py-3 text-center text-xs text-slate-500">Sin misiones propias. Crea retos que den {draft.currencyName} (gana sin perder LP, evoluciona cartas, etc.).</p>
         ) : (
@@ -165,6 +178,19 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
             ))}
           </div>
         )}
+        {/* Selector con todas las misiones posibles (acciones + objetivos de colección), igual que el de "Añadir acción". */}
+        <div className="mt-2 flex items-center gap-2">
+          <select
+            aria-label="Objetivo de la nueva misión"
+            className="flex-1 border border-cyan-900/60 bg-[#03101c] px-2.5 py-1.5 text-sm text-slate-100 outline-none focus:border-cyan-400"
+            value={newMissionObjective}
+            onChange={(event) => setNewMissionObjective(event.target.value)}
+          >
+            <option value="">+ Elige un objetivo…</option>
+            {MISSION_OBJECTIVE_TYPES.map((type) => <option key={type} value={type}>{progressionActionLabel(type)}</option>)}
+          </select>
+          <button type="button" onClick={() => addMission(newMissionObjective)} className="h-9 border border-cyan-500/60 px-3 font-mono text-xs font-bold uppercase text-cyan-200 hover:bg-cyan-500/10">Añadir misión</button>
+        </div>
       </div>
     </div>
   );

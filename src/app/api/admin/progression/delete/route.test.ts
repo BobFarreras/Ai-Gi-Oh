@@ -11,9 +11,11 @@ vi.mock("@/infrastructure/persistence/supabase/internal/create-supabase-service-
 }));
 
 const deleteMission = vi.fn().mockResolvedValue(undefined);
+const deleteEventRule = vi.fn().mockResolvedValue(undefined);
 vi.mock("@/infrastructure/persistence/supabase/SupabaseProgressionAdminRepository", () => ({
   SupabaseProgressionAdminRepository: class {
     deleteMission = deleteMission;
+    deleteEventRule = deleteEventRule;
   },
 }));
 
@@ -42,5 +44,17 @@ describe("POST /api/admin/progression/delete", () => {
     const res = await POST(req({ type: "evento", id: "x" }));
     expect(res.status).toBeGreaterThanOrEqual(400);
     expect(deleteMission).not.toHaveBeenCalled();
+  });
+
+  it("elimina una regla de evento por evento + acción", async () => {
+    const res = await POST(req({ type: "eventRule", eventId: "evt-launch", actionType: "WIN_DUEL" }));
+    expect(res.status).toBe(200);
+    expect(deleteEventRule).toHaveBeenCalledWith("evt-launch", "WIN_DUEL");
+  });
+
+  it("rechaza una regla de evento sin acción", async () => {
+    const res = await POST(req({ type: "eventRule", eventId: "evt-launch" }));
+    expect(res.status).toBeGreaterThanOrEqual(400);
+    expect(deleteEventRule).not.toHaveBeenCalled();
   });
 });

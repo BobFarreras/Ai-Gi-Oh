@@ -13,13 +13,18 @@ export async function POST(request: NextRequest) {
   if (originGuard) return originGuard;
   try {
     const context = await createAdminRouteContext(request);
-    const { type, id } = (await request.json()) as { type: string; id: string };
-    if (typeof id !== "string" || !id.trim()) throw new ValidationError("El id es obligatorio.");
+    const body = (await request.json()) as { type: string; id?: string; eventId?: string; actionType?: string };
     const repository = new SupabaseProgressionAdminRepository(createSupabaseServiceRoleClient());
 
-    switch (type) {
+    switch (body.type) {
       case "mission":
-        await new DeleteMissionUseCase(repository).execute(id);
+        if (typeof body.id !== "string" || !body.id.trim()) throw new ValidationError("El id es obligatorio.");
+        await new DeleteMissionUseCase(repository).execute(body.id);
+        break;
+      case "eventRule":
+        if (typeof body.eventId !== "string" || !body.eventId.trim()) throw new ValidationError("El evento es obligatorio.");
+        if (typeof body.actionType !== "string" || !body.actionType.trim()) throw new ValidationError("La acción es obligatoria.");
+        await repository.deleteEventRule(body.eventId, body.actionType);
         break;
       default:
         throw new ValidationError("Tipo de definición desconocido para eliminar.");

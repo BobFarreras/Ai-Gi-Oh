@@ -95,6 +95,11 @@ export class SupabaseProgressionAdminRepository implements IProgressionAdminRepo
     if (error) throw new Error(`No se pudo guardar la regla de puntos: ${error.message}`);
   }
 
+  async deleteEventRule(eventId: string, actionType: string): Promise<void> {
+    const { error } = await this.client.from("event_point_rules").delete().eq("event_id", eventId).eq("action_type", actionType);
+    if (error) throw new Error(`No se pudo eliminar la regla de puntos: ${error.message}`);
+  }
+
   async upsertEventShopItem(item: IAdminEventShopItem): Promise<void> {
     const { error } = await this.client.from("event_shop_items").upsert({
       id: item.id, event_id: item.eventId, card_id: item.cardId, cost_points: item.costPoints,

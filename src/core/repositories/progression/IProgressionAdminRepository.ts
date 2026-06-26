@@ -20,4 +20,6 @@ export interface IProgressionAdminRepository {
   upsertLoginRewardDay(day: IAdminLoginRewardDay): Promise<void>;
   /** Elimina una definición de misión por id. */
   deleteMission(id: string): Promise<void>;
+  /** Elimina una regla de puntos de un evento (clave compuesta evento+acción). */
+  deleteEventRule(eventId: string, actionType: string): Promise<void>;
 }
