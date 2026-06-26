@@ -8,6 +8,13 @@ function createPlayer(id: string): IPlayer {
   return { id, name: id, healthPoints: 4000, maxHealthPoints: 4000, currentEnergy: 2, maxEnergy: 5, deck: [], hand: [], graveyard: [], activeEntities: [], activeExecutions: [] };
 }
 
+function entityCard(id: string, attack: number): ICard {
+  return { id, name: id, description: "", type: "ENTITY", faction: "NEUTRAL", cost: 1, attack, defense: 0 };
+}
+function trapCard(id: string): ICard {
+  return { id, name: id, description: "", type: "TRAP", faction: "NEUTRAL", cost: 1 };
+}
+
 describe("execution-effect-registry", () => {
   it("expone el set esperado de acciones registradas", () => {
     expect(getRegisteredExecutionActions()).toEqual([
@@ -22,6 +29,9 @@ describe("execution-effect-registry", () => {
       "BOOST_DEFENSE_BY_CARD_ID",
       "DRAIN_OPPONENT_ENERGY",
       "SET_CARD_DUEL_PROGRESS",
+      "REDUCE_OPPONENT_ATTACK",
+      "DESTROY_ALL_TRAPS",
+      "DISCARD_OPPONENT_HAND_CARD",
     ]);
   });
 
@@ -30,5 +40,42 @@ describe("execution-effect-registry", () => {
     const opponent = createPlayer("b");
     const fusionEffect = { action: "FUSION_SUMMON", recipeId: "r1", materialsRequired: 2 } as ICard["effect"];
     expect(resolveExecutionEffectFromRegistry(player, opponent, fusionEffect!)).toBeNull();
+  });
+
+  it("REDUCE_OPPONENT_ATTACK baja el ataque de todas las entities rivales (mínimo 0)", () => {
+    const player = createPlayer("a");
+    const opponent: IPlayer = {
+      ...createPlayer("b"),
+      activeEntities: [
+        { instanceId: "e1", card: entityCard("c1", 1000), mode: "ATTACK", hasAttackedThisTurn: false, isNewlySummoned: false },
+        { instanceId: "e2", card: entityCard("c2", 500), mode: "DEFENSE", hasAttackedThisTurn: false, isNewlySummoned: false },
+      ],
+    };
+    const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "REDUCE_OPPONENT_ATTACK", value: 700 })!;
+    expect(result.opponent.activeEntities.map((e) => e.card.attack)).toEqual([300, 0]);
+    expect(result.buff).toEqual({ entityIds: ["e1", "e2"], stat: "ATTACK", amount: -700 });
+  });
+
+  it("DESTROY_ALL_TRAPS manda al cementerio del rival solo las trampas", () => {
+    const player = createPlayer("a");
+    const opponent: IPlayer = {
+      ...createPlayer("b"),
+      activeExecutions: [
+        { instanceId: "t1", card: trapCard("trap-1"), mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false },
+        { instanceId: "x1", card: { id: "exec-x", name: "x", description: "", type: "EXECUTION", faction: "NEUTRAL", cost: 1 }, mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false },
+      ],
+    };
+    const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "DESTROY_ALL_TRAPS" })!;
+    expect(result.opponent.activeExecutions.map((e) => e.instanceId)).toEqual(["x1"]);
+    expect(result.opponent.graveyard.map((c) => c.id)).toEqual(["trap-1"]);
+    expect(result.systemEvents).toHaveLength(1);
+  });
+
+  it("DISCARD_OPPONENT_HAND_CARD descarta la carta más antigua de la mano rival", () => {
+    const player = createPlayer("a");
+    const opponent: IPlayer = { ...createPlayer("b"), hand: [entityCard("h1", 100), entityCard("h2", 200)] };
+    const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "DISCARD_OPPONENT_HAND_CARD", count: 1 })!;
+    expect(result.opponent.hand.map((c) => c.id)).toEqual(["h2"]);
+    expect(result.opponent.graveyard.map((c) => c.id)).toEqual(["h1"]);
   });
 });

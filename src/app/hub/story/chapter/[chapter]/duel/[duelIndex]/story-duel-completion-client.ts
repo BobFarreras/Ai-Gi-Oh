@@ -7,6 +7,7 @@ interface IPostStoryDuelCompletionInput {
   duelIndex: number;
   outcome: StoryDuelOutcome;
   completionTicket: string;
+  flawless?: boolean;
 }
 
 export interface IPostStoryDuelCompletionOutput {

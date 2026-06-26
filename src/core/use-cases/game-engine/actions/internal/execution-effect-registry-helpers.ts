@@ -89,6 +89,52 @@ export function setCardDuelProgress(player: IPlayer, targetCardId: string, level
   };
 }
 
+/** Baja el ataque de todas las entities rivales (mínimo 0). Devuelve los instanceId afectados. */
+export function reduceOpponentEntitiesAttack(opponent: IPlayer, value: number): { updatedOpponent: IPlayer; targetIds: string[] } {
+  const delta = Math.max(0, value);
+  const targetIds = opponent.activeEntities.filter((entity) => (entity.card.attack ?? 0) > 0).map((entity) => entity.instanceId);
+  if (delta === 0 || targetIds.length === 0) return { updatedOpponent: opponent, targetIds: [] };
+  return {
+    updatedOpponent: {
+      ...opponent,
+      activeEntities: opponent.activeEntities.map((entity) => ({
+        ...entity,
+        card: { ...entity.card, attack: Math.max(0, (entity.card.attack ?? 0) - delta) },
+      })),
+    },
+    targetIds,
+  };
+}
+
+/** Manda al cementerio todas las trampas puestas del rival (zona de ejecuciones). */
+export function destroyOpponentTraps(opponent: IPlayer): { updatedOpponent: IPlayer; destroyedCardIds: string[] } {
+  const traps = opponent.activeExecutions.filter((entity) => entity.card.type === "TRAP");
+  if (traps.length === 0) return { updatedOpponent: opponent, destroyedCardIds: [] };
+  return {
+    updatedOpponent: {
+      ...opponent,
+      activeExecutions: opponent.activeExecutions.filter((entity) => entity.card.type !== "TRAP"),
+      graveyard: [...opponent.graveyard, ...traps.map((entity) => entity.card)],
+    },
+    destroyedCardIds: traps.map((entity) => entity.card.id),
+  };
+}
+
+/** Descarta al cementerio las N cartas más antiguas de la mano del rival (determinista). */
+export function discardOpponentHandCards(opponent: IPlayer, count: number): { updatedOpponent: IPlayer; discardedCardIds: string[] } {
+  const discardCount = Math.max(0, Math.min(count, opponent.hand.length));
+  if (discardCount === 0) return { updatedOpponent: opponent, discardedCardIds: [] };
+  const discarded = opponent.hand.slice(0, discardCount);
+  return {
+    updatedOpponent: {
+      ...opponent,
+      hand: opponent.hand.slice(discardCount),
+      graveyard: [...opponent.graveyard, ...discarded],
+    },
+    discardedCardIds: discarded.map((card) => card.id),
+  };
+}
+
 export function restoreEnergy(player: IPlayer, requestedValue?: number): { updatedPlayer: IPlayer; recoveredAmount: number } {
   const missingEnergy = player.maxEnergy - player.currentEnergy;
   if (missingEnergy <= 0) return { updatedPlayer: player, recoveredAmount: 0 };

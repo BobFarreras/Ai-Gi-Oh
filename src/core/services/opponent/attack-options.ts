@@ -47,7 +47,7 @@ function scoreBattle(attacker: IBoardEntity, defender: IBoardEntity, targetPlaye
 }
 
 export function buildAttackOptions(opponent: IPlayer, target: IPlayer, profile: IOpponentDifficultyProfile): IAttackOption[] {
-  const attackers = opponent.activeEntities.filter((entity) => entity.mode === "ATTACK" && !entity.hasAttackedThisTurn && !entity.isNewlySummoned);
+  const attackers = opponent.activeEntities.filter((entity) => entity.mode === "ATTACK" && !entity.hasAttackedThisTurn && !entity.isNewlySummoned && (entity.lockedTurnsRemaining ?? 0) === 0);
   if (attackers.length === 0) return [];
   if (target.activeEntities.length === 0) {
     return attackers.map((attacker) => ({

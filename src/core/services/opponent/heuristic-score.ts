@@ -10,6 +10,11 @@ export function scoreExecution(card: ICard, profile: IOpponentDifficultyProfile)
   if (!card.effect) return -1000;
   if (card.effect.action === "DAMAGE" && card.effect.target === "OPPONENT") return (card.effect.value * 2 - card.cost * 80) * profile.executionAggroBias;
   if (card.effect.action === "HEAL" && card.effect.target === "PLAYER") return card.effect.value - card.cost * 60;
+  if (card.effect.action === "RESTORE_ENERGY") return (card.effect.value ?? 4) * 45 - card.cost * 50;
+  if (card.effect.action === "REDUCE_OPPONENT_ATTACK") return (card.effect.value - card.cost * 60) * profile.executionAggroBias;
+  if (card.effect.action === "DISCARD_OPPONENT_HAND_CARD") return (card.effect.count ?? 1) * 200 - card.cost * 60;
+  if (card.effect.action === "DESTROY_ALL_TRAPS") return 180 - card.cost * 60;
+  if (card.effect.action === "LOCK_OPPONENT_ENTITY") return card.effect.turns * 220 - card.cost * 60;
   return 10 - card.cost * 100;
 }
 

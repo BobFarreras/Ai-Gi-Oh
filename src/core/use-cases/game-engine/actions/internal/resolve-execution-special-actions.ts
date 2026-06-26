@@ -2,6 +2,7 @@
 import {
   CardType,
   IFusionSummonEffect,
+  ILockOpponentEntityEffect,
   IRevealOpponentSetCardEffect,
   IReturnGraveyardCardToFieldEffect,
   IReturnGraveyardCardToHandEffect,
@@ -16,6 +17,7 @@ import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/comba
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import {
   createGraveyardSelectionPendingAction,
+  createOpponentEntityToLockSelectionPendingAction,
   createOpponentGraveyardSelectionPendingAction,
   createOpponentSetCardSelectionPendingAction,
 } from "@/core/use-cases/game-engine/state/pending-turn-action-factory";
@@ -129,18 +131,32 @@ function resolveOpponentSelectionEffect(context: ISpecialActionContext, effect: 
   };
 }
 
+function resolveLockOpponentEntityEffect(context: ISpecialActionContext, effect: ILockOpponentEntityEffect): GameState {
+  // Sin entities rivales a las que apuntar: deja la ejecución en SET para reactivarla más tarde.
+  if (context.opponent.activeEntities.length === 0) {
+    return suspendExecutionUntilCondition(context, "LOCK_WAITING_TARGET");
+  }
+  return {
+    ...context.state,
+    pendingTurnAction: createOpponentEntityToLockSelectionPendingAction(context.playerId, context.executionInstanceId, effect.turns),
+  };
+}
+
 /**
  * Resuelve acciones especiales de ejecución que no siguen el pipeline estándar de `applyExecutionEffect`.
  */
 export function resolveExecutionSpecialAction(
   context: ISpecialActionContext,
-  effect: IFusionSummonEffect | GraveyardReturnEffect | OpponentSelectionEffect,
+  effect: IFusionSummonEffect | GraveyardReturnEffect | OpponentSelectionEffect | ILockOpponentEntityEffect,
 ): GameState {
   if (effect.action === "FUSION_SUMMON") {
     return resolveFusionEffect(context, effect);
   }
   if (effect.action === "RETURN_GRAVEYARD_CARD_TO_HAND" || effect.action === "RETURN_GRAVEYARD_CARD_TO_FIELD") {
     return resolveGraveyardReturnEffect(context, effect);
+  }
+  if (effect.action === "LOCK_OPPONENT_ENTITY") {
+    return resolveLockOpponentEntityEffect(context, effect);
   }
   return resolveOpponentSelectionEffect(context, effect);
 }

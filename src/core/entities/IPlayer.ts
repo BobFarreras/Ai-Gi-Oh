@@ -11,6 +11,8 @@ export interface IBoardEntity {
   modeLock?: Extract<BattleMode, "ATTACK" | "DEFENSE"> | null;
   hasAttackedThisTurn: boolean;
   isNewlySummoned: boolean;
+  /** Turnos restantes en los que esta entity no puede atacar (efecto LOCK_OPPONENT_ENTITY). */
+  lockedTurnsRemaining?: number;
 }
 
 export interface IPlayer {

@@ -5,7 +5,7 @@ import { GameRuleError } from "@/core/errors/GameRuleError";
 import { defaultGameEngineIdFactory, type IGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 
 export interface IExecutionSystemEvent {
-  eventType: "CARD_TO_DESTROYED";
+  eventType: "CARD_TO_DESTROYED" | "CARD_TO_GRAVEYARD";
   payload: Record<string, unknown>;
 }
 

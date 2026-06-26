@@ -7,7 +7,10 @@ import { IExecutionEffectResult } from "@/core/use-cases/game-engine/actions/int
 import {
   boostDefenseByCardId,
   createBaseResult,
+  destroyOpponentTraps,
+  discardOpponentHandCards,
   drawCards,
+  reduceOpponentEntitiesAttack,
   restoreEnergy,
   setCardDuelProgress,
   setDefenseByCardId,
@@ -24,7 +27,10 @@ type ExecutionAction =
   | "SET_DEFENSE_BY_CARD_ID"
   | "BOOST_DEFENSE_BY_CARD_ID"
   | "DRAIN_OPPONENT_ENERGY"
-  | "SET_CARD_DUEL_PROGRESS";
+  | "SET_CARD_DUEL_PROGRESS"
+  | "REDUCE_OPPONENT_ATTACK"
+  | "DESTROY_ALL_TRAPS"
+  | "DISCARD_OPPONENT_HAND_CARD";
 type ExecutionEffect = Extract<ICardEffect, { action: ExecutionAction }>;
 
 type ExecutionHandler<K extends ExecutionAction> = (player: IPlayer, opponent: IPlayer, effect: Extract<ExecutionEffect, { action: K }>) => IExecutionEffectResult;
@@ -71,6 +77,24 @@ const executionEffectHandlers: { [K in ExecutionAction]: ExecutionHandler<K> } =
     };
   },
   SET_CARD_DUEL_PROGRESS: (player, opponent, effect) => createBaseResult(setCardDuelProgress(player, effect.targetCardId, effect.level, effect.versionTier), opponent),
+  REDUCE_OPPONENT_ATTACK: (player, opponent, effect) => {
+    const reduced = reduceOpponentEntitiesAttack(opponent, effect.value);
+    return { ...createBaseResult(player, reduced.updatedOpponent), buff: { entityIds: reduced.targetIds, stat: "ATTACK", amount: -Math.abs(effect.value) } };
+  },
+  DESTROY_ALL_TRAPS: (player, opponent) => {
+    const destroyed = destroyOpponentTraps(opponent);
+    return {
+      ...createBaseResult(player, destroyed.updatedOpponent),
+      systemEvents: destroyed.destroyedCardIds.map((cardId) => ({ eventType: "CARD_TO_GRAVEYARD" as const, payload: { cardId, ownerPlayerId: destroyed.updatedOpponent.id, from: "EXECUTION_ZONE" } })),
+    };
+  },
+  DISCARD_OPPONENT_HAND_CARD: (player, opponent, effect) => {
+    const discarded = discardOpponentHandCards(opponent, effect.count ?? 1);
+    return {
+      ...createBaseResult(player, discarded.updatedOpponent),
+      systemEvents: discarded.discardedCardIds.map((cardId) => ({ eventType: "CARD_TO_GRAVEYARD" as const, payload: { cardId, ownerPlayerId: discarded.updatedOpponent.id, from: "HAND" } })),
+    };
+  },
 };
 
 /** Resuelve una acción EXECUTION registrada; devuelve null cuando la acción no pertenece al registry. */
@@ -94,6 +118,9 @@ export function resolveExecutionEffectFromRegistry(player: IPlayer, opponent: IP
   if (effect.action === "BOOST_DEFENSE_BY_CARD_ID") return executionEffectHandlers.BOOST_DEFENSE_BY_CARD_ID(player, opponent, effect);
   if (effect.action === "DRAIN_OPPONENT_ENERGY") return executionEffectHandlers.DRAIN_OPPONENT_ENERGY(player, opponent, effect);
   if (effect.action === "SET_CARD_DUEL_PROGRESS") return executionEffectHandlers.SET_CARD_DUEL_PROGRESS(player, opponent, effect);
+  if (effect.action === "REDUCE_OPPONENT_ATTACK") return executionEffectHandlers.REDUCE_OPPONENT_ATTACK(player, opponent, effect);
+  if (effect.action === "DESTROY_ALL_TRAPS") return executionEffectHandlers.DESTROY_ALL_TRAPS(player, opponent, effect);
+  if (effect.action === "DISCARD_OPPONENT_HAND_CARD") return executionEffectHandlers.DISCARD_OPPONENT_HAND_CARD(player, opponent, effect);
   return null;
 }
 

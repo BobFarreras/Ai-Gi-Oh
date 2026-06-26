@@ -1,8 +1,8 @@
-<!-- README.md - Guía principal de AI-GI-OH como producto en producción v1.4.0. -->
+<!-- README.md - Guía principal de AI-GI-OH como producto en producción v1.5.0. -->
 # AI-GI-OH
 
 <p align="center">
-  <strong>Producto en producción · v1.4.0</strong><br/>
+  <strong>Producto en producción · v1.5.0</strong><br/>
   Juego táctico de cartas con motor desacoplado, arquitectura por capas y flujo profesional de calidad.
 </p>
 
@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.4.0-06b6d4">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.5.0-06b6d4">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black">
   <img alt="React" src="https://img.shields.io/badge/React-19-149eca">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-Strict-3178c6">
@@ -268,6 +268,10 @@ Seguridad y persistencia:
 - [docs/security/auth-hardening.md](./docs/security/auth-hardening.md)
 - [docs/security/rate-limit-rollout.md](./docs/security/rate-limit-rollout.md)
 - [docs/supabase/README.md](./docs/supabase/README.md)
+
+Diseño y UI:
+
+- [docs/DESIGN.md](./docs/DESIGN.md)
 
 Rendimiento:
 

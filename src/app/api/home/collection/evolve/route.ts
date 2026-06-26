@@ -4,6 +4,8 @@ import { createHomeRouteContext } from "@/app/api/home/internal/create-home-rout
 import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
 import { requireTrustedMutationOrigin } from "@/services/security/api/require-trusted-mutation-origin";
 import { readJsonObjectBody, readRequiredStringField } from "@/services/security/api/request-body-parser";
+import { createSupabaseRouteClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-route-client";
+import { recordProgressionEvent } from "@/services/progression/record-progression-event";
 
 export async function POST(request: NextRequest) {
   const originGuard = requireTrustedMutationOrigin(request);
@@ -16,6 +18,7 @@ export async function POST(request: NextRequest) {
       playerId: context.playerId,
       cardId,
     });
+    await recordProgressionEvent(createSupabaseRouteClient(request, context.response), ["EVOLVE_CARD"]);
     return NextResponse.json(evolveResult, { status: 200, headers: context.response.headers });
   } catch (error) {
     return createApiErrorResponse(error, "No se pudo evolucionar la carta.");

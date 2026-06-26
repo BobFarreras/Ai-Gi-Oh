@@ -64,6 +64,15 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
           params.setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una carta boca abajo (seteada) del rival para revelarla." });
           return;
         }
+        // Bloquear entity rival: se resuelve clicando una entity del RIVAL (cualquier modo).
+        if (pending.type === "SELECT_OPPONENT_ENTITY_TO_LOCK") {
+          if (isOpponent && entity) {
+            params.resolvePendingTurnAction(entity.instanceId);
+            return;
+          }
+          params.setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una entity del rival para bloquearla." });
+          return;
+        }
         if (!isOpponent && entity) {
           params.resolvePendingTurnAction(entity.instanceId);
           return;

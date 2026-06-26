@@ -1,6 +1,12 @@
 /* src/app/globals.css - Tokens visuales globales y atmósfera ciber/espacial del proyecto. */
 @import "tailwindcss";
 
+/* Fuente display tecnológica (HUD/sci-fi). Úsala con la utilidad `font-display`.
+   `inline` es obligatorio: emite la utilidad como var(--font-orbitron) resuelto en el
+   elemento (definido en <body>), no en :root donde no existiría. */
+@theme inline {
+  --font-display: var(--font-orbitron), ui-sans-serif, system-ui, sans-serif;
+}
 
 
 :root {
