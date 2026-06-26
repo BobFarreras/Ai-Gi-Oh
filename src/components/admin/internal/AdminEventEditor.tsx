@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { IAdminEvent, IAdminEventRule, IAdminEventShopItem, IAdminMissionDefinition } from "@/core/entities/progression/ILiveOpsAdmin";
 import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
-import { MISSION_OBJECTIVE_TYPES, OBJECTIVE_TYPES_WITH_PARAM, progressionActionLabel } from "@/core/services/progression/action-labels";
+import { ACTION_OBJECTIVE_TYPES, MISSION_OBJECTIVE_TYPES, OBJECTIVE_TYPES_WITH_PARAM, progressionActionLabel } from "@/core/services/progression/action-labels";
 import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { AdminMissionRow } from "./AdminMissionRow";
 import { LiveOpsField, LiveOpsNumber, LiveOpsToggle, LiveOpsSaveBar, LiveOpsCardPicker } from "./live-ops/live-ops-controls";
@@ -80,8 +80,9 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
     setDraft((prev) => ({ ...prev, [key]: value }));
   }
 
-  // Mismo catálogo que la sección de misiones: acciones repetibles + objetivos de colección.
-  const availableActions = MISSION_OBJECTIVE_TYPES.filter((action) => !rules.some((rule) => rule.actionType === action));
+  // Solo acciones repetibles (incluidas las flawless): los objetivos de colección no se otorgan
+  // por acción ni admiten umbral aquí; ésos se configuran como "Misiones del evento".
+  const availableActions = ACTION_OBJECTIVE_TYPES.filter((action) => !rules.some((rule) => rule.actionType === action));
 
   function addRule() {
     if (!newAction) return;
@@ -142,6 +143,7 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
 
       <div className="mt-5">
         <h4 className="mb-2 font-mono text-[11px] font-black uppercase tracking-[0.2em] text-cyan-400/80">Cómo se ganan puntos</h4>
+        <p className="mb-2 text-[11px] leading-snug text-slate-500">Puntos por cada acción repetible. ¿Retos con umbral (tener N cartas a nivel X, hacerlo sin perder LP…)? Configúralos abajo en <span className="text-cyan-400/80">Misiones del evento</span>.</p>
         <div className="space-y-2">
           {rules.map((rule) => <RuleRow key={rule.actionType} eventId={draft.id} rule={rule} onDelete={() => deleteRule(rule.actionType)} />)}
         </div>

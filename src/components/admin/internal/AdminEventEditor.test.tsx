@@ -37,7 +37,7 @@ describe("AdminEventEditor", () => {
   it("muestra la sección de misiones del evento con alta, borrado y objetivos de colección", () => {
     render(<AdminEventEditor event={event} />);
 
-    expect(screen.getByText(/Misiones del evento/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Misiones del evento/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Añadir misión/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Eliminar misión/i })).toBeInTheDocument();
 
@@ -62,13 +62,16 @@ describe("AdminEventEditor", () => {
     expect(screen.getByRole("button", { name: /Eliminar regla Ganar un duelo/i })).toBeInTheDocument();
   });
 
-  it("el selector de 'Añadir acción' ofrece el mismo catálogo que las misiones (incl. colección)", () => {
+  it("el selector de 'Añadir acción' ofrece acciones repetibles (incl. flawless) pero NO objetivos de colección", () => {
     render(<AdminEventEditor event={event} />);
 
     const actionSelector = screen.getByRole("combobox", { name: /Acción de la nueva regla de puntos/i });
     const labels = Array.from(actionSelector.querySelectorAll("option")).map((option) => option.textContent);
-    expect(labels).toContain("Tener cartas en el almacén");
-    expect(labels).toContain("Tener cartas distintas");
+    // Las flawless sí pasan por el bus de acciones -> válidas como regla de puntos.
+    expect(labels).toContain("Ganar en Story sin perder LP");
+    // Los objetivos de colección (estado, con umbral) NO se otorgan por acción: solo en misiones.
+    expect(labels).not.toContain("Tener cartas en el almacén");
+    expect(labels).not.toContain("Tener cartas a nivel ≥");
     // WIN_DUEL ya está usado como regla, así que no debe reaparecer como opción.
     expect(labels).not.toContain("Ganar un duelo");
   });
