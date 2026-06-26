@@ -7,12 +7,12 @@ import { usePathname } from "next/navigation";
 import { IMissionView } from "@/core/entities/progression/IMission";
 import { IEventOverview } from "@/core/entities/progression/IEvent";
 import { IFeaturedPromotion } from "@/core/entities/progression/IPromotion";
-import { ILoginStreakStatus } from "@/core/entities/progression/ILoginStreak";
 import { HUB_HUD_ANIMATION_DURATION, HUB_HUD_START_DELAY_MS } from "@/components/hub/internal/hub-entry-timings";
 import { MissionsPanel } from "./MissionsPanel";
 import { EventPanel } from "./EventPanel";
 import { NewsPanel } from "./NewsPanel";
 import { DailyLoginModal } from "./DailyLoginModal";
+import { useDailyLogin } from "./DailyLoginProvider";
 
 type DockPanel = "daily" | "missions" | "event" | "news" | null;
 
@@ -20,7 +20,6 @@ interface IProgressionDockProps {
   missions: IMissionView[];
   eventOverview: IEventOverview | null;
   promotions: IFeaturedPromotion[];
-  dailyLogin: ILoginStreakStatus | null;
 }
 
 const CLIP_PATH = "polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)";
@@ -94,12 +93,14 @@ function DockButton({
   );
 }
 
-export function ProgressionDock({ missions: initialMissions, eventOverview: initialEvent, promotions, dailyLogin: initialDailyLogin }: IProgressionDockProps) {
+export function ProgressionDock({ missions: initialMissions, eventOverview: initialEvent, promotions }: IProgressionDockProps) {
   const [panel, setPanel] = useState<DockPanel>(null);
   const [canShow, setCanShow] = useState(false);
   const [missions, setMissions] = useState(initialMissions);
   const [eventOverview, setEventOverview] = useState(initialEvent);
-  const [dailyLogin, setDailyLogin] = useState(initialDailyLogin);
+  // Estado de la recompensa diaria compartido con el popup automático (Gate): reclamar en
+  // cualquiera actualiza el badge del dock al instante, sin recargar la página.
+  const { status: dailyLogin, markClaimed: markDailyClaimed } = useDailyLogin();
   const pathname = usePathname();
 
   useEffect(() => {
@@ -244,11 +245,7 @@ export function ProgressionDock({ missions: initialMissions, eventOverview: init
       </AnimatePresence>
 
       {panel === "daily" && dailyLogin ? (
-        <DailyLoginModal
-          status={dailyLogin}
-          onClaimed={(result) => setDailyLogin((prev) => (prev ? { ...prev, claimedToday: true, currentStreak: result.currentStreak } : prev))}
-          onClose={() => setPanel(null)}
-        />
+        <DailyLoginModal status={dailyLogin} onClaimed={markDailyClaimed} onClose={() => setPanel(null)} />
       ) : null}
     </>
   );
