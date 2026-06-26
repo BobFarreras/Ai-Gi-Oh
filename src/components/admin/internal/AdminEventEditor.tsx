@@ -106,7 +106,8 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
         id, scope: "EVENT", objectiveType,
         objectiveParam: OBJECTIVE_TYPES_WITH_PARAM.has(objectiveType) ? 1 : null, targetCount: 1,
         rewardNexus: 50, rewardType: "EVENT_POINTS", eventId: draft.id,
-        title: `Nuevo reto: ${progressionActionLabel(objectiveType)}`, description: null, sortOrder: prev.length + 1, isActive: false,
+        // Activo por defecto: igual que las reglas por acción, así el jugador lo ve en cuanto se guarda.
+        title: `Nuevo reto: ${progressionActionLabel(objectiveType)}`, description: null, sortOrder: prev.length + 1, isActive: true,
       },
     ]);
     setNewMissionObjective("");
