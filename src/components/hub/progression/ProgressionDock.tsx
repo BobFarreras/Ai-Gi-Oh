@@ -94,11 +94,12 @@ function DockButton({
   );
 }
 
-export function ProgressionDock({ missions: initialMissions, eventOverview: initialEvent, promotions, dailyLogin }: IProgressionDockProps) {
+export function ProgressionDock({ missions: initialMissions, eventOverview: initialEvent, promotions, dailyLogin: initialDailyLogin }: IProgressionDockProps) {
   const [panel, setPanel] = useState<DockPanel>(null);
   const [canShow, setCanShow] = useState(false);
   const [missions, setMissions] = useState(initialMissions);
   const [eventOverview, setEventOverview] = useState(initialEvent);
+  const [dailyLogin, setDailyLogin] = useState(initialDailyLogin);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -242,7 +243,13 @@ export function ProgressionDock({ missions: initialMissions, eventOverview: init
         {panel === "news" ? <NewsPanel key="news" promotions={promotions} eventName={eventOverview?.name ?? null} onClose={handleClose} /> : null}
       </AnimatePresence>
 
-      {panel === "daily" && dailyLogin ? <DailyLoginModal status={dailyLogin} onClose={() => setPanel(null)} /> : null}
+      {panel === "daily" && dailyLogin ? (
+        <DailyLoginModal
+          status={dailyLogin}
+          onClaimed={(result) => setDailyLogin((prev) => (prev ? { ...prev, claimedToday: true, currentStreak: result.currentStreak } : prev))}
+          onClose={() => setPanel(null)}
+        />
+      ) : null}
     </>
   );
 }

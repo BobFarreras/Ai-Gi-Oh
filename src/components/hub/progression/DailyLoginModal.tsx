@@ -10,6 +10,8 @@ import { track } from "@/services/analytics/client/analytics-buffer";
 
 interface IDailyLoginModalProps {
   status: ILoginStreakStatus;
+  /** Notifica al dock el claim para que actualice el badge/estado sin recargar la página. */
+  onClaimed?: (result: IDailyLoginClaimResult) => void;
   onClose: () => void;
 }
 
@@ -61,7 +63,7 @@ function ClaimBurst() {
   );
 }
 
-export function DailyLoginModal({ status, onClose }: IDailyLoginModalProps) {
+export function DailyLoginModal({ status, onClaimed, onClose }: IDailyLoginModalProps) {
   const [claimedToday, setClaimedToday] = useState(status.claimedToday);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<IDailyLoginClaimResult | null>(null);
@@ -88,6 +90,7 @@ export function DailyLoginModal({ status, onClose }: IDailyLoginModalProps) {
       setResult(data);
       setClaimedToday(true);
       setSelectedDayIndex(status.pendingDayIndex);
+      onClaimed?.(data);
       if (data.applied) track("daily_login_claimed", "system", { dayIndex: status.pendingDayIndex, currentStreak: data.currentStreak });
     } catch {
       setError("No se pudo reclamar. Inténtalo de nuevo.");

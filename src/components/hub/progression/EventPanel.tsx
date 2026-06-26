@@ -137,31 +137,19 @@ export function EventPanel({ overview, eventMissions, onClose }: IEventPanelProp
           <AnimatePresence initial={false}>
             {showEarn ? (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-                <div className="space-y-3 px-3.5 pb-3.5">
-                  {overview.earnRules.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {overview.earnRules.map((rule) => (
-                        <div key={rule.actionType} className="flex items-center gap-2 border border-fuchsia-800/40 bg-fuchsia-500/5 px-3 py-1.5" style={{ clipPath: "polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)" }}>
-                          <span className="text-sm text-slate-200">{progressionActionLabel(rule.actionType)}</span>
-                          <span className="flex items-center gap-1 font-display text-sm font-bold text-fuchsia-200">+{rule.pointsPer}<FragmentIcon className="h-3.5 w-3.5" /></span>
-                        </div>
-                      ))}
+                <div className="flex flex-wrap gap-2 px-3.5 pb-3.5">
+                  {overview.earnRules.map((rule) => (
+                    <div key={rule.actionType} className="flex items-center gap-2 border border-fuchsia-800/40 bg-fuchsia-500/5 px-3 py-1.5" style={{ clipPath: "polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)" }}>
+                      <span className="text-sm text-slate-200">{progressionActionLabel(rule.actionType)}</span>
+                      <span className="flex items-center gap-1 font-display text-sm font-bold text-fuchsia-200">+{rule.pointsPer}<FragmentIcon className="h-3.5 w-3.5" /></span>
                     </div>
-                  ) : null}
-                  {eventMissions.length > 0 ? (
-                    <div className="space-y-1.5">
-                      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-cyan-500/70">Retos del evento</p>
-                      {eventMissions.map((mission) => (
-                        <div key={mission.missionId} className="flex items-center gap-3 border border-cyan-900/40 bg-cyan-500/5 px-3 py-2" style={{ clipPath: "polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)" }}>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm text-slate-200">{mission.title}</p>
-                            <p className="font-mono text-[10px] text-slate-500">{mission.claimed ? "Reclamado" : `${Math.min(mission.progress, mission.targetCount)}/${mission.targetCount}`}</p>
-                          </div>
-                          <span className="flex shrink-0 items-center gap-1 font-display text-sm font-bold text-fuchsia-200">+{mission.rewardNexus}<FragmentIcon className="h-3.5 w-3.5" /></span>
-                        </div>
-                      ))}
+                  ))}
+                  {eventMissions.map((mission) => (
+                    <div key={mission.missionId} className="flex items-center gap-2 border border-fuchsia-800/40 bg-fuchsia-500/5 px-3 py-1.5" style={{ clipPath: "polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)" }}>
+                      <span className="text-sm text-slate-200">{mission.title}</span>
+                      <span className="flex items-center gap-1 font-display text-sm font-bold text-fuchsia-200">+{mission.rewardNexus}<FragmentIcon className="h-3.5 w-3.5" /></span>
                     </div>
-                  ) : null}
+                  ))}
                 </div>
               </motion.div>
             ) : null}

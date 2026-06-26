@@ -45,8 +45,8 @@ describe("EventPanel", () => {
     // El bloque existe pese a earnRules vacío, porque hay retos.
     fireEvent.click(screen.getByRole("button", { name: /Cómo ganar Fragmentos/i }));
 
+    // Mismo diseño de chip que las reglas por acción: título + recompensa.
     expect(screen.getByText("Élite: 3 cartas a nivel 10")).toBeInTheDocument();
-    expect(screen.getByText("1/3")).toBeInTheDocument();
     expect(screen.getByText(/\+500/)).toBeInTheDocument();
   });
 
