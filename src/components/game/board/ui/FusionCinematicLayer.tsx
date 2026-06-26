@@ -20,12 +20,20 @@ const FUSION_VIDEO_BY_CARD_ID: Record<string, string> = {
   "fusion-gemgpt": "/assets/videos/fusion/gemgpt.mp4",
   "fusion-kaclauli": "/assets/videos/fusion/kaclouli.mp4",
   "fusion-pytgress": "/assets/videos/fusion/pytgress.mp4",
+  "fusion-curshost": "/assets/videos/fusion/curshost.mp4",
+  "fusion-kuberlinnet": "/assets/videos/fusion/kuberlinnet.mp4",
+  "fusion-rustyfox": "/assets/videos/fusion/rustyfox.mp4",
+  "fusion-super-c": "/assets/videos/fusion/super-c.mp4",
 };
 
 const FUSION_RENDER_BY_CARD_ID: Record<string, string> = {
   "fusion-gemgpt": "/assets/renders/gemgpt.webp",
   "fusion-kaclauli": "/assets/renders/kaclauli.webp",
   "fusion-pytgress": "/assets/renders/pytgress.webp",
+  "fusion-curshost": "/assets/renders/curshost.webp",
+  "fusion-kuberlinnet": "/assets/renders/kuberlinnet.webp",
+  "fusion-rustyfox": "/assets/renders/rustyfox.webp",
+  "fusion-super-c": "/assets/renders/super-c.webp",
 };
 
 // Watchdog inicial: si timeupdate nunca llega (tab en segundo plano), salta a summon.
