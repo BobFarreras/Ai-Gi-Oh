@@ -34,24 +34,24 @@ const event: IAdminEvent = {
 };
 
 describe("AdminEventEditor", () => {
-  it("muestra la sección de misiones del evento con alta, borrado y objetivos de colección", () => {
+  it("muestra el sub-bloque de retos del evento con alta, borrado y objetivos de colección", () => {
     render(<AdminEventEditor event={event} />);
 
-    expect(screen.getByRole("heading", { name: /Misiones del evento/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Añadir misión/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Eliminar misión/i })).toBeInTheDocument();
+    expect(screen.getByText(/Retos \(una vez\)/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Añadir reto/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Eliminar reto/i })).toBeInTheDocument();
 
-    // Las nuevas modalidades de colección están disponibles en el desplegable de objetivos.
+    // Las modalidades de colección están disponibles en el desplegable de objetivos del reto.
     expect(screen.getAllByRole("option", { name: /Tener cartas en el almacén/i }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole("option", { name: /Tener cartas a nivel/i }).length).toBeGreaterThanOrEqual(1);
     // Hay una opción flawless por sección (story/training/multiplayer).
     expect(screen.getAllByRole("option", { name: /sin perder LP/i }).length).toBeGreaterThanOrEqual(3);
   });
 
-  it("el selector de añadir misión ofrece todas las misiones posibles del catálogo", () => {
+  it("el selector de añadir reto ofrece todos los objetivos posibles del catálogo", () => {
     render(<AdminEventEditor event={event} />);
 
-    const selector = screen.getByRole("combobox", { name: /Objetivo de la nueva misión/i });
+    const selector = screen.getByRole("combobox", { name: /Objetivo del nuevo reto/i });
     // Una opción por cada objetivo posible + el placeholder.
     expect(selector.querySelectorAll("option").length).toBe(MISSION_OBJECTIVE_TYPES.length + 1);
   });

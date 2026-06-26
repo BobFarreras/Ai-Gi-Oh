@@ -6,7 +6,7 @@ import { IAdminEvent, IAdminEventRule, IAdminEventShopItem, IAdminMissionDefinit
 import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
 import { ACTION_OBJECTIVE_TYPES, MISSION_OBJECTIVE_TYPES, OBJECTIVE_TYPES_WITH_PARAM, progressionActionLabel } from "@/core/services/progression/action-labels";
 import { CardThumbnail } from "@/components/game/card/CardThumbnail";
-import { AdminMissionRow } from "./AdminMissionRow";
+import { AdminEventChallengeRow } from "./AdminEventChallengeRow";
 import { LiveOpsField, LiveOpsNumber, LiveOpsToggle, LiveOpsSaveBar, LiveOpsCardPicker } from "./live-ops/live-ops-controls";
 import { saveLiveOps, deleteLiveOps } from "./live-ops/save-live-ops";
 
@@ -142,8 +142,10 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
       </div>
 
       <div className="mt-5">
-        <h4 className="mb-2 font-mono text-[11px] font-black uppercase tracking-[0.2em] text-cyan-400/80">Cómo se ganan puntos</h4>
-        <p className="mb-2 text-[11px] leading-snug text-slate-500">Puntos por cada acción repetible. ¿Retos con umbral (tener N cartas a nivel X, hacerlo sin perder LP…)? Configúralos abajo en <span className="text-cyan-400/80">Misiones del evento</span>.</p>
+        <h4 className="mb-3 font-mono text-[11px] font-black uppercase tracking-[0.2em] text-cyan-400/80">Cómo se ganan {draft.currencyName}</h4>
+
+        <h5 className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-500/70">Por cada acción (cada vez)</h5>
+        <p className="mb-2 text-[11px] leading-snug text-slate-500">+X {draft.currencyName} cada vez que el jugador realiza la acción.</p>
         <div className="space-y-2">
           {rules.map((rule) => <RuleRow key={rule.actionType} eventId={draft.id} rule={rule} onDelete={() => deleteRule(rule.actionType)} />)}
         </div>
@@ -156,6 +158,30 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
             <button type="button" onClick={addRule} className="h-9 border border-cyan-500/60 px-3 font-mono text-xs font-bold uppercase text-cyan-200 hover:bg-cyan-500/10">Añadir</button>
           </div>
         ) : null}
+
+        <h5 className="mb-1 mt-5 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-500/70">Retos (una vez)</h5>
+        <p className="mb-2 text-[11px] leading-snug text-slate-500">Se completan una vez durante el evento. Ej.: tener N cartas a un nivel/versión, o ganar sin perder LP. El jugador los ve en el diálogo del evento.</p>
+        {missions.length === 0 ? (
+          <p className="py-3 text-center text-xs text-slate-500">Sin retos todavía. Elige un objetivo abajo para crear uno.</p>
+        ) : (
+          <div className="space-y-2.5">
+            {missions.map((mission) => (
+              <AdminEventChallengeRow key={mission.id} mission={mission} currencyName={draft.currencyName} onDelete={() => deleteMission(mission.id)} />
+            ))}
+          </div>
+        )}
+        <div className="mt-2 flex items-center gap-2">
+          <select
+            aria-label="Objetivo del nuevo reto"
+            className="flex-1 border border-cyan-900/60 bg-[#03101c] px-2.5 py-1.5 text-sm text-slate-100 outline-none focus:border-cyan-400"
+            value={newMissionObjective}
+            onChange={(event) => setNewMissionObjective(event.target.value)}
+          >
+            <option value="">+ Elige un reto…</option>
+            {MISSION_OBJECTIVE_TYPES.map((type) => <option key={type} value={type}>{progressionActionLabel(type)}</option>)}
+          </select>
+          <button type="button" onClick={() => addMission(newMissionObjective)} className="h-9 border border-cyan-500/60 px-3 font-mono text-xs font-bold uppercase text-cyan-200 hover:bg-cyan-500/10">Añadir reto</button>
+        </div>
       </div>
 
       <div className="mt-5">
@@ -165,32 +191,6 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
         </div>
         <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
           {items.map((item) => <ShopItemRow key={item.id} item={item} />)}
-        </div>
-      </div>
-
-      <div className="mt-5">
-        <h4 className="mb-2 font-mono text-[11px] font-black uppercase tracking-[0.2em] text-cyan-400/80">Misiones del evento ({draft.currencyName})</h4>
-        {missions.length === 0 ? (
-          <p className="py-3 text-center text-xs text-slate-500">Sin misiones propias. Crea retos que den {draft.currencyName} (gana sin perder LP, evoluciona cartas, etc.).</p>
-        ) : (
-          <div className="space-y-2.5">
-            {missions.map((mission) => (
-              <AdminMissionRow key={mission.id} mission={mission} events={[{ id: draft.id, name: draft.name }]} onDelete={() => deleteMission(mission.id)} />
-            ))}
-          </div>
-        )}
-        {/* Selector con todas las misiones posibles (acciones + objetivos de colección), igual que el de "Añadir acción". */}
-        <div className="mt-2 flex items-center gap-2">
-          <select
-            aria-label="Objetivo de la nueva misión"
-            className="flex-1 border border-cyan-900/60 bg-[#03101c] px-2.5 py-1.5 text-sm text-slate-100 outline-none focus:border-cyan-400"
-            value={newMissionObjective}
-            onChange={(event) => setNewMissionObjective(event.target.value)}
-          >
-            <option value="">+ Elige un objetivo…</option>
-            {MISSION_OBJECTIVE_TYPES.map((type) => <option key={type} value={type}>{progressionActionLabel(type)}</option>)}
-          </select>
-          <button type="button" onClick={() => addMission(newMissionObjective)} className="h-9 border border-cyan-500/60 px-3 font-mono text-xs font-bold uppercase text-cyan-200 hover:bg-cyan-500/10">Añadir misión</button>
         </div>
       </div>
     </div>
