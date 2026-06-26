@@ -10,7 +10,8 @@ export type PendingTurnActionType =
   | "SELECT_FUSION_MATERIALS"
   | "SELECT_GRAVEYARD_CARD"
   | "SELECT_OPPONENT_GRAVEYARD_CARD"
-  | "SELECT_OPPONENT_SET_CARD";
+  | "SELECT_OPPONENT_SET_CARD"
+  | "SELECT_OPPONENT_ENTITY_TO_LOCK";
 
 interface IBasePendingTurnAction {
   playerId: string;
@@ -48,12 +49,20 @@ export interface ISelectOpponentSetCardPendingTurnAction extends IBasePendingTur
   zone: "ENTITIES" | "EXECUTIONS" | "ANY";
 }
 
+export interface ISelectOpponentEntityToLockPendingTurnAction extends IBasePendingTurnAction {
+  type: "SELECT_OPPONENT_ENTITY_TO_LOCK";
+  executionInstanceId: string;
+  /** Turnos que durará el bloqueo de la entity elegida. */
+  turns: number;
+}
+
 export type IPendingTurnAction =
   | IDiscardForHandLimitPendingTurnAction
   | ISelectFusionMaterialsPendingTurnAction
   | ISelectGraveyardCardPendingTurnAction
   | ISelectOpponentGraveyardCardPendingTurnAction
-  | ISelectOpponentSetCardPendingTurnAction;
+  | ISelectOpponentSetCardPendingTurnAction
+  | ISelectOpponentEntityToLockPendingTurnAction;
 
 export interface GameState {
   playerA: IPlayer;

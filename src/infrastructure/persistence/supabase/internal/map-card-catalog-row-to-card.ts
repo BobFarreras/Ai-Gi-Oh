@@ -9,6 +9,7 @@ import {
   IDamageEffect,
   IDestroyAllTrapsEffect,
   IDiscardOpponentHandCardEffect,
+  ILockOpponentEntityEffect,
   IRestoreEnergyEffect,
   IDirectAttackEnergyDrainAndSetSelfToTenEffect,
   IDrainOpponentEnergyEffect,
@@ -54,6 +55,8 @@ function mapEffect(value: unknown): ICardEffect | undefined {
       return { action: "DESTROY_ALL_TRAPS" } as IDestroyAllTrapsEffect;
     case "DISCARD_OPPONENT_HAND_CARD":
       return { action: "DISCARD_OPPONENT_HAND_CARD", count: typeof value.count === "number" ? value.count : undefined } as IDiscardOpponentHandCardEffect;
+    case "LOCK_OPPONENT_ENTITY":
+      return typeof value.turns === "number" ? ({ action: "LOCK_OPPONENT_ENTITY", turns: value.turns } as ILockOpponentEntityEffect) : undefined;
     case "BOOST_ATTACK_ALLIED_ENTITY":
       return typeof value.value === "number"
         ? ({ action: "BOOST_ATTACK_ALLIED_ENTITY", value: value.value } as IBoostAttackAlliedEffect)

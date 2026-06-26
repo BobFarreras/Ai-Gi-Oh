@@ -121,6 +121,14 @@ export function SlotCellEntity({
             )
           ) : null}
           {isSelectedMaterial ? <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-black rounded-md bg-cyan-300 text-cyan-950 shadow-[0_0_14px_rgba(34,211,238,0.9)]">MATERIAL</span> : null}
+          {(entity.lockedTurnsRemaining ?? 0) > 0 ? (
+            <span
+              className="absolute right-2 top-2 z-[60] flex items-center gap-0.5 rounded-md border border-red-400/80 bg-red-950/85 px-1.5 py-0.5 text-[11px] font-black text-red-100 shadow-[0_0_12px_rgba(248,113,113,0.85)]"
+              aria-label={`Bloqueada: ${entity.lockedTurnsRemaining} turno(s)`}
+            >
+              🔒 {entity.lockedTurnsRemaining}
+            </span>
+          ) : null}
         </div>
       )}
     </motion.div>

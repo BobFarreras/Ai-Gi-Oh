@@ -37,6 +37,10 @@ export function validateAttackerEntity(
     throw new GameRuleError("Esta carta ya ha atacado este turno");
   }
 
+  if ((attackerEntity.lockedTurnsRemaining ?? 0) > 0) {
+    throw new GameRuleError("Esta carta está bloqueada y no puede atacar.");
+  }
+
   return attackerEntity;
 }
 

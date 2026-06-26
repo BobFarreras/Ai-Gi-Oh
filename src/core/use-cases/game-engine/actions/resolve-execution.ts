@@ -70,7 +70,8 @@ export function resolveExecution(
     effect.action === "RETURN_GRAVEYARD_CARD_TO_HAND" ||
     effect.action === "RETURN_GRAVEYARD_CARD_TO_FIELD" ||
     effect.action === "REVEAL_OPPONENT_SET_CARD" ||
-    effect.action === "STEAL_OPPONENT_GRAVEYARD_CARD_TO_HAND"
+    effect.action === "STEAL_OPPONENT_GRAVEYARD_CARD_TO_HAND" ||
+    effect.action === "LOCK_OPPONENT_ENTITY"
   ) {
     return resolveExecutionSpecialAction(
       { state: withTrapResolution, playerId, player, opponent, isPlayerA, executionInstanceId },

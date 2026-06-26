@@ -6,11 +6,15 @@ import { drawTopDeckCard } from "@/core/use-cases/game-engine/state/player-utils
 import { createDiscardForHandLimitPendingAction } from "@/core/use-cases/game-engine/state/pending-turn-action-factory";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
-function resetEntitiesForNewTurn(entities: IBoardEntity[]): IBoardEntity[] {
+function resetEntitiesForNewTurn(entities: IBoardEntity[], decrementLocks: boolean): IBoardEntity[] {
   return entities.map((entity) => ({
     ...entity,
     hasAttackedThisTurn: false,
     isNewlySummoned: false,
+    // El bloqueo se descuenta al terminar el turno de su dueño: así "N turnos" son N turnos reales del rival.
+    lockedTurnsRemaining: decrementLocks && entity.lockedTurnsRemaining
+      ? Math.max(0, entity.lockedTurnsRemaining - 1)
+      : entity.lockedTurnsRemaining,
   }));
 }
 
@@ -74,12 +78,13 @@ export function nextPhase(state: GameState): GameState {
     const nextPlayerA = {
       ...state.playerA,
       currentEnergy: isNextPlayerA ? Math.min(state.playerA.maxEnergy, state.playerA.currentEnergy + turnEnergyGain) : state.playerA.currentEnergy,
-      activeEntities: resetEntitiesForNewTurn(state.playerA.activeEntities),
+      // El jugador cuyo turno termina (el saliente) descuenta los bloqueos de sus entities.
+      activeEntities: resetEntitiesForNewTurn(state.playerA.activeEntities, !isNextPlayerA),
     };
     const nextPlayerB = {
       ...state.playerB,
       currentEnergy: isNextPlayerA ? state.playerB.currentEnergy : Math.min(state.playerB.maxEnergy, state.playerB.currentEnergy + turnEnergyGain),
-      activeEntities: resetEntitiesForNewTurn(state.playerB.activeEntities),
+      activeEntities: resetEntitiesForNewTurn(state.playerB.activeEntities, isNextPlayerA),
     };
     const turnStartResolution = isNextPlayerA
       ? resolveTurnStartForPlayer(nextPlayerA, nextActivePlayerId)

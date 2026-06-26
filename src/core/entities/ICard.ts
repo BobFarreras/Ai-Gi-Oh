@@ -145,6 +145,13 @@ export interface IDiscardOpponentHandCardEffect {
   count?: number;
 }
 
+/** Bloquea una entity rival seleccionada (no puede atacar) durante N turnos del rival. */
+export interface ILockOpponentEntityEffect {
+  action: "LOCK_OPPONENT_ENTITY";
+  /** Turnos del rival que la entity queda bloqueada (agnóstico: cada carta pone el suyo). */
+  turns: number;
+}
+
 export type ICardEffect =
   | IDamageEffect
   | IHealEffect
@@ -171,7 +178,8 @@ export type ICardEffect =
   | INegateOpponentTrapAndDestroyEffect
   | IFusionSummonEffect
   | IDestroyAllTrapsEffect
-  | IDiscardOpponentHandCardEffect;
+  | IDiscardOpponentHandCardEffect
+  | ILockOpponentEntityEffect;
 
 export interface ICard {
   readonly id: string;

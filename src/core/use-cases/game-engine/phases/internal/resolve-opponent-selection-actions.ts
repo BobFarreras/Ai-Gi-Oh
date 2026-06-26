@@ -4,7 +4,7 @@ import { IPlayer } from "@/core/entities/IPlayer";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { assignPlayers } from "@/core/use-cases/game-engine/state/player-utils";
-import { GameState, ISelectOpponentGraveyardCardPendingTurnAction, ISelectOpponentSetCardPendingTurnAction } from "@/core/use-cases/game-engine/state/types";
+import { GameState, ISelectOpponentEntityToLockPendingTurnAction, ISelectOpponentGraveyardCardPendingTurnAction, ISelectOpponentSetCardPendingTurnAction } from "@/core/use-cases/game-engine/state/types";
 
 function resolvePendingExecution(player: IPlayer, executionInstanceId: string): { executionCard: ICard; updatedPlayer: IPlayer } {
   const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
@@ -40,6 +40,40 @@ export function resolveOpponentGraveyardSelectionAction(
     type: "SELECT_OPPONENT_GRAVEYARD_CARD",
     selectedId,
     selectedCardId: selectedCard.id,
+    executionCardId: execution.executionCard.id,
+  });
+  return appendCombatLogEvent(withMandatoryLog, playerId, "CARD_TO_GRAVEYARD", {
+    cardId: execution.executionCard.id,
+    ownerPlayerId: playerId,
+    from: "EXECUTION_ZONE",
+  });
+}
+
+export function resolveOpponentEntityToLockSelectionAction(
+  state: GameState,
+  playerId: string,
+  selectedId: string,
+  player: IPlayer,
+  opponent: IPlayer,
+  isPlayerA: boolean,
+  pending: ISelectOpponentEntityToLockPendingTurnAction,
+): GameState {
+  const targetEntity = opponent.activeEntities.find((entity) => entity.instanceId === selectedId);
+  if (!targetEntity) throw new NotFoundError("La entity seleccionada no está en el campo rival.");
+  const execution = resolvePendingExecution(player, pending.executionInstanceId);
+  const updatedOpponent: IPlayer = {
+    ...opponent,
+    activeEntities: opponent.activeEntities.map((entity) =>
+      entity.instanceId === selectedId ? { ...entity, lockedTurnsRemaining: pending.turns } : entity,
+    ),
+  };
+  const withPlayers = assignPlayers({ ...state, pendingTurnAction: null }, execution.updatedPlayer, updatedOpponent, isPlayerA);
+  const withMandatoryLog = appendCombatLogEvent(withPlayers, playerId, "MANDATORY_ACTION_RESOLVED", {
+    type: "SELECT_OPPONENT_ENTITY_TO_LOCK",
+    selectedId,
+    selectedCardId: targetEntity.card.id,
+    selectedCardName: targetEntity.card.name,
+    turns: pending.turns,
     executionCardId: execution.executionCard.id,
   });
   return appendCombatLogEvent(withMandatoryLog, playerId, "CARD_TO_GRAVEYARD", {

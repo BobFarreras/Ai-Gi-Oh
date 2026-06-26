@@ -181,5 +181,23 @@ export const EXECUTION_CARDS: ICard[] = [
     cost: 3,
     effect: { action: "DESTROY_ALL_TRAPS" },
   }),
+  createExecution({
+    id: "exec-brave-lock-2",
+    name: "Brave: Escudo",
+    description: "Bloquea una entity rival elegida: no podrá atacar durante 2 turnos.",
+    renderFile: "brave-lock-2",
+    faction: "OPEN_SOURCE",
+    cost: 3,
+    effect: { action: "LOCK_OPPONENT_ENTITY", turns: 2 },
+  }),
+  createExecution({
+    id: "exec-github-lock-3",
+    name: "GitHub: Atadura",
+    description: "Bloquea una entity rival elegida: no podrá atacar durante 3 turnos.",
+    renderFile: "github-lock-3",
+    faction: "OPEN_SOURCE",
+    cost: 4,
+    effect: { action: "LOCK_OPPONENT_ENTITY", turns: 3 },
+  }),
 ];
 

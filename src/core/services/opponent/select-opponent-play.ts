@@ -55,6 +55,7 @@ export function canActivateExecutionNow(card: ICard, opponent: IPlayer, target: 
   if (effect.action === "REDUCE_OPPONENT_ATTACK" || effect.action === "REDUCE_OPPONENT_DEFENSE") return target.activeEntities.length > 0;
   if (effect.action === "DESTROY_ALL_TRAPS") return target.activeExecutions.some((entity) => entity.card.type === "TRAP");
   if (effect.action === "DISCARD_OPPONENT_HAND_CARD") return target.hand.length > 0;
+  if (effect.action === "LOCK_OPPONENT_ENTITY") return target.activeEntities.length > 0;
   if (effect.action === "HEAL") return opponent.healthPoints < opponent.maxHealthPoints;
   if (effect.action === "BOOST_ATTACK_ALLIED_ENTITY") return opponent.activeEntities.length > 0;
   if (effect.action === "BOOST_DEFENSE_BY_ARCHETYPE" || effect.action === "BOOST_ATTACK_BY_ARCHETYPE") return hasArchetypeEntity(opponent, effect.archetype);
@@ -127,6 +128,9 @@ function scoreCardWithContext(
   }
   if (effect.action === "DISCARD_OPPONENT_HAND_CARD") {
     return base + activateBonus + (target.hand.length > 0 ? 240 : -320);
+  }
+  if (effect.action === "LOCK_OPPONENT_ENTITY") {
+    return base + activateBonus + (target.activeEntities.length > 0 ? 380 : -320);
   }
   return base + activateBonus;
 }
