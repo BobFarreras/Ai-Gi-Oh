@@ -11,10 +11,11 @@ interface MarketListingsPanelProps {
 }
 
 function MarketListingsPanelComponent({ listings, onSelectCard }: MarketListingsPanelProps) {
-  // Scroll nativo + windowing del navegador (content-visibility): sin virtualización JS, el
-  // número de columnas y la altura los decide el propio CSS grid, así que nunca hay desfase
-  // entre lo que se calcula y lo que se pinta (faltaban cartas en la última fila y "saltaban"
-  // al rellenar huecos). El scroll por rueda o por barra rinde igual y no hay re-render por frame.
+  // Scroll nativo sin virtualización JS: el número de columnas y la altura los decide el propio CSS
+  // grid (nunca hay desfase entre lo calculado y lo pintado). Con un catálogo de ~100 cartas no se
+  // usa `content-visibility`: en móvil, al hacer scroll rápido, sus placeholders de tamaño intrínseco
+  // aparecían como cajas grises antes de pintarse. El navegador ya hace su propio culling de pintado
+  // y las imágenes son lazy (next/image), así que el scroll va fluido sin esos huecos grises.
   return (
     <section className="home-modern-scroll h-full min-h-0 overflow-y-auto overflow-x-hidden rounded-xl border border-cyan-800/35 bg-[#031020]/55 p-3 sm:p-4">
       <div className="grid w-full grid-cols-4 content-start justify-items-center gap-2 pb-6 sm:grid-cols-5 sm:gap-3 md:grid-cols-[repeat(auto-fill,minmax(90px,1fr))]">
@@ -25,10 +26,7 @@ function MarketListingsPanelComponent({ listings, onSelectCard }: MarketListings
               listing.isAvailable
                 ? "border-cyan-900/60 bg-[#081220] hover:border-cyan-400/80 cursor-pointer shadow-[0_0_10px_rgba(34,211,238,0.1)]"
                 : "border-zinc-800 bg-zinc-950/80 grayscale-[80%] opacity-60 cursor-pointer"
-            } overflow-hidden transition-all duration-300`}
-            // content-visibility salta el render de las cartas fuera de pantalla; el keyword `auto`
-            // recuerda el tamaño real tras el primer pintado para que la barra de scroll no salte.
-            style={{ contentVisibility: "auto", containIntrinsicSize: "auto 88px auto 123px" }}
+            } overflow-hidden transition-colors duration-200`}
             aria-label={`${listing.card.name} disponible por ${listing.priceNexus} Nexus`}
           >
             {/* Etiqueta de Precio */}
