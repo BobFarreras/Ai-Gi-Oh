@@ -59,9 +59,11 @@ export function HomeCardInspector({
       <h2 className="relative mb-2 text-sm font-black uppercase tracking-widest text-cyan-200">Detalle</h2>
       {selectedCard ? (
         <div className="relative flex min-h-0 flex-1 flex-col">
-          <div ref={cardViewportRef} className="mx-auto flex w-full justify-center overflow-visible">
-            <div className="flex justify-center overflow-visible" style={{ height: `${Math.round(380 * cardScale)}px` }}>
-              <div className="origin-top" style={{ transform: `scale(${cardScale})` }}>
+          <div ref={cardViewportRef} className="mx-auto flex w-full justify-center overflow-hidden">
+            {/* La caja toma el tamaño REAL escalado (transform: scale no afecta al layout), así la
+                carta nunca sobresale del contenedor; el origin-top-left la encaja dentro de la caja. */}
+            <div style={{ width: `${Math.round(260 * cardScale)}px`, height: `${Math.round(380 * cardScale)}px` }}>
+              <div className="origin-top-left" style={{ transform: `scale(${cardScale})` }}>
                 <Card
                   card={selectedCard}
                   versionTier={selectedCardVersionTier}

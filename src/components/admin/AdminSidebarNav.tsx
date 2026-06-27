@@ -95,8 +95,10 @@ export function AdminSidebarNav({ portalSlug }: IAdminSidebarNavProps) {
   const items = buildItems(portalSlug);
 
   return (
+    <>
+    {/* Sidebar lateral: solo desktop (md+). En móvil se usa la bottom bar de abajo. */}
     <aside
-      className={`${isCollapsed ? "w-14" : "w-52"} relative flex h-full min-h-0 shrink-0 flex-col rounded-xl border border-cyan-900/50 bg-[linear-gradient(175deg,rgba(4,14,28,0.96),rgba(2,8,18,0.98))] p-2 shadow-[0_0_25px_rgba(6,182,212,0.12),inset_0_0_20px_rgba(0,0,0,0.5)] transition-all duration-200`}
+      className={`${isCollapsed ? "md:w-14" : "md:w-52"} relative hidden h-full min-h-0 shrink-0 flex-col rounded-xl border border-cyan-900/50 bg-[linear-gradient(175deg,rgba(4,14,28,0.96),rgba(2,8,18,0.98))] p-2 shadow-[0_0_25px_rgba(6,182,212,0.12),inset_0_0_20px_rgba(0,0,0,0.5)] transition-all duration-200 md:flex`}
     >
       <div className="pointer-events-none absolute inset-0 rounded-xl bg-[linear-gradient(135deg,rgba(34,211,238,0.04),transparent_50%,rgba(59,130,246,0.03))]" />
 
@@ -156,5 +158,32 @@ export function AdminSidebarNav({ portalSlug }: IAdminSidebarNavProps) {
         </div>
       )}
     </aside>
+
+    {/* Bottom bar móvil (app-like): todas las secciones con scroll horizontal. */}
+    <nav aria-label="Navegación admin" className="order-last shrink-0 md:hidden">
+      <div className="home-modern-scroll flex gap-1.5 overflow-x-auto rounded-xl border border-cyan-900/50 bg-[#020c18]/95 p-1.5 shadow-[0_0_20px_rgba(6,182,212,0.12)]">
+        {items.map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-label={item.label}
+              className={`flex min-w-[64px] shrink-0 flex-col items-center gap-1 rounded-lg border px-1.5 py-1.5 transition-colors ${
+                isActive
+                  ? "border-cyan-400/60 bg-cyan-950/50 text-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.15)]"
+                  : "border-cyan-900/30 bg-[#020c18]/60 text-slate-400"
+              }`}
+            >
+              <span className="flex h-6 w-6 items-center justify-center">
+                <AdminNavIcon icon={item.icon} isActive={isActive} />
+              </span>
+              <span className="text-[8.5px] font-bold uppercase leading-none tracking-wide">{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+    </>
   );
 }
