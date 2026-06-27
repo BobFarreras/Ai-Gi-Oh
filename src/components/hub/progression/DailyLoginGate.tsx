@@ -6,6 +6,10 @@ import { usePathname } from "next/navigation";
 import { DailyLoginModal } from "./DailyLoginModal";
 import { useDailyLogin } from "./DailyLoginProvider";
 
+// Margen antes de abrir la recompensa diaria al llegar al hub: da aire a que la escena se asiente
+// (sobre todo tras el tutorial) en vez de saltar de golpe.
+const DAILY_REWARD_AUTO_OPEN_DELAY_MS = 2000;
+
 export function DailyLoginGate() {
   const { status, markClaimed } = useDailyLogin();
   const pathname = usePathname();
@@ -19,7 +23,7 @@ export function DailyLoginGate() {
   useEffect(() => {
     if (autoOpenedRef.current || pathname !== "/hub" || !status || status.claimedToday) return;
     autoOpenedRef.current = true;
-    const timeout = window.setTimeout(() => setOpen(true), 0);
+    const timeout = window.setTimeout(() => setOpen(true), DAILY_REWARD_AUTO_OPEN_DELAY_MS);
     return () => window.clearTimeout(timeout);
   }, [pathname, status]);
 
