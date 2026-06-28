@@ -21,6 +21,36 @@
    - `pnpm supabase:env:local`
    - `pnpm supabase:env:apply`
 
+## Mantener la BD sincronizada (contribuidores y contenido)
+
+El contenido del juego se sirve en dos capas, para separar **estructura** de **datos editables**:
+
+- **Estructura + contenido histórico** → migraciones en `docs/supabase/sql/` (fuente de verdad; `prepare-local-migrations` las copia a `supabase/migrations/`).
+- **Contenido esencial editable** → `supabase/seed.sql` (UPSERTs idempotentes que corren **después** de las migraciones, así que es la "capa que gana"): precios/rareza de mercado, sobres, eventos, misiones, promociones y calendario de login. **No** incluye `cards_catalog` (lo gobiernan las migraciones) ni datos de jugador.
+
+### Tras hacer `git pull` (contribuidor)
+
+```
+pnpm db:reset
+```
+
+Regenera `supabase/migrations` desde `docs/supabase/sql` y ejecuta `supabase db reset --local`, que reaplica **todas** las migraciones + `seed.sql` sobre una BD limpia. Así tu Docker queda idéntico al repo. ⚠️ Borra los datos locales (en local solo hay pruebas; los datos de jugador nunca se siembran). Necesario porque `supabase start` solo aplica migraciones en el **primer** arranque.
+
+### Tras cambiar contenido editable (mantenedor)
+
+Editas el contenido (p. ej. la carta del día 7 del login) por una de estas vías:
+
+1. **A mano** en `supabase/seed.sql` (una línea), commit. Aplícalo a prod re-ejecutando el seed (es idempotente).
+2. **Desde la BD** (lo cambiaste en prod vía panel admin o SQL): regenera el seed desde la fuente y commitea:
+
+   ```
+   pnpm db:seed:dump        # lee NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY de .env.local
+   # o apuntando a otra BD:
+   SEED_SOURCE_URL=... SEED_SOURCE_KEY=... pnpm db:seed:dump
+   ```
+
+En cualquier caso, los contribuidores reciben el cambio con `git pull` + `pnpm db:reset`.
+
 ## Diccionario de tablas
 
 1. `public.player_profiles`:
@@ -507,7 +537,7 @@
 2. Cartas insertadas (todas `ENTITY`, idempotentes por `on conflict (id) do update`):
    - `entity-aws` (BIG_TECH / TOOL, 1800/1200, cost 5),
    - `entity-qwen` (BIG_TECH / LLM, 1800/1200, cost 5),
-   - `entity-firebase` (BIG_TECH / DB, 1200/2000, cost 4),
+   - `entity-firebase` (BIG_TECH / DB, 1200/2000, cost 5 tras mig. 077),
    - `entity-mistral` (OPEN_SOURCE / LLM, 1500/1300, cost 4),
    - `entity-minimax` (NEUTRAL / LLM, 1500/1300, cost 4),
    - `entity-copilot` (BIG_TECH / LLM, 1000/1000, cost 3).
