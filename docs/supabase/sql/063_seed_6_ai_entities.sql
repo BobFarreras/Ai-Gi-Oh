@@ -8,8 +8,8 @@ insert into public.cards_catalog (
 ('entity-aws', 'AWS', 'Cloud de Amazon que escala invocaciones y reforzamiento de entidades.', 'ENTITY', 'BIG_TECH', 5, 1800, 1200, 'TOOL', null, '/assets/bgs/bg-tech.webp', '/assets/renders/aws.webp', null, null, '{}', null, true),
 ('entity-qwen', 'Qwen', 'LLM de Alibaba con razonamiento profundo para cierre de duelo.', 'ENTITY', 'BIG_TECH', 5, 1800, 1200, 'LLM', null, '/assets/bgs/bg-tech.webp', '/assets/renders/qwen.webp', null, null, '{}', null, true),
 
--- 1 carta: 1200 ATK, 2000 DEF (cost 4, muro defensivo)
-('entity-firebase', 'Firebase', 'Backend en tiempo real que estabiliza la línea defensiva y sincroniza el campo.', 'ENTITY', 'BIG_TECH', 4, 1200, 2000, 'DB', null, '/assets/bgs/bg-tech.webp', '/assets/renders/firebase.webp', null, null, '{}', null, true),
+-- 1 carta: 1200 ATK, 2000 DEF (cost 5, muro defensivo; budget 3200 ↔ c5, ver migración 077)
+('entity-firebase', 'Firebase', 'Backend en tiempo real que estabiliza la línea defensiva y sincroniza el campo.', 'ENTITY', 'BIG_TECH', 5, 1200, 2000, 'DB', null, '/assets/bgs/bg-tech.webp', '/assets/renders/firebase.webp', null, null, '{}', null, true),
 
 -- 2 cartas: 1500 ATK, 1300 DEF (cost 4, medio juego)
 ('entity-mistral', 'Mistral', 'LLM europeo open-source con razonamiento eficiente y presión de medio juego.', 'ENTITY', 'OPEN_SOURCE', 4, 1500, 1300, 'LLM', null, '/assets/bgs/bg-tech.webp', '/assets/renders/mistral.webp', null, null, '{}', null, true),

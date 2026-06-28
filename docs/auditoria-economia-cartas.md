@@ -25,12 +25,11 @@ Tres aclaraciones tuyas que cambian o matizan el análisis original:
 
 1. 🟢 **Fusiones NO son una bomba instantánea.** Para invocar una fusión hace falta la cadena completa: **2 materiales + carta `exec-fusion-*` (Compilador) + la carta FUSION** en uno de los 2 slots del deck de fusión, y además invocar los materiales a mesa y jugar el Compilador. Comprar solo la fusión no sirve. El gateo que pedía en §7.3 **ya existe por diseño** → preocupación nº3 rebajada (queda solo el tema de rareza/etiqueta, no de mecánica).
 
-2. 🔴 **HALLAZGO NUEVO — gate de fallback del mercado.** El juego solo sirve el mercado de la DB si `market_card_listings` **Y** `market_pack_definitions` **Y** `market_pack_pool_entries` tienen filas ([can-use-supabase-market-catalog.ts](src/services/player-persistence/internal/can-use-supabase-market-catalog.ts)). Las dos tablas de packs están **a 0 filas**, así que **todo el mercado cae al mock de código** ([InMemoryMarketRepository.ts](src/infrastructure/repositories/InMemoryMarketRepository.ts)):
-   - Precios de carta = `coste × 25` (NO los 50-1.400 de `market_card_listings`).
-   - 2 sobres reales: **Core Alpha** (220 Nexus, 5 cartas) y **Fusion Lab: Pytgress** (480 Nexus, 5 cartas).
-   - **Consecuencia:** mientras las tablas de packs estén vacías, **editar precios/rarezas en la DB no tiene efecto**. Toda la §3 describe `market_card_listings`, que ahora mismo puede no estar sirviéndose. **Decisión previa obligatoria:** ¿el mercado vive en DB (editable sin deploy) o en código? Hay que elegir UNA fuente de verdad.
+2. 🟢 **Gate de fallback del mercado — RESUELTO.** El juego solo sirve el mercado de la DB si `market_card_listings` **Y** `market_pack_definitions` **Y** `market_pack_pool_entries` tienen filas ([can-use-supabase-market-catalog.ts](src/services/player-persistence/internal/can-use-supabase-market-catalog.ts)). En la v1 las tablas de packs estaban a 0 → el mercado caía al mock de código. **Ya hay datos en DB** (120 listings, 2 packs, 10 pool entries), así que el gate pasa y se sirve el catálogo real de la DB (editable sin deploy). La §3 describe ahora la fuente de verdad activa.
 
-3. 🟢 **Sí hay sobres y sí hay tienda de eventos.** "Sumidero" = sitio por donde el dinero **sale** de la economía (lo contrario de "grifo"/ingreso). No dije que no existieran sobres; dije que el desagüe puede ser insuficiente frente al ingreso (de ahí wallets de 21.000). Ver §2.6 (corregida) y §2.7 (tienda de Fragmentos).
+3. 🟢 **Sí hay sobres y sí hay tienda de eventos.** "Sumidero" = sitio por donde el dinero **sale** de la economía (lo contrario de "grifo"/ingreso). No dije que no existieran sobres; dije que el desagüe puede ser insuficiente frente al ingreso (de ahí wallets de 21.000). Ver §2.6 y §2.7.
+
+> **Estado v3 (implementado):** migraciones 074-077 aplicadas y verificadas en vivo + arreglo del modo admin (mocks→DB) + seguridad del endpoint público. Detalle en §9 (changelog).
 
 ---
 
@@ -104,8 +103,8 @@ Recordatorio: **sumidero** = por donde sale el dinero (compras). Los sobres SÍ 
 ### 2.7 Tienda de eventos (Fragmentos) — canal y sumidero alternativos
 - Moneda separada **Fragmentos** (`events.currency_name`), no Nexus.
 - Se ganan por reglas de evento (`event_point_rules`): `BUY_PACK` = 20 pts, `WIN_FLAWLESS_STORY` = 100 pts.
-- Tienda `event_shop_items` (3 items hoy, con límite por jugador) → cartas exclusivas de evento.
-- ⚠️ Datos actuales parecen de prueba: los `id` dicen `python/flutter/avast` pero `card_id` apunta a Python/Perplexity/GitHub con stats placeholder 1200/1100. Revisar antes de un evento real.
+- Tienda `event_shop_items` (3 items, con límite por jugador) → cartas exclusivas de evento.
+- ✅ **v3:** placeholders corregidos. Los items apuntan a cartas reales (Cursor / Hostinger / CursHost) y los `id` ya derivan de la carta (`evt-launch-entity-cursor`, etc.). El panel admin genera el id derivado automáticamente al elegir/cambiar la carta (ver §9).
 
 ---
 
@@ -226,18 +225,21 @@ Son las cartas más fuertes del juego (con razón). La mecánica está bien gate
 
 ## 6. Problemas clave (priorizados)
 
-| # | Severidad | Problema | Impacto |
+| # | Severidad | Problema | Estado |
 |---|---|---|---|
-| 0 | ✅ **Resuelto** | ~~Gate de fallback: mercado servido desde código, no DB~~ | DB tiene datos (120 listings, 2 packs, 10 pool entries). Gate funciona. |
-| 1 | ✅ **Resuelto** | ~~Rareza sin significado~~ (COMMON a 1.200, 4 fusiones COMMON) | Migración 074: fusiones→LEGENDARY, AWS/Qwen→EPIC, Mistral/MiniMax→RARE |
-| 2 | ✅ **Resuelto** | ~~Chollos~~ (Flutter 118, DigitalOcean 75) | Migración 074: Flutter→450, DigitalOcean→220, Windows92→280 |
-| 3 | 🟠 Media | **Economía front-loaded** (~1.700 día 1, ~1.000/día) | Curva de adquisición demasiado rápida al inicio |
-| 4 | 🟠 Media | **Falta sumidero recurrente post-deck** | Economía se desborda (wallets de 21k) una vez montado el deck |
-| 5 | ✅ **Resuelto** | ~~Ruido de stats~~ (1205/1210/1230) | Migración 075: 37 cartas redondeadas a múltiplos de 50/100 |
-| 6 | ✅ **Resuelto** | ~~Mismo efecto, distinto precio~~ en mágicas | Migración 076: HEAL 700 unificado a 350 (Recovery Patch + NotebookLLM) |
-| 7 | 🟡 Baja | **Tienda de eventos con datos placeholder** | Revisar antes de lanzar un evento real (§2.7) |
-| 8 | 🟡 Baja | `cards_catalog.json` del repo **desactualizado** (80 vs 120 cartas) | Riesgo de confusión en desarrollo |
-| ~~9~~ | ✅ Resuelto | ~~Fusiones bomba día 1~~ | Falsa alarma: la cadena material+compilador+fusión ya lo gatea (§3.4) |
+| 0 | ✅ **Resuelto** | ~~Gate de fallback: mercado servido desde código~~ | DB con datos (120 listings, 2 packs, 10 pool entries). Gate pasa, sirve DB. |
+| 1 | ✅ **Resuelto** | ~~Rareza sin significado~~ (COMMON a 1.200, 4 fusiones COMMON) | Mig. 074: fusiones→LEGENDARY, AWS/Qwen→EPIC, Mistral/MiniMax→RARE |
+| 1b | ✅ **Resuelto** | ~~Rareza/precio residual en mágicas y trampas~~ | Mig. 077: Kernel Panic→RARE 650, rust-redeploy 480, steal 420, ddg-power-up→RARE 340 |
+| 2 | ✅ **Resuelto** | ~~Chollos~~ (Flutter 118, DigitalOcean 75) | Mig. 074: Flutter→450, DigitalOcean→220, Windows92→280 |
+| 2b | ✅ **Resuelto** | ~~Muros sobre presupuesto~~ (Firebase, Ubuntu, DUCKDUCKGO) | Mig. 077: subido el coste (c4→c5, c5→c6, c2→c3) — decisión de diseño |
+| 3 | 🟠 **Abierta** | **Economía front-loaded** (~1.700 día 1, ~1.000/día) | Pendiente (§7.5). Decisión de diseño tuya. |
+| 4 | 🟠 **Abierta** | **Falta sumidero recurrente post-deck** | Pendiente. Wallets de 21k sin destino una vez montado el deck. |
+| 5 | ✅ **Resuelto** | ~~Ruido de stats~~ (1205/1210/1230) | Mig. 075: 37 cartas redondeadas a múltiplos de 50/100 |
+| 6 | ✅ **Resuelto** | ~~Mismo efecto, distinto precio~~ en mágicas | Mig. 076: HEAL 700 unificado a 350 |
+| 7 | ✅ **Resuelto** | ~~Tienda de eventos con placeholders~~ | v3: cartas reales + ids derivados + auto-generación en admin (§9) |
+| 8 | ✅ **Resuelto** | ~~`cards_catalog.json` desactualizado~~ | Borrado del repo |
+| 9 | ✅ **Resuelto** | ~~Endpoint `cards-by-ids` público con service-role~~ | v3: usa sesión autenticada (RLS) + cap/dedupe de ids (§9) |
+| 10 | ✅ Falsa alarma | ~~Fusiones bomba día 1~~ | La cadena material+compilador+fusión ya lo gatea (§3.4) |
 
 ---
 
@@ -251,15 +253,14 @@ Definir la rareza por **presupuesto de poder real** y derivar el precio con fór
 Subir Flutter, DigitalOcean, Windows92, Hydra, Kotlin a su precio según fórmula (Flutter 1570 ATK c4 → ~450-500, no 118). Regla: **a igual coste+stats, igual precio** (±10%).
 **COMPLETADO:** Migración 074: Flutter→450, DigitalOcean→220, Windows92→280. Seeds 005/028/029 actualizados.
 
-### 7.3 Gatear las fusiones (clave para "no invencible al principio") ❌
-Elegir una de estas dos:
-- **(Preferida)** Quitar las fusiones de la compra directa: **solo craftear** vía materiales + Compilador. Esto premia el sistema que ya construiste y exige montar el combo en mesa.
-- **(Alternativa)** Mantener compra directa pero a **precio prohibitivo inicial** (2.500-3.500) y/o **gated por nivel de jugador / progreso de historia**.
+### 7.3 Gatear las fusiones ✅ (no requería acción)
+La cadena material + Compilador + carta de fusión + setup de mesa **ya gatea** el acceso (§3.4). Solo se reetiquetó la rareza (4 fusiones COMMON→LEGENDARY en mig. 074). Punto cerrado.
 
-### 7.4 Activar sobres como sumidero principal ❌
-Configurar `market_pack_definitions` (hoy vacío): packs con RNG ponderado por rareza, p. ej. sobre de 5 cartas a 500 Nexus con probabilidades fijas. Así el azar y el gasto recurrente sostienen la economía a largo plazo, y la compra directa queda como "premium" para completar.
+### 7.4 Sobres como sumidero ✅ (parcial)
+**HECHO:** ya hay 2 sobres en DB (`market_pack_definitions`: Core Alpha + Fusion Lab) con pools ponderados → el gate del mercado pasa y hay sumidero con azar.
+**Pendiente (opcional):** ampliar/rotar el catálogo de sobres para sostener el gasto a largo plazo (ligado a §4 abierto).
 
-### 7.5 Suavizar el front-load (opcional, fino) ❌
+### 7.5 Suavizar el front-load (opcional, fino) ⏳ ABIERTO
 - Tutorial 600 está bien como empujón.
 - Considerar que las recompensas de **primer clear de historia** entreguen **cartas** (progresión dirigida) en vez de tanto Nexus suelto, para controlar el pico del día 1.
 
@@ -267,8 +268,8 @@ Configurar `market_pack_definitions` (hoy vacío): packs con RNG ponderado por r
 Redondear todo a múltiplos de 50/100 sobre la rejilla de §4.2. Aprovechar la misma migración para tarifar mágicas por efecto (§5.1).
 **COMPLETADO:** Migración 075: 37 cartas redondeadas (c3→1200/1250, c4→1500/1550/1600, c5→1900). Migración 076: HEAL 700 unificado a 350. Seeds 005/028/029/003 actualizados.
 
-### 7.7 Higiene de repo ❌
-Regenerar/eliminar `cards_catalog.json` (80 cartas, precios viejos) para que no haya dos fuentes de verdad frente a la DB (120 cartas).
+### 7.7 Higiene de repo ✅
+**COMPLETADO:** `cards_catalog.json` borrado del repo; la DB (120 cartas) queda como fuente única.
 
 ---
 
@@ -278,6 +279,27 @@ Regenerar/eliminar `cards_catalog.json` (80 cartas, precios viejos) para que no 
 
 2. **¿Stats fijos por energía?** → **Sí**, pero como **presupuesto ATK+DEF por coste** (no un número rígido), repartido por rol y descontando si la carta tiene efecto. Ya tienes la curva; solo hay que formalizarla y quitar el ruido.
 
-3. **¿Deck invencible al principio?** → Hoy es posible en 2-3 días por culpa de chollos + fusiones directas. Con 7.2 y 7.3 lo cierras sin tocar la progresión (que está bien).
+3. **¿Deck invencible al principio?** → Cerrado: eliminados los chollos (7.2) y las fusiones ya estaban gateadas por su cadena de invocación (7.3). El único riesgo restante es el front-load (§7.5, abierto), que es ajuste fino.
 
-4. **¿Flujo de monedas?** → Generoso y front-loaded: ~1.700 el día 1, ~1.000/día activo. Sano, salvo que **faltan sumideros**: activa sobres (7.4) para que el dinero tenga a dónde ir.
+4. **¿Flujo de monedas?** → Generoso y front-loaded: ~1.700 el día 1, ~1.000/día activo. Ya hay sumideros (sobres en DB). Pendiente: un sumidero recurrente *post-deck* para los wallets saturados (§4 abierto).
+
+---
+
+## 9. Changelog de implementación (v3)
+
+**Migraciones SQL** (todas idempotentes y aplicadas/verificadas en vivo):
+- `074_market_economy_balance.sql` — rareza coherente + chollos.
+- `075_clean_card_stats_to_grid.sql` — 37 cartas a múltiplos de 50/100.
+- `076_fix_execution_effect_pricing.sql` — HEAL 700 unificado a 350.
+- `077_balance_residuals_and_walls.sql` — (1) residuales mágicas/trampas: Kernel Panic→RARE 650, rust-redeploy→480, steal→420, ddg-power-up→RARE 340; (2) muros: Firebase c4→c5, Ubuntu c5→c6, DUCKDUCKGO c2→c3; (3) renombrado de ids de `event_shop_items` a forma derivada.
+
+**Seeds back-patcheados** (consistencia en rebuild): `063` (Firebase c5), `030` (listings ddg-power-up RARE 340 / steal 420). Nota: ids legacy en seeds con capas múltiples no se back-patchean — la migración 077 es la fuente de verdad para esos.
+
+**Código:**
+- `cards-by-ids/route.ts` — seguridad: cliente de **sesión autenticada** (respeta RLS) en vez de service-role; **dedupe + cap de 120 ids**.
+- `AdminEventEditor.tsx` — el id de item de tienda **deriva de la carta** (`${evento}-${carta}`); al cambiar de carta, **borra la fila anterior** (sin huérfanos).
+- `delete/route.ts` + `SupabaseProgressionAdminRepository` + `IProgressionAdminRepository` — soporte de borrado de `eventShopItem`.
+
+**Verificado:** `tsc --noEmit` limpio · `AdminEventEditor.test.tsx` 4/4 · eslint sin avisos · estado DB confirmado por consulta.
+
+**Abierto (decisión de diseño):** §7.5 front-load · §4 sumidero recurrente post-deck · ampliar rotación de sobres (§7.4).

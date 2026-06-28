@@ -21,6 +21,10 @@ export async function POST(request: NextRequest) {
         if (typeof body.id !== "string" || !body.id.trim()) throw new ValidationError("El id es obligatorio.");
         await new DeleteMissionUseCase(repository).execute(body.id);
         break;
+      case "eventShopItem":
+        if (typeof body.id !== "string" || !body.id.trim()) throw new ValidationError("El id es obligatorio.");
+        await repository.deleteEventShopItem(body.id);
+        break;
       case "eventRule":
         if (typeof body.eventId !== "string" || !body.eventId.trim()) throw new ValidationError("El evento es obligatorio.");
         if (typeof body.actionType !== "string" || !body.actionType.trim()) throw new ValidationError("La acción es obligatoria.");

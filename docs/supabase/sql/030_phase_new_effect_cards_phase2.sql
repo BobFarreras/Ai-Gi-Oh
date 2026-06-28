@@ -239,10 +239,10 @@ insert into public.market_card_listings (
 ('listing-trap-nexus-reset-barrier', 'trap-nexus-reset-barrier', 'EPIC', 190, null, true),
 ('listing-trap-nullify-opponent-trap', 'trap-nullify-opponent-trap', 'RARE', 130, null, true),
 ('listing-exec-docker-defense-1000', 'exec-docker-defense-1000', 'RARE', 120, null, true),
-('listing-exec-duckduckgo-power-up', 'exec-duckduckgo-power-up', 'EPIC', 180, null, true),
+('listing-exec-duckduckgo-power-up', 'exec-duckduckgo-power-up', 'RARE', 340, null, true),
 ('listing-exec-drain-opponent-energy', 'exec-drain-opponent-energy', 'EPIC', 190, null, true),
 ('listing-exec-reveal-opponent-set-card', 'exec-reveal-opponent-set-card', 'RARE', 110, null, true),
-('listing-exec-steal-opponent-graveyard-card', 'exec-steal-opponent-graveyard-card', 'EPIC', 200, null, true)
+('listing-exec-steal-opponent-graveyard-card', 'exec-steal-opponent-graveyard-card', 'EPIC', 420, null, true)
 on conflict (id) do update set
   card_id = excluded.card_id,
   rarity = excluded.rarity,
