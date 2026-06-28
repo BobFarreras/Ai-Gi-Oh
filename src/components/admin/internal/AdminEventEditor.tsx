@@ -40,10 +40,14 @@ function RuleRow({ eventId, rule, onDelete }: { eventId: string; rule: IAdminEve
   );
 }
 
-function ShopItemRow({ item }: { item: IAdminEventShopItem }) {
+function ShopItemRow({ item, onItemChange }: { item: IAdminEventShopItem; onItemChange: (id: string, patch: Partial<IAdminEventShopItem>) => void }) {
   const [draft, setDraft] = useState<IAdminEventShopItem>(item);
   function update<K extends keyof IAdminEventShopItem>(key: K, value: IAdminEventShopItem[K]) {
-    setDraft((prev) => ({ ...prev, [key]: value }));
+    setDraft((prev) => {
+      const next = { ...prev, [key]: value };
+      onItemChange(prev.id, { [key]: value } as Partial<IAdminEventShopItem>);
+      return next;
+    });
   }
   const card = CARD_BY_ID.get(draft.cardId);
   return (
@@ -96,6 +100,9 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
   function addItem() {
     const id = `${draft.id}-item-${Math.random().toString(36).slice(2, 7)}`;
     setItems((prev) => [...prev, { id, eventId: draft.id, cardId: "", costPoints: 100, perPlayerLimit: 1, sortOrder: prev.length + 1, isActive: true }]);
+  }
+  function updateItem(id: string, patch: Partial<IAdminEventShopItem>) {
+    setItems((prev) => prev.map((item) => item.id === id ? { ...item, ...patch } : item));
   }
   function addMission(objectiveType: string) {
     if (!objectiveType) return;
@@ -191,7 +198,7 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
           <button type="button" onClick={addItem} className="h-8 border border-fuchsia-500/60 px-3 font-mono text-[11px] font-bold uppercase text-fuchsia-200 hover:bg-fuchsia-500/10">+ Añadir carta</button>
         </div>
         <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
-          {items.map((item) => <ShopItemRow key={item.id} item={item} />)}
+          {items.map((item) => <ShopItemRow key={item.id} item={item} onItemChange={updateItem} />)}
         </div>
       </div>
     </div>
