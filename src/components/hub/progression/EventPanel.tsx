@@ -1,11 +1,11 @@
 // src/components/hub/progression/EventPanel.tsx - Diálogo grande del evento: nombre destacado, saldo de Fragmentos con icono, countdown y tienda de canje con cartas reales.
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { IEventOverview, IEventShopItem } from "@/core/entities/progression/IEvent";
 import { IMissionView } from "@/core/entities/progression/IMission";
-import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
+import { ICard } from "@/core/entities/ICard";
 import { Card } from "@/components/game/card/Card";
 import { progressionActionLabel } from "@/core/services/progression/action-labels";
 import { track } from "@/services/analytics/client/analytics-buffer";
@@ -19,6 +19,25 @@ interface IEventPanelProps {
   onClose: () => void;
 }
 
+function useCardsByids(cardIds: string[]): Map<string, ICard> {
+  const [cards, setCards] = useState<Map<string, ICard>>(new Map());
+  const uniqueIds = useMemo(() => Array.from(new Set(cardIds.filter(Boolean))), [cardIds]);
+  useEffect(() => {
+    if (uniqueIds.length === 0) return;
+    const controller = new AbortController();
+    fetch(`/api/catalog/cards-by-ids?ids=${uniqueIds.join(",")}`, { signal: controller.signal })
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCards(new Map(data.map((c: ICard) => [c.id, c])));
+        }
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [uniqueIds]);
+  return cards;
+}
+
 function formatRemaining(endsAt: string): string {
   const ms = new Date(endsAt).getTime() - Date.now();
   if (ms <= 0) return "Evento finalizado";
@@ -27,10 +46,10 @@ function formatRemaining(endsAt: string): string {
   return days > 0 ? `Termina en ${days}d ${hours}h` : `Termina en ${hours}h`;
 }
 
-function ShopItem({ item, balance, onRedeemed }: { item: IEventShopItem; balance: number; onRedeemed: (itemId: string, newBalance: number) => void }) {
+function ShopItem({ item, balance, onRedeemed, cardMap }: { item: IEventShopItem; balance: number; onRedeemed: (itemId: string, newBalance: number) => void; cardMap: Map<string, ICard> }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const card = CARD_BY_ID.get(item.cardId);
+  const card = cardMap.get(item.cardId) ?? null;
   const soldOut = item.owned >= item.perPlayerLimit;
   const affordable = balance >= item.costPoints;
 
@@ -95,6 +114,8 @@ export function EventPanel({ overview, eventMissions, onClose }: IEventPanelProp
   const [items, setItems] = useState(overview.items);
   const [showEarn, setShowEarn] = useState(false);
   const hasEarnInfo = overview.earnRules.length > 0 || eventMissions.length > 0;
+  const cardIds = useMemo(() => items.map((i) => i.cardId), [items]);
+  const cardMap = useCardsByids(cardIds);
 
   function handleRedeemed(itemId: string, newBalance: number) {
     setBalance(newBalance);
@@ -160,7 +181,7 @@ export function EventPanel({ overview, eventMissions, onClose }: IEventPanelProp
       <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-[0.2em] text-fuchsia-400/90">Tienda de canje</h3>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {items.map((item) => (
-          <ShopItem key={item.itemId} item={item} balance={balance} onRedeemed={handleRedeemed} />
+          <ShopItem key={item.itemId} item={item} balance={balance} onRedeemed={handleRedeemed} cardMap={cardMap} />
         ))}
       </div>
     </ProgressionDialogShell>
