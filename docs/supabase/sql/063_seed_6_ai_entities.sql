@@ -1,4 +1,4 @@
--- docs/supabase/sql/063_seed_6_ai_entities.sql - Inserta 6 nuevas cartas ENTITY (modelos/plataformas de IA) en cards_catalog.
+-- docs/supabase/sql/063_seed_6_ai_entities.sql - Inserta 6 nuevas cartas ENTITY (modelos/plataformas de IA) en cards_catalog + listings de mercado.
 begin;
 
 insert into public.cards_catalog (
@@ -35,5 +35,20 @@ on conflict (id) do update set
   fusion_material_ids = excluded.fusion_material_ids,
   fusion_energy_requirement = excluded.fusion_energy_requirement,
   is_active = excluded.is_active;
+
+-- Listings de mercado: rareza por budget (EPIC para 1800/1200 c5, RARE para 1500/1300 c4, COMMON para muro/tempo)
+insert into public.market_card_listings (id, card_id, rarity, price_nexus, stock, is_available) values
+('listing-entity-aws', 'entity-aws', 'EPIC', 800, null, true),
+('listing-entity-qwen', 'entity-qwen', 'EPIC', 800, null, true),
+('listing-entity-firebase', 'entity-firebase', 'COMMON', 200, null, true),
+('listing-entity-mistral', 'entity-mistral', 'RARE', 400, null, true),
+('listing-entity-minimax', 'entity-minimax', 'RARE', 400, null, true),
+('listing-entity-copilot', 'entity-copilot', 'COMMON', 150, null, true)
+on conflict (id) do update set
+  card_id = excluded.card_id,
+  rarity = excluded.rarity,
+  price_nexus = excluded.price_nexus,
+  stock = excluded.stock,
+  is_available = excluded.is_available;
 
 commit;
