@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { resolveMasteryPassiveLabel } from "@/core/services/progression/mastery-passive-display";
 import { Card } from "@/components/game/card/Card";
+import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 
 interface HomeCardInspectorProps {
   selectedCard: ICard | null;
@@ -14,6 +15,9 @@ interface HomeCardInspectorProps {
   selectedCardMasteryPassiveSkillId: string | null;
   minCardScale?: number;
   maxCardScale?: number;
+  /** Usa CardThumbnail (estático, se adapta a su caja aspect-[13/19]) en vez del Card escalado.
+   *  Pensado para el admin, donde la carta escalada se cortaba en contenedores compactos. */
+  useThumbnail?: boolean;
 }
 
 export function HomeCardInspector({
@@ -24,6 +28,7 @@ export function HomeCardInspector({
   selectedCardMasteryPassiveSkillId,
   minCardScale = 0.5,
   maxCardScale = 0.9,
+  useThumbnail = false,
 }: HomeCardInspectorProps) {
   const cardViewportRef = useRef<HTMLDivElement | null>(null);
   const [cardScale, setCardScale] = useState(0.76);
@@ -59,21 +64,31 @@ export function HomeCardInspector({
       <h2 className="relative mb-2 text-sm font-black uppercase tracking-widest text-cyan-200">Detalle</h2>
       {selectedCard ? (
         <div className="relative flex min-h-0 flex-1 flex-col">
-          <div ref={cardViewportRef} className="mx-auto flex w-full justify-center overflow-hidden">
-            {/* La caja toma el tamaño REAL escalado (transform: scale no afecta al layout), así la
-                carta nunca sobresale del contenedor; el origin-top-left la encaja dentro de la caja. */}
-            <div style={{ width: `${Math.round(260 * cardScale)}px`, height: `${Math.round(380 * cardScale)}px` }}>
-              <div className="origin-top-left" style={{ transform: `scale(${cardScale})` }}>
-                <Card
-                  card={selectedCard}
-                  versionTier={selectedCardVersionTier}
-                  level={selectedCardLevel}
-                  xp={selectedCardXp}
-                  masteryPassiveLabel={masteryPassiveLabel}
-                />
+          {useThumbnail ? (
+            // CardThumbnail rellena su caja con proporción de carta: se adapta al contenedor y
+            // nunca se corta ni se sale, sin transform:scale.
+            <div className="mx-auto w-full max-w-[210px] shrink-0">
+              <div className="aspect-[13/19] w-full">
+                <CardThumbnail card={selectedCard} versionTier={selectedCardVersionTier} />
               </div>
             </div>
-          </div>
+          ) : (
+            <div ref={cardViewportRef} className="mx-auto flex w-full justify-center overflow-hidden">
+              {/* La caja toma el tamaño REAL escalado (transform: scale no afecta al layout), así la
+                  carta nunca sobresale del contenedor; el origin-top-left la encaja dentro de la caja. */}
+              <div style={{ width: `${Math.round(260 * cardScale)}px`, height: `${Math.round(380 * cardScale)}px` }}>
+                <div className="origin-top-left" style={{ transform: `scale(${cardScale})` }}>
+                  <Card
+                    card={selectedCard}
+                    versionTier={selectedCardVersionTier}
+                    level={selectedCardLevel}
+                    xp={selectedCardXp}
+                    masteryPassiveLabel={masteryPassiveLabel}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
           <p className="mt-2 pb-1 text-lg font-black uppercase text-cyan-100">{selectedCard.name}</p>
           <p className="mt-1 text-xs uppercase tracking-widest text-cyan-300/80">
             {selectedCard.type} · {selectedCard.faction}

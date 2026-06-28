@@ -64,7 +64,7 @@ export function AdminMarketListingsWorkspace({ cards, cardById, listingByCardId,
       </section>
 
       <div className="grid min-h-0 gap-3 grid-rows-[minmax(0,1fr)_auto]">
-        <HomeCardInspector selectedCard={selectedCard} selectedCardVersionTier={0} selectedCardLevel={0} selectedCardXp={0} selectedCardMasteryPassiveSkillId={null} minCardScale={0.62} maxCardScale={0.98} />
+        <HomeCardInspector selectedCard={selectedCard} selectedCardVersionTier={0} selectedCardLevel={0} selectedCardXp={0} selectedCardMasteryPassiveSkillId={null} minCardScale={0.62} maxCardScale={0.98} useThumbnail />
         <section className="rounded-2xl border border-slate-700 bg-slate-900/70 p-3 text-xs text-slate-200">
           <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-cyan-200">Listing</p>
           <div className="grid gap-2">
