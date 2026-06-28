@@ -89,10 +89,10 @@ export function LiveOpsCardPicker({ cardId, onChange }: { cardId: string; onChan
 
   return (
     <div className="flex items-end gap-3">
-      <div className="relative aspect-[13/19] w-16 shrink-0">
+      <div className="relative aspect-[13/19] w-20 shrink-0">
         {thumbnailCard ? <CardThumbnail card={thumbnailCard} /> : previewCard?.renderUrl ? (
           <div className="relative h-full w-full overflow-hidden border border-slate-700 bg-slate-900">
-            <Image src={previewCard.renderUrl} alt={previewCard.name} fill className="object-cover" sizes="64px" />
+            <Image src={previewCard.renderUrl} alt={previewCard.name} fill className="object-cover" sizes="80px" />
           </div>
         ) : selectedLight ? (
           <div className="flex h-full w-full items-center justify-center border border-slate-700 bg-slate-900 text-[9px] text-slate-400 text-center px-1">{selectedLight.name}</div>

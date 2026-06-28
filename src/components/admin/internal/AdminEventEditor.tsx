@@ -3,9 +3,7 @@
 
 import { useState } from "react";
 import { IAdminEvent, IAdminEventRule, IAdminEventShopItem, IAdminMissionDefinition } from "@/core/entities/progression/ILiveOpsAdmin";
-import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
 import { ACTION_OBJECTIVE_TYPES, MISSION_OBJECTIVE_TYPES, OBJECTIVE_TYPES_WITH_PARAM, progressionActionLabel } from "@/core/services/progression/action-labels";
-import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { AdminEventChallengeRow } from "./AdminEventChallengeRow";
 import { LiveOpsField, LiveOpsNumber, LiveOpsToggle, LiveOpsSaveBar, LiveOpsCardPicker } from "./live-ops/live-ops-controls";
 import { saveLiveOps, deleteLiveOps } from "./live-ops/save-live-ops";
@@ -43,18 +41,11 @@ function RuleRow({ eventId, rule, onDelete }: { eventId: string; rule: IAdminEve
 function ShopItemRow({ item, onItemChange }: { item: IAdminEventShopItem; onItemChange: (id: string, patch: Partial<IAdminEventShopItem>) => void }) {
   const [draft, setDraft] = useState<IAdminEventShopItem>(item);
   function update<K extends keyof IAdminEventShopItem>(key: K, value: IAdminEventShopItem[K]) {
-    setDraft((prev) => {
-      const next = { ...prev, [key]: value };
-      onItemChange(prev.id, { [key]: value } as Partial<IAdminEventShopItem>);
-      return next;
-    });
+    setDraft((prev) => ({ ...prev, [key]: value }));
+    onItemChange(item.id, { [key]: value } as Partial<IAdminEventShopItem>);
   }
-  const card = CARD_BY_ID.get(draft.cardId);
   return (
     <div className="flex gap-3 border border-fuchsia-900/40 bg-[#0a0716]/70 p-3">
-      <div className="relative aspect-[13/19] w-20 shrink-0">
-        {card ? <CardThumbnail card={card} /> : <div className="flex h-full w-full items-center justify-center border border-slate-700 bg-slate-900 text-[9px] text-slate-500">?</div>}
-      </div>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <LiveOpsCardPicker cardId={draft.cardId} onChange={(value) => update("cardId", value)} />
         <div className="grid grid-cols-2 gap-2">
