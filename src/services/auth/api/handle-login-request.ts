@@ -18,7 +18,7 @@ export async function handleLoginRequest(request: NextRequest): Promise<NextResp
     const credentials = await readAuthCredentials(request);
     const fingerprint = getAuthFingerprint(request, credentials.email);
     const limitByIp = await consumeAuthRateLimit(`login:ip:${fingerprint.ip}`, 10, 10 * 60 * 1000);
-    const limitByEmail = await consumeAuthRateLimit(`login:email:${fingerprint.emailKey}`, 8, 10 * 60 * 1000);
+    const limitByEmail = await consumeAuthRateLimit(`login:email:${fingerprint.emailKey}`, 4, 10 * 60 * 1000);
     if (!limitByIp || !limitByEmail) {
       return NextResponse.json({ ok: false, message: "Demasiados intentos. Espera unos minutos." }, { status: 429 });
     }
