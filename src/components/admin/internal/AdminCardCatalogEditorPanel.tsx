@@ -29,7 +29,7 @@ export function AdminCardCatalogEditorPanel({ mode, draft, previewCard, isBusy, 
       </div>
       <div className="grid min-h-0 gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
         <AdminCardCatalogFormFields draft={draft} isBusy={isBusy} onChange={onChange} onApplyTypeTemplate={onApplyTypeTemplate ?? (() => undefined)} />
-        <HomeCardInspector selectedCard={previewCard} selectedCardVersionTier={0} selectedCardLevel={0} selectedCardXp={0} selectedCardMasteryPassiveSkillId={null} minCardScale={0.62} maxCardScale={0.98} useThumbnail />
+        <HomeCardInspector selectedCard={previewCard} selectedCardVersionTier={0} selectedCardLevel={0} selectedCardXp={0} selectedCardMasteryPassiveSkillId={null} minCardScale={0.5} maxCardScale={0.98} />
       </div>
     </section>
   );

@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { resolveMasteryPassiveLabel } from "@/core/services/progression/mastery-passive-display";
 import { Card } from "@/components/game/card/Card";
-import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 
 interface HomeCardInspectorProps {
   selectedCard: ICard | null;
@@ -15,9 +14,6 @@ interface HomeCardInspectorProps {
   selectedCardMasteryPassiveSkillId: string | null;
   minCardScale?: number;
   maxCardScale?: number;
-  /** Usa CardThumbnail (estático, se adapta a su caja aspect-[13/19]) en vez del Card escalado.
-   *  Pensado para el admin, donde la carta escalada se cortaba en contenedores compactos. */
-  useThumbnail?: boolean;
 }
 
 export function HomeCardInspector({
@@ -28,7 +24,6 @@ export function HomeCardInspector({
   selectedCardMasteryPassiveSkillId,
   minCardScale = 0.5,
   maxCardScale = 0.9,
-  useThumbnail = false,
 }: HomeCardInspectorProps) {
   const cardViewportRef = useRef<HTMLDivElement | null>(null);
   const [cardScale, setCardScale] = useState(0.76);
@@ -42,55 +37,47 @@ export function HomeCardInspector({
     const viewport = cardViewportRef.current;
     if (!viewport || typeof ResizeObserver === "undefined") return;
 
-    // Ajusta la carta al ancho real disponible para evitar recorte en resoluciones compactas.
-    const syncScale = (contentWidth: number): void => {
-      const nextScale = Math.max(minCardScale, Math.min(maxCardScale, contentWidth / 260));
-      setCardScale(nextScale);
+    // Encaja la carta REAL (260x380) dentro del área disponible por ANCHO y ALTO (contain), para
+    // que nunca se corte ni se salga, sea cual sea el contenedor (también en columnas compactas).
+    const syncScale = (width: number, height: number): void => {
+      const fit = Math.min(width / 260, height / 380);
+      const nextScale = Math.max(minCardScale, Math.min(maxCardScale, fit));
+      if (Number.isFinite(nextScale) && nextScale > 0) setCardScale(nextScale);
     };
 
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (!entry) return;
-      syncScale(entry.contentRect.width);
+      syncScale(entry.contentRect.width, entry.contentRect.height);
     });
     observer.observe(viewport);
-    syncScale(viewport.clientWidth);
+    syncScale(viewport.clientWidth, viewport.clientHeight);
     return () => observer.disconnect();
   }, [maxCardScale, minCardScale]);
 
   return (
-    <aside data-tutorial-id="tutorial-home-inspector" className="relative flex h-full min-h-0 flex-col overflow-visible rounded-2xl border border-cyan-900/45 bg-[linear-gradient(180deg,#041325_0%,#020a14_100%)] p-4 shadow-[0_0_24px_rgba(8,145,178,0.18)]">
+    <aside data-tutorial-id="tutorial-home-inspector" className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-cyan-900/45 bg-[linear-gradient(180deg,#041325_0%,#020a14_100%)] p-4 shadow-[0_0_24px_rgba(8,145,178,0.18)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(34,211,238,0.08),transparent_50%)]" />
-      <h2 className="relative mb-2 text-sm font-black uppercase tracking-widest text-cyan-200">Detalle</h2>
+      <h2 className="relative mb-2 shrink-0 text-sm font-black uppercase tracking-widest text-cyan-200">Detalle</h2>
       {selectedCard ? (
         <div className="relative flex min-h-0 flex-1 flex-col">
-          {useThumbnail ? (
-            // CardThumbnail rellena su caja con proporción de carta: se adapta al contenedor y
-            // nunca se corta ni se sale, sin transform:scale.
-            <div className="mx-auto w-full max-w-[210px] shrink-0">
-              <div className="aspect-[13/19] w-full">
-                <CardThumbnail card={selectedCard} versionTier={selectedCardVersionTier} />
+          {/* La carta ocupa la mayor parte del espacio y se escala para caber ENTERA (ancho y alto).
+              La caja toma el tamaño real escalado (transform:scale no afecta al layout) + origin-top-left. */}
+          <div ref={cardViewportRef} className="flex min-h-0 flex-[2] items-center justify-center overflow-hidden">
+            <div style={{ width: `${Math.round(260 * cardScale)}px`, height: `${Math.round(380 * cardScale)}px` }}>
+              <div className="origin-top-left" style={{ transform: `scale(${cardScale})` }}>
+                <Card
+                  card={selectedCard}
+                  versionTier={selectedCardVersionTier}
+                  level={selectedCardLevel}
+                  xp={selectedCardXp}
+                  masteryPassiveLabel={masteryPassiveLabel}
+                />
               </div>
             </div>
-          ) : (
-            <div ref={cardViewportRef} className="mx-auto flex w-full justify-center overflow-hidden">
-              {/* La caja toma el tamaño REAL escalado (transform: scale no afecta al layout), así la
-                  carta nunca sobresale del contenedor; el origin-top-left la encaja dentro de la caja. */}
-              <div style={{ width: `${Math.round(260 * cardScale)}px`, height: `${Math.round(380 * cardScale)}px` }}>
-                <div className="origin-top-left" style={{ transform: `scale(${cardScale})` }}>
-                  <Card
-                    card={selectedCard}
-                    versionTier={selectedCardVersionTier}
-                    level={selectedCardLevel}
-                    xp={selectedCardXp}
-                    masteryPassiveLabel={masteryPassiveLabel}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-          <p className="mt-2 pb-1 text-lg font-black uppercase text-cyan-100">{selectedCard.name}</p>
-          <p className="mt-1 text-xs uppercase tracking-widest text-cyan-300/80">
+          </div>
+          <p className="mt-2 shrink-0 pb-1 text-base font-black uppercase text-cyan-100 sm:text-lg">{selectedCard.name}</p>
+          <p className="mt-1 shrink-0 text-[11px] uppercase tracking-widest text-cyan-300/80">
             {selectedCard.type} · {selectedCard.faction}
           </p>
           <div className="home-modern-scroll mt-2 min-h-0 flex-1 overflow-y-auto pr-1">
