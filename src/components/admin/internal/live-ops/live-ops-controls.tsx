@@ -1,9 +1,10 @@
 // src/components/admin/internal/live-ops/live-ops-controls.tsx - Átomos de formulario del panel Live-Ops (estilo del juego) + barra de guardado y selector de carta con preview y buscador.
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
 import { CardThumbnail } from "@/components/game/card/CardThumbnail";
+import { ICard } from "@/core/entities/ICard";
 
 interface ILightCard {
   id: string;
@@ -12,7 +13,20 @@ interface ILightCard {
   cost: number;
 }
 
+interface IAdminCard extends ILightCard {
+  description: string;
+  attack: number | null;
+  defense: number | null;
+  renderUrl: string | null;
+  bgUrl: string | null;
+}
+
 const INPUT_CLASS = "w-full border border-cyan-900/60 bg-[#03101c] px-2.5 py-1.5 text-sm text-slate-100 outline-none transition-colors focus:border-cyan-400";
+
+/** Mapea IAdminCard a ICard mínimo para CardThumbnail. */
+function adminToCard(c: IAdminCard): ICard {
+  return { id: c.id, name: c.name, description: c.description, type: c.type as ICard["type"], faction: "NEUTRAL", cost: c.cost, attack: c.attack ?? undefined, defense: c.defense ?? undefined, renderUrl: c.renderUrl ?? undefined, bgUrl: c.bgUrl ?? undefined };
+}
 
 export function LiveOpsField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
   return (
@@ -49,6 +63,7 @@ export function LiveOpsCardPicker({ cardId, onChange }: { cardId: string; onChan
   const [allCards, setAllCards] = useState<ILightCard[]>([]);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+  const [previewCard, setPreviewCard] = useState<IAdminCard | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/catalog/cards").then((r) => r.json()).then((data) => {
@@ -56,19 +71,30 @@ export function LiveOpsCardPicker({ cardId, onChange }: { cardId: string; onChan
     }).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (!cardId) { setPreviewCard(null); return; }
+    fetch(`/api/admin/catalog/cards?id=${cardId}`).then((r) => r.ok ? r.json() : null).then((data) => {
+      if (data && "renderUrl" in data) setPreviewCard(data as IAdminCard);
+    }).catch(() => {});
+  }, [cardId]);
+
   const filtered = useMemo(() => {
     if (!search.trim()) return allCards;
     const q = search.toLowerCase();
     return allCards.filter((c) => c.id.includes(q) || c.name.toLowerCase().includes(q) || c.type.toLowerCase().includes(q));
   }, [allCards, search]);
 
-  const selectedCard = CARD_BY_ID.get(cardId);
   const selectedLight = allCards.find((c) => c.id === cardId);
+  const thumbnailCard = previewCard ? adminToCard(previewCard) : null;
 
   return (
     <div className="flex items-end gap-3">
       <div className="relative aspect-[13/19] w-16 shrink-0">
-        {selectedCard ? <CardThumbnail card={selectedCard} /> : selectedLight ? (
+        {thumbnailCard ? <CardThumbnail card={thumbnailCard} /> : previewCard?.renderUrl ? (
+          <div className="relative h-full w-full overflow-hidden border border-slate-700 bg-slate-900">
+            <Image src={previewCard.renderUrl} alt={previewCard.name} fill className="object-cover" sizes="64px" />
+          </div>
+        ) : selectedLight ? (
           <div className="flex h-full w-full items-center justify-center border border-slate-700 bg-slate-900 text-[9px] text-slate-400 text-center px-1">{selectedLight.name}</div>
         ) : <div className="flex h-full w-full items-center justify-center border border-slate-700 bg-slate-900 text-[9px] text-slate-500">?</div>}
       </div>

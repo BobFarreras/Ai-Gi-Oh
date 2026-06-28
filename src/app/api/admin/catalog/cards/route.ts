@@ -9,8 +9,14 @@ import { consumeAdminMutationRateLimit } from "@/services/admin/api/security/adm
 export async function GET(request: NextRequest) {
   try {
     const context = await createAdminCatalogContext(request);
-    const cards = await context.getSnapshotUseCase.execute();
-    const lightweight = cards.cards.map((c) => ({ id: c.id, name: c.name, type: c.type, cost: c.cost }));
+    const snapshot = await context.getSnapshotUseCase.execute();
+    const cardId = request.nextUrl.searchParams.get("id");
+    if (cardId) {
+      const card = snapshot.cards.find((c) => c.id === cardId);
+      if (!card) return NextResponse.json({ error: "Carta no encontrada" }, { status: 404 });
+      return NextResponse.json(card, { status: 200, headers: context.response.headers });
+    }
+    const lightweight = snapshot.cards.map((c) => ({ id: c.id, name: c.name, type: c.type, cost: c.cost }));
     return NextResponse.json(lightweight, { status: 200, headers: context.response.headers });
   } catch (error) {
     return createApiErrorResponse(error, "No se pudo cargar el catálogo de cartas.");
