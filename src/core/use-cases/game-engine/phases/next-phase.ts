@@ -4,6 +4,8 @@ import { GameRuleError } from "@/core/errors/GameRuleError";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { drawTopDeckCard } from "@/core/use-cases/game-engine/state/player-utils";
 import { createDiscardForHandLimitPendingAction } from "@/core/use-cases/game-engine/state/pending-turn-action-factory";
+import { applyMasteryTurnStart } from "@/core/use-cases/game-engine/phases/internal/mastery-turn-start";
+import { MASTERY_PASSIVE_IDS } from "@/core/services/progression/mastery-passive-ids";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function resetEntitiesForNewTurn(entities: IBoardEntity[], decrementLocks: boolean): IBoardEntity[] {
@@ -39,10 +41,10 @@ interface IMasteryEnergyBonusBreakdown {
 
 function resolveMasteryEnergyBonus(player: IPlayer): IMasteryEnergyBonusBreakdown {
   const hasDefensiveMasteryEntity = player.activeEntities.some(
-    (entity) => entity.mode === "DEFENSE" && entity.card.masteryPassiveSkillId === "passive-defense-energy-plus-1",
+    (entity) => entity.mode === "DEFENSE" && entity.card.masteryPassiveSkillId === MASTERY_PASSIVE_IDS.DEFENSE_ENERGY,
   );
   const hasAttackMasteryEntity = player.activeEntities.some(
-    (entity) => entity.mode === "ATTACK" && entity.card.masteryPassiveSkillId === "passive-attack-energy-plus-1",
+    (entity) => entity.mode === "ATTACK" && entity.card.masteryPassiveSkillId === MASTERY_PASSIVE_IDS.ATTACK_ENERGY,
   );
   return {
     defenseBonus: hasDefensiveMasteryEntity ? 1 : 0,
@@ -86,9 +88,9 @@ export function nextPhase(state: GameState): GameState {
       currentEnergy: isNextPlayerA ? state.playerB.currentEnergy : Math.min(state.playerB.maxEnergy, state.playerB.currentEnergy + turnEnergyGain),
       activeEntities: resetEntitiesForNewTurn(state.playerB.activeEntities, isNextPlayerA),
     };
-    const turnStartResolution = isNextPlayerA
-      ? resolveTurnStartForPlayer(nextPlayerA, nextActivePlayerId)
-      : resolveTurnStartForPlayer(nextPlayerB, nextActivePlayerId);
+    // Aprendizaje Continuo / Regeneración: efectos de pasiva mastery sobre el jugador que arranca turno.
+    const activePlayerWithMastery = applyMasteryTurnStart(isNextPlayerA ? nextPlayerA : nextPlayerB);
+    const turnStartResolution = resolveTurnStartForPlayer(activePlayerWithMastery, nextActivePlayerId);
 
     const nextState: GameState = {
       ...state,

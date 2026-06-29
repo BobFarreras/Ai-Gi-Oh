@@ -10,7 +10,8 @@ import {
 } from "@/core/use-cases/game-engine/actions/internal/play-card-resolution";
 import { resolveReactiveTrapEvent } from "@/core/use-cases/game-engine/effects/internal/trap-trigger-registry";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
-import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
+import { drawTopDeckCard, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
+import { MASTERY_PASSIVE_IDS } from "@/core/services/progression/mastery-passive-ids";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function matchesHandCardReference(card: IPlayer["hand"][number], reference: string): boolean {
@@ -39,11 +40,16 @@ export function playCard(state: GameState, playerId: string, cardId: string, mod
   const boardEntity = createPlayedBoardEntity(state, card, resolvedMode);
   const updatedPlayer: IPlayer = buildPlayerAfterCardPlay(player, card, boardEntity, cardIndex);
 
+  // Caja de Herramientas: al invocar (no SET) una entity con la pasiva, su dueño roba 1 carta.
+  const drawsOnSummon =
+    card.type === "ENTITY" && resolvedMode !== "SET" && card.masteryPassiveSkillId === MASTERY_PASSIVE_IDS.DRAW_ON_SUMMON;
+  const playerAfterSummon = drawsOnSummon ? drawTopDeckCard(updatedPlayer) : updatedPlayer;
+
   const nextState = {
     ...state,
     hasNormalSummonedThisTurn: card.type === "ENTITY" ? true : state.hasNormalSummonedThisTurn,
-    playerA: isPlayerA ? updatedPlayer : opponent,
-    playerB: isPlayerA ? opponent : updatedPlayer,
+    playerA: isPlayerA ? playerAfterSummon : opponent,
+    playerB: isPlayerA ? opponent : playerAfterSummon,
   };
 
   const withPlayLog = appendCombatLogEvent(nextState, playerId, "CARD_PLAYED", {
