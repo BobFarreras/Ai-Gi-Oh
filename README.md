@@ -1,8 +1,8 @@
-<!-- README.md - Guía principal de AI-GI-OH como producto en producción v1.5.0. -->
+<!-- README.md - Guía principal de AI-GI-OH como producto en producción v1.6.0. -->
 # AI-GI-OH
 
 <p align="center">
-  <strong>Producto en producción · v1.5.0</strong><br/>
+  <strong>Producto en producción · v1.6.0</strong><br/>
   Juego táctico de cartas con motor desacoplado, arquitectura por capas y flujo profesional de calidad.
 </p>
 
@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.5.0-06b6d4">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.6.0-06b6d4">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black">
   <img alt="React" src="https://img.shields.io/badge/React-19-149eca">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-Strict-3178c6">
@@ -73,7 +73,7 @@ Producción actual:
   <tr>
     <td><img src="./public/assets/readme/card-render-showcase.webp" alt="Render de carta AI-GI-OH" width="240"></td>
     <td><img src="./public/assets/readme/technical-architecture-overview.webp" alt="Carta técnica AI-GI-OH" width="240"></td>
-    <td><img src="./public/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png" alt="Oponente BigLog" width="240"></td>
+    <td><img src="./public/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.webp" alt="Oponente BigLog" width="240"></td>
     <td><img src="./public/assets/renders/executions/exec-fusion-gemgpt.webp" alt="Fusión GemGPT" width="240"></td>
   </tr>
 </table>
