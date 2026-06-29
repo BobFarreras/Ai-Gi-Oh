@@ -27,8 +27,9 @@ export function CardFrame({
   const levelMetrics = getCardLevelProgressMetrics(level, xp);
   const levelProgressWidth = `${Math.round(levelMetrics.progressRatio * 100)}%`;
   const isMasteryTier = versionTier >= 5;
+  // El poder se integra en la descripción siempre que haya pasiva: de maestría (V5) o innata (desde V0).
   const descriptionText =
-    isMasteryTier && masteryPassiveLabel ? `${masteryPassiveLabel}\n\n${card.description}` : card.description;
+    masteryPassiveLabel ? `${masteryPassiveLabel}\n\n${card.description}` : card.description;
 
   return (
     <>

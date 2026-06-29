@@ -24,8 +24,8 @@ export function applyCardProgressionToCard(card: ICard, progress: IPlayerCardPro
     level,
     xp: progress?.xp ?? 0,
     masteryPassiveSkillId,
-    // La etiqueta se muestra siempre que haya pasiva (innata desde V1 o de maestría a V5).
-    masteryPassiveLabel: masteryPassiveSkillId ? resolveMasteryPassiveLabel(masteryPassiveSkillId) : null,
+    // La etiqueta se muestra siempre que haya pasiva (innata desde V0 o de maestría a V5), con la magnitud de su versión.
+    masteryPassiveLabel: masteryPassiveSkillId ? resolveMasteryPassiveLabel(masteryPassiveSkillId, versionTier) : null,
   };
 }
 

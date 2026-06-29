@@ -27,11 +27,15 @@ export function HomeCardInspector({
 }: HomeCardInspectorProps) {
   const cardViewportRef = useRef<HTMLDivElement | null>(null);
   const [cardScale, setCardScale] = useState(0.76);
-  const masteryPassiveLabel = resolveMasteryPassiveLabel(selectedCardMasteryPassiveSkillId);
-  // El poder se explica en el detalle tanto para pasivas de maestría (V5) como innatas (activas desde V0).
+  const masteryPassiveLabel = resolveMasteryPassiveLabel(selectedCardMasteryPassiveSkillId, selectedCardVersionTier);
+  // El poder se integra en la descripción tanto para pasivas de maestría (V5) como innatas (desde V0).
   const detailPassiveLabel = resolveMasteryPassiveLabel(
     selectedCardMasteryPassiveSkillId ?? selectedCard?.masteryPassiveSkillId ?? null,
+    selectedCardVersionTier,
   );
+  const detailDescription = detailPassiveLabel
+    ? `${detailPassiveLabel}\n\n${selectedCard?.description ?? ""}`
+    : (selectedCard?.description ?? "");
 
   useEffect(() => {
     const viewport = cardViewportRef.current;
@@ -81,12 +85,7 @@ export function HomeCardInspector({
             {selectedCard.type} · {selectedCard.faction}
           </p>
           <div className="home-modern-scroll mt-2 min-h-0 flex-1 overflow-y-auto pr-1">
-            {detailPassiveLabel ? (
-              <p className="mb-2 rounded-md border border-fuchsia-700/40 bg-fuchsia-950/25 p-2 text-[13px] font-medium leading-relaxed text-fuchsia-100">
-                {detailPassiveLabel}
-              </p>
-            ) : null}
-            <p className="whitespace-pre-line text-sm leading-relaxed text-slate-200">{selectedCard.description}</p>
+            <p className="whitespace-pre-line text-sm leading-relaxed text-slate-200">{detailDescription}</p>
           </div>
         </div>
       ) : (
