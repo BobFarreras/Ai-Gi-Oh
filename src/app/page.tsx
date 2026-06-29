@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import { AnimatePresence, motion, Variants } from "framer-motion";
+import { CommunityLinks } from "@/components/landing/CommunityLinks";
 import { CrawlText } from "@/components/landing/CrawlText";
 import { CyberBackground } from "@/components/landing/CyberBackground";
 import { HeroCards } from "@/components/landing/HeroCards";
@@ -95,6 +96,10 @@ export default function HomePage() {
                     Conexión Red
                   </Link>
                 </motion.footer>
+
+                <motion.div variants={itemVariants} className="mt-4 flex-shrink-0">
+                  <CommunityLinks onAction={playButtonClick} />
+                </motion.div>
               </motion.div>
             ) : null}
           </AnimatePresence>
