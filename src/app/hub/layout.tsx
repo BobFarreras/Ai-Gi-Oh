@@ -8,14 +8,16 @@ import { getDailyLoginStatus } from "@/services/progression/get-daily-login-stat
 import { getPlayerMissions } from "@/services/progression/get-player-missions";
 import { getEventOverview } from "@/services/progression/get-event-overview";
 import { getActivePromotions } from "@/services/progression/get-active-promotions";
+import { getOnboardingCompleted } from "@/services/hub/get-onboarding-completed";
 
 export default async function HubLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const [lobbyData, dailyLoginStatus, missions, eventOverview, promotions] = await Promise.all([
+  const [lobbyData, dailyLoginStatus, missions, eventOverview, promotions, onboardingCompleted] = await Promise.all([
     getMultiplayerLobbyData(),
     getDailyLoginStatus(),
     getPlayerMissions(),
     getEventOverview(),
     getActivePromotions(),
+    getOnboardingCompleted(),
   ]);
   const viewport = <div className="relative min-h-dvh overflow-hidden">{children}</div>;
 
@@ -29,10 +31,15 @@ export default async function HubLayout({ children }: Readonly<{ children: React
       activeDeckIds={lobbyData.activeDeckIds}
     >
       {viewport}
-      <DailyLoginProvider initialStatus={dailyLoginStatus}>
-        <DailyLoginGate />
-        <ProgressionDock missions={missions} eventOverview={eventOverview} promotions={promotions} />
-      </DailyLoginProvider>
+      {/* El dock y la recompensa diaria solo cuando el jugador ya pasó el onboarding: durante la
+          narración inicial y el tutorial NO deben aparecer. Tras completar el tutorial, el
+          router.refresh() re-ejecuta este layout y se montan (la diaria salta ya en el hub). */}
+      {onboardingCompleted ? (
+        <DailyLoginProvider initialStatus={dailyLoginStatus}>
+          <DailyLoginGate />
+          <ProgressionDock missions={missions} eventOverview={eventOverview} promotions={promotions} />
+        </DailyLoginProvider>
+      ) : null}
     </MultiplayerPresenceProvider>
   );
 }

@@ -1,5 +1,5 @@
 -- docs/supabase/sql/070_seed_fusion_cards_batch2.sql - Segundo lote de fusiones: CursHost, KuberLinnet, RustyFox, Super-C.
--- Cada fusión = carta FUSION (resultado, 3000 atk / 2000 def) + carta EXECUTION que la invoca (FUSION_SUMMON, 2 materiales).
+-- Cada fusión = carta FUSION (resultado, 3000 atk / 2000 def) + carta EXECUTION que la invoca (FUSION_SUMMON, 2 materiales) + listing LEGENDARY.
 begin;
 
 insert into public.cards_catalog
@@ -38,5 +38,19 @@ on conflict (id) do update set
   bg_url = excluded.bg_url, render_url = excluded.render_url, effect = excluded.effect,
   fusion_recipe_id = excluded.fusion_recipe_id, fusion_material_ids = excluded.fusion_material_ids,
   fusion_energy_requirement = excluded.fusion_energy_requirement, is_active = excluded.is_active, updated_at = now();
+
+-- Listings de mercado: fusiones → LEGENDARY, compilers → RARE
+insert into public.market_card_listings (id, card_id, rarity, price_nexus, stock, is_available) values
+('listing-fusion-curshost', 'fusion-curshost', 'LEGENDARY', 1200, null, true),
+('listing-fusion-kuberlinnet', 'fusion-kuberlinnet', 'LEGENDARY', 1200, null, true),
+('listing-fusion-rustyfox', 'fusion-rustyfox', 'LEGENDARY', 1200, null, true),
+('listing-fusion-super-c', 'fusion-super-c', 'LEGENDARY', 1200, null, true),
+('listing-exec-fusion-curshost', 'exec-fusion-curshost', 'RARE', 300, null, true),
+('listing-exec-fusion-kuberlinnet', 'exec-fusion-kuberlinnet', 'RARE', 300, null, true),
+('listing-exec-fusion-rustyfox', 'exec-fusion-rustyfox', 'RARE', 300, null, true),
+('listing-exec-fusion-super-c', 'exec-fusion-super-c', 'RARE', 300, null, true)
+on conflict (id) do update set
+  card_id = excluded.card_id, rarity = excluded.rarity, price_nexus = excluded.price_nexus,
+  stock = excluded.stock, is_available = excluded.is_available;
 
 commit;

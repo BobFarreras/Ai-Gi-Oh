@@ -22,4 +22,6 @@ export interface IProgressionAdminRepository {
   deleteMission(id: string): Promise<void>;
   /** Elimina una regla de puntos de un evento (clave compuesta evento+acción). */
   deleteEventRule(eventId: string, actionType: string): Promise<void>;
+  /** Elimina un item de la tienda de evento por id. */
+  deleteEventShopItem(id: string): Promise<void>;
 }

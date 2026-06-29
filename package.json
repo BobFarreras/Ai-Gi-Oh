@@ -1,6 +1,6 @@
 {
   "name": "ai-gi-oh",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -30,6 +30,8 @@
     "supabase:env:apply": "node scripts/supabase/apply-local-env-to-dotenv-local.mjs",
     "supabase:env:restore": "node scripts/supabase/restore-dotenv-local.mjs",
     "supabase:bootstrap:local": "node scripts/supabase/bootstrap-local.mjs",
+    "db:reset": "node scripts/supabase/reset-local.mjs",
+    "db:seed:dump": "node scripts/supabase/dump-seed.mjs",
     "perf:baseline:mobile": "node scripts/performance/run-mobile-baseline.mjs",
     "perf:baseline:mobile:realistic": "node scripts/performance/run-mobile-baseline.mjs --profile=realistic",
     "perf:baseline:mobile:stress": "node scripts/performance/run-mobile-baseline.mjs --profile=stress",

@@ -36,7 +36,7 @@ describe("LogoutButton", () => {
     fireEvent.click(screen.getByRole("button", { name: "Desconectar del Hub" }));
     fireEvent.click(screen.getByRole("button", { name: "Confirmar cierre de sesión" }));
     await waitFor(() => expect(logoutCurrentUser).toHaveBeenCalledTimes(1));
-    expect(push).toHaveBeenCalledWith("/login");
+    expect(push).toHaveBeenCalledWith("/");
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 

@@ -6,6 +6,32 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-06-29
+
+### Added
+- Desplegable de estadísticas en el HUD ("Estado del Arquitecto"): ELO + liga, saldo de Nexus y nº de cartas en colección, con carga lazy (endpoint `/api/player/hud-stats`).
+- Sincronización de BD para contribuidores: `supabase/seed.sql` idempotente con el contenido esencial + comandos `pnpm db:reset` (regenera migraciones + reset) y `pnpm db:seed:dump` (regenera el seed desde la BD fuente).
+- Auditoría de economía documentada (`docs/auditoria-economia-cartas.md`) y rebalanceo del catálogo: rareza coherente, precios corregidos, stats redondeados a rejilla y muros con coste ajustado (migraciones 074-077).
+- Publicación automática de la Release de GitHub al pushear un tag `v*` (workflow `release-on-tag`).
+- Onboarding: la recompensa diaria se abre con un leve retardo al llegar al hub.
+
+### Changed
+- El mercado se sirve siempre desde la BD: eliminado el fallback al mock y sus 4 consultas por arranque (mejora la latencia de login/hub).
+- Login, registro y landing redirigen al hub si ya hay sesión; el logout vuelve a la landing y limpia la sesión.
+- `.env*.example`, README, CONTRIBUTING y guía de despliegue sincronizados (mapa de variables de Vercel, comandos de BD).
+
+### Fixed
+- Tienda de eventos responsive en móvil: las cartas ya no se recortan.
+- Card picker del admin: lee del catálogo real (no del mock) y sin `setState` síncrono en efecto.
+- `getCurrentSession` devuelve `null` sin sesión en vez de lanzar (evita crash en `/login`).
+- Onboarding: dock y recompensa diaria ocultos durante la narración/tutorial.
+- Login: no rompe la UI ante respuestas no-JSON.
+- IDs de la tienda de eventos derivados de la carta seleccionada.
+
+### Security
+- Rate limiting distribuido real en producción (Upstash) y límite de login por email reducido de 8 a 4 intentos / 10 min.
+- `cards-by-ids` usa la sesión autenticada (RLS) en lugar de la service-role key.
+
 ## [1.5.0] - 2026-06-26
 
 ### Added
@@ -32,6 +58,7 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.0.0...v1.5.0
 [1.0.0]: https://github.com/BobFarreras/Ai-Gi-Oh/releases/tag/v1.0.0

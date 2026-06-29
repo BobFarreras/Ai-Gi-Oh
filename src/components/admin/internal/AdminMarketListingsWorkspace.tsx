@@ -39,8 +39,8 @@ export function AdminMarketListingsWorkspace({ cards, cardById, listingByCardId,
   return (
     <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
       <section className="flex min-h-0 flex-col rounded-2xl border border-cyan-800/35 bg-[#031020]/50 p-3">
-        <div className="mb-3 grid grid-cols-3 gap-2">
-          <input type="search" aria-label="Buscar carta en market" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por id o nombre..." className="rounded-md border border-slate-600 bg-slate-900 p-2 text-xs text-slate-100" />
+        <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <input type="search" aria-label="Buscar carta en market" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por id o nombre..." className="col-span-2 rounded-md border border-slate-600 bg-slate-900 p-2 text-xs text-slate-100 sm:col-span-1" />
           <select aria-label="Filtrar cartas market por tipo" value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as CardType | "ALL")} className="rounded-md border border-slate-600 bg-slate-900 p-2 text-xs text-slate-100"><option value="ALL">Todos</option><option value="ENTITY">Entity</option><option value="EXECUTION">Execution</option><option value="TRAP">Trap</option><option value="FUSION">Fusion</option><option value="ENVIRONMENT">Environment</option></select>
           <select aria-label="Filtrar cartas market por disponibilidad" value={availabilityFilter} onChange={(event) => setAvailabilityFilter(event.target.value as "ALL" | "ACTIVE" | "INACTIVE")} className="rounded-md border border-slate-600 bg-slate-900 p-2 text-xs text-slate-100"><option value="ALL">Todas</option><option value="ACTIVE">Con listing activo</option><option value="INACTIVE">Sin listing/inactivas</option></select>
         </div>
@@ -64,7 +64,7 @@ export function AdminMarketListingsWorkspace({ cards, cardById, listingByCardId,
       </section>
 
       <div className="grid min-h-0 gap-3 grid-rows-[minmax(0,1fr)_auto]">
-        <HomeCardInspector selectedCard={selectedCard} selectedCardVersionTier={0} selectedCardLevel={0} selectedCardXp={0} selectedCardMasteryPassiveSkillId={null} minCardScale={0.62} maxCardScale={0.98} />
+        <HomeCardInspector selectedCard={selectedCard} selectedCardVersionTier={0} selectedCardLevel={0} selectedCardXp={0} selectedCardMasteryPassiveSkillId={null} minCardScale={0.5} maxCardScale={0.98} />
         <section className="rounded-2xl border border-slate-700 bg-slate-900/70 p-3 text-xs text-slate-200">
           <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-cyan-200">Listing</p>
           <div className="grid gap-2">

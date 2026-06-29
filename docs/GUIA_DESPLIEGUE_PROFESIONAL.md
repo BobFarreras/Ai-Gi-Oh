@@ -70,6 +70,26 @@ Configurar workflows con estos gates:
 2. Revisar variables de entorno:
    - separar dev/staging/prod,
    - no exponer secretos en cliente.
+
+### 6.1 Sincronización de variables con Vercel
+
+Fuente de verdad de qué lee el código: `process.env.*` en `src/`. Mapa de qué configurar en Vercel:
+
+| Variable | ¿Requerida? | Default si falta | Notas de prod (Vercel) |
+|---|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅ Sí | — (la app falla) | Pública (build-time). |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ Sí | — (la app falla) | Pública (build-time). |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ Sí | — (admin/RPC fallan) | **Secreto**: márcala como *Sensitive*. Si Vercel marca "Needs Attention", revísala/rota. |
+| `ADMIN_PORTAL_SLUG` | ✅ Sí | — (portal admin 404) | Secreto (ruta del portal). |
+| `UPSTASH_REDIS_REST_URL` + `_TOKEN` | ⚠️ Recomendada | in-memory por instancia | **Sin esto el rate limiting NO protege en serverless** (cada lambda tiene su contador y se reinicia en cold start). |
+| `*_RATE_LIMIT_REQUIRE_DISTRIBUTED` | ⚠️ Recomendada | `false` | En prod → `true` (exige Upstash). Requiere tener Upstash configurado. |
+| `*_RATE_LIMIT_FAIL_CLOSED` | ⚠️ Recomendada | `false` (fail-open) | En prod → `true` (si el limiter falla, bloquea). |
+| `SECURITY_RATE_LIMIT_DISTRIBUTED_TIMEOUT_MS` | Opcional | `1200` | Prod sugerido `800`. |
+| `ANALYTICS_ENABLED` + `NEXT_PUBLIC_ANALYTICS_ENABLED` | Opcional | `false` | Ambas en `true` para activar telemetría. Hoy en prod están sin definir ⇒ analytics **desactivado**. |
+| `DUEL_COMPLETION_TOKEN_SECRET` | Opcional | usa `SUPABASE_SERVICE_ROLE_KEY` | — |
+| `TUTORIAL_FINAL_REWARD_NEXUS` | Opcional | `600` | — |
+
+> ⚠️ Estado actual detectado: en Vercel los flags de rate limit están en `false` y **no hay Upstash configurado** ⇒ el rate limiting es efectivamente inerte en producción. Para protección real: crear una BD Upstash Redis, añadir `UPSTASH_REDIS_REST_URL/TOKEN` y poner los `*_REQUIRE_DISTRIBUTED` y `*_FAIL_CLOSED` a `true` (valores ya reflejados en `.env.production.example`).
 3. Validar errores controlados:
    - páginas de error,
    - manejo de excepciones sin `console.log` genérico en producción.

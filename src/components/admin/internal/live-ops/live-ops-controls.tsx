@@ -1,11 +1,32 @@
-// src/components/admin/internal/live-ops/live-ops-controls.tsx - Átomos de formulario del panel Live-Ops (estilo del juego) + barra de guardado y selector de carta con preview.
+// src/components/admin/internal/live-ops/live-ops-controls.tsx - Átomos de formulario del panel Live-Ops (estilo del juego) + barra de guardado y selector de carta con preview y buscador.
 "use client";
 
-import { useState } from "react";
-import { CARD_CATALOG, CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 import { CardThumbnail } from "@/components/game/card/CardThumbnail";
+import { ICard } from "@/core/entities/ICard";
+
+interface ILightCard {
+  id: string;
+  name: string;
+  type: string;
+  cost: number;
+}
+
+interface IAdminCard extends ILightCard {
+  description: string;
+  attack: number | null;
+  defense: number | null;
+  renderUrl: string | null;
+  bgUrl: string | null;
+}
 
 const INPUT_CLASS = "w-full border border-cyan-900/60 bg-[#03101c] px-2.5 py-1.5 text-sm text-slate-100 outline-none transition-colors focus:border-cyan-400";
+
+/** Mapea IAdminCard a ICard mínimo para CardThumbnail. */
+function adminToCard(c: IAdminCard): ICard {
+  return { id: c.id, name: c.name, description: c.description, type: c.type as ICard["type"], faction: "NEUTRAL", cost: c.cost, attack: c.attack ?? undefined, defense: c.defense ?? undefined, renderUrl: c.renderUrl ?? undefined, bgUrl: c.bgUrl ?? undefined };
+}
 
 export function LiveOpsField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
   return (
@@ -39,20 +60,80 @@ export function LiveOpsToggle({ label, checked, onChange }: { label: string; che
 }
 
 export function LiveOpsCardPicker({ cardId, onChange }: { cardId: string; onChange: (cardId: string) => void }) {
-  const card = CARD_BY_ID.get(cardId);
+  const [allCards, setAllCards] = useState<ILightCard[]>([]);
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const [previewCard, setPreviewCard] = useState<IAdminCard | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/catalog/cards").then((r) => r.json()).then((data) => {
+      if (Array.isArray(data)) setAllCards(data);
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!cardId) return;
+    let active = true;
+    fetch(`/api/admin/catalog/cards?id=${cardId}`).then((r) => r.ok ? r.json() : null).then((data) => {
+      if (active && data && "renderUrl" in data) setPreviewCard(data as IAdminCard);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [cardId]);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return allCards;
+    const q = search.toLowerCase();
+    return allCards.filter((c) => c.id.includes(q) || c.name.toLowerCase().includes(q) || c.type.toLowerCase().includes(q));
+  }, [allCards, search]);
+
+  const selectedLight = allCards.find((c) => c.id === cardId);
+  // Preview derivado: solo vale si corresponde a la carta seleccionada actual (evita stale al cambiar de carta o vaciar).
+  const activePreview = previewCard && previewCard.id === cardId ? previewCard : null;
+  const thumbnailCard = activePreview ? adminToCard(activePreview) : null;
+
   return (
     <div className="flex items-end gap-3">
-      <div className="relative aspect-[13/19] w-16 shrink-0">
-        {card ? <CardThumbnail card={card} /> : <div className="flex h-full w-full items-center justify-center border border-slate-700 bg-slate-900 text-[9px] text-slate-500">?</div>}
+      <div className="relative aspect-[13/19] w-20 shrink-0">
+        {thumbnailCard ? <CardThumbnail card={thumbnailCard} /> : activePreview?.renderUrl ? (
+          <div className="relative h-full w-full overflow-hidden border border-slate-700 bg-slate-900">
+            <Image src={activePreview.renderUrl} alt={activePreview.name} fill className="object-cover" sizes="80px" />
+          </div>
+        ) : selectedLight ? (
+          <div className="flex h-full w-full items-center justify-center border border-slate-700 bg-slate-900 text-[9px] text-slate-400 text-center px-1">{selectedLight.name}</div>
+        ) : <div className="flex h-full w-full items-center justify-center border border-slate-700 bg-slate-900 text-[9px] text-slate-500">?</div>}
       </div>
       <label className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-500/70">Carta</span>
-        <select className={INPUT_CLASS} value={cardId} onChange={(event) => onChange(event.target.value)}>
-          <option value="">— Selecciona —</option>
-          {CARD_CATALOG.map((entry) => (
-            <option key={entry.id} value={entry.id}>{entry.name} ({entry.type})</option>
-          ))}
-        </select>
+        <input
+          className={INPUT_CLASS}
+          placeholder="Buscar carta..."
+          value={open ? search : (selectedLight?.name ?? cardId)}
+          onFocus={() => { setOpen(true); setSearch(""); }}
+          onBlur={() => { setTimeout(() => setOpen(false), 200); }}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        {open && (
+          <div className="relative z-50 max-h-60 overflow-y-auto border border-cyan-900/60 bg-[#03101c]">
+            <button
+              type="button"
+              className={`w-full px-2.5 py-1.5 text-left text-sm transition-colors ${cardId === "" ? "bg-cyan-500/20 text-cyan-300" : "text-slate-400 hover:bg-cyan-500/10"}`}
+              onMouseDown={() => { onChange(""); setSearch(""); }}
+            >
+              — Selecciona —
+            </button>
+            {filtered.map((entry) => (
+              <button
+                type="button"
+                key={entry.id}
+                className={`w-full px-2.5 py-1.5 text-left text-sm transition-colors ${entry.id === cardId ? "bg-cyan-500/20 text-cyan-300" : "text-slate-300 hover:bg-cyan-500/10"}`}
+                onMouseDown={() => { onChange(entry.id); setSearch(""); }}
+              >
+                {entry.name} <span className="text-[10px] text-slate-500">({entry.type} c{entry.cost})</span>
+              </button>
+            ))}
+            {filtered.length === 0 && <div className="px-2.5 py-2 text-xs text-slate-500">Sin resultados</div>}
+          </div>
+        )}
       </label>
     </div>
   );

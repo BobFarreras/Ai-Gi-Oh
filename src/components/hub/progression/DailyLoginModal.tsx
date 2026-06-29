@@ -1,10 +1,10 @@
 // src/components/hub/progression/DailyLoginModal.tsx - Modal cinemático de recompensa diaria: hero con la recompensa del día seleccionado (Card real si es carta), días clicables, racha y burst al reclamar.
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { IDailyLoginClaimResult, ILoginRewardDay, ILoginStreakStatus } from "@/core/entities/progression/ILoginStreak";
-import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
+import { ICard } from "@/core/entities/ICard";
 import { Card } from "@/components/game/card/Card";
 import { track } from "@/services/analytics/client/analytics-buffer";
 
@@ -75,7 +75,18 @@ export function DailyLoginModal({ status, onClaimed, onClose }: IDailyLoginModal
   const burst = result?.applied === true;
 
   const selectedDay: ILoginRewardDay | undefined = status.calendar.find((day) => day.dayIndex === selectedDayIndex);
-  const selectedCard = selectedDay?.rewardType === "CARD" && selectedDay.rewardCardId ? CARD_BY_ID.get(selectedDay.rewardCardId) : null;
+  const [selectedCard, setSelectedCard] = useState<ICard | null>(null);
+
+  useEffect(() => {
+    const cardId = selectedDay?.rewardType === "CARD" ? selectedDay.rewardCardId : null;
+    if (!cardId) { setSelectedCard(null); return; }
+    const controller = new AbortController();
+    fetch(`/api/catalog/cards-by-ids?ids=${cardId}`, { signal: controller.signal })
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data) && data.length > 0) setSelectedCard(data[0] as ICard); else setSelectedCard(null); })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [selectedDay]);
   const isSelectedClaimed = selectedDayIndex <= claimedThrough;
   const heroTone: "amber" | "cyan" | "emerald" = isSelectedClaimed ? "emerald" : selectedCard ? "cyan" : "amber";
   const isViewingToday = selectedDayIndex === status.pendingDayIndex;

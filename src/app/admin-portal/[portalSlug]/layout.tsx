@@ -31,10 +31,11 @@ export default async function AdminPortalLayout({ children, params }: AdminPorta
     notFound();
   }
   return (
-    <main className="min-h-dvh bg-slate-950 px-3 py-3 text-slate-100 md:px-4">
-      <section className="mx-auto flex h-[calc(100dvh-1.5rem)] w-full min-h-0 gap-3">
+    <main className="min-h-dvh bg-slate-950 px-2 py-2 text-slate-100 md:px-4 md:py-3">
+      {/* Móvil: columna (contenido + bottom bar). Desktop: fila (sidebar + contenido). */}
+      <section className="mx-auto flex h-[calc(100dvh-1rem)] w-full min-h-0 flex-col gap-2 md:h-[calc(100dvh-1.5rem)] md:flex-row md:gap-3">
         <AdminSidebarNav portalSlug={resolvedParams.portalSlug} />
-        <div className="min-h-0 flex-1 rounded-xl border border-slate-700 bg-slate-900/70 p-3 md:p-4">{children}</div>
+        <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-700 bg-slate-900/70 p-2 md:p-4">{children}</div>
       </section>
     </main>
   );

@@ -155,6 +155,10 @@ pnpm dev
 | `supabase:env:local` | Genera `.env.local.supabase` con keys locales |
 | `supabase:env:apply` | Aplica `.env.local.supabase` sobre `.env.local` (con backup) |
 | `supabase:env:restore` | Restaura `.env.local` original |
+| `db:reset` | Regenera migraciones desde `docs/supabase/sql` + `supabase db reset --local`. Úsalo **tras cada `git pull`** para que tu BD quede igual al repo (borra datos locales de prueba). |
+| `db:seed:dump` | Regenera `supabase/seed.sql` desde la BD fuente (solo mantenedores). |
+
+> **Tras `git pull` con cambios de BD:** ejecuta `pnpm db:reset`. `supabase start` solo aplica migraciones en el primer arranque, así que sin un reset tu Docker se queda desactualizado (faltan tablas/contenido nuevos).
 
 ## Seguridad de secretos
 
@@ -173,7 +177,7 @@ pnpm build
 
 ## Notas para cambios de base de datos
 
-1. SQL canónico del proyecto: `docs/supabase/sql`.
-2. Si añades una nueva fase SQL, usa prefijo incremental (`051_...sql`, `052_...sql`, etc.). El último archivo existente es `050_phase_grant_api_roles_table_privileges.sql`.
+1. **Estructura e historial** = SQL canónico en `docs/supabase/sql`. Si añades una fase, usa prefijo incremental continuando el último archivo existente (p. ej. tras `077_...` va `078_...`).
+2. **Contenido editable del juego** (precios/rareza de mercado, sobres, eventos, misiones, promos, calendario de login) = `supabase/seed.sql`. Son UPSERTs idempotentes que corren **después** de las migraciones (capa que gana). No incluye `cards_catalog` (lo gobiernan las migraciones) ni datos de jugador. Edítalo a mano o regenéralo con `pnpm db:seed:dump`.
 3. **Evita funciones de auth dependientes de versión en políticas RLS** (`auth.role()`, `auth.email()`): cambian entre versiones de Supabase y pueden hacer fallar el SELECT. Para "cualquier usuario autenticado" usa `to authenticated using (true)`; para "el dueño" usa `auth.uid() = <columna>`.
-4. Ejecuta de nuevo `pnpm supabase:prepare:migrations` para validar que el bootstrap local sigue siendo reproducible.
+4. Ejecuta `pnpm db:reset` para validar que el bootstrap local (migraciones + seed) sigue siendo reproducible.

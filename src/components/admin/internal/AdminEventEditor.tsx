@@ -1,11 +1,9 @@
 // src/components/admin/internal/AdminEventEditor.tsx - Editor completo de un evento: datos básicos, reglas de puntos (cómo se ganan) y tienda de canje (con cartas reales).
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { IAdminEvent, IAdminEventRule, IAdminEventShopItem, IAdminMissionDefinition } from "@/core/entities/progression/ILiveOpsAdmin";
-import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
 import { ACTION_OBJECTIVE_TYPES, MISSION_OBJECTIVE_TYPES, OBJECTIVE_TYPES_WITH_PARAM, progressionActionLabel } from "@/core/services/progression/action-labels";
-import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { AdminEventChallengeRow } from "./AdminEventChallengeRow";
 import { LiveOpsField, LiveOpsNumber, LiveOpsToggle, LiveOpsSaveBar, LiveOpsCardPicker } from "./live-ops/live-ops-controls";
 import { saveLiveOps, deleteLiveOps } from "./live-ops/save-live-ops";
@@ -40,17 +38,34 @@ function RuleRow({ eventId, rule, onDelete }: { eventId: string; rule: IAdminEve
   );
 }
 
-function ShopItemRow({ item }: { item: IAdminEventShopItem }) {
+/** Deriva el id del item desde la carta: `${evento}-${carta}`. Así el id nunca queda desincronizado del contenido. */
+function deriveShopItemId(eventId: string, cardId: string, fallbackId: string): string {
+  return cardId ? `${eventId}-${cardId}` : fallbackId;
+}
+
+function ShopItemRow({ item, eventId, wasPersisted }: { item: IAdminEventShopItem; eventId: string; wasPersisted: boolean }) {
   const [draft, setDraft] = useState<IAdminEventShopItem>(item);
+  // Último id realmente persistido (null si el item aún no se ha guardado nunca).
+  const [lastSavedId, setLastSavedId] = useState<string | null>(wasPersisted ? item.id : null);
+
   function update<K extends keyof IAdminEventShopItem>(key: K, value: IAdminEventShopItem[K]) {
     setDraft((prev) => ({ ...prev, [key]: value }));
   }
-  const card = CARD_BY_ID.get(draft.cardId);
+
+  const derivedId = deriveShopItemId(eventId, draft.cardId, draft.id);
+
+  async function handleSave(): Promise<boolean> {
+    if (!draft.cardId) return false; // sin carta no hay item válido que tarifar
+    const ok = await saveLiveOps("eventShopItem", { ...draft, id: derivedId });
+    if (!ok) return false;
+    // Si la carta cambió, el id cambia: borra la fila anterior para no dejar huérfanos.
+    if (lastSavedId && lastSavedId !== derivedId) await deleteLiveOps("eventShopItem", lastSavedId);
+    setLastSavedId(derivedId);
+    return true;
+  }
+
   return (
     <div className="flex gap-3 border border-fuchsia-900/40 bg-[#0a0716]/70 p-3">
-      <div className="relative aspect-[13/19] w-20 shrink-0">
-        {card ? <CardThumbnail card={card} /> : <div className="flex h-full w-full items-center justify-center border border-slate-700 bg-slate-900 text-[9px] text-slate-500">?</div>}
-      </div>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <LiveOpsCardPicker cardId={draft.cardId} onChange={(value) => update("cardId", value)} />
         <div className="grid grid-cols-2 gap-2">
@@ -59,7 +74,7 @@ function ShopItemRow({ item }: { item: IAdminEventShopItem }) {
         </div>
         <div className="flex items-center justify-between gap-2">
           <LiveOpsToggle label="Item" checked={draft.isActive} onChange={(value) => update("isActive", value)} />
-          <LiveOpsSaveBar onSave={() => saveLiveOps("eventShopItem", draft)} />
+          <LiveOpsSaveBar onSave={handleSave} />
         </div>
       </div>
     </div>
@@ -93,8 +108,13 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
     await deleteLiveOps("eventRule", { eventId: draft.id, actionType });
     setRules((prev) => prev.filter((rule) => rule.actionType !== actionType));
   }
+  // ids que ya existían en la BD al cargar: sirven para que ShopItemRow sepa si debe limpiar
+  // la fila anterior cuando se cambia la carta (y por tanto el id derivado).
+  const initialItemIds = useMemo(() => new Set((event.items ?? []).map((item) => item.id)), [event.items]);
+
   function addItem() {
-    const id = `${draft.id}-item-${Math.random().toString(36).slice(2, 7)}`;
+    // id temporal hasta que se elija carta; al guardar, ShopItemRow lo sustituye por `${evento}-${carta}`.
+    const id = `${draft.id}-nuevo-${Math.random().toString(36).slice(2, 7)}`;
     setItems((prev) => [...prev, { id, eventId: draft.id, cardId: "", costPoints: 100, perPlayerLimit: 1, sortOrder: prev.length + 1, isActive: true }]);
   }
   function addMission(objectiveType: string) {
@@ -191,7 +211,7 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
           <button type="button" onClick={addItem} className="h-8 border border-fuchsia-500/60 px-3 font-mono text-[11px] font-bold uppercase text-fuchsia-200 hover:bg-fuchsia-500/10">+ Añadir carta</button>
         </div>
         <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
-          {items.map((item) => <ShopItemRow key={item.id} item={item} />)}
+          {items.map((item) => <ShopItemRow key={item.id} item={item} eventId={draft.id} wasPersisted={initialItemIds.has(item.id)} />)}
         </div>
       </div>
     </div>

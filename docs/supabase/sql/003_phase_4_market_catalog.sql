@@ -103,7 +103,7 @@ insert into public.market_card_listings (id, card_id, rarity, price_nexus, stock
 ('listing-exec-framework-atk-300', 'exec-framework-atk-300', 'COMMON', 75, null, true),
 ('listing-exec-direct-damage-900', 'exec-direct-damage-900', 'COMMON', 75, null, true),
 ('listing-exec-direct-damage-600', 'exec-direct-damage-600', 'COMMON', 50, null, true),
-('listing-exec-heal-700', 'exec-heal-700', 'COMMON', 50, null, true),
+('listing-exec-heal-700', 'exec-heal-700', 'COMMON', 350, null, true),
 ('listing-exec-db-def-300', 'exec-db-def-300', 'COMMON', 50, null, true),
 ('listing-exec-fusion-gemgpt', 'exec-fusion-gemgpt', 'RARE', 100, null, true),
 ('listing-exec-fusion-kaclauli', 'exec-fusion-kaclauli', 'RARE', 100, null, true),
@@ -113,9 +113,9 @@ insert into public.market_card_listings (id, card_id, rarity, price_nexus, stock
 ('listing-trap-kernel-panic', 'trap-kernel-panic', 'COMMON', 75, null, true),
 ('listing-trap-atk-drain', 'trap-atk-drain', 'COMMON', 50, null, true),
 ('listing-trap-def-fragment', 'trap-def-fragment', 'COMMON', 50, null, true),
-('listing-fusion-gemgpt', 'fusion-gemgpt', 'LEGENDARY', 275, null, true),
-('listing-fusion-kaclauli', 'fusion-kaclauli', 'LEGENDARY', 275, null, true),
-('listing-fusion-pytgress', 'fusion-pytgress', 'LEGENDARY', 250, null, false)
+('listing-fusion-gemgpt', 'fusion-gemgpt', 'LEGENDARY', 1200, null, true),
+('listing-fusion-kaclauli', 'fusion-kaclauli', 'LEGENDARY', 1400, null, true),
+('listing-fusion-pytgress', 'fusion-pytgress', 'LEGENDARY', 1200, null, false)
 on conflict (id) do update set
   card_id = excluded.card_id,
   rarity = excluded.rarity,

@@ -1,8 +1,8 @@
-<!-- README.md - Guía principal de AI-GI-OH como producto en producción v1.5.0. -->
+<!-- README.md - Guía principal de AI-GI-OH como producto en producción v1.6.0. -->
 # AI-GI-OH
 
 <p align="center">
-  <strong>Producto en producción · v1.5.0</strong><br/>
+  <strong>Producto en producción · v1.6.0</strong><br/>
   Juego táctico de cartas con motor desacoplado, arquitectura por capas y flujo profesional de calidad.
 </p>
 
@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.5.0-06b6d4">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.6.0-06b6d4">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black">
   <img alt="React" src="https://img.shields.io/badge/React-19-149eca">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-Strict-3178c6">
@@ -73,7 +73,7 @@ Producción actual:
   <tr>
     <td><img src="./public/assets/readme/card-render-showcase.webp" alt="Render de carta AI-GI-OH" width="240"></td>
     <td><img src="./public/assets/readme/technical-architecture-overview.webp" alt="Carta técnica AI-GI-OH" width="240"></td>
-    <td><img src="./public/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.png" alt="Oponente BigLog" width="240"></td>
+    <td><img src="./public/assets/story/opponents/opp-ch1-biglog/tutorial-BigLog.webp" alt="Oponente BigLog" width="240"></td>
     <td><img src="./public/assets/renders/executions/exec-fusion-gemgpt.webp" alt="Fusión GemGPT" width="240"></td>
   </tr>
 </table>
@@ -139,21 +139,29 @@ Plantilla base:
 
 - [`.env.example`](./.env.example)
 
-Críticas para funcionamiento:
+Críticas para funcionamiento (la app falla o el admin no carga sin ellas):
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `ADMIN_PORTAL_SLUG`
 
 Hardening recomendado en staging/prod:
 
-- `AUTH_RATE_LIMIT_REQUIRE_DISTRIBUTED`
-- `AUTH_RATE_LIMIT_FAIL_CLOSED`
-- `ADMIN_RATE_LIMIT_REQUIRE_DISTRIBUTED`
-- `ADMIN_RATE_LIMIT_FAIL_CLOSED`
-- `PLAYER_PROFILE_RATE_LIMIT_REQUIRE_DISTRIBUTED`
-- `PLAYER_PROFILE_RATE_LIMIT_FAIL_CLOSED`
+- `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` — **necesarios para que el rate limiting funcione de verdad en serverless** (Vercel). Sin ellos, el límite es en memoria por instancia (efímero, se reinicia en cada cold start ⇒ protección casi nula).
+- `AUTH_RATE_LIMIT_REQUIRE_DISTRIBUTED` / `AUTH_RATE_LIMIT_FAIL_CLOSED`
+- `ADMIN_RATE_LIMIT_REQUIRE_DISTRIBUTED` / `ADMIN_RATE_LIMIT_FAIL_CLOSED`
+- `PLAYER_PROFILE_RATE_LIMIT_REQUIRE_DISTRIBUTED` / `PLAYER_PROFILE_RATE_LIMIT_FAIL_CLOSED`
+- `ANALYTICS_RATE_LIMIT_REQUIRE_DISTRIBUTED` / `ANALYTICS_RATE_LIMIT_FAIL_CLOSED`
 - `SECURITY_RATE_LIMIT_DISTRIBUTED_TIMEOUT_MS`
+
+Opcionales con default seguro (si no se definen):
+
+- `DUEL_COMPLETION_TOKEN_SECRET` — si vacío, usa `SUPABASE_SERVICE_ROLE_KEY` en prod.
+- `TUTORIAL_FINAL_REWARD_NEXUS` — default `600`.
+- `ANALYTICS_ENABLED` + `NEXT_PUBLIC_ANALYTICS_ENABLED` — default `false` (telemetría desactivada).
+
+> Los `.env*.example` son plantillas versionadas (sin secretos). Ver la tabla de sincronización con Vercel en [docs/GUIA_DESPLIEGUE_PROFESIONAL.md](./docs/GUIA_DESPLIEGUE_PROFESIONAL.md).
 
 ## Scripts de ingeniería
 
@@ -196,6 +204,15 @@ Releases:
 pnpm release:tag
 pnpm release:tag:push
 ```
+
+Base de datos (local):
+
+```bash
+pnpm db:reset        # tras git pull: regenera migraciones + supabase db reset (sincroniza tu BD con el repo)
+pnpm db:seed:dump    # regenera supabase/seed.sql desde la BD fuente (contenido esencial)
+```
+
+> El contenido editable del juego (mercado, sobres, eventos, misiones, promos, login) vive en `supabase/seed.sql` (UPSERTs idempotentes que corren tras las migraciones). Detalle en [docs/supabase/README.md](./docs/supabase/README.md).
 
 ## Arquitectura y estructura
 

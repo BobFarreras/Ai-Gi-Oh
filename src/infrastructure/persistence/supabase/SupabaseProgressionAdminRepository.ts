@@ -108,6 +108,11 @@ export class SupabaseProgressionAdminRepository implements IProgressionAdminRepo
     if (error) throw new Error(`No se pudo guardar el item de tienda: ${error.message}`);
   }
 
+  async deleteEventShopItem(id: string): Promise<void> {
+    const { error } = await this.client.from("event_shop_items").delete().eq("id", id);
+    if (error) throw new Error(`No se pudo eliminar el item de tienda: ${error.message}`);
+  }
+
   async upsertLoginRewardDay(day: IAdminLoginRewardDay): Promise<void> {
     const { error } = await this.client.from("login_reward_calendar").upsert({
       day_index: day.dayIndex, reward_type: day.rewardType, reward_nexus: day.rewardNexus,

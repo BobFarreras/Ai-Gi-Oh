@@ -8,6 +8,7 @@ import { IMissionView } from "@/core/entities/progression/IMission";
 import { IEventOverview } from "@/core/entities/progression/IEvent";
 import { IFeaturedPromotion } from "@/core/entities/progression/IPromotion";
 import { HUB_HUD_ANIMATION_DURATION, HUB_HUD_START_DELAY_MS } from "@/components/hub/internal/hub-entry-timings";
+import { HUB_BOOT_LOADING_MS, HUB_BOOT_OPENING_MS } from "@/components/hub/internal/hub-boot-timings";
 import { MissionsPanel } from "./MissionsPanel";
 import { EventPanel } from "./EventPanel";
 import { NewsPanel } from "./NewsPanel";
@@ -103,10 +104,21 @@ export function ProgressionDock({ missions: initialMissions, eventOverview: init
   const { status: dailyLogin, markClaimed: markDailyClaimed } = useDailyLogin();
   const pathname = usePathname();
 
+  // El dock aparece sincronizado con el fin de la transición de arranque del hub (boot), no a los
+  // pocos ms: si no, en móvil (donde el boot se nota más) los botones se ven sobre la pantalla de
+  // carga. Se re-sincroniza en cada (re)entrada a /hub porque el boot vuelve a reproducirse: el
+  // reset a oculto va en la limpieza (al salir de /hub), no en el cuerpo del efecto.
   useEffect(() => {
-    const timeout = window.setTimeout(() => setCanShow(true), HUB_HUD_START_DELAY_MS);
-    return () => window.clearTimeout(timeout);
-  }, []);
+    if (pathname !== "/hub") return;
+    const timeout = window.setTimeout(
+      () => setCanShow(true),
+      HUB_BOOT_LOADING_MS + HUB_BOOT_OPENING_MS + HUB_HUD_START_DELAY_MS,
+    );
+    return () => {
+      window.clearTimeout(timeout);
+      setCanShow(false);
+    };
+  }, [pathname]);
 
   // Refresca el estado en vivo (misiones + evento) sin recargar: el SSR de layout no se
   // re-ejecuta al navegar dentro del hub, así que el progreso quedaría obsoleto.

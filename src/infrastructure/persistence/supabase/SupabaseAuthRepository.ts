@@ -67,14 +67,16 @@ export class SupabaseAuthRepository implements IAuthRepository {
   }
 
   async getCurrentSession(): Promise<IAuthSession | null> {
-    const [{ data: sessionData, error: sessionError }, { data: userData, error: userError }] = await Promise.all([
-      this.client.auth.getSession(),
-      this.client.auth.getUser(),
-    ]);
-    if (sessionError || userError) {
+    // Sin sesión (p. ej. en /login) getUser() devuelve AuthSessionMissingError: eso NO es un
+    // fallo, es simplemente "no autenticado". Comprobamos primero la sesión y devolvemos null.
+    const { data: sessionData, error: sessionError } = await this.client.auth.getSession();
+    if (sessionError) {
       throw new ValidationError("No se pudo obtener la sesión actual.");
     }
-    if (!sessionData.session || !userData.user) return null;
+    if (!sessionData.session) return null;
+    // Hay cookies de sesión: validamos el usuario contra el servidor de auth.
+    const { data: userData, error: userError } = await this.client.auth.getUser();
+    if (userError || !userData.user) return null;
     return mapSession(sessionData.session, userData.user);
   }
 }
