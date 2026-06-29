@@ -2,6 +2,7 @@
 "use client";
 
 import { IAdminCardCatalogDraft } from "@/components/admin/internal/admin-card-catalog-draft";
+import { AdminCardEffectField } from "@/components/admin/internal/AdminCardEffectField";
 import { CardType } from "@/core/entities/ICard";
 
 interface IAdminCardCatalogFormFieldsProps {
@@ -36,6 +37,6 @@ export function AdminCardCatalogFormFields({ draft, isBusy, onChange, onApplyTyp
       <div className="grid gap-2 md:grid-cols-3"><label className="text-[11px] text-slate-300">Fusion recipe id<input aria-label="Fusion recipe id" className="mt-1 w-full rounded-md border border-slate-600 bg-slate-900 p-2 text-xs text-slate-100" value={draft.fusionRecipeId} onChange={(event) => onChange("fusionRecipeId", event.target.value)} placeholder="fusion-recipe-example" disabled={isBusy} /></label><label className="text-[11px] text-slate-300">Fusion materials<input aria-label="Fusion materials" className="mt-1 w-full rounded-md border border-slate-600 bg-slate-900 p-2 text-xs text-slate-100" value={draft.fusionMaterialIdsText} onChange={(event) => onChange("fusionMaterialIdsText", event.target.value)} placeholder="entity-a,entity-b" disabled={isBusy} /></label><label className="text-[11px] text-slate-300">Energía de fusión<input aria-label="Energía de fusión" className="mt-1 w-full rounded-md border border-slate-600 bg-slate-900 p-2 text-xs text-slate-100" value={draft.fusionEnergyRequirementText} onChange={(event) => onChange("fusionEnergyRequirementText", event.target.value)} placeholder="Ej: 2" disabled={isBusy} /></label></div>
     </section>
 
-    <section className="space-y-2 rounded-lg border border-slate-700/80 bg-slate-950/40 p-3"><p className="text-[11px] font-bold uppercase tracking-wide text-cyan-200">Lógica (effect JSON)</p><label className="text-[11px] text-slate-300">JSON del efecto<textarea aria-label="JSON de efecto" className="mt-1 min-h-28 w-full rounded-md border border-slate-600 bg-slate-900 p-2 font-mono text-xs text-slate-100" value={draft.effectJson} onChange={(event) => onChange("effectJson", event.target.value)} placeholder='{"action":"DAMAGE","target":"OPPONENT","value":300}' disabled={isBusy} /></label></section>
+    <AdminCardEffectField effectJson={draft.effectJson} isBusy={isBusy} onChange={(effectJson) => onChange("effectJson", effectJson)} />
   </div>;
 }
