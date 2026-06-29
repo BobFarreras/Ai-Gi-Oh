@@ -1,8 +1,28 @@
 // src/services/training/resolve-training-opponent-loadout.test.ts - Valida resolución de perfil/deck rival de training por tier.
 import { describe, expect, it } from "vitest";
+import { ICard } from "@/core/entities/ICard";
+import { IArenaOpponent } from "@/core/entities/training/IArenaOpponent";
 import { resolveTrainingOpponentLoadout } from "@/services/training/resolve-training-opponent-loadout";
 
 describe("resolveTrainingOpponentLoadout", () => {
+  it("usa el catálogo de oponentes provisto (BD) y respeta los overrides por carta", () => {
+    const card: ICard = { id: "entity-x", name: "X", description: "", type: "ENTITY", faction: "NEUTRAL", cost: 1, attack: 1000, defense: 1000 };
+    const cardCatalog = new Map<string, ICard>([["entity-x", card]]);
+    const opponents: Record<string, IArenaOpponent> = {
+      "training-tier-1": {
+        id: "training-tier-1", codeName: "x", displayName: "Custom X", avatarUrl: "a", introUrl: "i", storyOpponentId: "opp-x",
+        variants: [{ id: "v1", label: "V1", deckCards: [{ cardId: "entity-x", versionTier: 5, level: 30, xp: 9999 }], fusionCards: [] }],
+      },
+    };
+    const loadout = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", deckTemplateId: "training-tier-1", tierWins: 0, tierMatches: 0, opponents, cardCatalog });
+    expect(loadout.displayName).toBe("Custom X");
+    expect(loadout.deckVariantLabel).toBe("V1");
+    // El override de carta manda sobre el escalado EASY (versionTier=0).
+    expect(loadout.deck[0]?.versionTier).toBe(5);
+    expect(loadout.deck[0]?.level).toBe(30);
+    expect(loadout.deck[0]?.xp).toBe(9999);
+  });
+
   it("resuelve deck completo y fusión para un tier válido", () => {
     const loadout = resolveTrainingOpponentLoadout({
       tier: 3,

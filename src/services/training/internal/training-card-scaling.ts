@@ -1,5 +1,7 @@
 // src/services/training/internal/training-card-scaling.ts - Aplica escalado estático de version/level/xp para decks de training según dificultad efectiva.
 import { ICard } from "@/core/entities/ICard";
+import { ValidationError } from "@/core/errors/ValidationError";
+import { IArenaDeckCardEntry } from "@/core/entities/training/IArenaOpponent";
 import { OpponentDifficulty } from "@/core/services/opponent/difficulty/types";
 
 interface ITrainingCardScale {
@@ -23,4 +25,26 @@ const TRAINING_SCALE_BY_DIFFICULTY: Record<OpponentDifficulty, ITrainingCardScal
 export function applyTrainingCardScaling(cards: ICard[], difficulty: OpponentDifficulty): ICard[] {
   const scale = TRAINING_SCALE_BY_DIFFICULTY[difficulty];
   return cards.map((card) => ({ ...card, versionTier: scale.versionTier, level: scale.level, xp: scale.xp }));
+}
+
+/**
+ * Hidrata entradas de mazo de arena aplicando, por carta, su override (version/level/xp) si existe,
+ * o el escalado por dificultad en su defecto. Permite mazos con cartas más potentes editables.
+ */
+export function applyArenaCardScaling(
+  entries: IArenaDeckCardEntry[],
+  difficulty: OpponentDifficulty,
+  cardCatalog: Map<string, ICard>,
+): ICard[] {
+  const scale = TRAINING_SCALE_BY_DIFFICULTY[difficulty];
+  return entries.map((entry) => {
+    const card = cardCatalog.get(entry.cardId);
+    if (!card) throw new ValidationError(`No existe carta '${entry.cardId}' en el catálogo para arena.`);
+    return {
+      ...card,
+      versionTier: entry.versionTier ?? scale.versionTier,
+      level: entry.level ?? scale.level,
+      xp: entry.xp ?? scale.xp,
+    };
+  });
 }
