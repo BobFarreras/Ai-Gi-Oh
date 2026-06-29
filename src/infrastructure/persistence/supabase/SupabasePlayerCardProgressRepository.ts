@@ -25,6 +25,10 @@ interface ICardPassiveSkillRow {
   id: string;
 }
 
+interface ICardInnatePassiveRow {
+  innate_passive_skill_id: string | null;
+}
+
 function toEntity(row: IPlayerCardProgressRow): IPlayerCardProgress {
   return {
     playerId: row.player_id,
@@ -41,6 +45,13 @@ export class SupabasePlayerCardProgressRepository implements IPlayerCardProgress
   constructor(private readonly client: SupabaseClient) {}
 
   private async resolveDefaultMasteryPassiveSkillId(cardId: string): Promise<string | null> {
+    // Las cartas con pasiva innata la conservan a V5 (no reciben el mapa genérico ni el fallback).
+    const { data: innate } = await this.client
+      .from("cards_catalog")
+      .select("innate_passive_skill_id")
+      .eq("id", cardId)
+      .maybeSingle<ICardInnatePassiveRow>();
+    if (innate?.innate_passive_skill_id) return innate.innate_passive_skill_id;
     const { data, error } = await this.client
       .from("card_mastery_passive_map")
       .select("passive_skill_id")

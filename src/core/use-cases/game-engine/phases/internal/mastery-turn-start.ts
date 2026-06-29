@@ -1,32 +1,30 @@
-// src/core/use-cases/game-engine/phases/internal/mastery-turn-start.ts - Efectos de pasiva mastery al iniciar el turno propio (crecimiento de ATK y curación).
+// src/core/use-cases/game-engine/phases/internal/mastery-turn-start.ts - Efectos de pasiva mastery al iniciar el turno propio (crecimiento de ATK y curación), con magnitud escalada por versión.
 import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { MASTERY_PASSIVE_IDS } from "@/core/services/progression/mastery-passive-ids";
+import { resolveAttackGrowthCap, resolvePassiveMagnitude } from "@/core/services/progression/mastery-passive-magnitude";
 
-/** Tope de crecimiento acumulado de ATK (evita bola de nieve) y paso por turno. */
-const ATTACK_GROWTH_CAP = 500;
-const ATTACK_GROWTH_STEP = 100;
-const TURN_START_HEAL = 200;
-
-/** Aprendizaje Continuo: +100 ATK permanente por turno hasta el tope de +500 acumulado. */
+/** Aprendizaje Continuo: suma ATK por turno (escalado por versión) hasta el tope acumulado. */
 export function applyMasteryAttackGrowth(entities: IBoardEntity[]): IBoardEntity[] {
   return entities.map((entity) => {
     if (entity.card.masteryPassiveSkillId !== MASTERY_PASSIVE_IDS.ATK_GROWTH) return entity;
+    const step = resolvePassiveMagnitude(MASTERY_PASSIVE_IDS.ATK_GROWTH, entity.card.versionTier);
+    const cap = resolveAttackGrowthCap(entity.card.versionTier);
     const currentGrowth = entity.masteryAttackGrowth ?? 0;
-    if (currentGrowth >= ATTACK_GROWTH_CAP) return entity;
+    if (currentGrowth >= cap) return entity;
     return {
       ...entity,
-      masteryAttackGrowth: currentGrowth + ATTACK_GROWTH_STEP,
-      card: { ...entity.card, attack: (entity.card.attack ?? 0) + ATTACK_GROWTH_STEP },
+      masteryAttackGrowth: currentGrowth + step,
+      card: { ...entity.card, attack: (entity.card.attack ?? 0) + step },
     };
   });
 }
 
-/** Regeneración: 200 HP si el jugador controla al menos una entity con la pasiva. */
+/** Regeneración: curación de inicio de turno (escalada) si el jugador controla la pasiva. */
 export function resolveMasteryTurnStartHeal(player: IPlayer): number {
-  const hasHealer = player.activeEntities.some(
+  const healer = player.activeEntities.find(
     (entity) => entity.card.masteryPassiveSkillId === MASTERY_PASSIVE_IDS.HEAL_ON_TURN,
   );
-  return hasHealer ? TURN_START_HEAL : 0;
+  return healer ? resolvePassiveMagnitude(MASTERY_PASSIVE_IDS.HEAL_ON_TURN, healer.card.versionTier) : 0;
 }
 
 /** Devuelve el jugador con el crecimiento de ATK y la curación de inicio de turno aplicados. */

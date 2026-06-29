@@ -48,6 +48,13 @@ describe("apply-card-progression-to-card", () => {
     expect(atLevel30.cost).toBe(3);
   });
 
+  it("conserva la pasiva innata (y su etiqueta) desde V1 aunque la progresión no fije pasiva", () => {
+    const innateCard: ICard = { ...ENTITY_CARD, masteryPassiveSkillId: "passive-reflect-damage-200" };
+    const result = applyCardProgressionToCard(innateCard, createProgress(5));
+    expect(result.masteryPassiveSkillId).toBe("passive-reflect-damage-200");
+    expect(result.masteryPassiveLabel).toContain("Cortafuegos");
+  });
+
   it("en EXECUTION solo reduce coste al nivel 30", () => {
     const atLevel20 = applyCardProgressionToCard(EXEC_CARD, createProgress(20));
     expect(atLevel20.cost).toBe(2);

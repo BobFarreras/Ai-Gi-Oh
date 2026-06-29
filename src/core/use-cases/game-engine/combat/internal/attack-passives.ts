@@ -1,29 +1,35 @@
-// src/core/use-cases/game-engine/combat/internal/attack-passives.ts - Reglas puras de pasivas mastery aplicadas durante combate.
+// src/core/use-cases/game-engine/combat/internal/attack-passives.ts - Reglas puras de pasivas mastery aplicadas durante combate (magnitud escalada por versión).
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { MASTERY_PASSIVE_IDS } from "@/core/services/progression/mastery-passive-ids";
+import { resolvePassiveMagnitude } from "@/core/services/progression/mastery-passive-magnitude";
+
+/** Magnitud de una pasiva concreta para esta entity (0 si no la tiene). */
+function magnitudeFor(entity: IBoardEntity, passiveId: string): number {
+  if (entity.card.masteryPassiveSkillId !== passiveId) return 0;
+  return resolvePassiveMagnitude(passiveId, entity.card.versionTier);
+}
 
 /** Carga Letal: bonus de daño cuando el atacante golpea directo al rival. */
 export function resolveDirectHitBonus(attackerEntity: IBoardEntity): number {
-  return attackerEntity.card.masteryPassiveSkillId === MASTERY_PASSIVE_IDS.DIRECT_HIT ? 200 : 0;
+  return magnitudeFor(attackerEntity, MASTERY_PASSIVE_IDS.DIRECT_HIT);
 }
 
-/** Drenaje de ATK: el defensor reduce 200 ATK del atacante al ser atacado. */
+/** Drenaje de ATK: el defensor reduce el ATK del atacante al ser atacado. */
 export function applyAttackDrainByDefenderPassive(attackerAttack: number, defenderEntity: IBoardEntity): number {
-  if (defenderEntity.card.masteryPassiveSkillId !== MASTERY_PASSIVE_IDS.ATK_DRAIN) return attackerAttack;
-  return Math.max(0, attackerAttack - 200);
+  return Math.max(0, attackerAttack - magnitudeFor(defenderEntity, MASTERY_PASSIVE_IDS.ATK_DRAIN));
 }
 
-/** Sobrecarga: +300 ATK efímero cuando el atacante embiste a una entity rival. */
+/** Sobrecarga: bonus de ATK efímero cuando el atacante embiste a una entity rival. */
 export function resolveEntityAttackBonus(attackerEntity: IBoardEntity): number {
-  return attackerEntity.card.masteryPassiveSkillId === MASTERY_PASSIVE_IDS.ENTITY_ATTACK_BONUS ? 300 : 0;
+  return magnitudeFor(attackerEntity, MASTERY_PASSIVE_IDS.ENTITY_ATTACK_BONUS);
 }
 
-/** Cortafuegos Reactivo: el defensor refleja 200 de daño directo al jugador atacante. */
+/** Cortafuegos Reactivo: el defensor refleja daño directo al jugador atacante. */
 export function resolveDefenderReflectDamage(defenderEntity: IBoardEntity): number {
-  return defenderEntity.card.masteryPassiveSkillId === MASTERY_PASSIVE_IDS.REFLECT_DAMAGE ? 200 : 0;
+  return magnitudeFor(defenderEntity, MASTERY_PASSIVE_IDS.REFLECT_DAMAGE);
 }
 
-/** Autoguardado: devuelve 1 energía a su dueño cuando la entity es destruida. */
+/** Autoguardado: devuelve energía a su dueño cuando la entity es destruida. */
 export function resolveEnergyRefundOnDeath(entity: IBoardEntity): number {
-  return entity.card.masteryPassiveSkillId === MASTERY_PASSIVE_IDS.ENERGY_ON_DEATH ? 1 : 0;
+  return magnitudeFor(entity, MASTERY_PASSIVE_IDS.ENERGY_ON_DEATH);
 }

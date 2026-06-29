@@ -21,6 +21,7 @@ function createBaseRow(): ICardCatalogRow {
     fusion_recipe_id: null,
     fusion_material_ids: [],
     fusion_energy_requirement: null,
+    innate_passive_skill_id: null,
   };
 }
 
@@ -65,6 +66,12 @@ describe("mapCardCatalogRowToCard", () => {
     });
     expect(recovery.effect).toEqual({ action: "RETURN_GRAVEYARD_CARD_TO_HAND", cardType: "ENTITY" });
     expect(counterTrap.effect).toEqual({ action: "NEGATE_OPPONENT_TRAP_AND_DESTROY" });
+  });
+
+  it("transporta la pasiva innata desde la carta base", () => {
+    const innate = mapCardCatalogRowToCard({ ...createBaseRow(), id: "entity-vscode", innate_passive_skill_id: "passive-reflect-damage-200" });
+    expect(innate.masteryPassiveSkillId).toBe("passive-reflect-damage-200");
+    expect(mapCardCatalogRowToCard(createBaseRow()).masteryPassiveSkillId).toBeUndefined();
   });
 
   it("mapea nuevos efectos de fase 1 para ejecución y trampa", () => {
