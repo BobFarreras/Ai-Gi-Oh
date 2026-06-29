@@ -1,17 +1,21 @@
-// src/components/landing/CommunityLinks.tsx - Barra social discreta de la landing: estrella en GitHub e invitación a Discord.
+// src/components/landing/CommunityLinks.tsx - Iconos sociales flotantes con expansión animada en desktop, iconos fijos en móvil, estética glass y audio contextual.
 "use client";
 
-import { Github, Star } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Github } from "lucide-react";
+import { AnimatePresence, motion, Variants } from "framer-motion";
+import { getAudio } from "@/lib/audio-pool";
 
 const GITHUB_URL = "https://github.com/BobFarreras/Ai-Gi-Oh";
 const DISCORD_URL = "https://discord.gg/dTsuGswTjc";
 
+const AUDIO_HOVER = "/audio/landing/button-click.m4a";
+const AUDIO_HOVER_VOLUME = 0.12;
+
 interface ICommunityLinksProps {
-  /** Reproduce el click de UI compartido con el resto de CTAs de la landing. */
   onAction?: () => void;
 }
 
-/** Icono de marca de Discord (no disponible en lucide-react, se incrusta el SVG oficial). */
 function DiscordIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden className={className}>
@@ -20,31 +24,148 @@ function DiscordIcon({ className }: { className?: string }) {
   );
 }
 
-/** Enlaces de comunidad mostrados en la fase SHOWCASE, debajo de los CTA principales. */
-export function CommunityLinks({ onAction }: ICommunityLinksProps) {
+function playHoverSound() {
+  const audio = getAudio(AUDIO_HOVER, AUDIO_HOVER_VOLUME);
+  if (audio) {
+    audio.currentTime = 0;
+    const maybePromise = audio.play();
+    if (maybePromise && typeof maybePromise.catch === "function") {
+      void maybePromise.catch(() => undefined);
+    }
+  }
+}
+
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    setIsDesktop(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return isDesktop;
+}
+
+const containerVariants: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.12, delayChildren: 0.5 } },
+};
+
+const iconEntryVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.4, y: 10 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 280, damping: 18 },
+  },
+};
+
+interface ISocialIconProps {
+  label: string;
+  href: string;
+  icon: React.ReactNode;
+  hoverBg: string;
+  hoverGlow: string;
+  onAction?: () => void;
+  isDesktop: boolean;
+}
+
+function SocialIcon({ label, href, icon, hoverBg, hoverGlow, onAction, isDesktop }: ISocialIconProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleMouseEnter = useCallback(() => {
+    if (!isDesktop) return;
+    playHoverSound();
+    setIsExpanded(true);
+  }, [isDesktop]);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsExpanded(false);
+  }, []);
+
   return (
-    <div className="flex w-full items-center justify-center gap-3 sm:gap-4">
-      <a
+    <motion.div
+      className="relative flex-shrink-0"
+      variants={iconEntryVariants}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <motion.a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={onAction}
+        aria-label={label}
+        className="group flex h-11 items-center overflow-hidden bg-black/60 backdrop-blur-md transition-colors sm:h-12"
+        animate={{
+          width: isExpanded ? 220 : 44,
+          boxShadow: isExpanded ? `0 0 24px ${hoverGlow}` : "0 0 0px transparent",
+        }}
+        transition={{ type: "spring", stiffness: 320, damping: 30 }}
+        style={{ borderRadius: 4 }}
+      >
+        <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center sm:h-12 sm:w-12">
+          {icon}
+        </span>
+
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.span
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -8 }}
+              transition={{ duration: 0.12, delay: 0.06 }}
+              className="pointer-events-none whitespace-nowrap pr-4 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white sm:text-xs"
+            >
+              {label}
+            </motion.span>
+          )}
+        </AnimatePresence>
+
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+          style={{ background: hoverBg }}
+        />
+      </motion.a>
+    </motion.div>
+  );
+}
+
+export function CommunityLinks({ onAction }: ICommunityLinksProps) {
+  const isDesktop = useIsDesktop();
+
+  return (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="
+        fixed z-[70] flex flex-col gap-2
+        left-4 top-4
+        md:bottom-6 md:left-6 md:top-auto md:flex-row md:gap-2
+      "
+    >
+      <SocialIcon
+        label="Dale una estrella"
         href={GITHUB_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={onAction}
-        className="group flex items-center gap-2 border border-cyan-500/30 bg-black/50 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-300/90 backdrop-blur-md transition-all hover:border-cyan-300 hover:text-cyan-100 sm:px-4 sm:text-xs"
-      >
-        <Github className="h-4 w-4" aria-hidden />
-        <span>Dale una estrella</span>
-        <Star className="h-3.5 w-3.5 transition-colors group-hover:fill-amber-300 group-hover:text-amber-300" aria-hidden />
-      </a>
-      <a
+        icon={<Github className="h-5 w-5 text-cyan-300 transition-colors group-hover:text-white" aria-hidden />}
+        hoverBg="linear-gradient(90deg, rgba(6,182,212,0.15) 0%, transparent 100%)"
+        hoverGlow="rgba(6,182,212,0.4)"
+        onAction={onAction}
+        isDesktop={isDesktop}
+      />
+      <SocialIcon
+        label="Únete a Discord"
         href={DISCORD_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={onAction}
-        className="flex items-center gap-2 border border-indigo-500/40 bg-indigo-950/40 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-200 backdrop-blur-md transition-all hover:border-indigo-300 hover:bg-indigo-900/50 hover:text-white sm:px-4 sm:text-xs"
-      >
-        <DiscordIcon className="h-4 w-4" />
-        <span>Únete a Discord</span>
-      </a>
-    </div>
+        icon={<DiscordIcon className="h-5 w-5 text-indigo-300 transition-colors group-hover:text-white" />}
+        hoverBg="linear-gradient(90deg, rgba(99,102,241,0.15) 0%, transparent 100%)"
+        hoverGlow="rgba(99,102,241,0.4)"
+        onAction={onAction}
+        isDesktop={isDesktop}
+      />
+    </motion.div>
   );
 }

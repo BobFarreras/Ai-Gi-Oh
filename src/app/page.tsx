@@ -62,6 +62,8 @@ export default function HomePage() {
       <CyberBackground />
       {!isReady ? null : (
         <>
+          {phase === "SHOWCASE" ? <CommunityLinks onAction={playButtonClick} /> : null}
+
           <AnimatePresence mode="wait">
             {phase === "TERMINAL" ? <TerminalPrompt key="terminal" onComplete={toNarrative} onAction={playButtonClick} /> : null}
           </AnimatePresence>
@@ -96,10 +98,6 @@ export default function HomePage() {
                     Conexión Red
                   </Link>
                 </motion.footer>
-
-                <motion.div variants={itemVariants} className="mt-4 flex-shrink-0">
-                  <CommunityLinks onAction={playButtonClick} />
-                </motion.div>
               </motion.div>
             ) : null}
           </AnimatePresence>
