@@ -4,7 +4,7 @@
 import { Github, Star } from "lucide-react";
 
 const GITHUB_URL = "https://github.com/BobFarreras/Ai-Gi-Oh";
-const DISCORD_URL = "https://discord.gg/tNBUkwsws";
+const DISCORD_URL = "https://discord.gg/dTsuGswTjc";
 
 interface ICommunityLinksProps {
   /** Reproduce el click de UI compartido con el resto de CTAs de la landing. */
