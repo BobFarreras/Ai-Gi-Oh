@@ -40,6 +40,18 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
   return useCallback(
     async (entity: IUsePlayerActionsParams["gameState"]["playerA"]["activeEntities"][number] | null, isOpponent: boolean, event: React.MouseEvent) => {
       event.stopPropagation();
+
+      // En el turno del rival no se puede ACTUAR, pero sí INSPECCIONAR el detalle de cartas boca arriba
+      // (propias y rivales reveladas) para planear estrategia mientras esperas. Sin acciones ni error de turno.
+      const isPlayerTurn = params.gameState.activePlayerId === params.gameState.playerA.id;
+      if (!isPlayerTurn) {
+        if (entity && !(isOpponent && entity.mode === "SET")) {
+          params.setSelectedCard(entity.card);
+          params.setSelectedBoardEntityInstanceId(null);
+        }
+        return;
+      }
+
       if (params.isAnimating || !params.assertPlayerTurn()) return;
 
       if (params.gameState.pendingTurnAction?.playerId === params.gameState.playerA.id) {
