@@ -23,7 +23,7 @@ export function LogoutButton({ iconOnly = false, confirmBeforeLogout = false, on
       const result = await logoutCurrentUser();
       if (!result.ok) return;
       setIsDialogOpen(false);
-      router.push("/login");
+      router.push("/");
       router.refresh();
     });
   }, [router]);

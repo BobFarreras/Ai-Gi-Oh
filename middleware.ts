@@ -36,9 +36,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  // Si ya hay sesión activa, saltar la landing y entrar directo al hub.
+  if (pathname === "/" && user) {
+    return NextResponse.redirect(new URL("/hub", request.url));
+  }
+
   return response;
 }
 
 export const config = {
-  matcher: ["/hub/:path*", "/admin/:path*", "/admin-portal/:path*"],
+  matcher: ["/", "/hub/:path*", "/admin/:path*", "/admin-portal/:path*"],
 };
