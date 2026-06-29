@@ -32,7 +32,7 @@ describe("AdminCardMasteryPassiveSelector", () => {
     render(<AdminCardMasteryPassiveSelector cardId="entity-kali-linux" />);
     const select = await screen.findByLabelText<HTMLSelectElement>("Pasiva de la carta");
     await waitFor(() => expect(select.value).toBe("passive-atk-drain-200"));
-    expect(screen.getByLabelText<HTMLInputElement>("Pasiva innata desde V1").checked).toBe(false);
+    expect(screen.getByLabelText<HTMLInputElement>("Pasiva innata desde V0").checked).toBe(false);
   });
 
   it("muestra la pasiva innata con el check marcado", async () => {
@@ -40,7 +40,7 @@ describe("AdminCardMasteryPassiveSelector", () => {
     render(<AdminCardMasteryPassiveSelector cardId="entity-n8n" />);
     const select = await screen.findByLabelText<HTMLSelectElement>("Pasiva de la carta");
     await waitFor(() => expect(select.value).toBe("passive-atk-drain-200"));
-    expect(screen.getByLabelText<HTMLInputElement>("Pasiva innata desde V1").checked).toBe(true);
+    expect(screen.getByLabelText<HTMLInputElement>("Pasiva innata desde V0").checked).toBe(true);
   });
 
   it("guarda la pasiva con el flag innate en el POST", async () => {
@@ -50,7 +50,7 @@ describe("AdminCardMasteryPassiveSelector", () => {
     await waitFor(() => expect(select.value).toBe("passive-atk-drain-200"));
 
     fireEvent.change(select, { target: { value: "passive-reflect-damage-200" } });
-    fireEvent.click(screen.getByLabelText("Pasiva innata desde V1"));
+    fireEvent.click(screen.getByLabelText("Pasiva innata desde V0"));
     fireEvent.click(screen.getByLabelText("Guardar pasiva de la carta"));
 
     await screen.findByText("Pasiva actualizada.");

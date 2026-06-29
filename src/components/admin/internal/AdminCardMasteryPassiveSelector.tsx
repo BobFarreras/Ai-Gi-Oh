@@ -1,8 +1,9 @@
-// src/components/admin/internal/AdminCardMasteryPassiveSelector.tsx - Selector admin de la pasiva de una entity: V5 (a maestría) o innata (desde V1, escalable).
+// src/components/admin/internal/AdminCardMasteryPassiveSelector.tsx - Selector admin de la pasiva de una entity: V5 (a maestría) o innata (desde V0, escalable).
 "use client";
 
 import { useEffect, useState } from "react";
 import { IMasteryPassiveOption } from "@/core/repositories/ICardMasteryPassiveAdminRepository";
+import { resolveMasteryPassiveLabel } from "@/core/services/progression/mastery-passive-display";
 
 interface IAdminCardMasteryPassiveSelectorProps {
   cardId: string;
@@ -107,15 +108,20 @@ export function AdminCardMasteryPassiveSelector({ cardId }: IAdminCardMasteryPas
           {status === "saving" ? "…" : "Guardar"}
         </button>
       </div>
+      {selected !== "" ? (
+        <p className="mt-2 rounded-md border border-fuchsia-700/30 bg-fuchsia-950/20 p-2 text-[11px] leading-relaxed text-fuchsia-100/90">
+          {resolveMasteryPassiveLabel(selected)}
+        </p>
+      ) : null}
       <label className="mt-2 flex items-center gap-2 text-[11px] text-slate-300">
         <input
           type="checkbox"
-          aria-label="Pasiva innata desde V1"
+          aria-label="Pasiva innata desde V0"
           checked={isInnate}
           disabled={status === "loading" || status === "saving" || selected === ""}
           onChange={(event) => setIsInnate(event.target.checked)}
         />
-        Innata (activa desde V1, escala hasta V5)
+        Innata (activa desde V0, escala hasta V5)
       </label>
       {status === "error" ? <p className="mt-1.5 text-[11px] font-semibold text-rose-300">No se pudo cargar o guardar la pasiva.</p> : null}
       {status === "saved" ? <p className="mt-1.5 text-[11px] font-semibold text-emerald-300">Pasiva actualizada.</p> : null}
