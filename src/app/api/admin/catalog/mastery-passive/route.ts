@@ -12,12 +12,40 @@ function assertNonEmpty(value: unknown, field: string): string {
   return value;
 }
 
+/**
+ * Aplica la pasiva elegida en el campo correcto: innata (cards_catalog, desde V1, fuera del mapa V5)
+ * o de maestría (card_mastery_passive_map, solo a V5). Limpiar = quitar de ambos sitios.
+ */
+async function applyPassiveAssignment(
+  repository: SupabaseCardMasteryPassiveAdminRepository,
+  cardId: string,
+  passiveSkillId: string,
+  innate: boolean,
+): Promise<void> {
+  if (passiveSkillId === "") {
+    await repository.removeAssignment(cardId);
+    await repository.setInnatePassive(cardId, null);
+    return;
+  }
+  if (innate) {
+    await repository.setInnatePassive(cardId, passiveSkillId);
+    await repository.removeAssignment(cardId);
+    return;
+  }
+  await repository.upsertAssignment(cardId, passiveSkillId);
+  await repository.setInnatePassive(cardId, null);
+}
+
 export async function GET(request: NextRequest) {
   try {
     const context = await createAdminRouteContext(request);
     const repository = new SupabaseCardMasteryPassiveAdminRepository(createSupabaseServiceRoleClient());
-    const [passives, assignments] = await Promise.all([repository.listActivePassives(), repository.listAssignments()]);
-    return NextResponse.json({ passives, assignments }, { status: 200, headers: context.response.headers });
+    const [passives, assignments, innateAssignments] = await Promise.all([
+      repository.listActivePassives(),
+      repository.listAssignments(),
+      repository.listInnateAssignments(),
+    ]);
+    return NextResponse.json({ passives, assignments, innateAssignments }, { status: 200, headers: context.response.headers });
   } catch (error) {
     return createApiErrorResponse(error, "No se pudieron cargar las pasivas mastery.");
   }
@@ -28,16 +56,23 @@ export async function POST(request: NextRequest) {
   if (originGuard) return originGuard;
   try {
     const context = await createAdminRouteContext(request);
-    const { cardId, passiveSkillId } = (await request.json()) as { cardId?: unknown; passiveSkillId?: unknown };
+    const { cardId, passiveSkillId, innate } = (await request.json()) as {
+      cardId?: unknown;
+      passiveSkillId?: unknown;
+      innate?: unknown;
+    };
     const validCardId = assertNonEmpty(cardId, "La carta");
-    const validPassiveId = assertNonEmpty(passiveSkillId, "La pasiva");
+    // passiveSkillId vacío = limpiar la pasiva de la carta.
+    const requestedPassiveId = typeof passiveSkillId === "string" ? passiveSkillId.trim() : "";
     const repository = new SupabaseCardMasteryPassiveAdminRepository(createSupabaseServiceRoleClient());
     // Rechaza ids fuera del catálogo activo para no dejar mapeos huérfanos.
-    const passives = await repository.listActivePassives();
-    if (!passives.some((passive) => passive.id === validPassiveId)) {
-      throw new ValidationError("La pasiva seleccionada no existe o no está activa.");
+    if (requestedPassiveId !== "") {
+      const passives = await repository.listActivePassives();
+      if (!passives.some((passive) => passive.id === requestedPassiveId)) {
+        throw new ValidationError("La pasiva seleccionada no existe o no está activa.");
+      }
     }
-    await repository.upsertAssignment(validCardId, validPassiveId);
+    await applyPassiveAssignment(repository, validCardId, requestedPassiveId, innate === true);
     return NextResponse.json({ ok: true }, { status: 200, headers: context.response.headers });
   } catch (error) {
     return createApiErrorResponse(error, "No se pudo guardar la pasiva de la carta.");

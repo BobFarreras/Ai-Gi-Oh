@@ -32,6 +32,7 @@ export function AdminCardEffectField({ effectJson, isBusy, onChange }: IAdminCar
   return (
     <section className="space-y-2 rounded-lg border border-slate-700/80 bg-slate-950/40 p-3">
       <p className="text-[11px] font-bold uppercase tracking-wide text-cyan-200">Efecto de la carta</p>
+      <p className="text-[10px] text-slate-500">Solo ejecuciones, trampas e innatos por `effect`. Las pasivas (V5/innatas) se asignan en el panel de detalle.</p>
 
       <label className="block text-[11px] text-slate-300">
         Acción (elige una y se rellena el JSON)

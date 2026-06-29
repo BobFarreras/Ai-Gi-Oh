@@ -11,6 +11,11 @@ interface IAssignmentRow {
   passive_skill_id: string;
 }
 
+interface IInnateRow {
+  id: string;
+  innate_passive_skill_id: string | null;
+}
+
 export class SupabaseCardMasteryPassiveAdminRepository implements ICardMasteryPassiveAdminRepository {
   constructor(private readonly client: SupabaseClient) {}
 
@@ -38,12 +43,34 @@ export class SupabaseCardMasteryPassiveAdminRepository implements ICardMasteryPa
     return assignments;
   }
 
+  async listInnateAssignments(): Promise<Record<string, string>> {
+    const { data, error } = await this.client
+      .from("cards_catalog")
+      .select("id,innate_passive_skill_id")
+      .not("innate_passive_skill_id", "is", null);
+    if (error) throw new ValidationError("No se pudieron leer las pasivas innatas.");
+    const assignments: Record<string, string> = {};
+    for (const row of (data ?? []) as IInnateRow[]) {
+      if (row.innate_passive_skill_id) assignments[row.id] = row.innate_passive_skill_id;
+    }
+    return assignments;
+  }
+
   async upsertAssignment(cardId: string, passiveSkillId: string): Promise<void> {
-    const removal = await this.client.from("card_mastery_passive_map").delete().eq("card_id", cardId);
-    if (removal.error) throw new ValidationError("No se pudo actualizar la pasiva de la carta.");
+    await this.removeAssignment(cardId);
     const insertion = await this.client
       .from("card_mastery_passive_map")
       .insert({ card_id: cardId, passive_skill_id: passiveSkillId, priority: 1 });
     if (insertion.error) throw new ValidationError("No se pudo asignar la pasiva a la carta.");
+  }
+
+  async removeAssignment(cardId: string): Promise<void> {
+    const removal = await this.client.from("card_mastery_passive_map").delete().eq("card_id", cardId);
+    if (removal.error) throw new ValidationError("No se pudo actualizar la pasiva de la carta.");
+  }
+
+  async setInnatePassive(cardId: string, passiveSkillId: string | null): Promise<void> {
+    const update = await this.client.from("cards_catalog").update({ innate_passive_skill_id: passiveSkillId }).eq("id", cardId);
+    if (update.error) throw new ValidationError("No se pudo actualizar la pasiva innata de la carta.");
   }
 }
