@@ -6,6 +6,20 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-06-29
+
+### Added
+- Tienda de evento: muestra la carta completa (`ResponsiveGameCard`) escalada de forma fluida a cualquier ancho, en vez de la miniatura.
+- Enlaces de comunidad en la landing (GitHub + Discord) con iconos sociales animados (expansión en desktop, estética glass).
+- Catálogo de 10 pasivas mastery V5 temáticas por arquetipo, con 6 mecánicas nuevas (Caja de Herramientas, Aprendizaje Continuo, Autoguardado, Cortafuegos Reactivo, Regeneración, Sobrecarga) y mapeo de las 67 entities (migración 078).
+- Poderes innatos de entity: 10 cartas de stats bajos con pasiva activa desde V0 que escala hasta V5, vía resolver de magnitud editable (migración 079).
+- Admin: selector de pasiva (V5 o innata) en el detalle del Card Catalog, y glosario de efectos del juego (pasivas, ejecuciones, trampas, innatos, triggers).
+- Admin: editor de efecto de carta con selector de acción que inserta la plantilla JSON + interpretación en lenguaje claro.
+
+### Changed
+- El editor de nombre de operador ya no fuerza mayúsculas: el texto se ve tal cual se teclea.
+- El poder de la carta (pasiva V5 o innata) se integra en su descripción, mostrando la magnitud real según la versión.
+
 ## [1.6.0] - 2026-06-29
 
 ### Added
