@@ -4,6 +4,7 @@
 import { IAdminCardCatalogEntry } from "@/core/entities/admin/IAdminCatalogSnapshot";
 import { ICard } from "@/core/entities/ICard";
 import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
+import { AdminCardMasteryPassiveSelector } from "@/components/admin/internal/AdminCardMasteryPassiveSelector";
 
 interface IAdminCardCatalogDetailPanelProps {
   selectedEntry: IAdminCardCatalogEntry | null;
@@ -39,6 +40,7 @@ export function AdminCardCatalogDetailPanel({ selectedEntry, selectedCard, canEd
             </div>
             <p className="mt-2 text-slate-300">Tipo: {selectedEntry.type} · Facción: {selectedEntry.faction}</p>
             <p className="mt-1 text-slate-300">Coste: {selectedEntry.cost} · Activa: {selectedEntry.isActive ? "Sí" : "No"}</p>
+            {selectedEntry.type === "ENTITY" ? <AdminCardMasteryPassiveSelector cardId={selectedEntry.id} /> : null}
           </>
         ) : (
           <p>Selecciona una carta para ver detalle.</p>
