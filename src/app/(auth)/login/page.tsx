@@ -1,9 +1,15 @@
 // src/app/(auth)/login/page.tsx - Página de acceso con fondo dinámico y formulario de login.
+import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { BackToLandingButton } from "@/components/auth/BackToLandingButton";
 import { CyberBackground } from "@/components/landing/CyberBackground";
+import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  // Si ya hay sesión válida (cookies persisten 400 días), no hace falta volver a loguear.
+  const session = await getCurrentUserSession();
+  if (session) redirect("/hub");
+
   return (
     // relative y min-h-dvh aseguran que ocupe toda la pantalla.
     // bg-[#010308] mantiene el fondo oscuro si el Canvas tarda unos ms en cargar.
