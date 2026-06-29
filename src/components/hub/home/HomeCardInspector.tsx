@@ -27,11 +27,15 @@ export function HomeCardInspector({
 }: HomeCardInspectorProps) {
   const cardViewportRef = useRef<HTMLDivElement | null>(null);
   const [cardScale, setCardScale] = useState(0.76);
-  const masteryPassiveLabel = resolveMasteryPassiveLabel(selectedCardMasteryPassiveSkillId);
-  const detailDescription =
-    selectedCardVersionTier >= 5 && masteryPassiveLabel
-      ? `${masteryPassiveLabel}\n\n${selectedCard?.description ?? ""}`
-      : (selectedCard?.description ?? "");
+  const masteryPassiveLabel = resolveMasteryPassiveLabel(selectedCardMasteryPassiveSkillId, selectedCardVersionTier);
+  // El poder se integra en la descripción tanto para pasivas de maestría (V5) como innatas (desde V0).
+  const detailPassiveLabel = resolveMasteryPassiveLabel(
+    selectedCardMasteryPassiveSkillId ?? selectedCard?.masteryPassiveSkillId ?? null,
+    selectedCardVersionTier,
+  );
+  const detailDescription = detailPassiveLabel
+    ? `${detailPassiveLabel}\n\n${selectedCard?.description ?? ""}`
+    : (selectedCard?.description ?? "");
 
   useEffect(() => {
     const viewport = cardViewportRef.current;

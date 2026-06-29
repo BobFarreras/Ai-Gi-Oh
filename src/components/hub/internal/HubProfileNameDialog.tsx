@@ -68,7 +68,7 @@ export function HubProfileNameDialog({
           value={value}
           disabled={isSaving}
           onChange={(event) => setValue(event.target.value)}
-          className="relative z-10 mt-2 w-full border border-cyan-500/45 bg-black/65 px-3 py-2 font-mono text-sm font-semibold uppercase tracking-[0.08em] text-cyan-50 outline-none transition focus:border-cyan-300 focus:shadow-[0_0_14px_rgba(34,211,238,0.35)]"
+          className="relative z-10 mt-2 w-full border border-cyan-500/45 bg-black/65 px-3 py-2 font-mono text-sm font-semibold tracking-[0.08em] text-cyan-50 outline-none transition focus:border-cyan-300 focus:shadow-[0_0_14px_rgba(34,211,238,0.35)]"
           style={{ clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)" }}
           placeholder="NeoOperator"
           minLength={3}

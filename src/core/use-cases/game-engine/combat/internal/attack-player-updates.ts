@@ -1,9 +1,16 @@
 // src/core/use-cases/game-engine/combat/internal/attack-player-updates.ts - Aplica actualizaciones de jugador tras resolver intercambio de combate.
 import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { markAttackerAsUsed } from "@/core/use-cases/game-engine/combat/internal/attack-entities";
+import { resolveEnergyRefundOnDeath } from "@/core/use-cases/game-engine/combat/internal/attack-passives";
 
 function shouldDestroyBattleTarget(winner: IBoardEntity, winnerDestroyed: boolean, loserDestroyed: boolean): boolean {
   return !winnerDestroyed && loserDestroyed && winner.card.effect?.action === "DESTROY_ENTITY_ON_BATTLE_WIN";
+}
+
+/** Autoguardado: suma la energía devuelta por la entity destruida sin pasar del máximo. */
+function applyEnergyRefundOnDeath(currentEnergy: number, maxEnergy: number, destroyed: boolean, entity: IBoardEntity): number {
+  if (!destroyed) return currentEnergy;
+  return Math.min(maxEnergy, currentEnergy + resolveEnergyRefundOnDeath(entity));
 }
 
 /**
@@ -45,6 +52,7 @@ export function buildUpdatedAttacker(
     destroyedDestination,
     player: {
       ...attacker,
+      currentEnergy: applyEnergyRefundOnDeath(attacker.currentEnergy, attacker.maxEnergy, attackerDestroyed, attackerEntity),
       healthPoints: Math.max(0, attacker.healthPoints - damageToAttackerPlayer),
       activeEntities: updatedEntities,
       graveyard: updatedGraveyard,
@@ -87,6 +95,7 @@ export function buildUpdatedDefender(
     destroyedDestination,
     player: {
       ...defender,
+      currentEnergy: applyEnergyRefundOnDeath(defender.currentEnergy, defender.maxEnergy, defenderDestroyed, defenderEntity),
       healthPoints: Math.max(0, defender.healthPoints - damageToDefenderPlayer),
       activeEntities: updatedEntities,
       graveyard: updatedGraveyard,

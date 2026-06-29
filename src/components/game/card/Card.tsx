@@ -4,6 +4,7 @@
 import { memo } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { BattleMode } from "@/core/entities/IPlayer";
+import { resolveMasteryPassiveLabel } from "@/core/services/progression/mastery-passive-display";
 import { CARD_CLIP_PATHS, getCardTypeStyles } from "./internal/styles";
 import { CardFrame } from "./internal/CardFrame";
 import { CardHologram } from "./internal/CardHologram";
@@ -55,7 +56,8 @@ function CardComponent({
   const resolvedVersionTier = versionTier ?? card.versionTier ?? 0;
   const resolvedLevel = level ?? card.level ?? 0;
   const resolvedXp = xp ?? card.xp ?? 0;
-  const resolvedMasteryPassiveLabel = masteryPassiveLabel ?? card.masteryPassiveLabel ?? null;
+  const resolvedMasteryPassiveLabel =
+    masteryPassiveLabel ?? card.masteryPassiveLabel ?? resolveMasteryPassiveLabel(card.masteryPassiveSkillId ?? null, resolvedVersionTier);
   const wrapperStyle = clipToFrameShape ? { transformStyle: "preserve-3d" as const, clipPath: CARD_CLIP_PATHS.outer } : { transformStyle: "preserve-3d" as const };
 
   return (

@@ -11,7 +11,7 @@ interface IAdminSidebarNavProps {
 
 interface IAdminSidebarItem {
   href: string;
-  icon: "catalog" | "market" | "starter" | "story" | "audit" | "analytics" | "liveops";
+  icon: "catalog" | "market" | "starter" | "story" | "audit" | "analytics" | "liveops" | "effects";
   label: string;
   description: string;
 }
@@ -20,6 +20,7 @@ function buildItems(portalSlug: string): IAdminSidebarItem[] {
   const base = `/admin-portal/${portalSlug}`;
   return [
     { href: `${base}/catalog`, icon: "catalog", label: "Catálogo", description: "Card Catalog" },
+    { href: `${base}/effects`, icon: "effects", label: "Efectos", description: "Glosario de poderes" },
     { href: `${base}/market`, icon: "market", label: "Market", description: "Listings & Packs" },
     { href: `${base}/starter-deck`, icon: "starter", label: "Starter Deck", description: "Plantilla inicial" },
     { href: `${base}/story-decks`, icon: "story", label: "Story Decks", description: "Oponentes & Duelos" },
@@ -76,6 +77,12 @@ function AdminNavIcon({ icon, isActive }: { icon: IAdminSidebarItem["icon"]; isA
     return (
       <svg viewBox="0 0 24 24" className={cls}>
         <path d="M12 2l2.4 5.2L20 8l-4 4 1 6-5-2.8L7 18l1-6-4-4 5.6-.8z" strokeWidth="1.6" strokeLinejoin="round" />
+      </svg>
+    );
+  if (icon === "effects")
+    return (
+      <svg viewBox="0 0 24 24" className={cls}>
+        <path d="M13 2L4.5 13H11l-1 9 8.5-11H12l1-9z" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
       </svg>
     );
   return (

@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { IEventOverview, IEventShopItem } from "@/core/entities/progression/IEvent";
 import { IMissionView } from "@/core/entities/progression/IMission";
 import { ICard } from "@/core/entities/ICard";
-import { CardThumbnail } from "@/components/game/card/CardThumbnail";
+import { ResponsiveGameCard } from "@/components/game/card/ResponsiveGameCard";
 import { progressionActionLabel } from "@/core/services/progression/action-labels";
 import { track } from "@/services/analytics/client/analytics-buffer";
 import { ProgressionDialogShell } from "./internal/ProgressionDialogShell";
@@ -75,10 +75,10 @@ function ShopItem({ item, balance, onRedeemed, cardMap }: { item: IEventShopItem
 
   return (
     <div className="flex flex-col gap-2 border border-fuchsia-900/40 bg-[#0a0716]/70 p-2 sm:gap-2.5 sm:p-3" style={{ clipPath: "polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px)" }}>
-      <div className="relative mx-auto w-full max-w-[160px]">
+      <div className="relative mx-auto w-full">
         {card ? (
-          <div className={`aspect-[13/19] w-full ${soldOut ? "opacity-40 grayscale" : "drop-shadow-[0_0_18px_rgba(232,121,249,0.35)]"}`}>
-            <CardThumbnail card={card} />
+          <div className={`w-full ${soldOut ? "opacity-40 grayscale" : "drop-shadow-[0_0_18px_rgba(232,121,249,0.35)]"}`}>
+            <ResponsiveGameCard card={card} />
           </div>
         ) : (
           <div className="flex aspect-[13/19] w-full items-center justify-center border border-slate-700 bg-slate-900 text-[10px] text-slate-500">{item.cardId}</div>

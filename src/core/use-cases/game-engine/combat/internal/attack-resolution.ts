@@ -6,7 +6,12 @@ import { assignPlayers } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 import { markAttackerAsUsed } from "@/core/use-cases/game-engine/combat/internal/attack-entities";
 import { validateDirectAttack } from "@/core/use-cases/game-engine/combat/internal/attack-validation";
-import { applyAttackDrainByDefenderPassive, resolveDirectHitBonus } from "@/core/use-cases/game-engine/combat/internal/attack-passives";
+import {
+  applyAttackDrainByDefenderPassive,
+  resolveDefenderReflectDamage,
+  resolveDirectHitBonus,
+  resolveEntityAttackBonus,
+} from "@/core/use-cases/game-engine/combat/internal/attack-passives";
 import { buildUpdatedAttacker, buildUpdatedDefender } from "@/core/use-cases/game-engine/combat/internal/attack-player-updates";
 
 interface IResolveDirectAttackParams {
@@ -57,7 +62,8 @@ export function resolveEntityBattleState(params: IResolveEntityBattleParams): { 
   }
 
   const isDefenderInDefenseMode = defenderEntity.mode === "DEFENSE" || defenderEntity.mode === "SET";
-  const attackerAttackBase = attackerEntity.card.attack ?? 0;
+  // Sobrecarga: el bonus de ATK es efímero (solo este ataque); no se persiste en la carta.
+  const attackerAttackBase = (attackerEntity.card.attack ?? 0) + resolveEntityAttackBonus(attackerEntity);
   const attackerAttackAfterPassive = applyAttackDrainByDefenderPassive(attackerAttackBase, defenderEntity);
   const passiveAttackReduction = Math.max(0, attackerAttackBase - attackerAttackAfterPassive);
   const defenderStat = isDefenderInDefenseMode ? (defenderEntity.card.defense ?? 0) : (defenderEntity.card.attack ?? 0);
@@ -67,6 +73,8 @@ export function resolveEntityBattleState(params: IResolveEntityBattleParams): { 
     isDefenderInDefenseMode,
   };
   const result = CombatService.calculateBattle(context);
+  // Cortafuegos Reactivo: el defensor refleja daño directo al jugador atacante, además del resultado del combate.
+  const reflectDamage = resolveDefenderReflectDamage(defenderEntity);
   const updatedAttacker = buildUpdatedAttacker(
     attacker,
     attackerEntity,
@@ -74,7 +82,7 @@ export function resolveEntityBattleState(params: IResolveEntityBattleParams): { 
     attackerInstanceId,
     passiveAttackReduction,
     result.attackerDestroyed,
-    result.damageToAttackerPlayer,
+    result.damageToAttackerPlayer + reflectDamage,
     result.defenderDestroyed,
   );
   const updatedDefender = buildUpdatedDefender(

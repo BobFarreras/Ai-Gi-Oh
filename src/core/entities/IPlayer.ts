@@ -13,6 +13,8 @@ export interface IBoardEntity {
   isNewlySummoned: boolean;
   /** Turnos restantes en los que esta entity no puede atacar (efecto LOCK_OPPONENT_ENTITY). */
   lockedTurnsRemaining?: number;
+  /** ATK acumulado por la pasiva mastery de Aprendizaje Continuo (tope +500); permite respetar el cap entre turnos. */
+  masteryAttackGrowth?: number;
 }
 
 export interface IPlayer {

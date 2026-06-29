@@ -13,7 +13,8 @@ export function applyCardProgressionToCard(card: ICard, progress: IPlayerCardPro
   const level = progress?.level ?? 0;
   const bonuses = resolveCardLevelBonuses(card.type, level);
   const versionTier = progress?.versionTier ?? 0;
-  const masteryPassiveSkillId = progress?.masteryPassiveSkillId ?? null;
+  // Si la progresión no fija pasiva (pre-V5 o no asignada), conserva la pasiva innata de la carta base.
+  const masteryPassiveSkillId = progress?.masteryPassiveSkillId ?? card.masteryPassiveSkillId ?? null;
   return {
     ...card,
     cost: resolveCombatCost(card.cost, card.type, level),
@@ -23,7 +24,8 @@ export function applyCardProgressionToCard(card: ICard, progress: IPlayerCardPro
     level,
     xp: progress?.xp ?? 0,
     masteryPassiveSkillId,
-    masteryPassiveLabel: versionTier >= 5 ? resolveMasteryPassiveLabel(masteryPassiveSkillId) : null,
+    // La etiqueta se muestra siempre que haya pasiva (innata desde V0 o de maestría a V5), con la magnitud de su versión.
+    masteryPassiveLabel: masteryPassiveSkillId ? resolveMasteryPassiveLabel(masteryPassiveSkillId, versionTier) : null,
   };
 }
 

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import { AnimatePresence, motion, Variants } from "framer-motion";
+import { CommunityLinks } from "@/components/landing/CommunityLinks";
 import { CrawlText } from "@/components/landing/CrawlText";
 import { CyberBackground } from "@/components/landing/CyberBackground";
 import { HeroCards } from "@/components/landing/HeroCards";
@@ -61,6 +62,8 @@ export default function HomePage() {
       <CyberBackground />
       {!isReady ? null : (
         <>
+          {phase === "SHOWCASE" ? <CommunityLinks onAction={playButtonClick} /> : null}
+
           <AnimatePresence mode="wait">
             {phase === "TERMINAL" ? <TerminalPrompt key="terminal" onComplete={toNarrative} onAction={playButtonClick} /> : null}
           </AnimatePresence>

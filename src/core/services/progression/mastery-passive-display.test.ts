@@ -14,4 +14,9 @@ describe("mastery-passive-display", () => {
   it("devuelve fallback para pasiva desconocida", () => {
     expect(resolveMasteryPassiveLabel("unknown-passive-id")).toBe("Pasiva Mastery activa en esta carta.");
   });
+
+  it("escala la magnitud del texto según la versión (innata vs V5)", () => {
+    expect(resolveMasteryPassiveLabel("passive-atk-drain-200", 1)).toContain("reduce 100 ATK");
+    expect(resolveMasteryPassiveLabel("passive-atk-drain-200", 5)).toContain("reduce 200 ATK");
+  });
 });

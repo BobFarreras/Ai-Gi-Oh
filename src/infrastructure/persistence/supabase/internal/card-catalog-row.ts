@@ -18,7 +18,9 @@ export interface ICardCatalogRow {
   fusion_recipe_id: string | null;
   fusion_material_ids: string[];
   fusion_energy_requirement: number | null;
+  /** Pasiva mastery activa desde V1 (poder innato); null en cartas normales. */
+  innate_passive_skill_id: string | null;
 }
 
 export const CARD_CATALOG_SELECT =
-  "id,name,description,type,faction,cost,attack,defense,archetype,trigger,bg_url,render_url,effect,fusion_recipe_id,fusion_material_ids,fusion_energy_requirement";
+  "id,name,description,type,faction,cost,attack,defense,archetype,trigger,bg_url,render_url,effect,fusion_recipe_id,fusion_material_ids,fusion_energy_requirement,innate_passive_skill_id";
