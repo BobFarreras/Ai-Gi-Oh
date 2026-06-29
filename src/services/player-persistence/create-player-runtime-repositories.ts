@@ -6,11 +6,9 @@ import { SupabasePlayerCardProgressRepository } from "@/infrastructure/persisten
 import { SupabaseTransactionRepository } from "@/infrastructure/persistence/supabase/SupabaseTransactionRepository";
 import { SupabaseWalletRepository } from "@/infrastructure/persistence/supabase/SupabaseWalletRepository";
 import { createSupabaseServerClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-server-client";
-import { InMemoryMarketRepository } from "@/infrastructure/repositories/InMemoryMarketRepository";
-import { canUseSupabaseMarketCatalog } from "@/services/player-persistence/internal/can-use-supabase-market-catalog";
 
 export interface IPlayerRuntimeRepositories {
-  marketRepository: InMemoryMarketRepository | SupabaseMarketRepository;
+  marketRepository: SupabaseMarketRepository;
   walletRepository: SupabaseWalletRepository;
   collectionRepository: SupabaseCardCollectionRepository;
   transactionRepository: SupabaseTransactionRepository;
@@ -20,9 +18,8 @@ export interface IPlayerRuntimeRepositories {
 
 export async function createPlayerRuntimeRepositories(): Promise<IPlayerRuntimeRepositories> {
   const client = await createSupabaseServerClient();
-  const marketRepository = (await canUseSupabaseMarketCatalog(client))
-    ? new SupabaseMarketRepository(client)
-    : new InMemoryMarketRepository();
+  // El mercado siempre se sirve desde la BD (estructura + seed garantizados por el bootstrap).
+  const marketRepository = new SupabaseMarketRepository(client);
   const collectionRepository = new SupabaseCardCollectionRepository(client);
   const walletRepository = new SupabaseWalletRepository(client);
   const transactionRepository = new SupabaseTransactionRepository(client);

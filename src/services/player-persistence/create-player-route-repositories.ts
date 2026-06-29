@@ -10,14 +10,12 @@ import { SupabaseTrainingProgressRepository } from "@/infrastructure/persistence
 import { SupabaseTransactionRepository } from "@/infrastructure/persistence/supabase/SupabaseTransactionRepository";
 import { SupabaseWalletRepository } from "@/infrastructure/persistence/supabase/SupabaseWalletRepository";
 import { createSupabaseRouteClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-route-client";
-import { InMemoryMarketRepository } from "@/infrastructure/repositories/InMemoryMarketRepository";
-import { canUseSupabaseMarketCatalog } from "@/services/player-persistence/internal/can-use-supabase-market-catalog";
 
 export async function createPlayerRouteRepositories(request: NextRequest, response: NextResponse) {
   const client = createSupabaseRouteClient(request, response);
-  const marketRepository = (await canUseSupabaseMarketCatalog(client))
-    ? new SupabaseMarketRepository(client)
-    : new InMemoryMarketRepository();
+  // El mercado siempre se sirve desde la BD: la estructura + seed se generan en el bootstrap
+  // del contribuidor, así que no hay caso real con catálogo vacío que justifique el mock.
+  const marketRepository = new SupabaseMarketRepository(client);
   const collectionRepository = new SupabaseCardCollectionRepository(client);
   const walletRepository = new SupabaseWalletRepository(client);
   const transactionRepository = new SupabaseTransactionRepository(client);
