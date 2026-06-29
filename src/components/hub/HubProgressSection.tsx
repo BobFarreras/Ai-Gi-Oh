@@ -2,55 +2,70 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, Medal, ShieldCheck } from "lucide-react";
+import { BookOpen, Coins, Library, Medal, ShieldCheck, Trophy, type LucideIcon } from "lucide-react";
 import { IPlayerHubProgress } from "@/core/entities/hub/IPlayerHubProgress";
+import { getEloLeague, getLeagueStyle, type EloLeague } from "@/components/hub/ranking/internal/tier";
+
+type ProgressTone = "amber" | "cyan" | "emerald" | "orange" | "violet";
 
 interface IProgressItemProps {
   label: string;
   value: string | number;
-  icon: "medal" | "chapter" | "tutorial";
-  tone: "amber" | "cyan" | "emerald" | "orange";
+  icon: LucideIcon;
+  tone: ProgressTone;
 }
 
-function ProgressItem({ label, value, icon, tone }: IProgressItemProps) {
-  const iconClass =
-    tone === "amber"
-      ? "text-amber-200"
-      : tone === "cyan"
-        ? "text-cyan-200"
-        : tone === "emerald"
-          ? "text-emerald-200"
-          : "text-orange-200";
-  const toneClass =
-    tone === "amber"
-      ? "border-amber-500/30 bg-amber-950/20"
-      : tone === "cyan"
-        ? "border-cyan-500/30 bg-cyan-950/20"
-        : tone === "emerald"
-          ? "border-emerald-500/30 bg-emerald-950/20"
-          : "border-orange-500/30 bg-orange-950/20";
-  const valueClass =
-    tone === "amber"
-      ? "text-amber-300"
-      : tone === "cyan"
-        ? "text-cyan-200"
-        : tone === "emerald"
-          ? "text-emerald-300"
-          : "text-orange-300";
-  const Icon = icon === "medal" ? Medal : icon === "chapter" ? BookOpen : ShieldCheck;
+const ICON_TONE_CLASS: Record<ProgressTone, string> = {
+  amber: "text-amber-200",
+  cyan: "text-cyan-200",
+  emerald: "text-emerald-200",
+  orange: "text-orange-200",
+  violet: "text-violet-200",
+};
 
+const BORDER_TONE_CLASS: Record<ProgressTone, string> = {
+  amber: "border-amber-500/30 bg-amber-950/20",
+  cyan: "border-cyan-500/30 bg-cyan-950/20",
+  emerald: "border-emerald-500/30 bg-emerald-950/20",
+  orange: "border-orange-500/30 bg-orange-950/20",
+  violet: "border-violet-500/30 bg-violet-950/20",
+};
+
+const VALUE_TONE_CLASS: Record<ProgressTone, string> = {
+  amber: "text-amber-300",
+  cyan: "text-cyan-200",
+  emerald: "text-emerald-300",
+  orange: "text-orange-300",
+  violet: "text-violet-300",
+};
+
+function ProgressItem({ label, value, icon: Icon, tone }: IProgressItemProps) {
   return (
-    <div className={`flex items-center gap-1 rounded-sm border px-1.5 py-1 shadow-[inset_0_0_15px_rgba(0,0,0,0.2)] sm:gap-2 sm:px-2 ${toneClass}`}>
+    <div className={`flex items-center gap-1 rounded-sm border px-1.5 py-1 shadow-[inset_0_0_15px_rgba(0,0,0,0.2)] sm:gap-2 sm:px-2 ${BORDER_TONE_CLASS[tone]}`}>
       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm border border-white/10 bg-black/30 sm:h-10 sm:w-10">
-        <Icon className={`h-3.5 w-3.5 animate-pulse sm:h-5 sm:w-5 ${iconClass}`} />
+        <Icon className={`h-3.5 w-3.5 animate-pulse sm:h-5 sm:w-5 ${ICON_TONE_CLASS[tone]}`} />
       </div>
-      <div className="flex flex-col text-left">
+      <div className="flex min-w-0 flex-col text-left">
         <span className="font-mono text-[6px] uppercase tracking-[0.12em] text-white/60 sm:text-[8px] sm:tracking-widest">{label}</span>
-        <span className={`font-mono text-[11px] font-black leading-tight sm:text-base ${valueClass}`}>{value}</span>
+        <span className={`truncate font-mono text-[11px] font-black leading-tight sm:text-base ${VALUE_TONE_CLASS[tone]}`}>{value}</span>
       </div>
     </div>
   );
 }
+
+interface IHudStats {
+  eloRating: number;
+  nexus: number;
+  collectionCount: number;
+}
+
+const LEAGUE_TONE: Record<EloLeague, ProgressTone> = {
+  bronze: "orange",
+  silver: "cyan",
+  gold: "amber",
+  diamond: "cyan",
+  master: "violet",
+};
 
 interface HubProgressSectionProps {
   progress: IPlayerHubProgress;
@@ -58,9 +73,39 @@ interface HubProgressSectionProps {
 }
 
 export function HubProgressSection({ progress, onToggleSound }: HubProgressSectionProps) {
-  const tutorialTone = progress.hasCompletedTutorial ? "emerald" : progress.hasSkippedTutorial ? "amber" : "orange";
+  const tutorialTone: ProgressTone = progress.hasCompletedTutorial ? "emerald" : progress.hasSkippedTutorial ? "amber" : "orange";
   const tutorialValue = progress.hasCompletedTutorial ? "Listo" : progress.hasSkippedTutorial ? "Libre" : "Pendiente";
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showExtra, setShowExtra] = useState(false);
+  const [stats, setStats] = useState<IHudStats | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const [statsError, setStatsError] = useState(false);
+
+  const league = stats ? getEloLeague(stats.eloRating) : null;
+  const leagueLabel = league ? getLeagueStyle(league).label : "";
+
+  /** Carga lazy: solo se dispara desde el click de "Ver más" (no en render/efecto). */
+  async function loadStats(): Promise<void> {
+    setIsLoadingStats(true);
+    setStatsError(false);
+    try {
+      const response = await fetch("/api/player/hud-stats", { credentials: "include" });
+      if (!response.ok) throw new Error("hud-stats failed");
+      setStats((await response.json()) as IHudStats);
+    } catch {
+      setStatsError(true);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  }
+
+  function toggleExtra(): void {
+    onToggleSound?.();
+    const next = !showExtra;
+    setShowExtra(next);
+    // Pide los datos la primera vez (o reintenta si la anterior falló).
+    if (next && !isLoadingStats && (!stats || statsError)) void loadStats();
+  }
 
   return (
     <section
@@ -87,10 +132,39 @@ export function HubProgressSection({ progress, onToggleSound }: HubProgressSecti
         </div>
       </button>
       {!isCollapsed ? (
-        <div className="relative z-10 mt-1.5 grid w-full grid-cols-3 gap-1 px-1 sm:gap-2">
-        <ProgressItem label="Medallas" value={progress.medals} icon="medal" tone="amber" />
-        <ProgressItem label="Capítulo" value={progress.storyChapter} icon="chapter" tone="cyan" />
-        <ProgressItem label="Tutorial" value={tutorialValue} icon="tutorial" tone={tutorialTone} />
+        <div className="relative z-10 mt-1.5 flex w-full flex-col gap-1.5 px-1">
+          <div className="grid w-full grid-cols-3 gap-1 sm:gap-2">
+            <ProgressItem label="Medallas" value={progress.medals} icon={Medal} tone="amber" />
+            <ProgressItem label="Capítulo" value={progress.storyChapter} icon={BookOpen} tone="cyan" />
+            <ProgressItem label="Tutorial" value={tutorialValue} icon={ShieldCheck} tone={tutorialTone} />
+          </div>
+
+          {showExtra ? (
+            <div className="grid w-full grid-cols-3 gap-1 sm:gap-2">
+              {isLoadingStats ? (
+                <p className="col-span-3 py-1.5 text-center font-mono text-[9px] uppercase tracking-widest text-cyan-400/70">Cargando…</p>
+              ) : statsError ? (
+                <p className="col-span-3 py-1.5 text-center font-mono text-[9px] uppercase tracking-widest text-rose-300/80">Error al cargar</p>
+              ) : stats ? (
+                <>
+                  <ProgressItem label={league ? `Liga ${leagueLabel}` : "Ranking"} value={stats.eloRating} icon={Trophy} tone={league ? LEAGUE_TONE[league] : "violet"} />
+                  <ProgressItem label="Nexus" value={stats.nexus.toLocaleString()} icon={Coins} tone="amber" />
+                  <ProgressItem label="Colección" value={stats.collectionCount} icon={Library} tone="cyan" />
+                </>
+              ) : null}
+            </div>
+          ) : null}
+
+          <button
+            type="button"
+            aria-expanded={showExtra}
+            aria-label={showExtra ? "Ver menos estadísticas" : "Ver más estadísticas"}
+            onClick={toggleExtra}
+            className="flex w-full items-center justify-center gap-1 border-t border-cyan-900/40 pt-1 font-mono text-[8px] font-black uppercase tracking-[0.25em] text-cyan-400/80 transition-colors hover:text-cyan-200 sm:text-[9px]"
+          >
+            {showExtra ? "Ver menos" : "Ver más"}
+            <svg viewBox="0 0 24 24" className={`h-3 w-3 fill-none stroke-current transition-transform ${showExtra ? "rotate-180" : ""}`} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+          </button>
         </div>
       ) : null}
     </section>
