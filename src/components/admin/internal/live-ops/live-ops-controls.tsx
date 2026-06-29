@@ -72,10 +72,12 @@ export function LiveOpsCardPicker({ cardId, onChange }: { cardId: string; onChan
   }, []);
 
   useEffect(() => {
-    if (!cardId) { setPreviewCard(null); return; }
+    if (!cardId) return;
+    let active = true;
     fetch(`/api/admin/catalog/cards?id=${cardId}`).then((r) => r.ok ? r.json() : null).then((data) => {
-      if (data && "renderUrl" in data) setPreviewCard(data as IAdminCard);
+      if (active && data && "renderUrl" in data) setPreviewCard(data as IAdminCard);
     }).catch(() => {});
+    return () => { active = false; };
   }, [cardId]);
 
   const filtered = useMemo(() => {
@@ -85,14 +87,16 @@ export function LiveOpsCardPicker({ cardId, onChange }: { cardId: string; onChan
   }, [allCards, search]);
 
   const selectedLight = allCards.find((c) => c.id === cardId);
-  const thumbnailCard = previewCard ? adminToCard(previewCard) : null;
+  // Preview derivado: solo vale si corresponde a la carta seleccionada actual (evita stale al cambiar de carta o vaciar).
+  const activePreview = previewCard && previewCard.id === cardId ? previewCard : null;
+  const thumbnailCard = activePreview ? adminToCard(activePreview) : null;
 
   return (
     <div className="flex items-end gap-3">
       <div className="relative aspect-[13/19] w-20 shrink-0">
-        {thumbnailCard ? <CardThumbnail card={thumbnailCard} /> : previewCard?.renderUrl ? (
+        {thumbnailCard ? <CardThumbnail card={thumbnailCard} /> : activePreview?.renderUrl ? (
           <div className="relative h-full w-full overflow-hidden border border-slate-700 bg-slate-900">
-            <Image src={previewCard.renderUrl} alt={previewCard.name} fill className="object-cover" sizes="80px" />
+            <Image src={activePreview.renderUrl} alt={activePreview.name} fill className="object-cover" sizes="80px" />
           </div>
         ) : selectedLight ? (
           <div className="flex h-full w-full items-center justify-center border border-slate-700 bg-slate-900 text-[9px] text-slate-400 text-center px-1">{selectedLight.name}</div>
