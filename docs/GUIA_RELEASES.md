@@ -48,7 +48,12 @@ Formato: `MAJOR.MINOR.PATCH`
    - `pnpm release:tag`
 7. Publicar tag:
    - `pnpm release:tag:push`
-8. Crear GitHub Release desde el tag y pegar resumen del changelog.
+8. La **GitHub Release se crea/actualiza automáticamente** al pushear el tag (workflow
+   `.github/workflows/release-on-tag.yml`): toma las notas de la sección del `CHANGELOG`
+   del tag y la marca como `Latest`. **No hay que crearla a mano.**
+   - Comprobar que en `Releases` aparece la versión recién publicada como `Latest`.
+   - Si por lo que sea no apareciera: `gh release create vX.Y.Z --notes-file - --latest`
+     (o re-lanzar el workflow `release-on-tag` con `workflow_dispatch`).
 
 ## Convención de decisión rápida (qué número subo)
 
@@ -64,6 +69,11 @@ Formato: `MAJOR.MINOR.PATCH`
    - Falla si hay cambios sin commit o si el tag ya existe.
 2. `pnpm release:tag:push`:
    - Hace lo mismo y además sube el tag a `origin`.
+3. Workflow `release-on-tag` (`.github/workflows/release-on-tag.yml`):
+   - Se dispara con cada push de un tag `v*` (y por `workflow_dispatch`).
+   - Crea o actualiza la **GitHub Release** con las notas del `CHANGELOG` y la marca `Latest`.
+   - Garantiza que un tag de git **siempre** se traduzca en una Release publicada
+     (un tag por sí solo NO aparece en la página de Releases).
 
 ## Nota práctica
 

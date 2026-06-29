@@ -74,7 +74,7 @@ function ShopItem({ item, balance, onRedeemed, cardMap }: { item: IEventShopItem
   }
 
   return (
-    <div className="flex flex-col gap-2.5 border border-fuchsia-900/40 bg-[#0a0716]/70 p-3" style={{ clipPath: "polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px)" }}>
+    <div className="flex flex-col gap-2 border border-fuchsia-900/40 bg-[#0a0716]/70 p-2 sm:gap-2.5 sm:p-3" style={{ clipPath: "polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px)" }}>
       <div className="relative mx-auto w-full max-w-[160px]">
         {card ? (
           <div className={`aspect-[13/19] w-full ${soldOut ? "opacity-40 grayscale" : "drop-shadow-[0_0_18px_rgba(232,121,249,0.35)]"}`}>
@@ -177,7 +177,7 @@ export function EventPanel({ overview, eventMissions, onClose }: IEventPanelProp
       ) : null}
 
       <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-[0.2em] text-fuchsia-400/90">Tienda de canje</h3>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4">
         {items.map((item) => (
           <ShopItem key={item.itemId} item={item} balance={balance} onRedeemed={handleRedeemed} cardMap={cardMap} />
         ))}

@@ -1,0 +1,58 @@
+name: release-on-tag
+
+# Publica (o actualiza) una Release de GitHub automáticamente al pushear un tag vX.Y.Z.
+# Motivo: un tag de git NO es una Release; sin esto, la página de Releases se queda atrás
+# respecto a la última versión. Las notas se toman de la sección del CHANGELOG del tag.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag a publicar (p. ej. v1.5.0)"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-on-tag-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Crear o actualizar la Release de GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="${TAG#v}"
+
+          # Extrae la sección "## [VERSION]" del CHANGELOG (sin regex frágil: compara prefijos literales).
+          NOTES="$(awk -v hdr="## [$VERSION]" '
+            index($0, hdr) == 1 { f = 1; next }
+            f && substr($0, 1, 4) == "## [" { f = 0 }
+            f { print }
+          ' CHANGELOG.md || true)"
+
+          if [ -z "${NOTES//[$'\n\r\t ']/}" ]; then
+            NOTES="Release ${TAG}. Ver el CHANGELOG para más detalle."
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "La Release $TAG ya existe: actualizo sus notas."
+            printf '%s\n' "$NOTES" | gh release edit "$TAG" --notes-file - --latest
+          else
+            echo "Creo la Release $TAG."
+            printf '%s\n' "$NOTES" | gh release create "$TAG" --title "$TAG" --notes-file - --latest
+          fi

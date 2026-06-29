@@ -10,11 +10,11 @@ import { consumeAuthRateLimit } from "@/services/auth/api/security/auth-rate-lim
 import { hasTrustedAuthOrigin } from "@/services/auth/api/security/validate-auth-origin";
 
 export async function handleLoginRequest(request: NextRequest): Promise<NextResponse> {
-  if (!hasTrustedAuthOrigin(request)) {
-    return NextResponse.json({ ok: false, message: "Origen de petición no confiable." }, { status: 403 });
-  }
-
   try {
+    if (!hasTrustedAuthOrigin(request)) {
+      return NextResponse.json({ ok: false, message: "Origen de petición no confiable." }, { status: 403 });
+    }
+
     const credentials = await readAuthCredentials(request);
     const fingerprint = getAuthFingerprint(request, credentials.email);
     const limitByIp = await consumeAuthRateLimit(`login:ip:${fingerprint.ip}`, 10, 10 * 60 * 1000);
