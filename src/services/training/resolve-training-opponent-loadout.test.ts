@@ -23,6 +23,21 @@ describe("resolveTrainingOpponentLoadout", () => {
     expect(loadout.deck[0]?.xp).toBe(9999);
   });
 
+  it("aplica el escalado del tier (defaultScaling) por encima del de la dificultad", () => {
+    const card: ICard = { id: "entity-x", name: "X", description: "", type: "ENTITY", faction: "NEUTRAL", cost: 1, attack: 1000, defense: 1000 };
+    const cardCatalog = new Map<string, ICard>([["entity-x", card]]);
+    const opponents: Record<string, IArenaOpponent> = {
+      "training-tier-1": {
+        id: "training-tier-1", codeName: "x", displayName: "X", avatarUrl: "a", introUrl: "i", storyOpponentId: "opp-x",
+        variants: [{ id: "v1", label: null, deckCards: [{ cardId: "entity-x", versionTier: null, level: null, xp: null }], fusionCards: [] }],
+      },
+    };
+    const loadout = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", deckTemplateId: "training-tier-1", tierWins: 0, tierMatches: 0, opponents, cardCatalog, defaultScaling: { versionTier: 3, level: 10, xp: 980 } });
+    // EASY daría 0/0; el escalado del tier manda → 3/10.
+    expect(loadout.deck[0]?.versionTier).toBe(3);
+    expect(loadout.deck[0]?.level).toBe(10);
+  });
+
   it("resuelve deck completo y fusión para un tier válido", () => {
     const loadout = resolveTrainingOpponentLoadout({
       tier: 3,

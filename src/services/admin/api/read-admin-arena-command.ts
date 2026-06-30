@@ -68,5 +68,8 @@ export function readArenaTierCommand(data: Raw): IUpsertArenaTierCommand {
     opponentId: asString(data.opponentId, "El oponente"),
     rewardMultiplier: asNumber(data.rewardMultiplier, "El multiplicador de recompensa"),
     isActive: data.isActive === true,
+    defaultVersionTier: asOptionalNumber(data.defaultVersionTier),
+    defaultLevel: asOptionalNumber(data.defaultLevel),
+    defaultXp: asOptionalNumber(data.defaultXp),
   };
 }

@@ -38,6 +38,10 @@ export interface IAdminArenaTier {
   opponentId: string;
   rewardMultiplier: number;
   isActive: boolean;
+  /** Escalado de cartas del rival en este tier (null = usa el de la dificultad). */
+  defaultVersionTier: number | null;
+  defaultLevel: number | null;
+  defaultXp: number | null;
 }
 
 /** Carta válida para el selector del editor (restringida al catálogo en código que hidrata arena). */

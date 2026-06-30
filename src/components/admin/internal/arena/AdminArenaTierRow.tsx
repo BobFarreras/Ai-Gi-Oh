@@ -15,6 +15,13 @@ interface IAdminArenaTierRowProps {
 const DIFFICULTIES = ["EASY", "NORMAL", "HARD", "BOSS", "MASTER", "MYTHIC"];
 const FIELD = "h-7 rounded border border-slate-600 bg-slate-950/70 px-1.5 text-[11px] text-slate-100";
 
+/** Vacío = null (usa el escalado por dificultad). */
+function parseOptional(value: string): number | null {
+  if (value.trim() === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export function AdminArenaTierRow({ tier, opponents, isBusy, onSave, onDelete }: IAdminArenaTierRowProps) {
   const [draft, setDraft] = useState<IAdminArenaTier>(tier);
 
@@ -34,6 +41,12 @@ export function AdminArenaTierRow({ tier, opponents, isBusy, onSave, onDelete }:
       <select aria-label="Oponente del tier" className={`${FIELD} min-w-0 flex-1`} value={draft.opponentId} onChange={(event) => setDraft({ ...draft, opponentId: event.target.value })}>
         {opponents.map((opponent) => <option key={opponent.id} value={opponent.id}>{opponent.displayName} ({opponent.id})</option>)}
       </select>
+      <label className="flex items-center gap-1 text-[10px] text-slate-400" title="Nivel de las cartas del rival (vacío = por dificultad)">Nv rival
+        <input aria-label="Nivel del rival" className={`${FIELD} w-12`} placeholder="auto" inputMode="numeric" value={draft.defaultLevel ?? ""} onChange={(event) => setDraft({ ...draft, defaultLevel: parseOptional(event.target.value) })} />
+      </label>
+      <label className="flex items-center gap-1 text-[10px] text-slate-400" title="Versión de las cartas del rival (vacío = por dificultad)">V rival
+        <input aria-label="Versión del rival" className={`${FIELD} w-11`} placeholder="auto" inputMode="numeric" value={draft.defaultVersionTier ?? ""} onChange={(event) => setDraft({ ...draft, defaultVersionTier: parseOptional(event.target.value) })} />
+      </label>
       <label className="flex items-center gap-1 text-[11px] text-slate-300"><input type="checkbox" aria-label="Tier activo" checked={draft.isActive} onChange={(event) => setDraft({ ...draft, isActive: event.target.checked })} /> Activo</label>
       <button type="button" aria-label="Guardar tier" disabled={isBusy} className="h-7 rounded border border-emerald-600/60 bg-emerald-950/40 px-3 text-[10px] font-black uppercase text-emerald-300 hover:bg-emerald-900/50 disabled:opacity-50" onClick={() => onSave(draft)}>Guardar</button>
       <button type="button" aria-label="Eliminar tier" disabled={isBusy} className="h-7 w-7 rounded border border-rose-700/50 text-[12px] text-rose-300 hover:bg-rose-900/40 disabled:opacity-50" onClick={() => onDelete(draft.tier)}>×</button>

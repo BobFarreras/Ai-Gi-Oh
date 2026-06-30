@@ -11,7 +11,7 @@ export function AdminArenaPanel() {
 
   const addTier = () => {
     const nextTier = arena.tiers.reduce((max, tier) => Math.max(max, tier.tier), 0) + 1;
-    arena.saveTier({ tier: nextTier, code: "NUEVO", requiredWinsInPreviousTier: 5, aiDifficulty: "NORMAL", opponentId: arena.opponents[0]?.id ?? "", rewardMultiplier: 1, isActive: false });
+    arena.saveTier({ tier: nextTier, code: "NUEVO", requiredWinsInPreviousTier: 5, aiDifficulty: "NORMAL", opponentId: arena.opponents[0]?.id ?? "", rewardMultiplier: 1, isActive: false, defaultVersionTier: null, defaultLevel: null, defaultXp: null });
   };
   const addOpponent = () => {
     const id = `arena-opp-${Math.random().toString(36).slice(2, 7)}`;

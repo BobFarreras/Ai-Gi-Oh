@@ -4,7 +4,7 @@ import { IArenaDeckCardEntry, IArenaOpponent } from "@/core/entities/training/IA
 import { ITrainingTierDefinition } from "@/core/entities/training/ITrainingTierDefinition";
 import { OpponentDifficulty } from "@/core/services/opponent/difficulty/types";
 
-interface ITierRow { tier: number; code: string; required_wins_in_previous_tier: number; ai_difficulty: string; opponent_id: string; reward_multiplier: number }
+interface ITierRow { tier: number; code: string; required_wins_in_previous_tier: number; ai_difficulty: string; opponent_id: string; reward_multiplier: number; default_version_tier: number | null; default_level: number | null; default_xp: number | null }
 interface IOpponentRow { id: string; code_name: string; display_name: string; avatar_url: string; intro_url: string; story_opponent_id: string }
 interface IVariantRow { id: string; opponent_id: string; label: string | null }
 interface ICardRow { variant_id: string; card_id: string; zone: "DECK" | "FUSION"; version_tier: number | null; level: number | null; xp: number | null }
@@ -16,7 +16,7 @@ export class SupabaseArenaCatalogRepository {
   async listTiers(): Promise<ITrainingTierDefinition[]> {
     const { data, error } = await this.client
       .from("arena_tiers")
-      .select("tier,code,required_wins_in_previous_tier,ai_difficulty,opponent_id,reward_multiplier")
+      .select("tier,code,required_wins_in_previous_tier,ai_difficulty,opponent_id,reward_multiplier,default_version_tier,default_level,default_xp")
       .eq("is_active", true)
       .order("tier", { ascending: true });
     if (error || !data) return [];
@@ -27,6 +27,9 @@ export class SupabaseArenaCatalogRepository {
       aiDifficulty: row.ai_difficulty as OpponentDifficulty,
       deckTemplateId: row.opponent_id,
       rewardMultiplier: Number(row.reward_multiplier),
+      defaultVersionTier: row.default_version_tier,
+      defaultLevel: row.default_level,
+      defaultXp: row.default_xp,
     }));
   }
 

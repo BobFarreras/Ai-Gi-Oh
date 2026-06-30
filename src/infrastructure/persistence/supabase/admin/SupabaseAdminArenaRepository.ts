@@ -13,7 +13,7 @@ import {
 interface IOpponentRow { id: string; code_name: string; display_name: string; avatar_url: string; intro_url: string; story_opponent_id: string; is_active: boolean; sort_order: number }
 interface IVariantRow { id: string; opponent_id: string; label: string | null; sort_order: number; is_active: boolean }
 interface ICardRow { variant_id: string; card_id: string; zone: "DECK" | "FUSION"; version_tier: number | null; level: number | null; xp: number | null }
-interface ITierRow { tier: number; code: string; required_wins_in_previous_tier: number; ai_difficulty: string; opponent_id: string; reward_multiplier: number; is_active: boolean }
+interface ITierRow { tier: number; code: string; required_wins_in_previous_tier: number; ai_difficulty: string; opponent_id: string; reward_multiplier: number; is_active: boolean; default_version_tier: number | null; default_level: number | null; default_xp: number | null }
 
 export class SupabaseAdminArenaRepository {
   constructor(private readonly client: SupabaseClient) {}
@@ -51,11 +51,12 @@ export class SupabaseAdminArenaRepository {
   }
 
   async getTiers(): Promise<IAdminArenaTier[]> {
-    const { data, error } = await this.client.from("arena_tiers").select("tier,code,required_wins_in_previous_tier,ai_difficulty,opponent_id,reward_multiplier,is_active").order("tier");
+    const { data, error } = await this.client.from("arena_tiers").select("tier,code,required_wins_in_previous_tier,ai_difficulty,opponent_id,reward_multiplier,is_active,default_version_tier,default_level,default_xp").order("tier");
     if (error) throw new ValidationError("No se pudieron leer los tiers de arena.");
     return (data as ITierRow[]).map((row) => ({
       tier: row.tier, code: row.code, requiredWinsInPreviousTier: row.required_wins_in_previous_tier,
       aiDifficulty: row.ai_difficulty, opponentId: row.opponent_id, rewardMultiplier: Number(row.reward_multiplier), isActive: row.is_active,
+      defaultVersionTier: row.default_version_tier, defaultLevel: row.default_level, defaultXp: row.default_xp,
     }));
   }
 
@@ -87,7 +88,8 @@ export class SupabaseAdminArenaRepository {
   async upsertTier(command: IUpsertArenaTierCommand): Promise<void> {
     const { error } = await this.client.from("arena_tiers").upsert({
       tier: command.tier, code: command.code, required_wins_in_previous_tier: command.requiredWinsInPreviousTier,
-      ai_difficulty: command.aiDifficulty, opponent_id: command.opponentId, reward_multiplier: command.rewardMultiplier, is_active: command.isActive, updated_at: new Date().toISOString(),
+      ai_difficulty: command.aiDifficulty, opponent_id: command.opponentId, reward_multiplier: command.rewardMultiplier, is_active: command.isActive,
+      default_version_tier: command.defaultVersionTier, default_level: command.defaultLevel, default_xp: command.defaultXp, updated_at: new Date().toISOString(),
     });
     if (error) throw new ValidationError("No se pudo guardar el tier de arena.");
   }

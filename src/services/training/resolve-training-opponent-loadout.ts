@@ -4,7 +4,7 @@ import { ValidationError } from "@/core/errors/ValidationError";
 import { ICard } from "@/core/entities/ICard";
 import { IArenaDeckVariant, IArenaOpponent } from "@/core/entities/training/IArenaOpponent";
 import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
-import { applyArenaCardScaling } from "@/services/training/internal/training-card-scaling";
+import { applyArenaCardScaling, ITrainingCardScale, resolveDifficultyScale } from "@/services/training/internal/training-card-scaling";
 import { buildArenaOpponentsFromPresets } from "@/services/training/internal/build-arena-opponents-from-presets";
 
 interface IResolveTrainingOpponentLoadoutInput {
@@ -17,6 +17,8 @@ interface IResolveTrainingOpponentLoadoutInput {
   opponents?: Record<string, IArenaOpponent>;
   /** Catálogo de cartas para hidratar el mazo; por defecto el catálogo en código. */
   cardCatalog?: Map<string, ICard>;
+  /** Escalado de cartas propio del tier; si se omite, se usa el escalado por dificultad efectiva. */
+  defaultScaling?: ITrainingCardScale | null;
 }
 
 export interface ITrainingOpponentLoadout {
@@ -94,6 +96,8 @@ export function resolveTrainingOpponentLoadout(input: IResolveTrainingOpponentLo
   if (!opponent) throw new ValidationError(`No existe preset de oponente para '${selectedTemplateId}'.`);
   const selectedVariant = resolveDeckVariant(opponent, input.tierMatches);
   const effectiveDifficulty = resolveAdaptiveDifficulty(input.aiDifficulty, input.tierWins, input.tierMatches);
+  // El escalado propio del tier (editable) manda; si no hay, se usa el de la dificultad efectiva.
+  const baseScale = input.defaultScaling ?? resolveDifficultyScale(effectiveDifficulty);
   return {
     tier: input.tier,
     difficulty: effectiveDifficulty,
@@ -103,7 +107,7 @@ export function resolveTrainingOpponentLoadout(input: IResolveTrainingOpponentLo
     introUrl: opponent.introUrl,
     deckVariantId: selectedVariant.id,
     deckVariantLabel: toVariantLabel(selectedVariant),
-    deck: applyArenaCardScaling(selectedVariant.deckCards, effectiveDifficulty, cardCatalog),
-    fusionDeck: applyArenaCardScaling(selectedVariant.fusionCards, effectiveDifficulty, cardCatalog),
+    deck: applyArenaCardScaling(selectedVariant.deckCards, baseScale, cardCatalog),
+    fusionDeck: applyArenaCardScaling(selectedVariant.fusionCards, baseScale, cardCatalog),
   };
 }
