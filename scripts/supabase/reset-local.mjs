@@ -18,6 +18,8 @@ function runNode(title, args) {
 ui.section("Re-sincronizar BD local");
 // 1) Regenerar supabase/migrations desde docs/supabase/sql (fuente de verdad).
 runNode("Regenerando migraciones desde docs/supabase/sql", ["scripts/supabase/prepare-local-migrations.mjs"]);
-// 2) Reset: reaplica migraciones + supabase/seed.sql sobre una BD limpia.
+// 2) Validar que toda carta referenciada por el seed la cree una migración (falla rápido, sin Docker).
+runNode("Validando referencias de cartas (seed ↔ migraciones)", ["scripts/supabase/validate-card-references.mjs"]);
+// 3) Reset: reaplica migraciones + supabase/seed.sql sobre una BD limpia.
 runNode("Reseteando BD local (migraciones + seed)", ["scripts/supabase/run-cli.mjs", "db", "reset", "--local"]);
 ui.ok("BD local sincronizada con el repo");
