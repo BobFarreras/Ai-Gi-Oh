@@ -6,6 +6,9 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+- `pnpm release:prepare <major|minor|patch|X.Y.Z>`: sincroniza la versión en `package.json`, `README.md` y `CHANGELOG.md` (incluidos los enlaces de comparación del pie) en un solo comando, promoviendo la sección `[Unreleased]` a la nueva versión. Evita el bump manual en 3 sitios.
+
 ## [1.7.1] - 2026-06-30
 
 ### Fixed

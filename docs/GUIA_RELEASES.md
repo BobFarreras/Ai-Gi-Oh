@@ -37,18 +37,21 @@ Formato: `MAJOR.MINOR.PATCH`
 
 1. Sincronizar rama:
    - `main` actualizado con `origin/main`.
-2. Validar gates:
+2. Documentar cambios:
+   - ir añadiendo las notas bajo `## [Unreleased]` del `CHANGELOG.md` durante el desarrollo.
+3. Subir la versión en **todos los sitios a la vez** (package.json + README + CHANGELOG):
+   - `pnpm release:prepare <patch|minor|major>` (o una versión explícita `X.Y.Z`).
+   - Previsualiza con `--dry-run` antes de escribir.
+   - Promueve `## [Unreleased]` a `## [X.Y.Z] - fecha`, añade los enlaces de comparación del
+     pie y actualiza el badge/subtítulo del README. Falla si `[Unreleased]` está vacío
+     (usa `--allow-empty` solo si de verdad no hay notas).
+4. Validar gates:
    - `pnpm quality:check`
-3. Actualizar `CHANGELOG.md`:
-   - mover notas de `Unreleased` a nueva versión.
-4. Crear commit de release:
+5. Crear commit de release:
    - `chore(release): vX.Y.Z`
-5. Cambiar manualmente `package.json` (campo `version`).
-6. Crear tag leyendo versión automáticamente:
-   - `pnpm release:tag`
-7. Publicar tag:
+6. Crear y publicar tag (lee la versión de `package.json`):
    - `pnpm release:tag:push`
-8. La **GitHub Release se crea/actualiza automáticamente** al pushear el tag (workflow
+7. La **GitHub Release se crea/actualiza automáticamente** al pushear el tag (workflow
    `.github/workflows/release-on-tag.yml`): toma las notas de la sección del `CHANGELOG`
    del tag y la marca como `Latest`. **No hay que crearla a mano.**
    - Comprobar que en `Releases` aparece la versión recién publicada como `Latest`.
@@ -63,7 +66,13 @@ Formato: `MAJOR.MINOR.PATCH`
 
 ## Automatización disponible
 
-1. `pnpm release:tag`:
+1. `pnpm release:prepare <patch|minor|major|X.Y.Z>`:
+   - Sube la versión en `package.json`, `README.md` (comentario, subtítulo y badge) y `CHANGELOG.md`.
+   - En el `CHANGELOG`: promueve `## [Unreleased]` a la nueva versión con fecha y añade los enlaces
+     de comparación del pie (`[X.Y.Z]: .../compare/...` y `[Unreleased]: .../compare/vX.Y.Z...HEAD`).
+   - Acepta `--dry-run` (previsualiza) y `--allow-empty` (permite versión sin notas).
+   - No commitea ni crea el tag: revisa el diff y continúa con `release:tag:push`.
+2. `pnpm release:tag`:
    - Lee la versión de `package.json`.
    - Crea `vX.Y.Z`.
    - Falla si hay cambios sin commit o si el tag ya existe.
