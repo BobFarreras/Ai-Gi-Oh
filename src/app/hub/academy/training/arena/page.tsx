@@ -1,4 +1,5 @@
 // src/app/hub/academy/training/arena/page.tsx - Entry server-side de arena training con tier validado y runtime listo para UI cliente.
+import { cookies } from "next/headers";
 import { HubSectionEntryBurst } from "@/components/hub/sections/HubSectionEntryBurst";
 import { TrainingDeckReadyGate } from "@/components/hub/academy/training/TrainingDeckReadyGate";
 import { TrainingArenaClient } from "@/components/hub/academy/training/modes/arena/TrainingArenaClient";
@@ -14,7 +15,11 @@ interface TrainingArenaPageProps {
 
 export default async function TrainingArenaPage({ searchParams }: TrainingArenaPageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
-  const selectedTier = Number.parseInt(resolvedSearchParams?.tier ?? "1", 10);
+  // Sin ?tier explícito se recupera el último nivel que eligió el jugador (cookie). El use-case lo
+  // re-valida contra el progreso (clampa si ya no está desbloqueado), así que es seguro.
+  const persistedTier = (await cookies()).get("arena_tier")?.value;
+  const requestedTier = Number.parseInt(resolvedSearchParams?.tier ?? persistedTier ?? "1", 10);
+  const selectedTier = Number.isFinite(requestedTier) && requestedTier > 0 ? requestedTier : 1;
   const runtime = await getTrainingArenaRuntimeData(selectedTier);
   const currentTier = runtime.tiers.find((tier) => tier.tier === runtime.effectiveTier) ?? runtime.tiers[0];
   const currentTierStats = runtime.progress.tierStats.find((tierStats) => tierStats.tier === (currentTier?.tier ?? 1));

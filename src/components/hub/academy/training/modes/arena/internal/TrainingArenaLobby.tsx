@@ -29,7 +29,7 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
             transition={{ duration: 2.6, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
           />
           <div className="relative flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] font-black uppercase tracking-[0.14em] text-cyan-100 md:gap-x-3.5 md:text-[12px] lg:text-[13px]">
-            <span className="text-cyan-300 md:text-[13px] lg:text-[14px]">Arena Nivel {props.level}</span>
+            <span className="text-cyan-300 md:text-[13px] lg:text-[14px]">Arena · Nivel {props.level} de {props.tierOptions.length}</span>
             <span className="h-1 w-1 rounded-full bg-cyan-300/80" />
             <span className="inline-flex items-center gap-1">
               <svg className="h-3.5 w-3.5 text-cyan-300 md:h-4 md:w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2 3 6v8l7 4 7-4V6l-7-4Zm0 2.3 4.8 2.75L10 9.8 5.2 7.05 10 4.3Z" /></svg>
@@ -54,25 +54,38 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
           <div className="relative mt-1 text-center text-[11px] font-semibold tracking-[0.08em] text-cyan-100/85 md:text-[12px] lg:text-[13px]">
             {props.nextTierRequirementLabel}
           </div>
-          <div className="relative mt-2 flex flex-wrap items-center justify-center gap-1.5">
-            {props.tierOptions.map((tierOption) => (
-              <button
-                key={tierOption.tier}
-                type="button"
-                disabled={!tierOption.isUnlocked || tierOption.isSelected}
-                aria-label={`Seleccionar nivel ${tierOption.tier}`}
-                onClick={() => props.onSelectTier(tierOption.tier)}
-                className={`rounded border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] transition md:text-[11px] ${
-                  tierOption.isSelected
-                    ? "border-emerald-300/65 bg-emerald-500/20 text-emerald-100"
-                    : tierOption.isUnlocked
-                      ? "border-cyan-300/45 bg-cyan-500/10 text-cyan-100 hover:bg-cyan-500/20"
-                      : "cursor-not-allowed border-slate-600/45 bg-slate-900/45 text-slate-500"
-                }`}
-              >
-                Nivel {tierOption.tier}
-              </button>
-            ))}
+          <div className="relative mt-2 flex flex-col items-center gap-1">
+            <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-cyan-300/70 md:text-[10px]">Selecciona tu nivel</span>
+            <div className="flex flex-wrap items-center justify-center gap-1.5">
+              {props.tierOptions.map((tierOption) => {
+                const isLocked = !tierOption.isUnlocked;
+                return (
+                  <button
+                    key={tierOption.tier}
+                    type="button"
+                    disabled={isLocked || tierOption.isSelected}
+                    aria-label={`Seleccionar nivel ${tierOption.tier}`}
+                    aria-current={tierOption.isSelected ? "true" : undefined}
+                    onClick={() => props.onSelectTier(tierOption.tier)}
+                    className={`relative inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.1em] transition md:text-[12px] ${
+                      tierOption.isSelected
+                        ? "border-emerald-300 bg-emerald-500/25 text-emerald-50 shadow-[0_0_12px_rgba(16,185,129,0.45)] ring-1 ring-emerald-300/60"
+                        : isLocked
+                          ? "cursor-not-allowed border-slate-600/45 bg-slate-900/45 text-slate-500"
+                          : "border-cyan-300/45 bg-cyan-500/10 text-cyan-100 hover:bg-cyan-500/20"
+                    }`}
+                  >
+                    {isLocked ? (
+                      <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6 8V6a4 4 0 1 1 8 0v2h1v9H5V8h1Zm2 0h4V6a2 2 0 1 0-4 0v2Z" /></svg>
+                    ) : null}
+                    <span>Nivel {tierOption.tier}</span>
+                    {tierOption.isSelected ? (
+                      <span className="ml-0.5 rounded bg-emerald-300/90 px-1 text-[8px] font-black tracking-[0.05em] text-emerald-950">ACTUAL</span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </motion.header>
         <div className="grid min-h-0 flex-1 grid-cols-1 items-stretch gap-2 md:w-full md:flex-none md:grid-cols-[1fr_auto_1fr] md:gap-4">

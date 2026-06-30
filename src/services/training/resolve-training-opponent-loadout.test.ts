@@ -167,4 +167,23 @@ describe("resolveTrainingOpponentLoadout", () => {
     expect(bossLoadout.deck[0]?.versionTier).toBe(2);
     expect((bossLoadout.deck[0]?.xp ?? 0)).toBeGreaterThan(0);
   });
+
+  it("aplica los bonus de combate por nivel a las cartas del oponente (no solo fija el campo level)", () => {
+    const card: ICard = { id: "entity-x", name: "X", description: "", type: "ENTITY", faction: "NEUTRAL", cost: 3, attack: 1000, defense: 1000 };
+    const cardCatalog = new Map<string, ICard>([["entity-x", card]]);
+    const opponents: Record<string, IArenaOpponent> = {
+      "training-tier-1": {
+        id: "training-tier-1", codeName: "x", displayName: "X", avatarUrl: "a", introUrl: "i", storyOpponentId: "opp-x",
+        variants: [{ id: "v1", label: null, deckCards: [{ cardId: "entity-x", versionTier: null, level: null, xp: null }], fusionCards: [] }],
+      },
+    };
+    const baseInput = { tier: 1, aiDifficulty: "EASY" as const, deckTemplateId: "training-tier-1", tierWins: 0, tierMatches: 0, opponents, cardCatalog };
+    const atLevel10 = resolveTrainingOpponentLoadout({ ...baseInput, defaultScaling: { versionTier: 1, level: 10, xp: 980 } });
+    const atLevel20 = resolveTrainingOpponentLoadout({ ...baseInput, defaultScaling: { versionTier: 2, level: 20, xp: 2800 } });
+    // ENTITY: nivel 10 → +100 ATK / +100 DEF; nivel 20 → +300 ATK / +300 DEF (resolveCardLevelBonuses).
+    expect(atLevel10.deck[0]?.attack).toBe(1100);
+    expect(atLevel10.deck[0]?.defense).toBe(1100);
+    expect(atLevel20.deck[0]?.attack).toBe(1300);
+    expect(atLevel20.deck[0]?.defense).toBe(1300);
+  });
 });
