@@ -1,22 +1,22 @@
 -- docs/supabase/sql/085_fix_missing_ubuntu_duckduckgo_cards.sql
 -- Fix: 'entity-ubuntu' y 'entity-duckduckgo' se referencian en market_card_listings
--- (supabase/seed.sql, migraciones 063/074) y en el UPDATE de coste de 077, pero NUNCA
--- se insertaban en cards_catalog. Resultado: el seed fallaba con
---   market_card_listings_card_id_fkey_catalog (FK 23503) durante `supabase db reset`.
+-- (supabase/seed.sql) y en migraciones de balance, pero NUNCA se insertaban en
+-- cards_catalog: se habían creado solo en producción (panel admin / SQL manual), sin
+-- migración. En `supabase db reset` limpio el seed fallaba con FK 23503
+-- (market_card_listings_card_id_fkey_catalog) al referenciar cartas inexistentes.
 --
--- Ambas cartas existen en producción; aquí faltaba su INSERT. Este fichero se ordena el
--- último (corre tras todas las migraciones y antes del seed), así que las insertamos ya
--- con sus valores BALANCEADOS finales (los que dejaría 077), no los de base:
---   Ubuntu      1500/2200 (budget 3700) · coste 6 · muro OPEN_SOURCE
---   DuckDuckGo  1000/1700 (budget 2700) · coste 3 · privacidad/scan OPEN_SOURCE
--- Idempotente (UPSERT) para alinearse con el patrón de 063.
+-- Estos VALORES REPLICAN EXACTAMENTE PRODUCCIÓN (faction NEUTRAL; Ubuntu=TOOL,
+-- DuckDuckGo=SECURITY) para que la instalación limpia quede idéntica a prod.
+-- Se ordena el último (corre tras todas las migraciones y antes del seed). Como la
+-- migración 078 (mapa de pasivas por arquetipo) corre antes, también re-añadimos aquí
+-- la pasiva V5 de estas dos cartas (igual que en prod). Idempotente.
 begin;
 
 insert into public.cards_catalog (
   id, name, description, type, faction, cost, attack, defense, archetype, trigger, bg_url, render_url, effect, fusion_recipe_id, fusion_material_ids, fusion_energy_requirement, is_active
 ) values
-('entity-ubuntu', 'Ubuntu', 'Distribución Linux robusta que sostiene la línea defensiva con un muro de alta resistencia.', 'ENTITY', 'OPEN_SOURCE', 6, 1500, 2200, 'SECURITY', null, '/assets/bgs/bg-tech.webp', '/assets/renders/ubuntu.webp', null, null, '{}', null, true),
-('entity-duckduckgo', 'DuckDuckGo', 'Buscador centrado en la privacidad que rastrea y limpia el campo a bajo coste.', 'ENTITY', 'OPEN_SOURCE', 3, 1000, 1700, 'SECURITY', null, '/assets/bgs/bg-tech.webp', '/assets/renders/duckduckgo.webp', null, null, '{}', null, true)
+('entity-ubuntu', 'Ubuntu', 'Estabilidad a largo plazo en un mundo de ejecución volátil.', 'ENTITY', 'NEUTRAL', 6, 1500, 2200, 'TOOL', null, '/assets/bgs/bg-tech.webp', '/assets/renders/ubuntu.webp', null, null, '{}', null, true),
+('entity-duckduckgo', 'DUCKDUCKGO', 'Navegador veloz con espíritu libre i seguro.', 'ENTITY', 'NEUTRAL', 3, 1000, 1700, 'SECURITY', null, '/assets/bgs/bg-tech.webp', '/assets/renders/duckduckgo.webp', null, null, '{}', null, true)
 on conflict (id) do update set
   name = excluded.name,
   description = excluded.description,
@@ -34,5 +34,11 @@ on conflict (id) do update set
   fusion_material_ids = excluded.fusion_material_ids,
   fusion_energy_requirement = excluded.fusion_energy_requirement,
   is_active = excluded.is_active;
+
+-- Pasiva V5 temática (igual que prod): la 078 ya corrió sin estas cartas presentes.
+delete from public.card_mastery_passive_map where card_id in ('entity-ubuntu', 'entity-duckduckgo');
+insert into public.card_mastery_passive_map (card_id, passive_skill_id, priority) values
+  ('entity-ubuntu', 'passive-draw-on-summon', 1),
+  ('entity-duckduckgo', 'passive-reflect-damage-200', 1);
 
 commit;
