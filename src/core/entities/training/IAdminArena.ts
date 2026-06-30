@@ -1,4 +1,5 @@
 // src/core/entities/training/IAdminArena.ts - DTOs y comandos para la edición admin del catálogo de arena (oponentes, variantes, cartas, tiers).
+import { ICard } from "@/core/entities/ICard";
 
 /** Carta de un mazo con overrides (null = escalado por dificultad). */
 export interface IAdminArenaCardEntry {
@@ -44,16 +45,11 @@ export interface IAdminArenaTier {
   defaultXp: number | null;
 }
 
-/** Carta válida para el selector del editor (restringida al catálogo en código que hidrata arena). */
-export interface IAdminArenaValidCard {
-  id: string;
-  name: string;
-}
-
 export interface IAdminArenaCatalog {
   opponents: IAdminArenaOpponent[];
   tiers: IAdminArenaTier[];
-  validCards: IAdminArenaValidCard[];
+  /** Cartas válidas (catálogo en código que hidrata arena), con datos completos para previsualizar. */
+  validCards: ICard[];
 }
 
 export type IUpsertArenaOpponentCommand = Omit<IAdminArenaOpponent, "variants">;

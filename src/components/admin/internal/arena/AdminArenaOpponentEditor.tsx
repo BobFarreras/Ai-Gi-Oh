@@ -2,12 +2,13 @@
 "use client";
 
 import { useState } from "react";
-import { IAdminArenaOpponent, IAdminArenaValidCard, IAdminArenaVariant, IUpsertArenaOpponentCommand } from "@/core/entities/training/IAdminArena";
+import { ICard } from "@/core/entities/ICard";
+import { IAdminArenaOpponent, IAdminArenaVariant, IUpsertArenaOpponentCommand } from "@/core/entities/training/IAdminArena";
 import { AdminArenaVariantEditor } from "@/components/admin/internal/arena/AdminArenaVariantEditor";
 
 interface IAdminArenaOpponentEditorProps {
   opponent: IAdminArenaOpponent;
-  validCards: IAdminArenaValidCard[];
+  validCards: ICard[];
   isBusy: boolean;
   onSaveOpponent: (opponent: IUpsertArenaOpponentCommand) => void;
   onDeleteOpponent: (id: string) => void;

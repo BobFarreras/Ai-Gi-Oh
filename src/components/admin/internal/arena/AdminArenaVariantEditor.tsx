@@ -2,12 +2,13 @@
 "use client";
 
 import { useState } from "react";
-import { IAdminArenaVariant, IAdminArenaCardEntry, IAdminArenaValidCard } from "@/core/entities/training/IAdminArena";
+import { ICard } from "@/core/entities/ICard";
+import { IAdminArenaVariant, IAdminArenaCardEntry } from "@/core/entities/training/IAdminArena";
 import { AdminArenaCardList } from "@/components/admin/internal/arena/AdminArenaCardList";
 
 interface IAdminArenaVariantEditorProps {
   variant: IAdminArenaVariant;
-  validCards: IAdminArenaValidCard[];
+  validCards: ICard[];
   isBusy: boolean;
   onSave: (variant: IAdminArenaVariant) => void;
   onDelete: (id: string) => void;

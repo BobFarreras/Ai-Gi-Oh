@@ -2,10 +2,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ICard } from "@/core/entities/ICard";
 import {
   IAdminArenaOpponent,
   IAdminArenaTier,
-  IAdminArenaValidCard,
   IUpsertArenaOpponentCommand,
   IUpsertArenaTierCommand,
   IUpsertArenaVariantCommand,
@@ -18,7 +18,7 @@ type ArenaStatus = "loading" | "idle" | "saving" | "error";
 export function useAdminArena() {
   const [opponents, setOpponents] = useState<IAdminArenaOpponent[]>([]);
   const [tiers, setTiers] = useState<IAdminArenaTier[]>([]);
-  const [validCards, setValidCards] = useState<IAdminArenaValidCard[]>([]);
+  const [validCards, setValidCards] = useState<ICard[]>([]);
   const [status, setStatus] = useState<ArenaStatus>("loading");
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -27,7 +27,7 @@ export function useAdminArena() {
     try {
       const response = await fetch(BASE);
       if (!response.ok) throw new Error("load");
-      const data = (await response.json()) as { opponents: IAdminArenaOpponent[]; tiers: IAdminArenaTier[]; validCards: IAdminArenaValidCard[] };
+      const data = (await response.json()) as { opponents: IAdminArenaOpponent[]; tiers: IAdminArenaTier[]; validCards: ICard[] };
       setOpponents(data.opponents ?? []);
       setTiers(data.tiers ?? []);
       setValidCards(data.validCards ?? []);

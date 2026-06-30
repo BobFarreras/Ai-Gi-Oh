@@ -11,9 +11,8 @@ export async function GET(request: NextRequest) {
     const context = await createAdminRouteContext(request);
     const repository = new SupabaseAdminArenaRepository(createSupabaseServiceRoleClient());
     const [opponents, tiers] = await Promise.all([repository.getOpponents(), repository.getTiers()]);
-    const validCards = Array.from(CARD_BY_ID.values())
-      .map((card) => ({ id: card.id, name: card.name }))
-      .sort((a, b) => a.id.localeCompare(b.id));
+    // Cartas completas (no solo id/nombre) para que el editor muestre la miniatura real.
+    const validCards = Array.from(CARD_BY_ID.values()).sort((a, b) => a.id.localeCompare(b.id));
     return NextResponse.json({ opponents, tiers, validCards }, { status: 200, headers: context.response.headers });
   } catch (error) {
     return createApiErrorResponse(error, "No se pudo cargar el catálogo de arena.");
