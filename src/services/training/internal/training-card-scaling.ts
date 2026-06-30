@@ -1,6 +1,5 @@
 // src/services/training/internal/training-card-scaling.ts - Aplica escalado estático de version/level/xp para decks de training según dificultad efectiva.
 import { ICard } from "@/core/entities/ICard";
-import { ValidationError } from "@/core/errors/ValidationError";
 import { IArenaDeckCardEntry } from "@/core/entities/training/IArenaOpponent";
 import { OpponentDifficulty } from "@/core/services/opponent/difficulty/types";
 
@@ -41,14 +40,15 @@ export function applyArenaCardScaling(
   baseScale: ITrainingCardScale,
   cardCatalog: Map<string, ICard>,
 ): ICard[] {
-  return entries.map((entry) => {
+  // Omite cartas ausentes del catálogo en vez de romper el duelo (robustez ante datos editados).
+  return entries.flatMap((entry) => {
     const card = cardCatalog.get(entry.cardId);
-    if (!card) throw new ValidationError(`No existe carta '${entry.cardId}' en el catálogo para arena.`);
-    return {
+    if (!card) return [];
+    return [{
       ...card,
       versionTier: entry.versionTier ?? baseScale.versionTier,
       level: entry.level ?? baseScale.level,
       xp: entry.xp ?? baseScale.xp,
-    };
+    }];
   });
 }

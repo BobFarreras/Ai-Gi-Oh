@@ -28,8 +28,9 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
     deckTemplateId: currentTier?.deckTemplateId ?? "training-tier-1",
     tierWins: currentTierStats?.wins ?? 0,
     tierMatches: currentTierStats?.matches ?? 0,
-    // Oponentes desde BD si existen; si no, presets en código (fallback robusto).
+    // Oponentes y cartas desde BD si existen; si no, presets/catálogo en código (fallback robusto).
     opponents: runtime.arenaOpponents ?? undefined,
+    cardCatalog: runtime.arenaCardCatalog ?? undefined,
     defaultScaling: tierScaling,
   });
   const narrationPack = buildStoryOpponentNarrationPack({

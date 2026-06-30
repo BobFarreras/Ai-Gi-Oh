@@ -20,10 +20,10 @@ export async function getTrainingArenaRuntimeData(selectedTier: number) {
       selectedTier,
       catalog,
     });
-    return { loadout, progress, playerId, playerDisplayName, arenaOpponents: arenaCatalog.opponents, ...state };
+    return { loadout, progress, playerId, playerDisplayName, arenaOpponents: arenaCatalog.opponents, arenaCardCatalog: arenaCatalog.cardCatalog, ...state };
   }
   const trainingRepository = await createSupabaseTrainingProgressRepository();
   const progress = (await trainingRepository.getByPlayerId(session.user.id)) ?? createInitialTrainingProgress(session.user.id);
   const state = new GetTrainingArenaStateUseCase().execute({ progress, selectedTier, catalog });
-  return { loadout, progress, playerId, playerDisplayName, arenaOpponents: arenaCatalog.opponents, ...state };
+  return { loadout, progress, playerId, playerDisplayName, arenaOpponents: arenaCatalog.opponents, arenaCardCatalog: arenaCatalog.cardCatalog, ...state };
 }
