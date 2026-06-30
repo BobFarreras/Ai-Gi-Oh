@@ -6,6 +6,15 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-06-30
+
+### Fixed
+- Instalación limpia de contribuidor: `entity-ubuntu` y `entity-duckduckgo` se referenciaban en el mercado pero ninguna migración las creaba en `cards_catalog` (existían solo en producción), rompiendo `supabase db reset` con FK 23503 al sembrar (migración 085, valores idénticos a producción + su pasiva V5).
+
+### Added
+- Test de validación `pnpm db:validate`: comprueba estáticamente (sin Docker) que toda carta referenciada por `seed.sql` la cree alguna migración de `cards_catalog`. Integrado en `quality:check` (gate de CI/PR) y como paso previo de `pnpm db:reset`.
+- Documentación del flujo de contribución de BD en `docs/supabase/README.md` ("Regla de oro: toda carta nueva en prod necesita una migración" + sección del test de validación).
+
 ## [1.7.0] - 2026-06-29
 
 ### Added
