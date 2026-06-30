@@ -30,7 +30,7 @@ export function AdminArenaVariantEditor({ variant, validCards, isBusy, onSave, o
         </label>
         <code className="font-mono text-[10px] text-slate-500">{draft.id}</code>
       </div>
-      <div className="grid gap-2 md:grid-cols-2">
+      <div className="space-y-2">
         <AdminArenaCardList title="Mazo" cards={draft.deckCards} validCards={validCards} onChange={setCards("deckCards")} />
         <AdminArenaCardList title="Fusión" cards={draft.fusionCards} validCards={validCards} onChange={setCards("fusionCards")} />
       </div>
