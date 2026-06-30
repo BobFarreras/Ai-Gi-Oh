@@ -1,11 +1,11 @@
-// src/services/training/resolve-training-opponent-loadout.ts - Resuelve perfil y mazos del oponente de training según tier y template configurado.
+// src/services/training/resolve-training-opponent-loadout.ts - Resuelve perfil y mazos del oponente de arena (datos de BD o, por defecto, de los presets en código).
 import { OpponentDifficulty } from "@/core/services/opponent/difficulty/types";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { ICard } from "@/core/entities/ICard";
+import { IArenaDeckVariant, IArenaOpponent } from "@/core/entities/training/IArenaOpponent";
 import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
-import { applyTrainingCardScaling } from "@/services/training/internal/training-card-scaling";
-import { TRAINING_OPPONENT_PRESETS } from "@/services/training/internal/training-opponent-presets";
-import { TRAINING_OPPONENT_DECK_POOLS } from "@/services/training/internal/training-opponent-deck-pools";
+import { applyArenaCardScaling, ITrainingCardScale, resolveDifficultyScale } from "@/services/training/internal/training-card-scaling";
+import { buildArenaOpponentsFromPresets } from "@/services/training/internal/build-arena-opponents-from-presets";
 
 interface IResolveTrainingOpponentLoadoutInput {
   tier: number;
@@ -13,6 +13,12 @@ interface IResolveTrainingOpponentLoadoutInput {
   deckTemplateId: string;
   tierWins: number;
   tierMatches: number;
+  /** Catálogo de oponentes (BD); por defecto se construye desde las constantes en código. */
+  opponents?: Record<string, IArenaOpponent>;
+  /** Catálogo de cartas para hidratar el mazo; por defecto el catálogo en código. */
+  cardCatalog?: Map<string, ICard>;
+  /** Escalado de cartas propio del tier; si se omite, se usa el escalado por dificultad efectiva. */
+  defaultScaling?: ITrainingCardScale | null;
 }
 
 export interface ITrainingOpponentLoadout {
@@ -28,11 +34,6 @@ export interface ITrainingOpponentLoadout {
   fusionDeck: ICard[];
 }
 
-function resolveCard(cardId: string): ICard {
-  const card = CARD_BY_ID.get(cardId);
-  if (!card) throw new ValidationError(`No existe carta '${cardId}' en el catálogo local para training.`);
-  return { ...card };
-}
 const DIFFICULTY_ORDER: OpponentDifficulty[] = ["EASY", "NORMAL", "HARD", "BOSS", "MASTER", "MYTHIC"];
 const TRAINING_TIER_ONE_SHOWCASE_ROSTER = [
   "training-tier-1",
@@ -56,58 +57,57 @@ function resolveAdaptiveDifficulty(baseDifficulty: OpponentDifficulty, tierWins:
   return baseDifficulty;
 }
 
-function resolveRosterTemplateIds(tier: number, deckTemplateId: string): string[] {
-  if (!TRAINING_OPPONENT_PRESETS[deckTemplateId]) {
+function resolveRosterTemplateIds(tier: number, deckTemplateId: string, opponents: Record<string, IArenaOpponent>): string[] {
+  if (!opponents[deckTemplateId]) {
     throw new ValidationError(`No existe preset base de oponente para '${deckTemplateId}'.`);
   }
   if (tier === 1) {
-    const showcaseRoster = TRAINING_TIER_ONE_SHOWCASE_ROSTER.filter((templateId) => Boolean(TRAINING_OPPONENT_PRESETS[templateId]));
+    const showcaseRoster = TRAINING_TIER_ONE_SHOWCASE_ROSTER.filter((templateId) => Boolean(opponents[templateId]));
     return showcaseRoster.length > 0 ? showcaseRoster : [deckTemplateId];
   }
   const previousTemplates = Array.from({ length: Math.max(0, tier - 1) }, (_, index) => `training-tier-${tier - (index + 1)}`)
-    .filter((templateId) => Boolean(TRAINING_OPPONENT_PRESETS[templateId]));
+    .filter((templateId) => Boolean(opponents[templateId]));
   return [deckTemplateId, ...previousTemplates];
 }
 
-function resolveDeckVariant(templateId: string, tierMatches: number): { id: string; deckCardIds: string[]; fusionDeckCardIds: string[] } {
-  const variants = TRAINING_OPPONENT_DECK_POOLS[templateId];
-  if (!variants || variants.length === 0) {
-    const preset = TRAINING_OPPONENT_PRESETS[templateId];
-    if (!preset) throw new ValidationError(`No existe preset de mazo para '${templateId}'.`);
-    return { id: "preset-default", deckCardIds: preset.deckCardIds, fusionDeckCardIds: preset.fusionDeckCardIds };
-  }
-  return variants[tierMatches % variants.length];
+function resolveDeckVariant(opponent: IArenaOpponent, tierMatches: number): IArenaDeckVariant {
+  if (opponent.variants.length === 0) throw new ValidationError(`El oponente '${opponent.id}' no tiene variantes de mazo.`);
+  return opponent.variants[tierMatches % opponent.variants.length];
 }
 
-function toVariantLabel(variantId: string): string {
-  return variantId
+function toVariantLabel(variant: IArenaDeckVariant): string {
+  if (variant.label) return variant.label;
+  return variant.id
     .split("-")
     .map((word) => `${word.slice(0, 1).toUpperCase()}${word.slice(1)}`)
     .join(" ");
 }
 
 /**
- * Resuelve un oponente de training con rotación de roster y dificultad adaptativa por rendimiento real.
+ * Resuelve un oponente de arena con rotación de roster y dificultad adaptativa por rendimiento real.
+ * Acepta opcionalmente el catálogo de BD; sin él usa los presets en código (comportamiento idéntico).
  */
 export function resolveTrainingOpponentLoadout(input: IResolveTrainingOpponentLoadoutInput): ITrainingOpponentLoadout {
-  const roster = resolveRosterTemplateIds(input.tier, input.deckTemplateId);
+  const opponents = input.opponents ?? buildArenaOpponentsFromPresets();
+  const cardCatalog = input.cardCatalog ?? CARD_BY_ID;
+  const roster = resolveRosterTemplateIds(input.tier, input.deckTemplateId, opponents);
   const selectedTemplateId = roster[input.tierMatches % roster.length];
-  const preset = TRAINING_OPPONENT_PRESETS[selectedTemplateId];
-  if (!preset) {
-    throw new ValidationError(`No existe preset de oponente para '${selectedTemplateId}'.`);
-  }
-  const selectedVariant = resolveDeckVariant(selectedTemplateId, input.tierMatches);
+  const opponent = opponents[selectedTemplateId];
+  if (!opponent) throw new ValidationError(`No existe preset de oponente para '${selectedTemplateId}'.`);
+  const selectedVariant = resolveDeckVariant(opponent, input.tierMatches);
   const effectiveDifficulty = resolveAdaptiveDifficulty(input.aiDifficulty, input.tierWins, input.tierMatches);
+  // El escalado propio del tier (editable) manda; si no hay, se usa el de la dificultad efectiva.
+  const baseScale = input.defaultScaling ?? resolveDifficultyScale(effectiveDifficulty);
   return {
     tier: input.tier,
     difficulty: effectiveDifficulty,
-    storyOpponentId: preset.storyOpponentId,
-    displayName: preset.displayName,
-    avatarUrl: preset.avatarUrl,
-    introUrl: preset.introUrl,
+    storyOpponentId: opponent.storyOpponentId,
+    displayName: opponent.displayName,
+    avatarUrl: opponent.avatarUrl,
+    introUrl: opponent.introUrl,
     deckVariantId: selectedVariant.id,
-    deckVariantLabel: toVariantLabel(selectedVariant.id),
-    deck: applyTrainingCardScaling(selectedVariant.deckCardIds.map(resolveCard), effectiveDifficulty),
-    fusionDeck: applyTrainingCardScaling(selectedVariant.fusionDeckCardIds.map(resolveCard), effectiveDifficulty),
+    deckVariantLabel: toVariantLabel(selectedVariant),
+    deck: applyArenaCardScaling(selectedVariant.deckCards, baseScale, cardCatalog),
+    fusionDeck: applyArenaCardScaling(selectedVariant.fusionCards, baseScale, cardCatalog),
   };
 }

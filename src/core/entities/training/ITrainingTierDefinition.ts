@@ -8,4 +8,8 @@ export interface ITrainingTierDefinition {
   aiDifficulty: OpponentDifficulty;
   deckTemplateId: string;
   rewardMultiplier: number;
+  /** Escalado de cartas del rival propio del tier (version/level/xp); null = usa el escalado por dificultad. */
+  defaultVersionTier?: number | null;
+  defaultLevel?: number | null;
+  defaultXp?: number | null;
 }

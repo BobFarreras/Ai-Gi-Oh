@@ -1,6 +1,6 @@
 {
   "name": "ai-gi-oh",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -18,7 +18,7 @@
     "quality:story": "pnpm vitest run src/core/use-cases/story src/core/services/story/world src/services/story/build-story-chapter-briefing.test.ts src/components/hub/story/internal/resolve-story-performance-profile.test.ts && pnpm lint && pnpm build",
     "security:audit:prod": "pnpm audit --prod --audit-level=high",
     "quality:check:assets": "node scripts/quality/check-assets.mjs",
-    "quality:check": "pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm quality:check:assets && pnpm build",
+    "quality:check": "pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm quality:check:assets && pnpm db:validate && pnpm build",
     "security:rate-limit:check": "node scripts/security/check-rate-limit-env.mjs",
     "security:rate-limit:check:staging": "node scripts/security/check-rate-limit-env.mjs --target=staging --env-file=.env.staging.example",
     "security:rate-limit:check:production": "node scripts/security/check-rate-limit-env.mjs --target=production --env-file=.env.production.example",
@@ -32,6 +32,7 @@
     "supabase:bootstrap:local": "node scripts/supabase/bootstrap-local.mjs",
     "db:reset": "node scripts/supabase/reset-local.mjs",
     "db:seed:dump": "node scripts/supabase/dump-seed.mjs",
+    "db:validate": "node scripts/supabase/validate-card-references.mjs",
     "perf:baseline:mobile": "node scripts/performance/run-mobile-baseline.mjs",
     "perf:baseline:mobile:realistic": "node scripts/performance/run-mobile-baseline.mjs --profile=realistic",
     "perf:baseline:mobile:stress": "node scripts/performance/run-mobile-baseline.mjs --profile=stress",

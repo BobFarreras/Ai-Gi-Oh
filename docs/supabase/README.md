@@ -51,6 +51,29 @@ Editas el contenido (p. ej. la carta del día 7 del login) por una de estas vía
 
 En cualquier caso, los contribuidores reciben el cambio con `git pull` + `pnpm db:reset`.
 
+### ⚠️ Regla de oro: toda carta nueva necesita una migración
+
+`cards_catalog` lo gobiernan **las migraciones**, pero el `seed.sql` (y migraciones de mercado) referencian cartas vía **FK** (`market_card_listings`, pools de sobres, tienda de evento, login). Por tanto:
+
+> **Si creas una carta nueva en producción (panel admin o SQL manual), DEBES añadir su `INSERT` en una migración `docs/supabase/sql/`** — con los **valores reales de prod**, no inventados.
+
+Si no, una instalación limpia (`pnpm db:reset`) falla al sembrar con **FK 23503** (`...card_id_fkey_catalog`), porque las migraciones no crean esa carta. Esto rompió el setup de un contribuidor con `entity-ubuntu`/`entity-duckduckgo` (existían solo en prod) → arreglado en la migración `085`.
+
+Para regenerar el INSERT exacto desde prod: mira la fila en `cards_catalog` (Studio o SQL) y crea la migración con esos valores, idempotente (`on conflict (id) do update`), siguiendo el patrón de `063`/`085`.
+
+### Test de validación (antes de cualquier migración)
+
+```
+pnpm db:validate
+```
+
+Comprueba **estáticamente (sin Docker)** que toda carta referenciada por el `seed.sql` la cree alguna migración de `cards_catalog`. Falla con la lista de huérfanas si no. Está integrado en:
+
+- **`pnpm quality:check`** (gate de CI/PR) → cualquier PR que deje una carta huérfana falla.
+- **`pnpm db:reset`** (paso previo al reset) → feedback inmediato local.
+
+Cuándo correrlo: **siempre que toques `seed.sql` o añadas/quites cartas en migraciones**, antes de commitear.
+
 ## Diccionario de tablas
 
 1. `public.player_profiles`:

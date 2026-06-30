@@ -1,10 +1,21 @@
 // src/components/hub/market/internal/MarketCardInspectorSelectedView.tsx - Renderiza detalle de carta seleccionada y bloque de compra contextual.
+"use client";
+
 import { motion } from "framer-motion";
 import { ICard } from "@/core/entities/ICard";
 import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
 import { Card } from "@/components/game/card/Card";
 import { MarketNexusSpendFloat } from "@/components/hub/market/internal/MarketNexusSpendFloat";
+import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
+import { composeCardPowerDescription } from "@/core/services/progression/compose-card-power-description";
 import { Lock, ShoppingCart, Shield, Swords, Tag, Zap } from "lucide-react";
+
+/** Escala base de la carta por viewport: siempre < 1 para que el zoom de hover no la haga borrosa (downscale del render nativo). */
+function resolveBaseCardScale(viewportWidth: number): number {
+  if (viewportWidth >= 768) return 0.7;
+  if (viewportWidth >= 640) return 0.65;
+  return 0.55;
+}
 
 interface IMarketCardInspectorSelectedViewProps {
   selectedCard: ICard;
@@ -23,11 +34,12 @@ export function MarketCardInspectorSelectedView({
   floatingSpendId,
   onBuyClick,
 }: IMarketCardInspectorSelectedViewProps) {
+  const baseCardScale = resolveBaseCardScale(useViewportWidth());
   return (
     <>
       <div className="home-modern-scroll flex-1 overflow-y-auto pr-2 pb-4">
         <div className="relative flex justify-center items-center w-full h-[260px] sm:h-[300px] mb-4 perspective-1000">
-          <motion.div whileHover={isCompactMode ? {} : { scale: 1.05, rotateY: 5, rotateX: 5 }} transition={isCompactMode ? { duration: 0.01 } : { type: "spring", stiffness: 300, damping: 20 }} className="relative origin-center scale-[0.55] sm:scale-[0.65] md:scale-[0.70] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+          <motion.div initial={{ scale: baseCardScale }} animate={{ scale: baseCardScale }} whileHover={isCompactMode ? {} : { scale: baseCardScale * 1.08, rotateY: 5, rotateX: 5 }} transition={isCompactMode ? { duration: 0.01 } : { type: "spring", stiffness: 300, damping: 20 }} className="relative origin-center shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
             {!isCompactMode ? <div className="absolute -inset-4 bg-cyan-400/20 blur-2xl rounded-full opacity-0 hover:opacity-100 transition-opacity duration-500" /> : null}
             {/* prioritizeMediaLoading: el arte de la carta seleccionada es el elemento LCP del Market. */}
             <Card card={selectedCard} isPerformanceMode={isCompactMode} disableHoverEffects={isCompactMode} disableDefaultShadow={isCompactMode} prioritizeMediaLoading />
@@ -40,7 +52,7 @@ export function MarketCardInspectorSelectedView({
           {selectedCard.attack !== undefined ? <span className="flex items-center gap-1.5 rounded bg-rose-950/60 border border-rose-800/50 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-rose-300"><Swords size={12} /> {selectedCard.attack}</span> : null}
           {selectedCard.defense !== undefined ? <span className="flex items-center gap-1.5 rounded bg-indigo-950/60 border border-indigo-800/50 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-indigo-300"><Shield size={12} /> {selectedCard.defense}</span> : null}
         </div>
-        <p className="text-xs sm:text-sm leading-relaxed text-cyan-100/70 font-medium">{selectedCard.description}</p>
+        <p className="text-xs sm:text-sm leading-relaxed text-cyan-100/70 font-medium whitespace-pre-line">{composeCardPowerDescription(selectedCard)}</p>
       </div>
       <div className="mt-auto pt-4 border-t border-cyan-900/50 shrink-0 bg-[#030c16]">
         {selectedListing ? (

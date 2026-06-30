@@ -11,6 +11,7 @@ import { Card } from "@/components/game/card/Card";
 import { CombatLogEventRow } from "../CombatLogEventRow";
 import { resolveLiveSelectedCard } from "@/components/game/board/internal/resolve-live-selected-card";
 import { ITrapActivationPrompt } from "@/components/game/board/hooks/internal/board-state/useBoardUiState";
+import { composeCardPowerDescription } from "@/core/services/progression/compose-card-power-description";
 
 interface BoardMobilePanelsDialogProps {
   selectedCard: ICard | null;
@@ -95,7 +96,7 @@ export function BoardMobilePanelsDialog({
             ) : null}
             <h3 className="text-lg font-black uppercase text-cyan-300">{liveSelectedCard.name}</h3>
             <p className="mb-2 border-b border-zinc-800 pb-2 text-[11px] font-bold uppercase tracking-widest text-zinc-500">{liveSelectedCard.faction} {liveSelectedCard.type}</p>
-            <p className="text-sm leading-relaxed text-zinc-200 whitespace-pre-line">{liveSelectedCard.description}</p>
+            <p className="text-sm leading-relaxed text-zinc-200 whitespace-pre-line">{composeCardPowerDescription(liveSelectedCard)}</p>
             {isTrapPromptForSelectedCard ? (
               <div className="mt-4 flex items-center gap-2 border-t border-zinc-800 pt-3">
                 <button

@@ -18,12 +18,20 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
   const runtime = await getTrainingArenaRuntimeData(selectedTier);
   const currentTier = runtime.tiers.find((tier) => tier.tier === runtime.effectiveTier) ?? runtime.tiers[0];
   const currentTierStats = runtime.progress.tierStats.find((tierStats) => tierStats.tier === (currentTier?.tier ?? 1));
+  // Escalado de cartas propio del tier (editable); null = el resolver usa el escalado por dificultad.
+  const tierScaling = currentTier?.defaultLevel != null
+    ? { versionTier: currentTier.defaultVersionTier ?? 0, level: currentTier.defaultLevel, xp: currentTier.defaultXp ?? 0 }
+    : null;
   const opponentLoadout = resolveTrainingOpponentLoadout({
     tier: currentTier?.tier ?? 1,
     aiDifficulty: currentTier?.aiDifficulty ?? "EASY",
     deckTemplateId: currentTier?.deckTemplateId ?? "training-tier-1",
     tierWins: currentTierStats?.wins ?? 0,
     tierMatches: currentTierStats?.matches ?? 0,
+    // Oponentes y cartas desde BD si existen; si no, presets/catálogo en código (fallback robusto).
+    opponents: runtime.arenaOpponents ?? undefined,
+    cardCatalog: runtime.arenaCardCatalog ?? undefined,
+    defaultScaling: tierScaling,
   });
   const narrationPack = buildStoryOpponentNarrationPack({
     opponentId: opponentLoadout.storyOpponentId,
