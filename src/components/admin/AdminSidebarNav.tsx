@@ -11,7 +11,7 @@ interface IAdminSidebarNavProps {
 
 interface IAdminSidebarItem {
   href: string;
-  icon: "catalog" | "market" | "starter" | "story" | "audit" | "analytics" | "liveops" | "effects";
+  icon: "catalog" | "market" | "starter" | "story" | "audit" | "analytics" | "liveops" | "effects" | "arena";
   label: string;
   description: string;
 }
@@ -24,6 +24,7 @@ function buildItems(portalSlug: string): IAdminSidebarItem[] {
     { href: `${base}/market`, icon: "market", label: "Market", description: "Listings & Packs" },
     { href: `${base}/starter-deck`, icon: "starter", label: "Starter Deck", description: "Plantilla inicial" },
     { href: `${base}/story-decks`, icon: "story", label: "Story Decks", description: "Oponentes & Duelos" },
+    { href: `${base}/arena`, icon: "arena", label: "Arena", description: "Oponentes & Tiers" },
     { href: `${base}/audit`, icon: "audit", label: "Auditoría", description: "Historial de cambios" },
     { href: `${base}/analytics`, icon: "analytics", label: "Analytics", description: "Dashboard de telemetría" },
     { href: `${base}/live-ops`, icon: "liveops", label: "Live-Ops", description: "Misiones & Promos" },
@@ -83,6 +84,13 @@ function AdminNavIcon({ icon, isActive }: { icon: IAdminSidebarItem["icon"]; isA
     return (
       <svg viewBox="0 0 24 24" className={cls}>
         <path d="M13 2L4.5 13H11l-1 9 8.5-11H12l1-9z" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
+      </svg>
+    );
+  if (icon === "arena")
+    return (
+      <svg viewBox="0 0 24 24" className={cls}>
+        <path d="M14.5 3.5l6 6M3 21l5.5-1.5L19 9l-4-4L4.5 15.5 3 21z" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
+        <path d="M9.5 5.5l-4-2-2 4 2 1M14.5 18.5l4 2 2-4-2-1" strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round" />
       </svg>
     );
   return (
