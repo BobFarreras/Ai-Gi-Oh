@@ -56,7 +56,7 @@ export function AdminArenaOpponentEditor({ opponent, validCards, isBusy, onSaveO
         <p className="text-[11px] font-black uppercase tracking-widest text-fuchsia-300">Variantes de mazo</p>
         <button type="button" aria-label="Añadir variante" disabled={isBusy} className="h-7 rounded border border-cyan-600/50 px-2 text-[10px] font-bold uppercase text-cyan-200 hover:bg-cyan-900/40 disabled:opacity-50" onClick={addVariant}>+ Variante</button>
       </div>
-      <div className="mt-2 space-y-2">
+      <div className="mt-2 grid gap-2 md:grid-cols-2">
         {variants.map((variant) => (
           <AdminArenaVariantEditor key={variant.id} variant={variant} validCards={validCards} isBusy={isBusy} onSave={onSaveVariant} onDelete={onDeleteVariant} />
         ))}

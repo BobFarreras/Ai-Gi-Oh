@@ -35,7 +35,7 @@ export function AdminArenaCardList({ title, cards, validCards, onChange }: IAdmi
         <p className="text-[10px] font-black uppercase tracking-widest text-cyan-300">{title} ({cards.length})</p>
         <button type="button" aria-label={`Añadir carta a ${title}`} className="h-6 rounded border border-cyan-600/50 px-2 text-[10px] font-bold uppercase text-cyan-200 hover:bg-cyan-900/40" onClick={addCard}>+ Carta</button>
       </div>
-      <div className="grid grid-cols-5 gap-1.5">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(52px,1fr))] gap-1.5">
         {cards.map((card, index) => {
           const resolved = cardById.get(card.cardId);
           const hasOverride = card.versionTier !== null || card.level !== null || card.xp !== null;
