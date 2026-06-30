@@ -1,6 +1,6 @@
 // src/components/hub/academy/training/modes/arena/TrainingArenaClient.tsx - Orquesta UI de arena training con selección de tier y cierre de partida remoto.
 "use client";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Board } from "@/components/game/board";
 import { ICard } from "@/core/entities/ICard";
 import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result/duel-result-reward-summary";
@@ -51,6 +51,10 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
   const [resultAction, setResultAction] = useState(() => ({ label: "Volver a selección", href: ACADEMY_HOME_ROUTE }));
   const hasPostedRef = useRef(false);
   const selectedTierMeta = props.tiers.find((tier) => tier.tier === props.selectedTier) ?? props.tiers[0];
+  // Recuerda el último nivel elegido: al volver a Arena sin ?tier, el server lo lee de esta cookie.
+  useEffect(() => {
+    document.cookie = `arena_tier=${props.selectedTier}; path=/; max-age=31536000; samesite=lax`;
+  }, [props.selectedTier]);
   const opponentStrategy = useMemo(
     () => new HeuristicOpponentStrategy({ difficulty: props.opponentDifficulty }),
     [props.opponentDifficulty],
