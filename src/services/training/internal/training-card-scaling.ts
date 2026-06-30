@@ -1,7 +1,9 @@
-// src/services/training/internal/training-card-scaling.ts - Aplica escalado estático de version/level/xp para decks de training según dificultad efectiva.
+// src/services/training/internal/training-card-scaling.ts - Escalado estático de version/level/xp para decks de training, con stats de combate recalculados como el jugador.
 import { ICard } from "@/core/entities/ICard";
 import { IArenaDeckCardEntry } from "@/core/entities/training/IArenaOpponent";
+import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { OpponentDifficulty } from "@/core/services/opponent/difficulty/types";
+import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
 
 export interface ITrainingCardScale {
   versionTier: number;
@@ -18,22 +20,29 @@ const TRAINING_SCALE_BY_DIFFICULTY: Record<OpponentDifficulty, ITrainingCardScal
   MYTHIC: { versionTier: 5, level: 30, xp: 9800 },
 };
 
-/**
- * Escala todas las copias de cartas al mismo tier para mantener consistencia de entrenamiento.
- */
-export function applyTrainingCardScaling(cards: ICard[], difficulty: OpponentDifficulty): ICard[] {
-  const scale = TRAINING_SCALE_BY_DIFFICULTY[difficulty];
-  return cards.map((card) => ({ ...card, versionTier: scale.versionTier, level: scale.level, xp: scale.xp }));
-}
-
 /** Escalado base de un tier por su dificultad (fallback cuando el tier no define escalado propio). */
 export function resolveDifficultyScale(difficulty: OpponentDifficulty): ITrainingCardScale {
   return TRAINING_SCALE_BY_DIFFICULTY[difficulty];
 }
 
+/** Progreso sintético para reutilizar el cálculo de bonus de combate del jugador (sin fecha real, determinista). */
+function toOpponentProgress(card: ICard, scale: ITrainingCardScale): IPlayerCardProgress {
+  return {
+    playerId: "arena-opponent",
+    cardId: card.id,
+    versionTier: scale.versionTier,
+    level: scale.level,
+    xp: scale.xp,
+    masteryPassiveSkillId: card.masteryPassiveSkillId ?? null,
+    updatedAtIso: "1970-01-01T00:00:00.000Z",
+  };
+}
+
 /**
- * Hidrata entradas de mazo de arena aplicando, por carta, su override (version/level/xp) si existe,
- * o el escalado base del tier/dificultad en su defecto. Permite mazos editables y más fuertes por nivel.
+ * Hidrata entradas de mazo de arena aplicando, por carta, su override (version/level/xp) o el escalado
+ * base del tier/dificultad, y recalcula stats/coste de combate con las MISMAS reglas que el jugador
+ * (`applyCardProgressionToCard` → `resolveCardLevelBonuses`). Así un oponente a nivel 10/20/30 sube
+ * ataque/defensa y refleja la pasiva de su versión, igual que las cartas del jugador.
  */
 export function applyArenaCardScaling(
   entries: IArenaDeckCardEntry[],
@@ -44,11 +53,11 @@ export function applyArenaCardScaling(
   return entries.flatMap((entry) => {
     const card = cardCatalog.get(entry.cardId);
     if (!card) return [];
-    return [{
-      ...card,
+    const scale: ITrainingCardScale = {
       versionTier: entry.versionTier ?? baseScale.versionTier,
       level: entry.level ?? baseScale.level,
       xp: entry.xp ?? baseScale.xp,
-    }];
+    };
+    return [applyCardProgressionToCard(card, toOpponentProgress(card, scale))];
   });
 }

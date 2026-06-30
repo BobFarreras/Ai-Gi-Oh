@@ -6,8 +6,18 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-06-30
+
 ### Added
 - `pnpm release:prepare <major|minor|patch|X.Y.Z>`: sincroniza la versión en `package.json`, `README.md` y `CHANGELOG.md` (incluidos los enlaces de comparación del pie) en un solo comando, promoviendo la sección `[Unreleased]` a la nueva versión. Evita el bump manual en 3 sitios.
+- Arena (admin): editor visual de mazos estilo Story con layout de 4 columnas — oponentes y variantes, mazo (deck + fusión) con miniaturas reales, almacén con buscador/filtros e inspector con escalado versión/nivel/xp por carta; pestañas «Mazos» / «Estructura».
+- Arena: recuerda el último nivel seleccionado por el jugador (cookie) en lugar de volver siempre al Nivel 1 al entrar.
+
+### Changed
+- Arena: selector de nivel más claro en el lobby (cabecera «Nivel X de N», candado en niveles bloqueados y marca del nivel actual).
+
+### Fixed
+- Arena: las cartas del oponente ahora suben ataque/defensa según su nivel (10/20/30) y reflejan su versión, aplicando las mismas reglas de progresión que el jugador (antes solo se fijaba el nivel sin recalcular los stats).
 
 ## [1.7.1] - 2026-06-30
 
@@ -84,7 +94,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.7.1...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.7.2...HEAD
+[1.7.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.5.0...v1.6.0
