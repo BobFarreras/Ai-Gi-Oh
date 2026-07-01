@@ -1,6 +1,6 @@
 // src/app/hub/academy/page.tsx - Entrada server-side de Academy con escena fullscreen y layout sin márgenes en desktop.
 import { Suspense } from "react";
-import { TrainingModeSelection } from "@/components/hub/academy/training/TrainingModeSelection";
+import { AcademyScene } from "@/components/hub/academy/scene/AcademyScene";
 import { HubSectionEntryBurst } from "@/components/hub/sections/HubSectionEntryBurst";
 import { AcademyPostTutorialBigLogOverlay } from "@/components/hub/academy/internal/AcademyPostTutorialBigLogOverlay";
 
@@ -18,7 +18,7 @@ export default async function AcademyPage() {
       <div className="pointer-events-none absolute inset-0 hub-control-flow-lines opacity-75" />
 
       <div className="relative z-10 h-full w-full min-h-0">
-        <TrainingModeSelection />
+        <AcademyScene />
       </div>
     </main>
   );
