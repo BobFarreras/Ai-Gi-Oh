@@ -55,15 +55,20 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
             {props.nextTierRequirementLabel}
           </div>
           <div className="relative mt-2 flex flex-col items-center gap-1">
-            <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-cyan-300/70 md:text-[10px]">Selecciona tu nivel</span>
-            <div className="flex flex-wrap items-center justify-center gap-1.5">
+            <span className="inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.22em] text-cyan-300/70 md:text-[10px]">
+              Selecciona tu nivel
+              {props.isTierSwitching ? (
+                <span aria-hidden="true" className="h-2.5 w-2.5 animate-spin rounded-full border-[1.5px] border-cyan-300/40 border-t-cyan-200" />
+              ) : null}
+            </span>
+            <div className={`flex flex-wrap items-center justify-center gap-1.5 transition-opacity duration-200 ${props.isTierSwitching ? "opacity-60" : "opacity-100"}`}>
               {props.tierOptions.map((tierOption) => {
                 const isLocked = !tierOption.isUnlocked;
                 return (
                   <button
                     key={tierOption.tier}
                     type="button"
-                    disabled={isLocked || tierOption.isSelected}
+                    disabled={isLocked || tierOption.isSelected || props.isTierSwitching}
                     aria-label={`Seleccionar nivel ${tierOption.tier}`}
                     aria-current={tierOption.isSelected ? "true" : undefined}
                     onClick={() => props.onSelectTier(tierOption.tier)}
