@@ -90,6 +90,36 @@ describe("GameEngine CombatLog", () => {
     expect(energyLog?.payload).toMatchObject({ amount: 1, source: "MASTERY_PASSIVE_ENERGY_ON_DEATH" });
   });
 
+  it("emite STAT_BUFF_APPLIED (Sobrecarga) sobre el atacante al embestir una entity rival", () => {
+    const attackerCard: ICard = {
+      id: "entity-overload",
+      name: "Sobrecarga",
+      description: "",
+      type: "ENTITY",
+      faction: "NEUTRAL",
+      cost: 4,
+      attack: 2000,
+      defense: 1000,
+      masteryPassiveSkillId: MASTERY_PASSIVE_IDS.ENTITY_ATTACK_BONUS,
+      versionTier: 5,
+    };
+    const defenderCard: ICard = { id: "entity-wall", name: "Muro", description: "", type: "ENTITY", faction: "NEUTRAL", cost: 4, attack: 1000, defense: 900 };
+    const state: GameState = {
+      ...createTestGameState({
+        playerA: createTestPlayer("p1", { activeEntities: [createTestBoardEntity("atk-1", attackerCard, "ATTACK")] }),
+        playerB: createTestPlayer("p2", { activeEntities: [createTestBoardEntity("def-1", defenderCard, "ATTACK")] }),
+        activePlayerId: "p1",
+        startingPlayerId: "p2",
+        turn: 2,
+        phase: "BATTLE",
+      }),
+    };
+    const next = GameEngine.executeAttack(state, "p1", "atk-1", "def-1");
+    const buffLog = [...next.combatLog].reverse().find((event) => event.eventType === "STAT_BUFF_APPLIED");
+    expect(buffLog?.payload).toMatchObject({ stat: "ATTACK", amount: 300, reason: "MASTERY_PASSIVE_ENTITY_ATTACK_BONUS" });
+    expect(buffLog?.payload.targetEntityIds).toEqual(["atk-1"]);
+  });
+
   it("debería registrar DIRECT_DAMAGE con jugador objetivo", () => {
     let state = createState();
     state = GameEngine.playCard(state, "p1", "entity-log-1", "ATTACK");

@@ -1,7 +1,7 @@
 // src/core/use-cases/game-engine/combat/internal/attack-logging.ts - Registra eventos de combate y envío de cartas a cementerio/destrucción.
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
-import { resolveEnergyRefundOnDeath } from "@/core/use-cases/game-engine/combat/internal/attack-passives";
+import { resolveEnergyRefundOnDeath, resolveEntityAttackBonus } from "@/core/use-cases/game-engine/combat/internal/attack-passives";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 interface ICombatResultSummary {
@@ -10,6 +10,7 @@ interface ICombatResultSummary {
   damageToDefenderPlayer: number;
   damageToAttackerPlayer: number;
   passiveAttackReduction?: number;
+  reflectDamageToAttackerPlayer?: number;
   attackerDestroyedDestination?: "GRAVEYARD" | "DESTROYED" | null;
   defenderDestroyedDestination?: "GRAVEYARD" | "DESTROYED" | null;
 }
@@ -78,12 +79,34 @@ export function appendEntityBattleLogs(params: IBuildBattleLogsParams): GameStat
       amount: result.damageToAttackerPlayer,
     });
   }
+  // Cortafuegos Reactivo: el daño reflejado se emite como daño directo de efecto con la carta defensora
+  // como origen (source), para que dispare el rayo de daño directo desde el Cortafuegos hacia el atacante.
+  if ((result.reflectDamageToAttackerPlayer ?? 0) > 0) {
+    withLogs = appendCombatLogEvent(withLogs, defenderPlayerId, "DIRECT_DAMAGE", {
+      targetPlayerId: attackerPlayerTargetId,
+      amount: result.reflectDamageToAttackerPlayer,
+      sourceCardId: defender.card.id,
+      sourceLaneType: "ENTITIES",
+      reason: "MASTERY_PASSIVE_REFLECT_DAMAGE",
+    });
+  }
   if ((result.passiveAttackReduction ?? 0) > 0) {
     withLogs = appendCombatLogEvent(withLogs, defenderPlayerId, "STAT_BUFF_APPLIED", {
       stat: "ATTACK",
       amount: -Math.abs(result.passiveAttackReduction ?? 0),
       targetEntityIds: [attacker.instanceId],
       reason: "MASTERY_PASSIVE_ATK_DRAIN",
+    });
+  }
+  // Sobrecarga (mastery): bonus efímero de ATK del atacante al embestir a una entity rival. No se
+  // persiste en la carta; se emite el buff para mostrar el "+ATK" flotante durante ese ataque.
+  const entityAttackBonus = resolveEntityAttackBonus(attacker);
+  if (entityAttackBonus > 0) {
+    withLogs = appendCombatLogEvent(withLogs, attackerPlayerId, "STAT_BUFF_APPLIED", {
+      stat: "ATTACK",
+      amount: entityAttackBonus,
+      targetEntityIds: [attacker.instanceId],
+      reason: "MASTERY_PASSIVE_ENTITY_ATTACK_BONUS",
     });
   }
   if (result.attackerDestroyed) {

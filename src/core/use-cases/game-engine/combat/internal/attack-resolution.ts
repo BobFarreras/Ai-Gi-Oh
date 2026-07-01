@@ -50,6 +50,8 @@ interface IResolveEntityBattleParams {
 
 interface IResolvedEntityBattleResult extends ReturnType<typeof CombatService.calculateBattle> {
   passiveAttackReduction: number;
+  /** Cortafuegos Reactivo: daño reflejado al jugador atacante (aparte del daño de combate). */
+  reflectDamageToAttackerPlayer: number;
   attackerDestroyedDestination: "GRAVEYARD" | "DESTROYED" | null;
   defenderDestroyedDestination: "GRAVEYARD" | "DESTROYED" | null;
 }
@@ -99,6 +101,7 @@ export function resolveEntityBattleState(params: IResolveEntityBattleParams): { 
     result: {
       ...result,
       passiveAttackReduction,
+      reflectDamageToAttackerPlayer: reflectDamage,
       attackerDestroyedDestination: updatedAttacker.destroyedDestination,
       defenderDestroyedDestination: updatedDefender.destroyedDestination,
     },

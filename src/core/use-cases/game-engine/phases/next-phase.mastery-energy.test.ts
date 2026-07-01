@@ -34,6 +34,60 @@ describe("next-phase mastery defense bonus", () => {
     expect(next.playerA.currentEnergy).toBe(7);
   });
 
+  it("emite ENERGY_GAINED con amount = bonus mastery para disparar el pulse del HUD", () => {
+    const next = GameEngine.nextPhase(createState());
+    const energyLog = [...next.combatLog].reverse().find((event) => event.eventType === "ENERGY_GAINED");
+    expect(energyLog?.actorPlayerId).toBe("p1");
+    expect(energyLog?.payload).toMatchObject({ amount: 1 });
+  });
+
+  it("emite HEAL_APPLIED (Regeneración) al iniciar el turno del jugador con la pasiva", () => {
+    const healState = createTestGameState({
+      playerA: createTestPlayer("p1", {
+        healthPoints: 7000,
+        activeEntities: [
+          createTestBoardEntity(
+            "h1",
+            { id: "entity-postgress", name: "Postgres", description: "", type: "ENTITY", faction: "OPEN_SOURCE", cost: 3, attack: 1000, defense: 1900, versionTier: 5, masteryPassiveSkillId: "passive-heal-200-on-turn" },
+            "DEFENSE",
+          ),
+        ],
+      }),
+      playerB: createTestPlayer("p2"),
+      activePlayerId: "p2",
+      startingPlayerId: "p1",
+      turn: 2,
+      phase: "BATTLE",
+    });
+    const next = GameEngine.nextPhase(healState);
+    const healLog = [...next.combatLog].reverse().find((event) => event.eventType === "HEAL_APPLIED");
+    expect(healLog?.actorPlayerId).toBe("p1");
+    expect(healLog?.payload).toMatchObject({ amount: 200, source: "MASTERY_PASSIVE_HEAL_ON_TURN" });
+  });
+
+  it("emite STAT_BUFF_APPLIED (Aprendizaje Continuo) sobre la entity que crece", () => {
+    const growthState = createTestGameState({
+      playerA: createTestPlayer("p1", {
+        activeEntities: [
+          createTestBoardEntity(
+            "g1",
+            { id: "entity-copilot", name: "Copilot", description: "", type: "ENTITY", faction: "BIG_TECH", cost: 3, attack: 1500, defense: 900, versionTier: 5, masteryPassiveSkillId: "passive-atk-growth-100" },
+            "ATTACK",
+          ),
+        ],
+      }),
+      playerB: createTestPlayer("p2"),
+      activePlayerId: "p2",
+      startingPlayerId: "p1",
+      turn: 2,
+      phase: "BATTLE",
+    });
+    const next = GameEngine.nextPhase(growthState);
+    const buffLog = [...next.combatLog].reverse().find((event) => event.eventType === "STAT_BUFF_APPLIED");
+    expect(buffLog?.payload).toMatchObject({ stat: "ATTACK", amount: 100, reason: "MASTERY_PASSIVE_ATK_GROWTH" });
+    expect(buffLog?.payload.targetEntityIds).toEqual(["g1"]);
+  });
+
   it("otorga +3 energía total cuando hay entidad mastery en ataque", () => {
     const attackState = createTestGameState({
       playerA: createTestPlayer("p1", {

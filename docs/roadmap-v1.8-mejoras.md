@@ -1,8 +1,16 @@
 # Roadmap v1.8 — Guía de implementación (mejoras y nuevas features)
 
-> Rama sugerida: `feat/v1.8-improvements` (creada desde `main` v1.7.2), con una sub-rama por fase (o agrupando fases pequeñas) y merge a `develop` → `main` siguiendo el flujo ya documentado (push directo a `main` para el mantenedor).
-> Estado: **solo guía** — contexto recogido de código real (exploración 2026-07-01), sin implementar. Cada fase puede ir en su propio commit/PR.
+> Rama: `feat/v1.8-improvements` (creada desde `main` v1.7.2), con una sub-rama por fase (o agrupando fases pequeñas) y merge a `develop` → `main` siguiendo el flujo ya documentado (push directo a `main` para el mantenedor).
+> Estado (2026-07-01): **Fases 1, 2 y 4 IMPLEMENTADAS** ✅ · siguiente = Fase 3 (admin mobile). El resto sigue como guía.
 > Fuente de las 5 ideas originales del usuario, reordenadas por dependencia técnica y riesgo, no por prioridad de negocio.
+
+**Progreso:**
+- ✅ **Fase 1** — Arena cambia de nivel sin recarga (soft-nav).
+- ✅ **Fase 2** — Animaciones de las **10** pasivas V5 en combate (el diagnóstico inicial se quedó corto; ver bloque de la fase).
+- ✅ **Fase 4** — 2 oponentes nuevos (Guill nivel 6 + Mouretech comodín), migración 086 aplicada a prod.
+- ⏳ **Fase 3** — Admin mobile (siguiente).
+- ⬜ Fases 5, 6, 7 — Academy UI / documentación / hologramas 3D.
+- 🅿️ Fase 8 — codegen catálogo (aplazada; el guard de `db:validate` ya cubre el dolor inmediato).
 
 ---
 
@@ -28,7 +36,9 @@
 
 ---
 
-## Fase 1 — Cambio de nivel en Arena sin recarga 🟢 fácil-medio
+## Fase 1 — Cambio de nivel en Arena sin recarga 🟢 fácil-medio · ✅ IMPLEMENTADA (commit `5b4eef5`)
+
+> **Hecho:** `TrainingArenaClient.tsx` usa `router.push({ scroll: false })` + `useTransition` + `router.prefetch` de los tiers desbloqueados; nuevo prop `isTierSwitching` en `TrainingArenaLobby` (spinner + atenuado). Se mantiene `window.location.replace` solo en `onResultAction`/`onExitMatch` (teardown deliberado del `Board` post-combate).
 
 **Diagnóstico.** El selector de nivel en el lobby de Arena dispara una recarga completa del navegador porque usa `window.location.replace()` en vez de navegación de Next.js:
 
@@ -50,9 +60,26 @@ Hay 3 usos más del mismo patrón en el mismo archivo (`onBack`, `onResultAction
 
 ---
 
-## Fase 2 — Animaciones de efectos de pasivas V5 en combate 🟠 medio
+## Fase 2 — Animaciones de efectos de pasivas V5 en combate 🟠 medio · ✅ IMPLEMENTADA
 
-**Diagnóstico.** El catálogo de 10 pasivas de mastery V5 (`src/core/services/progression/mastery-passive-ids.ts`) tiene su lógica de servidor 100% correcta y determinista (importante para multijugador), pero **4 de las 10 no disparan ningún VFX** en la UI de combate:
+> **Hecho (real, corrige el diagnóstico de abajo).** El diagnóstico inicial se quedó corto: al rastrear el código, había **más de 4** pasivas sin VFX y una (Cortafuegos) con un bug real (aplicaba el daño al estado pero no emitía evento → sin animación). Arquitectura confirmada: el feedback de combate se **deriva del combat log** (`boardCombatFeedback.ts` lee el último evento por tipo), no de una cola `PASSIVE_TRIGGERED` nueva. Por tanto el arreglo fue **emitir los eventos que faltaban** en el punto donde el motor ya aplica el efecto (determinista, válido para multijugador), reutilizando los VFX existentes. Estado final de las **10**:
+>
+> | Pasiva | Animación | Cómo |
+> |---|---|---|
+> | Drenaje ATK | "−200" violeta en la carta | ya emitía `STAT_BUFF_APPLIED` (−) → `BuffImpactVfx` debuff |
+> | Núcleo Defensivo | pulse "+1" energía | `next-phase.ts`: `amount` en el `ENERGY_GAINED` de turno solo si hay bonus mastery |
+> | Carga Letal | daño directo aumentado | ya (el daño mayor se anima) |
+> | Turbo Ofensivo | pulse "+1" energía | ídem Núcleo Defensivo |
+> | Caja de Herramientas | robo deck→mano | `play-card.ts` marca `drewOnSummon` → `DrawCardFlowVfx` lo detecta |
+> | Aprendizaje Continuo | "+100" ATK flotante | `next-phase.ts` emite `STAT_BUFF_APPLIED` sobre las entities que crecen |
+> | Autoguardado | pulse "+energía" al morir | `attack-logging.ts` emite `ENERGY_GAINED` al dueño de la entity destruida |
+> | Cortafuegos Reactivo | rayo de daño desde la carta al atacante | `attack-logging.ts` emite `DIRECT_DAMAGE` de efecto (source = carta) + `beam-overlay-logic` deja de suprimirlo (`reason` reflect) |
+> | Regeneración | VFX de curación (+200 HP) | `next-phase.ts` emite `HEAL_APPLIED` |
+> | Sobrecarga | "+300" ATK flotante en el ataque | `attack-logging.ts` emite `STAT_BUFF_APPLIED` sobre el atacante |
+>
+> Archivos: `attack-logging.ts`, `attack-resolution.ts`, `mastery-turn-start.ts`, `next-phase.ts`, `play-card.ts`, `DrawCardFlowVfx.tsx`, `direct-damage-beam-overlay-logic.ts`/`-readers.ts`. Tests de integración añadidos por pasiva. **Limitación conocida:** el feedback surface "el último evento de cada tipo" por recompute → si dos pasivas del mismo tipo se disparan en la misma acción (ej. Sobrecarga +300 y Drenaje −200 sobre la misma carta), solo se ve una. Raro; posible follow-up (cola de buffs). **Verificación:** por tests + typecheck + lint; NO validado visualmente en partida real.
+
+**Diagnóstico (original, parcialmente inexacto — se conserva por contexto).** El catálogo de 10 pasivas de mastery V5 (`src/core/services/progression/mastery-passive-ids.ts`) tiene su lógica de servidor 100% correcta y determinista (importante para multijugador), pero **4 de las 10 no disparan ningún VFX** en la UI de combate:
 
 | Pasiva | Lógica (correcta) | VFX actual |
 |---|---|---|
@@ -78,7 +105,9 @@ Las otras 6 ya tienen animación reutilizable: robo (`DrawCardFlowVfx`), crecimi
 
 ---
 
-## Fase 3 — Panel de Admin en modo mobile 🟠 medio (superficie grande, riesgo bajo por sección)
+## Fase 3 — Panel de Admin en modo mobile 🟠 medio (superficie grande, riesgo bajo por sección) · ⏳ SIGUIENTE
+
+> **Alcance (confirmado por el usuario):** en **desktop el panel admin está perfecto** — NO tocar el layout de escritorio. El trabajo es **exclusivamente adaptar a mobile/tablet** sin regresión visual en desktop. Regla de oro: todo cambio va detrás de breakpoints (`max-md:` / `md:`), nunca alterando el aspecto ≥ `md`.
 
 **Diagnóstico.** El layout base ya tiene una estrategia mobile-first razonable:
 - `src/app/admin-portal/[portalSlug]/layout.tsx`: contenedor con `flex-col md:flex-row`.
@@ -97,7 +126,9 @@ El problema está **dentro de cada panel de contenido**, no en el shell. Ejemplo
 
 ---
 
-## Fase 4 — Dos oponentes nuevos, agnósticos Arena/Story 🟠 medio (mayormente contenido)
+## Fase 4 — Dos oponentes nuevos, agnósticos Arena/Story 🟠 medio (mayormente contenido) · ✅ IMPLEMENTADA (commit `d213879`)
+
+> **Hecho.** **Guill** = rival dedicado del **Nivel 6** (APEX); antes el N6 reusaba `training-tier-5` (el soldado quedaba duplicado en el roster). **Mouretech** = rival **comodín** con 25% de aparecer en cualquier nivel (lógica pura: el azar se inyecta desde la página con `crypto`, no `Math.random`). Toca: narración (`story-opponent-narration-catalog.ts`, textos puestos; audios los graba el usuario), presets/pools de arena, catálogo de tiers (+Nivel 6), resolver (comodín), migración `086_arena_opponents_guill_mouretech.sql` **aplicada a prod** (verificado: 22 cartas/variante, cero refs rotas). Alta solo en Arena (identidad lista para Story). Gotcha resuelto: `trap-gemini-counter-seal` era un id muerto (no está en CARD_BY_ID) → `trap-atk-drain`. Guard `db:validate` extendido para validar cartas de decks de migraciones (commit `ee4418e`). **Pendiente:** el usuario graba los `.m4a`.
 
 **Diagnóstico.** El sistema es más maduro de lo que parece a primera vista: **tanto Arena como Story ya son 100% data-driven en BD**, con paneles admin propios:
 - **Arena:** tablas `arena_opponents` / `arena_opponent_deck_variants` / `arena_deck_variant_cards` / `arena_tiers` (migraciones 081-084), editadas desde `/admin-portal/[slug]/arena` (`AdminArenaPanel`, con pestañas Mazos/Estructura).
@@ -186,18 +217,18 @@ Hay fallback en código si la BD falla (`build-arena-opponents-from-presets.ts` 
 
 ## Resumen de esfuerzo / orden sugerido
 
-| Fase | Tema | Esfuerzo | Riesgo | Tipo |
-|---|---|---|---|---|
-| 1 | Cambio de nivel Arena sin recarga | Bajo | Bajo | Código (navegación) |
-| 2 | VFX de pasivas V5 faltantes | Medio | Medio | Motor de combate + UI |
-| 3 | Admin panel mobile | Medio (9 páginas) | Bajo | UI/CSS |
-| 4 | 2 oponentes nuevos agnósticos | Medio | Bajo-medio | Contenido/admin |
-| 5 | UI de Academy (tutorial+arena) | Medio | Medio | UI |
-| 6 | Documentación interactiva | Medio-alto | Medio | Contenido + UI |
-| 7 | Hologramas 3D | Alto | Alto | 3D + rendimiento |
-| 8 | Sincronización total catálogo (codegen) | Medio | Medio | Infra/build (aplazada) |
+| Fase | Tema | Esfuerzo | Riesgo | Tipo | Estado |
+|---|---|---|---|---|---|
+| 1 | Cambio de nivel Arena sin recarga | Bajo | Bajo | Código (navegación) | ✅ hecha |
+| 2 | VFX de las 10 pasivas V5 | Medio | Medio | Motor de combate + UI | ✅ hecha |
+| 3 | Admin panel mobile (solo mobile; desktop perfecto) | Medio (9 páginas) | Bajo | UI/CSS | ⏳ siguiente |
+| 4 | 2 oponentes nuevos agnósticos | Medio | Bajo-medio | Contenido/admin | ✅ hecha |
+| 5 | UI de Academy (tutorial+arena) | Medio | Medio | UI | ⬜ |
+| 6 | Documentación interactiva | Medio-alto | Medio | Contenido + UI | ⬜ |
+| 7 | Hologramas 3D | Alto | Alto | 3D + rendimiento | ⬜ |
+| 8 | Sincronización total catálogo (codegen) | Medio | Medio | Infra/build | 🅿️ aplazada |
 
-**Orden recomendado: 1 → 2 → 3 → 4 → 5 → 6 → 7.** La Fase 8 (codegen) queda **aplazada**: se hará solo si la deriva código↔BD vuelve a molestar; el guard de CI ya añadido cubre el dolor inmediato.
+**Orden: 1 ✅ → 2 ✅ → 4 ✅ → 3 (siguiente) → 5 → 6 → 7.** La Fase 8 (codegen) queda **aplazada**: se hará solo si la deriva código↔BD vuelve a molestar; el guard de CI ya añadido cubre el dolor inmediato.
 
 Razonamiento: las fases 1-2 son arreglos acotados en código ya existente (bajo riesgo, alto valor inmediato de "se siente pulido"). La fase 3 es ancha pero mecánica y aislable por sección. La fase 4 es sobre todo contenido y no bloquea ni depende de las demás — puede incluso avanzar en paralelo por otra persona. Las fases 5-7 son la pieza más grande y nueva (rediseño de Academy + documentación + 3D) y conviene abordarlas al final, con las bases de navegación (Fase 1) y VFX (Fase 2) ya sólidas para no rediseñar dos veces.
 

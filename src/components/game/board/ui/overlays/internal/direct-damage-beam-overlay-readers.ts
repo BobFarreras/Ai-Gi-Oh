@@ -62,3 +62,8 @@ export function readSourceLaneType(event: ICombatLogEvent): "EXECUTIONS" | "ENTI
   const payload = asPayload(event);
   return payload && (payload.sourceLaneType === "EXECUTIONS" || payload.sourceLaneType === "ENTITIES") ? payload.sourceLaneType : null;
 }
+
+export function readDamageReason(event: ICombatLogEvent): string | null {
+  const payload = asPayload(event);
+  return payload && typeof payload.reason === "string" ? payload.reason : null;
+}

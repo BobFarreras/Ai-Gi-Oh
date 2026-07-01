@@ -42,6 +42,12 @@ describe("mastery passives V5 nuevas", () => {
     // Rompe el muro (sin daño penetrante) pero recibe 200 reflejados.
     expect(next.playerA.healthPoints).toBe(7800);
     expect(next.playerB.activeEntities).toHaveLength(0);
+    // Emite un DIRECT_DAMAGE de efecto (con la carta Cortafuegos como origen) para disparar el rayo.
+    const reflectLog = [...next.combatLog].reverse().find(
+      (event) => event.eventType === "DIRECT_DAMAGE" && event.payload.reason === "MASTERY_PASSIVE_REFLECT_DAMAGE",
+    );
+    expect(reflectLog?.actorPlayerId).toBe("p2");
+    expect(reflectLog?.payload).toMatchObject({ amount: 200, targetPlayerId: "p1", sourceCardId: "def" });
   });
 
   it("Autoguardado: la entity destruida devuelve 1 energía a su dueño", () => {
@@ -71,5 +77,23 @@ describe("mastery passives V5 nuevas", () => {
     expect(next.playerA.hand).toHaveLength(1);
     expect(next.playerA.hand[0]?.id).toBe("drawn");
     expect(next.playerA.deck).toHaveLength(0);
+    // El CARD_PLAYED marca el robo para que el VFX de robo (deck→mano) se dispare.
+    const playLog = [...next.combatLog].reverse().find((event) => event.eventType === "CARD_PLAYED");
+    expect(playLog?.payload).toMatchObject({ cardId: "box", drewOnSummon: true });
+  });
+
+  it("Caja de Herramientas: al hacer SET no roba ni marca el robo", () => {
+    const boxCard = entityCard("box", 1000, 1000, MASTERY_PASSIVE_IDS.DRAW_ON_SUMMON);
+    const drawnCard = entityCard("drawn", 900, 900);
+    const state = createTestGameState({
+      playerA: createTestPlayer("p1", { hand: [boxCard], deck: [drawnCard] }),
+      activePlayerId: "p1",
+      startingPlayerId: "p1",
+      phase: "MAIN_1",
+    });
+    const next = GameEngine.playCard(state, "p1", "box", "SET");
+    expect(next.playerA.deck).toHaveLength(1);
+    const playLog = [...next.combatLog].reverse().find((event) => event.eventType === "CARD_PLAYED");
+    expect(playLog?.payload.drewOnSummon).toBeUndefined();
   });
 });
