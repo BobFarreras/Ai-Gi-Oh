@@ -152,7 +152,33 @@ Hay fallback en código si la BD falla (`build-arena-opponents-from-presets.ts` 
 
 ---
 
-## Fase 5 — Mejora de UI de Academy (Tutorial + Arena) 🟠 medio
+## Fase 5 + 7 (FUSIONADAS) — Academy 3D: 3 pilares holográficos 🔴 alto · ⬜ SIGUIENTE
+
+> **Decisiones tomadas (2026-07-01):** rediseñar `/hub/academy` como una **pantalla estilo selección de campaña de StarCraft II** (el usuario pasó esa referencia) con **3 pilares holográficos 3D** sobre pedestales. Enfoque **3D real con react-three-fiber** (reusar el patrón de `HubScene`/`HubSceneWorld3D`), con **fallback 2D** en gama baja/sin-WebGL. Las imágenes 2D `intro-*` se proyectan como **planos con look holográfico** (tinte cian, líneas de escaneo, flotación, glow), NO son modelos 3D.
+>
+> **Los 3 pilares:**
+> 1. **Tutorial** → holograma de `intro-BigLog` (`/assets/story/opponents/opp-ch1-biglog/intro-BigLog.webp` o `tutorial-BigLog.webp`). CTA → `ACADEMY_TUTORIAL_MAP_ROUTE`.
+> 2. **Oponentes/Arena** → grupo (roster) con los 7 `intro-<oponente>` juntos, escalonados. CTA → `ACADEMY_TRAINING_ARENA_ROUTE`.
+> 3. **Documentación (Códex)** → una `Card` del juego flotando como holograma que **cicla Entity→Magic→Trap** (reusa `Card` + `CardHologram`). CTA → nueva ruta de glosario (Fase 6).
+>
+> **Arquitectura (espejo de `HubScene`):**
+> - `AcademyScene` (2D shell, `"use client"`): gate de hidratación (`useHubHydrationGate` o equivalente), check `supportsWebGL()`, decisión `canRender3D`, skeleton, y **`dynamic(() => import AcademyWorld3D, { ssr:false })`**. Renderiza `AcademyFallback2D` cuando `!canRender3D` (reusa el look de `TrainingMode3DPanel` actual, ya existente — así el fallback NO es peor que hoy).
+> - `AcademyWorld3D` (`"use client"`): `<Canvas dpr={renderProfile.dpr} gl={{antialias:false, powerPreference:"high-performance"}} frameloop={isDocumentVisible ? "always" : "never"}>` con luces (ambient + 2 directional cian como el hub), y 3 `<HologramPillar>`.
+> - `HologramPillar` (r3f): pedestal (cylinder + anillo emisivo), plano holográfico con la textura (imagen intro o card), animación de flotación (`useFrame`, `position.y = base + sin(t)*amp`), líneas de escaneo (segundo plano con textura de líneas + offset animado, additive), rim/glow, y estados hover/selected. onClick → navega (soft-nav de Fase 1, `router.push`).
+> - Reusar `resolveHubRenderProfile(viewportWidth, capability)` + `useHubDeviceCapability` para dpr/calidad; **gating `isPerformanceMode`/perfil desde el día 1**.
+> - Para la carta-códex: opción A (recomendada, más simple) = plano con textura de la cara de carta ciclando 3 imágenes; opción B (más fiel) = `<Html transform>` de drei incrustando el componente `Card` real en el espacio 3D (cuidado con perf/occlusion de `Html`).
+>
+> **Orden de implementación (incremental, medir en `pnpm build && pnpm start` en móvil real entre pasos):**
+> 1. `AcademyScene` shell + fallback 2D (mantiene la Academy funcionando) + `AcademyWorld3D` con SOLO el pilar Tutorial. Verificar rendimiento.
+> 2. Añadir pilar Oponentes (roster) y pilar Documentación (card códex).
+> 3. Pulido: cámara con parallax suave al mover ratón/orientación, entrada escalonada de pilares, títulos 2D superpuestos (HUD overlay como en el hub, no texto 3D), audio.
+> 4. Fase 6 aparte: el contenido del glosario que abre el pilar Docs.
+>
+> **Riesgo:** alto — es la superficie de mayor impacto de rendimiento móvil (preocupación recurrente del usuario). Mitigación: fallback 2D robusto + gating + medir por pilar. **Sesión dedicada recomendada** (contexto limpio para el 3D). **Aceptación:** Academy muestra los 3 pilares holográficos sin degradar LCP/FPS en build de producción móvil, con fallback 2D correcto; los 3 CTA navegan (soft-nav) a tutorial / arena / glosario.
+
+---
+
+## Fase 5 (original) — Mejora de UI de Academy (Tutorial + Arena) 🟠 medio
 
 **Diagnóstico.** Las páginas de Academy (`/hub/academy`, `/hub/academy/training/arena`, `/hub/academy/training/tutorial`, `/hub/academy/tutorial` + subrutas `arsenal`/`market`/`reward`) son hoy 2D con Tailwind + Framer Motion, sin ningún elemento 3D. El layout (`src/app/hub/academy/layout.tsx`) ya centraliza el control de audio del tutorial, así que es un buen punto de entrada estable para envolver mejoras de UI sin tocar cada página.
 
