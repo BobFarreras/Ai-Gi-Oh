@@ -17,7 +17,7 @@ interface IAdminCardCatalogDetailPanelProps {
 
 export function AdminCardCatalogDetailPanel({ selectedEntry, selectedCard, canEdit, onEdit, isFormMode, onBack }: IAdminCardCatalogDetailPanelProps) {
   return (
-    <div className="grid min-h-0 gap-3 grid-rows-[minmax(0,1fr)_auto]">
+    <div className="grid h-full min-h-0 gap-3 grid-rows-[minmax(0,1fr)_auto]">
       <HomeCardInspector selectedCard={selectedCard} selectedCardVersionTier={0} selectedCardLevel={0} selectedCardXp={0} selectedCardMasteryPassiveSkillId={null} minCardScale={0.5} maxCardScale={0.98} />
       <section className="rounded-2xl border border-slate-700 bg-slate-900/70 p-3 text-xs text-slate-200">
         {isFormMode ? (
