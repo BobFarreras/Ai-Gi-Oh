@@ -163,6 +163,27 @@ Hay fallback en código si la BD falla (`build-arena-opponents-from-presets.ts` 
 
 ---
 
+## Fase 8 — Sincronización total del catálogo de cartas código↔BD (codegen) 🟠 medio
+
+**Contexto (parte ya hecha).** Ya existe un guard barato ("Nivel 1", commit `ee4418e`): `pnpm db:validate` valida que las cartas usadas en los decks de las migraciones (arena/story/starter) existan en `cards_catalog`. Eso cubre el dolor de los decks de oponentes. Esta Fase 8 es el "Nivel 2" que se dejó aparcado a propósito.
+
+**Diagnóstico.** Hay **dos catálogos de cartas** y no están sincronizados automáticamente:
+- **BD `cards_catalog`** (fuente de verdad en prod): **121 cartas**. Lo consumen los modos reales (story, arena en prod, multijugador, colección, market) vía `loadAllActiveCards` / `loadCardsByIds`.
+- **Código `CARD_BY_ID`** (`src/core/data/mock-cards/`): **~55-62 cartas**, mantenido a mano. Es un **subconjunto** y puede derivar.
+
+`CARD_BY_ID` NO es solo un mock de tests: lo usan también (a) el *fallback* de arena si la BD falla y (b) el **tutorial de combate** ([create-tutorial-combat-loadout.ts](src/components/hub/academy/training/modes/tutorial/internal/create-tutorial-combat-loadout.ts)), que construye sus mazos desde `CARD_BY_ID` a propósito (guion fijo/reproducible). El motor del juego NO usa mocks: es agnóstico, opera sobre `ICard` venga de donde venga; lo único que cambia por modo es la **fuente** de las cartas. Riesgo latente: si alguien quita del código una carta que el tutorial referencia (`entity-chatgpt`, etc.), el tutorial lanza `Carta no disponible para tutorial` en runtime, sin aviso en CI.
+
+**Qué hacer.**
+1. **Generar `CARD_BY_ID` desde las migraciones/BD** (codegen). Como la "regla de oro" ya obliga a que toda carta tenga su `INSERT` en una migración, las migraciones son la fuente única → un script emite un TS generado (o un JSON) con las 121 cartas, y `CARD_BY_ID` se construye de ahí. Deriva imposible; cualquier carta activa queda usable en tests/fallback/tutorial.
+2. **Viabilidad confirmada:** `cards_catalog` tiene todas las columnas necesarias para reconstruir `ICard` (id, name, description, type, faction, cost, attack, defense, archetype, trigger, effect jsonb, fusiones, `innate_passive_skill_id`, render/bg url). El mapeo ya existe (`mapCardCatalogRowToCard`), así que el codegen puede reutilizar esa lógica.
+3. **Cuidado con lo hand-tuned:** los `mock-cards` usan helpers (`createEntity`) y campos como `renderFile`. Verificar que el generado produce `ICard` equivalentes (o mejor: unificar en el mapeo de BD) sin cambiar comportamiento. Comparar el catálogo generado vs. el actual carta a carta antes de sustituir.
+4. **Regenerar en el flujo:** integrar el codegen como paso (o check) en `db:validate`/`quality:check` para que el TS generado no derive de las migraciones.
+5. **Extender el guard al tutorial:** de paso, validar que las cartas que el tutorial referencia existan en el catálogo (hoy no está cubierto por el guard de Fase 8-nivel-1).
+
+**Riesgo:** medio — toca la carga de cartas del tutorial y el fallback; el peligro es cambiar sutilmente `ICard`s existentes. Mitigación: diff carta-a-carta generado vs. actual y tests de motor verdes. **Aceptación:** `CARD_BY_ID` es espejo exacto de las cartas activas de `cards_catalog`; imposible que un modo en código (tutorial/fallback/tests) referencie una carta que no exista, y viceversa.
+
+---
+
 ## Resumen de esfuerzo / orden sugerido
 
 | Fase | Tema | Esfuerzo | Riesgo | Tipo |
@@ -174,8 +195,9 @@ Hay fallback en código si la BD falla (`build-arena-opponents-from-presets.ts` 
 | 5 | UI de Academy (tutorial+arena) | Medio | Medio | UI |
 | 6 | Documentación interactiva | Medio-alto | Medio | Contenido + UI |
 | 7 | Hologramas 3D | Alto | Alto | 3D + rendimiento |
+| 8 | Sincronización total catálogo (codegen) | Medio | Medio | Infra/build (aplazada) |
 
-**Orden recomendado: 1 → 2 → 3 → 4 → 5 → 6 → 7.**
+**Orden recomendado: 1 → 2 → 3 → 4 → 5 → 6 → 7.** La Fase 8 (codegen) queda **aplazada**: se hará solo si la deriva código↔BD vuelve a molestar; el guard de CI ya añadido cubre el dolor inmediato.
 
 Razonamiento: las fases 1-2 son arreglos acotados en código ya existente (bajo riesgo, alto valor inmediato de "se siente pulido"). La fase 3 es ancha pero mecánica y aislable por sección. La fase 4 es sobre todo contenido y no bloquea ni depende de las demás — puede incluso avanzar en paralelo por otra persona. Las fases 5-7 son la pieza más grande y nueva (rediseño de Academy + documentación + 3D) y conviene abordarlas al final, con las bases de navegación (Fase 1) y VFX (Fase 2) ya sólidas para no rediseñar dos veces.
 
