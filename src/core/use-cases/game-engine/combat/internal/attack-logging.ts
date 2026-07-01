@@ -1,6 +1,7 @@
 // src/core/use-cases/game-engine/combat/internal/attack-logging.ts - Registra eventos de combate y envío de cartas a cementerio/destrucción.
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
+import { resolveEnergyRefundOnDeath } from "@/core/use-cases/game-engine/combat/internal/attack-passives";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 interface ICombatResultSummary {
@@ -99,6 +100,24 @@ export function appendEntityBattleLogs(params: IBuildBattleLogsParams): GameStat
       cardId: defender.card.id,
       ownerPlayerId: defenderPlayerId,
       from: "BATTLEFIELD",
+    });
+  }
+  // Autoguardado (mastery): la entity destruida devuelve energía a su dueño. El motor ya la suma en
+  // attack-player-updates; aquí solo se emite el evento para que el HUD dispare el VFX de "+energía".
+  const attackerEnergyRefund = result.attackerDestroyed ? resolveEnergyRefundOnDeath(attacker) : 0;
+  if (attackerEnergyRefund > 0) {
+    withLogs = appendCombatLogEvent(withLogs, attackerPlayerTargetId, "ENERGY_GAINED", {
+      amount: attackerEnergyRefund,
+      source: "MASTERY_PASSIVE_ENERGY_ON_DEATH",
+      sourceCardId: attacker.card.id,
+    });
+  }
+  const defenderEnergyRefund = result.defenderDestroyed ? resolveEnergyRefundOnDeath(defender) : 0;
+  if (defenderEnergyRefund > 0) {
+    withLogs = appendCombatLogEvent(withLogs, defenderPlayerId, "ENERGY_GAINED", {
+      amount: defenderEnergyRefund,
+      source: "MASTERY_PASSIVE_ENERGY_ON_DEATH",
+      sourceCardId: defender.card.id,
     });
   }
   return withLogs;

@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { IGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
-import { createTestGameState, createTestPlayer } from "@/core/use-cases/game-engine/test-support/state-fixtures";
+import { MASTERY_PASSIVE_IDS } from "@/core/services/progression/mastery-passive-ids";
+import { createTestBoardEntity, createTestGameState, createTestPlayer } from "@/core/use-cases/game-engine/test-support/state-fixtures";
 
 const entityCard: ICard = {
   id: "entity-log-1",
@@ -57,6 +58,36 @@ describe("GameEngine CombatLog", () => {
     const next = GameEngine.nextPhase(state);
     const tail = next.combatLog.slice(-2).map((event) => event.eventType);
     expect(tail).toEqual(["TURN_STARTED", "ENERGY_GAINED"]);
+  });
+
+  it("emite ENERGY_GAINED (Autoguardado) cuando una entity con la pasiva es destruida en combate", () => {
+    const attackerCard: ICard = { id: "entity-attacker", name: "Atacante", description: "", type: "ENTITY", faction: "NEUTRAL", cost: 4, attack: 3000, defense: 1000 };
+    const defenderCard: ICard = {
+      id: "entity-autosave",
+      name: "Autoguardado",
+      description: "",
+      type: "ENTITY",
+      faction: "NEUTRAL",
+      cost: 4,
+      attack: 1000,
+      defense: 500,
+      masteryPassiveSkillId: MASTERY_PASSIVE_IDS.ENERGY_ON_DEATH,
+      versionTier: 5,
+    };
+    const state: GameState = {
+      ...createTestGameState({
+        playerA: createTestPlayer("p1", { activeEntities: [createTestBoardEntity("atk-1", attackerCard, "ATTACK")] }),
+        playerB: createTestPlayer("p2", { currentEnergy: 5, activeEntities: [createTestBoardEntity("def-1", defenderCard, "ATTACK")] }),
+        activePlayerId: "p1",
+        startingPlayerId: "p2",
+        turn: 2,
+        phase: "BATTLE",
+      }),
+    };
+    const next = GameEngine.executeAttack(state, "p1", "atk-1", "def-1");
+    const energyLog = [...next.combatLog].reverse().find((event) => event.eventType === "ENERGY_GAINED");
+    expect(energyLog?.actorPlayerId).toBe("p2");
+    expect(energyLog?.payload).toMatchObject({ amount: 1, source: "MASTERY_PASSIVE_ENERGY_ON_DEATH" });
   });
 
   it("debería registrar DIRECT_DAMAGE con jugador objetivo", () => {
