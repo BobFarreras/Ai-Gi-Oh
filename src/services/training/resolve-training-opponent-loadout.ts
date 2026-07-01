@@ -19,6 +19,12 @@ interface IResolveTrainingOpponentLoadoutInput {
   cardCatalog?: Map<string, ICard>;
   /** Escalado de cartas propio del tier; si se omite, se usa el escalado por dificultad efectiva. */
   defaultScaling?: ITrainingCardScale | null;
+  /** Oponente comodín que puede aparecer aleatoriamente en cualquier nivel (p. ej. Mouretech). */
+  wildcardTemplateId?: string;
+  /** Tirada de azar [0,1) inyectada por el caller; si es < wildcardChance, se elige el comodín. */
+  wildcardRoll?: number;
+  /** Probabilidad de que salga el comodín (por defecto WILDCARD_OPPONENT_CHANCE). */
+  wildcardChance?: number;
 }
 
 export interface ITrainingOpponentLoadout {
@@ -35,6 +41,8 @@ export interface ITrainingOpponentLoadout {
 }
 
 const DIFFICULTY_ORDER: OpponentDifficulty[] = ["EASY", "NORMAL", "HARD", "BOSS", "MASTER", "MYTHIC"];
+/** Probabilidad por defecto de que el oponente comodín sustituya al rival fijo del roster. */
+const WILDCARD_OPPONENT_CHANCE = 0.25;
 const TRAINING_TIER_ONE_SHOWCASE_ROSTER = [
   "training-tier-1",
   "training-tier-1-alt",
@@ -70,6 +78,23 @@ function resolveRosterTemplateIds(tier: number, deckTemplateId: string, opponent
   return [deckTemplateId, ...previousTemplates];
 }
 
+/**
+ * Elige el template del rival: el comodín (si su tirada de azar entra) o el rival fijo del roster.
+ * El comodín solo aplica si existe en el catálogo, evitando lanzar cuando no está sembrado (p. ej. BD sin él).
+ */
+function resolveSelectedTemplateId(
+  input: IResolveTrainingOpponentLoadoutInput,
+  roster: string[],
+  opponents: Record<string, IArenaOpponent>,
+): string {
+  const wildcardId = input.wildcardTemplateId;
+  const chance = input.wildcardChance ?? WILDCARD_OPPONENT_CHANCE;
+  if (wildcardId && opponents[wildcardId] && input.wildcardRoll !== undefined && input.wildcardRoll < chance) {
+    return wildcardId;
+  }
+  return roster[input.tierMatches % roster.length];
+}
+
 function resolveDeckVariant(opponent: IArenaOpponent, tierMatches: number): IArenaDeckVariant {
   if (opponent.variants.length === 0) throw new ValidationError(`El oponente '${opponent.id}' no tiene variantes de mazo.`);
   return opponent.variants[tierMatches % opponent.variants.length];
@@ -91,7 +116,7 @@ export function resolveTrainingOpponentLoadout(input: IResolveTrainingOpponentLo
   const opponents = input.opponents ?? buildArenaOpponentsFromPresets();
   const cardCatalog = input.cardCatalog ?? CARD_BY_ID;
   const roster = resolveRosterTemplateIds(input.tier, input.deckTemplateId, opponents);
-  const selectedTemplateId = roster[input.tierMatches % roster.length];
+  const selectedTemplateId = resolveSelectedTemplateId(input, roster, opponents);
   const opponent = opponents[selectedTemplateId];
   if (!opponent) throw new ValidationError(`No existe preset de oponente para '${selectedTemplateId}'.`);
   const selectedVariant = resolveDeckVariant(opponent, input.tierMatches);

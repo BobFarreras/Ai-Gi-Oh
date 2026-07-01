@@ -116,6 +116,34 @@ export const STORY_OPPONENT_NARRATION_CATALOG: Record<string, IStoryOpponentNarr
       opponentDefeat: line("opponentDefeat", "Mis cartas me han fallado.", "derrota-Soldado-act01.m4a"),
     },
   }),
+  "opp-guill": profile({
+    opponentId: "opp-guill",
+    assetFolder: "opp-ch1-guill",
+    portraits: { intro: "intro-Guill.webp", victory: "victoria-Guill.webp", defeat: "derrota-Guill.webp" },
+    lines: {
+      intro: line("intro", "Has llegado al último nivel. Nadie lo ha superado.", "intro.m4a"),
+      trap: line("trap", "Predije cada carta de tu mano.", "trampa.m4a"),
+      fusion: line("fusion", "Fusión completada. Se acabó el juego.", "fusion.m4a"),
+      directHitToPlayer: line("directHitToPlayer", "Insignificante.", "impacto-directo-jugador.m4a"),
+      directHitToOpponent: line("directHitToOpponent", "Ríndete mientras puedas.", "impacto-directo-opponente.m4a"),
+      opponentVictory: line("opponentVictory", "El nivel más alto permanece invicto.", "victoria-oponente.m4a"),
+      opponentDefeat: line("opponentDefeat", "Imposible... ¿me has superado?", "derrota-oponente.m4a"),
+    },
+  }),
+  "opp-mouretech": profile({
+    opponentId: "opp-mouretech",
+    assetFolder: "opp-ch1-mouretech",
+    portraits: { intro: "intro-Mouretech.webp", victory: "victoria-Mouretech.webp", defeat: "derrota-Mouretech.webp" },
+    lines: {
+      intro: line("intro", "Mouretech interviene. Optimizaré tu derrota.", "intro.m4a"),
+      trap: line("trap", "Todo dentro de los parámetros previstos.", "trampa.m4a"),
+      fusion: line("fusion", "Recursos combinados. Eficiencia máxima.", "fusion.m4a"),
+      directHitToPlayer: line("directHitToPlayer", "Daño asumible.", "impacto-directo-jugador.m4a"),
+      directHitToOpponent: line("directHitToOpponent", "Procesando tu eliminación.", "impacto-directo-opponente.m4a"),
+      opponentVictory: line("opponentVictory", "Resultado esperado. Fin del análisis.", "victoria-oponente.m4a"),
+      opponentDefeat: line("opponentDefeat", "Error crítico... recalculando.", "derrota-oponente.m4a"),
+    },
+  }),
 };
 
 export function getStoryOpponentNarrationProfile(opponentId: string): IStoryOpponentNarrationProfile | null {

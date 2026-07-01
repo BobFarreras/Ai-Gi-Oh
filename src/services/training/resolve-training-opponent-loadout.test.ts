@@ -124,6 +124,59 @@ describe("resolveTrainingOpponentLoadout", () => {
     expect(loadout.difficulty).toBe("BOSS");
   });
 
+  it("usa a Guill como rival base del nivel 6 (sin duplicar al soldado)", () => {
+    const loadout = resolveTrainingOpponentLoadout({
+      tier: 6,
+      aiDifficulty: "MYTHIC",
+      deckTemplateId: "training-tier-6",
+      tierWins: 0,
+      tierMatches: 0,
+    });
+    expect(loadout.displayName).toBe("Guill");
+    expect(loadout.storyOpponentId).toBe("opp-guill");
+    expect(loadout.deck).toHaveLength(20);
+  });
+
+  it("elige el rival comodín cuando la tirada de azar entra dentro de la probabilidad", () => {
+    const loadout = resolveTrainingOpponentLoadout({
+      tier: 3,
+      aiDifficulty: "NORMAL",
+      deckTemplateId: "training-tier-3",
+      tierWins: 0,
+      tierMatches: 0,
+      wildcardTemplateId: "training-mouretech",
+      wildcardRoll: 0, // < chance → sale el comodín
+    });
+    expect(loadout.displayName).toBe("Mouretech");
+    expect(loadout.storyOpponentId).toBe("opp-mouretech");
+  });
+
+  it("ignora el comodín cuando la tirada de azar queda fuera de la probabilidad", () => {
+    const loadout = resolveTrainingOpponentLoadout({
+      tier: 3,
+      aiDifficulty: "NORMAL",
+      deckTemplateId: "training-tier-3",
+      tierWins: 0,
+      tierMatches: 0,
+      wildcardTemplateId: "training-mouretech",
+      wildcardRoll: 0.99, // >= chance → rival fijo del roster
+    });
+    expect(loadout.displayName).toBe("Jaku");
+  });
+
+  it("ignora el comodín si no está en el catálogo provisto (sin lanzar)", () => {
+    const loadout = resolveTrainingOpponentLoadout({
+      tier: 3,
+      aiDifficulty: "NORMAL",
+      deckTemplateId: "training-tier-3",
+      tierWins: 0,
+      tierMatches: 0,
+      wildcardTemplateId: "training-mouretech-inexistente",
+      wildcardRoll: 0,
+    });
+    expect(loadout.displayName).toBe("Jaku");
+  });
+
   it("falla si el template no existe", () => {
     expect(() =>
       resolveTrainingOpponentLoadout({
