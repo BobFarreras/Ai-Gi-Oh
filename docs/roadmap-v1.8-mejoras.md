@@ -8,8 +8,9 @@
 - ✅ **Fase 1** — Arena cambia de nivel sin recarga (soft-nav).
 - ✅ **Fase 2** — Animaciones de las **10** pasivas V5 en combate (el diagnóstico inicial se quedó corto; ver bloque de la fase).
 - ✅ **Fase 4** — 2 oponentes nuevos (Guill nivel 6 + Mouretech comodín), migración 086 aplicada a prod.
-- ⏳ **Fase 3** — Admin mobile (siguiente).
-- ⬜ Fases 5, 6, 7 — Academy UI / documentación / hologramas 3D.
+- ✅ **Fase 3** — Admin mobile (Catálogo, Market, Starter, Story, Arena con detalle en diálogo; desktop intacto).
+- ⬜ **Fases 5 + 7 (FUSIONADAS)** — Academy 3D estilo "selección de campaña" (3 pilares holográficos: Tutorial, Oponentes, Documentación).
+- ⬜ Fase 6 — documentación interactiva (el contenido que abre el pilar de Documentación).
 - 🅿️ Fase 8 — codegen catálogo (aplazada; el guard de `db:validate` ya cubre el dolor inmediato).
 
 ---
@@ -105,9 +106,11 @@ Las otras 6 ya tienen animación reutilizable: robo (`DrawCardFlowVfx`), crecimi
 
 ---
 
-## Fase 3 — Panel de Admin en modo mobile 🟠 medio (superficie grande, riesgo bajo por sección) · ⏳ SIGUIENTE
+## Fase 3 — Panel de Admin en modo mobile 🟠 medio · ✅ IMPLEMENTADA (commits `b75e9da`, `4d732ce`, `0088289`)
 
-> **Alcance (confirmado por el usuario):** en **desktop el panel admin está perfecto** — NO tocar el layout de escritorio. El trabajo es **exclusivamente adaptar a mobile/tablet** sin regresión visual en desktop. Regla de oro: todo cambio va detrás de breakpoints (`max-md:` / `md:`), nunca alterando el aspecto ≥ `md`.
+> **Hecho.** Patrón único: en desktop (≥xl) el layout NO cambia; por debajo de `xl` los workspaces multi-columna pasan a **scroll vertical** y el inspector/detalle se abre como **diálogo** (`AdminMobileDetailDialog`, wrapper de `MobileInspectorDialogShell` — el mismo de arsenal/mercado). Paneles: Catálogo, Market (listings+packs), Starter, Story, Arena (editor de mazos; el diálogo incluye acciones Añadir/Quitar por su flujo click-based). Wrappers `xl:contents` para no alterar el grid desktop; alturas definidas en móvil para los paneles con `h-full` interno. Effects/Analytics/Live-Ops/Audit ya apilaban (`md:grid-cols`/tabla con `overflow-auto`). Fix de paso: el detalle de carta lleva `h-full` → el `ResizeObserver` del inspector mide bien y la `Card` deja de recortarse (afectaba también a desktop).
+>
+> **Alcance confirmado:** desktop perfecto, NO tocarlo — solo mobile/tablet.
 
 **Diagnóstico.** El layout base ya tiene una estrategia mobile-first razonable:
 - `src/app/admin-portal/[portalSlug]/layout.tsx`: contenedor con `flex-col md:flex-row`.
@@ -221,14 +224,13 @@ Hay fallback en código si la BD falla (`build-arena-opponents-from-presets.ts` 
 |---|---|---|---|---|---|
 | 1 | Cambio de nivel Arena sin recarga | Bajo | Bajo | Código (navegación) | ✅ hecha |
 | 2 | VFX de las 10 pasivas V5 | Medio | Medio | Motor de combate + UI | ✅ hecha |
-| 3 | Admin panel mobile (solo mobile; desktop perfecto) | Medio (9 páginas) | Bajo | UI/CSS | ⏳ siguiente |
+| 3 | Admin panel mobile (solo mobile; desktop perfecto) | Medio (9 páginas) | Bajo | UI/CSS | ✅ hecha |
 | 4 | 2 oponentes nuevos agnósticos | Medio | Bajo-medio | Contenido/admin | ✅ hecha |
-| 5 | UI de Academy (tutorial+arena) | Medio | Medio | UI | ⬜ |
-| 6 | Documentación interactiva | Medio-alto | Medio | Contenido + UI | ⬜ |
-| 7 | Hologramas 3D | Alto | Alto | 3D + rendimiento | ⬜ |
+| 5+7 | Academy 3D (3 pilares holográficos) | Alto | Alto | 3D + rendimiento | ⬜ siguiente |
+| 6 | Documentación interactiva (contenido del pilar Docs) | Medio-alto | Medio | Contenido + UI | ⬜ |
 | 8 | Sincronización total catálogo (codegen) | Medio | Medio | Infra/build | 🅿️ aplazada |
 
-**Orden: 1 ✅ → 2 ✅ → 4 ✅ → 3 (siguiente) → 5 → 6 → 7.** La Fase 8 (codegen) queda **aplazada**: se hará solo si la deriva código↔BD vuelve a molestar; el guard de CI ya añadido cubre el dolor inmediato.
+**Orden: 1 ✅ → 2 ✅ → 4 ✅ → 3 ✅ → 5+7 (siguiente) → 6.** Las Fases 5 (UI Academy) y 7 (hologramas 3D) se **fusionan**: el rediseño de Academy ES la página de 3 pilares holográficos 3D (estilo pantalla de selección de campaña de StarCraft II). La Fase 6 (documentación) provee el contenido que abre el pilar de Documentación. La Fase 8 (codegen) queda **aplazada**: se hará solo si la deriva código↔BD vuelve a molestar; el guard de CI ya añadido cubre el dolor inmediato.
 
 Razonamiento: las fases 1-2 son arreglos acotados en código ya existente (bajo riesgo, alto valor inmediato de "se siente pulido"). La fase 3 es ancha pero mecánica y aislable por sección. La fase 4 es sobre todo contenido y no bloquea ni depende de las demás — puede incluso avanzar en paralelo por otra persona. Las fases 5-7 son la pieza más grande y nueva (rediseño de Academy + documentación + 3D) y conviene abordarlas al final, con las bases de navegación (Fase 1) y VFX (Fase 2) ya sólidas para no rediseñar dos veces.
 
