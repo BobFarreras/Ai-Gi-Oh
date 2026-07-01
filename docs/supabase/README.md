@@ -67,12 +67,17 @@ Para regenerar el INSERT exacto desde prod: mira la fila en `cards_catalog` (Stu
 pnpm db:validate
 ```
 
-Comprueba **estáticamente (sin Docker)** que toda carta referenciada por el `seed.sql` la cree alguna migración de `cards_catalog`. Falla con la lista de huérfanas si no. Está integrado en:
+Comprueba **estáticamente (sin Docker)** que toda carta referenciada la cree alguna migración de `cards_catalog`. Cubre dos fuentes:
+
+1. El **`seed.sql`** (mercado, sobres, tienda de evento, login) → evita romper `supabase db reset` con FK 23503.
+2. Los **decks de las migraciones** (`arena_deck_variant_cards`, `story_deck_list_cards`, `story_duel_deck_overrides`, `story_duel_reward_cards`, `starter_deck_template_slots`) → evita que una carta inexistente en un deck de oponente "desaparezca" en silencio al hidratarse (la arena lee de BD; `applyArenaCardScaling` omite cartas ausentes). Nota: en `arena_deck_variant_cards` las cartas se leen solo de dentro de `ARRAY[...]`, para no confundir un `variant_id` con prefijo de carta (p. ej. `fusion-pressure`) con una carta real.
+
+Falla con la lista de huérfanas si no. Está integrado en:
 
 - **`pnpm quality:check`** (gate de CI/PR) → cualquier PR que deje una carta huérfana falla.
 - **`pnpm db:reset`** (paso previo al reset) → feedback inmediato local.
 
-Cuándo correrlo: **siempre que toques `seed.sql` o añadas/quites cartas en migraciones**, antes de commitear.
+Cuándo correrlo: **siempre que toques `seed.sql`, añadas/quites cartas en migraciones, o edites decks de oponentes (arena/story)**, antes de commitear.
 
 ## Diccionario de tablas
 
