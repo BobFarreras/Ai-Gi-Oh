@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="https://ai-gi-oh.vercel.app"><strong>🌐 App en producción</strong></a> ·
+  <a href="https://ai-gi-oh.es"><strong>🌐 App en producción</strong></a> ·
   <a href="./CONTRIBUTING.md"><strong>🤝 Contribuir</strong></a> ·
   <a href="./docs/GUIA_DESPLIEGUE_PROFESIONAL.md"><strong>🚀 Deploy</strong></a> ·
   <a href="./docs/architecture/README.md"><strong>🏗️ Arquitectura</strong></a>
@@ -49,8 +49,8 @@ Incluye:
 
 Producción actual:
 
-- App: `https://ai-gi-oh.vercel.app`
-- Callback auth: `https://ai-gi-oh.vercel.app/auth/callback`
+- App: `https://ai-gi-oh.es`
+- Callback auth: `https://ai-gi-oh.es/auth/callback`
 
 ## Vista rápida del producto
 
