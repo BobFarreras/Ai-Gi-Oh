@@ -20,10 +20,15 @@ import { STORY_OPPONENT_NARRATION_CATALOG } from "@/services/story/story-opponen
 import { EffectVfxDemo } from "./EffectVfxDemo";
 import {
   CARD_TYPE_GUIDE,
+  type IStoryFaction,
   MASTERY_INTRO,
   OPPONENT_BIOS,
   OPPONENT_ORDER,
+  STORY_FACTIONS,
+  STORY_HERO,
+  STORY_LORE_INTRO,
   STORY_OVERVIEW,
+  STORY_THREAT,
   VERSION_INTRO,
   XP_INTRO,
 } from "./glossary-content";
@@ -48,6 +53,8 @@ const EFFECT_GROUPS: { category: EffectCategory; label: string; accent: string }
 ];
 
 const HEADING_FONT = { fontFamily: "var(--font-orbitron)" } as const;
+// Fuente narrativa (sci-fi) para la prosa del lore/Historia; da carácter sin perder legibilidad.
+const NARRATIVE_FONT = { fontFamily: "var(--font-narrative)" } as const;
 
 // Mapa efecto/pasiva/trigger → primera carta real que lo usa (para mostrarla como ejemplo).
 const EXAMPLE_CARD_BY_KEY: Map<string, ICard> = (() => {
@@ -400,10 +407,111 @@ function MasterySection({ onSelect }: { onSelect: (item: IEffectCatalogItem) => 
   );
 }
 
+function FactionCard({ faction }: { faction: IStoryFaction }) {
+  return (
+    <motion.li variants={itemFade} className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-4">
+      <div className="flex items-center gap-2">
+        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${faction.dot} shadow-[0_0_10px_currentColor]`} />
+        <h4 className={`text-base font-black ${faction.accent}`} style={HEADING_FONT}>
+          {faction.name}
+        </h4>
+      </div>
+      <p className={`mb-2 mt-1 text-[11px] font-bold uppercase tracking-[0.16em] ${faction.accent} opacity-80`}>
+        {faction.tagline}
+      </p>
+      <p className="text-[13.5px] leading-6 text-slate-300" style={NARRATIVE_FONT}>
+        {faction.description}
+      </p>
+    </motion.li>
+  );
+}
+
+/** Bloque narrativo destacado (amenaza / héroe) con acento de color. */
+function StoryHighlight({
+  kicker,
+  name,
+  paragraphs,
+  tone,
+}: {
+  kicker: string;
+  name: string;
+  paragraphs: string[];
+  tone: "danger" | "hero";
+}) {
+  const styles =
+    tone === "danger"
+      ? {
+          box: "border-red-500/40 bg-red-950/20 shadow-[0_0_28px_rgba(239,68,68,0.08)]",
+          dot: "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.85)] animate-pulse",
+          kicker: "text-red-400",
+          title: "text-white",
+        }
+      : {
+          box: "border-cyan-400/40 bg-cyan-950/20 shadow-[0_0_28px_rgba(34,211,238,0.1)]",
+          dot: "bg-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.85)]",
+          kicker: "text-cyan-300",
+          title: "text-white drop-shadow-[0_0_20px_rgba(6,182,212,0.6)]",
+        };
+  return (
+    <div className={`rounded-2xl border p-5 ${styles.box}`}>
+      <div className="mb-2 flex items-center gap-2">
+        <span className={`h-2 w-2 rounded-full ${styles.dot}`} />
+        <span className={`text-[11px] font-black uppercase tracking-[0.22em] ${styles.kicker}`}>{kicker}</span>
+      </div>
+      <h3 className={`text-2xl font-black sm:text-3xl ${styles.title}`} style={HEADING_FONT}>
+        {name}
+      </h3>
+      <div className="mt-3 space-y-3">
+        {paragraphs.map((paragraph) => (
+          <p key={paragraph} className="text-[14.5px] leading-7 text-slate-200" style={NARRATIVE_FONT}>
+            {paragraph}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function StorySection() {
   return (
     <Panel>
-      <SectionHeading kicker="Campaña" title="Cómo funciona la Historia" intro={STORY_OVERVIEW} />
+      <SectionHeading kicker="La trama" title="El conflicto por la red" />
+
+      <div className="mb-4 inline-flex items-center rounded-full border border-cyan-300/40 bg-cyan-400/10 px-3 py-1">
+        <span className="text-sm font-black tracking-[0.3em] text-cyan-200" style={HEADING_FONT}>
+          {STORY_LORE_INTRO.year}
+        </span>
+      </div>
+      <div className="space-y-3">
+        {STORY_LORE_INTRO.paragraphs.map((paragraph) => (
+          <p key={paragraph} className="max-w-3xl text-[15px] leading-7 text-slate-300" style={NARRATIVE_FONT}>
+            {paragraph}
+          </p>
+        ))}
+      </div>
+
+      <h3 className="mb-3 mt-7 text-sm font-black uppercase tracking-[0.18em] text-cyan-300">Las tres facciones</h3>
+      <motion.ul variants={listStagger} initial="hidden" animate="show" className="grid gap-3 sm:grid-cols-3">
+        {STORY_FACTIONS.map((faction) => (
+          <FactionCard key={faction.name} faction={faction} />
+        ))}
+      </motion.ul>
+
+      <div className="mt-7 space-y-4">
+        <StoryHighlight kicker={STORY_THREAT.kicker} name={STORY_THREAT.name} paragraphs={STORY_THREAT.paragraphs} tone="danger" />
+        <StoryHighlight kicker={STORY_HERO.kicker} name={STORY_HERO.name} paragraphs={STORY_HERO.paragraphs} tone="hero" />
+      </div>
+
+      <div className="mt-7 border-t border-cyan-400/15 pt-6">
+        <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-cyan-300">Cómo funciona el Modo Historia</h3>
+        <div className="space-y-3">
+          {STORY_OVERVIEW.map((paragraph) => (
+            <p key={paragraph} className="max-w-3xl text-[15px] leading-7 text-slate-300" style={NARRATIVE_FONT}>
+              {paragraph}
+            </p>
+          ))}
+        </div>
+      </div>
     </Panel>
   );
 }
@@ -541,7 +649,7 @@ export function AcademyGlossary() {
   }, [active, examples]);
 
   return (
-    <section className="relative grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-4 text-slate-100">
+    <section className="home-modern-scroll relative flex h-full flex-col gap-4 overflow-y-auto text-slate-100 lg:grid lg:min-h-0 lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:overflow-hidden">
       <header className="px-1 pt-1 text-center lg:pt-3">
         <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-cyan-300/45 bg-cyan-400/10 px-3 py-1">
           <span className="h-2 w-2 animate-pulse rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.85)]" />
@@ -552,8 +660,8 @@ export function AcademyGlossary() {
         </h1>
       </header>
 
-      <nav className="row-start-2 flex min-h-0 flex-col gap-4 lg:flex-row">
-        <div className="flex gap-2 overflow-x-auto pb-1 lg:w-56 lg:shrink-0 lg:flex-col lg:overflow-visible lg:pb-0">
+      <nav className="row-start-2 flex flex-col gap-4 lg:min-h-0 lg:flex-row">
+        <div className="home-modern-scroll sticky top-0 z-20 flex gap-2 overflow-x-auto bg-[#04121d]/85 py-1 backdrop-blur-sm lg:static lg:z-auto lg:w-56 lg:shrink-0 lg:flex-col lg:overflow-visible lg:bg-transparent lg:py-0 lg:backdrop-blur-none">
           {SECTIONS.map((item) => {
             const isActive = item.id === active;
             return (
@@ -573,7 +681,7 @@ export function AcademyGlossary() {
           })}
         </div>
 
-        <div className="home-modern-scroll min-h-0 flex-1 overflow-y-auto pr-1">
+        <div className="home-modern-scroll flex-1 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
           <AnimatePresence mode="wait">
             <motion.div
               key={active}

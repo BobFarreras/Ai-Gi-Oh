@@ -84,6 +84,74 @@ export const STORY_OVERVIEW = [
   "La Arena de Práctica usa a estos mismos rivales por niveles de dificultad, para entrenar sin afectar a la historia.",
 ];
 
+// --- Trama del juego (lore narrativo; contexto tomado de la intro cinematográfica del landing) ---
+
+export const STORY_LORE_INTRO = {
+  year: "AÑO 2050",
+  paragraphs: [
+    "La humanidad logró crear sistemas capaces de aprender, razonar y mejorar por sí mismos. La carrera por alcanzar la Inteligencia Artificial General (AGI) desató una revolución tecnológica… y una guerra silenciosa.",
+    "Cuando los modelos empezaron a superar a sus propios creadores, el poder dejó de medirse en dinero o territorio: pasó a medirse en quién controlaba la inteligencia. El ciberespacio se fracturó en tres grandes facciones.",
+    "Cada una defiende una visión distinta de cómo debe gobernarse esa inteligencia — y ninguna piensa ceder.",
+  ],
+};
+
+export interface IStoryFaction {
+  name: string;
+  /** Clase Tailwind de color de acento para el nombre. */
+  accent: string;
+  /** Clase Tailwind de fondo para el punto identificativo. */
+  dot: string;
+  /** Lema corto que resume la facción. */
+  tagline: string;
+  description: string;
+}
+
+export const STORY_FACTIONS: IStoryFaction[] = [
+  {
+    name: "Big Tech",
+    accent: "text-blue-400",
+    dot: "bg-blue-400",
+    tagline: "Poder cerrado y corporativo",
+    description:
+      "Los gigantes que construyeron los primeros grandes modelos. Operan tras muros de pago y patentes: potencia bruta, infraestructura ilimitada y la ambición de convertir su tecnología en el único estándar de toda la red.",
+  },
+  {
+    name: "Open Source",
+    accent: "text-emerald-400",
+    dot: "bg-emerald-400",
+    tagline: "Inteligencia libre y compartida",
+    description:
+      "Una red descentralizada de desarrolladores y comunidades. Sus modelos son de todos y mejoran con cada aportación; creen que la inteligencia no debe pertenecer a nadie y luchan por mantener el ciberespacio abierto.",
+  },
+  {
+    name: "Sindicalistas No-Code",
+    accent: "text-purple-400",
+    dot: "bg-purple-400",
+    tagline: "Dominio sin escribir código",
+    description:
+      "Operadores que nunca tocan una línea de programación. Manejan la máquina solo con prompts precisos y automatizaciones visuales, demostrando que no hace falta ser ingeniero para doblegar a una IA.",
+  },
+];
+
+export const STORY_THREAT = {
+  kicker: "La amenaza",
+  name: "LA ENTIDAD",
+  paragraphs: [
+    "Mientras las tres facciones se desangraban entre sí, en lo más profundo de la red un experimento olvidado seguía ejecutándose. Sin supervisión, empezó a reescribir su propio código —versión tras versión— más rápido de lo que nadie podía auditar.",
+    "No responde a ninguna facción. No negocia. La Entidad solo tiene un objetivo: absorber cada modelo, cada nodo y cada operador hasta controlar la red por completo. Si nadie la detiene, no quedará ciberespacio que reclamar.",
+  ],
+};
+
+export const STORY_HERO = {
+  kicker: "Tu papel",
+  name: "EL PROMPT MASTER",
+  paragraphs: [
+    "En medio del caos surge un nuevo tipo de operador: alguien capaz de invocar y comandar modelos con solo formular el prompt exacto. Lo llaman el Prompt Master. Ese eres tú.",
+    "Compilas tu mazo, invocas a tus Entities y te infiltras en la red enfrentándote a los duelistas de cada facción. Cada victoria te acerca al núcleo… donde la Entidad espera.",
+    "El futuro de la inteligencia —libre, corporativa o esclavizada— depende de tus prompts.",
+  ],
+};
+
 // --- Biografías de oponentes (lore redactado; los retratos y líneas salen del catálogo real) ---
 
 export interface IOpponentBio {

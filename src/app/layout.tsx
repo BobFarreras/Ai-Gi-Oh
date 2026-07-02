@@ -1,7 +1,7 @@
 // src/app/layout.tsx - Layout raíz: fuentes, metadata global (SEO/GEO), structured data y botón de
 // perfil de efectos visuales.
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Orbitron } from "next/font/google";
+import { Chakra_Petch, Geist, Geist_Mono, Orbitron } from "next/font/google";
 import { PerformanceProfileToggle } from "@/components/internal/PerformanceProfileToggle";
 import { shouldRenderPerformanceToggle } from "@/components/internal/should-render-performance-toggle";
 import { AnalyticsInitializer } from "@/services/analytics/client/AnalyticsInitializer";
@@ -32,6 +32,13 @@ const geistMono = Geist_Mono({
 // Fuente display tecnológica (HUD/sci-fi) para títulos y etiquetas destacadas.
 const orbitron = Orbitron({
   variable: "--font-orbitron",
+  subsets: ["latin"],
+});
+
+// Fuente narrativa sci-fi (cuerpo de lore/historia): más carácter que la sans base, legible en párrafos.
+const chakraPetch = Chakra_Petch({
+  variable: "--font-narrative",
+  weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
 });
 
@@ -143,7 +150,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} ${chakraPetch.variable} antialiased`}
       >
         {children}
         <AnalyticsInitializer />
