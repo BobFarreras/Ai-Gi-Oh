@@ -72,6 +72,7 @@ export function DocumentationDeck({ centerY, isHovered }: DocumentationDeckProps
               <Card
                 card={card}
                 isPerformanceMode
+                showBackgroundInPerformanceMode
                 disableHoverEffects
                 disableHologram
                 disableDefaultShadow
