@@ -1,11 +1,12 @@
 // src/components/admin/AdminCatalogPanel.tsx - Panel visual de Card Catalog con almacén, detalle y editor con preview en tiempo real.
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { IAdminCatalogSnapshot } from "@/core/entities/admin/IAdminCatalogSnapshot";
 import { AdminCardCatalogDetailPanel } from "@/components/admin/internal/AdminCardCatalogDetailPanel";
 import { AdminCardCatalogFormFields } from "@/components/admin/internal/AdminCardCatalogFormFields";
 import { AdminCardCatalogWarehousePanel } from "@/components/admin/internal/AdminCardCatalogWarehousePanel";
+import { AdminMobileDetailDialog } from "@/components/admin/internal/AdminMobileDetailDialog";
 import { mapEntryToCard } from "@/components/admin/internal/admin-card-catalog-draft";
 import { useAdminCardCatalogEditor } from "@/components/admin/internal/use-admin-card-catalog-editor";
 
@@ -21,6 +22,16 @@ export function AdminCatalogPanel({ initialSnapshot }: AdminCatalogPanelProps) {
   const activeCards = editor.cards.filter((entry) => entry.isActive).length;
   const detailCard = isFormMode ? editor.draftPreviewCard : editor.selectedPreviewCard;
   const hasErrorFeedback = editor.feedback.toLowerCase().includes("no se pudo") || editor.feedback.toLowerCase().includes("válido");
+  // Detalle como diálogo en móvil (<xl); en desktop sigue inline. Se abre al seleccionar carta o editar.
+  const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
+  const beginCreateMobile = () => {
+    editor.beginCreate();
+    setIsMobileDetailOpen(true);
+  };
+  const beginEditMobile = () => {
+    editor.beginEdit();
+    setIsMobileDetailOpen(true);
+  };
 
   return (
     <section className="flex h-full min-h-0 flex-1 flex-col gap-3">
@@ -84,7 +95,7 @@ export function AdminCatalogPanel({ initialSnapshot }: AdminCatalogPanelProps) {
                   type="button"
                   aria-label="Crear carta nueva"
                   className="flex h-8 items-center gap-1.5 rounded-md border border-emerald-500/70 bg-emerald-950/50 px-4 text-[10px] font-black uppercase tracking-wider text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.12)] transition hover:bg-emerald-900/50 disabled:opacity-50"
-                  onClick={editor.beginCreate}
+                  onClick={beginCreateMobile}
                   disabled={editor.isBusy}
                 >
                   <svg viewBox="0 0 24 24" className="h-3 w-3 fill-none stroke-current" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
@@ -105,25 +116,51 @@ export function AdminCatalogPanel({ initialSnapshot }: AdminCatalogPanelProps) {
       <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
         {isFormMode ? (
           <section className="flex min-h-0 flex-col rounded-2xl border border-slate-700/60 bg-[#040d1a]/80 p-3">
-            <div className="mb-3 flex items-center gap-2 border-b border-slate-700/50 pb-3">
+            <div className="mb-3 flex items-center justify-between gap-2 border-b border-slate-700/50 pb-3">
               <span className={`rounded-md border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${editor.mode === "create" ? "border-emerald-500/60 bg-emerald-950/50 text-emerald-300" : "border-cyan-500/60 bg-cyan-950/50 text-cyan-300"}`}>
                 {editor.mode === "create" ? "Crear carta" : "Editar carta"}
               </span>
+              <button type="button" aria-label="Ver preview de la carta" onClick={() => setIsMobileDetailOpen(true)} className="flex h-7 items-center gap-1.5 rounded-md border border-cyan-700/50 bg-cyan-950/40 px-2.5 text-[10px] font-bold uppercase tracking-wider text-cyan-300 xl:hidden">
+                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current" strokeWidth="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg>
+                Preview
+              </button>
             </div>
             <AdminCardCatalogFormFields draft={editor.draft} isBusy={editor.isBusy} onChange={editor.updateDraft} onApplyTypeTemplate={editor.applyTypeTemplate} />
           </section>
         ) : (
-          <AdminCardCatalogWarehousePanel cards={editor.cards} selectedCardId={editor.selectedCardId} cardById={cardById} onSelectCard={editor.selectCard} />
+          <AdminCardCatalogWarehousePanel
+            cards={editor.cards}
+            selectedCardId={editor.selectedCardId}
+            cardById={cardById}
+            onSelectCard={(cardId) => {
+              editor.selectCard(cardId);
+              setIsMobileDetailOpen(true);
+            }}
+          />
         )}
+        {/* Detalle inline: solo desktop (xl+). En móvil se muestra en el diálogo de abajo. */}
+        <div className="hidden min-h-0 xl:block">
+          <AdminCardCatalogDetailPanel
+            selectedEntry={editor.selectedEntry}
+            selectedCard={detailCard}
+            canEdit={editor.mode === "view" && editor.selectedEntry !== null && !editor.isBusy}
+            onEdit={editor.beginEdit}
+            isFormMode={isFormMode}
+            onBack={editor.cancelEdit}
+          />
+        </div>
+      </div>
+
+      <AdminMobileDetailDialog isOpen={isMobileDetailOpen} onClose={() => setIsMobileDetailOpen(false)} closeAriaLabel="Cerrar detalle de carta">
         <AdminCardCatalogDetailPanel
           selectedEntry={editor.selectedEntry}
           selectedCard={detailCard}
           canEdit={editor.mode === "view" && editor.selectedEntry !== null && !editor.isBusy}
-          onEdit={editor.beginEdit}
+          onEdit={beginEditMobile}
           isFormMode={isFormMode}
           onBack={editor.cancelEdit}
         />
-      </div>
+      </AdminMobileDetailDialog>
     </section>
   );
 }

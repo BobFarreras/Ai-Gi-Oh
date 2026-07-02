@@ -6,6 +6,24 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-07-02
+
+### Added
+- Academy 3D: nueva pantalla de acceso con 3 pilares holográficos, carrusel en móvil y zoom al pulsar.
+- Códex/Documentación para novatos (Academy): guía navegable por secciones (tipos de carta, efectos, niveles/XP, versiones, pasivas de maestría, Historia y oponentes) con cartas reales de ejemplo y demos de VFX. Totalmente adaptada a móvil (contenedor de scroll único y fiable + pestañas fijas).
+- Historia (Códex): sección narrativa de la trama del juego —planteamiento «Año 2050», las tres facciones (Big Tech, Open Source, Sindicalistas No-Code), la amenaza de «La Entidad» y el rol del Prompt Master— con fuente narrativa sci-fi dedicada.
+- SEO/GEO: dominio `ai-gi-oh.es` con SEO clásico y optimización para motores de IA; imagen Open Graph/Twitter de marca generada dinámicamente.
+- Combate: animación y flujo de las 10 pasivas mastery V5, y VFX de Autoguardado al morir la entity.
+- Arena: dos oponentes nuevos (Guill nivel 6 + Mouretech comodín) y cambio de nivel sin recarga de página (soft-nav).
+- Admin usable en móvil: Catálogo, Market, Starter, Story y el editor de mazos de Arena muestran el detalle como diálogo.
+- `pnpm db:validate` valida también las cartas de los decks referenciados en migraciones.
+
+### Changed
+- Academy: mejoras de rendimiento y de UI en móvil (carrusel, oclusión de mazo, zoom al pulsar).
+
+### Fixed
+- Academy: Mouretech en tier 4, correcciones del Academy 3D en móvil y poder de carta mostrado en el cementerio.
+
 ## [1.7.2] - 2026-06-30
 
 ### Added
@@ -94,7 +112,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.7.2...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.7.2...v1.8.0
 [1.7.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.6.0...v1.7.0

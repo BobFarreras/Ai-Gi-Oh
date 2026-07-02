@@ -37,6 +37,7 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
     opponents: runtime.arenaOpponents ?? undefined,
     cardCatalog: runtime.arenaCardCatalog ?? undefined,
     defaultScaling: tierScaling,
+    // Mouretech ya no es comodín aleatorio: ahora es el rival fijo del tier 4 (ver catálogo de tiers).
   });
   const narrationPack = buildStoryOpponentNarrationPack({
     opponentId: opponentLoadout.storyOpponentId,

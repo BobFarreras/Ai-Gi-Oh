@@ -35,6 +35,7 @@ export function AcademyBackButton({ label, href, onClick, className }: IAcademyB
       <Link
         href={href}
         aria-label={label}
+        onClick={onClick}
         className={buttonClassName}
         style={{ clipPath: "polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)" }}
       >

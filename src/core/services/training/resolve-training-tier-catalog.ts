@@ -7,8 +7,10 @@ const DEFAULT_TRAINING_TIERS: ITrainingTierDefinition[] = [
   { tier: 1, code: "BOOT", requiredWinsInPreviousTier: 0, aiDifficulty: "EASY", deckTemplateId: "training-tier-1", rewardMultiplier: 1 },
   { tier: 2, code: "SPARK", requiredWinsInPreviousTier: 5, aiDifficulty: "NORMAL", deckTemplateId: "training-tier-2", rewardMultiplier: 1.2 },
   { tier: 3, code: "CORE", requiredWinsInPreviousTier: 5, aiDifficulty: "NORMAL", deckTemplateId: "training-tier-3", rewardMultiplier: 1.4 },
-  { tier: 4, code: "ASCENT", requiredWinsInPreviousTier: 5, aiDifficulty: "HARD", deckTemplateId: "training-tier-4", rewardMultiplier: 1.7 },
+  // Tier 4 usa a Mouretech (antes BigLog / rival comodín aleatorio, ahora fijo aquí).
+  { tier: 4, code: "ASCENT", requiredWinsInPreviousTier: 5, aiDifficulty: "HARD", deckTemplateId: "training-mouretech", rewardMultiplier: 1.7 },
   { tier: 5, code: "NEXUS", requiredWinsInPreviousTier: 5, aiDifficulty: "BOSS", deckTemplateId: "training-tier-5", rewardMultiplier: 2.1 },
+  { tier: 6, code: "APEX", requiredWinsInPreviousTier: 5, aiDifficulty: "MYTHIC", deckTemplateId: "training-tier-6", rewardMultiplier: 2.5, defaultVersionTier: 5, defaultLevel: 30, defaultXp: 9800 },
 ];
 
 interface IResolveTrainingTierCatalogInput {

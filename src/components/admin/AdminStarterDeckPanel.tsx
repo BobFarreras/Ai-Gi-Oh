@@ -1,8 +1,9 @@
 // src/components/admin/AdminStarterDeckPanel.tsx - Composición principal del editor starter deck con layout tipo Arsenal para administración.
 "use client";
-import { DragEvent, useMemo } from "react";
+import { DragEvent, useMemo, useState } from "react";
 import { IAdminStarterDeckApiResponse } from "@/components/admin/admin-starter-deck-api";
 import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
+import { AdminMobileDetailDialog } from "@/components/admin/internal/AdminMobileDetailDialog";
 import { AdminStarterDeckCollectionPanel } from "@/components/admin/internal/AdminStarterDeckCollectionPanel";
 import { AdminStarterDeckDeckPanel } from "@/components/admin/internal/AdminStarterDeckDeckPanel";
 import { readAdminStarterDeckDragData, writeAdminStarterDeckDragData } from "@/components/admin/internal/admin-starter-deck-dnd";
@@ -14,6 +15,7 @@ interface IAdminStarterDeckPanelProps {
 
 export function AdminStarterDeckPanel({ initialData }: IAdminStarterDeckPanelProps) {
   const editor = useAdminStarterDeckEditor(initialData);
+  const [isMobileInspectorOpen, setIsMobileInspectorOpen] = useState(false);
   const cardById = useMemo(() => new Map(editor.data.availableCards.map((card) => [card.id, card])), [editor.data.availableCards]);
   const selectedSlotCardId = editor.selectedSlotIndex === null ? null : (editor.draftCardIds[editor.selectedSlotIndex] ?? null);
   const selectedCard = (editor.selectedCollectionCardId ? cardById.get(editor.selectedCollectionCardId) ?? null : null) ?? (selectedSlotCardId ? cardById.get(selectedSlotCardId) ?? null : null);
@@ -166,17 +168,20 @@ export function AdminStarterDeckPanel({ initialData }: IAdminStarterDeckPanelPro
       </div>
 
       {editor.data.template ? (
-        <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[360px_470px_minmax(0,1fr)]">
-          <HomeCardInspector
-            selectedCard={selectedCard}
-            selectedCardVersionTier={0}
-            selectedCardLevel={0}
-            selectedCardXp={0}
-            selectedCardMasteryPassiveSkillId={null}
-            minCardScale={0.62}
-            maxCardScale={0.98}
-          />
-          <div className="flex min-h-0 justify-center xl:justify-start">
+        <div className="grid min-h-0 flex-1 gap-4 max-xl:flex max-xl:flex-col max-xl:overflow-y-auto xl:grid-cols-[360px_470px_minmax(0,1fr)]">
+          {/* Inspector inline solo en desktop; en móvil se abre como diálogo al seleccionar carta/slot. */}
+          <div className="hidden min-h-0 xl:block">
+            <HomeCardInspector
+              selectedCard={selectedCard}
+              selectedCardVersionTier={0}
+              selectedCardLevel={0}
+              selectedCardXp={0}
+              selectedCardMasteryPassiveSkillId={null}
+              minCardScale={0.62}
+              maxCardScale={0.98}
+            />
+          </div>
+          <div className="flex min-h-0 justify-center max-xl:shrink-0 xl:justify-start">
             <AdminStarterDeckDeckPanel
               draftCardIds={editor.draftCardIds}
               cardById={cardById}
@@ -185,6 +190,7 @@ export function AdminStarterDeckPanel({ initialData }: IAdminStarterDeckPanelPro
               onSelectSlot={(slotIndex) => {
                 editor.setSelectedSlotIndex(slotIndex);
                 editor.setSelectedCollectionCardId(null);
+                setIsMobileInspectorOpen(true);
               }}
               onDropOnSlot={onDropOnSlot}
               onStartDragSlot={(slotIndex, event) => {
@@ -193,23 +199,38 @@ export function AdminStarterDeckPanel({ initialData }: IAdminStarterDeckPanelPro
               }}
             />
           </div>
-          <AdminStarterDeckCollectionPanel
-            availableCards={editor.data.availableCards}
-            selectedCardId={editor.selectedCollectionCardId}
-            isEditMode={editor.isEditMode}
-            onSelectCard={(cardId) => {
-              editor.setSelectedCollectionCardId(cardId);
-              editor.setSelectedSlotIndex(null);
-            }}
-            onDropToCollection={onDropToCollection}
-            onStartDragCard={(cardId, event) => writeAdminStarterDeckDragData(event, { type: "card", cardId })}
-          />
+          <div className="min-h-0 max-xl:h-[68vh] max-xl:shrink-0 xl:h-full">
+            <AdminStarterDeckCollectionPanel
+              availableCards={editor.data.availableCards}
+              selectedCardId={editor.selectedCollectionCardId}
+              isEditMode={editor.isEditMode}
+              onSelectCard={(cardId) => {
+                editor.setSelectedCollectionCardId(cardId);
+                editor.setSelectedSlotIndex(null);
+                setIsMobileInspectorOpen(true);
+              }}
+              onDropToCollection={onDropToCollection}
+              onStartDragCard={(cardId, event) => writeAdminStarterDeckDragData(event, { type: "card", cardId })}
+            />
+          </div>
         </div>
       ) : (
         <div className="rounded-xl border border-amber-500/40 bg-amber-950/20 p-4">
           <p className="text-sm font-semibold text-amber-200">No hay plantilla starter disponible todavía.</p>
         </div>
       )}
+
+      <AdminMobileDetailDialog isOpen={isMobileInspectorOpen} onClose={() => setIsMobileInspectorOpen(false)} closeAriaLabel="Cerrar detalle de carta">
+        <HomeCardInspector
+          selectedCard={selectedCard}
+          selectedCardVersionTier={0}
+          selectedCardLevel={0}
+          selectedCardXp={0}
+          selectedCardMasteryPassiveSkillId={null}
+          minCardScale={0.62}
+          maxCardScale={0.98}
+        />
+      </AdminMobileDetailDialog>
     </section>
   );
 }

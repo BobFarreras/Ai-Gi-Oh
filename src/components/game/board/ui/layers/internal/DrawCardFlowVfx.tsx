@@ -27,7 +27,10 @@ function resolveLatestDrawEvent(events: ICombatLogEvent[], playerId: string): ID
     const cardType = payload && typeof payload.cardType === "string" ? payload.cardType : "";
     const mode = payload && typeof payload.mode === "string" ? payload.mode : "";
     const action = payload && typeof payload.effectAction === "string" ? payload.effectAction : "";
-    if (cardType !== "EXECUTION" || mode !== "ACTIVATE" || action !== "DRAW_CARD") continue;
+    // Ejecución DRAW_CARD (exec-draw-1) o Caja de Herramientas (robo al invocar la entity).
+    const isExecutionDraw = cardType === "EXECUTION" && mode === "ACTIVATE" && action === "DRAW_CARD";
+    const isSummonDraw = payload?.drewOnSummon === true;
+    if (!isExecutionDraw && !isSummonDraw) continue;
     return { id: event.id, isOpponent: event.actorPlayerId !== playerId };
   }
   return null;

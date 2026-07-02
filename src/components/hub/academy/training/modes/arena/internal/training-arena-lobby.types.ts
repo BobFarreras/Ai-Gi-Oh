@@ -13,6 +13,7 @@ export interface ITrainingArenaLobbyProps {
   nextTierRequirementLabel: string;
   tierOptions: ITrainingArenaTierOption[];
   onSelectTier: (tier: number) => void;
+  isTierSwitching?: boolean;
   opponentName: string;
   playerAvatarUrl: string;
   opponentAvatarUrl: string;
