@@ -29,14 +29,25 @@ function jitter(index: number, seed: number): number {
   return x - Math.floor(x);
 }
 
+// Tope del rango de z-index del mazo cuando usa oclusión "blending" de drei. drei sitúa el <canvas>
+// en floor(tope/2) = 20, así que el DOM de las cartas queda por debajo del canvas (0..19) y el WebGL
+// lo tapa por profundidad. El HUD (header/footer) debe ir por encima de 20.
+export const DOC_DECK_BLENDING_ZINDEX = 40;
+
 interface DocumentationDeckProps {
   /** Altura (dentro del grupo del pilar) a la que flota el centro de la baraja. */
   centerY: number;
   /** Como los demás hologramas: en reposo las cartas van veladas y al hacer hover se revelan. */
   isHovered: boolean;
+  /**
+   * Si true, cada carta usa oclusión "blending" de drei: el WebGL de la escena la tapa por
+   * profundidad (para el carrusel móvil, donde los hologramas se solapan). En desktop se deja en
+   * false (el DOM va encima, pero ahí los pilares no se solapan).
+   */
+  occludeBlending?: boolean;
 }
 
-export function DocumentationDeck({ centerY, isHovered }: DocumentationDeckProps) {
+export function DocumentationDeck({ centerY, isHovered, occludeBlending = false }: DocumentationDeckProps) {
   const cards = useMemo(() => DOC_DECK_CARDS, []);
   const count = cards.length;
 
@@ -62,7 +73,8 @@ export function DocumentationDeck({ centerY, isHovered }: DocumentationDeckProps
             position={[x, y, z]}
             rotation={[0, 0, rotationZ]}
             distanceFactor={2}
-            zIndexRange={[0, 0]}
+            occlude={occludeBlending ? "blending" : undefined}
+            zIndexRange={occludeBlending ? [DOC_DECK_BLENDING_ZINDEX, 0] : [0, 0]}
             style={{ pointerEvents: "none" }}
           >
             <div

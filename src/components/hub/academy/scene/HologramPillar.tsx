@@ -4,7 +4,7 @@
 // El onClick delega la navegación (soft-nav) al padre. Reutilizable para los 3 pilares.
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { Html, useTexture } from "@react-three/drei";
 import * as THREE from "three";
@@ -40,7 +40,16 @@ interface HologramPillarProps {
   scale?: number;
   /** Orden de dibujo: mayor = se pinta encima (el pilar de delante debe ir por encima de los de atrás). */
   renderOrder?: number;
+  /** Modo ligero (móvil / gama baja): sin luz puntual y la Documentación como plano en vez de baraja HTML. */
+  lite?: boolean;
+  /** Si true, la posición se interpola suavemente hacia `position` (carrusel móvil: el pilar se desliza). */
+  animatePosition?: boolean;
+  /** Si true, el mazo de Documentación usa oclusión "blending" (el WebGL lo tapa por profundidad). */
+  occludeDeckBlending?: boolean;
 }
+
+// Rapidez del deslizamiento del carrusel (lambda de MathUtils.damp; mayor = más rápido).
+const CAROUSEL_DAMP_LAMBDA = 5;
 
 const PEDESTAL_HEIGHT = 0.28;
 // La base (pies) de la imagen queda centrada dentro del aro (que está a y≈0.28), como si
@@ -104,12 +113,17 @@ export function HologramPillar({
   documentationDeck = false,
   scale = 1,
   renderOrder = 0,
+  lite = false,
+  animatePosition = false,
+  occludeDeckBlending = false,
 }: HologramPillarProps) {
   // El colorSpace se fija en el callback de carga (no se puede mutar el valor devuelto por el hook).
   const texture = useTexture(textureUrl, (loaded) => {
     const tex = Array.isArray(loaded) ? loaded[0] : loaded;
     if (tex) tex.colorSpace = THREE.SRGBColorSpace;
   });
+  const outerGroupRef = useRef<THREE.Group>(null);
+  const positionInitializedRef = useRef(false);
   const holoGroupRef = useRef<THREE.Group>(null);
   const materialRef = useRef<AcademyHologramMaterialImpl | null>(null);
   const shaftMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
@@ -131,6 +145,9 @@ export function HologramPillar({
   const shaftHeight = hologramTopY - PEDESTAL_HEIGHT;
   const shaftCenterY = PEDESTAL_HEIGHT + shaftHeight / 2;
   const shaftWidth = hologramWidth * 1.3;
+  // z-index del título en el portal HTML de drei: entero positivo ordenado por profundidad
+  // (renderOrder = z del pilar). Así el título del pilar de delante queda sobre los de atrás.
+  const titleZIndex = Math.round((renderOrder + 10) * 10);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -140,8 +157,28 @@ export function HologramPillar({
     };
   }, [isHovered]);
 
+  // Coloca el grupo en su posición inicial antes del primer frame (evita un deslizamiento desde el
+  // origen al montar cuando animatePosition está activo). Después el useFrame interpola hacia
+  // `position`; el guard impide que un cambio de posición "salte" de golpe (debe deslizarse).
+  useLayoutEffect(() => {
+    if (!animatePosition) return;
+    const group = outerGroupRef.current;
+    if (group && !positionInitializedRef.current) {
+      group.position.set(position[0], position[1], position[2]);
+      positionInitializedRef.current = true;
+    }
+  }, [animatePosition, position]);
+
   useFrame((_, delta) => {
     timeRef.current += delta;
+
+    // Carrusel móvil: desliza el grupo hacia el slot objetivo (pasa por el centro al rotar).
+    if (animatePosition && outerGroupRef.current && positionInitializedRef.current) {
+      const pos = outerGroupRef.current.position;
+      pos.x = THREE.MathUtils.damp(pos.x, position[0], CAROUSEL_DAMP_LAMBDA, delta);
+      pos.y = THREE.MathUtils.damp(pos.y, position[1], CAROUSEL_DAMP_LAMBDA, delta);
+      pos.z = THREE.MathUtils.damp(pos.z, position[2], CAROUSEL_DAMP_LAMBDA, delta);
+    }
     // Reloj de aparición desfasado: el pilar espera su turno antes de emerger (entrada escalonada).
     const elapsed = Math.max(0, timeRef.current - activationDelaySeconds);
 
@@ -186,7 +223,7 @@ export function HologramPillar({
   };
 
   return (
-    <group position={position} scale={scale}>
+    <group ref={outerGroupRef} position={animatePosition ? undefined : position} scale={scale}>
       {/* Pedestal cilíndrico con tapa emisiva cian. */}
       <mesh position={[0, PEDESTAL_HEIGHT / 2, 0]}>
         <cylinderGeometry args={[1.55, 1.75, PEDESTAL_HEIGHT, 48]} />
@@ -219,27 +256,32 @@ export function HologramPillar({
         />
       </mesh>
 
-      {/* Luz cian que emana del pedestal para dar volumen al holograma. */}
-      <pointLight position={[0, PEDESTAL_HEIGHT + 0.6, 0.6]} color="#38bdf8" intensity={isHovered ? 6 : 3.4} distance={7} />
+      {/* Luz cian que emana del pedestal para dar volumen al holograma. En modo ligero se omite:
+          menos luces dinámicas = fragment shader más barato en gama baja (el aro emisivo se mantiene). */}
+      {lite ? null : (
+        <pointLight position={[0, PEDESTAL_HEIGHT + 0.6, 0.6]} color="#38bdf8" intensity={isHovered ? 6 : 3.4} distance={7} />
+      )}
 
-      {/* Título futurista "en la plataforma" (HTML en el espacio 3D; no bloquea el puntero). */}
+      {/* Título futurista "en la plataforma" (HTML en el espacio 3D; no bloquea el puntero).
+          El z-index se deriva del orden de dibujo (entero positivo): el pilar de delante pinta su
+          título por encima de los de atrás, igual que el propio holograma. */}
       {title ? (
         <Html
           position={[0, 0.02, 1.9]}
           center
-          distanceFactor={10}
-          zIndexRange={[renderOrder, renderOrder]}
+          distanceFactor={11}
+          zIndexRange={[titleZIndex, titleZIndex]}
           className="pointer-events-none select-none"
         >
           <div
-            className="flex items-center gap-2 whitespace-nowrap rounded-[3px] border border-cyan-300/50 bg-[#04121d]/80 px-3 py-1 shadow-[0_0_18px_rgba(34,211,238,0.35)] backdrop-blur-sm"
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-[3px] border border-cyan-300/50 bg-[#04121d]/80 px-2 py-0.5 shadow-[0_0_14px_rgba(34,211,238,0.3)] backdrop-blur-sm"
             style={{ fontFamily: "var(--font-orbitron)" }}
           >
-            <span className="text-cyan-300/70">&#9668;</span>
-            <span className="text-sm font-black uppercase tracking-[0.3em] text-cyan-100 [text-shadow:0_0_8px_rgba(34,211,238,0.8)]">
+            <span className="text-[10px] text-cyan-300/70">&#9668;</span>
+            <span className="text-[11px] font-black uppercase tracking-[0.22em] text-cyan-100 [text-shadow:0_0_8px_rgba(34,211,238,0.8)]">
               {title}
             </span>
-            <span className="text-cyan-300/70">&#9658;</span>
+            <span className="text-[10px] text-cyan-300/70">&#9658;</span>
           </div>
         </Html>
       ) : null}
@@ -259,7 +301,11 @@ export function HologramPillar({
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
         {documentationDeck ? (
-          <DocumentationDeck centerY={hologramHeight * 0.52} isHovered={isHovered} />
+          <DocumentationDeck
+            centerY={hologramHeight * 0.52}
+            isHovered={isHovered}
+            occludeBlending={occludeDeckBlending}
+          />
         ) : (
           <mesh position={[0, hologramHeight / 2, 0]} renderOrder={renderOrder}>
             <planeGeometry args={[hologramWidth, hologramHeight]} />
