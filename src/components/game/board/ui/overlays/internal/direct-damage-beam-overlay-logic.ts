@@ -1,6 +1,7 @@
 // src/components/game/board/ui/overlays/internal/direct-damage-beam-overlay-logic.ts - Lógica de señal y trayectoria para rayo de daño directo por efecto.
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import {
+  readDamageReason,
   readSourceCardId,
   readSourceLaneType,
   readSourceSlotIndex,
@@ -33,16 +34,20 @@ export function resolveEffectDamageSignalAt(events: ICombatLogEvent[], index: nu
   const sourceSlotIndex = readSourceSlotIndex(event);
   const sourceLaneType = readSourceLaneType(event);
   if (!trapContext.fromTrap && !sourceCardId) return null;
+  // Cortafuegos Reactivo: aunque el reflejo ocurre durante el combate, es daño de EFECTO y sí debe
+  // mostrar el rayo (desde la carta defensora hacia el atacante), no se suprime como el daño de combate.
+  const isReflect = readDamageReason(event) === "MASTERY_PASSIVE_REFLECT_DAMAGE";
   const markerA = events[index - 1]?.eventType;
   const markerB = events[index - 2]?.eventType;
   const comesFromAttack = markerA === "ATTACK_DECLARED" || markerA === "BATTLE_RESOLVED" || markerB === "ATTACK_DECLARED";
-  if (comesFromAttack && !trapContext.fromTrap) return null;
+  if (comesFromAttack && !trapContext.fromTrap && !isReflect) return null;
   const needsBlockPhase = trapContext.fromTrap && (
     trapContext.trapAction === "NEGATE_ATTACK_AND_DESTROY_ATTACKER" ||
     trapContext.trapAction === "NEGATE_OPPONENT_TRAP_AND_DESTROY" ||
     trapContext.trapAction === "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED"
   );
-  const trapStartDelayMs = needsBlockPhase ? 980 : trapContext.fromTrap ? 760 : 0;
+  // El reflejo arranca con un pequeño retardo para leerse tras la embestida del atacante.
+  const startDelayMs = needsBlockPhase ? 980 : trapContext.fromTrap ? 760 : isReflect ? 420 : 0;
   return {
     id: event.id,
     towardsPlayer: targetPlayerId === playerAId,
@@ -50,7 +55,7 @@ export function resolveEffectDamageSignalAt(events: ICombatLogEvent[], index: nu
     sourceCardId,
     sourceSlotIndex,
     sourceLaneType,
-    startDelayMs: trapStartDelayMs,
+    startDelayMs,
   };
 }
 

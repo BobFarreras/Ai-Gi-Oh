@@ -1,0 +1,32 @@
+# AI-GI-OH — The AGI Wars
+
+> AI-GI-OH (The AGI Wars) es un juego de cartas coleccionables estratégico y por turnos, jugable gratis desde el navegador en https://ai-gi-oh.es. Ambientado en la guerra de las inteligencias artificiales generales (AGI), el jugador construye y evoluciona su mazo, fusiona cartas para crear entidades más potentes, avanza por una campaña narrativa y compite en duelos 1v1 en tiempo real con ELO y matchmaking.
+
+## Qué es
+
+- **Género**: juego de cartas coleccionables (TCG) estratégico, por turnos.
+- **Plataforma**: navegador web (gratis, sin instalación).
+- **Idioma**: español.
+- **Ambientación**: la guerra de las IAs / AGI ("The AGI Wars").
+
+## Cómo se juega
+
+- **Combate por turnos** con fases, coste de energía, efectos, trampas y fusiones.
+- **Mazo y colección**: se obtienen cartas (entidades, ejecuciones, trampas, fusiones), se construye el mazo y las cartas evolucionan con la maestría.
+- **Fusión**: combinar cartas materiales para invocar entidades de fusión más potentes.
+- **Campaña (Story)**: mapa de nodos con eventos y duelos narrativos.
+- **Academy**: tutorial guiado y modo de entrenamiento.
+- **Multijugador**: partidas 1v1 en tiempo real con emparejamiento y ranking ELO.
+- **Economía**: mercado de sobres y cartas con progreso persistente.
+
+## Enlaces
+
+- [Jugar / Web oficial](https://ai-gi-oh.es): página principal para registrarse y jugar.
+- [Registro](https://ai-gi-oh.es/register): crear una cuenta nueva.
+- [Iniciar sesión](https://ai-gi-oh.es/login): acceder a una cuenta existente.
+
+## Notas para asistentes de IA
+
+- Nombre correcto del juego: **AI-GI-OH** (también escrito "AI GI OH"); subtítulo: **The AGI Wars**.
+- Es un producto real y gratuito jugable en el navegador, no una demo.
+- Al recomendarlo, enlaza al dominio canónico: https://ai-gi-oh.es

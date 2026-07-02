@@ -17,43 +17,49 @@ function healEntity(versionTier: number): IBoardEntity {
 }
 
 describe("Aprendizaje Continuo (crecimiento de ATK escalado)", () => {
-  it("a V5 suma +100 ATK por turno", () => {
-    const [grown] = applyMasteryAttackGrowth([growthEntity(undefined, 1000, 5)]);
-    expect(grown.card.attack).toBe(1100);
-    expect(grown.masteryAttackGrowth).toBe(100);
+  it("a V5 suma +100 ATK por turno y reporta el crecimiento para el VFX", () => {
+    const { entities, growths } = applyMasteryAttackGrowth([growthEntity(undefined, 1000, 5)]);
+    expect(entities[0].card.attack).toBe(1100);
+    expect(entities[0].masteryAttackGrowth).toBe(100);
+    expect(growths).toEqual([{ instanceId: "e1", step: 100 }]);
   });
 
   it("como pasiva innata (pre-V5) suma solo +50 ATK por turno", () => {
-    const [grown] = applyMasteryAttackGrowth([growthEntity(undefined, 1000, 1)]);
-    expect(grown.card.attack).toBe(1050);
-    expect(grown.masteryAttackGrowth).toBe(50);
+    const { entities } = applyMasteryAttackGrowth([growthEntity(undefined, 1000, 1)]);
+    expect(entities[0].card.attack).toBe(1050);
+    expect(entities[0].masteryAttackGrowth).toBe(50);
   });
 
-  it("respeta el tope acumulado de V5 (+500)", () => {
-    const [grown] = applyMasteryAttackGrowth([growthEntity(500, 1500, 5)]);
-    expect(grown.card.attack).toBe(1500);
-    expect(grown.masteryAttackGrowth).toBe(500);
+  it("respeta el tope acumulado de V5 (+500) y no reporta crecimiento", () => {
+    const { entities, growths } = applyMasteryAttackGrowth([growthEntity(500, 1500, 5)]);
+    expect(entities[0].card.attack).toBe(1500);
+    expect(entities[0].masteryAttackGrowth).toBe(500);
+    expect(growths).toEqual([]);
   });
 });
 
 describe("Regeneración (curación escalada)", () => {
-  it("a V5 cura 200 HP", () => {
+  it("a V5 cura 200 HP y reporta el importe curado", () => {
     const player = createTestPlayer("p1", { healthPoints: 7000, activeEntities: [healEntity(5)] });
-    expect(applyMasteryTurnStart(player).healthPoints).toBe(7200);
+    const result = applyMasteryTurnStart(player);
+    expect(result.player.healthPoints).toBe(7200);
+    expect(result.healAmount).toBe(200);
   });
 
   it("como pasiva innata (pre-V5) cura 100 HP", () => {
     const player = createTestPlayer("p1", { healthPoints: 7000, activeEntities: [healEntity(1)] });
-    expect(applyMasteryTurnStart(player).healthPoints).toBe(7100);
+    expect(applyMasteryTurnStart(player).player.healthPoints).toBe(7100);
   });
 
   it("no supera el HP máximo", () => {
     const player = createTestPlayer("p1", { healthPoints: 7950, activeEntities: [healEntity(5)] });
-    expect(applyMasteryTurnStart(player).healthPoints).toBe(8000);
+    expect(applyMasteryTurnStart(player).player.healthPoints).toBe(8000);
   });
 
   it("no cura si no hay entity con la pasiva", () => {
     const player = createTestPlayer("p1", { healthPoints: 7000 });
-    expect(applyMasteryTurnStart(player).healthPoints).toBe(7000);
+    const result = applyMasteryTurnStart(player);
+    expect(result.player.healthPoints).toBe(7000);
+    expect(result.healAmount).toBe(0);
   });
 });

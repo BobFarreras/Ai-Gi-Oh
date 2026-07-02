@@ -89,8 +89,8 @@ export function nextPhase(state: GameState): GameState {
       activeEntities: resetEntitiesForNewTurn(state.playerB.activeEntities, isNextPlayerA),
     };
     // Aprendizaje Continuo / Regeneración: efectos de pasiva mastery sobre el jugador que arranca turno.
-    const activePlayerWithMastery = applyMasteryTurnStart(isNextPlayerA ? nextPlayerA : nextPlayerB);
-    const turnStartResolution = resolveTurnStartForPlayer(activePlayerWithMastery, nextActivePlayerId);
+    const masteryTurnStart = applyMasteryTurnStart(isNextPlayerA ? nextPlayerA : nextPlayerB);
+    const turnStartResolution = resolveTurnStartForPlayer(masteryTurnStart.player, nextActivePlayerId);
 
     const nextState: GameState = {
       ...state,
@@ -108,13 +108,34 @@ export function nextPhase(state: GameState): GameState {
       activePlayerId: nextActivePlayerId,
       phase: "MAIN_1",
     });
-    return appendCombatLogEvent(withTurnLog, nextActivePlayerId, "ENERGY_GAINED", {
+    // Núcleo Defensivo / Turbo Ofensivo: el pulse "+energía" del HUD solo se dispara con el bonus mastery
+    // (campo `amount`); el +2 rutinario del turno no debe animarse cada vez.
+    let withEnergyLog = appendCombatLogEvent(withTurnLog, nextActivePlayerId, "ENERGY_GAINED", {
       before: previousEnergy,
       gained: Math.max(0, energyAfterGain - previousEnergy),
       after: energyAfterGain,
       masteryDefenseBonus: masteryEnergyBonus.defenseBonus,
       masteryAttackBonus: masteryEnergyBonus.attackBonus,
+      ...(totalMasteryBonus > 0 ? { amount: totalMasteryBonus } : {}),
     });
+    // Regeneración: cura de inicio de turno → VFX de curación en el HUD del jugador activo.
+    if (masteryTurnStart.healAmount > 0) {
+      withEnergyLog = appendCombatLogEvent(withEnergyLog, nextActivePlayerId, "HEAL_APPLIED", {
+        targetPlayerId: nextActivePlayerId,
+        amount: masteryTurnStart.healAmount,
+        source: "MASTERY_PASSIVE_HEAL_ON_TURN",
+      });
+    }
+    // Aprendizaje Continuo: buff de ATK por turno → VFX flotante "+ATK" sobre las entities que crecen.
+    if (masteryTurnStart.attackGrowths.length > 0) {
+      withEnergyLog = appendCombatLogEvent(withEnergyLog, nextActivePlayerId, "STAT_BUFF_APPLIED", {
+        stat: "ATTACK",
+        amount: masteryTurnStart.attackGrowths[0].step,
+        targetEntityIds: masteryTurnStart.attackGrowths.map((growth) => growth.instanceId),
+        reason: "MASTERY_PASSIVE_ATK_GROWTH",
+      });
+    }
+    return withEnergyLog;
   }
 
   return state;

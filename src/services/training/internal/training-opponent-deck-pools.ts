@@ -143,4 +143,52 @@ export const TRAINING_OPPONENT_DECK_POOLS: Record<string, ITrainingOpponentDeckV
       fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
     },
   ],
+  "training-tier-6": [
+    {
+      id: "apex-annihilation",
+      deckCardIds: toDeck([
+        "entity-chatgpt", "entity-gemini", "entity-claude", "entity-kali-linux", "entity-deepseek",
+        "entity-python", "entity-postgress", "entity-nextjs", "entity-react", "entity-openclaw",
+        "exec-fusion-gemgpt", "exec-fusion-kaclauli", "exec-fusion-pytgress", "exec-boost-atk-400",
+        "exec-direct-damage-900", "exec-llm-def-300", "trap-kernel-panic", "trap-atk-drain",
+        "trap-runtime-punish", "trap-counter-intrusion",
+      ]),
+      fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
+    },
+    {
+      id: "apex-lockdown",
+      deckCardIds: toDeck([
+        "entity-chatgpt", "entity-gemini", "entity-claude", "entity-kali-linux", "entity-deepseek",
+        "entity-python", "entity-postgress", "entity-nextjs", "entity-react", "entity-openclaw",
+        "exec-fusion-gemgpt", "exec-fusion-kaclauli", "exec-fusion-pytgress", "exec-llm-def-300",
+        "exec-heal-700", "exec-direct-damage-900", "trap-kernel-panic", "trap-atk-drain",
+        "trap-runtime-punish", "trap-def-fragment",
+      ]),
+      fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
+    },
+  ],
+  "training-mouretech": [
+    {
+      id: "mouretech-offense",
+      deckCardIds: toDeck([
+        "entity-chatgpt", "entity-gemini", "entity-claude", "entity-kali-linux", "entity-deepseek",
+        "entity-python", "entity-postgress", "entity-nextjs", "entity-react", "entity-vercel",
+        "exec-fusion-gemgpt", "exec-fusion-kaclauli", "exec-direct-damage-900", "exec-boost-atk-400",
+        "exec-framework-atk-300", "exec-draw-1", "trap-kernel-panic", "trap-runtime-punish",
+        "trap-counter-intrusion", "trap-atk-drain",
+      ]),
+      fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
+    },
+    {
+      id: "mouretech-control",
+      deckCardIds: toDeck([
+        "entity-chatgpt", "entity-gemini", "entity-claude", "entity-kali-linux", "entity-deepseek",
+        "entity-python", "entity-postgress", "entity-nextjs", "entity-react", "entity-supabase",
+        "exec-fusion-gemgpt", "exec-fusion-kaclauli", "exec-llm-def-300", "exec-heal-700",
+        "exec-framework-atk-300", "exec-draw-1", "trap-kernel-panic", "trap-runtime-punish",
+        "trap-counter-intrusion", "trap-def-fragment",
+      ]),
+      fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
+    },
+  ],
 };

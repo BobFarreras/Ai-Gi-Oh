@@ -1,6 +1,7 @@
 // src/components/hub/academy/training/modes/arena/TrainingArenaClient.tsx - Orquesta UI de arena training con selección de tier y cierre de partida remoto.
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Board } from "@/components/game/board";
 import { ICard } from "@/core/entities/ICard";
 import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result/duel-result-reward-summary";
@@ -46,15 +47,23 @@ function resolveOutcome(result: { winnerPlayerId: string | "DRAW"; playerId: str
 }
 
 export function TrainingArenaClient(props: ITrainingArenaClientProps) {
+  const router = useRouter();
   const [isBattleStarted, setIsBattleStarted] = useState(false);
   const [rewardSummary, setRewardSummary] = useState<IDuelResultRewardSummary | null>(null);
   const [resultAction, setResultAction] = useState(() => ({ label: "Volver a selección", href: ACADEMY_HOME_ROUTE }));
+  const [isTierSwitching, startTierTransition] = useTransition();
   const hasPostedRef = useRef(false);
   const selectedTierMeta = props.tiers.find((tier) => tier.tier === props.selectedTier) ?? props.tiers[0];
   // Recuerda el último nivel elegido: al volver a Arena sin ?tier, el server lo lee de esta cookie.
   useEffect(() => {
     document.cookie = `arena_tier=${props.selectedTier}; path=/; max-age=31536000; samesite=lax`;
   }, [props.selectedTier]);
+  // Precarga los niveles desbloqueados para que el cambio de nivel (soft-nav) sea casi instantáneo.
+  useEffect(() => {
+    for (const tier of props.tiers) {
+      if (tier.isUnlocked) router.prefetch(`/hub/academy/training/arena?tier=${tier.tier}`);
+    }
+  }, [props.tiers, router]);
   const opponentStrategy = useMemo(
     () => new HeuristicOpponentStrategy({ difficulty: props.opponentDifficulty }),
     [props.opponentDifficulty],
@@ -114,7 +123,8 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
             isUnlocked: tier.isUnlocked,
             isSelected: tier.tier === props.selectedTier,
           }))}
-          onSelectTier={(tier) => window.location.replace(`/hub/academy/training/arena?tier=${tier}`)}
+          onSelectTier={(tier) => startTierTransition(() => router.push(`/hub/academy/training/arena?tier=${tier}`, { scroll: false }))}
+          isTierSwitching={isTierSwitching}
           opponentName={props.opponentName}
           playerAvatarUrl="/assets/story/player/bob.webp"
           opponentAvatarUrl={props.opponentAvatarUrl}
@@ -122,7 +132,7 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
             setIsBattleStarted(true);
             track("duel_started", "gameplay", { mode: "TRAINING", tier: props.selectedTier, difficulty: props.opponentDifficulty });
           }}
-          onBack={() => window.location.replace(ACADEMY_HOME_ROUTE)}
+          onBack={() => router.push(ACADEMY_HOME_ROUTE)}
         />
       ) : null}
       {isBattleStarted ? (

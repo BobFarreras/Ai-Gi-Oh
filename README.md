@@ -1,20 +1,20 @@
-<!-- README.md - Guía principal de AI-GI-OH como producto en producción v1.7.2. -->
+<!-- README.md - Guía principal de AI-GI-OH como producto en producción v1.8.0. -->
 # AI-GI-OH
 
 <p align="center">
-  <strong>Producto en producción · v1.7.2</strong><br/>
+  <strong>Producto en producción · v1.8.0</strong><br/>
   Juego táctico de cartas con motor desacoplado, arquitectura por capas y flujo profesional de calidad.
 </p>
 
 <p align="center">
-  <a href="https://ai-gi-oh.vercel.app"><strong>🌐 App en producción</strong></a> ·
+  <a href="https://ai-gi-oh.es"><strong>🌐 App en producción</strong></a> ·
   <a href="./CONTRIBUTING.md"><strong>🤝 Contribuir</strong></a> ·
   <a href="./docs/GUIA_DESPLIEGUE_PROFESIONAL.md"><strong>🚀 Deploy</strong></a> ·
   <a href="./docs/architecture/README.md"><strong>🏗️ Arquitectura</strong></a>
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.7.2-06b6d4">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.8.0-06b6d4">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black">
   <img alt="React" src="https://img.shields.io/badge/React-19-149eca">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-Strict-3178c6">
@@ -49,8 +49,8 @@ Incluye:
 
 Producción actual:
 
-- App: `https://ai-gi-oh.vercel.app`
-- Callback auth: `https://ai-gi-oh.vercel.app/auth/callback`
+- App: `https://ai-gi-oh.es`
+- Callback auth: `https://ai-gi-oh.es/auth/callback`
 
 ## Vista rápida del producto
 

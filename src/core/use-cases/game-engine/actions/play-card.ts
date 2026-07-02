@@ -57,6 +57,8 @@ export function playCard(state: GameState, playerId: string, cardId: string, mod
     cardType: card.type,
     mode: resolvedMode,
     effectAction: card.effect?.action ?? null,
+    // Caja de Herramientas: marca el robo al invocar para que el VFX de robo (deck→mano) se dispare.
+    ...(drawsOnSummon ? { drewOnSummon: true } : {}),
   });
   if (card.type === "ENTITY" && resolvedMode === "SET") {
     return resolveReactiveTrapEvent(withPlayLog, opponent.id, {

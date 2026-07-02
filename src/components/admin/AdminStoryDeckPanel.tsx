@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { DragEvent, memo, useMemo, useState } from "react";
 import { IAdminStoryDeckApiResponse } from "@/components/admin/admin-story-deck-api";
+import { AdminMobileDetailDialog } from "@/components/admin/internal/AdminMobileDetailDialog";
 import { AdminStarterDeckCollectionPanel } from "@/components/admin/internal/AdminStarterDeckCollectionPanel";
 import { AdminStoryDeckSlotsPanel } from "@/components/admin/internal/AdminStoryDeckSlotsPanel";
 import { AdminStoryDuelCatalog } from "@/components/admin/internal/AdminStoryDuelCatalog";
@@ -18,6 +19,7 @@ interface IAdminStoryDeckPanelProps {
 function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps) {
   const editor = useAdminStoryDeckEditor(initialData);
   const [leftPanelMode, setLeftPanelMode] = useState<"opponents" | "duels">("opponents");
+  const [isMobileInspectorOpen, setIsMobileInspectorOpen] = useState(false);
   const [massVersionTier, setMassVersionTier] = useState(0);
   const [massLevel, setMassLevel] = useState(0);
   const [massXp, setMassXp] = useState(0);
@@ -321,27 +323,29 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
       </div>
 
       {/* ── Contenido principal ── */}
-      <div className="grid min-h-0 flex-1 gap-2.5 xl:grid-cols-[auto_470px_minmax(0,1fr)_360px]">
-        {leftPanelMode === "opponents"
-          ? <AdminStoryOpponentCatalog
-              opponents={editor.data.opponents}
-              selectedOpponentId={editor.selectedOpponentId}
-              onSelectOpponent={(opponentId) => {
-                void editor.onSelectOpponent(opponentId);
-                setLeftPanelMode("duels");
-              }}
-            />
-          : <AdminStoryDuelCatalog
-              duels={editor.data.duels}
-              selectedDuelId={editor.selectedDuelId}
-              selectedDeckListId={editor.data.deck?.deckListId ?? null}
-              selectedOpponentName={selectedOpponent?.displayName ?? null}
-              isBusy={editor.isBusy}
-              onBackToOpponents={() => setLeftPanelMode("opponents")}
-              onSelectDuel={(duelId) => void editor.onSelectDuelReference(duelId)}
-            />}
+      <div className="grid min-h-0 flex-1 gap-2.5 max-xl:flex max-xl:flex-col max-xl:overflow-y-auto xl:grid-cols-[auto_470px_minmax(0,1fr)_360px]">
+        <div className="min-h-0 max-xl:h-[42vh] max-xl:shrink-0 xl:contents">
+          {leftPanelMode === "opponents"
+            ? <AdminStoryOpponentCatalog
+                opponents={editor.data.opponents}
+                selectedOpponentId={editor.selectedOpponentId}
+                onSelectOpponent={(opponentId) => {
+                  void editor.onSelectOpponent(opponentId);
+                  setLeftPanelMode("duels");
+                }}
+              />
+            : <AdminStoryDuelCatalog
+                duels={editor.data.duels}
+                selectedDuelId={editor.selectedDuelId}
+                selectedDeckListId={editor.data.deck?.deckListId ?? null}
+                selectedOpponentName={selectedOpponent?.displayName ?? null}
+                isBusy={editor.isBusy}
+                onBackToOpponents={() => setLeftPanelMode("opponents")}
+                onSelectDuel={(duelId) => void editor.onSelectDuelReference(duelId)}
+              />}
+        </div>
 
-        <div className="flex min-h-0 flex-col justify-start xl:justify-start">
+        <div className="flex min-h-0 flex-col justify-start max-xl:shrink-0 xl:justify-start">
           <AdminStoryDeckSlotsPanel
             draftCardIds={editor.draftCardIds}
             draftFusionCardIds={editor.draftFusionCardIds}
@@ -355,6 +359,7 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
             onSelectSlot={(slotIndex) => {
               editor.setSelectedSlotIndex(slotIndex);
               editor.setSelectedCollectionCardId(null);
+              setIsMobileInspectorOpen(true);
             }}
             onDropOnSlot={onDropOnSlot}
             onStartDragSlot={(slotIndex, event) =>
@@ -371,6 +376,7 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
           />
         </div>
 
+        <div className="min-h-0 max-xl:h-[68vh] max-xl:shrink-0 xl:contents">
         <AdminStarterDeckCollectionPanel
           availableCards={editor.data.availableCards}
           selectedCardId={editor.selectedCollectionCardId}
@@ -378,6 +384,7 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
           onSelectCard={(cardId) => {
             editor.setSelectedCollectionCardId(cardId);
             editor.setSelectedSlotIndex(null);
+            setIsMobileInspectorOpen(true);
           }}
           onDropToCollection={(event) => {
             if (!editor.isEditMode) return;
@@ -391,8 +398,10 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
           }}
           onStartDragCard={(cardId, event) => writeAdminStarterDeckDragData(event, { type: "card", cardId })}
         />
+        </div>
 
-        <div className="flex min-h-0 flex-col gap-2">
+        {/* Detalle (inspector + escalado): inline solo en desktop; en móvil se abre como diálogo. */}
+        <div className="hidden min-h-0 flex-col gap-2 xl:flex">
           <HomeCardInspector
             selectedCard={selectedCard}
             selectedCardVersionTier={selectedSlotLevels?.versionTier ?? 0}
@@ -448,6 +457,18 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
           </section>
         </div>
       </div>
+
+      <AdminMobileDetailDialog isOpen={isMobileInspectorOpen} onClose={() => setIsMobileInspectorOpen(false)} closeAriaLabel="Cerrar detalle de carta">
+        <HomeCardInspector
+          selectedCard={selectedCard}
+          selectedCardVersionTier={selectedSlotLevels?.versionTier ?? 0}
+          selectedCardLevel={selectedSlotLevels?.level ?? 0}
+          selectedCardXp={selectedSlotLevels?.xp ?? 0}
+          selectedCardMasteryPassiveSkillId={null}
+          minCardScale={0.62}
+          maxCardScale={0.95}
+        />
+      </AdminMobileDetailDialog>
     </section>
   );
 }
