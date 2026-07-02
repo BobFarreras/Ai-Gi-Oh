@@ -52,6 +52,8 @@ export const metadata: Metadata = {
   // Sin canonical global: en Next se heredaría a TODAS las páginas y marcaría /login y /register como
   // duplicados de la home. Sin él, cada URL se auto-canonicaliza (correcto). Si más adelante alguna
   // página necesita canonical propio, se define en su metadata local.
+  // La imagen social la generan opengraph-image.tsx / twitter-image.tsx (tarjeta de marca 1200x630);
+  // Next las inyecta automáticamente, por eso aquí no se declara `images`.
   openGraph: {
     type: "website",
     locale: SITE_LOCALE,
@@ -59,13 +61,11 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: [{ url: SITE_OG_IMAGE, alt: `${SITE_NAME} — ${SITE_TAGLINE}` }],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: [SITE_OG_IMAGE],
   },
   robots: {
     index: true,
