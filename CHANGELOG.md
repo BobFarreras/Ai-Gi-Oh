@@ -6,6 +6,12 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-07-02
+
+### Fixed
+- Tienda de canje del evento: las cartas ya muestran su descripción (y efecto/pasiva). El endpoint `cards-by-ids` devolvía un subconjunto de columnas sin `description`; ahora reutiliza el cargador canónico `loadCardsByIds` (mismo SELECT/mapeo que el resto de repos).
+- Academy 3D (holograma de Documentación): los velos holográficos de las cartas usan el mismo `clip-path` biselado que la Card; con esquinas redondeadas asomaban por el chaflán y en móvil real se veían como bordes cian.
+
 ## [1.8.0] - 2026-07-02
 
 ### Added
@@ -112,7 +118,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.8.1...HEAD
+[1.8.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.7.2...v1.8.0
 [1.7.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.7.0...v1.7.1
