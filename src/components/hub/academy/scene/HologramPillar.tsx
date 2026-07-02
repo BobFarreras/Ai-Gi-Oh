@@ -36,6 +36,10 @@ interface HologramPillarProps {
   baseY?: number;
   /** Si true, renderiza la baraja de cartas reales (pilar de Documentación) en vez de una figura. */
   documentationDeck?: boolean;
+  /** Escala global del pilar (para achicarlo en móvil y que quepan los 3). */
+  scale?: number;
+  /** Orden de dibujo: mayor = se pinta encima (el pilar de delante debe ir por encima de los de atrás). */
+  renderOrder?: number;
 }
 
 const PEDESTAL_HEIGHT = 0.28;
@@ -98,6 +102,8 @@ export function HologramPillar({
   title,
   baseY = HOLOGRAM_BASE_Y,
   documentationDeck = false,
+  scale = 1,
+  renderOrder = 0,
 }: HologramPillarProps) {
   // El colorSpace se fija en el callback de carga (no se puede mutar el valor devuelto por el hook).
   const texture = useTexture(textureUrl, (loaded) => {
@@ -180,7 +186,7 @@ export function HologramPillar({
   };
 
   return (
-    <group position={position}>
+    <group position={position} scale={scale}>
       {/* Pedestal cilíndrico con tapa emisiva cian. */}
       <mesh position={[0, PEDESTAL_HEIGHT / 2, 0]}>
         <cylinderGeometry args={[1.55, 1.75, PEDESTAL_HEIGHT, 48]} />
@@ -198,7 +204,7 @@ export function HologramPillar({
 
       {/* Haz de LUZ (plano con degradado suave, detrás de la figura): lee como luz volumétrica,
           no como un cilindro sólido. Brillante abajo junto al pedestal y apagándose hacia arriba. */}
-      <mesh position={[0, shaftCenterY, -0.12]}>
+      <mesh position={[0, shaftCenterY, -0.12]} renderOrder={renderOrder}>
         <planeGeometry args={[shaftWidth, shaftHeight]} />
         <meshBasicMaterial
           ref={shaftMaterialRef}
@@ -222,7 +228,7 @@ export function HologramPillar({
           position={[0, 0.02, 1.9]}
           center
           distanceFactor={10}
-          zIndexRange={[0, 0]}
+          zIndexRange={[renderOrder, renderOrder]}
           className="pointer-events-none select-none"
         >
           <div
@@ -255,7 +261,7 @@ export function HologramPillar({
         {documentationDeck ? (
           <DocumentationDeck centerY={hologramHeight * 0.52} isHovered={isHovered} />
         ) : (
-          <mesh position={[0, hologramHeight / 2, 0]}>
+          <mesh position={[0, hologramHeight / 2, 0]} renderOrder={renderOrder}>
             <planeGeometry args={[hologramWidth, hologramHeight]} />
             <academyHologramMaterial
               ref={materialRef}

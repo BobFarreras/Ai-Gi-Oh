@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
 import { Card } from "@/components/game/card/Card";
+import { composeCardPowerDescription } from "@/core/services/progression/compose-card-power-description";
 
 interface GraveyardBrowserProps {
   isOpen: boolean;
@@ -104,7 +105,7 @@ export function GraveyardBrowser({
                     <div className="mt-2 min-h-0 flex-1 overflow-y-auto pr-1">
                       <h4 className="text-sm font-black uppercase tracking-wider text-cyan-200">{detailCard.name}</h4>
                       <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">{detailCard.faction} · {detailCard.type}</p>
-                      <p className="mt-2 text-xs leading-relaxed text-zinc-200 whitespace-pre-line">{detailCard.description}</p>
+                      <p className="mt-2 text-xs leading-relaxed text-zinc-200 whitespace-pre-line">{composeCardPowerDescription(detailCard)}</p>
                     </div>
                   </>
                 ) : (

@@ -27,9 +27,6 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
   const tierScaling = currentTier?.defaultLevel != null
     ? { versionTier: currentTier.defaultVersionTier ?? 0, level: currentTier.defaultLevel, xp: currentTier.defaultXp ?? 0 }
     : null;
-  // Tirada de azar del rival comodín derivada de una fuente aleatoria por request (crypto, no Math.random,
-  // que la regla de pureza de React prohíbe en render). Rango [0,1).
-  const wildcardRoll = Number.parseInt(crypto.randomUUID().replace(/-/g, "").slice(0, 8), 16) / 0xffffffff;
   const opponentLoadout = resolveTrainingOpponentLoadout({
     tier: currentTier?.tier ?? 1,
     aiDifficulty: currentTier?.aiDifficulty ?? "EASY",
@@ -40,10 +37,7 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
     opponents: runtime.arenaOpponents ?? undefined,
     cardCatalog: runtime.arenaCardCatalog ?? undefined,
     defaultScaling: tierScaling,
-    // Rival comodín: puede aparecer aleatoriamente en cualquier nivel (el azar se inyecta aquí para
-    // mantener el resolver puro/determinista). Se ignora si el comodín no está en el catálogo.
-    wildcardTemplateId: "training-mouretech",
-    wildcardRoll,
+    // Mouretech ya no es comodín aleatorio: ahora es el rival fijo del tier 4 (ver catálogo de tiers).
   });
   const narrationPack = buildStoryOpponentNarrationPack({
     opponentId: opponentLoadout.storyOpponentId,
