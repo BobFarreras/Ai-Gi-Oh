@@ -7,6 +7,7 @@
 import { useMemo } from "react";
 import { Html } from "@react-three/drei";
 import { Card } from "@/components/game/card/Card";
+import { CARD_CLIP_PATHS } from "@/components/game/card/internal/styles";
 import { ICard } from "@/core/entities/ICard";
 import { CARD_CATALOG } from "@/infrastructure/repositories/internal/card-catalog";
 
@@ -89,10 +90,13 @@ export function DocumentationDeck({ centerY, isHovered, occludeBlending = false 
                 disableHologram
                 disableDefaultShadow
               />
-              {/* Velo holográfico cian: fuerte en reposo, se desvanece al hacer hover (se revela la carta). */}
+              {/* Velo holográfico cian: fuerte en reposo, se desvanece al hacer hover (se revela la carta).
+                  Usa el MISMO clip-path biselado que la Card: si fuera un rectángulo redondeado, sus
+                  esquinas asomarían por el chaflán de la carta y en móvil real se ven como bordes cian raros. */}
               <div
-                className="pointer-events-none absolute inset-0 rounded-[18px] mix-blend-screen"
+                className="pointer-events-none absolute inset-0 mix-blend-screen"
                 style={{
+                  clipPath: CARD_CLIP_PATHS.outer,
                   background:
                     "linear-gradient(160deg, rgba(56,189,248,0.55), rgba(34,211,238,0.18) 45%, rgba(14,165,233,0.45))",
                   opacity: veilOpacity,
@@ -100,8 +104,9 @@ export function DocumentationDeck({ centerY, isHovered, occludeBlending = false 
                 }}
               />
               <div
-                className="pointer-events-none absolute inset-0 rounded-[18px]"
+                className="pointer-events-none absolute inset-0"
                 style={{
+                  clipPath: CARD_CLIP_PATHS.outer,
                   opacity: scanOpacity,
                   transition: "opacity 350ms ease",
                   backgroundImage:
