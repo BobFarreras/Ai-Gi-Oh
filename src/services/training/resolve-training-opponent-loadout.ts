@@ -56,6 +56,27 @@ export interface ITrainingOpponentLoadout {
   ladderSize: number;
 }
 
+/** Entrada del ladder para la UI (fila de "monedas" de progreso del nivel). */
+export interface IArenaLadderEntry {
+  templateId: string;
+  storyOpponentId: string;
+  displayName: string;
+  avatarUrl: string;
+}
+
+/**
+ * Devuelve los 6 rivales del ladder EN ORDEN con su identidad visual, para pintar el progreso del
+ * nivel en el lobby (ganados / siguiente / pendientes). Usa el catálogo de BD si se provee.
+ */
+export function resolveArenaLadderRoster(opponents?: Record<string, IArenaOpponent>): IArenaLadderEntry[] {
+  const source = opponents ?? buildArenaOpponentsFromPresets();
+  return ARENA_LADDER_ROSTER.map((templateId) => {
+    const opponent = source[templateId];
+    if (!opponent) return null;
+    return { templateId, storyOpponentId: opponent.storyOpponentId, displayName: opponent.displayName, avatarUrl: opponent.avatarUrl };
+  }).filter((entry): entry is IArenaLadderEntry => entry !== null);
+}
+
 /** Roster efectivo: los miembros del ladder presentes en el catálogo, conservando el orden. */
 function resolveLadderRoster(opponents: Record<string, IArenaOpponent>): string[] {
   const roster = ARENA_LADDER_ROSTER.filter((templateId) => Boolean(opponents[templateId]));

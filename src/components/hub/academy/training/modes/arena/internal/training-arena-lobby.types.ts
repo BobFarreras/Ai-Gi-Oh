@@ -5,6 +5,12 @@ export interface ITrainingArenaTierOption {
   isSelected: boolean;
 }
 
+/** Rival del ladder del nivel (fila de "monedas" de progreso). */
+export interface ITrainingArenaLadderEntry {
+  displayName: string;
+  avatarUrl: string;
+}
+
 export interface ITrainingArenaLobbyProps {
   level: number;
   tierCode: string;
@@ -14,6 +20,10 @@ export interface ITrainingArenaLobbyProps {
   tierOptions: ITrainingArenaTierOption[];
   onSelectTier: (tier: number) => void;
   isTierSwitching?: boolean;
+  /** Los rivales del nivel en orden (6) para pintar el progreso con avatares. */
+  ladder: ITrainingArenaLadderEntry[];
+  /** Victorias en el nivel actual: índices < ladderWins = ganados, === ladderWins = siguiente. */
+  ladderWins: number;
   opponentName: string;
   playerAvatarUrl: string;
   opponentAvatarUrl: string;

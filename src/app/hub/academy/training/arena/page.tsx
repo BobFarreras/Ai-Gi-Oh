@@ -5,7 +5,7 @@ import { TrainingDeckReadyGate } from "@/components/hub/academy/training/Trainin
 import { TrainingArenaClient } from "@/components/hub/academy/training/modes/arena/TrainingArenaClient";
 import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
 import { getTrainingArenaRuntimeData } from "@/services/training/get-training-arena-runtime-data";
-import { resolveTrainingOpponentLoadout } from "@/services/training/resolve-training-opponent-loadout";
+import { resolveArenaLadderRoster, resolveTrainingOpponentLoadout } from "@/services/training/resolve-training-opponent-loadout";
 import { buildStoryOpponentNarrationPack } from "@/services/story/build-story-opponent-narration-pack";
 import { issueTrainingCompletionTicket } from "@/services/security/duel-completion-ticket";
 
@@ -39,6 +39,12 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
     cardCatalog: runtime.arenaCardCatalog ?? undefined,
     defaultScaling: tierScaling,
   });
+  // Ladder del nivel: los 6 rivales en orden + cuántos llevas ganados (para las "monedas" del lobby).
+  const ladder = resolveArenaLadderRoster(runtime.arenaOpponents ?? undefined).map((entry) => ({
+    displayName: entry.displayName,
+    avatarUrl: entry.avatarUrl,
+  }));
+  const ladderWins = currentTierStats?.wins ?? 0;
   const narrationPack = buildStoryOpponentNarrationPack({
     opponentId: opponentLoadout.storyOpponentId,
     opponentName: opponentLoadout.displayName,
@@ -72,6 +78,8 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
         playerName={runtime.playerDisplayName}
         opponentAvatarUrl={opponentLoadout.avatarUrl}
         opponentDifficulty={opponentLoadout.difficulty}
+        ladder={ladder}
+        ladderWins={ladderWins}
         narrationPack={narrationPack}
         completionTicket={completionTicket}
         completionBattleId={completionBattleId}

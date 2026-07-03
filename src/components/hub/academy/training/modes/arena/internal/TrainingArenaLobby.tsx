@@ -92,6 +92,47 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
               })}
             </div>
           </div>
+
+          {props.ladder.length > 0 ? (
+            <div className="relative mt-2.5 flex flex-col items-center gap-1 border-t border-cyan-300/15 pt-2">
+              <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-cyan-300/70 md:text-[10px]">
+                Combate {Math.min(props.ladderWins + 1, props.ladder.length)} de {props.ladder.length}
+              </span>
+              <div className="flex items-center justify-center gap-1.5 md:gap-2.5">
+                {props.ladder.map((entry, index) => {
+                  const isBeaten = index < props.ladderWins;
+                  const isNext = index === props.ladderWins;
+                  return (
+                    <div
+                      key={`${entry.displayName}-${index}`}
+                      title={entry.displayName}
+                      className={`relative h-9 w-9 shrink-0 overflow-hidden rounded-full border-2 transition md:h-11 md:w-11 ${
+                        isBeaten
+                          ? "border-emerald-400/80 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                          : isNext
+                            ? "border-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.65)] ring-2 ring-cyan-300/50"
+                            : "border-slate-600/50 opacity-45 grayscale"
+                      }`}
+                    >
+                      <Image src={entry.avatarUrl} alt={entry.displayName} fill sizes="44px" className="object-cover object-top" />
+                      {isBeaten ? (
+                        <span className="absolute inset-0 flex items-center justify-center bg-emerald-500/35">
+                          <svg className="h-4 w-4 text-white md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path d="M8 13.2 4.6 9.8l-1.2 1.2L8 15.6l9-9-1.2-1.2z" />
+                          </svg>
+                        </span>
+                      ) : null}
+                      {isNext ? (
+                        <span className="pointer-events-none absolute -bottom-0.5 left-1/2 -translate-x-1/2 rounded-full bg-cyan-300 px-1 text-[6px] font-black uppercase tracking-wider text-cyan-950 md:text-[7px]">
+                          Aquí
+                        </span>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
         </motion.header>
         <div className="grid min-h-0 flex-1 grid-cols-1 items-stretch gap-2 md:w-full md:flex-none md:grid-cols-[1fr_auto_1fr] md:gap-4">
           <motion.article
