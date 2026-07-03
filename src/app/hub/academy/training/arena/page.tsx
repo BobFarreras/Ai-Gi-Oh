@@ -30,14 +30,14 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
   const opponentLoadout = resolveTrainingOpponentLoadout({
     tier: currentTier?.tier ?? 1,
     aiDifficulty: currentTier?.aiDifficulty ?? "EASY",
-    deckTemplateId: currentTier?.deckTemplateId ?? "training-tier-1",
+    // Roster FIJO de 6 rivales en orden, igual en todos los niveles; te enfrentas al Nº = victorias
+    // del nivel (ganas a uno para pasar al siguiente). La fuerza sube por nivel vía `defaultScaling`.
     tierWins: currentTierStats?.wins ?? 0,
     tierMatches: currentTierStats?.matches ?? 0,
     // Oponentes y cartas desde BD si existen; si no, presets/catálogo en código (fallback robusto).
     opponents: runtime.arenaOpponents ?? undefined,
     cardCatalog: runtime.arenaCardCatalog ?? undefined,
     defaultScaling: tierScaling,
-    // Mouretech ya no es comodín aleatorio: ahora es el rival fijo del tier 4 (ver catálogo de tiers).
   });
   const narrationPack = buildStoryOpponentNarrationPack({
     opponentId: opponentLoadout.storyOpponentId,

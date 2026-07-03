@@ -7,24 +7,36 @@ import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog"
 import { applyArenaCardScaling, ITrainingCardScale, resolveDifficultyScale } from "@/services/training/internal/training-card-scaling";
 import { buildArenaOpponentsFromPresets } from "@/services/training/internal/build-arena-opponents-from-presets";
 
+/**
+ * Roster FIJO del ladder de Arena: los MISMOS 6 rivales en TODOS los niveles, en este orden.
+ * - Cada nivel los presenta más fuertes (la fuerza la aporta el escalado/dificultad del tier).
+ * - Se enfrentan EN ORDEN por victorias del nivel: ganas al Nº k para desbloquear al Nº k+1.
+ *   6 victorias completan el nivel (ver `requiredWinsInPreviousTier` del catálogo de tiers).
+ * Orden (decisión de producto): GenNvim → Helena → Jaku → Mouretech → Soldado → Guill.
+ * BigLog (`training-tier-4`) queda fuera del ladder; Mouretech ocupa su puesto.
+ */
+export const ARENA_LADDER_ROSTER: readonly string[] = [
+  "training-tier-1", // GenNvim
+  "training-tier-2", // Helena
+  "training-tier-3", // Jaku
+  "training-mouretech", // Mouretech (en el puesto de BigLog)
+  "training-tier-5", // Soldado
+  "training-tier-6", // Guill
+];
+
 interface IResolveTrainingOpponentLoadoutInput {
   tier: number;
   aiDifficulty: OpponentDifficulty;
-  deckTemplateId: string;
+  /** Victorias en el nivel actual: determina a qué rival del roster te enfrentas (en orden). */
   tierWins: number;
+  /** Combates jugados en el nivel actual: rota la variante de mazo del rival. */
   tierMatches: number;
   /** Catálogo de oponentes (BD); por defecto se construye desde las constantes en código. */
   opponents?: Record<string, IArenaOpponent>;
   /** Catálogo de cartas para hidratar el mazo; por defecto el catálogo en código. */
   cardCatalog?: Map<string, ICard>;
-  /** Escalado de cartas propio del tier; si se omite, se usa el escalado por dificultad efectiva. */
+  /** Escalado de cartas propio del tier; si se omite, se usa el escalado por dificultad. */
   defaultScaling?: ITrainingCardScale | null;
-  /** Oponente comodín que puede aparecer aleatoriamente en cualquier nivel (p. ej. Mouretech). */
-  wildcardTemplateId?: string;
-  /** Tirada de azar [0,1) inyectada por el caller; si es < wildcardChance, se elige el comodín. */
-  wildcardRoll?: number;
-  /** Probabilidad de que salga el comodín (por defecto WILDCARD_OPPONENT_CHANCE). */
-  wildcardChance?: number;
 }
 
 export interface ITrainingOpponentLoadout {
@@ -38,66 +50,22 @@ export interface ITrainingOpponentLoadout {
   deckVariantLabel: string;
   deck: ICard[];
   fusionDeck: ICard[];
+  /** Posición (0-based) del rival dentro del ladder del nivel (para "Combate X/N"). */
+  ladderIndex: number;
+  /** Nº de combates por nivel (tamaño del roster efectivo). */
+  ladderSize: number;
 }
 
-const DIFFICULTY_ORDER: OpponentDifficulty[] = ["EASY", "NORMAL", "HARD", "BOSS", "MASTER", "MYTHIC"];
-/** Probabilidad por defecto de que el oponente comodín sustituya al rival fijo del roster. */
-const WILDCARD_OPPONENT_CHANCE = 0.25;
-const TRAINING_TIER_ONE_SHOWCASE_ROSTER = [
-  "training-tier-1",
-  "training-tier-1-alt",
-  "training-tier-3",
-  "training-tier-4",
-  "training-tier-5",
-];
-
-function clampDifficultyIndex(index: number): number {
-  return Math.max(0, Math.min(DIFFICULTY_ORDER.length - 1, index));
+/** Roster efectivo: los miembros del ladder presentes en el catálogo, conservando el orden. */
+function resolveLadderRoster(opponents: Record<string, IArenaOpponent>): string[] {
+  const roster = ARENA_LADDER_ROSTER.filter((templateId) => Boolean(opponents[templateId]));
+  if (roster.length === 0) throw new ValidationError("No hay oponentes de arena disponibles para el ladder.");
+  return roster;
 }
 
-function resolveAdaptiveDifficulty(baseDifficulty: OpponentDifficulty, tierWins: number, tierMatches: number): OpponentDifficulty {
-  if (tierMatches < 3) return baseDifficulty;
-  const rate = tierWins / tierMatches;
-  const baseIndex = DIFFICULTY_ORDER.indexOf(baseDifficulty);
-  if (rate >= 0.85 && tierMatches >= 6) return DIFFICULTY_ORDER[clampDifficultyIndex(baseIndex + 2)];
-  if (rate >= 0.7) return DIFFICULTY_ORDER[clampDifficultyIndex(baseIndex + 1)];
-  if (rate <= 0.34) return DIFFICULTY_ORDER[clampDifficultyIndex(baseIndex - 1)];
-  return baseDifficulty;
-}
-
-function resolveRosterTemplateIds(tier: number, deckTemplateId: string, opponents: Record<string, IArenaOpponent>): string[] {
-  if (!opponents[deckTemplateId]) {
-    throw new ValidationError(`No existe preset base de oponente para '${deckTemplateId}'.`);
-  }
-  if (tier === 1) {
-    const showcaseRoster = TRAINING_TIER_ONE_SHOWCASE_ROSTER.filter((templateId) => Boolean(opponents[templateId]));
-    return showcaseRoster.length > 0 ? showcaseRoster : [deckTemplateId];
-  }
-  const previousTemplates = Array.from({ length: Math.max(0, tier - 1) }, (_, index) => `training-tier-${tier - (index + 1)}`)
-    .filter((templateId) => Boolean(opponents[templateId]));
-  return [deckTemplateId, ...previousTemplates];
-}
-
-/**
- * Elige el template del rival: el comodín (si su tirada de azar entra) o el rival fijo del roster.
- * El comodín solo aplica si existe en el catálogo, evitando lanzar cuando no está sembrado (p. ej. BD sin él).
- */
-function resolveSelectedTemplateId(
-  input: IResolveTrainingOpponentLoadoutInput,
-  roster: string[],
-  opponents: Record<string, IArenaOpponent>,
-): string {
-  const wildcardId = input.wildcardTemplateId;
-  const chance = input.wildcardChance ?? WILDCARD_OPPONENT_CHANCE;
-  if (wildcardId && opponents[wildcardId] && input.wildcardRoll !== undefined && input.wildcardRoll < chance) {
-    return wildcardId;
-  }
-  return roster[input.tierMatches % roster.length];
-}
-
-function resolveDeckVariant(opponent: IArenaOpponent, tierMatches: number): IArenaDeckVariant {
+function resolveDeckVariant(opponent: IArenaOpponent, rotation: number): IArenaDeckVariant {
   if (opponent.variants.length === 0) throw new ValidationError(`El oponente '${opponent.id}' no tiene variantes de mazo.`);
-  return opponent.variants[tierMatches % opponent.variants.length];
+  return opponent.variants[rotation % opponent.variants.length];
 }
 
 function toVariantLabel(variant: IArenaDeckVariant): string {
@@ -109,23 +77,26 @@ function toVariantLabel(variant: IArenaDeckVariant): string {
 }
 
 /**
- * Resuelve un oponente de arena con rotación de roster y dificultad adaptativa por rendimiento real.
- * Acepta opcionalmente el catálogo de BD; sin él usa los presets en código (comportamiento idéntico).
+ * Resuelve el rival de arena del combate actual: roster FIJO de 6 (igual en todos los niveles),
+ * enfrentado EN ORDEN por victorias del nivel, con la fuerza (escalado + dificultad) FIJA del tier.
+ * Acepta opcionalmente el catálogo de BD; sin él usa los presets en código (mismo comportamiento).
  */
 export function resolveTrainingOpponentLoadout(input: IResolveTrainingOpponentLoadoutInput): ITrainingOpponentLoadout {
   const opponents = input.opponents ?? buildArenaOpponentsFromPresets();
   const cardCatalog = input.cardCatalog ?? CARD_BY_ID;
-  const roster = resolveRosterTemplateIds(input.tier, input.deckTemplateId, opponents);
-  const selectedTemplateId = resolveSelectedTemplateId(input, roster, opponents);
+  const roster = resolveLadderRoster(opponents);
+  // Índice del rival = victorias del nivel (en orden). El módulo mantiene el índice dentro del roster
+  // aunque el contador venga por encima (defensivo); dentro de un nivel va de 0 a roster.length-1.
+  const ladderIndex = ((input.tierWins % roster.length) + roster.length) % roster.length;
+  const selectedTemplateId = roster[ladderIndex];
   const opponent = opponents[selectedTemplateId];
   if (!opponent) throw new ValidationError(`No existe preset de oponente para '${selectedTemplateId}'.`);
   const selectedVariant = resolveDeckVariant(opponent, input.tierMatches);
-  const effectiveDifficulty = resolveAdaptiveDifficulty(input.aiDifficulty, input.tierWins, input.tierMatches);
-  // El escalado propio del tier (editable) manda; si no hay, se usa el de la dificultad efectiva.
-  const baseScale = input.defaultScaling ?? resolveDifficultyScale(effectiveDifficulty);
+  // El escalado propio del tier (editable) manda; si no hay, se usa el de la dificultad del tier.
+  const baseScale = input.defaultScaling ?? resolveDifficultyScale(input.aiDifficulty);
   return {
     tier: input.tier,
-    difficulty: effectiveDifficulty,
+    difficulty: input.aiDifficulty,
     storyOpponentId: opponent.storyOpponentId,
     displayName: opponent.displayName,
     avatarUrl: opponent.avatarUrl,
@@ -134,5 +105,7 @@ export function resolveTrainingOpponentLoadout(input: IResolveTrainingOpponentLo
     deckVariantLabel: toVariantLabel(selectedVariant),
     deck: applyArenaCardScaling(selectedVariant.deckCards, baseScale, cardCatalog),
     fusionDeck: applyArenaCardScaling(selectedVariant.fusionCards, baseScale, cardCatalog),
+    ladderIndex,
+    ladderSize: roster.length,
   };
 }

@@ -99,13 +99,15 @@ Archivo: `src/components/hub/academy/scene/HologramPillar.tsx`.
 - Cada nivel superior = **los mismos 6 pero más fuertes** (escalado creciente).
 - Nivel 1 = 6 combates en el orden de `arena_opponents`.
 
-### Decisiones a confirmar (bloquean la implementación)
-1. **¿Qué 6 rivales y en qué orden?** `arena_opponents` tiene 7 (incluye Mouretech). Recomendado (de más débil a más fuerte, coherente con la narrativa): **GenNvim → Helena → Jaku → BigLog → Soldado → Guill** (`training-tier-1..6`), y **Mouretech fuera del ladder** (o como encuentro especial opcional). *Alternativa: incluir Mouretech y quitar a uno.*
-2. **Índice del rival dentro del nivel:** por **victorias** (`tierWins`) → hay que **ganar al #1 para pasar al #2** (escalera "gánalos en orden"; una derrota repite rival). *Alternativa:* por combates jugados (`tierMatches`) → recorres los 6 ganes o pierdas. **Recomendado: por victorias.**
-3. **Avance de nivel:** al llegar a **6 victorias** en el nivel (batir a los 6) se desbloquea el siguiente. (`required_wins_in_previous_tier`: 5 → **6**.)
-4. **Nº de niveles:** mantener **6** (escalado BOOT→APEX ya existente), reutilizando el escalado por tier. *Se puede cambiar el nº después sin tocar la lógica.*
-5. **Dificultad adaptativa:** **eliminarla** (choca con "fuerza fija por nivel"); cada nivel usa el escalado/dificultad fijos del tier.
-6. **Variante de mazo por rival:** cada rival tiene 2 variantes; mantener la rotación actual (`variants[index % 2]`) o fijar una. Sin impacto en tu spec; propongo mantener rotación.
+### Decisiones (CONFIRMADAS por el usuario)
+1. **Roster fijo de 6, en orden:** `GenNvim → Helena → Jaku → Mouretech → Soldado → Guill`
+   = `["training-tier-1","training-tier-2","training-tier-3","training-mouretech","training-tier-5","training-tier-6"]`.
+   **BigLog (`training-tier-4`) queda FUERA del ladder** (Mouretech ocupa su hueco).
+2. **Índice del rival dentro del nivel = por VICTORIAS** (`tierWins`): enfrentas al rival Nº = victorias en el nivel; hay que **ganar al #1 para pasar al #2** (una derrota repite rival).
+3. **Avance de nivel:** **6 victorias** completan el nivel y desbloquean el siguiente (`required_wins_in_previous_tier`: 5 → **6**).
+4. **Nº de niveles:** mantener **6** (escalado BOOT→APEX), reutilizando el escalado por tier.
+5. **Dificultad adaptativa:** **eliminarla**; cada nivel usa el escalado/dificultad fijos del tier.
+6. **Variante de mazo por rival:** mantener la rotación actual (`variants[index % 2]`).
 
 ### Cambios de CÓDIGO (una vez confirmadas las decisiones)
 En [`resolve-training-opponent-loadout.ts`](../src/services/training/resolve-training-opponent-loadout.ts):
