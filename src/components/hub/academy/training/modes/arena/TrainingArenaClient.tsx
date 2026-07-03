@@ -25,6 +25,10 @@ interface ITrainingArenaClientProps {
   opponentName: string;
   opponentAvatarUrl: string;
   opponentDifficulty: OpponentDifficulty;
+  /** Los 6 rivales del nivel en orden (para las "monedas" de progreso del lobby). */
+  ladder: Array<{ displayName: string; avatarUrl: string }>;
+  /** Victorias en el nivel actual: marca cuáles del ladder ya has ganado y cuál es el siguiente. */
+  ladderWins: number;
   narrationPack: IMatchNarrationPack;
   selectedTier: number;
   completionTicket: string;
@@ -125,6 +129,8 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
           }))}
           onSelectTier={(tier) => startTierTransition(() => router.push(`/hub/academy/training/arena?tier=${tier}`, { scroll: false }))}
           isTierSwitching={isTierSwitching}
+          ladder={props.ladder}
+          ladderWins={props.ladderWins}
           opponentName={props.opponentName}
           playerAvatarUrl="/assets/story/player/bob.webp"
           opponentAvatarUrl={props.opponentAvatarUrl}

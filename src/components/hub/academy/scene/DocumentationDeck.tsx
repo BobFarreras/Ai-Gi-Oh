@@ -76,6 +76,10 @@ export function DocumentationDeck({ centerY, isHovered, occludeBlending = false 
             distanceFactor={2}
             occlude={occludeBlending ? "blending" : undefined}
             zIndexRange={occludeBlending ? [DOC_DECK_BLENDING_ZINDEX, 0] : [0, 0]}
+            // El wrapper exterior de drei también debe ser click-through: si no, el DOM de las cartas
+            // (denso en el centro del abanico) intercepta el puntero y el colisionador 3D de detrás no
+            // recibe el click en el centro (los bordes, sin cartas encima, sí funcionaban).
+            wrapperClass="pointer-events-none"
             style={{ pointerEvents: "none" }}
           >
             <div

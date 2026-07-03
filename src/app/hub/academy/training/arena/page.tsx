@@ -5,7 +5,7 @@ import { TrainingDeckReadyGate } from "@/components/hub/academy/training/Trainin
 import { TrainingArenaClient } from "@/components/hub/academy/training/modes/arena/TrainingArenaClient";
 import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
 import { getTrainingArenaRuntimeData } from "@/services/training/get-training-arena-runtime-data";
-import { resolveTrainingOpponentLoadout } from "@/services/training/resolve-training-opponent-loadout";
+import { resolveArenaLadderRoster, resolveTrainingOpponentLoadout } from "@/services/training/resolve-training-opponent-loadout";
 import { buildStoryOpponentNarrationPack } from "@/services/story/build-story-opponent-narration-pack";
 import { issueTrainingCompletionTicket } from "@/services/security/duel-completion-ticket";
 
@@ -30,15 +30,21 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
   const opponentLoadout = resolveTrainingOpponentLoadout({
     tier: currentTier?.tier ?? 1,
     aiDifficulty: currentTier?.aiDifficulty ?? "EASY",
-    deckTemplateId: currentTier?.deckTemplateId ?? "training-tier-1",
+    // Roster FIJO de 6 rivales en orden, igual en todos los niveles; te enfrentas al Nº = victorias
+    // del nivel (ganas a uno para pasar al siguiente). La fuerza sube por nivel vía `defaultScaling`.
     tierWins: currentTierStats?.wins ?? 0,
     tierMatches: currentTierStats?.matches ?? 0,
     // Oponentes y cartas desde BD si existen; si no, presets/catálogo en código (fallback robusto).
     opponents: runtime.arenaOpponents ?? undefined,
     cardCatalog: runtime.arenaCardCatalog ?? undefined,
     defaultScaling: tierScaling,
-    // Mouretech ya no es comodín aleatorio: ahora es el rival fijo del tier 4 (ver catálogo de tiers).
   });
+  // Ladder del nivel: los 6 rivales en orden + cuántos llevas ganados (para las "monedas" del lobby).
+  const ladder = resolveArenaLadderRoster(runtime.arenaOpponents ?? undefined).map((entry) => ({
+    displayName: entry.displayName,
+    avatarUrl: entry.avatarUrl,
+  }));
+  const ladderWins = currentTierStats?.wins ?? 0;
   const narrationPack = buildStoryOpponentNarrationPack({
     opponentId: opponentLoadout.storyOpponentId,
     opponentName: opponentLoadout.displayName,
@@ -72,6 +78,8 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
         playerName={runtime.playerDisplayName}
         opponentAvatarUrl={opponentLoadout.avatarUrl}
         opponentDifficulty={opponentLoadout.difficulty}
+        ladder={ladder}
+        ladderWins={ladderWins}
         narrationPack={narrationPack}
         completionTicket={completionTicket}
         completionBattleId={completionBattleId}

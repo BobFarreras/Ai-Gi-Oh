@@ -149,6 +149,15 @@ export function HologramPillar({
   // (renderOrder = z del pilar). Así el título del pilar de delante queda sobre los de atrás.
   const titleZIndex = Math.round((renderOrder + 10) * 10);
 
+  // La baraja de cartas REALES (HTML) solo en desktop: en móvil (lite) el HTML transformado en 3D +
+  // blending renderiza con bordes raros en GPUs reales, así que ahí se usa el plano de textura como
+  // los demás pilares (más robusto y barato). Ver docs/guia-arena6-holograma-cementerio.md §1.
+  const showDocumentationDeck = documentationDeck && !lite;
+  // El colisionador de Documentación se sube y agranda: la baraja flota más arriba que el plano de
+  // las figuras, así que su zona activa debe subir para que se pulse "donde se ven las cartas" (§2).
+  const colliderCenterY = showDocumentationDeck ? hologramHeight * 0.62 : hologramHeight / 2;
+  const colliderHeight = showDocumentationDeck ? hologramHeight * 1.05 : hologramHeight;
+
   useEffect(() => {
     if (typeof document === "undefined") return;
     document.body.style.cursor = isHovered ? "pointer" : "";
@@ -292,15 +301,15 @@ export function HologramPillar({
         {/* Colisionador invisible ÚNICO que capta hover/click (no el pedestal ni cada carta):
             así el sonido de hover suena solo al pasar por el holograma y no se duplica. */}
         <mesh
-          position={[0, hologramHeight / 2, 0.2]}
+          position={[0, colliderCenterY, 0.2]}
           onPointerOver={handleOver}
           onPointerOut={handleOut}
           onClick={handleClick}
         >
-          <planeGeometry args={[hologramWidth * 1.5, hologramHeight]} />
+          <planeGeometry args={[hologramWidth * 1.5, colliderHeight]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
-        {documentationDeck ? (
+        {showDocumentationDeck ? (
           <DocumentationDeck
             centerY={hologramHeight * 0.52}
             isHovered={isHovered}
