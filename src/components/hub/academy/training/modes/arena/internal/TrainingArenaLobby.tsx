@@ -122,11 +122,6 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
                           </svg>
                         </span>
                       ) : null}
-                      {isNext ? (
-                        <span className="pointer-events-none absolute -bottom-0.5 left-1/2 -translate-x-1/2 rounded-full bg-cyan-300 px-1 text-[6px] font-black uppercase tracking-wider text-cyan-950 md:text-[7px]">
-                          Aquí
-                        </span>
-                      ) : null}
                     </div>
                   );
                 })}
