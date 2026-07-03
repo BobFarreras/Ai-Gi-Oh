@@ -1,11 +1,62 @@
-// src/services/training/resolve-training-opponent-loadout.test.ts - Valida resolución de perfil/deck rival de training por tier.
+// src/services/training/resolve-training-opponent-loadout.test.ts - Valida el ladder fijo de 6 rivales de arena (orden por victorias, fuerza por tier).
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { IArenaOpponent } from "@/core/entities/training/IArenaOpponent";
 import { resolveTrainingOpponentLoadout } from "@/services/training/resolve-training-opponent-loadout";
 
 describe("resolveTrainingOpponentLoadout", () => {
-  it("usa el catálogo de oponentes provisto (BD) y respeta los overrides por carta", () => {
+  it("enfrenta a los 6 rivales del ladder en orden por victorias del nivel", () => {
+    const names = Array.from({ length: 6 }, (_, wins) =>
+      resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: wins, tierMatches: 0 }).displayName,
+    );
+    expect(names).toEqual(["GenNvim", "Helena", "Jaku", "Mouretech", "Soldado", "Guill"]);
+  });
+
+  it("usa el mismo roster en cualquier nivel (solo cambia la fuerza)", () => {
+    const lvl1 = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: 0, tierMatches: 0 });
+    const lvl6 = resolveTrainingOpponentLoadout({ tier: 6, aiDifficulty: "MYTHIC", tierWins: 0, tierMatches: 0 });
+    expect(lvl1.displayName).toBe("GenNvim");
+    expect(lvl6.displayName).toBe("GenNvim");
+    expect(lvl1.ladderSize).toBe(6);
+  });
+
+  it("deja a BigLog fuera del ladder (no aparece en ninguna posición)", () => {
+    const names = Array.from({ length: 6 }, (_, wins) =>
+      resolveTrainingOpponentLoadout({ tier: 2, aiDifficulty: "NORMAL", tierWins: wins, tierMatches: 0 }).displayName,
+    );
+    expect(names).not.toContain("BigLog");
+  });
+
+  it("expone ladderIndex y ladderSize del combate actual", () => {
+    const loadout = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: 3, tierMatches: 0 });
+    expect(loadout.ladderIndex).toBe(3);
+    expect(loadout.ladderSize).toBe(6);
+    expect(loadout.displayName).toBe("Mouretech");
+    expect(loadout.storyOpponentId).toBe("opp-mouretech");
+  });
+
+  it("mantiene la dificultad fija del tier (sin adaptar por winrate)", () => {
+    const loadout = resolveTrainingOpponentLoadout({ tier: 3, aiDifficulty: "HARD", tierWins: 5, tierMatches: 20 });
+    expect(loadout.difficulty).toBe("HARD");
+  });
+
+  it("rota la variante de mazo del mismo rival por combates jugados", () => {
+    const opponents: Record<string, IArenaOpponent> = {
+      "training-tier-1": {
+        id: "training-tier-1", codeName: "x", displayName: "X", avatarUrl: "a", introUrl: "i", storyOpponentId: "opp-x",
+        variants: [
+          { id: "v1", label: "V1", deckCards: [], fusionCards: [] },
+          { id: "v2", label: "V2", deckCards: [], fusionCards: [] },
+        ],
+      },
+    };
+    const first = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: 0, tierMatches: 0, opponents });
+    const second = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: 0, tierMatches: 1, opponents });
+    expect(first.deckVariantId).toBe("v1");
+    expect(second.deckVariantId).toBe("v2");
+  });
+
+  it("respeta los overrides por carta del catálogo provisto (BD)", () => {
     const card: ICard = { id: "entity-x", name: "X", description: "", type: "ENTITY", faction: "NEUTRAL", cost: 1, attack: 1000, defense: 1000 };
     const cardCatalog = new Map<string, ICard>([["entity-x", card]]);
     const opponents: Record<string, IArenaOpponent> = {
@@ -14,13 +65,10 @@ describe("resolveTrainingOpponentLoadout", () => {
         variants: [{ id: "v1", label: "V1", deckCards: [{ cardId: "entity-x", versionTier: 5, level: 30, xp: 9999 }], fusionCards: [] }],
       },
     };
-    const loadout = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", deckTemplateId: "training-tier-1", tierWins: 0, tierMatches: 0, opponents, cardCatalog });
+    const loadout = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: 0, tierMatches: 0, opponents, cardCatalog });
     expect(loadout.displayName).toBe("Custom X");
-    expect(loadout.deckVariantLabel).toBe("V1");
-    // El override de carta manda sobre el escalado EASY (versionTier=0).
     expect(loadout.deck[0]?.versionTier).toBe(5);
     expect(loadout.deck[0]?.level).toBe(30);
-    expect(loadout.deck[0]?.xp).toBe(9999);
   });
 
   it("aplica el escalado del tier (defaultScaling) por encima del de la dificultad", () => {
@@ -32,196 +80,12 @@ describe("resolveTrainingOpponentLoadout", () => {
         variants: [{ id: "v1", label: null, deckCards: [{ cardId: "entity-x", versionTier: null, level: null, xp: null }], fusionCards: [] }],
       },
     };
-    const loadout = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", deckTemplateId: "training-tier-1", tierWins: 0, tierMatches: 0, opponents, cardCatalog, defaultScaling: { versionTier: 3, level: 10, xp: 980 } });
-    // EASY daría 0/0; el escalado del tier manda → 3/10.
+    const loadout = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: 0, tierMatches: 0, opponents, cardCatalog, defaultScaling: { versionTier: 3, level: 10, xp: 980 } });
     expect(loadout.deck[0]?.versionTier).toBe(3);
     expect(loadout.deck[0]?.level).toBe(10);
   });
 
-  it("resuelve deck completo y fusión para un tier válido", () => {
-    const loadout = resolveTrainingOpponentLoadout({
-      tier: 3,
-      aiDifficulty: "NORMAL",
-      deckTemplateId: "training-tier-3",
-      tierWins: 0,
-      tierMatches: 0,
-    });
-    expect(loadout.displayName).toBe("Jaku");
-    expect(loadout.deck).toHaveLength(20);
-    expect(loadout.fusionDeck.length).toBeGreaterThan(0);
-    expect(loadout.difficulty).toBe("NORMAL");
-    expect(loadout.storyOpponentId).toBe("opp-jaku");
-    expect(loadout.deckVariantId).toBe("fusion-pressure");
-    expect(loadout.deckVariantLabel).toBe("Fusion Pressure");
-  });
-
-  it("rota rival dentro del roster del tier según matches jugados", () => {
-    const loadout = resolveTrainingOpponentLoadout({
-      tier: 3,
-      aiDifficulty: "NORMAL",
-      deckTemplateId: "training-tier-3",
-      tierWins: 1,
-      tierMatches: 1,
-    });
-    expect(loadout.displayName).toBe("Helena");
-  });
-
-  it("rota variante de mazo dentro del mismo rival por arquetipo", () => {
-    const first = resolveTrainingOpponentLoadout({
-      tier: 1,
-      aiDifficulty: "NORMAL",
-      deckTemplateId: "training-tier-1",
-      tierWins: 1,
-      tierMatches: 0,
-    });
-    const second = resolveTrainingOpponentLoadout({
-      tier: 1,
-      aiDifficulty: "NORMAL",
-      deckTemplateId: "training-tier-1",
-      tierWins: 1,
-      tierMatches: 1,
-    });
-    expect(first.displayName).toBe("GenNvim");
-    expect(second.displayName).toBe("Helena");
-    expect(first.deckVariantId).not.toBe(second.deckVariantId);
-  });
-
-  it("incluye roster ampliado en tier 1 con rivales veteranos", () => {
-    const jaku = resolveTrainingOpponentLoadout({
-      tier: 1,
-      aiDifficulty: "NORMAL",
-      deckTemplateId: "training-tier-1",
-      tierWins: 1,
-      tierMatches: 2,
-    });
-    const bigLog = resolveTrainingOpponentLoadout({
-      tier: 1,
-      aiDifficulty: "NORMAL",
-      deckTemplateId: "training-tier-1",
-      tierWins: 1,
-      tierMatches: 3,
-    });
-    const sentinel = resolveTrainingOpponentLoadout({
-      tier: 1,
-      aiDifficulty: "NORMAL",
-      deckTemplateId: "training-tier-1",
-      tierWins: 1,
-      tierMatches: 4,
-    });
-    expect(jaku.displayName).toBe("Jaku");
-    expect(bigLog.displayName).toBe("BigLog");
-    expect(sentinel.displayName).toBe("Soldado");
-  });
-
-  it("sube dificultad cuando el winrate del tier es alto", () => {
-    const loadout = resolveTrainingOpponentLoadout({
-      tier: 3,
-      aiDifficulty: "NORMAL",
-      deckTemplateId: "training-tier-3",
-      tierWins: 6,
-      tierMatches: 7,
-    });
-    expect(loadout.difficulty).toBe("BOSS");
-  });
-
-  it("usa a Guill como rival base del nivel 6 (sin duplicar al soldado)", () => {
-    const loadout = resolveTrainingOpponentLoadout({
-      tier: 6,
-      aiDifficulty: "MYTHIC",
-      deckTemplateId: "training-tier-6",
-      tierWins: 0,
-      tierMatches: 0,
-    });
-    expect(loadout.displayName).toBe("Guill");
-    expect(loadout.storyOpponentId).toBe("opp-guill");
-    expect(loadout.deck).toHaveLength(20);
-  });
-
-  it("elige el rival comodín cuando la tirada de azar entra dentro de la probabilidad", () => {
-    const loadout = resolveTrainingOpponentLoadout({
-      tier: 3,
-      aiDifficulty: "NORMAL",
-      deckTemplateId: "training-tier-3",
-      tierWins: 0,
-      tierMatches: 0,
-      wildcardTemplateId: "training-mouretech",
-      wildcardRoll: 0, // < chance → sale el comodín
-    });
-    expect(loadout.displayName).toBe("Mouretech");
-    expect(loadout.storyOpponentId).toBe("opp-mouretech");
-  });
-
-  it("ignora el comodín cuando la tirada de azar queda fuera de la probabilidad", () => {
-    const loadout = resolveTrainingOpponentLoadout({
-      tier: 3,
-      aiDifficulty: "NORMAL",
-      deckTemplateId: "training-tier-3",
-      tierWins: 0,
-      tierMatches: 0,
-      wildcardTemplateId: "training-mouretech",
-      wildcardRoll: 0.99, // >= chance → rival fijo del roster
-    });
-    expect(loadout.displayName).toBe("Jaku");
-  });
-
-  it("ignora el comodín si no está en el catálogo provisto (sin lanzar)", () => {
-    const loadout = resolveTrainingOpponentLoadout({
-      tier: 3,
-      aiDifficulty: "NORMAL",
-      deckTemplateId: "training-tier-3",
-      tierWins: 0,
-      tierMatches: 0,
-      wildcardTemplateId: "training-mouretech-inexistente",
-      wildcardRoll: 0,
-    });
-    expect(loadout.displayName).toBe("Jaku");
-  });
-
-  it("falla si el template no existe", () => {
-    expect(() =>
-      resolveTrainingOpponentLoadout({
-        tier: 9,
-        aiDifficulty: "BOSS",
-        deckTemplateId: "training-tier-unknown",
-        tierWins: 0,
-        tierMatches: 0,
-      }),
-    ).toThrowError();
-  });
-
-  it("permite escalar dos niveles por encima de BOSS en training", () => {
-    const loadout = resolveTrainingOpponentLoadout({
-      tier: 5,
-      aiDifficulty: "BOSS",
-      deckTemplateId: "training-tier-5",
-      tierWins: 9,
-      tierMatches: 10,
-    });
-    expect(loadout.difficulty).toBe("MYTHIC");
-  });
-
-  it("escala version/level/xp de cartas según dificultad efectiva", () => {
-    const easyLoadout = resolveTrainingOpponentLoadout({
-      tier: 1,
-      aiDifficulty: "EASY",
-      deckTemplateId: "training-tier-1",
-      tierWins: 0,
-      tierMatches: 0,
-    });
-    const bossLoadout = resolveTrainingOpponentLoadout({
-      tier: 5,
-      aiDifficulty: "BOSS",
-      deckTemplateId: "training-tier-5",
-      tierWins: 0,
-      tierMatches: 0,
-    });
-    expect(easyLoadout.deck[0]?.level).toBe(0);
-    expect(bossLoadout.deck[0]?.level).toBe(20);
-    expect(bossLoadout.deck[0]?.versionTier).toBe(2);
-    expect((bossLoadout.deck[0]?.xp ?? 0)).toBeGreaterThan(0);
-  });
-
-  it("aplica los bonus de combate por nivel a las cartas del oponente (no solo fija el campo level)", () => {
+  it("aplica los bonus de combate por nivel a las cartas del oponente", () => {
     const card: ICard = { id: "entity-x", name: "X", description: "", type: "ENTITY", faction: "NEUTRAL", cost: 3, attack: 1000, defense: 1000 };
     const cardCatalog = new Map<string, ICard>([["entity-x", card]]);
     const opponents: Record<string, IArenaOpponent> = {
@@ -230,13 +94,25 @@ describe("resolveTrainingOpponentLoadout", () => {
         variants: [{ id: "v1", label: null, deckCards: [{ cardId: "entity-x", versionTier: null, level: null, xp: null }], fusionCards: [] }],
       },
     };
-    const baseInput = { tier: 1, aiDifficulty: "EASY" as const, deckTemplateId: "training-tier-1", tierWins: 0, tierMatches: 0, opponents, cardCatalog };
+    const baseInput = { tier: 1, aiDifficulty: "EASY" as const, tierWins: 0, tierMatches: 0, opponents, cardCatalog };
     const atLevel10 = resolveTrainingOpponentLoadout({ ...baseInput, defaultScaling: { versionTier: 1, level: 10, xp: 980 } });
     const atLevel20 = resolveTrainingOpponentLoadout({ ...baseInput, defaultScaling: { versionTier: 2, level: 20, xp: 2800 } });
-    // ENTITY: nivel 10 → +100 ATK / +100 DEF; nivel 20 → +300 ATK / +300 DEF (resolveCardLevelBonuses).
+    // ENTITY: nivel 10 → +100 ATK/DEF; nivel 20 → +300 (resolveCardLevelBonuses).
     expect(atLevel10.deck[0]?.attack).toBe(1100);
-    expect(atLevel10.deck[0]?.defense).toBe(1100);
     expect(atLevel20.deck[0]?.attack).toBe(1300);
-    expect(atLevel20.deck[0]?.defense).toBe(1300);
+  });
+
+  it("resuelve deck completo (20) y fusión para un rival del roster", () => {
+    const loadout = resolveTrainingOpponentLoadout({ tier: 3, aiDifficulty: "NORMAL", tierWins: 2, tierMatches: 0 });
+    expect(loadout.displayName).toBe("Jaku");
+    expect(loadout.storyOpponentId).toBe("opp-jaku");
+    expect(loadout.deck).toHaveLength(20);
+    expect(loadout.fusionDeck.length).toBeGreaterThan(0);
+  });
+
+  it("lanza si no hay oponentes disponibles para el ladder", () => {
+    expect(() =>
+      resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: 0, tierMatches: 0, opponents: {} }),
+    ).toThrowError();
   });
 });

@@ -21,9 +21,10 @@ describe("CompleteTrainingMatchUseCase", () => {
     vi.mocked(deps.claimRepository.tryReserveMatch).mockResolvedValue(true);
     vi.mocked(deps.trainingProgressRepository.getByPlayerId).mockResolvedValue({
       ...createInitialTrainingProgress("p1"),
-      tierStats: [{ tier: 1, wins: 4, matches: 4 }],
-      totalWins: 4,
-      totalMatches: 4,
+      // 5 victorias previas + esta (WIN) = 6 → desbloquea el tier 2 (requiredWinsInPreviousTier = 6).
+      tierStats: [{ tier: 1, wins: 5, matches: 5 }],
+      totalWins: 5,
+      totalMatches: 5,
       updatedAtIso: "2026-03-17T09:00:00.000Z",
     });
     vi.mocked(deps.trainingProgressRepository.upsert).mockImplementation(async (progress) => progress);

@@ -51,18 +51,18 @@ export function GraveyardBrowser({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 16 }}
             transition={{ duration: 0.2 }}
-            className="w-[92%] max-w-5xl max-h-[72vh] bg-zinc-950/95 border border-cyan-500/40 rounded-2xl shadow-[0_0_60px_rgba(6,182,212,0.2)] p-4"
+            className="flex w-[92%] max-w-5xl max-h-[72vh] flex-col overflow-hidden bg-zinc-950/95 border border-cyan-500/40 rounded-2xl shadow-[0_0_60px_rgba(6,182,212,0.2)] p-4"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4 border-b border-zinc-700/70 pb-3">
+            <div className="flex shrink-0 items-center justify-between mb-4 border-b border-zinc-700/70 pb-3">
               <h3 className="text-lg text-cyan-200 font-black uppercase tracking-wider">{title} de {ownerName}</h3>
               <button data-tutorial-id="tutorial-board-graveyard-close" aria-label="Cerrar zona de cartas" onClick={onClose} className="text-zinc-300 hover:text-white">
                 <X size={20} />
               </button>
             </div>
             {cards.length === 0 && <p className="text-zinc-400">{emptyMessage}</p>}
-            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_18rem] gap-4 max-h-[58vh]">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-500/70 [&::-webkit-scrollbar-track]:bg-transparent">
+            <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_18rem] gap-4">
+              <div className="grid min-h-0 grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-500/70 [&::-webkit-scrollbar-track]:bg-transparent">
                 {cards.map((card, index) => {
                 const cardRef = card.runtimeId ?? card.id;
                 const isSelectable = !hasSelectionFilter || selectableCardRefs.includes(cardRef);
