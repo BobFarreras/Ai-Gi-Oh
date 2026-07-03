@@ -61,8 +61,8 @@ export function GraveyardBrowser({
               </button>
             </div>
             {cards.length === 0 && <p className="text-zinc-400">{emptyMessage}</p>}
-            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_18rem] gap-4 max-h-[58vh]">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-500/70 [&::-webkit-scrollbar-track]:bg-transparent">
+            <div className="grid min-h-0 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_18rem] gap-4 max-h-[58vh]">
+              <div className="grid min-h-0 grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-500/70 [&::-webkit-scrollbar-track]:bg-transparent">
                 {cards.map((card, index) => {
                 const cardRef = card.runtimeId ?? card.id;
                 const isSelectable = !hasSelectionFilter || selectableCardRefs.includes(cardRef);
