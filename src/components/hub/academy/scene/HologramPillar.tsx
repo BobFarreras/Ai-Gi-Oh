@@ -149,14 +149,10 @@ export function HologramPillar({
   // (renderOrder = z del pilar). Así el título del pilar de delante queda sobre los de atrás.
   const titleZIndex = Math.round((renderOrder + 10) * 10);
 
-  // La baraja de cartas REALES (HTML) solo en desktop: en móvil (lite) el HTML transformado en 3D +
-  // blending renderiza con bordes raros en GPUs reales, así que ahí se usa el plano de textura como
-  // los demás pilares (más robusto y barato). Ver docs/guia-arena6-holograma-cementerio.md §1.
-  const showDocumentationDeck = documentationDeck && !lite;
   // El colisionador de Documentación se sube y agranda: la baraja flota más arriba que el plano de
   // las figuras, así que su zona activa debe subir para que se pulse "donde se ven las cartas" (§2).
-  const colliderCenterY = showDocumentationDeck ? hologramHeight * 0.62 : hologramHeight / 2;
-  const colliderHeight = showDocumentationDeck ? hologramHeight * 1.05 : hologramHeight;
+  const colliderCenterY = documentationDeck ? hologramHeight * 0.62 : hologramHeight / 2;
+  const colliderHeight = documentationDeck ? hologramHeight * 1.05 : hologramHeight;
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -309,11 +305,14 @@ export function HologramPillar({
           <planeGeometry args={[hologramWidth * 1.5, colliderHeight]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
-        {showDocumentationDeck ? (
+        {documentationDeck ? (
+          // Baraja de cartas REALES (<Card>) también en móvil, pero con menos cartas (3 distintas)
+          // para que en pantalla pequeña se lea limpio. En móvil (lite) usa oclusión "blending".
           <DocumentationDeck
             centerY={hologramHeight * 0.52}
             isHovered={isHovered}
             occludeBlending={occludeDeckBlending}
+            maxCards={lite ? 3 : undefined}
           />
         ) : (
           <mesh position={[0, hologramHeight / 2, 0]} renderOrder={renderOrder}>
