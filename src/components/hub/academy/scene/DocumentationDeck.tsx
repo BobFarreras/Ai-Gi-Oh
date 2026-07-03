@@ -46,10 +46,15 @@ interface DocumentationDeckProps {
    * false (el DOM va encima, pero ahí los pilares no se solapan).
    */
   occludeBlending?: boolean;
+  /** Límite de cartas mostradas (móvil usa menos para que se lea limpio); por defecto, todas. */
+  maxCards?: number;
 }
 
-export function DocumentationDeck({ centerY, isHovered, occludeBlending = false }: DocumentationDeckProps) {
-  const cards = useMemo(() => DOC_DECK_CARDS, []);
+export function DocumentationDeck({ centerY, isHovered, occludeBlending = false, maxCards }: DocumentationDeckProps) {
+  const cards = useMemo(
+    () => (maxCards ? DOC_DECK_CARDS.slice(0, maxCards) : DOC_DECK_CARDS),
+    [maxCards],
+  );
   const count = cards.length;
 
   // Misma lógica que el shader de las figuras: veladas (holográficas) en reposo, nítidas en hover.
