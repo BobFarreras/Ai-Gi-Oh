@@ -6,6 +6,22 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-07-03
+
+### Added
+- Arena — **6 combates por nivel**: cada nivel enfrenta a los mismos 6 rivales fijos y en orden (GenNvim → Helena → Jaku → Mouretech → Soldado → Guill), y a cada nivel son más fuertes. Se enfrentan por victorias (ganas a uno para pasar al siguiente) y se avanza de nivel al ganar los 6. En el lobby, fila de progreso con el avatar de cada rival (ganados / siguiente / pendientes) y contador «Combate X de N».
+- Códex/Documentación (Academy): el holograma es seleccionable en todo su contenido (también el centro); en móvil muestra 3 cartas reales distintas. En Historia, sección narrativa de la trama con fuente sci-fi dedicada.
+
+### Changed
+- Arena: eliminados el rival comodín aleatorio y la dificultad adaptativa; la fuerza de cada nivel es fija (escalado/dificultad del tier). Desbloquear el siguiente nivel requiere 6 victorias (antes 5).
+
+### Fixed
+- Cementerio en combate: el diálogo hace scroll correctamente en móvil y ya no recorta las cartas.
+- Academy: holograma de Documentación en móvil (bordes raros) y zona de activación del pilar en desktop.
+
+### Internal
+- Catálogo: se sellan en la fuente de verdad de migraciones (`docs/supabase/sql`) las entities Docker, TypeScript y Kubernetes para paridad con producción en clones limpios.
+
 ## [1.8.1] - 2026-07-02
 
 ### Fixed
@@ -118,7 +134,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.8.1...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.7.2...v1.8.0
 [1.7.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.7.1...v1.7.2
