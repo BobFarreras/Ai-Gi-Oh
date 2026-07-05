@@ -6,6 +6,16 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.9.1] - 2026-07-05
+
+### Fixed
+- Setup de contribuidor: `pnpm install` compila los binarios nativos (esbuild, sharp, unrs-resolver) de forma automática vía `pnpm.onlyBuiltDependencies` en `package.json`. Ya no aparece `ERR_PNPM_IGNORED_BUILDS` ni hace falta `pnpm approve-builds` (que además bloqueaba `pnpm dev`): pnpm 11 no respetaba la sintaxis `only-built-dependencies[]` del `.npmrc`.
+- Auth: `getCurrentSession` devuelve `null` ante un refresh token inválido o caducado en las cookies (sesión antigua o BD local recién creada) en vez de lanzar un 500 en `/login` y `/register`.
+- Bootstrap de Supabase local: el mensaje de fallo apunta a la causa real (DNS/red/VPN de Docker), y CONTRIBUTING documenta ese caso y el del refresh token.
+
+### Changed
+- Academy: el nodo de Documentación es ahora una imagen holográfica (servidor) como los de Tutorial y Arena, en vez de la baraja de cartas (se veía mal en móvil).
+
 ## [1.9.0] - 2026-07-03
 
 ### Added
@@ -134,7 +144,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.1...HEAD
+[1.9.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.7.2...v1.8.0
