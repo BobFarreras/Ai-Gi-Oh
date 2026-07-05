@@ -41,13 +41,12 @@ Si prefieres hacerlo manualmente:
 
 ```bash
 pnpm install
-pnpm rebuild esbuild sharp unrs-resolver
 ```
 
-El segundo comando **compila los binarios nativos**. Es necesario porque, según la versión de pnpm,
-`pnpm install` a veces ignora los build scripts (aunque estén pre-aprobados en `.npmrc`) y aborta con
-`ERR_PNPM_IGNORED_BUILDS`. `pnpm rebuild` los fuerza sin necesidad de `pnpm approve-builds`.
-El asistente `node scripts/setup.mjs` ya hace esto por ti.
+`pnpm install` **compila los binarios nativos** (esbuild, sharp, unrs-resolver) automáticamente:
+están pre-aprobados en `package.json` (`pnpm.onlyBuiltDependencies`), así que **no** tienes que
+ejecutar `pnpm approve-builds` ni ningún paso extra. El asistente `node scripts/setup.mjs` también
+lo hace por ti.
 
 ### 2. Instalar el CLI de Supabase
 
@@ -108,11 +107,25 @@ Estos puertos son fijos (definidos en `supabase/config.toml`), iguales para todo
 
 ### `ERR_PNPM_IGNORED_BUILDS` (Ignored build scripts: esbuild, sharp, unrs-resolver)
 
-Según la versión de pnpm/Node, `pnpm install` puede ignorar los build scripts y abortar. Compílalos a mano:
+Ya **no debería aparecer**: los tres builds están pre-aprobados en `package.json`
+(`pnpm.onlyBuiltDependencies`), así que `pnpm install` los compila solo. Si lo ves (p. ej. por un
+`node_modules` de un clon antiguo), basta con reinstalar: `pnpm install`. No hace falta
+`pnpm approve-builds` (es interactivo y depende de la versión).
+
+### Docker: `no such host` / `unexpected EOF` al descargar imágenes de Supabase
+
+Docker no tiene salida a internet (fallo de DNS/red), no es un problema de puertos ni de recursos
+aunque el mensaje lo sugiera. **Reinicia Docker Desktop por completo** (icono de la bandeja → Quit →
+abrir de nuevo) y pausa VPN/proxy/antivirus si los usas. Luego reintenta solo ese paso:
 ```bash
-pnpm rebuild esbuild sharp unrs-resolver
+pnpm supabase:bootstrap:local
 ```
-No uses `pnpm approve-builds` (es interactivo y depende de la versión). El asistente `node scripts/setup.mjs` ya hace este rebuild automáticamente.
+
+### `/register` o `/login` daban error 500 con "Invalid Refresh Token"
+
+Ocurría con cookies de una sesión anterior en `localhost:3000` y una BD local recién creada. Ya está
+**corregido** (la app trata ese caso como visitante). Si vienes de una versión antigua, borra los datos
+del sitio del navegador (DevTools → Application → Clear site data) y recarga.
 
 ### `supabase` command not found
 

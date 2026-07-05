@@ -67,13 +67,12 @@ export class SupabaseAuthRepository implements IAuthRepository {
   }
 
   async getCurrentSession(): Promise<IAuthSession | null> {
-    // Sin sesión (p. ej. en /login) getUser() devuelve AuthSessionMissingError: eso NO es un
-    // fallo, es simplemente "no autenticado". Comprobamos primero la sesión y devolvemos null.
+    // getSession() puede devolver error si las cookies llevan un refresh token inválido o caducado
+    // (p. ej. tras recrear la BD local en un setup de contribuidor, o una sesión antigua en el mismo
+    // puerto). Eso NO es un fallo del servidor: se trata como "no autenticado" (visitante) para no
+    // romper con un 500 páginas públicas como /login o /register. Igual que cuando no hay sesión.
     const { data: sessionData, error: sessionError } = await this.client.auth.getSession();
-    if (sessionError) {
-      throw new ValidationError("No se pudo obtener la sesión actual.");
-    }
-    if (!sessionData.session) return null;
+    if (sessionError || !sessionData.session) return null;
     // Hay cookies de sesión: validamos el usuario contra el servidor de auth.
     const { data: userData, error: userError } = await this.client.auth.getUser();
     if (userError || !userData.user) return null;
