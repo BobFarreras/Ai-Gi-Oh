@@ -62,7 +62,13 @@ function main() {
   const startResult = runSupabase(cli, ["start", "--ignore-health-check"]);
   if (startResult.status !== 0) {
     ui.fail("No se pudieron levantar los contenedores de Supabase");
-    ui.note("Revisa que Docker Desktop tenga recursos suficientes y que los puertos 54321-54324 estén libres.");
+    ui.note("Causas típicas (en orden de frecuencia):");
+    ui.note("  1) DNS/red de Docker: si ves 'no such host' o 'unexpected EOF' al descargar imágenes,");
+    ui.note("     Docker no tiene salida a internet. Reinicia Docker Desktop por completo (icono de la");
+    ui.note("     bandeja → Quit → abrir de nuevo) y pausa VPN/proxy/antivirus si los usas.");
+    ui.note("  2) Puertos 54321-54324 ocupados por otro proceso.");
+    ui.note("  3) Docker con pocos recursos (RAM/disco) asignados.");
+    ui.note("Cuando Docker vuelva a tener red, reintenta SOLO este paso: pnpm supabase:bootstrap:local");
     process.exit(1);
   }
 

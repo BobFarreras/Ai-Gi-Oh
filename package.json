@@ -2,6 +2,13 @@
   "name": "ai-gi-oh",
   "version": "1.9.0",
   "private": true,
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
