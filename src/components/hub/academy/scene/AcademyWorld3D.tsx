@@ -21,7 +21,7 @@ import { HologramPillar } from "./HologramPillar";
 
 const TUTORIAL_TEXTURE = "/assets/story/opponents/opp-ch1-biglog/intro-BigLog.webp";
 const ARENA_TEXTURE = "/assets/story/opponents/opp-ch1-guill/intro-Guill.webp";
-const DOC_CARD_TEXTURE = "/assets/readme/card-render-showcase.webp";
+const DOC_NODE_TEXTURE = "/assets/story/servidor-doc.webp";
 
 type Vec3 = [number, number, number];
 
@@ -32,7 +32,6 @@ interface AcademyNodeConfig {
   route: string;
   hologramHeight?: number;
   baseY?: number;
-  documentationDeck?: boolean;
   floatOffset: number;
   activationDelaySeconds: number;
 }
@@ -59,11 +58,10 @@ const ACADEMY_NODES: AcademyNodeConfig[] = [
   },
   {
     key: "docs",
-    textureUrl: DOC_CARD_TEXTURE,
+    textureUrl: DOC_NODE_TEXTURE,
     title: "Documentación",
     route: ACADEMY_GLOSSARY_ROUTE,
     hologramHeight: 3.4,
-    documentationDeck: true,
     floatOffset: 2.2,
     activationDelaySeconds: 0.36,
   },
@@ -175,27 +173,6 @@ function AcademyCameraRig({ target, zoom }: { target: [number, number, number]; 
   return null;
 }
 
-// La oclusión "blending" del mazo de Documentación hace que drei ponga `pointer-events:none` en el
-// <canvas> (para dejar pasar los eventos al DOM de debajo). Aquí lo reactivamos porque SÍ queremos
-// conservar el picking 3D (tocar los hologramas para navegar / traerlos al frente). Usamos un
-// MutationObserver sobre el atributo `style` en vez de comprobarlo cada frame: coste cero por frame,
-// solo reacciona cuando drei toca el estilo.
-function CanvasPointerEventsGuard() {
-  const gl = useThree((state) => state.gl);
-  useEffect(() => {
-    const el = gl.domElement;
-    const ensureInteractive = (): void => {
-      // setProperty (método) en vez de asignación directa: no muta el valor del hook.
-      if (el.style.pointerEvents !== "auto") el.style.setProperty("pointer-events", "auto");
-    };
-    ensureInteractive();
-    const observer = new MutationObserver(ensureInteractive);
-    observer.observe(el, { attributes: true, attributeFilter: ["style"] });
-    return () => observer.disconnect();
-  }, [gl]);
-  return null;
-}
-
 export function AcademyWorld3D({
   viewportWidth,
   isDocumentVisible,
@@ -252,7 +229,6 @@ export function AcademyWorld3D({
     >
       <PerspectiveCamera makeDefault position={layout.cameraPosition} fov={layout.fov} />
       <AcademyCameraRig target={layout.lookAtTarget} zoom={zoom} />
-      {isMobile ? <CanvasPointerEventsGuard /> : null}
       <ambientLight intensity={0.35} />
       <directionalLight position={[8, 16, 10]} intensity={1.1} color="#0ea5e9" />
       <directionalLight position={[-12, 8, -10]} intensity={0.5} color="#38bdf8" />
@@ -279,9 +255,6 @@ export function AcademyWorld3D({
             // mueve): solo pasan los hologramas. El nodo de delante navega al tocarlo; tocar otro lo
             // trae al frente. El renderOrder (= z del slot) da el z-index de profundidad: central
             // máximo, luego medio, luego el del fondo.
-            // El mazo de 5 cartas reales (DOM) se dibuja SIEMPRE, en las 3 posiciones: usa la
-            // oclusión "blending" de drei para que el WebGL de los demás hologramas lo tape por
-            // profundidad (el DOM ya no se sobrepone). Ver CanvasPointerEventsGuard más abajo.
             ACADEMY_NODES.map((node, index) => {
               const slotIndex =
                 (index - activeNodeIndex + ACADEMY_CAROUSEL_NODE_COUNT) % ACADEMY_CAROUSEL_NODE_COUNT;
@@ -296,8 +269,7 @@ export function AcademyWorld3D({
                   position={slot}
                   hologramHeight={node.hologramHeight}
                   baseY={node.baseY}
-                  documentationDeck={node.documentationDeck}
-                  occludeDeckBlending
+                  chromaKeyWhite={node.key === "docs"}
                   scale={layout.pillarScale}
                   renderOrder={slot[2]}
                   animatePosition={!capability.prefersReducedMotion}
@@ -322,7 +294,7 @@ export function AcademyWorld3D({
                 title={node.title}
                 hologramHeight={node.hologramHeight}
                 baseY={node.baseY}
-                documentationDeck={node.documentationDeck}
+                chromaKeyWhite={node.key === "docs"}
                 scale={layout.pillarScale}
                 renderOrder={pos[2]}
                 onSelect={() =>

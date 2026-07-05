@@ -26,6 +26,9 @@ export const AcademyHologramMaterial = shaderMaterial(
     uGlow: 0,
     // 1 = aplica máscara de carta (recorta el margen oscuro y redondea esquinas) para la baraja.
     uCardMask: 0,
+    // 1 = recorta el fondo BLANCO/claro de la imagen (chroma-key) para imágenes sin canal alfa
+    // (p. ej. el nodo de Documentación es un servidor sobre fondo blanco): deja solo la silueta.
+    uChromaWhite: 0,
   },
   /* glsl - vertex */ `
     varying vec2 vUv;
@@ -42,12 +45,23 @@ export const AcademyHologramMaterial = shaderMaterial(
     uniform float uScanIntensity;
     uniform float uGlow;
     uniform float uCardMask;
+    uniform float uChromaWhite;
     varying vec2 vUv;
 
     void main() {
       vec4 tex = texture2D(uMap, vUv);
       // Recorta el fondo transparente de la imagen intro para dejar solo la silueta.
       if (tex.a < 0.02) discard;
+
+      // Chroma-key de fondo blanco (imágenes sin canal alfa): descarta los píxeles casi blancos/grises
+      // claros (alta luminancia + baja saturación), dejando solo el objeto de color/oscuro.
+      if (uChromaWhite > 0.5) {
+        float mx = max(max(tex.r, tex.g), tex.b);
+        float mn = min(min(tex.r, tex.g), tex.b);
+        float sat = mx > 0.001 ? (mx - mn) / mx : 0.0;
+        float bright = dot(tex.rgb, vec3(0.299, 0.587, 0.114));
+        if (bright > 0.8 && sat < 0.15) discard;
+      }
 
       // Máscara de carta (baraja): recorta el margen oscuro exterior de la imagen y redondea las
       // esquinas, para que se vea SOLO la carta y no un rectángulo con borde.

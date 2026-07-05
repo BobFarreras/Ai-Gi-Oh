@@ -13,7 +13,6 @@ import * as THREE from "three";
 // y el `extend` nunca correría → "not part of the THREE namespace".)
 import "./internal/academy-hologram-material";
 import type { AcademyHologramMaterialImpl } from "./internal/academy-hologram-material";
-import { DocumentationDeck } from "./DocumentationDeck";
 
 interface HologramPillarProps {
   /** URL de la imagen a proyectar (webp intro del personaje/carta). */
@@ -34,18 +33,16 @@ interface HologramPillarProps {
   title?: string;
   /** Altura de la base (pies) de la imagen; override por pilar (p. ej. subir uno con los pies cortados). */
   baseY?: number;
-  /** Si true, renderiza la baraja de cartas reales (pilar de Documentación) en vez de una figura. */
-  documentationDeck?: boolean;
   /** Escala global del pilar (para achicarlo en móvil y que quepan los 3). */
   scale?: number;
   /** Orden de dibujo: mayor = se pinta encima (el pilar de delante debe ir por encima de los de atrás). */
   renderOrder?: number;
-  /** Modo ligero (móvil / gama baja): sin luz puntual y la Documentación como plano en vez de baraja HTML. */
+  /** Modo ligero (móvil / gama baja): sin luz puntual. */
   lite?: boolean;
   /** Si true, la posición se interpola suavemente hacia `position` (carrusel móvil: el pilar se desliza). */
   animatePosition?: boolean;
-  /** Si true, el mazo de Documentación usa oclusión "blending" (el WebGL lo tapa por profundidad). */
-  occludeDeckBlending?: boolean;
+  /** Si true, recorta el fondo blanco de la imagen (chroma-key), para imágenes sin canal alfa. */
+  chromaKeyWhite?: boolean;
 }
 
 // Rapidez del deslizamiento del carrusel (lambda de MathUtils.damp; mayor = más rápido).
@@ -110,12 +107,11 @@ export function HologramPillar({
   activationDelaySeconds = 0,
   title,
   baseY = HOLOGRAM_BASE_Y,
-  documentationDeck = false,
   scale = 1,
   renderOrder = 0,
   lite = false,
   animatePosition = false,
-  occludeDeckBlending = false,
+  chromaKeyWhite = false,
 }: HologramPillarProps) {
   // El colorSpace se fija en el callback de carga (no se puede mutar el valor devuelto por el hook).
   const texture = useTexture(textureUrl, (loaded) => {
@@ -148,11 +144,6 @@ export function HologramPillar({
   // z-index del título en el portal HTML de drei: entero positivo ordenado por profundidad
   // (renderOrder = z del pilar). Así el título del pilar de delante queda sobre los de atrás.
   const titleZIndex = Math.round((renderOrder + 10) * 10);
-
-  // El colisionador de Documentación se sube y agranda: la baraja flota más arriba que el plano de
-  // las figuras, así que su zona activa debe subir para que se pulse "donde se ven las cartas" (§2).
-  const colliderCenterY = documentationDeck ? hologramHeight * 0.62 : hologramHeight / 2;
-  const colliderHeight = documentationDeck ? hologramHeight * 1.05 : hologramHeight;
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -291,41 +282,32 @@ export function HologramPillar({
         </Html>
       ) : null}
 
-      {/* Contenido holográfico (figura o baraja). El grupo pivota en la base y su escala de
-          aparición crece desde el aro. */}
+      {/* Contenido holográfico: plano con la imagen proyectada (igual para todos los pilares:
+          Tutorial, Arena y Documentación). El grupo pivota en la base y su escala de aparición
+          crece desde el aro. */}
       <group ref={holoGroupRef} position={[0, baseY, 0]}>
-        {/* Colisionador invisible ÚNICO que capta hover/click (no el pedestal ni cada carta):
+        {/* Colisionador invisible ÚNICO que capta hover/click (no el pedestal):
             así el sonido de hover suena solo al pasar por el holograma y no se duplica. */}
         <mesh
-          position={[0, colliderCenterY, 0.2]}
+          position={[0, hologramHeight / 2, 0.2]}
           onPointerOver={handleOver}
           onPointerOut={handleOut}
           onClick={handleClick}
         >
-          <planeGeometry args={[hologramWidth * 1.5, colliderHeight]} />
+          <planeGeometry args={[hologramWidth * 1.5, hologramHeight]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
-        {documentationDeck ? (
-          // Baraja de cartas REALES (<Card>) también en móvil, pero con menos cartas (3 distintas)
-          // para que en pantalla pequeña se lea limpio. En móvil (lite) usa oclusión "blending".
-          <DocumentationDeck
-            centerY={hologramHeight * 0.52}
-            isHovered={isHovered}
-            occludeBlending={occludeDeckBlending}
-            maxCards={lite ? 3 : undefined}
+        <mesh position={[0, hologramHeight / 2, 0]} renderOrder={renderOrder}>
+          <planeGeometry args={[hologramWidth, hologramHeight]} />
+          <academyHologramMaterial
+            ref={materialRef}
+            uMap={texture}
+            uChromaWhite={chromaKeyWhite ? 1 : 0}
+            transparent
+            depthWrite={false}
+            side={THREE.DoubleSide}
           />
-        ) : (
-          <mesh position={[0, hologramHeight / 2, 0]} renderOrder={renderOrder}>
-            <planeGeometry args={[hologramWidth, hologramHeight]} />
-            <academyHologramMaterial
-              ref={materialRef}
-              uMap={texture}
-              transparent
-              depthWrite={false}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-        )}
+        </mesh>
       </group>
     </group>
   );
