@@ -35,8 +35,10 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
             />
           </div>
           <div className="relative flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] font-black uppercase tracking-[0.14em] text-cyan-100 md:gap-x-3.5 md:text-[12px] lg:text-[13px]">
-            <span className="text-cyan-300 md:text-[13px] lg:text-[14px]">Arena · Nivel {props.level} de {props.tierOptions.length}</span>
-            <span className="h-1 w-1 rounded-full bg-cyan-300/80" />
+            {/* "Arena · Nivel X de N" solo en desktop: en móvil sobra (el nivel se ve en el desplegable)
+                y libera espacio para que dificultad/Tier/XP/Nexus quepan en una línea. */}
+            <span className="hidden text-cyan-300 md:inline md:text-[13px] lg:text-[14px]">Arena · Nivel {props.level} de {props.tierOptions.length}</span>
+            <span className="hidden h-1 w-1 rounded-full bg-cyan-300/80 md:block" />
             <span className="inline-flex items-center gap-1">
               <svg className="h-3.5 w-3.5 text-cyan-300 md:h-4 md:w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2 3 6v8l7 4 7-4V6l-7-4Zm0 2.3 4.8 2.75L10 9.8 5.2 7.05 10 4.3Z" /></svg>
               <span>{props.tierDifficultyLabel}</span>
