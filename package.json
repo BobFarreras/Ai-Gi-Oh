@@ -40,6 +40,7 @@
     "db:reset": "node scripts/supabase/reset-local.mjs",
     "db:seed:dump": "node scripts/supabase/dump-seed.mjs",
     "db:validate": "node scripts/supabase/validate-card-references.mjs",
+    "db:make-admin": "node scripts/supabase/make-admin.mjs",
     "perf:baseline:mobile": "node scripts/performance/run-mobile-baseline.mjs",
     "perf:baseline:mobile:realistic": "node scripts/performance/run-mobile-baseline.mjs --profile=realistic",
     "perf:baseline:mobile:stress": "node scripts/performance/run-mobile-baseline.mjs --profile=stress",

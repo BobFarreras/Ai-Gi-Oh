@@ -8,6 +8,8 @@ import { LucideIcon, ChevronDown } from "lucide-react";
 interface GameSelectOption {
   label: string;
   value: string;
+  /** Si true, la opción se muestra atenuada y no es seleccionable (p. ej. un nivel bloqueado). */
+  disabled?: boolean;
 }
 
 interface GameSelectProps {
@@ -78,22 +80,27 @@ export function GameSelect({ label, value, options, onChange, ariaLabel, Icon, o
           >
             {options.map((option) => {
               const isSelected = option.value === value;
+              const isDisabled = option.disabled === true;
               return (
                 <li
                   key={option.value}
                   role="option"
                   aria-selected={isSelected}
+                  aria-disabled={isDisabled}
                   onClick={() => {
+                    if (isDisabled) return;
                     onChange(option.value);
                     setIsOpen(false);
                   }}
-                  className={`relative cursor-pointer px-3 py-2 text-xs font-bold transition-all ${
-                    isSelected
-                      ? "bg-cyan-900/50 text-cyan-100"
-                      : "text-cyan-200/60 hover:bg-cyan-900/30 hover:text-cyan-100 hover:pl-4"
+                  className={`relative px-3 py-2 text-xs font-bold transition-all ${
+                    isDisabled
+                      ? "cursor-not-allowed text-cyan-200/25"
+                      : isSelected
+                        ? "cursor-pointer bg-cyan-900/50 text-cyan-100"
+                        : "cursor-pointer text-cyan-200/60 hover:bg-cyan-900/30 hover:text-cyan-100 hover:pl-4"
                   }`}
                 >
-                  {isSelected && (
+                  {isSelected && !isDisabled && (
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,1)]" />
                   )}
                   {option.label}

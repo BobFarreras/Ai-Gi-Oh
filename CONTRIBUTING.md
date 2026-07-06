@@ -103,6 +103,34 @@ Estos puertos son fijos (definidos en `supabase/config.toml`), iguales para todo
 | API Supabase | `http://127.0.0.1:54321` | Endpoint REST/Auth local |
 | Inbucket (emails auth) | `http://127.0.0.1:54324` | Bandeja de correos de autenticación |
 
+## Acceder al panel de administración en local
+
+El panel admin está protegido en dos capas: (1) vive en una ruta privada por slug
+(`/admin-portal/<ADMIN_PORTAL_SLUG>`, en local `local-admin`) y (2) exige que tu usuario esté en la
+tabla `admin_users` (whitelist por rol). **Por seguridad, la app no deja que un usuario se auto-conceda
+admin** (solo el `service_role` escribe en esa tabla), así que hay que hacerlo una vez en local:
+
+```bash
+# 1) Regístrate primero en la app para crear tu usuario:
+#    abre http://localhost:3000/register y crea una cuenta.
+
+# 2) Concédete acceso admin en la BD local (usa la service-role key de tu .env):
+pnpm db:make-admin --email=tu@email.com
+#    (si solo hay un usuario en local, puedes omitir --email)
+#    rol por defecto SUPER_ADMIN; para ADMIN normal: --role=ADMIN
+
+# 3) Entra al panel:
+#    http://localhost:3000/admin  (redirige al portal si eres admin)
+```
+
+El comando aborta si la URL de Supabase no es local (protección anti-producción; fuérzalo con `--force`
+solo si sabes lo que haces). Alternativa manual: en Supabase Studio (`http://127.0.0.1:54323`) → SQL:
+
+```sql
+insert into admin_users (user_id, role, is_active)
+values ((select id from auth.users where email = 'tu@email.com'), 'SUPER_ADMIN', true);
+```
+
 ## Troubleshooting
 
 ### `ERR_PNPM_IGNORED_BUILDS` (Ignored build scripts: esbuild, sharp, unrs-resolver)
@@ -170,6 +198,7 @@ pnpm dev
 | `supabase:env:restore` | Restaura `.env.local` original |
 | `db:reset` | Regenera migraciones desde `docs/supabase/sql` + `supabase db reset --local`. Úsalo **tras cada `git pull`** para que tu BD quede igual al repo (borra datos locales de prueba). |
 | `db:seed:dump` | Regenera `supabase/seed.sql` desde la BD fuente (solo mantenedores). |
+| `db:make-admin` | Te concede acceso al panel admin en la BD **local** (`--email=`, `--role=`). Ver [Acceder al panel de administración en local](#acceder-al-panel-de-administración-en-local). |
 
 > **Tras `git pull` con cambios de BD:** ejecuta `pnpm db:reset`. `supabase start` solo aplica migraciones en el primer arranque, así que sin un reset tu Docker se queda desactualizado (faltan tablas/contenido nuevos).
 
