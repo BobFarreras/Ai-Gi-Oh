@@ -6,6 +6,14 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.9.2] - 2026-07-06
+
+### Added
+- Contribuidores: `pnpm db:make-admin` concede acceso al panel de administración en la BD local (por email, con guarda anti-producción), documentado en CONTRIBUTING («Acceder al panel de administración en local»). Antes no había forma clara de hacerse admin en local.
+
+### Changed
+- Arena (móvil): cabecera del lobby más compacta. El selector de nivel es un desplegable con estilo de juego (`GameSelect`, como Market/Arsenal) con los niveles bloqueados atenuados; se ocultan en móvil «Arena · Nivel X de N» y la frase «Te faltan X victorias…», y las monedas de rivales del ladder son más pequeñas. En desktop sin cambios.
+
 ## [1.9.1] - 2026-07-05
 
 ### Fixed
@@ -144,7 +152,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.1...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.2...HEAD
+[1.9.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.8.0...v1.8.1
