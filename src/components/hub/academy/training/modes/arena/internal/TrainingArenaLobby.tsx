@@ -2,6 +2,8 @@
 "use client";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { Swords } from "lucide-react";
+import { GameSelect } from "@/components/ui/GameSelect";
 import { AcademyBackButton } from "@/components/hub/academy/AcademyBackButton";
 import { TrainingArenaLobbyBackdrop } from "@/components/hub/academy/training/modes/arena/internal/TrainingArenaLobbyBackdrop";
 import { TrainingArenaLobbyActions } from "@/components/hub/academy/training/modes/arena/internal/TrainingArenaLobbyActions";
@@ -19,15 +21,19 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
           initial={{ y: -22, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.42, ease: "easeOut" }}
-          className="relative overflow-hidden rounded-xl border border-cyan-300/55 bg-[#03172a]/90 px-3 py-2.5 shadow-[0_0_22px_rgba(34,211,238,0.24)] md:px-4 lg:px-5"
+          className="relative rounded-xl border border-cyan-300/55 bg-[#03172a]/90 px-3 py-2.5 shadow-[0_0_22px_rgba(34,211,238,0.24)] md:px-4 lg:px-5"
         >
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(34,211,238,0.08),transparent_50%,rgba(167,139,250,0.08))]" />
-          <motion.span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 left-[-20%] w-[20%] bg-[linear-gradient(90deg,transparent,rgba(34,211,238,0.24),transparent)]"
-            animate={{ x: ["0%", "620%"] }}
-            transition={{ duration: 2.6, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-          />
+          {/* Decoraciones (gradiente + barrido) con su propio overflow-hidden, para que el desplegable
+              de niveles (popup absoluto) NO quede recortado por la cabecera. */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
+            <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(34,211,238,0.08),transparent_50%,rgba(167,139,250,0.08))]" />
+            <motion.span
+              aria-hidden="true"
+              className="absolute inset-y-0 left-[-20%] w-[20%] bg-[linear-gradient(90deg,transparent,rgba(34,211,238,0.24),transparent)]"
+              animate={{ x: ["0%", "620%"] }}
+              transition={{ duration: 2.6, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+            />
+          </div>
           <div className="relative flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] font-black uppercase tracking-[0.14em] text-cyan-100 md:gap-x-3.5 md:text-[12px] lg:text-[13px]">
             <span className="text-cyan-300 md:text-[13px] lg:text-[14px]">Arena · Nivel {props.level} de {props.tierOptions.length}</span>
             <span className="h-1 w-1 rounded-full bg-cyan-300/80" />
@@ -54,32 +60,32 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
           <div className="relative mt-1 hidden text-center text-[11px] font-semibold tracking-[0.08em] text-cyan-100/85 md:block md:text-[12px] lg:text-[13px]">
             {props.nextTierRequirementLabel}
           </div>
-          <div className="relative mt-2 flex flex-col items-center gap-1">
-            <span className="inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.22em] text-cyan-300/70 md:text-[10px]">
+          <div className="relative z-30 mt-2 flex flex-col items-center gap-1">
+            {/* La etiqueta solo en desktop: en móvil el propio GameSelect ya muestra "NIVEL". */}
+            <span className="hidden items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.22em] text-cyan-300/70 md:inline-flex md:text-[10px]">
               Selecciona tu nivel
               {props.isTierSwitching ? (
                 <span aria-hidden="true" className="h-2.5 w-2.5 animate-spin rounded-full border-[1.5px] border-cyan-300/40 border-t-cyan-200" />
               ) : null}
             </span>
-            {/* Móvil: desplegable compacto (ahorra alto en la cabecera). */}
-            <select
-              value={props.level}
-              disabled={props.isTierSwitching}
-              aria-label="Seleccionar nivel"
-              onChange={(event) => {
-                const tier = Number(event.target.value);
-                if (tier !== props.level) props.onSelectTier(tier);
-              }}
-              className="w-44 rounded-md border border-cyan-300/45 bg-[#03172a] px-3 py-1.5 text-center text-[12px] font-black uppercase tracking-[0.08em] text-cyan-100 outline-none md:hidden"
-            >
-              {props.tierOptions.map((tierOption) => (
-                <option key={tierOption.tier} value={tierOption.tier} disabled={!tierOption.isUnlocked}>
-                  Nivel {tierOption.tier}
-                  {tierOption.isSelected ? " · actual" : ""}
-                  {!tierOption.isUnlocked ? " 🔒" : ""}
-                </option>
-              ))}
-            </select>
+            {/* Móvil: desplegable con el estilo de juego (como Market/Arsenal). */}
+            <div className={`w-44 transition-opacity duration-200 md:hidden ${props.isTierSwitching ? "opacity-60" : "opacity-100"}`}>
+              <GameSelect
+                label="NIVEL"
+                ariaLabel="Seleccionar nivel"
+                Icon={Swords}
+                value={String(props.level)}
+                onChange={(value) => {
+                  const tier = Number(value);
+                  if (tier !== props.level) props.onSelectTier(tier);
+                }}
+                options={props.tierOptions.map((tierOption) => ({
+                  value: String(tierOption.tier),
+                  label: `Nivel ${tierOption.tier}${tierOption.isSelected ? " · actual" : tierOption.isUnlocked ? "" : " · bloqueado"}`,
+                  disabled: !tierOption.isUnlocked,
+                }))}
+              />
+            </div>
 
             {/* Desktop/tablet: fila de botones. */}
             <div className={`hidden flex-wrap items-center justify-center gap-1.5 transition-opacity duration-200 md:flex ${props.isTierSwitching ? "opacity-60" : "opacity-100"}`}>
