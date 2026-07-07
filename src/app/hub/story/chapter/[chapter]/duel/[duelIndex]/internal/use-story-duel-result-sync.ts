@@ -28,9 +28,11 @@ function buildFallbackTransition(input: IStoryDuelResultSyncInput): IStoryDuelTr
 }
 
 function pushBackToStory(input: IStoryDuelTransition, returnBasePath: string): void {
-  // El overworld lee el progreso real de la BD; no necesita los params de transición clásica.
+  // El overworld lee el progreso real de la BD; no necesita los params de transición clásica,
+  // pero sí el resultado: al perder o abandonar se reaparece al inicio del acto (no en el sitio).
   if (returnBasePath !== "/hub/story") {
-    window.location.replace(`${returnBasePath}?hardReload=${Date.now()}`);
+    const query = new URLSearchParams({ outcome: input.outcome, hardReload: Date.now().toString() });
+    window.location.replace(`${returnBasePath}?${query.toString()}`);
     return;
   }
   const query = new URLSearchParams({

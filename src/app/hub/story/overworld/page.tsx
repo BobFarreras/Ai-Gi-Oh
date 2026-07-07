@@ -18,7 +18,11 @@ function isOverworldEnabled(): boolean {
   return process.env.STORY_OVERWORLD_ENABLED === "true";
 }
 
-export default async function StoryOverworldPage() {
+interface StoryOverworldPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function StoryOverworldPage({ searchParams }: StoryOverworldPageProps) {
   if (!isOverworldEnabled()) notFound();
   const session = await getCurrentUserSession();
   if (!session) {
@@ -37,13 +41,21 @@ export default async function StoryOverworldPage() {
       </main>
     );
   }
-  const runtime = await getStoryOverworldRuntime(OVERWORLD_MAP_ID);
+  const [runtime, resolvedSearchParams] = await Promise.all([
+    getStoryOverworldRuntime(OVERWORLD_MAP_ID),
+    searchParams,
+  ]);
+  // Al perder o abandonar un combate se reaparece al INICIO del acto (spawn), no en el sitio:
+  // ignoramos la posición guardada y la escena persiste el spawn al montar.
+  const outcome = resolvedSearchParams.outcome;
+  const resetToActStart = outcome === "LOST" || outcome === "ABANDONED";
   return (
     <main className="flex h-[100dvh] w-full flex-col overflow-hidden bg-black">
       <OverworldDevScene
         completedNodeIds={runtime?.completedNodeIds ?? []}
-        initialPosition={runtime?.initialPosition ?? null}
+        initialPosition={resetToActStart ? null : runtime?.initialPosition ?? null}
         interactedNodeIds={runtime?.interactedNodeIds ?? []}
+        resetToActStart={resetToActStart}
       />
     </main>
   );

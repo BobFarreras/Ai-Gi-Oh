@@ -58,6 +58,8 @@ interface IOverworldDevSceneProps {
   completedNodeIds: string[];
   initialPosition: IPlayerOverworldPosition | null;
   interactedNodeIds: string[];
+  /** Tras perder/abandonar un combate: se arranca en el spawn del acto y se persiste. */
+  resetToActStart?: boolean;
 }
 
 function buildProgress(completedIds: ReadonlySet<string>) {
@@ -134,7 +136,7 @@ interface IActiveNarration {
   isCutscene: boolean;
 }
 
-export function OverworldDevScene({ completedNodeIds, initialPosition, interactedNodeIds }: IOverworldDevSceneProps) {
+export function OverworldDevScene({ completedNodeIds, initialPosition, interactedNodeIds, resetToActStart }: IOverworldDevSceneProps) {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<OverworldEngine | null>(null);
@@ -206,6 +208,12 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
     sfxRef.current?.playButtonClick();
     router.push("/hub");
   }, [router]);
+
+  // Tras perder/abandonar: la escena ya arranca en el spawn (initialPosition=null); persistimos
+  // esa posición para que un refresco no restaure la última casilla previa al combate.
+  useEffect(() => {
+    if (resetToActStart) void saveOverworldPosition();
+  }, [resetToActStart, saveOverworldPosition]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
