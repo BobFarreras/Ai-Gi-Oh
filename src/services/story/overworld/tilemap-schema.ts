@@ -67,6 +67,12 @@ export interface IOverworldTilemapObject {
   patrolAxis?: "H" | "V";
   /** Longitud del recorrido de patrulla en celdas. Requiere patrolAxis. */
   patrolLength?: number;
+  /**
+   * Sentry "barredor": al rebotar en cada extremo del recorrido alterna su
+   * orientación de vigilancia al lado perpendicular opuesto (p. ej. UP↔DOWN en
+   * un eje H), abriendo huecos móviles más divertidos de esquivar. Requiere patrol.
+   */
+  patrolSweep?: boolean;
   /** Trigger invisible (un "recuadro" del suelo): no se dibuja token ni en minimapa. */
   hidden?: boolean;
 }

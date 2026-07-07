@@ -8,6 +8,7 @@ import { ISightlineSource } from "@/core/services/story/overworld/sightline";
 import {
   IPatrolConfig,
   IPatrolRuntime,
+  PatrolAxis,
   advancePatrol,
 } from "@/core/services/story/overworld/resolve-patrol";
 import { IOverworldTilemapObject } from "@/services/story/overworld/tilemap-schema";
@@ -18,12 +19,15 @@ type ActorMode = "IDLE" | "PATROL" | "APPROACH" | "SPENT";
 interface IOpponentActor {
   objectId: string;
   spriteSrc?: string;
+  accent: string;
   visionRange: number;
   tile: IGridPosition;
   facing: OverworldDirection;
   activeMove: IActiveTileMove | null;
   mode: ActorMode;
   patrol?: { config: IPatrolConfig; runtime: IPatrolRuntime; cooldownSeconds: number };
+  /** Sentry "barredor": alterna la orientación de vigilancia al rebotar en cada extremo. */
+  sweepsVision: boolean;
   approachPath: IGridPosition[];
   approachIndex: number;
 }
@@ -36,10 +40,15 @@ export interface IOpponentActorRenderData {
   tileY: number;
   facing: OverworldDirection;
   spriteSrc?: string;
+  accent: string;
   visionRange: number;
   showBeam: boolean;
   isDefeated: boolean;
 }
+
+/** Color del rival según tipo: el jefe conserva su lila distintivo. */
+const DUEL_ACCENT = "#f43f5e";
+const BOSS_ACCENT = "#c026d3";
 
 export interface IActorUpdateOptions {
   deltaSeconds: number;
@@ -72,6 +81,7 @@ export class OpponentActorManager {
       this.actors.push({
         objectId: object.id,
         spriteSrc: object.imageSrc,
+        accent: object.kind === "BOSS" ? BOSS_ACCENT : DUEL_ACCENT,
         visionRange: object.visionRange,
         tile: { tileX: object.tileX, tileY: object.tileY },
         facing: object.facing,
@@ -89,6 +99,7 @@ export class OpponentActorManager {
               cooldownSeconds: PATROL_PAUSE_SECONDS,
             }
           : undefined,
+        sweepsVision: Boolean(object.patrolSweep),
         approachPath: [],
         approachIndex: 0,
       });
@@ -194,14 +205,25 @@ export class OpponentActorManager {
     if (actor.mode !== "PATROL" || !actor.patrol || !canMovePatrol) return;
     actor.patrol.cooldownSeconds -= options.deltaSeconds;
     if (actor.patrol.cooldownSeconds > 0) return;
-    // Sentry: pasea a lo largo del eje pero mantiene su orientación de vigilancia fija
-    // (el haz barre el corredor perpendicular en vez de mirar hacia donde camina).
+    // Sentry: pasea a lo largo del eje manteniendo su orientación de vigilancia
+    // perpendicular (el haz barre el corredor en vez de mirar hacia donde camina).
+    // Los "barredores" (sweepsVision) alternan ese lado perpendicular al rebotar.
+    const previousDirection = actor.patrol.runtime.direction;
     const advance = advancePatrol(actor.patrol.config, actor.patrol.runtime, options.canEnter);
     actor.patrol.cooldownSeconds = PATROL_PAUSE_SECONDS;
     if (advance.target) {
+      if (actor.sweepsVision && advance.runtime.direction !== previousDirection) {
+        actor.facing = this.flipSweepFacing(actor.facing, actor.patrol.config.axis);
+      }
       actor.patrol.runtime = advance.runtime;
       actor.activeMove = { from: actor.tile, to: advance.target, progress: 0 };
     }
+  }
+
+  /** Invierte la orientación de vigilancia al lado perpendicular opuesto del eje de patrulla. */
+  private flipSweepFacing(facing: OverworldDirection, axis: PatrolAxis): OverworldDirection {
+    if (axis === "H") return facing === "UP" ? "DOWN" : "UP";
+    return facing === "LEFT" ? "RIGHT" : "LEFT";
   }
 
   private resolveFacingTo(from: IGridPosition, to: IGridPosition): OverworldDirection {
@@ -234,6 +256,7 @@ export class OpponentActorManager {
         tileY: actor.tile.tileY,
         facing: actor.facing,
         spriteSrc: actor.spriteSrc,
+        accent: actor.accent,
         visionRange: actor.visionRange,
         showBeam: !defeated && (actor.mode === "IDLE" || actor.mode === "PATROL"),
         isDefeated: defeated,

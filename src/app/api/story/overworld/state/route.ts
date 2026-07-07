@@ -5,9 +5,8 @@ import { requireTrustedMutationOrigin } from "@/services/security/api/require-tr
 import { readJsonObjectBody } from "@/services/security/api/request-body-parser";
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { createSupabasePlayerStoryWorldRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-story-world-repository";
-import { createSupabaseOpponentRepository } from "@/infrastructure/persistence/supabase/create-supabase-opponent-repository";
 import { createSupabasePlayerStoryDuelProgressRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-story-duel-progress-repository";
-import { GetStoryWorldStateUseCase } from "@/core/use-cases/story/GetStoryWorldStateUseCase";
+import { isOverworldNodeAccessible } from "@/services/story/overworld/resolve-overworld-node-access";
 
 const MAX_TILE = 1023;
 const NODE_ID_PATTERN = /^story-[a-z0-9-]{1,80}$/i;
@@ -37,16 +36,18 @@ export async function POST(request: NextRequest) {
 
     const worldRepository = await createSupabasePlayerStoryWorldRepository();
 
-    // Solo fijamos el nodo actual si está bien formado y desbloqueado para este jugador:
-    // evita que un cliente marque como "activo" un duelo al que no tiene acceso.
+    // Solo fijamos el nodo actual si está bien formado y accesible en el overworld para
+    // este jugador: evita que un cliente marque como "activo" un nodo tras una puerta que
+    // aún no ha abierto. En mundo abierto el acceso lo dictan los gates del propio mapa
+    // (no la cadena legacy "gana el anterior"), así que el Acto 1 permite todos los duelos.
     let currentNodeId: string | undefined;
     if (rawNodeId && NODE_ID_PATTERN.test(rawNodeId)) {
-      const opponentRepository = await createSupabaseOpponentRepository();
       const progressRepository = await createSupabasePlayerStoryDuelProgressRepository();
-      const worldState = await new GetStoryWorldStateUseCase(opponentRepository, progressRepository).execute({
-        playerId: session.user.id,
-      });
-      if (worldState.progress.unlockedNodeIds.includes(rawNodeId)) currentNodeId = rawNodeId;
+      const progressEntries = await progressRepository.listByPlayerId(session.user.id);
+      const completedNodeIds = new Set(
+        progressEntries.filter((entry) => entry.bestResult === "WON").map((entry) => entry.duelId),
+      );
+      if (isOverworldNodeAccessible(mapId, rawNodeId, completedNodeIds)) currentNodeId = rawNodeId;
     }
 
     await worldRepository.saveOverworldState(session.user.id, {

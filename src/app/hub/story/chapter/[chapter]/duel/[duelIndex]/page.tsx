@@ -34,7 +34,9 @@ export default async function StoryDuelPage({ params, searchParams }: StoryDuelP
       </main>
     );
   }
-  if (!runtime.isUnlocked) {
+  // En el mundo abierto no aplica la cadena legacy "gana el anterior": el acceso lo valida el
+  // overworld (gates del mapa) al fijar el nodo activo, así que aquí basta con `isCurrentNode`.
+  if (!isFromOverworld && !runtime.isUnlocked) {
     return (
       <main className="hub-control-room-bg flex min-h-dvh items-center justify-center px-4 text-cyan-100">
         <div className="rounded-xl border border-amber-300/40 bg-amber-950/45 p-4 text-center">

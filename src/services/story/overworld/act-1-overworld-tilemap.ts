@@ -115,10 +115,13 @@ export function buildAct1OverworldTilemap(): IOverworldTilemap {
   sealSideRoomWithServers(map, roomSide);
 
   // Rivales (sólidos) que vigilan; se marcan tras sellar (para no pisar sus casillas).
-  for (const [x, y] of [[16, 11], [30, 11], [34, 15], [37, 11], [16, 20]]) markOpponent(map, x, y);
+  // duel-3 guarda la ENTRADA de la sala de jefes (27,11) y duel-4 patrulla dentro (33,15).
+  for (const [x, y] of [[16, 11], [27, 11], [33, 15], [37, 11], [16, 20]]) markOpponent(map, x, y);
   // Los nodos Market y Arsenal son obstáculos sólidos con los que se interactúa al acercarse.
   markOpponent(map, 5, 11);
   markOpponent(map, 7, 11);
+  // Teletransporte de salida: nodo sólido contiguo al spawn (se activa al acercarse, no al pisar).
+  markOpponent(map, 3, 13);
 
   // Racks de servidor, pantallas y cajas para dar volumen a las salas (no tocan corredores ni haces).
   const racks: Array<[number, number]> = [
@@ -153,31 +156,25 @@ export function buildAct1OverworldTilemap(): IOverworldTilemap {
       // Nodos de servicio estilo hub (Market/Arsenal) y teletransporte de salida en el spawn.
       { id: "story-a1-market", kind: "MARKET", tileX: 5, tileY: 11, sprite: "market", trigger: "ADJACENT_ACTION" },
       { id: "story-a1-arsenal", kind: "ARSENAL", tileX: 7, tileY: 11, sprite: "arsenal", trigger: "ADJACENT_ACTION" },
-      { id: "story-a1-teleport-hub", kind: "TELEPORT", tileX: 4, tileY: 13, sprite: "teleport", trigger: "STEP_ON" },
+      { id: "story-a1-teleport-hub", kind: "TELEPORT", tileX: 3, tileY: 13, sprite: "teleport", trigger: "ADJACENT_ACTION" },
       // Subruta difícil: trigger invisible en el corredor; al pisarlo aparece BigLog y avisa. Recompensa: carta potente.
       { id: "story-a1-side-event-echo-fragment", kind: "EVENT", tileX: 12, tileY: 16, sprite: "trigger", trigger: "STEP_ON", hidden: true },
       { id: "story-a1-side-reward-card", kind: "REWARD_CARD", tileX: 18, tileY: 21, sprite: "trap-kernel", trigger: "BUMP", imageSrc: TRAP_KERNEL },
 
       // Rivales con rango de visión: vigilan el corredor y retan al cruzar su haz.
+      // Mundo abierto: NO hay cadena de desbloqueo entre duelos (puedes retarlos en cualquier
+      // orden y esquivar a los que quieras). La regla de gateRequiredNodeIds sigue disponible en
+      // el motor por si un acto futuro exige vencer a varios rivales antes de otro/el jefe.
       { id: "story-ch1-duel-1", kind: "DUEL", tileX: 16, tileY: 11, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/1", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3 },
       { id: "story-ch1-duel-2", kind: "DUEL", tileX: 16, tileY: 20, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/2", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3 },
-      // Rivales que patrullan (sentry): pasean vigilando el corredor con su haz.
-      // gateRequiredNodeIds refleja la cadena de desbloqueo de la BD (1→3→4→5): su radar
-      // no reta hasta cumplir el requisito (evita el "Duelo bloqueado" al esquivar a otro).
-      { id: "story-ch1-duel-3", kind: "DUEL", tileX: 30, tileY: 11, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/3", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3, patrolAxis: "H", patrolLength: 3, gateRequiredNodeIds: ["story-ch1-duel-1"] },
-      { id: "story-ch1-duel-4", kind: "DUEL", tileX: 34, tileY: 15, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/4", imageSrc: SOLDIER, facing: "UP", visionRange: 3, patrolAxis: "H", patrolLength: 2, gateRequiredNodeIds: ["story-ch1-duel-3"] },
-      { id: "story-ch1-duel-5", kind: "BOSS", tileX: 37, tileY: 11, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/5", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3, gateRequiredNodeIds: ["story-ch1-duel-4"] },
+      // duel-3 GUARDA la entrada de la sala de jefes (27,11) mirando al corredor (27,13):
+      // su haz cruza el único acceso (choke de 1 casilla), así que SIEMPRE hay que vencerlo.
+      { id: "story-ch1-duel-3", kind: "DUEL", tileX: 27, tileY: 11, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/3", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3 },
+      // duel-4 patrulla dentro de la sala (recorrido largo) y BARRE su visión (UP↔DOWN) al
+      // rebotar en cada extremo: los huecos seguros se mueven, más divertido de esquivar.
+      { id: "story-ch1-duel-4", kind: "DUEL", tileX: 33, tileY: 15, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/4", imageSrc: SOLDIER, facing: "UP", visionRange: 3, patrolAxis: "H", patrolLength: 4, patrolSweep: true },
+      { id: "story-ch1-duel-5", kind: "BOSS", tileX: 37, tileY: 11, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/5", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3 },
 
-      // Puerta que cierra el paso a la sala de jefes hasta ganar el primer duelo.
-      {
-        id: "story-a1-gate-descent",
-        kind: "GATE",
-        tileX: 25,
-        tileY: 13,
-        sprite: "gate",
-        trigger: "ADJACENT_ACTION",
-        gateRequiredNodeIds: ["story-ch1-duel-1"],
-      },
       // Puerta final: el jefe es obligatorio para cruzar al Acto 2.
       {
         id: "story-a1-gate-boss",

@@ -3,7 +3,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { OverworldEngine } from "@/components/hub/story/overworld/engine/OverworldEngine";
 import {
   IOverworldFocus,
@@ -154,8 +154,6 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
   );
   const playerTileRef = useRef(playerTile);
   const [completedIds] = useState<ReadonlySet<string>>(initialCompleted);
-  const [isMarketPromptOpen, setIsMarketPromptOpen] = useState(false);
-  const [isExitPromptOpen, setIsExitPromptOpen] = useState(false);
 
   // Audio: SFX de Story + soundtrack del acto (reutilizados del modo Story clásico).
   const sfx = useStorySceneSfx();
@@ -197,27 +195,17 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
     router.push("/hub/arsenal?from=overworld");
   }, [saveOverworldPosition, router]);
 
-  const enterMarket = async (): Promise<void> => {
+  // Flujo directo: al activar Mercado/Salida se hace el zoom al nodo y se navega (sin diálogo).
+  const enterMarket = useCallback(async (): Promise<void> => {
     sfxRef.current?.playButtonClick();
-    setIsMarketPromptOpen(false);
     await saveOverworldPosition();
     router.push("/hub/market?from=overworld");
-  };
+  }, [saveOverworldPosition, router]);
 
-  const closeMarketPrompt = (): void => {
-    setIsMarketPromptOpen(false);
-    engineRef.current?.setInteractionSuspended(false);
-  };
-
-  const confirmExitToHub = (): void => {
+  const exitToHub = useCallback((): void => {
     sfxRef.current?.playButtonClick();
     router.push("/hub");
-  };
-
-  const closeExitPrompt = (): void => {
-    setIsExitPromptOpen(false);
-    engineRef.current?.setInteractionSuspended(false);
-  };
+  }, [router]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -305,17 +293,17 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
             startBattle(object);
             return;
           }
-          // Nodos de servicio: mercado, arsenal y teletransporte de salida.
+          // Nodos de servicio: acercamiento de cámara al nodo y navegación directa (sin diálogo).
           if (object.kind === "MARKET") {
-            setIsMarketPromptOpen(true);
+            engine.playServiceZoom(object.id, () => void enterMarket());
             return;
           }
           if (object.kind === "ARSENAL") {
-            void openArsenal();
+            engine.playServiceZoom(object.id, () => void openArsenal());
             return;
           }
           if (object.kind === "TELEPORT") {
-            setIsExitPromptOpen(true);
+            engine.playServiceZoom(object.id, () => exitToHub());
             return;
           }
           // Recompensas: se otorgan en servidor (una sola vez) al pisarlas.
@@ -359,7 +347,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
       engine.dispose();
       engineRef.current = null;
     };
-  }, [tilemap, initialCompleted, initialPosition, initialInteracted, openArsenal]);
+  }, [tilemap, initialCompleted, initialPosition, initialInteracted, openArsenal, enterMarket, exitToHub]);
 
   const closeIntent = (): void => {
     setActiveIntent(null);
@@ -452,9 +440,19 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
       : resolveIntentPresentation(focus.object.kind).actionVerb
     : null;
 
+  const handleCanvasClick = (event: ReactMouseEvent<HTMLCanvasElement>): void => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    engineRef.current?.handlePointer(event.clientX - rect.left, event.clientY - rect.top);
+  };
+
   return (
     <div className="absolute inset-0 overflow-hidden bg-slate-950">
-      <canvas ref={canvasRef} className="block h-full w-full" aria-label="Mundo Story" />
+      <canvas
+        ref={canvasRef}
+        onClick={handleCanvasClick}
+        className="block h-full w-full"
+        aria-label="Mundo Story"
+      />
 
       <div className="pointer-events-none absolute left-3 top-3 z-20 rounded-lg border border-cyan-300/25 bg-slate-950/80 px-3 py-2 text-[11px] leading-relaxed text-cyan-100 backdrop-blur-sm">
         <p className="font-black uppercase tracking-widest text-cyan-300">Acto 1 · facility</p>
@@ -501,64 +499,6 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
           onClose={closeNarration}
           centerNextButton
         />
-      ) : null}
-
-      {isMarketPromptOpen ? (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/65 p-4" onClick={closeMarketPrompt}>
-          <div
-            className="w-full max-w-sm rounded-2xl border border-emerald-300/30 bg-slate-950/95 p-5 text-emerald-50 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <p className="text-[11px] font-black uppercase tracking-widest text-emerald-300">Mercado</p>
-            <p className="mt-3 text-sm text-slate-200">
-              ¿Quieres entrar al mercado a comprar sobres, cartas y recursos? Volverás aquí mismo al salir.
-            </p>
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={() => void enterMarket()}
-                className="flex-1 rounded-lg border border-emerald-300/50 bg-emerald-500/20 py-2 text-xs font-black uppercase tracking-widest text-emerald-100 transition hover:bg-emerald-400/30"
-              >
-                Entrar
-              </button>
-              <button
-                type="button"
-                onClick={closeMarketPrompt}
-                className="rounded-lg border border-slate-400/30 px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-300 transition hover:bg-white/5"
-              >
-                Ahora no
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {isExitPromptOpen ? (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/65 p-4" onClick={closeExitPrompt}>
-          <div
-            className="w-full max-w-sm rounded-2xl border border-sky-300/30 bg-slate-950/95 p-5 text-sky-50 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <p className="text-[11px] font-black uppercase tracking-widest text-sky-300">Teletransporte</p>
-            <p className="mt-3 text-sm text-slate-200">¿Salir del mundo y volver al hub principal?</p>
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={confirmExitToHub}
-                className="flex-1 rounded-lg border border-sky-300/50 bg-sky-500/20 py-2 text-xs font-black uppercase tracking-widest text-sky-100 transition hover:bg-sky-400/30"
-              >
-                Salir al hub
-              </button>
-              <button
-                type="button"
-                onClick={closeExitPrompt}
-                className="rounded-lg border border-slate-400/30 px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-300 transition hover:bg-white/5"
-              >
-                Quedarme
-              </button>
-            </div>
-          </div>
-        </div>
       ) : null}
 
       {pendingBattle ? (

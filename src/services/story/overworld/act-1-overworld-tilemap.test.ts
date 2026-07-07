@@ -36,23 +36,18 @@ describe("buildAct1OverworldTilemap", () => {
     expect(duel?.duelHref).toBe("/hub/story/chapter/1/duel/1");
   });
 
-  it("bloquea el tramo de jefes hasta ganar el duelo 1 y lo abre después", () => {
+  it("mundo abierto: la sala de jefes es accesible sin requisitos previos", () => {
     const tilemap = buildAct1OverworldTilemap();
-    const collisionGrid = buildCollisionGridFromTilemap(tilemap);
-    const gates = listGatesFromTilemap(tilemap);
+    const context = resolveMovementContext({
+      collisionGrid: buildCollisionGridFromTilemap(tilemap),
+      gates: listGatesFromTilemap(tilemap),
+      progress: buildProgress([]),
+    });
     const spawn = tilemap.spawns[0];
     const boss = tilemap.objects.find((object) => object.kind === "BOSS")!;
-    // La aproximación al jefe (celda de suelo bajo su casilla) es lo navegable.
+    // Sin haber vencido a nadie, se puede llegar hasta la casilla contigua al jefe.
     const bossAnchor = { tileX: boss.tileX, tileY: boss.tileY + 1 };
-
-    const closed = resolveMovementContext({ collisionGrid, gates, progress: buildProgress([]) });
-    expect(findGridPath({ tileX: spawn.tileX, tileY: spawn.tileY }, bossAnchor, closed)).toBeNull();
-
-    const open = resolveMovementContext({ collisionGrid, gates, progress: buildProgress(["story-ch1-duel-1"]) });
-    const path = findGridPath({ tileX: spawn.tileX, tileY: spawn.tileY }, bossAnchor, open);
-    expect(path).not.toBeNull();
-    // La ruta abierta cruza obligatoriamente la puerta (choke real).
-    expect(path?.some((cell) => cell.tileX === 25 && cell.tileY === 13)).toBe(true);
+    expect(findGridPath({ tileX: spawn.tileX, tileY: spawn.tileY }, bossAnchor, context)).not.toBeNull();
   });
 
   it("los rivales definen rango de visión y orientación", () => {
@@ -61,17 +56,27 @@ describe("buildAct1OverworldTilemap", () => {
     expect(duel.facing).toBe("DOWN");
   });
 
-  it("algunos rivales patrullan (entidades móviles)", () => {
-    const duel3 = buildAct1OverworldTilemap().objects.find((object) => object.id === "story-ch1-duel-3")!;
-    expect(duel3.patrolAxis).toBe("H");
-    expect(duel3.patrolLength).toBeGreaterThan(0);
+  it("el rival 4 patrulla con recorrido largo y barre su visión (móvil, esquivable)", () => {
+    const duel4 = buildAct1OverworldTilemap().objects.find((object) => object.id === "story-ch1-duel-4")!;
+    expect(duel4.patrolAxis).toBe("H");
+    expect(duel4.patrolLength).toBeGreaterThan(0);
+    expect(duel4.patrolSweep).toBe(true);
   });
 
-  it("los rivales del sector jefe reflejan la cadena de desbloqueo de la BD (1→3→4→5)", () => {
+  it("el rival 3 guarda estático la entrada de la sala de jefes (vigila el corredor)", () => {
+    const duel3 = buildAct1OverworldTilemap().objects.find((object) => object.id === "story-ch1-duel-3")!;
+    expect(duel3.tileX).toBe(27);
+    expect(duel3.facing).toBe("DOWN");
+    expect(duel3.patrolAxis).toBeUndefined();
+  });
+
+  it("mundo abierto: los duelos no encadenan requisitos (orden agnóstico)", () => {
     const byId = new Map(buildAct1OverworldTilemap().objects.map((object) => [object.id, object]));
-    expect(byId.get("story-ch1-duel-3")?.gateRequiredNodeIds).toEqual(["story-ch1-duel-1"]);
-    expect(byId.get("story-ch1-duel-4")?.gateRequiredNodeIds).toEqual(["story-ch1-duel-3"]);
-    expect(byId.get("story-ch1-duel-5")?.gateRequiredNodeIds).toEqual(["story-ch1-duel-4"]);
+    for (const id of ["story-ch1-duel-1", "story-ch1-duel-2", "story-ch1-duel-3", "story-ch1-duel-4", "story-ch1-duel-5"]) {
+      expect(byId.get(id)?.gateRequiredNodeIds ?? []).toEqual([]);
+    }
+    // La única puerta con requisito es la del portal del Acto 2: el jefe sigue siendo obligatorio para avanzar.
+    expect(byId.get("story-a1-gate-boss")?.gateRequiredNodeIds).toEqual(["story-ch1-duel-5"]);
   });
 
   it("las recompensas se cogen al chocar (BUMP) y hay un nodo de mercado", () => {
@@ -83,11 +88,12 @@ describe("buildAct1OverworldTilemap", () => {
     expect(kinds.has("MARKET")).toBe(true);
     expect(kinds.has("ARSENAL")).toBe(true);
     expect(kinds.has("TELEPORT")).toBe(true);
-    // El teletransporte está en la casilla de spawn.
+    // El teletransporte es un nodo de acción contiguo al spawn (no se activa al pisar).
     const teleport = objects.find((object) => object.kind === "TELEPORT")!;
     const spawn = buildAct1OverworldTilemap().spawns[0];
-    expect(teleport.tileX).toBe(spawn.tileX);
-    expect(teleport.tileY).toBe(spawn.tileY);
+    expect(teleport.trigger).toBe("ADJACENT_ACTION");
+    const distanceToSpawn = Math.abs(teleport.tileX - spawn.tileX) + Math.abs(teleport.tileY - spawn.tileY);
+    expect(distanceToSpawn).toBe(1);
   });
 
   it("los nodos de recompensa existen en el registro con su tipo (para el claim server-side)", () => {

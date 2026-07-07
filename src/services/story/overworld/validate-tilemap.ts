@@ -192,6 +192,13 @@ function validateObject(
     patrolLength = assertBoundedInteger(raw.patrolLength, `${path}.patrolLength`, 1, 12);
   }
 
+  let patrolSweep: boolean | undefined;
+  if (raw.patrolSweep !== undefined) {
+    if (typeof raw.patrolSweep !== "boolean") fail(`${path}.patrolSweep`, "se esperaba un booleano");
+    if (patrolAxis === undefined) fail(`${path}.patrolSweep`, "patrolSweep requiere patrulla (patrolAxis/patrolLength)");
+    patrolSweep = raw.patrolSweep;
+  }
+
   let hidden: boolean | undefined;
   if (raw.hidden !== undefined) {
     if (typeof raw.hidden !== "boolean") fail(`${path}.hidden`, "se esperaba un booleano");
@@ -213,6 +220,7 @@ function validateObject(
     visionRange,
     patrolAxis,
     patrolLength,
+    patrolSweep,
     hidden,
   };
 }

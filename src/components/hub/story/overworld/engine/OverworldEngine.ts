@@ -96,6 +96,17 @@ export class OverworldEngine {
     onDone: () => void;
   } | null = null;
 
+  // Animación de acercamiento de cámara al pulsar un nodo de servicio (market/arsenal/salida).
+  private serviceZoom: {
+    focusTile: IGridPosition;
+    baseZoom: number;
+    targetZoom: number;
+    progress: number;
+    phase: "IN" | "HELD" | "OUT";
+    onArrived: (() => void) | null;
+  } | null = null;
+  private lastCameraOffset: { x: number; y: number } = { x: 0, y: 0 };
+
   // Cutscene guionizada (intro, apariciones de NPC).
   private cutsceneSteps: OverworldCutsceneStep[] = [];
   private cutsceneIndex = 0;
@@ -250,6 +261,87 @@ export class OverworldEngine {
       this.externalDirection = null;
       this.isActionQueued = false;
     }
+  }
+
+  /**
+   * Anima un acercamiento cinemático de la cámara hacia un nodo de servicio y, al
+   * llegar, ejecuta `onArrived` (abrir el panel). El mundo queda congelado durante la animación.
+   */
+  playServiceZoom(objectId: string, onArrived: () => void): void {
+    const object = this.objectsById.get(objectId);
+    if (!object) {
+      onArrived();
+      return;
+    }
+    this.serviceZoom = {
+      focusTile: { tileX: object.tileX, tileY: object.tileY },
+      baseZoom: this.config.zoom,
+      targetZoom: this.config.zoom * 1.55,
+      progress: 0,
+      phase: "IN",
+      onArrived,
+    };
+  }
+
+  /** Revierte el acercamiento de cámara (al cancelar un panel de servicio). */
+  releaseServiceZoom(): void {
+    if (this.serviceZoom) this.serviceZoom.phase = "OUT";
+  }
+
+  private advanceServiceZoom(deltaSeconds: number): void {
+    const zoom = this.serviceZoom;
+    if (!zoom) return;
+    if (zoom.phase === "IN") {
+      zoom.progress = Math.min(1, zoom.progress + deltaSeconds / 0.42);
+      if (zoom.progress >= 1) {
+        zoom.phase = "HELD";
+        const onArrived = zoom.onArrived;
+        zoom.onArrived = null;
+        onArrived?.();
+      }
+    } else if (zoom.phase === "OUT") {
+      zoom.progress = Math.max(0, zoom.progress - deltaSeconds / 0.3);
+      if (zoom.progress <= 0) this.serviceZoom = null;
+    }
+  }
+
+  /**
+   * Activación por clic/tap: si el jugador está en una casilla contigua a un nodo
+   * interactuable, se orienta hacia él y lanza su acción (igual que pulsar espacio).
+   */
+  handlePointer(cssX: number, cssY: number): void {
+    if (this.isInteractionSuspended || this.isCutsceneActive || this.serviceZoom) return;
+    const { player } = this.world;
+    if (player.activeMove) return;
+    const tile = this.resolveTileFromScreen(cssX, cssY);
+    if (!tile) return;
+    const target = this.interactables.find(
+      (candidate) => candidate.tileX === tile.tileX && candidate.tileY === tile.tileY,
+    );
+    if (!target) return;
+    const distance =
+      Math.abs(player.tile.tileX - target.tileX) + Math.abs(player.tile.tileY - target.tileY);
+    if (distance !== 1) return;
+    player.facing = this.resolveFacingTo(player.tile, target);
+    this.activateFocusedInteractable();
+  }
+
+  private resolveTileFromScreen(cssX: number, cssY: number): IGridPosition | null {
+    const { tilemap } = this.world;
+    const zoom = this.renderer.getZoom();
+    const worldX = cssX / zoom - this.lastCameraOffset.x;
+    const worldY = cssY / zoom - this.lastCameraOffset.y;
+    const tileX = Math.floor(worldX / tilemap.tileSize);
+    const tileY = Math.floor(worldY / tilemap.tileSize);
+    if (tileX < 0 || tileY < 0 || tileX >= tilemap.width || tileY >= tilemap.height) return null;
+    return { tileX, tileY };
+  }
+
+  private resolveFacingTo(from: IGridPosition, to: IGridPosition): OverworldDirection {
+    if (to.tileX > from.tileX) return "RIGHT";
+    if (to.tileX < from.tileX) return "LEFT";
+    if (to.tileY > from.tileY) return "DOWN";
+    return "UP";
   }
 
   start(): void {
@@ -661,6 +753,11 @@ export class OverworldEngine {
 
   private update(deltaSeconds: number): void {
     this.advanceCollectEffect(deltaSeconds);
+    // Acercamiento cinemático a un nodo de servicio: el mundo queda congelado.
+    if (this.serviceZoom) {
+      this.advanceServiceZoom(deltaSeconds);
+      return;
+    }
     if (this.isCutsceneActive) {
       this.advanceCutscene(deltaSeconds);
       this.actors.update({
@@ -737,8 +834,13 @@ export class OverworldEngine {
   private consumeActionInput(): void {
     if (!this.isActionQueued) return;
     this.isActionQueued = false;
+    if (this.world.player.activeMove) return;
+    this.activateFocusedInteractable();
+  }
+
+  /** Resuelve el nodo enfocado (delante del jugador) y emite su intención de acción. */
+  private activateFocusedInteractable(): void {
     const { player } = this.world;
-    if (player.activeMove) return;
     const focused = resolveFocusedInteractable({
       playerTile: player.tile,
       facing: player.facing,
@@ -795,12 +897,34 @@ export class OverworldEngine {
   private renderFrame(): void {
     const { tilemap, player } = this.world;
     const playerPixel = resolvePlayerPixelPosition(player, tilemap.tileSize);
+    const playerFocus = resolvePlayerFocus(playerPixel, tilemap.tileSize);
+
+    // Durante el acercamiento a un nodo de servicio, interpolamos zoom y foco hacia él.
+    let focus = playerFocus;
+    if (this.serviceZoom) {
+      const eased = easeInOut(this.serviceZoom.progress);
+      this.renderer.setZoom(
+        this.serviceZoom.baseZoom + (this.serviceZoom.targetZoom - this.serviceZoom.baseZoom) * eased,
+      );
+      const nodeFocus = {
+        x: this.serviceZoom.focusTile.tileX * tilemap.tileSize + tilemap.tileSize / 2,
+        y: this.serviceZoom.focusTile.tileY * tilemap.tileSize + tilemap.tileSize / 2,
+      };
+      focus = {
+        x: playerFocus.x + (nodeFocus.x - playerFocus.x) * eased,
+        y: playerFocus.y + (nodeFocus.y - playerFocus.y) * eased,
+      };
+    } else {
+      this.renderer.setZoom(this.config.zoom);
+    }
+
     const worldViewport = this.renderer.getWorldViewportSize();
     const cameraOffset = resolveCameraOffset(
-      resolvePlayerFocus(playerPixel, tilemap.tileSize),
+      focus,
       { width: worldViewport.cssWidth, height: worldViewport.cssHeight },
       { width: tilemap.width * tilemap.tileSize, height: tilemap.height * tilemap.tileSize },
     );
+    this.lastCameraOffset = cameraOffset;
     this.renderer.render(this.world, playerPixel, cameraOffset, {
       focusedObjectId: this.focusedObjectId,
       blockedObjectIds: this.blockedObjectIds,
@@ -811,4 +935,10 @@ export class OverworldEngine {
       timeMs: this.lastFrameTimeMs ?? 0,
     });
   }
+}
+
+/** Suavizado ease-in-out para la animación de acercamiento de cámara. */
+function easeInOut(t: number): number {
+  const clamped = Math.max(0, Math.min(1, t));
+  return clamped < 0.5 ? 2 * clamped * clamped : 1 - Math.pow(-2 * clamped + 2, 2) / 2;
 }

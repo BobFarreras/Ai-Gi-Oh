@@ -83,11 +83,21 @@ export class Renderer2D {
     private readonly maxDevicePixelRatio: number,
     private readonly sprites: SpriteCache,
     private readonly playerImageSrc: string,
-    private readonly zoom: number,
+    private zoom: number,
   ) {
     const context = canvas.getContext("2d", { alpha: false });
     if (!context) throw new Error("Canvas 2D no disponible en este dispositivo.");
     this.context = context;
+  }
+
+  /** Ajusta el zoom en vivo (usado por la animación de acercamiento a nodos de servicio). */
+  setZoom(zoom: number): void {
+    this.zoom = zoom;
+  }
+
+  /** Zoom actual (para convertir coordenadas de pantalla a mundo). */
+  getZoom(): number {
+    return this.zoom;
   }
 
   /** Tamaño del viewport en unidades de mundo (dividido por el zoom). */
@@ -250,7 +260,7 @@ export class Renderer2D {
         tileY += delta.tileY;
         if (!canWalkToTile({ tileX, tileY }, world.movementContext)) break;
         const pulse = 0.18 + Math.sin(options.timeMs / 260 - distance) * 0.07;
-        context.fillStyle = "#f43f5e";
+        context.fillStyle = actor.accent;
         context.globalAlpha = Math.max(0.05, pulse * (1 - (distance - 1) / (actor.visionRange + 1)));
         context.fillRect(camera.x + tileX * size + 4, camera.y + tileY * size + 4, size - 8, size - 8);
       }
@@ -267,7 +277,8 @@ export class Renderer2D {
       const cx = drawX + size / 2;
       const cy = drawY + size / 2;
       const radius = size * 0.42;
-      const accent = actor.isDefeated ? "#64748b" : "#f43f5e";
+      const accent = actor.isDefeated ? "#64748b" : actor.accent;
+      const markColor = actor.isDefeated ? "#94a3b8" : actor.accent === "#c026d3" ? "#f5d0fe" : "#fecdd3";
 
       context.fillStyle = "rgba(0,0,0,0.4)";
       context.beginPath();
@@ -293,7 +304,7 @@ export class Renderer2D {
 
       // Marca de orientación (hacia dónde vigila).
       const delta = resolveDirectionDelta(actor.facing);
-      context.fillStyle = actor.isDefeated ? "#94a3b8" : "#fecdd3";
+      context.fillStyle = markColor;
       context.beginPath();
       context.arc(cx + delta.tileX * radius, cy + delta.tileY * radius, size * 0.06, 0, Math.PI * 2);
       context.fill();
