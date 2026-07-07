@@ -1,0 +1,781 @@
+// src/components/hub/story/overworld/engine/Renderer2D.ts - Render Canvas 2D cibernético del overworld (circuito neón + imágenes reales) con culling y DPR limitado.
+import { IGridPosition, resolveDirectionDelta } from "@/core/services/story/overworld/overworld-types";
+import { canWalkToTile } from "@/core/services/story/overworld/movement-rules";
+import { IOverworldTilemap, OverworldObjectKind } from "@/services/story/overworld/tilemap-schema";
+import { GROUND_TILE, OVERLAY_TILE } from "@/services/story/overworld/overworld-tile-kinds";
+import {
+  ICameraOffset,
+  resolveVisibleTileRange,
+} from "@/components/hub/story/overworld/engine/camera-math";
+import {
+  IEngineWorldState,
+  IOverworldCutsceneNpcRender,
+} from "@/components/hub/story/overworld/engine/engine-types";
+import { SpriteCache } from "@/components/hub/story/overworld/engine/SpriteCache";
+import { IOpponentActorRenderData } from "@/components/hub/story/overworld/engine/OpponentActorManager";
+
+export interface IRendererViewportSize {
+  cssWidth: number;
+  cssHeight: number;
+}
+
+export interface IRenderOptions {
+  focusedObjectId: string | null;
+  blockedObjectIds: ReadonlySet<string>;
+  /** Oponentes como entidades dinámicas (posición en vivo, haz de visión). */
+  opponentActors: ReadonlyArray<IOpponentActorRenderData>;
+  /** NPC de cutscene (p. ej. BigLog en la intro), o null. */
+  cutsceneNpc: IOverworldCutsceneNpcRender | null;
+  timeMs: number;
+}
+
+const OBJECT_LABELS: Record<OverworldObjectKind, string> = {
+  DUEL: "Rival",
+  BOSS: "Jefe",
+  REWARD_CARD: "Carta",
+  REWARD_NEXUS: "Nexus",
+  EVENT: "Evento",
+  NPC: "Aliado",
+  SUBMISSION: "Terminal",
+  WARP: "Portal",
+  GATE: "Puerta",
+};
+
+const OBJECT_ACCENT: Record<OverworldObjectKind, string> = {
+  DUEL: "#f43f5e",
+  BOSS: "#c026d3",
+  REWARD_CARD: "#f59e0b",
+  REWARD_NEXUS: "#22d3ee",
+  EVENT: "#2dd4bf",
+  NPC: "#38bdf8",
+  SUBMISSION: "#fb7185",
+  WARP: "#818cf8",
+  GATE: "#eab308",
+};
+
+const BACKGROUND = "#05070f";
+const GRID_LINE = "rgba(56, 189, 248, 0.07)";
+const LANE_CORE = "#0e2a3d";
+const LANE_GLOW = "rgba(34, 211, 238, 0.55)";
+
+/**
+ * Renderer imperativo cibernético: rejilla neón, lanes de circuito e imágenes reales.
+ * No crea objetos por frame y solo dibuja el rango visible.
+ */
+export class Renderer2D {
+  private readonly context: CanvasRenderingContext2D;
+  private cssWidth = 0;
+  private cssHeight = 0;
+
+  constructor(
+    private readonly canvas: HTMLCanvasElement,
+    private readonly maxDevicePixelRatio: number,
+    private readonly sprites: SpriteCache,
+    private readonly playerImageSrc: string,
+    private readonly zoom: number,
+  ) {
+    const context = canvas.getContext("2d", { alpha: false });
+    if (!context) throw new Error("Canvas 2D no disponible en este dispositivo.");
+    this.context = context;
+  }
+
+  /** Tamaño del viewport en unidades de mundo (dividido por el zoom). */
+  getWorldViewportSize(): IRendererViewportSize {
+    return { cssWidth: this.cssWidth / this.zoom, cssHeight: this.cssHeight / this.zoom };
+  }
+
+  resize(size: IRendererViewportSize, devicePixelRatio: number): void {
+    const clampedRatio = Math.max(1, Math.min(devicePixelRatio, this.maxDevicePixelRatio));
+    this.cssWidth = size.cssWidth;
+    this.cssHeight = size.cssHeight;
+    this.canvas.width = Math.max(1, Math.round(size.cssWidth * clampedRatio));
+    this.canvas.height = Math.max(1, Math.round(size.cssHeight * clampedRatio));
+    this.context.setTransform(clampedRatio, 0, 0, clampedRatio, 0, 0);
+    this.context.textBaseline = "middle";
+    this.context.textAlign = "center";
+  }
+
+  getViewportSize(): IRendererViewportSize {
+    return { cssWidth: this.cssWidth, cssHeight: this.cssHeight };
+  }
+
+  render(
+    world: IEngineWorldState,
+    playerPixel: ICameraOffset,
+    cameraOffset: ICameraOffset,
+    options: IRenderOptions,
+  ): void {
+    const { tilemap } = world;
+    const worldViewport = this.getWorldViewportSize();
+    const range = resolveVisibleTileRange({
+      cameraOffset,
+      viewport: { width: worldViewport.cssWidth, height: worldViewport.cssHeight },
+      tileSize: tilemap.tileSize,
+      mapWidth: tilemap.width,
+      mapHeight: tilemap.height,
+    });
+
+    const context = this.context;
+    context.save();
+    context.scale(this.zoom, this.zoom);
+    this.drawBackground(tilemap.tileSize, cameraOffset, worldViewport);
+    this.drawGroundPass(tilemap, cameraOffset, range, options.timeMs);
+    this.drawSightBeams(world, cameraOffset, options);
+    this.drawObjectsPass(world, cameraOffset, range, options);
+    this.drawActorsPass(world, cameraOffset, options);
+    this.drawCutsceneNpc(world, cameraOffset, options);
+    this.drawPlayer(world, playerPixel, cameraOffset);
+    this.drawOverlayPass(tilemap, cameraOffset, range, options.timeMs);
+    this.drawFocusLabel(world, cameraOffset, options);
+    context.restore();
+    this.drawScanlinesAndVignette();
+  }
+
+  private drawBackground(tileSize: number, camera: ICameraOffset, viewport: IRendererViewportSize): void {
+    const context = this.context;
+    const viewW = viewport.cssWidth;
+    const viewH = viewport.cssHeight;
+    context.fillStyle = BACKGROUND;
+    context.fillRect(0, 0, viewW, viewH);
+    // Rejilla técnica alineada al mundo (se desplaza con la cámara).
+    context.strokeStyle = GRID_LINE;
+    context.lineWidth = 1;
+    context.beginPath();
+    const startX = camera.x % tileSize;
+    const startY = camera.y % tileSize;
+    for (let x = startX; x <= viewW; x += tileSize) {
+      context.moveTo(x, 0);
+      context.lineTo(x, viewH);
+    }
+    for (let y = startY; y <= viewH; y += tileSize) {
+      context.moveTo(0, y);
+      context.lineTo(viewW, y);
+    }
+    context.stroke();
+  }
+
+  private drawGroundPass(
+    tilemap: IOverworldTilemap,
+    camera: ICameraOffset,
+    range: ReturnType<typeof resolveVisibleTileRange>,
+    timeMs: number,
+  ): void {
+    const size = tilemap.tileSize;
+    const ground = tilemap.layers.ground;
+    const isInterior = (x: number, y: number): boolean => {
+      const kind = ground[y]?.[x];
+      return kind === GROUND_TILE.PATH || kind === GROUND_TILE.SAND;
+    };
+    for (let tileY = range.minTileY; tileY <= range.maxTileY; tileY++) {
+      for (let tileX = range.minTileX; tileX <= range.maxTileX; tileX++) {
+        const kind = ground[tileY]?.[tileX];
+        if (kind === GROUND_TILE.PATH) this.drawLaneTile(tilemap, tileX, tileY, camera, timeMs);
+        else if (kind === GROUND_TILE.SAND) {
+          this.drawRoomFloorTile(camera.x + tileX * size, camera.y + tileY * size, size);
+        }
+      }
+    }
+    // Bordes de muro: donde el suelo/corredor limita con el vacío exterior.
+    this.context.strokeStyle = "rgba(56, 189, 248, 0.4)";
+    this.context.lineWidth = 2;
+    for (let tileY = range.minTileY; tileY <= range.maxTileY; tileY++) {
+      for (let tileX = range.minTileX; tileX <= range.maxTileX; tileX++) {
+        if (!isInterior(tileX, tileY)) continue;
+        this.drawWallEdges(tileX, tileY, size, camera, isInterior);
+      }
+    }
+  }
+
+  private drawWallEdges(
+    tileX: number,
+    tileY: number,
+    size: number,
+    camera: ICameraOffset,
+    isInterior: (x: number, y: number) => boolean,
+  ): void {
+    const context = this.context;
+    const left = camera.x + tileX * size;
+    const top = camera.y + tileY * size;
+    context.beginPath();
+    if (!isInterior(tileX, tileY - 1)) {
+      context.moveTo(left, top);
+      context.lineTo(left + size, top);
+    }
+    if (!isInterior(tileX, tileY + 1)) {
+      context.moveTo(left, top + size);
+      context.lineTo(left + size, top + size);
+    }
+    if (!isInterior(tileX - 1, tileY)) {
+      context.moveTo(left, top);
+      context.lineTo(left, top + size);
+    }
+    if (!isInterior(tileX + 1, tileY)) {
+      context.moveTo(left + size, top);
+      context.lineTo(left + size, top + size);
+    }
+    context.stroke();
+  }
+
+  private drawRoomFloorTile(screenX: number, screenY: number, size: number): void {
+    const context = this.context;
+    context.fillStyle = "#0c1626";
+    context.fillRect(screenX, screenY, size, size);
+    context.strokeStyle = "rgba(30, 58, 92, 0.6)";
+    context.lineWidth = 1;
+    context.strokeRect(screenX + 3, screenY + 3, size - 6, size - 6);
+  }
+
+  private drawSightBeams(world: IEngineWorldState, camera: ICameraOffset, options: IRenderOptions): void {
+    const context = this.context;
+    const size = world.tilemap.tileSize;
+    for (const actor of options.opponentActors) {
+      if (!actor.showBeam) continue;
+      const delta = resolveDirectionDelta(actor.facing);
+      let tileX = actor.tileX;
+      let tileY = actor.tileY;
+      for (let distance = 1; distance <= actor.visionRange; distance++) {
+        tileX += delta.tileX;
+        tileY += delta.tileY;
+        if (!canWalkToTile({ tileX, tileY }, world.movementContext)) break;
+        const pulse = 0.18 + Math.sin(options.timeMs / 260 - distance) * 0.07;
+        context.fillStyle = "#f43f5e";
+        context.globalAlpha = Math.max(0.05, pulse * (1 - (distance - 1) / (actor.visionRange + 1)));
+        context.fillRect(camera.x + tileX * size + 4, camera.y + tileY * size + 4, size - 8, size - 8);
+      }
+    }
+    context.globalAlpha = 1;
+  }
+
+  private drawActorsPass(world: IEngineWorldState, camera: ICameraOffset, options: IRenderOptions): void {
+    const context = this.context;
+    const size = world.tilemap.tileSize;
+    for (const actor of options.opponentActors) {
+      const drawX = camera.x + actor.pixelX;
+      const drawY = camera.y + actor.pixelY;
+      const cx = drawX + size / 2;
+      const cy = drawY + size / 2;
+      const radius = size * 0.42;
+      const accent = actor.isDefeated ? "#64748b" : "#f43f5e";
+
+      context.fillStyle = "rgba(0,0,0,0.4)";
+      context.beginPath();
+      context.ellipse(cx, drawY + size * 0.92, size * 0.3, size * 0.1, 0, 0, Math.PI * 2);
+      context.fill();
+
+      context.fillStyle = accent;
+      context.globalAlpha = actor.isDefeated ? 0.25 : 0.5;
+      context.beginPath();
+      context.arc(cx, cy, radius + 3, 0, Math.PI * 2);
+      context.fill();
+      context.globalAlpha = 1;
+
+      const image = this.sprites.get(actor.spriteSrc);
+      if (image) this.drawImageCircle(image, cx, cy, radius, actor.isDefeated);
+      else this.drawTokenPlaceholder(cx, cy, radius, accent);
+
+      context.strokeStyle = accent;
+      context.lineWidth = 2.5;
+      context.beginPath();
+      context.arc(cx, cy, radius, 0, Math.PI * 2);
+      context.stroke();
+
+      // Marca de orientación (hacia dónde vigila).
+      const delta = resolveDirectionDelta(actor.facing);
+      context.fillStyle = actor.isDefeated ? "#94a3b8" : "#fecdd3";
+      context.beginPath();
+      context.arc(cx + delta.tileX * radius, cy + delta.tileY * radius, size * 0.06, 0, Math.PI * 2);
+      context.fill();
+    }
+  }
+
+  private drawLaneTile(
+    tilemap: IOverworldTilemap,
+    tileX: number,
+    tileY: number,
+    camera: ICameraOffset,
+    timeMs: number,
+  ): void {
+    const context = this.context;
+    const size = tilemap.tileSize;
+    const screenX = camera.x + tileX * size;
+    const screenY = camera.y + tileY * size;
+    context.fillStyle = LANE_CORE;
+    context.fillRect(screenX + 2, screenY + 2, size - 4, size - 4);
+
+    const ground = tilemap.layers.ground;
+    const isLane = (x: number, y: number): boolean => ground[y]?.[x] === GROUND_TILE.PATH;
+    // Vena de energía central que conecta lanes contiguas.
+    const pulse = 0.55 + Math.sin(timeMs / 500 + (tileX + tileY) * 0.6) * 0.25;
+    context.strokeStyle = `rgba(34, 211, 238, ${pulse})`;
+    context.lineWidth = Math.max(2, size * 0.08);
+    context.lineCap = "round";
+    const cx = screenX + size / 2;
+    const cy = screenY + size / 2;
+    context.beginPath();
+    context.moveTo(cx, cy);
+    if (isLane(tileX + 1, tileY)) context.lineTo(screenX + size, cy);
+    context.moveTo(cx, cy);
+    if (isLane(tileX - 1, tileY)) context.lineTo(screenX, cy);
+    context.moveTo(cx, cy);
+    if (isLane(tileX, tileY + 1)) context.lineTo(cx, screenY + size);
+    context.moveTo(cx, cy);
+    if (isLane(tileX, tileY - 1)) context.lineTo(cx, screenY);
+    context.stroke();
+    // Nodo central.
+    context.fillStyle = LANE_GLOW;
+    context.beginPath();
+    context.arc(cx, cy, size * 0.06, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  private drawObjectsPass(
+    world: IEngineWorldState,
+    camera: ICameraOffset,
+    range: ReturnType<typeof resolveVisibleTileRange>,
+    options: IRenderOptions,
+  ): void {
+    const size = world.tilemap.tileSize;
+    for (const object of world.tilemap.objects) {
+      // Los rivales se dibujan como actores dinámicos, no como token estático.
+      if (object.kind === "DUEL" || object.kind === "BOSS") continue;
+      if (
+        object.tileX < range.minTileX - 1 ||
+        object.tileX > range.maxTileX + 1 ||
+        object.tileY < range.minTileY - 1 ||
+        object.tileY > range.maxTileY + 1
+      ) {
+        continue;
+      }
+      const screenX = camera.x + object.tileX * size;
+      const screenY = camera.y + object.tileY * size;
+      const isBlocked = options.blockedObjectIds.has(object.id);
+      const isFocused = options.focusedObjectId === object.id;
+      this.drawObject(object.kind, object.imageSrc, screenX, screenY, size, isBlocked, isFocused, options.timeMs);
+    }
+  }
+
+  private drawObject(
+    kind: OverworldObjectKind,
+    imageSrc: string | undefined,
+    screenX: number,
+    screenY: number,
+    size: number,
+    isBlocked: boolean,
+    isFocused: boolean,
+    timeMs: number,
+  ): void {
+    const context = this.context;
+    const cx = screenX + size / 2;
+    const cy = screenY + size / 2;
+    const accent = isBlocked ? "#64748b" : OBJECT_ACCENT[kind];
+
+    // Sombra de contacto proyectada.
+    context.fillStyle = "rgba(0,0,0,0.4)";
+    context.beginPath();
+    context.ellipse(cx, screenY + size * 0.92, size * 0.32, size * 0.1, 0, 0, Math.PI * 2);
+    context.fill();
+
+    if (kind === "GATE") {
+      this.drawGate(screenX, screenY, size, accent, isBlocked, timeMs);
+    } else if (kind === "WARP") {
+      this.drawPortal(cx, cy, size, accent, timeMs);
+    } else {
+      const image = this.sprites.get(imageSrc);
+      const radius = size * 0.42;
+      // Halo del token.
+      context.fillStyle = accent;
+      context.globalAlpha = isBlocked ? 0.25 : 0.5;
+      context.beginPath();
+      context.arc(cx, cy, radius + 3, 0, Math.PI * 2);
+      context.fill();
+      context.globalAlpha = 1;
+      if (image) {
+        this.drawImageCircle(image, cx, cy, radius, isBlocked);
+      } else {
+        this.drawTokenPlaceholder(cx, cy, radius, accent);
+      }
+      // Aro del token.
+      context.strokeStyle = accent;
+      context.lineWidth = 2.5;
+      context.beginPath();
+      context.arc(cx, cy, radius, 0, Math.PI * 2);
+      context.stroke();
+    }
+
+    if (isFocused) {
+      const pulse = Math.sin(timeMs / 180) * 0.5 + 0.5;
+      context.strokeStyle = isBlocked ? "rgba(148,163,184,0.9)" : "rgba(226,255,255,0.95)";
+      context.lineWidth = 2 + pulse * 2.5;
+      context.beginPath();
+      context.arc(cx, cy, size * 0.5, 0, Math.PI * 2);
+      context.stroke();
+      // Cursor flotante encima.
+      context.fillStyle = context.strokeStyle;
+      const bob = Math.sin(timeMs / 260) * size * 0.06;
+      context.beginPath();
+      context.moveTo(cx, screenY - size * 0.14 + bob);
+      context.lineTo(cx - size * 0.1, screenY - size * 0.3 + bob);
+      context.lineTo(cx + size * 0.1, screenY - size * 0.3 + bob);
+      context.closePath();
+      context.fill();
+    }
+  }
+
+  private drawImageCircle(
+    image: HTMLImageElement,
+    cx: number,
+    cy: number,
+    radius: number,
+    isBlocked: boolean,
+  ): void {
+    const context = this.context;
+    context.save();
+    context.beginPath();
+    context.arc(cx, cy, radius, 0, Math.PI * 2);
+    context.clip();
+    // Cover-fit: rellena el círculo sin deformar la imagen.
+    const scale = Math.max((radius * 2) / image.width, (radius * 2) / image.height);
+    const drawWidth = image.width * scale;
+    const drawHeight = image.height * scale;
+    if (isBlocked) context.filter = "grayscale(0.85) brightness(0.6)";
+    context.drawImage(image, cx - drawWidth / 2, cy - drawHeight / 2, drawWidth, drawHeight);
+    context.filter = "none";
+    context.restore();
+  }
+
+  private drawTokenPlaceholder(cx: number, cy: number, radius: number, accent: string): void {
+    const context = this.context;
+    context.fillStyle = "#0b1220";
+    context.beginPath();
+    context.arc(cx, cy, radius, 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = accent;
+    context.beginPath();
+    context.arc(cx, cy, radius * 0.4, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  private drawGate(
+    screenX: number,
+    screenY: number,
+    size: number,
+    accent: string,
+    isBlocked: boolean,
+    timeMs: number,
+  ): void {
+    const context = this.context;
+    const flicker = 0.6 + Math.sin(timeMs / 140) * 0.2;
+    context.globalAlpha = isBlocked ? flicker : 0.28;
+    context.fillStyle = accent;
+    for (let index = 0; index < 4; index++) {
+      context.fillRect(screenX + size * (0.16 + index * 0.2), screenY + size * 0.12, size * 0.08, size * 0.76);
+    }
+    context.globalAlpha = isBlocked ? 0.9 : 0.3;
+    context.strokeStyle = accent;
+    context.lineWidth = 2;
+    context.strokeRect(screenX + size * 0.1, screenY + size * 0.1, size * 0.8, size * 0.8);
+    context.globalAlpha = 1;
+  }
+
+  private drawPortal(cx: number, cy: number, size: number, accent: string, timeMs: number): void {
+    const context = this.context;
+    const spin = Math.sin(timeMs / 240) * 0.5 + 0.5;
+    for (let ring = 0; ring < 4; ring++) {
+      context.strokeStyle = accent;
+      context.globalAlpha = 0.3 + spin * 0.55 - ring * 0.1;
+      context.lineWidth = size * 0.05;
+      context.beginPath();
+      context.arc(cx, cy, size * (0.1 + ring * 0.1), spin * Math.PI, spin * Math.PI + Math.PI * 1.5);
+      context.stroke();
+    }
+    context.globalAlpha = 1;
+  }
+
+  private drawCutsceneNpc(world: IEngineWorldState, camera: ICameraOffset, options: IRenderOptions): void {
+    const npc = options.cutsceneNpc;
+    if (!npc) return;
+    const context = this.context;
+    const size = world.tilemap.tileSize;
+    const drawX = camera.x + npc.pixelX;
+    const drawY = camera.y + npc.pixelY;
+    const cx = drawX + size / 2;
+    const cy = drawY + size / 2;
+    const radius = size * 0.42;
+
+    context.fillStyle = "rgba(0,0,0,0.4)";
+    context.beginPath();
+    context.ellipse(cx, drawY + size * 0.92, size * 0.3, size * 0.1, 0, 0, Math.PI * 2);
+    context.fill();
+
+    context.fillStyle = "rgba(34, 211, 238, 0.5)";
+    context.beginPath();
+    context.arc(cx, cy, radius + 3, 0, Math.PI * 2);
+    context.fill();
+
+    const image = this.sprites.get(npc.spriteSrc);
+    if (image) this.drawImageCircle(image, cx, cy, radius, false);
+    else this.drawTokenPlaceholder(cx, cy, radius, "#22d3ee");
+
+    context.strokeStyle = "#22d3ee";
+    context.lineWidth = 3;
+    context.beginPath();
+    context.arc(cx, cy, radius, 0, Math.PI * 2);
+    context.stroke();
+
+    const delta = resolveDirectionDelta(npc.facing);
+    context.fillStyle = "#cffafe";
+    context.beginPath();
+    context.arc(cx + delta.tileX * radius, cy + delta.tileY * radius, size * 0.06, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  private drawPlayer(world: IEngineWorldState, playerPixel: ICameraOffset, camera: ICameraOffset): void {
+    const context = this.context;
+    const size = world.tilemap.tileSize;
+    const drawX = camera.x + playerPixel.x;
+    const drawY = camera.y + playerPixel.y;
+    const cx = drawX + size / 2;
+    const cy = drawY + size / 2;
+    const move = world.player.activeMove;
+    const bob = move ? Math.sin(move.progress * Math.PI * 2) * size * 0.05 : 0;
+    const radius = size * 0.4;
+
+    context.fillStyle = "rgba(0,0,0,0.45)";
+    context.beginPath();
+    context.ellipse(cx, drawY + size * 0.9, size * 0.28, size * 0.09, 0, 0, Math.PI * 2);
+    context.fill();
+
+    context.fillStyle = "rgba(16, 185, 129, 0.5)";
+    context.beginPath();
+    context.arc(cx, cy + bob, radius + 3, 0, Math.PI * 2);
+    context.fill();
+
+    const image = this.sprites.get(this.playerImageSrc);
+    if (image) this.drawImageCircle(image, cx, cy + bob, radius, false);
+    else this.drawTokenPlaceholder(cx, cy + bob, radius, "#10b981");
+
+    context.strokeStyle = "#34d399";
+    context.lineWidth = 3;
+    context.beginPath();
+    context.arc(cx, cy + bob, radius, 0, Math.PI * 2);
+    context.stroke();
+
+    this.drawFacingArrow(world.player.facing, cx, cy + bob, radius, size);
+  }
+
+  private drawFacingArrow(
+    facing: IEngineWorldState["player"]["facing"],
+    cx: number,
+    cy: number,
+    radius: number,
+    size: number,
+  ): void {
+    const context = this.context;
+    const distance = radius + size * 0.12;
+    const point = { x: cx, y: cy };
+    switch (facing) {
+      case "UP":
+        point.y = cy - distance;
+        break;
+      case "DOWN":
+        point.y = cy + distance;
+        break;
+      case "LEFT":
+        point.x = cx - distance;
+        break;
+      case "RIGHT":
+        point.x = cx + distance;
+        break;
+    }
+    context.fillStyle = "#34d399";
+    context.beginPath();
+    context.arc(point.x, point.y, size * 0.05, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  private drawOverlayPass(
+    tilemap: IOverworldTilemap,
+    camera: ICameraOffset,
+    range: ReturnType<typeof resolveVisibleTileRange>,
+    timeMs: number,
+  ): void {
+    const size = tilemap.tileSize;
+    for (let tileY = range.minTileY; tileY <= range.maxTileY; tileY++) {
+      const overlayRow = tilemap.layers.overlay[tileY];
+      for (let tileX = range.minTileX; tileX <= range.maxTileX; tileX++) {
+        const kind = overlayRow?.[tileX] ?? 0;
+        if (kind === 0) continue;
+        const screenX = camera.x + tileX * size;
+        const screenY = camera.y + tileY * size;
+        if (kind === OVERLAY_TILE.SERVER_RACK) this.drawServerRack(screenX, screenY, size, timeMs, tileX + tileY);
+        else if (kind === OVERLAY_TILE.HOLO_SCREEN) this.drawHoloScreen(screenX, screenY, size, timeMs);
+        else if (kind === OVERLAY_TILE.CRATE) this.drawCrate(screenX, screenY, size);
+        else this.drawPillar(screenX, screenY, size, timeMs, tileX);
+      }
+    }
+  }
+
+  private drawServerRack(screenX: number, screenY: number, size: number, timeMs: number, seed: number): void {
+    const context = this.context;
+    const rackX = screenX + size * 0.12;
+    const rackW = size * 0.76;
+    context.fillStyle = "rgba(0,0,0,0.35)";
+    context.fillRect(screenX + size * 0.16, screenY + size * 0.9, size * 0.68, size * 0.1);
+    context.fillStyle = "#0a1220";
+    context.fillRect(rackX, screenY + size * 0.06, rackW, size * 0.86);
+    context.strokeStyle = "rgba(56, 189, 248, 0.45)";
+    context.lineWidth = 2;
+    context.strokeRect(rackX, screenY + size * 0.06, rackW, size * 0.86);
+    // Bahías con LEDs parpadeantes.
+    for (let bay = 0; bay < 4; bay++) {
+      const bayY = screenY + size * (0.14 + bay * 0.19);
+      context.fillStyle = "#060c16";
+      context.fillRect(rackX + size * 0.08, bayY, rackW - size * 0.16, size * 0.12);
+      const blink = 0.35 + Math.sin(timeMs / 260 + seed + bay) * 0.4;
+      context.fillStyle = `rgba(34, 211, 238, ${Math.max(0.15, blink)})`;
+      context.fillRect(rackX + size * 0.12, bayY + size * 0.03, size * 0.06, size * 0.06);
+      context.fillStyle = `rgba(52, 211, 153, ${Math.max(0.15, 0.7 - blink)})`;
+      context.fillRect(rackX + size * 0.24, bayY + size * 0.03, size * 0.06, size * 0.06);
+    }
+  }
+
+  private drawHoloScreen(screenX: number, screenY: number, size: number, timeMs: number): void {
+    const context = this.context;
+    context.fillStyle = "#08131f";
+    context.fillRect(screenX + size * 0.1, screenY + size * 0.1, size * 0.8, size * 0.6);
+    context.strokeStyle = "rgba(129, 140, 248, 0.6)";
+    context.lineWidth = 2;
+    context.strokeRect(screenX + size * 0.1, screenY + size * 0.1, size * 0.8, size * 0.6);
+    context.strokeStyle = `rgba(129, 140, 248, ${0.35 + Math.sin(timeMs / 240) * 0.25})`;
+    context.lineWidth = 1;
+    for (let line = 0; line < 3; line++) {
+      const y = screenY + size * (0.22 + line * 0.14);
+      context.beginPath();
+      context.moveTo(screenX + size * 0.18, y);
+      context.lineTo(screenX + size * (0.5 + line * 0.1), y);
+      context.stroke();
+    }
+    context.fillStyle = "#0a1220";
+    context.fillRect(screenX + size * 0.44, screenY + size * 0.7, size * 0.12, size * 0.22);
+  }
+
+  private drawCrate(screenX: number, screenY: number, size: number): void {
+    const context = this.context;
+    context.fillStyle = "#13233a";
+    context.fillRect(screenX + size * 0.2, screenY + size * 0.34, size * 0.6, size * 0.56);
+    context.strokeStyle = "rgba(56, 189, 248, 0.5)";
+    context.lineWidth = 2;
+    context.strokeRect(screenX + size * 0.2, screenY + size * 0.34, size * 0.6, size * 0.56);
+    context.beginPath();
+    context.moveTo(screenX + size * 0.2, screenY + size * 0.34);
+    context.lineTo(screenX + size * 0.8, screenY + size * 0.9);
+    context.moveTo(screenX + size * 0.8, screenY + size * 0.34);
+    context.lineTo(screenX + size * 0.2, screenY + size * 0.9);
+    context.stroke();
+  }
+
+  private drawPillar(screenX: number, screenY: number, size: number, timeMs: number, seed: number): void {
+    const context = this.context;
+    const cx = screenX + size / 2;
+    context.fillStyle = "#0a1526";
+    context.fillRect(cx - size * 0.16, screenY, size * 0.32, size);
+    context.strokeStyle = "rgba(56, 189, 248, 0.4)";
+    context.lineWidth = 2;
+    context.strokeRect(cx - size * 0.16, screenY, size * 0.32, size);
+    const blink = 0.4 + Math.sin(timeMs / 300 + seed) * 0.4;
+    context.fillStyle = `rgba(34, 211, 238, ${blink})`;
+    context.beginPath();
+    context.arc(cx, screenY + size * 0.16, size * 0.07, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  private drawFocusLabel(
+    world: IEngineWorldState,
+    camera: ICameraOffset,
+    options: IRenderOptions,
+  ): void {
+    if (!options.focusedObjectId) return;
+    const object = world.tilemap.objects.find((entry) => entry.id === options.focusedObjectId);
+    if (!object) return;
+    const context = this.context;
+    const size = world.tilemap.tileSize;
+    const centerX = camera.x + object.tileX * size + size / 2;
+    const labelY = camera.y + object.tileY * size - size * 0.42;
+    const label = OBJECT_LABELS[object.kind];
+    context.font = `600 ${Math.round(size * 0.24)}px system-ui, sans-serif`;
+    const width = context.measureText(label).width + size * 0.4;
+    context.fillStyle = "rgba(2, 6, 23, 0.9)";
+    context.fillRect(centerX - width / 2, labelY - size * 0.18, width, size * 0.36);
+    context.strokeStyle = options.blockedObjectIds.has(object.id) ? "#64748b" : "#22d3ee";
+    context.lineWidth = 1;
+    context.strokeRect(centerX - width / 2, labelY - size * 0.18, width, size * 0.36);
+    context.fillStyle = options.blockedObjectIds.has(object.id) ? "#cbd5e1" : "#e0f7ff";
+    context.fillText(label, centerX, labelY);
+  }
+
+  private drawScanlinesAndVignette(): void {
+    const context = this.context;
+    // Scanlines sutiles (una pasada barata cada 3px).
+    context.strokeStyle = "rgba(0, 0, 0, 0.10)";
+    context.lineWidth = 1;
+    context.beginPath();
+    for (let y = 0; y < this.cssHeight; y += 3) {
+      context.moveTo(0, y);
+      context.lineTo(this.cssWidth, y);
+    }
+    context.stroke();
+    const gradient = context.createRadialGradient(
+      this.cssWidth / 2,
+      this.cssHeight / 2,
+      Math.min(this.cssWidth, this.cssHeight) * 0.3,
+      this.cssWidth / 2,
+      this.cssHeight / 2,
+      Math.max(this.cssWidth, this.cssHeight) * 0.75,
+    );
+    gradient.addColorStop(0, "rgba(0,0,0,0)");
+    gradient.addColorStop(1, "rgba(0,0,0,0.5)");
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, this.cssWidth, this.cssHeight);
+  }
+}
+
+/**
+ * Posición visual del jugador en píxeles del mundo (interpolando el paso activo).
+ */
+export function resolvePlayerPixelPosition(
+  player: IEngineWorldState["player"],
+  tileSize: number,
+): ICameraOffset {
+  if (!player.activeMove) {
+    return { x: player.tile.tileX * tileSize, y: player.tile.tileY * tileSize };
+  }
+  const { from, to, progress } = player.activeMove;
+  return {
+    x: (from.tileX + (to.tileX - from.tileX) * progress) * tileSize,
+    y: (from.tileY + (to.tileY - from.tileY) * progress) * tileSize,
+  };
+}
+
+/**
+ * Centro del jugador en píxeles del mundo, usado como foco de cámara.
+ */
+export function resolvePlayerFocus(playerPixel: ICameraOffset, tileSize: number): ICameraOffset {
+  return { x: playerPixel.x + tileSize / 2, y: playerPixel.y + tileSize / 2 };
+}
+
+/**
+ * Celda que tiene delante el jugador según su orientación.
+ */
+export function resolveFacingTile(player: IEngineWorldState["player"]): IGridPosition {
+  const { tile, facing } = player;
+  switch (facing) {
+    case "UP":
+      return { tileX: tile.tileX, tileY: tile.tileY - 1 };
+    case "DOWN":
+      return { tileX: tile.tileX, tileY: tile.tileY + 1 };
+    case "LEFT":
+      return { tileX: tile.tileX - 1, tileY: tile.tileY };
+    case "RIGHT":
+      return { tileX: tile.tileX + 1, tileY: tile.tileY };
+  }
+}
