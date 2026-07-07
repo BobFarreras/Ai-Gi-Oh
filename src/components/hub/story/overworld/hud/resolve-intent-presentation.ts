@@ -56,6 +56,11 @@ const PRESENTATIONS: Record<OverworldObjectKind, IIntentPresentation> = {
     title: "Puerta bloqueada",
     body: "Se abrirá automáticamente al cumplir sus requisitos.",
   },
+  MARKET: {
+    actionVerb: "Entrar al mercado",
+    title: "Mercado",
+    body: "Abre el mercado para comprar sobres, cartas y recursos.",
+  },
 };
 
 export function resolveIntentPresentation(kind: OverworldObjectKind): IIntentPresentation {

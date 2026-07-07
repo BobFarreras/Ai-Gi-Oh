@@ -116,6 +116,8 @@ export function buildAct1OverworldTilemap(): IOverworldTilemap {
 
   // Rivales (sólidos) que vigilan; se marcan tras sellar (para no pisar sus casillas).
   for (const [x, y] of [[16, 11], [30, 11], [34, 15], [37, 11], [16, 20]]) markOpponent(map, x, y);
+  // El nodo Market es un obstáculo sólido con el que se interactúa al acercarse.
+  markOpponent(map, 5, 11);
 
   // Racks de servidor, pantallas y cajas para dar volumen a las salas (no tocan corredores ni haces).
   const racks: Array<[number, number]> = [
@@ -143,12 +145,15 @@ export function buildAct1OverworldTilemap(): IOverworldTilemap {
     objects: [
       // Trigger invisible a 2 casillas del spawn: al pisarlo suena el dispositivo y salta el vídeo intro.
       { id: "story-a1-event-biglog-briefing", kind: "EVENT", tileX: 6, tileY: 13, sprite: "trigger", trigger: "STEP_ON", hidden: true },
-      { id: "story-a1-reward-nexus-cache", kind: "REWARD_NEXUS", tileX: 18, tileY: 11, sprite: "nexus", trigger: "STEP_ON", imageSrc: NEXUS },
+      // Recompensas: se cogen al CHOCAR con ellas (BUMP); bloquean su celda hasta recogerse.
+      { id: "story-a1-reward-nexus-cache", kind: "REWARD_NEXUS", tileX: 18, tileY: 11, sprite: "nexus", trigger: "BUMP", imageSrc: NEXUS },
       { id: "story-a1-event-special-card-signal", kind: "EVENT", tileX: 20, tileY: 15, sprite: "servidor", trigger: "STEP_ON", imageSrc: SERVIDOR },
-      { id: "story-a1-reward-card-guardian", kind: "REWARD_CARD", tileX: 24, tileY: 13, sprite: "trap-drain", trigger: "STEP_ON", imageSrc: TRAP_DRAIN },
+      { id: "story-a1-reward-card-guardian", kind: "REWARD_CARD", tileX: 16, tileY: 15, sprite: "trap-drain", trigger: "BUMP", imageSrc: TRAP_DRAIN },
+      // Nodo Market: al acercarse y pulsar A abre el mercado (y vuelve al mapa).
+      { id: "story-a1-market", kind: "MARKET", tileX: 5, tileY: 11, sprite: "market", trigger: "ADJACENT_ACTION" },
       // Subruta difícil: trigger invisible en el corredor; al pisarlo aparece BigLog y avisa. Recompensa: carta potente.
       { id: "story-a1-side-event-echo-fragment", kind: "EVENT", tileX: 12, tileY: 16, sprite: "trigger", trigger: "STEP_ON", hidden: true },
-      { id: "story-a1-side-reward-card", kind: "REWARD_CARD", tileX: 18, tileY: 21, sprite: "trap-kernel", trigger: "STEP_ON", imageSrc: TRAP_KERNEL },
+      { id: "story-a1-side-reward-card", kind: "REWARD_CARD", tileX: 18, tileY: 21, sprite: "trap-kernel", trigger: "BUMP", imageSrc: TRAP_KERNEL },
 
       // Rivales con rango de visión: vigilan el corredor y retan al cruzar su haz.
       { id: "story-ch1-duel-1", kind: "DUEL", tileX: 16, tileY: 11, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/1", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3 },

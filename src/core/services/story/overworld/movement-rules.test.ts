@@ -59,6 +59,18 @@ describe("canWalkToTile", () => {
     expect(canWalkToTile({ tileX: 1, tileY: 1 }, context)).toBe(false);
   });
 
+  it("bloquea celdas dinámicas (blockedTileKeys) y las libera al quitarlas", () => {
+    const blocked = resolveMovementContext({
+      collisionGrid: grid,
+      gates: [],
+      progress: buildProgress(),
+      blockedTileKeys: new Set(["2,0"]),
+    });
+    expect(canWalkToTile({ tileX: 2, tileY: 0 }, blocked)).toBe(false);
+    const freed = resolveMovementContext({ collisionGrid: grid, gates: [], progress: buildProgress() });
+    expect(canWalkToTile({ tileX: 2, tileY: 0 }, freed)).toBe(true);
+  });
+
   it("bloquea una celda con puerta cerrada y la libera al cumplir requisitos", () => {
     const gate = { id: "gate-1", tileX: 2, tileY: 0, requiredNodeIds: ["story-ch1-duel-1"] };
     const closedContext = resolveMovementContext({

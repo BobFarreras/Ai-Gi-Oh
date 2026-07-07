@@ -3,6 +3,8 @@ import {
   IGridPosition,
   IOverworldProgressState,
   OverworldDirection,
+  resolveDirectionDelta,
+  toGridPositionKey,
 } from "@/core/services/story/overworld/overworld-types";
 import {
   canWalkToTile,
@@ -83,6 +85,8 @@ export class OverworldEngine {
   private focusedObjectId: string | null = null;
   private blockedSightlineId: string | null = null;
   private readonly collectedObjectIds: Set<string>;
+  private readonly bumpObjectByTileKey = new Map<string, string>();
+  private bumpBlockedKeys: Set<string> = new Set();
   private collectEffect: {
     objectId: string;
     imageSrc?: string;
@@ -139,6 +143,17 @@ export class OverworldEngine {
     this.hooks = init.hooks ?? {};
     this.progress = init.progress;
     this.collectedObjectIds = new Set(this.config.collectedNodeIds ?? []);
+    // Objetos que se cogen al chocar (BUMP): bloquean su celda hasta recogerse.
+    for (const object of init.tilemap.objects) {
+      if (object.trigger === "BUMP") {
+        this.bumpObjectByTileKey.set(toGridPositionKey({ tileX: object.tileX, tileY: object.tileY }), object.id);
+      }
+    }
+    this.bumpBlockedKeys = new Set(
+      [...this.bumpObjectByTileKey.entries()]
+        .filter(([, objectId]) => !this.collectedObjectIds.has(objectId))
+        .map(([key]) => key),
+    );
     this.renderer = new Renderer2D(
       init.canvas,
       this.config.maxDevicePixelRatio,
@@ -152,12 +167,17 @@ export class OverworldEngine {
     // Los rivales (DUEL/BOSS) son actores dinámicos con línea de visión, no objetos
     // de acción adyacente: se excluyen del foco de interacción.
     this.interactables = init.tilemap.objects
-      .filter((object) => object.kind !== "DUEL" && object.kind !== "BOSS")
+      .filter(
+        (object) =>
+          object.kind !== "DUEL" &&
+          object.kind !== "BOSS" &&
+          object.trigger !== "BUMP", // los BUMP se resuelven al chocar, no por foco
+      )
       .map((object) => ({
         id: object.id,
         tileX: object.tileX,
         tileY: object.tileY,
-        trigger: object.trigger,
+        trigger: object.trigger === "STEP_ON" ? "STEP_ON" : "ADJACENT_ACTION",
         requiredNodeIds: object.gateRequiredNodeIds ?? [],
       }));
     this.actors = new OpponentActorManager(init.tilemap.objects, this.config.tilesPerSecond);
@@ -182,6 +202,7 @@ export class OverworldEngine {
         collisionGrid,
         gates: listGatesFromTilemap(init.tilemap),
         progress: init.progress,
+        blockedTileKeys: this.bumpBlockedKeys,
       }),
       player: {
         tile:
@@ -198,12 +219,17 @@ export class OverworldEngine {
   /** Recalcula puertas y objetos bloqueados cuando cambia el progreso. */
   updateProgress(progress: IOverworldProgressState): void {
     this.progress = progress;
+    this.rebuildMovementContext();
+    this.recomputeBlockedObjects();
+  }
+
+  private rebuildMovementContext(): void {
     this.world.movementContext = resolveMovementContext({
       collisionGrid: buildCollisionGridFromTilemap(this.world.tilemap),
       gates: listGatesFromTilemap(this.world.tilemap),
-      progress,
+      progress: this.progress,
+      blockedTileKeys: this.bumpBlockedKeys,
     });
-    this.recomputeBlockedObjects();
   }
 
   /** Entrada direccional externa (D-pad táctil). `null` = sin dirección. */
@@ -272,6 +298,11 @@ export class OverworldEngine {
   }): void {
     const object = this.objectsById.get(input.objectId);
     this.collectedObjectIds.add(input.objectId);
+    // Al recoger un objeto de choque, su celda queda libre para pasar.
+    if (object) {
+      this.bumpBlockedKeys.delete(toGridPositionKey({ tileX: object.tileX, tileY: object.tileY }));
+      this.rebuildMovementContext();
+    }
     this.collectEffect = {
       objectId: input.objectId,
       imageSrc: input.imageSrc,
@@ -681,8 +712,26 @@ export class OverworldEngine {
     const { player } = this.world;
     const step = resolveStep(player.tile, direction, this.world.movementContext);
     player.facing = step.facing;
-    if (!step.target) return;
+    if (!step.target) {
+      // Bloqueado: ¿es un objeto que se coge al chocar?
+      const delta = resolveDirectionDelta(direction);
+      const candidateKey = toGridPositionKey({
+        tileX: player.tile.tileX + delta.tileX,
+        tileY: player.tile.tileY + delta.tileY,
+      });
+      const bumpObjectId = this.bumpBlockedKeys.has(candidateKey)
+        ? this.bumpObjectByTileKey.get(candidateKey)
+        : undefined;
+      if (bumpObjectId) this.emitObjectBump(bumpObjectId);
+      return;
+    }
     player.activeMove = { from: player.tile, to: step.target, progress: initialProgress };
+  }
+
+  private emitObjectBump(objectId: string): void {
+    const object = this.objectsById.get(objectId);
+    if (!object) return;
+    this.hooks.onIntent?.({ object, isBlocked: false, missingRequirements: [], source: "BUMP" });
   }
 
   private consumeActionInput(): void {

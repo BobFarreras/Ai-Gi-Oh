@@ -14,6 +14,8 @@ export interface IMovementContext {
   collisionGrid: IOverworldCollisionGrid;
   gates: ReadonlyArray<IOverworldGate>;
   progress: IOverworldProgressState;
+  /** Celdas bloqueadas dinámicamente (p. ej. recompensas por recoger); se liberan al recogerlas. */
+  blockedTileKeys?: ReadonlySet<string>;
 }
 
 /**
@@ -36,6 +38,7 @@ export function resolveMovementContext(context: IMovementContext): IResolvedMove
       closedGateKeys.add(toGridPositionKey({ tileX: gate.tileX, tileY: gate.tileY }));
     }
   }
+  for (const key of context.blockedTileKeys ?? []) closedGateKeys.add(key);
   return { collisionGrid: context.collisionGrid, closedGateKeys };
 }
 

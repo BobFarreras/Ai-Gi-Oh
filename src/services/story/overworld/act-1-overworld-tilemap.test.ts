@@ -74,6 +74,14 @@ describe("buildAct1OverworldTilemap", () => {
     expect(byId.get("story-ch1-duel-5")?.gateRequiredNodeIds).toEqual(["story-ch1-duel-4"]);
   });
 
+  it("las recompensas se cogen al chocar (BUMP) y hay un nodo de mercado", () => {
+    const objects = buildAct1OverworldTilemap().objects;
+    const rewards = objects.filter((object) => object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD");
+    expect(rewards.length).toBeGreaterThan(0);
+    expect(rewards.every((object) => object.trigger === "BUMP")).toBe(true);
+    expect(objects.some((object) => object.kind === "MARKET")).toBe(true);
+  });
+
   it("los nodos de recompensa existen en el registro con su tipo (para el claim server-side)", () => {
     const rewardIds = buildAct1OverworldTilemap()
       .objects.filter((object) => object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD")

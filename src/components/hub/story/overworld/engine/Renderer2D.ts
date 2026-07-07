@@ -44,6 +44,7 @@ const OBJECT_LABELS: Record<OverworldObjectKind, string> = {
   SUBMISSION: "Terminal",
   WARP: "Portal",
   GATE: "Puerta",
+  MARKET: "Mercado",
 };
 
 const OBJECT_ACCENT: Record<OverworldObjectKind, string> = {
@@ -56,6 +57,7 @@ const OBJECT_ACCENT: Record<OverworldObjectKind, string> = {
   SUBMISSION: "#fb7185",
   WARP: "#818cf8",
   GATE: "#eab308",
+  MARKET: "#4ade80",
 };
 
 const BACKGROUND = "#05070f";
@@ -387,6 +389,8 @@ export class Renderer2D {
       this.drawGate(screenX, screenY, size, accent, isBlocked, timeMs);
     } else if (kind === "WARP") {
       this.drawPortal(cx, cy, size, accent, timeMs);
+    } else if (kind === "MARKET") {
+      this.drawMarketKiosk(screenX, screenY, size, accent, timeMs);
     } else {
       const image = this.sprites.get(imageSrc);
       const radius = size * 0.42;
@@ -483,6 +487,27 @@ export class Renderer2D {
     context.lineWidth = 2;
     context.strokeRect(screenX + size * 0.1, screenY + size * 0.1, size * 0.8, size * 0.8);
     context.globalAlpha = 1;
+  }
+
+  private drawMarketKiosk(screenX: number, screenY: number, size: number, accent: string, timeMs: number): void {
+    const context = this.context;
+    // Mostrador.
+    context.fillStyle = "#0b1f16";
+    context.fillRect(screenX + size * 0.14, screenY + size * 0.42, size * 0.72, size * 0.44);
+    context.strokeStyle = accent;
+    context.lineWidth = 2;
+    context.strokeRect(screenX + size * 0.14, screenY + size * 0.42, size * 0.72, size * 0.44);
+    // Toldo a rayas.
+    for (let stripe = 0; stripe < 4; stripe++) {
+      context.fillStyle = stripe % 2 === 0 ? accent : "#f8fafc";
+      context.fillRect(screenX + size * (0.1 + stripe * 0.2), screenY + size * 0.24, size * 0.2, size * 0.18);
+    }
+    // Icono de carrito / brillo.
+    const glow = 0.5 + Math.sin(timeMs / 300) * 0.4;
+    context.fillStyle = `rgba(74, 222, 128, ${Math.max(0.2, glow)})`;
+    context.beginPath();
+    context.arc(screenX + size / 2, screenY + size * 0.62, size * 0.1, 0, Math.PI * 2);
+    context.fill();
   }
 
   private drawPortal(cx: number, cy: number, size: number, accent: string, timeMs: number): void {

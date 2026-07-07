@@ -27,10 +27,12 @@ const VALID_KINDS: ReadonlySet<OverworldObjectKind> = new Set([
   "SUBMISSION",
   "WARP",
   "GATE",
+  "MARKET",
 ]);
 const VALID_TRIGGERS: ReadonlySet<OverworldObjectTrigger> = new Set([
   "ADJACENT_ACTION",
   "STEP_ON",
+  "BUMP",
 ]);
 const VALID_FACINGS = new Set(["UP", "DOWN", "LEFT", "RIGHT"]);
 const VALID_WARP_DIRECTIONS = new Set(["forward", "backward"]);

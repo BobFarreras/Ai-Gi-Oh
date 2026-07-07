@@ -16,6 +16,9 @@ import { OverworldBattleTransition } from "@/components/hub/story/overworld/hud/
 import { resolveIntentPresentation } from "@/components/hub/story/overworld/hud/resolve-intent-presentation";
 import { StoryInteractionVideoOverlay } from "@/components/hub/story/internal/scene/dialog/StoryInteractionVideoOverlay";
 import { StoryNodeInteractionDialog } from "@/components/hub/story/internal/scene/dialog/StoryNodeInteractionDialog";
+import { useStorySceneSfx } from "@/components/hub/story/internal/scene/audio/use-story-scene-sfx";
+import { useStoryMapSoundtrack } from "@/components/hub/story/internal/scene/audio/use-story-map-soundtrack";
+import { Backpack, Volume2, VolumeX } from "lucide-react";
 import { buildAct1OverworldTilemap } from "@/services/story/overworld/act-1-overworld-tilemap";
 import { buildAct1EchoCutscene } from "@/services/story/overworld/act-1-echo-cutscene";
 import { resolveOverworldEventDialogue } from "@/services/story/overworld/resolve-overworld-event-dialogue";
@@ -28,7 +31,9 @@ import {
 import { IOverworldTilemap } from "@/services/story/overworld/tilemap-schema";
 
 const OVERWORLD_MAP_ID = "act-1";
+const ACT_ID = 1;
 const ECHO_TRIGGER_NODE_ID = "story-a1-side-event-echo-fragment";
+const PRECOMBAT_SOUND = "/audio/story/sonido-precombate.m4a";
 const SEEN_EVENTS_STORAGE_KEY = "overworld-seen-events-act-1";
 
 function loadSeenEvents(): Set<string> {
@@ -150,6 +155,59 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
   );
   const playerTileRef = useRef(playerTile);
   const [completedIds] = useState<ReadonlySet<string>>(initialCompleted);
+  const [isMarketPromptOpen, setIsMarketPromptOpen] = useState(false);
+
+  // Audio: SFX de Story + soundtrack del acto (reutilizados del modo Story clásico).
+  const sfx = useStorySceneSfx();
+  const sfxRef = useRef(sfx);
+  useEffect(() => {
+    sfxRef.current = sfx;
+  });
+  const { isMuted, toggleMute } = useStoryMapSoundtrack(ACT_ID);
+  const precombatRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    if (typeof Audio === "undefined") return;
+    const audio = new Audio(PRECOMBAT_SOUND);
+    audio.preload = "auto";
+    audio.volume = 0.55;
+    precombatRef.current = audio;
+    return () => {
+      audio.pause();
+      precombatRef.current = null;
+    };
+  }, []);
+
+  const saveOverworldPosition = async (): Promise<void> => {
+    const tile = playerTileRef.current;
+    try {
+      await fetch("/api/story/overworld/state", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ mapId: OVERWORLD_MAP_ID, tileX: tile.tileX, tileY: tile.tileY }),
+      });
+    } catch {
+      // Si falla, se pierde solo la posición restaurada; no bloquea la navegación.
+    }
+  };
+
+  const openArsenal = async (): Promise<void> => {
+    sfxRef.current?.playButtonClick();
+    await saveOverworldPosition();
+    router.push("/hub/arsenal?from=overworld");
+  };
+
+  const enterMarket = async (): Promise<void> => {
+    sfxRef.current?.playButtonClick();
+    setIsMarketPromptOpen(false);
+    await saveOverworldPosition();
+    router.push("/hub/market?from=overworld");
+  };
+
+  const closeMarketPrompt = (): void => {
+    setIsMarketPromptOpen(false);
+    engineRef.current?.setInteractionSuspended(false);
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -174,6 +232,8 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
           markEventSeen(object.id);
           setCollectedRewardIds((prev) => new Set(prev).add(object.id));
           if (!data.alreadyClaimed && ((data.rewardNexus ?? 0) > 0 || data.rewardCardId)) {
+            if ((data.rewardNexus ?? 0) > 0) sfxRef.current?.playRewardNexus();
+            else sfxRef.current?.playRewardCard();
             // El objeto se encoge hacia el jugador; si es Nexus, sube el valor flotante.
             engine.collectReward({
               objectId: object.id,
@@ -190,6 +250,12 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
       engine.setInteractionSuspended(false);
     };
     const startBattle = (object: IOverworldIntent["object"]): void => {
+      // Sonido de pre-combate al arrancar la animación de vibración.
+      const precombat = precombatRef.current;
+      if (precombat) {
+        precombat.currentTime = 0;
+        void precombat.play().catch(() => undefined);
+      }
       setActiveIntent(null);
       setPendingBattle({
         duelHref: object.duelHref!,
@@ -227,6 +293,11 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
             Boolean(object.duelHref);
           if (isCombat && intent.source === "SIGHTLINE") {
             startBattle(object);
+            return;
+          }
+          // Mercado: diálogo de confirmación antes de abrir la página del market.
+          if (object.kind === "MARKET") {
+            setIsMarketPromptOpen(true);
             return;
           }
           // Recompensas: se otorgan en servidor (una sola vez) al pisarlas.
@@ -279,6 +350,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
 
   const closeVideo = (): void => {
     const wasCutscene = activeVideo?.isCutscene ?? false;
+    sfxRef.current?.playEventFinish();
     setActiveVideo(null);
     if (wasCutscene) engineRef.current?.resumeCutscene();
     else engineRef.current?.setInteractionSuspended(false);
@@ -311,6 +383,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
 
   const closeNarration = (): void => {
     const wasCutscene = narration?.isCutscene ?? false;
+    sfxRef.current?.playEventFinish();
     setNarration(null);
     if (wasCutscene) engineRef.current?.resumeCutscene();
     else engineRef.current?.setInteractionSuspended(false);
@@ -373,14 +446,32 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
 
       <OverworldMinimap tilemap={tilemap} playerTile={playerTile} defeatedIds={completedIds} hiddenIds={collectedRewardIds} />
 
-      <div className="absolute left-3 top-24 z-20">
+      <div className="absolute left-3 top-24 z-20 flex flex-col gap-2">
         <Link
           href="/hub/story"
           className="pointer-events-auto rounded-md border border-cyan-300/35 bg-slate-950/80 px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-cyan-200 backdrop-blur-sm transition hover:bg-cyan-400/10"
         >
           Salir
         </Link>
+        <button
+          type="button"
+          onClick={() => void openArsenal()}
+          aria-label="Abrir Arsenal (editar deck)"
+          className="pointer-events-auto group flex items-center gap-2 overflow-hidden rounded-md border border-fuchsia-400/40 bg-gradient-to-br from-fuchsia-950/70 to-slate-950/80 px-3 py-2 text-[11px] font-black uppercase tracking-widest text-fuchsia-100 shadow-[inset_0_0_10px_rgba(0,0,0,0.5)] backdrop-blur-sm transition hover:border-fuchsia-300/80 hover:shadow-[0_0_15px_rgba(232,121,249,0.35)]"
+        >
+          <Backpack size={16} className="text-fuchsia-300 transition group-hover:scale-110" />
+          Mochila
+        </button>
       </div>
+
+      <button
+        type="button"
+        onClick={toggleMute}
+        aria-label={isMuted ? "Activar música" : "Silenciar música"}
+        className="pointer-events-auto absolute right-3 top-40 z-20 rounded-md border border-cyan-300/30 bg-slate-950/80 p-2 text-cyan-200 backdrop-blur-sm transition hover:bg-cyan-400/10"
+      >
+        {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+      </button>
 
       {promptText ? (
         <div className="pointer-events-none absolute left-1/2 top-16 z-20 -translate-x-1/2 rounded-full border border-white/20 bg-slate-950/85 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-white backdrop-blur-sm">
@@ -410,6 +501,36 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
           onClose={closeNarration}
           centerNextButton
         />
+      ) : null}
+
+      {isMarketPromptOpen ? (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/65 p-4" onClick={closeMarketPrompt}>
+          <div
+            className="w-full max-w-sm rounded-2xl border border-emerald-300/30 bg-slate-950/95 p-5 text-emerald-50 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="text-[11px] font-black uppercase tracking-widest text-emerald-300">Mercado</p>
+            <p className="mt-3 text-sm text-slate-200">
+              ¿Quieres entrar al mercado a comprar sobres, cartas y recursos? Volverás aquí mismo al salir.
+            </p>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => void enterMarket()}
+                className="flex-1 rounded-lg border border-emerald-300/50 bg-emerald-500/20 py-2 text-xs font-black uppercase tracking-widest text-emerald-100 transition hover:bg-emerald-400/30"
+              >
+                Entrar
+              </button>
+              <button
+                type="button"
+                onClick={closeMarketPrompt}
+                className="rounded-lg border border-slate-400/30 px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-300 transition hover:bg-white/5"
+              >
+                Ahora no
+              </button>
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {pendingBattle ? (

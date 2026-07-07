@@ -15,7 +15,7 @@ export interface IOverworldIntent {
   object: IOverworldTilemapObject;
   isBlocked: boolean;
   missingRequirements: string[];
-  source: "ACTION" | "STEP_ON" | "SIGHTLINE";
+  source: "ACTION" | "STEP_ON" | "SIGHTLINE" | "BUMP";
 }
 
 /**

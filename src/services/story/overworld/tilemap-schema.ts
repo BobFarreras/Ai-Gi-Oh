@@ -20,13 +20,14 @@ export type OverworldObjectKind =
   | "NPC"
   | "SUBMISSION"
   | "WARP"
-  | "GATE";
+  | "GATE"
+  | "MARKET";
 
 /**
  * Cómo se dispara la interacción: acción explícita estando adyacente
  * (botón A / Espacio) o automáticamente al pisar la celda.
  */
-export type OverworldObjectTrigger = "ADJACENT_ACTION" | "STEP_ON";
+export type OverworldObjectTrigger = "ADJACENT_ACTION" | "STEP_ON" | "BUMP";
 
 export type OverworldWarpDirection = "forward" | "backward";
 
