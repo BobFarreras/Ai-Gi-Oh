@@ -34,6 +34,8 @@ interface StoryDuelClientProps {
   opponentDeck: ICard[];
   opponentFusionDeck: ICard[];
   completionTicket: string;
+  returnBasePath?: string;
+  resultActionLabel?: string;
 }
 
 export function StoryDuelClient(props: StoryDuelClientProps) {
@@ -49,6 +51,7 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
     chapter: props.chapter,
     duelIndex: props.duelIndex,
     completionTicket: props.completionTicket,
+    returnBasePath: props.returnBasePath,
   });
   const presentationRuntime = useMemo(
     () => createStoryDuelPresentationRuntime(props.opponentId, props.opponentAvatarUrl),
@@ -108,7 +111,7 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
         narrationPack={narrationPack}
         isMatchStartLocked={isCoinTossVisible}
         duelResultRewardSummary={rewardSummary}
-        resultActionLabel="Volver al mapa Story"
+        resultActionLabel={props.resultActionLabel ?? "Volver al mapa Story"}
         onResultAction={handleResultAction}
         onExitMatch={() => void handleAbortMatch()}
         onMatchResolved={handleMatchResolved}

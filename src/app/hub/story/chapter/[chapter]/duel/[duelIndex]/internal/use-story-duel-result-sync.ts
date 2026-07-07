@@ -9,6 +9,8 @@ interface IStoryDuelResultSyncInput {
   chapter: number;
   duelIndex: number;
   completionTicket: string;
+  /** Ruta base de retorno tras el duelo (por defecto el mapa Story clásico). */
+  returnBasePath?: string;
 }
 
 interface IStoryDuelTransition {
@@ -25,7 +27,12 @@ function buildFallbackTransition(input: IStoryDuelResultSyncInput): IStoryDuelTr
   };
 }
 
-function pushBackToStory(input: IStoryDuelTransition): void {
+function pushBackToStory(input: IStoryDuelTransition, returnBasePath: string): void {
+  // El overworld lee el progreso real de la BD; no necesita los params de transición clásica.
+  if (returnBasePath !== "/hub/story") {
+    window.location.replace(`${returnBasePath}?hardReload=${Date.now()}`);
+    return;
+  }
   const query = new URLSearchParams({
     duelOutcome: input.outcome,
     duelNodeId: input.duelNodeId,
@@ -45,8 +52,9 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
   const [resultTransition, setResultTransition] = useState<IStoryDuelTransition | null>(null);
   const hasPostedResultRef = useRef(false);
 
+  const returnBasePath = input.returnBasePath ?? "/hub/story";
   const handleResultAction = (): void => {
-    pushBackToStory(resultTransition ?? buildFallbackTransition(input));
+    pushBackToStory(resultTransition ?? buildFallbackTransition(input), returnBasePath);
   };
 
   const handleMatchResolved = async (result: { winnerPlayerId: string | "DRAW"; playerId: string; flawless?: boolean }): Promise<void> => {
@@ -94,11 +102,14 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
         outcome: "ABANDONED",
         completionTicket: input.completionTicket,
       });
-      pushBackToStory({
-        outcome: "ABANDONED",
-        duelNodeId: payload.duelNodeId,
-        returnNodeId: payload.returnNodeId,
-      });
+      pushBackToStory(
+        {
+          outcome: "ABANDONED",
+          duelNodeId: payload.duelNodeId,
+          returnNodeId: payload.returnNodeId,
+        },
+        returnBasePath,
+      );
     } catch {
       hasPostedResultRef.current = false;
       setStatus("No se pudo sincronizar el abandono Story.");
