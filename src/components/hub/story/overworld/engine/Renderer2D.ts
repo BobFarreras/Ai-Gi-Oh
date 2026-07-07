@@ -9,6 +9,7 @@ import {
 } from "@/components/hub/story/overworld/engine/camera-math";
 import {
   IEngineWorldState,
+  IOverworldCollectEffectRender,
   IOverworldCutsceneNpcRender,
 } from "@/components/hub/story/overworld/engine/engine-types";
 import { SpriteCache } from "@/components/hub/story/overworld/engine/SpriteCache";
@@ -26,6 +27,10 @@ export interface IRenderOptions {
   opponentActors: ReadonlyArray<IOpponentActorRenderData>;
   /** NPC de cutscene (p. ej. BigLog en la intro), o null. */
   cutsceneNpc: IOverworldCutsceneNpcRender | null;
+  /** Objetos ya recogidos: no se dibujan. */
+  collectedObjectIds: ReadonlySet<string>;
+  /** Efecto de recolección en curso (objeto encogiéndose + valor flotante). */
+  collectEffect: IOverworldCollectEffectRender | null;
   timeMs: number;
 }
 
@@ -126,6 +131,7 @@ export class Renderer2D {
     this.drawCutsceneNpc(world, cameraOffset, options);
     this.drawPlayer(world, playerPixel, cameraOffset);
     this.drawOverlayPass(tilemap, cameraOffset, range, options.timeMs);
+    this.drawCollectEffect(cameraOffset, options);
     this.drawFocusLabel(world, cameraOffset, options);
     context.restore();
     this.drawScanlinesAndVignette();
@@ -338,8 +344,8 @@ export class Renderer2D {
     for (const object of world.tilemap.objects) {
       // Los rivales se dibujan como actores dinámicos, no como token estático.
       if (object.kind === "DUEL" || object.kind === "BOSS") continue;
-      // Triggers invisibles: no se dibujan.
-      if (object.hidden) continue;
+      // Triggers invisibles y objetos ya recogidos: no se dibujan.
+      if (object.hidden || options.collectedObjectIds.has(object.id)) continue;
       if (
         object.tileX < range.minTileX - 1 ||
         object.tileX > range.maxTileX + 1 ||
@@ -689,6 +695,41 @@ export class Renderer2D {
     context.beginPath();
     context.arc(cx, screenY + size * 0.16, size * 0.07, 0, Math.PI * 2);
     context.fill();
+  }
+
+  private drawCollectEffect(camera: ICameraOffset, options: IRenderOptions): void {
+    const effect = options.collectEffect;
+    if (!effect) return;
+    const context = this.context;
+    // Token encogiéndose hacia el jugador.
+    if (effect.size > 1) {
+      const cx = camera.x + effect.x + effect.size / 2;
+      const cy = camera.y + effect.y + effect.size / 2;
+      const radius = effect.size / 2;
+      context.globalAlpha = effect.alpha;
+      const image = this.sprites.get(effect.imageSrc);
+      if (image) this.drawImageCircle(image, cx, cy, radius, false);
+      else this.drawTokenPlaceholder(cx, cy, radius, "#fbbf24");
+      context.strokeStyle = "rgba(251, 191, 36, 0.9)";
+      context.lineWidth = 2;
+      context.beginPath();
+      context.arc(cx, cy, radius, 0, Math.PI * 2);
+      context.stroke();
+      context.globalAlpha = 1;
+    }
+    // Valor flotante (p. ej. +180) subiendo sobre el jugador.
+    if (effect.label) {
+      context.globalAlpha = effect.labelAlpha;
+      context.font = "900 22px system-ui, sans-serif";
+      context.fillStyle = "#fde68a";
+      context.strokeStyle = "rgba(2, 6, 23, 0.9)";
+      context.lineWidth = 4;
+      const labelX = camera.x + effect.labelX;
+      const labelY = camera.y + effect.labelY;
+      context.strokeText(effect.label, labelX, labelY);
+      context.fillText(effect.label, labelX, labelY);
+      context.globalAlpha = 1;
+    }
   }
 
   private drawFocusLabel(

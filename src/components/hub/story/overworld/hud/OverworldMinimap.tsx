@@ -10,6 +10,8 @@ interface IOverworldMinimapProps {
   tilemap: IOverworldTilemap;
   playerTile: IGridPosition;
   defeatedIds: ReadonlySet<string>;
+  /** Objetos recogidos/ocultos que no deben aparecer. */
+  hiddenIds?: ReadonlySet<string>;
 }
 
 const CELL = 4;
@@ -27,7 +29,7 @@ const DOT: Partial<Record<OverworldObjectKind, string>> = {
  * Minimapa fijo arriba a la derecha: da visión global mientras la cámara va
  * "por habitaciones". Se redibuja solo cuando el jugador cambia de celda.
  */
-export function OverworldMinimap({ tilemap, playerTile, defeatedIds }: IOverworldMinimapProps) {
+export function OverworldMinimap({ tilemap, playerTile, defeatedIds, hiddenIds }: IOverworldMinimapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export function OverworldMinimap({ tilemap, playerTile, defeatedIds }: IOverworl
     }
 
     for (const object of tilemap.objects) {
-      if (object.hidden) continue;
+      if (object.hidden || hiddenIds?.has(object.id)) continue;
       const color = DOT[object.kind];
       if (!color) continue;
       context.fillStyle = defeatedIds.has(object.id) ? "rgba(100,116,139,0.7)" : color;
@@ -63,7 +65,7 @@ export function OverworldMinimap({ tilemap, playerTile, defeatedIds }: IOverworl
     context.strokeStyle = "#022c22";
     context.lineWidth = 1;
     context.stroke();
-  }, [tilemap, playerTile, defeatedIds]);
+  }, [tilemap, playerTile, defeatedIds, hiddenIds]);
 
   return (
     <div className="pointer-events-none absolute right-3 top-14 z-20 rounded-lg border border-cyan-300/25 bg-slate-950/80 p-2 backdrop-blur-sm">

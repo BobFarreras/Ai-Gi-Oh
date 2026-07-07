@@ -7,6 +7,8 @@ import { IPlayerOverworldPosition } from "@/core/entities/story/IPlayerOverworld
 export interface IStoryOverworldRuntime {
   completedNodeIds: string[];
   initialPosition: IPlayerOverworldPosition | null;
+  /** Nodos ya interactuados (recompensas recogidas): no se vuelven a otorgar ni dibujar. */
+  interactedNodeIds: string[];
 }
 
 /**
@@ -18,16 +20,20 @@ export async function getStoryOverworldRuntime(mapId: string): Promise<IStoryOve
   if (!session) return null;
   const progressRepository = await createSupabasePlayerStoryDuelProgressRepository();
   const worldRepository = await createSupabasePlayerStoryWorldRepository();
-  const [progress, overworld] = await Promise.all([
+  const [progress, overworld, compact] = await Promise.all([
     progressRepository.listByPlayerId(session.user.id),
     worldRepository
       .getOverworldStateByPlayerId(session.user.id)
       .catch(() => ({ mapId: null, position: null })),
+    worldRepository
+      .getCompactStateByPlayerId(session.user.id)
+      .catch(() => ({ currentNodeId: null, visitedNodeIds: [], interactedNodeIds: [] })),
   ]);
   return {
     completedNodeIds: progress
       .filter((entry) => entry.bestResult === "WON")
       .map((entry) => entry.duelId),
     initialPosition: overworld.mapId === mapId ? overworld.position : null,
+    interactedNodeIds: compact.interactedNodeIds,
   };
 }

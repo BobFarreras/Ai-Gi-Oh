@@ -27,6 +27,7 @@ import {
   DEFAULT_ENGINE_CONFIG,
   FIXED_TIMESTEP_MS,
   IEngineWorldState,
+  IOverworldCollectEffectRender,
   IOverworldCutsceneNpcRender,
   IOverworldEngineConfig,
   IOverworldFocus,
@@ -81,6 +82,15 @@ export class OverworldEngine {
   private blockedObjectIds: Set<string> = new Set();
   private focusedObjectId: string | null = null;
   private blockedSightlineId: string | null = null;
+  private readonly collectedObjectIds: Set<string>;
+  private collectEffect: {
+    objectId: string;
+    imageSrc?: string;
+    fromTile: IGridPosition;
+    floatingLabel: string | null;
+    progress: number;
+    onDone: () => void;
+  } | null = null;
 
   // Cutscene guionizada (intro, apariciones de NPC).
   private cutsceneSteps: OverworldCutsceneStep[] = [];
@@ -128,6 +138,7 @@ export class OverworldEngine {
     this.config = { ...DEFAULT_ENGINE_CONFIG, ...init.config };
     this.hooks = init.hooks ?? {};
     this.progress = init.progress;
+    this.collectedObjectIds = new Set(this.config.collectedNodeIds ?? []);
     this.renderer = new Renderer2D(
       init.canvas,
       this.config.maxDevicePixelRatio,
@@ -247,6 +258,68 @@ export class OverworldEngine {
     if (!this.isCutsceneAwaitingResume) return;
     this.isCutsceneAwaitingResume = false;
     this.goToNextCutsceneStep();
+  }
+
+  /**
+   * Anima la recogida de una recompensa: el objeto se encoge hacia el jugador y
+   * (si es Nexus) sube un valor flotante. El objeto deja de dibujarse al instante.
+   */
+  collectReward(input: {
+    objectId: string;
+    imageSrc?: string;
+    floatingLabel: string | null;
+    onDone: () => void;
+  }): void {
+    const object = this.objectsById.get(input.objectId);
+    this.collectedObjectIds.add(input.objectId);
+    this.collectEffect = {
+      objectId: input.objectId,
+      imageSrc: input.imageSrc,
+      fromTile: object
+        ? { tileX: object.tileX, tileY: object.tileY }
+        : { tileX: this.world.player.tile.tileX, tileY: this.world.player.tile.tileY },
+      floatingLabel: input.floatingLabel,
+      progress: 0,
+      onDone: input.onDone,
+    };
+  }
+
+  private advanceCollectEffect(deltaSeconds: number): void {
+    if (!this.collectEffect) return;
+    this.collectEffect.progress += deltaSeconds / 0.65;
+    if (this.collectEffect.progress >= 1) {
+      const onDone = this.collectEffect.onDone;
+      this.collectEffect = null;
+      onDone();
+    }
+  }
+
+  private resolveCollectEffectRender(tileSize: number): IOverworldCollectEffectRender | null {
+    const effect = this.collectEffect;
+    if (!effect) return null;
+    const progress = Math.max(0, Math.min(1, effect.progress));
+    const eased = progress * progress;
+    const fromCenterX = effect.fromTile.tileX * tileSize + tileSize / 2;
+    const fromCenterY = effect.fromTile.tileY * tileSize + tileSize / 2;
+    const playerCenterX = this.world.player.tile.tileX * tileSize + tileSize / 2;
+    const playerCenterY = this.world.player.tile.tileY * tileSize + tileSize / 2;
+    const size = tileSize * (0.84 - 0.68 * progress);
+    const centerX = fromCenterX + (playerCenterX - fromCenterX) * eased;
+    const centerY = fromCenterY + (playerCenterY - fromCenterY) * eased;
+    const alpha = progress < 0.85 ? 1 : Math.max(0, 1 - (progress - 0.85) / 0.15);
+    const labelAlpha =
+      progress < 0.12 ? progress / 0.12 : Math.max(0, 1 - (progress - 0.12) / 0.88);
+    return {
+      imageSrc: effect.imageSrc,
+      x: centerX - size / 2,
+      y: centerY - size / 2,
+      size,
+      alpha,
+      label: effect.floatingLabel,
+      labelX: playerCenterX,
+      labelY: this.world.player.tile.tileY * tileSize - tileSize * 0.2 - progress * tileSize * 0.9,
+      labelAlpha,
+    };
   }
 
   dispose(): void {
@@ -556,6 +629,7 @@ export class OverworldEngine {
   };
 
   private update(deltaSeconds: number): void {
+    this.advanceCollectEffect(deltaSeconds);
     if (this.isCutsceneActive) {
       this.advanceCutscene(deltaSeconds);
       this.actors.update({
@@ -683,6 +757,8 @@ export class OverworldEngine {
       blockedObjectIds: this.blockedObjectIds,
       opponentActors: this.actors.getRenderData(tilemap.tileSize, this.isOpponentDefeated),
       cutsceneNpc: this.resolveCutsceneNpcRender(tilemap.tileSize),
+      collectedObjectIds: this.collectedObjectIds,
+      collectEffect: this.resolveCollectEffectRender(tilemap.tileSize),
       timeMs: this.lastFrameTimeMs ?? 0,
     });
   }

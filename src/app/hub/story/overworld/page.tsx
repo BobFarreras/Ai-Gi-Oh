@@ -43,6 +43,7 @@ export default async function StoryOverworldPage() {
       <OverworldDevScene
         completedNodeIds={runtime?.completedNodeIds ?? []}
         initialPosition={runtime?.initialPosition ?? null}
+        interactedNodeIds={runtime?.interactedNodeIds ?? []}
       />
     </main>
   );

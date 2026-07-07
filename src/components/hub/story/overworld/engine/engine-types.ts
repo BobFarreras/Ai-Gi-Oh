@@ -45,6 +45,19 @@ export interface IOverworldCutsceneNpcRender {
   spriteSrc: string;
 }
 
+/** Datos de render del efecto de recolección (el objeto se encoge hacia el jugador + valor flotante). */
+export interface IOverworldCollectEffectRender {
+  imageSrc?: string;
+  x: number;
+  y: number;
+  size: number;
+  alpha: number;
+  label: string | null;
+  labelX: number;
+  labelY: number;
+  labelAlpha: number;
+}
+
 /**
  * Interpolación en curso entre dos celdas (posición visual en píxeles).
  */
@@ -84,6 +97,8 @@ export interface IOverworldEngineConfig {
   initialPosition?: IGridPosition | null;
   /** Cutscene a reproducir al arrancar (p. ej. la intro). */
   introCutscene?: OverworldCutsceneStep[] | null;
+  /** Recompensas ya recogidas (no se dibujan; se restauran del servidor). */
+  collectedNodeIds?: string[] | null;
 }
 
 export const DEFAULT_ENGINE_CONFIG: IOverworldEngineConfig = {
@@ -93,6 +108,7 @@ export const DEFAULT_ENGINE_CONFIG: IOverworldEngineConfig = {
   zoom: 1.85,
   initialPosition: null,
   introCutscene: null,
+  collectedNodeIds: null,
 };
 
 /** Paso fijo de simulación (60 Hz) desacoplado del framerate de render. */

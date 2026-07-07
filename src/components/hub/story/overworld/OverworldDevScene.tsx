@@ -53,6 +53,7 @@ function persistSeenEvents(seen: Set<string>): void {
 interface IOverworldDevSceneProps {
   completedNodeIds: string[];
   initialPosition: IPlayerOverworldPosition | null;
+  interactedNodeIds: string[];
 }
 
 function buildProgress(completedIds: ReadonlySet<string>) {
@@ -129,7 +130,7 @@ interface IActiveNarration {
   isCutscene: boolean;
 }
 
-export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverworldDevSceneProps) {
+export function OverworldDevScene({ completedNodeIds, initialPosition, interactedNodeIds }: IOverworldDevSceneProps) {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<OverworldEngine | null>(null);
@@ -142,7 +143,8 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
   const [pendingBattle, setPendingBattle] = useState<IPendingBattle | null>(null);
   const [activeVideo, setActiveVideo] = useState<{ video: IStoryInteractionCinematicVideo; isCutscene: boolean } | null>(null);
   const [narration, setNarration] = useState<IActiveNarration | null>(null);
-  const [rewardResult, setRewardResult] = useState<{ nexus: number; cardId: string | null; imageSrc?: string } | null>(null);
+  const initialInteracted = useMemo(() => new Set(interactedNodeIds), [interactedNodeIds]);
+  const [collectedRewardIds, setCollectedRewardIds] = useState<ReadonlySet<string>>(initialInteracted);
   const [playerTile, setPlayerTile] = useState(
     initialPosition ?? { tileX: tilemap.spawns[0].tileX, tileY: tilemap.spawns[0].tileY },
   );
@@ -152,8 +154,9 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    // Los eventos ya vistos no se repiten (persisten entre recargas).
+    // Los eventos/recompensas ya vistos no se repiten (persisten entre recargas + servidor).
     loadSeenEvents().forEach((id) => seenEventIdsRef.current.add(id));
+    initialInteracted.forEach((id) => seenEventIdsRef.current.add(id));
     const markEventSeen = (nodeId: string): void => {
       seenEventIdsRef.current.add(nodeId);
       persistSeenEvents(seenEventIdsRef.current);
@@ -169,8 +172,15 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
         const data = (await res.json()) as { alreadyClaimed?: boolean; rewardNexus?: number; rewardCardId?: string | null };
         if (res.ok) {
           markEventSeen(object.id);
+          setCollectedRewardIds((prev) => new Set(prev).add(object.id));
           if (!data.alreadyClaimed && ((data.rewardNexus ?? 0) > 0 || data.rewardCardId)) {
-            setRewardResult({ nexus: data.rewardNexus ?? 0, cardId: data.rewardCardId ?? null, imageSrc: object.imageSrc });
+            // El objeto se encoge hacia el jugador; si es Nexus, sube el valor flotante.
+            engine.collectReward({
+              objectId: object.id,
+              imageSrc: object.imageSrc,
+              floatingLabel: (data.rewardNexus ?? 0) > 0 ? `+${data.rewardNexus}` : null,
+              onDone: () => engine.setInteractionSuspended(false),
+            });
             return;
           }
         }
@@ -192,7 +202,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
       canvas,
       tilemap,
       progress: buildProgress(initialCompleted),
-      config: { initialPosition },
+      config: { initialPosition, collectedNodeIds: [...initialInteracted] },
       hooks: {
         onFocusChanged: setFocus,
         onPlayerTileChanged: (tile) => {
@@ -260,15 +270,10 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
       engine.dispose();
       engineRef.current = null;
     };
-  }, [tilemap, initialCompleted, initialPosition]);
+  }, [tilemap, initialCompleted, initialPosition, initialInteracted]);
 
   const closeIntent = (): void => {
     setActiveIntent(null);
-    engineRef.current?.setInteractionSuspended(false);
-  };
-
-  const closeReward = (): void => {
-    setRewardResult(null);
     engineRef.current?.setInteractionSuspended(false);
   };
 
@@ -366,7 +371,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
         <p>Pisa nexus/cartas/eventos; ¡cuidado con la visión de los rivales!</p>
       </div>
 
-      <OverworldMinimap tilemap={tilemap} playerTile={playerTile} defeatedIds={completedIds} />
+      <OverworldMinimap tilemap={tilemap} playerTile={playerTile} defeatedIds={completedIds} hiddenIds={collectedRewardIds} />
 
       <div className="absolute left-3 top-24 z-20">
         <Link
@@ -407,36 +412,6 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
         />
       ) : null}
 
-      {rewardResult ? (
-        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4" onClick={closeReward}>
-          <div
-            className="w-full max-w-xs rounded-2xl border border-amber-300/40 bg-slate-950/95 p-5 text-center text-amber-50 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <p className="text-[11px] font-black uppercase tracking-widest text-amber-300">¡Recompensa obtenida!</p>
-            {rewardResult.imageSrc ? (
-              <Image
-                src={rewardResult.imageSrc}
-                alt=""
-                width={96}
-                height={96}
-                className="mx-auto mt-3 h-24 w-24 rounded-xl border border-amber-300/40 object-cover"
-              />
-            ) : null}
-            <p className="mt-3 text-lg font-black text-amber-100">
-              {rewardResult.nexus > 0 ? `+${rewardResult.nexus} NEXUS` : "Carta añadida a tu colección"}
-            </p>
-            <button
-              type="button"
-              onClick={closeReward}
-              className="mt-4 w-full rounded-lg border border-amber-300/40 bg-amber-500/15 py-2 text-xs font-bold uppercase tracking-widest text-amber-100 transition hover:bg-amber-400/25"
-            >
-              Genial
-            </button>
-          </div>
-        </div>
-      ) : null}
-
       {pendingBattle ? (
         <OverworldBattleTransition
           opponentImageSrc={pendingBattle.imageSrc}
@@ -444,7 +419,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
         />
       ) : null}
 
-      {activeIntent && !pendingBattle && !activeVideo && !narration && !rewardResult ? (
+      {activeIntent && !pendingBattle && !activeVideo && !narration ? (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/65 p-4" onClick={closeIntent}>
           <div
             className="w-full max-w-sm rounded-2xl border border-cyan-300/30 bg-slate-950/95 p-5 text-cyan-50 shadow-2xl"
