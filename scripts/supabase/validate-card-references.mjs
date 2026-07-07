@@ -37,9 +37,25 @@ function collectCreatedCardIds() {
   return created;
 }
 
-/** IDs referenciados por el seed (tokens entre comillas + elementos de arrays preview_card_ids). */
+/**
+ * IDs de entidades de arena (oponentes y variantes de deck) presentes en el seed. Sus `id`
+ * pueden empezar por un prefijo de carta (p. ej. `fusion-pressure`) pero NO son cartas: hay
+ * que excluirlos para no marcarlos como huérfanos. Mismo criterio que el escáner de migraciones.
+ */
+function collectSeedArenaEntityIds(sql) {
+  const ids = new Set();
+  for (const table of ["arena_opponents", "arena_opponent_deck_variants"]) {
+    const stmt = sql.match(new RegExp(`insert\\s+into\\s+(?:public\\.)?${table}\\s*\\([^)]*\\)\\s*values([\\s\\S]*?);`));
+    if (!stmt) continue;
+    for (const row of stmt[1].matchAll(/\(\s*'([^']*)'/g)) ids.add(row[1]);
+  }
+  return ids;
+}
+
+/** IDs referenciados por el seed (tokens entre comillas + elementos de arrays), sin ids de arena. */
 function collectSeedReferencedCardIds() {
   const sql = stripLineComments(readFileSync(SEED_FILE, "utf8")).toLowerCase();
+  const arenaEntityIds = collectSeedArenaEntityIds(sql);
   const referenced = new Set();
   for (const match of sql.matchAll(new RegExp(`'(${CARD_ID})'`, "g"))) referenced.add(match[1]);
   for (const arr of sql.matchAll(/'\{([^}]*)\}'/g)) {
@@ -47,6 +63,7 @@ function collectSeedReferencedCardIds() {
       if (new RegExp(`^${CARD_ID}$`).test(token)) referenced.add(token);
     }
   }
+  for (const id of arenaEntityIds) referenced.delete(id);
   return referenced;
 }
 
