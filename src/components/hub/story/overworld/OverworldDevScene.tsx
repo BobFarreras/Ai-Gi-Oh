@@ -142,6 +142,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
   const [pendingBattle, setPendingBattle] = useState<IPendingBattle | null>(null);
   const [activeVideo, setActiveVideo] = useState<{ video: IStoryInteractionCinematicVideo; isCutscene: boolean } | null>(null);
   const [narration, setNarration] = useState<IActiveNarration | null>(null);
+  const [rewardResult, setRewardResult] = useState<{ nexus: number; cardId: string | null; imageSrc?: string } | null>(null);
   const [playerTile, setPlayerTile] = useState(
     initialPosition ?? { tileX: tilemap.spawns[0].tileX, tileY: tilemap.spawns[0].tileY },
   );
@@ -156,6 +157,27 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
     const markEventSeen = (nodeId: string): void => {
       seenEventIdsRef.current.add(nodeId);
       persistSeenEvents(seenEventIdsRef.current);
+    };
+    const claimReward = async (object: IOverworldIntent["object"]): Promise<void> => {
+      try {
+        const res = await fetch("/api/story/overworld/claim-reward", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ nodeId: object.id, mapId: OVERWORLD_MAP_ID }),
+        });
+        const data = (await res.json()) as { alreadyClaimed?: boolean; rewardNexus?: number; rewardCardId?: string | null };
+        if (res.ok) {
+          markEventSeen(object.id);
+          if (!data.alreadyClaimed && ((data.rewardNexus ?? 0) > 0 || data.rewardCardId)) {
+            setRewardResult({ nexus: data.rewardNexus ?? 0, cardId: data.rewardCardId ?? null, imageSrc: object.imageSrc });
+            return;
+          }
+        }
+      } catch {
+        // Si falla la red, no marcamos como visto: se puede reintentar al volver a pisar.
+      }
+      engine.setInteractionSuspended(false);
     };
     const startBattle = (object: IOverworldIntent["object"]): void => {
       setActiveIntent(null);
@@ -197,6 +219,15 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
             startBattle(object);
             return;
           }
+          // Recompensas: se otorgan en servidor (una sola vez) al pisarlas.
+          if (!intent.isBlocked && (object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD")) {
+            if (seenEventIdsRef.current.has(object.id)) {
+              engine.setInteractionSuspended(false);
+              return;
+            }
+            void claimReward(object);
+            return;
+          }
           if (!intent.isBlocked && (object.kind === "EVENT" || object.kind === "NPC")) {
             if (seenEventIdsRef.current.has(object.id)) {
               engine.setInteractionSuspended(false);
@@ -233,6 +264,11 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
 
   const closeIntent = (): void => {
     setActiveIntent(null);
+    engineRef.current?.setInteractionSuspended(false);
+  };
+
+  const closeReward = (): void => {
+    setRewardResult(null);
     engineRef.current?.setInteractionSuspended(false);
   };
 
@@ -371,6 +407,36 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
         />
       ) : null}
 
+      {rewardResult ? (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4" onClick={closeReward}>
+          <div
+            className="w-full max-w-xs rounded-2xl border border-amber-300/40 bg-slate-950/95 p-5 text-center text-amber-50 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="text-[11px] font-black uppercase tracking-widest text-amber-300">¡Recompensa obtenida!</p>
+            {rewardResult.imageSrc ? (
+              <Image
+                src={rewardResult.imageSrc}
+                alt=""
+                width={96}
+                height={96}
+                className="mx-auto mt-3 h-24 w-24 rounded-xl border border-amber-300/40 object-cover"
+              />
+            ) : null}
+            <p className="mt-3 text-lg font-black text-amber-100">
+              {rewardResult.nexus > 0 ? `+${rewardResult.nexus} NEXUS` : "Carta añadida a tu colección"}
+            </p>
+            <button
+              type="button"
+              onClick={closeReward}
+              className="mt-4 w-full rounded-lg border border-amber-300/40 bg-amber-500/15 py-2 text-xs font-bold uppercase tracking-widest text-amber-100 transition hover:bg-amber-400/25"
+            >
+              Genial
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {pendingBattle ? (
         <OverworldBattleTransition
           opponentImageSrc={pendingBattle.imageSrc}
@@ -378,7 +444,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
         />
       ) : null}
 
-      {activeIntent && !pendingBattle && !activeVideo && !narration ? (
+      {activeIntent && !pendingBattle && !activeVideo && !narration && !rewardResult ? (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/65 p-4" onClick={closeIntent}>
           <div
             className="w-full max-w-sm rounded-2xl border border-cyan-300/30 bg-slate-950/95 p-5 text-cyan-50 shadow-2xl"
@@ -400,13 +466,19 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
             </div>
 
             {activeIntent.isBlocked ? (
-              <p className="mt-3 text-sm text-slate-200">
-                Está bloqueado. Requisitos pendientes:{" "}
-                <span className="font-semibold text-amber-200">
-                  {activeIntent.missingRequirements.join(", ") || "—"}
-                </span>
-                .
-              </p>
+              activeIntent.object.kind === "DUEL" || activeIntent.object.kind === "BOSS" ? (
+                <p className="mt-3 text-sm text-slate-200">
+                  Este rival aún no te reconoce como rival. Vence antes a los oponentes anteriores del sector.
+                </p>
+              ) : (
+                <p className="mt-3 text-sm text-slate-200">
+                  Está bloqueado. Requisitos pendientes:{" "}
+                  <span className="font-semibold text-amber-200">
+                    {activeIntent.missingRequirements.join(", ") || "—"}
+                  </span>
+                  .
+                </p>
+              )
             ) : (
               <p className="mt-3 text-sm text-slate-200">
                 {resolveIntentPresentation(activeIntent.object.kind).body}

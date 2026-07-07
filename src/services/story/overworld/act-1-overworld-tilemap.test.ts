@@ -7,6 +7,7 @@ import {
 import { resolveMovementContext } from "@/core/services/story/overworld/movement-rules";
 import { findGridPath } from "@/core/services/story/overworld/pathfinding";
 import { IOverworldProgressState } from "@/core/services/story/overworld/overworld-types";
+import { findStoryVirtualNodeDefinition } from "@/services/story/map-definitions/story-map-definition-registry";
 
 function buildProgress(completed: string[]): IOverworldProgressState {
   return {
@@ -64,6 +65,25 @@ describe("buildAct1OverworldTilemap", () => {
     const duel3 = buildAct1OverworldTilemap().objects.find((object) => object.id === "story-ch1-duel-3")!;
     expect(duel3.patrolAxis).toBe("H");
     expect(duel3.patrolLength).toBeGreaterThan(0);
+  });
+
+  it("los rivales del sector jefe reflejan la cadena de desbloqueo de la BD (1→3→4→5)", () => {
+    const byId = new Map(buildAct1OverworldTilemap().objects.map((object) => [object.id, object]));
+    expect(byId.get("story-ch1-duel-3")?.gateRequiredNodeIds).toEqual(["story-ch1-duel-1"]);
+    expect(byId.get("story-ch1-duel-4")?.gateRequiredNodeIds).toEqual(["story-ch1-duel-3"]);
+    expect(byId.get("story-ch1-duel-5")?.gateRequiredNodeIds).toEqual(["story-ch1-duel-4"]);
+  });
+
+  it("los nodos de recompensa existen en el registro con su tipo (para el claim server-side)", () => {
+    const rewardIds = buildAct1OverworldTilemap()
+      .objects.filter((object) => object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD")
+      .map((object) => object.id);
+    expect(rewardIds.length).toBeGreaterThan(0);
+    for (const nodeId of rewardIds) {
+      const definition = findStoryVirtualNodeDefinition(nodeId);
+      expect(definition).not.toBeNull();
+      expect(["REWARD_NEXUS", "REWARD_CARD"]).toContain(definition?.nodeType);
+    }
   });
 
   it("hace el jefe obligatorio: el portal del Acto 2 exige vencer al boss", () => {

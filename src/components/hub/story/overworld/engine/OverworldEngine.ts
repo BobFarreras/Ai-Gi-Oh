@@ -80,6 +80,7 @@ export class OverworldEngine {
   private progress: IOverworldProgressState;
   private blockedObjectIds: Set<string> = new Set();
   private focusedObjectId: string | null = null;
+  private blockedSightlineId: string | null = null;
 
   // Cutscene guionizada (intro, apariciones de NPC).
   private cutsceneSteps: OverworldCutsceneStep[] = [];
@@ -280,6 +281,13 @@ export class OverworldEngine {
    * Reto por línea de visión (estilo Pokémon): si un rival activo ve al jugador,
    * el rival empieza a acercarse (no se emite el combate hasta que llega a su lado).
    */
+  private resolveMissingRequirements(objectId: string): string[] {
+    const object = this.objectsById.get(objectId);
+    return (object?.gateRequiredNodeIds ?? []).filter(
+      (nodeId) => !isRequirementSatisfied(nodeId, this.progress),
+    );
+  }
+
   private triggerSightline(): void {
     if (this.actors.isApproaching()) return;
     const triggered = resolveTriggeredSightline({
@@ -288,7 +296,19 @@ export class OverworldEngine {
       isTransparent: (tileX, tileY) => canWalkToTile({ tileX, tileY }, this.world.movementContext),
       isSourceActive: (sourceId) => !this.isOpponentDefeated(sourceId),
     });
-    if (!triggered) return;
+    if (!triggered) {
+      this.blockedSightlineId = null;
+      return;
+    }
+    // Rival aún no desbloqueado (cadena de la BD): avisa una vez, sin acercarse ni combatir.
+    if (this.resolveMissingRequirements(triggered.id).length > 0) {
+      if (this.blockedSightlineId !== triggered.id) {
+        this.blockedSightlineId = triggered.id;
+        this.emitOpponentIntent(triggered.id);
+      }
+      return;
+    }
+    this.blockedSightlineId = null;
     this.actors.startApproach(triggered.id, this.world.player.tile, (tile) =>
       canWalkToTile(tile, this.world.movementContext),
     );
@@ -297,7 +317,13 @@ export class OverworldEngine {
   private emitOpponentIntent(objectId: string): void {
     const object = this.objectsById.get(objectId);
     if (!object) return;
-    this.hooks.onIntent?.({ object, isBlocked: false, missingRequirements: [], source: "SIGHTLINE" });
+    const missingRequirements = this.resolveMissingRequirements(objectId);
+    this.hooks.onIntent?.({
+      object,
+      isBlocked: missingRequirements.length > 0,
+      missingRequirements,
+      source: "SIGHTLINE",
+    });
   }
 
   private goToNextCutsceneStep(): void {

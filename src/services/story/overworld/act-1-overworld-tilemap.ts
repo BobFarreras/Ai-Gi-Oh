@@ -154,9 +154,11 @@ export function buildAct1OverworldTilemap(): IOverworldTilemap {
       { id: "story-ch1-duel-1", kind: "DUEL", tileX: 16, tileY: 11, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/1", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3 },
       { id: "story-ch1-duel-2", kind: "DUEL", tileX: 16, tileY: 20, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/2", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3 },
       // Rivales que patrullan (sentry): pasean vigilando el corredor con su haz.
-      { id: "story-ch1-duel-3", kind: "DUEL", tileX: 30, tileY: 11, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/3", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3, patrolAxis: "H", patrolLength: 3 },
-      { id: "story-ch1-duel-4", kind: "DUEL", tileX: 34, tileY: 15, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/4", imageSrc: SOLDIER, facing: "UP", visionRange: 3, patrolAxis: "H", patrolLength: 2 },
-      { id: "story-ch1-duel-5", kind: "BOSS", tileX: 37, tileY: 11, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/5", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3 },
+      // gateRequiredNodeIds refleja la cadena de desbloqueo de la BD (1→3→4→5): su radar
+      // no reta hasta cumplir el requisito (evita el "Duelo bloqueado" al esquivar a otro).
+      { id: "story-ch1-duel-3", kind: "DUEL", tileX: 30, tileY: 11, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/3", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3, patrolAxis: "H", patrolLength: 3, gateRequiredNodeIds: ["story-ch1-duel-1"] },
+      { id: "story-ch1-duel-4", kind: "DUEL", tileX: 34, tileY: 15, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/4", imageSrc: SOLDIER, facing: "UP", visionRange: 3, patrolAxis: "H", patrolLength: 2, gateRequiredNodeIds: ["story-ch1-duel-3"] },
+      { id: "story-ch1-duel-5", kind: "BOSS", tileX: 37, tileY: 11, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/5", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3, gateRequiredNodeIds: ["story-ch1-duel-4"] },
 
       // Puerta que cierra el paso a la sala de jefes hasta ganar el primer duelo.
       {
