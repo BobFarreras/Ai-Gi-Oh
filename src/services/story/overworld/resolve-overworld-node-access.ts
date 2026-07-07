@@ -1,16 +1,5 @@
 // src/services/story/overworld/resolve-overworld-node-access.ts - Acceso server-authoritative a un nodo del overworld según las reglas del propio mapa (gates), no la cadena legacy por-duelo.
-import { buildAct1OverworldTilemap } from "@/services/story/overworld/act-1-overworld-tilemap";
-import { IOverworldTilemap } from "@/services/story/overworld/tilemap-schema";
-
-/** Registro de tilemaps del overworld por mapId (fuente de verdad de gates/objetos). */
-function resolveTilemap(mapId: string): IOverworldTilemap | null {
-  switch (mapId) {
-    case "act-1":
-      return buildAct1OverworldTilemap();
-    default:
-      return null;
-  }
-}
+import { buildOverworldTilemap } from "@/services/story/overworld/resolve-overworld-tilemap";
 
 /**
  * ¿Puede el jugador iniciar el combate/interacción de este nodo en el overworld?
@@ -26,7 +15,7 @@ export function isOverworldNodeAccessible(
   nodeId: string,
   completedNodeIds: ReadonlySet<string>,
 ): boolean {
-  const tilemap = resolveTilemap(mapId);
+  const tilemap = buildOverworldTilemap(mapId);
   if (!tilemap) return false;
   const object = tilemap.objects.find((entry) => entry.id === nodeId);
   if (!object) return false;

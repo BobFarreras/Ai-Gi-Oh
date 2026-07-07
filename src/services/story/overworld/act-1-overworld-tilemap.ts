@@ -192,6 +192,7 @@ export function buildAct1OverworldTilemap(): IOverworldTilemap {
         tileY: 13,
         sprite: "portal",
         trigger: "STEP_ON",
+        gateRequiredNodeIds: ["story-ch1-duel-5"],
         warp: { toMapId: "act-2", toSpawnId: "spawn-entry", direction: "forward" },
       },
     ],

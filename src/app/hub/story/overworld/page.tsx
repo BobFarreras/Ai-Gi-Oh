@@ -4,8 +4,7 @@ import { notFound } from "next/navigation";
 import { OverworldDevScene } from "@/components/hub/story/overworld/OverworldDevScene";
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { getStoryOverworldRuntime } from "@/services/story/overworld/get-story-overworld-runtime";
-
-const OVERWORLD_MAP_ID = "act-1";
+import { DEFAULT_OVERWORLD_MAP_ID } from "@/services/story/overworld/resolve-overworld-tilemap";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -42,7 +41,7 @@ export default async function StoryOverworldPage({ searchParams }: StoryOverworl
     );
   }
   const [runtime, resolvedSearchParams] = await Promise.all([
-    getStoryOverworldRuntime(OVERWORLD_MAP_ID),
+    getStoryOverworldRuntime(),
     searchParams,
   ]);
   // Al perder o abandonar un combate se reaparece al INICIO del acto (spawn), no en el sitio:
@@ -52,6 +51,7 @@ export default async function StoryOverworldPage({ searchParams }: StoryOverworl
   return (
     <main className="flex h-[100dvh] w-full flex-col overflow-hidden bg-black">
       <OverworldDevScene
+        mapId={runtime?.currentMapId ?? DEFAULT_OVERWORLD_MAP_ID}
         completedNodeIds={runtime?.completedNodeIds ?? []}
         initialPosition={resetToActStart ? null : runtime?.initialPosition ?? null}
         interactedNodeIds={runtime?.interactedNodeIds ?? []}

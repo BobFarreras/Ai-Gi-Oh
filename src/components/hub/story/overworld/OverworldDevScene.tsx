@@ -19,6 +19,7 @@ import { useStorySceneSfx } from "@/components/hub/story/internal/scene/audio/us
 import { useStoryMapSoundtrack } from "@/components/hub/story/internal/scene/audio/use-story-map-soundtrack";
 import { Volume2, VolumeX } from "lucide-react";
 import { buildAct1OverworldTilemap } from "@/services/story/overworld/act-1-overworld-tilemap";
+import { buildOverworldTilemap, resolveOverworldActId } from "@/services/story/overworld/resolve-overworld-tilemap";
 import { buildAct1EchoCutscene } from "@/services/story/overworld/act-1-echo-cutscene";
 import { resolveOverworldEventDialogue } from "@/services/story/overworld/resolve-overworld-event-dialogue";
 import { IPlayerOverworldPosition } from "@/core/entities/story/IPlayerOverworldState";
@@ -29,15 +30,16 @@ import {
 } from "@/services/story/story-node-interaction-dialogue-types";
 import { IOverworldTilemap } from "@/services/story/overworld/tilemap-schema";
 
-const OVERWORLD_MAP_ID = "act-1";
-const ACT_ID = 1;
 const ECHO_TRIGGER_NODE_ID = "story-a1-side-event-echo-fragment";
 const PRECOMBAT_SOUND = "/audio/story/sonido-precombate.m4a";
-const SEEN_EVENTS_STORAGE_KEY = "overworld-seen-events-act-1";
 
-function loadSeenEvents(): Set<string> {
+function seenEventsStorageKey(mapId: string): string {
+  return `overworld-seen-events-${mapId}`;
+}
+
+function loadSeenEvents(storageKey: string): Set<string> {
   try {
-    const raw = window.localStorage.getItem(SEEN_EVENTS_STORAGE_KEY);
+    const raw = window.localStorage.getItem(storageKey);
     const parsed = raw ? (JSON.parse(raw) as unknown) : null;
     if (Array.isArray(parsed)) return new Set(parsed.filter((id): id is string => typeof id === "string"));
   } catch {
@@ -46,15 +48,17 @@ function loadSeenEvents(): Set<string> {
   return new Set();
 }
 
-function persistSeenEvents(seen: Set<string>): void {
+function persistSeenEvents(storageKey: string, seen: Set<string>): void {
   try {
-    window.localStorage.setItem(SEEN_EVENTS_STORAGE_KEY, JSON.stringify([...seen]));
+    window.localStorage.setItem(storageKey, JSON.stringify([...seen]));
   } catch {
     // Ignorar si no hay localStorage.
   }
 }
 
 interface IOverworldDevSceneProps {
+  /** Mapa/acto activo (p. ej. "act-1", "act-2"). Determina tilemap, soundtrack y persistencia. */
+  mapId: string;
   completedNodeIds: string[];
   initialPosition: IPlayerOverworldPosition | null;
   interactedNodeIds: string[];
@@ -136,11 +140,13 @@ interface IActiveNarration {
   isCutscene: boolean;
 }
 
-export function OverworldDevScene({ completedNodeIds, initialPosition, interactedNodeIds, resetToActStart }: IOverworldDevSceneProps) {
+export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, interactedNodeIds, resetToActStart }: IOverworldDevSceneProps) {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<OverworldEngine | null>(null);
-  const tilemap = useMemo(() => buildAct1OverworldTilemap(), []);
+  const tilemap = useMemo(() => buildOverworldTilemap(mapId) ?? buildAct1OverworldTilemap(), [mapId]);
+  const actId = useMemo(() => resolveOverworldActId(mapId), [mapId]);
+  const storageKey = useMemo(() => seenEventsStorageKey(mapId), [mapId]);
   const initialCompleted = useMemo(() => new Set(completedNodeIds), [completedNodeIds]);
   const seenEventIdsRef = useRef<Set<string>>(new Set());
 
@@ -156,6 +162,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
   );
   const playerTileRef = useRef(playerTile);
   const [completedIds] = useState<ReadonlySet<string>>(initialCompleted);
+  const [portalNotice, setPortalNotice] = useState<string | null>(null);
 
   // Audio: SFX de Story + soundtrack del acto (reutilizados del modo Story clásico).
   const sfx = useStorySceneSfx();
@@ -163,7 +170,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
   useEffect(() => {
     sfxRef.current = sfx;
   });
-  const { isMuted, toggleMute } = useStoryMapSoundtrack(ACT_ID);
+  const { isMuted, toggleMute } = useStoryMapSoundtrack(actId);
   const precombatRef = useRef<HTMLAudioElement | null>(null);
   useEffect(() => {
     if (typeof Audio === "undefined") return;
@@ -184,12 +191,12 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
         method: "POST",
         headers: { "content-type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ mapId: OVERWORLD_MAP_ID, tileX: tile.tileX, tileY: tile.tileY }),
+        body: JSON.stringify({ mapId, tileX: tile.tileX, tileY: tile.tileY }),
       });
     } catch {
       // Si falla, se pierde solo la posición restaurada; no bloquea la navegación.
     }
-  }, []);
+  }, [mapId]);
 
   const openArsenal = useCallback(async (): Promise<void> => {
     sfxRef.current?.playButtonClick();
@@ -209,6 +216,30 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
     router.push("/hub");
   }, [router]);
 
+  // Portal entre actos: el servidor valida el acceso (gate del mapa) y persiste el nuevo mapa;
+  // recargamos el overworld, que carga el mapa destino. Si el destino aún no existe, avisamos.
+  const warpToMap = useCallback(async (nodeId: string): Promise<void> => {
+    try {
+      const res = await fetch("/api/story/overworld/warp", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ fromMapId: mapId, nodeId }),
+      });
+      const data = (await res.json()) as { available?: boolean };
+      if (res.ok && data.available) {
+        sfxRef.current?.playButtonClick();
+        window.location.assign("/hub/story/overworld");
+        return;
+      }
+    } catch {
+      // Cae al aviso de "no disponible".
+    }
+    setPortalNotice("El siguiente acto aún no está disponible. ¡Muy pronto!");
+    engineRef.current?.releaseServiceZoom();
+    engineRef.current?.setInteractionSuspended(false);
+  }, [mapId]);
+
   // Tras perder/abandonar: la escena ya arranca en el spawn (initialPosition=null); persistimos
   // esa posición para que un refresco no restaure la última casilla previa al combate.
   useEffect(() => {
@@ -219,11 +250,11 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
     const canvas = canvasRef.current;
     if (!canvas) return;
     // Los eventos/recompensas ya vistos no se repiten (persisten entre recargas + servidor).
-    loadSeenEvents().forEach((id) => seenEventIdsRef.current.add(id));
+    loadSeenEvents(storageKey).forEach((id) => seenEventIdsRef.current.add(id));
     initialInteracted.forEach((id) => seenEventIdsRef.current.add(id));
     const markEventSeen = (nodeId: string): void => {
       seenEventIdsRef.current.add(nodeId);
-      persistSeenEvents(seenEventIdsRef.current);
+      persistSeenEvents(storageKey, seenEventIdsRef.current);
     };
     const claimReward = async (object: IOverworldIntent["object"]): Promise<void> => {
       try {
@@ -231,7 +262,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
           method: "POST",
           headers: { "content-type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ nodeId: object.id, mapId: OVERWORLD_MAP_ID }),
+          body: JSON.stringify({ nodeId: object.id, mapId }),
         });
         const data = (await res.json()) as { alreadyClaimed?: boolean; rewardNexus?: number; rewardCardId?: string | null };
         if (res.ok) {
@@ -314,6 +345,11 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
             engine.playServiceZoom(object.id, () => exitToHub());
             return;
           }
+          // Portal de acto: zoom al portal y salto de mapa validado en servidor.
+          if (!intent.isBlocked && object.kind === "WARP") {
+            engine.playServiceZoom(object.id, () => void warpToMap(object.id));
+            return;
+          }
           // Recompensas: se otorgan en servidor (una sola vez) al pisarlas.
           if (!intent.isBlocked && (object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD")) {
             if (seenEventIdsRef.current.has(object.id)) {
@@ -355,7 +391,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
       engine.dispose();
       engineRef.current = null;
     };
-  }, [tilemap, initialCompleted, initialPosition, initialInteracted, openArsenal, enterMarket, exitToHub]);
+  }, [mapId, storageKey, tilemap, initialCompleted, initialPosition, initialInteracted, openArsenal, enterMarket, exitToHub, warpToMap]);
 
   const closeIntent = (): void => {
     setActiveIntent(null);
@@ -425,7 +461,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
         credentials: "include",
         body: JSON.stringify({
           currentNodeId: battle.duelNodeId,
-          mapId: OVERWORLD_MAP_ID,
+          mapId,
           tileX: safeTile.tileX,
           tileY: safeTile.tileY,
         }),
@@ -463,7 +499,9 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
       />
 
       <div className="pointer-events-none absolute left-3 top-3 z-20 rounded-lg border border-cyan-300/25 bg-slate-950/80 px-3 py-2 text-[11px] leading-relaxed text-cyan-100 backdrop-blur-sm">
-        <p className="font-black uppercase tracking-widest text-cyan-300">Acto 1 · facility</p>
+        <p className="font-black uppercase tracking-widest text-cyan-300">
+          {actId === 2 ? "Acto 2 · valle visual" : "Acto 1 · facility"}
+        </p>
         <p>Muévete: flechas/WASD o el D-pad.</p>
         <p>Pisa nexus/cartas/eventos; ¡cuidado con la visión de los rivales!</p>
       </div>
@@ -507,6 +545,25 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
           onClose={closeNarration}
           centerNextButton
         />
+      ) : null}
+
+      {portalNotice ? (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/65 p-4" onClick={() => setPortalNotice(null)}>
+          <div
+            className="w-full max-w-sm rounded-2xl border border-indigo-300/30 bg-slate-950/95 p-5 text-indigo-50 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="text-[11px] font-black uppercase tracking-widest text-indigo-300">Portal de acto</p>
+            <p className="mt-3 text-sm text-slate-200">{portalNotice}</p>
+            <button
+              type="button"
+              onClick={() => setPortalNotice(null)}
+              className="mt-4 w-full rounded-lg border border-indigo-300/40 bg-indigo-500/15 py-2 text-xs font-bold uppercase tracking-widest text-indigo-100 transition hover:bg-indigo-400/25"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
       ) : null}
 
       {pendingBattle ? (
