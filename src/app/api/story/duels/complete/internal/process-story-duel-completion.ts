@@ -13,6 +13,7 @@ import { resolveStoryDuelCompletionInput } from "@/services/story/duel-flow/reso
 import { didWinFromStoryOutcome } from "@/services/story/duel-flow/story-duel-outcome";
 import { resolveStoryRewardCards } from "@/services/story/resolve-story-reward-cards";
 import { resolveStoryDuelReturnNode } from "@/app/api/story/duels/complete/internal/resolve-story-duel-return-node";
+import { buildOverworldTilemap, isKnownOverworldMap } from "@/services/story/overworld/resolve-overworld-tilemap";
 
 interface IProcessStoryDuelCompletionParams {
   playerId: string;
@@ -45,6 +46,27 @@ function resolveBossRepeatRewardCardIds(duel: IStoryDuelDefinition): string[] {
   return [fallbackReward.cardId];
 }
 
+/**
+ * Al perder o abandonar un duelo lanzado desde el overworld, el jugador reaparece al INICIO
+ * del acto: reseteamos la posición guardada al spawn del mapa activo (server-authoritative,
+ * no depende de que el retorno del cliente arrastre el resultado). Sin overworld activo, no hace nada.
+ */
+async function resetOverworldToActStart(
+  playerId: string,
+  storyWorldRepository: IPlayerStoryWorldRepository,
+): Promise<void> {
+  const state = await storyWorldRepository
+    .getOverworldStateByPlayerId(playerId)
+    .catch(() => ({ mapId: null, position: null }));
+  if (!state.mapId || !isKnownOverworldMap(state.mapId)) return;
+  const spawn = buildOverworldTilemap(state.mapId)?.spawns[0];
+  if (!spawn) return;
+  await storyWorldRepository.saveOverworldState(playerId, {
+    mapId: state.mapId,
+    position: { tileX: spawn.tileX, tileY: spawn.tileY },
+  });
+}
+
 async function resolveDuelFromPayload(payload: Record<string, unknown>, opponentRepository: IOpponentRepository): Promise<IStoryDuelDefinition> {
   const input = resolveStoryDuelCompletionInput(payload);
   if (!input) throw new ValidationError("El resultado del duelo Story es inválido.");
@@ -62,6 +84,8 @@ export async function processStoryDuelCompletion(params: IProcessStoryDuelComple
   const didWin = didWinFromStoryOutcome(input.outcome);
   const duel = await resolveDuelFromPayload(params.payload, params.opponentRepository);
   const duelProgress = await params.storyProgressRepository.registerDuelResult(params.playerId, duel.id, didWin);
+  // Derrota/abandono en el overworld: reaparecer al inicio del acto.
+  if (!didWin) await resetOverworldToActStart(params.playerId, params.storyWorldRepository);
   const firstVictory = didWin
     && duelProgress.firstClearedAtIso !== null
     && duelProgress.lastPlayedAtIso !== null

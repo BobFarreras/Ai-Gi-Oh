@@ -109,6 +109,7 @@ export function buildAct2OverworldTilemap(): IOverworldTilemap {
   markSolid(map, 5, 28); // market
   markSolid(map, 7, 28); // arsenal
   markSolid(map, 10, 30); // teletransporte de salida
+  // El portal de descenso (4,30) NO se marca sólido: un WARP debe estar sobre celda transitable.
 
   // Muros/pantallas para dar volumen a los búnkeres (no tocan puentes ni casillas de objeto).
   const racks: Array<[number, number]> = [
@@ -136,6 +137,8 @@ export function buildAct2OverworldTilemap(): IOverworldTilemap {
       { id: "story-a2-market", kind: "MARKET", tileX: 5, tileY: 28, sprite: "market", trigger: "ADJACENT_ACTION" },
       { id: "story-a2-arsenal", kind: "ARSENAL", tileX: 7, tileY: 28, sprite: "arsenal", trigger: "ADJACENT_ACTION" },
       { id: "story-a2-teleport-hub", kind: "TELEPORT", tileX: 10, tileY: 30, sprite: "teleport", trigger: "ADJACENT_ACTION" },
+      // Portal de descenso al acto anterior (sin requisitos): para volver a explorar el Acto 1.
+      { id: "story-ch2-transition-to-act1", kind: "WARP", tileX: 4, tileY: 30, sprite: "portal", trigger: "ADJACENT_ACTION", warp: { toMapId: "act-1", toSpawnId: "spawn-entry", direction: "backward" } },
 
       // Recompensas (se cogen al CHOCAR) y eventos, reutilizando los nodos virtuales reales del Acto 2.
       { id: "story-ch2-reward-nexus-a", kind: "REWARD_NEXUS", tileX: 18, tileY: 27, sprite: "nexus", trigger: "BUMP", imageSrc: NEXUS },

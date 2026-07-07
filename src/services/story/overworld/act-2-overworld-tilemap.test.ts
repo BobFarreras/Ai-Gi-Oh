@@ -58,7 +58,7 @@ describe("buildAct2OverworldTilemap", () => {
   it("el portal al Acto 3 exige vencer al jefe (duel-7)", () => {
     const { tilemap } = contextFor([]);
     const spawn = tilemap.spawns[0];
-    const warp = tilemap.objects.find((object) => object.kind === "WARP")!;
+    const warp = tilemap.objects.find((object) => object.id === "story-ch2-transition-to-act3")!;
     const warpTile = { tileX: warp.tileX, tileY: warp.tileY };
     const start = { tileX: spawn.tileX, tileY: spawn.tileY };
 

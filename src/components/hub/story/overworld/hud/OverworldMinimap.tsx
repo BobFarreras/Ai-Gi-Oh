@@ -40,9 +40,11 @@ export function OverworldMinimap({ tilemap, playerTile, defeatedIds, hiddenIds }
 
     for (let tileY = 0; tileY < tilemap.height; tileY++) {
       for (let tileX = 0; tileX < tilemap.width; tileX++) {
-        if (tilemap.collision[tileY][tileX] !== 1 && tilemap.layers.ground[tileY][tileX] === GROUND_TILE.GRASS) {
-          continue;
-        }
+        // Dibuja salas/corredores (transitables) y muros/estructuras (overlay); salta el vacío
+        // (celda no transitable sin estructura), sea GRASS (Acto 1) o WATER (Acto 2).
+        const isWalkable = tilemap.collision[tileY][tileX] === 1;
+        const hasStructure = tilemap.layers.overlay[tileY][tileX] !== 0;
+        if (!isWalkable && !hasStructure) continue;
         const isCorridor = tilemap.layers.ground[tileY][tileX] === GROUND_TILE.PATH;
         context.fillStyle = isCorridor ? "rgba(34, 211, 238, 0.5)" : "rgba(56, 89, 130, 0.55)";
         context.fillRect(tileX * CELL, tileY * CELL, CELL, CELL);
