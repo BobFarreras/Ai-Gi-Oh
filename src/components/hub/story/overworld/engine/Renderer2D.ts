@@ -338,6 +338,8 @@ export class Renderer2D {
     for (const object of world.tilemap.objects) {
       // Los rivales se dibujan como actores dinámicos, no como token estático.
       if (object.kind === "DUEL" || object.kind === "BOSS") continue;
+      // Triggers invisibles: no se dibujan.
+      if (object.hidden) continue;
       if (
         object.tileX < range.minTileX - 1 ||
         object.tileX > range.maxTileX + 1 ||

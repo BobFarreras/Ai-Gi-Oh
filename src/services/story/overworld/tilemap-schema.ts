@@ -64,6 +64,8 @@ export interface IOverworldTilemapObject {
   patrolAxis?: "H" | "V";
   /** Longitud del recorrido de patrulla en celdas. Requiere patrolAxis. */
   patrolLength?: number;
+  /** Trigger invisible (un "recuadro" del suelo): no se dibuja token ni en minimapa. */
+  hidden?: boolean;
 }
 
 export interface IOverworldTilemapSpawn {

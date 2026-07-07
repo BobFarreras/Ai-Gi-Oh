@@ -188,6 +188,12 @@ function validateObject(
     patrolLength = assertBoundedInteger(raw.patrolLength, `${path}.patrolLength`, 1, 12);
   }
 
+  let hidden: boolean | undefined;
+  if (raw.hidden !== undefined) {
+    if (typeof raw.hidden !== "boolean") fail(`${path}.hidden`, "se esperaba un booleano");
+    hidden = raw.hidden;
+  }
+
   return {
     id,
     kind,
@@ -203,6 +209,7 @@ function validateObject(
     visionRange,
     patrolAxis,
     patrolLength,
+    hidden,
   };
 }
 

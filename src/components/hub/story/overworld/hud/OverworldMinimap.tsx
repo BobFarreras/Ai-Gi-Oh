@@ -48,6 +48,7 @@ export function OverworldMinimap({ tilemap, playerTile, defeatedIds }: IOverworl
     }
 
     for (const object of tilemap.objects) {
+      if (object.hidden) continue;
       const color = DOT[object.kind];
       if (!color) continue;
       context.fillStyle = defeatedIds.has(object.id) ? "rgba(100,116,139,0.7)" : color;

@@ -7,10 +7,8 @@ const MAP_WIDTH = 44;
 const MAP_HEIGHT = 28;
 
 const SOLDIER = "/assets/story/opponents/opp-ch1-soldier-act01/avatar-Soldado-act01.webp";
-const BIGLOG = "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.webp";
 const NEXUS = "/assets/renders/nexus.webp";
 const SERVIDOR = "/assets/story/servidor-doc.webp";
-const DISCORD = "/assets/renders/discord.webp";
 const TRAP_DRAIN = "/assets/renders/traps/trap-atk-drain.webp";
 const TRAP_KERNEL = "/assets/renders/traps/trap-kernel-panic.webp";
 
@@ -124,12 +122,13 @@ export function buildAct1OverworldTilemap(): IOverworldTilemap {
     layers: { ground: map.ground, overlay: map.overlay },
     collision: map.collision,
     objects: [
-      // Pickups centrados en las salas (se activan al pisarlos).
-      { id: "story-a1-event-biglog-briefing", kind: "EVENT", tileX: 6, tileY: 12, sprite: "biglog", trigger: "STEP_ON", imageSrc: BIGLOG },
+      // Trigger invisible a 2 casillas del spawn: al pisarlo suena el dispositivo y salta el vídeo intro.
+      { id: "story-a1-event-biglog-briefing", kind: "EVENT", tileX: 6, tileY: 13, sprite: "trigger", trigger: "STEP_ON", hidden: true },
       { id: "story-a1-reward-nexus-cache", kind: "REWARD_NEXUS", tileX: 18, tileY: 11, sprite: "nexus", trigger: "STEP_ON", imageSrc: NEXUS },
       { id: "story-a1-event-special-card-signal", kind: "EVENT", tileX: 20, tileY: 15, sprite: "servidor", trigger: "STEP_ON", imageSrc: SERVIDOR },
       { id: "story-a1-reward-card-guardian", kind: "REWARD_CARD", tileX: 24, tileY: 13, sprite: "trap-drain", trigger: "STEP_ON", imageSrc: TRAP_DRAIN },
-      { id: "story-a1-side-event-echo-fragment", kind: "EVENT", tileX: 14, tileY: 21, sprite: "discord", trigger: "STEP_ON", imageSrc: DISCORD },
+      // Subruta difícil: trigger invisible en el corredor; al pisarlo aparece BigLog y avisa. Recompensa: carta potente.
+      { id: "story-a1-side-event-echo-fragment", kind: "EVENT", tileX: 12, tileY: 16, sprite: "trigger", trigger: "STEP_ON", hidden: true },
       { id: "story-a1-side-reward-card", kind: "REWARD_CARD", tileX: 18, tileY: 21, sprite: "trap-kernel", trigger: "STEP_ON", imageSrc: TRAP_KERNEL },
 
       // Rivales con rango de visión: vigilan el corredor y retan al cruzar su haz.

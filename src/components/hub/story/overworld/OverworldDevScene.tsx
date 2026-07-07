@@ -1,4 +1,4 @@
-// src/components/hub/story/overworld/OverworldDevScene.tsx - Escena del overworld: intro cutscene, eventos con vídeo, combate real y controles.
+// src/components/hub/story/overworld/OverworldDevScene.tsx - Escena del overworld: triggers de evento (vídeo terminal / narración BigLog), combate real y controles.
 "use client";
 
 import Link from "next/link";
@@ -13,17 +13,22 @@ import {
 import { OverworldTouchControls } from "@/components/hub/story/overworld/hud/OverworldTouchControls";
 import { OverworldMinimap } from "@/components/hub/story/overworld/hud/OverworldMinimap";
 import { OverworldBattleTransition } from "@/components/hub/story/overworld/hud/OverworldBattleTransition";
-import { OverworldEventDialog } from "@/components/hub/story/overworld/hud/OverworldEventDialog";
 import { resolveIntentPresentation } from "@/components/hub/story/overworld/hud/resolve-intent-presentation";
+import { StoryInteractionVideoOverlay } from "@/components/hub/story/internal/scene/dialog/StoryInteractionVideoOverlay";
+import { StoryNodeInteractionDialog } from "@/components/hub/story/internal/scene/dialog/StoryNodeInteractionDialog";
 import { buildAct1OverworldTilemap } from "@/services/story/overworld/act-1-overworld-tilemap";
-import { buildAct1IntroCutscene } from "@/services/story/overworld/act-1-intro-cutscene";
+import { buildAct1EchoCutscene } from "@/services/story/overworld/act-1-echo-cutscene";
 import { resolveOverworldEventDialogue } from "@/services/story/overworld/resolve-overworld-event-dialogue";
 import { IPlayerOverworldPosition } from "@/core/entities/story/IPlayerOverworldState";
 import { OverworldDirection } from "@/core/services/story/overworld/overworld-types";
-import { IStoryNodeInteractionDialogue } from "@/services/story/story-node-interaction-dialogue-types";
+import {
+  IStoryInteractionCinematicVideo,
+  IStoryInteractionDialogueLine,
+} from "@/services/story/story-node-interaction-dialogue-types";
 import { IOverworldTilemap } from "@/services/story/overworld/tilemap-schema";
 
 const OVERWORLD_MAP_ID = "act-1";
+const ECHO_TRIGGER_NODE_ID = "story-a1-side-event-echo-fragment";
 
 interface IOverworldDevSceneProps {
   completedNodeIds: string[];
@@ -62,6 +67,34 @@ function resolveSafeReturnTile(
   return playerTile;
 }
 
+/** Bip electrónico procedural de "dispositivo" (sin asset). */
+function playDeviceSound(): void {
+  try {
+    const AudioCtor =
+      window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtor) return;
+    const ctx = new AudioCtor();
+    const beep = (freq: number, start: number, dur: number): void => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "square";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur + 0.02);
+    };
+    beep(760, 0, 0.08);
+    beep(1240, 0.1, 0.14);
+    window.setTimeout(() => void ctx.close(), 700);
+  } catch {
+    // El audio es un extra; si falla, la interacción continúa igual.
+  }
+}
+
 interface IPendingBattle {
   duelHref: string;
   duelNodeId: string;
@@ -69,20 +102,28 @@ interface IPendingBattle {
   opponentFacing?: OverworldDirection;
 }
 
+interface IActiveNarration {
+  title: string;
+  lines: IStoryInteractionDialogueLine[];
+  lineIndex: number;
+  isCutscene: boolean;
+}
+
 export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverworldDevSceneProps) {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<OverworldEngine | null>(null);
   const tilemap = useMemo(() => buildAct1OverworldTilemap(), []);
-  const spawn = tilemap.spawns.find((entry) => entry.id === tilemap.defaultSpawnId) ?? tilemap.spawns[0];
   const initialCompleted = useMemo(() => new Set(completedNodeIds), [completedNodeIds]);
+  const seenEventIdsRef = useRef<Set<string>>(new Set());
 
   const [focus, setFocus] = useState<IOverworldFocus | null>(null);
   const [activeIntent, setActiveIntent] = useState<IOverworldIntent | null>(null);
   const [pendingBattle, setPendingBattle] = useState<IPendingBattle | null>(null);
-  const [eventDialogue, setEventDialogue] = useState<{ dialogue: IStoryNodeInteractionDialogue; isCutscene: boolean } | null>(null);
+  const [activeVideo, setActiveVideo] = useState<{ video: IStoryInteractionCinematicVideo; isCutscene: boolean } | null>(null);
+  const [narration, setNarration] = useState<IActiveNarration | null>(null);
   const [playerTile, setPlayerTile] = useState(
-    initialPosition ?? { tileX: spawn.tileX, tileY: spawn.tileY },
+    initialPosition ?? { tileX: tilemap.spawns[0].tileX, tileY: tilemap.spawns[0].tileY },
   );
   const playerTileRef = useRef(playerTile);
   const [completedIds] = useState<ReadonlySet<string>>(initialCompleted);
@@ -103,8 +144,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
       canvas,
       tilemap,
       progress: buildProgress(initialCompleted),
-      // La intro solo se reproduce en una entrada fresca (no al volver de un duelo).
-      config: { initialPosition, introCutscene: initialPosition ? null : buildAct1IntroCutscene() },
+      config: { initialPosition },
       hooks: {
         onFocusChanged: setFocus,
         onPlayerTileChanged: (tile) => {
@@ -113,23 +153,43 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
         },
         onCutsceneEvent: (nodeId) => {
           const dialogue = resolveOverworldEventDialogue(nodeId);
-          if (dialogue) setEventDialogue({ dialogue, isCutscene: true });
-          else engine.resumeCutscene();
+          if (dialogue && dialogue.lines.length > 0) {
+            setNarration({ title: dialogue.title, lines: dialogue.lines, lineIndex: 0, isCutscene: true });
+          } else {
+            engine.resumeCutscene();
+          }
         },
+        onCutsceneEnd: () => engine.setInteractionSuspended(false),
         onIntent: (intent) => {
           engine.setInteractionSuspended(true);
+          const { object } = intent;
           const isCombat =
             !intent.isBlocked &&
-            (intent.object.kind === "DUEL" || intent.object.kind === "BOSS") &&
-            Boolean(intent.object.duelHref);
+            (object.kind === "DUEL" || object.kind === "BOSS") &&
+            Boolean(object.duelHref);
           if (isCombat && intent.source === "SIGHTLINE") {
-            startBattle(intent.object);
+            startBattle(object);
             return;
           }
-          if (!intent.isBlocked && (intent.object.kind === "EVENT" || intent.object.kind === "NPC")) {
-            const dialogue = resolveOverworldEventDialogue(intent.object.id);
-            if (dialogue) {
-              setEventDialogue({ dialogue, isCutscene: false });
+          if (!intent.isBlocked && (object.kind === "EVENT" || object.kind === "NPC")) {
+            if (seenEventIdsRef.current.has(object.id)) {
+              engine.setInteractionSuspended(false);
+              return;
+            }
+            seenEventIdsRef.current.add(object.id);
+            // Subruta difícil: aparece BigLog (cutscene) y narra el aviso.
+            if (object.id === ECHO_TRIGGER_NODE_ID) {
+              engine.startCutscene(buildAct1EchoCutscene());
+              return;
+            }
+            const dialogue = resolveOverworldEventDialogue(object.id);
+            if (dialogue?.cinematicVideo) {
+              playDeviceSound();
+              setActiveVideo({ video: dialogue.cinematicVideo, isCutscene: false });
+              return;
+            }
+            if (dialogue && dialogue.lines.length > 0) {
+              setNarration({ title: dialogue.title, lines: dialogue.lines, lineIndex: 0, isCutscene: false });
               return;
             }
           }
@@ -150,9 +210,28 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
     engineRef.current?.setInteractionSuspended(false);
   };
 
-  const closeEventDialogue = (): void => {
-    const wasCutscene = eventDialogue?.isCutscene ?? false;
-    setEventDialogue(null);
+  const closeVideo = (): void => {
+    const wasCutscene = activeVideo?.isCutscene ?? false;
+    setActiveVideo(null);
+    if (wasCutscene) engineRef.current?.resumeCutscene();
+    else engineRef.current?.setInteractionSuspended(false);
+  };
+
+  const advanceNarration = (): void => {
+    setNarration((current) => {
+      if (!current) return null;
+      if (current.lineIndex < current.lines.length - 1) {
+        return { ...current, lineIndex: current.lineIndex + 1 };
+      }
+      if (current.isCutscene) engineRef.current?.resumeCutscene();
+      else engineRef.current?.setInteractionSuspended(false);
+      return null;
+    });
+  };
+
+  const closeNarration = (): void => {
+    const wasCutscene = narration?.isCutscene ?? false;
+    setNarration(null);
     if (wasCutscene) engineRef.current?.resumeCutscene();
     else engineRef.current?.setInteractionSuspended(false);
   };
@@ -171,7 +250,6 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
   const launchPendingBattle = async (): Promise<void> => {
     const battle = pendingBattle;
     if (!battle) return;
-    // Guardamos una casilla fuera del radar para no re-activar el combate al volver.
     const safeTile = resolveSafeReturnTile(playerTileRef.current, battle.opponentFacing, tilemap);
     try {
       await fetch("/api/story/overworld/state", {
@@ -236,8 +314,21 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
         onAction={() => engineRef.current?.pressAction()}
       />
 
-      {eventDialogue ? (
-        <OverworldEventDialog dialogue={eventDialogue.dialogue} onClose={closeEventDialogue} />
+      <StoryInteractionVideoOverlay
+        isOpen={Boolean(activeVideo)}
+        cinematicVideo={activeVideo?.video ?? null}
+        onClose={closeVideo}
+      />
+
+      {narration ? (
+        <StoryNodeInteractionDialog
+          isOpen
+          title={narration.title}
+          cinematicVideo={null}
+          line={narration.lines[narration.lineIndex] ?? null}
+          onNext={advanceNarration}
+          onClose={closeNarration}
+        />
       ) : null}
 
       {pendingBattle ? (
@@ -247,7 +338,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
         />
       ) : null}
 
-      {activeIntent && !pendingBattle && !eventDialogue ? (
+      {activeIntent && !pendingBattle && !activeVideo && !narration ? (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/65 p-4" onClick={closeIntent}>
           <div
             className="w-full max-w-sm rounded-2xl border border-cyan-300/30 bg-slate-950/95 p-5 text-cyan-50 shadow-2xl"
