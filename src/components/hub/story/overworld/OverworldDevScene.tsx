@@ -4,7 +4,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { OverworldEngine } from "@/components/hub/story/overworld/engine/OverworldEngine";
 import {
   IOverworldFocus,
@@ -29,6 +29,26 @@ import { IOverworldTilemap } from "@/services/story/overworld/tilemap-schema";
 
 const OVERWORLD_MAP_ID = "act-1";
 const ECHO_TRIGGER_NODE_ID = "story-a1-side-event-echo-fragment";
+const SEEN_EVENTS_STORAGE_KEY = "overworld-seen-events-act-1";
+
+function loadSeenEvents(): Set<string> {
+  try {
+    const raw = window.localStorage.getItem(SEEN_EVENTS_STORAGE_KEY);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : null;
+    if (Array.isArray(parsed)) return new Set(parsed.filter((id): id is string => typeof id === "string"));
+  } catch {
+    // localStorage no disponible: los eventos simplemente no persisten.
+  }
+  return new Set();
+}
+
+function persistSeenEvents(seen: Set<string>): void {
+  try {
+    window.localStorage.setItem(SEEN_EVENTS_STORAGE_KEY, JSON.stringify([...seen]));
+  } catch {
+    // Ignorar si no hay localStorage.
+  }
+}
 
 interface IOverworldDevSceneProps {
   completedNodeIds: string[];
@@ -131,6 +151,12 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    // Los eventos ya vistos no se repiten (persisten entre recargas).
+    loadSeenEvents().forEach((id) => seenEventIdsRef.current.add(id));
+    const markEventSeen = (nodeId: string): void => {
+      seenEventIdsRef.current.add(nodeId);
+      persistSeenEvents(seenEventIdsRef.current);
+    };
     const startBattle = (object: IOverworldIntent["object"]): void => {
       setActiveIntent(null);
       setPendingBattle({
@@ -176,7 +202,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
               engine.setInteractionSuspended(false);
               return;
             }
-            seenEventIdsRef.current.add(object.id);
+            markEventSeen(object.id);
             // Subruta difícil: aparece BigLog (cutscene) y narra el aviso.
             if (object.id === ECHO_TRIGGER_NODE_ID) {
               engine.startCutscene(buildAct1EchoCutscene());
@@ -217,7 +243,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
     else engineRef.current?.setInteractionSuspended(false);
   };
 
-  const advanceNarration = (): void => {
+  const advanceNarration = useCallback((): void => {
     setNarration((current) => {
       if (!current) return null;
       if (current.lineIndex < current.lines.length - 1) {
@@ -227,7 +253,20 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
       else engineRef.current?.setInteractionSuspended(false);
       return null;
     });
-  };
+  }, []);
+
+  // Espacio/Enter avanzan la narración (además del botón y el D-pad "A").
+  useEffect(() => {
+    if (!narration) return;
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.code === "Space" || event.code === "Enter") {
+        event.preventDefault();
+        advanceNarration();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [narration, advanceNarration]);
 
   const closeNarration = (): void => {
     const wasCutscene = narration?.isCutscene ?? false;
@@ -328,6 +367,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition }: IOverwo
           line={narration.lines[narration.lineIndex] ?? null}
           onNext={advanceNarration}
           onClose={closeNarration}
+          centerNextButton
         />
       ) : null}
 

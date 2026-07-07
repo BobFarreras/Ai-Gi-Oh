@@ -74,6 +74,23 @@ function markOpponent(map: IMutableTilemap, tileX: number, tileY: number): void 
 }
 
 /**
+ * Rellena la sala de la subruta con servidores dejando solo el pasillo (bajada por
+ * la columna 12 y giro por la fila 21) y la hornacina del rival en (16,20).
+ */
+function sealSideRoomWithServers(map: IMutableTilemap, room: IRect): void {
+  const isCorridor = (x: number, y: number): boolean =>
+    (x === 12 && y >= 18 && y <= 21) || (y === 21 && x >= 12 && x <= 18);
+  for (let tileY = room.y0; tileY <= room.y1; tileY++) {
+    for (let tileX = room.x0; tileX <= room.x1; tileX++) {
+      if (isCorridor(tileX, tileY)) continue;
+      if (tileX === 16 && tileY === 20) continue; // hornacina del guardián
+      map.overlay[tileY][tileX] = OVERLAY_TILE.SERVER_RACK;
+      map.collision[tileY][tileX] = 0;
+    }
+  }
+}
+
+/**
  * Acto 1 como facility: sala de entrada → sala de servidores A (evento/nexus + rival vigilando)
  * → sala de jefes → rama lateral inferior. Los pickups (nexus/cartas/eventos) están centrados
  * en las salas (STEP_ON) y los rivales vigilan el corredor con su rango de visión (estilo Pokémon).
@@ -94,21 +111,23 @@ export function buildAct1OverworldTilemap(): IOverworldTilemap {
   carveCorridor(map, { x: 12, y: 13 }, { x: 12, y: 21 });
   carveCorridor(map, { x: 12, y: 21 }, { x: 18, y: 21 });
 
-  // Rivales (sólidos) que vigilan; se marcan antes que las estructuras.
-  for (const [x, y] of [[16, 11], [30, 11], [34, 15], [37, 11], [16, 19]]) markOpponent(map, x, y);
+  // La sala de la subruta difícil queda SELLADA con servidores: solo se pasa por el pasillo.
+  sealSideRoomWithServers(map, roomSide);
+
+  // Rivales (sólidos) que vigilan; se marcan tras sellar (para no pisar sus casillas).
+  for (const [x, y] of [[16, 11], [30, 11], [34, 15], [37, 11], [16, 20]]) markOpponent(map, x, y);
 
   // Racks de servidor, pantallas y cajas para dar volumen a las salas (no tocan corredores ni haces).
   const racks: Array<[number, number]> = [
     [4, 10], [8, 10], [4, 16], [8, 16],
     [15, 9], [21, 9], [15, 17], [21, 17],
     [28, 8], [36, 8], [28, 18], [36, 18], [33, 8],
-    [10, 18], [20, 18], [10, 24], [20, 24],
   ];
   for (const [x, y] of racks) placeStructure(map, x, y, OVERLAY_TILE.SERVER_RACK);
   for (const [x, y] of [[18, 9], [33, 18]] as Array<[number, number]>) {
     placeStructure(map, x, y, OVERLAY_TILE.HOLO_SCREEN);
   }
-  for (const [x, y] of [[7, 15], [31, 16], [12, 23]] as Array<[number, number]>) {
+  for (const [x, y] of [[7, 15], [31, 16]] as Array<[number, number]>) {
     placeStructure(map, x, y, OVERLAY_TILE.CRATE);
   }
 
@@ -133,7 +152,7 @@ export function buildAct1OverworldTilemap(): IOverworldTilemap {
 
       // Rivales con rango de visión: vigilan el corredor y retan al cruzar su haz.
       { id: "story-ch1-duel-1", kind: "DUEL", tileX: 16, tileY: 11, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/1", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3 },
-      { id: "story-ch1-duel-2", kind: "DUEL", tileX: 16, tileY: 19, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/2", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3 },
+      { id: "story-ch1-duel-2", kind: "DUEL", tileX: 16, tileY: 20, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/2", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3 },
       // Rivales que patrullan (sentry): pasean vigilando el corredor con su haz.
       { id: "story-ch1-duel-3", kind: "DUEL", tileX: 30, tileY: 11, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/3", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3, patrolAxis: "H", patrolLength: 3 },
       { id: "story-ch1-duel-4", kind: "DUEL", tileX: 34, tileY: 15, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/1/duel/4", imageSrc: SOLDIER, facing: "UP", visionRange: 3, patrolAxis: "H", patrolLength: 2 },
