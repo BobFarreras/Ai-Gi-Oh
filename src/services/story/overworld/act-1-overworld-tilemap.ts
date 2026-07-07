@@ -116,8 +116,9 @@ export function buildAct1OverworldTilemap(): IOverworldTilemap {
 
   // Rivales (sólidos) que vigilan; se marcan tras sellar (para no pisar sus casillas).
   for (const [x, y] of [[16, 11], [30, 11], [34, 15], [37, 11], [16, 20]]) markOpponent(map, x, y);
-  // El nodo Market es un obstáculo sólido con el que se interactúa al acercarse.
+  // Los nodos Market y Arsenal son obstáculos sólidos con los que se interactúa al acercarse.
   markOpponent(map, 5, 11);
+  markOpponent(map, 7, 11);
 
   // Racks de servidor, pantallas y cajas para dar volumen a las salas (no tocan corredores ni haces).
   const racks: Array<[number, number]> = [
@@ -149,8 +150,10 @@ export function buildAct1OverworldTilemap(): IOverworldTilemap {
       { id: "story-a1-reward-nexus-cache", kind: "REWARD_NEXUS", tileX: 18, tileY: 11, sprite: "nexus", trigger: "BUMP", imageSrc: NEXUS },
       { id: "story-a1-event-special-card-signal", kind: "EVENT", tileX: 20, tileY: 15, sprite: "servidor", trigger: "STEP_ON", imageSrc: SERVIDOR },
       { id: "story-a1-reward-card-guardian", kind: "REWARD_CARD", tileX: 16, tileY: 15, sprite: "trap-drain", trigger: "BUMP", imageSrc: TRAP_DRAIN },
-      // Nodo Market: al acercarse y pulsar A abre el mercado (y vuelve al mapa).
+      // Nodos de servicio estilo hub (Market/Arsenal) y teletransporte de salida en el spawn.
       { id: "story-a1-market", kind: "MARKET", tileX: 5, tileY: 11, sprite: "market", trigger: "ADJACENT_ACTION" },
+      { id: "story-a1-arsenal", kind: "ARSENAL", tileX: 7, tileY: 11, sprite: "arsenal", trigger: "ADJACENT_ACTION" },
+      { id: "story-a1-teleport-hub", kind: "TELEPORT", tileX: 4, tileY: 13, sprite: "teleport", trigger: "STEP_ON" },
       // Subruta difícil: trigger invisible en el corredor; al pisarlo aparece BigLog y avisa. Recompensa: carta potente.
       { id: "story-a1-side-event-echo-fragment", kind: "EVENT", tileX: 12, tileY: 16, sprite: "trigger", trigger: "STEP_ON", hidden: true },
       { id: "story-a1-side-reward-card", kind: "REWARD_CARD", tileX: 18, tileY: 21, sprite: "trap-kernel", trigger: "BUMP", imageSrc: TRAP_KERNEL },

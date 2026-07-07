@@ -1,7 +1,6 @@
 // src/components/hub/story/overworld/OverworldDevScene.tsx - Escena del overworld: triggers de evento (vídeo terminal / narración BigLog), combate real y controles.
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -18,7 +17,7 @@ import { StoryInteractionVideoOverlay } from "@/components/hub/story/internal/sc
 import { StoryNodeInteractionDialog } from "@/components/hub/story/internal/scene/dialog/StoryNodeInteractionDialog";
 import { useStorySceneSfx } from "@/components/hub/story/internal/scene/audio/use-story-scene-sfx";
 import { useStoryMapSoundtrack } from "@/components/hub/story/internal/scene/audio/use-story-map-soundtrack";
-import { Backpack, Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX } from "lucide-react";
 import { buildAct1OverworldTilemap } from "@/services/story/overworld/act-1-overworld-tilemap";
 import { buildAct1EchoCutscene } from "@/services/story/overworld/act-1-echo-cutscene";
 import { resolveOverworldEventDialogue } from "@/services/story/overworld/resolve-overworld-event-dialogue";
@@ -156,6 +155,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
   const playerTileRef = useRef(playerTile);
   const [completedIds] = useState<ReadonlySet<string>>(initialCompleted);
   const [isMarketPromptOpen, setIsMarketPromptOpen] = useState(false);
+  const [isExitPromptOpen, setIsExitPromptOpen] = useState(false);
 
   // Audio: SFX de Story + soundtrack del acto (reutilizados del modo Story clásico).
   const sfx = useStorySceneSfx();
@@ -177,7 +177,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
     };
   }, []);
 
-  const saveOverworldPosition = async (): Promise<void> => {
+  const saveOverworldPosition = useCallback(async (): Promise<void> => {
     const tile = playerTileRef.current;
     try {
       await fetch("/api/story/overworld/state", {
@@ -189,13 +189,13 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
     } catch {
       // Si falla, se pierde solo la posición restaurada; no bloquea la navegación.
     }
-  };
+  }, []);
 
-  const openArsenal = async (): Promise<void> => {
+  const openArsenal = useCallback(async (): Promise<void> => {
     sfxRef.current?.playButtonClick();
     await saveOverworldPosition();
     router.push("/hub/arsenal?from=overworld");
-  };
+  }, [saveOverworldPosition, router]);
 
   const enterMarket = async (): Promise<void> => {
     sfxRef.current?.playButtonClick();
@@ -206,6 +206,16 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
 
   const closeMarketPrompt = (): void => {
     setIsMarketPromptOpen(false);
+    engineRef.current?.setInteractionSuspended(false);
+  };
+
+  const confirmExitToHub = (): void => {
+    sfxRef.current?.playButtonClick();
+    router.push("/hub");
+  };
+
+  const closeExitPrompt = (): void => {
+    setIsExitPromptOpen(false);
     engineRef.current?.setInteractionSuspended(false);
   };
 
@@ -295,9 +305,17 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
             startBattle(object);
             return;
           }
-          // Mercado: diálogo de confirmación antes de abrir la página del market.
+          // Nodos de servicio: mercado, arsenal y teletransporte de salida.
           if (object.kind === "MARKET") {
             setIsMarketPromptOpen(true);
+            return;
+          }
+          if (object.kind === "ARSENAL") {
+            void openArsenal();
+            return;
+          }
+          if (object.kind === "TELEPORT") {
+            setIsExitPromptOpen(true);
             return;
           }
           // Recompensas: se otorgan en servidor (una sola vez) al pisarlas.
@@ -341,7 +359,7 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
       engine.dispose();
       engineRef.current = null;
     };
-  }, [tilemap, initialCompleted, initialPosition, initialInteracted]);
+  }, [tilemap, initialCompleted, initialPosition, initialInteracted, openArsenal]);
 
   const closeIntent = (): void => {
     setActiveIntent(null);
@@ -446,24 +464,6 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
 
       <OverworldMinimap tilemap={tilemap} playerTile={playerTile} defeatedIds={completedIds} hiddenIds={collectedRewardIds} />
 
-      <div className="absolute left-3 top-24 z-20 flex flex-col gap-2">
-        <Link
-          href="/hub/story"
-          className="pointer-events-auto rounded-md border border-cyan-300/35 bg-slate-950/80 px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-cyan-200 backdrop-blur-sm transition hover:bg-cyan-400/10"
-        >
-          Salir
-        </Link>
-        <button
-          type="button"
-          onClick={() => void openArsenal()}
-          aria-label="Abrir Arsenal (editar deck)"
-          className="pointer-events-auto group flex items-center gap-2 overflow-hidden rounded-md border border-fuchsia-400/40 bg-gradient-to-br from-fuchsia-950/70 to-slate-950/80 px-3 py-2 text-[11px] font-black uppercase tracking-widest text-fuchsia-100 shadow-[inset_0_0_10px_rgba(0,0,0,0.5)] backdrop-blur-sm transition hover:border-fuchsia-300/80 hover:shadow-[0_0_15px_rgba(232,121,249,0.35)]"
-        >
-          <Backpack size={16} className="text-fuchsia-300 transition group-hover:scale-110" />
-          Mochila
-        </button>
-      </div>
-
       <button
         type="button"
         onClick={toggleMute}
@@ -527,6 +527,34 @@ export function OverworldDevScene({ completedNodeIds, initialPosition, interacte
                 className="rounded-lg border border-slate-400/30 px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-300 transition hover:bg-white/5"
               >
                 Ahora no
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isExitPromptOpen ? (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/65 p-4" onClick={closeExitPrompt}>
+          <div
+            className="w-full max-w-sm rounded-2xl border border-sky-300/30 bg-slate-950/95 p-5 text-sky-50 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="text-[11px] font-black uppercase tracking-widest text-sky-300">Teletransporte</p>
+            <p className="mt-3 text-sm text-slate-200">¿Salir del mundo y volver al hub principal?</p>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={confirmExitToHub}
+                className="flex-1 rounded-lg border border-sky-300/50 bg-sky-500/20 py-2 text-xs font-black uppercase tracking-widest text-sky-100 transition hover:bg-sky-400/30"
+              >
+                Salir al hub
+              </button>
+              <button
+                type="button"
+                onClick={closeExitPrompt}
+                className="rounded-lg border border-slate-400/30 px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-300 transition hover:bg-white/5"
+              >
+                Quedarme
               </button>
             </div>
           </div>

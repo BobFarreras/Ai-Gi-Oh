@@ -28,6 +28,8 @@ const VALID_KINDS: ReadonlySet<OverworldObjectKind> = new Set([
   "WARP",
   "GATE",
   "MARKET",
+  "ARSENAL",
+  "TELEPORT",
 ]);
 const VALID_TRIGGERS: ReadonlySet<OverworldObjectTrigger> = new Set([
   "ADJACENT_ACTION",

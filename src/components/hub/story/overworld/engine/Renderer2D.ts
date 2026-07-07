@@ -45,6 +45,8 @@ const OBJECT_LABELS: Record<OverworldObjectKind, string> = {
   WARP: "Portal",
   GATE: "Puerta",
   MARKET: "Mercado",
+  ARSENAL: "Arsenal",
+  TELEPORT: "Salir",
 };
 
 const OBJECT_ACCENT: Record<OverworldObjectKind, string> = {
@@ -57,7 +59,9 @@ const OBJECT_ACCENT: Record<OverworldObjectKind, string> = {
   SUBMISSION: "#fb7185",
   WARP: "#818cf8",
   GATE: "#eab308",
-  MARKET: "#4ade80",
+  MARKET: "#f59e0b",
+  ARSENAL: "#06b6d4",
+  TELEPORT: "#0ea5e9",
 };
 
 const BACKGROUND = "#05070f";
@@ -389,8 +393,8 @@ export class Renderer2D {
       this.drawGate(screenX, screenY, size, accent, isBlocked, timeMs);
     } else if (kind === "WARP") {
       this.drawPortal(cx, cy, size, accent, timeMs);
-    } else if (kind === "MARKET") {
-      this.drawMarketKiosk(screenX, screenY, size, accent, timeMs);
+    } else if (kind === "MARKET" || kind === "ARSENAL" || kind === "TELEPORT") {
+      this.drawHubNode(screenX, screenY, size, accent, kind, timeMs);
     } else {
       const image = this.sprites.get(imageSrc);
       const radius = size * 0.42;
@@ -489,25 +493,104 @@ export class Renderer2D {
     context.globalAlpha = 1;
   }
 
-  private drawMarketKiosk(screenX: number, screenY: number, size: number, accent: string, timeMs: number): void {
+  /** Nodo de servicio con el estilo angular neón de los nodos del hub. */
+  private drawHubNode(
+    screenX: number,
+    screenY: number,
+    size: number,
+    accent: string,
+    kind: OverworldObjectKind,
+    timeMs: number,
+  ): void {
     const context = this.context;
-    // Mostrador.
-    context.fillStyle = "#0b1f16";
-    context.fillRect(screenX + size * 0.14, screenY + size * 0.42, size * 0.72, size * 0.44);
+    const pad = size * 0.14;
+    const x = screenX + pad;
+    const y = screenY + pad;
+    const w = size - pad * 2;
+    const h = size - pad * 2;
+    const cut = size * 0.18;
+    const tracePanel = (): void => {
+      context.beginPath();
+      context.moveTo(x, y);
+      context.lineTo(x + w - cut, y);
+      context.lineTo(x + w, y + cut);
+      context.lineTo(x + w, y + h);
+      context.lineTo(x + cut, y + h);
+      context.lineTo(x, y + h - cut);
+      context.closePath();
+    };
+    // Resplandor exterior pulsante (estilo hub).
+    const glow = 0.4 + Math.sin(timeMs / 320) * 0.25;
+    context.strokeStyle = accent;
+    context.globalAlpha = glow;
+    context.lineWidth = 6;
+    tracePanel();
+    context.stroke();
+    context.globalAlpha = 1;
+    // Panel oscuro + borde neón.
+    context.fillStyle = "#030914";
+    tracePanel();
+    context.fill();
     context.strokeStyle = accent;
     context.lineWidth = 2;
-    context.strokeRect(screenX + size * 0.14, screenY + size * 0.42, size * 0.72, size * 0.44);
-    // Toldo a rayas.
-    for (let stripe = 0; stripe < 4; stripe++) {
-      context.fillStyle = stripe % 2 === 0 ? accent : "#f8fafc";
-      context.fillRect(screenX + size * (0.1 + stripe * 0.2), screenY + size * 0.24, size * 0.2, size * 0.18);
-    }
-    // Icono de carrito / brillo.
-    const glow = 0.5 + Math.sin(timeMs / 300) * 0.4;
-    context.fillStyle = `rgba(74, 222, 128, ${Math.max(0.2, glow)})`;
+    tracePanel();
+    context.stroke();
+    // Icono central según el nodo.
+    const cx = screenX + size / 2;
+    const cy = screenY + size / 2;
+    context.strokeStyle = accent;
+    context.fillStyle = accent;
+    context.lineWidth = 2;
+    if (kind === "MARKET") this.drawCartIcon(cx, cy, size);
+    else if (kind === "ARSENAL") this.drawCardsIcon(cx, cy, size);
+    else this.drawTeleportIcon(cx, cy, size, timeMs);
+  }
+
+  private drawCartIcon(cx: number, cy: number, size: number): void {
+    const context = this.context;
+    const s = size * 0.16;
     context.beginPath();
-    context.arc(screenX + size / 2, screenY + size * 0.62, size * 0.1, 0, Math.PI * 2);
+    context.moveTo(cx - s * 1.2, cy - s);
+    context.lineTo(cx - s * 0.7, cy - s);
+    context.lineTo(cx - s * 0.4, cy + s * 0.4);
+    context.lineTo(cx + s, cy + s * 0.4);
+    context.lineTo(cx + s * 1.2, cy - s * 0.4);
+    context.lineTo(cx - s * 0.4, cy - s * 0.4);
+    context.stroke();
+    context.beginPath();
+    context.arc(cx - s * 0.2, cy + s, s * 0.22, 0, Math.PI * 2);
+    context.arc(cx + s * 0.8, cy + s, s * 0.22, 0, Math.PI * 2);
     context.fill();
+  }
+
+  private drawCardsIcon(cx: number, cy: number, size: number): void {
+    const context = this.context;
+    const w = size * 0.2;
+    const h = size * 0.28;
+    context.save();
+    context.translate(cx, cy);
+    context.rotate(-0.18);
+    context.strokeRect(-w * 0.7, -h / 2, w, h);
+    context.restore();
+    context.save();
+    context.translate(cx, cy);
+    context.rotate(0.18);
+    context.fillStyle = "#030914";
+    context.fillRect(-w * 0.1, -h / 2, w, h);
+    context.strokeRect(-w * 0.1, -h / 2, w, h);
+    context.restore();
+  }
+
+  private drawTeleportIcon(cx: number, cy: number, size: number, timeMs: number): void {
+    const context = this.context;
+    const spin = Math.sin(timeMs / 240) * 0.5 + 0.5;
+    for (let ring = 0; ring < 3; ring++) {
+      context.globalAlpha = 0.4 + spin * 0.5 - ring * 0.12;
+      context.beginPath();
+      context.arc(cx, cy, size * (0.08 + ring * 0.07), spin * Math.PI, spin * Math.PI + Math.PI * 1.4);
+      context.stroke();
+    }
+    context.globalAlpha = 1;
   }
 
   private drawPortal(cx: number, cy: number, size: number, accent: string, timeMs: number): void {

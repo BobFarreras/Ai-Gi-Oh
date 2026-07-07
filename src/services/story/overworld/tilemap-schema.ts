@@ -21,7 +21,9 @@ export type OverworldObjectKind =
   | "SUBMISSION"
   | "WARP"
   | "GATE"
-  | "MARKET";
+  | "MARKET"
+  | "ARSENAL"
+  | "TELEPORT";
 
 /**
  * Cómo se dispara la interacción: acción explícita estando adyacente

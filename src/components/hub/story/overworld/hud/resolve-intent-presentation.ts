@@ -61,6 +61,16 @@ const PRESENTATIONS: Record<OverworldObjectKind, IIntentPresentation> = {
     title: "Mercado",
     body: "Abre el mercado para comprar sobres, cartas y recursos.",
   },
+  ARSENAL: {
+    actionVerb: "Abrir Arsenal",
+    title: "Arsenal",
+    body: "Edita tu deck en cualquier momento.",
+  },
+  TELEPORT: {
+    actionVerb: "Salir al hub",
+    title: "Teletransporte",
+    body: "Vuelve al hub principal.",
+  },
 };
 
 export function resolveIntentPresentation(kind: OverworldObjectKind): IIntentPresentation {

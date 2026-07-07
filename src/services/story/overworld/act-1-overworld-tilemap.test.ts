@@ -79,7 +79,15 @@ describe("buildAct1OverworldTilemap", () => {
     const rewards = objects.filter((object) => object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD");
     expect(rewards.length).toBeGreaterThan(0);
     expect(rewards.every((object) => object.trigger === "BUMP")).toBe(true);
-    expect(objects.some((object) => object.kind === "MARKET")).toBe(true);
+    const kinds = new Set(objects.map((object) => object.kind));
+    expect(kinds.has("MARKET")).toBe(true);
+    expect(kinds.has("ARSENAL")).toBe(true);
+    expect(kinds.has("TELEPORT")).toBe(true);
+    // El teletransporte está en la casilla de spawn.
+    const teleport = objects.find((object) => object.kind === "TELEPORT")!;
+    const spawn = buildAct1OverworldTilemap().spawns[0];
+    expect(teleport.tileX).toBe(spawn.tileX);
+    expect(teleport.tileY).toBe(spawn.tileY);
   });
 
   it("los nodos de recompensa existen en el registro con su tipo (para el claim server-side)", () => {
