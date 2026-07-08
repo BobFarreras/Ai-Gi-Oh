@@ -1,7 +1,7 @@
 // src/components/hub/story/overworld/hud/OverworldTouchControls.tsx - D-pad y botón de acción táctiles con estética cibernética (pointer events, cross-device).
 "use client";
 
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, type LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Zap, type LucideIcon } from "lucide-react";
 import { OverworldDirection } from "@/core/services/story/overworld/overworld-types";
 
 interface IOverworldTouchControlsProps {
@@ -58,15 +58,24 @@ export function OverworldTouchControls({
       </div>
       <button
         type="button"
-        aria-label="Acción"
-        className="pointer-events-auto flex h-20 w-20 items-center justify-center border-2 border-emerald-300/60 bg-gradient-to-br from-emerald-400/30 to-emerald-950/60 text-2xl font-black uppercase tracking-widest text-emerald-50 shadow-[0_0_24px_rgba(16,185,129,0.4),inset_0_0_16px_rgba(16,185,129,0.22)] backdrop-blur-sm transition-all active:scale-95 active:shadow-[0_0_32px_rgba(16,185,129,0.75),inset_0_0_20px_rgba(16,185,129,0.4)]"
+        aria-label="Interactuar"
+        className="group pointer-events-auto relative flex h-20 w-20 items-center justify-center border-2 border-emerald-300/60 bg-gradient-to-br from-emerald-400/30 to-emerald-950/60 text-emerald-50 shadow-[0_0_24px_rgba(16,185,129,0.4),inset_0_0_16px_rgba(16,185,129,0.22)] backdrop-blur-sm transition-all active:scale-95 active:shadow-[0_0_32px_rgba(16,185,129,0.75),inset_0_0_20px_rgba(16,185,129,0.4)]"
         style={{ clipPath: OCTAGON, touchAction: "none" }}
         onPointerDown={(event) => {
           event.preventDefault();
           onAction();
         }}
       >
-        <span className="drop-shadow-[0_0_8px_rgba(16,185,129,0.9)]">A</span>
+        {/* Anillo interior para dar profundidad de "botón de consola". */}
+        <span
+          className="pointer-events-none absolute inset-[6px] border border-emerald-300/40"
+          style={{ clipPath: OCTAGON }}
+        />
+        <Zap
+          size={30}
+          strokeWidth={2.25}
+          className="relative fill-emerald-300/25 text-emerald-100 drop-shadow-[0_0_10px_rgba(16,185,129,0.95)] transition-transform group-active:scale-110"
+        />
       </button>
     </div>
   );
