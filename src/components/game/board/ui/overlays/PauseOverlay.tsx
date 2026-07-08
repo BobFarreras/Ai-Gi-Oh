@@ -1,9 +1,8 @@
 // src/components/game/board/ui/overlays/PauseOverlay.tsx - Overlay de pausa con acciones de reanudar o abandonar el duelo según modo.
 "use client";
 
-import { Play, TriangleAlert } from "lucide-react";
+import { LogOut, Play, TriangleAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { BackButton } from "@/components/ui/BackButton";
 
 interface PauseOverlayProps {
   isPaused: boolean;
@@ -55,18 +54,25 @@ export function PauseOverlay({ isPaused, onResume, onExit }: PauseOverlayProps) 
             Reanudar Simulación
           </button>
 
-          {/* BOTÓN SECUNDARIO: Abandonar (Usando onClick manual para forzar el enrutamiento y evitar bloqueos del Overlay) */}
-          <BackButton 
-            label="Desconectar y Salir" 
-            onClick={() => {
+          {/* BOTÓN SECUNDARIO: Abandonar. Botón plano (NO BackButton): el atajo "?from=overworld" del
+              BackButton navegaría al mapa sin el resultado y saltándose onExit, dejando al jugador en la
+              misma casilla (el haz del rival se reactiva). onExit == abandono real → reset al inicio del acto. */}
+          <button
+            type="button"
+            aria-label="Desconectar y salir"
+            onClick={(event) => {
+              event.stopPropagation();
               if (onExit) {
                 onExit();
                 return;
               }
               router.push("/hub");
             }}
-            className="w-full justify-center py-3 border-zinc-800 bg-zinc-900/50 hover:border-red-500/50 hover:bg-red-950/40 hover:text-red-400 group-hover:text-red-400"
-          />
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-zinc-300 font-black uppercase tracking-widest hover:border-red-500/50 hover:bg-red-950/40 hover:text-red-400 transition-all"
+          >
+            <LogOut size={18} />
+            Desconectar y Salir
+          </button>
           
         </div>
       </div>
