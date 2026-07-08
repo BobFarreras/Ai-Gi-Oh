@@ -6,6 +6,20 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-07-08
+
+### Added
+- **Modo Historia rediseñado como overworld semi-abierto** (estilo Pokémon): recorres un mapa 2D con tu personaje (flechas/WASD, o D-pad en táctil), esquivas o retas a los rivales según su **línea de visión**, recoges Nexus/cartas al pisarlos, activas eventos con vídeo/narración, y entras a **Mercado** y **Arsenal** como nodos del propio mapa. Cubre el **Acto 1** (facility de servidores) y el **Acto 2** ("Valle Visual": búnkeres sobre el abismo, puentes, dos mitades de llave y jefa). Sustituye al panel de nodos clásico y se activa por entorno (`STORY_OVERWORLD_ENABLED`), de forma reversible.
+- Overworld: **minimapa** de esquina, **zoom de cámara** por salas, **cutscenes** guionizadas (intro con BigLog), **puertas y puentes** que se abren en vivo al cumplir requisitos, patrullas de rivales con acercamiento antes del combate, recompensas que se recogen al chocar, y **jefe obligatorio** ante el portal del siguiente acto.
+- **Penalización de 50 Nexus** al perder o abandonar un duelo de Historia (server-authoritative y limitada al saldo, nunca deja el monedero en negativo).
+
+### Changed
+- Diálogo de **pausa** en combate: botón "Reanudar Combate" (antes "Reanudar Simulación") y aviso claro de que abandonar penaliza con 50 Nexus.
+- Controles del overworld **adaptados al dispositivo**: en escritorio se muestra una ayuda de teclado difuminada (W/A/S/D + Espacio); en móvil, un D-pad y un botón de acción con estética cibernética que respetan la *safe-area* (no los tapa la barra del móvil) y con la cámara más alejada para ver más mapa.
+
+### Internal
+- Esquema (migración **089**): columnas `overworld_map_id` y `overworld_position` en `player_story_world_state` (aditiva y no destructiva). El contenido de Historia (duelos, decks, cartas) se reutiliza del ya existente en producción.
+
 ## [1.9.2] - 2026-07-06
 
 ### Added
@@ -152,7 +166,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.2...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.2...v1.10.0
 [1.9.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.8.1...v1.9.0
