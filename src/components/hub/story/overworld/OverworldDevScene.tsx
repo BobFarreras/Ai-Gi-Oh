@@ -10,6 +10,7 @@ import {
   IOverworldIntent,
 } from "@/components/hub/story/overworld/engine/engine-types";
 import { OverworldTouchControls } from "@/components/hub/story/overworld/hud/OverworldTouchControls";
+import { OverworldKeyboardHints } from "@/components/hub/story/overworld/hud/OverworldKeyboardHints";
 import { OverworldMinimap } from "@/components/hub/story/overworld/hud/OverworldMinimap";
 import { OverworldBattleTransition } from "@/components/hub/story/overworld/hud/OverworldBattleTransition";
 import { resolveIntentPresentation } from "@/components/hub/story/overworld/hud/resolve-intent-presentation";
@@ -365,11 +366,15 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
         opponentFacing: object.facing,
       });
     };
+    // En pantallas compactas (móvil) alejamos la cámara para ver más mapa de una vez.
+    const isCompactViewport =
+      typeof window !== "undefined" && window.matchMedia("(max-width: 820px)").matches;
+    const initialZoom = isCompactViewport ? 1.35 : 1.85;
     const engine = new OverworldEngine({
       canvas,
       tilemap,
       progress: buildProgress(initialCompleted, initialInteracted),
-      config: { initialPosition, collectedNodeIds: [...initialInteracted] },
+      config: { initialPosition, collectedNodeIds: [...initialInteracted], zoom: initialZoom },
       hooks: {
         onFocusChanged: setFocus,
         onPlayerTileChanged: (tile) => {
@@ -618,21 +623,13 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
         aria-label="Mundo Story"
       />
 
-      <div className="pointer-events-none absolute left-3 top-3 z-20 rounded-lg border border-cyan-300/25 bg-slate-950/80 px-3 py-2 text-[11px] leading-relaxed text-cyan-100 backdrop-blur-sm">
-        <p className="font-black uppercase tracking-widest text-cyan-300">
-          {actId === 2 ? "Acto 2 · valle visual" : "Acto 1 · facility"}
-        </p>
-        <p>Muévete: flechas/WASD o el D-pad.</p>
-        <p>Pisa nexus/cartas/eventos; ¡cuidado con la visión de los rivales!</p>
-      </div>
-
       <OverworldMinimap tilemap={tilemap} playerTile={playerTile} defeatedIds={completedIds} hiddenIds={collectedRewardIds} />
 
       <button
         type="button"
         onClick={toggleMute}
         aria-label={isMuted ? "Activar música" : "Silenciar música"}
-        className="pointer-events-auto absolute right-3 top-40 z-20 rounded-md border border-cyan-300/30 bg-slate-950/80 p-2 text-cyan-200 backdrop-blur-sm transition hover:bg-cyan-400/10"
+        className="pointer-events-auto absolute left-3 top-3 z-20 rounded-md border border-cyan-300/30 bg-slate-950/80 p-2 text-cyan-200 backdrop-blur-sm transition hover:bg-cyan-400/10"
       >
         {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
       </button>
@@ -648,6 +645,8 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
         onDirectionUp={() => engineRef.current?.setExternalDirection(null)}
         onAction={() => engineRef.current?.pressAction()}
       />
+
+      <OverworldKeyboardHints />
 
       <StoryInteractionVideoOverlay
         isOpen={Boolean(activeVideo)}
