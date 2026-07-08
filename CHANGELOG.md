@@ -6,6 +6,11 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-07-08
+
+### Fixed
+- Móvil (PWA / pantalla completa): los controles del overworld ya no quedan tapados por la barra de navegación del sistema ni obligan a hacer scroll. Se declara el viewport con `viewport-fit=cover` (habilita las `env(safe-area-inset-*)` en toda la app) y el D-pad y el botón de acción respetan el área segura inferior.
+
 ## [1.10.0] - 2026-07-08
 
 ### Added
@@ -166,7 +171,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.1...HEAD
+[1.10.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.2...v1.10.0
 [1.9.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.0...v1.9.1
