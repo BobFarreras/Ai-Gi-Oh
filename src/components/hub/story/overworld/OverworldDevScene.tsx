@@ -65,6 +65,8 @@ interface IOverworldDevSceneProps {
   interactedNodeIds: string[];
   /** Tras perder/abandonar un combate: se arranca en el spawn del acto y se persiste. */
   resetToActStart?: boolean;
+  /** Nexus perdido por la derrota/abandono que trajo de vuelta al mapa (aviso transitorio). */
+  penaltyNexus?: number;
 }
 
 function buildProgress(completedIds: ReadonlySet<string>, interactedIds: ReadonlySet<string> = new Set<string>()) {
@@ -150,7 +152,7 @@ interface IActiveNarration {
   isCutscene: boolean;
 }
 
-export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, interactedNodeIds, resetToActStart }: IOverworldDevSceneProps) {
+export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, interactedNodeIds, resetToActStart, penaltyNexus = 0 }: IOverworldDevSceneProps) {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<OverworldEngine | null>(null);
@@ -173,6 +175,13 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
   const playerTileRef = useRef(playerTile);
   const [completedIds] = useState<ReadonlySet<string>>(initialCompleted);
   const [portalNotice, setPortalNotice] = useState<string | null>(null);
+  const [penaltyToast, setPenaltyToast] = useState<number>(penaltyNexus);
+  // El aviso "-N Nexus" (penalización por derrota/abandono) se desvanece solo tras unos segundos.
+  useEffect(() => {
+    if (penaltyToast <= 0) return;
+    const timer = window.setTimeout(() => setPenaltyToast(0), 3800);
+    return () => window.clearTimeout(timer);
+  }, [penaltyToast]);
 
   // Audio: SFX de Story + soundtrack del acto (reutilizados del modo Story clásico).
   const sfx = useStorySceneSfx();
@@ -673,6 +682,14 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
             >
               Entendido
             </button>
+          </div>
+        </div>
+      ) : null}
+
+      {penaltyToast > 0 ? (
+        <div className="pointer-events-none absolute inset-x-0 top-6 z-40 flex justify-center px-4">
+          <div className="animate-pulse rounded-full border border-rose-400/40 bg-rose-950/85 px-5 py-2 text-sm font-black uppercase tracking-widest text-rose-200 shadow-[0_0_25px_rgba(244,63,94,0.35)]">
+            −{penaltyToast} Nexus
           </div>
         </div>
       ) : null}

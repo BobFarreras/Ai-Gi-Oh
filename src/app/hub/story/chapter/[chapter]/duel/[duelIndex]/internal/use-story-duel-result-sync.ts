@@ -17,6 +17,7 @@ interface IStoryDuelTransition {
   outcome: StoryDuelOutcome;
   duelNodeId: string;
   returnNodeId: string;
+  penaltyNexus: number;
 }
 
 function buildFallbackTransition(input: IStoryDuelResultSyncInput): IStoryDuelTransition {
@@ -24,14 +25,17 @@ function buildFallbackTransition(input: IStoryDuelResultSyncInput): IStoryDuelTr
     outcome: "LOST",
     duelNodeId: `story-ch${input.chapter}-duel-${input.duelIndex}`,
     returnNodeId: "story-ch1-player-start",
+    penaltyNexus: 0,
   };
 }
 
 function pushBackToStory(input: IStoryDuelTransition, returnBasePath: string): void {
   // El overworld lee el progreso real de la BD; no necesita los params de transición clásica,
-  // pero sí el resultado: al perder o abandonar se reaparece al inicio del acto (no en el sitio).
+  // pero sí el resultado: al perder o abandonar se reaparece al inicio del acto (no en el sitio),
+  // y arrastramos el Nexus penalizado para avisar al jugador en el mapa.
   if (returnBasePath !== "/hub/story") {
     const query = new URLSearchParams({ outcome: input.outcome, hardReload: Date.now().toString() });
+    if (input.penaltyNexus > 0) query.set("penalty", String(input.penaltyNexus));
     window.location.replace(`${returnBasePath}?${query.toString()}`);
     return;
   }
@@ -78,6 +82,7 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
         outcome,
         duelNodeId: payload.duelNodeId,
         returnNodeId: payload.returnNodeId,
+        penaltyNexus: payload.penaltyNexus,
       });
       setRewardSummary({
         rewardNexus: payload.rewardNexus,
@@ -109,6 +114,7 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
           outcome: "ABANDONED",
           duelNodeId: payload.duelNodeId,
           returnNodeId: payload.returnNodeId,
+          penaltyNexus: payload.penaltyNexus,
         },
         returnBasePath,
       );

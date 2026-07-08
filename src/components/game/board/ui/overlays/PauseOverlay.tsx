@@ -8,9 +8,11 @@ interface PauseOverlayProps {
   isPaused: boolean;
   onResume: () => void;
   onExit?: () => void;
+  /** Solo Story: Nexus que se perderá al abandonar el combate (0/omitido = sin aviso económico). */
+  abandonPenaltyNexus?: number;
 }
 
-export function PauseOverlay({ isPaused, onResume, onExit }: PauseOverlayProps) {
+export function PauseOverlay({ isPaused, onResume, onExit, abandonPenaltyNexus = 0 }: PauseOverlayProps) {
   const router = useRouter();
   
   if (!isPaused) return null;
@@ -36,7 +38,14 @@ export function PauseOverlay({ isPaused, onResume, onExit }: PauseOverlayProps) 
           Pausa Táctica
         </h2>
         <p className="mt-3 text-sm text-red-200/60 font-mono">
-          Advertencia: Abandonar la simulación ahora resultará en la pérdida de progreso no guardado.
+          {abandonPenaltyNexus > 0 ? (
+            <>
+              Abandonar el combate te penaliza con{" "}
+              <span className="font-black text-rose-300">{abandonPenaltyNexus} Nexus</span>.
+            </>
+          ) : (
+            "Abandonar el combate perderá el progreso no guardado."
+          )}
         </p>
         
         <div className="mt-8 flex flex-col gap-3 w-full relative z-10">
@@ -51,7 +60,7 @@ export function PauseOverlay({ isPaused, onResume, onExit }: PauseOverlayProps) 
             className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-red-500/50 bg-red-500/10 px-4 py-3 text-red-100 font-black uppercase tracking-widest hover:bg-red-500/20 hover:border-red-400 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all"
           >
             <Play size={18} className="fill-red-100" />
-            Reanudar Simulación
+            Reanudar Combate
           </button>
 
           {/* BOTÓN SECUNDARIO: Abandonar. Botón plano (NO BackButton): el atajo "?from=overworld" del

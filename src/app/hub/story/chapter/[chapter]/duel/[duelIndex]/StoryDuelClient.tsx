@@ -11,6 +11,7 @@ import {
   createStoryDuelOpponentStrategy,
   createStoryDuelPresentationRuntime,
 } from "./internal/story-duel-runtime";
+import { STORY_DEFEAT_NEXUS_PENALTY } from "@/services/story/duel-flow/story-defeat-penalty";
 import { useStoryDuelResultSync } from "./internal/use-story-duel-result-sync";
 import { StoryDuelCoinTossOverlay } from "./StoryDuelCoinTossOverlay";
 import { useStoryBossSoundtrack } from "./use-story-boss-soundtrack";
@@ -114,6 +115,7 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
         resultActionLabel={props.resultActionLabel ?? "Volver al mapa Story"}
         onResultAction={handleResultAction}
         onExitMatch={() => void handleAbortMatch()}
+        abandonPenaltyNexus={STORY_DEFEAT_NEXUS_PENALTY}
         onMatchResolved={handleMatchResolved}
       />
       <StoryDuelCoinTossOverlay

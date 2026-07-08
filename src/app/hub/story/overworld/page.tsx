@@ -48,6 +48,9 @@ export default async function StoryOverworldPage({ searchParams }: StoryOverworl
   // ignoramos la posición guardada y la escena persiste el spawn al montar.
   const outcome = resolvedSearchParams.outcome;
   const resetToActStart = outcome === "LOST" || outcome === "ABANDONED";
+  // Nexus perdido por la derrota/abandono (aviso "-N Nexus" al reaparecer en el mapa).
+  const penaltyRaw = resolvedSearchParams.penalty;
+  const penaltyNexus = Number.parseInt(typeof penaltyRaw === "string" ? penaltyRaw : "", 10);
   return (
     <main className="flex h-[100dvh] w-full flex-col overflow-hidden bg-black">
       <OverworldDevScene
@@ -56,6 +59,7 @@ export default async function StoryOverworldPage({ searchParams }: StoryOverworl
         initialPosition={resetToActStart ? null : runtime?.initialPosition ?? null}
         interactedNodeIds={runtime?.interactedNodeIds ?? []}
         resetToActStart={resetToActStart}
+        penaltyNexus={Number.isFinite(penaltyNexus) && penaltyNexus > 0 ? penaltyNexus : 0}
       />
     </main>
   );

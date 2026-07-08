@@ -14,6 +14,7 @@ import { didWinFromStoryOutcome } from "@/services/story/duel-flow/story-duel-ou
 import { resolveStoryRewardCards } from "@/services/story/resolve-story-reward-cards";
 import { resolveStoryDuelReturnNode } from "@/app/api/story/duels/complete/internal/resolve-story-duel-return-node";
 import { buildOverworldTilemap, isKnownOverworldMap } from "@/services/story/overworld/resolve-overworld-tilemap";
+import { STORY_DEFEAT_NEXUS_PENALTY } from "@/services/story/duel-flow/story-defeat-penalty";
 
 interface IProcessStoryDuelCompletionParams {
   playerId: string;
@@ -44,6 +45,23 @@ function resolveBossRepeatRewardCardIds(duel: IStoryDuelDefinition): string[] {
   const fallbackReward = duel.rewardCards[0];
   if (!fallbackReward) return [];
   return [fallbackReward.cardId];
+}
+
+/**
+ * Penaliza la derrota/abandono de un duelo Story restando Nexus. Se limita al saldo disponible
+ * (nunca deja el monedero en negativo ni lanza si el jugador tiene menos que la penalización).
+ * Devuelve cuánto se restó realmente para que el cliente lo muestre.
+ */
+async function penalizeDefeatNexus(
+  playerId: string,
+  walletRepository: IWalletRepository,
+): Promise<number> {
+  const wallet = await walletRepository.getWallet(playerId).catch(() => null);
+  if (!wallet) return 0;
+  const penalty = Math.min(STORY_DEFEAT_NEXUS_PENALTY, Math.max(0, wallet.nexus));
+  if (penalty <= 0) return 0;
+  await walletRepository.debitNexus(playerId, penalty).catch(() => undefined);
+  return penalty;
 }
 
 /**
@@ -84,7 +102,12 @@ export async function processStoryDuelCompletion(params: IProcessStoryDuelComple
   const didWin = didWinFromStoryOutcome(input.outcome);
   // Derrota/abandono en el overworld: reaparecer al inicio del acto. Se hace ANTES del lookup del
   // duelo para que un fallo al resolverlo no impida el reset (evita el bucle de re-entrar al haz).
-  if (!didWin) await resetOverworldToActStart(params.playerId, params.storyWorldRepository);
+  // Además penalizamos el Nexus (solo en Story), también antes del lookup por el mismo motivo.
+  let penaltyNexus = 0;
+  if (!didWin) {
+    await resetOverworldToActStart(params.playerId, params.storyWorldRepository);
+    penaltyNexus = await penalizeDefeatNexus(params.playerId, params.walletRepository);
+  }
   const duel = await resolveDuelFromPayload(params.payload, params.opponentRepository);
   const duelProgress = await params.storyProgressRepository.registerDuelResult(params.playerId, duel.id, didWin);
   const firstVictory = didWin
@@ -102,7 +125,7 @@ export async function processStoryDuelCompletion(params: IProcessStoryDuelComple
     storyWorldRepository: params.storyWorldRepository,
   });
   if (!shouldGrantStandardRewards && !shouldGrantBossRepeatCardReward) {
-    return { duelProgress, rewarded: false, rewardNexus: 0, rewardPlayerExperience: 0, rewardCardIds: [], rewardCards: [], outcome: input.outcome, duelNodeId: duel.id, returnNodeId };
+    return { duelProgress, rewarded: false, rewardNexus: 0, rewardPlayerExperience: 0, rewardCardIds: [], rewardCards: [], penaltyNexus, outcome: input.outcome, duelNodeId: duel.id, returnNodeId };
   }
   const rewardCardIds = shouldGrantBossRepeatCardReward
     ? resolveBossRepeatRewardCardIds(duel)
@@ -130,6 +153,7 @@ export async function processStoryDuelCompletion(params: IProcessStoryDuelComple
     rewardPlayerExperience,
     rewardCardIds,
     rewardCards,
+    penaltyNexus,
     ...(playerProgress ? { playerProgress } : {}),
     outcome: input.outcome,
     duelNodeId: duel.id,
