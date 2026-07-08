@@ -66,13 +66,19 @@ interface IOverworldDevSceneProps {
   resetToActStart?: boolean;
 }
 
-function buildProgress(completedIds: ReadonlySet<string>) {
+function buildProgress(completedIds: ReadonlySet<string>, interactedIds: ReadonlySet<string> = new Set<string>()) {
   return {
     visitedNodeIds: new Set<string>(),
-    interactedNodeIds: new Set<string>(),
+    interactedNodeIds: new Set<string>(interactedIds),
     completedNodeIds: new Set<string>(completedIds),
   };
 }
+
+// Ids de las dos mitades de la llave del Acto 2 (nodos de recompensa reutilizados) y sus narraciones.
+const ACT2_KEY_NODE_IDS = ["story-ch2-branch-center-a", "story-ch2-branch-bottom-c"];
+const ACT2_FIRST_KEY_NARRATION = "story-ch2-branch-lower-up-event";
+const ACT2_BOTH_KEYS_NARRATION = "story-ch2-link-recovered-event";
+const ACT2_BIGLOG_DUEL_ID = "story-ch2-duel-8";
 
 /** Casilla contigua fuera del haz del rival (perpendicular a su orientación), para no re-activar el combate al volver. */
 function resolveSafeReturnTile(
@@ -246,6 +252,27 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
     if (resetToActStart) void saveOverworldPosition();
   }, [resetToActStart, saveOverworldPosition]);
 
+  // Sincroniza los nodos interactuados (eventos/recompensas/llaves vistos) al motor, para que las
+  // puertas (evento del puente) y el puente central (2 llaves) se abran EN VIVO al conseguirlos.
+  const syncEngineProgress = useCallback((): void => {
+    engineRef.current?.updateProgress(buildProgress(initialCompleted, seenEventIdsRef.current));
+  }, [initialCompleted]);
+
+  // Combate diferido tras una narración (BigLog: aparece, narra y arranca el combate).
+  const pendingNarrationBattleRef = useRef<IOverworldIntent["object"] | null>(null);
+  const launchPendingNarrationBattle = useCallback((): boolean => {
+    const object = pendingNarrationBattleRef.current;
+    if (!object?.duelHref) return false;
+    pendingNarrationBattleRef.current = null;
+    const precombat = precombatRef.current;
+    if (precombat) {
+      precombat.currentTime = 0;
+      void precombat.play().catch(() => undefined);
+    }
+    setPendingBattle({ duelHref: object.duelHref, duelNodeId: object.id, imageSrc: object.imageSrc, opponentFacing: object.facing });
+    return true;
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -276,7 +303,20 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
               objectId: object.id,
               imageSrc: object.imageSrc,
               floatingLabel: (data.rewardNexus ?? 0) > 0 ? `+${data.rewardNexus}` : null,
-              onDone: () => engine.setInteractionSuspended(false),
+              onDone: () => {
+                // Puertas/puente reevalúan sus requisitos con el nodo recién interactuado.
+                engine.updateProgress(buildProgress(initialCompleted, seenEventIdsRef.current));
+                // Al coger una mitad de la llave: narración (primera mitad, o "link recuperado" si ya tienes las dos).
+                if (ACT2_KEY_NODE_IDS.includes(object.id)) {
+                  const hasBothKeys = ACT2_KEY_NODE_IDS.every((id) => seenEventIdsRef.current.has(id));
+                  const dialogue = resolveOverworldEventDialogue(hasBothKeys ? ACT2_BOTH_KEYS_NARRATION : ACT2_FIRST_KEY_NARRATION);
+                  if (dialogue && dialogue.lines.length > 0) {
+                    setNarration({ title: dialogue.title, lines: dialogue.lines, lineIndex: 0, isCutscene: false });
+                    return;
+                  }
+                }
+                engine.setInteractionSuspended(false);
+              },
             });
             return;
           }
@@ -304,7 +344,7 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
     const engine = new OverworldEngine({
       canvas,
       tilemap,
-      progress: buildProgress(initialCompleted),
+      progress: buildProgress(initialCompleted, initialInteracted),
       config: { initialPosition, collectedNodeIds: [...initialInteracted] },
       hooks: {
         onFocusChanged: setFocus,
@@ -329,6 +369,15 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
             (object.kind === "DUEL" || object.kind === "BOSS") &&
             Boolean(object.duelHref);
           if (isCombat && intent.source === "SIGHTLINE") {
+            // BigLog: aparece (acercamiento), narra el reto y ARRANCA el combate al cerrar la narración.
+            if (object.id === ACT2_BIGLOG_DUEL_ID) {
+              const dialogue = resolveOverworldEventDialogue(object.id);
+              if (dialogue && dialogue.lines.length > 0) {
+                pendingNarrationBattleRef.current = object;
+                setNarration({ title: dialogue.title, lines: dialogue.lines, lineIndex: 0, isCutscene: false });
+                return;
+              }
+            }
             startBattle(object);
             return;
           }
@@ -402,6 +451,7 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
     const wasCutscene = activeVideo?.isCutscene ?? false;
     sfxRef.current?.playEventFinish();
     setActiveVideo(null);
+    syncEngineProgress(); // el vídeo del diagnóstico abre las 2 puertas de las ramas.
     if (wasCutscene) engineRef.current?.resumeCutscene();
     else engineRef.current?.setInteractionSuspended(false);
   };
@@ -412,11 +462,21 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
       if (current.lineIndex < current.lines.length - 1) {
         return { ...current, lineIndex: current.lineIndex + 1 };
       }
-      if (current.isCutscene) engineRef.current?.resumeCutscene();
-      else engineRef.current?.setInteractionSuspended(false);
+      // Narración terminada. Si hay un combate diferido (BigLog), se deja suspendido y lo lanza
+      // el efecto de abajo; si no, se sincroniza el progreso (la 2ª llave despliega el puente).
+      if (!pendingNarrationBattleRef.current) {
+        syncEngineProgress();
+        if (current.isCutscene) engineRef.current?.resumeCutscene();
+        else engineRef.current?.setInteractionSuspended(false);
+      }
       return null;
     });
-  }, []);
+  }, [syncEngineProgress]);
+
+  // Al cerrarse una narración con combate diferido (BigLog), arranca la animación de combate.
+  useEffect(() => {
+    if (narration === null && pendingNarrationBattleRef.current) launchPendingNarrationBattle();
+  }, [narration, launchPendingNarrationBattle]);
 
   // Espacio/Enter avanzan la narración (además del botón y el D-pad "A").
   useEffect(() => {
@@ -435,6 +495,9 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
     const wasCutscene = narration?.isCutscene ?? false;
     sfxRef.current?.playEventFinish();
     setNarration(null);
+    // Si hay combate diferido (BigLog), lo lanza el efecto al pasar narration a null.
+    if (pendingNarrationBattleRef.current) return;
+    syncEngineProgress();
     if (wasCutscene) engineRef.current?.resumeCutscene();
     else engineRef.current?.setInteractionSuspended(false);
   };

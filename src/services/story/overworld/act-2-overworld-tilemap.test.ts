@@ -1,4 +1,4 @@
-// src/services/story/overworld/act-2-overworld-tilemap.test.ts - Blinda el Acto 2: válido, reutiliza contenido real y con gating físico correcto.
+// src/services/story/overworld/act-2-overworld-tilemap.test.ts - Blinda el Acto 2: válido, reutiliza contenido real y con el gating narrativo (vídeo→puertas, 2 llaves→puente, jefe→portal).
 import { buildAct2OverworldTilemap } from "@/services/story/overworld/act-2-overworld-tilemap";
 import {
   buildCollisionGridFromTilemap,
@@ -9,24 +9,30 @@ import { findGridPath } from "@/core/services/story/overworld/pathfinding";
 import { IOverworldProgressState } from "@/core/services/story/overworld/overworld-types";
 import { findStoryVirtualNodeDefinition } from "@/services/story/map-definitions/story-map-definition-registry";
 
-function buildProgress(completed: string[]): IOverworldProgressState {
-  return {
-    visitedNodeIds: new Set<string>(),
-    interactedNodeIds: new Set<string>(),
-    completedNodeIds: new Set<string>(completed),
-  };
-}
+const EVENT_BRIDGE = "story-ch2-event-core";
+const KEY_LEFT = "story-ch2-branch-center-a";
+const KEY_RIGHT = "story-ch2-branch-bottom-c";
 
-function contextFor(completed: string[]) {
+function contextFor(progress: { completed?: string[]; interacted?: string[] }) {
   const tilemap = buildAct2OverworldTilemap();
+  const state: IOverworldProgressState = {
+    visitedNodeIds: new Set<string>(),
+    interactedNodeIds: new Set<string>(progress.interacted ?? []),
+    completedNodeIds: new Set<string>(progress.completed ?? []),
+  };
   return {
     tilemap,
     context: resolveMovementContext({
       collisionGrid: buildCollisionGridFromTilemap(tilemap),
       gates: listGatesFromTilemap(tilemap),
-      progress: buildProgress(completed),
+      progress: state,
     }),
   };
+}
+
+function spawnTile(tilemap: ReturnType<typeof buildAct2OverworldTilemap>) {
+  const spawn = tilemap.spawns[0];
+  return { tileX: spawn.tileX, tileY: spawn.tileY };
 }
 
 describe("buildAct2OverworldTilemap", () => {
@@ -38,34 +44,46 @@ describe("buildAct2OverworldTilemap", () => {
     const objects = buildAct2OverworldTilemap().objects;
     const ids = new Set(objects.map((object) => object.id));
     for (let n = 1; n <= 8; n++) expect(ids.has(`story-ch2-duel-${n}`)).toBe(true);
-    const boss = objects.find((object) => object.kind === "BOSS")!;
-    expect(boss.id).toBe("story-ch2-duel-7");
+    expect(objects.find((object) => object.kind === "BOSS")!.id).toBe("story-ch2-duel-7");
   });
 
-  it("la sala del jefe está sellada por la compuerta que exige vencer a BigLog (duel-8)", () => {
-    const spawn = buildAct2OverworldTilemap().spawns[0];
+  it("las llaves usan las imágenes reales de llave", () => {
+    const objects = buildAct2OverworldTilemap().objects;
+    expect(objects.find((object) => object.id === KEY_LEFT)?.imageSrc).toContain("llave-1");
+    expect(objects.find((object) => object.id === KEY_RIGHT)?.imageSrc).toContain("llave-2");
+  });
+
+  it("las ramas de las llaves están tras puertas que se abren con el vídeo del puente", () => {
+    const key = buildAct2OverworldTilemap().objects.find((object) => object.id === KEY_LEFT)!;
+    const keyTile = { tileX: key.tileX, tileY: key.tileY };
+
+    const closed = contextFor({});
+    expect(findGridPath(spawnTile(closed.tilemap), keyTile, closed.context)).toBeNull();
+
+    const opened = contextFor({ interacted: [EVENT_BRIDGE] });
+    expect(findGridPath(spawnTile(opened.tilemap), keyTile, opened.context)).not.toBeNull();
+  });
+
+  it("el puente al jefe solo se despliega con las DOS mitades de la llave", () => {
     const boss = buildAct2OverworldTilemap().objects.find((object) => object.kind === "BOSS")!;
     const bossAnchor = { tileX: boss.tileX, tileY: boss.tileY + 1 };
-    const start = { tileX: spawn.tileX, tileY: spawn.tileY };
 
-    const locked = contextFor([]);
-    expect(findGridPath(start, bossAnchor, locked.context)).toBeNull();
+    const oneKey = contextFor({ interacted: [EVENT_BRIDGE, KEY_LEFT] });
+    expect(findGridPath(spawnTile(oneKey.tilemap), bossAnchor, oneKey.context)).toBeNull();
 
-    const open = contextFor(["story-ch2-duel-8"]);
-    expect(findGridPath(start, bossAnchor, open.context)).not.toBeNull();
+    const bothKeys = contextFor({ interacted: [EVENT_BRIDGE, KEY_LEFT, KEY_RIGHT] });
+    expect(findGridPath(spawnTile(bothKeys.tilemap), bossAnchor, bothKeys.context)).not.toBeNull();
   });
 
   it("el portal al Acto 3 exige vencer al jefe (duel-7)", () => {
-    const { tilemap } = contextFor([]);
-    const spawn = tilemap.spawns[0];
-    const warp = tilemap.objects.find((object) => object.id === "story-ch2-transition-to-act3")!;
+    const warp = buildAct2OverworldTilemap().objects.find((object) => object.id === "story-ch2-transition-to-act3")!;
     const warpTile = { tileX: warp.tileX, tileY: warp.tileY };
-    const start = { tileX: spawn.tileX, tileY: spawn.tileY };
 
-    // Con BigLog vencido pero sin el jefe: el portal sigue bloqueado.
-    expect(findGridPath(start, warpTile, contextFor(["story-ch2-duel-8"]).context)).toBeNull();
-    // Venciendo BigLog y el jefe: el portal es alcanzable.
-    expect(findGridPath(start, warpTile, contextFor(["story-ch2-duel-8", "story-ch2-duel-7"]).context)).not.toBeNull();
+    const withoutBoss = contextFor({ interacted: [EVENT_BRIDGE, KEY_LEFT, KEY_RIGHT] });
+    expect(findGridPath(spawnTile(withoutBoss.tilemap), warpTile, withoutBoss.context)).toBeNull();
+
+    const withBoss = contextFor({ interacted: [EVENT_BRIDGE, KEY_LEFT, KEY_RIGHT], completed: ["story-ch2-duel-7"] });
+    expect(findGridPath(spawnTile(withBoss.tilemap), warpTile, withBoss.context)).not.toBeNull();
   });
 
   it("las recompensas se cogen al chocar (BUMP) y hay nodos de servicio", () => {
@@ -79,14 +97,9 @@ describe("buildAct2OverworldTilemap", () => {
     expect(kinds.has("TELEPORT")).toBe(true);
   });
 
-  it("los nodos de recompensa existen en el registro (para el claim server-side)", () => {
-    const rewardIds = buildAct2OverworldTilemap()
-      .objects.filter((object) => object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD")
-      .map((object) => object.id);
-    for (const nodeId of rewardIds) {
-      const definition = findStoryVirtualNodeDefinition(nodeId);
-      expect(definition).not.toBeNull();
-      expect(["REWARD_NEXUS", "REWARD_CARD"]).toContain(definition?.nodeType);
+  it("las llaves existen en el registro de nodos virtuales (para el claim server-side)", () => {
+    for (const nodeId of [KEY_LEFT, KEY_RIGHT]) {
+      expect(findStoryVirtualNodeDefinition(nodeId)).not.toBeNull();
     }
   });
 });

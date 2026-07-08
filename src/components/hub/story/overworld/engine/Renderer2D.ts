@@ -77,6 +77,10 @@ export class Renderer2D {
   private readonly context: CanvasRenderingContext2D;
   private cssWidth = 0;
   private cssHeight = 0;
+  // Progreso de apertura animado por puerta/puente (0 cerrado → 1 abierto) y delta de frame.
+  private readonly gateOpenProgress = new Map<string, number>();
+  private lastRenderMs = 0;
+  private frameDeltaMs = 16;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -127,6 +131,9 @@ export class Renderer2D {
     options: IRenderOptions,
   ): void {
     const { tilemap } = world;
+    // Delta de frame para animaciones basadas en estado (apertura de puertas/puente).
+    this.frameDeltaMs = this.lastRenderMs === 0 ? 16 : Math.max(0, Math.min(120, options.timeMs - this.lastRenderMs));
+    this.lastRenderMs = options.timeMs;
     const worldViewport = this.getWorldViewportSize();
     const range = resolveVisibleTileRange({
       cameraOffset,
@@ -375,11 +382,12 @@ export class Renderer2D {
       const screenY = camera.y + object.tileY * size;
       const isBlocked = options.blockedObjectIds.has(object.id);
       const isFocused = options.focusedObjectId === object.id;
-      this.drawObject(object.kind, object.imageSrc, screenX, screenY, size, isBlocked, isFocused, options.timeMs);
+      this.drawObject(object.id, object.kind, object.imageSrc, screenX, screenY, size, isBlocked, isFocused, options.timeMs);
     }
   }
 
   private drawObject(
+    objectId: string,
     kind: OverworldObjectKind,
     imageSrc: string | undefined,
     screenX: number,
@@ -401,7 +409,19 @@ export class Renderer2D {
     context.fill();
 
     if (kind === "GATE") {
-      this.drawGate(screenX, screenY, size, accent, isBlocked, timeMs);
+      // Progreso de apertura animado (0 cerrado → 1 abierto) hacia el estado real de la puerta.
+      const target = isBlocked ? 0 : 1;
+      const prev = this.gateOpenProgress.get(objectId) ?? target;
+      const step = this.frameDeltaMs / 420;
+      const openProgress = prev < target ? Math.min(target, prev + step) : Math.max(target, prev - step);
+      this.gateOpenProgress.set(objectId, openProgress);
+      if (objectId.includes("bridge")) {
+        this.drawDeployBridge(screenX, screenY, size, openProgress, timeMs);
+      } else if (objectId.includes("door")) {
+        this.drawSlidingDoor(screenX, screenY, size, openProgress, accent);
+      } else {
+        this.drawGate(screenX, screenY, size, accent, isBlocked, timeMs);
+      }
     } else if (kind === "WARP") {
       this.drawPortal(cx, cy, size, accent, timeMs);
     } else if (kind === "MARKET" || kind === "ARSENAL" || kind === "TELEPORT") {
@@ -501,6 +521,68 @@ export class Renderer2D {
     context.strokeStyle = accent;
     context.lineWidth = 2;
     context.strokeRect(screenX + size * 0.1, screenY + size * 0.1, size * 0.8, size * 0.8);
+    context.globalAlpha = 1;
+  }
+
+  /** Puente central que se DESPLIEGA: tablones que se extienden de abajo arriba al abrirse (0→1). */
+  private drawDeployBridge(screenX: number, screenY: number, size: number, progress: number, timeMs: number): void {
+    const context = this.context;
+    const cx = screenX + size / 2;
+    const planks = 6;
+    const solid = Math.round(progress * planks);
+    const halfW = size * 0.36;
+    context.strokeStyle = "rgba(129,140,248,0.55)";
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(cx - halfW, screenY + size * 0.08);
+    context.lineTo(cx - halfW, screenY + size * 0.92);
+    context.moveTo(cx + halfW, screenY + size * 0.08);
+    context.lineTo(cx + halfW, screenY + size * 0.92);
+    context.stroke();
+    for (let index = 0; index < planks; index++) {
+      // index 0 abajo (entrada) → arriba (hacia el jefe): se despliega de abajo a arriba.
+      const py = screenY + size * (0.86 - (index / (planks - 1)) * 0.72);
+      if (index < solid) {
+        context.globalAlpha = 0.92;
+        context.fillStyle = "#818cf8";
+        context.fillRect(cx - halfW, py - size * 0.04, halfW * 2, size * 0.08);
+        context.fillStyle = "rgba(224,231,255,0.5)";
+        context.fillRect(cx - halfW, py - size * 0.04, halfW * 2, size * 0.02);
+      } else {
+        context.globalAlpha = 0.16 + Math.sin(timeMs / 220 + index) * 0.08;
+        context.strokeStyle = "#818cf8";
+        context.setLineDash([5, 5]);
+        context.strokeRect(cx - halfW, py - size * 0.04, halfW * 2, size * 0.08);
+        context.setLineDash([]);
+      }
+    }
+    context.globalAlpha = 1;
+  }
+
+  /** Puerta de sala: dos paneles que se retraen arriba/abajo al abrirse (0 cerrado → 1 abierto). */
+  private drawSlidingDoor(screenX: number, screenY: number, size: number, progress: number, accent: string): void {
+    const context = this.context;
+    const x = screenX + size * 0.14;
+    const w = size * 0.72;
+    const panelH = size * 0.36 * (1 - progress);
+    context.globalAlpha = 1;
+    context.strokeStyle = accent;
+    context.lineWidth = 2;
+    context.strokeRect(screenX + size * 0.12, screenY + size * 0.1, size * 0.76, size * 0.8);
+    if (panelH > 0.5) {
+      context.fillStyle = accent;
+      context.globalAlpha = 0.85;
+      context.fillRect(x, screenY + size * 0.12, w, panelH);
+      context.fillRect(x, screenY + size * 0.88 - panelH, w, panelH);
+      context.fillStyle = "rgba(15,23,42,0.55)";
+      context.fillRect(x, screenY + size * 0.12 + panelH - 2, w, 2);
+      context.fillRect(x, screenY + size * 0.88 - panelH, w, 2);
+    }
+    if (progress > 0.35) {
+      context.globalAlpha = 0.4 * progress;
+      context.fillStyle = "rgba(226,232,255,0.9)";
+      context.fillRect(x, screenY + size / 2 - 1.5, w, 3);
+    }
     context.globalAlpha = 1;
   }
 
