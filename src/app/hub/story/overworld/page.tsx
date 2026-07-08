@@ -5,24 +5,18 @@ import { OverworldDevScene } from "@/components/hub/story/overworld/OverworldDev
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { getStoryOverworldRuntime } from "@/services/story/overworld/get-story-overworld-runtime";
 import { DEFAULT_OVERWORLD_MAP_ID } from "@/services/story/overworld/resolve-overworld-tilemap";
+import { isStoryOverworldEnabled } from "@/services/story/overworld/overworld-feature-flag";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-/**
- * Flag server-side: mientras el overworld esté en desarrollo, la ruta no existe
- * en producción (404 real, sin filtrar que la feature está en curso).
- */
-function isOverworldEnabled(): boolean {
-  return process.env.STORY_OVERWORLD_ENABLED === "true";
-}
 
 interface StoryOverworldPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function StoryOverworldPage({ searchParams }: StoryOverworldPageProps) {
-  if (!isOverworldEnabled()) notFound();
+  // Con el flag apagado la ruta no existe (404 real, sin filtrar que la feature está en curso).
+  if (!isStoryOverworldEnabled()) notFound();
   const session = await getCurrentUserSession();
   if (!session) {
     return (
