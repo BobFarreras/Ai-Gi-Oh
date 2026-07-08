@@ -105,7 +105,7 @@ export function buildAct2OverworldTilemap(): IOverworldTilemap {
   // Rivales y servicios (sólidos). Helena BLOQUEA el único acceso al nicho de la llave en cada rama
   // (duel-1 en (6,16) mira al este, duel-6 en (34,16) mira al oeste); al vencerla se teletransporta y
   // libera su casilla. Los soldados guardan el hub central.
-  for (const [x, y] of [[6, 16], [34, 16], [16, 22], [20, 22], [17, 20], [22, 22], [33, 28], [19, 6]]) {
+  for (const [x, y] of [[6, 16], [34, 16], [16, 22], [20, 22], [17, 20], [22, 22], [19, 6]]) {
     markSolid(map, x, y);
   }
   markSolid(map, 16, 29); // market
@@ -142,9 +142,9 @@ export function buildAct2OverworldTilemap(): IOverworldTilemap {
       // Descenso al Acto 1: se activa al PISARLO y reaparece al FINAL del Acto 1 (junto a su portal), no en su inicio.
       { id: "story-ch2-transition-to-act1", kind: "WARP", tileX: 15, tileY: 30, sprite: "portal", trigger: "STEP_ON", warp: { toMapId: "act-1", toSpawnId: "spawn-from-act2", direction: "backward" } },
 
-      // Vídeo del diagnóstico ANTES de entrar al hub central (trigger oculto en la pasarela de
-      // acceso): al verlo se abren las dos puertas de las ramas de las llaves.
-      { id: EVENT_BRIDGE, kind: "EVENT", tileX: 19, tileY: 26, sprite: "trigger", trigger: "STEP_ON", hidden: true },
+      // Vídeo del diagnóstico al entrar al hub central (trigger oculto un par de casillas dentro,
+      // ya con las dos puertas de las ramas a la vista): al verlo, ambas se abren con animación.
+      { id: EVENT_BRIDGE, kind: "EVENT", tileX: 19, tileY: 23, sprite: "trigger", trigger: "STEP_ON", hidden: true },
       // Puente central sin desplegar: cruzar al jefe exige haber recogido las DOS mitades de la llave.
       { id: "story-a2-bridge-gate", kind: "GATE", tileX: 19, tileY: 16, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: [KEY_LEFT, KEY_RIGHT] },
       // Puertas a las ramas: se abren al ver el vídeo del puente (evento interactuado).
@@ -164,8 +164,11 @@ export function buildAct2OverworldTilemap(): IOverworldTilemap {
       { id: "story-ch2-duel-3", kind: "DUEL", tileX: 20, tileY: 22, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/3", imageSrc: SOLDIER, facing: "UP", visionRange: 3, patrolAxis: "H", patrolLength: 2, patrolSweep: true },
       { id: "story-ch2-duel-4", kind: "DUEL", tileX: 17, tileY: 20, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/4", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3 },
       { id: "story-ch2-duel-5", kind: "DUEL", tileX: 22, tileY: 22, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/5", imageSrc: SOLDIER, facing: "UP", visionRange: 3 },
-      // BigLog: guarda el búnker de su ruta mirando a la entrada; al asomarte, aparece, narra y combate.
-      { id: "story-ch2-duel-8", kind: "DUEL", tileX: 33, tileY: 28, sprite: "biglog", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/8", imageSrc: BIGLOG, facing: "UP", visionRange: 3 },
+      // BigLog NO es un oponente estático: al PISAR la entrada del búnker (trigger oculto) salta una
+      // cutscene (aparece, se acerca, narra) y al terminar arranca el combate. duel-8 queda como nodo
+      // invisible (sin visión) solo para aportar el duelHref del combate.
+      { id: "story-a2-biglog-trigger", kind: "EVENT", tileX: 33, tileY: 25, sprite: "trigger", trigger: "STEP_ON", hidden: true },
+      { id: "story-ch2-duel-8", kind: "DUEL", tileX: 36, tileY: 30, sprite: "biglog", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/8", imageSrc: BIGLOG, hidden: true },
       // Jefe del acto (Helena: Núcleo de Control).
       { id: "story-ch2-duel-7", kind: "BOSS", tileX: 19, tileY: 6, sprite: "helena", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/7", imageSrc: HELENA, facing: "DOWN", visionRange: 3 },
 

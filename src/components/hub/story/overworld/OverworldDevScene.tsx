@@ -21,6 +21,7 @@ import { Volume2, VolumeX } from "lucide-react";
 import { buildAct1OverworldTilemap } from "@/services/story/overworld/act-1-overworld-tilemap";
 import { buildOverworldTilemap, resolveOverworldActId } from "@/services/story/overworld/resolve-overworld-tilemap";
 import { buildAct1EchoCutscene } from "@/services/story/overworld/act-1-echo-cutscene";
+import { buildAct2BigLogCutscene } from "@/services/story/overworld/act-2-biglog-cutscene";
 import { resolveOverworldEventDialogue } from "@/services/story/overworld/resolve-overworld-event-dialogue";
 import { IPlayerOverworldPosition } from "@/core/entities/story/IPlayerOverworldState";
 import { OverworldDirection } from "@/core/services/story/overworld/overworld-types";
@@ -79,6 +80,9 @@ const ACT2_KEY_NODE_IDS = ["story-ch2-branch-center-a", "story-ch2-branch-bottom
 const ACT2_FIRST_KEY_NARRATION = "story-ch2-branch-lower-up-event";
 const ACT2_BOTH_KEYS_NARRATION = "story-ch2-link-recovered-event";
 const ACT2_BIGLOG_DUEL_ID = "story-ch2-duel-8";
+const ACT2_BIGLOG_TRIGGER_ID = "story-a2-biglog-trigger";
+const ACT2_BRIDGE_EVENT_ID = "story-ch2-event-core";
+const OPEN_DOOR_SOUND = "/audio/story/open-door-story.m4a";
 
 /** Casilla contigua fuera del haz del rival (perpendicular a su orientación), para no re-activar el combate al volver. */
 function resolveSafeReturnTile(
@@ -159,7 +163,7 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
   const [focus, setFocus] = useState<IOverworldFocus | null>(null);
   const [activeIntent, setActiveIntent] = useState<IOverworldIntent | null>(null);
   const [pendingBattle, setPendingBattle] = useState<IPendingBattle | null>(null);
-  const [activeVideo, setActiveVideo] = useState<{ video: IStoryInteractionCinematicVideo; isCutscene: boolean } | null>(null);
+  const [activeVideo, setActiveVideo] = useState<{ video: IStoryInteractionCinematicVideo; isCutscene: boolean; nodeId?: string } | null>(null);
   const [narration, setNarration] = useState<IActiveNarration | null>(null);
   const initialInteracted = useMemo(() => new Set(interactedNodeIds), [interactedNodeIds]);
   const [collectedRewardIds, setCollectedRewardIds] = useState<ReadonlySet<string>>(initialInteracted);
@@ -178,15 +182,24 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
   });
   const { isMuted, toggleMute } = useStoryMapSoundtrack(actId);
   const precombatRef = useRef<HTMLAudioElement | null>(null);
+  const doorSoundRef = useRef<HTMLAudioElement | null>(null);
+  // Nodo BigLog pendiente de combate tras su cutscene de aparición.
+  const bigLogPendingRef = useRef<IOverworldIntent["object"] | null>(null);
   useEffect(() => {
     if (typeof Audio === "undefined") return;
-    const audio = new Audio(PRECOMBAT_SOUND);
-    audio.preload = "auto";
-    audio.volume = 0.55;
-    precombatRef.current = audio;
+    const precombat = new Audio(PRECOMBAT_SOUND);
+    precombat.preload = "auto";
+    precombat.volume = 0.55;
+    precombatRef.current = precombat;
+    const door = new Audio(OPEN_DOOR_SOUND);
+    door.preload = "auto";
+    door.volume = 0.6;
+    doorSoundRef.current = door;
     return () => {
-      audio.pause();
+      precombat.pause();
+      door.pause();
       precombatRef.current = null;
+      doorSoundRef.current = null;
     };
   }, []);
 
@@ -362,7 +375,20 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
             engine.resumeCutscene();
           }
         },
-        onCutsceneEnd: () => engine.setInteractionSuspended(false),
+        onCutsceneEnd: () => {
+          // Fin de la cutscene de BigLog: narra el reto y (al cerrarla) arranca el combate.
+          const bigLogDuel = bigLogPendingRef.current;
+          if (bigLogDuel) {
+            bigLogPendingRef.current = null;
+            pendingNarrationBattleRef.current = bigLogDuel;
+            const dialogue = resolveOverworldEventDialogue(bigLogDuel.id);
+            if (dialogue && dialogue.lines.length > 0) {
+              setNarration({ title: dialogue.title, lines: dialogue.lines, lineIndex: 0, isCutscene: false });
+              return;
+            }
+          }
+          engine.setInteractionSuspended(false);
+        },
         onIntent: (intent) => {
           engine.setInteractionSuspended(true);
           const { object } = intent;
@@ -371,15 +397,6 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
             (object.kind === "DUEL" || object.kind === "BOSS") &&
             Boolean(object.duelHref);
           if (isCombat && intent.source === "SIGHTLINE") {
-            // BigLog: aparece (acercamiento), narra el reto y ARRANCA el combate al cerrar la narración.
-            if (object.id === ACT2_BIGLOG_DUEL_ID) {
-              const dialogue = resolveOverworldEventDialogue(object.id);
-              if (dialogue && dialogue.lines.length > 0) {
-                pendingNarrationBattleRef.current = object;
-                setNarration({ title: dialogue.title, lines: dialogue.lines, lineIndex: 0, isCutscene: false });
-                return;
-              }
-            }
             startBattle(object);
             return;
           }
@@ -411,6 +428,21 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
             return;
           }
           if (!intent.isBlocked && (object.kind === "EVENT" || object.kind === "NPC")) {
+            // BigLog: al PISAR la entrada del búnker salta la cutscene (aparece + se acerca); al
+            // terminar se narra el reto y arranca el combate. Se re-dispara mientras no lo venzas
+            // (se gatea por su duelo completado, no por "visto"), y por eso NO se marca como visto.
+            if (object.id === ACT2_BIGLOG_TRIGGER_ID) {
+              if (initialCompleted.has(ACT2_BIGLOG_DUEL_ID)) {
+                engine.setInteractionSuspended(false);
+                return;
+              }
+              const bigLogDuel = tilemap.objects.find((entry) => entry.id === ACT2_BIGLOG_DUEL_ID);
+              if (bigLogDuel) {
+                bigLogPendingRef.current = bigLogDuel;
+                engine.startCutscene(buildAct2BigLogCutscene());
+                return;
+              }
+            }
             if (seenEventIdsRef.current.has(object.id)) {
               engine.setInteractionSuspended(false);
               return;
@@ -424,7 +456,7 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
             const dialogue = resolveOverworldEventDialogue(object.id);
             if (dialogue?.cinematicVideo) {
               playDeviceSound();
-              setActiveVideo({ video: dialogue.cinematicVideo, isCutscene: false });
+              setActiveVideo({ video: dialogue.cinematicVideo, isCutscene: false, nodeId: object.id });
               return;
             }
             if (dialogue && dialogue.lines.length > 0) {
@@ -451,9 +483,14 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
 
   const closeVideo = (): void => {
     const wasCutscene = activeVideo?.isCutscene ?? false;
+    const wasBridgeVideo = activeVideo?.nodeId === ACT2_BRIDGE_EVENT_ID;
     sfxRef.current?.playEventFinish();
     setActiveVideo(null);
     syncEngineProgress(); // el vídeo del diagnóstico abre las 2 puertas de las ramas.
+    if (wasBridgeVideo && doorSoundRef.current) {
+      doorSoundRef.current.currentTime = 0;
+      void doorSoundRef.current.play().catch(() => undefined);
+    }
     if (wasCutscene) engineRef.current?.resumeCutscene();
     else engineRef.current?.setInteractionSuspended(false);
   };
