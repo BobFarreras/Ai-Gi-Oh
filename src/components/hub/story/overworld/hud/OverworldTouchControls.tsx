@@ -17,8 +17,9 @@ const DPAD_BUTTONS: Array<{ direction: OverworldDirection; label: string; classN
 ];
 
 /**
- * Controles táctiles para móvil/pantallas sin teclado. Usa pointer events para
- * cubrir ratón, táctil y lápiz por igual. Se ocultan en escritorio vía CSS.
+ * Controles táctiles para móvil/pantallas táctiles. Solo se muestran en dispositivos con
+ * puntero grueso (táctil): en escritorio (puntero fino) se ocultan y se usan las teclas.
+ * El padding inferior respeta la `safe-area` para que la barra del móvil no tape el D-pad.
  */
 export function OverworldTouchControls({
   onDirectionDown,
@@ -26,7 +27,10 @@ export function OverworldTouchControls({
   onAction,
 }: IOverworldTouchControlsProps) {
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex select-none items-end justify-between p-4 sm:p-6">
+    <div
+      className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex select-none items-end justify-between p-4 sm:p-6 [@media(pointer:fine)]:hidden"
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
+    >
       <div className="pointer-events-auto grid grid-cols-3 grid-rows-3 gap-1.5" style={{ touchAction: "none" }}>
         {DPAD_BUTTONS.map((button) => (
           <button
