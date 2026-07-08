@@ -14,6 +14,8 @@ export interface IPostStoryDuelCompletionOutput {
   rewardNexus: number;
   rewardPlayerExperience: number;
   rewardCards: ICard[];
+  /** Nexus perdido por derrota/abandono (0 si ganaste o no había saldo). */
+  penaltyNexus: number;
   duelNodeId: string;
   returnNodeId: string;
 }
@@ -38,6 +40,7 @@ export async function postStoryDuelCompletion(
     rewardNexus: payload.rewardNexus ?? 0,
     rewardPlayerExperience: payload.rewardPlayerExperience ?? 0,
     rewardCards: payload.rewardCards ?? [],
+    penaltyNexus: payload.penaltyNexus ?? 0,
     duelNodeId: payload.duelNodeId ?? "",
     returnNodeId: payload.returnNodeId ?? "story-ch1-player-start",
   };

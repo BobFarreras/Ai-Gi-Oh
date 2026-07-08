@@ -18,6 +18,8 @@ interface IStoryNodeInteractionDialogProps {
   line: IStoryInteractionDialogueLine | null;
   onNext: () => void;
   onClose: () => void;
+  /** Fuerza el botón "Siguiente" centrado abajo también en escritorio. */
+  centerNextButton?: boolean;
 }
 
 const DEFAULT_AUTO_ADVANCE_MS = 7000;
@@ -29,6 +31,7 @@ export function StoryNodeInteractionDialog({
   line,
   onNext,
   onClose,
+  centerNextButton = false,
 }: IStoryNodeInteractionDialogProps) {
   const isVideoOpen = Boolean(isOpen && cinematicVideo);
   const presentationMode = line?.presentationMode ?? "DIRECT";
@@ -96,7 +99,11 @@ export function StoryNodeInteractionDialog({
               onClick={onNext}
               animate={{ scale: [1, 1.08, 1] }}
               transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
-              className="absolute bottom-[calc(env(safe-area-inset-bottom)+10px)] left-1/2 z-30 w-[min(90vw,360px)] -translate-x-1/2 rounded-2xl border-2 border-cyan-300 bg-cyan-950/95 px-6 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-50 shadow-[0_0_24px_rgba(34,211,238,0.35)] md:bottom-6 md:left-auto md:right-8 md:w-auto md:translate-x-0 md:rounded-full md:text-xs"
+              className={
+                centerNextButton
+                  ? "absolute bottom-[calc(env(safe-area-inset-bottom)+10px)] left-1/2 z-30 w-[min(90vw,360px)] -translate-x-1/2 rounded-2xl border-2 border-cyan-300 bg-cyan-950/95 px-6 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-50 shadow-[0_0_24px_rgba(34,211,238,0.35)] md:bottom-6"
+                  : "absolute bottom-[calc(env(safe-area-inset-bottom)+10px)] left-1/2 z-30 w-[min(90vw,360px)] -translate-x-1/2 rounded-2xl border-2 border-cyan-300 bg-cyan-950/95 px-6 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-50 shadow-[0_0_24px_rgba(34,211,238,0.35)] md:bottom-6 md:left-auto md:right-8 md:w-auto md:translate-x-0 md:rounded-full md:text-xs"
+              }
             >
               Siguiente
             </motion.button>

@@ -9,12 +9,15 @@ interface IStoryDuelResultSyncInput {
   chapter: number;
   duelIndex: number;
   completionTicket: string;
+  /** Ruta base de retorno tras el duelo (por defecto el mapa Story clásico). */
+  returnBasePath?: string;
 }
 
 interface IStoryDuelTransition {
   outcome: StoryDuelOutcome;
   duelNodeId: string;
   returnNodeId: string;
+  penaltyNexus: number;
 }
 
 function buildFallbackTransition(input: IStoryDuelResultSyncInput): IStoryDuelTransition {
@@ -22,10 +25,20 @@ function buildFallbackTransition(input: IStoryDuelResultSyncInput): IStoryDuelTr
     outcome: "LOST",
     duelNodeId: `story-ch${input.chapter}-duel-${input.duelIndex}`,
     returnNodeId: "story-ch1-player-start",
+    penaltyNexus: 0,
   };
 }
 
-function pushBackToStory(input: IStoryDuelTransition): void {
+function pushBackToStory(input: IStoryDuelTransition, returnBasePath: string): void {
+  // El overworld lee el progreso real de la BD; no necesita los params de transición clásica,
+  // pero sí el resultado: al perder o abandonar se reaparece al inicio del acto (no en el sitio),
+  // y arrastramos el Nexus penalizado para avisar al jugador en el mapa.
+  if (returnBasePath !== "/hub/story") {
+    const query = new URLSearchParams({ outcome: input.outcome, hardReload: Date.now().toString() });
+    if (input.penaltyNexus > 0) query.set("penalty", String(input.penaltyNexus));
+    window.location.replace(`${returnBasePath}?${query.toString()}`);
+    return;
+  }
   const query = new URLSearchParams({
     duelOutcome: input.outcome,
     duelNodeId: input.duelNodeId,
@@ -45,8 +58,9 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
   const [resultTransition, setResultTransition] = useState<IStoryDuelTransition | null>(null);
   const hasPostedResultRef = useRef(false);
 
+  const returnBasePath = input.returnBasePath ?? "/hub/story";
   const handleResultAction = (): void => {
-    pushBackToStory(resultTransition ?? buildFallbackTransition(input));
+    pushBackToStory(resultTransition ?? buildFallbackTransition(input), returnBasePath);
   };
 
   const handleMatchResolved = async (result: { winnerPlayerId: string | "DRAW"; playerId: string; flawless?: boolean }): Promise<void> => {
@@ -68,6 +82,7 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
         outcome,
         duelNodeId: payload.duelNodeId,
         returnNodeId: payload.returnNodeId,
+        penaltyNexus: payload.penaltyNexus,
       });
       setRewardSummary({
         rewardNexus: payload.rewardNexus,
@@ -94,11 +109,15 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
         outcome: "ABANDONED",
         completionTicket: input.completionTicket,
       });
-      pushBackToStory({
-        outcome: "ABANDONED",
-        duelNodeId: payload.duelNodeId,
-        returnNodeId: payload.returnNodeId,
-      });
+      pushBackToStory(
+        {
+          outcome: "ABANDONED",
+          duelNodeId: payload.duelNodeId,
+          returnNodeId: payload.returnNodeId,
+          penaltyNexus: payload.penaltyNexus,
+        },
+        returnBasePath,
+      );
     } catch {
       hasPostedResultRef.current = false;
       setStatus("No se pudo sincronizar el abandono Story.");

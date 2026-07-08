@@ -63,11 +63,12 @@ export function createBoardMatchConfig(input?: ICreateBoardMatchConfigInput): IB
   const opponentName = input?.opponentName ?? "Rival Nexus";
 
   const playerDeckBase = input?.playerDeck && input.playerDeck.length > 0 ? input.playerDeck : createPlayerDeckA(randomSource);
-  const playerFusionDeckBase =
-    input?.playerFusionDeck && input.playerFusionDeck.length > 0 ? input.playerFusionDeck : createDefaultFusionDeck();
+  // El bloque de fusión es agnóstico (0/1/2 cartas): si se aporta uno explícito —aunque
+  // esté vacío— se respeta tal cual. El mazo de fusión por defecto (mock) solo se usa en
+  // partidas locales/demo donde no se aporta ningún bloque de fusión (undefined/null).
+  const playerFusionDeckBase = input?.playerFusionDeck ?? createDefaultFusionDeck();
   const opponentDeckBase = input?.opponentDeck && input.opponentDeck.length > 0 ? input.opponentDeck : createPlayerDeckB(randomSource);
-  const opponentFusionDeckBase =
-    input?.opponentFusionDeck && input.opponentFusionDeck.length > 0 ? input.opponentFusionDeck : createDefaultFusionDeck();
+  const opponentFusionDeckBase = input?.opponentFusionDeck ?? createDefaultFusionDeck();
 
   const preserveDeckOrder = Boolean(input?.preserveDeckOrder);
   const cloneDeck = (deck: ICard[]): ICard[] => deck.map((card) => ({ ...card }));

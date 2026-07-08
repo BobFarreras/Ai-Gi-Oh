@@ -1,17 +1,18 @@
 // src/components/game/board/ui/overlays/PauseOverlay.tsx - Overlay de pausa con acciones de reanudar o abandonar el duelo según modo.
 "use client";
 
-import { Play, TriangleAlert } from "lucide-react";
+import { LogOut, Play, TriangleAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { BackButton } from "@/components/ui/BackButton";
 
 interface PauseOverlayProps {
   isPaused: boolean;
   onResume: () => void;
   onExit?: () => void;
+  /** Solo Story: Nexus que se perderá al abandonar el combate (0/omitido = sin aviso económico). */
+  abandonPenaltyNexus?: number;
 }
 
-export function PauseOverlay({ isPaused, onResume, onExit }: PauseOverlayProps) {
+export function PauseOverlay({ isPaused, onResume, onExit, abandonPenaltyNexus = 0 }: PauseOverlayProps) {
   const router = useRouter();
   
   if (!isPaused) return null;
@@ -37,7 +38,14 @@ export function PauseOverlay({ isPaused, onResume, onExit }: PauseOverlayProps) 
           Pausa Táctica
         </h2>
         <p className="mt-3 text-sm text-red-200/60 font-mono">
-          Advertencia: Abandonar la simulación ahora resultará en la pérdida de progreso no guardado.
+          {abandonPenaltyNexus > 0 ? (
+            <>
+              Abandonar el combate te penaliza con{" "}
+              <span className="font-black text-rose-300">{abandonPenaltyNexus} Nexus</span>.
+            </>
+          ) : (
+            "Abandonar el combate perderá el progreso no guardado."
+          )}
         </p>
         
         <div className="mt-8 flex flex-col gap-3 w-full relative z-10">
@@ -52,21 +60,28 @@ export function PauseOverlay({ isPaused, onResume, onExit }: PauseOverlayProps) 
             className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-red-500/50 bg-red-500/10 px-4 py-3 text-red-100 font-black uppercase tracking-widest hover:bg-red-500/20 hover:border-red-400 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all"
           >
             <Play size={18} className="fill-red-100" />
-            Reanudar Simulación
+            Reanudar Combate
           </button>
 
-          {/* BOTÓN SECUNDARIO: Abandonar (Usando onClick manual para forzar el enrutamiento y evitar bloqueos del Overlay) */}
-          <BackButton 
-            label="Desconectar y Salir" 
-            onClick={() => {
+          {/* BOTÓN SECUNDARIO: Abandonar. Botón plano (NO BackButton): el atajo "?from=overworld" del
+              BackButton navegaría al mapa sin el resultado y saltándose onExit, dejando al jugador en la
+              misma casilla (el haz del rival se reactiva). onExit == abandono real → reset al inicio del acto. */}
+          <button
+            type="button"
+            aria-label="Desconectar y salir"
+            onClick={(event) => {
+              event.stopPropagation();
               if (onExit) {
                 onExit();
                 return;
               }
               router.push("/hub");
             }}
-            className="w-full justify-center py-3 border-zinc-800 bg-zinc-900/50 hover:border-red-500/50 hover:bg-red-950/40 hover:text-red-400 group-hover:text-red-400"
-          />
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-zinc-300 font-black uppercase tracking-widest hover:border-red-500/50 hover:bg-red-950/40 hover:text-red-400 transition-all"
+          >
+            <LogOut size={18} />
+            Desconectar y Salir
+          </button>
           
         </div>
       </div>

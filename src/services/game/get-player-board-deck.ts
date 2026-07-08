@@ -5,7 +5,6 @@ import { applyCardProgressionToCard } from "@/services/game/apply-card-progressi
 import { createPlayerRuntimeRepositories } from "@/services/player-persistence/create-player-runtime-repositories";
 
 const HOME_DECK_SIZE = 20;
-const HOME_FUSION_DECK_SIZE = 2;
 
 export interface IPlayerBoardLoadout {
   deck: ICard[] | null;
@@ -66,6 +65,8 @@ export async function getPlayerBoardLoadout(): Promise<IPlayerBoardLoadout> {
     .filter((card): card is ICard => card !== null);
   return {
     deck: mainDeck.length === HOME_DECK_SIZE ? mainDeck.map((card) => ({ ...card })) : null,
-    fusionDeck: fusionDeck.length === HOME_FUSION_DECK_SIZE ? fusionDeck.map((card) => ({ ...card })) : null,
+    // El bloque de fusión es agnóstico: el jugador puede llevar 0, 1 o 2 cartas de
+    // fusión (no se obliga a llenarlo). Se devuelven las válidas que tenga tal cual.
+    fusionDeck: fusionDeck.map((card) => ({ ...card })),
   };
 }

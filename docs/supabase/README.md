@@ -23,6 +23,9 @@
 
 ## Mantener la BD sincronizada (contribuidores y contenido)
 
+> 📘 Guía completa del método (por qué los cambios de admin no van a migraciones,
+> flujo mantenedor/contribuidor, backup automático content-only): **[db-sync-guide.md](./db-sync-guide.md)**.
+
 El contenido del juego se sirve en dos capas, para separar **estructura** de **datos editables**:
 
 - **Estructura + contenido histórico** → migraciones en `docs/supabase/sql/` (fuente de verdad; `prepare-local-migrations` las copia a `supabase/migrations/`).

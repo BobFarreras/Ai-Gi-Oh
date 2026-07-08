@@ -15,6 +15,8 @@ export interface IBoardViewSectionProps {
   opponentAvatarUrl: string | null;
   opponentAvatarObjectPosition?: string;
   onExitMatch?: () => void;
+  /** Solo Story: Nexus perdido al abandonar el combate (aviso del menú de pausa). */
+  abandonPenaltyNexus?: number;
   isTurnTimerEnabled?: boolean;
   suppressCombatBanners?: boolean;
 }

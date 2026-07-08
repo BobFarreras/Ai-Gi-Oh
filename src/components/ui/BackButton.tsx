@@ -24,6 +24,12 @@ export function BackButton({ href, onClick, label = "Volver", className = "" }: 
 
   const handleAction = useCallback((e: React.MouseEvent) => {
     playAudio("/audio/landing/button-click.m4a", 0.2);
+    // Si venimos del overworld (mochila/mercado), volvemos al mapa en vez de al hub.
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("from") === "overworld") {
+      e.preventDefault();
+      router.push("/hub/story/overworld");
+      return;
+    }
     if (onClick) {
       e.preventDefault();
       onClick();

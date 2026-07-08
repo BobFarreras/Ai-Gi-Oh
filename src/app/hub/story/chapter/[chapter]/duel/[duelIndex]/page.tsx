@@ -7,10 +7,15 @@ import { issueStoryCompletionTicket } from "@/services/security/duel-completion-
 
 interface StoryDuelPageProps {
   params: Promise<{ chapter: string; duelIndex: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default async function StoryDuelPage({ params }: StoryDuelPageProps) {
+export default async function StoryDuelPage({ params, searchParams }: StoryDuelPageProps) {
   const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  const isFromOverworld = resolvedSearchParams.from === "overworld";
+  const returnBasePath = isFromOverworld ? "/hub/story/overworld" : "/hub/story";
+  const resultActionLabel = isFromOverworld ? "Volver al mundo" : "Volver al mapa Story";
   const chapter = Number.parseInt(resolvedParams.chapter, 10);
   const duelIndex = Number.parseInt(resolvedParams.duelIndex, 10);
   if (!Number.isInteger(chapter) || chapter <= 0 || !Number.isInteger(duelIndex) || duelIndex <= 0) {
@@ -29,7 +34,9 @@ export default async function StoryDuelPage({ params }: StoryDuelPageProps) {
       </main>
     );
   }
-  if (!runtime.isUnlocked) {
+  // En el mundo abierto no aplica la cadena legacy "gana el anterior": el acceso lo valida el
+  // overworld (gates del mapa) al fijar el nodo activo, así que aquí basta con `isCurrentNode`.
+  if (!isFromOverworld && !runtime.isUnlocked) {
     return (
       <main className="hub-control-room-bg flex min-h-dvh items-center justify-center px-4 text-cyan-100">
         <div className="rounded-xl border border-amber-300/40 bg-amber-950/45 p-4 text-center">
@@ -73,5 +80,12 @@ export default async function StoryDuelPage({ params }: StoryDuelPageProps) {
     chapter: runtime.chapter,
     duelIndex: runtime.duelIndex,
   });
-  return <StoryDuelClient {...runtime} completionTicket={completionTicket} />;
+  return (
+    <StoryDuelClient
+      {...runtime}
+      completionTicket={completionTicket}
+      returnBasePath={returnBasePath}
+      resultActionLabel={resultActionLabel}
+    />
+  );
 }
