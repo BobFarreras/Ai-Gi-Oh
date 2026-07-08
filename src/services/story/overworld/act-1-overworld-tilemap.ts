@@ -196,7 +196,11 @@ export function buildAct1OverworldTilemap(): IOverworldTilemap {
         warp: { toMapId: "act-2", toSpawnId: "spawn-entry", direction: "forward" },
       },
     ],
-    spawns: [{ id: "spawn-entry", tileX: 4, tileY: 13, facing: "RIGHT" }],
+    spawns: [
+      { id: "spawn-entry", tileX: 4, tileY: 13, facing: "RIGHT" },
+      // Reaparición al descender desde el Acto 2: junto al portal de salida (final del acto), no en el inicio.
+      { id: "spawn-from-act2", tileX: 36, tileY: 13, facing: "LEFT" },
+    ],
     defaultSpawnId: "spawn-entry",
   });
 }

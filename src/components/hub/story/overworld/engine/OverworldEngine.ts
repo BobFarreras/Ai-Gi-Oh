@@ -214,6 +214,7 @@ export class OverworldEngine {
         gates: listGatesFromTilemap(init.tilemap),
         progress: init.progress,
         blockedTileKeys: this.bumpBlockedKeys,
+        openTileKeys: this.resolveFreedOpponentTileKeys(init.tilemap.objects, init.progress),
       }),
       player: {
         tile:
@@ -240,7 +241,22 @@ export class OverworldEngine {
       gates: listGatesFromTilemap(this.world.tilemap),
       progress: this.progress,
       blockedTileKeys: this.bumpBlockedKeys,
+      openTileKeys: this.resolveFreedOpponentTileKeys(this.world.tilemap.objects, this.progress),
     });
+  }
+
+  /** Casillas de rivales derrotados: se "teletransportan" y liberan su casilla para dejar pasar a la llave. */
+  private resolveFreedOpponentTileKeys(
+    objects: ReadonlyArray<IOverworldTilemapObject>,
+    progress: IOverworldProgressState,
+  ): Set<string> {
+    const keys = new Set<string>();
+    for (const object of objects) {
+      if ((object.kind === "DUEL" || object.kind === "BOSS") && progress.completedNodeIds.has(object.id)) {
+        keys.add(toGridPositionKey({ tileX: object.tileX, tileY: object.tileY }));
+      }
+    }
+    return keys;
   }
 
   /** Entrada direccional externa (D-pad táctil). `null` = sin dirección. */

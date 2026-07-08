@@ -295,14 +295,16 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
         if (res.ok) {
           markEventSeen(object.id);
           setCollectedRewardIds((prev) => new Set(prev).add(object.id));
-          if (!data.alreadyClaimed && ((data.rewardNexus ?? 0) > 0 || data.rewardCardId)) {
-            if ((data.rewardNexus ?? 0) > 0) sfxRef.current?.playRewardNexus();
+          // Las llaves son objetos de story (no Nexus): siempre animan la recogida SIN valor flotante.
+          const isKey = ACT2_KEY_NODE_IDS.includes(object.id);
+          if (isKey || (!data.alreadyClaimed && ((data.rewardNexus ?? 0) > 0 || data.rewardCardId))) {
+            if (!isKey && (data.rewardNexus ?? 0) > 0) sfxRef.current?.playRewardNexus();
             else sfxRef.current?.playRewardCard();
-            // El objeto se encoge hacia el jugador; si es Nexus, sube el valor flotante.
+            // El objeto se encoge hacia el jugador; si es Nexus (no llave), sube el valor flotante.
             engine.collectReward({
               objectId: object.id,
               imageSrc: object.imageSrc,
-              floatingLabel: (data.rewardNexus ?? 0) > 0 ? `+${data.rewardNexus}` : null,
+              floatingLabel: !isKey && (data.rewardNexus ?? 0) > 0 ? `+${data.rewardNexus}` : null,
               onDone: () => {
                 // Puertas/puente reevalúan sus requisitos con el nodo recién interactuado.
                 engine.updateProgress(buildProgress(initialCompleted, seenEventIdsRef.current));

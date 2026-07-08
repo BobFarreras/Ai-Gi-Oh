@@ -6,7 +6,7 @@ import {
 } from "@/services/story/overworld/tilemap-runtime";
 import { resolveMovementContext } from "@/core/services/story/overworld/movement-rules";
 import { findGridPath } from "@/core/services/story/overworld/pathfinding";
-import { IOverworldProgressState } from "@/core/services/story/overworld/overworld-types";
+import { IOverworldProgressState, toGridPositionKey } from "@/core/services/story/overworld/overworld-types";
 import { findStoryVirtualNodeDefinition } from "@/services/story/map-definitions/story-map-definition-registry";
 
 const EVENT_BRIDGE = "story-ch2-event-core";
@@ -15,17 +15,25 @@ const KEY_RIGHT = "story-ch2-branch-bottom-c";
 
 function contextFor(progress: { completed?: string[]; interacted?: string[] }) {
   const tilemap = buildAct2OverworldTilemap();
+  const completed = new Set<string>(progress.completed ?? []);
   const state: IOverworldProgressState = {
     visitedNodeIds: new Set<string>(),
     interactedNodeIds: new Set<string>(progress.interacted ?? []),
-    completedNodeIds: new Set<string>(progress.completed ?? []),
+    completedNodeIds: completed,
   };
+  // Los rivales derrotados liberan su casilla (se teletransportan), igual que en el engine.
+  const openTileKeys = new Set<string>(
+    tilemap.objects
+      .filter((object) => (object.kind === "DUEL" || object.kind === "BOSS") && completed.has(object.id))
+      .map((object) => toGridPositionKey({ tileX: object.tileX, tileY: object.tileY })),
+  );
   return {
     tilemap,
     context: resolveMovementContext({
       collisionGrid: buildCollisionGridFromTilemap(tilemap),
       gates: listGatesFromTilemap(tilemap),
       progress: state,
+      openTileKeys,
     }),
   };
 }
@@ -53,15 +61,20 @@ describe("buildAct2OverworldTilemap", () => {
     expect(objects.find((object) => object.id === KEY_RIGHT)?.imageSrc).toContain("llave-2");
   });
 
-  it("las ramas de las llaves están tras puertas que se abren con el vídeo del puente", () => {
+  it("la llave está tras la puerta (vídeo) Y detrás de Helena (hay que vencerla)", () => {
     const key = buildAct2OverworldTilemap().objects.find((object) => object.id === KEY_LEFT)!;
     const keyTile = { tileX: key.tileX, tileY: key.tileY };
 
-    const closed = contextFor({});
-    expect(findGridPath(spawnTile(closed.tilemap), keyTile, closed.context)).toBeNull();
+    // Sin ver el vídeo: la rama de la llave está cerrada.
+    expect(findGridPath(spawnTile(contextFor({}).tilemap), keyTile, contextFor({}).context)).toBeNull();
 
-    const opened = contextFor({ interacted: [EVENT_BRIDGE] });
-    expect(findGridPath(spawnTile(opened.tilemap), keyTile, opened.context)).not.toBeNull();
+    // Vídeo visto (puerta abierta) pero Helena viva: la llave sigue bloqueada por Helena.
+    const doorOpen = contextFor({ interacted: [EVENT_BRIDGE] });
+    expect(findGridPath(spawnTile(doorOpen.tilemap), keyTile, doorOpen.context)).toBeNull();
+
+    // Vídeo + Helena (duel-1) vencida (se teletransporta): la llave es alcanzable.
+    const helenaDown = contextFor({ interacted: [EVENT_BRIDGE], completed: ["story-ch2-duel-1"] });
+    expect(findGridPath(spawnTile(helenaDown.tilemap), keyTile, helenaDown.context)).not.toBeNull();
   });
 
   it("el puente al jefe solo se despliega con las DOS mitades de la llave", () => {

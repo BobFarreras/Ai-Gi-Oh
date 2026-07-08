@@ -16,6 +16,8 @@ export interface IMovementContext {
   progress: IOverworldProgressState;
   /** Celdas bloqueadas dinámicamente (p. ej. recompensas por recoger); se liberan al recogerlas. */
   blockedTileKeys?: ReadonlySet<string>;
+  /** Celdas forzadas transitables (p. ej. la casilla de un rival derrotado que "se teletransporta"). */
+  openTileKeys?: ReadonlySet<string>;
 }
 
 /**
@@ -26,6 +28,7 @@ export interface IMovementContext {
 export interface IResolvedMovementContext {
   collisionGrid: IOverworldCollisionGrid;
   closedGateKeys: ReadonlySet<string>;
+  openTileKeys: ReadonlySet<string>;
 }
 
 /**
@@ -39,7 +42,7 @@ export function resolveMovementContext(context: IMovementContext): IResolvedMove
     }
   }
   for (const key of context.blockedTileKeys ?? []) closedGateKeys.add(key);
-  return { collisionGrid: context.collisionGrid, closedGateKeys };
+  return { collisionGrid: context.collisionGrid, closedGateKeys, openTileKeys: context.openTileKeys ?? new Set() };
 }
 
 /**
@@ -65,8 +68,11 @@ export function canWalkToTile(
   resolvedContext: IResolvedMovementContext,
 ): boolean {
   if (!isInsideGrid(position, resolvedContext.collisionGrid)) return false;
-  if (!resolvedContext.collisionGrid.walkable[position.tileY]?.[position.tileX]) return false;
-  return !resolvedContext.closedGateKeys.has(toGridPositionKey(position));
+  const key = toGridPositionKey(position);
+  if (resolvedContext.closedGateKeys.has(key)) return false;
+  // Casilla liberada (rival derrotado que se teletransporta): transitable aunque su tile fuese sólido.
+  if (resolvedContext.openTileKeys.has(key)) return true;
+  return Boolean(resolvedContext.collisionGrid.walkable[position.tileY]?.[position.tileX]);
 }
 
 export interface IStepResolution {

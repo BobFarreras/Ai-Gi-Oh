@@ -234,7 +234,8 @@ export class OpponentActorManager {
   }
 
   getRenderData(tileSize: number, isDefeated: (objectId: string) => boolean): IOpponentActorRenderData[] {
-    return this.actors.map((actor) => {
+    // Los rivales derrotados "se teletransportan": dejan de dibujarse (y su casilla se libera).
+    return this.actors.filter((actor) => !isDefeated(actor.objectId)).map((actor) => {
       const pixel = actor.activeMove
         ? {
             x:

@@ -102,9 +102,10 @@ export function buildAct2OverworldTilemap(): IOverworldTilemap {
   carveBridge(map, { x: 33, y: 24 }, { x: 33, y: 24 }); // rama derecha -> búnker de BigLog
   carveBridge(map, { x: 20, y: 1 }, { x: 20, y: 2 }); // jefe -> portal Acto 3 (con compuerta)
 
-  // Rivales y servicios (sólidos). Helena SOLO en cada sala de llave (duel-1 / duel-6) y el jefe;
-  // los soldados guardan el hub central y la aproximación a BigLog.
-  for (const [x, y] of [[6, 18], [33, 18], [16, 22], [20, 22], [17, 20], [30, 28], [33, 28], [19, 6]]) {
+  // Rivales y servicios (sólidos). Helena BLOQUEA el único acceso al nicho de la llave en cada rama
+  // (duel-1 en (6,16) mira al este, duel-6 en (34,16) mira al oeste); al vencerla se teletransporta y
+  // libera su casilla. Los soldados guardan el hub central.
+  for (const [x, y] of [[6, 16], [34, 16], [16, 22], [20, 22], [17, 20], [22, 22], [33, 28], [19, 6]]) {
     markSolid(map, x, y);
   }
   markSolid(map, 16, 29); // market
@@ -113,7 +114,11 @@ export function buildAct2OverworldTilemap(): IOverworldTilemap {
   // El portal de descenso (15,30) NO se marca sólido: un WARP debe estar sobre celda transitable.
 
   const racks: Array<[number, number]> = [
-    [15, 27], [23, 33], [15, 18], [23, 24], [3, 15], [10, 23], [30, 15], [37, 23], [30, 31], [14, 3], [24, 10],
+    [15, 27], [23, 33], [15, 18], [23, 24], [30, 31], [14, 3], [24, 10], [10, 15], [30, 23],
+    // Sella el nicho de la llave izquierda (fila 16, x3-6) salvo el acceso este (7,16), guardado por Helena.
+    [3, 15], [4, 15], [5, 15], [6, 15], [3, 17], [4, 17], [5, 17], [6, 17],
+    // Sella el nicho de la llave derecha (fila 16, x34-37) salvo el acceso oeste (33,16).
+    [34, 15], [35, 15], [36, 15], [37, 15], [34, 17], [35, 17], [36, 17], [37, 17],
   ];
   for (const [x, y] of racks) placeStructure(map, x, y, OVERLAY_TILE.SERVER_RACK);
   for (const [x, y] of [[16, 3], [22, 3]] as Array<[number, number]>) {
@@ -134,7 +139,8 @@ export function buildAct2OverworldTilemap(): IOverworldTilemap {
       { id: "story-a2-market", kind: "MARKET", tileX: 16, tileY: 29, sprite: "market", trigger: "ADJACENT_ACTION" },
       { id: "story-a2-arsenal", kind: "ARSENAL", tileX: 18, tileY: 29, sprite: "arsenal", trigger: "ADJACENT_ACTION" },
       { id: "story-a2-teleport-hub", kind: "TELEPORT", tileX: 22, tileY: 30, sprite: "teleport", trigger: "ADJACENT_ACTION" },
-      { id: "story-ch2-transition-to-act1", kind: "WARP", tileX: 15, tileY: 30, sprite: "portal", trigger: "ADJACENT_ACTION", warp: { toMapId: "act-1", toSpawnId: "spawn-entry", direction: "backward" } },
+      // Descenso al Acto 1: se activa al PISARLO y reaparece al FINAL del Acto 1 (junto a su portal), no en su inicio.
+      { id: "story-ch2-transition-to-act1", kind: "WARP", tileX: 15, tileY: 30, sprite: "portal", trigger: "STEP_ON", warp: { toMapId: "act-1", toSpawnId: "spawn-from-act2", direction: "backward" } },
 
       // Vídeo del diagnóstico ANTES de entrar al hub central (trigger oculto en la pasarela de
       // acceso): al verlo se abren las dos puertas de las ramas de las llaves.
@@ -145,21 +151,21 @@ export function buildAct2OverworldTilemap(): IOverworldTilemap {
       { id: "story-a2-door-left", kind: "GATE", tileX: 14, tileY: 20, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: [EVENT_BRIDGE] },
       { id: "story-a2-door-right", kind: "GATE", tileX: 24, tileY: 20, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: [EVENT_BRIDGE] },
 
-      // Mitades de la llave (se cogen al CHOCAR), guardadas por Helena en cada rama.
-      { id: KEY_LEFT, kind: "REWARD_NEXUS", tileX: 8, tileY: 17, sprite: "key", trigger: "BUMP", imageSrc: KEY_1 },
-      { id: KEY_RIGHT, kind: "REWARD_NEXUS", tileX: 35, tileY: 17, sprite: "key", trigger: "BUMP", imageSrc: KEY_2 },
+      // Mitades de la llave (se cogen al CHOCAR), al FONDO del nicho, detrás de Helena.
+      { id: KEY_LEFT, kind: "REWARD_NEXUS", tileX: 3, tileY: 16, sprite: "key", trigger: "BUMP", imageSrc: KEY_1 },
+      { id: KEY_RIGHT, kind: "REWARD_NEXUS", tileX: 37, tileY: 16, sprite: "key", trigger: "BUMP", imageSrc: KEY_2 },
       { id: "story-ch2-branch-lower-down-b", kind: "REWARD_NEXUS", tileX: 35, tileY: 29, sprite: "nexus", trigger: "BUMP", imageSrc: "/assets/renders/nexus.webp" },
 
-      // Helena guarda cada sala de llave (una en cada rama); el jefe es la Helena final.
-      { id: "story-ch2-duel-1", kind: "DUEL", tileX: 6, tileY: 18, sprite: "helena", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/1", imageSrc: HELENA, facing: "DOWN", visionRange: 3 },
-      { id: "story-ch2-duel-6", kind: "DUEL", tileX: 33, tileY: 18, sprite: "helena", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/6", imageSrc: HELENA, facing: "DOWN", visionRange: 3 },
-      // Soldados: guardias del hub central y de la aproximación a BigLog (fuera de las salas de llave).
+      // Helena bloquea el acceso al nicho de la llave (mira hacia el jugador); vencerla la teletransporta.
+      { id: "story-ch2-duel-1", kind: "DUEL", tileX: 6, tileY: 16, sprite: "helena", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/1", imageSrc: HELENA, facing: "RIGHT", visionRange: 3 },
+      { id: "story-ch2-duel-6", kind: "DUEL", tileX: 34, tileY: 16, sprite: "helena", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/6", imageSrc: HELENA, facing: "LEFT", visionRange: 3 },
+      // Soldados: guardias del hub central (fuera de las salas de llave).
       { id: "story-ch2-duel-2", kind: "DUEL", tileX: 16, tileY: 22, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/2", imageSrc: SOLDIER, facing: "UP", visionRange: 3 },
       { id: "story-ch2-duel-3", kind: "DUEL", tileX: 20, tileY: 22, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/3", imageSrc: SOLDIER, facing: "UP", visionRange: 3, patrolAxis: "H", patrolLength: 2, patrolSweep: true },
       { id: "story-ch2-duel-4", kind: "DUEL", tileX: 17, tileY: 20, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/4", imageSrc: SOLDIER, facing: "DOWN", visionRange: 3 },
-      { id: "story-ch2-duel-5", kind: "DUEL", tileX: 30, tileY: 28, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/5", imageSrc: SOLDIER, facing: "UP", visionRange: 3 },
-      // BigLog: en la ruta tras la rama derecha. Su intent muestra la narración y arranca el combate.
-      { id: "story-ch2-duel-8", kind: "DUEL", tileX: 33, tileY: 28, sprite: "biglog", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/8", imageSrc: BIGLOG, facing: "DOWN", visionRange: 3 },
+      { id: "story-ch2-duel-5", kind: "DUEL", tileX: 22, tileY: 22, sprite: "soldier", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/5", imageSrc: SOLDIER, facing: "UP", visionRange: 3 },
+      // BigLog: guarda el búnker de su ruta mirando a la entrada; al asomarte, aparece, narra y combate.
+      { id: "story-ch2-duel-8", kind: "DUEL", tileX: 33, tileY: 28, sprite: "biglog", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/8", imageSrc: BIGLOG, facing: "UP", visionRange: 3 },
       // Jefe del acto (Helena: Núcleo de Control).
       { id: "story-ch2-duel-7", kind: "BOSS", tileX: 19, tileY: 6, sprite: "helena", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/7", imageSrc: HELENA, facing: "DOWN", visionRange: 3 },
 
