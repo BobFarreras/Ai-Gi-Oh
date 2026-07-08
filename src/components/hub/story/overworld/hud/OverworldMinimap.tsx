@@ -70,8 +70,13 @@ export function OverworldMinimap({ tilemap, playerTile, defeatedIds, hiddenIds }
   }, [tilemap, playerTile, defeatedIds, hiddenIds]);
 
   return (
-    <div className="pointer-events-none absolute right-3 top-14 z-20 rounded-lg border border-cyan-300/25 bg-slate-950/80 p-2 backdrop-blur-sm">
-      <canvas ref={canvasRef} width={tilemap.width * CELL} height={tilemap.height * CELL} className="block" />
+    <div className="pointer-events-none absolute right-3 top-3 z-20 rounded-lg border border-cyan-300/25 bg-slate-950/80 p-1.5 backdrop-blur-sm sm:top-14 sm:p-2">
+      <canvas
+        ref={canvasRef}
+        width={tilemap.width * CELL}
+        height={tilemap.height * CELL}
+        className="block h-auto w-[104px] sm:w-auto"
+      />
     </div>
   );
 }

@@ -629,7 +629,7 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
         type="button"
         onClick={toggleMute}
         aria-label={isMuted ? "Activar música" : "Silenciar música"}
-        className="pointer-events-auto absolute right-3 top-40 z-20 rounded-md border border-cyan-300/30 bg-slate-950/80 p-2 text-cyan-200 backdrop-blur-sm transition hover:bg-cyan-400/10"
+        className="pointer-events-auto absolute left-3 top-3 z-20 rounded-md border border-cyan-300/30 bg-slate-950/80 p-2 text-cyan-200 backdrop-blur-sm transition hover:bg-cyan-400/10"
       >
         {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
       </button>
