@@ -1,6 +1,6 @@
 // src/app/layout.tsx - Layout raíz: fuentes, metadata global (SEO/GEO), structured data y botón de
 // perfil de efectos visuales.
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Chakra_Petch, Geist, Geist_Mono, Orbitron } from "next/font/google";
 import { PerformanceProfileToggle } from "@/components/internal/PerformanceProfileToggle";
 import { shouldRenderPerformanceToggle } from "@/components/internal/should-render-performance-toggle";
@@ -41,6 +41,15 @@ const chakraPetch = Chakra_Petch({
   weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
 });
+
+// `viewportFit: "cover"` extiende el contenido bajo las áreas seguras (notch, barra de navegación
+// del sistema en PWA/standalone) y HABILITA las variables `env(safe-area-inset-*)`. Sin esto, en
+// modo app la barra del móvil tapa la parte inferior (p. ej. los controles del overworld).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

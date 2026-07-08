@@ -33,7 +33,7 @@ export function OverworldTouchControls({
   return (
     <div
       className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex select-none items-end justify-between p-4 sm:p-6 [@media(pointer:fine)]:hidden"
-      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
+      style={{ paddingBottom: "max(2.25rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem))" }}
     >
       <div className="pointer-events-auto grid grid-cols-3 grid-rows-3 gap-1.5" style={{ touchAction: "none" }}>
         {DPAD_BUTTONS.map(({ direction, Icon, className }) => (
