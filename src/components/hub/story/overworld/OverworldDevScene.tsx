@@ -366,11 +366,15 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
         opponentFacing: object.facing,
       });
     };
+    // En pantallas compactas (móvil) alejamos la cámara para ver más mapa de una vez.
+    const isCompactViewport =
+      typeof window !== "undefined" && window.matchMedia("(max-width: 820px)").matches;
+    const initialZoom = isCompactViewport ? 1.35 : 1.85;
     const engine = new OverworldEngine({
       canvas,
       tilemap,
       progress: buildProgress(initialCompleted, initialInteracted),
-      config: { initialPosition, collectedNodeIds: [...initialInteracted] },
+      config: { initialPosition, collectedNodeIds: [...initialInteracted], zoom: initialZoom },
       hooks: {
         onFocusChanged: setFocus,
         onPlayerTileChanged: (tile) => {
