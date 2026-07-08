@@ -16,6 +16,8 @@ describe("CommitStoryProgressUseCase", () => {
         interactedNodeIds: [],
       }),
       saveCompactStateByPlayerId: async () => undefined,
+      getOverworldStateByPlayerId: async () => ({ mapId: null, position: null }),
+      saveOverworldState: async () => undefined,
     };
     const useCase = new CommitStoryProgressUseCase(repository);
     await useCase.execute({

@@ -15,6 +15,7 @@ export function BoardStatusAndTopBarSection({
   playerAvatarUrl,
   opponentAvatarUrl,
   onExitMatch,
+  abandonPenaltyNexus = 0,
   isTurnTimerEnabled = true,
   suppressCombatBanners = false,
 }: IBoardViewSectionProps) {
@@ -57,6 +58,7 @@ export function BoardStatusAndTopBarSection({
           board.togglePause();
         }}
         onExitPause={onExitMatch}
+        abandonPenaltyNexus={abandonPenaltyNexus}
         isFusionCinematicActive={board.isFusionCinematicActive}
         setIsFusionCinematicActive={board.setIsFusionCinematicActive}
         graveyardView={screen.effectiveGraveyardView}

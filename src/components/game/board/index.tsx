@@ -36,6 +36,8 @@ interface IBoardProps {
   resultActionLabel?: string;
   onResultAction?: () => void;
   onExitMatch?: () => void;
+  /** Solo Story: Nexus perdido al abandonar el combate (aviso del menú de pausa). */
+  abandonPenaltyNexus?: number;
   isMatchStartLocked?: boolean;
   disableOpponentAutomation?: boolean;
   isTurnTimerEnabled?: boolean;
@@ -56,7 +58,7 @@ interface IBoardProps {
   /** Recibe applyRemoteAction: aplica una acción del rival CON su coreografía visual (multijugador). */
   applyRemoteActionRef?: React.MutableRefObject<((action: import("@/core/entities/multiplayer/IMatchAction").IMatchActionPayload) => Promise<void>) | null>;
 }
-export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, opponentAvatarObjectPosition, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId }: IBoardProps) {
+export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, opponentAvatarObjectPosition, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, abandonPenaltyNexus = 0, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId }: IBoardProps) {
   countRender("Board");
   const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme, disableOpponentAutomation, opponentStrategyOverride);
   useLayoutEffect(() => {
@@ -112,6 +114,7 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
             playerAvatarUrl={playerAvatarUrl}
             opponentAvatarUrl={opponentAvatarUrl}
             onExitMatch={onExitMatch}
+            abandonPenaltyNexus={abandonPenaltyNexus}
             isTurnTimerEnabled={isTurnTimerEnabled}
             suppressCombatBanners={suppressCombatBanners}
           />

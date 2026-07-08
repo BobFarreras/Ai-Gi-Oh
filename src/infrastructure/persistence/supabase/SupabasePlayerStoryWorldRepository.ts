@@ -2,6 +2,11 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { IPlayerStoryWorldCompactState } from "@/core/entities/story/IPlayerStoryWorldCompactState";
+import {
+  IPlayerOverworldPosition,
+  IPlayerOverworldState,
+  ISaveOverworldStateInput,
+} from "@/core/entities/story/IPlayerOverworldState";
 import { IPlayerStoryWorldRepository } from "@/core/repositories/IPlayerStoryWorldRepository";
 
 interface IStoryWorldStateRow {
@@ -9,6 +14,8 @@ interface IStoryWorldStateRow {
   current_node_id: string | null;
   visited_node_ids?: string[] | null;
   interacted_node_ids?: string[] | null;
+  overworld_map_id?: string | null;
+  overworld_position?: { tileX?: unknown; tileY?: unknown } | null;
 }
 
 export class SupabasePlayerStoryWorldRepository implements IPlayerStoryWorldRepository {
@@ -66,4 +73,38 @@ export class SupabasePlayerStoryWorldRepository implements IPlayerStoryWorldRepo
     if (error) throw new ValidationError("No se pudo guardar estado compacto de Story.");
   }
 
+  private normalizePosition(
+    value: { tileX?: unknown; tileY?: unknown } | null | undefined,
+  ): IPlayerOverworldPosition | null {
+    if (!value || typeof value.tileX !== "number" || typeof value.tileY !== "number") return null;
+    if (!Number.isInteger(value.tileX) || !Number.isInteger(value.tileY)) return null;
+    return { tileX: value.tileX, tileY: value.tileY };
+  }
+
+  async getOverworldStateByPlayerId(playerId: string): Promise<IPlayerOverworldState> {
+    const { data, error } = await this.client
+      .from("player_story_world_state")
+      .select("player_id,overworld_map_id,overworld_position")
+      .eq("player_id", playerId)
+      .maybeSingle<IStoryWorldStateRow>();
+    if (error) throw new ValidationError("No se pudo cargar la posición de overworld Story.");
+    return {
+      mapId: data?.overworld_map_id ?? null,
+      position: this.normalizePosition(data?.overworld_position),
+    };
+  }
+
+  async saveOverworldState(playerId: string, input: ISaveOverworldStateInput): Promise<void> {
+    const payload: Record<string, unknown> = {
+      player_id: playerId,
+      overworld_map_id: input.mapId,
+      overworld_position: { tileX: input.position.tileX, tileY: input.position.tileY },
+    };
+    // Solo tocamos current_node_id cuando se pide explícitamente (no pisamos el resto del estado).
+    if (input.currentNodeId !== undefined) payload.current_node_id = input.currentNodeId;
+    const { error } = await this.client
+      .from("player_story_world_state")
+      .upsert(payload, { onConflict: "player_id" });
+    if (error) throw new ValidationError("No se pudo guardar la posición de overworld Story.");
+  }
 }

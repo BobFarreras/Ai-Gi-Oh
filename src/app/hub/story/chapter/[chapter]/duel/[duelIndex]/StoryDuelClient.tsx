@@ -11,6 +11,7 @@ import {
   createStoryDuelOpponentStrategy,
   createStoryDuelPresentationRuntime,
 } from "./internal/story-duel-runtime";
+import { STORY_DEFEAT_NEXUS_PENALTY } from "@/services/story/duel-flow/story-defeat-penalty";
 import { useStoryDuelResultSync } from "./internal/use-story-duel-result-sync";
 import { StoryDuelCoinTossOverlay } from "./StoryDuelCoinTossOverlay";
 import { useStoryBossSoundtrack } from "./use-story-boss-soundtrack";
@@ -34,6 +35,8 @@ interface StoryDuelClientProps {
   opponentDeck: ICard[];
   opponentFusionDeck: ICard[];
   completionTicket: string;
+  returnBasePath?: string;
+  resultActionLabel?: string;
 }
 
 export function StoryDuelClient(props: StoryDuelClientProps) {
@@ -49,6 +52,7 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
     chapter: props.chapter,
     duelIndex: props.duelIndex,
     completionTicket: props.completionTicket,
+    returnBasePath: props.returnBasePath,
   });
   const presentationRuntime = useMemo(
     () => createStoryDuelPresentationRuntime(props.opponentId, props.opponentAvatarUrl),
@@ -108,9 +112,10 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
         narrationPack={narrationPack}
         isMatchStartLocked={isCoinTossVisible}
         duelResultRewardSummary={rewardSummary}
-        resultActionLabel="Volver al mapa Story"
+        resultActionLabel={props.resultActionLabel ?? "Volver al mapa Story"}
         onResultAction={handleResultAction}
         onExitMatch={() => void handleAbortMatch()}
+        abandonPenaltyNexus={STORY_DEFEAT_NEXUS_PENALTY}
         onMatchResolved={handleMatchResolved}
       />
       <StoryDuelCoinTossOverlay

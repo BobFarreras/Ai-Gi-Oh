@@ -24,6 +24,7 @@ export function BoardStatusOverlays({
   isPaused,
   onResumePause,
   onExitPause,
+  abandonPenaltyNexus = 0,
   isFusionCinematicActive = false,
   setIsFusionCinematicActive = () => undefined,
   graveyardView,
@@ -71,7 +72,7 @@ export function BoardStatusOverlays({
         onConfirmEntityReplacement={onConfirmEntityReplacement}
         onCancelEntityReplacement={onCancelEntityReplacement}
       />
-      <PauseOverlay isPaused={isPaused} onResume={onResumePause} onExit={onExitPause} />
+      <PauseOverlay isPaused={isPaused} onResume={onResumePause} onExit={onExitPause} abandonPenaltyNexus={abandonPenaltyNexus} />
       <TurnAdvanceGuardOverlay warning={pendingAdvanceWarning} onConfirm={onConfirmAdvancePhase} onCancel={onCancelAdvancePhase} />
       <FusionCinematicLayer
         events={combatLog}

@@ -21,6 +21,8 @@ export interface BoardStatusOverlaysProps {
   isPaused: boolean;
   onResumePause: () => void;
   onExitPause?: () => void;
+  /** Solo Story: Nexus perdido al abandonar el combate (para el aviso del menú de pausa). */
+  abandonPenaltyNexus?: number;
   isFusionCinematicActive?: boolean;
   setIsFusionCinematicActive?: (value: boolean) => void;
   graveyardView: "player" | "opponent" | null;

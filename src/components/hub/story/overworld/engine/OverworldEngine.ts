@@ -1,0 +1,960 @@
+// src/components/hub/story/overworld/engine/OverworldEngine.ts - Game loop imperativo del overworld: timestep fijo, movimiento por celdas, interacción y render desacoplado.
+import {
+  IGridPosition,
+  IOverworldProgressState,
+  OverworldDirection,
+  resolveDirectionDelta,
+  toGridPositionKey,
+} from "@/core/services/story/overworld/overworld-types";
+import {
+  canWalkToTile,
+  resolveMovementContext,
+  resolveStep,
+} from "@/core/services/story/overworld/movement-rules";
+import { isRequirementSatisfied } from "@/core/services/story/overworld/interaction-rules";
+import {
+  IInteractableTarget,
+  resolveFocusedInteractable,
+  resolveSteppedInteractable,
+} from "@/core/services/story/overworld/interaction-focus";
+import { resolveTriggeredSightline } from "@/core/services/story/overworld/sightline";
+import { IOverworldTilemap, IOverworldTilemapObject } from "@/services/story/overworld/tilemap-schema";
+import { OpponentActorManager } from "@/components/hub/story/overworld/engine/OpponentActorManager";
+import {
+  buildCollisionGridFromTilemap,
+  listGatesFromTilemap,
+} from "@/services/story/overworld/tilemap-runtime";
+import { resolveCameraOffset } from "@/components/hub/story/overworld/engine/camera-math";
+import {
+  DEFAULT_ENGINE_CONFIG,
+  FIXED_TIMESTEP_MS,
+  IEngineWorldState,
+  IOverworldCollectEffectRender,
+  IOverworldCutsceneNpcRender,
+  IOverworldEngineConfig,
+  IOverworldFocus,
+  IOverworldIntent,
+  MAX_ACCUMULATED_MS,
+  OverworldCutsceneStep,
+} from "@/components/hub/story/overworld/engine/engine-types";
+import {
+  Renderer2D,
+  resolvePlayerFocus,
+  resolvePlayerPixelPosition,
+} from "@/components/hub/story/overworld/engine/Renderer2D";
+import { SpriteCache } from "@/components/hub/story/overworld/engine/SpriteCache";
+
+export interface IOverworldEngineHooks {
+  /** Se dispara al completar cada paso; costura para persistir posición (Fase 3). */
+  onPlayerTileChanged?: (tile: IGridPosition) => void;
+  /** Objeto enfocado (o null) para el prompt contextual. */
+  onFocusChanged?: (focus: IOverworldFocus | null) => void;
+  /** Interacción disparada (acción adyacente o pisada): React decide qué hacer. */
+  onIntent?: (intent: IOverworldIntent) => void;
+  /** Paso EVENT de una cutscene: React muestra el diálogo/vídeo y luego llama a resumeCutscene(). */
+  onCutsceneEvent?: (nodeId: string) => void;
+  /** La cutscene ha terminado (se devuelve el control al jugador). */
+  onCutsceneEnd?: () => void;
+}
+
+interface IOverworldEngineInit {
+  canvas: HTMLCanvasElement;
+  tilemap: IOverworldTilemap;
+  progress: IOverworldProgressState;
+  hooks?: IOverworldEngineHooks;
+  config?: Partial<IOverworldEngineConfig>;
+}
+
+/**
+ * Motor del overworld. Vive fuera del ciclo de render de React: React lo monta,
+ * le envía entrada externa (móvil) y escucha hooks; el motor no toca DOM de React ni la BD.
+ */
+export class OverworldEngine {
+  private readonly canvas: HTMLCanvasElement;
+  private readonly renderer: Renderer2D;
+  private readonly config: IOverworldEngineConfig;
+  private readonly hooks: IOverworldEngineHooks;
+  private readonly world: IEngineWorldState;
+  private readonly interactables: IInteractableTarget[];
+  private readonly objectsById: Map<string, IOverworldTilemapObject>;
+  private readonly actors: OpponentActorManager;
+  private readonly sprites = new SpriteCache();
+
+  private progress: IOverworldProgressState;
+  private blockedObjectIds: Set<string> = new Set();
+  private focusedObjectId: string | null = null;
+  private blockedSightlineId: string | null = null;
+  private readonly collectedObjectIds: Set<string>;
+  private readonly bumpObjectByTileKey = new Map<string, string>();
+  private bumpBlockedKeys: Set<string> = new Set();
+  private collectEffect: {
+    objectId: string;
+    imageSrc?: string;
+    fromTile: IGridPosition;
+    floatingLabel: string | null;
+    progress: number;
+    onDone: () => void;
+  } | null = null;
+
+  // Animación de acercamiento de cámara al pulsar un nodo de servicio (market/arsenal/salida).
+  private serviceZoom: {
+    focusTile: IGridPosition;
+    baseZoom: number;
+    targetZoom: number;
+    progress: number;
+    phase: "IN" | "HELD" | "OUT";
+    onArrived: (() => void) | null;
+  } | null = null;
+  private lastCameraOffset: { x: number; y: number } = { x: 0, y: 0 };
+
+  // Cutscene guionizada (intro, apariciones de NPC).
+  private cutsceneSteps: OverworldCutsceneStep[] = [];
+  private cutsceneIndex = 0;
+  private isCutsceneActive = false;
+  private isCutsceneStepStarted = false;
+  private cutsceneWaitSeconds = 0;
+  private isCutsceneAwaitingResume = false;
+  private cutsceneNpc: {
+    tile: IGridPosition;
+    facing: OverworldDirection;
+    spriteSrc: string;
+    activeMove: { from: IGridPosition; to: IGridPosition; progress: number } | null;
+    walkPath: IGridPosition[];
+    walkIndex: number;
+  } | null = null;
+
+  private heldDirection: OverworldDirection | null = null;
+  private externalDirection: OverworldDirection | null = null;
+  private isActionQueued = false;
+  private isInteractionSuspended = false;
+
+  private animationFrameId: number | null = null;
+  private lastFrameTimeMs: number | null = null;
+  private accumulatedMs = 0;
+  private isRunning = false;
+  private isDisposed = false;
+  private resizeObserver: ResizeObserver | null = null;
+
+  private readonly keyToDirection: Record<string, OverworldDirection> = {
+    ArrowUp: "UP",
+    ArrowDown: "DOWN",
+    ArrowLeft: "LEFT",
+    ArrowRight: "RIGHT",
+    KeyW: "UP",
+    KeyS: "DOWN",
+    KeyA: "LEFT",
+    KeyD: "RIGHT",
+  };
+  private readonly actionKeys = new Set(["Space", "Enter", "KeyE"]);
+  private readonly heldKeyDirections: OverworldDirection[] = [];
+
+  constructor(init: IOverworldEngineInit) {
+    this.canvas = init.canvas;
+    this.config = { ...DEFAULT_ENGINE_CONFIG, ...init.config };
+    this.hooks = init.hooks ?? {};
+    this.progress = init.progress;
+    this.collectedObjectIds = new Set(this.config.collectedNodeIds ?? []);
+    // Objetos que se cogen al chocar (BUMP): bloquean su celda hasta recogerse.
+    for (const object of init.tilemap.objects) {
+      if (object.trigger === "BUMP") {
+        this.bumpObjectByTileKey.set(toGridPositionKey({ tileX: object.tileX, tileY: object.tileY }), object.id);
+      }
+    }
+    this.bumpBlockedKeys = new Set(
+      [...this.bumpObjectByTileKey.entries()]
+        .filter(([, objectId]) => !this.collectedObjectIds.has(objectId))
+        .map(([key]) => key),
+    );
+    this.renderer = new Renderer2D(
+      init.canvas,
+      this.config.maxDevicePixelRatio,
+      this.sprites,
+      this.config.playerImageSrc,
+      this.config.zoom,
+    );
+    this.sprites.load(this.config.playerImageSrc);
+    this.sprites.loadAll(init.tilemap.objects.map((object) => object.imageSrc));
+    this.objectsById = new Map(init.tilemap.objects.map((object) => [object.id, object]));
+    // Los rivales (DUEL/BOSS) son actores dinámicos con línea de visión, no objetos
+    // de acción adyacente: se excluyen del foco de interacción.
+    this.interactables = init.tilemap.objects
+      .filter(
+        (object) =>
+          object.kind !== "DUEL" &&
+          object.kind !== "BOSS" &&
+          object.trigger !== "BUMP", // los BUMP se resuelven al chocar, no por foco
+      )
+      .map((object) => ({
+        id: object.id,
+        tileX: object.tileX,
+        tileY: object.tileY,
+        trigger: object.trigger === "STEP_ON" ? "STEP_ON" : "ADJACENT_ACTION",
+        requiredNodeIds: object.gateRequiredNodeIds ?? [],
+      }));
+    this.actors = new OpponentActorManager(init.tilemap.objects, this.config.tilesPerSecond);
+
+    const spawn =
+      init.tilemap.spawns.find((entry) => entry.id === init.tilemap.defaultSpawnId) ??
+      init.tilemap.spawns[0];
+    const collisionGrid = buildCollisionGridFromTilemap(init.tilemap);
+    // Posición inicial restaurada (tras un duelo) si es válida y transitable; si no, el spawn del mapa.
+    const restored = this.config.initialPosition;
+    const useRestored = Boolean(
+      restored &&
+        restored.tileY >= 0 &&
+        restored.tileY < init.tilemap.height &&
+        restored.tileX >= 0 &&
+        restored.tileX < init.tilemap.width &&
+        collisionGrid.walkable[restored.tileY]?.[restored.tileX],
+    );
+    this.world = {
+      tilemap: init.tilemap,
+      movementContext: resolveMovementContext({
+        collisionGrid,
+        gates: listGatesFromTilemap(init.tilemap),
+        progress: init.progress,
+        blockedTileKeys: this.bumpBlockedKeys,
+        openTileKeys: this.resolveFreedOpponentTileKeys(init.tilemap.objects, init.progress),
+      }),
+      player: {
+        tile:
+          useRestored && restored
+            ? { tileX: restored.tileX, tileY: restored.tileY }
+            : { tileX: spawn.tileX, tileY: spawn.tileY },
+        facing: spawn.facing,
+        activeMove: null,
+      },
+    };
+    this.recomputeBlockedObjects();
+  }
+
+  /** Recalcula puertas y objetos bloqueados cuando cambia el progreso. */
+  updateProgress(progress: IOverworldProgressState): void {
+    this.progress = progress;
+    this.rebuildMovementContext();
+    this.recomputeBlockedObjects();
+  }
+
+  private rebuildMovementContext(): void {
+    this.world.movementContext = resolveMovementContext({
+      collisionGrid: buildCollisionGridFromTilemap(this.world.tilemap),
+      gates: listGatesFromTilemap(this.world.tilemap),
+      progress: this.progress,
+      blockedTileKeys: this.bumpBlockedKeys,
+      openTileKeys: this.resolveFreedOpponentTileKeys(this.world.tilemap.objects, this.progress),
+    });
+  }
+
+  /** Casillas de rivales derrotados: se "teletransportan" y liberan su casilla para dejar pasar a la llave. */
+  private resolveFreedOpponentTileKeys(
+    objects: ReadonlyArray<IOverworldTilemapObject>,
+    progress: IOverworldProgressState,
+  ): Set<string> {
+    const keys = new Set<string>();
+    for (const object of objects) {
+      if ((object.kind === "DUEL" || object.kind === "BOSS") && progress.completedNodeIds.has(object.id)) {
+        keys.add(toGridPositionKey({ tileX: object.tileX, tileY: object.tileY }));
+      }
+    }
+    return keys;
+  }
+
+  /** Entrada direccional externa (D-pad táctil). `null` = sin dirección. */
+  setExternalDirection(direction: OverworldDirection | null): void {
+    this.externalDirection = direction;
+  }
+
+  /** Botón de acción externo (botón A táctil). */
+  pressAction(): void {
+    this.isActionQueued = true;
+  }
+
+  /** Suspende movimiento/acción sin parar el render (mientras un panel está abierto). */
+  setInteractionSuspended(isSuspended: boolean): void {
+    this.isInteractionSuspended = isSuspended;
+    if (isSuspended) {
+      this.heldDirection = null;
+      this.externalDirection = null;
+      this.isActionQueued = false;
+    }
+  }
+
+  /**
+   * Anima un acercamiento cinemático de la cámara hacia un nodo de servicio y, al
+   * llegar, ejecuta `onArrived` (abrir el panel). El mundo queda congelado durante la animación.
+   */
+  playServiceZoom(objectId: string, onArrived: () => void): void {
+    const object = this.objectsById.get(objectId);
+    if (!object) {
+      onArrived();
+      return;
+    }
+    this.serviceZoom = {
+      focusTile: { tileX: object.tileX, tileY: object.tileY },
+      baseZoom: this.config.zoom,
+      targetZoom: this.config.zoom * 1.55,
+      progress: 0,
+      phase: "IN",
+      onArrived,
+    };
+  }
+
+  /** Revierte el acercamiento de cámara (al cancelar un panel de servicio). */
+  releaseServiceZoom(): void {
+    if (this.serviceZoom) this.serviceZoom.phase = "OUT";
+  }
+
+  private advanceServiceZoom(deltaSeconds: number): void {
+    const zoom = this.serviceZoom;
+    if (!zoom) return;
+    if (zoom.phase === "IN") {
+      zoom.progress = Math.min(1, zoom.progress + deltaSeconds / 0.42);
+      if (zoom.progress >= 1) {
+        zoom.phase = "HELD";
+        const onArrived = zoom.onArrived;
+        zoom.onArrived = null;
+        onArrived?.();
+      }
+    } else if (zoom.phase === "OUT") {
+      zoom.progress = Math.max(0, zoom.progress - deltaSeconds / 0.3);
+      if (zoom.progress <= 0) this.serviceZoom = null;
+    }
+  }
+
+  /**
+   * Activación por clic/tap: si el jugador está en una casilla contigua a un nodo
+   * interactuable, se orienta hacia él y lanza su acción (igual que pulsar espacio).
+   */
+  handlePointer(cssX: number, cssY: number): void {
+    if (this.isInteractionSuspended || this.isCutsceneActive || this.serviceZoom) return;
+    const { player } = this.world;
+    if (player.activeMove) return;
+    const tile = this.resolveTileFromScreen(cssX, cssY);
+    if (!tile) return;
+    const target = this.interactables.find(
+      (candidate) => candidate.tileX === tile.tileX && candidate.tileY === tile.tileY,
+    );
+    if (!target) return;
+    const distance =
+      Math.abs(player.tile.tileX - target.tileX) + Math.abs(player.tile.tileY - target.tileY);
+    if (distance !== 1) return;
+    player.facing = this.resolveFacingTo(player.tile, target);
+    this.activateFocusedInteractable();
+  }
+
+  private resolveTileFromScreen(cssX: number, cssY: number): IGridPosition | null {
+    const { tilemap } = this.world;
+    const zoom = this.renderer.getZoom();
+    const worldX = cssX / zoom - this.lastCameraOffset.x;
+    const worldY = cssY / zoom - this.lastCameraOffset.y;
+    const tileX = Math.floor(worldX / tilemap.tileSize);
+    const tileY = Math.floor(worldY / tilemap.tileSize);
+    if (tileX < 0 || tileY < 0 || tileX >= tilemap.width || tileY >= tilemap.height) return null;
+    return { tileX, tileY };
+  }
+
+  private resolveFacingTo(from: IGridPosition, to: IGridPosition): OverworldDirection {
+    if (to.tileX > from.tileX) return "RIGHT";
+    if (to.tileX < from.tileX) return "LEFT";
+    if (to.tileY > from.tileY) return "DOWN";
+    return "UP";
+  }
+
+  start(): void {
+    if (this.isDisposed || this.isRunning) return;
+    this.isRunning = true;
+    window.addEventListener("keydown", this.handleKeyDown);
+    window.addEventListener("keyup", this.handleKeyUp);
+    window.addEventListener("blur", this.handleWindowBlur);
+    document.addEventListener("visibilitychange", this.handleVisibilityChange);
+    this.observeCanvasSize();
+    this.syncCanvasSize();
+    if (this.config.introCutscene && this.config.introCutscene.length > 0) {
+      this.startCutscene(this.config.introCutscene);
+    }
+    this.resume();
+  }
+
+  /** Arranca una cutscene guionizada (bloquea el control del jugador hasta terminar). */
+  startCutscene(steps: OverworldCutsceneStep[]): void {
+    this.cutsceneSteps = steps;
+    this.cutsceneIndex = 0;
+    this.isCutsceneActive = true;
+    this.isCutsceneStepStarted = false;
+    this.isCutsceneAwaitingResume = false;
+    this.cutsceneNpc = null;
+    this.focusedObjectId = null;
+    this.hooks.onFocusChanged?.(null);
+  }
+
+  /** Reanuda la cutscene tras cerrar el diálogo/vídeo de un paso EVENT. */
+  resumeCutscene(): void {
+    if (!this.isCutsceneAwaitingResume) return;
+    this.isCutsceneAwaitingResume = false;
+    this.goToNextCutsceneStep();
+  }
+
+  /**
+   * Anima la recogida de una recompensa: el objeto se encoge hacia el jugador y
+   * (si es Nexus) sube un valor flotante. El objeto deja de dibujarse al instante.
+   */
+  collectReward(input: {
+    objectId: string;
+    imageSrc?: string;
+    floatingLabel: string | null;
+    onDone: () => void;
+  }): void {
+    const object = this.objectsById.get(input.objectId);
+    this.collectedObjectIds.add(input.objectId);
+    // Al recoger un objeto de choque, su celda queda libre para pasar.
+    if (object) {
+      this.bumpBlockedKeys.delete(toGridPositionKey({ tileX: object.tileX, tileY: object.tileY }));
+      this.rebuildMovementContext();
+    }
+    this.collectEffect = {
+      objectId: input.objectId,
+      imageSrc: input.imageSrc,
+      fromTile: object
+        ? { tileX: object.tileX, tileY: object.tileY }
+        : { tileX: this.world.player.tile.tileX, tileY: this.world.player.tile.tileY },
+      floatingLabel: input.floatingLabel,
+      progress: 0,
+      onDone: input.onDone,
+    };
+  }
+
+  private advanceCollectEffect(deltaSeconds: number): void {
+    if (!this.collectEffect) return;
+    this.collectEffect.progress += deltaSeconds / 0.65;
+    if (this.collectEffect.progress >= 1) {
+      const onDone = this.collectEffect.onDone;
+      this.collectEffect = null;
+      onDone();
+    }
+  }
+
+  private resolveCollectEffectRender(tileSize: number): IOverworldCollectEffectRender | null {
+    const effect = this.collectEffect;
+    if (!effect) return null;
+    const progress = Math.max(0, Math.min(1, effect.progress));
+    const eased = progress * progress;
+    const fromCenterX = effect.fromTile.tileX * tileSize + tileSize / 2;
+    const fromCenterY = effect.fromTile.tileY * tileSize + tileSize / 2;
+    const playerCenterX = this.world.player.tile.tileX * tileSize + tileSize / 2;
+    const playerCenterY = this.world.player.tile.tileY * tileSize + tileSize / 2;
+    const size = tileSize * (0.84 - 0.68 * progress);
+    const centerX = fromCenterX + (playerCenterX - fromCenterX) * eased;
+    const centerY = fromCenterY + (playerCenterY - fromCenterY) * eased;
+    const alpha = progress < 0.85 ? 1 : Math.max(0, 1 - (progress - 0.85) / 0.15);
+    const labelAlpha =
+      progress < 0.12 ? progress / 0.12 : Math.max(0, 1 - (progress - 0.12) / 0.88);
+    return {
+      imageSrc: effect.imageSrc,
+      x: centerX - size / 2,
+      y: centerY - size / 2,
+      size,
+      alpha,
+      label: effect.floatingLabel,
+      labelX: playerCenterX,
+      labelY: this.world.player.tile.tileY * tileSize - tileSize * 0.2 - progress * tileSize * 0.9,
+      labelAlpha,
+    };
+  }
+
+  dispose(): void {
+    if (this.isDisposed) return;
+    this.pause();
+    window.removeEventListener("keydown", this.handleKeyDown);
+    window.removeEventListener("keyup", this.handleKeyUp);
+    window.removeEventListener("blur", this.handleWindowBlur);
+    document.removeEventListener("visibilitychange", this.handleVisibilityChange);
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
+    this.sprites.dispose();
+    this.isRunning = false;
+    this.isDisposed = true;
+  }
+
+  private recomputeBlockedObjects(): void {
+    this.blockedObjectIds = new Set(
+      this.interactables
+        .filter(
+          (target) =>
+            target.requiredNodeIds.length > 0 &&
+            target.requiredNodeIds.some((nodeId) => !isRequirementSatisfied(nodeId, this.progress)),
+        )
+        .map((target) => target.id),
+    );
+  }
+
+  private isOpponentDefeated = (objectId: string): boolean => this.progress.completedNodeIds.has(objectId);
+
+  /**
+   * Reto por línea de visión (estilo Pokémon): si un rival activo ve al jugador,
+   * el rival empieza a acercarse (no se emite el combate hasta que llega a su lado).
+   */
+  private resolveMissingRequirements(objectId: string): string[] {
+    const object = this.objectsById.get(objectId);
+    return (object?.gateRequiredNodeIds ?? []).filter(
+      (nodeId) => !isRequirementSatisfied(nodeId, this.progress),
+    );
+  }
+
+  private triggerSightline(): void {
+    if (this.actors.isApproaching()) return;
+    const triggered = resolveTriggeredSightline({
+      playerTile: this.world.player.tile,
+      sources: this.actors.buildSightlineSources(this.isOpponentDefeated),
+      isTransparent: (tileX, tileY) => canWalkToTile({ tileX, tileY }, this.world.movementContext),
+      isSourceActive: (sourceId) => !this.isOpponentDefeated(sourceId),
+    });
+    if (!triggered) {
+      this.blockedSightlineId = null;
+      return;
+    }
+    // Rival aún no desbloqueado (cadena de la BD): avisa una vez, sin acercarse ni combatir.
+    if (this.resolveMissingRequirements(triggered.id).length > 0) {
+      if (this.blockedSightlineId !== triggered.id) {
+        this.blockedSightlineId = triggered.id;
+        this.emitOpponentIntent(triggered.id);
+      }
+      return;
+    }
+    this.blockedSightlineId = null;
+    this.actors.startApproach(triggered.id, this.world.player.tile, (tile) =>
+      canWalkToTile(tile, this.world.movementContext),
+    );
+  }
+
+  private emitOpponentIntent(objectId: string): void {
+    const object = this.objectsById.get(objectId);
+    if (!object) return;
+    const missingRequirements = this.resolveMissingRequirements(objectId);
+    this.hooks.onIntent?.({
+      object,
+      isBlocked: missingRequirements.length > 0,
+      missingRequirements,
+      source: "SIGHTLINE",
+    });
+  }
+
+  private goToNextCutsceneStep(): void {
+    this.cutsceneIndex += 1;
+    this.isCutsceneStepStarted = false;
+    this.cutsceneWaitSeconds = 0;
+    if (this.cutsceneIndex >= this.cutsceneSteps.length) {
+      this.isCutsceneActive = false;
+      this.cutsceneNpc = null;
+      this.hooks.onCutsceneEnd?.();
+    }
+  }
+
+  private advanceCutscene(deltaSeconds: number): void {
+    const step = this.cutsceneSteps[this.cutsceneIndex];
+    if (!step) {
+      this.isCutsceneActive = false;
+      return;
+    }
+    switch (step.kind) {
+      case "WAIT":
+        if (!this.isCutsceneStepStarted) {
+          this.cutsceneWaitSeconds = step.seconds;
+          this.isCutsceneStepStarted = true;
+        }
+        this.cutsceneWaitSeconds -= deltaSeconds;
+        if (this.cutsceneWaitSeconds <= 0) this.goToNextCutsceneStep();
+        break;
+      case "PLAYER_STEP":
+        this.advanceCutscenePlayerStep(step.direction, deltaSeconds);
+        break;
+      case "SPAWN_NPC":
+        this.sprites.load(step.spriteSrc);
+        this.cutsceneNpc = {
+          tile: { tileX: step.tileX, tileY: step.tileY },
+          facing: step.facing,
+          spriteSrc: step.spriteSrc,
+          activeMove: null,
+          walkPath: [],
+          walkIndex: 0,
+        };
+        this.goToNextCutsceneStep();
+        break;
+      case "NPC_WALK_TO":
+        this.advanceCutsceneNpcWalk(step.tileX, step.tileY, deltaSeconds);
+        break;
+      case "EVENT":
+        if (!this.isCutsceneStepStarted) {
+          this.isCutsceneStepStarted = true;
+          this.isCutsceneAwaitingResume = true;
+          this.hooks.onCutsceneEvent?.(step.nodeId);
+        }
+        break;
+      case "DESPAWN_NPC":
+        this.cutsceneNpc = null;
+        this.goToNextCutsceneStep();
+        break;
+    }
+  }
+
+  private advanceCutscenePlayerStep(direction: OverworldDirection, deltaSeconds: number): void {
+    const { player } = this.world;
+    if (!this.isCutsceneStepStarted) {
+      this.isCutsceneStepStarted = true;
+      const step = resolveStep(player.tile, direction, this.world.movementContext);
+      player.facing = step.facing;
+      if (!step.target) {
+        this.goToNextCutsceneStep();
+        return;
+      }
+      player.activeMove = { from: player.tile, to: step.target, progress: 0 };
+    }
+    if (!player.activeMove) return;
+    player.activeMove.progress += this.config.tilesPerSecond * deltaSeconds;
+    if (player.activeMove.progress >= 1) {
+      player.tile = player.activeMove.to;
+      player.activeMove = null;
+      this.hooks.onPlayerTileChanged?.(player.tile);
+      this.goToNextCutsceneStep();
+    }
+  }
+
+  private advanceCutsceneNpcWalk(targetX: number, targetY: number, deltaSeconds: number): void {
+    const npc = this.cutsceneNpc;
+    if (!npc) {
+      this.goToNextCutsceneStep();
+      return;
+    }
+    if (!this.isCutsceneStepStarted) {
+      this.isCutsceneStepStarted = true;
+      npc.walkPath = this.buildStraightPath(npc.tile, { tileX: targetX, tileY: targetY });
+      npc.walkIndex = 0;
+    }
+    if (npc.activeMove) {
+      npc.activeMove.progress += this.config.tilesPerSecond * deltaSeconds;
+      if (npc.activeMove.progress >= 1) {
+        npc.tile = npc.activeMove.to;
+        npc.activeMove = null;
+        npc.walkIndex += 1;
+      }
+      return;
+    }
+    if (npc.walkIndex >= npc.walkPath.length) {
+      this.goToNextCutsceneStep();
+      return;
+    }
+    const next = npc.walkPath[npc.walkIndex];
+    npc.facing = this.resolveNpcFacing(npc.tile, next);
+    npc.activeMove = { from: npc.tile, to: next, progress: 0 };
+  }
+
+  private buildStraightPath(from: IGridPosition, to: IGridPosition): IGridPosition[] {
+    const path: IGridPosition[] = [];
+    const cursor = { ...from };
+    while (cursor.tileX !== to.tileX) {
+      cursor.tileX += cursor.tileX < to.tileX ? 1 : -1;
+      path.push({ ...cursor });
+    }
+    while (cursor.tileY !== to.tileY) {
+      cursor.tileY += cursor.tileY < to.tileY ? 1 : -1;
+      path.push({ ...cursor });
+    }
+    return path;
+  }
+
+  private resolveNpcFacing(from: IGridPosition, to: IGridPosition): OverworldDirection {
+    if (to.tileX > from.tileX) return "RIGHT";
+    if (to.tileX < from.tileX) return "LEFT";
+    if (to.tileY > from.tileY) return "DOWN";
+    return "UP";
+  }
+
+  private resolveCutsceneNpcRender(tileSize: number): IOverworldCutsceneNpcRender | null {
+    const npc = this.cutsceneNpc;
+    if (!npc) return null;
+    const pixel = npc.activeMove
+      ? {
+          x:
+            (npc.activeMove.from.tileX +
+              (npc.activeMove.to.tileX - npc.activeMove.from.tileX) * npc.activeMove.progress) *
+            tileSize,
+          y:
+            (npc.activeMove.from.tileY +
+              (npc.activeMove.to.tileY - npc.activeMove.from.tileY) * npc.activeMove.progress) *
+            tileSize,
+        }
+      : { x: npc.tile.tileX * tileSize, y: npc.tile.tileY * tileSize };
+    return { pixelX: pixel.x, pixelY: pixel.y, facing: npc.facing, spriteSrc: npc.spriteSrc };
+  }
+
+  private readonly handleKeyDown = (event: KeyboardEvent): void => {
+    const direction = this.keyToDirection[event.code];
+    if (direction) {
+      event.preventDefault();
+      if (!this.heldKeyDirections.includes(direction)) this.heldKeyDirections.push(direction);
+      this.heldDirection = this.heldKeyDirections[this.heldKeyDirections.length - 1];
+      return;
+    }
+    if (this.actionKeys.has(event.code)) {
+      event.preventDefault();
+      if (!event.repeat) this.isActionQueued = true;
+    }
+  };
+
+  private readonly handleKeyUp = (event: KeyboardEvent): void => {
+    const direction = this.keyToDirection[event.code];
+    if (!direction) return;
+    const index = this.heldKeyDirections.indexOf(direction);
+    if (index !== -1) this.heldKeyDirections.splice(index, 1);
+    this.heldDirection = this.heldKeyDirections[this.heldKeyDirections.length - 1] ?? null;
+  };
+
+  private readonly handleWindowBlur = (): void => {
+    this.heldKeyDirections.length = 0;
+    this.heldDirection = null;
+    this.isActionQueued = false;
+  };
+
+  private readonly handleVisibilityChange = (): void => {
+    if (document.visibilityState === "hidden") this.pause();
+    else this.resume();
+  };
+
+  private observeCanvasSize(): void {
+    this.resizeObserver = new ResizeObserver(() => this.syncCanvasSize());
+    if (this.canvas.parentElement) this.resizeObserver.observe(this.canvas.parentElement);
+  }
+
+  private syncCanvasSize(): void {
+    const parent = this.canvas.parentElement;
+    if (!parent) return;
+    const rect = parent.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    this.renderer.resize({ cssWidth: rect.width, cssHeight: rect.height }, window.devicePixelRatio || 1);
+    this.renderFrame();
+  }
+
+  private pause(): void {
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+    this.lastFrameTimeMs = null;
+    this.accumulatedMs = 0;
+  }
+
+  private resume(): void {
+    if (!this.isRunning || this.isDisposed || this.animationFrameId !== null) return;
+    this.animationFrameId = requestAnimationFrame(this.loop);
+  }
+
+  private readonly loop = (frameTimeMs: number): void => {
+    this.animationFrameId = null;
+    if (!this.isRunning || this.isDisposed) return;
+
+    if (this.lastFrameTimeMs !== null) {
+      this.accumulatedMs = Math.min(
+        this.accumulatedMs + (frameTimeMs - this.lastFrameTimeMs),
+        MAX_ACCUMULATED_MS,
+      );
+      while (this.accumulatedMs >= FIXED_TIMESTEP_MS) {
+        this.update(FIXED_TIMESTEP_MS / 1000);
+        this.accumulatedMs -= FIXED_TIMESTEP_MS;
+      }
+    }
+    this.lastFrameTimeMs = frameTimeMs;
+
+    this.renderFrame();
+    this.animationFrameId = requestAnimationFrame(this.loop);
+  };
+
+  private update(deltaSeconds: number): void {
+    this.advanceCollectEffect(deltaSeconds);
+    // Acercamiento cinemático a un nodo de servicio: el mundo queda congelado.
+    if (this.serviceZoom) {
+      this.advanceServiceZoom(deltaSeconds);
+      return;
+    }
+    if (this.isCutsceneActive) {
+      this.advanceCutscene(deltaSeconds);
+      this.actors.update({
+        deltaSeconds,
+        canEnter: (tile) => canWalkToTile(tile, this.world.movementContext),
+        isDefeated: this.isOpponentDefeated,
+        isGlobalCutscene: true,
+      });
+      return;
+    }
+    const isApproachCutscene = this.actors.isApproaching();
+    if (!isApproachCutscene && !this.isInteractionSuspended) this.consumeActionInput();
+    if (!isApproachCutscene) this.advanceMovement(deltaSeconds);
+
+    // Actores (patrulla + acercamiento). Las patrullas se congelan si hay un panel
+    // abierto o un acercamiento en curso (foco cinemático).
+    const finishedApproachId = this.actors.update({
+      deltaSeconds,
+      canEnter: (tile) => canWalkToTile(tile, this.world.movementContext),
+      isDefeated: this.isOpponentDefeated,
+      isGlobalCutscene: this.isInteractionSuspended,
+    });
+    if (finishedApproachId) this.emitOpponentIntent(finishedApproachId);
+    else if (!this.actors.isApproaching() && !this.isInteractionSuspended) this.triggerSightline();
+
+    this.refreshFocus();
+  }
+
+  private advanceMovement(deltaSeconds: number): void {
+    const { player } = this.world;
+    if (player.activeMove) {
+      player.activeMove.progress += this.config.tilesPerSecond * deltaSeconds;
+      if (player.activeMove.progress >= 1) {
+        const overflow = player.activeMove.progress - 1;
+        player.tile = player.activeMove.to;
+        player.activeMove = null;
+        this.hooks.onPlayerTileChanged?.(player.tile);
+        this.triggerStepOnInteractable();
+        if (!this.isInteractionSuspended) this.tryStartStep(overflow);
+      }
+      return;
+    }
+    if (!this.isInteractionSuspended) this.tryStartStep(0);
+  }
+
+  private tryStartStep(initialProgress: number): void {
+    const direction = this.externalDirection ?? this.heldDirection;
+    if (!direction) return;
+    const { player } = this.world;
+    const step = resolveStep(player.tile, direction, this.world.movementContext);
+    player.facing = step.facing;
+    if (!step.target) {
+      // Bloqueado: ¿es un objeto que se coge al chocar?
+      const delta = resolveDirectionDelta(direction);
+      const candidateKey = toGridPositionKey({
+        tileX: player.tile.tileX + delta.tileX,
+        tileY: player.tile.tileY + delta.tileY,
+      });
+      const bumpObjectId = this.bumpBlockedKeys.has(candidateKey)
+        ? this.bumpObjectByTileKey.get(candidateKey)
+        : undefined;
+      if (bumpObjectId) this.emitObjectBump(bumpObjectId);
+      return;
+    }
+    player.activeMove = { from: player.tile, to: step.target, progress: initialProgress };
+  }
+
+  private emitObjectBump(objectId: string): void {
+    const object = this.objectsById.get(objectId);
+    if (!object) return;
+    this.hooks.onIntent?.({ object, isBlocked: false, missingRequirements: [], source: "BUMP" });
+  }
+
+  private consumeActionInput(): void {
+    if (!this.isActionQueued) return;
+    this.isActionQueued = false;
+    if (this.world.player.activeMove) return;
+    this.activateFocusedInteractable();
+  }
+
+  /** Resuelve el nodo enfocado (delante del jugador) y emite su intención de acción. */
+  private activateFocusedInteractable(): void {
+    const { player } = this.world;
+    const focused = resolveFocusedInteractable({
+      playerTile: player.tile,
+      facing: player.facing,
+      targets: this.interactables,
+      progress: this.progress,
+    });
+    if (!focused) return;
+    const object = this.objectsById.get(focused.target.id);
+    if (!object) return;
+    this.hooks.onIntent?.({
+      object,
+      isBlocked: focused.isBlocked,
+      missingRequirements: focused.missingRequirements,
+      source: "ACTION",
+    });
+  }
+
+  private triggerStepOnInteractable(): void {
+    const stepped = resolveSteppedInteractable({
+      playerTile: this.world.player.tile,
+      targets: this.interactables,
+      progress: this.progress,
+    });
+    if (!stepped) return;
+    const object = this.objectsById.get(stepped.target.id);
+    if (!object) return;
+    this.hooks.onIntent?.({
+      object,
+      isBlocked: stepped.isBlocked,
+      missingRequirements: stepped.missingRequirements,
+      source: "STEP_ON",
+    });
+  }
+
+  private refreshFocus(): void {
+    const { player } = this.world;
+    const focused = resolveFocusedInteractable({
+      playerTile: player.tile,
+      facing: player.facing,
+      targets: this.interactables,
+      progress: this.progress,
+    });
+    const nextFocusId = focused?.target.id ?? null;
+    if (nextFocusId === this.focusedObjectId) return;
+    this.focusedObjectId = nextFocusId;
+    if (!focused) {
+      this.hooks.onFocusChanged?.(null);
+      return;
+    }
+    const object = this.objectsById.get(focused.target.id);
+    if (object) this.hooks.onFocusChanged?.({ object, isBlocked: focused.isBlocked });
+  }
+
+  private renderFrame(): void {
+    const { tilemap, player } = this.world;
+    const playerPixel = resolvePlayerPixelPosition(player, tilemap.tileSize);
+    const playerFocus = resolvePlayerFocus(playerPixel, tilemap.tileSize);
+
+    // Durante el acercamiento a un nodo de servicio, interpolamos zoom y foco hacia él.
+    let focus = playerFocus;
+    if (this.serviceZoom) {
+      const eased = easeInOut(this.serviceZoom.progress);
+      this.renderer.setZoom(
+        this.serviceZoom.baseZoom + (this.serviceZoom.targetZoom - this.serviceZoom.baseZoom) * eased,
+      );
+      const nodeFocus = {
+        x: this.serviceZoom.focusTile.tileX * tilemap.tileSize + tilemap.tileSize / 2,
+        y: this.serviceZoom.focusTile.tileY * tilemap.tileSize + tilemap.tileSize / 2,
+      };
+      focus = {
+        x: playerFocus.x + (nodeFocus.x - playerFocus.x) * eased,
+        y: playerFocus.y + (nodeFocus.y - playerFocus.y) * eased,
+      };
+    } else {
+      this.renderer.setZoom(this.config.zoom);
+    }
+
+    const worldViewport = this.renderer.getWorldViewportSize();
+    const cameraOffset = resolveCameraOffset(
+      focus,
+      { width: worldViewport.cssWidth, height: worldViewport.cssHeight },
+      { width: tilemap.width * tilemap.tileSize, height: tilemap.height * tilemap.tileSize },
+    );
+    this.lastCameraOffset = cameraOffset;
+    this.renderer.render(this.world, playerPixel, cameraOffset, {
+      focusedObjectId: this.focusedObjectId,
+      blockedObjectIds: this.blockedObjectIds,
+      opponentActors: this.actors.getRenderData(tilemap.tileSize, this.isOpponentDefeated),
+      cutsceneNpc: this.resolveCutsceneNpcRender(tilemap.tileSize),
+      collectedObjectIds: this.collectedObjectIds,
+      collectEffect: this.resolveCollectEffectRender(tilemap.tileSize),
+      timeMs: this.lastFrameTimeMs ?? 0,
+    });
+  }
+}
+
+/** Suavizado ease-in-out para la animación de acercamiento de cámara. */
+function easeInOut(t: number): number {
+  const clamped = Math.max(0, Math.min(1, t));
+  return clamped < 0.5 ? 2 * clamped * clamped : 1 - Math.pow(-2 * clamped + 2, 2) / 2;
+}

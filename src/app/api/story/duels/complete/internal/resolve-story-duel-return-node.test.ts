@@ -47,6 +47,8 @@ function createStoryWorldRepositoryStub(initialState: IPlayerStoryWorldCompactSt
     saveCompactStateByPlayerId: async (_playerId, state) => {
       savedState = state;
     },
+    getOverworldStateByPlayerId: async () => ({ mapId: null, position: null }),
+    saveOverworldState: async () => undefined,
   };
   return {
     repository,

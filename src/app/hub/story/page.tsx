@@ -1,6 +1,8 @@
 // src/app/hub/story/page.tsx - Renderiza Story con datos reales del jugador y layout full-screen responsivo.
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { StoryScene } from "@/components/hub/story/StoryScene";
+import { isStoryOverworldEnabled } from "@/services/story/overworld/overworld-feature-flag";
 import { buildStoryChapterBriefing } from "@/services/story/build-story-chapter-briefing";
 import { resolveStoryPostDuelTransitionFromSearchParams } from "@/services/story/duel-flow/story-post-duel-transition";
 import { getStoryMapRuntimeData } from "@/services/story/get-story-map-runtime-data";
@@ -14,6 +16,8 @@ interface IStoryPageProps {
 }
 
 export default async function StoryPage({ searchParams }: IStoryPageProps) {
+  // El overworld reemplaza el panel de nodos: cuando el flag está activo, esta ruta redirige a él.
+  if (isStoryOverworldEnabled()) redirect("/hub/story/overworld");
   const resolvedSearchParams = await searchParams;
   const rawActParam = resolvedSearchParams.act;
   const rawDirectionParam = resolvedSearchParams.dir;
