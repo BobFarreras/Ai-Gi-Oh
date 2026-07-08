@@ -82,10 +82,11 @@ export async function processStoryDuelCompletion(params: IProcessStoryDuelComple
   const input = resolveStoryDuelCompletionInput(params.payload);
   if (!input) throw new ValidationError("El resultado del duelo Story es inválido.");
   const didWin = didWinFromStoryOutcome(input.outcome);
+  // Derrota/abandono en el overworld: reaparecer al inicio del acto. Se hace ANTES del lookup del
+  // duelo para que un fallo al resolverlo no impida el reset (evita el bucle de re-entrar al haz).
+  if (!didWin) await resetOverworldToActStart(params.playerId, params.storyWorldRepository);
   const duel = await resolveDuelFromPayload(params.payload, params.opponentRepository);
   const duelProgress = await params.storyProgressRepository.registerDuelResult(params.playerId, duel.id, didWin);
-  // Derrota/abandono en el overworld: reaparecer al inicio del acto.
-  if (!didWin) await resetOverworldToActStart(params.playerId, params.storyWorldRepository);
   const firstVictory = didWin
     && duelProgress.firstClearedAtIso !== null
     && duelProgress.lastPlayedAtIso !== null

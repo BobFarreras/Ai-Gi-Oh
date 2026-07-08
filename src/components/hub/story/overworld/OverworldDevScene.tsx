@@ -487,9 +487,18 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
     sfxRef.current?.playEventFinish();
     setActiveVideo(null);
     syncEngineProgress(); // el vídeo del diagnóstico abre las 2 puertas de las ramas.
-    if (wasBridgeVideo && doorSoundRef.current) {
-      doorSoundRef.current.currentTime = 0;
-      void doorSoundRef.current.play().catch(() => undefined);
+    if (wasBridgeVideo) {
+      if (doorSoundRef.current) {
+        doorSoundRef.current.currentTime = 0;
+        void doorSoundRef.current.play().catch(() => undefined);
+      }
+      // Persistimos el evento en servidor: las puertas siguen abiertas tras un combate/refresco.
+      void fetch("/api/story/overworld/mark-interacted", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ nodeId: ACT2_BRIDGE_EVENT_ID }),
+      }).catch(() => undefined);
     }
     if (wasCutscene) engineRef.current?.resumeCutscene();
     else engineRef.current?.setInteractionSuspended(false);
