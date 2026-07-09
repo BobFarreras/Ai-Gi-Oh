@@ -24,6 +24,7 @@ import { buildOverworldTilemap, resolveOverworldActId } from "@/services/story/o
 import { buildAct1EchoCutscene } from "@/services/story/overworld/act-1-echo-cutscene";
 import { buildAct2BigLogCutscene } from "@/services/story/overworld/act-2-biglog-cutscene";
 import { resolveOverworldEventDialogue } from "@/services/story/overworld/resolve-overworld-event-dialogue";
+import { markOverworldEventInteracted } from "@/services/story/overworld/overworld-persistence-client";
 import { IPlayerOverworldPosition } from "@/core/entities/story/IPlayerOverworldState";
 import { OverworldDirection } from "@/core/services/story/overworld/overworld-types";
 import {
@@ -493,6 +494,10 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
             }
             if (seenEventIdsRef.current.has(object.id)) return;
             markEventSeen(object.id);
+            // Persistimos el evento en BD (no solo en localStorage): así no reaparece al
+            // iniciar sesión en otro navegador/dispositivo. Best-effort: si falla, el caché
+            // local cubre la sesión actual y se reintenta al volver a activarlo.
+            void markOverworldEventInteracted(object.id);
             // Subruta difícil: aparece BigLog (cutscene) y narra el aviso.
             if (object.id === ECHO_TRIGGER_NODE_ID) {
               engine.setInteractionSuspended(true);
