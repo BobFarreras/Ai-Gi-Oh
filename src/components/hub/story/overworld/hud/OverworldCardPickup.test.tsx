@@ -13,7 +13,7 @@ const rewardCard: ICard = {
   cost: 3,
   attack: 0,
   defense: 0,
-  archetype: "TRAP",
+  archetype: "SECURITY",
   renderUrl: "/assets/renders/traps/trap-atk-drain.webp",
 };
 
