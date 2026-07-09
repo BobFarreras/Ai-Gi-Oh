@@ -186,6 +186,27 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
     return () => window.clearTimeout(timer);
   }, [penaltyToast]);
 
+  // Altura visible REAL del móvil. El overworld debe ocupar exactamente el viewport visible
+  // (restando la barra del navegador/sistema), no `100dvh` ni el wrapper `min-h-dvh` del hub,
+  // que se extienden por debajo de la barra y cortan los controles. `visualViewport` da el alto
+  // exacto y se actualiza al mostrarse/ocultarse la barra; se aplica como px fijos al contenedor.
+  const [viewportHeightPx, setViewportHeightPx] = useState<number | null>(null);
+  useEffect(() => {
+    const measure = (): void => setViewportHeightPx(window.visualViewport?.height ?? window.innerHeight);
+    measure();
+    const vv = window.visualViewport;
+    vv?.addEventListener("resize", measure);
+    vv?.addEventListener("scroll", measure);
+    window.addEventListener("resize", measure);
+    window.addEventListener("orientationchange", measure);
+    return () => {
+      vv?.removeEventListener("resize", measure);
+      vv?.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("orientationchange", measure);
+    };
+  }, []);
+
   // Audio: SFX de Story + soundtrack del acto (reutilizados del modo Story clásico).
   const sfx = useStorySceneSfx();
   const sfxRef = useRef(sfx);
@@ -626,7 +647,10 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
   };
 
   return (
-    <div className="absolute inset-0 overflow-hidden bg-slate-950">
+    <div
+      className="fixed left-0 top-0 w-full overflow-hidden bg-slate-950"
+      style={{ height: viewportHeightPx ? `${viewportHeightPx}px` : "100svh" }}
+    >
       <canvas
         ref={canvasRef}
         onClick={handleCanvasClick}
