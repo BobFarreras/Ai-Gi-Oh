@@ -35,7 +35,7 @@ function MultiplayerHeaderBarComponent({ onlineCount, inMatchCount }: Multiplaye
         {/* Stats en vivo de presencia */}
         <motion.div
           layout
-          className="ml-auto flex items-center gap-1.5 sm:gap-2.5"
+          className="flex items-center gap-1.5 sm:ml-auto sm:gap-2.5"
         >
           <div
             className="flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-[#020a14]/90 px-2.5 py-1.5 shadow-[inset_0_0_10px_rgba(0,0,0,0.6)] sm:gap-2 sm:px-3.5"
@@ -58,10 +58,10 @@ function MultiplayerHeaderBarComponent({ onlineCount, inMatchCount }: Multiplaye
         <Link
           href="/hub/ranking"
           aria-label="Ir al ranking global"
-          className="flex shrink-0 items-center gap-2 rounded-lg border border-cyan-500/50 bg-[#021426]/85 px-2.5 py-2 text-sm font-black uppercase tracking-widest text-cyan-200 transition hover:border-cyan-400/80 hover:bg-cyan-950/40 hover:shadow-[0_0_14px_rgba(34,211,238,0.35)] sm:px-4"
+          className="ml-auto flex shrink-0 items-center gap-2 rounded-lg border border-cyan-500/50 bg-[#021426]/85 px-3 py-2 text-sm font-black uppercase tracking-widest text-cyan-200 transition hover:border-cyan-400/80 hover:bg-cyan-950/40 hover:shadow-[0_0_14px_rgba(34,211,238,0.35)] sm:ml-0 sm:px-4"
         >
           <Trophy size={16} />
-          <span className="hidden sm:inline">Ranking</span>
+          <span>Ranking</span>
         </Link>
       </div>
     </header>
