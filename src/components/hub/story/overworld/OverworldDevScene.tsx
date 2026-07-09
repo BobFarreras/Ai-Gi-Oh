@@ -13,6 +13,7 @@ import { OverworldTouchControls } from "@/components/hub/story/overworld/hud/Ove
 import { OverworldKeyboardHints } from "@/components/hub/story/overworld/hud/OverworldKeyboardHints";
 import { OverworldMinimap } from "@/components/hub/story/overworld/hud/OverworldMinimap";
 import { OverworldBattleTransition } from "@/components/hub/story/overworld/hud/OverworldBattleTransition";
+import { OverworldCardPickup } from "@/components/hub/story/overworld/hud/OverworldCardPickup";
 import { resolveIntentPresentation } from "@/components/hub/story/overworld/hud/resolve-intent-presentation";
 import { StoryInteractionVideoOverlay } from "@/components/hub/story/internal/scene/dialog/StoryInteractionVideoOverlay";
 import { StoryNodeInteractionDialog } from "@/components/hub/story/internal/scene/dialog/StoryNodeInteractionDialog";
@@ -24,7 +25,9 @@ import { buildOverworldTilemap, resolveOverworldActId } from "@/services/story/o
 import { buildAct1EchoCutscene } from "@/services/story/overworld/act-1-echo-cutscene";
 import { buildAct2BigLogCutscene } from "@/services/story/overworld/act-2-biglog-cutscene";
 import { resolveOverworldEventDialogue } from "@/services/story/overworld/resolve-overworld-event-dialogue";
+import { markOverworldEventInteracted } from "@/services/story/overworld/overworld-persistence-client";
 import { IPlayerOverworldPosition } from "@/core/entities/story/IPlayerOverworldState";
+import { ICard } from "@/core/entities/ICard";
 import { OverworldDirection } from "@/core/services/story/overworld/overworld-types";
 import {
   IStoryInteractionCinematicVideo,
@@ -164,12 +167,17 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
   const storageKey = useMemo(() => seenEventsStorageKey(playerId, mapId), [playerId, mapId]);
   const initialCompleted = useMemo(() => new Set(completedNodeIds), [completedNodeIds]);
   const seenEventIdsRef = useRef<Set<string>>(new Set());
+  // Recompensas cuya reclamación está en vuelo (fetch en curso): impide dobles cobros/etiquetas
+  // "+N" si el jugador vuelve a pulsar antes de que el servidor responda.
+  const claimingRewardIdsRef = useRef<Set<string>>(new Set());
 
   const [focus, setFocus] = useState<IOverworldFocus | null>(null);
   const [activeIntent, setActiveIntent] = useState<IOverworldIntent | null>(null);
   const [pendingBattle, setPendingBattle] = useState<IPendingBattle | null>(null);
   const [activeVideo, setActiveVideo] = useState<{ video: IStoryInteractionCinematicVideo; isCutscene: boolean; nodeId?: string } | null>(null);
   const [narration, setNarration] = useState<IActiveNarration | null>(null);
+  // Carta en proceso de revelado tras recogerla (overlay React): congela la escena hasta terminar.
+  const [cardPickup, setCardPickup] = useState<ICard | null>(null);
   const initialInteracted = useMemo(() => new Set(interactedNodeIds), [interactedNodeIds]);
   const [collectedRewardIds, setCollectedRewardIds] = useState<ReadonlySet<string>>(initialInteracted);
   const [playerTile, setPlayerTile] = useState(
@@ -310,6 +318,13 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
     engineRef.current?.updateProgress(buildProgress(initialCompleted, seenEventIdsRef.current));
   }, [initialCompleted]);
 
+  // Fin del revelado de carta: reevalúa el progreso (por si desbloquea algo) y devuelve el control.
+  const completeCardPickup = useCallback((): void => {
+    setCardPickup(null);
+    engineRef.current?.updateProgress(buildProgress(initialCompleted, seenEventIdsRef.current));
+    engineRef.current?.setInteractionSuspended(false);
+  }, [initialCompleted]);
+
   // Combate diferido tras una narración (BigLog: aparece, narra y arranca el combate).
   const pendingNarrationBattleRef = useRef<IOverworldIntent["object"] | null>(null);
   const launchPendingNarrationBattle = useCallback((): boolean => {
@@ -336,6 +351,10 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
       persistSeenEvents(storageKey, seenEventIdsRef.current);
     };
     const claimReward = async (object: IOverworldIntent["object"]): Promise<void> => {
+      // Guard anti-duplicado: si ya se está reclamando (o ya está visto) no se relanza. Evita varias
+      // etiquetas "+N" y SFX cuando se pulsa rápido antes de que el servidor confirme el cobro.
+      if (claimingRewardIdsRef.current.has(object.id) || seenEventIdsRef.current.has(object.id)) return;
+      claimingRewardIdsRef.current.add(object.id);
       try {
         const res = await fetch("/api/story/overworld/claim-reward", {
           method: "POST",
@@ -343,12 +362,26 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
           credentials: "include",
           body: JSON.stringify({ nodeId: object.id, mapId }),
         });
-        const data = (await res.json()) as { alreadyClaimed?: boolean; rewardNexus?: number; rewardCardId?: string | null };
+        const data = (await res.json()) as {
+          alreadyClaimed?: boolean;
+          rewardNexus?: number;
+          rewardCardId?: string | null;
+          rewardCard?: ICard | null;
+        };
         if (res.ok) {
           markEventSeen(object.id);
           setCollectedRewardIds((prev) => new Set(prev).add(object.id));
           // Las llaves son objetos de story (no Nexus): siempre animan la recogida SIN valor flotante.
           const isKey = ACT2_KEY_NODE_IDS.includes(object.id);
+          // Recompensa de carta: se revela con la Card real (overlay React) y luego se encoge hacia el
+          // jugador. El nodo se oculta y su celda se libera sin la animación de canvas (la hace React).
+          if (!isKey && object.kind === "REWARD_CARD" && data.rewardCard) {
+            sfxRef.current?.playRewardCard();
+            engine.setInteractionSuspended(true);
+            engine.markObjectCollected(object.id);
+            setCardPickup(data.rewardCard);
+            return;
+          }
           if (isKey || (!data.alreadyClaimed && ((data.rewardNexus ?? 0) > 0 || data.rewardCardId))) {
             if (!isKey && (data.rewardNexus ?? 0) > 0) sfxRef.current?.playRewardNexus();
             else sfxRef.current?.playRewardCard();
@@ -377,6 +410,8 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
         }
       } catch {
         // Si falla la red, no marcamos como visto: se puede reintentar al volver a pisar.
+      } finally {
+        claimingRewardIdsRef.current.delete(object.id);
       }
       engine.setInteractionSuspended(false);
     };
@@ -469,8 +504,9 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
             engine.playServiceZoom(object.id, () => void warpToMap(object.id));
             return;
           }
-          // Recompensas: se otorgan en servidor (una sola vez) al pisarlas. Se cogen SIN frenar; solo
-          // las mitades de la llave congelan porque después narran.
+          // Recompensas: se otorgan en servidor (una sola vez) al pulsar el botón estando al lado
+          // (ADJACENT_ACTION). Su celda está bloqueada, así que el jugador se para enfrente y decide;
+          // solo las mitades de la llave congelan la escena porque después narran.
           if (!intent.isBlocked && (object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD")) {
             if (seenEventIdsRef.current.has(object.id)) return;
             if (ACT2_KEY_NODE_IDS.includes(object.id)) engine.setInteractionSuspended(true);
@@ -493,6 +529,10 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
             }
             if (seenEventIdsRef.current.has(object.id)) return;
             markEventSeen(object.id);
+            // Persistimos el evento en BD (no solo en localStorage): así no reaparece al
+            // iniciar sesión en otro navegador/dispositivo. Best-effort: si falla, el caché
+            // local cubre la sesión actual y se reintenta al volver a activarlo.
+            void markOverworldEventInteracted(object.id);
             // Subruta difícil: aparece BigLog (cutscene) y narra el aviso.
             if (object.id === ECHO_TRIGGER_NODE_ID) {
               engine.setInteractionSuspended(true);
@@ -733,6 +773,8 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
           </div>
         </div>
       ) : null}
+
+      {cardPickup ? <OverworldCardPickup card={cardPickup} onComplete={completeCardPickup} /> : null}
 
       {pendingBattle ? (
         <OverworldBattleTransition

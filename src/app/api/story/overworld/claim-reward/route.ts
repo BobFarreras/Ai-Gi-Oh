@@ -6,6 +6,8 @@ import { readJsonObjectBody } from "@/services/security/api/request-body-parser"
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { createSupabasePlayerStoryWorldRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-story-world-repository";
 import { createPlayerRouteRepositories } from "@/services/player-persistence/create-player-route-repositories";
+import { createSupabaseRouteClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-route-client";
+import { loadCardsByIds } from "@/infrastructure/persistence/supabase/internal/load-cards-by-ids";
 import { findStoryVirtualNodeDefinition } from "@/services/story/map-definitions/story-map-definition-registry";
 
 const NODE_ID_PATTERN = /^story-[a-z0-9-]{1,80}$/i;
@@ -51,8 +53,17 @@ export async function POST(request: NextRequest) {
       interactedNodeIds: [...compact.interactedNodeIds, nodeId],
     });
 
+    // La carta otorgada se devuelve completa (nombre/ATK/DEF/render) para que el cliente anime su
+    // revelado con el componente Card real, sin una segunda petición al catálogo.
+    let rewardCard = null;
+    if (rewardCardId) {
+      const catalogClient = createSupabaseRouteClient(request, response);
+      const cardsById = await loadCardsByIds(catalogClient, [rewardCardId]);
+      rewardCard = cardsById.get(rewardCardId) ?? null;
+    }
+
     return NextResponse.json(
-      { alreadyClaimed: false, rewardNexus, rewardCardId },
+      { alreadyClaimed: false, rewardNexus, rewardCardId, rewardCard },
       { status: 200, headers: response.headers },
     );
   } catch (error) {

@@ -79,11 +79,11 @@ describe("buildAct1OverworldTilemap", () => {
     expect(byId.get("story-a1-gate-boss")?.gateRequiredNodeIds).toEqual(["story-ch1-duel-5"]);
   });
 
-  it("las recompensas se cogen al chocar (BUMP) y hay un nodo de mercado", () => {
+  it("las recompensas se recogen pulsando el botón al lado (ADJACENT_ACTION) y hay un nodo de mercado", () => {
     const objects = buildAct1OverworldTilemap().objects;
     const rewards = objects.filter((object) => object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD");
     expect(rewards.length).toBeGreaterThan(0);
-    expect(rewards.every((object) => object.trigger === "BUMP")).toBe(true);
+    expect(rewards.every((object) => object.trigger === "ADJACENT_ACTION")).toBe(true);
     const kinds = new Set(objects.map((object) => object.kind));
     expect(kinds.has("MARKET")).toBe(true);
     expect(kinds.has("ARSENAL")).toBe(true);
