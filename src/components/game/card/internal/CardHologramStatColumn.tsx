@@ -23,7 +23,7 @@ interface StatColumnTokens {
 
 const VARIANT_TOKENS: Record<StatColumnVariant, StatColumnTokens> = {
   full: { column: "gap-3", row: "grid-cols-[3rem_1fr] gap-6", icon: "h-12 w-12", value: "text-6xl" },
-  compact: { column: "gap-2", row: "grid-cols-[2.5rem_1fr] gap-4", icon: "h-9 w-9", value: "text-5xl" },
+  compact: { column: "gap-1.5", row: "grid-cols-[2.75rem_1fr] gap-4", icon: "h-11 w-11", value: "text-7xl" },
 };
 
 interface CardHologramStatColumnProps {
