@@ -28,12 +28,12 @@ describe("CardHologramStatColumn", () => {
     expect(screen.getByText("2000")).toBeInTheDocument();
   });
 
-  it("en la variante compact (móvil) reduce el tamaño para caber bajo la imagen", () => {
-    render(<CardHologramStatColumn card={baseCard} isExecution={false} variant="compact" />);
-    const attack = screen.getByText("2500");
-    // Grande y legible, pero algo menor que el desktop para caber bajo la imagen.
-    expect(attack.className).toContain("text-5xl");
-    expect(attack.className).not.toContain("text-6xl");
+  it("en la variante compact (móvil) mantiene números grandes y legibles con espaciado más ajustado", () => {
+    const { container } = render(<CardHologramStatColumn card={baseCard} isExecution={false} variant="compact" />);
+    // Los números son aún más grandes que en desktop (text-7xl) para leerse bien en el tablero móvil...
+    expect(screen.getByText("2500").className).toContain("text-7xl");
+    // ...pero la columna usa un espaciado más ajustado para caber bajo la imagen.
+    expect((container.firstChild as HTMLElement).className).toContain("gap-1.5");
   });
 
   it("en ejecuciones oculta ATK/DEF y solo muestra el coste", () => {

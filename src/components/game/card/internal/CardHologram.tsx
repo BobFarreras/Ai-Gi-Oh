@@ -32,9 +32,9 @@ function CardHologramComponent({ card, isDefense, mode = "full", className }: Ca
         <div className="absolute inset-0 rounded-xl bg-cyan-500/8" />
         {/* Glow con gradiente radial en la zona superior (acompaña a la imagen): mismo aspecto que
             blur-2xl sin coste de filtro GPU. */}
-        <div className="absolute left-1/2 top-[2%] h-[58%] w-[80%] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.28)_0%,rgba(34,211,238,0.12)_55%,transparent_75%)]" />
+        <div className="absolute left-1/2 top-[-4%] h-[58%] w-[80%] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.28)_0%,rgba(34,211,238,0.12)_55%,transparent_75%)]" />
         {/* Imagen holográfica anclada ARRIBA, como en el desktop: ocupa la mitad superior de la carta. */}
-        <div className="absolute inset-x-0 top-[0%] h-[62%]">
+        <div className="absolute inset-x-0 top-[-6%] h-[62%]">
           <Image
             src={card.renderUrl}
             alt={`Render de ${card.name}`}
