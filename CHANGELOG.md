@@ -6,6 +6,14 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.10.2] - 2026-07-09
+
+### Fixed
+- Historia (overworld): un jugador nuevo vuelve a ver los eventos. El caché local de "eventos vistos" se aislaba solo por mapa, así que se filtraba entre cuentas del mismo navegador; ahora la clave incluye también el jugador.
+- Historia (overworld): se elimina el "freno" al cruzar casillas de evento o recompensa. El movimiento solo se detiene cuando se abre algo que bloquea (combate, mercado/arsenal, cutscene, vídeo, narración o panel de acción); los pasos sin acción y las recompensas normales se cogen sin detener al personaje.
+- Multijugador (móvil): el botón "Ranking" ya no se sale del contenedor. Los badges de presencia se alinean a la izquierda y el botón cabe con su texto completo.
+- Ranking (móvil): la forma reciente (últimas 5 partidas) se muestra como un gráfico circular de 5 secciones (ocupa mucho menos y deja sitio al nombre); en escritorio se mantienen las bolitas. Además, tocar una fila despliega el nombre completo.
+
 ## [1.10.1] - 2026-07-08
 
 ### Fixed
@@ -171,7 +179,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.1...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.2...HEAD
+[1.10.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.1...v1.10.2
 [1.10.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.2...v1.10.0
 [1.9.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.1...v1.9.2
