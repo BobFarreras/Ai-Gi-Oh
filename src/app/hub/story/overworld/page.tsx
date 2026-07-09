@@ -46,7 +46,7 @@ export default async function StoryOverworldPage({ searchParams }: StoryOverworl
   const penaltyRaw = resolvedSearchParams.penalty;
   const penaltyNexus = Number.parseInt(typeof penaltyRaw === "string" ? penaltyRaw : "", 10);
   return (
-    <main className="flex h-[100dvh] w-full flex-col overflow-hidden bg-black">
+    <main className="flex h-[100svh] w-full flex-col overflow-hidden bg-black">
       <OverworldDevScene
         playerId={session.user.id}
         mapId={runtime?.currentMapId ?? DEFAULT_OVERWORLD_MAP_ID}
