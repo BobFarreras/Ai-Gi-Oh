@@ -157,17 +157,25 @@ export class OverworldEngine {
     this.hooks = init.hooks ?? {};
     this.progress = init.progress;
     this.collectedObjectIds = new Set(this.config.collectedNodeIds ?? []);
-    // Objetos que se cogen al chocar (BUMP): bloquean su celda hasta recogerse.
+    // Celdas bloqueadas por un pickup pendiente (se liberan al recogerlo):
+    //  - BUMP: se coge automáticamente al chocar.
+    //  - Recompensa de acción (REWARD_* con ADJACENT_ACTION): se coge pulsando el botón estando al
+    //    lado. Bloquea su celda igual que un BUMP para que el jugador se pare enfrente (no la pisa).
+    // El mapa `bumpObjectByTileKey` solo lista los BUMP (auto-cobro); las recompensas de acción se
+    // resuelven por foco + botón, no por choque.
+    const pickupBlockedKeys = new Set<string>();
     for (const object of init.tilemap.objects) {
-      if (object.trigger === "BUMP") {
-        this.bumpObjectByTileKey.set(toGridPositionKey({ tileX: object.tileX, tileY: object.tileY }), object.id);
+      const tileKey = toGridPositionKey({ tileX: object.tileX, tileY: object.tileY });
+      const isBump = object.trigger === "BUMP";
+      const isActionReward =
+        (object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD") &&
+        object.trigger === "ADJACENT_ACTION";
+      if (isBump) this.bumpObjectByTileKey.set(tileKey, object.id);
+      if ((isBump || isActionReward) && !this.collectedObjectIds.has(object.id)) {
+        pickupBlockedKeys.add(tileKey);
       }
     }
-    this.bumpBlockedKeys = new Set(
-      [...this.bumpObjectByTileKey.entries()]
-        .filter(([, objectId]) => !this.collectedObjectIds.has(objectId))
-        .map(([key]) => key),
-    );
+    this.bumpBlockedKeys = pickupBlockedKeys;
     this.renderer = new Renderer2D(
       init.canvas,
       this.config.maxDevicePixelRatio,

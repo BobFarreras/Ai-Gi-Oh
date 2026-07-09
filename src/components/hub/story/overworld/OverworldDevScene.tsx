@@ -165,6 +165,9 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
   const storageKey = useMemo(() => seenEventsStorageKey(playerId, mapId), [playerId, mapId]);
   const initialCompleted = useMemo(() => new Set(completedNodeIds), [completedNodeIds]);
   const seenEventIdsRef = useRef<Set<string>>(new Set());
+  // Recompensas cuya reclamación está en vuelo (fetch en curso): impide dobles cobros/etiquetas
+  // "+N" si el jugador vuelve a pulsar antes de que el servidor responda.
+  const claimingRewardIdsRef = useRef<Set<string>>(new Set());
 
   const [focus, setFocus] = useState<IOverworldFocus | null>(null);
   const [activeIntent, setActiveIntent] = useState<IOverworldIntent | null>(null);
@@ -337,6 +340,10 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
       persistSeenEvents(storageKey, seenEventIdsRef.current);
     };
     const claimReward = async (object: IOverworldIntent["object"]): Promise<void> => {
+      // Guard anti-duplicado: si ya se está reclamando (o ya está visto) no se relanza. Evita varias
+      // etiquetas "+N" y SFX cuando se pulsa rápido antes de que el servidor confirme el cobro.
+      if (claimingRewardIdsRef.current.has(object.id) || seenEventIdsRef.current.has(object.id)) return;
+      claimingRewardIdsRef.current.add(object.id);
       try {
         const res = await fetch("/api/story/overworld/claim-reward", {
           method: "POST",
@@ -378,6 +385,8 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
         }
       } catch {
         // Si falla la red, no marcamos como visto: se puede reintentar al volver a pisar.
+      } finally {
+        claimingRewardIdsRef.current.delete(object.id);
       }
       engine.setInteractionSuspended(false);
     };
@@ -470,8 +479,9 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
             engine.playServiceZoom(object.id, () => void warpToMap(object.id));
             return;
           }
-          // Recompensas: se otorgan en servidor (una sola vez) al pisarlas. Se cogen SIN frenar; solo
-          // las mitades de la llave congelan porque después narran.
+          // Recompensas: se otorgan en servidor (una sola vez) al pulsar el botón estando al lado
+          // (ADJACENT_ACTION). Su celda está bloqueada, así que el jugador se para enfrente y decide;
+          // solo las mitades de la llave congelan la escena porque después narran.
           if (!intent.isBlocked && (object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD")) {
             if (seenEventIdsRef.current.has(object.id)) return;
             if (ACT2_KEY_NODE_IDS.includes(object.id)) engine.setInteractionSuspended(true);
