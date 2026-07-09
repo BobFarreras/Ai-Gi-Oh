@@ -151,10 +151,11 @@ export function buildAct2OverworldTilemap(): IOverworldTilemap {
       { id: "story-a2-door-left", kind: "GATE", tileX: 14, tileY: 20, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: [EVENT_BRIDGE] },
       { id: "story-a2-door-right", kind: "GATE", tileX: 24, tileY: 20, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: [EVENT_BRIDGE] },
 
-      // Mitades de la llave (se cogen al CHOCAR), al FONDO del nicho, detrás de Helena.
-      { id: KEY_LEFT, kind: "REWARD_NEXUS", tileX: 3, tileY: 16, sprite: "key", trigger: "BUMP", imageSrc: KEY_1 },
-      { id: KEY_RIGHT, kind: "REWARD_NEXUS", tileX: 37, tileY: 16, sprite: "key", trigger: "BUMP", imageSrc: KEY_2 },
-      { id: "story-ch2-branch-lower-down-b", kind: "REWARD_NEXUS", tileX: 35, tileY: 29, sprite: "nexus", trigger: "BUMP", imageSrc: "/assets/renders/nexus.webp" },
+      // Mitades de la llave y Nexus: se recogen pulsando el botón estando al lado (ADJACENT_ACTION),
+      // no al chocar. Bloquean su celda hasta recogerse; al FONDO del nicho, detrás de Helena.
+      { id: KEY_LEFT, kind: "REWARD_NEXUS", tileX: 3, tileY: 16, sprite: "key", trigger: "ADJACENT_ACTION", imageSrc: KEY_1 },
+      { id: KEY_RIGHT, kind: "REWARD_NEXUS", tileX: 37, tileY: 16, sprite: "key", trigger: "ADJACENT_ACTION", imageSrc: KEY_2 },
+      { id: "story-ch2-branch-lower-down-b", kind: "REWARD_NEXUS", tileX: 35, tileY: 29, sprite: "nexus", trigger: "ADJACENT_ACTION", imageSrc: "/assets/renders/nexus.webp" },
 
       // Helena bloquea el acceso al nicho de la llave (mira hacia el jugador); vencerla la teletransporta.
       { id: "story-ch2-duel-1", kind: "DUEL", tileX: 6, tileY: 16, sprite: "helena", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/2/duel/1", imageSrc: HELENA, facing: "RIGHT", visionRange: 3 },

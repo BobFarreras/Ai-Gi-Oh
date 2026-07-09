@@ -122,6 +122,9 @@ export function buildAct1OverworldTilemap(): IOverworldTilemap {
   markOpponent(map, 7, 11);
   // Teletransporte de salida: nodo sólido contiguo al spawn (se activa al acercarse, no al pisar).
   markOpponent(map, 3, 13);
+  // El nodo de evento visible "señal especial" (20,15) es sólido: se investiga pulsando el botón
+  // estando al lado (antes se disparaba al pisarlo). Bloquea su celda como los nodos de servicio.
+  markOpponent(map, 20, 15);
 
   // Racks de servidor, pantallas y cajas para dar volumen a las salas (no tocan corredores ni haces).
   const racks: Array<[number, number]> = [
@@ -149,17 +152,19 @@ export function buildAct1OverworldTilemap(): IOverworldTilemap {
     objects: [
       // Trigger invisible a 2 casillas del spawn: al pisarlo suena el dispositivo y salta el vídeo intro.
       { id: "story-a1-event-biglog-briefing", kind: "EVENT", tileX: 6, tileY: 13, sprite: "trigger", trigger: "STEP_ON", hidden: true },
-      // Recompensas: se cogen al CHOCAR con ellas (BUMP); bloquean su celda hasta recogerse.
-      { id: "story-a1-reward-nexus-cache", kind: "REWARD_NEXUS", tileX: 18, tileY: 11, sprite: "nexus", trigger: "BUMP", imageSrc: NEXUS },
-      { id: "story-a1-event-special-card-signal", kind: "EVENT", tileX: 20, tileY: 15, sprite: "servidor", trigger: "STEP_ON", imageSrc: SERVIDOR },
-      { id: "story-a1-reward-card-guardian", kind: "REWARD_CARD", tileX: 16, tileY: 15, sprite: "trap-drain", trigger: "BUMP", imageSrc: TRAP_DRAIN },
+      // Recompensas y evento visible: se recogen/investigan pulsando el botón estando al lado
+      // (ADJACENT_ACTION), no al pisarlas ni al chocar. Bloquean su celda; las recompensas la
+      // liberan al recogerse (el evento queda sólido como los nodos de servicio).
+      { id: "story-a1-reward-nexus-cache", kind: "REWARD_NEXUS", tileX: 18, tileY: 11, sprite: "nexus", trigger: "ADJACENT_ACTION", imageSrc: NEXUS },
+      { id: "story-a1-event-special-card-signal", kind: "EVENT", tileX: 20, tileY: 15, sprite: "servidor", trigger: "ADJACENT_ACTION", imageSrc: SERVIDOR },
+      { id: "story-a1-reward-card-guardian", kind: "REWARD_CARD", tileX: 16, tileY: 15, sprite: "trap-drain", trigger: "ADJACENT_ACTION", imageSrc: TRAP_DRAIN },
       // Nodos de servicio estilo hub (Market/Arsenal) y teletransporte de salida en el spawn.
       { id: "story-a1-market", kind: "MARKET", tileX: 5, tileY: 11, sprite: "market", trigger: "ADJACENT_ACTION" },
       { id: "story-a1-arsenal", kind: "ARSENAL", tileX: 7, tileY: 11, sprite: "arsenal", trigger: "ADJACENT_ACTION" },
       { id: "story-a1-teleport-hub", kind: "TELEPORT", tileX: 3, tileY: 13, sprite: "teleport", trigger: "ADJACENT_ACTION" },
       // Subruta difícil: trigger invisible en el corredor; al pisarlo aparece BigLog y avisa. Recompensa: carta potente.
       { id: "story-a1-side-event-echo-fragment", kind: "EVENT", tileX: 12, tileY: 16, sprite: "trigger", trigger: "STEP_ON", hidden: true },
-      { id: "story-a1-side-reward-card", kind: "REWARD_CARD", tileX: 18, tileY: 21, sprite: "trap-kernel", trigger: "BUMP", imageSrc: TRAP_KERNEL },
+      { id: "story-a1-side-reward-card", kind: "REWARD_CARD", tileX: 18, tileY: 21, sprite: "trap-kernel", trigger: "ADJACENT_ACTION", imageSrc: TRAP_KERNEL },
 
       // Rivales con rango de visión: vigilan el corredor y retan al cruzar su haz.
       // Mundo abierto: NO hay cadena de desbloqueo entre duelos (puedes retarlos en cualquier

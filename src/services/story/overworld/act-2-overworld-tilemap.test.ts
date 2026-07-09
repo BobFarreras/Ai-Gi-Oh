@@ -99,11 +99,11 @@ describe("buildAct2OverworldTilemap", () => {
     expect(findGridPath(spawnTile(withBoss.tilemap), warpTile, withBoss.context)).not.toBeNull();
   });
 
-  it("las recompensas se cogen al chocar (BUMP) y hay nodos de servicio", () => {
+  it("las recompensas se recogen pulsando el botón al lado (ADJACENT_ACTION) y hay nodos de servicio", () => {
     const objects = buildAct2OverworldTilemap().objects;
     const rewards = objects.filter((object) => object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD");
     expect(rewards.length).toBeGreaterThan(0);
-    expect(rewards.every((object) => object.trigger === "BUMP")).toBe(true);
+    expect(rewards.every((object) => object.trigger === "ADJACENT_ACTION")).toBe(true);
     const kinds = new Set(objects.map((object) => object.kind));
     expect(kinds.has("MARKET")).toBe(true);
     expect(kinds.has("ARSENAL")).toBe(true);

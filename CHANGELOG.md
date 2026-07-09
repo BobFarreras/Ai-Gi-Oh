@@ -6,6 +6,19 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.10.4] - 2026-07-09
+
+### Fixed
+- Historia (overworld): los eventos vistos (diálogos, vídeos, cutscenes) se guardan en la base de datos y ya no reaparecen al entrar desde otro navegador o dispositivo; antes solo se recordaban en `localStorage`.
+- Historia (overworld): recoger una recompensa de Nexus ya no duplica la cantidad ni muestra varias etiquetas «+N» al mantener la dirección contra ella (guard de reclamación en vuelo).
+- Combate (móvil): las cartas del tablero vuelven a mostrar los atributos flotantes (energía/ATK/DEF) como en escritorio —imagen holográfica arriba, atributos grandes y legibles debajo—, sin el coste de la animación en bucle ni los blurs de GPU del holograma de escritorio.
+
+### Changed
+- Historia (overworld): las recompensas y eventos interactivos se activan **pulsando el botón de acción** frente a ellos (antes se disparaban al pisarlos o al chocar), lo que elimina el tirón de recogerlos en marcha.
+
+### Added
+- Historia (overworld): al recoger una carta se muestra la carta real a tamaño de lectura y se encoge hacia el personaje.
+
 ## [1.10.3] - 2026-07-09
 
 ### Fixed
