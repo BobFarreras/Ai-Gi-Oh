@@ -446,6 +446,19 @@ export class OverworldEngine {
     };
   }
 
+  /**
+   * Marca un objeto como recogido SIN animación de canvas (la recogida la anima React, p. ej. el
+   * revelado de carta). Oculta el nodo al instante y libera su celda para poder pasar.
+   */
+  markObjectCollected(objectId: string): void {
+    const object = this.objectsById.get(objectId);
+    this.collectedObjectIds.add(objectId);
+    if (object) {
+      this.bumpBlockedKeys.delete(toGridPositionKey({ tileX: object.tileX, tileY: object.tileY }));
+      this.rebuildMovementContext();
+    }
+  }
+
   private advanceCollectEffect(deltaSeconds: number): void {
     if (!this.collectEffect) return;
     this.collectEffect.progress += deltaSeconds / 0.65;
