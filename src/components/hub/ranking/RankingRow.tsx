@@ -1,7 +1,7 @@
 // src/components/hub/ranking/RankingRow.tsx - Fila memoizada de la lista de ranking (rank 4+) con avatar, liga, stats y forma reciente.
 "use client";
 
-import { memo } from "react";
+import { memo, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { IRankingEntry } from "@/services/ranking/get-ranking-data";
@@ -32,6 +32,8 @@ function RankingRowComponent({ entry, isLocal }: RankingRowProps) {
   const style = getLeagueStyle(league);
   const avatar = getAvatarGradientClasses(entry.playerId);
   const initial = getAvatarInitial(entry.nickname);
+  // Al tocar la fila se despliega el nombre completo (útil en móvil, donde el nick se trunca).
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <motion.div
@@ -39,7 +41,17 @@ function RankingRowComponent({ entry, isLocal }: RankingRowProps) {
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ type: "spring", stiffness: 320, damping: 28 }}
-      className={`grid grid-cols-[2.5rem_2.5rem_1fr_3.5rem_auto_3rem] items-center gap-1.5 rounded-lg px-2.5 py-2 transition-colors sm:grid-cols-[3.5rem_3.5rem_1fr_5rem_auto_4.5rem_4rem] sm:gap-2 sm:px-3 ${
+      role="button"
+      tabIndex={0}
+      aria-expanded={isExpanded}
+      onClick={() => setIsExpanded((v) => !v)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          setIsExpanded((v) => !v);
+        }
+      }}
+      className={`grid cursor-pointer grid-cols-[2.5rem_2.5rem_1fr_3.5rem_auto_3rem] items-center gap-1.5 rounded-lg px-2.5 py-2 transition-colors sm:grid-cols-[3.5rem_3.5rem_1fr_5rem_auto_4.5rem_4rem] sm:gap-2 sm:px-3 ${
         isLocal
           ? "bg-cyan-500/12 ring-1 ring-inset ring-cyan-400/40"
           : "bg-slate-900/30 hover:bg-slate-800/40"
@@ -61,9 +73,13 @@ function RankingRowComponent({ entry, isLocal }: RankingRowProps) {
         )}
       </div>
 
-      {/* Nickname + liga (badge de liga oculto en móvil) */}
+      {/* Nickname + liga (badge de liga oculto en móvil). Al tocar la fila deja de truncarse. */}
       <div className="flex min-w-0 items-center gap-2">
-        <span className={`truncate text-sm font-semibold ${isLocal ? "text-cyan-200" : "text-slate-200"}`}>
+        <span
+          className={`text-sm font-semibold ${isExpanded ? "break-all" : "truncate"} ${
+            isLocal ? "text-cyan-200" : "text-slate-200"
+          }`}
+        >
           {entry.nickname}
           {isLocal && <span className="ml-1 text-[10px] font-bold uppercase tracking-widest text-cyan-400">(tú)</span>}
         </span>
