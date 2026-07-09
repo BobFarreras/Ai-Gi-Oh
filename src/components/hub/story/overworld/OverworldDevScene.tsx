@@ -207,6 +207,12 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
     };
   }, []);
 
+  // Mientras se reproduce un vídeo, pausamos el bucle del engine (update + render del canvas): así el
+  // vídeo no compite con el render a 60Hz y va fluido en móvil. Se reanuda al cerrarlo.
+  useEffect(() => {
+    engineRef.current?.setLoopSuspended(activeVideo !== null);
+  }, [activeVideo]);
+
   // Audio: SFX de Story + soundtrack del acto (reutilizados del modo Story clásico).
   const sfx = useStorySceneSfx();
   const sfxRef = useRef(sfx);

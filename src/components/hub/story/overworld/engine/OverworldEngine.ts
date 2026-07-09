@@ -133,6 +133,9 @@ export class OverworldEngine {
   private accumulatedMs = 0;
   private isRunning = false;
   private isDisposed = false;
+  // Pausado externo del bucle (p. ej. mientras se reproduce un vídeo): libera CPU/GPU para que el
+  // vídeo vaya fluido en móvil, en vez de competir con el render del canvas a 60Hz.
+  private isLoopSuspended = false;
   private resizeObserver: ResizeObserver | null = null;
 
   private readonly keyToDirection: Record<string, OverworldDirection> = {
@@ -267,6 +270,18 @@ export class OverworldEngine {
   /** Botón de acción externo (botón A táctil). */
   pressAction(): void {
     this.isActionQueued = true;
+  }
+
+  /**
+   * Pausa/reanuda el bucle completo (update + render). Se usa mientras se reproduce un vídeo:
+   * detener el render del canvas a 60Hz libera CPU/GPU y el vídeo va fluido en móvil. Respeta la
+   * pausa por visibilidad (no reanuda si la pestaña está oculta).
+   */
+  setLoopSuspended(isSuspended: boolean): void {
+    if (this.isLoopSuspended === isSuspended) return;
+    this.isLoopSuspended = isSuspended;
+    if (isSuspended) this.pause();
+    else if (document.visibilityState !== "hidden") this.resume();
   }
 
   /** Suspende movimiento/acción sin parar el render (mientras un panel está abierto). */
@@ -743,7 +758,7 @@ export class OverworldEngine {
   }
 
   private resume(): void {
-    if (!this.isRunning || this.isDisposed || this.animationFrameId !== null) return;
+    if (!this.isRunning || this.isDisposed || this.isLoopSuspended || this.animationFrameId !== null) return;
     this.animationFrameId = requestAnimationFrame(this.loop);
   }
 
