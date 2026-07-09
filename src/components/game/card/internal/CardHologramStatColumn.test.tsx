@@ -28,6 +28,14 @@ describe("CardHologramStatColumn", () => {
     expect(screen.getByText("2000")).toBeInTheDocument();
   });
 
+  it("en la variante compact (móvil) reduce el tamaño para caber bajo la imagen", () => {
+    render(<CardHologramStatColumn card={baseCard} isExecution={false} variant="compact" />);
+    const attack = screen.getByText("2500");
+    // Grande y legible, pero algo menor que el desktop para caber bajo la imagen.
+    expect(attack.className).toContain("text-5xl");
+    expect(attack.className).not.toContain("text-6xl");
+  });
+
   it("en ejecuciones oculta ATK/DEF y solo muestra el coste", () => {
     render(<CardHologramStatColumn card={{ ...baseCard, type: "EXECUTION" }} isExecution />);
     expect(screen.getByText("7")).toBeInTheDocument();

@@ -30,24 +30,30 @@ function CardHologramComponent({ card, isDefense, mode = "full", className }: Ca
         style={{ transformStyle: "preserve-3d", transform: "translateZ(12px)" }}
       >
         <div className="absolute inset-0 rounded-xl bg-cyan-500/8" />
-        {/* Glow con gradiente radial: mismo aspecto que blur-2xl sin coste de filtro GPU. */}
-        <div className="absolute left-1/2 top-[10%] h-[72%] w-[72%] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.28)_0%,rgba(34,211,238,0.12)_55%,transparent_75%)]" />
-        <Image
-          src={card.renderUrl}
-          alt={`Render de ${card.name}`}
-          fill
-          sizes="180px"
-          unoptimized={shouldBypassImageOptimization}
-          quality={45}
-          className="object-contain opacity-85 drop-shadow-[0_0px_12px_rgba(0,0,0,0.7)]"
-        />
-        {/* Atributos flotantes idénticos al desktop (mismos tamaños), centrados sobre la carta y
-            legibles. Evita el coste del full: sin blur de GPU ni animación en bucle. */}
+        {/* Glow con gradiente radial en la zona superior (acompaña a la imagen): mismo aspecto que
+            blur-2xl sin coste de filtro GPU. */}
+        <div className="absolute left-1/2 top-[2%] h-[58%] w-[80%] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.28)_0%,rgba(34,211,238,0.12)_55%,transparent_75%)]" />
+        {/* Imagen holográfica anclada ARRIBA, como en el desktop: ocupa la mitad superior de la carta. */}
+        <div className="absolute inset-x-0 top-[0%] h-[62%]">
+          <Image
+            src={card.renderUrl}
+            alt={`Render de ${card.name}`}
+            fill
+            sizes="180px"
+            unoptimized={shouldBypassImageOptimization}
+            quality={45}
+            className="object-contain opacity-90 drop-shadow-[0_0px_12px_rgba(0,0,0,0.7)]"
+          />
+        </div>
+        {/* Atributos ABAJO, como en el desktop: misma columna (colores/iconos/sombras) en tamaño
+            `compact` para que quepan bajo la imagen sin taparla. Evita el coste del full: sin blur de
+            GPU ni animación en bucle. */}
         <CardHologramStatColumn
           card={card}
           isExecution={isExecution}
-          className="absolute left-1/2 top-1/2 z-50"
-          style={{ transform: "translate(-50%, -50%) translateZ(20px)", transformStyle: "preserve-3d" }}
+          variant="compact"
+          className="absolute left-1/2 bottom-[3%] z-50"
+          style={{ transform: "translate(-50%, 0) translateZ(20px)", transformStyle: "preserve-3d" }}
         />
       </div>
     );
