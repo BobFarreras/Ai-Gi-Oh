@@ -6,6 +6,12 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.10.3] - 2026-07-09
+
+### Fixed
+- Historia (overworld, móvil): la escena se ajusta al **alto visible real** del dispositivo (`window.visualViewport`), en vez de `100dvh`/el wrapper `min-h-dvh` del hub, que se extendían por debajo de la barra del sistema. Se acabaron los controles cortados y el scroll indebido.
+- Historia (overworld, móvil): los **vídeos** ya no se entrecortan. Mientras se reproduce un vídeo se pausa el bucle de render del canvas (60Hz) para no competir con el decodificador; se reanuda al cerrarlo.
+
 ## [1.10.2] - 2026-07-09
 
 ### Fixed
@@ -179,7 +185,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.2...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.3...HEAD
+[1.10.3]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.2...v1.10.3
 [1.10.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.1...v1.10.2
 [1.10.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.9.2...v1.10.0
