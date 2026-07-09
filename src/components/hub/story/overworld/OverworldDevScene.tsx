@@ -35,8 +35,8 @@ import { IOverworldTilemap } from "@/services/story/overworld/tilemap-schema";
 const ECHO_TRIGGER_NODE_ID = "story-a1-side-event-echo-fragment";
 const PRECOMBAT_SOUND = "/audio/story/sonido-precombate.m4a";
 
-function seenEventsStorageKey(mapId: string): string {
-  return `overworld-seen-events-${mapId}`;
+function seenEventsStorageKey(playerId: string, mapId: string): string {
+  return `overworld-seen-events-${playerId}-${mapId}`;
 }
 
 function loadSeenEvents(storageKey: string): Set<string> {
@@ -59,6 +59,8 @@ function persistSeenEvents(storageKey: string, seen: Set<string>): void {
 }
 
 interface IOverworldDevSceneProps {
+  /** Jugador actual: aísla el caché local de eventos vistos por cuenta (no se filtra entre jugadores). */
+  playerId: string;
   /** Mapa/acto activo (p. ej. "act-1", "act-2"). Determina tilemap, soundtrack y persistencia. */
   mapId: string;
   completedNodeIds: string[];
@@ -153,13 +155,13 @@ interface IActiveNarration {
   isCutscene: boolean;
 }
 
-export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, interactedNodeIds, resetToActStart, penaltyNexus = 0 }: IOverworldDevSceneProps) {
+export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPosition, interactedNodeIds, resetToActStart, penaltyNexus = 0 }: IOverworldDevSceneProps) {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<OverworldEngine | null>(null);
   const tilemap = useMemo(() => buildOverworldTilemap(mapId) ?? buildAct1OverworldTilemap(), [mapId]);
   const actId = useMemo(() => resolveOverworldActId(mapId), [mapId]);
-  const storageKey = useMemo(() => seenEventsStorageKey(mapId), [mapId]);
+  const storageKey = useMemo(() => seenEventsStorageKey(playerId, mapId), [playerId, mapId]);
   const initialCompleted = useMemo(() => new Set(completedNodeIds), [completedNodeIds]);
   const seenEventIdsRef = useRef<Set<string>>(new Set());
 
@@ -404,40 +406,47 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
           engine.setInteractionSuspended(false);
         },
         onIntent: (intent) => {
-          engine.setInteractionSuspended(true);
+          // Importante: NO suspendemos por defecto. Solo se congela el movimiento cuando el intent
+          // abre algo que bloquea (combate, nodo de servicio, cutscene, vídeo, narración o panel).
+          // Los pasos "sin acción" (evento/recompensa ya vistos, o recompensa normal que se coge al
+          // vuelo) NO frenan al jugador → se acabó el tirón al cruzar la casilla.
           const { object } = intent;
           const isCombat =
             !intent.isBlocked &&
             (object.kind === "DUEL" || object.kind === "BOSS") &&
             Boolean(object.duelHref);
           if (isCombat && intent.source === "SIGHTLINE") {
+            engine.setInteractionSuspended(true);
             startBattle(object);
             return;
           }
           // Nodos de servicio: acercamiento de cámara al nodo y navegación directa (sin diálogo).
           if (object.kind === "MARKET") {
+            engine.setInteractionSuspended(true);
             engine.playServiceZoom(object.id, () => void enterMarket());
             return;
           }
           if (object.kind === "ARSENAL") {
+            engine.setInteractionSuspended(true);
             engine.playServiceZoom(object.id, () => void openArsenal());
             return;
           }
           if (object.kind === "TELEPORT") {
+            engine.setInteractionSuspended(true);
             engine.playServiceZoom(object.id, () => exitToHub());
             return;
           }
           // Portal de acto: zoom al portal y salto de mapa validado en servidor.
           if (!intent.isBlocked && object.kind === "WARP") {
+            engine.setInteractionSuspended(true);
             engine.playServiceZoom(object.id, () => void warpToMap(object.id));
             return;
           }
-          // Recompensas: se otorgan en servidor (una sola vez) al pisarlas.
+          // Recompensas: se otorgan en servidor (una sola vez) al pisarlas. Se cogen SIN frenar; solo
+          // las mitades de la llave congelan porque después narran.
           if (!intent.isBlocked && (object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD")) {
-            if (seenEventIdsRef.current.has(object.id)) {
-              engine.setInteractionSuspended(false);
-              return;
-            }
+            if (seenEventIdsRef.current.has(object.id)) return;
+            if (ACT2_KEY_NODE_IDS.includes(object.id)) engine.setInteractionSuspended(true);
             void claimReward(object);
             return;
           }
@@ -446,38 +455,40 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
             // terminar se narra el reto y arranca el combate. Se re-dispara mientras no lo venzas
             // (se gatea por su duelo completado, no por "visto"), y por eso NO se marca como visto.
             if (object.id === ACT2_BIGLOG_TRIGGER_ID) {
-              if (initialCompleted.has(ACT2_BIGLOG_DUEL_ID)) {
-                engine.setInteractionSuspended(false);
-                return;
-              }
+              if (initialCompleted.has(ACT2_BIGLOG_DUEL_ID)) return;
               const bigLogDuel = tilemap.objects.find((entry) => entry.id === ACT2_BIGLOG_DUEL_ID);
               if (bigLogDuel) {
+                engine.setInteractionSuspended(true);
                 bigLogPendingRef.current = bigLogDuel;
                 engine.startCutscene(buildAct2BigLogCutscene());
                 return;
               }
             }
-            if (seenEventIdsRef.current.has(object.id)) {
-              engine.setInteractionSuspended(false);
-              return;
-            }
+            if (seenEventIdsRef.current.has(object.id)) return;
             markEventSeen(object.id);
             // Subruta difícil: aparece BigLog (cutscene) y narra el aviso.
             if (object.id === ECHO_TRIGGER_NODE_ID) {
+              engine.setInteractionSuspended(true);
               engine.startCutscene(buildAct1EchoCutscene());
               return;
             }
             const dialogue = resolveOverworldEventDialogue(object.id);
             if (dialogue?.cinematicVideo) {
+              engine.setInteractionSuspended(true);
               playDeviceSound();
               setActiveVideo({ video: dialogue.cinematicVideo, isCutscene: false, nodeId: object.id });
               return;
             }
             if (dialogue && dialogue.lines.length > 0) {
+              engine.setInteractionSuspended(true);
               setNarration({ title: dialogue.title, lines: dialogue.lines, lineIndex: 0, isCutscene: false });
               return;
             }
+            // Evento sin diálogo configurado: nada que abrir → no frena.
+            return;
           }
+          // Acción adyacente (pulsar A frente a un nodo): abre el panel → congela mientras esté abierto.
+          engine.setInteractionSuspended(true);
           setActiveIntent(intent);
         },
       },
