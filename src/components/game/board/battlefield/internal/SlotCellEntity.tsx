@@ -2,7 +2,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Lock } from "lucide-react";
+import { Lock, LockOpen } from "lucide-react";
 import { MouseEvent } from "react";
 import { BattleMode, IBoardEntity } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
@@ -130,25 +130,42 @@ export function SlotCellEntity({
           {isSelectedMaterial ? <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-black rounded-md bg-cyan-300 text-cyan-950 shadow-[0_0_14px_rgba(34,211,238,0.9)]">MATERIAL</span> : null}
           {isLocked ? (
             <>
-              {/* Tinte de apagado sobre la carta bloqueada. */}
+              {/* Tinte de apagado sobre la carta bloqueada (la carta ya va en gris). */}
               <div className="pointer-events-none absolute inset-0 z-[58] rounded-xl bg-slate-950/45" aria-hidden />
-              {/* Candado que "se cierra" (rebote de escala al montar) + turnos restantes de bloqueo. */}
-              <div
-                className="pointer-events-none absolute inset-0 z-[62] flex flex-col items-center justify-center gap-1.5"
+              {/* Animación de bloqueo: candado GRANDE sobre el holograma que se cierra (abierto -> cerrado)
+                  y se encoge hasta desaparecer. El estado persistente de "bloqueado" lo da la carta en gris. */}
+              {shouldReduceCombatEffects ? (
+                <span className="pointer-events-none absolute inset-0 z-[62] flex items-center justify-center" aria-hidden>
+                  <Lock className="h-14 w-14 text-amber-300 drop-shadow-[0_0_24px_rgba(251,191,36,0.9)]" strokeWidth={2.5} />
+                </span>
+              ) : (
+                <div className="pointer-events-none absolute inset-0 z-[62] flex items-center justify-center" aria-hidden>
+                  <motion.span
+                    className="absolute drop-shadow-[0_0_30px_rgba(251,191,36,0.95)]"
+                    initial={{ scale: 2.4, opacity: 0, rotate: -16 }}
+                    animate={{ scale: [2.4, 2.05, 2.05], opacity: [0, 1, 0], rotate: [-16, 2, 2] }}
+                    transition={{ duration: 0.6, times: [0, 0.5, 1], ease: "easeOut" }}
+                  >
+                    <LockOpen className="h-16 w-16 text-amber-200" strokeWidth={2.5} />
+                  </motion.span>
+                  <motion.span
+                    className="absolute drop-shadow-[0_0_36px_rgba(251,191,36,1)]"
+                    initial={{ scale: 2.2, opacity: 0 }}
+                    animate={{ scale: [2.2, 1.7, 1.95, 0.1], opacity: [0, 1, 1, 0] }}
+                    transition={{ duration: 1.5, times: [0, 0.3, 0.6, 1], delay: 0.42, ease: "easeInOut" }}
+                  >
+                    <Lock className="h-16 w-16 text-amber-300" strokeWidth={2.5} />
+                  </motion.span>
+                </div>
+              )}
+              {/* Turnos restantes: chip compacto y persistente (para consultar cuánto queda). */}
+              <span
+                className="pointer-events-none absolute right-1.5 top-1.5 z-[63] flex items-center gap-0.5 rounded-md border border-amber-300/70 bg-slate-950/85 px-1.5 py-0.5 text-[11px] font-black text-amber-100 shadow-[0_0_10px_rgba(0,0,0,0.75)]"
                 aria-label={`Carta bloqueada: faltan ${lockedTurnsRemaining} ${lockedTurnsRemaining === 1 ? "turno" : "turnos"}`}
               >
-                <motion.span
-                  initial={{ scale: 1.55, y: -12, rotate: -14, opacity: 0 }}
-                  animate={{ scale: [1.55, 0.86, 1.06, 1], y: [-12, 2, 0, 0], rotate: [-14, 5, -2, 0], opacity: [0, 1, 1, 1] }}
-                  transition={{ duration: 0.62, ease: "easeOut", times: [0, 0.45, 0.78, 1] }}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-amber-300/85 bg-slate-950/85 shadow-[0_0_22px_rgba(251,191,36,0.6)]"
-                >
-                  <Lock className="h-6 w-6 text-amber-300" strokeWidth={2.5} />
-                </motion.span>
-                <span className="rounded-md border border-amber-300/70 bg-slate-950/90 px-2 py-0.5 text-[11px] font-black uppercase tracking-wide text-amber-100 shadow-[0_0_12px_rgba(0,0,0,0.7)]">
-                  {lockedTurnsRemaining} {lockedTurnsRemaining === 1 ? "turno" : "turnos"}
-                </span>
-              </div>
+                <Lock className="h-3 w-3" strokeWidth={3} />
+                {lockedTurnsRemaining}
+              </span>
             </>
           ) : null}
         </div>
