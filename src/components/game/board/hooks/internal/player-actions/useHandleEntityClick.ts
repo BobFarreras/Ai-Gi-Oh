@@ -121,6 +121,22 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
         if (result === "handled") return;
       }
 
+      // Una entidad solo puede atacar a ENTIDADES rivales (o directo si el rival no tiene ninguna). La
+      // zona de magias/trampas NO es objetivo válido: sin este guard, el clic revelaba la carta e intentaba
+      // atacarla, fallando con "La carta defensora no está en el campo". Mantenemos el atacante seleccionado.
+      if (
+        params.activeAttackerId &&
+        isOpponent &&
+        entity &&
+        (entity.card.type === "EXECUTION" || entity.card.type === "TRAP")
+      ) {
+        params.setLastError({
+          code: "GAME_RULE_ERROR",
+          message: "Una entidad no puede atacar a la zona de magias/trampas del rival. Ataca a una entidad rival (o directamente si no tiene ninguna).",
+        });
+        return;
+      }
+
       const result = await handleOpponentEntityClick({
         entity,
         activeAttackerId: params.activeAttackerId,
