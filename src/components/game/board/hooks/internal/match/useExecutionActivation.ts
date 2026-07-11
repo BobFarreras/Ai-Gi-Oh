@@ -19,7 +19,14 @@ interface IUseExecutionActivationInput {
 
 interface IUseExecutionActivationOutput {
   canActivateSelectedExecution: boolean;
-  activateSelectedExecution: () => Promise<"NOOP" | "ACTIVATED" | "MISSING_MATERIALS">;
+  activateSelectedExecution: () => Promise<"NOOP" | "ACTIVATED" | "MISSING_MATERIALS" | "NO_TARGET">;
+}
+
+/** La ejecución se quedó a la espera en SET (sin objetivo válido) en lugar de resolverse y consumirse. */
+function wasExecutionSuspendedInSet(state: GameState, executionInstanceId: string): boolean {
+  return state.playerA.activeExecutions.some(
+    (entity) => entity.instanceId === executionInstanceId && entity.mode === "SET",
+  );
 }
 
 function isExecutionWaitingForFusionMaterials(state: GameState, executionInstanceId: string): boolean {
@@ -55,7 +62,7 @@ export function useExecutionActivation(input: IUseExecutionActivationInput): IUs
     !input.isActionLocked &&
     input.gameState.pendingTurnAction?.playerId !== input.gameState.playerA.id;
 
-  const activateSelectedExecution = useCallback(async (): Promise<"NOOP" | "ACTIVATED" | "MISSING_MATERIALS"> => {
+  const activateSelectedExecution = useCallback(async (): Promise<"NOOP" | "ACTIVATED" | "MISSING_MATERIALS" | "NO_TARGET"> => {
     if (!canActivateSelectedExecution || !selectedActivatableExecution) return "NOOP";
     input.setIsAnimating(true);
     const activated = input.applyTransition((state) =>
@@ -78,6 +85,11 @@ export function useExecutionActivation(input: IUseExecutionActivationInput): IUs
     if (isExecutionWaitingForFusionMaterials(resolved, selectedActivatableExecution.instanceId)) {
       input.clearSelection();
       return "MISSING_MATERIALS";
+    }
+    // Sin objetivo válido: la carta vuelve a SET (no se consume) y sigue disponible para reactivar.
+    if (wasExecutionSuspendedInSet(resolved, selectedActivatableExecution.instanceId)) {
+      input.clearSelection();
+      return "NO_TARGET";
     }
     input.clearSelection();
     return "ACTIVATED";

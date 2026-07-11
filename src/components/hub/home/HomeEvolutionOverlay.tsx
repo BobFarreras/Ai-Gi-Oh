@@ -16,7 +16,15 @@ interface HomeEvolutionOverlayProps {
   toVersionTier: number;
   level: number;
   consumedCopies: number;
+  /** Cierra el overlay al instante (botón "Volver a Arsenal"). Opcional: el overlay también auto-cierra. */
+  onClose?: () => void;
 }
+
+// Dimensiones intrínsecas del componente Card (fijo: h-[380px] w-[260px]). Se usan para dimensionar la
+// caja contenedora al tamaño YA escalado, de modo que el `scale` no deje un hueco de layout (causa del
+// "scroll raro" en móvil, donde el box seguía midiendo 380px aunque la carta se viera al 56%).
+const CARD_WIDTH_PX = 260;
+const CARD_HEIGHT_PX = 380;
 
 function resolveGlowClass(versionTier: number): string {
   if (versionTier >= 5) return "shadow-[0_0_90px_rgba(245,158,11,0.8)]";
@@ -32,6 +40,7 @@ export function HomeEvolutionOverlay({
   toVersionTier,
   level,
   consumedCopies,
+  onClose,
 }: HomeEvolutionOverlayProps) {
   const viewportWidth = useViewportWidth();
   const capability = useHubDeviceCapability();
@@ -45,10 +54,12 @@ export function HomeEvolutionOverlay({
   }, [card, play]);
   if (!card) return null;
   const visualCopies = Math.max(4, Math.min(consumedCopies, shouldUseLiteAnimation ? 18 : 42));
-  const cardScaleClass = isMobileViewport ? "scale-[0.56]" : shouldUseLiteAnimation ? "scale-[0.82]" : "scale-100";
+  // El `scale` sirve a la vez para animar la entrada y para dimensionar: la caja contenedora mide el
+  // tamaño ya escalado, así el layout no rebasa el viewport en móvil.
+  const cardScale = isMobileViewport ? 0.52 : shouldUseLiteAnimation ? 0.82 : 1;
   const pulseRepeat = shouldUseLiteAnimation ? 0 : 1;
   return (
-    <div className="pointer-events-none absolute inset-0 z-[420] flex items-center justify-center overflow-y-auto bg-black/75 px-3 py-4 backdrop-blur-md sm:px-6 sm:py-6">
+    <div className="pointer-events-none absolute inset-0 z-[440] flex items-center justify-center overflow-hidden bg-black/75 px-3 py-4 backdrop-blur-md sm:px-6 sm:py-6">
       <motion.div
         initial={{ opacity: 0, scale: 0.7 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -114,24 +125,39 @@ export function HomeEvolutionOverlay({
             />
           </div>
         ) : null}
-        <motion.div
-          initial={{ scale: 0.72, rotate: -2 }}
-          animate={{ scale: [0.72, 1.12, 1], rotate: [-2, 2, 0] }}
-          transition={{ duration: shouldUseLiteAnimation ? 0.95 : 1.2, times: [0, 0.65, 1] }}
-          className={`origin-center ${cardScaleClass} ${resolveGlowClass(toVersionTier)}`}
-        >
-          <Card
-            card={card}
-            versionTier={toVersionTier}
-            level={level}
-            disableHoverEffects
-            disableDefaultShadow
-            clipToFrameShape
-          />
-        </motion.div>
+        <div className="relative" style={{ width: CARD_WIDTH_PX * cardScale, height: CARD_HEIGHT_PX * cardScale }}>
+          <motion.div
+            initial={{ scale: cardScale * 0.72, rotate: -2 }}
+            animate={{ scale: [cardScale * 0.72, cardScale * 1.12, cardScale], rotate: [-2, 2, 0] }}
+            transition={{ duration: shouldUseLiteAnimation ? 0.95 : 1.2, times: [0, 0.65, 1] }}
+            style={{ transformOrigin: "top left" }}
+            className={`absolute left-0 top-0 ${resolveGlowClass(toVersionTier)}`}
+          >
+            <Card
+              card={card}
+              versionTier={toVersionTier}
+              level={level}
+              disableHoverEffects
+              disableDefaultShadow
+              clipToFrameShape
+            />
+          </motion.div>
+        </div>
         <p className="mt-3 rounded border border-cyan-500/35 bg-black/65 px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-cyan-100 sm:mt-4 sm:text-xs">
           Fusión de {consumedCopies} copias completada
         </p>
+        {onClose ? (
+          <button
+            type="button"
+            onClick={onClose}
+            className="pointer-events-auto mt-3 inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/70 bg-cyan-500/15 px-4 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-cyan-100 transition hover:bg-cyan-500/25 active:scale-95 sm:mt-4 sm:text-xs"
+          >
+            <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M12.5 4 6.5 10l6 6 1.4-1.4L9.3 10l4.6-4.6z" />
+            </svg>
+            Volver a Arsenal
+          </button>
+        ) : null}
       </motion.div>
     </div>
   );

@@ -9,8 +9,10 @@ export interface SlotCellProps {
   isOpponentSide: boolean;
   tutorialTargetId?: string;
   isAttacking: boolean;
-  selectedCardId: string | null;
-  selectedBoardEntityInstanceId: string | null;
+  // Selección pre-computada POR SLOT (no ids globales): así seleccionar una carta solo re-renderiza
+  // la slot afectada y no las 3 del campo. Evita el jank/parpadeo en móvil al seleccionar.
+  matchesSelectedCardId: boolean;
+  isSelectedBoardEntity: boolean;
   isSelectedByCard: boolean;
   isRevealed: boolean;
   isHighlighted: boolean;

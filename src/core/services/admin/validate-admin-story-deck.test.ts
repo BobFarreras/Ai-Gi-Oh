@@ -25,14 +25,21 @@ describe("validateAdminSaveStoryDeckCommand", () => {
     expect(() => validateAdminSaveStoryDeckCommand(buildCommand())).not.toThrow();
   });
 
-  it("rechaza duelo sin exactamente 2 cartas de fusión", () => {
+  it("acepta duelo con 0 o 1 cartas de fusión (fusiones opcionales)", () => {
+    const withOne = buildCommand({ duelConfig: { ...buildCommand().duelConfig!, fusionCardIds: ["fusion-gemgpt"] } });
+    const withNone = buildCommand({ duelConfig: { ...buildCommand().duelConfig!, fusionCardIds: [] } });
+    expect(() => validateAdminSaveStoryDeckCommand(withOne)).not.toThrow();
+    expect(() => validateAdminSaveStoryDeckCommand(withNone)).not.toThrow();
+  });
+
+  it("rechaza duelo con más de 2 cartas de fusión", () => {
     const command = buildCommand({
       duelConfig: {
         ...buildCommand().duelConfig!,
-        fusionCardIds: ["fusion-gemgpt"],
+        fusionCardIds: ["fusion-a", "fusion-b", "fusion-c"],
       },
     });
-    expect(() => validateAdminSaveStoryDeckCommand(command)).toThrow("exactamente 2 cartas de fusión");
+    expect(() => validateAdminSaveStoryDeckCommand(command)).toThrow("máximo 2 cartas de fusión");
   });
 
   it("rechaza cartas de recompensa duplicadas", () => {

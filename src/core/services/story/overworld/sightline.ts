@@ -11,6 +11,11 @@ export interface ISightlineSource {
   tileY: number;
   facing: OverworldDirection;
   visionRange: number;
+  /**
+   * Aggro de sala: si el jugador está dentro de este rect (celdas inclusivas), el rival reta al
+   * instante, sin depender del haz frontal ni de muros. Para jefes que dominan toda su sala.
+   */
+  visionRect?: { x0: number; y0: number; x1: number; y1: number };
 }
 
 export interface IResolveSightlineInput {
@@ -31,6 +36,8 @@ export function resolveSightlineDistance(
   playerTile: IGridPosition,
   isTransparent: (tileX: number, tileY: number) => boolean,
 ): number | null {
+  // Aggro de sala: dentro del rect, reto inmediato (distancia 0 = prioridad máxima).
+  if (source.visionRect && isInsideVisionRect(playerTile, source.visionRect)) return 0;
   const delta = resolveDirectionDelta(source.facing);
   let tileX = source.tileX;
   let tileY = source.tileY;
@@ -42,6 +49,13 @@ export function resolveSightlineDistance(
     if (!isTransparent(tileX, tileY)) return null;
   }
   return null;
+}
+
+function isInsideVisionRect(
+  tile: IGridPosition,
+  rect: { x0: number; y0: number; x1: number; y1: number },
+): boolean {
+  return tile.tileX >= rect.x0 && tile.tileX <= rect.x1 && tile.tileY >= rect.y0 && tile.tileY <= rect.y1;
 }
 
 /**

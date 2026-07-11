@@ -1,8 +1,13 @@
 // src/components/hub/story/overworld/engine/Renderer2D.ts - Render Canvas 2D cibernético del overworld (circuito neón + imágenes reales) con culling y DPR limitado.
 import { IGridPosition, resolveDirectionDelta } from "@/core/services/story/overworld/overworld-types";
 import { canWalkToTile } from "@/core/services/story/overworld/movement-rules";
+import { IOverworldLight } from "@/core/services/story/overworld/lighting";
 import { IOverworldTilemap, OverworldObjectKind } from "@/services/story/overworld/tilemap-schema";
-import { GROUND_TILE, OVERLAY_TILE } from "@/services/story/overworld/overworld-tile-kinds";
+import {
+  GROUND_TILE,
+  OVERLAY_TILE,
+  resolveBeltDirection,
+} from "@/services/story/overworld/overworld-tile-kinds";
 import {
   ICameraOffset,
   resolveVisibleTileRange,
@@ -31,6 +36,12 @@ export interface IRenderOptions {
   collectedObjectIds: ReadonlySet<string>;
   /** Efecto de recolección en curso (objeto encogiéndose + valor flotante). */
   collectEffect: IOverworldCollectEffectRender | null;
+  /** Luces activas (interruptores encendidos) para el pase de oscuridad en mapas DARK. */
+  activeLights: ReadonlyArray<IOverworldLight>;
+  /** Cajas empujables en su posición viva (interpolada en píxeles del mundo). */
+  boxes: ReadonlyArray<{ id: string; pixelX: number; pixelY: number }>;
+  /** Placas de presión actualmente pulsadas (una caja encima). */
+  pressedPlateIds: ReadonlySet<string>;
   timeMs: number;
 }
 
@@ -47,6 +58,10 @@ const OBJECT_LABELS: Record<OverworldObjectKind, string> = {
   MARKET: "Mercado",
   ARSENAL: "Arsenal",
   TELEPORT: "Salir",
+  SWITCH: "Interruptor",
+  BOX: "Caja",
+  PLATE: "Placa",
+  BOX_RESET: "Reiniciar caja",
 };
 
 const OBJECT_ACCENT: Record<OverworldObjectKind, string> = {
@@ -62,7 +77,14 @@ const OBJECT_ACCENT: Record<OverworldObjectKind, string> = {
   MARKET: "#f59e0b",
   ARSENAL: "#06b6d4",
   TELEPORT: "#0ea5e9",
+  SWITCH: "#fde047",
+  BOX: "#d4a373",
+  PLATE: "#38bdf8",
+  BOX_RESET: "#f97316",
 };
+
+/** Radio (en celdas) de la luz que acompaña al jugador en mapas DARK. */
+const DARK_PLAYER_LIGHT_TILES = 2.7;
 
 const BACKGROUND = "#05070f";
 const GRID_LINE = "rgba(56, 189, 248, 0.07)";
@@ -77,6 +99,10 @@ export class Renderer2D {
   private readonly context: CanvasRenderingContext2D;
   private cssWidth = 0;
   private cssHeight = 0;
+  // Máscara de oscuridad reutilizada entre frames (se perforan gradientes de luz sobre ella
+  // y se blitea sobre el mundo). Fuera de pantalla para no repintar la escena bajo la sombra.
+  private darknessCanvas: HTMLCanvasElement | null = null;
+  private darknessCtx: CanvasRenderingContext2D | null = null;
   // Progreso de apertura animado por puerta/puente (0 cerrado → 1 abierto) y delta de frame.
   private readonly gateOpenProgress = new Map<string, number>();
   private lastRenderMs = 0;
@@ -148,8 +174,10 @@ export class Renderer2D {
     context.scale(this.zoom, this.zoom);
     this.drawBackground(tilemap.tileSize, cameraOffset, worldViewport);
     this.drawGroundPass(tilemap, cameraOffset, range, options.timeMs);
+    this.drawPlatesPass(world, cameraOffset, options);
     this.drawSightBeams(world, cameraOffset, options);
     this.drawObjectsPass(world, cameraOffset, range, options);
+    this.drawBoxesPass(world, cameraOffset, options);
     this.drawActorsPass(world, cameraOffset, options);
     this.drawCutsceneNpc(world, cameraOffset, options);
     this.drawPlayer(world, playerPixel, cameraOffset);
@@ -157,7 +185,111 @@ export class Renderer2D {
     this.drawCollectEffect(cameraOffset, options);
     this.drawFocusLabel(world, cameraOffset, options);
     context.restore();
+    this.drawDarknessPass(world, playerPixel, cameraOffset, options);
     this.drawScanlinesAndVignette();
+  }
+
+  /**
+   * Mapas DARK: cubre el mundo con una capa de oscuridad y "perfora" gradientes de luz
+   * en el jugador y en los interruptores encendidos. Un fill + pocos gradientes + un blit:
+   * barato en móvil. La escena ya está pintada debajo, así que solo se revela lo iluminado.
+   */
+  private drawDarknessPass(
+    world: IEngineWorldState,
+    playerPixel: ICameraOffset,
+    camera: ICameraOffset,
+    options: IRenderOptions,
+  ): void {
+    if (world.tilemap.ambient !== "DARK") return;
+    const w = Math.max(1, Math.round(this.cssWidth));
+    const h = Math.max(1, Math.round(this.cssHeight));
+    if (!this.darknessCanvas) {
+      this.darknessCanvas = document.createElement("canvas");
+      this.darknessCtx = this.darknessCanvas.getContext("2d");
+    }
+    const mask = this.darknessCtx;
+    if (!mask || !this.darknessCanvas) return;
+    if (this.darknessCanvas.width !== w || this.darknessCanvas.height !== h) {
+      this.darknessCanvas.width = w;
+      this.darknessCanvas.height = h;
+    }
+    const zoom = this.zoom;
+    const size = world.tilemap.tileSize;
+    // worldPoint -> pantalla: (camera + world) * zoom (mismo mapeo que el pase escalado).
+    const toScreenX = (worldX: number): number => (camera.x + worldX) * zoom;
+    const toScreenY = (worldY: number): number => (camera.y + worldY) * zoom;
+
+    mask.setTransform(1, 0, 0, 1, 0, 0);
+    mask.clearRect(0, 0, w, h);
+    mask.globalCompositeOperation = "source-over";
+    mask.fillStyle = "rgba(2, 4, 10, 0.95)";
+    mask.fillRect(0, 0, w, h);
+
+    // Perforado: lo que dibujemos ahora RESTA oscuridad (alpha alto = totalmente iluminado).
+    mask.globalCompositeOperation = "destination-out";
+    // Luz del jugador (siempre lo acompaña en la oscuridad).
+    this.punchRadialLight(
+      mask,
+      toScreenX(playerPixel.x + size / 2),
+      toScreenY(playerPixel.y + size / 2),
+      DARK_PLAYER_LIGHT_TILES * size * zoom,
+    );
+    // Luces de interruptores encendidos.
+    for (const light of options.activeLights) {
+      if (light.kind === "RECT") {
+        const x = toScreenX(light.x0 * size);
+        const y = toScreenY(light.y0 * size);
+        const rw = (light.x1 - light.x0 + 1) * size * zoom;
+        const rh = (light.y1 - light.y0 + 1) * size * zoom;
+        this.punchRectLight(mask, x, y, rw, rh);
+      } else {
+        this.punchRadialLight(
+          mask,
+          toScreenX(light.tileX * size + size / 2),
+          toScreenY(light.tileY * size + size / 2),
+          light.radius * size * zoom,
+        );
+      }
+    }
+    mask.globalCompositeOperation = "source-over";
+    this.context.drawImage(this.darknessCanvas, 0, 0, this.cssWidth, this.cssHeight);
+  }
+
+  private punchRadialLight(
+    mask: CanvasRenderingContext2D,
+    cx: number,
+    cy: number,
+    radius: number,
+  ): void {
+    if (radius <= 0) return;
+    const gradient = mask.createRadialGradient(cx, cy, radius * 0.12, cx, cy, radius);
+    gradient.addColorStop(0, "rgba(0, 0, 0, 1)");
+    gradient.addColorStop(0.62, "rgba(0, 0, 0, 0.82)");
+    gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+    mask.fillStyle = gradient;
+    mask.beginPath();
+    mask.arc(cx, cy, radius, 0, Math.PI * 2);
+    mask.fill();
+  }
+
+  /** Sala encendida: se despeja el rect con un pequeño degradado de borde para que no corte a pico. */
+  private punchRectLight(
+    mask: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    rw: number,
+    rh: number,
+  ): void {
+    const feather = Math.min(rw, rh) * 0.18;
+    mask.fillStyle = "rgba(0, 0, 0, 0.96)";
+    mask.fillRect(x + feather, y + feather, rw - feather * 2, rh - feather * 2);
+    // Borde difuminado con sombra para suavizar la transición sala↔oscuridad.
+    mask.save();
+    mask.shadowColor = "rgba(0, 0, 0, 0.96)";
+    mask.shadowBlur = feather;
+    mask.fillStyle = "rgba(0, 0, 0, 0.96)";
+    mask.fillRect(x + feather, y + feather, rw - feather * 2, rh - feather * 2);
+    mask.restore();
   }
 
   private drawBackground(tileSize: number, camera: ICameraOffset, viewport: IRendererViewportSize): void {
@@ -193,7 +325,7 @@ export class Renderer2D {
     const ground = tilemap.layers.ground;
     const isInterior = (x: number, y: number): boolean => {
       const kind = ground[y]?.[x];
-      return kind === GROUND_TILE.PATH || kind === GROUND_TILE.SAND;
+      return kind === GROUND_TILE.PATH || kind === GROUND_TILE.SAND || resolveBeltDirection(kind) !== null;
     };
     for (let tileY = range.minTileY; tileY <= range.maxTileY; tileY++) {
       for (let tileX = range.minTileX; tileX <= range.maxTileX; tileX++) {
@@ -201,6 +333,9 @@ export class Renderer2D {
         if (kind === GROUND_TILE.PATH) this.drawLaneTile(tilemap, tileX, tileY, camera, timeMs);
         else if (kind === GROUND_TILE.SAND) {
           this.drawRoomFloorTile(camera.x + tileX * size, camera.y + tileY * size, size);
+        } else {
+          const belt = resolveBeltDirection(kind);
+          if (belt) this.drawBeltTile(camera.x + tileX * size, camera.y + tileY * size, size, belt, timeMs);
         }
       }
     }
@@ -243,6 +378,58 @@ export class Renderer2D {
       context.lineTo(left + size, top + size);
     }
     context.stroke();
+  }
+
+  /** Cinta transportadora: suelo metálico con chevrones que fluyen en la dirección de arrastre. */
+  private drawBeltTile(
+    screenX: number,
+    screenY: number,
+    size: number,
+    direction: "UP" | "DOWN" | "LEFT" | "RIGHT",
+    timeMs: number,
+  ): void {
+    const context = this.context;
+    context.fillStyle = "#111d2e";
+    context.fillRect(screenX, screenY, size, size);
+    context.strokeStyle = "rgba(56, 189, 248, 0.35)";
+    context.lineWidth = 1;
+    context.strokeRect(screenX + 2, screenY + 2, size - 4, size - 4);
+
+    const cx = screenX + size / 2;
+    const cy = screenY + size / 2;
+    const flow = ((timeMs / 520) % 1 + 1) % 1; // 0..1 en bucle, para el desplazamiento del patrón.
+    context.save();
+    context.translate(cx, cy);
+    switch (direction) {
+      case "UP":
+        break;
+      case "DOWN":
+        context.rotate(Math.PI);
+        break;
+      case "LEFT":
+        context.rotate(-Math.PI / 2);
+        break;
+      case "RIGHT":
+        context.rotate(Math.PI / 2);
+        break;
+    }
+    // Tres chevrones apuntando "arriba" en el marco rotado; fluyen hacia la dirección.
+    context.strokeStyle = "rgba(34, 211, 238, 0.75)";
+    context.lineWidth = Math.max(2, size * 0.06);
+    context.lineCap = "round";
+    const span = size * 0.3;
+    for (let index = 0; index < 3; index++) {
+      const offset = (index - flow) * (size * 0.32);
+      const y = offset;
+      context.beginPath();
+      context.moveTo(-span, y + span * 0.6);
+      context.lineTo(0, y - span * 0.6);
+      context.lineTo(span, y + span * 0.6);
+      context.globalAlpha = 0.35 + 0.4 * (1 - Math.abs(index - 1) / 2);
+      context.stroke();
+    }
+    context.globalAlpha = 1;
+    context.restore();
   }
 
   private drawRoomFloorTile(screenX: number, screenY: number, size: number): void {
@@ -368,6 +555,8 @@ export class Renderer2D {
     for (const object of world.tilemap.objects) {
       // Los rivales se dibujan como actores dinámicos, no como token estático.
       if (object.kind === "DUEL" || object.kind === "BOSS") continue;
+      // Cajas (posición viva) y placas (marca de suelo) tienen su propio pase.
+      if (object.kind === "BOX" || object.kind === "PLATE") continue;
       // Triggers invisibles y objetos ya recogidos: no se dibujan.
       if (object.hidden || options.collectedObjectIds.has(object.id)) continue;
       if (
@@ -424,6 +613,10 @@ export class Renderer2D {
       }
     } else if (kind === "WARP") {
       this.drawPortal(cx, cy, size, accent, timeMs);
+    } else if (kind === "SWITCH") {
+      this.drawSwitch(screenX, screenY, size, accent, timeMs);
+    } else if (kind === "BOX_RESET") {
+      this.drawResetButton(screenX, screenY, size, accent, timeMs);
     } else if (kind === "MARKET" || kind === "ARSENAL" || kind === "TELEPORT") {
       this.drawHubNode(screenX, screenY, size, accent, kind, timeMs);
     } else {
@@ -686,6 +879,69 @@ export class Renderer2D {
     context.globalAlpha = 1;
   }
 
+  /** Interruptor de pared: caja con palanca y bombilla que late (llama la atención en la oscuridad). */
+  private drawSwitch(screenX: number, screenY: number, size: number, accent: string, timeMs: number): void {
+    const context = this.context;
+    const x = screenX + size * 0.3;
+    const y = screenY + size * 0.24;
+    const w = size * 0.4;
+    const h = size * 0.52;
+    // Placa.
+    context.fillStyle = "#0b1220";
+    context.fillRect(x, y, w, h);
+    context.strokeStyle = accent;
+    context.lineWidth = 2;
+    context.strokeRect(x, y, w, h);
+    // Palanca.
+    context.strokeStyle = accent;
+    context.lineWidth = Math.max(2, size * 0.05);
+    context.lineCap = "round";
+    context.beginPath();
+    context.moveTo(x + w / 2, y + h * 0.72);
+    context.lineTo(x + w * 0.68, y + h * 0.32);
+    context.stroke();
+    // Bombilla pulsante encima.
+    const pulse = 0.5 + Math.sin(timeMs / 220) * 0.5;
+    context.globalAlpha = 0.35 + pulse * 0.55;
+    context.fillStyle = accent;
+    context.beginPath();
+    context.arc(screenX + size / 2, y - size * 0.06, size * 0.08, 0, Math.PI * 2);
+    context.fill();
+    context.globalAlpha = 1;
+  }
+
+  /** Botón de reinicio de cajas: consola con una flecha circular de "reset". */
+  private drawResetButton(screenX: number, screenY: number, size: number, accent: string, timeMs: number): void {
+    const context = this.context;
+    const cx = screenX + size / 2;
+    const cy = screenY + size / 2;
+    // Base de consola.
+    context.fillStyle = "#0b1220";
+    context.fillRect(screenX + size * 0.24, screenY + size * 0.24, size * 0.52, size * 0.52);
+    context.strokeStyle = accent;
+    context.lineWidth = 2;
+    context.strokeRect(screenX + size * 0.24, screenY + size * 0.24, size * 0.52, size * 0.52);
+    // Flecha circular (reset).
+    const pulse = 0.55 + Math.sin(timeMs / 260) * 0.35;
+    context.strokeStyle = accent;
+    context.globalAlpha = pulse;
+    context.lineWidth = Math.max(2, size * 0.05);
+    context.beginPath();
+    context.arc(cx, cy, size * 0.16, Math.PI * 0.35, Math.PI * 1.9);
+    context.stroke();
+    // Punta de la flecha.
+    const tipX = cx + Math.cos(Math.PI * 0.35) * size * 0.16;
+    const tipY = cy + Math.sin(Math.PI * 0.35) * size * 0.16;
+    context.fillStyle = accent;
+    context.beginPath();
+    context.moveTo(tipX, tipY);
+    context.lineTo(tipX - size * 0.02, tipY - size * 0.09);
+    context.lineTo(tipX + size * 0.09, tipY - size * 0.04);
+    context.closePath();
+    context.fill();
+    context.globalAlpha = 1;
+  }
+
   private drawPortal(cx: number, cy: number, size: number, accent: string, timeMs: number): void {
     const context = this.context;
     const spin = Math.sin(timeMs / 240) * 0.5 + 0.5;
@@ -881,6 +1137,64 @@ export class Renderer2D {
     context.moveTo(screenX + size * 0.8, screenY + size * 0.34);
     context.lineTo(screenX + size * 0.2, screenY + size * 0.9);
     context.stroke();
+  }
+
+  /** Placas de presión: marca de suelo que se ilumina al pisarse con una caja. */
+  private drawPlatesPass(world: IEngineWorldState, camera: ICameraOffset, options: IRenderOptions): void {
+    const size = world.tilemap.tileSize;
+    for (const object of world.tilemap.objects) {
+      if (object.kind !== "PLATE") continue;
+      const screenX = camera.x + object.tileX * size;
+      const screenY = camera.y + object.tileY * size;
+      this.drawPlate(screenX, screenY, size, options.pressedPlateIds.has(object.id), options.timeMs);
+    }
+  }
+
+  private drawPlate(
+    screenX: number,
+    screenY: number,
+    size: number,
+    pressed: boolean,
+    timeMs: number,
+  ): void {
+    const context = this.context;
+    const inset = size * 0.16;
+    const x = screenX + inset;
+    const y = screenY + inset;
+    const s = size - inset * 2;
+    const accent = pressed ? "#22d3ee" : "#38618c";
+    context.fillStyle = pressed ? "rgba(34, 211, 238, 0.22)" : "rgba(56, 97, 140, 0.14)";
+    context.fillRect(x, y, s, s);
+    context.strokeStyle = accent;
+    context.lineWidth = 2;
+    context.strokeRect(x, y, s, s);
+    // Cruz central; late cuando está pulsada.
+    const glow = pressed ? 0.6 + Math.sin(timeMs / 200) * 0.35 : 0.4;
+    context.globalAlpha = glow;
+    context.strokeStyle = accent;
+    context.beginPath();
+    context.moveTo(x + s * 0.3, y + s * 0.5);
+    context.lineTo(x + s * 0.7, y + s * 0.5);
+    context.moveTo(x + s * 0.5, y + s * 0.3);
+    context.lineTo(x + s * 0.5, y + s * 0.7);
+    context.stroke();
+    context.globalAlpha = 1;
+  }
+
+  /** Cajas empujables: se dibujan en su posición viva (interpolada) con sombra de contacto. */
+  private drawBoxesPass(world: IEngineWorldState, camera: ICameraOffset, options: IRenderOptions): void {
+    const size = world.tilemap.tileSize;
+    for (const box of options.boxes) {
+      const screenX = camera.x + box.pixelX;
+      const screenY = camera.y + box.pixelY;
+      // Sombra de contacto.
+      const context = this.context;
+      context.fillStyle = "rgba(0,0,0,0.4)";
+      context.beginPath();
+      context.ellipse(screenX + size / 2, screenY + size * 0.9, size * 0.32, size * 0.1, 0, 0, Math.PI * 2);
+      context.fill();
+      this.drawCrate(screenX, screenY, size);
+    }
   }
 
   private drawPillar(screenX: number, screenY: number, size: number, timeMs: number, seed: number): void {

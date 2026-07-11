@@ -1,13 +1,18 @@
 // src/services/story/map-definitions/story-map-definition-registry.ts - Registro único de definiciones visuales Story por acto.
 import { storyAct1MapDefinition } from "@/services/story/map-definitions/act-1-map-definition";
 import { storyAct2MapDefinition } from "@/services/story/map-definitions/act-2-map-definition";
+import { storyAct3MapDefinition } from "@/services/story/map-definitions/act-3-map-definition";
 import {
   IStoryActMapDefinition,
   IStoryMapVirtualNodeDefinition,
   IStoryMapVisualNodeDefinition,
 } from "@/services/story/map-definitions/story-map-definition-types";
 
-const storyActDefinitions: IStoryActMapDefinition[] = [storyAct1MapDefinition, storyAct2MapDefinition];
+const storyActDefinitions: IStoryActMapDefinition[] = [
+  storyAct1MapDefinition,
+  storyAct2MapDefinition,
+  storyAct3MapDefinition,
+];
 
 /**
  * Devuelve todas las definiciones visuales de actos disponibles localmente.

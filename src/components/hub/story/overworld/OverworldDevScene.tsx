@@ -12,9 +12,18 @@ import {
 import { OverworldTouchControls } from "@/components/hub/story/overworld/hud/OverworldTouchControls";
 import { OverworldKeyboardHints } from "@/components/hub/story/overworld/hud/OverworldKeyboardHints";
 import { OverworldMinimap } from "@/components/hub/story/overworld/hud/OverworldMinimap";
+import { OverworldActBadge } from "@/components/hub/story/overworld/hud/OverworldActBadge";
+import { buildStoryChapterBriefing } from "@/services/story/build-story-chapter-briefing";
 import { OverworldBattleTransition } from "@/components/hub/story/overworld/hud/OverworldBattleTransition";
 import { OverworldCardPickup } from "@/components/hub/story/overworld/hud/OverworldCardPickup";
+import { OverworldSubmissionDialog } from "@/components/hub/story/overworld/hud/OverworldSubmissionDialog";
 import { resolveIntentPresentation } from "@/components/hub/story/overworld/hud/resolve-intent-presentation";
+import {
+  assertStoryNodeSubmissionRequirements,
+  assertStoryNodeSubmissionValid,
+  IStoryNodeSubmissionPrompt,
+  resolveStoryNodeSubmissionPrompt,
+} from "@/services/story/story-node-submission-rules";
 import { StoryInteractionVideoOverlay } from "@/components/hub/story/internal/scene/dialog/StoryInteractionVideoOverlay";
 import { StoryNodeInteractionDialog } from "@/components/hub/story/internal/scene/dialog/StoryNodeInteractionDialog";
 import { useStorySceneSfx } from "@/components/hub/story/internal/scene/audio/use-story-scene-sfx";
@@ -37,6 +46,14 @@ import { IOverworldTilemap } from "@/services/story/overworld/tilemap-schema";
 
 const ECHO_TRIGGER_NODE_ID = "story-a1-side-event-echo-fragment";
 const PRECOMBAT_SOUND = "/audio/story/sonido-precombate.m4a";
+// Consolas re-leíbles: eventos-nota (p. ej. el registro con el código del terminal) que se pueden
+// volver a consultar siempre. Se marcan interactuados una vez (para satisfacer requisitos) pero
+// NUNCA se ocultan ni se bloquean: si no apuntaste el código, vuelves y lo relees.
+const REREADABLE_EVENT_IDS = new Set<string>(["story-ch3-event-corrupt-log"]);
+// Evento de intro que se dispara al PRIMER paso del jugador en el acto (no por trigger de suelo).
+const FIRST_STEP_INTRO_BY_MAP: Record<string, string> = {
+  "act-3": "story-ch3-event-intro",
+};
 
 function seenEventsStorageKey(playerId: string, mapId: string): string {
   return `overworld-seen-events-${playerId}-${mapId}`;
@@ -164,6 +181,7 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
   const engineRef = useRef<OverworldEngine | null>(null);
   const tilemap = useMemo(() => buildOverworldTilemap(mapId) ?? buildAct1OverworldTilemap(), [mapId]);
   const actId = useMemo(() => resolveOverworldActId(mapId), [mapId]);
+  const actArcTitle = useMemo(() => buildStoryChapterBriefing(actId).arcTitle, [actId]);
   const storageKey = useMemo(() => seenEventsStorageKey(playerId, mapId), [playerId, mapId]);
   const initialCompleted = useMemo(() => new Set(completedNodeIds), [completedNodeIds]);
   const seenEventIdsRef = useRef<Set<string>>(new Set());
@@ -176,6 +194,9 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
   const [pendingBattle, setPendingBattle] = useState<IPendingBattle | null>(null);
   const [activeVideo, setActiveVideo] = useState<{ video: IStoryInteractionCinematicVideo; isCutscene: boolean; nodeId?: string } | null>(null);
   const [narration, setNarration] = useState<IActiveNarration | null>(null);
+  // Terminal de código (SUBMISSION): nodo activo + prompt + error de la última validación.
+  const [submission, setSubmission] = useState<{ objectId: string; prompt: IStoryNodeSubmissionPrompt } | null>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   // Carta en proceso de revelado tras recogerla (overlay React): congela la escena hasta terminar.
   const [cardPickup, setCardPickup] = useState<ICard | null>(null);
   const initialInteracted = useMemo(() => new Set(interactedNodeIds), [interactedNodeIds]);
@@ -343,6 +364,7 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const firstStepIntroId = FIRST_STEP_INTRO_BY_MAP[mapId];
     // Los eventos/recompensas ya vistos no se repiten (persisten entre recargas + servidor).
     loadSeenEvents(storageKey).forEach((id) => seenEventIdsRef.current.add(id));
     initialInteracted.forEach((id) => seenEventIdsRef.current.add(id));
@@ -438,12 +460,27 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
       canvas,
       tilemap,
       progress: buildProgress(initialCompleted, initialInteracted),
-      config: { initialPosition, collectedNodeIds: [...initialInteracted], zoom: initialZoom },
+      config: {
+        initialPosition,
+        // Las consolas re-leíbles no se ocultan aunque estén interactuadas (siguen consultables).
+        collectedNodeIds: [...initialInteracted].filter((id) => !REREADABLE_EVENT_IDS.has(id)),
+        zoom: initialZoom,
+      },
       hooks: {
         onFocusChanged: setFocus,
         onPlayerTileChanged: (tile) => {
           playerTileRef.current = { tileX: tile.tileX, tileY: tile.tileY };
           setPlayerTile({ tileX: tile.tileX, tileY: tile.tileY });
+          // Intro del acto al PRIMER paso: BigLog narra el Repositorio Fantasma una sola vez.
+          if (firstStepIntroId && !seenEventIdsRef.current.has(firstStepIntroId)) {
+            markEventSeen(firstStepIntroId);
+            void markOverworldEventInteracted(firstStepIntroId);
+            const dialogue = resolveOverworldEventDialogue(firstStepIntroId);
+            if (dialogue && dialogue.lines.length > 0) {
+              engine.setInteractionSuspended(true);
+              setNarration({ title: dialogue.title, lines: dialogue.lines, lineIndex: 0, isCutscene: false });
+            }
+          }
         },
         onCutsceneEvent: (nodeId) => {
           const dialogue = resolveOverworldEventDialogue(nodeId);
@@ -451,6 +488,13 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
             setNarration({ title: dialogue.title, lines: dialogue.lines, lineIndex: 0, isCutscene: true });
           } else {
             engine.resumeCutscene();
+          }
+        },
+        onPlatePressed: () => {
+          // Una caja pisó una placa: suena el "clunk" de puerta que se abre.
+          if (doorSoundRef.current) {
+            doorSoundRef.current.currentTime = 0;
+            void doorSoundRef.current.play().catch(() => undefined);
           }
         },
         onCutsceneEnd: () => {
@@ -527,12 +571,16 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
                 return;
               }
             }
-            if (seenEventIdsRef.current.has(object.id)) return;
-            markEventSeen(object.id);
-            // Persistimos el evento en BD (no solo en localStorage): así no reaparece al
-            // iniciar sesión en otro navegador/dispositivo. Best-effort: si falla, el caché
-            // local cubre la sesión actual y se reintenta al volver a activarlo.
-            void markOverworldEventInteracted(object.id);
+            const isReReadable = REREADABLE_EVENT_IDS.has(object.id);
+            // Las consolas re-leíbles no se bloquean: siempre reabren su diálogo. El resto, una vez.
+            if (!isReReadable && seenEventIdsRef.current.has(object.id)) return;
+            if (!seenEventIdsRef.current.has(object.id)) {
+              markEventSeen(object.id);
+              // Persistimos el evento en BD (no solo en localStorage): así no reaparece al
+              // iniciar sesión en otro navegador/dispositivo. Best-effort: si falla, el caché
+              // local cubre la sesión actual y se reintenta al volver a activarlo.
+              void markOverworldEventInteracted(object.id);
+            }
             // Subruta difícil: aparece BigLog (cutscene) y narra el aviso.
             if (object.id === ECHO_TRIGGER_NODE_ID) {
               engine.setInteractionSuspended(true);
@@ -552,6 +600,34 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
               return;
             }
             // Evento sin diálogo configurado: nada que abrir → no frena.
+            return;
+          }
+          // Terminal de código (SUBMISSION): abre el diálogo de introducción de clave. La validación
+          // (código + requisitos) la hace el padre con las reglas de submission existentes.
+          if (!intent.isBlocked && object.kind === "SUBMISSION") {
+            if (seenEventIdsRef.current.has(object.id)) return;
+            const prompt = resolveStoryNodeSubmissionPrompt(object.id);
+            if (!prompt) return;
+            engine.setInteractionSuspended(true);
+            playDeviceSound();
+            setSubmissionError(null);
+            setSubmission({ objectId: object.id, prompt });
+            return;
+          }
+          // Botón de reinicio: devuelve las cajas a su sitio (rescate anti soft-lock). Sin panel.
+          if (!intent.isBlocked && object.kind === "BOX_RESET") {
+            engine.resetBoxes();
+            playDeviceSound();
+            return;
+          }
+          // Interruptor de luz (mapas oscuros): enciende la sala al instante, sin panel. Se marca
+          // como interactuado (persistido) para que siga encendido tras un combate/refresco.
+          if (!intent.isBlocked && object.kind === "SWITCH") {
+            if (seenEventIdsRef.current.has(object.id)) return;
+            markEventSeen(object.id);
+            void markOverworldEventInteracted(object.id);
+            playDeviceSound();
+            engine.updateProgress(buildProgress(initialCompleted, seenEventIdsRef.current));
             return;
           }
           // Acción adyacente (pulsar A frente a un nodo): abre el panel → congela mientras esté abierto.
@@ -642,6 +718,44 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
     else engineRef.current?.setInteractionSuspended(false);
   };
 
+  const closeSubmission = useCallback((): void => {
+    setSubmission(null);
+    setSubmissionError(null);
+    engineRef.current?.setInteractionSuspended(false);
+  }, []);
+
+  const submitSubmission = useCallback(
+    (code: string): void => {
+      const active = submission;
+      if (!active) return;
+      try {
+        assertStoryNodeSubmissionRequirements({
+          nodeId: active.objectId,
+          completedNodeIds: [...initialCompleted],
+          interactedNodeIds: [...seenEventIdsRef.current],
+        });
+        assertStoryNodeSubmissionValid(active.objectId, code);
+      } catch (error) {
+        setSubmissionError(error instanceof Error ? error.message : "Código inválido.");
+        return;
+      }
+      // Código correcto: marca el terminal como resuelto (persistido) → abre la puerta enlazada.
+      seenEventIdsRef.current.add(active.objectId);
+      persistSeenEvents(storageKey, seenEventIdsRef.current);
+      void markOverworldEventInteracted(active.objectId);
+      engineRef.current?.updateProgress(buildProgress(initialCompleted, seenEventIdsRef.current));
+      if (doorSoundRef.current) {
+        doorSoundRef.current.currentTime = 0;
+        void doorSoundRef.current.play().catch(() => undefined);
+      }
+      sfxRef.current?.playEventFinish();
+      setSubmission(null);
+      setSubmissionError(null);
+      engineRef.current?.setInteractionSuspended(false);
+    },
+    [submission, initialCompleted, storageKey],
+  );
+
   const beginBattleFromPanel = (): void => {
     if (!activeIntent) return;
     setPendingBattle({
@@ -705,6 +819,8 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
       />
 
       <OverworldMinimap tilemap={tilemap} playerTile={playerTile} defeatedIds={completedIds} hiddenIds={collectedRewardIds} />
+
+      <OverworldActBadge mapId={mapId} arcTitle={actArcTitle} />
 
       <button
         type="button"
@@ -775,6 +891,15 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
       ) : null}
 
       {cardPickup ? <OverworldCardPickup card={cardPickup} onComplete={completeCardPickup} /> : null}
+
+      {submission ? (
+        <OverworldSubmissionDialog
+          prompt={submission.prompt}
+          errorText={submissionError}
+          onSubmit={submitSubmission}
+          onClose={closeSubmission}
+        />
+      ) : null}
 
       {pendingBattle ? (
         <OverworldBattleTransition

@@ -17,7 +17,10 @@ function MarketListingsPanelComponent({ listings, onSelectCard }: MarketListings
   // aparecían como cajas grises antes de pintarse. El navegador ya hace su propio culling de pintado
   // y las imágenes son lazy (next/image), así que el scroll va fluido sin esos huecos grises.
   return (
-    <section className="home-modern-scroll h-full min-h-0 overflow-y-auto overflow-x-hidden rounded-xl border border-cyan-800/35 bg-[#031020]/55 p-3 sm:p-4">
+    <section
+      className="home-modern-scroll h-full min-h-0 overflow-y-auto overflow-x-hidden rounded-xl border border-cyan-800/35 bg-[#031020]/55 p-3 sm:p-4"
+      style={{ scrollbarGutter: "stable" }}
+    >
       <div className="grid w-full grid-cols-4 content-start justify-items-center gap-2 pb-6 sm:grid-cols-5 sm:gap-3 md:grid-cols-[repeat(auto-fill,minmax(90px,1fr))]">
         {listings.map((listing) => (
           <article
@@ -48,7 +51,7 @@ function MarketListingsPanelComponent({ listings, onSelectCard }: MarketListings
                   tamaño para todas las cartas sin importar la longitud del nombre. */}
               <div className="pointer-events-none absolute inset-x-0 bottom-0 top-4 flex items-center justify-center p-1">
                 <div className="aspect-[13/19] w-full max-w-[72px]">
-                  <CardThumbnail card={listing.card} />
+                  <CardThumbnail card={listing.card} showArtSkeleton />
                 </div>
               </div>
             </button>

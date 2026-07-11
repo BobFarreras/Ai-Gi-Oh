@@ -110,6 +110,13 @@ export async function handleOwnEntityClick({
 
   if (entity.hasAttackedThisTurn) return "handled";
   if (entity.mode === "DEFENSE" || entity.mode === "SET") {
+    // Doble click sobre una entidad en DEFENSA (boca arriba) la devuelve a ATAQUE: es el inverso
+    // simétrico del doble-click ATTACK->DEFENSE de más abajo. Las cartas SET (boca abajo) no se
+    // voltean con este gesto (revelarlas es otra acción). `changeEntityMode` respeta `modeLock`,
+    // así que una entidad bloqueada en defensa simplemente no cambia (no-op silencioso).
+    if (entity.mode === "DEFENSE" && event.detail >= 2) {
+      applyTransition((state) => GameEngine.changeEntityMode(state, state.playerA.id, entity.instanceId, "ATTACK"));
+    }
     setSelectedCard(entity.card);
     setSelectedBoardEntityInstanceId(entity.instanceId);
     setPlayingCard(null);
@@ -124,6 +131,19 @@ export async function handleOwnEntityClick({
         setActiveAttackerId(null);
       }
     }
+    setSelectedCard(entity.card);
+    setSelectedBoardEntityInstanceId(entity.instanceId);
+    return "handled";
+  }
+  // Carta bloqueada (LOCK_OPPONENT_ENTITY): no se puede seleccionar como atacante. En vez del error rojo
+  // del motor, mostramos un aviso de BLOQUEO con los turnos restantes y abrimos su detalle igualmente.
+  const lockedTurns = entity.lockedTurnsRemaining ?? 0;
+  if (lockedTurns > 0) {
+    setLastError({
+      code: "GAME_RULE_ERROR",
+      tone: "blocked",
+      message: `Carta bloqueada · faltan ${lockedTurns} ${lockedTurns === 1 ? "turno" : "turnos"} para desbloquearse.`,
+    });
     setSelectedCard(entity.card);
     setSelectedBoardEntityInstanceId(entity.instanceId);
     return "handled";

@@ -90,7 +90,7 @@ describe("resolveExecution effects", () => {
     expect(notBoosted?.card.attack).toBe(1000);
   });
 
-  it("debería bloquear BOOST_ATTACK_ALLIED_ENTITY sin entidades aliadas", () => {
+  it("debería suspender BOOST_ATTACK_ALLIED_ENTITY sin entidades aliadas (queda en SET reactivable)", () => {
     const buffExecution: ICard = {
       id: "exec-atk-buff-empty",
       name: "Atk Buff Empty",
@@ -106,9 +106,34 @@ describe("resolveExecution effects", () => {
     });
 
     state = GameEngine.playCard(state, "p1", "exec-atk-buff-empty", "ACTIVATE");
-    expect(() => GameEngine.resolveExecution(state, "p1", state.playerA.activeExecutions[0].instanceId)).toThrow(
-      "No tienes entidades en campo para aumentar ATK.",
-    );
+    const instanceId = state.playerA.activeExecutions[0].instanceId;
+    // Sin aliados a los que aumentar el ataque: no se lanza error ni se consume; la carta vuelve a SET
+    // para poder reactivarla cuando ya haya una entidad en campo (regla general de magias sin objetivo).
+    state = GameEngine.resolveExecution(state, "p1", instanceId);
+    const suspended = state.playerA.activeExecutions.find((entity) => entity.instanceId === instanceId);
+    expect(suspended).toBeDefined();
+    expect(suspended?.mode).toBe("SET");
+    expect(state.playerA.graveyard.some((card) => card.id === "exec-atk-buff-empty")).toBe(false);
+  });
+
+  it("debería suspender REDUCE_OPPONENT_ATTACK sin entidades rivales (queda en SET reactivable)", () => {
+    const debuffExecution: ICard = {
+      id: "exec-reduce-atk-empty",
+      name: "Reduce Atk Empty",
+      description: "Reduce ataque rival",
+      type: "EXECUTION",
+      faction: "BIG_TECH",
+      cost: 1,
+      effect: { action: "REDUCE_OPPONENT_ATTACK", value: 300 },
+    };
+    let state = createResolveExecutionBaseState({ hand: [debuffExecution] });
+
+    state = GameEngine.playCard(state, "p1", "exec-reduce-atk-empty", "ACTIVATE");
+    const instanceId = state.playerA.activeExecutions[0].instanceId;
+    state = GameEngine.resolveExecution(state, "p1", instanceId);
+    const suspended = state.playerA.activeExecutions.find((entity) => entity.instanceId === instanceId);
+    expect(suspended?.mode).toBe("SET");
+    expect(state.playerA.graveyard.some((card) => card.id === "exec-reduce-atk-empty")).toBe(false);
   });
 
   it("debería registrar HEAL_APPLIED al resolver curación", () => {

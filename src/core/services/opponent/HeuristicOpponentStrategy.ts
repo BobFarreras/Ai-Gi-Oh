@@ -98,6 +98,21 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
 
   public chooseModeChange(state: GameState, opponentId: string): IOpponentModeChangeDecision | null {
     const { opponent, target } = getPlayers(state, opponentId);
+    // 1) Oportunidad ofensiva: pasar un defensor a ATAQUE si le compensa.
+    const promote = this.chooseDefenderToAttack(opponent, target);
+    if (promote) return promote;
+    // 2) Repliegue defensivo: pasar a DEFENSA un tanque que está en ATAQUE y no aguantaría el turno.
+    return this.chooseAttackerToDefend(opponent, target);
+  }
+
+  /** Stats rivales relevantes para intercambios: defensa si se defienden, ataque si atacan. */
+  private resolveTargetStats(target: IPlayer): number[] {
+    return target.activeEntities.map((entity) =>
+      entity.mode === "DEFENSE" || entity.mode === "SET" ? (entity.card.defense ?? 0) : (entity.card.attack ?? 0));
+  }
+
+  /** Promueve un defensor a ATAQUE cuando puede ganar un intercambio o presionar (lógica previa). */
+  private chooseDefenderToAttack(opponent: IPlayer, target: IPlayer): IOpponentModeChangeDecision | null {
     const defenders = opponent.activeEntities.filter((entity) =>
       (entity.mode === "DEFENSE" || entity.mode === "SET") &&
       !entity.hasAttackedThisTurn &&
@@ -105,8 +120,7 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
       (!entity.modeLock || entity.modeLock === "ATTACK"),
     );
     if (defenders.length === 0) return null;
-    const targetStats = target.activeEntities.map((entity) =>
-      entity.mode === "DEFENSE" || entity.mode === "SET" ? (entity.card.defense ?? 0) : (entity.card.attack ?? 0));
+    const targetStats = this.resolveTargetStats(target);
     const canPressureSet = target.activeEntities.some((entity) => entity.mode === "SET");
     const bestRivalStat = targetStats.length > 0 ? Math.max(...targetStats) : 0;
     const orderedDefenders = [...defenders].sort((left, right) => (right.card.attack ?? 0) - (left.card.attack ?? 0));
@@ -120,6 +134,42 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
       }
       const controlHold = this.aiProfile.style === "control" && this.aiProfile.aggression < 0.5 && attack < bestRivalStat;
       if (controlHold) continue;
+    }
+    return null;
+  }
+
+  /**
+   * Repliega a DEFENSA una entity que está en ATAQUE cuando es un tanque amenazado: su defensa
+   * sobreviviría al mayor atacante rival pero su ataque no. Antes se quedaban en ATAQUE (menor valor)
+   * y morían regalando daño. Sólo se replega si NO puede ganar ningún intercambio atacando, lo que
+   * garantiza que la fase de promoción no la vuelva a pasar a ATAQUE (sin oscilación): cada repliegue
+   * reduce de forma monótona el número de tanques en ATAQUE candidatos.
+   */
+  private chooseAttackerToDefend(opponent: IPlayer, target: IPlayer): IOpponentModeChangeDecision | null {
+    const attackers = opponent.activeEntities.filter((entity) =>
+      entity.mode === "ATTACK" &&
+      !entity.hasAttackedThisTurn &&
+      !entity.isNewlySummoned &&
+      (!entity.modeLock || entity.modeLock === "DEFENSE"),
+    );
+    if (attackers.length === 0) return null;
+    // Amenaza real = mayor ATAQUE entre las entidades rivales EN ATAQUE (las que pueden golpearnos).
+    const rivalThreat = target.activeEntities.reduce(
+      (best, entity) => (entity.mode === "ATTACK" ? Math.max(best, entity.card.attack ?? 0) : best), 0);
+    if (rivalThreat === 0) return null; // Sin atacantes rivales no hay a quién temer: mantener presión.
+    const targetStats = this.resolveTargetStats(target);
+    const canPressureSet = target.activeEntities.some((entity) => entity.mode === "SET");
+    // Replegar primero el tanque de mayor defensa (aguanta mejor y libera valor de tablero).
+    const orderedTanks = [...attackers].sort((left, right) => (right.card.defense ?? 0) - (left.card.defense ?? 0));
+    for (const tank of orderedTanks) {
+      const attack = tank.card.attack ?? 0;
+      const defense = tank.card.defense ?? 0;
+      // Guard anti-oscilación: si podría ganar un intercambio atacando, la promoción lo re-subiría.
+      if (targetStats.some((stat) => attack >= stat)) continue;
+      if ((this.profile.key === "MASTER" || this.profile.key === "MYTHIC") && canPressureSet && attack >= 1700) continue;
+      if (defense > attack && defense >= rivalThreat && attack < rivalThreat) {
+        return { instanceId: tank.instanceId, newMode: "DEFENSE" };
+      }
     }
     return null;
   }

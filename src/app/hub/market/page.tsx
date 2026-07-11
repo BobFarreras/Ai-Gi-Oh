@@ -17,14 +17,13 @@ import {
 export default async function MarketPage() {
   const session = await getCurrentUserSession();
   const playerId = session?.user.id ?? "local-player";
-  const repositories = session
-    ? await createPlayerRuntimeRepositories()
-    : {
-        marketRepository: sharedMarketRepository,
-        walletRepository: sharedWalletRepository,
-        collectionRepository: sharedCollectionRepository,
-        transactionRepository: sharedTransactionRepository,
-      };
+  const runtimeRepositories = session ? await createPlayerRuntimeRepositories() : null;
+  const repositories = runtimeRepositories ?? {
+    marketRepository: sharedMarketRepository,
+    walletRepository: sharedWalletRepository,
+    collectionRepository: sharedCollectionRepository,
+    transactionRepository: sharedTransactionRepository,
+  };
   const viewModel = await getHubSectionViewModel("MARKET");
   if (viewModel.section.isLocked) {
     return (
@@ -38,10 +37,12 @@ export default async function MarketPage() {
   }
   const getMarketCatalogUseCase = new GetMarketCatalogUseCase(repositories.marketRepository, repositories.walletRepository);
   const getMarketTransactionsUseCase = new GetMarketTransactionsUseCase(repositories.transactionRepository);
-  const [catalog, transactions, collection] = await Promise.all([
+  const [catalog, transactions, collection, cardProgress] = await Promise.all([
     getMarketCatalogUseCase.execute(playerId),
     getMarketTransactionsUseCase.execute(playerId),
     repositories.collectionRepository.getCollection(playerId),
+    // Progresión por carta del jugador para mostrar en el mercado los ATK/DEF según SU nivel/versión.
+    runtimeRepositories ? runtimeRepositories.playerCardProgressRepository.listByPlayer(playerId) : Promise.resolve([]),
   ]);
 
   return (
@@ -52,6 +53,7 @@ export default async function MarketPage() {
         initialCatalog={catalog}
         initialTransactions={transactions}
         initialCollection={collection}
+        initialCardProgress={cardProgress}
       />
     </>
   );

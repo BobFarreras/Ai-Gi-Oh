@@ -2,11 +2,13 @@
 import { IOverworldTilemap } from "@/services/story/overworld/tilemap-schema";
 import { buildAct1OverworldTilemap } from "@/services/story/overworld/act-1-overworld-tilemap";
 import { buildAct2OverworldTilemap } from "@/services/story/overworld/act-2-overworld-tilemap";
+import { buildAct3OverworldTilemap } from "@/services/story/overworld/act-3-overworld-tilemap";
 
 /** mapId -> constructor del tilemap. Añadir aquí cada acto nuevo. */
 const TILEMAP_BUILDERS: Record<string, () => IOverworldTilemap> = {
   "act-1": buildAct1OverworldTilemap,
   "act-2": buildAct2OverworldTilemap,
+  "act-3": buildAct3OverworldTilemap,
 };
 
 /** mapId por defecto al entrar al overworld sin estado guardado. */

@@ -141,7 +141,7 @@ export function buildAct1OverworldTilemap(): IOverworldTilemap {
   }
 
   return validateOverworldTilemap({
-    schemaVersion: 1,
+    schemaVersion: 2,
     id: "act-1",
     act: 1,
     tileSize: 52,

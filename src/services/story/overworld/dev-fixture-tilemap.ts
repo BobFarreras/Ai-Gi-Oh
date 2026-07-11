@@ -150,7 +150,7 @@ export function buildOverworldDevFixtureTilemap(): IOverworldTilemap {
   markSolidObjectCell(map, 21, 25); // EVENT
 
   return validateOverworldTilemap({
-    schemaVersion: 1,
+    schemaVersion: 2,
     id: "dev-fixture",
     act: 1,
     tileSize: 48,

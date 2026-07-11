@@ -8,7 +8,7 @@ import {
 
 function buildValidRawTilemap(): Record<string, unknown> {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     id: "act-test",
     act: 1,
     tileSize: 32,
@@ -161,6 +161,49 @@ describe("validateOverworldTilemap", () => {
     expect(() => validateOverworldTilemap(null)).toThrow(ValidationError);
     expect(() => validateOverworldTilemap([])).toThrow(ValidationError);
     expect(() => validateOverworldTilemap("{}")).toThrow(ValidationError);
+  });
+
+  // ── v2: mecánicas interactivas ──────────────────────────────────────────────
+  it("acepta ambient DARK y un interruptor con luz", () => {
+    const raw = buildValidRawTilemap();
+    raw.ambient = "DARK";
+    (raw.objects as Record<string, unknown>[]).push({
+      id: "story-ch-switch-1",
+      kind: "SWITCH",
+      tileX: 0,
+      tileY: 1,
+      sprite: "switch",
+      trigger: "ADJACENT_ACTION",
+      lightRect: { x0: 0, y0: 0, x1: 2, y1: 1 },
+    });
+    const tilemap = validateOverworldTilemap(raw);
+    expect(tilemap.ambient).toBe("DARK");
+    expect(tilemap.objects.at(-1)?.lightRect).toEqual({ x0: 0, y0: 0, x1: 2, y1: 1 });
+  });
+
+  it("rechaza ambient desconocido", () => {
+    expect(() => validateOverworldTilemap({ ...buildValidRawTilemap(), ambient: "FOGGY" })).toThrow(
+      /'NORMAL' o 'DARK'/,
+    );
+  });
+
+  it("rechaza luz en un kind que no es SWITCH", () => {
+    const raw = buildValidRawTilemap();
+    (raw.objects as Record<string, unknown>[])[0].lightRadius = 4;
+    expect(() => validateOverworldTilemap(raw)).toThrow(/solo SWITCH admite luz/);
+  });
+
+  it("rechaza una caja o placa sobre celda no transitable", () => {
+    const raw = buildValidRawTilemap();
+    (raw.objects as Record<string, unknown>[]).push({
+      id: "story-ch-box-1",
+      kind: "BOX",
+      tileX: 1,
+      tileY: 1,
+      sprite: "box",
+      trigger: "BUMP",
+    });
+    expect(() => validateOverworldTilemap(raw)).toThrow(/celda transitable/);
   });
 });
 

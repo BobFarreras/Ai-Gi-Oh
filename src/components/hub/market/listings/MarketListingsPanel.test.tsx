@@ -41,14 +41,17 @@ describe("MarketListingsPanel", () => {
     expect(screen.getByRole("button", { name: "Seleccionar Python" })).toBeInTheDocument();
   });
 
-  it("usa la miniatura estática (sin Card completa con animaciones)", () => {
+  it("usa la miniatura ligera y muestra skeleton en el arte mientras carga", () => {
     const listing = createListing(createCard("entity-postgres", "Postgres"));
     const { container } = render(
       <MarketListingsPanel listings={[listing]} onSelectCard={() => undefined} />,
     );
 
     expect(screen.getByAltText("Miniatura de Postgres")).toBeInTheDocument();
-    expect(container.querySelectorAll("[class*='animate-']")).toHaveLength(0);
+    // El único elemento animado permitido es el skeleton de carga del arte (pulse), no una Card completa.
+    const animated = container.querySelectorAll("[class*='animate-']");
+    expect(animated).toHaveLength(1);
+    expect(animated[0]?.className).toContain("animate-pulse");
   });
 
   it("renderiza todas las cartas del catálogo sin recortar la última fila", () => {

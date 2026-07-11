@@ -13,4 +13,6 @@ export const HOME_ORDER_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "ATTACK", label: "Ataque" },
   { value: "DEFENSE", label: "Defensa" },
   { value: "ENERGY", label: "Energía" },
+  { value: "LEVEL", label: "Nivel" },
+  { value: "VERSION", label: "Versión" },
 ];

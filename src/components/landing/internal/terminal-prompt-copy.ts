@@ -4,8 +4,8 @@ export const TERMINAL_TEXT = [
   "Transmisión entrante interceptada.",
   "¿Hola? ¿Estás ahí?",
   "Soy del Escuadrón 430.",
-  "Si es tu primera vez en el ciberespacio, necesito confirmar tu identidad.",
-  "Introduce tu código de verificación:",
+  "Si es tu primera vez en el ciberespacio, necesito registrar tu identidad.",
+  "Escribe el nombre de usuario con el que operarás:",
 ];
 
-export const TERMINAL_HELP_TEXT = "¿Te has olvidado deL código? No será tu nombre...";
+export const TERMINAL_HELP_TEXT = "Será tu nombre de operador en la red. Elígelo bien.";

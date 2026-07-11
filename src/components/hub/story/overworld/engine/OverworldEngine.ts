@@ -13,6 +13,13 @@ import {
 } from "@/core/services/story/overworld/movement-rules";
 import { isRequirementSatisfied } from "@/core/services/story/overworld/interaction-rules";
 import {
+  DEFAULT_SWITCH_LIGHT_RADIUS,
+  IOverworldLight,
+  ISwitchLightSource,
+  resolveActiveLights,
+} from "@/core/services/story/overworld/lighting";
+import { resolvePush } from "@/core/services/story/overworld/push-rules";
+import {
   IInteractableTarget,
   resolveFocusedInteractable,
   resolveSteppedInteractable,
@@ -24,6 +31,7 @@ import {
   buildCollisionGridFromTilemap,
   listGatesFromTilemap,
 } from "@/services/story/overworld/tilemap-runtime";
+import { resolveBeltDirection } from "@/services/story/overworld/overworld-tile-kinds";
 import { resolveCameraOffset } from "@/components/hub/story/overworld/engine/camera-math";
 import {
   DEFAULT_ENGINE_CONFIG,
@@ -55,6 +63,8 @@ export interface IOverworldEngineHooks {
   onCutsceneEvent?: (nodeId: string) => void;
   /** La cutscene ha terminado (se devuelve el control al jugador). */
   onCutsceneEnd?: () => void;
+  /** Una placa de presión se acaba de pulsar con una caja (React puede sonar un "clunk"/abrir puerta). */
+  onPlatePressed?: (plateId: string) => void;
 }
 
 interface IOverworldEngineInit {
@@ -81,6 +91,15 @@ export class OverworldEngine {
   private readonly sprites = new SpriteCache();
 
   private progress: IOverworldProgressState;
+  private readonly switchLightSources: ISwitchLightSource[];
+  private activeLights: IOverworldLight[] = [];
+  // Cajas empujables (sokoban): posición lógica viva + celdas que bloquean + animación de deslizado.
+  private boxPositions = new Map<string, IGridPosition>();
+  private boxHomePositions = new Map<string, IGridPosition>();
+  private boxTileKeys: Set<string> = new Set();
+  private boxActiveMoves = new Map<string, { from: IGridPosition; to: IGridPosition; progress: number }>();
+  private plateObjects: IOverworldTilemapObject[] = [];
+  private pressedPlateIds: Set<string> = new Set();
   private blockedObjectIds: Set<string> = new Set();
   private focusedObjectId: string | null = null;
   private blockedSightlineId: string | null = null;
@@ -193,6 +212,9 @@ export class OverworldEngine {
         (object) =>
           object.kind !== "DUEL" &&
           object.kind !== "BOSS" &&
+          // Las cajas se empujan y las placas son pasivas: no son objetivos de foco/acción.
+          object.kind !== "BOX" &&
+          object.kind !== "PLATE" &&
           object.trigger !== "BUMP", // los BUMP se resuelven al chocar, no por foco
       )
       .map((object) => ({
@@ -203,6 +225,9 @@ export class OverworldEngine {
         requiredNodeIds: object.gateRequiredNodeIds ?? [],
       }));
     this.actors = new OpponentActorManager(init.tilemap.objects, this.config.tilesPerSecond);
+    this.switchLightSources = this.buildSwitchLightSources(init.tilemap.objects);
+    this.recomputeLights();
+    this.initBoxesAndPlates(init.tilemap.objects);
 
     const spawn =
       init.tilemap.spawns.find((entry) => entry.id === init.tilemap.defaultSpawnId) ??
@@ -223,8 +248,8 @@ export class OverworldEngine {
       movementContext: resolveMovementContext({
         collisionGrid,
         gates: listGatesFromTilemap(init.tilemap),
-        progress: init.progress,
-        blockedTileKeys: this.bumpBlockedKeys,
+        progress: this.buildAugmentedProgress(),
+        blockedTileKeys: this.buildBlockedTileKeys(),
         openTileKeys: this.resolveFreedOpponentTileKeys(init.tilemap.objects, init.progress),
       }),
       player: {
@@ -244,16 +269,123 @@ export class OverworldEngine {
     this.progress = progress;
     this.rebuildMovementContext();
     this.recomputeBlockedObjects();
+    this.recomputeLights();
+  }
+
+  /** Construye las fuentes de luz de los interruptores del mapa (radio o sala). */
+  private buildSwitchLightSources(
+    objects: ReadonlyArray<IOverworldTilemapObject>,
+  ): ISwitchLightSource[] {
+    const sources: ISwitchLightSource[] = [];
+    for (const object of objects) {
+      if (object.kind !== "SWITCH") continue;
+      if (object.lightRect) {
+        sources.push({ id: object.id, light: { kind: "RECT", ...object.lightRect } });
+      } else {
+        sources.push({
+          id: object.id,
+          light: {
+            kind: "RADIAL",
+            tileX: object.tileX,
+            tileY: object.tileY,
+            radius: object.lightRadius ?? DEFAULT_SWITCH_LIGHT_RADIUS,
+          },
+        });
+      }
+    }
+    return sources;
+  }
+
+  /** Recalcula las luces encendidas (interruptores ya accionados) tras un cambio de progreso. */
+  private recomputeLights(): void {
+    this.activeLights = resolveActiveLights(this.switchLightSources, this.progress.interactedNodeIds);
   }
 
   private rebuildMovementContext(): void {
     this.world.movementContext = resolveMovementContext({
       collisionGrid: buildCollisionGridFromTilemap(this.world.tilemap),
       gates: listGatesFromTilemap(this.world.tilemap),
-      progress: this.progress,
-      blockedTileKeys: this.bumpBlockedKeys,
+      progress: this.buildAugmentedProgress(),
+      blockedTileKeys: this.buildBlockedTileKeys(),
       openTileKeys: this.resolveFreedOpponentTileKeys(this.world.tilemap.objects, this.progress),
     });
+  }
+
+  /**
+   * Progreso "aumentado" con las placas de presión pulsadas EN VIVO (tratadas como interacted),
+   * de modo que un GATE con `requires: [plateId]` se abre mientras haya una caja encima, sin tocar
+   * `isGateOpen`. Si no hay placas pulsadas, devuelve el progreso base (sin coste ni alocación).
+   */
+  private buildAugmentedProgress(): IOverworldProgressState {
+    if (this.pressedPlateIds.size === 0) return this.progress;
+    return {
+      visitedNodeIds: this.progress.visitedNodeIds,
+      completedNodeIds: this.progress.completedNodeIds,
+      interactedNodeIds: new Set([...this.progress.interactedNodeIds, ...this.pressedPlateIds]),
+    };
+  }
+
+  /** Celdas bloqueadas dinámicamente: pickups pendientes + cajas empujables en su posición viva. */
+  private buildBlockedTileKeys(): Set<string> {
+    if (this.boxTileKeys.size === 0) return this.bumpBlockedKeys;
+    return new Set([...this.bumpBlockedKeys, ...this.boxTileKeys]);
+  }
+
+  private initBoxesAndPlates(objects: ReadonlyArray<IOverworldTilemapObject>): void {
+    this.boxPositions = new Map();
+    this.boxHomePositions = new Map();
+    for (const object of objects) {
+      if (object.kind === "BOX") {
+        this.boxPositions.set(object.id, { tileX: object.tileX, tileY: object.tileY });
+        this.boxHomePositions.set(object.id, { tileX: object.tileX, tileY: object.tileY });
+      }
+    }
+    this.plateObjects = objects.filter((object) => object.kind === "PLATE");
+    this.boxTileKeys = this.computeBoxTileKeys();
+    this.pressedPlateIds = this.computePressedPlates();
+  }
+
+  /**
+   * Devuelve todas las cajas a su posición inicial (botón anti soft-lock: si el jugador empotra una
+   * caja contra una pared y no puede sacarla, la restaura). Reevalúa placas y puertas.
+   */
+  resetBoxes(): void {
+    this.boxActiveMoves.clear();
+    this.boxPositions = new Map();
+    for (const [id, home] of this.boxHomePositions) {
+      this.boxPositions.set(id, { tileX: home.tileX, tileY: home.tileY });
+    }
+    this.boxTileKeys = this.computeBoxTileKeys();
+    this.updatePressedPlates();
+    this.rebuildMovementContext();
+    this.recomputeBlockedObjects();
+  }
+
+  private computeBoxTileKeys(): Set<string> {
+    const keys = new Set<string>();
+    for (const position of this.boxPositions.values()) keys.add(toGridPositionKey(position));
+    return keys;
+  }
+
+  private computePressedPlates(): Set<string> {
+    const pressed = new Set<string>();
+    for (const plate of this.plateObjects) {
+      if (this.boxTileKeys.has(toGridPositionKey({ tileX: plate.tileX, tileY: plate.tileY }))) {
+        pressed.add(plate.id);
+      }
+    }
+    return pressed;
+  }
+
+  private readonly isBoxAt = (position: IGridPosition): boolean =>
+    this.boxTileKeys.has(toGridPositionKey(position));
+
+  private findBoxIdAt(position: IGridPosition): string | null {
+    const key = toGridPositionKey(position);
+    for (const [id, pos] of this.boxPositions) {
+      if (toGridPositionKey(pos) === key) return id;
+    }
+    return null;
   }
 
   /** Casillas de rivales derrotados: se "teletransportan" y liberan su casilla para dejar pasar a la llave. */
@@ -512,12 +644,13 @@ export class OverworldEngine {
   }
 
   private recomputeBlockedObjects(): void {
+    const progress = this.buildAugmentedProgress();
     this.blockedObjectIds = new Set(
       this.interactables
         .filter(
           (target) =>
             target.requiredNodeIds.length > 0 &&
-            target.requiredNodeIds.some((nodeId) => !isRequirementSatisfied(nodeId, this.progress)),
+            target.requiredNodeIds.some((nodeId) => !isRequirementSatisfied(nodeId, progress)),
         )
         .map((target) => target.id),
     );
@@ -805,6 +938,7 @@ export class OverworldEngine {
 
   private update(deltaSeconds: number): void {
     this.advanceCollectEffect(deltaSeconds);
+    this.advanceBoxes(deltaSeconds);
     // Acercamiento cinemático a un nodo de servicio: el mundo queda congelado.
     if (this.serviceZoom) {
       this.advanceServiceZoom(deltaSeconds);
@@ -856,18 +990,23 @@ export class OverworldEngine {
   }
 
   private tryStartStep(initialProgress: number): void {
-    const direction = this.externalDirection ?? this.heldDirection;
+    const direction = this.resolveStepDirection();
     if (!direction) return;
     const { player } = this.world;
     const step = resolveStep(player.tile, direction, this.world.movementContext);
     player.facing = step.facing;
     if (!step.target) {
-      // Bloqueado: ¿es un objeto que se coge al chocar?
       const delta = resolveDirectionDelta(direction);
       const candidateKey = toGridPositionKey({
         tileX: player.tile.tileX + delta.tileX,
         tileY: player.tile.tileY + delta.tileY,
       });
+      // ¿Caja empujable delante? Intenta desplazarla y avanza a su hueco.
+      if (this.boxTileKeys.has(candidateKey)) {
+        this.tryPushBox(direction, initialProgress);
+        return;
+      }
+      // Bloqueado: ¿es un objeto que se coge al chocar?
       const bumpObjectId = this.bumpBlockedKeys.has(candidateKey)
         ? this.bumpObjectByTileKey.get(candidateKey)
         : undefined;
@@ -875,6 +1014,79 @@ export class OverworldEngine {
       return;
     }
     player.activeMove = { from: player.tile, to: step.target, progress: initialProgress };
+  }
+
+  /**
+   * Dirección del próximo paso.
+   * - Fuera de cinta: manda el input (D-pad/teclado).
+   * - Sobre una cinta: te arrastra en su sentido y NO puedes ir en contra (el input opuesto se
+   *   ignora). Un input perpendicular te deja salir por el lateral; sin input, la cinta empuja.
+   */
+  private resolveStepDirection(): OverworldDirection | null {
+    const input = this.externalDirection ?? this.heldDirection;
+    const { tile } = this.world.player;
+    const beltDirection = resolveBeltDirection(this.world.tilemap.layers.ground[tile.tileY]?.[tile.tileX]);
+    if (!beltDirection) return input;
+    if (!input || isOppositeDirection(input, beltDirection)) return beltDirection;
+    return input;
+  }
+
+  /**
+   * Empuje de caja: si la caja de delante puede deslizarse una celda, la mueve (lógica + animación),
+   * el jugador ocupa su hueco, y se reevalúan puertas y placas. No empuja mientras otra caja se desliza.
+   */
+  private tryPushBox(direction: OverworldDirection, initialProgress: number): void {
+    if (this.boxActiveMoves.size > 0) return;
+    const { player } = this.world;
+    const push = resolvePush(player.tile, direction, this.world.movementContext, this.isBoxAt);
+    if (!push) return;
+    const boxId = this.findBoxIdAt(push.boxTile);
+    if (!boxId) return;
+    // Compromete la posición lógica de la caja de inmediato (las placas reflejan el estado final).
+    this.boxPositions.set(boxId, push.boxDestination);
+    this.boxTileKeys = this.computeBoxTileKeys();
+    this.boxActiveMoves.set(boxId, { from: push.boxTile, to: push.boxDestination, progress: initialProgress });
+    this.updatePressedPlates();
+    this.rebuildMovementContext();
+    this.recomputeBlockedObjects();
+    // El jugador entra en la casilla que la caja acaba de dejar libre.
+    player.activeMove = { from: player.tile, to: push.boxTile, progress: initialProgress };
+  }
+
+  /** Reevalúa placas pulsadas; dispara el hook por cada placa recién pulsada. */
+  private updatePressedPlates(): void {
+    const pressed = this.computePressedPlates();
+    const newlyPressed: string[] = [];
+    for (const id of pressed) if (!this.pressedPlateIds.has(id)) newlyPressed.push(id);
+    this.pressedPlateIds = pressed;
+    for (const id of newlyPressed) this.hooks.onPlatePressed?.(id);
+  }
+
+  private advanceBoxes(deltaSeconds: number): void {
+    if (this.boxActiveMoves.size === 0) return;
+    for (const [id, move] of this.boxActiveMoves) {
+      move.progress += this.config.tilesPerSecond * deltaSeconds;
+      if (move.progress >= 1) this.boxActiveMoves.delete(id);
+    }
+  }
+
+  /** Datos de render de las cajas (posición interpolada en píxeles). */
+  private resolveBoxRenderData(tileSize: number): Array<{ id: string; pixelX: number; pixelY: number }> {
+    const data: Array<{ id: string; pixelX: number; pixelY: number }> = [];
+    for (const [id, position] of this.boxPositions) {
+      const move = this.boxActiveMoves.get(id);
+      if (move) {
+        const t = Math.min(1, move.progress);
+        data.push({
+          id,
+          pixelX: (move.from.tileX + (move.to.tileX - move.from.tileX) * t) * tileSize,
+          pixelY: (move.from.tileY + (move.to.tileY - move.from.tileY) * t) * tileSize,
+        });
+      } else {
+        data.push({ id, pixelX: position.tileX * tileSize, pixelY: position.tileY * tileSize });
+      }
+    }
+    return data;
   }
 
   private emitObjectBump(objectId: string): void {
@@ -897,7 +1109,7 @@ export class OverworldEngine {
       playerTile: player.tile,
       facing: player.facing,
       targets: this.interactables,
-      progress: this.progress,
+      progress: this.buildAugmentedProgress(),
     });
     if (!focused) return;
     const object = this.objectsById.get(focused.target.id);
@@ -914,7 +1126,7 @@ export class OverworldEngine {
     const stepped = resolveSteppedInteractable({
       playerTile: this.world.player.tile,
       targets: this.interactables,
-      progress: this.progress,
+      progress: this.buildAugmentedProgress(),
     });
     if (!stepped) return;
     const object = this.objectsById.get(stepped.target.id);
@@ -933,7 +1145,7 @@ export class OverworldEngine {
       playerTile: player.tile,
       facing: player.facing,
       targets: this.interactables,
-      progress: this.progress,
+      progress: this.buildAugmentedProgress(),
     });
     const nextFocusId = focused?.target.id ?? null;
     if (nextFocusId === this.focusedObjectId) return;
@@ -984,9 +1196,22 @@ export class OverworldEngine {
       cutsceneNpc: this.resolveCutsceneNpcRender(tilemap.tileSize),
       collectedObjectIds: this.collectedObjectIds,
       collectEffect: this.resolveCollectEffectRender(tilemap.tileSize),
+      activeLights: this.activeLights,
+      boxes: this.resolveBoxRenderData(tilemap.tileSize),
+      pressedPlateIds: this.pressedPlateIds,
       timeMs: this.lastFrameTimeMs ?? 0,
     });
   }
+}
+
+/** ¿Son dos direcciones opuestas (UP/DOWN o LEFT/RIGHT)? */
+function isOppositeDirection(a: OverworldDirection, b: OverworldDirection): boolean {
+  return (
+    (a === "UP" && b === "DOWN") ||
+    (a === "DOWN" && b === "UP") ||
+    (a === "LEFT" && b === "RIGHT") ||
+    (a === "RIGHT" && b === "LEFT")
+  );
 }
 
 /** Suavizado ease-in-out para la animación de acercamiento de cámara. */

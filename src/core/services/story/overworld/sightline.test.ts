@@ -28,6 +28,21 @@ describe("resolveSightlineDistance", () => {
     expect(resolveSightlineDistance(guard, { tileX: 3, tileY: 5 }, alwaysTransparent)).toBeNull();
   });
 
+  it("aggro de sala (visionRect): reto inmediato dentro del rect, sin depender del haz", () => {
+    const boss: ISightlineSource = {
+      id: "boss",
+      tileX: 5,
+      tileY: 2,
+      facing: "DOWN",
+      visionRange: 3,
+      visionRect: { x0: 1, y0: 1, x1: 9, y1: 9 },
+    };
+    // Dentro de la sala pero fuera del haz frontal → detecta igual (distancia 0).
+    expect(resolveSightlineDistance(boss, { tileX: 1, tileY: 9 }, alwaysTransparent)).toBe(0);
+    // Fuera de la sala → no detecta (ni por rect ni por haz).
+    expect(resolveSightlineDistance(boss, { tileX: 12, tileY: 5 }, alwaysTransparent)).toBeNull();
+  });
+
   it("un muro entre medias corta la visión", () => {
     // Muro en (7,5): el jugador en (8,5) queda tapado.
     const isTransparent = (x: number, y: number) => !(x === 7 && y === 5);

@@ -6,6 +6,33 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-07-11
+
+### Added
+- **Chat de comunidad en vivo**: página `/hub/chat` con presencia en tiempo real (Supabase Realtime), reacciones con emojis, compartir cartas y retar a duelo desde el chat.
+- **Historia (Acto 3)**: "Repositorio Fantasma" (Jaku) con flujo narrativo completo sobre el overworld, nuevo mapa, soundtrack y oponente Soldado-Laptop.
+- **Badge de acto** al entrar al overworld ("ACTO N · Nombre").
+- **Motor overworld v2**: mecánicas interactivas (puertas, puentes, eventos), schema v2, lighting, reglas de empuje y sightline.
+- **Progresión**: misiones reclamables siempre arriba en cada sección (diarias, semanales, evento).
+- **Novedades**: badge del campana se borra al abrir el diálogo (visto en localStorage).
+- Test de flujo de combate del oponente HeuristicOpponentStrategy.
+
+### Changed
+- Arsenal/Mercado: muestra ATK/DEF/coste según nivel y versión del jugador.
+- Performance (board): aislamiento del re-render de slot por selección (menos jank en móvil).
+- Combate: entidad bloqueada no puede atacar zona de magias/trampas rival.
+- Fusiones Story ahora opcionales en admin + animación de bloqueo mejorada.
+
+### Fixed
+- Testers 2a tanda: landing usuario, evolución/detalle móvil, UI de bloqueo.
+- Testers lote: arsenal, market, combate, IA, magias.
+
+### Internal
+- Migraciones 089-092: overworld v2, Acto 3 Jaku, chat messages, chat reactions.
+- Documentación: diseño del chat/foro de comunidad (Supabase Realtime + pg_cron).
+- Guía del motor overworld (`docs/story/overworld-engine-guide.md`).
+- Lote de fixes testers (`docs/fixes/2026-07-testers-batch.md`, `2026-07-testers-batch-2.md`).
+
 ## [1.10.4] - 2026-07-09
 
 ### Fixed
@@ -198,7 +225,9 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.3...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.4...v1.11.0
+[1.10.4]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.3...v1.10.4
 [1.10.3]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.2...v1.10.3
 [1.10.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.1...v1.10.2
 [1.10.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.0...v1.10.1

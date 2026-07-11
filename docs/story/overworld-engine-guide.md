@@ -408,3 +408,39 @@ Esta sección documenta lo que **ya está construido** en la rama `feat/story-ov
 - Aplicar la migración 089 a **producción** al hacer release.
 - Persistir "intro ya vista" para no repetirla.
 - Rutas especiales cerradas (subrutas difíciles) con trigger de corredor + narración estilo Story.
+
+---
+
+## 12. Mecánicas interactivas v2 (Acto 3+)
+
+El schema del tilemap sube a **v2** (`OVERWORLD_TILEMAP_SCHEMA_VERSION = 2`). Todos los campos nuevos son
+opcionales, así que los mapas v1 solo cambian el literal de versión. Estreno en el **Acto 3** (`ambient: "DARK"`).
+
+### 12.1 Oscuridad + luces
+- Mapa: `ambient: "DARK"` activa el pase de oscuridad en `Renderer2D.drawDarknessPass` (máscara offscreen +
+  gradientes `destination-out`; barato en móvil). El jugador lleva una luz que lo acompaña.
+- Objeto `SWITCH` (`ADJACENT_ACTION`) con `lightRadius?` o `lightRect?`: al accionarlo se marca `interacted`
+  (persistido vía `mark-interacted`) y su luz se enciende. Reglas puras en `core/.../lighting.ts` (testeadas).
+
+### 12.2 Cajas empujables + placas
+- Objetos `BOX` (empujable) y `PLATE` (placa). El motor mantiene posiciones vivas de cajas y las anima.
+- Regla pura `core/.../push-rules.ts` (`resolvePush`): empuja si la celda de detrás es transitable y libre.
+- Una placa con una caja encima se trata como `interacted` **en vivo** (progreso aumentado), de modo que un
+  `GATE` con `gateRequiredNodeIds: [plateId]` se abre mientras la caja esté encima, sin tocar `isGateOpen`.
+- **Botón de rescate** `BOX_RESET` (`ADJACENT_ACTION`): `engine.resetBoxes()` devuelve todas las cajas a su
+  posición inicial. Anti soft-lock: si el jugador empotra una caja contra una pared y no puede sacarla.
+
+### 12.3 Cintas transportadoras (un solo sentido)
+- Tiles de suelo `BELT_UP/DOWN/LEFT/RIGHT` (`GROUND_TILE`, ver `resolveBeltDirection`). La cinta **arrastra** en
+  su dirección y **no se puede recorrer en sentido contrario**: `resolveStepDirection` ignora el input opuesto;
+  un input perpendicular permite salir por el lateral. Diseñar siempre un camino de retorno alternativo para no
+  atrapar al jugador. Renderizadas con chevrones animados.
+
+### 12.4 Terminales de código (SUBMISSION)
+- Objeto `SUBMISSION` cableado en `OverworldDevScene` con `OverworldSubmissionDialog`, validado por
+  `story-node-submission-rules.ts` (catálogo por node id: código + requisitos). Al acertar se marca `interacted`
+  y se abre el `GATE` enlazado.
+
+> Nota: los objetos `EVENT`/`SWITCH`/`SUBMISSION` y los `REWARD_*` del overworld deben existir como nodos
+> virtuales en el registro clásico (`act-N-map-definition.ts`) para que `mark-interacted`/`claim-reward` los
+> reconozcan server-side (nodeType `EVENT` para switches/terminal/eventos).

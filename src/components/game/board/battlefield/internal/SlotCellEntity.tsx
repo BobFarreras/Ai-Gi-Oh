@@ -2,6 +2,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Lock, LockOpen } from "lucide-react";
 import { MouseEvent } from "react";
 import { BattleMode, IBoardEntity } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
@@ -20,8 +21,8 @@ interface ISlotCellEntityProps {
   isRevealed: boolean;
   isMobileLayout: boolean;
   isSelectedByCard: boolean;
-  selectedCardId: string | null;
-  selectedBoardEntityInstanceId: string | null;
+  matchesSelectedCardId: boolean;
+  isSelectedBoardEntity: boolean;
   isAttacking: boolean;
   isActivating: boolean;
   shouldShowBlockedLock: boolean;
@@ -38,8 +39,8 @@ export function SlotCellEntity({
   isRevealed,
   isMobileLayout,
   isSelectedByCard,
-  selectedCardId,
-  selectedBoardEntityInstanceId,
+  matchesSelectedCardId,
+  isSelectedBoardEntity,
   isAttacking,
   isActivating,
   shouldShowBlockedLock,
@@ -49,7 +50,7 @@ export function SlotCellEntity({
   onEntityClick,
 }: ISlotCellEntityProps) {
   const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
-  const isBoardEntitySelected = selectedBoardEntityInstanceId === entity.instanceId || isSelectedByCard;
+  const isBoardEntitySelected = isSelectedBoardEntity || isSelectedByCard;
   const isTrapActivating = entity.card.type === "TRAP" && (isAttacking || isActivating);
   const visibility = resolveEntityVisibility(entity, isRevealed);
   const forceTrapReveal = isTrapActivating && entity.card.type === "TRAP";
@@ -61,6 +62,8 @@ export function SlotCellEntity({
         : (entity.mode as BattleMode);
   const motionState = resolveEntityMotionState({ isAttacking, isActivating, isOpponentSide, isHorizontal: visibility.isHorizontal });
   const targetX = -120 - index * 105;
+  const lockedTurnsRemaining = entity.lockedTurnsRemaining ?? 0;
+  const isLocked = lockedTurnsRemaining > 0;
 
   return (
     <motion.div
@@ -93,14 +96,18 @@ export function SlotCellEntity({
       ) : (
         <div className="absolute w-full h-full flex items-center justify-center">
           <SummonHologramVfx show={Boolean((entity.isNewlySummoned && (entity.card.type === "ENTITY" || entity.card.type === "FUSION" || entity.card.type === "TRAP")) || forceTrapReveal)} />
-          <Card
-            card={entity.card}
-            isSelected={selectedCardId === entity.card.id}
-            hologramMode={isMobileLayout || shouldReduceCombatEffects ? "lite" : "full"}
-            boardMode={resolvedBoardMode}
-            isPerformanceMode={shouldReduceCombatEffects}
-            showBackgroundInPerformanceMode
-          />
+          {/* Wrapper dedicado: el filtro grayscale/brightness apaga la carta REAL (holograma, atributos,
+              arte) cuando está bloqueada, sin afectar al candado/overlays que van fuera del wrapper. */}
+          <div className={cn(isLocked && "grayscale brightness-[0.5]")}>
+            <Card
+              card={entity.card}
+              isSelected={matchesSelectedCardId}
+              hologramMode={isMobileLayout || shouldReduceCombatEffects ? "lite" : "full"}
+              boardMode={resolvedBoardMode}
+              isPerformanceMode={shouldReduceCombatEffects}
+              showBackgroundInPerformanceMode
+            />
+          </div>
           {shouldShowBlockedLock ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.7, y: 8 }}
@@ -121,13 +128,45 @@ export function SlotCellEntity({
             )
           ) : null}
           {isSelectedMaterial ? <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-black rounded-md bg-cyan-300 text-cyan-950 shadow-[0_0_14px_rgba(34,211,238,0.9)]">MATERIAL</span> : null}
-          {(entity.lockedTurnsRemaining ?? 0) > 0 ? (
-            <span
-              className="absolute right-2 top-2 z-[60] flex items-center gap-0.5 rounded-md border border-red-400/80 bg-red-950/85 px-1.5 py-0.5 text-[11px] font-black text-red-100 shadow-[0_0_12px_rgba(248,113,113,0.85)]"
-              aria-label={`Bloqueada: ${entity.lockedTurnsRemaining} turno(s)`}
-            >
-              🔒 {entity.lockedTurnsRemaining}
-            </span>
+          {isLocked ? (
+            <>
+              {/* Tinte de apagado sobre la carta bloqueada (la carta ya va en gris). */}
+              <div className="pointer-events-none absolute inset-0 z-[58] rounded-xl bg-slate-950/45" aria-hidden />
+              {/* Animación de bloqueo: candado GRANDE sobre el holograma que se cierra (abierto -> cerrado)
+                  y se encoge hasta desaparecer. El estado persistente de "bloqueado" lo da la carta en gris. */}
+              {shouldReduceCombatEffects ? (
+                <span className="pointer-events-none absolute inset-0 z-[62] flex items-center justify-center" aria-hidden>
+                  <Lock className="h-14 w-14 text-amber-300 drop-shadow-[0_0_24px_rgba(251,191,36,0.9)]" strokeWidth={2.5} />
+                </span>
+              ) : (
+                <div className="pointer-events-none absolute inset-0 z-[62] flex items-center justify-center" aria-hidden>
+                  <motion.span
+                    className="absolute drop-shadow-[0_0_30px_rgba(251,191,36,0.95)]"
+                    initial={{ scale: 2.4, opacity: 0, rotate: -16 }}
+                    animate={{ scale: [2.4, 2.05, 2.05], opacity: [0, 1, 0], rotate: [-16, 2, 2] }}
+                    transition={{ duration: 0.6, times: [0, 0.5, 1], ease: "easeOut" }}
+                  >
+                    <LockOpen className="h-16 w-16 text-amber-200" strokeWidth={2.5} />
+                  </motion.span>
+                  <motion.span
+                    className="absolute drop-shadow-[0_0_36px_rgba(251,191,36,1)]"
+                    initial={{ scale: 2.2, opacity: 0 }}
+                    animate={{ scale: [2.2, 1.7, 1.95, 0.1], opacity: [0, 1, 1, 0] }}
+                    transition={{ duration: 1.5, times: [0, 0.3, 0.6, 1], delay: 0.42, ease: "easeInOut" }}
+                  >
+                    <Lock className="h-16 w-16 text-amber-300" strokeWidth={2.5} />
+                  </motion.span>
+                </div>
+              )}
+              {/* Turnos restantes: chip compacto y persistente (para consultar cuánto queda). */}
+              <span
+                className="pointer-events-none absolute right-1.5 top-1.5 z-[63] flex items-center gap-0.5 rounded-md border border-amber-300/70 bg-slate-950/85 px-1.5 py-0.5 text-[11px] font-black text-amber-100 shadow-[0_0_10px_rgba(0,0,0,0.75)]"
+                aria-label={`Carta bloqueada: faltan ${lockedTurnsRemaining} ${lockedTurnsRemaining === 1 ? "turno" : "turnos"}`}
+              >
+                <Lock className="h-3 w-3" strokeWidth={3} />
+                {lockedTurnsRemaining}
+              </span>
+            </>
           ) : null}
         </div>
       )}

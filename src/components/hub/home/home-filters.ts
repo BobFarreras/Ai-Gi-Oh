@@ -2,5 +2,5 @@
 import { CardType } from "@/core/entities/ICard";
 
 export type HomeCollectionTypeFilter = "ALL" | CardType;
-export type HomeCollectionOrderField = "NAME" | "ATTACK" | "DEFENSE" | "ENERGY";
+export type HomeCollectionOrderField = "NAME" | "ATTACK" | "DEFENSE" | "ENERGY" | "LEVEL" | "VERSION";
 export type HomeCollectionOrderDirection = "ASC" | "DESC";

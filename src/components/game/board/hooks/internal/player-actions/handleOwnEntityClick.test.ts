@@ -121,4 +121,47 @@ describe("handleOwnEntityClick reemplazo", () => {
     expect(setSelectedCard).toHaveBeenCalledWith(execution.card);
     expect(setSelectedBoardEntityInstanceId).toHaveBeenCalledWith("execution-set-1");
   });
+
+  it("no selecciona como atacante una carta bloqueada y avisa con tono 'blocked' y turnos", async () => {
+    const entity: IBoardEntity = { ...createEntity("entity-locked-1"), lockedTurnsRemaining: 2 };
+    const setActiveAttackerId = vi.fn();
+    const setLastError = vi.fn();
+    const setSelectedCard = vi.fn();
+
+    const result = await handleOwnEntityClick({
+      entity,
+      event: createClickEvent(),
+      activeAttackerId: null,
+      applyTransition: vi.fn(),
+      clearSelection: vi.fn(),
+      gameState: {
+        playerA: { id: "p1", name: "P1", healthPoints: 8000, maxHealthPoints: 8000, currentEnergy: 10, maxEnergy: 10, deck: [], hand: [], graveyard: [], activeEntities: [entity], activeExecutions: [] },
+        playerB: { id: "p2", name: "P2", healthPoints: 8000, maxHealthPoints: 8000, currentEnergy: 10, maxEnergy: 10, deck: [], hand: [], graveyard: [], activeEntities: [], activeExecutions: [] },
+        activePlayerId: "p1",
+        startingPlayerId: "p2",
+        turn: 3,
+        phase: "BATTLE",
+        hasNormalSummonedThisTurn: false,
+        pendingTurnAction: null,
+        combatLog: [],
+      },
+      pendingFusionSummon: null,
+      pendingEntityReplacement: null,
+      pendingEntityReplacementTargetId: null,
+      setActiveAttackerId,
+      setLastError,
+      setPendingEntityReplacementTargetId: vi.fn(),
+      setPendingFusionSummon: vi.fn(),
+      setPlayingCard: vi.fn(),
+      setSelectedCard,
+      setSelectedBoardEntityInstanceId: vi.fn(),
+    });
+
+    expect(result).toBe("handled");
+    expect(setActiveAttackerId).not.toHaveBeenCalled();
+    expect(setLastError).toHaveBeenCalledWith(
+      expect.objectContaining({ tone: "blocked", message: expect.stringContaining("2 turnos") }),
+    );
+    expect(setSelectedCard).toHaveBeenCalledWith(entity.card);
+  });
 });

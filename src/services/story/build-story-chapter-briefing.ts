@@ -21,9 +21,9 @@ const STORY_CHAPTER_BRIEFINGS: Record<number, IStoryChapterBriefing> = {
   },
   3: {
     chapter: 3,
-    arcTitle: "Acto 3 · Descenso a Deep Net",
-    objective: "Entrar en el núcleo inestable y contener nodos con reglas alteradas.",
-    tension: "El mapa muta en tiempo real; cada decisión puede cerrar rutas de salida.",
+    arcTitle: "Acto 3 · Repositorio Fantasma",
+    objective: "Iluminar las salas del repo, hackear el cortafuegos y llegar al núcleo de Jaku.",
+    tension: "Los forks tóxicos de Jaku acechan en la oscuridad; sin luz, cada sala es una emboscada.",
   },
 };
 

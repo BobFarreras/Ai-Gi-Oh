@@ -8,6 +8,9 @@ import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { buildMarketVaultCollectionView } from "@/components/hub/market/vault/build-market-vault-collection-view";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
+import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
+import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
+import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
 import { IMarketCatalog } from "@/core/use-cases/market/GetMarketCatalogUseCase";
 import { useMarketPurchaseActions } from "@/components/hub/market/internal/useMarketPurchaseActions";
 import { useLocalMarketSceneStore, useMarketStoreSelector } from "@/components/hub/market/internal/market-scene-store";
@@ -20,6 +23,7 @@ interface UseMarketSceneStateInput {
   initialCatalog: IMarketCatalog;
   initialTransactions: IMarketTransaction[];
   initialCollection: ICollectionCard[];
+  cardProgress?: IPlayerCardProgress[];
   purchaseActionOverrides?: IMarketPurchaseActionOverrides;
 }
 
@@ -96,13 +100,39 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     purchaseActionOverrides: input.purchaseActionOverrides,
   });
 
+  // Hidratación SOLO para display: el mercado muestra ATK/DEF/coste de cada carta según el nivel/versión
+  // que el jugador tiene de ESA carta (si la posee). El store mantiene las cartas base para la compra.
+  const cardProgressById = useMemo(
+    () => new Map((input.cardProgress ?? []).map((progress) => [progress.cardId, progress])),
+    [input.cardProgress],
+  );
+  const hydrateListings = useCallback(
+    (listings: IMarketCardListing[]): IMarketCardListing[] =>
+      cardProgressById.size === 0
+        ? listings
+        : listings.map((listing) => ({ ...listing, card: applyCardProgressionToCard(listing.card, cardProgressById.get(listing.card.id) ?? null) })),
+    [cardProgressById],
+  );
+  const displaySelectedCard = useMemo(
+    () => (selectedCard ? applyCardProgressionToCard(selectedCard, cardProgressById.get(selectedCard.id) ?? null) : null),
+    [selectedCard, cardProgressById],
+  );
+  const displayVisibleListings = useMemo(() => hydrateListings(visibleListings), [hydrateListings, visibleListings]);
+  const displayMobileVisibleListings = useMemo(() => hydrateListings(mobileVisibleListings), [hydrateListings, mobileVisibleListings]);
+  const displayVisibleCollection = useMemo(
+    () => (cardProgressById.size === 0
+      ? visibleCollection
+      : visibleCollection.map((entry) => ({ ...entry, card: applyCardProgressionToCard(entry.card, cardProgressById.get(entry.card.id) ?? null) }))),
+    [cardProgressById, visibleCollection],
+  );
+
   return {
     catalog,
     transactions,
     collection,
     selectedPackId,
     selectedListing,
-    selectedCard,
+    selectedCard: displaySelectedCard,
     nameQuery,
     typeFilter,
     orderField,
@@ -111,9 +141,9 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     revealedPackCards,
     isPackRevealOpen,
     isBuyingPack,
-    visibleListings,
-    mobileVisibleListings,
-    visibleCollection,
+    visibleListings: displayVisibleListings,
+    mobileVisibleListings: displayMobileVisibleListings,
+    visibleCollection: displayVisibleCollection,
     setSelectedPackId,
     setSelectedListing,
     setSelectedCard,

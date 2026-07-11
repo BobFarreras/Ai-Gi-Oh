@@ -71,6 +71,26 @@ const PRESENTATIONS: Record<OverworldObjectKind, IIntentPresentation> = {
     title: "Teletransporte",
     body: "Vuelve al hub principal.",
   },
+  SWITCH: {
+    actionVerb: "Encender luz",
+    title: "Interruptor",
+    body: "Enciende la iluminación de esta sala y revela lo que esconde la oscuridad.",
+  },
+  BOX: {
+    actionVerb: "Empujar",
+    title: "Caja",
+    body: "Empújala caminando contra ella para despejar el paso o pisar una placa.",
+  },
+  PLATE: {
+    actionVerb: "Activar",
+    title: "Placa de presión",
+    body: "Se mantiene pulsada con una caja encima; abre la puerta enlazada.",
+  },
+  BOX_RESET: {
+    actionVerb: "Reiniciar caja",
+    title: "Botón de reinicio",
+    body: "Devuelve las cajas a su posición inicial si se han quedado atascadas.",
+  },
 };
 
 export function resolveIntentPresentation(kind: OverworldObjectKind): IIntentPresentation {
