@@ -5,6 +5,7 @@ import { IDeck } from "@/core/entities/home/IDeck";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { HOME_MAX_DUPLICATES, countAssignedCopies, countDeckCopies } from "@/core/services/home/deck-rules";
 import { getCopiesNeededForNextVersion } from "@/core/services/progression/card-version-rules";
+import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
 import { buildHomeCollectionView } from "@/components/hub/home/home-collection-view";
 import {
   HomeCollectionOrderDirection,
@@ -52,10 +53,17 @@ export function useHomeSelectionView(input: IUseHomeSelectionViewInput) {
     return deck.slots[selectedSlotIndex]?.cardId ?? null;
   }, [deck.fusionSlots, deck.slots, selectedCollectionCardId, selectedFusionSlotIndex, selectedSlotIndex]);
   // Copias "storage" = copias en colección no asignadas actualmente al deck/fusión.
-  const selectedCard = selectedCardId ? cardById.get(selectedCardId) ?? null : null;
+  const selectedCardProgress = selectedCardId ? (cardProgressById.get(selectedCardId) ?? null) : null;
+  const baseSelectedCard = selectedCardId ? cardById.get(selectedCardId) ?? null : null;
+  // El detalle muestra la carta HIDRATADA con la progresión del jugador (ATK/DEF/coste según nivel),
+  // no la del catálogo base. La identidad (id/tipo) se preserva, así que insertar/evolucionar no cambia.
+  // Memoizado para mantener referencia estable (evita re-renders del inspector en renders ajenos).
+  const selectedCard = useMemo(
+    () => (baseSelectedCard ? applyCardProgressionToCard(baseSelectedCard, selectedCardProgress) : null),
+    [baseSelectedCard, selectedCardProgress],
+  );
   const selectedSlotHasCard = selectedSlotIndex !== null && deck.slots[selectedSlotIndex].cardId !== null;
   const selectedFusionSlotHasCard = selectedFusionSlotIndex !== null && deck.fusionSlots[selectedFusionSlotIndex].cardId !== null;
-  const selectedCardProgress = selectedCardId ? (cardProgressById.get(selectedCardId) ?? null) : null;
   const selectedCardVersionTier = selectedCardProgress?.versionTier ?? 0;
   const selectedCardLevel = selectedCardProgress?.level ?? 0;
   const selectedCardXp = selectedCardProgress?.xp ?? 0;

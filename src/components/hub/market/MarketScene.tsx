@@ -10,6 +10,7 @@ import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
 import { useMarketSceneState } from "@/components/hub/market/internal/useMarketSceneState";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
+import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { IMarketCatalog } from "@/core/use-cases/market/GetMarketCatalogUseCase";
 import { isDesktopLayoutViewport } from "@/components/internal/layout-breakpoints";
 import { IMarketPurchaseActionOverrides, IMarketTutorialActions } from "@/components/hub/market/internal/market-tutorial-contract";
@@ -20,6 +21,7 @@ interface MarketSceneProps {
   initialCatalog: IMarketCatalog;
   initialTransactions: IMarketTransaction[];
   initialCollection: ICollectionCard[];
+  initialCardProgress?: IPlayerCardProgress[];
   tutorialActions?: IMarketTutorialActions;
   purchaseActionOverrides?: IMarketPurchaseActionOverrides;
   tutorialCurrentStepId?: string | null;
@@ -35,6 +37,7 @@ export function MarketScene(props: MarketSceneProps) {
     initialCatalog: props.initialCatalog,
     initialTransactions: props.initialTransactions,
     initialCollection: props.initialCollection,
+    cardProgress: props.initialCardProgress ?? [],
     purchaseActionOverrides: props.purchaseActionOverrides,
   });
   const {

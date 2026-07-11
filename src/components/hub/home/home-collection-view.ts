@@ -2,6 +2,7 @@
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { HomeCollectionOrderDirection, HomeCollectionOrderField, HomeCollectionTypeFilter } from "@/components/hub/home/home-filters";
+import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
 
 interface BuildCollectionViewInput {
   collection: ICollectionCard[];
@@ -27,10 +28,17 @@ function resolveCardVersion(entry: ICollectionCard, cardProgressById?: Map<strin
 }
 
 export function buildHomeCollectionView(input: BuildCollectionViewInput): ICollectionCard[] {
+  // Hidrata cada carta con la progresión del jugador (nivel/versión) para que la rejilla muestre los
+  // ATRIBUTOS reales (ATK/DEF/coste subidos por nivel), no los del catálogo base. Sin progreso, la
+  // hidratación es neutra (nivel 0 → sin bonus), así que las cartas sin subir quedan igual.
+  const hydrated = input.collection.map((entry) => ({
+    ...entry,
+    card: applyCardProgressionToCard(entry.card, input.cardProgressById?.get(entry.card.id) ?? null),
+  }));
   const byType =
     input.typeFilter === "ALL"
-      ? [...input.collection]
-      : input.collection.filter((entry) => entry.card.type === input.typeFilter);
+      ? [...hydrated]
+      : hydrated.filter((entry) => entry.card.type === input.typeFilter);
   const normalizedQuery = input.nameQuery.trim().toLowerCase();
   const filtered =
     normalizedQuery.length === 0
