@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { HubChatButton } from "@/components/hub/HubChatButton";
 import { HubResetCameraButton } from "@/components/hub/HubResetCameraButton";
 import { HubToggleNodeLabelsButton } from "@/components/hub/HubToggleNodeLabelsButton";
 import { HUB_HUD_ANIMATION_DURATION, HUB_HUD_START_DELAY_MS } from "@/components/hub/internal/hub-entry-timings";
@@ -40,6 +41,7 @@ export function HubSceneFloatingActions({
       style={{ willChange: "transform,opacity" }}
       className="pointer-events-auto absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] z-50 flex items-center gap-2 sm:bottom-6 sm:right-6"
     >
+      <HubChatButton onActionSound={onHudButtonSound} />
       {canResetCamera ? <HubResetCameraButton onReset={onResetCamera} onActionSound={onHudButtonSound} /> : null}
       <HubToggleNodeLabelsButton isVisible={areNodeLabelsVisible} onToggle={onToggleNodeLabels} onActionSound={onHudButtonSound} />
       <LogoutButton iconOnly confirmBeforeLogout onActionSound={onHudButtonSound} />
