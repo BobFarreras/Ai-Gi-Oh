@@ -4,10 +4,13 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Check, Send, Swords, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Check, Layers, Send, Swords, Trash2, Users } from "lucide-react";
 import { IChatMessage } from "@/core/entities/chat/IChatMessage";
+import { CardArchetype, CardType, Faction, ICard } from "@/core/entities/ICard";
 import { IOnlinePlayer, OnlinePlayerStatus } from "@/core/entities/multiplayer/IOnlinePlayer";
+import { CardThumbnail } from "@/components/game/card/CardThumbnail";
 import { useOnlinePlayersContext } from "@/components/hub/multiplayer/MultiplayerPresenceProvider";
+import { CommunityChatCardPicker } from "@/components/hub/community/CommunityChatCardPicker";
 import { sendInvitation } from "@/app/hub/multiplayer/actions/send-invitation";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/core/services/chat/validate-chat-message";
 import { useCommunityChat } from "@/core/hooks/chat/use-community-chat";
@@ -34,13 +37,60 @@ function formatTime(iso: string): string {
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
+/** Reconstruye una carta (para CardThumbnail) desde la metadata auto-contenida de un mensaje CARD_SHARE. */
+function reconstructSharedCard(metadata: Record<string, unknown>): ICard | null {
+  const cardId = typeof metadata.cardId === "string" ? metadata.cardId : null;
+  if (!cardId) return null;
+  return {
+    id: cardId,
+    name: typeof metadata.name === "string" ? metadata.name : "Carta",
+    description: "",
+    type: (typeof metadata.type === "string" ? metadata.type : "ENTITY") as CardType,
+    faction: (typeof metadata.faction === "string" ? metadata.faction : "NEUTRAL") as Faction,
+    cost: typeof metadata.cost === "number" ? metadata.cost : 0,
+    attack: typeof metadata.attack === "number" ? metadata.attack : undefined,
+    defense: typeof metadata.defense === "number" ? metadata.defense : undefined,
+    archetype: typeof metadata.archetype === "string" ? (metadata.archetype as CardArchetype) : undefined,
+    renderUrl: typeof metadata.renderUrl === "string" ? metadata.renderUrl : undefined,
+    bgUrl: typeof metadata.bgUrl === "string" ? metadata.bgUrl : undefined,
+    versionTier: typeof metadata.versionTier === "number" ? metadata.versionTier : 0,
+    level: typeof metadata.level === "number" ? metadata.level : 0,
+  };
+}
+
 export function CommunityChatClient({ room, localPlayerId, localNickname, activeDeckIds, initialMessages }: CommunityChatClientProps) {
   const { messages, isSending, error, send, remove, clearError } = useCommunityChat(room, initialMessages);
   const onlineOthers = useOnlinePlayersContext();
   const [draft, setDraft] = useState("");
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const canInvite = activeDeckIds.length > 0;
+
+  const handleShareCard = useCallback(
+    async (card: ICard) => {
+      setIsPickerOpen(false);
+      await send({
+        content: `Comparte su ${card.name}`,
+        kind: "CARD_SHARE",
+        metadata: {
+          cardId: card.id,
+          name: card.name,
+          type: card.type,
+          faction: card.faction,
+          cost: card.cost,
+          attack: card.attack ?? null,
+          defense: card.defense ?? null,
+          archetype: card.archetype ?? null,
+          renderUrl: card.renderUrl ?? null,
+          bgUrl: card.bgUrl ?? null,
+          versionTier: card.versionTier ?? 0,
+          level: card.level ?? 0,
+        },
+      });
+    },
+    [send],
+  );
 
   // Retar a duelo: reutiliza el sistema de invitaciones (el retado recibe el banner y ambos entran a la
   // partida al aceptar, gestionado por el MultiplayerPresenceProvider que envuelve el hub).
@@ -166,6 +216,7 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
                     </p>
                   );
                 }
+                const sharedCard = message.kind === "CARD_SHARE" ? reconstructSharedCard(message.metadata) : null;
                 return (
                   <div key={message.id} className={`group flex flex-col ${isOwn ? "items-end" : "items-start"}`}>
                     <div className="flex items-baseline gap-2">
@@ -184,9 +235,17 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
                         </button>
                       ) : null}
                     </div>
-                    <p className={`mt-0.5 max-w-[85%] whitespace-pre-wrap break-words rounded-lg border px-3 py-1.5 text-sm ${isOwn ? "border-amber-500/25 bg-amber-950/25 text-amber-50" : "border-cyan-800/40 bg-[#03141f]/80 text-slate-100"}`}>
-                      {message.content}
-                    </p>
+                    {sharedCard ? (
+                      <div className={`mt-1 w-[92px] rounded-lg border p-1 sm:w-[104px] ${isOwn ? "border-amber-500/30 bg-amber-950/20" : "border-cyan-800/40 bg-[#03141f]/80"}`}>
+                        <div className="aspect-[13/19] w-full">
+                          <CardThumbnail card={sharedCard} versionTier={sharedCard.versionTier ?? 0} level={sharedCard.level} showArtSkeleton />
+                        </div>
+                      </div>
+                    ) : (
+                      <p className={`mt-0.5 max-w-[85%] whitespace-pre-wrap break-words rounded-lg border px-3 py-1.5 text-sm ${isOwn ? "border-amber-500/25 bg-amber-950/25 text-amber-50" : "border-cyan-800/40 bg-[#03141f]/80 text-slate-100"}`}>
+                        {message.content}
+                      </p>
+                    )}
                   </div>
                 );
               })
@@ -201,6 +260,17 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
 
           {/* Input */}
           <form onSubmit={handleSubmit} className="flex shrink-0 items-end gap-2 border-t border-cyan-900/50 bg-[#03101c]/80 p-2.5 sm:p-3">
+            <button
+              type="button"
+              aria-label="Compartir una carta"
+              title="Compartir una carta tuya"
+              onClick={() => setIsPickerOpen(true)}
+              disabled={isSending}
+              className="flex h-[42px] w-[42px] shrink-0 items-center justify-center border border-cyan-500/40 bg-cyan-950/30 text-cyan-300 transition hover:border-cyan-300/70 hover:text-cyan-100 disabled:opacity-40"
+              style={{ clipPath: CLIP_CHIP }}
+            >
+              <Layers className="h-4 w-4" />
+            </button>
             <div className="flex flex-1 flex-col">
               <input
                 value={draft}
@@ -243,6 +313,8 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
           </div>
         </aside>
       </div>
+
+      <CommunityChatCardPicker key={isPickerOpen ? "open" : "closed"} isOpen={isPickerOpen} onClose={() => setIsPickerOpen(false)} onSelect={handleShareCard} />
     </motion.div>
   );
 }
