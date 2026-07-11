@@ -2,6 +2,23 @@
 import { IStoryNodeInteractionDialogue } from "@/services/story/story-node-interaction-dialogue-types";
 
 export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNodeInteractionDialogue> = {
+  // ── Acto 3 — Repositorio Fantasma (Jaku) ────────────────────────────────────
+  "story-ch3-event-intro": {
+    title: "Umbral del Repositorio",
+    lines: [
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Estás dentro del Repositorio Fantasma. Aquí no hay luz: Jaku fragmentó el índice en forks tóxicos que se replican en la oscuridad." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Busca los interruptores para iluminar cada sala antes de que un fork te embosque. Y ojo con los bloques de datos: algunos hay que moverlos para abrir paso." },
+      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "Operador", text: "Recibido. Enciendo, despejo y bajo el cortafuegos hasta el núcleo de Jaku." },
+    ],
+  },
+  "story-ch3-event-corrupt-log": {
+    title: "Registro Corrupto",
+    lines: [
+      { actorId: "opp-jaku", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "Jaku", text: "¿Otro auditor husmeando mis forks? Este registro se purga solo... si conoces la clave." },
+      { speaker: "Sistema", text: "CLAVE DE PURGA DEL CORTAFUEGOS:  PURGE-3F17\n\n>> Apunta este código: lo necesitarás en el terminal del cortafuegos." },
+      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "Operador", text: "Anotado: PURGE-3F17. Si se me olvida, puedo volver a esta consola y releerlo cuando quiera." },
+    ],
+  },
   "story-a1-event-biglog-briefing": {
     title: "Protocolo de Emergencia",
     cinematicVideo: {

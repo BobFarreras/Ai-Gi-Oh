@@ -116,6 +116,20 @@ export const STORY_OPPONENT_NARRATION_CATALOG: Record<string, IStoryOpponentNarr
       opponentDefeat: line("opponentDefeat", "Mis cartas me han fallado.", "derrota-Soldado-act01.m4a"),
     },
   }),
+  "opp-soldado-laptop": profile({
+    opponentId: "opp-soldado-laptop",
+    assetFolder: "opp-ch3-soldado-laptop",
+    portraits: { intro: "intro-Soldado-laptop.webp", victory: "victoria-Soldado-laptop.webp", defeat: "derrota-Soldado-laptop.webp" },
+    lines: {
+      intro: line("intro", "Centinela en línea. Este repositorio no es para ti.", "intro.m4a"),
+      trap: line("trap", "Protocolo de contención activado.", "trampa.m4a"),
+      fusion: line("fusion", "Compilando refuerzos.", "fusion.m4a"),
+      directHitToPlayer: line("directHitToPlayer", "Daño registrado.", "impacto-directo-jugador.m4a"),
+      directHitToOpponent: line("directHitToOpponent", "Fijando objetivo.", "impacto-directo-opponente.m4a"),
+      opponentVictory: line("opponentVictory", "Intruso purgado del sistema.", "victoria-oponente.m4a"),
+      opponentDefeat: line("opponentDefeat", "Centinela comprometido... replegando.", "derrota-oponente.m4a"),
+    },
+  }),
   "opp-guill": profile({
     opponentId: "opp-guill",
     assetFolder: "opp-ch1-guill",
