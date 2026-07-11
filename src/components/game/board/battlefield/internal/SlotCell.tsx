@@ -19,8 +19,8 @@ function SlotCellComponent({
   isOpponentSide,
   tutorialTargetId,
   isAttacking,
-  selectedCardId,
-  selectedBoardEntityInstanceId,
+  matchesSelectedCardId,
+  isSelectedBoardEntity,
   isSelectedByCard,
   isRevealed,
   isHighlighted,
@@ -62,8 +62,8 @@ function SlotCellComponent({
             isRevealed={isRevealed}
             isMobileLayout={isMobileLayout}
             isSelectedByCard={isSelectedByCard}
-            selectedCardId={selectedCardId}
-            selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}
+            matchesSelectedCardId={matchesSelectedCardId}
+            isSelectedBoardEntity={isSelectedBoardEntity}
             isAttacking={Boolean(isAttacking || isSticky)}
             isActivating={Boolean(isActivating)}
             shouldShowBlockedLock={Boolean(isAttacking && hasBlockingTrapActivation)}

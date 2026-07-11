@@ -73,6 +73,10 @@ export function SlotGrid({
         // un ataque/buff/xp re-renderice únicamente el slot afectado y no todo el campo.
         const isBuffedThisSlot = Boolean(entity && buffedSet.has(entity.instanceId));
         const hasCardXpThisSlot = Boolean(entity && cardXpCardId && entity.card.id === cardXpCardId);
+        // Selección resuelta a booleanos POR SLOT: un cambio de selección solo re-renderiza el slot
+        // cuyo booleano cambia (antes se pasaban los ids globales y re-renderizaba todo el campo).
+        const matchesSelectedCardId = Boolean(entity && selectedCardId != null && entity.card.id === selectedCardId);
+        const isSelectedBoardEntity = Boolean(entity && selectedBoardEntityInstanceId != null && entity.instanceId === selectedBoardEntityInstanceId);
         return (
           <SlotCell
             laneType={laneType}
@@ -82,8 +86,8 @@ export function SlotGrid({
             isOpponentSide={isOpponentSide}
             tutorialTargetId={isOpponentSide && laneType === "ENTITIES" ? `tutorial-board-opponent-zone-${index + 1}` : undefined}
             isAttacking={Boolean(entity && entity.instanceId === activeAttackerId)}
-            selectedCardId={selectedCardId}
-            selectedBoardEntityInstanceId={selectedBoardEntityInstanceId}
+            matchesSelectedCardId={matchesSelectedCardId}
+            isSelectedBoardEntity={isSelectedBoardEntity}
             isSelectedByCard={Boolean(entity && selectedCardKey && selectedCardKey === entityCardKey)}
             isRevealed={Boolean(entity && revealedSet.has(entity.instanceId))}
             isHighlighted={Boolean(entity && highlightedSet.has(entity.instanceId))}

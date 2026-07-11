@@ -21,8 +21,8 @@ interface ISlotCellEntityProps {
   isRevealed: boolean;
   isMobileLayout: boolean;
   isSelectedByCard: boolean;
-  selectedCardId: string | null;
-  selectedBoardEntityInstanceId: string | null;
+  matchesSelectedCardId: boolean;
+  isSelectedBoardEntity: boolean;
   isAttacking: boolean;
   isActivating: boolean;
   shouldShowBlockedLock: boolean;
@@ -39,8 +39,8 @@ export function SlotCellEntity({
   isRevealed,
   isMobileLayout,
   isSelectedByCard,
-  selectedCardId,
-  selectedBoardEntityInstanceId,
+  matchesSelectedCardId,
+  isSelectedBoardEntity,
   isAttacking,
   isActivating,
   shouldShowBlockedLock,
@@ -50,7 +50,7 @@ export function SlotCellEntity({
   onEntityClick,
 }: ISlotCellEntityProps) {
   const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
-  const isBoardEntitySelected = selectedBoardEntityInstanceId === entity.instanceId || isSelectedByCard;
+  const isBoardEntitySelected = isSelectedBoardEntity || isSelectedByCard;
   const isTrapActivating = entity.card.type === "TRAP" && (isAttacking || isActivating);
   const visibility = resolveEntityVisibility(entity, isRevealed);
   const forceTrapReveal = isTrapActivating && entity.card.type === "TRAP";
@@ -101,7 +101,7 @@ export function SlotCellEntity({
           <div className={cn(isLocked && "grayscale brightness-[0.5]")}>
             <Card
               card={entity.card}
-              isSelected={selectedCardId === entity.card.id}
+              isSelected={matchesSelectedCardId}
               hologramMode={isMobileLayout || shouldReduceCombatEffects ? "lite" : "full"}
               boardMode={resolvedBoardMode}
               isPerformanceMode={shouldReduceCombatEffects}
