@@ -4,8 +4,9 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Check, Layers, Send, Swords, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Check, Layers, Send, SmilePlus, Swords, Trash2, Users } from "lucide-react";
 import { IChatMessage } from "@/core/entities/chat/IChatMessage";
+import { IChatMessageReactionSummary } from "@/core/entities/chat/IChatMessageReaction";
 import { CardArchetype, CardType, Faction, ICard } from "@/core/entities/ICard";
 import { IOnlinePlayer, OnlinePlayerStatus } from "@/core/entities/multiplayer/IOnlinePlayer";
 import { CardThumbnail } from "@/components/game/card/CardThumbnail";
@@ -13,6 +14,7 @@ import { useOnlinePlayersContext } from "@/components/hub/multiplayer/Multiplaye
 import { CommunityChatCardPicker } from "@/components/hub/community/CommunityChatCardPicker";
 import { sendInvitation } from "@/app/hub/multiplayer/actions/send-invitation";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/core/services/chat/validate-chat-message";
+import { CHAT_REACTION_EMOJIS } from "@/core/services/chat/chat-reactions";
 import { useCommunityChat } from "@/core/hooks/chat/use-community-chat";
 
 interface CommunityChatClientProps {
@@ -21,6 +23,7 @@ interface CommunityChatClientProps {
   localNickname: string;
   activeDeckIds: string[];
   initialMessages: IChatMessage[];
+  initialReactions: IChatMessageReactionSummary[];
 }
 
 const CLIP_PANEL = "polygon(0 14px,14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%)";
@@ -58,14 +61,34 @@ function reconstructSharedCard(metadata: Record<string, unknown>): ICard | null 
   };
 }
 
-export function CommunityChatClient({ room, localPlayerId, localNickname, activeDeckIds, initialMessages }: CommunityChatClientProps) {
-  const { messages, isSending, error, send, remove, clearError } = useCommunityChat(room, initialMessages);
+export function CommunityChatClient({ room, localPlayerId, localNickname, activeDeckIds, initialMessages, initialReactions }: CommunityChatClientProps) {
+  const { messages, reactions, isSending, error, send, remove, toggleReaction, clearError } = useCommunityChat(room, initialMessages, initialReactions);
   const onlineOthers = useOnlinePlayersContext();
   const [draft, setDraft] = useState("");
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [paletteFor, setPaletteFor] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const canInvite = activeDeckIds.length > 0;
+
+  // Reacciones agrupadas por mensaje para render rápido.
+  const reactionsByMessage = useMemo(() => {
+    const grouped = new Map<string, IChatMessageReactionSummary[]>();
+    for (const reaction of reactions) {
+      const list = grouped.get(reaction.messageId) ?? [];
+      list.push(reaction);
+      grouped.set(reaction.messageId, list);
+    }
+    return grouped;
+  }, [reactions]);
+
+  const handleToggleReaction = useCallback(
+    (messageId: string, emoji: string) => {
+      setPaletteFor(null);
+      void toggleReaction(messageId, emoji);
+    },
+    [toggleReaction],
+  );
 
   const handleShareCard = useCallback(
     async (card: ICard) => {
@@ -246,6 +269,39 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
                         {message.content}
                       </p>
                     )}
+                    <div className={`mt-1 flex flex-wrap items-center gap-1 ${isOwn ? "justify-end" : "justify-start"}`}>
+                      {(reactionsByMessage.get(message.id) ?? []).map((reaction) => (
+                        <button
+                          key={reaction.emoji}
+                          type="button"
+                          aria-label={`${reaction.emoji} (${reaction.count})`}
+                          onClick={() => handleToggleReaction(message.id, reaction.emoji)}
+                          className={`flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs transition ${reaction.reactedByMe ? "border-cyan-400/70 bg-cyan-950/50 text-cyan-100" : "border-slate-700/60 bg-slate-900/50 text-slate-300 hover:border-cyan-500/50"}`}
+                        >
+                          <span>{reaction.emoji}</span>
+                          <span className="font-mono text-[10px] font-bold">{reaction.count}</span>
+                        </button>
+                      ))}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          aria-label="Reaccionar"
+                          onClick={() => setPaletteFor((current) => (current === message.id ? null : message.id))}
+                          className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-700/50 text-slate-500 opacity-100 transition hover:text-cyan-300 sm:opacity-0 sm:group-hover:opacity-100"
+                        >
+                          <SmilePlus className="h-3.5 w-3.5" />
+                        </button>
+                        {paletteFor === message.id ? (
+                          <div className={`absolute bottom-full z-20 mb-1 flex gap-0.5 border border-cyan-500/50 bg-[#040d18] p-1 shadow-[0_0_18px_rgba(0,0,0,0.6)] ${isOwn ? "right-0" : "left-0"}`}>
+                            {CHAT_REACTION_EMOJIS.map((emoji) => (
+                              <button key={emoji} type="button" aria-label={`Reaccionar ${emoji}`} onClick={() => handleToggleReaction(message.id, emoji)} className="flex h-7 w-7 items-center justify-center rounded text-base transition hover:bg-cyan-500/20">
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
                   </div>
                 );
               })

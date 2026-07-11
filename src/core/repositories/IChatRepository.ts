@@ -1,5 +1,6 @@
 // src/core/repositories/IChatRepository.ts - Puerto de persistencia del chat de comunidad.
 import { ChatMessageKind, IChatMessage } from "@/core/entities/chat/IChatMessage";
+import { IChatMessageReactionSummary } from "@/core/entities/chat/IChatMessageReaction";
 
 export interface IInsertChatMessageInput {
   room: string;
@@ -19,4 +20,8 @@ export interface IChatRepository {
   softDeleteOwn(messageId: string, userId: string): Promise<boolean>;
   /** Cuántos mensajes ha enviado el usuario desde `sinceIso` (para rate limit anti-spam). */
   countRecentByUser(userId: string, sinceIso: string): Promise<number>;
+  /** Reacciones agregadas (emoji + total + si el usuario reaccionó) de los mensajes indicados. */
+  getReactionsForMessages(messageIds: string[], currentUserId: string): Promise<IChatMessageReactionSummary[]>;
+  /** Alterna una reacción del usuario a un mensaje: la añade si no estaba, la quita si estaba. */
+  toggleReaction(messageId: string, userId: string, emoji: string): Promise<{ added: boolean }>;
 }

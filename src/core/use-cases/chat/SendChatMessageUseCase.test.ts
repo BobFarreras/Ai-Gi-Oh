@@ -20,6 +20,8 @@ function createRepository(): IChatRepository & { insert: ReturnType<typeof vi.fn
     listRecent: vi.fn(async () => []),
     softDeleteOwn: vi.fn(async () => true),
     countRecentByUser: vi.fn(async () => 0),
+    getReactionsForMessages: vi.fn(async () => []),
+    toggleReaction: vi.fn(async () => ({ added: true })),
   };
 }
 

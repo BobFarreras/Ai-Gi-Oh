@@ -15,7 +15,7 @@ export default async function HubChatPage() {
   if (!lobbyData) redirect("/login");
 
   // Carga inicial server-side (LCP): el cliente sigue en vivo desde aquí vía realtime.
-  const initialMessages = await getRecentChatMessages(CHAT_ROOM);
+  const initial = await getRecentChatMessages(CHAT_ROOM, lobbyData.playerId);
 
   return (
     <main className="hub-control-room-bg relative min-h-dvh w-full text-slate-100">
@@ -25,7 +25,8 @@ export default async function HubChatPage() {
         localPlayerId={lobbyData.playerId}
         localNickname={lobbyData.nickname}
         activeDeckIds={lobbyData.activeDeckIds}
-        initialMessages={initialMessages}
+        initialMessages={initial.messages}
+        initialReactions={initial.reactions}
       />
     </main>
   );

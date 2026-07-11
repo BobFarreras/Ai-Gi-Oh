@@ -1,5 +1,6 @@
 // src/core/hooks/chat/community-chat-api.ts - Cliente HTTP del chat de comunidad.
 import { ChatMessageKind, IChatMessage } from "@/core/entities/chat/IChatMessage";
+import { IChatMessageReactionSummary } from "@/core/entities/chat/IChatMessageReaction";
 
 async function parseError(response: Response, fallback: string): Promise<string> {
   try {
@@ -10,13 +11,26 @@ async function parseError(response: Response, fallback: string): Promise<string>
   }
 }
 
-export async function fetchRecentChatMessages(room: string, beforeIso?: string | null): Promise<IChatMessage[]> {
+export async function fetchRecentChatMessages(
+  room: string,
+  beforeIso?: string | null,
+): Promise<{ messages: IChatMessage[]; reactions: IChatMessageReactionSummary[] }> {
   const params = new URLSearchParams({ room });
   if (beforeIso) params.set("before", beforeIso);
   const response = await fetch(`/api/chat/messages?${params.toString()}`, { method: "GET", cache: "no-store" });
   if (!response.ok) throw new Error(await parseError(response, "No se pudieron cargar los mensajes."));
-  const body = (await response.json()) as { messages: IChatMessage[] };
-  return body.messages;
+  const body = (await response.json()) as { messages: IChatMessage[]; reactions?: IChatMessageReactionSummary[] };
+  return { messages: body.messages, reactions: body.reactions ?? [] };
+}
+
+export async function toggleChatReaction(messageId: string, emoji: string): Promise<{ added: boolean }> {
+  const response = await fetch("/api/chat/reactions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messageId, emoji }),
+  });
+  if (!response.ok) throw new Error(await parseError(response, "No se pudo reaccionar."));
+  return (await response.json()) as { added: boolean };
 }
 
 export async function sendChatMessage(input: {

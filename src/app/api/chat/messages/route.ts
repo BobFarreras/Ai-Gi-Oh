@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
       beforeIso: params.get("before"),
       limit: limitParam ? Number.parseInt(limitParam, 10) : undefined,
     });
-    return NextResponse.json({ messages }, { status: 200, headers: { "Cache-Control": "no-store" } });
+    const reactions = await repository.getReactionsForMessages(messages.map((message) => message.id), session.user.id);
+    return NextResponse.json({ messages, reactions }, { status: 200, headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return createApiErrorResponse(error, "No se pudieron cargar los mensajes del chat.");
   }
