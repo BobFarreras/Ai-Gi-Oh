@@ -24,6 +24,7 @@ export default async function HubChatPage() {
         room={CHAT_ROOM}
         localPlayerId={lobbyData.playerId}
         localNickname={lobbyData.nickname}
+        activeDeckIds={lobbyData.activeDeckIds}
         initialMessages={initialMessages}
       />
     </main>

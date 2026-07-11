@@ -2,12 +2,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Send, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Check, Send, Swords, Trash2, Users } from "lucide-react";
 import { IChatMessage } from "@/core/entities/chat/IChatMessage";
 import { IOnlinePlayer, OnlinePlayerStatus } from "@/core/entities/multiplayer/IOnlinePlayer";
 import { useOnlinePlayersContext } from "@/components/hub/multiplayer/MultiplayerPresenceProvider";
+import { sendInvitation } from "@/app/hub/multiplayer/actions/send-invitation";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/core/services/chat/validate-chat-message";
 import { useCommunityChat } from "@/core/hooks/chat/use-community-chat";
 
@@ -15,6 +16,7 @@ interface CommunityChatClientProps {
   room: string;
   localPlayerId: string;
   localNickname: string;
+  activeDeckIds: string[];
   initialMessages: IChatMessage[];
 }
 
@@ -32,11 +34,31 @@ function formatTime(iso: string): string {
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
-export function CommunityChatClient({ room, localPlayerId, localNickname, initialMessages }: CommunityChatClientProps) {
+export function CommunityChatClient({ room, localPlayerId, localNickname, activeDeckIds, initialMessages }: CommunityChatClientProps) {
   const { messages, isSending, error, send, remove, clearError } = useCommunityChat(room, initialMessages);
   const onlineOthers = useOnlinePlayersContext();
   const [draft, setDraft] = useState("");
+  const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const canInvite = activeDeckIds.length > 0;
+
+  // Retar a duelo: reutiliza el sistema de invitaciones (el retado recibe el banner y ambos entran a la
+  // partida al aceptar, gestionado por el MultiplayerPresenceProvider que envuelve el hub).
+  const handleInvite = useCallback(
+    async (player: IOnlinePlayer) => {
+      if (!canInvite || player.status === "IN_MATCH" || invitedIds.has(player.playerId)) return;
+      setInvitedIds((current) => new Set(current).add(player.playerId));
+      const result = await sendInvitation(player.playerId, activeDeckIds);
+      if (!result.ok) {
+        setInvitedIds((current) => {
+          const next = new Set(current);
+          next.delete(player.playerId);
+          return next;
+        });
+      }
+    },
+    [activeDeckIds, canInvite, invitedIds],
+  );
 
   // Lista de conectados incluyendo al jugador local (la presencia solo devuelve a los demás).
   const connected = useMemo<IOnlinePlayer[]>(() => {
@@ -49,6 +71,31 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, initia
     const node = scrollRef.current;
     if (node) node.scrollTop = node.scrollHeight;
   }, [messages]);
+
+  const challengeButton = (player: IOnlinePlayer, variant: "chip" | "row") => {
+    if (player.playerId === localPlayerId) return null;
+    const invited = invitedIds.has(player.playerId);
+    const disabled = !canInvite || player.status === "IN_MATCH" || invited;
+    return (
+      <button
+        type="button"
+        aria-label={`Retar a duelo a ${player.nickname}`}
+        title={!canInvite ? "Necesitas un deck activo para retar" : player.status === "IN_MATCH" ? "En partida" : "Retar a duelo"}
+        onClick={() => handleInvite(player)}
+        disabled={disabled}
+        className={`flex shrink-0 items-center justify-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[9px] font-black uppercase tracking-wide transition ${
+          invited
+            ? "border-emerald-400/60 bg-emerald-950/50 text-emerald-300"
+            : disabled
+              ? "cursor-not-allowed border-slate-700/50 bg-slate-900/40 text-slate-600"
+              : "border-rose-400/60 bg-rose-950/40 text-rose-200 hover:bg-rose-900/60"
+        }`}
+      >
+        {invited ? <Check className="h-3 w-3" /> : <Swords className="h-3 w-3" />}
+        {variant === "row" ? <span>{invited ? "Enviado" : "Retar"}</span> : null}
+      </button>
+    );
+  };
 
   async function handleSubmit(event: React.FormEvent): Promise<void> {
     event.preventDefault();
@@ -95,6 +142,7 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, initia
           <span key={player.playerId} className="flex shrink-0 items-center gap-1.5 border border-cyan-900/60 bg-[#040d18]/80 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-cyan-100" style={{ clipPath: CLIP_CHIP }}>
             <span className={`h-1.5 w-1.5 rounded-full ${STATUS_META[player.status].dot}`} />
             {player.nickname}
+            {challengeButton(player, "chip")}
           </span>
         ))}
       </div>
@@ -185,8 +233,11 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, initia
             {connected.map((player) => (
               <div key={player.playerId} className="flex items-center gap-2 rounded-md border border-cyan-900/40 bg-[#03141f]/70 px-2 py-1.5">
                 <span className={`h-2 w-2 shrink-0 rounded-full ${STATUS_META[player.status].dot}`} />
-                <span className="min-w-0 flex-1 truncate text-xs font-bold text-cyan-100">{player.nickname}</span>
-                <span className="shrink-0 font-mono text-[8px] uppercase tracking-wide text-slate-500">{STATUS_META[player.status].label}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-bold text-cyan-100">{player.nickname}</p>
+                  <p className="font-mono text-[8px] uppercase tracking-wide text-slate-500">{STATUS_META[player.status].label}</p>
+                </div>
+                {challengeButton(player, "row")}
               </div>
             ))}
           </div>
