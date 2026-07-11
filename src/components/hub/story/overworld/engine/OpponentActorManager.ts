@@ -21,6 +21,7 @@ interface IOpponentActor {
   spriteSrc?: string;
   accent: string;
   visionRange: number;
+  visionRect?: { x0: number; y0: number; x1: number; y1: number };
   tile: IGridPosition;
   facing: OverworldDirection;
   activeMove: IActiveTileMove | null;
@@ -83,6 +84,7 @@ export class OpponentActorManager {
         spriteSrc: object.imageSrc,
         accent: object.kind === "BOSS" ? BOSS_ACCENT : DUEL_ACCENT,
         visionRange: object.visionRange,
+        visionRect: object.visionRect,
         tile: { tileX: object.tileX, tileY: object.tileY },
         facing: object.facing,
         activeMove: null,
@@ -125,6 +127,7 @@ export class OpponentActorManager {
         tileY: actor.tile.tileY,
         facing: actor.facing,
         visionRange: actor.visionRange,
+        visionRect: actor.visionRect,
       }));
   }
 

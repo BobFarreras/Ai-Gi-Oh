@@ -4,8 +4,12 @@ import { OverworldDirection } from "@/core/services/story/overworld/overworld-ty
 /**
  * Versión actual del formato. Cualquier cambio incompatible incrementa la versión
  * y añade su migración en el validador para no romper mapas ya publicados.
+ *
+ * v2: mecánicas interactivas del Acto 3+ (oscuridad/luces, cajas empujables, placas,
+ * cintas). Todos los campos nuevos son opcionales, así que los mapas v1 solo suben el
+ * literal de versión.
  */
-export const OVERWORLD_TILEMAP_SCHEMA_VERSION = 1;
+export const OVERWORLD_TILEMAP_SCHEMA_VERSION = 2;
 
 /**
  * Kinds de objeto interactivo. Mantienen correspondencia 1:1 con la semántica
@@ -23,7 +27,23 @@ export type OverworldObjectKind =
   | "GATE"
   | "MARKET"
   | "ARSENAL"
-  | "TELEPORT";
+  | "TELEPORT"
+  // v2 — mecánicas interactivas:
+  | "SWITCH" // interruptor de luz (ilumina una sala oscura al activarse).
+  | "BOX" // caja empujable (bloque sokoban).
+  | "PLATE" // placa de presión (se "pulsa" con una caja encima; abre un GATE en vivo).
+  | "BOX_RESET"; // botón que devuelve las cajas a su posición inicial (anti soft-lock).
+
+/** Ambiente lumínico del mapa. `DARK` activa el pase de oscuridad + radios de luz. */
+export type OverworldAmbient = "NORMAL" | "DARK";
+
+/** Rectángulo de celdas (inclusivo) que un interruptor ilumina por completo. */
+export interface IOverworldLightRect {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
 
 /**
  * Cómo se dispara la interacción: acción explícita estando adyacente
@@ -63,6 +83,11 @@ export interface IOverworldTilemapObject {
    * frontal sin obstáculos, el oponente le reta a combate. Solo DUEL/BOSS.
    */
   visionRange?: number;
+  /**
+   * Aggro de sala (solo DUEL/BOSS): si el jugador entra en este rect, el rival reta al instante
+   * (además de su haz frontal). Ideal para jefes: entrar en su sala = combate garantizado.
+   */
+  visionRect?: IOverworldLightRect;
   /** Eje de patrulla del rival (si se mueve). Solo DUEL/BOSS. */
   patrolAxis?: "H" | "V";
   /** Longitud del recorrido de patrulla en celdas. Requiere patrolAxis. */
@@ -75,6 +100,14 @@ export interface IOverworldTilemapObject {
   patrolSweep?: boolean;
   /** Trigger invisible (un "recuadro" del suelo): no se dibuja token ni en minimapa. */
   hidden?: boolean;
+  // ── v2: mecánicas interactivas ──────────────────────────────────────────────
+  /**
+   * Solo SWITCH: radio de luz (en celdas) que abre en la oscuridad al activarse.
+   * Si se omite y no hay `lightRect`, se usa un radio por defecto.
+   */
+  lightRadius?: number;
+  /** Solo SWITCH: sala completa (rect de celdas) que se ilumina al activarse. */
+  lightRect?: IOverworldLightRect;
 }
 
 export interface IOverworldTilemapSpawn {
@@ -96,6 +129,11 @@ export interface IOverworldTilemap {
   id: string;
   /** Acto Story al que pertenece, para soundtrack/briefing/transiciones. */
   act: number;
+  /**
+   * Ambiente lumínico (v2). `DARK` activa el pase de oscuridad: solo se ve un radio
+   * alrededor del jugador y de los interruptores encendidos. Default `NORMAL`.
+   */
+  ambient?: OverworldAmbient;
   /** Tamaño de celda en píxeles (los sprites/tiles se dibujan a esta escala). */
   tileSize: number;
   width: number;

@@ -30,7 +30,12 @@ const VALID_KINDS: ReadonlySet<OverworldObjectKind> = new Set([
   "MARKET",
   "ARSENAL",
   "TELEPORT",
+  "SWITCH",
+  "BOX",
+  "PLATE",
+  "BOX_RESET",
 ]);
+const VALID_AMBIENTS = new Set(["NORMAL", "DARK"]);
 const VALID_TRIGGERS: ReadonlySet<OverworldObjectTrigger> = new Set([
   "ADJACENT_ACTION",
   "STEP_ON",
@@ -123,8 +128,13 @@ function validateObject(
   const trigger = triggerValue as OverworldObjectTrigger;
 
   // Los objetos que se pisan (STEP_ON) y las puertas deben ocupar celdas transitables:
-  // una puerta sobre celda bloqueada jamás se abriría físicamente.
-  if ((trigger === "STEP_ON" || kind === "GATE" || kind === "WARP") && !isWalkableCell(collision, tileX, tileY)) {
+  // una puerta sobre celda bloqueada jamás se abriría físicamente. Las cajas (BOX) y placas
+  // (PLATE) también viven sobre suelo transitable: la caja se empuja a celdas caminables y
+  // tanto caja como jugador pueden pisar la placa.
+  if (
+    (trigger === "STEP_ON" || kind === "GATE" || kind === "WARP" || kind === "BOX" || kind === "PLATE") &&
+    !isWalkableCell(collision, tileX, tileY)
+  ) {
     fail(path, `el objeto '${id}' (${kind}) debe estar sobre una celda transitable`);
   }
 
@@ -180,6 +190,20 @@ function validateObject(
     facing = facingValue as IOverworldTilemapObject["facing"];
   }
 
+  let visionRect: IOverworldTilemapObject["visionRect"];
+  if (raw.visionRect !== undefined) {
+    if (kind !== "DUEL" && kind !== "BOSS") {
+      fail(path, `solo DUEL/BOSS admiten visionRect (kind actual: ${kind})`);
+    }
+    if (!isRecord(raw.visionRect)) fail(`${path}.visionRect`, "se esperaba un rect {x0,y0,x1,y1}");
+    const rx0 = assertBoundedInteger(raw.visionRect.x0, `${path}.visionRect.x0`, 0, width - 1);
+    const ry0 = assertBoundedInteger(raw.visionRect.y0, `${path}.visionRect.y0`, 0, height - 1);
+    const rx1 = assertBoundedInteger(raw.visionRect.x1, `${path}.visionRect.x1`, 0, width - 1);
+    const ry1 = assertBoundedInteger(raw.visionRect.y1, `${path}.visionRect.y1`, 0, height - 1);
+    if (rx1 < rx0 || ry1 < ry0) fail(`${path}.visionRect`, "se esperaba x0<=x1 e y0<=y1");
+    visionRect = { x0: rx0, y0: ry0, x1: rx1, y1: ry1 };
+  }
+
   let patrolAxis: IOverworldTilemapObject["patrolAxis"];
   let patrolLength: number | undefined;
   if (raw.patrolAxis !== undefined || raw.patrolLength !== undefined) {
@@ -205,6 +229,27 @@ function validateObject(
     hidden = raw.hidden;
   }
 
+  // v2 — luces de interruptor: solo SWITCH ilumina la oscuridad al activarse.
+  let lightRadius: number | undefined;
+  let lightRect: IOverworldTilemapObject["lightRect"];
+  if (raw.lightRadius !== undefined || raw.lightRect !== undefined) {
+    if (kind !== "SWITCH") {
+      fail(path, `solo SWITCH admite luz (lightRadius/lightRect); kind actual: ${kind}`);
+    }
+    if (raw.lightRadius !== undefined) {
+      lightRadius = assertBoundedInteger(raw.lightRadius, `${path}.lightRadius`, 1, 64);
+    }
+    if (raw.lightRect !== undefined) {
+      if (!isRecord(raw.lightRect)) fail(`${path}.lightRect`, "se esperaba un rect {x0,y0,x1,y1}");
+      const x0 = assertBoundedInteger(raw.lightRect.x0, `${path}.lightRect.x0`, 0, width - 1);
+      const y0 = assertBoundedInteger(raw.lightRect.y0, `${path}.lightRect.y0`, 0, height - 1);
+      const x1 = assertBoundedInteger(raw.lightRect.x1, `${path}.lightRect.x1`, 0, width - 1);
+      const y1 = assertBoundedInteger(raw.lightRect.y1, `${path}.lightRect.y1`, 0, height - 1);
+      if (x1 < x0 || y1 < y0) fail(`${path}.lightRect`, "se esperaba x0<=x1 e y0<=y1");
+      lightRect = { x0, y0, x1, y1 };
+    }
+  }
+
   return {
     id,
     kind,
@@ -218,10 +263,13 @@ function validateObject(
     imageSrc,
     facing,
     visionRange,
+    visionRect,
     patrolAxis,
     patrolLength,
     patrolSweep,
     hidden,
+    lightRadius,
+    lightRect,
   };
 }
 
@@ -285,6 +333,13 @@ export function validateOverworldTilemap(raw: unknown): IOverworldTilemap {
   const atlasSrc =
     raw.atlasSrc === undefined ? undefined : assertInternalAssetPath(raw.atlasSrc, "$.atlasSrc");
 
+  let ambient: IOverworldTilemap["ambient"];
+  if (raw.ambient !== undefined) {
+    const ambientValue = assertNonEmptyString(raw.ambient, "$.ambient");
+    if (!VALID_AMBIENTS.has(ambientValue)) fail("$.ambient", "se esperaba 'NORMAL' o 'DARK'");
+    ambient = ambientValue as IOverworldTilemap["ambient"];
+  }
+
   if (!isRecord(raw.layers)) fail("$.layers", "se esperaban capas ground/overlay");
   const ground = assertLayerMatrix(raw.layers.ground, "$.layers.ground", width, height, 65535);
   const overlay = assertLayerMatrix(raw.layers.overlay, "$.layers.overlay", width, height, 65535);
@@ -316,6 +371,7 @@ export function validateOverworldTilemap(raw: unknown): IOverworldTilemap {
     schemaVersion,
     id,
     act,
+    ambient,
     tileSize,
     width,
     height,
