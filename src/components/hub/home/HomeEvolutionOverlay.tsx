@@ -59,7 +59,7 @@ export function HomeEvolutionOverlay({
   const cardScale = isMobileViewport ? 0.52 : shouldUseLiteAnimation ? 0.82 : 1;
   const pulseRepeat = shouldUseLiteAnimation ? 0 : 1;
   return (
-    <div className="pointer-events-none absolute inset-0 z-[420] flex items-center justify-center overflow-hidden bg-black/75 px-3 py-4 backdrop-blur-md sm:px-6 sm:py-6">
+    <div className="pointer-events-none absolute inset-0 z-[440] flex items-center justify-center overflow-hidden bg-black/75 px-3 py-4 backdrop-blur-md sm:px-6 sm:py-6">
       <motion.div
         initial={{ opacity: 0, scale: 0.7 }}
         animate={{ opacity: 1, scale: 1 }}

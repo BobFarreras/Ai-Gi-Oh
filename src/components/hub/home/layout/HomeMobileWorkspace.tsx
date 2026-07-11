@@ -55,7 +55,9 @@ export function HomeMobileWorkspace(props: IHomeMobileWorkspaceProps) {
     (props.tutorialCurrentStepId === "arsenal-remove-deck" && selectedCardSource === "DECK") ||
     ((props.tutorialCurrentStepId === "arsenal-add-deck" || props.tutorialCurrentStepId === "arsenal-open-evolve") &&
       selectedCardSource === "COLLECTION");
-  const isInspectorVisible = forceCloseInspector ? false : forceOpenInspectorForAction ? true : isInspectorOpen;
+  // Exigir carta seleccionada evita el detalle vacío: al re-tocar una carta ya seleccionada, la
+  // selección se alterna a null (deselecciona) y sin este guard el diálogo se abriría sin contenido.
+  const isInspectorVisible = forceCloseInspector ? false : forceOpenInspectorForAction ? true : (isInspectorOpen && props.selectedCard !== null);
   const isTutorialActionStep = Boolean(forceOpenInspectorForAction);
   const tutorialHighlightTargetId =
     props.tutorialCurrentStepId === "arsenal-add-deck"

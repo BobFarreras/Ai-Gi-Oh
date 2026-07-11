@@ -135,6 +135,19 @@ export async function handleOwnEntityClick({
     setSelectedBoardEntityInstanceId(entity.instanceId);
     return "handled";
   }
+  // Carta bloqueada (LOCK_OPPONENT_ENTITY): no se puede seleccionar como atacante. En vez del error rojo
+  // del motor, mostramos un aviso de BLOQUEO con los turnos restantes y abrimos su detalle igualmente.
+  const lockedTurns = entity.lockedTurnsRemaining ?? 0;
+  if (lockedTurns > 0) {
+    setLastError({
+      code: "GAME_RULE_ERROR",
+      tone: "blocked",
+      message: `Carta bloqueada · faltan ${lockedTurns} ${lockedTurns === 1 ? "turno" : "turnos"} para desbloquearse.`,
+    });
+    setSelectedCard(entity.card);
+    setSelectedBoardEntityInstanceId(entity.instanceId);
+    return "handled";
+  }
   setActiveAttackerId((previous) => (previous === entity.instanceId ? null : entity.instanceId));
   setSelectedCard(entity.card);
   setSelectedBoardEntityInstanceId(entity.instanceId);

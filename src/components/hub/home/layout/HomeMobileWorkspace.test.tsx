@@ -23,22 +23,19 @@ vi.mock("@/components/hub/home/HomeCardInspectorDialog", () => ({
   ),
 }));
 
+const PYTHON_CARD: ICollectionCard["card"] = {
+  id: "entity-python",
+  name: "Python",
+  description: "Carta test",
+  type: "ENTITY",
+  faction: "NEUTRAL",
+  cost: 2,
+  attack: 1000,
+  defense: 1000,
+};
+
 function createProps(): IHomeWorkspaceProps {
-  const collection: ICollectionCard[] = [
-    {
-      card: {
-        id: "entity-python",
-        name: "Python",
-        description: "Carta test",
-        type: "ENTITY",
-        faction: "NEUTRAL",
-        cost: 2,
-        attack: 1000,
-        defense: 1000,
-      },
-      ownedCopies: 2,
-    },
-  ];
+  const collection: ICollectionCard[] = [{ card: PYTHON_CARD, ownedCopies: 2 }];
   return {
     deck: {
       playerId: "player-1",
@@ -56,7 +53,7 @@ function createProps(): IHomeWorkspaceProps {
     selectedFusionSlotIndex: null,
     selectedCardId: "entity-python",
     selectedCollectionCardId: null,
-    selectedCard: null,
+    selectedCard: PYTHON_CARD,
     selectedCardVersionTier: 0,
     selectedCardLevel: 0,
     selectedCardXp: 0,
@@ -103,5 +100,14 @@ describe("HomeMobileWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Almacén" }));
     fireEvent.click(screen.getByRole("button", { name: "Carta Python" }));
     expect(screen.getByTestId("home-mobile-inspector-state")).toHaveTextContent("open");
+  });
+
+  it("no abre el detalle vacío cuando no hay carta seleccionada (deselección al re-tocar)", () => {
+    // Sin carta seleccionada (p.ej. tras deseleccionar re-tocando), el inspector debe seguir cerrado
+    // aunque se dispare la apertura: evita el detalle vacío reportado en móvil.
+    render(<HomeMobileWorkspace {...createProps()} selectedCard={null} />);
+    fireEvent.click(screen.getByRole("button", { name: "Almacén" }));
+    fireEvent.click(screen.getByRole("button", { name: "Carta Python" }));
+    expect(screen.getByTestId("home-mobile-inspector-state")).toHaveTextContent("closed");
   });
 });

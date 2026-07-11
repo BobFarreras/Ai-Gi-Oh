@@ -60,7 +60,7 @@ export function CrawlText({ accessCode, onSkip, onAction }: ICrawlTextProps) {
         className="w-full max-w-2xl px-6 text-center text-cyan-100 font-light tracking-wide leading-relaxed text-lg sm:text-xl pointer-events-none"
       >
         <p className="mb-12 text-2xl font-mono text-cyan-500">
-          CÓDIGO ACEPTADO: [{accessCode}]
+          USUARIO REGISTRADO: [{accessCode}]
         </p>
 
         <p className="mb-12 text-3xl font-black text-white tracking-widest">

@@ -94,16 +94,12 @@ export function HomeCardInspectorDialog({
   const handleEvolve = async () => {
     if (pendingAction) return;
     setPendingAction("EVOLVE");
+    // Cerrar el inspector para que la cinemática de evolución (overlay a pantalla completa) se vea en
+    // móvil sin quedar tapada por este diálogo modal. Los fallos se muestran vía el diálogo de error de
+    // la escena (HubErrorDialog, alimentado por handleHomeEvolveSelectedCard), así que no se pierde feedback.
+    onClose();
     try {
-      const result = await Promise.resolve(onEvolve());
-      if (!result.ok) {
-        setStatusMessage({ tone: "error", text: result.message ?? "No se pudo evolucionar la carta." });
-        return;
-      }
-      setStatusMessage({ tone: "success", text: "Evolución completada." });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo evolucionar la carta.";
-      setStatusMessage({ tone: "error", text: message });
+      await Promise.resolve(onEvolve());
     } finally {
       setPendingAction(null);
     }

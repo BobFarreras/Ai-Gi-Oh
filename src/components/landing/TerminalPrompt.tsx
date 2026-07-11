@@ -74,14 +74,14 @@ export function TerminalPrompt({ onComplete, onAction, onInputReady }: ITerminal
               className="flex items-center gap-2"
               onSubmit={handleSubmit}
             >
-              <span className="text-cyan-500">_ACCESS_CODE:</span>
+              <span className="text-cyan-500">_USUARIO:</span>
               <input
                 ref={inputRef}
                 type="text"
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value.toUpperCase())}
+                onChange={(e) => setInputValue(e.target.value)}
                 className="flex-1 bg-transparent text-white outline-none placeholder:text-zinc-700"
-                placeholder="Escribe aquí..."
+                placeholder="Tu nombre de usuario..."
                 autoComplete="off"
               />
             </motion.form>

@@ -2,6 +2,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Lock } from "lucide-react";
 import { MouseEvent } from "react";
 import { BattleMode, IBoardEntity } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,8 @@ export function SlotCellEntity({
         : (entity.mode as BattleMode);
   const motionState = resolveEntityMotionState({ isAttacking, isActivating, isOpponentSide, isHorizontal: visibility.isHorizontal });
   const targetX = -120 - index * 105;
+  const lockedTurnsRemaining = entity.lockedTurnsRemaining ?? 0;
+  const isLocked = lockedTurnsRemaining > 0;
 
   return (
     <motion.div
@@ -93,14 +96,18 @@ export function SlotCellEntity({
       ) : (
         <div className="absolute w-full h-full flex items-center justify-center">
           <SummonHologramVfx show={Boolean((entity.isNewlySummoned && (entity.card.type === "ENTITY" || entity.card.type === "FUSION" || entity.card.type === "TRAP")) || forceTrapReveal)} />
-          <Card
-            card={entity.card}
-            isSelected={selectedCardId === entity.card.id}
-            hologramMode={isMobileLayout || shouldReduceCombatEffects ? "lite" : "full"}
-            boardMode={resolvedBoardMode}
-            isPerformanceMode={shouldReduceCombatEffects}
-            showBackgroundInPerformanceMode
-          />
+          {/* Wrapper dedicado: el filtro grayscale/brightness apaga la carta REAL (holograma, atributos,
+              arte) cuando está bloqueada, sin afectar al candado/overlays que van fuera del wrapper. */}
+          <div className={cn(isLocked && "grayscale brightness-[0.5]")}>
+            <Card
+              card={entity.card}
+              isSelected={selectedCardId === entity.card.id}
+              hologramMode={isMobileLayout || shouldReduceCombatEffects ? "lite" : "full"}
+              boardMode={resolvedBoardMode}
+              isPerformanceMode={shouldReduceCombatEffects}
+              showBackgroundInPerformanceMode
+            />
+          </div>
           {shouldShowBlockedLock ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.7, y: 8 }}
@@ -121,13 +128,28 @@ export function SlotCellEntity({
             )
           ) : null}
           {isSelectedMaterial ? <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-black rounded-md bg-cyan-300 text-cyan-950 shadow-[0_0_14px_rgba(34,211,238,0.9)]">MATERIAL</span> : null}
-          {(entity.lockedTurnsRemaining ?? 0) > 0 ? (
-            <span
-              className="absolute right-2 top-2 z-[60] flex items-center gap-0.5 rounded-md border border-red-400/80 bg-red-950/85 px-1.5 py-0.5 text-[11px] font-black text-red-100 shadow-[0_0_12px_rgba(248,113,113,0.85)]"
-              aria-label={`Bloqueada: ${entity.lockedTurnsRemaining} turno(s)`}
-            >
-              🔒 {entity.lockedTurnsRemaining}
-            </span>
+          {isLocked ? (
+            <>
+              {/* Tinte de apagado sobre la carta bloqueada. */}
+              <div className="pointer-events-none absolute inset-0 z-[58] rounded-xl bg-slate-950/45" aria-hidden />
+              {/* Candado que "se cierra" (rebote de escala al montar) + turnos restantes de bloqueo. */}
+              <div
+                className="pointer-events-none absolute inset-0 z-[62] flex flex-col items-center justify-center gap-1.5"
+                aria-label={`Carta bloqueada: faltan ${lockedTurnsRemaining} ${lockedTurnsRemaining === 1 ? "turno" : "turnos"}`}
+              >
+                <motion.span
+                  initial={{ scale: 1.55, y: -12, rotate: -14, opacity: 0 }}
+                  animate={{ scale: [1.55, 0.86, 1.06, 1], y: [-12, 2, 0, 0], rotate: [-14, 5, -2, 0], opacity: [0, 1, 1, 1] }}
+                  transition={{ duration: 0.62, ease: "easeOut", times: [0, 0.45, 0.78, 1] }}
+                  className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-amber-300/85 bg-slate-950/85 shadow-[0_0_22px_rgba(251,191,36,0.6)]"
+                >
+                  <Lock className="h-6 w-6 text-amber-300" strokeWidth={2.5} />
+                </motion.span>
+                <span className="rounded-md border border-amber-300/70 bg-slate-950/90 px-2 py-0.5 text-[11px] font-black uppercase tracking-wide text-amber-100 shadow-[0_0_12px_rgba(0,0,0,0.7)]">
+                  {lockedTurnsRemaining} {lockedTurnsRemaining === 1 ? "turno" : "turnos"}
+                </span>
+              </div>
+            </>
           ) : null}
         </div>
       )}
