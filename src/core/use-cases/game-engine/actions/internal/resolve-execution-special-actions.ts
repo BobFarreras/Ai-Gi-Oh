@@ -10,11 +10,10 @@ import {
 } from "@/core/entities/ICard";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
-import { NotFoundError } from "@/core/errors/NotFoundError";
 import { startFusionSummonFromExecution } from "@/core/use-cases/game-engine/fusion/start-fusion-summon-from-execution";
 import { resolveSelectableMaterialInstanceIds } from "@/core/use-cases/game-engine/fusion/internal/selectable-material-instance-ids";
-import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
-import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
+import { suspendExecutionInSet } from "@/core/use-cases/game-engine/actions/internal/suspend-execution";
+import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import {
   createGraveyardSelectionPendingAction,
   createOpponentEntityToLockSelectionPendingAction,
@@ -49,26 +48,9 @@ function hasSelectableOpponentSetCard(opponent: IPlayer, zone: "ENTITIES" | "EXE
   return entityMatches || executionMatches;
 }
 
-/**
- * Deja la ejecución en SET (a la espera) en vez de lanzar error cuando todavía no se cumple la
- * condición para resolverla (faltan materiales de fusión, no hay objetivo válido, etc.). Así la
- * carta no se queda en ACTIVATE rota y puede reactivarse en un turno posterior.
- */
+/** Deja la ejecución del contexto en SET a la espera (fusión sin materiales, sin objetivo, etc.). */
 function suspendExecutionUntilCondition(context: ISpecialActionContext, waitType: string): GameState {
-  const { state, player, opponent, isPlayerA, playerId, executionInstanceId } = context;
-  const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
-  if (!executionEntity) throw new NotFoundError("La ejecución no existe en el tablero.");
-  const updatedPlayer: IPlayer = {
-    ...player,
-    activeExecutions: player.activeExecutions.map((entity) =>
-      entity.instanceId === executionInstanceId ? { ...entity, mode: "SET" } : entity,
-    ),
-  };
-  const withPlayers = assignPlayers(state, updatedPlayer, opponent, isPlayerA);
-  return appendCombatLogEvent(withPlayers, playerId, "MANDATORY_ACTION_RESOLVED", {
-    type: waitType,
-    executionCardId: executionEntity.card.id,
-  });
+  return suspendExecutionInSet(context.state, context.playerId, context.executionInstanceId, waitType);
 }
 
 function resolveFusionEffect(context: ISpecialActionContext, effect: IFusionSummonEffect): GameState {

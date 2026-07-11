@@ -110,6 +110,13 @@ export async function handleOwnEntityClick({
 
   if (entity.hasAttackedThisTurn) return "handled";
   if (entity.mode === "DEFENSE" || entity.mode === "SET") {
+    // Doble click sobre una entidad en DEFENSA (boca arriba) la devuelve a ATAQUE: es el inverso
+    // simétrico del doble-click ATTACK->DEFENSE de más abajo. Las cartas SET (boca abajo) no se
+    // voltean con este gesto (revelarlas es otra acción). `changeEntityMode` respeta `modeLock`,
+    // así que una entidad bloqueada en defensa simplemente no cambia (no-op silencioso).
+    if (entity.mode === "DEFENSE" && event.detail >= 2) {
+      applyTransition((state) => GameEngine.changeEntityMode(state, state.playerA.id, entity.instanceId, "ATTACK"));
+    }
     setSelectedCard(entity.card);
     setSelectedBoardEntityInstanceId(entity.instanceId);
     setPlayingCard(null);

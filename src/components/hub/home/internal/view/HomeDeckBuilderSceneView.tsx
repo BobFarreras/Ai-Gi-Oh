@@ -25,6 +25,7 @@ export interface IHomeDeckBuilderSceneViewProps {
   workspaceProps: IHomeWorkspaceProps;
   evolutionOverlay: IHomeEvolutionOverlayState | null;
   evolutionCard: ICard | null;
+  onCloseEvolutionOverlay: () => void;
   errorMessage: string | null;
   onNameQueryChange: (query: string) => void;
   onChangeTypeFilter: (filter: HomeCollectionTypeFilter) => void;
@@ -76,6 +77,7 @@ export function HomeDeckBuilderSceneView(props: IHomeDeckBuilderSceneViewProps) 
           toVersionTier={props.evolutionOverlay.toVersionTier}
           level={props.evolutionOverlay.level}
           consumedCopies={props.evolutionOverlay.consumedCopies}
+          onClose={props.onCloseEvolutionOverlay}
         />
       )}
       <HomeIncompleteDeckExitDialog

@@ -37,6 +37,7 @@ interface ICreateHomeDeckBuilderViewPropsInput {
   errorMessage: string | null;
   evolutionOverlay: IHomeEvolutionOverlayState | null;
   evolutionCard: ICard | null;
+  onCloseEvolutionOverlay: () => void;
   onNameQueryChange: Dispatch<SetStateAction<string>>;
   onChangeTypeFilter: Dispatch<SetStateAction<HomeCollectionTypeFilter>>;
   onChangeOrderField: Dispatch<SetStateAction<HomeCollectionOrderField>>;
@@ -111,6 +112,7 @@ export function createHomeDeckBuilderViewProps(input: ICreateHomeDeckBuilderView
     workspaceProps,
     evolutionOverlay: input.evolutionOverlay,
     evolutionCard: input.evolutionCard,
+    onCloseEvolutionOverlay: input.onCloseEvolutionOverlay,
     errorMessage: input.errorMessage,
     onNameQueryChange: input.onNameQueryChange,
     onChangeTypeFilter: input.onChangeTypeFilter,

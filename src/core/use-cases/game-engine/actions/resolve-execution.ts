@@ -5,7 +5,9 @@ import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { applyExecutionEffect } from "@/core/use-cases/game-engine/actions/internal/execution-effects";
 import { appendExecutionResolutionLogs } from "@/core/use-cases/game-engine/actions/internal/execution-logging";
+import { executionStandardEffectHasUnmetTarget } from "@/core/use-cases/game-engine/actions/internal/execution-target-guards";
 import { resolveExecutionSpecialAction } from "@/core/use-cases/game-engine/actions/internal/resolve-execution-special-actions";
+import { suspendExecutionInSet } from "@/core/use-cases/game-engine/actions/internal/suspend-execution";
 import { resolveReactiveTrapEvent } from "@/core/use-cases/game-engine/effects/internal/trap-trigger-registry";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
@@ -77,6 +79,12 @@ export function resolveExecution(
       { state: withTrapResolution, playerId, player, opponent, isPlayerA, executionInstanceId },
       effect,
     );
+  }
+
+  // Si el efecto necesita un objetivo de tablero que ahora no existe (p.ej. +ATK a un aliado sin
+  // entidades propias), no lo consumimos: la carta vuelve a SET y podrá reactivarse en otro turno.
+  if (executionStandardEffectHasUnmetTarget(effect, player, opponent)) {
+    return suspendExecutionInSet(withTrapResolution, playerId, executionInstanceId, "EXECUTION_WAITING_TARGET");
   }
 
   const effectResult = applyExecutionEffect(player, opponent, effect);

@@ -83,8 +83,8 @@ export function useHomeSelectionView(input: IUseHomeSelectionViewInput) {
     selectedCardStorageCopies >= copiesRequiredToEvolve &&
     evolutionOverlay === null;
   const filteredCollection = useMemo(
-    () => buildHomeCollectionView({ collection: collectionState, nameQuery, typeFilter, orderField, orderDirection }),
-    [collectionState, nameQuery, orderDirection, orderField, typeFilter],
+    () => buildHomeCollectionView({ collection: collectionState, nameQuery, typeFilter, orderField, orderDirection, cardProgressById }),
+    [collectionState, nameQuery, orderDirection, orderField, typeFilter, cardProgressById],
   );
   const evolvableCardIds = useMemo(() => {
     const ids = new Set<string>();

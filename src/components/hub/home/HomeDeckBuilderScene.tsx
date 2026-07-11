@@ -101,6 +101,7 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
     errorMessage: state.errorMessage,
     evolutionOverlay: state.evolutionOverlay,
     evolutionCard: state.evolutionCard,
+    onCloseEvolutionOverlay: () => state.setEvolutionOverlay(null),
     onNameQueryChange: state.setNameQuery,
     onChangeTypeFilter: state.setTypeFilter,
     onChangeOrderField: state.setOrderField,

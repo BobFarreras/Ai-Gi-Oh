@@ -176,4 +176,101 @@ describe("HeuristicOpponentStrategy BATTLE flow", () => {
     state = runOpponentStep(state, "p2", strategy);
     expect(state.playerA.activeEntities).toHaveLength(0);
   });
+
+  it("repliega a DEFENSA un tanque amenazado que está en ATAQUE (no aguantaría atacando)", () => {
+    const strategy = new HeuristicOpponentStrategy();
+    const baseState = createBaseState();
+    const state: GameState = {
+      ...baseState,
+      phase: "BATTLE",
+      playerA: {
+        ...baseState.playerA,
+        activeEntities: [
+          createBoardEntity("p1-striker", {
+            id: "p1-striker-card", name: "Striker", description: "Atacante fuerte",
+            type: "ENTITY", faction: "BIG_TECH", cost: 3, attack: 1800, defense: 1000,
+          }),
+        ],
+      },
+      playerB: {
+        ...baseState.playerB,
+        hand: [],
+        activeEntities: [
+          createBoardEntity("p2-tank", {
+            id: "p2-tank-card", name: "Tank", description: "Alta defensa, poco ataque",
+            type: "ENTITY", faction: "OPEN_SOURCE", cost: 3, attack: 800, defense: 2000,
+          }),
+        ],
+      },
+    };
+
+    const decision = strategy.chooseModeChange(state, "p2");
+    expect(decision).toEqual({ instanceId: "p2-tank", newMode: "DEFENSE" });
+  });
+
+  it("NO repliega un atacante que puede ganar un intercambio (evita oscilación con la promoción)", () => {
+    const strategy = new HeuristicOpponentStrategy();
+    const baseState = createBaseState();
+    const state: GameState = {
+      ...baseState,
+      phase: "BATTLE",
+      playerA: {
+        ...baseState.playerA,
+        activeEntities: [
+          createBoardEntity("p1-big", {
+            id: "p1-big-card", name: "Big", description: "Atacante enorme",
+            type: "ENTITY", faction: "BIG_TECH", cost: 4, attack: 1900, defense: 1200,
+          }),
+          createBoardEntity("p1-weak", {
+            id: "p1-weak-card", name: "Weak", description: "Defensor débil",
+            type: "ENTITY", faction: "OPEN_SOURCE", cost: 1, attack: 500, defense: 1000,
+          }, "DEFENSE"),
+        ],
+      },
+      playerB: {
+        ...baseState.playerB,
+        hand: [],
+        activeEntities: [
+          createBoardEntity("p2-bruiser", {
+            id: "p2-bruiser-card", name: "Bruiser", description: "Ataque alto y defensa alta",
+            type: "ENTITY", faction: "OPEN_SOURCE", cost: 4, attack: 1800, defense: 2000,
+          }),
+        ],
+      },
+    };
+
+    // Aunque su defensa (2000) supera la amenaza (1900), puede ganar el intercambio contra el
+    // defensor débil (1800 >= 1000) atacando, así que no debe replegarse.
+    expect(strategy.chooseModeChange(state, "p2")).toBeNull();
+  });
+
+  it("NO repliega si el rival no tiene atacantes (sin amenaza que temer)", () => {
+    const strategy = new HeuristicOpponentStrategy();
+    const baseState = createBaseState();
+    const state: GameState = {
+      ...baseState,
+      phase: "BATTLE",
+      playerA: {
+        ...baseState.playerA,
+        activeEntities: [
+          createBoardEntity("p1-wall", {
+            id: "p1-wall-card", name: "Wall", description: "Solo defiende",
+            type: "ENTITY", faction: "BIG_TECH", cost: 3, attack: 2500, defense: 2500,
+          }, "DEFENSE"),
+        ],
+      },
+      playerB: {
+        ...baseState.playerB,
+        hand: [],
+        activeEntities: [
+          createBoardEntity("p2-tank", {
+            id: "p2-tank-card", name: "Tank", description: "Alta defensa, poco ataque",
+            type: "ENTITY", faction: "OPEN_SOURCE", cost: 3, attack: 800, defense: 2000,
+          }),
+        ],
+      },
+    };
+
+    expect(strategy.chooseModeChange(state, "p2")).toBeNull();
+  });
 });

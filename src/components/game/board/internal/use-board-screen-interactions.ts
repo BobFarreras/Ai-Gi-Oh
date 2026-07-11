@@ -65,6 +65,10 @@ export function useBoardScreenInteractions({
         if (result === "MISSING_MATERIALS") {
           setAutoModeBannerSignal({ id: `fusion-missing-materials-${Date.now()}`, left: "Fusion", right: "Faltan materiales" });
           board.playBanner();
+        } else if (result === "NO_TARGET") {
+          // La magia no tenía objetivo válido: se queda disponible para reactivarla en otro turno.
+          setAutoModeBannerSignal({ id: `execution-no-target-${Date.now()}`, left: "Magia", right: "Sin objetivo válido" });
+          board.playBanner();
         }
         endInteraction(token, "ok");
       } catch {

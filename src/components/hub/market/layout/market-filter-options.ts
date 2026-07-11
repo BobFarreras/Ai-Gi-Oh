@@ -4,10 +4,13 @@ export const MARKET_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "ENTITY", label: "Entidad" },
   { value: "EXECUTION", label: "Magia" },
   { value: "TRAP", label: "Trampa" },
+  { value: "FUSION", label: "Fusión" },
 ] as const;
 
 export const MARKET_ORDER_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "PRICE", label: "Precio" },
   { value: "ENERGY", label: "Energía" },
+  { value: "ATTACK", label: "Ataque" },
+  { value: "DEFENSE", label: "Defensa" },
   { value: "NAME", label: "Nombre" },
 ] as const;

@@ -1,6 +1,8 @@
-// src/components/game/card/CardThumbnail.tsx - Miniatura estática de carta con la anatomía visual del Card (cabecera, arte, nombre, nivel, stats) sin animaciones.
+// src/components/game/card/CardThumbnail.tsx - Miniatura de carta con la anatomía visual del Card (cabecera, arte, nombre, nivel, stats); opcionalmente muestra un skeleton mientras carga el arte.
+"use client";
+
 import Image from "next/image";
-import { memo } from "react";
+import { memo, useState } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { getCardLevelProgressMetrics } from "@/core/services/progression/card-level-rules";
 import { cn } from "@/lib/utils";
@@ -20,6 +22,12 @@ interface CardThumbnailProps {
   className?: string;
   /** Usa object-cover para el render en lugar de object-contain. Útil en contexts compactos como el combat log. */
   coverRender?: boolean;
+  /**
+   * Muestra un skeleton (pulse) en la zona de arte mientras la imagen de render carga. Pensado para
+   * grids largos con imágenes lazy (p.ej. mercado): al hacer scroll rápido ya no se ve el arte en
+   * negro, sino un "contenedor cargando". Se desactiva por defecto para no afectar a otros usos.
+   */
+  showArtSkeleton?: boolean;
 }
 
 /**
@@ -28,11 +36,14 @@ interface CardThumbnailProps {
  * nombre, barra de nivel y footer de stats. Llena por completo su contenedor;
  * el contenedor debe imponer la proporción de carta (aspect-[13/19]).
  */
-function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelected = false, className, coverRender = false }: CardThumbnailProps) {
+function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelected = false, className, coverRender = false, showArtSkeleton = false }: CardThumbnailProps) {
   const factionStyles = getCardTypeStyles(card);
   const isMasteryTier = versionTier >= 5;
   const shouldBypassImageOptimization = Boolean(card.renderUrl?.startsWith("/assets/renders/"));
   const levelMetrics = typeof level === "number" ? getCardLevelProgressMetrics(level, xp) : null;
+  const [isArtLoaded, setIsArtLoaded] = useState(false);
+  // Skeleton solo si se pidió, hay arte que cargar y aún no ha pintado (se retira al primer onLoad/onError).
+  const shouldRenderArtSkeleton = showArtSkeleton && Boolean(card.renderUrl) && !isArtLoaded;
 
   return (
     <div
@@ -72,6 +83,12 @@ function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelect
         </div>
         {/* Zona de arte: fondo de carta + render, como CardFrameArtAndProgress. */}
         <div className="relative mx-0.5 mt-0.5 flex-1 overflow-hidden rounded-sm bg-black">
+          {shouldRenderArtSkeleton ? (
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 z-0 animate-pulse bg-[linear-gradient(110deg,rgba(30,41,59,0.65),rgba(51,65,85,0.85),rgba(30,41,59,0.65))]"
+            />
+          ) : null}
           {card.bgUrl ? (
             <Image
               src={card.bgUrl}
@@ -90,6 +107,8 @@ function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelect
               sizes="96px"
               quality={40}
               unoptimized={shouldBypassImageOptimization}
+              onLoad={() => setIsArtLoaded(true)}
+              onError={() => setIsArtLoaded(true)}
               className={coverRender ? "z-10 object-cover object-top" : "z-10 object-contain p-px"}
             />
           ) : null}
