@@ -12,6 +12,8 @@ import {
 import { OverworldTouchControls } from "@/components/hub/story/overworld/hud/OverworldTouchControls";
 import { OverworldKeyboardHints } from "@/components/hub/story/overworld/hud/OverworldKeyboardHints";
 import { OverworldMinimap } from "@/components/hub/story/overworld/hud/OverworldMinimap";
+import { OverworldActBadge } from "@/components/hub/story/overworld/hud/OverworldActBadge";
+import { buildStoryChapterBriefing } from "@/services/story/build-story-chapter-briefing";
 import { OverworldBattleTransition } from "@/components/hub/story/overworld/hud/OverworldBattleTransition";
 import { OverworldCardPickup } from "@/components/hub/story/overworld/hud/OverworldCardPickup";
 import { OverworldSubmissionDialog } from "@/components/hub/story/overworld/hud/OverworldSubmissionDialog";
@@ -179,6 +181,7 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
   const engineRef = useRef<OverworldEngine | null>(null);
   const tilemap = useMemo(() => buildOverworldTilemap(mapId) ?? buildAct1OverworldTilemap(), [mapId]);
   const actId = useMemo(() => resolveOverworldActId(mapId), [mapId]);
+  const actArcTitle = useMemo(() => buildStoryChapterBriefing(actId).arcTitle, [actId]);
   const storageKey = useMemo(() => seenEventsStorageKey(playerId, mapId), [playerId, mapId]);
   const initialCompleted = useMemo(() => new Set(completedNodeIds), [completedNodeIds]);
   const seenEventIdsRef = useRef<Set<string>>(new Set());
@@ -816,6 +819,8 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
       />
 
       <OverworldMinimap tilemap={tilemap} playerTile={playerTile} defeatedIds={completedIds} hiddenIds={collectedRewardIds} />
+
+      <OverworldActBadge mapId={mapId} arcTitle={actArcTitle} />
 
       <button
         type="button"

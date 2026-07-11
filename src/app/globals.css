@@ -79,6 +79,20 @@
   100% { transform: translateY(-120%); opacity: 0; }
 }
 
+/* Badge de acto del overworld: entra, se mantiene y se desvanece (una sola pasada). */
+@keyframes overworldActBadge {
+  0% { opacity: 0; transform: translateY(-16px) scale(0.9); }
+  12% { opacity: 1; transform: translateY(0) scale(1); }
+  85% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-10px) scale(0.98); }
+}
+.overworld-act-badge-anim {
+  animation: overworldActBadge 3.4s ease-in-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .overworld-act-badge-anim { animation: overworldActBadge 3.4s steps(1, end) forwards; }
+}
+
 @keyframes landingButtonShine {
   0% { transform: translateX(-210%) skewX(-18deg); opacity: 0; }
   18% { opacity: 0.72; }
