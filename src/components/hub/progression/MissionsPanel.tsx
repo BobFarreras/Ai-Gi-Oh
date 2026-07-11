@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { IMissionView } from "@/core/entities/progression/IMission";
 import { formatResetCountdown, msUntilDailyReset, msUntilWeeklyReset } from "@/core/services/progression/reset-schedule";
+import { sortMissionsByPriority } from "@/core/services/progression/mission-sort";
 import { track } from "@/services/analytics/client/analytics-buffer";
 import { ProgressionDialogShell } from "./internal/ProgressionDialogShell";
 import { FragmentIcon } from "./internal/FragmentIcon";
@@ -107,9 +108,9 @@ export function MissionsPanel({ missions, onClose }: IMissionsPanelProps) {
     return () => window.clearInterval(id);
   }, []);
 
-  const daily = missions.filter((mission) => mission.scope === "DAILY");
-  const weekly = missions.filter((mission) => mission.scope === "WEEKLY");
-  const event = missions.filter((mission) => mission.scope === "EVENT");
+  const daily = sortMissionsByPriority(missions.filter((mission) => mission.scope === "DAILY"));
+  const weekly = sortMissionsByPriority(missions.filter((mission) => mission.scope === "WEEKLY"));
+  const event = sortMissionsByPriority(missions.filter((mission) => mission.scope === "EVENT"));
   const dailyCountdown = formatResetCountdown(msUntilDailyReset(nowMs));
   const weeklyCountdown = formatResetCountdown(msUntilWeeklyReset(nowMs));
 

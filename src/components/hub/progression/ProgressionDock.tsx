@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { IMissionView } from "@/core/entities/progression/IMission";
 import { IEventOverview } from "@/core/entities/progression/IEvent";
 import { IFeaturedPromotion } from "@/core/entities/progression/IPromotion";
+import { countUnseenPromotions, markPromotionsAsSeen } from "@/core/services/promotions/seen-promotions";
 import { HUB_HUD_ANIMATION_DURATION, HUB_HUD_START_DELAY_MS } from "@/components/hub/internal/hub-entry-timings";
 import { HUB_BOOT_LOADING_MS, HUB_BOOT_OPENING_MS } from "@/components/hub/internal/hub-boot-timings";
 import { MissionsPanel } from "./MissionsPanel";
@@ -167,6 +168,8 @@ export function ProgressionDock({ missions: initialMissions, eventOverview: init
   const canRedeemEvent = eventOverview
     ? eventOverview.items.some((item) => eventOverview.balance >= item.costPoints && item.owned < item.perPlayerLimit)
     : false;
+  const promotionIds = promotions.map((p) => p.id);
+  const unseenNewsCount = countUnseenPromotions(promotionIds);
 
   const buttons: ReactNode[] = [];
   if (dailyLogin) {
@@ -200,7 +203,7 @@ export function ProgressionDock({ missions: initialMissions, eventOverview: init
   }
   if (promotions.length > 0) {
     buttons.push(
-      <DockButton key="news" label="Novedades" badge={<CountBadge count={promotions.length} tone="cyan" />} onClick={() => setPanel("news")}>
+      <DockButton key="news" label="Novedades" badge={unseenNewsCount > 0 ? <CountBadge count={unseenNewsCount} tone="cyan" /> : null} onClick={() => { markPromotionsAsSeen(promotionIds); setPanel("news"); }}>
         <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
           <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.7 21a2 2 0 0 1-3.4 0" />
