@@ -6,12 +6,14 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Activity, CalendarClock, Home, ShoppingBag, Swords, Users, Zap } from "lucide-react";
+import { Activity, CalendarClock, HelpCircle, Home, ShoppingBag, Swords, Users, Zap } from "lucide-react";
 import { BackButton } from "@/components/ui/BackButton";
 import { UserSearchInput } from "@/components/hub/internal/UserSearchInput";
 import { IRankingBoard, IRankingBoardsData, RankingBoardId } from "@/services/ranking/get-ranking-boards";
+import { RANKING_SCORING_GUIDES } from "@/services/ranking/ranking-scoring";
 import { formatResetCountdown, msUntilWeeklyLeaderboardReset } from "@/core/services/progression/reset-schedule";
 import { RankingBoardRow } from "./RankingBoardRow";
+import { RankingScoringHelpDialog } from "./RankingScoringHelpDialog";
 
 interface RankingHubClientProps {
   data: IRankingBoardsData;
@@ -38,6 +40,7 @@ function useWeeklyCountdown(active: boolean): string {
 export function RankingHubClient({ data }: RankingHubClientProps) {
   const [activeId, setActiveId] = useState<RankingBoardId>(data.boards[0]?.id ?? "MULTIPLAYER");
   const [query, setQuery] = useState("");
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const activeBoard = useMemo<IRankingBoard | null>(
     () => data.boards.find((board) => board.id === activeId) ?? null,
@@ -90,6 +93,16 @@ export function RankingHubClient({ data }: RankingHubClientProps) {
             );
           })}
         </div>
+
+        <button
+          type="button"
+          onClick={() => setIsHelpOpen(true)}
+          aria-label="Cómo puntúa este ranking"
+          title="Cómo puntúa este ranking"
+          className="flex shrink-0 items-center justify-center rounded-lg border border-cyan-600/50 bg-[#021426]/85 px-2.5 py-2 text-cyan-300 transition hover:border-cyan-400/70 hover:text-cyan-100"
+        >
+          <HelpCircle size={16} className="shrink-0" />
+        </button>
 
         <Link
           href="/hub"
@@ -155,6 +168,12 @@ export function RankingHubClient({ data }: RankingHubClientProps) {
           )}
         </div>
       </div>
+
+      <AnimatePresence>
+        {isHelpOpen ? (
+          <RankingScoringHelpDialog guide={RANKING_SCORING_GUIDES[activeId]} onClose={() => setIsHelpOpen(false)} />
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

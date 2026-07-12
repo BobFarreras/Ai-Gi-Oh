@@ -78,6 +78,11 @@ export const MASTERY_INTRO = [
   "Algunas Entity nacen con un poder INNATO: lo tienen activo desde el primer momento, sin necesidad de desbloquearlo.",
 ];
 
+export const RANKINGS_INTRO = [
+  "Hay tres clasificaciones y cada una premia algo distinto. Subir en ellas te da prestigio y, en las semanales, recompensas de Nexus.",
+  "Aquí tienes exactamente qué acciones puntúan en cada ranking.",
+];
+
 export const STORY_OVERVIEW = [
   "En el Modo Historia recorres un mapa por capítulos, enfrentándote a una sucesión de oponentes con mazos, personalidad y voz propios.",
   "Cada rival tiene su intro, sus reacciones cuando caes en sus trampas o recibes golpes directos, y su desenlace al ganar o perder. Derrotarlos avanza la trama y desbloquea recompensas.",

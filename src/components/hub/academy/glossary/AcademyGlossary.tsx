@@ -17,6 +17,7 @@ import { resolveCardLevelBonuses } from "@/core/services/progression/card-level-
 import { getCopiesNeededForNextVersion, MAX_CARD_VERSION_TIER } from "@/core/services/progression/card-version-rules";
 import { CARD_CATALOG } from "@/infrastructure/repositories/internal/card-catalog";
 import { STORY_OPPONENT_NARRATION_CATALOG } from "@/services/story/story-opponent-narration-catalog";
+import { RANKING_SCORING_GUIDES, RANKING_SCORING_ORDER } from "@/services/ranking/ranking-scoring";
 import { EffectVfxDemo } from "./EffectVfxDemo";
 import {
   CARD_TYPE_GUIDE,
@@ -24,6 +25,7 @@ import {
   MASTERY_INTRO,
   OPPONENT_BIOS,
   OPPONENT_ORDER,
+  RANKINGS_INTRO,
   STORY_FACTIONS,
   STORY_HERO,
   STORY_LORE_INTRO,
@@ -33,7 +35,7 @@ import {
   XP_INTRO,
 } from "./glossary-content";
 
-type SectionId = "types" | "effects" | "levels" | "versions" | "mastery" | "story" | "opponents";
+type SectionId = "types" | "effects" | "levels" | "versions" | "mastery" | "rankings" | "story" | "opponents";
 
 const SECTIONS: { id: SectionId; label: string }[] = [
   { id: "types", label: "Tipos de carta" },
@@ -41,6 +43,7 @@ const SECTIONS: { id: SectionId; label: string }[] = [
   { id: "levels", label: "Niveles y XP" },
   { id: "versions", label: "Versiones" },
   { id: "mastery", label: "Pasivas de maestría" },
+  { id: "rankings", label: "Rankings" },
   { id: "story", label: "Historia" },
   { id: "opponents", label: "Oponentes" },
 ];
@@ -407,6 +410,45 @@ function MasterySection({ onSelect }: { onSelect: (item: IEffectCatalogItem) => 
   );
 }
 
+function RankingsSection() {
+  return (
+    <Panel>
+      <SectionHeading kicker="Competición" title="Cómo subir los rankings" intro={RANKINGS_INTRO} />
+      <motion.div variants={listStagger} initial="hidden" animate="show" className="space-y-4">
+        {RANKING_SCORING_ORDER.map((boardId) => {
+          const guide = RANKING_SCORING_GUIDES[boardId];
+          return (
+            <motion.div key={boardId} variants={itemFade} className="rounded-2xl border border-slate-700/70 bg-slate-950/50 p-4">
+              <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-lg font-black text-cyan-100" style={HEADING_FONT}>
+                  {guide.title}
+                </h3>
+                <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-cyan-400/70">{guide.cadence}</span>
+              </div>
+              <p className="text-[14px] leading-6 text-slate-300">{guide.summary}</p>
+              <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                {guide.rules.map((rule) => (
+                  <li
+                    key={rule.action}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-slate-700/60 bg-black/30 px-3 py-2"
+                  >
+                    <span className="text-[13.5px] leading-5 text-slate-200">{rule.action}</span>
+                    <span className="shrink-0 rounded-md border border-cyan-500/40 bg-cyan-500/10 px-2 py-0.5 text-[13px] font-black text-cyan-200">
+                      {rule.points}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {guide.resetNote ? <p className="mt-3 text-[13px] leading-5 text-slate-400">{guide.resetNote}</p> : null}
+              {guide.prizes ? <p className="mt-1 text-[13px] font-semibold text-amber-300/80">{guide.prizes}</p> : null}
+            </motion.div>
+          );
+        })}
+      </motion.div>
+    </Panel>
+  );
+}
+
 function FactionCard({ faction }: { faction: IStoryFaction }) {
   return (
     <motion.li variants={itemFade} className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-4">
@@ -641,6 +683,8 @@ export function AcademyGlossary() {
         return <VersionsSection />;
       case "mastery":
         return <MasterySection onSelect={setSelected} />;
+      case "rankings":
+        return <RankingsSection />;
       case "story":
         return <StorySection />;
       case "opponents":
