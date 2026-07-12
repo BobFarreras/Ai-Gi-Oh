@@ -1,21 +1,17 @@
-// src/app/hub/ranking/page.tsx - Tabla de clasificación global de jugadores por ELO con podio holográfico.
+// src/app/hub/ranking/page.tsx - Ranking con selector entre tres tableros (multijugador ELO, actividad y
+// comercial) y transición animada de posiciones. Ver docs/features/ranking-selector-design.md.
 import { RankingScene } from "@/components/hub/ranking/RankingScene";
-import { RankingClient } from "@/components/hub/ranking/RankingClient";
-import { getRankingData } from "@/services/ranking/get-ranking-data";
+import { RankingHubClient } from "@/components/hub/ranking/RankingHubClient";
+import { getRankingBoards } from "@/services/ranking/get-ranking-boards";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function RankingPage() {
-  const { entries, localPlayerId, localPlayerRank } = await getRankingData();
-
+  const data = await getRankingBoards();
   return (
     <RankingScene>
-      <RankingClient
-        entries={entries}
-        localPlayerId={localPlayerId}
-        localPlayerRank={localPlayerRank}
-      />
+      <RankingHubClient data={data} />
     </RankingScene>
   );
 }
