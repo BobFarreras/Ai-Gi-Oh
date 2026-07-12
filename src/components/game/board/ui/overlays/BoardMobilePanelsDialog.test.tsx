@@ -1,8 +1,9 @@
-// src/components/game/board/ui/overlays/BoardMobilePanelsDialog.test.tsx - Verifica decisión de trampa en diálogo móvil sin bloquear banners centrales.
+// src/components/game/board/ui/overlays/BoardMobilePanelsDialog.test.tsx - Verifica decisión de trampa e inspección de cartas del log en el diálogo móvil.
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { BoardMobilePanelsDialog } from "@/components/game/board/ui/overlays/BoardMobilePanelsDialog";
 import { boardMockGameState } from "@/components/game/board/board-test-fixtures";
+import { GameState } from "@/core/use-cases/GameEngine";
 import { ITrapActivationPrompt } from "@/components/game/board/hooks/internal/board-state/useBoardUiState";
 
 const pathnameMock = vi.fn<() => string | null>(() => "/hub/academy/training/arena");
@@ -15,8 +16,16 @@ vi.mock("@/components/game/card/Card", () => ({
   Card: ({ card }: { card: { name: string } }) => <div>{card.name}</div>,
 }));
 
+// Simula una fila del log que expone un botón para inspeccionar su primera carta.
 vi.mock("@/components/game/board/ui/CombatLogEventRow", () => ({
-  CombatLogEventRow: () => <div>log-row</div>,
+  CombatLogEventRow: ({ onCardClick, cardLookup }: { onCardClick: (card: unknown) => void; cardLookup: Record<string, unknown> }) => {
+    const firstCard = Object.values(cardLookup)[0];
+    return (
+      <button type="button" onClick={() => onCardClick(firstCard)}>
+        inspeccionar-carta-log
+      </button>
+    );
+  },
 }));
 
 function createTrapPrompt(): ITrapActivationPrompt {
@@ -42,12 +51,9 @@ describe("BoardMobilePanelsDialog", () => {
 
     render(
       <BoardMobilePanelsDialog
-        selectedCard={null}
         gameState={boardMockGameState}
         isHistoryOpen={false}
         pendingTrapActivationPrompt={createTrapPrompt()}
-        onSelectCard={() => undefined}
-        onCloseCard={() => undefined}
         onCloseHistory={() => undefined}
         onActivatePendingTrap={onActivatePendingTrap}
         onSkipPendingTrap={onSkipPendingTrap}
@@ -68,12 +74,9 @@ describe("BoardMobilePanelsDialog", () => {
 
     render(
       <BoardMobilePanelsDialog
-        selectedCard={null}
         gameState={boardMockGameState}
         isHistoryOpen={false}
         pendingTrapActivationPrompt={createTrapPrompt()}
-        onSelectCard={() => undefined}
-        onCloseCard={() => undefined}
         onCloseHistory={() => undefined}
         onActivatePendingTrap={() => undefined}
         onSkipPendingTrap={onSkipPendingTrap}
@@ -84,5 +87,36 @@ describe("BoardMobilePanelsDialog", () => {
     expect(cancelButton).toBeDisabled();
     fireEvent.click(cancelButton);
     expect(onSkipPendingTrap).not.toHaveBeenCalled();
+  });
+
+  it("abre el detalle al tocar una carta del combat log y lo cierra con la X", () => {
+    pathnameMock.mockReturnValue("/hub/academy/training/arena");
+    const gameStateWithLog: GameState = {
+      ...boardMockGameState,
+      combatLog: [
+        { id: "e1", turn: 1, actorPlayerId: "p1", eventType: "BATTLE_RESOLVED", payload: {} },
+      ] as unknown as GameState["combatLog"],
+    };
+
+    render(
+      <BoardMobilePanelsDialog
+        gameState={gameStateWithLog}
+        isHistoryOpen
+        pendingTrapActivationPrompt={null}
+        onCloseHistory={() => undefined}
+      />,
+    );
+
+    // Sin inspección todavía: no hay panel de detalle (botón cerrar detalle).
+    expect(screen.queryByRole("button", { name: "Cerrar detalle" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "inspeccionar-carta-log" }));
+
+    // El detalle aparece con su botón de cierre.
+    const closeDetail = screen.getByRole("button", { name: "Cerrar detalle" });
+    expect(closeDetail).toBeInTheDocument();
+
+    fireEvent.click(closeDetail);
+    expect(screen.queryByRole("button", { name: "Cerrar detalle" })).toBeNull();
   });
 });
