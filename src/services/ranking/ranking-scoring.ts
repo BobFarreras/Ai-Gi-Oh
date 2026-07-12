@@ -22,7 +22,9 @@ export interface IRankingScoringGuide {
   resetNote?: string;
 }
 
-const WEEKLY_RESET = "Cierra cada domingo a las 22:00 UTC (medianoche en España).";
+// Texto de cara al jugador: el cierre real es a las 22:00 UTC, que en España equivale a medianoche
+// (00:00/24:00), que es lo que refleja la cuenta atrás. Mostramos la hora local para no confundir.
+const WEEKLY_RESET = "Cierra cada domingo a las 24:00 (medianoche, hora española).";
 
 /**
  * Guía de puntuación por tablero (la MECÁNICA: qué acciones puntúan). Refleja
