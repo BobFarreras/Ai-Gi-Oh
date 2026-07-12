@@ -14,27 +14,37 @@ export function useUnreadDirectMessages(): number {
 
   useEffect(() => {
     let isActive = true;
-    const supabase = createSupabaseBrowserClient();
+    let supabase: ReturnType<typeof createSupabaseBrowserClient> | null = null;
     let channel: RealtimeChannel | null = null;
 
     const refresh = async (): Promise<void> => {
-      const total = await fetchUnreadDirectCount();
-      if (isActive) setCount(total);
+      try {
+        const total = await fetchUnreadDirectCount();
+        if (isActive) setCount(total);
+      } catch {
+        // El badge es accesorio: nunca debe romper la vista que lo monta.
+      }
     };
 
     void (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!isActive) return;
-      meRef.current = data.user?.id ?? null;
       await refresh();
-      // RLS limita los INSERT recibidos a las conversaciones del jugador; solo contamos los ajenos.
-      channel = supabase
-        .channel("dm-unread")
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "dm_messages" }, (payload) => {
-          const senderId = (payload.new as { sender_id?: string })?.sender_id;
-          if (senderId && senderId !== meRef.current) setCount((current) => current + 1);
-        })
-        .subscribe();
+      try {
+        // El realtime es best-effort: si el cliente no puede crearse (p.ej. sin env), no rompe el hub.
+        supabase = createSupabaseBrowserClient();
+        const { data } = await supabase.auth.getUser();
+        if (!isActive) return;
+        meRef.current = data.user?.id ?? null;
+        // RLS limita los INSERT recibidos a las conversaciones del jugador; solo contamos los ajenos.
+        channel = supabase
+          .channel("dm-unread")
+          .on("postgres_changes", { event: "INSERT", schema: "public", table: "dm_messages" }, (payload) => {
+            const senderId = (payload.new as { sender_id?: string })?.sender_id;
+            if (senderId && senderId !== meRef.current) setCount((current) => current + 1);
+          })
+          .subscribe();
+      } catch {
+        // Sin realtime: el badge se refresca al reenfocar la pestaña o al recargar la vista.
+      }
     })();
 
     // Al volver a la pestaña (p.ej. tras leer una conversación en otra vista), se resincroniza.
@@ -46,7 +56,7 @@ export function useUnreadDirectMessages(): number {
     return () => {
       isActive = false;
       document.removeEventListener("visibilitychange", onVisible);
-      if (channel) supabase.removeChannel(channel);
+      if (channel && supabase) supabase.removeChannel(channel);
     };
   }, []);
 

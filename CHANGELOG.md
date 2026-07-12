@@ -6,6 +6,25 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-07-12
+
+### Added
+- **Rankings semanales**: dos clasificaciones nuevas (Actividad y Comercio) con premios automáticos los domingos (pg_cron). Actividad suma combates y misiones/eventos/diarias reclamadas; Comercio suma cartas, packs y evoluciones.
+- **Selector de rankings**: la página de ranking pasa a un selector entre tres tableros (Multijugador ELO, Actividad, Comercio) con transición animada de posiciones al cambiar.
+- **Mensajes privados 1-a-1** (estilo WhatsApp): bandeja de conversaciones, no-leídos, tiempo real y notificaciones (badge de no-leídos en el botón de chat y en el enlace de mensajes).
+- **Responder arrastrando** un mensaje (estilo WhatsApp) en el chat de comunidad y en los privados.
+- **Columna de Nexus gastados** en el ranking comercial (suma de compras de la semana).
+
+### Changed
+- Hub: los botones flotantes se recolocan en móvil (clúster 2×2) para no invadir el centro ni la etiqueta del jugador.
+
+### Fixed
+- Historia (Acto 3): corregido el bloqueo (soft-lock) del puzzle de la caja y la placa; al ganar el duelo de la sala la puerta ya no se cerraba dejando al jugador atrapado (la placa queda enclavada).
+
+### Internal
+- Migraciones 093 (responder a mensajes), 094 (rankings semanales + pg_cron), 095 (mensajes privados con RLS estricta).
+- Documentación: guía del batch comunidad+rankings y diseño del selector de ranking.
+
 ## [1.11.0] - 2026-07-11
 
 ### Added
@@ -225,7 +244,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.11.0...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.12.0...HEAD
+[1.12.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.4...v1.11.0
 [1.10.4]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.3...v1.10.4
 [1.10.3]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.2...v1.10.3
