@@ -5,6 +5,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { Coins } from "lucide-react";
 import { RankingBoardId, IRankingBoardEntry } from "@/services/ranking/get-ranking-boards";
 import { getAvatarGradientClasses, getAvatarInitial } from "@/components/hub/internal/avatar-color";
 import { getEloLeague, getLeagueStyle, getPodiumStyle, getPodiumTier, PodiumTier } from "./internal/tier";
@@ -101,6 +102,17 @@ export function RankingBoardRow({ entry, isLocal, boardId }: RankingBoardRowProp
 
       {/* Forma reciente (solo multijugador) */}
       {isMultiplayer && entry.recentForm ? <PlayerFormDots form={entry.recentForm} /> : null}
+
+      {/* Nexus gastados esta semana (solo ranking comercial) */}
+      {boardId === "COMMERCIAL" ? (
+        <div className="flex shrink-0 flex-col items-end" title="Nexus gastados esta semana">
+          <span className="flex items-center gap-1 text-sm font-black tabular-nums text-amber-300/90">
+            <Coins size={13} className="text-amber-400" />
+            {(entry.nexusSpent ?? 0).toLocaleString()}
+          </span>
+          <span className="hidden text-[9px] font-bold uppercase tracking-widest text-slate-500 sm:block">gastados</span>
+        </div>
+      ) : null}
 
       {/* Métrica principal */}
       <div className="flex shrink-0 flex-col items-end">

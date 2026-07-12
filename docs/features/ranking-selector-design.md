@@ -13,10 +13,13 @@ tableros**, todos con la misma UI de lista de jugadores:
 |---|---|---|---|
 | **Multijugador** | ELO | Liga (color), forma reciente (5), V/D y % | `getRankingData` (ELO de partidas 1v1) |
 | **Actividad** | Puntos de la semana | — | tablero `ACTIVITY` de `getWeeklyLeaderboards` |
-| **Comercio** | Puntos de la semana | — | tablero `COMMERCIAL` de `getWeeklyLeaderboards` |
+| **Comercio** | Puntos de la semana | **Nexus gastados** | tablero `COMMERCIAL` de `getWeeklyLeaderboards` |
 
 Los rankings semanales no tienen rachas: en su lugar la fila muestra su **puntuación** (actividad =
-combates + misiones/eventos/diarias; comercio = cartas + packs + evoluciones). Ver
+combates + misiones/eventos/diarias; comercio = cartas + packs + evoluciones). El **ranking comercial**
+añade además una columna con los **Nexus realmente gastados en el mercado esta semana**, calculada al
+vuelo sumando `market_transactions.amount_nexus` desde el inicio de la semana (domingo 22:00 UTC) — no
+necesita acumulador ni migración; es solo lectura. Ver
 [community-rankings-batch-guide.md](community-rankings-batch-guide.md) para las reglas de puntos y el
 cierre semanal (domingos 22:00 UTC).
 

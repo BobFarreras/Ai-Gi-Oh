@@ -16,6 +16,8 @@ export interface IRankingBoardEntry {
   wins?: number;
   losses?: number;
   recentForm?: MatchResult[];
+  /** Nexus gastados en el mercado esta semana (solo en el tablero comercial). */
+  nexusSpent?: number;
 }
 
 export interface IRankingBoard {
@@ -62,6 +64,7 @@ export async function getRankingBoards(): Promise<IRankingBoardsData> {
       nickname: entry.nickname,
       avatarUrl: entry.avatarUrl,
       value: entry.points,
+      nexusSpent: entry.nexusSpent,
     })),
     localRank: board.localRank,
     localValue: board.localRank ? board.localPoints : null,
