@@ -138,4 +138,16 @@ describe("buildAct3OverworldTilemap", () => {
       expect(findStoryVirtualNodeDefinition(nodeId)).not.toBeNull();
     }
   });
+
+  it("la placa del puzzle es un EVENT persistible: se enclava vía mark-interacted (anti soft-lock)", () => {
+    // Al ganar el duelo obligatorio de la caché se navega fuera del overworld y la caja vuelve a su
+    // origen; si la placa no persistiese, la compuerta se cerraría y el jugador quedaría atrapado.
+    // Registrarla como EVENT permite que `mark-interacted` la enclave y la puerta siga abierta.
+    const definition = findStoryVirtualNodeDefinition(PLATE);
+    expect(definition).not.toBeNull();
+    expect(definition!.nodeType).toBe("EVENT");
+    // Y la compuerta del puzzle debe requerir exactamente esa placa.
+    const gate = buildAct3OverworldTilemap().objects.find((object) => object.id === "story-a3-gate-puzzle")!;
+    expect(gate.gateRequiredNodeIds).toContain(PLATE);
+  });
 });
