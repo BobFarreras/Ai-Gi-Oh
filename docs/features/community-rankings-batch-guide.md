@@ -204,13 +204,21 @@ usuario) para soportar navegación entre canal de lobby y conversaciones privada
 ---
 
 ## Checklist de release del batch
-- [ ] P1 bug Acto 3 (migración registro virtual + persistencia placa)
-- [ ] P4 botones móvil
-- [ ] P3 drag-to-reply (migración `reply_to_message_id`)
-- [ ] P5 rankings semanales (migración + RPCs + pg_cron + UI + admin)
-- [ ] P2 DM 1-a-1 (migración + dominio + API + UI rediseñada)
-- [ ] `CI=true pnpm quality:check` verde
-- [ ] Migraciones aplicadas a prod (MCP) y a Supabase local
+- [x] P1 bug Acto 3 (nodo virtual `story-ch3-plate-1` + persistencia de la placa vía `mark-interacted`)
+- [x] P4 botones móvil (clúster 2×2 en `HubSceneFloatingActions`)
+- [x] P3 drag-to-reply (migración 093 `reply_to_message_id`, aplicada a prod)
+- [x] P5 rankings semanales (migración 094 + RPCs + pg_cron domingos 22:00 UTC + UI `/hub/ranking/weekly`)
+- [x] P2 DM 1-a-1 (migración 095 + dominio + API + UI `/hub/chat/dm`)
+- [x] Suite de tests verde (386 archivos / 1247 tests) + typecheck + lint
+- [x] Migraciones 093/094/095 aplicadas a **prod** vía MCP y verificadas
+- [ ] Aplicar 093/094/095 al **Supabase local** del dev (si usa Docker)
+- [ ] Verificación en navegador de la app autenticada (P4 en móvil, P3 drag, P2 DM en vivo)
+- [ ] `CI=true pnpm quality:check` (incluye build) antes del merge
 - [ ] CHANGELOG + bump de versión (`pnpm release:prepare`)
+
+### Notas de implementación (decisiones tomadas)
+- **P1**: la placa se enclava una vez pulsada (patrón del puente del Acto 2). Es más robusto que añadir una segunda caja.
+- **P5 corte semanal**: la semana rueda los **domingos 22:00 UTC** (~medianoche España) — helper `weekly_leaderboard_week_key` con desplazamiento +2h. El cron `close_weekly_leaderboards` cierra semanas `< actual` no cerradas (idempotente ante runs perdidos). Acreditación SIN tocar RPCs existentes: el wrapper `recordProgressionEvent` también llama `award_weekly_points`, y el endpoint de claim de misiones suma `MISSION_CLAIM`. Reglas y premios editables en tablas (falta el CRUD admin — futuro).
+- **P2 DM**: escrituras siempre por API con service-role (validación + rate limit + pertenencia); RLS solo-lectura por participante habilita el realtime. `dm_list_conversations(p_self)` resuelve último mensaje + no-leídos + perfil del otro en una consulta con laterales. Card-share en DM queda como mejora futura (la burbuja ya lo renderiza si llega).
 </content>
 </invoke>
