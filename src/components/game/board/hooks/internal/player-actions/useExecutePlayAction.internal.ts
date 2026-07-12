@@ -84,7 +84,11 @@ export async function executeActivationPlay(input: IExecuteActivationInput): Pro
 
   input.clearSelection();
   await sleep(1500);
-  const reactiveTrap = findReactiveTrap(input.gameState, input.gameState.playerB.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
+  // Una ejecución dispara ON_OPPONENT_EXECUTION_ACTIVATED y, si aplica un buff, ON_OPPONENT_STAT_BUFF_APPLIED.
+  // Detectamos ambos para poder decidir el contra-trampa frente a cualquier trampa rival que reaccione.
+  const reactiveTrap =
+    findReactiveTrap(input.gameState, input.gameState.playerB.id, "ON_OPPONENT_EXECUTION_ACTIVATED") ??
+    findReactiveTrap(input.gameState, input.gameState.playerB.id, "ON_OPPONENT_STAT_BUFF_APPLIED");
   const playerCounterTrap = reactiveTrap
     ? findReactiveTrap(input.gameState, input.gameState.playerA.id, "ON_OPPONENT_TRAP_ACTIVATED")
     : null;

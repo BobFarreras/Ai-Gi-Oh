@@ -98,10 +98,16 @@ export function resolveExecution(
   };
   const withPlayers = assignPlayers(withTrapResolution, updatedPlayer, effectResult.opponent, isPlayerA);
   const withBuffTrapResolution = effectResult.buff.stat && effectResult.buff.amount > 0
-    ? resolveReactiveTrapEvent(withPlayers, effectResult.opponent.id, {
-      type: "EXECUTION_BUFF_APPLIED",
-      context: { buffSourcePlayerId: playerId, buffStat: effectResult.buff.stat, buffAmount: effectResult.buff.amount },
-    })
+    ? resolveReactiveTrapEvent(
+      withPlayers,
+      effectResult.opponent.id,
+      {
+        type: "EXECUTION_BUFF_APPLIED",
+        context: { buffSourcePlayerId: playerId, buffStat: effectResult.buff.stat, buffAmount: effectResult.buff.amount },
+      },
+      // Coherencia: si el jugador rechazó su contra-trampa para esta ejecución, también aplica al buff.
+      { skipCounterTrapPlayerIds: options?.skipCounterTrapPlayerIds },
+    )
     : withPlayers;
   return appendExecutionResultLogs(
     withBuffTrapResolution,
