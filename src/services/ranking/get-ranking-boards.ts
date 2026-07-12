@@ -20,11 +20,19 @@ export interface IRankingBoardEntry {
   nexusSpent?: number;
 }
 
+/** Premio semanal por posición (solo tableros semanales). Fuente: weekly_leaderboard_prizes (BD). */
+export interface IRankingBoardPrize {
+  rank: number;
+  rewardNexus: number;
+}
+
 export interface IRankingBoard {
   id: RankingBoardId;
   entries: IRankingBoardEntry[];
   localRank: number | null;
   localValue: number | null;
+  /** Premios configurados en BD (vacío/undefined en el tablero de ELO, que no reparte Nexus). */
+  prizes?: IRankingBoardPrize[];
 }
 
 export interface IRankingBoardsData {
@@ -68,6 +76,8 @@ export async function getRankingBoards(): Promise<IRankingBoardsData> {
     })),
     localRank: board.localRank,
     localValue: board.localRank ? board.localPoints : null,
+    // Los premios ya se leen de BD en getWeeklyLeaderboards; solo los propagamos (sin consulta extra).
+    prizes: board.prizes,
   }));
 
   // Orden del selector: Multijugador primero (el ranking "de referencia"), luego los semanales.

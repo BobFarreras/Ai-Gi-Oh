@@ -22,9 +22,9 @@ describe("ranking-scoring", () => {
     expect(points).toEqual(["+10", "+20", "+30"]);
   });
 
-  it("los tableros semanales llevan nota de cierre y premios; el ELO no", () => {
-    expect(RANKING_SCORING_GUIDES.ACTIVITY.prizes).toBeTruthy();
+  it("marca los tableros semanales (nota de cierre); el ELO es permanente", () => {
+    expect(RANKING_SCORING_GUIDES.ACTIVITY.weekly).toBe(true);
     expect(RANKING_SCORING_GUIDES.COMMERCIAL.resetNote).toBeTruthy();
-    expect(RANKING_SCORING_GUIDES.MULTIPLAYER.prizes).toBeUndefined();
+    expect(RANKING_SCORING_GUIDES.MULTIPLAYER.weekly).toBe(false);
   });
 });

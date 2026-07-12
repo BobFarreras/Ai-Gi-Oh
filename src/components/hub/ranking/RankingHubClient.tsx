@@ -171,7 +171,7 @@ export function RankingHubClient({ data }: RankingHubClientProps) {
 
       <AnimatePresence>
         {isHelpOpen ? (
-          <RankingScoringHelpDialog guide={RANKING_SCORING_GUIDES[activeId]} onClose={() => setIsHelpOpen(false)} />
+          <RankingScoringHelpDialog guide={RANKING_SCORING_GUIDES[activeId]} prizes={activeBoard?.prizes} onClose={() => setIsHelpOpen(false)} />
         ) : null}
       </AnimatePresence>
     </div>

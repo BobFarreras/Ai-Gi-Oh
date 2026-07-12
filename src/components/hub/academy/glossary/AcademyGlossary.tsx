@@ -440,7 +440,11 @@ function RankingsSection() {
                 ))}
               </ul>
               {guide.resetNote ? <p className="mt-3 text-[13px] leading-5 text-slate-400">{guide.resetNote}</p> : null}
-              {guide.prizes ? <p className="mt-1 text-[13px] font-semibold text-amber-300/80">{guide.prizes}</p> : null}
+              {guide.weekly ? (
+                <p className="mt-1 text-[13px] font-semibold text-amber-300/80">
+                  Reparte premios de Nexus al top 5 cada semana; consulta los importes actuales con el botón “?” del ranking.
+                </p>
+              ) : null}
             </motion.div>
           );
         })}

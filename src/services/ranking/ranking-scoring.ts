@@ -16,16 +16,19 @@ export interface IRankingScoringGuide {
   cadence: string;
   summary: string;
   rules: IRankingScoringRule[];
-  /** Nota de cierre (solo tableros semanales). */
+  /** Tableros semanales (reparten premios de Nexus y se reinician cada semana). */
+  weekly: boolean;
+  /** Nota de cierre (solo tableros semanales). Los importes de premio se leen de BD, no aquí. */
   resetNote?: string;
-  /** Resumen de premios (solo tableros semanales). */
-  prizes?: string;
 }
 
 const WEEKLY_RESET = "Cierra cada domingo a las 22:00 UTC (medianoche en España).";
-const WEEKLY_PRIZES = "Premios semanales al top 5: 1000 / 600 / 400 / 250 / 150 Nexus.";
 
-/** Guía de puntuación por tablero. Debe reflejar `weekly_leaderboard_point_rules` de la BD. */
+/**
+ * Guía de puntuación por tablero (la MECÁNICA: qué acciones puntúan). Refleja
+ * `weekly_leaderboard_point_rules`. Los IMPORTES de premio NO se hardcodean aquí: se leen en vivo de
+ * `weekly_leaderboard_prizes` (BD) y se muestran en el diálogo, para no quedar desactualizados.
+ */
 export const RANKING_SCORING_GUIDES: Record<RankingBoardId, IRankingScoringGuide> = {
   MULTIPLAYER: {
     boardId: "MULTIPLAYER",
@@ -37,6 +40,7 @@ export const RANKING_SCORING_GUIDES: Record<RankingBoardId, IRankingScoringGuide
       { action: "Ganar un duelo multijugador", points: "+ELO" },
       { action: "Perder un duelo multijugador", points: "−ELO" },
     ],
+    weekly: false,
   },
   ACTIVITY: {
     boardId: "ACTIVITY",
@@ -49,8 +53,8 @@ export const RANKING_SCORING_GUIDES: Record<RankingBoardId, IRankingScoringGuide
       { action: "Jugar una partida Multijugador", points: "+20" },
       { action: "Reclamar una misión, evento o diaria", points: "+15" },
     ],
+    weekly: true,
     resetNote: WEEKLY_RESET,
-    prizes: WEEKLY_PRIZES,
   },
   COMMERCIAL: {
     boardId: "COMMERCIAL",
@@ -62,8 +66,8 @@ export const RANKING_SCORING_GUIDES: Record<RankingBoardId, IRankingScoringGuide
       { action: "Comprar un pack de sobres", points: "+30" },
       { action: "Evolucionar una carta", points: "+20" },
     ],
+    weekly: true,
     resetNote: WEEKLY_RESET,
-    prizes: WEEKLY_PRIZES,
   },
 };
 
