@@ -38,6 +38,7 @@ export async function sendChatMessage(input: {
   content: string;
   kind?: ChatMessageKind;
   metadata?: Record<string, unknown>;
+  replyToMessageId?: string | null;
 }): Promise<IChatMessage> {
   const response = await fetch("/api/chat/messages", {
     method: "POST",

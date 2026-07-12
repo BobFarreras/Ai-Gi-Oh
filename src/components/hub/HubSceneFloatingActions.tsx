@@ -33,13 +33,15 @@ export function HubSceneFloatingActions({
 
   if (!canShowActions) return null;
 
+  // Móvil: clúster compacto 2×2 (wrap + ancho acotado) pegado abajo-derecha para no invadir el centro
+  // ni chocar con la etiqueta del jugador (abajo-izquierda). Desktop: fila única con etiquetas.
   return (
     <motion.div
       initial={{ y: "30vh", opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: HUB_HUD_ANIMATION_DURATION, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
       style={{ willChange: "transform,opacity" }}
-      className="pointer-events-auto absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] z-50 flex items-center gap-2 sm:bottom-6 sm:right-6"
+      className="pointer-events-auto absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] z-50 flex max-w-[6.75rem] flex-wrap items-center justify-end gap-2 sm:max-w-none sm:flex-nowrap sm:bottom-6 sm:right-6"
     >
       <HubChatButton onActionSound={onHudButtonSound} />
       {canResetCamera ? <HubResetCameraButton onReset={onResetCamera} onActionSound={onHudButtonSound} /> : null}

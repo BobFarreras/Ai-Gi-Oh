@@ -349,6 +349,22 @@ body {
   border: 1px solid rgba(8, 145, 178, 0.35);
 }
 
+/* Resaltado breve del mensaje original al pulsar una cita de respuesta en el chat. */
+@keyframes chat-quote-flash {
+  0% { background-color: rgba(34, 211, 238, 0.28); }
+  100% { background-color: transparent; }
+}
+
+.chat-quote-flash {
+  animation: chat-quote-flash 1.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-quote-flash {
+    animation: none;
+  }
+}
+
 .landing-cta-shine {
   position: absolute;
   inset: 0;

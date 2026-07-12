@@ -45,6 +45,9 @@ export const storyAct3MapDefinition: IStoryActMapDefinition = {
     v({ id: "story-ch3-switch-entrance", duelIndex: 303, nodeType: "EVENT", title: "Interruptor de Entrada", unlockRequirementNodeId: null, position: { x: 600, y: 200 } }),
     v({ id: "story-ch3-switch-deep", duelIndex: 304, nodeType: "EVENT", title: "Interruptor Profundo", unlockRequirementNodeId: null, position: { x: 800, y: 200 } }),
     v({ id: "story-ch3-firewall-terminal", duelIndex: 305, nodeType: "EVENT", title: "Terminal del Cortafuegos", unlockRequirementNodeId: null, position: { x: 1000, y: 200 } }),
+    // Placa de presión del puzzle de la caja: una vez pulsada se enclava (persiste vía mark-interacted)
+    // para que la compuerta a la caché siga abierta tras el duelo obligatorio (evita el soft-lock).
+    v({ id: "story-ch3-plate-1", duelIndex: 309, nodeType: "EVENT", title: "Placa de Presión", unlockRequirementNodeId: null, position: { x: 1200, y: 200 } }),
     // Cachés de recompensa (una sola vez, vía claim-reward).
     v({ id: "story-ch3-cache-1", duelIndex: 306, nodeType: "REWARD_NEXUS", title: "Caché de Nexus", rewardNexus: 420, unlockRequirementNodeId: null, position: { x: 200, y: 400 } }),
     v({ id: "story-ch3-cache-2", duelIndex: 307, nodeType: "REWARD_NEXUS", title: "Caché de Nexus", rewardNexus: 480, unlockRequirementNodeId: null, position: { x: 400, y: 400 } }),

@@ -19,10 +19,11 @@ interface IChatMessageRow {
   content: string;
   kind: ChatMessageKind;
   metadata: Record<string, unknown> | null;
+  reply_to_message_id: string | null;
   created_at: string;
 }
 
-const CHAT_ROW_COLUMNS = "id,room,user_id,nickname,content,kind,metadata,created_at";
+const CHAT_ROW_COLUMNS = "id,room,user_id,nickname,content,kind,metadata,reply_to_message_id,created_at";
 
 function mapRow(row: IChatMessageRow): IChatMessage {
   return {
@@ -33,6 +34,7 @@ function mapRow(row: IChatMessageRow): IChatMessage {
     content: row.content,
     kind: row.kind,
     metadata: row.metadata ?? {},
+    replyToMessageId: row.reply_to_message_id ?? null,
     createdAtIso: row.created_at,
   };
 }
@@ -65,6 +67,7 @@ export class SupabaseChatRepository implements IChatRepository {
         content: input.content,
         kind: input.kind,
         metadata: input.metadata,
+        reply_to_message_id: input.replyToMessageId,
       })
       .select(CHAT_ROW_COLUMNS)
       .single<IChatMessageRow>();

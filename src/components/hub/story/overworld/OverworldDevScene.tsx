@@ -490,11 +490,20 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
             engine.resumeCutscene();
           }
         },
-        onPlatePressed: () => {
+        onPlatePressed: (plateId) => {
           // Una caja pisó una placa: suena el "clunk" de puerta que se abre.
           if (doorSoundRef.current) {
             doorSoundRef.current.currentTime = 0;
             void doorSoundRef.current.play().catch(() => undefined);
+          }
+          // Enclavamos la placa: se persiste como evento interactuado (una sola vez) para que la
+          // compuerta a la caché siga abierta tras el duelo obligatorio de la sala. Sin esto, la caja
+          // vuelve a su origen al regresar del combate, la placa se despresuriza y el jugador queda
+          // atrapado dentro (soft-lock del Acto 3).
+          if (!seenEventIdsRef.current.has(plateId)) {
+            markEventSeen(plateId);
+            void markOverworldEventInteracted(plateId);
+            engine.updateProgress(buildProgress(initialCompleted, seenEventIdsRef.current));
           }
         },
         onCutsceneEnd: () => {

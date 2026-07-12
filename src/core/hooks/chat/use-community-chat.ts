@@ -16,6 +16,7 @@ interface IChatMessageRow {
   content: string;
   kind: ChatMessageKind;
   metadata: Record<string, unknown> | null;
+  reply_to_message_id: string | null;
   created_at: string;
 }
 
@@ -34,6 +35,7 @@ function mapRow(row: IChatMessageRow): IChatMessage {
     content: row.content,
     kind: row.kind,
     metadata: row.metadata ?? {},
+    replyToMessageId: row.reply_to_message_id ?? null,
     createdAtIso: row.created_at,
   };
 }
@@ -70,7 +72,7 @@ export interface IUseCommunityChatResult {
   isLoading: boolean;
   isSending: boolean;
   error: string | null;
-  send: (input: { content: string; kind?: ChatMessageKind; metadata?: Record<string, unknown> }) => Promise<boolean>;
+  send: (input: { content: string; kind?: ChatMessageKind; metadata?: Record<string, unknown>; replyToMessageId?: string | null }) => Promise<boolean>;
   remove: (messageId: string) => Promise<void>;
   toggleReaction: (messageId: string, emoji: string) => Promise<void>;
   clearError: () => void;
@@ -135,12 +137,12 @@ export function useCommunityChat(
   }, [room]);
 
   const send = useCallback(
-    async (input: { content: string; kind?: ChatMessageKind; metadata?: Record<string, unknown> }): Promise<boolean> => {
+    async (input: { content: string; kind?: ChatMessageKind; metadata?: Record<string, unknown>; replyToMessageId?: string | null }): Promise<boolean> => {
       if (isSending) return false;
       setIsSending(true);
       setError(null);
       try {
-        const created = await sendChatMessage({ room, content: input.content, kind: input.kind, metadata: input.metadata });
+        const created = await sendChatMessage({ room, content: input.content, kind: input.kind, metadata: input.metadata, replyToMessageId: input.replyToMessageId });
         setMessages((current) => appendUnique(current, created));
         return true;
       } catch (sendError) {

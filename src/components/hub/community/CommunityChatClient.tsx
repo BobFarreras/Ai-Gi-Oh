@@ -2,20 +2,34 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Check, Layers, Send, SmilePlus, Swords, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Check, CornerUpLeft, Layers, MessageSquare, Send, Swords, Users, X } from "lucide-react";
+import { openDirectConversation } from "@/core/hooks/chat/direct-messages-api";
+import { useUnreadDirectMessages } from "@/core/hooks/chat/use-unread-direct-messages";
 import { IChatMessage } from "@/core/entities/chat/IChatMessage";
 import { IChatMessageReactionSummary } from "@/core/entities/chat/IChatMessageReaction";
-import { CardArchetype, CardType, Faction, ICard } from "@/core/entities/ICard";
+import { ICard } from "@/core/entities/ICard";
 import { IOnlinePlayer, OnlinePlayerStatus } from "@/core/entities/multiplayer/IOnlinePlayer";
-import { CardThumbnail } from "@/components/game/card/CardThumbnail";
+import { CommunityChatMessage, IQuotedPreview } from "@/components/hub/community/CommunityChatMessage";
 import { useOnlinePlayersContext } from "@/components/hub/multiplayer/MultiplayerPresenceProvider";
 import { CommunityChatCardPicker } from "@/components/hub/community/CommunityChatCardPicker";
 import { sendInvitation } from "@/app/hub/multiplayer/actions/send-invitation";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/core/services/chat/validate-chat-message";
 import { CHAT_REACTION_EMOJIS } from "@/core/services/chat/chat-reactions";
 import { useCommunityChat } from "@/core/hooks/chat/use-community-chat";
+
+const NO_REACTIONS: IChatMessageReactionSummary[] = [];
+
+/** Texto corto del mensaje citado para la vista previa de respuesta. */
+function buildQuotedPreviewText(message: IChatMessage): string {
+  if (message.kind === "CARD_SHARE") {
+    const name = typeof message.metadata.name === "string" ? message.metadata.name : "una carta";
+    return `🃏 ${name}`;
+  }
+  return message.content;
+}
 
 interface CommunityChatClientProps {
   room: string;
@@ -35,32 +49,6 @@ const STATUS_META: Record<OnlinePlayerStatus, { label: string; dot: string }> = 
   IN_MATCH: { label: "En partida", dot: "bg-amber-400" },
 };
 
-function formatTime(iso: string): string {
-  const date = new Date(iso);
-  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-}
-
-/** Reconstruye una carta (para CardThumbnail) desde la metadata auto-contenida de un mensaje CARD_SHARE. */
-function reconstructSharedCard(metadata: Record<string, unknown>): ICard | null {
-  const cardId = typeof metadata.cardId === "string" ? metadata.cardId : null;
-  if (!cardId) return null;
-  return {
-    id: cardId,
-    name: typeof metadata.name === "string" ? metadata.name : "Carta",
-    description: "",
-    type: (typeof metadata.type === "string" ? metadata.type : "ENTITY") as CardType,
-    faction: (typeof metadata.faction === "string" ? metadata.faction : "NEUTRAL") as Faction,
-    cost: typeof metadata.cost === "number" ? metadata.cost : 0,
-    attack: typeof metadata.attack === "number" ? metadata.attack : undefined,
-    defense: typeof metadata.defense === "number" ? metadata.defense : undefined,
-    archetype: typeof metadata.archetype === "string" ? (metadata.archetype as CardArchetype) : undefined,
-    renderUrl: typeof metadata.renderUrl === "string" ? metadata.renderUrl : undefined,
-    bgUrl: typeof metadata.bgUrl === "string" ? metadata.bgUrl : undefined,
-    versionTier: typeof metadata.versionTier === "number" ? metadata.versionTier : 0,
-    level: typeof metadata.level === "number" ? metadata.level : 0,
-  };
-}
-
 export function CommunityChatClient({ room, localPlayerId, localNickname, activeDeckIds, initialMessages, initialReactions }: CommunityChatClientProps) {
   const { messages, reactions, isSending, error, send, remove, toggleReaction, clearError } = useCommunityChat(room, initialMessages, initialReactions);
   const onlineOthers = useOnlinePlayersContext();
@@ -68,8 +56,28 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [paletteFor, setPaletteFor] = useState<string | null>(null);
+  const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const router = useRouter();
+  const [openingDmFor, setOpeningDmFor] = useState<string | null>(null);
+  const unreadDms = useUnreadDirectMessages();
   const canInvite = activeDeckIds.length > 0;
+
+  // Abre (o recupera) la conversación privada con un jugador y navega a ella.
+  const handleOpenDm = useCallback(
+    async (playerId: string) => {
+      if (openingDmFor) return;
+      setOpeningDmFor(playerId);
+      try {
+        const conversationId = await openDirectConversation(playerId);
+        router.push(`/hub/chat/dm/${conversationId}`);
+      } catch {
+        setOpeningDmFor(null);
+      }
+    },
+    [openingDmFor, router],
+  );
 
   // Reacciones agrupadas por mensaje para render rápido.
   const reactionsByMessage = useMemo(() => {
@@ -82,6 +90,30 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
     return grouped;
   }, [reactions]);
 
+  const messagesById = useMemo(() => {
+    const map = new Map<string, IChatMessage>();
+    for (const message of messages) map.set(message.id, message);
+    return map;
+  }, [messages]);
+
+  // Vista previa del mensaje citado por cada respuesta (autor + extracto), resuelta una vez por lote.
+  const quotedByMessage = useMemo(() => {
+    const map = new Map<string, IQuotedPreview>();
+    for (const message of messages) {
+      if (!message.replyToMessageId) continue;
+      const original = messagesById.get(message.replyToMessageId);
+      if (!original) continue;
+      map.set(message.id, {
+        nickname: original.nickname,
+        preview: buildQuotedPreviewText(original),
+        isOwn: original.userId === localPlayerId,
+      });
+    }
+    return map;
+  }, [messages, messagesById, localPlayerId]);
+
+  const replyingTo = replyingToId ? messagesById.get(replyingToId) ?? null : null;
+
   const handleToggleReaction = useCallback(
     (messageId: string, emoji: string) => {
       setPaletteFor(null);
@@ -89,6 +121,26 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
     },
     [toggleReaction],
   );
+
+  const handleOpenPalette = useCallback((messageId: string) => {
+    setPaletteFor((current) => (current === messageId ? null : messageId));
+  }, []);
+
+  const handleReply = useCallback((messageId: string) => {
+    setReplyingToId(messageId);
+    inputRef.current?.focus();
+  }, []);
+
+  // Al pulsar una cita se hace scroll al mensaje original y se resalta un instante.
+  const handleJumpToQuoted = useCallback((messageId: string) => {
+    const original = messagesById.get(messageId)?.replyToMessageId;
+    if (!original) return;
+    const node = scrollRef.current?.querySelector(`[data-message-id="${original}"]`);
+    if (!node) return;
+    node.scrollIntoView({ behavior: "smooth", block: "center" });
+    node.classList.add("chat-quote-flash");
+    window.setTimeout(() => node.classList.remove("chat-quote-flash"), 1200);
+  }, [messagesById]);
 
   const handleShareCard = useCallback(
     async (card: ICard) => {
@@ -170,12 +222,32 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
     );
   };
 
+  const dmButton = (player: IOnlinePlayer, variant: "chip" | "row") => {
+    if (player.playerId === localPlayerId) return null;
+    return (
+      <button
+        type="button"
+        aria-label={`Enviar mensaje privado a ${player.nickname}`}
+        title="Mensaje privado"
+        onClick={() => handleOpenDm(player.playerId)}
+        disabled={openingDmFor === player.playerId}
+        className="flex shrink-0 items-center justify-center gap-1 rounded border border-cyan-400/60 bg-cyan-950/40 px-1.5 py-0.5 font-mono text-[9px] font-black uppercase tracking-wide text-cyan-200 transition hover:bg-cyan-900/60 disabled:opacity-50"
+      >
+        <MessageSquare className="h-3 w-3" />
+        {variant === "row" ? <span>Mensaje</span> : null}
+      </button>
+    );
+  };
+
   async function handleSubmit(event: React.FormEvent): Promise<void> {
     event.preventDefault();
     const content = draft.trim();
     if (!content || isSending) return;
-    const ok = await send({ content });
-    if (ok) setDraft("");
+    const ok = await send({ content, replyToMessageId: replyingToId });
+    if (ok) {
+      setDraft("");
+      setReplyingToId(null);
+    }
   }
 
   return (
@@ -204,9 +276,27 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
             <p className="font-display text-lg uppercase tracking-[0.14em] text-cyan-50">{"//"} {room}</p>
           </div>
         </div>
-        <span className="flex items-center gap-1.5 border border-emerald-400/40 bg-emerald-950/40 px-2.5 py-1 font-mono text-[11px] font-black uppercase tracking-[0.14em] text-emerald-300" style={{ clipPath: CLIP_CHIP }}>
-          <Users className="h-3.5 w-3.5" /> {connected.length}
-        </span>
+        <div className="flex items-center gap-2">
+          <div className="relative inline-flex">
+            <Link
+              href="/hub/chat/dm"
+              aria-label={unreadDms > 0 ? `Ver mensajes privados (${unreadDms} sin leer)` : "Ver mensajes privados"}
+              className="flex items-center gap-1.5 border border-cyan-500/45 bg-cyan-950/30 px-2.5 py-1 font-mono text-[11px] font-black uppercase tracking-[0.14em] text-cyan-200 transition hover:border-cyan-300/80 hover:text-cyan-50"
+              style={{ clipPath: CLIP_CHIP }}
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Mensajes</span>
+            </Link>
+            {unreadDms > 0 ? (
+              <span className="pointer-events-none absolute -right-2 -top-2 z-10 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-black text-white ring-2 ring-[#03101c]">
+                {unreadDms > 99 ? "99+" : unreadDms}
+              </span>
+            ) : null}
+          </div>
+          <span className="flex items-center gap-1.5 border border-emerald-400/40 bg-emerald-950/40 px-2.5 py-1 font-mono text-[11px] font-black uppercase tracking-[0.14em] text-emerald-300" style={{ clipPath: CLIP_CHIP }}>
+            <Users className="h-3.5 w-3.5" /> {connected.length}
+          </span>
+        </div>
       </header>
 
       {/* Tira de conectados en móvil */}
@@ -215,6 +305,7 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
           <span key={player.playerId} className="flex shrink-0 items-center gap-1.5 border border-cyan-900/60 bg-[#040d18]/80 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-cyan-100" style={{ clipPath: CLIP_CHIP }}>
             <span className={`h-1.5 w-1.5 rounded-full ${STATUS_META[player.status].dot}`} />
             {player.nickname}
+            {dmButton(player, "chip")}
             {challengeButton(player, "chip")}
           </span>
         ))}
@@ -229,82 +320,23 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
                 Sé el primero en escribir en el canal.
               </p>
             ) : (
-              messages.map((message) => {
-                const isOwn = message.userId === localPlayerId;
-                const isSystem = message.kind === "SYSTEM";
-                if (isSystem) {
-                  return (
-                    <p key={message.id} className="mx-auto rounded border border-fuchsia-500/40 bg-fuchsia-950/30 px-3 py-1 text-center font-mono text-[11px] uppercase tracking-widest text-fuchsia-200">
-                      {message.content}
-                    </p>
-                  );
-                }
-                const sharedCard = message.kind === "CARD_SHARE" ? reconstructSharedCard(message.metadata) : null;
-                return (
-                  <div key={message.id} className={`group flex flex-col ${isOwn ? "items-end" : "items-start"}`}>
-                    <div className="flex items-baseline gap-2">
-                      <span className={`font-mono text-[11px] font-black uppercase tracking-wider ${isOwn ? "text-amber-300" : "text-cyan-300"}`}>
-                        {isOwn ? "Tú" : message.nickname}
-                      </span>
-                      <span className="font-mono text-[9px] text-slate-500">{formatTime(message.createdAtIso)}</span>
-                      {isOwn ? (
-                        <button
-                          type="button"
-                          aria-label="Borrar mensaje"
-                          onClick={() => remove(message.id)}
-                          className="text-slate-600 opacity-0 transition hover:text-rose-300 group-hover:opacity-100"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      ) : null}
-                    </div>
-                    {sharedCard ? (
-                      <div className={`mt-1 w-[92px] rounded-lg border p-1 sm:w-[104px] ${isOwn ? "border-amber-500/30 bg-amber-950/20" : "border-cyan-800/40 bg-[#03141f]/80"}`}>
-                        <div className="aspect-[13/19] w-full">
-                          <CardThumbnail card={sharedCard} versionTier={sharedCard.versionTier ?? 0} level={sharedCard.level} showArtSkeleton />
-                        </div>
-                      </div>
-                    ) : (
-                      <p className={`mt-0.5 max-w-[85%] whitespace-pre-wrap break-words rounded-lg border px-3 py-1.5 text-sm ${isOwn ? "border-amber-500/25 bg-amber-950/25 text-amber-50" : "border-cyan-800/40 bg-[#03141f]/80 text-slate-100"}`}>
-                        {message.content}
-                      </p>
-                    )}
-                    <div className={`mt-1 flex flex-wrap items-center gap-1 ${isOwn ? "justify-end" : "justify-start"}`}>
-                      {(reactionsByMessage.get(message.id) ?? []).map((reaction) => (
-                        <button
-                          key={reaction.emoji}
-                          type="button"
-                          aria-label={`${reaction.emoji} (${reaction.count})`}
-                          onClick={() => handleToggleReaction(message.id, reaction.emoji)}
-                          className={`flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs transition ${reaction.reactedByMe ? "border-cyan-400/70 bg-cyan-950/50 text-cyan-100" : "border-slate-700/60 bg-slate-900/50 text-slate-300 hover:border-cyan-500/50"}`}
-                        >
-                          <span>{reaction.emoji}</span>
-                          <span className="font-mono text-[10px] font-bold">{reaction.count}</span>
-                        </button>
-                      ))}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          aria-label="Reaccionar"
-                          onClick={() => setPaletteFor((current) => (current === message.id ? null : message.id))}
-                          className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-700/50 text-slate-500 opacity-100 transition hover:text-cyan-300 sm:opacity-0 sm:group-hover:opacity-100"
-                        >
-                          <SmilePlus className="h-3.5 w-3.5" />
-                        </button>
-                        {paletteFor === message.id ? (
-                          <div className={`absolute bottom-full z-20 mb-1 flex gap-0.5 border border-cyan-500/50 bg-[#040d18] p-1 shadow-[0_0_18px_rgba(0,0,0,0.6)] ${isOwn ? "right-0" : "left-0"}`}>
-                            {CHAT_REACTION_EMOJIS.map((emoji) => (
-                              <button key={emoji} type="button" aria-label={`Reaccionar ${emoji}`} onClick={() => handleToggleReaction(message.id, emoji)} className="flex h-7 w-7 items-center justify-center rounded text-base transition hover:bg-cyan-500/20">
-                                {emoji}
-                              </button>
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
+              messages.map((message) => (
+                <div key={message.id} data-message-id={message.id} className="rounded transition-colors">
+                  <CommunityChatMessage
+                    message={message}
+                    isOwn={message.userId === localPlayerId}
+                    reactions={reactionsByMessage.get(message.id) ?? NO_REACTIONS}
+                    quoted={quotedByMessage.get(message.id) ?? null}
+                    isPaletteOpen={paletteFor === message.id}
+                    reactionEmojis={CHAT_REACTION_EMOJIS}
+                    onOpenPalette={handleOpenPalette}
+                    onToggleReaction={handleToggleReaction}
+                    onRemove={remove}
+                    onReply={handleReply}
+                    onJumpToQuoted={handleJumpToQuoted}
+                  />
+                </div>
+              ))
             )}
           </div>
 
@@ -312,6 +344,27 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
             <button type="button" onClick={clearError} className="mx-3 mb-2 shrink-0 rounded border border-rose-500/50 bg-rose-950/50 px-3 py-1.5 text-left text-xs font-semibold text-rose-200">
               {error} · (toca para cerrar)
             </button>
+          ) : null}
+
+          {/* Vista previa de la respuesta (mensaje citado) */}
+          {replyingTo ? (
+            <div className="mx-2.5 mb-1 flex shrink-0 items-center gap-2 border-l-2 border-cyan-400/70 bg-cyan-950/30 px-2.5 py-1.5 sm:mx-3">
+              <CornerUpLeft className="h-3.5 w-3.5 shrink-0 text-cyan-300" />
+              <div className="min-w-0 flex-1">
+                <p className="font-mono text-[9px] font-black uppercase tracking-wider text-cyan-300/90">
+                  Respondiendo a {replyingTo.userId === localPlayerId ? "ti" : replyingTo.nickname}
+                </p>
+                <p className="truncate text-[11px] text-slate-300">{buildQuotedPreviewText(replyingTo)}</p>
+              </div>
+              <button
+                type="button"
+                aria-label="Cancelar respuesta"
+                onClick={() => setReplyingToId(null)}
+                className="shrink-0 text-slate-500 transition hover:text-rose-300"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           ) : null}
 
           {/* Input */}
@@ -329,6 +382,7 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
             </button>
             <div className="flex flex-1 flex-col">
               <input
+                ref={inputRef}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value.slice(0, CHAT_MESSAGE_MAX_LENGTH))}
                 placeholder="Escribe un mensaje…"
@@ -363,6 +417,7 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
                   <p className="truncate text-xs font-bold text-cyan-100">{player.nickname}</p>
                   <p className="font-mono text-[8px] uppercase tracking-wide text-slate-500">{STATUS_META[player.status].label}</p>
                 </div>
+                {dmButton(player, "row")}
                 {challengeButton(player, "row")}
               </div>
             ))}
