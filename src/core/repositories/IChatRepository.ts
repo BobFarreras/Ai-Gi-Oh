@@ -9,6 +9,8 @@ export interface IInsertChatMessageInput {
   content: string;
   kind: ChatMessageKind;
   metadata: Record<string, unknown>;
+  /** Id del mensaje citado al responder, o null. */
+  replyToMessageId: string | null;
 }
 
 export interface IChatRepository {

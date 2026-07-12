@@ -10,5 +10,7 @@ export interface IChatMessage {
   kind: ChatMessageKind;
   /** Datos extra según `kind` (p.ej. { cardId } para CARD_SHARE). Vacío en mensajes normales. */
   metadata: Record<string, unknown>;
+  /** Id del mensaje citado al responder (estilo WhatsApp), o null si no responde a ninguno. */
+  replyToMessageId: string | null;
   createdAtIso: string;
 }

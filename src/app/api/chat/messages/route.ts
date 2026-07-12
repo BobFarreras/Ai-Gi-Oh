@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
       content: typeof payload.content === "string" ? payload.content : "",
       kind: typeof payload.kind === "string" ? payload.kind : undefined,
       metadata: payload.metadata && typeof payload.metadata === "object" ? (payload.metadata as Record<string, unknown>) : undefined,
+      replyToMessageId: typeof payload.replyToMessageId === "string" ? payload.replyToMessageId : null,
     });
     return NextResponse.json({ message }, { status: 201 });
   } catch (error) {

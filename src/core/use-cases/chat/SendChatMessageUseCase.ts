@@ -11,6 +11,14 @@ interface ISendChatMessageInput {
   content: string;
   kind?: string;
   metadata?: Record<string, unknown>;
+  replyToMessageId?: string | null;
+}
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Solo se acepta un id de cita bien formado; cualquier otra cosa se descarta (la FK garantiza que exista). */
+function sanitizeReplyToMessageId(value: string | null | undefined): string | null {
+  return typeof value === "string" && UUID_PATTERN.test(value) ? value : null;
 }
 
 export class SendChatMessageUseCase {
@@ -27,6 +35,7 @@ export class SendChatMessageUseCase {
       kind: validated.kind,
       // Solo los mensajes no-TEXT llevan metadata (p.ej. CARD_SHARE → { cardId }).
       metadata: validated.kind === "TEXT" ? {} : (input.metadata ?? {}),
+      replyToMessageId: sanitizeReplyToMessageId(input.replyToMessageId),
     });
   }
 }

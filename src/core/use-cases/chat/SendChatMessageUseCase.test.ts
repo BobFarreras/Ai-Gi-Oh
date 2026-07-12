@@ -13,6 +13,7 @@ function createRepository(): IChatRepository & { insert: ReturnType<typeof vi.fn
     content: input.content,
     kind: input.kind,
     metadata: input.metadata,
+    replyToMessageId: input.replyToMessageId,
     createdAtIso: "2026-07-11T00:00:00.000Z",
   }));
   return {
@@ -45,6 +46,15 @@ describe("SendChatMessageUseCase", () => {
     expect(repository.insert).toHaveBeenLastCalledWith(expect.objectContaining({ metadata: {} }));
     await new SendChatMessageUseCase(repository).execute({ userId: "u", nickname: "n", content: "mira", kind: "CARD_SHARE", metadata: { cardId: "entity-kali" } });
     expect(repository.insert).toHaveBeenLastCalledWith(expect.objectContaining({ kind: "CARD_SHARE", metadata: { cardId: "entity-kali" } }));
+  });
+
+  it("conserva un id de cita válido (UUID) y descarta uno malformado", async () => {
+    const repository = createRepository();
+    const validId = "11111111-2222-4333-8444-555555555555";
+    await new SendChatMessageUseCase(repository).execute({ userId: "u", nickname: "n", content: "respondo", replyToMessageId: validId });
+    expect(repository.insert).toHaveBeenLastCalledWith(expect.objectContaining({ replyToMessageId: validId }));
+    await new SendChatMessageUseCase(repository).execute({ userId: "u", nickname: "n", content: "sin cita", replyToMessageId: "no-es-uuid" });
+    expect(repository.insert).toHaveBeenLastCalledWith(expect.objectContaining({ replyToMessageId: null }));
   });
 
   it("rechaza sin userId o con contenido vacío", async () => {
