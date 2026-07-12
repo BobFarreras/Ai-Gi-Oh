@@ -20,16 +20,20 @@ export interface IQuotedPreview {
 interface CommunityChatMessageProps {
   message: IChatMessage;
   isOwn: boolean;
-  reactions: IChatMessageReactionSummary[];
   quoted: IQuotedPreview | null;
-  isPaletteOpen: boolean;
-  reactionEmojis: readonly string[];
-  onOpenPalette: (messageId: string) => void;
-  onToggleReaction: (messageId: string, emoji: string) => void;
   onRemove: (messageId: string) => void;
   onReply: (messageId: string) => void;
   onJumpToQuoted: (messageId: string) => void;
+  /** Oculta la fila de reacciones (p.ej. en los mensajes privados). Por defecto se muestran. */
+  hideReactions?: boolean;
+  reactions?: IChatMessageReactionSummary[];
+  isPaletteOpen?: boolean;
+  reactionEmojis?: readonly string[];
+  onOpenPalette?: (messageId: string) => void;
+  onToggleReaction?: (messageId: string, emoji: string) => void;
 }
+
+const NO_REACTIONS: IChatMessageReactionSummary[] = [];
 
 const DRAG_TRIGGER_PX = 48;
 const DRAG_MAX_PX = 72;
@@ -42,15 +46,16 @@ function formatTime(iso: string): string {
 function CommunityChatMessageBase({
   message,
   isOwn,
-  reactions,
   quoted,
-  isPaletteOpen,
-  reactionEmojis,
-  onOpenPalette,
-  onToggleReaction,
   onRemove,
   onReply,
   onJumpToQuoted,
+  hideReactions = false,
+  reactions = NO_REACTIONS,
+  isPaletteOpen = false,
+  reactionEmojis = [],
+  onOpenPalette,
+  onToggleReaction,
 }: CommunityChatMessageProps) {
   // Gesto de arrastre horizontal para responder. `touch-action: pan-y` deja el scroll vertical intacto.
   const [dragX, setDragX] = useState(0);
@@ -166,13 +171,14 @@ function CommunityChatMessageBase({
         )}
       </div>
 
+      {hideReactions ? null : (
       <div className={`mt-1 flex flex-wrap items-center gap-1 ${isOwn ? "justify-end" : "justify-start"}`}>
         {reactions.map((reaction) => (
           <button
             key={reaction.emoji}
             type="button"
             aria-label={`${reaction.emoji} (${reaction.count})`}
-            onClick={() => onToggleReaction(message.id, reaction.emoji)}
+            onClick={() => onToggleReaction?.(message.id, reaction.emoji)}
             className={`flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs transition ${reaction.reactedByMe ? "border-cyan-400/70 bg-cyan-950/50 text-cyan-100" : "border-slate-700/60 bg-slate-900/50 text-slate-300 hover:border-cyan-500/50"}`}
           >
             <span>{reaction.emoji}</span>
@@ -183,7 +189,7 @@ function CommunityChatMessageBase({
           <button
             type="button"
             aria-label="Reaccionar"
-            onClick={() => onOpenPalette(message.id)}
+            onClick={() => onOpenPalette?.(message.id)}
             className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-700/50 text-slate-500 opacity-100 transition hover:text-cyan-300 sm:opacity-0 sm:group-hover:opacity-100"
           >
             <SmilePlus className="h-3.5 w-3.5" />
@@ -191,7 +197,7 @@ function CommunityChatMessageBase({
           {isPaletteOpen ? (
             <div className={`absolute bottom-full z-20 mb-1 flex gap-0.5 border border-cyan-500/50 bg-[#040d18] p-1 shadow-[0_0_18px_rgba(0,0,0,0.6)] ${isOwn ? "right-0" : "left-0"}`}>
               {reactionEmojis.map((emoji) => (
-                <button key={emoji} type="button" aria-label={`Reaccionar ${emoji}`} onClick={() => onToggleReaction(message.id, emoji)} className="flex h-7 w-7 items-center justify-center rounded text-base transition hover:bg-cyan-500/20">
+                <button key={emoji} type="button" aria-label={`Reaccionar ${emoji}`} onClick={() => onToggleReaction?.(message.id, emoji)} className="flex h-7 w-7 items-center justify-center rounded text-base transition hover:bg-cyan-500/20">
                   {emoji}
                 </button>
               ))}
@@ -199,6 +205,7 @@ function CommunityChatMessageBase({
           ) : null}
         </div>
       </div>
+      )}
     </div>
   );
 }

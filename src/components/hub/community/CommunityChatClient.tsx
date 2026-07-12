@@ -2,9 +2,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Check, CornerUpLeft, Layers, Send, Swords, Users, X } from "lucide-react";
+import { ArrowLeft, Check, CornerUpLeft, Layers, MessageSquare, Send, Swords, Users, X } from "lucide-react";
+import { openDirectConversation } from "@/core/hooks/chat/direct-messages-api";
 import { IChatMessage } from "@/core/entities/chat/IChatMessage";
 import { IChatMessageReactionSummary } from "@/core/entities/chat/IChatMessageReaction";
 import { ICard } from "@/core/entities/ICard";
@@ -56,7 +58,24 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const router = useRouter();
+  const [openingDmFor, setOpeningDmFor] = useState<string | null>(null);
   const canInvite = activeDeckIds.length > 0;
+
+  // Abre (o recupera) la conversación privada con un jugador y navega a ella.
+  const handleOpenDm = useCallback(
+    async (playerId: string) => {
+      if (openingDmFor) return;
+      setOpeningDmFor(playerId);
+      try {
+        const conversationId = await openDirectConversation(playerId);
+        router.push(`/hub/chat/dm/${conversationId}`);
+      } catch {
+        setOpeningDmFor(null);
+      }
+    },
+    [openingDmFor, router],
+  );
 
   // Reacciones agrupadas por mensaje para render rápido.
   const reactionsByMessage = useMemo(() => {
@@ -201,6 +220,23 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
     );
   };
 
+  const dmButton = (player: IOnlinePlayer, variant: "chip" | "row") => {
+    if (player.playerId === localPlayerId) return null;
+    return (
+      <button
+        type="button"
+        aria-label={`Enviar mensaje privado a ${player.nickname}`}
+        title="Mensaje privado"
+        onClick={() => handleOpenDm(player.playerId)}
+        disabled={openingDmFor === player.playerId}
+        className="flex shrink-0 items-center justify-center gap-1 rounded border border-cyan-400/60 bg-cyan-950/40 px-1.5 py-0.5 font-mono text-[9px] font-black uppercase tracking-wide text-cyan-200 transition hover:bg-cyan-900/60 disabled:opacity-50"
+      >
+        <MessageSquare className="h-3 w-3" />
+        {variant === "row" ? <span>Mensaje</span> : null}
+      </button>
+    );
+  };
+
   async function handleSubmit(event: React.FormEvent): Promise<void> {
     event.preventDefault();
     const content = draft.trim();
@@ -238,9 +274,20 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
             <p className="font-display text-lg uppercase tracking-[0.14em] text-cyan-50">{"//"} {room}</p>
           </div>
         </div>
-        <span className="flex items-center gap-1.5 border border-emerald-400/40 bg-emerald-950/40 px-2.5 py-1 font-mono text-[11px] font-black uppercase tracking-[0.14em] text-emerald-300" style={{ clipPath: CLIP_CHIP }}>
-          <Users className="h-3.5 w-3.5" /> {connected.length}
-        </span>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/hub/chat/dm"
+            aria-label="Ver mensajes privados"
+            className="flex items-center gap-1.5 border border-cyan-500/45 bg-cyan-950/30 px-2.5 py-1 font-mono text-[11px] font-black uppercase tracking-[0.14em] text-cyan-200 transition hover:border-cyan-300/80 hover:text-cyan-50"
+            style={{ clipPath: CLIP_CHIP }}
+          >
+            <MessageSquare className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Mensajes</span>
+          </Link>
+          <span className="flex items-center gap-1.5 border border-emerald-400/40 bg-emerald-950/40 px-2.5 py-1 font-mono text-[11px] font-black uppercase tracking-[0.14em] text-emerald-300" style={{ clipPath: CLIP_CHIP }}>
+            <Users className="h-3.5 w-3.5" /> {connected.length}
+          </span>
+        </div>
       </header>
 
       {/* Tira de conectados en móvil */}
@@ -249,6 +296,7 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
           <span key={player.playerId} className="flex shrink-0 items-center gap-1.5 border border-cyan-900/60 bg-[#040d18]/80 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-cyan-100" style={{ clipPath: CLIP_CHIP }}>
             <span className={`h-1.5 w-1.5 rounded-full ${STATUS_META[player.status].dot}`} />
             {player.nickname}
+            {dmButton(player, "chip")}
             {challengeButton(player, "chip")}
           </span>
         ))}
@@ -360,6 +408,7 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
                   <p className="truncate text-xs font-bold text-cyan-100">{player.nickname}</p>
                   <p className="font-mono text-[8px] uppercase tracking-wide text-slate-500">{STATUS_META[player.status].label}</p>
                 </div>
+                {dmButton(player, "row")}
                 {challengeButton(player, "row")}
               </div>
             ))}
