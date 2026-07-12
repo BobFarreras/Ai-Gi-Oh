@@ -7,6 +7,7 @@ import Image from "next/image";
 import { ArrowLeft, MessageSquarePlus } from "lucide-react";
 import { IDirectConversation } from "@/core/entities/chat/IDirectMessage";
 import { getAvatarGradientClasses, getAvatarInitial } from "@/components/hub/internal/avatar-color";
+import { useDirectConversationsLive } from "@/core/hooks/chat/use-direct-conversations-live";
 
 interface DirectConversationsClientProps {
   conversations: IDirectConversation[];
@@ -20,7 +21,9 @@ function formatWhen(iso: string): string {
   return `${date.getDate()}/${date.getMonth() + 1}`;
 }
 
-export function DirectConversationsClient({ conversations }: DirectConversationsClientProps) {
+export function DirectConversationsClient({ conversations: initialConversations }: DirectConversationsClientProps) {
+  const conversations = useDirectConversationsLive(initialConversations);
+
   return (
     <div className="mx-auto flex h-dvh w-full max-w-3xl flex-col gap-3 px-3 py-3 sm:px-5 sm:py-5">
       <header className="flex shrink-0 items-center gap-3 border border-cyan-500/40 bg-[#03101c]/90 px-3 py-2.5">

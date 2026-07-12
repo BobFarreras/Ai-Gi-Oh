@@ -59,6 +59,13 @@ export async function deleteOwnDirectMessage(messageId: string): Promise<void> {
   if (!response.ok) throw new Error(await parseError(response, "No se pudo borrar el mensaje."));
 }
 
+export async function fetchUnreadDirectCount(): Promise<number> {
+  const response = await fetch("/api/chat/dm/unread", { method: "GET", cache: "no-store" });
+  if (!response.ok) return 0;
+  const body = (await response.json()) as { count?: number };
+  return body.count ?? 0;
+}
+
 export async function markDirectConversationRead(conversationId: string): Promise<void> {
   await fetch("/api/chat/dm/read", {
     method: "POST",
