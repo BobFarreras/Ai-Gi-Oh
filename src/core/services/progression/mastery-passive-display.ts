@@ -19,10 +19,12 @@ const PASSIVE_TEMPLATE: Record<string, (magnitude: number) => string> = {
 /**
  * Devuelve el texto de la pasiva con la magnitud correspondiente a la versión.
  * Sin `versionTier` asume el valor pleno (V5), útil para glosarios/referencia.
+ * Devuelve `null` cuando no hay pasiva o no sabemos describir su efecto: preferimos
+ * ocultar la línea antes que afirmar un poder vacío ("Pasiva activa" sin explicar).
  */
 export function resolveMasteryPassiveLabel(passiveSkillId: string | null, versionTier?: number): string | null {
   if (!passiveSkillId) return null;
   const template = PASSIVE_TEMPLATE[passiveSkillId];
-  if (!template) return "Pasiva Mastery activa en esta carta.";
+  if (!template) return null;
   return template(resolvePassiveMagnitude(passiveSkillId, versionTier ?? 5));
 }

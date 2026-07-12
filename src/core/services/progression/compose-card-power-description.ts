@@ -4,11 +4,13 @@ import { resolveMasteryPassiveLabel } from "./mastery-passive-display";
 
 /**
  * Devuelve la descripción de la carta con su poder integrado al inicio (como las magias/trampas).
- * La magnitud se resuelve a la versión de la carta (V0 base si no tiene progreso), para coincidir con la cara.
+ * Fuente única de la línea de poder: prioriza la etiqueta ya resuelta (`masteryPassiveLabel`, con la
+ * magnitud de la versión que fija la progresión) y, si falta, la deriva del `masteryPassiveSkillId`.
+ * Sin pasiva describible no antepone nada (no afirma un poder vacío).
  */
 export function composeCardPowerDescription(
-  card: Pick<ICard, "description" | "masteryPassiveSkillId" | "versionTier">,
+  card: Pick<ICard, "description" | "masteryPassiveSkillId" | "masteryPassiveLabel" | "versionTier">,
 ): string {
-  const power = resolveMasteryPassiveLabel(card.masteryPassiveSkillId ?? null, card.versionTier ?? 0);
+  const power = card.masteryPassiveLabel ?? resolveMasteryPassiveLabel(card.masteryPassiveSkillId ?? null, card.versionTier ?? 0);
   return power ? `${power}\n\n${card.description}` : card.description;
 }

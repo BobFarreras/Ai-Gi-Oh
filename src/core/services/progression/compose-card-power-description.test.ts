@@ -22,4 +22,20 @@ describe("composeCardPowerDescription", () => {
     const result = composeCardPowerDescription({ ...baseCard, masteryPassiveSkillId: "passive-atk-drain-200", versionTier: 5 });
     expect(result).toContain("reduce 200 ATK");
   });
+
+  it("prioriza la etiqueta ya resuelta (masteryPassiveLabel) sobre el skill id", () => {
+    const result = composeCardPowerDescription({
+      ...baseCard,
+      masteryPassiveSkillId: "passive-atk-drain-200",
+      masteryPassiveLabel: "Etiqueta ya resuelta con magnitud de versión.",
+      versionTier: 3,
+    });
+    expect(result).toContain("Etiqueta ya resuelta con magnitud de versión.");
+    expect(result).not.toContain("reduce"); // no vuelve a derivar del skill id
+  });
+
+  it("no antepone nada cuando la pasiva no es describible (skill id sin plantilla)", () => {
+    const result = composeCardPowerDescription({ ...baseCard, masteryPassiveSkillId: "passive-desconocida", versionTier: 5 });
+    expect(result).toBe("Automatización de flujos para ganar ventaja.");
+  });
 });

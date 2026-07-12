@@ -1,4 +1,4 @@
-// src/components/game/board/internal/resolve-live-selected-card.test.ts - Verifica que el detalle use carta viva y añada texto de pasiva V5.
+// src/components/game/board/internal/resolve-live-selected-card.test.ts - Verifica que el detalle use la carta viva sin duplicar el texto de la pasiva V5.
 import { describe, expect, it } from "vitest";
 import { createTestGameState } from "@/core/use-cases/game-engine/test-support/state-fixtures";
 import { resolveLiveSelectedCard } from "@/components/game/board/internal/resolve-live-selected-card";
@@ -54,7 +54,10 @@ describe("resolveLiveSelectedCard", () => {
     };
     const resolved = resolveLiveSelectedCard(selected, state);
     expect(resolved?.defense).toBe(2200);
-    expect(resolved?.description).toContain("[Pasiva V5]");
+    // Usa la descripción de la carta viva ("Base"), no la de la referencia seleccionada ("Old").
+    expect(resolved?.description).toBe("Base");
+    // Ya no inyecta la línea de pasiva: eso lo compone composeCardPowerDescription (sin duplicar).
+    expect(resolved?.description).not.toContain("[Pasiva V5]");
   });
 });
 
