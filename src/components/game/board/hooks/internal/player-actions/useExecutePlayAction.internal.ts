@@ -5,7 +5,7 @@ import { LocalActionEmitter } from "@/components/game/board/multiplayer/local-ac
 import { sleep } from "../sleep";
 import { addRevealedId, findReactiveTrap, removeRevealedId } from "../trapPreview";
 import { PLAYER_POST_RESOLUTION_MS, PLAYER_TRAP_PREVIEW_MS } from "./constants";
-import { IUsePlayerActionsParams } from "./types";
+import { IUsePlayerActionsParams, RequestTrapActivationDecision } from "./types";
 
 interface IBoardUiError {
   code: "GAME_RULE_ERROR" | "NOT_FOUND_ERROR";
@@ -32,6 +32,7 @@ interface IExecuteActivationInput {
   gameState: GameState;
   selectedCardReference: string;
   applyTransition: IApplyTransition;
+  requestTrapActivationDecision: RequestTrapActivationDecision;
   clearSelection: IUsePlayerActionsParams["clearSelection"];
   setIsAnimating: IUsePlayerActionsParams["setIsAnimating"];
   setLastError: IUsePlayerActionsParams["setLastError"];
@@ -94,23 +95,30 @@ export async function executeActivationPlay(input: IExecuteActivationInput): Pro
     input.setSelectedCard(reactiveTrap.card);
     await sleep(PLAYER_TRAP_PREVIEW_MS);
   }
-  if (playerCounterTrap) {
+  // El jugador decide si activa su contra-trampa (Nullify) para negar la trampa rival.
+  const activateCounterTrap = playerCounterTrap
+    ? await input.requestTrapActivationDecision(playerCounterTrap.card, "ON_OPPONENT_TRAP_ACTIVATED")
+    : false;
+  if (playerCounterTrap && activateCounterTrap) {
     input.setRevealedEntities((previous) => addRevealedId(previous, playerCounterTrap.instanceId));
     input.setActiveAttackerId(playerCounterTrap.instanceId);
     input.setSelectedCard(playerCounterTrap.card);
     await sleep(PLAYER_TRAP_PREVIEW_MS);
   }
 
-  const resolvedState = input.applyTransition((state) => GameEngine.resolveExecution(state, state.playerA.id, executionId));
+  const declineCounterTrap = Boolean(playerCounterTrap) && !activateCounterTrap;
+  const resolvedState = input.applyTransition((state) =>
+    GameEngine.resolveExecution(state, state.playerA.id, executionId, declineCounterTrap ? { skipCounterTrapPlayerIds: [state.playerA.id] } : undefined),
+  );
   if (resolvedState) {
     // Sincronizar la RESOLUCIÓN del efecto (daño, trampas reactivas, etc.) al rival.
-    input.emitLocalAction({ type: "RESOLVE_EXECUTION", payload: { instanceId: executionId } });
+    input.emitLocalAction({ type: "RESOLVE_EXECUTION", payload: { instanceId: executionId, declineCounterTrap: declineCounterTrap || undefined } });
   }
   if (reactiveTrap) {
     await sleep(PLAYER_POST_RESOLUTION_MS);
     input.setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
   }
-  if (playerCounterTrap) {
+  if (playerCounterTrap && activateCounterTrap) {
     await sleep(PLAYER_POST_RESOLUTION_MS);
     input.setRevealedEntities((previous) => removeRevealedId(previous, playerCounterTrap.instanceId));
   }

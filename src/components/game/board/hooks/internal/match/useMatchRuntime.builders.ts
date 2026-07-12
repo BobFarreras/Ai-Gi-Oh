@@ -55,6 +55,7 @@ export function buildPlayerActionsParams(
   assertPlayerTurn: () => boolean,
   applyTransition: (transition: (state: GameState) => GameState) => GameState | null,
   resolvePendingTurnAction: (selectedId: string) => void,
+  requestTrapActivationDecision: IBuildOpponentTurnParamsInput["requestTrapActivationDecision"],
 ): IUsePlayerActionsParams {
   return {
     gameState: uiState.gameState,
@@ -66,6 +67,7 @@ export function buildPlayerActionsParams(
     pendingFusionSummon: uiState.pendingFusionSummon,
     assertPlayerTurn,
     applyTransition,
+    requestTrapActivationDecision,
     clearSelection: uiState.clearSelection,
     clearError: uiState.clearError,
     resolvePendingTurnAction,

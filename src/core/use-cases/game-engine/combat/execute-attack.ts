@@ -9,6 +9,8 @@ import { GameState } from "@/core/use-cases/game-engine/state/types";
 interface IExecuteAttackOptions {
   skipReactivePlayerIds?: string[];
   skipTrapEventTypes?: ("ATTACK_DECLARED" | "DIRECT_ATTACK_DECLARED")[];
+  /** Dueños cuyo contra-trampa (Nullify) no debe auto-activarse (el jugador decide). */
+  skipCounterTrapPlayerIds?: string[];
 }
 
 export function executeAttack(
@@ -30,6 +32,7 @@ export function executeAttack(
     {
       skipReactivePlayerIds: options?.skipReactivePlayerIds,
       skipEventTypes: options?.skipTrapEventTypes,
+      skipCounterTrapPlayerIds: options?.skipCounterTrapPlayerIds,
     },
   );
   const { player: currentAttacker, opponent: currentDefender, isPlayerA } = getPlayerPair(stateAfterTrap, attackerPlayerId);
@@ -47,6 +50,7 @@ export function executeAttack(
       {
         skipReactivePlayerIds: options?.skipReactivePlayerIds,
         skipEventTypes: options?.skipTrapEventTypes,
+        skipCounterTrapPlayerIds: options?.skipCounterTrapPlayerIds,
       },
     );
     const { player: directAttacker, opponent: directDefender, isPlayerA: isPlayerADirect } = getPlayerPair(stateAfterDirectTrap, attackerPlayerId);

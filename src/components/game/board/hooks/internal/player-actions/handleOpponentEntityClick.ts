@@ -11,6 +11,7 @@ interface IHandleOpponentEntityClickParams extends Pick<
   IUsePlayerActionsParams,
   | "activeAttackerId"
   | "applyTransition"
+  | "requestTrapActivationDecision"
   | "clearSelection"
   | "gameState"
   | "setActiveAttackerId"
@@ -33,6 +34,7 @@ export async function handleOpponentEntityClick({
   entity,
   activeAttackerId,
   applyTransition,
+  requestTrapActivationDecision,
   clearSelection,
   gameState,
   setActiveAttackerId,
@@ -67,7 +69,12 @@ export async function handleOpponentEntityClick({
     await sleep(PLAYER_TRAP_PREVIEW_MS);
     setActiveAttackerId(attackerId);
   }
-  if (playerCounterTrap) {
+  // El jugador decide si activa su contra-trampa (Nullify) para negar la trampa rival, igual que el
+  // resto de trampas. Si la rechaza, la trampa rival resuelve con normalidad.
+  const activateCounterTrap = playerCounterTrap
+    ? await requestTrapActivationDecision(playerCounterTrap.card, "ON_OPPONENT_TRAP_ACTIVATED")
+    : false;
+  if (playerCounterTrap && activateCounterTrap) {
     setRevealedEntities((previous) => addRevealedId(previous, playerCounterTrap.instanceId));
     setActiveAttackerId(playerCounterTrap.instanceId);
     setSelectedCard(playerCounterTrap.card);
@@ -75,9 +82,12 @@ export async function handleOpponentEntityClick({
     setActiveAttackerId(attackerId);
   }
 
-  const attacked = applyTransition((state) => GameEngine.executeAttack(state, state.playerA.id, attackerId, targetId));
+  const declineCounterTrap = Boolean(playerCounterTrap) && !activateCounterTrap;
+  const attacked = applyTransition((state) =>
+    GameEngine.executeAttack(state, state.playerA.id, attackerId, targetId, declineCounterTrap ? { skipCounterTrapPlayerIds: [state.playerA.id] } : undefined),
+  );
   if (attacked) {
-    emitLocalAction({ type: "ATTACK", payload: { attackerInstanceId: attackerId, defenderInstanceId: targetId } });
+    emitLocalAction({ type: "ATTACK", payload: { attackerInstanceId: attackerId, defenderInstanceId: targetId, declineCounterTrap: declineCounterTrap || undefined } });
   }
   if (shouldRevealTargetBeforeBattle && targetId) {
     await sleep(PLAYER_POST_RESOLUTION_MS);
@@ -87,7 +97,7 @@ export async function handleOpponentEntityClick({
     await sleep(PLAYER_POST_RESOLUTION_MS);
     setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
   }
-  if (playerCounterTrap) {
+  if (playerCounterTrap && activateCounterTrap) {
     await sleep(PLAYER_POST_RESOLUTION_MS);
     setRevealedEntities((previous) => removeRevealedId(previous, playerCounterTrap.instanceId));
   }

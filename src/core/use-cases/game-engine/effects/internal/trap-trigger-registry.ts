@@ -14,6 +14,8 @@ export type TrapReactiveEvent =
 export interface ITrapReactiveResolutionOptions {
   skipReactivePlayerIds?: string[];
   skipEventTypes?: TrapReactiveEvent["type"][];
+  /** Dueños cuyo contra-trampa (Nullify) no debe auto-activarse (el jugador lo decide). */
+  skipCounterTrapPlayerIds?: string[];
 }
 
 /** Dispara resolución de trampa desde un evento reactivo del motor usando mapping centralizado. */
@@ -26,12 +28,13 @@ export function resolveReactiveTrapEvent(
   if (options?.skipReactivePlayerIds?.includes(reactivePlayerId) && options?.skipEventTypes?.includes(event.type)) {
     return state;
   }
-  if (event.type === "ATTACK_DECLARED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_ATTACK_DECLARED", event.context);
-  if (event.type === "DIRECT_ATTACK_DECLARED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_DIRECT_ATTACK_DECLARED", event.context);
-  if (event.type === "ENTITY_SET_PLAYED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_ENTITY_SET_PLAYED", event.context);
-  if (event.type === "EXECUTION_BUFF_APPLIED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_STAT_BUFF_APPLIED", event.context);
-  if (event.type === "EXECUTION_ACTIVATED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_EXECUTION_ACTIVATED");
-  return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_TRAP_ACTIVATED");
+  const trapOptions = { skipCounterTrapPlayerIds: options?.skipCounterTrapPlayerIds };
+  if (event.type === "ATTACK_DECLARED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_ATTACK_DECLARED", event.context, trapOptions);
+  if (event.type === "DIRECT_ATTACK_DECLARED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_DIRECT_ATTACK_DECLARED", event.context, trapOptions);
+  if (event.type === "ENTITY_SET_PLAYED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_ENTITY_SET_PLAYED", event.context, trapOptions);
+  if (event.type === "EXECUTION_BUFF_APPLIED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_STAT_BUFF_APPLIED", event.context, trapOptions);
+  if (event.type === "EXECUTION_ACTIVATED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_EXECUTION_ACTIVATED", undefined, trapOptions);
+  return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_TRAP_ACTIVATED", undefined, trapOptions);
 }
 
 export function getRegisteredTrapReactiveEvents(): ReadonlyArray<TrapReactiveEvent["type"]> {

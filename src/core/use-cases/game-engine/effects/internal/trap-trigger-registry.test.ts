@@ -14,12 +14,18 @@ describe("trap-trigger-registry", () => {
   it("mapea ATTACK_DECLARED al trigger de ataque con contexto", () => {
     const state = { turn: 1 };
     resolveReactiveTrapEvent(state as never, "player-b", { type: "ATTACK_DECLARED", context: { attackerPlayerId: "player-a", attackerInstanceId: "entity-1" } });
-    expect(resolveTrapTriggerMock).toHaveBeenCalledWith(state, "player-b", "ON_OPPONENT_ATTACK_DECLARED", { attackerPlayerId: "player-a", attackerInstanceId: "entity-1" });
+    expect(resolveTrapTriggerMock).toHaveBeenCalledWith(state, "player-b", "ON_OPPONENT_ATTACK_DECLARED", { attackerPlayerId: "player-a", attackerInstanceId: "entity-1" }, { skipCounterTrapPlayerIds: undefined });
+  });
+
+  it("propaga skipCounterTrapPlayerIds al resolver la trampa", () => {
+    const state = { turn: 1 };
+    resolveReactiveTrapEvent(state as never, "player-b", { type: "ATTACK_DECLARED", context: { attackerPlayerId: "player-a", attackerInstanceId: "entity-1" } }, { skipCounterTrapPlayerIds: ["player-a"] });
+    expect(resolveTrapTriggerMock).toHaveBeenCalledWith(state, "player-b", "ON_OPPONENT_ATTACK_DECLARED", { attackerPlayerId: "player-a", attackerInstanceId: "entity-1" }, { skipCounterTrapPlayerIds: ["player-a"] });
   });
 
   it("mapea DIRECT_ATTACK_DECLARED al trigger dedicado", () => {
     const state = { turn: 1 };
     resolveReactiveTrapEvent(state as never, "player-b", { type: "DIRECT_ATTACK_DECLARED", context: { attackerPlayerId: "player-a", attackerInstanceId: "entity-1" } });
-    expect(resolveTrapTriggerMock).toHaveBeenCalledWith(state, "player-b", "ON_OPPONENT_DIRECT_ATTACK_DECLARED", { attackerPlayerId: "player-a", attackerInstanceId: "entity-1" });
+    expect(resolveTrapTriggerMock).toHaveBeenCalledWith(state, "player-b", "ON_OPPONENT_DIRECT_ATTACK_DECLARED", { attackerPlayerId: "player-a", attackerInstanceId: "entity-1" }, { skipCounterTrapPlayerIds: undefined });
   });
 });

@@ -59,17 +59,29 @@ function resolveCounterTrapNegation(
   });
 }
 
+export interface IResolveTrapTriggerOptions {
+  /**
+   * Dueños cuyo contra-trampa (Nullify) NO debe auto-activarse. Permite que el jugador decida si
+   * activa su Nullify en vez de negarse automáticamente. La contra-trampa pertenece al actor de la
+   * acción (el `opponent` del jugador reactivo), por eso se compara contra `opponent.id`.
+   */
+  skipCounterTrapPlayerIds?: string[];
+}
+
 export function resolveTrapTrigger(
   state: GameState,
   reactivePlayerId: string,
   trigger: TrapTrigger,
   context?: ITrapTriggerContext,
+  options?: IResolveTrapTriggerOptions,
 ): GameState {
   const selectedTrap = selectTriggeredTrap(state, reactivePlayerId, trigger);
   if (!selectedTrap) return state;
   const { trap, player, opponent, isPlayerA } = selectedTrap;
   const trapSlotIndex = player.activeExecutions.findIndex((entity) => entity.instanceId === trap.instanceId);
-  const counterTrap = selectCounterTrap(opponent.activeExecutions);
+  const counterTrap = options?.skipCounterTrapPlayerIds?.includes(opponent.id)
+    ? null
+    : selectCounterTrap(opponent.activeExecutions);
   if (counterTrap) {
     return resolveCounterTrapNegation(state, player, opponent, counterTrap, trap, isPlayerA);
   }

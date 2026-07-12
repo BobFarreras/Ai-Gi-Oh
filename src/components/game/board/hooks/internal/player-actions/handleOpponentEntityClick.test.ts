@@ -74,6 +74,7 @@ describe("handleOpponentEntityClick", () => {
       entity: target,
       activeAttackerId: "attacker-1",
       applyTransition: (transition) => transition(state),
+      requestTrapActivationDecision: vi.fn(async () => false),
       clearSelection: vi.fn(),
       gameState: state,
       setActiveAttackerId: vi.fn(),

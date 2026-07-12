@@ -34,11 +34,15 @@ export function applyMatchAction(state: GameState, playerId: string, action: IMa
     case "START_FUSION_SUMMON":
       return GameEngine.startFusionSummon(state, playerId, action.payload.cardId, action.payload.mode);
     case "ATTACK":
-      return GameEngine.executeAttack(state, playerId, action.payload.attackerInstanceId, action.payload.defenderInstanceId);
+      return GameEngine.executeAttack(state, playerId, action.payload.attackerInstanceId, action.payload.defenderInstanceId, {
+        skipCounterTrapPlayerIds: action.payload.declineCounterTrap ? [playerId] : undefined,
+      });
     case "NEXT_PHASE":
       return GameEngine.nextPhase(state);
     case "RESOLVE_EXECUTION":
-      return GameEngine.resolveExecution(state, playerId, action.payload.instanceId);
+      return GameEngine.resolveExecution(state, playerId, action.payload.instanceId, {
+        skipCounterTrapPlayerIds: action.payload.declineCounterTrap ? [playerId] : undefined,
+      });
     case "CHANGE_ENTITY_MODE":
       return GameEngine.changeEntityMode(state, playerId, action.payload.instanceId, action.payload.newMode);
     case "RESOLVE_PENDING_TURN_ACTION":

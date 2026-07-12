@@ -16,6 +16,8 @@ import { GameState } from "@/core/use-cases/game-engine/state/types";
 interface IResolveExecutionOptions {
   skipReactivePlayerIds?: string[];
   skipTrapEventTypes?: ("EXECUTION_ACTIVATED")[];
+  /** Dueños cuyo contra-trampa (Nullify) no debe auto-activarse (el jugador decide). */
+  skipCounterTrapPlayerIds?: string[];
 }
 
 function appendExecutionResultLogs(
@@ -57,6 +59,7 @@ export function resolveExecution(
     {
       skipReactivePlayerIds: options?.skipReactivePlayerIds,
       skipEventTypes: options?.skipTrapEventTypes,
+      skipCounterTrapPlayerIds: options?.skipCounterTrapPlayerIds,
     },
   );
   const { player, opponent, isPlayerA } = getPlayerPair(withTrapResolution, playerId);

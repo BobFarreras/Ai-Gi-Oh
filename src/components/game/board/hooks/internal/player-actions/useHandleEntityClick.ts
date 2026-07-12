@@ -15,6 +15,7 @@ type IHandleEntityClickParams = Pick<
   | "activeAttackerId"
   | "applyTransition"
   | "assertPlayerTurn"
+  | "requestTrapActivationDecision"
   | "clearError"
   | "clearSelection"
   | "gameState"
@@ -141,6 +142,7 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
         entity,
         activeAttackerId: params.activeAttackerId,
         applyTransition: params.applyTransition,
+        requestTrapActivationDecision: params.requestTrapActivationDecision,
         clearSelection: params.clearSelection,
         gameState: params.gameState,
         setActiveAttackerId: params.setActiveAttackerId,

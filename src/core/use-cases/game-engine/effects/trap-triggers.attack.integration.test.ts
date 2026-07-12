@@ -108,6 +108,31 @@ describe("Trap triggers on attack", () => {
     expect(counterToGraveyardIndex).toBeGreaterThan(destroyedIndex);
   });
 
+  it("no activa el counter-trap si el jugador lo rechaza (skipCounterTrapPlayerIds)", () => {
+    const base = createTrapBaseState();
+    const state: GameState = {
+      ...base,
+      playerA: {
+        ...base.playerA,
+        activeEntities: [createTestBoardEntity("a-counter", attackerCard, "ATTACK")],
+        activeExecutions: [createTrapEntity("counter", trapCounterTrap)],
+      },
+      playerB: {
+        ...base.playerB,
+        activeExecutions: [createTrapEntity("trap-source", trapOnAttack)],
+      },
+    };
+    // El atacante (p1) decide NO activar su Nullify: la trampa rival resuelve con normalidad.
+    const next = GameEngine.executeAttack(state, "p1", "a-counter", undefined, { skipCounterTrapPlayerIds: ["p1"] });
+    // La trampa rival golpea a p1 (no fue negada) y va al cementerio normal, no a destruidos.
+    expect(next.playerA.healthPoints).toBe(7500);
+    expect(next.playerB.graveyard.some((card) => card.id === "trap-on-attack")).toBe(true);
+    expect((next.playerB.destroyedPile ?? []).some((card) => card.id === "trap-on-attack")).toBe(false);
+    // El counter-trap del jugador se conserva sin usarse (sigue en su zona, no en cementerio).
+    expect(next.playerA.activeExecutions.some((entity) => entity.card.id === "trap-counter-trap")).toBe(true);
+    expect(next.playerA.graveyard.some((card) => card.id === "trap-counter-trap")).toBe(false);
+  });
+
   it("debería drenar energía del atacante y fijar energía del defensor a 10 en ataque directo", () => {
     const base = createTrapBaseState();
     const state: GameState = {

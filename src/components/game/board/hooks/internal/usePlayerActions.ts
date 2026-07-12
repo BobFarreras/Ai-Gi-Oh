@@ -22,6 +22,7 @@ export function usePlayerActions(params: IUsePlayerActionsParams): IPlayerAction
   const executePlayAction = useExecutePlayAction({
     applyTransition: params.applyTransition,
     assertPlayerTurn: params.assertPlayerTurn,
+    requestTrapActivationDecision: params.requestTrapActivationDecision,
     clearError: params.clearError,
     clearSelection: params.clearSelection,
     gameState: params.gameState,
@@ -43,6 +44,7 @@ export function usePlayerActions(params: IUsePlayerActionsParams): IPlayerAction
     activeAttackerId: params.activeAttackerId,
     applyTransition: params.applyTransition,
     assertPlayerTurn: params.assertPlayerTurn,
+    requestTrapActivationDecision: params.requestTrapActivationDecision,
     clearError: params.clearError,
     clearSelection: params.clearSelection,
     gameState: params.gameState,

@@ -187,6 +187,20 @@ Diseño alineado con lo existente, por fases y sin deuda:
 2. #2: Docs en el **Códex de Academy** (`/hub/academy/glossary`).
 3. #3: **Solo el diseño** por ahora (esta guía); la implementación se agenda tras cerrar decisiones.
 
+## Estado de implementación (2026-07-12)
+
+- **#2 → HECHO.** Chip de ayuda "?" por tablero + sección "Cómo subir los rankings" en el Códex,
+  con la puntuación en un módulo único (`services/ranking/ranking-scoring`).
+- **#1 → Nullify HECHO** (fase 1 de la Opción B). El contra-trampa (Nullify) ahora es **skippable**
+  en el motor (`skipCounterTrapPlayerIds`, propagado por `executeAttack`/`resolveExecution` →
+  `resolveReactiveTrapEvent` → `resolveTrapTrigger`/`selectCounterTrap`) y el jugador **decide**
+  activarlo en sus dos flujos de turno (ataque y ejecución). La decisión viaja en el payload MP
+  (`declineCounterTrap`) para replay determinista. Verificado: typecheck · lint · 1251 tests · build.
+  - **Pendiente (fase 2):** extender el prompt a los 3 triggers reactivos raros
+    (`DIRECT_ATTACK_DECLARED`, `ENTITY_SET_PLAYED`, `STAT_BUFF_APPLIED`) en el turno del rival,
+    idealmente validado con playtest. Requiere interceptar acciones de la IA a mitad de turno.
+- **#3 → diseño entregado** (sección de arriba). Implementación por fases pendiente de tus decisiones.
+
 ## Checklist de calidad (memoria del repo)
 - **pnpm** (no npm). Antes de commitear: `CI=true pnpm quality:check` con exit code real.
 - #1 y #3 tocan motor/BD: tests de integración obligatorios; migraciones nuevas siguen la numeración

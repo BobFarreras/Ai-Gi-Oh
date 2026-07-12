@@ -56,7 +56,7 @@ export class GameEngine {
     attackerPlayerId: string,
     attackerInstanceId: string,
     defenderInstanceId?: string,
-    options?: { skipReactivePlayerIds?: string[]; skipTrapEventTypes?: ("ATTACK_DECLARED" | "DIRECT_ATTACK_DECLARED")[] },
+    options?: { skipReactivePlayerIds?: string[]; skipTrapEventTypes?: ("ATTACK_DECLARED" | "DIRECT_ATTACK_DECLARED")[]; skipCounterTrapPlayerIds?: string[] },
   ): GameState {
     return executeAttack(state, attackerPlayerId, attackerInstanceId, defenderInstanceId, options);
   }
@@ -92,7 +92,7 @@ export class GameEngine {
     state: GameState,
     playerId: string,
     executionInstanceId: string,
-    options?: { skipReactivePlayerIds?: string[]; skipTrapEventTypes?: ("EXECUTION_ACTIVATED")[] },
+    options?: { skipReactivePlayerIds?: string[]; skipTrapEventTypes?: ("EXECUTION_ACTIVATED")[]; skipCounterTrapPlayerIds?: string[] },
   ): GameState {
     return resolveExecution(state, playerId, executionInstanceId, options);
   }

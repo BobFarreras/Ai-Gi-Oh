@@ -11,6 +11,7 @@ type IExecutePlayActionParams = Pick<
   IUsePlayerActionsParams,
   | "applyTransition"
   | "assertPlayerTurn"
+  | "requestTrapActivationDecision"
   | "clearError"
   | "clearSelection"
   | "gameState"
@@ -31,6 +32,7 @@ type IExecutePlayActionParams = Pick<
 export function useExecutePlayAction({
   applyTransition,
   assertPlayerTurn,
+  requestTrapActivationDecision,
   clearError,
   clearSelection,
   gameState,
@@ -117,6 +119,7 @@ export function useExecutePlayAction({
           gameState,
           selectedCardReference,
           applyTransition,
+          requestTrapActivationDecision,
           clearSelection,
           setIsAnimating,
           setLastError,
@@ -139,6 +142,7 @@ export function useExecutePlayAction({
     [
       applyTransition,
       assertPlayerTurn,
+      requestTrapActivationDecision,
       clearError,
       clearSelection,
       emitLocalAction,
