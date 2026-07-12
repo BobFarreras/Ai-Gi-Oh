@@ -16,6 +16,20 @@ export function msUntilWeeklyReset(nowMs: number): number {
   return next - nowMs;
 }
 
+/**
+ * Milisegundos hasta el próximo cierre de los rankings semanales: domingos a las 22:00 UTC
+ * (~medianoche en España), mismo corte que la clave de semana del backend (weekly_leaderboard_week_key).
+ */
+export function msUntilWeeklyLeaderboardReset(nowMs: number): number {
+  const now = new Date(nowMs);
+  const dayOffset = (7 - now.getUTCDay()) % 7; // días hasta el próximo domingo (0 si hoy ya es domingo)
+  const candidate = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + dayOffset, 22, 0, 0, 0),
+  );
+  if (candidate.getTime() <= nowMs) candidate.setUTCDate(candidate.getUTCDate() + 7);
+  return candidate.getTime() - nowMs;
+}
+
 /** Formatea una duración en una cuenta atrás compacta: "2d 3h", "5h 12m" o "8m". */
 export function formatResetCountdown(ms: number): string {
   if (ms <= 0) return "ahora";

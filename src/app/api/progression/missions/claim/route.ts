@@ -6,6 +6,7 @@ import { ClaimMissionRewardUseCase } from "@/core/use-cases/progression/ClaimMis
 import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
 import { requireTrustedMutationOrigin } from "@/services/security/api/require-trusted-mutation-origin";
 import { readJsonObjectBody, readRequiredStringField } from "@/services/security/api/request-body-parser";
+import { awardWeeklyPoints } from "@/services/progression/award-weekly-points";
 
 export async function POST(request: NextRequest) {
   const originGuard = requireTrustedMutationOrigin(request);
@@ -18,6 +19,8 @@ export async function POST(request: NextRequest) {
     const client = createSupabaseRouteClient(request, response);
     const repository = new SupabaseMissionRepository(client);
     const result = await new ClaimMissionRewardUseCase(repository).execute(missionId, periodKey);
+    // Ranking semanal de actividad: solo suma en el claim efectivo (no en un re-claim idempotente).
+    if (result.applied) await awardWeeklyPoints(client, ["MISSION_CLAIM"]);
     return NextResponse.json(result, { status: 200, headers: response.headers });
   } catch (error) {
     return createApiErrorResponse(error, "No se pudo reclamar la recompensa de la misión.");
