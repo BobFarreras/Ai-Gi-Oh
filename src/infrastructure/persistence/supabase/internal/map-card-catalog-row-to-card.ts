@@ -33,6 +33,7 @@ import {
   IApplyDamageOverTimeEffect,
   IApplyHealOverTimeEffect,
   IReflectDirectDamageEffect,
+  IGrantExtraSummonEffect,
   IDestroyOpponentEntityEffect,
   IFlipOpponentEntityToDefenseEffect,
   ISacrificeAllyEntityForEnergyEffect,
@@ -134,6 +135,8 @@ function mapEffect(value: unknown): ICardEffect | undefined {
       return { action: "NEGATE_ATTACK_AND_DESTROY_ATTACKER" } as INegateAttackAndDestroyAttackerEffect;
     case "REFLECT_DIRECT_DAMAGE":
       return { action: "REFLECT_DIRECT_DAMAGE" } as IReflectDirectDamageEffect;
+    case "GRANT_EXTRA_SUMMON":
+      return { action: "GRANT_EXTRA_SUMMON", count: typeof value.count === "number" ? value.count : undefined } as IGrantExtraSummonEffect;
     case "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES":
       return { action: "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES" } as ICopyOpponentBuffToAlliedEntitiesEffect;
     case "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED":

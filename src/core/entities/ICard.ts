@@ -215,6 +215,15 @@ export interface IReflectDirectDamageEffect {
   action: "REFLECT_DIRECT_DAMAGE";
 }
 
+/**
+ * Magia (Núcleo de Datos): concede `count` invocaciones normales EXTRA este turno (además de la normal).
+ * `count` ausente = 1.
+ */
+export interface IGrantExtraSummonEffect {
+  action: "GRANT_EXTRA_SUMMON";
+  count?: number;
+}
+
 export type ICardEffect =
   | IDamageEffect
   | IHealEffect
@@ -251,7 +260,8 @@ export type ICardEffect =
   | ILockOpponentEntityEffect
   | IApplyDamageOverTimeEffect
   | IApplyHealOverTimeEffect
-  | IReflectDirectDamageEffect;
+  | IReflectDirectDamageEffect
+  | IGrantExtraSummonEffect;
 
 export interface ICard {
   readonly id: string;

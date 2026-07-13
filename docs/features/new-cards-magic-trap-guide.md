@@ -24,13 +24,13 @@
 | ✅ | #10 Bandera Windows (infección -300 LP/turno) | `APPLY_DAMAGE_OVER_TIME` + reacción `ON_OPPONENT_TRAP_ACTIVATED` | 103 |
 | ✅ | #11 Abrazo Hugging (regeneración +300 LP/turno) | `APPLY_HEAL_OVER_TIME` | 104 |
 | ✅ | #9 Flutter Enjambre (anula ataque directo + refleja ATK) | `REFLECT_DIRECT_DAMAGE` + negación transitoria | 105 |
+| ✅ | #2 Núcleo de Datos (doble invocación este turno) | `GRANT_EXTRA_SUMMON` + contador `extraSummonsThisTurn` + `canNormalSummon` | 106 |
 | ✅ | Badges de estado en HUD (escudo/infección/regeneración), desktop + móvil | `HudStatusBadges` | — |
 
 **Pendiente:**
 
 | ⬜ | Ítem | Acción/efecto | Fase | Compl. |
 |----|------|---------------|------|--------|
-| ⬜ | #2 Núcleo de Datos (doble invocación este turno) | contador `extraSummonsThisTurn` | 2 | 🟡 |
 | ⬜ | Trampa Metasploit (bloquear ataque a entity, sin destruir) | `NEGATE_ATTACK` | — | 🟡 |
 | ⬜ | Trampa OpenClaw (anular buff que el rival aplica) | `NULLIFY_OPPONENT_BUFF` | — | 🟡 |
 | ⬜ | #12 Octocat (robar entity del tablero rival) | `STEAL_OPPONENT_ENTITY` + selección | 4 | 🔴 |
@@ -41,9 +41,9 @@
 | ⬜ | #15 Escudo Firewall (anular y destruir magia rival) | `NEGATE_OPPONENT_EXECUTION_AND_DESTROY` | 5 | 🔴 |
 | ⬜ | Cierre: cartas en mazos de IA + pase de balance + renombrar imágenes restantes | — | — | — |
 
-> **Fase 0, 1 y 3 completas.** Fase 2 casi (solo falta #2). Quedan la Fase 4 (robos/intercambios, la más
-> grande) y la Fase 5 (contra-magia), más las 2 trampas extra (Metasploit, OpenClaw) y el cierre.
-> Migraciones 096-105 aplicadas SOLO a la BD local; ninguna a producción todavía.
+> **Fases 0, 1, 2 y 3 completas.** Quedan la Fase 4 (robos/intercambios, la más grande) y la Fase 5
+> (contra-magia), más las 2 trampas extra (Metasploit, OpenClaw) y el cierre.
+> Migraciones 096-106 aplicadas SOLO a la BD local; ninguna a producción todavía.
 
 ---
 
@@ -163,7 +163,7 @@ Leyenda complejidad: 🟢 bajo (patrón existente) · 🟡 medio (acción nueva 
   de "seleccionar entity/carta del tablero (propia o rival)". Todo con tests unitarios. Es la base de
   #5, #8, #10, #11 y la pasiva de Antigrabity.
 - **✅ Fase 1 — Antigrabity + efectos 🟢:** entity Antigrabity (sin pasiva), #1, #3. Riesgo mínimo.
-- **🟡 Fase 2 — Selección 🟡:** #4 ✅, #14 ✅, #16 ✅ hechos; **falta #2** (doble invocación). Patrón `LOCK` + IA que resuelve.
+- **✅ Fase 2 — Selección 🟡:** #4 ✅, #14 ✅, #16 ✅, #2 ✅ (doble invocación). Patrón `LOCK` + IA que resuelve.
 - **✅ Fase 3 — Pasiva Antigrabity + status multi-turno 🔴:** revivir ✅, #5 ✅, #9 ✅, #10 ✅, #11 ✅ sobre la infra §2.
 - **⬜ Fase 4 — Robos/intercambios 🔴:** #12, #13, #6, #7, #8 (escudo ligado). Los de mayor riesgo de
   balance y edge-cases (propiedad de cartas, slots llenos, runtimeId).

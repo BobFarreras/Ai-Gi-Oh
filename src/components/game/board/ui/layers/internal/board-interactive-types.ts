@@ -21,7 +21,8 @@ export interface IBoardInteractiveLayerProps {
   player: IBoardLayerPlayerState;
   opponent: IBoardLayerPlayerState;
   phase: string;
-  hasNormalSummonedThisTurn: boolean;
+  /** true si el jugador NO puede invocar más entities este turno (ya invocó y sin invocaciones extra). */
+  isSummonBlocked: boolean;
   selectedCard: ICard | null;
   selectedBoardEntityInstanceId: string | null;
   playingCard: ICard | null;

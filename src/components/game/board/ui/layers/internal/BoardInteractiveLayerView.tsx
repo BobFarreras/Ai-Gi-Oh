@@ -72,7 +72,7 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
           hand={props.player.hand}
           playingCard={props.playingCard}
           stagedCardId={props.stagedCardId}
-          hasSummoned={props.hasNormalSummonedThisTurn}
+          hasSummoned={props.isSummonBlocked}
           isPlayerTurn={props.isPlayerTurn}
           highlightedCardIds={props.pendingDiscardCardIds}
           cardScale={props.viewport.handCardScale}
@@ -90,7 +90,7 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
       {props.isMobileLayout && props.selection.shouldRenderMobileOverlay && (
         <BoardMobileSelectedCardOverlay
           card={props.selection.selectedOverlayCard}
-          hasSummoned={props.hasNormalSummonedThisTurn}
+          hasSummoned={props.isSummonBlocked}
           isPlayerTurn={props.isPlayerTurn}
           source={props.selection.overlaySource}
           isOpponentCard={props.selection.isOpponentBoardSelection}

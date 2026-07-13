@@ -34,7 +34,8 @@ type ExecutionAction =
   | "SET_CARD_DUEL_PROGRESS"
   | "REDUCE_OPPONENT_ATTACK"
   | "DESTROY_ALL_TRAPS"
-  | "DISCARD_OPPONENT_HAND_CARD";
+  | "DISCARD_OPPONENT_HAND_CARD"
+  | "GRANT_EXTRA_SUMMON";
 type ExecutionEffect = Extract<ICardEffect, { action: ExecutionAction }>;
 
 type ExecutionHandler<K extends ExecutionAction> = (player: IPlayer, opponent: IPlayer, effect: Extract<ExecutionEffect, { action: K }>) => IExecutionEffectResult;
@@ -117,6 +118,11 @@ const executionEffectHandlers: { [K in ExecutionAction]: ExecutionHandler<K> } =
       systemEvents: discarded.discardedCardIds.map((cardId) => ({ eventType: "CARD_TO_GRAVEYARD" as const, payload: { cardId, ownerPlayerId: discarded.updatedOpponent.id, from: "HAND" } })),
     };
   },
+  // Núcleo de Datos: concede invocaciones normales EXTRA este turno (se aplican al contador de GameState).
+  GRANT_EXTRA_SUMMON: (player, opponent, effect) => ({
+    ...createBaseResult(player, opponent),
+    grantedExtraSummons: Math.max(1, Math.trunc(effect.count ?? 1)),
+  }),
 };
 
 /** Resuelve una acción EXECUTION registrada; devuelve null cuando la acción no pertenece al registry. */
@@ -146,6 +152,7 @@ export function resolveExecutionEffectFromRegistry(player: IPlayer, opponent: IP
   if (effect.action === "REDUCE_OPPONENT_ATTACK") return executionEffectHandlers.REDUCE_OPPONENT_ATTACK(player, opponent, effect);
   if (effect.action === "DESTROY_ALL_TRAPS") return executionEffectHandlers.DESTROY_ALL_TRAPS(player, opponent, effect);
   if (effect.action === "DISCARD_OPPONENT_HAND_CARD") return executionEffectHandlers.DISCARD_OPPONENT_HAND_CARD(player, opponent, effect);
+  if (effect.action === "GRANT_EXTRA_SUMMON") return executionEffectHandlers.GRANT_EXTRA_SUMMON(player, opponent, effect);
   return null;
 }
 

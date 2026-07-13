@@ -10,7 +10,7 @@ export function areEqualBoardInteractiveLayerProps(previous: IBoardInteractiveLa
     previous.player === next.player &&
     previous.opponent === next.opponent &&
     previous.phase === next.phase &&
-    previous.hasNormalSummonedThisTurn === next.hasNormalSummonedThisTurn &&
+    previous.isSummonBlocked === next.isSummonBlocked &&
     previous.selectedCard === next.selectedCard &&
     previous.selectedBoardEntityInstanceId === next.selectedBoardEntityInstanceId &&
     previous.playingCard === next.playingCard &&

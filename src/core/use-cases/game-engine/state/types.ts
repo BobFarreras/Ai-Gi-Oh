@@ -94,6 +94,8 @@ export interface GameState {
   turn: number;
   phase: TurnPhase;
   hasNormalSummonedThisTurn: boolean;
+  /** Invocaciones normales EXTRA disponibles este turno (Núcleo de Datos). Se resetea al inicio de turno. */
+  extraSummonsThisTurn?: number;
   pendingTurnAction?: IPendingTurnAction | null;
   combatLog: ICombatLogEvent[];
   /** Efectos de estado multi-turno a nivel de jugador (p.ej. "sin ataques directos N turnos"). */

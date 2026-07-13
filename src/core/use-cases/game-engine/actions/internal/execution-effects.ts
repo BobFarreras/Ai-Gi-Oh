@@ -24,6 +24,8 @@ export interface IExecutionEffectResult {
   systemEvents: IExecutionSystemEvent[];
   /** Estados multi-turno a añadir a GameState (el id se asigna al resolver, con la info del estado). */
   addedStatusEffects?: IStatusEffectSpec[];
+  /** Invocaciones normales EXTRA concedidas este turno (Núcleo de Datos). */
+  grantedExtraSummons?: number;
 }
 
 function createNeutralResult(player: IPlayer, opponent: IPlayer): IExecutionEffectResult {

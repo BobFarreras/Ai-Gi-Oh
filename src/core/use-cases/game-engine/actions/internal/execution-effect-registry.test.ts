@@ -35,7 +35,15 @@ describe("execution-effect-registry", () => {
       "REDUCE_OPPONENT_ATTACK",
       "DESTROY_ALL_TRAPS",
       "DISCARD_OPPONENT_HAND_CARD",
+      "GRANT_EXTRA_SUMMON",
     ]);
+  });
+
+  it("GRANT_EXTRA_SUMMON concede invocaciones extra (mínimo 1)", () => {
+    const player = createPlayer("a");
+    const opponent = createPlayer("b");
+    expect(resolveExecutionEffectFromRegistry(player, opponent, { action: "GRANT_EXTRA_SUMMON" })?.grantedExtraSummons).toBe(1);
+    expect(resolveExecutionEffectFromRegistry(player, opponent, { action: "GRANT_EXTRA_SUMMON", count: 2 })?.grantedExtraSummons).toBe(2);
   });
 
   it("devuelve null para acciones delegadas fuera del registry", () => {

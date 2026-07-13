@@ -127,6 +127,13 @@ export function resolveExecution(
       });
     }
   }
+  // Núcleo de Datos: concede invocaciones normales extra este turno (contador de GameState).
+  if (effectResult.grantedExtraSummons && effectResult.grantedExtraSummons > 0) {
+    withBuffTrapResolution = {
+      ...withBuffTrapResolution,
+      extraSummonsThisTurn: (withBuffTrapResolution.extraSummonsThisTurn ?? 0) + effectResult.grantedExtraSummons,
+    };
+  }
   return appendExecutionResultLogs(
     withBuffTrapResolution,
     playerId,

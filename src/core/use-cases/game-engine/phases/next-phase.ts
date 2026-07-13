@@ -106,6 +106,7 @@ export function nextPhase(state: GameState): GameState {
       phase: "MAIN_1",
       activePlayerId: nextActivePlayerId,
       hasNormalSummonedThisTurn: false,
+      extraSummonsThisTurn: 0,
       activeStatusEffects: tickedStatusEffects,
       pendingTurnAction: turnStartResolution.pendingTurnAction,
       playerA: isNextPlayerA ? turnStartResolution.player : nextPlayerA,
