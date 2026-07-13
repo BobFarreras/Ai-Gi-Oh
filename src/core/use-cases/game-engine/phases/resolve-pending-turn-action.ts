@@ -3,7 +3,7 @@ import { GameRuleError } from "@/core/errors/GameRuleError";
 import { resolveDiscardForHandLimitAction } from "@/core/use-cases/game-engine/phases/internal/resolve-discard-for-hand-limit-action";
 import { resolveFusionMaterialsAction } from "@/core/use-cases/game-engine/phases/internal/resolve-fusion-materials-action";
 import { resolveGraveyardSelectionAction } from "@/core/use-cases/game-engine/phases/internal/resolve-graveyard-selection-action";
-import { resolveOpponentEntityToDestroySelectionAction, resolveOpponentEntityToFlipDefenseSelectionAction, resolveOpponentEntityToLockSelectionAction, resolveOpponentGraveyardSelectionAction, resolveOpponentSetCardSelectionAction } from "@/core/use-cases/game-engine/phases/internal/resolve-opponent-selection-actions";
+import { resolveOpponentEntityToDestroySelectionAction, resolveOpponentEntityToFlipDefenseSelectionAction, resolveOpponentEntityToLockSelectionAction, resolveOpponentGraveyardSelectionAction, resolveOpponentSetCardSelectionAction, resolveOwnEntityToSacrificeSelectionAction } from "@/core/use-cases/game-engine/phases/internal/resolve-opponent-selection-actions";
 import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { GameState, IPendingTurnAction } from "@/core/use-cases/game-engine/state/types";
 
@@ -39,6 +39,8 @@ export function resolvePendingTurnAction(state: GameState, playerId: string, sel
       return resolveOpponentEntityToDestroySelectionAction(state, playerId, selectedId, player, opponent, isPlayerA, pendingTurnAction);
     case "SELECT_OPPONENT_ENTITY_TO_FLIP_DEFENSE":
       return resolveOpponentEntityToFlipDefenseSelectionAction(state, playerId, selectedId, player, opponent, isPlayerA, pendingTurnAction);
+    case "SELECT_OWN_ENTITY_TO_SACRIFICE":
+      return resolveOwnEntityToSacrificeSelectionAction(state, playerId, selectedId, player, opponent, isPlayerA, pendingTurnAction);
     default:
       throw new GameRuleError("Tipo de acción obligatoria no soportado.");
   }

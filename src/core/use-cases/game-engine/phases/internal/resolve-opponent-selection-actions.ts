@@ -4,7 +4,7 @@ import { IPlayer } from "@/core/entities/IPlayer";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { assignPlayers } from "@/core/use-cases/game-engine/state/player-utils";
-import { GameState, ISelectOpponentEntityToDestroyPendingTurnAction, ISelectOpponentEntityToFlipDefensePendingTurnAction, ISelectOpponentEntityToLockPendingTurnAction, ISelectOpponentGraveyardCardPendingTurnAction, ISelectOpponentSetCardPendingTurnAction } from "@/core/use-cases/game-engine/state/types";
+import { GameState, ISelectOpponentEntityToDestroyPendingTurnAction, ISelectOpponentEntityToFlipDefensePendingTurnAction, ISelectOpponentEntityToLockPendingTurnAction, ISelectOpponentGraveyardCardPendingTurnAction, ISelectOpponentSetCardPendingTurnAction, ISelectOwnEntityToSacrificePendingTurnAction } from "@/core/use-cases/game-engine/state/types";
 
 function resolvePendingExecution(player: IPlayer, executionInstanceId: string): { executionCard: ICard; updatedPlayer: IPlayer } {
   const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
@@ -152,6 +152,39 @@ export function resolveOpponentEntityToFlipDefenseSelectionAction(
     ownerPlayerId: playerId,
     from: "EXECUTION_ZONE",
   });
+}
+
+export function resolveOwnEntityToSacrificeSelectionAction(
+  state: GameState,
+  playerId: string,
+  selectedId: string,
+  player: IPlayer,
+  opponent: IPlayer,
+  isPlayerA: boolean,
+  pending: ISelectOwnEntityToSacrificePendingTurnAction,
+): GameState {
+  const targetEntity = player.activeEntities.find((entity) => entity.instanceId === selectedId);
+  if (!targetEntity) throw new NotFoundError("La entity seleccionada no está en tu campo.");
+  const execution = resolvePendingExecution(player, pending.executionInstanceId);
+  const energyGain = Math.max(0, targetEntity.card.cost ?? 0);
+  const before = execution.updatedPlayer.currentEnergy;
+  const after = Math.min(execution.updatedPlayer.maxEnergy, before + energyGain);
+  const updatedPlayer: IPlayer = {
+    ...execution.updatedPlayer,
+    currentEnergy: after,
+    activeEntities: execution.updatedPlayer.activeEntities.filter((entity) => entity.instanceId !== selectedId),
+    destroyedPile: [...(execution.updatedPlayer.destroyedPile ?? []), targetEntity.card],
+  };
+  const withPlayers = assignPlayers({ ...state, pendingTurnAction: null }, updatedPlayer, opponent, isPlayerA);
+  let withLogs = appendCombatLogEvent(withPlayers, playerId, "MANDATORY_ACTION_RESOLVED", {
+    type: "SELECT_OWN_ENTITY_TO_SACRIFICE",
+    selectedId,
+    selectedCardId: targetEntity.card.id,
+    executionCardId: execution.executionCard.id,
+  });
+  withLogs = appendCombatLogEvent(withLogs, playerId, "CARD_TO_DESTROYED", { cardId: targetEntity.card.id, ownerPlayerId: playerId, from: "BATTLEFIELD" });
+  withLogs = appendCombatLogEvent(withLogs, playerId, "ENERGY_GAINED", { before, gained: after - before, after, amount: after - before });
+  return appendCombatLogEvent(withLogs, playerId, "CARD_TO_GRAVEYARD", { cardId: execution.executionCard.id, ownerPlayerId: playerId, from: "EXECUTION_ZONE" });
 }
 
 export function resolveOpponentSetCardSelectionAction(

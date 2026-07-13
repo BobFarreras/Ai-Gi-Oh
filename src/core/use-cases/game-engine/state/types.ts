@@ -14,7 +14,8 @@ export type PendingTurnActionType =
   | "SELECT_OPPONENT_SET_CARD"
   | "SELECT_OPPONENT_ENTITY_TO_LOCK"
   | "SELECT_OPPONENT_ENTITY_TO_DESTROY"
-  | "SELECT_OPPONENT_ENTITY_TO_FLIP_DEFENSE";
+  | "SELECT_OPPONENT_ENTITY_TO_FLIP_DEFENSE"
+  | "SELECT_OWN_ENTITY_TO_SACRIFICE";
 
 interface IBasePendingTurnAction {
   playerId: string;
@@ -69,6 +70,11 @@ export interface ISelectOpponentEntityToFlipDefensePendingTurnAction extends IBa
   executionInstanceId: string;
 }
 
+export interface ISelectOwnEntityToSacrificePendingTurnAction extends IBasePendingTurnAction {
+  type: "SELECT_OWN_ENTITY_TO_SACRIFICE";
+  executionInstanceId: string;
+}
+
 export type IPendingTurnAction =
   | IDiscardForHandLimitPendingTurnAction
   | ISelectFusionMaterialsPendingTurnAction
@@ -77,7 +83,8 @@ export type IPendingTurnAction =
   | ISelectOpponentSetCardPendingTurnAction
   | ISelectOpponentEntityToLockPendingTurnAction
   | ISelectOpponentEntityToDestroyPendingTurnAction
-  | ISelectOpponentEntityToFlipDefensePendingTurnAction;
+  | ISelectOpponentEntityToFlipDefensePendingTurnAction
+  | ISelectOwnEntityToSacrificePendingTurnAction;
 
 export interface GameState {
   playerA: IPlayer;

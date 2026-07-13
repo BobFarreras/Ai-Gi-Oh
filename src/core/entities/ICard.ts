@@ -91,6 +91,11 @@ export interface IFlipOpponentEntityToDefenseEffect {
   action: "FLIP_OPPONENT_ENTITY_TO_DEFENSE";
 }
 
+/** El jugador elige una entity PROPIA, la destruye y gana energía igual a su coste. */
+export interface ISacrificeAllyEntityForEnergyEffect {
+  action: "SACRIFICE_ALLY_ENTITY_FOR_ENERGY";
+}
+
 export interface IDrainOpponentEnergyEffect {
   action: "DRAIN_OPPONENT_ENERGY";
 }
@@ -196,6 +201,7 @@ export type ICardEffect =
   | IApplyNoDirectAttacksEffect
   | IDestroyOpponentEntityEffect
   | IFlipOpponentEntityToDefenseEffect
+  | ISacrificeAllyEntityForEnergyEffect
   | IDrainOpponentEnergyEffect
   | ISetCardDuelProgressEffect
   | IRevealOpponentSetCardEffect

@@ -35,7 +35,9 @@ export function buildBoardPendingUi(
                   ? "Selecciona una entity del rival para destruirla."
                   : gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_FLIP_DEFENSE"
                     ? "Selecciona una entity del rival para voltearla a defensa."
-                    : `Selecciona 2 materiales para fusionar (${pendingFusionMaterialsCount ?? 0}/2).`
+                    : gameState.pendingTurnAction.type === "SELECT_OWN_ENTITY_TO_SACRIFICE"
+                      ? "Selecciona una entity de tu campo para sacrificarla y ganar su energía."
+                      : `Selecciona 2 materiales para fusionar (${pendingFusionMaterialsCount ?? 0}/2).`
       : pendingFusionMaterialsCount !== null
         ? `Selecciona 2 materiales para fusionar (${pendingFusionMaterialsCount}/2).`
         : pendingEntityReplacement
@@ -53,6 +55,8 @@ export function buildBoardPendingUi(
   const pendingEntitySelectionIds =
     gameState.pendingTurnAction?.playerId === gameState.playerA.id && gameState.pendingTurnAction.type === "SELECT_FUSION_MATERIALS"
         ? pendingFusionSelectableIds
+        : gameState.pendingTurnAction?.playerId === gameState.playerA.id && gameState.pendingTurnAction.type === "SELECT_OWN_ENTITY_TO_SACRIFICE"
+        ? gameState.playerA.activeEntities.map((entity) => entity.instanceId)
         : pendingEntityReplacement
         ? pendingEntityReplacement.zone === "ENTITIES"
           ? gameState.playerA.activeEntities.map((entity) => entity.instanceId)

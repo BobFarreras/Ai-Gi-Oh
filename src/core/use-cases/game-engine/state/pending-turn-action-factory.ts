@@ -7,6 +7,7 @@ import {
   ISelectOpponentEntityToLockPendingTurnAction,
   ISelectOpponentEntityToDestroyPendingTurnAction,
   ISelectOpponentEntityToFlipDefensePendingTurnAction,
+  ISelectOwnEntityToSacrificePendingTurnAction,
   ISelectOpponentGraveyardCardPendingTurnAction,
   ISelectOpponentSetCardPendingTurnAction,
 } from "@/core/use-cases/game-engine/state/types";
@@ -129,6 +130,18 @@ export function createOpponentEntityToFlipDefenseSelectionPendingAction(
 ): ISelectOpponentEntityToFlipDefensePendingTurnAction {
   return {
     type: "SELECT_OPPONENT_ENTITY_TO_FLIP_DEFENSE",
+    playerId,
+    executionInstanceId,
+  };
+}
+
+/** Acción pendiente para elegir una entity PROPIA a sacrificar (a cambio de su energía). */
+export function createOwnEntityToSacrificeSelectionPendingAction(
+  playerId: string,
+  executionInstanceId: string,
+): ISelectOwnEntityToSacrificePendingTurnAction {
+  return {
+    type: "SELECT_OWN_ENTITY_TO_SACRIFICE",
     playerId,
     executionInstanceId,
   };

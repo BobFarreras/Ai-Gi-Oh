@@ -3,6 +3,7 @@ import {
   CardType,
   IDestroyOpponentEntityEffect,
   IFlipOpponentEntityToDefenseEffect,
+  ISacrificeAllyEntityForEnergyEffect,
   IFusionSummonEffect,
   ILockOpponentEntityEffect,
   IRevealOpponentSetCardEffect,
@@ -21,6 +22,7 @@ import {
   createOpponentEntityToLockSelectionPendingAction,
   createOpponentEntityToDestroySelectionPendingAction,
   createOpponentEntityToFlipDefenseSelectionPendingAction,
+  createOwnEntityToSacrificeSelectionPendingAction,
   createOpponentGraveyardSelectionPendingAction,
   createOpponentSetCardSelectionPendingAction,
 } from "@/core/use-cases/game-engine/state/pending-turn-action-factory";
@@ -150,12 +152,23 @@ function resolveFlipOpponentEntityToDefenseEffect(context: ISpecialActionContext
   };
 }
 
+function resolveSacrificeAllyForEnergyEffect(context: ISpecialActionContext): GameState {
+  // Sin entities propias a las que sacrificar: deja la ejecución en SET para reactivarla más tarde.
+  if (context.player.activeEntities.length === 0) {
+    return suspendExecutionUntilCondition(context, "SACRIFICE_WAITING_TARGET");
+  }
+  return {
+    ...context.state,
+    pendingTurnAction: createOwnEntityToSacrificeSelectionPendingAction(context.playerId, context.executionInstanceId),
+  };
+}
+
 /**
  * Resuelve acciones especiales de ejecución que no siguen el pipeline estándar de `applyExecutionEffect`.
  */
 export function resolveExecutionSpecialAction(
   context: ISpecialActionContext,
-  effect: IFusionSummonEffect | GraveyardReturnEffect | OpponentSelectionEffect | ILockOpponentEntityEffect | IDestroyOpponentEntityEffect | IFlipOpponentEntityToDefenseEffect,
+  effect: IFusionSummonEffect | GraveyardReturnEffect | OpponentSelectionEffect | ILockOpponentEntityEffect | IDestroyOpponentEntityEffect | IFlipOpponentEntityToDefenseEffect | ISacrificeAllyEntityForEnergyEffect,
 ): GameState {
   if (effect.action === "FUSION_SUMMON") {
     return resolveFusionEffect(context, effect);
@@ -171,6 +184,9 @@ export function resolveExecutionSpecialAction(
   }
   if (effect.action === "FLIP_OPPONENT_ENTITY_TO_DEFENSE") {
     return resolveFlipOpponentEntityToDefenseEffect(context);
+  }
+  if (effect.action === "SACRIFICE_ALLY_ENTITY_FOR_ENERGY") {
+    return resolveSacrificeAllyForEnergyEffect(context);
   }
   return resolveOpponentSelectionEffect(context, effect);
 }

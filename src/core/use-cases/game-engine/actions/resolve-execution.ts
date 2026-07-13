@@ -79,7 +79,8 @@ export function resolveExecution(
     effect.action === "STEAL_OPPONENT_GRAVEYARD_CARD_TO_HAND" ||
     effect.action === "LOCK_OPPONENT_ENTITY" ||
     effect.action === "DESTROY_OPPONENT_ENTITY" ||
-    effect.action === "FLIP_OPPONENT_ENTITY_TO_DEFENSE"
+    effect.action === "FLIP_OPPONENT_ENTITY_TO_DEFENSE" ||
+    effect.action === "SACRIFICE_ALLY_ENTITY_FOR_ENERGY"
   ) {
     return resolveExecutionSpecialAction(
       { state: withTrapResolution, playerId, player, opponent, isPlayerA, executionInstanceId },

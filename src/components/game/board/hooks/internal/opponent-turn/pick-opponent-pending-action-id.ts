@@ -68,5 +68,12 @@ export function pickOpponentPendingActionId(context: IOpponentTurnContext, autoP
       (current.card.attack ?? 0) > (selected.card.attack ?? 0) ? current : selected);
     return best.instanceId;
   }
+  if (gameState.pendingTurnAction.type === "SELECT_OWN_ENTITY_TO_SACRIFICE") {
+    // Sacrifica su entity propia (playerB) con menor ataque: la de menor valor.
+    const own = gameState.playerB.activeEntities;
+    if (own.length === 0) return null;
+    const weakest = own.reduce((selected, current) => ((current.card.attack ?? 0) < (selected.card.attack ?? 0) ? current : selected));
+    return weakest.instanceId;
+  }
   return null;
 }
