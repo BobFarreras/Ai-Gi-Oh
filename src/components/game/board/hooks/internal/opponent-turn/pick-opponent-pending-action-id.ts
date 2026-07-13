@@ -59,13 +59,21 @@ export function pickOpponentPendingActionId(context: IOpponentTurnContext, autoP
   if (
     gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_LOCK" ||
     gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_DESTROY" ||
-    gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_FLIP_DEFENSE"
+    gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_FLIP_DEFENSE" ||
+    gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_STEAL"
   ) {
-    // Bloquea/destruye/voltea la entity rival (playerA) con más ataque: la amenaza mayor.
+    // Bloquea/destruye/voltea/roba la entity rival (playerA) con más ataque: la amenaza mayor.
     const candidates = gameState.playerA.activeEntities;
     if (candidates.length === 0) return null;
     const best = candidates.reduce((selected, current) =>
       (current.card.attack ?? 0) > (selected.card.attack ?? 0) ? current : selected);
+    return best.instanceId;
+  }
+  if (gameState.pendingTurnAction.type === "SELECT_OPPONENT_EXECUTION_TO_STEAL") {
+    // Roba la magia/trampa rival (playerA) más "valiosa" según amenaza estimada.
+    const candidates = gameState.playerA.activeExecutions;
+    if (candidates.length === 0) return null;
+    const best = candidates.reduce((selected, current) => (scoreSetCardThreat(current) > scoreSetCardThreat(selected) ? current : selected));
     return best.instanceId;
   }
   if (gameState.pendingTurnAction.type === "SELECT_OWN_ENTITY_TO_SACRIFICE") {

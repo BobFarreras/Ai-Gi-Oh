@@ -35,7 +35,9 @@ type ExecutionAction =
   | "REDUCE_OPPONENT_ATTACK"
   | "DESTROY_ALL_TRAPS"
   | "DISCARD_OPPONENT_HAND_CARD"
-  | "GRANT_EXTRA_SUMMON";
+  | "GRANT_EXTRA_SUMMON"
+  | "SWAP_HANDS"
+  | "SWAP_BOARD_ENTITIES";
 type ExecutionEffect = Extract<ICardEffect, { action: ExecutionAction }>;
 
 type ExecutionHandler<K extends ExecutionAction> = (player: IPlayer, opponent: IPlayer, effect: Extract<ExecutionEffect, { action: K }>) => IExecutionEffectResult;
@@ -123,6 +125,14 @@ const executionEffectHandlers: { [K in ExecutionAction]: ExecutionHandler<K> } =
     ...createBaseResult(player, opponent),
     grantedExtraSummons: Math.max(1, Math.trunc(effect.count ?? 1)),
   }),
+  // Terminal Córtice: intercambia las manos completas de ambos jugadores.
+  SWAP_HANDS: (player, opponent) => createBaseResult({ ...player, hand: opponent.hand }, { ...opponent, hand: player.hand }),
+  // reaq m: intercambia las entities del tablero. Las que recibe el jugador activo quedan "usadas"
+  // (no pueden atacar el turno en que cambian de control), para evitar un swing inmediato.
+  SWAP_BOARD_ENTITIES: (player, opponent) => createBaseResult(
+    { ...player, activeEntities: opponent.activeEntities.map((entity) => ({ ...entity, hasAttackedThisTurn: true, isNewlySummoned: false })) },
+    { ...opponent, activeEntities: player.activeEntities },
+  ),
 };
 
 /** Resuelve una acción EXECUTION registrada; devuelve null cuando la acción no pertenece al registry. */
@@ -153,6 +163,8 @@ export function resolveExecutionEffectFromRegistry(player: IPlayer, opponent: IP
   if (effect.action === "DESTROY_ALL_TRAPS") return executionEffectHandlers.DESTROY_ALL_TRAPS(player, opponent, effect);
   if (effect.action === "DISCARD_OPPONENT_HAND_CARD") return executionEffectHandlers.DISCARD_OPPONENT_HAND_CARD(player, opponent, effect);
   if (effect.action === "GRANT_EXTRA_SUMMON") return executionEffectHandlers.GRANT_EXTRA_SUMMON(player, opponent, effect);
+  if (effect.action === "SWAP_HANDS") return executionEffectHandlers.SWAP_HANDS(player, opponent, effect);
+  if (effect.action === "SWAP_BOARD_ENTITIES") return executionEffectHandlers.SWAP_BOARD_ENTITIES(player, opponent, effect);
   return null;
 }
 

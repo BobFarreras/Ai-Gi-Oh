@@ -12,6 +12,8 @@ import {
   trapMetasploitNegate,
   trapNegateAttack,
   trapOnAttack,
+  trapTypescriptShield,
+  typescriptEntity,
 } from "@/core/use-cases/game-engine/effects/trap-triggers.test-fixtures";
 
 describe("Trap triggers on attack", () => {
@@ -193,6 +195,30 @@ describe("Trap triggers on attack", () => {
     expect(next.playerB.healthPoints).toBe(8000);
     expect(next.playerA.activeEntities.find((entity) => entity.instanceId === "a-meta2")?.hasAttackedThisTurn).toBe(true);
     expect(next.playerB.graveyard.some((card) => card.id === "trap-escudo-metasploit")).toBe(true);
+  });
+
+  it("Escudo TypeScript refuerza la entity ligada al ser atacada y la trampa persiste", () => {
+    const base = createTrapBaseState();
+    const state: GameState = {
+      ...base,
+      activePlayerId: "p2",
+      playerA: {
+        ...base.playerA,
+        activeEntities: [createTestBoardEntity("ts", typescriptEntity, "DEFENSE")],
+        activeExecutions: [createTrapEntity("shield", trapTypescriptShield)],
+      },
+      playerB: {
+        ...base.playerB,
+        activeEntities: [createTestBoardEntity("atk", attackerCard, "ATTACK")],
+      },
+    };
+    const next = GameEngine.executeAttack(state, "p2", "atk", "ts");
+    // +1000 DEF a la entity ligada (1000 -> 2000): sobrevive al ataque de 1600 ATK.
+    const ts = next.playerA.activeEntities.find((entity) => entity.instanceId === "ts");
+    expect(ts?.card.defense).toBe(2000);
+    // La trampa NO se consume: sigue puesta (no está en el cementerio).
+    expect(next.playerA.activeExecutions.some((entity) => entity.card.id === "trap-typescript-shield")).toBe(true);
+    expect(next.playerA.graveyard.some((card) => card.id === "trap-typescript-shield")).toBe(false);
   });
 
   it("debería drenar energía del atacante y fijar energía del defensor a 10 en ataque directo", () => {

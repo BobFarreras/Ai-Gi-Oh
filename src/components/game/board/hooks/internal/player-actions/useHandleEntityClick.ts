@@ -105,6 +105,24 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
           params.setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una entity del rival para voltearla a defensa." });
           return;
         }
+        // Robar entity rival: se resuelve clicando una entity del RIVAL.
+        if (pending.type === "SELECT_OPPONENT_ENTITY_TO_STEAL") {
+          if (isOpponent && entity && entity.card.type === "ENTITY") {
+            params.resolvePendingTurnAction(entity.instanceId);
+            return;
+          }
+          params.setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una entity del rival para robarla." });
+          return;
+        }
+        // Robar magia/trampa rival: se resuelve clicando una carta de la zona de magias/trampas del RIVAL.
+        if (pending.type === "SELECT_OPPONENT_EXECUTION_TO_STEAL") {
+          if (isOpponent && entity && (entity.card.type === "EXECUTION" || entity.card.type === "TRAP")) {
+            params.resolvePendingTurnAction(entity.instanceId);
+            return;
+          }
+          params.setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una magia/trampa del rival para robarla." });
+          return;
+        }
         if (!isOpponent && entity) {
           params.resolvePendingTurnAction(entity.instanceId);
           return;

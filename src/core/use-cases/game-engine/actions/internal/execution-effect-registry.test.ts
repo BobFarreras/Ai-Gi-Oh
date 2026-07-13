@@ -36,7 +36,30 @@ describe("execution-effect-registry", () => {
       "DESTROY_ALL_TRAPS",
       "DISCARD_OPPONENT_HAND_CARD",
       "GRANT_EXTRA_SUMMON",
+      "SWAP_HANDS",
+      "SWAP_BOARD_ENTITIES",
     ]);
+  });
+
+  it("SWAP_HANDS intercambia las manos de ambos jugadores", () => {
+    const cardA = { id: "ca", name: "ca", description: "", type: "EXECUTION" as const, faction: "NEUTRAL" as const, cost: 1 };
+    const cardB = { id: "cb", name: "cb", description: "", type: "EXECUTION" as const, faction: "NEUTRAL" as const, cost: 1 };
+    const player = { ...createPlayer("a"), hand: [cardA] };
+    const opponent = { ...createPlayer("b"), hand: [cardB] };
+    const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "SWAP_HANDS" })!;
+    expect(result.player.hand).toEqual([cardB]);
+    expect(result.opponent.hand).toEqual([cardA]);
+  });
+
+  it("SWAP_BOARD_ENTITIES intercambia entities y marca como usadas las que recibe el jugador activo", () => {
+    const entA = { instanceId: "ea", card: { id: "ea", name: "ea", description: "", type: "ENTITY" as const, faction: "NEUTRAL" as const, cost: 2, attack: 500, defense: 500 }, mode: "ATTACK" as const, hasAttackedThisTurn: false, isNewlySummoned: false };
+    const entB = { instanceId: "eb", card: { id: "eb", name: "eb", description: "", type: "ENTITY" as const, faction: "NEUTRAL" as const, cost: 2, attack: 900, defense: 900 }, mode: "ATTACK" as const, hasAttackedThisTurn: false, isNewlySummoned: false };
+    const player = { ...createPlayer("a"), activeEntities: [entA] };
+    const opponent = { ...createPlayer("b"), activeEntities: [entB] };
+    const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "SWAP_BOARD_ENTITIES" })!;
+    expect(result.player.activeEntities.map((e) => e.instanceId)).toEqual(["eb"]);
+    expect(result.player.activeEntities[0].hasAttackedThisTurn).toBe(true); // no puede atacar este turno
+    expect(result.opponent.activeEntities.map((e) => e.instanceId)).toEqual(["ea"]);
   });
 
   it("GRANT_EXTRA_SUMMON concede invocaciones extra (mínimo 1)", () => {

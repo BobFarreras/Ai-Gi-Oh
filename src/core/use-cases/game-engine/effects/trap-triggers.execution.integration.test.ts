@@ -7,6 +7,7 @@ import {
   createTrapEntity,
   executionCard,
   trapCopyOpponentBuff,
+  trapFirewallCounterMagic,
   trapOnExecution,
   trapOpenClawNullify,
   trapReduceDefenseOnExecution,
@@ -107,6 +108,25 @@ describe("Trap triggers on execution", () => {
     const next = GameEngine.resolveExecution(state, "p1", executionId);
     const copiedBuffEntity = next.playerB.activeEntities.find((entity) => entity.instanceId === "p2-entity");
     expect(copiedBuffEntity?.card.defense).toBe(900);
+  });
+
+  it("Escudo Firewall anula y destruye la magia del rival antes de que se resuelva", () => {
+    const base = createTrapBaseState();
+    let state: GameState = {
+      ...base,
+      phase: "MAIN_1",
+      playerA: { ...base.playerA, hand: [executionCard] }, // DAMAGE OPPONENT 600
+      playerB: { ...base.playerB, activeExecutions: [createTrapEntity("t-fw", trapFirewallCounterMagic)] },
+    };
+    state = GameEngine.playCard(state, "p1", "exec-card", "ACTIVATE");
+    const executionId = state.playerA.activeExecutions[0].instanceId;
+    const next = GameEngine.resolveExecution(state, "p1", executionId);
+    // El daño se anula (p2 intacto); la magia va a destruidos de p1 y el Firewall al cementerio de p2.
+    expect(next.playerB.healthPoints).toBe(8000);
+    expect(next.playerA.activeExecutions).toHaveLength(0);
+    expect((next.playerA.destroyedPile ?? []).some((card) => card.id === "exec-card")).toBe(true);
+    expect(next.playerB.graveyard.some((card) => card.id === "trap-firewall-counter-magic")).toBe(true);
+    expect(next.negatedExecutionInstanceId).toBeUndefined();
   });
 
   it("OpenClaw anula el buff que el rival aplica a sus entities (resta el mismo valor)", () => {

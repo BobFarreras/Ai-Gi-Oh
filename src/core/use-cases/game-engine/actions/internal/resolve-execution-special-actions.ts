@@ -4,6 +4,8 @@ import {
   IDestroyOpponentEntityEffect,
   IFlipOpponentEntityToDefenseEffect,
   ISacrificeAllyEntityForEnergyEffect,
+  IStealOpponentEntityEffect,
+  IStealOpponentExecutionEffect,
   IFusionSummonEffect,
   ILockOpponentEntityEffect,
   IRevealOpponentSetCardEffect,
@@ -23,6 +25,8 @@ import {
   createOpponentEntityToDestroySelectionPendingAction,
   createOpponentEntityToFlipDefenseSelectionPendingAction,
   createOwnEntityToSacrificeSelectionPendingAction,
+  createOpponentEntityToStealSelectionPendingAction,
+  createOpponentExecutionToStealSelectionPendingAction,
   createOpponentGraveyardSelectionPendingAction,
   createOpponentSetCardSelectionPendingAction,
 } from "@/core/use-cases/game-engine/state/pending-turn-action-factory";
@@ -152,6 +156,29 @@ function resolveFlipOpponentEntityToDefenseEffect(context: ISpecialActionContext
   };
 }
 
+function resolveStealOpponentEntityEffect(context: ISpecialActionContext): GameState {
+  // Sin entities rivales que robar, o sin hueco propio: deja la ejecución en SET para reactivarla.
+  if (context.opponent.activeEntities.length === 0 || context.player.activeEntities.length >= 3) {
+    return suspendExecutionUntilCondition(context, "STEAL_ENTITY_WAITING_TARGET");
+  }
+  return {
+    ...context.state,
+    pendingTurnAction: createOpponentEntityToStealSelectionPendingAction(context.playerId, context.executionInstanceId),
+  };
+}
+
+function resolveStealOpponentExecutionEffect(context: ISpecialActionContext): GameState {
+  // Sin magias/trampas rivales que robar: deja la ejecución en SET para reactivarla. No hace falta
+  // comprobar hueco propio: la propia carta de robo libera su slot al resolverse.
+  if (context.opponent.activeExecutions.length === 0) {
+    return suspendExecutionUntilCondition(context, "STEAL_EXECUTION_WAITING_TARGET");
+  }
+  return {
+    ...context.state,
+    pendingTurnAction: createOpponentExecutionToStealSelectionPendingAction(context.playerId, context.executionInstanceId),
+  };
+}
+
 function resolveSacrificeAllyForEnergyEffect(context: ISpecialActionContext): GameState {
   // Sin entities propias a las que sacrificar: deja la ejecución en SET para reactivarla más tarde.
   if (context.player.activeEntities.length === 0) {
@@ -168,7 +195,7 @@ function resolveSacrificeAllyForEnergyEffect(context: ISpecialActionContext): Ga
  */
 export function resolveExecutionSpecialAction(
   context: ISpecialActionContext,
-  effect: IFusionSummonEffect | GraveyardReturnEffect | OpponentSelectionEffect | ILockOpponentEntityEffect | IDestroyOpponentEntityEffect | IFlipOpponentEntityToDefenseEffect | ISacrificeAllyEntityForEnergyEffect,
+  effect: IFusionSummonEffect | GraveyardReturnEffect | OpponentSelectionEffect | ILockOpponentEntityEffect | IDestroyOpponentEntityEffect | IFlipOpponentEntityToDefenseEffect | ISacrificeAllyEntityForEnergyEffect | IStealOpponentEntityEffect | IStealOpponentExecutionEffect,
 ): GameState {
   if (effect.action === "FUSION_SUMMON") {
     return resolveFusionEffect(context, effect);
@@ -187,6 +214,12 @@ export function resolveExecutionSpecialAction(
   }
   if (effect.action === "SACRIFICE_ALLY_ENTITY_FOR_ENERGY") {
     return resolveSacrificeAllyForEnergyEffect(context);
+  }
+  if (effect.action === "STEAL_OPPONENT_ENTITY") {
+    return resolveStealOpponentEntityEffect(context);
+  }
+  if (effect.action === "STEAL_OPPONENT_EXECUTION") {
+    return resolveStealOpponentExecutionEffect(context);
   }
   return resolveOpponentSelectionEffect(context, effect);
 }

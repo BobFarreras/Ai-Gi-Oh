@@ -15,7 +15,9 @@ export type PendingTurnActionType =
   | "SELECT_OPPONENT_ENTITY_TO_LOCK"
   | "SELECT_OPPONENT_ENTITY_TO_DESTROY"
   | "SELECT_OPPONENT_ENTITY_TO_FLIP_DEFENSE"
-  | "SELECT_OWN_ENTITY_TO_SACRIFICE";
+  | "SELECT_OWN_ENTITY_TO_SACRIFICE"
+  | "SELECT_OPPONENT_ENTITY_TO_STEAL"
+  | "SELECT_OPPONENT_EXECUTION_TO_STEAL";
 
 interface IBasePendingTurnAction {
   playerId: string;
@@ -75,6 +77,16 @@ export interface ISelectOwnEntityToSacrificePendingTurnAction extends IBasePendi
   executionInstanceId: string;
 }
 
+export interface ISelectOpponentEntityToStealPendingTurnAction extends IBasePendingTurnAction {
+  type: "SELECT_OPPONENT_ENTITY_TO_STEAL";
+  executionInstanceId: string;
+}
+
+export interface ISelectOpponentExecutionToStealPendingTurnAction extends IBasePendingTurnAction {
+  type: "SELECT_OPPONENT_EXECUTION_TO_STEAL";
+  executionInstanceId: string;
+}
+
 export type IPendingTurnAction =
   | IDiscardForHandLimitPendingTurnAction
   | ISelectFusionMaterialsPendingTurnAction
@@ -84,7 +96,9 @@ export type IPendingTurnAction =
   | ISelectOpponentEntityToLockPendingTurnAction
   | ISelectOpponentEntityToDestroyPendingTurnAction
   | ISelectOpponentEntityToFlipDefensePendingTurnAction
-  | ISelectOwnEntityToSacrificePendingTurnAction;
+  | ISelectOwnEntityToSacrificePendingTurnAction
+  | ISelectOpponentEntityToStealPendingTurnAction
+  | ISelectOpponentExecutionToStealPendingTurnAction;
 
 export interface GameState {
   playerA: IPlayer;
@@ -106,5 +120,10 @@ export interface GameState {
    * Metasploit a entity). `executeAttack` lo consume y lo limpia; no persiste entre acciones.
    */
   negatedAttackAttackerInstanceId?: string;
+  /**
+   * Transitorio: instanceId de la ejecución anulada y destruida por una contra-magia (Escudo Firewall)
+   * antes de resolverse. `resolveExecution` lo consume y lo limpia; no persiste entre acciones.
+   */
+  negatedExecutionInstanceId?: string;
   idFactory?: IGameEngineIdFactory;
 }

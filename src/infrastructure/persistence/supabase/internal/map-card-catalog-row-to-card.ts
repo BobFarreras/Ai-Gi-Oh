@@ -39,6 +39,12 @@ import {
   IDestroyOpponentEntityEffect,
   IFlipOpponentEntityToDefenseEffect,
   ISacrificeAllyEntityForEnergyEffect,
+  ISwapHandsEffect,
+  ISwapBoardEntitiesEffect,
+  IStealOpponentEntityEffect,
+  IStealOpponentExecutionEffect,
+  INegateOpponentExecutionAndDestroyEffect,
+  IReinforceLinkedEntityOnAttackEffect,
   ISetDefenseByCardIdEffect,
   IStealOpponentGraveyardCardToHandEffect,
 } from "@/core/entities/ICard";
@@ -115,6 +121,20 @@ function mapEffect(value: unknown): ICardEffect | undefined {
       return { action: "FLIP_OPPONENT_ENTITY_TO_DEFENSE" } as IFlipOpponentEntityToDefenseEffect;
     case "SACRIFICE_ALLY_ENTITY_FOR_ENERGY":
       return { action: "SACRIFICE_ALLY_ENTITY_FOR_ENERGY" } as ISacrificeAllyEntityForEnergyEffect;
+    case "SWAP_HANDS":
+      return { action: "SWAP_HANDS" } as ISwapHandsEffect;
+    case "SWAP_BOARD_ENTITIES":
+      return { action: "SWAP_BOARD_ENTITIES" } as ISwapBoardEntitiesEffect;
+    case "STEAL_OPPONENT_ENTITY":
+      return { action: "STEAL_OPPONENT_ENTITY" } as IStealOpponentEntityEffect;
+    case "STEAL_OPPONENT_EXECUTION":
+      return { action: "STEAL_OPPONENT_EXECUTION" } as IStealOpponentExecutionEffect;
+    case "NEGATE_OPPONENT_EXECUTION_AND_DESTROY":
+      return { action: "NEGATE_OPPONENT_EXECUTION_AND_DESTROY" } as INegateOpponentExecutionAndDestroyEffect;
+    case "REINFORCE_LINKED_ENTITY_ON_ATTACK":
+      return typeof value.linkedCardId === "string" && typeof value.value === "number"
+        ? ({ action: "REINFORCE_LINKED_ENTITY_ON_ATTACK", linkedCardId: value.linkedCardId, value: value.value } as IReinforceLinkedEntityOnAttackEffect)
+        : undefined;
     case "DRAIN_OPPONENT_ENERGY":
       return { action: "DRAIN_OPPONENT_ENERGY" } as IDrainOpponentEnergyEffect;
     case "SET_CARD_DUEL_PROGRESS":

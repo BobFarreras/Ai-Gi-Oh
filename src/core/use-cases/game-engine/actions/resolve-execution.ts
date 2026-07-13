@@ -56,13 +56,17 @@ export function resolveExecution(
   const withTrapResolution = resolveReactiveTrapEvent(
     state,
     getPlayerPair(state, playerId).opponent.id,
-    { type: "EXECUTION_ACTIVATED" },
+    { type: "EXECUTION_ACTIVATED", context: { activatedExecutionInstanceId: executionInstanceId } },
     {
       skipReactivePlayerIds: options?.skipReactivePlayerIds,
       skipEventTypes: options?.skipTrapEventTypes,
       skipCounterTrapPlayerIds: options?.skipCounterTrapPlayerIds,
     },
   );
+  // Escudo Firewall: si una contra-magia anuló y destruyó esta ejecución, no se resuelve su efecto.
+  if (withTrapResolution.negatedExecutionInstanceId === executionInstanceId) {
+    return { ...withTrapResolution, negatedExecutionInstanceId: undefined };
+  }
   const { player, opponent, isPlayerA } = getPlayerPair(withTrapResolution, playerId);
   const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
   const executionSlotIndex = player.activeExecutions.findIndex((entity) => entity.instanceId === executionInstanceId);
@@ -80,7 +84,9 @@ export function resolveExecution(
     effect.action === "LOCK_OPPONENT_ENTITY" ||
     effect.action === "DESTROY_OPPONENT_ENTITY" ||
     effect.action === "FLIP_OPPONENT_ENTITY_TO_DEFENSE" ||
-    effect.action === "SACRIFICE_ALLY_ENTITY_FOR_ENERGY"
+    effect.action === "SACRIFICE_ALLY_ENTITY_FOR_ENERGY" ||
+    effect.action === "STEAL_OPPONENT_ENTITY" ||
+    effect.action === "STEAL_OPPONENT_EXECUTION"
   ) {
     return resolveExecutionSpecialAction(
       { state: withTrapResolution, playerId, player, opponent, isPlayerA, executionInstanceId },

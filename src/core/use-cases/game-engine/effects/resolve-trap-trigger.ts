@@ -87,18 +87,26 @@ export function resolveTrapTrigger(
     return resolveCounterTrapNegation(state, player, opponent, counterTrap, trap, isPlayerA);
   }
 
-  const playerAfterTrapUse = {
-    ...player,
-    activeExecutions: player.activeExecutions.filter((entity) => entity.instanceId !== trap.instanceId),
-    graveyard: [...player.graveyard, trap.card],
-  };
-
-  const resolved = resolveTrapEffect(playerAfterTrapUse, opponent, trap, context);
-  const assigned = assignPlayers(state, resolved.player, resolved.opponent, isPlayerA);
+  // Resolvemos con la trampa AÚN puesta: los efectos persistentes (Escudo TypeScript) piden que no se
+  // consuma (`keepTrapSet`); el resto se manda al cementerio tras resolver.
+  const resolved = resolveTrapEffect(player, opponent, trap, context);
+  const keepTrapSet = resolved.keepTrapSet === true;
+  const playerAfterTrap = keepTrapSet
+    ? resolved.player
+    : {
+        ...resolved.player,
+        activeExecutions: resolved.player.activeExecutions.filter((entity) => entity.instanceId !== trap.instanceId),
+        graveyard: [...resolved.player.graveyard, trap.card],
+      };
+  const assigned = assignPlayers(state, playerAfterTrap, resolved.opponent, isPlayerA);
   // Flutter / Metasploit: señala a executeAttack que el ataque de este atacante queda anulado.
-  const baseState = resolved.negatesAttack && context?.attackerInstanceId
+  const afterAttackFlag = resolved.negatesAttack && context?.attackerInstanceId
     ? { ...assigned, negatedAttackAttackerInstanceId: context.attackerInstanceId }
     : assigned;
+  // Escudo Firewall: señala a resolveExecution que la ejecución activada queda anulada.
+  const baseState = resolved.negatesExecution && context?.activatedExecutionInstanceId
+    ? { ...afterAttackFlag, negatedExecutionInstanceId: context.activatedExecutionInstanceId }
+    : afterAttackFlag;
   const withTrapLogs = appendTrapResolutionLogs({
     state: baseState,
     reactivePlayerId,
@@ -108,6 +116,7 @@ export function resolveTrapTrigger(
     targetOpponentId: opponent.id,
     targetPlayerId: player.id,
     resolved,
+    keepTrapSet,
   });
   // Bandera Windows / Abrazo Hugging: el ACTOR reacciona a que el dueño acaba de activar una trampa.
   return applyOpponentTrapActivationReactions(withTrapLogs, reactivePlayerId);

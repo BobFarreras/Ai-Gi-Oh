@@ -48,7 +48,7 @@ export function executeAttack(
   const stateAfterTrap = resolveReactiveTrapEvent(
     state,
     defender.id,
-    { type: "ATTACK_DECLARED", context: { attackerPlayerId, attackerInstanceId } },
+    { type: "ATTACK_DECLARED", context: { attackerPlayerId, attackerInstanceId, defenderInstanceId } },
     {
       skipReactivePlayerIds: options?.skipReactivePlayerIds,
       skipEventTypes: options?.skipTrapEventTypes,

@@ -24,9 +24,43 @@ describe("trap-effect-registry", () => {
       "APPLY_DAMAGE_OVER_TIME",
       "APPLY_HEAL_OVER_TIME",
       "REFLECT_DIRECT_DAMAGE",
+      "REINFORCE_LINKED_ENTITY_ON_ATTACK",
       "NEGATE_ATTACK",
+      "NEGATE_OPPONENT_EXECUTION_AND_DESTROY",
       "NULLIFY_OPPONENT_BUFF",
     ]);
+  });
+
+  it("REINFORCE_LINKED_ENTITY_ON_ATTACK suma DEF a la entity ligada, persiste y acumula", () => {
+    const tsCard = { id: "entity-typescript", name: "TS", description: "", type: "ENTITY" as const, faction: "OPEN_SOURCE" as const, cost: 4, attack: 1200, defense: 1000 };
+    const player = { ...createPlayer("a"), activeEntities: [{ instanceId: "ts", card: tsCard, mode: "DEFENSE" as const, hasAttackedThisTurn: false, isNewlySummoned: false }] };
+    const trap: IBoardEntity = { instanceId: "t-shield", mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false, card: { id: "trap-typescript-shield", name: "Shield", description: "", type: "TRAP", faction: "OPEN_SOURCE", cost: 2, trigger: "ON_OPPONENT_ATTACK_DECLARED", effect: { action: "REINFORCE_LINKED_ENTITY_ON_ATTACK", linkedCardId: "entity-typescript", value: 1000 } } };
+    const first = resolveTrapEffectFromRegistry(player, createPlayer("b"), trap, { attackerPlayerId: "b", attackerInstanceId: "x", defenderInstanceId: "ts" })!;
+    expect(first.keepTrapSet).toBe(true);
+    expect(first.player.activeEntities[0].card.defense).toBe(2000);
+    // Acumula sobre el resultado anterior.
+    const second = resolveTrapEffectFromRegistry(first.player, createPlayer("b"), trap, { attackerPlayerId: "b", attackerInstanceId: "x", defenderInstanceId: "ts" })!;
+    expect(second.player.activeEntities[0].card.defense).toBe(3000);
+  });
+
+  it("REINFORCE_LINKED_ENTITY_ON_ATTACK no refuerza si el atacado no es la entity ligada, pero persiste", () => {
+    const otherCard = { id: "entity-otra", name: "O", description: "", type: "ENTITY" as const, faction: "NEUTRAL" as const, cost: 2, attack: 800, defense: 700 };
+    const player = { ...createPlayer("a"), activeEntities: [{ instanceId: "o", card: otherCard, mode: "DEFENSE" as const, hasAttackedThisTurn: false, isNewlySummoned: false }] };
+    const trap: IBoardEntity = { instanceId: "t-shield", mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false, card: { id: "trap-typescript-shield", name: "Shield", description: "", type: "TRAP", faction: "OPEN_SOURCE", cost: 2, trigger: "ON_OPPONENT_ATTACK_DECLARED", effect: { action: "REINFORCE_LINKED_ENTITY_ON_ATTACK", linkedCardId: "entity-typescript", value: 1000 } } };
+    const result = resolveTrapEffectFromRegistry(player, createPlayer("b"), trap, { attackerPlayerId: "b", attackerInstanceId: "x", defenderInstanceId: "o" })!;
+    expect(result.keepTrapSet).toBe(true);
+    expect(result.player.activeEntities[0].card.defense).toBe(700); // sin cambios
+  });
+
+  it("NEGATE_OPPONENT_EXECUTION_AND_DESTROY destruye la ejecución activada y marca la anulación", () => {
+    const execCard = { id: "exec-x", name: "X", description: "", type: "EXECUTION" as const, faction: "NEUTRAL" as const, cost: 2, effect: { action: "DAMAGE" as const, target: "OPPONENT" as const, value: 500 } };
+    const opponent = { ...createPlayer("b"), activeExecutions: [{ instanceId: "exec-inst", card: execCard, mode: "ACTIVATE" as const, hasAttackedThisTurn: false, isNewlySummoned: false }] };
+    const trap: IBoardEntity = { instanceId: "t-fw", mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false, card: { id: "trap-firewall-counter-magic", name: "FW", description: "", type: "TRAP", faction: "OPEN_SOURCE", cost: 3, trigger: "ON_OPPONENT_EXECUTION_ACTIVATED", effect: { action: "NEGATE_OPPONENT_EXECUTION_AND_DESTROY" } } };
+    const result = resolveTrapEffectFromRegistry(createPlayer("a"), opponent, trap, { activatedExecutionInstanceId: "exec-inst" });
+    expect(result?.negatesExecution).toBe(true);
+    expect(result?.opponent.activeExecutions).toHaveLength(0);
+    expect((result?.opponent.destroyedPile ?? []).some((card) => card.id === "exec-x")).toBe(true);
+    expect(result?.destroyedOpponentEntityFrom).toBe("EXECUTION_ZONE");
   });
 
   it("NULLIFY_OPPONENT_BUFF resta el buff a las entities buffeadas del rival", () => {

@@ -4,11 +4,11 @@ import { resolveTrapTrigger } from "@/core/use-cases/game-engine/effects/resolve
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 export type TrapReactiveEvent =
-  | { type: "ATTACK_DECLARED"; context: Required<Pick<ITrapTriggerContext, "attackerPlayerId" | "attackerInstanceId">> }
+  | { type: "ATTACK_DECLARED"; context: Required<Pick<ITrapTriggerContext, "attackerPlayerId" | "attackerInstanceId">> & Pick<ITrapTriggerContext, "defenderInstanceId"> }
   | { type: "DIRECT_ATTACK_DECLARED"; context: Required<Pick<ITrapTriggerContext, "attackerPlayerId" | "attackerInstanceId">> }
   | { type: "ENTITY_SET_PLAYED"; context: Required<Pick<ITrapTriggerContext, "summonedPlayerId" | "summonedInstanceId">> }
   | { type: "EXECUTION_BUFF_APPLIED"; context: Required<Pick<ITrapTriggerContext, "buffSourcePlayerId" | "buffStat" | "buffAmount" | "buffTargetEntityIds">> }
-  | { type: "EXECUTION_ACTIVATED" }
+  | { type: "EXECUTION_ACTIVATED"; context: Required<Pick<ITrapTriggerContext, "activatedExecutionInstanceId">> }
   | { type: "TRAP_ACTIVATED" };
 
 export interface ITrapReactiveResolutionOptions {
@@ -33,7 +33,7 @@ export function resolveReactiveTrapEvent(
   if (event.type === "DIRECT_ATTACK_DECLARED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_DIRECT_ATTACK_DECLARED", event.context, trapOptions);
   if (event.type === "ENTITY_SET_PLAYED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_ENTITY_SET_PLAYED", event.context, trapOptions);
   if (event.type === "EXECUTION_BUFF_APPLIED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_STAT_BUFF_APPLIED", event.context, trapOptions);
-  if (event.type === "EXECUTION_ACTIVATED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_EXECUTION_ACTIVATED", undefined, trapOptions);
+  if (event.type === "EXECUTION_ACTIVATED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_EXECUTION_ACTIVATED", event.context, trapOptions);
   return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_TRAP_ACTIVATED", undefined, trapOptions);
 }
 

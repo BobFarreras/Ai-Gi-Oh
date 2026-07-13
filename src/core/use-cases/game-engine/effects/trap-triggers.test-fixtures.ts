@@ -168,6 +168,39 @@ export const trapOpenClawNullify: ICard = {
   effect: { action: "NULLIFY_OPPONENT_BUFF" },
 };
 
+export const trapFirewallCounterMagic: ICard = {
+  id: "trap-firewall-counter-magic",
+  name: "Escudo Firewall",
+  description: "",
+  type: "TRAP",
+  faction: "OPEN_SOURCE",
+  cost: 3,
+  trigger: "ON_OPPONENT_EXECUTION_ACTIVATED",
+  effect: { action: "NEGATE_OPPONENT_EXECUTION_AND_DESTROY" },
+};
+
+export const typescriptEntity: ICard = {
+  id: "entity-typescript",
+  name: "TypeScript",
+  description: "",
+  type: "ENTITY",
+  faction: "OPEN_SOURCE",
+  cost: 4,
+  attack: 1200,
+  defense: 1000,
+};
+
+export const trapTypescriptShield: ICard = {
+  id: "trap-typescript-shield",
+  name: "Escudo de Tipos TypeScript",
+  description: "",
+  type: "TRAP",
+  faction: "OPEN_SOURCE",
+  cost: 2,
+  trigger: "ON_OPPONENT_ATTACK_DECLARED",
+  effect: { action: "REINFORCE_LINKED_ENTITY_ON_ATTACK", linkedCardId: "entity-typescript", value: 1000 },
+};
+
 export function createTrapEntity(instanceId: string, card: ICard): IBoardEntity {
   return { instanceId, card, mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false };
 }

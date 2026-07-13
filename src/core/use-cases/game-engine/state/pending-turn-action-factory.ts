@@ -8,6 +8,8 @@ import {
   ISelectOpponentEntityToDestroyPendingTurnAction,
   ISelectOpponentEntityToFlipDefensePendingTurnAction,
   ISelectOwnEntityToSacrificePendingTurnAction,
+  ISelectOpponentEntityToStealPendingTurnAction,
+  ISelectOpponentExecutionToStealPendingTurnAction,
   ISelectOpponentGraveyardCardPendingTurnAction,
   ISelectOpponentSetCardPendingTurnAction,
 } from "@/core/use-cases/game-engine/state/types";
@@ -142,6 +144,30 @@ export function createOwnEntityToSacrificeSelectionPendingAction(
 ): ISelectOwnEntityToSacrificePendingTurnAction {
   return {
     type: "SELECT_OWN_ENTITY_TO_SACRIFICE",
+    playerId,
+    executionInstanceId,
+  };
+}
+
+/** Acción pendiente para elegir una entity rival a robar a tu campo. */
+export function createOpponentEntityToStealSelectionPendingAction(
+  playerId: string,
+  executionInstanceId: string,
+): ISelectOpponentEntityToStealPendingTurnAction {
+  return {
+    type: "SELECT_OPPONENT_ENTITY_TO_STEAL",
+    playerId,
+    executionInstanceId,
+  };
+}
+
+/** Acción pendiente para elegir una magia/trampa rival a robar a tu campo. */
+export function createOpponentExecutionToStealSelectionPendingAction(
+  playerId: string,
+  executionInstanceId: string,
+): ISelectOpponentExecutionToStealPendingTurnAction {
+  return {
+    type: "SELECT_OPPONENT_EXECUTION_TO_STEAL",
     playerId,
     executionInstanceId,
   };

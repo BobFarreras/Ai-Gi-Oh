@@ -96,6 +96,26 @@ export interface ISacrificeAllyEntityForEnergyEffect {
   action: "SACRIFICE_ALLY_ENTITY_FOR_ENERGY";
 }
 
+/** Magia (Terminal Córtice): intercambia por completo la mano del jugador con la del rival. */
+export interface ISwapHandsEffect {
+  action: "SWAP_HANDS";
+}
+
+/** Magia (reaq m): intercambia por completo las entities del tablero con las del rival. */
+export interface ISwapBoardEntitiesEffect {
+  action: "SWAP_BOARD_ENTITIES";
+}
+
+/** El jugador elige una entity del tablero rival y la roba a su propio campo. */
+export interface IStealOpponentEntityEffect {
+  action: "STEAL_OPPONENT_ENTITY";
+}
+
+/** El jugador elige una magia/trampa del tablero rival y la roba a su propio campo. */
+export interface IStealOpponentExecutionEffect {
+  action: "STEAL_OPPONENT_EXECUTION";
+}
+
 export interface IDrainOpponentEnergyEffect {
   action: "DRAIN_OPPONENT_ENERGY";
 }
@@ -175,6 +195,25 @@ export interface IDestroyEntityOnBattleWinEffect {
 
 export interface INegateOpponentTrapAndDestroyEffect {
   action: "NEGATE_OPPONENT_TRAP_AND_DESTROY";
+}
+
+/**
+ * Trampa (Escudo Firewall, `ON_OPPONENT_EXECUTION_ACTIVATED`): cuando el rival activa una magia, anula su
+ * efecto y destruye esa carta antes de que se resuelva.
+ */
+export interface INegateOpponentExecutionAndDestroyEffect {
+  action: "NEGATE_OPPONENT_EXECUTION_AND_DESTROY";
+}
+
+/**
+ * Trampa PERSISTENTE (Escudo TypeScript, `ON_OPPONENT_ATTACK_DECLARED`): cada vez que el rival ataca a tu
+ * entity con `linkedCardId`, esa entity gana `value` de DEF (acumulable). La trampa NO se consume: sigue
+ * puesta mientras la entity ligada siga en el campo.
+ */
+export interface IReinforceLinkedEntityOnAttackEffect {
+  action: "REINFORCE_LINKED_ENTITY_ON_ATTACK";
+  linkedCardId: string;
+  value: number;
 }
 
 export interface IFusionSummonEffect {
@@ -279,7 +318,13 @@ export type ICardEffect =
   | IReflectDirectDamageEffect
   | IGrantExtraSummonEffect
   | INegateAttackEffect
-  | INullifyOpponentBuffEffect;
+  | INullifyOpponentBuffEffect
+  | ISwapHandsEffect
+  | ISwapBoardEntitiesEffect
+  | IStealOpponentEntityEffect
+  | IStealOpponentExecutionEffect
+  | INegateOpponentExecutionAndDestroyEffect
+  | IReinforceLinkedEntityOnAttackEffect;
 
 export interface ICard {
   readonly id: string;
