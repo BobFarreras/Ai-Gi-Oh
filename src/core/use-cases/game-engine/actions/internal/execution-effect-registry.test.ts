@@ -27,6 +27,7 @@ describe("execution-effect-registry", () => {
       "BOOST_ATTACK_BY_ARCHETYPE",
       "SET_DEFENSE_BY_CARD_ID",
       "BOOST_DEFENSE_BY_CARD_ID",
+      "BOOST_ATTACK_BY_CARD_ID",
       "DRAIN_OPPONENT_ENERGY",
       "SET_CARD_DUEL_PROGRESS",
       "REDUCE_OPPONENT_ATTACK",
@@ -54,6 +55,27 @@ describe("execution-effect-registry", () => {
     const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "REDUCE_OPPONENT_ATTACK", value: 700 })!;
     expect(result.opponent.activeEntities.map((e) => e.card.attack)).toEqual([300, 0]);
     expect(result.buff).toEqual({ entityIds: ["e1", "e2"], stat: "ATTACK", amount: -700 });
+  });
+
+  it("BOOST_ATTACK_BY_CARD_ID solo sube el ATK de las entities propias con ese card id", () => {
+    const player: IPlayer = {
+      ...createPlayer("a"),
+      activeEntities: [
+        { instanceId: "e1", card: entityCard("entity-figma", 1000), mode: "ATTACK", hasAttackedThisTurn: false, isNewlySummoned: false },
+        { instanceId: "e2", card: entityCard("entity-otra", 900), mode: "ATTACK", hasAttackedThisTurn: false, isNewlySummoned: false },
+      ],
+    };
+    const opponent = createPlayer("b");
+    const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "BOOST_ATTACK_BY_CARD_ID", targetCardId: "entity-figma", value: 1000 })!;
+    expect(result.player.activeEntities.map((e) => e.card.attack)).toEqual([2000, 900]);
+    expect(result.buff).toEqual({ entityIds: ["e1"], stat: "ATTACK", amount: 1000 });
+  });
+
+  it("BOOST_ATTACK_BY_CARD_ID es no-op si no hay ninguna entity con ese card id", () => {
+    const player = createPlayer("a");
+    const opponent = createPlayer("b");
+    const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "BOOST_ATTACK_BY_CARD_ID", targetCardId: "entity-figma", value: 1000 })!;
+    expect(result.buff).toEqual({ entityIds: [], stat: "ATTACK", amount: 1000 });
   });
 
   it("DESTROY_ALL_TRAPS manda al cementerio del rival solo las trampas", () => {

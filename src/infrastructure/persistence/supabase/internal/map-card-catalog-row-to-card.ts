@@ -27,6 +27,7 @@ import {
   IReduceOpponentDefenseEffect,
   ISetCardDuelProgressEffect,
   IBoostDefenseByCardIdEffect,
+  IBoostAttackByCardIdEffect,
   ISetDefenseByCardIdEffect,
   IStealOpponentGraveyardCardToHandEffect,
 } from "@/core/entities/ICard";
@@ -76,6 +77,10 @@ function mapEffect(value: unknown): ICardEffect | undefined {
     case "BOOST_DEFENSE_BY_CARD_ID":
       return typeof value.targetCardId === "string" && typeof value.value === "number"
         ? ({ action: "BOOST_DEFENSE_BY_CARD_ID", targetCardId: value.targetCardId, value: value.value } as IBoostDefenseByCardIdEffect)
+        : undefined;
+    case "BOOST_ATTACK_BY_CARD_ID":
+      return typeof value.targetCardId === "string" && typeof value.value === "number"
+        ? ({ action: "BOOST_ATTACK_BY_CARD_ID", targetCardId: value.targetCardId, value: value.value } as IBoostAttackByCardIdEffect)
         : undefined;
     case "DRAIN_OPPONENT_ENERGY":
       return { action: "DRAIN_OPPONENT_ENERGY" } as IDrainOpponentEnergyEffect;

@@ -58,6 +58,23 @@ export function boostDefenseByCardId(player: IPlayer, targetCardId: string, valu
   };
 }
 
+export function boostAttackByCardId(player: IPlayer, targetCardId: string, value: number): { updatedPlayer: IPlayer; buffIds: string[] } {
+  const delta = Math.max(0, value);
+  const buffIds = player.activeEntities.filter((entity) => entity.card.id === targetCardId).map((entity) => entity.instanceId);
+  if (buffIds.length === 0 || delta === 0) return { updatedPlayer: player, buffIds: [] };
+  return {
+    updatedPlayer: {
+      ...player,
+      activeEntities: player.activeEntities.map((entity) => (
+        entity.card.id === targetCardId
+          ? { ...entity, card: { ...entity.card, attack: Math.max(0, (entity.card.attack ?? 0) + delta) } }
+          : entity
+      )),
+    },
+    buffIds,
+  };
+}
+
 export function setCardDuelProgress(player: IPlayer, targetCardId: string, level: number, versionTier: number): IPlayer {
   const normalizedLevel = Math.max(1, Math.floor(level));
   const normalizedVersionTier = Math.max(1, Math.floor(versionTier));

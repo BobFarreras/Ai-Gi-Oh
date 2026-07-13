@@ -5,6 +5,7 @@ import { GameRuleError } from "@/core/errors/GameRuleError";
 import { boostArchetypeStat, boostBestAlliedAttack } from "@/core/use-cases/game-engine/actions/internal/execution-effect-buffs";
 import { IExecutionEffectResult } from "@/core/use-cases/game-engine/actions/internal/execution-effects";
 import {
+  boostAttackByCardId,
   boostDefenseByCardId,
   createBaseResult,
   destroyOpponentTraps,
@@ -26,6 +27,7 @@ type ExecutionAction =
   | "BOOST_ATTACK_BY_ARCHETYPE"
   | "SET_DEFENSE_BY_CARD_ID"
   | "BOOST_DEFENSE_BY_CARD_ID"
+  | "BOOST_ATTACK_BY_CARD_ID"
   | "DRAIN_OPPONENT_ENERGY"
   | "SET_CARD_DUEL_PROGRESS"
   | "REDUCE_OPPONENT_ATTACK"
@@ -67,6 +69,10 @@ const executionEffectHandlers: { [K in ExecutionAction]: ExecutionHandler<K> } =
   BOOST_DEFENSE_BY_CARD_ID: (player, opponent, effect) => {
     const boosted = boostDefenseByCardId(player, effect.targetCardId, effect.value);
     return { ...createBaseResult(boosted.updatedPlayer, opponent), buff: { entityIds: boosted.buffIds, stat: "DEFENSE", amount: effect.value } };
+  },
+  BOOST_ATTACK_BY_CARD_ID: (player, opponent, effect) => {
+    const boosted = boostAttackByCardId(player, effect.targetCardId, effect.value);
+    return { ...createBaseResult(boosted.updatedPlayer, opponent), buff: { entityIds: boosted.buffIds, stat: "ATTACK", amount: effect.value } };
   },
   DRAIN_OPPONENT_ENERGY: (player, opponent) => {
     const drainedAmount = Math.max(0, opponent.currentEnergy);
@@ -116,6 +122,7 @@ export function resolveExecutionEffectFromRegistry(player: IPlayer, opponent: IP
   if (effect.action === "BOOST_ATTACK_BY_ARCHETYPE") return executionEffectHandlers.BOOST_ATTACK_BY_ARCHETYPE(player, opponent, effect);
   if (effect.action === "SET_DEFENSE_BY_CARD_ID") return executionEffectHandlers.SET_DEFENSE_BY_CARD_ID(player, opponent, effect);
   if (effect.action === "BOOST_DEFENSE_BY_CARD_ID") return executionEffectHandlers.BOOST_DEFENSE_BY_CARD_ID(player, opponent, effect);
+  if (effect.action === "BOOST_ATTACK_BY_CARD_ID") return executionEffectHandlers.BOOST_ATTACK_BY_CARD_ID(player, opponent, effect);
   if (effect.action === "DRAIN_OPPONENT_ENERGY") return executionEffectHandlers.DRAIN_OPPONENT_ENERGY(player, opponent, effect);
   if (effect.action === "SET_CARD_DUEL_PROGRESS") return executionEffectHandlers.SET_CARD_DUEL_PROGRESS(player, opponent, effect);
   if (effect.action === "REDUCE_OPPONENT_ATTACK") return executionEffectHandlers.REDUCE_OPPONENT_ATTACK(player, opponent, effect);
