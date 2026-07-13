@@ -8,6 +8,7 @@ import {
   executionCard,
   trapCopyOpponentBuff,
   trapOnExecution,
+  trapOpenClawNullify,
   trapReduceDefenseOnExecution,
 } from "@/core/use-cases/game-engine/effects/trap-triggers.test-fixtures";
 
@@ -106,5 +107,33 @@ describe("Trap triggers on execution", () => {
     const next = GameEngine.resolveExecution(state, "p1", executionId);
     const copiedBuffEntity = next.playerB.activeEntities.find((entity) => entity.instanceId === "p2-entity");
     expect(copiedBuffEntity?.card.defense).toBe(900);
+  });
+
+  it("OpenClaw anula el buff que el rival aplica a sus entities (resta el mismo valor)", () => {
+    const base = createTrapBaseState();
+    const buffExecution = {
+      id: "exec-buff-def-openclaw", name: "Buff Defense", description: "", type: "EXECUTION" as const,
+      faction: "OPEN_SOURCE" as const, cost: 1, effect: { action: "BOOST_DEFENSE_BY_ARCHETYPE" as const, archetype: "TOOL" as const, value: 200 },
+    };
+    let state: GameState = {
+      ...base,
+      phase: "MAIN_1",
+      playerA: {
+        ...base.playerA,
+        hand: [buffExecution],
+        activeEntities: [createTestBoardEntity("p1-tool", { ...executionCard, id: "entity-tool-a", type: "ENTITY", attack: 900, defense: 600, archetype: "TOOL" }, "ATTACK")],
+      },
+      playerB: {
+        ...base.playerB,
+        activeExecutions: [createTrapEntity("t-openclaw", trapOpenClawNullify)],
+      },
+    };
+    state = GameEngine.playCard(state, "p1", "exec-buff-def-openclaw", "ACTIVATE");
+    const executionId = state.playerA.activeExecutions[0].instanceId;
+    const next = GameEngine.resolveExecution(state, "p1", executionId);
+    // El buff +200 se aplica y OpenClaw lo resta: DEF neta vuelve a 600.
+    const tool = next.playerA.activeEntities.find((entity) => entity.instanceId === "p1-tool");
+    expect(tool?.card.defense).toBe(600);
+    expect(next.playerB.graveyard.some((card) => card.id === "trap-openclaw-nullify-buff")).toBe(true);
   });
 });

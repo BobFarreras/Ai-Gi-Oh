@@ -9,6 +9,7 @@ import {
   trapCounterTrap,
   trapDrainDirectAttackerEnergy,
   trapFlutterReflect,
+  trapMetasploitNegate,
   trapNegateAttack,
   trapOnAttack,
 } from "@/core/use-cases/game-engine/effects/trap-triggers.test-fixtures";
@@ -154,11 +155,44 @@ describe("Trap triggers on attack", () => {
     // El atacante queda marcado como usado y la trampa va al cementerio; la marca transitoria se limpia.
     expect(next.playerA.activeEntities.find((entity) => entity.instanceId === "a-flutter")?.hasAttackedThisTurn).toBe(true);
     expect(next.playerB.graveyard.some((card) => card.id === "trap-flutter-reflect")).toBe(true);
-    expect(next.directAttackNegatedAttackerInstanceId).toBeUndefined();
+    expect(next.negatedAttackAttackerInstanceId).toBeUndefined();
     const reflectDamage = next.combatLog.find(
       (event) => event.eventType === "DIRECT_DAMAGE" && (event.payload as Record<string, unknown>).targetPlayerId === "p1",
     );
     expect(reflectDamage).toBeTruthy();
+  });
+
+  it("Escudo Metasploit bloquea el ataque a una entity sin destruir al atacante", () => {
+    const base = createTrapBaseState();
+    const defenderCard = { id: "def-card", name: "Defender", description: "", type: "ENTITY" as const, faction: "OPEN_SOURCE" as const, cost: 2, attack: 800, defense: 1200 };
+    const state: GameState = {
+      ...base,
+      playerA: { ...base.playerA, activeEntities: [createTestBoardEntity("a-meta", attackerCard, "ATTACK")] },
+      playerB: {
+        ...base.playerB,
+        activeEntities: [createTestBoardEntity("d-meta", defenderCard, "DEFENSE")],
+        activeExecutions: [createTrapEntity("t-meta", trapMetasploitNegate)],
+      },
+    };
+    const next = GameEngine.executeAttack(state, "p1", "a-meta", "d-meta");
+    // Ni atacante ni defensor se destruyen; el atacante queda marcado como usado y la trampa al cementerio.
+    expect(next.playerA.activeEntities.find((entity) => entity.instanceId === "a-meta")?.hasAttackedThisTurn).toBe(true);
+    expect(next.playerB.activeEntities.some((entity) => entity.instanceId === "d-meta")).toBe(true);
+    expect(next.playerB.graveyard.some((card) => card.id === "trap-escudo-metasploit")).toBe(true);
+    expect(next.negatedAttackAttackerInstanceId).toBeUndefined();
+  });
+
+  it("Escudo Metasploit también bloquea un ataque directo (sin daño al dueño)", () => {
+    const base = createTrapBaseState();
+    const state: GameState = {
+      ...base,
+      playerA: { ...base.playerA, activeEntities: [createTestBoardEntity("a-meta2", attackerCard, "ATTACK")] },
+      playerB: { ...base.playerB, activeExecutions: [createTrapEntity("t-meta2", trapMetasploitNegate)] },
+    };
+    const next = GameEngine.executeAttack(state, "p1", "a-meta2");
+    expect(next.playerB.healthPoints).toBe(8000);
+    expect(next.playerA.activeEntities.find((entity) => entity.instanceId === "a-meta2")?.hasAttackedThisTurn).toBe(true);
+    expect(next.playerB.graveyard.some((card) => card.id === "trap-escudo-metasploit")).toBe(true);
   });
 
   it("debería drenar energía del atacante y fijar energía del defensor a 10 en ataque directo", () => {

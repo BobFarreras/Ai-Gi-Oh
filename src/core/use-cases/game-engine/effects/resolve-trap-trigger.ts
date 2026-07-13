@@ -95,9 +95,9 @@ export function resolveTrapTrigger(
 
   const resolved = resolveTrapEffect(playerAfterTrapUse, opponent, trap, context);
   const assigned = assignPlayers(state, resolved.player, resolved.opponent, isPlayerA);
-  // Flutter Enjambre: señala a executeAttack que el golpe directo de este atacante queda anulado.
-  const baseState = resolved.negatesDirectAttack && context?.attackerInstanceId
-    ? { ...assigned, directAttackNegatedAttackerInstanceId: context.attackerInstanceId }
+  // Flutter / Metasploit: señala a executeAttack que el ataque de este atacante queda anulado.
+  const baseState = resolved.negatesAttack && context?.attackerInstanceId
+    ? { ...assigned, negatedAttackAttackerInstanceId: context.attackerInstanceId }
     : assigned;
   const withTrapLogs = appendTrapResolutionLogs({
     state: baseState,

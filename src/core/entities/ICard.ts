@@ -131,8 +131,24 @@ export interface INegateAttackAndDestroyAttackerEffect {
   action: "NEGATE_ATTACK_AND_DESTROY_ATTACKER";
 }
 
+/**
+ * Trampa (Escudo Metasploit, `ON_OPPONENT_ATTACK_DECLARED`): al declarar el rival un ataque, lo bloquea
+ * (no se resuelve) sin destruir al atacante.
+ */
+export interface INegateAttackEffect {
+  action: "NEGATE_ATTACK";
+}
+
 export interface ICopyOpponentBuffToAlliedEntitiesEffect {
   action: "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES";
+}
+
+/**
+ * Trampa (OpenClaw Bug Trap, `ON_OPPONENT_STAT_BUFF_APPLIED`): cuando el rival aplica un buff a sus
+ * entities, resta ese mismo valor a las entities buffeadas (anula el buff).
+ */
+export interface INullifyOpponentBuffEffect {
+  action: "NULLIFY_OPPONENT_BUFF";
 }
 
 export interface IForceSummonedDefenseToAttackLockedEffect {
@@ -261,7 +277,9 @@ export type ICardEffect =
   | IApplyDamageOverTimeEffect
   | IApplyHealOverTimeEffect
   | IReflectDirectDamageEffect
-  | IGrantExtraSummonEffect;
+  | IGrantExtraSummonEffect
+  | INegateAttackEffect
+  | INullifyOpponentBuffEffect;
 
 export interface ICard {
   readonly id: string;

@@ -3,7 +3,7 @@ import { ICardEffect } from "@/core/entities/ICard";
 import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { ITrapResolutionResult, ITrapTriggerContext } from "@/core/use-cases/game-engine/effects/internal/trap-types";
 
-type TrapAction = "DAMAGE" | "REDUCE_OPPONENT_ATTACK" | "REDUCE_OPPONENT_DEFENSE" | "NEGATE_ATTACK_AND_DESTROY_ATTACKER" | "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES" | "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED" | "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN" | "APPLY_DAMAGE_OVER_TIME" | "APPLY_HEAL_OVER_TIME" | "REFLECT_DIRECT_DAMAGE";
+type TrapAction = "DAMAGE" | "REDUCE_OPPONENT_ATTACK" | "REDUCE_OPPONENT_DEFENSE" | "NEGATE_ATTACK_AND_DESTROY_ATTACKER" | "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES" | "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED" | "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN" | "APPLY_DAMAGE_OVER_TIME" | "APPLY_HEAL_OVER_TIME" | "REFLECT_DIRECT_DAMAGE" | "NEGATE_ATTACK" | "NULLIFY_OPPONENT_BUFF";
 type TrapEffect = Extract<ICardEffect, { action: TrapAction }>;
 type TrapHandler<K extends TrapAction> = (player: IPlayer, opponent: IPlayer, trap: IBoardEntity, effect: Extract<TrapEffect, { action: K }>, context?: ITrapTriggerContext) => ITrapResolutionResult;
 
@@ -127,8 +127,29 @@ const trapEffectHandlers: { [K in TrapAction]: TrapHandler<K> } = {
       ...createNeutralResult(player, { ...opponent, healthPoints: Math.max(0, opponent.healthPoints - reflected) }),
       damage: reflected,
       blockedTargetEntityInstanceId: context.attackerInstanceId,
-      negatesDirectAttack: true,
+      negatesAttack: true,
     };
+  },
+  // Escudo Metasploit: bloquea el ataque declarado (a entity o directo) sin destruir al atacante.
+  NEGATE_ATTACK: (player, opponent, _trap, _effect, context) => {
+    if (!context?.attackerInstanceId || context.attackerPlayerId !== opponent.id) return createNeutralResult(player, opponent);
+    return { ...createNeutralResult(player, opponent), blockedTargetEntityInstanceId: context.attackerInstanceId, negatesAttack: true };
+  },
+  // OpenClaw Bug Trap: resta el buff recién aplicado a las entities buffeadas del rival (lo anula).
+  NULLIFY_OPPONENT_BUFF: (player, opponent, _trap, _effect, context) => {
+    if (!context?.buffSourcePlayerId || context.buffSourcePlayerId !== opponent.id) return createNeutralResult(player, opponent);
+    if (!context.buffStat || typeof context.buffAmount !== "number" || context.buffAmount <= 0) return createNeutralResult(player, opponent);
+    const targetIds = context.buffTargetEntityIds ?? [];
+    const stat = context.buffStat === "ATTACK" ? "attack" : "defense";
+    const updatedOpponent: IPlayer = {
+      ...opponent,
+      activeEntities: opponent.activeEntities.map((entity) =>
+        targetIds.includes(entity.instanceId)
+          ? { ...entity, card: { ...entity.card, [stat]: Math.max(0, (entity.card[stat] ?? 0) - context.buffAmount!) } }
+          : entity,
+      ),
+    };
+    return { ...createNeutralResult(player, updatedOpponent), buffTargetEntityIds: targetIds, buffStat: context.buffStat, buffAmount: -Math.abs(context.buffAmount) };
   },
 };
 
@@ -145,6 +166,8 @@ export function resolveTrapEffectFromRegistry(player: IPlayer, opponent: IPlayer
   if (trap.card.effect.action === "APPLY_DAMAGE_OVER_TIME") return trapEffectHandlers.APPLY_DAMAGE_OVER_TIME(player, opponent, trap, trap.card.effect, context);
   if (trap.card.effect.action === "APPLY_HEAL_OVER_TIME") return trapEffectHandlers.APPLY_HEAL_OVER_TIME(player, opponent, trap, trap.card.effect, context);
   if (trap.card.effect.action === "REFLECT_DIRECT_DAMAGE") return trapEffectHandlers.REFLECT_DIRECT_DAMAGE(player, opponent, trap, trap.card.effect, context);
+  if (trap.card.effect.action === "NEGATE_ATTACK") return trapEffectHandlers.NEGATE_ATTACK(player, opponent, trap, trap.card.effect, context);
+  if (trap.card.effect.action === "NULLIFY_OPPONENT_BUFF") return trapEffectHandlers.NULLIFY_OPPONENT_BUFF(player, opponent, trap, trap.card.effect, context);
   return null;
 }
 

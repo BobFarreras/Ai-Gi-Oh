@@ -8,6 +8,8 @@ export interface ITrapTriggerContext {
   buffSourcePlayerId?: string;
   buffStat?: "ATTACK" | "DEFENSE";
   buffAmount?: number;
+  /** instanceIds de las entities que recibieron el buff (para anularlo exactamente en ellas). */
+  buffTargetEntityIds?: string[];
   summonedPlayerId?: string;
   summonedInstanceId?: string;
 }
@@ -30,8 +32,8 @@ export interface ITrapResolutionResult {
   destroyedOpponentEntityDestination: "GRAVEYARD" | "DESTROYED" | null;
   /** Estados multi-turno a añadir a GameState (DoT/HoT de Bandera Windows / Abrazo Hugging). */
   addedStatusEffects?: IStatusEffectSpec[];
-  /** Flutter Enjambre: anula el ataque DIRECTO en curso (el dueño no recibe daño). */
-  negatesDirectAttack?: boolean;
+  /** Anula el ataque en curso sin destruir al atacante (Flutter Enjambre directo / Metasploit a entity). */
+  negatesAttack?: boolean;
 }
 
 export interface ITriggeredTrap {

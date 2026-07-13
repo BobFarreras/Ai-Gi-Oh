@@ -25,14 +25,14 @@
 | ✅ | #11 Abrazo Hugging (regeneración +300 LP/turno) | `APPLY_HEAL_OVER_TIME` | 104 |
 | ✅ | #9 Flutter Enjambre (anula ataque directo + refleja ATK) | `REFLECT_DIRECT_DAMAGE` + negación transitoria | 105 |
 | ✅ | #2 Núcleo de Datos (doble invocación este turno) | `GRANT_EXTRA_SUMMON` + contador `extraSummonsThisTurn` + `canNormalSummon` | 106 |
+| ✅ | Trampa Metasploit (bloquear ataque a entity o directo, sin destruir) | `NEGATE_ATTACK` + negación transitoria general | 107 |
+| ✅ | Trampa OpenClaw (anular buff que el rival aplica) | `NULLIFY_OPPONENT_BUFF` + `buffTargetEntityIds` en contexto | 108 |
 | ✅ | Badges de estado en HUD (escudo/infección/regeneración), desktop + móvil | `HudStatusBadges` | — |
 
 **Pendiente:**
 
 | ⬜ | Ítem | Acción/efecto | Fase | Compl. |
 |----|------|---------------|------|--------|
-| ⬜ | Trampa Metasploit (bloquear ataque a entity, sin destruir) | `NEGATE_ATTACK` | — | 🟡 |
-| ⬜ | Trampa OpenClaw (anular buff que el rival aplica) | `NULLIFY_OPPONENT_BUFF` | — | 🟡 |
 | ⬜ | #12 Octocat (robar entity del tablero rival) | `STEAL_OPPONENT_ENTITY` + selección | 4 | 🔴 |
 | ⬜ | #13 robar magia/trampa del tablero rival | `STEAL_OPPONENT_EXECUTION` + selección | 4 | 🔴 |
 | ⬜ | #6 reaq m (intercambiar entities de tablero) | `SWAP_BOARD_ENTITIES` | 4 | 🔴 |
@@ -41,9 +41,9 @@
 | ⬜ | #15 Escudo Firewall (anular y destruir magia rival) | `NEGATE_OPPONENT_EXECUTION_AND_DESTROY` | 5 | 🔴 |
 | ⬜ | Cierre: cartas en mazos de IA + pase de balance + renombrar imágenes restantes | — | — | — |
 
-> **Fases 0, 1, 2 y 3 completas.** Quedan la Fase 4 (robos/intercambios, la más grande) y la Fase 5
-> (contra-magia), más las 2 trampas extra (Metasploit, OpenClaw) y el cierre.
-> Migraciones 096-106 aplicadas SOLO a la BD local; ninguna a producción todavía.
+> **Fases 0, 1, 2, 3 completas + las 2 trampas extra (Metasploit, OpenClaw).** Quedan la Fase 4
+> (robos/intercambios, la más grande), la Fase 5 (contra-magia) y el cierre (IA + balance).
+> Migraciones 096-108 aplicadas SOLO a la BD local; ninguna a producción todavía.
 
 ---
 
@@ -168,7 +168,7 @@ Leyenda complejidad: 🟢 bajo (patrón existente) · 🟡 medio (acción nueva 
 - **⬜ Fase 4 — Robos/intercambios 🔴:** #12, #13, #6, #7, #8 (escudo ligado). Los de mayor riesgo de
   balance y edge-cases (propiedad de cartas, slots llenos, runtimeId).
 - **⬜ Fase 5 — Contra-magia 🔴:** #15 (interceptar la resolución de una magia rival y anularla).
-- **⬜ Extra (trampas nuevas 🟡):** Metasploit (`NEGATE_ATTACK`) y OpenClaw (`NULLIFY_OPPONENT_BUFF`).
+- **✅ Extra (trampas nuevas 🟡):** Metasploit (`NEGATE_ATTACK`) ✅ y OpenClaw (`NULLIFY_OPPONENT_BUFF`) ✅.
 - **⬜ Cierre:** cartas en mazos de IA + Códex + VFX pulidos + pase de balance + `CI=true pnpm quality:check`.
 
 Cada carta, en su fase: contrato → parser → handler → (trigger) → VFX → IA → migración → (mock-cards) →

@@ -6,6 +6,7 @@ import {
   ICard,
   ICardEffect,
   ICopyOpponentBuffToAlliedEntitiesEffect,
+  INullifyOpponentBuffEffect,
   IDamageEffect,
   IDestroyAllTrapsEffect,
   IDiscardOpponentHandCardEffect,
@@ -20,6 +21,7 @@ import {
   IHealEffect,
   INegateOpponentTrapAndDestroyEffect,
   INegateAttackAndDestroyAttackerEffect,
+  INegateAttackEffect,
   IRevealOpponentSetCardEffect,
   IReturnGraveyardCardToFieldEffect,
   IReturnGraveyardCardToHandEffect,
@@ -133,12 +135,16 @@ function mapEffect(value: unknown): ICardEffect | undefined {
         : undefined;
     case "NEGATE_ATTACK_AND_DESTROY_ATTACKER":
       return { action: "NEGATE_ATTACK_AND_DESTROY_ATTACKER" } as INegateAttackAndDestroyAttackerEffect;
+    case "NEGATE_ATTACK":
+      return { action: "NEGATE_ATTACK" } as INegateAttackEffect;
     case "REFLECT_DIRECT_DAMAGE":
       return { action: "REFLECT_DIRECT_DAMAGE" } as IReflectDirectDamageEffect;
     case "GRANT_EXTRA_SUMMON":
       return { action: "GRANT_EXTRA_SUMMON", count: typeof value.count === "number" ? value.count : undefined } as IGrantExtraSummonEffect;
     case "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES":
       return { action: "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES" } as ICopyOpponentBuffToAlliedEntitiesEffect;
+    case "NULLIFY_OPPONENT_BUFF":
+      return { action: "NULLIFY_OPPONENT_BUFF" } as INullifyOpponentBuffEffect;
     case "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED":
       return { action: "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED" } as IForceSummonedDefenseToAttackLockedEffect;
     case "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN":

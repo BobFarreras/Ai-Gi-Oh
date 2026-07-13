@@ -7,7 +7,7 @@ export type TrapReactiveEvent =
   | { type: "ATTACK_DECLARED"; context: Required<Pick<ITrapTriggerContext, "attackerPlayerId" | "attackerInstanceId">> }
   | { type: "DIRECT_ATTACK_DECLARED"; context: Required<Pick<ITrapTriggerContext, "attackerPlayerId" | "attackerInstanceId">> }
   | { type: "ENTITY_SET_PLAYED"; context: Required<Pick<ITrapTriggerContext, "summonedPlayerId" | "summonedInstanceId">> }
-  | { type: "EXECUTION_BUFF_APPLIED"; context: Required<Pick<ITrapTriggerContext, "buffSourcePlayerId" | "buffStat" | "buffAmount">> }
+  | { type: "EXECUTION_BUFF_APPLIED"; context: Required<Pick<ITrapTriggerContext, "buffSourcePlayerId" | "buffStat" | "buffAmount" | "buffTargetEntityIds">> }
   | { type: "EXECUTION_ACTIVATED" }
   | { type: "TRAP_ACTIVATED" };
 

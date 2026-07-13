@@ -101,10 +101,10 @@ export interface GameState {
   /** Efectos de estado multi-turno a nivel de jugador (p.ej. "sin ataques directos N turnos"). */
   activeStatusEffects?: IActiveStatusEffect[];
   /**
-   * Transitorio dentro de una misma resolución de ataque: instanceId del atacante cuyo ataque DIRECTO ha
-   * sido anulado por una trampa reactiva (Flutter Enjambre). `executeAttack` lo consume y lo limpia; no
-   * persiste entre acciones.
+   * Transitorio dentro de una misma resolución de ataque: instanceId del atacante cuyo ataque ha sido
+   * ANULADO por una trampa reactiva sin destruir al atacante (Flutter Enjambre en directo / Escudo
+   * Metasploit a entity). `executeAttack` lo consume y lo limpia; no persiste entre acciones.
    */
-  directAttackNegatedAttackerInstanceId?: string;
+  negatedAttackAttackerInstanceId?: string;
   idFactory?: IGameEngineIdFactory;
 }

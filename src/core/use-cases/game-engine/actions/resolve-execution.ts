@@ -107,7 +107,7 @@ export function resolveExecution(
       effectResult.opponent.id,
       {
         type: "EXECUTION_BUFF_APPLIED",
-        context: { buffSourcePlayerId: playerId, buffStat: effectResult.buff.stat, buffAmount: effectResult.buff.amount },
+        context: { buffSourcePlayerId: playerId, buffStat: effectResult.buff.stat, buffAmount: effectResult.buff.amount, buffTargetEntityIds: effectResult.buff.entityIds },
       },
       // Coherencia: si el jugador rechazó su contra-trampa para esta ejecución, también aplica al buff.
       { skipCounterTrapPlayerIds: options?.skipCounterTrapPlayerIds },

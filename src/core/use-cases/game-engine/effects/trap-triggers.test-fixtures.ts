@@ -146,6 +146,28 @@ export const trapFlutterReflect: ICard = {
   effect: { action: "REFLECT_DIRECT_DAMAGE" },
 };
 
+export const trapMetasploitNegate: ICard = {
+  id: "trap-escudo-metasploit",
+  name: "Escudo Metasploit",
+  description: "",
+  type: "TRAP",
+  faction: "OPEN_SOURCE",
+  cost: 2,
+  trigger: "ON_OPPONENT_ATTACK_DECLARED",
+  effect: { action: "NEGATE_ATTACK" },
+};
+
+export const trapOpenClawNullify: ICard = {
+  id: "trap-openclaw-nullify-buff",
+  name: "OpenClaw Bug Trap",
+  description: "",
+  type: "TRAP",
+  faction: "OPEN_SOURCE",
+  cost: 2,
+  trigger: "ON_OPPONENT_STAT_BUFF_APPLIED",
+  effect: { action: "NULLIFY_OPPONENT_BUFF" },
+};
+
 export function createTrapEntity(instanceId: string, card: ICard): IBoardEntity {
   return { instanceId, card, mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false };
 }
