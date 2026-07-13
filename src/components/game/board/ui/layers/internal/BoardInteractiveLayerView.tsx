@@ -2,7 +2,6 @@
 "use client";
 
 import { Battlefield } from "@/components/game/board/Battlefield";
-import { DirectAttackShieldOverlay } from "@/components/game/board/ui/overlays/DirectAttackShieldOverlay";
 import { MobilePlayerHand } from "@/components/game/board/MobilePlayerHand";
 import { PlayerHand } from "@/components/game/board/PlayerHand";
 import { SidePanels } from "@/components/game/board/SidePanels";
@@ -48,6 +47,8 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
           cardXpActorPlayerId={props.lastCardXpActorPlayerId}
           playerId={props.player.id}
           opponentId={props.opponent.id}
+          playerShieldActive={(props.gameState.activeStatusEffects ?? []).some((status) => status.kind === "NO_DIRECT_ATTACKS" && status.targetPlayerId === props.opponent.id)}
+          opponentShieldActive={(props.gameState.activeStatusEffects ?? []).some((status) => status.kind === "NO_DIRECT_ATTACKS" && status.targetPlayerId === props.player.id)}
           viewportBoardScale={props.viewport.boardScale}
           isMobileLayout={props.isMobileLayout}
           onGraveyardClick={props.onGraveyardClick}
@@ -56,11 +57,6 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
           onEntityClick={props.onEntityClick}
         />
       </div>
-      <DirectAttackShieldOverlay
-        statusEffects={props.gameState.activeStatusEffects}
-        playerId={props.player.id}
-        opponentId={props.opponent.id}
-      />
       {props.isMobileLayout ? (
         <MobilePlayerHand
           hand={props.player.hand}

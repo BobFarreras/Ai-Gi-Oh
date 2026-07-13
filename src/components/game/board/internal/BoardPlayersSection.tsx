@@ -19,6 +19,12 @@ export function BoardPlayersSection({
   opponentAvatarObjectPosition,
 }: IBoardViewSectionProps) {
   const mobileHudLayout = useBoardMobileHudLayout();
+  // Escudo "sin ataques directos": un jugador está protegido cuando su rival tiene el bloqueo activo.
+  const statusEffects = board.gameState.activeStatusEffects ?? [];
+  const shieldTurnsProtectedFrom = (blockedPlayerId: string): number | null =>
+    statusEffects.find((status) => status.kind === "NO_DIRECT_ATTACKS" && status.targetPlayerId === blockedPlayerId)?.remainingTurns ?? null;
+  const playerShieldTurns = shieldTurnsProtectedFrom(opponent.id);
+  const opponentShieldTurns = shieldTurnsProtectedFrom(player.id);
   if (screen.isResultVisible) return null;
 
   if (!isMobile) {
@@ -46,6 +52,8 @@ export function BoardPlayersSection({
         opponentDialogueMessage={screen.narration.hudDialogueByPlayerId[opponent.id] ?? null}
         phase={board.gameState.phase}
         onAdvancePhase={board.advancePhase}
+        playerShieldTurns={playerShieldTurns}
+        opponentShieldTurns={opponentShieldTurns}
       />
     );
   }
@@ -74,6 +82,7 @@ export function BoardPlayersSection({
         containerClassName="!top-0 !right-0 !z-[280] !w-[clamp(11.8rem,35vw,16.4rem)] !h-[clamp(5.4rem,10.2vh,6.9rem)]"
         containerStyle={{ top: `${mobileHudLayout.opponentHudTopPx}px` }}
         showPhaseControls={false}
+        shieldTurns={opponentShieldTurns}
       />
       <PlayerHUD
         isOpponent={false}
@@ -99,6 +108,7 @@ export function BoardPlayersSection({
         containerStyle={{ bottom: `${mobileHudLayout.playerHudBottomPx}px` }}
         showPhaseControls={false}
         showEnergy={false}
+        shieldTurns={playerShieldTurns}
       />
       <BoardMobilePhaseControls
         phase={board.gameState.phase}

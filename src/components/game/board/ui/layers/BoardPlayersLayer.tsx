@@ -28,6 +28,8 @@ interface BoardPlayersLayerProps {
   opponentDialogueMessage?: string | null;
   phase: string;
   onAdvancePhase: () => void;
+  playerShieldTurns?: number | null;
+  opponentShieldTurns?: number | null;
 }
 
 export function BoardPlayersLayer({
@@ -53,6 +55,8 @@ export function BoardPlayersLayer({
   opponentDialogueMessage = null,
   phase,
   onAdvancePhase,
+  playerShieldTurns = null,
+  opponentShieldTurns = null,
 }: BoardPlayersLayerProps) {
   return (
     <>
@@ -76,6 +80,7 @@ export function BoardPlayersLayer({
         avatarUrl={opponentAvatarUrl}
         avatarObjectPosition={opponentAvatarObjectPosition}
         dialogueMessage={opponentDialogueMessage}
+        shieldTurns={opponentShieldTurns}
       />
       <PlayerHUD
         isOpponent={false}
@@ -97,6 +102,7 @@ export function BoardPlayersLayer({
         dialogueMessage={playerDialogueMessage}
         phase={phase}
         onAdvancePhase={onAdvancePhase}
+        shieldTurns={playerShieldTurns}
       />
     </>
   );

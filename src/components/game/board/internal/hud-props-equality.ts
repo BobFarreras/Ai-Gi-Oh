@@ -50,6 +50,7 @@ export function areEqualPlayerHudProps(previous: PlayerHUDProps, next: PlayerHUD
     previous.containerClassName === next.containerClassName &&
     areStylesEqual(previous.containerStyle, next.containerStyle) &&
     previous.showPhaseControls === next.showPhaseControls &&
-    previous.showEnergy === next.showEnergy
+    previous.showEnergy === next.showEnergy &&
+    previous.shieldTurns === next.shieldTurns
   );
 }

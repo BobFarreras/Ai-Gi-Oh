@@ -37,6 +37,8 @@ export interface PlayerHUDProps {
   containerStyle?: React.CSSProperties;
   showPhaseControls?: boolean;
   showEnergy?: boolean;
+  /** Turnos restantes de escudo "sin ataques directos" que protege a este jugador. */
+  shieldTurns?: number | null;
 }
 
 function PlayerHUDComponent({
@@ -65,6 +67,7 @@ function PlayerHUDComponent({
   containerStyle,
   showPhaseControls = true,
   showEnergy = true,
+  shieldTurns = null,
 }: PlayerHUDProps) {
   const { damageTaken, healGained, energyGained, energyLost, isShaking } = useHudFeedback(
     wasDamagedThisAction,
@@ -143,6 +146,7 @@ function PlayerHUDComponent({
         avatarObjectPosition={avatarObjectPosition}
         badgeText={badgeText}
         showEnergy={showEnergy}
+        shieldTurns={shieldTurns}
       />
       <HudPhaseControls phase={phase} isVisible={showPhaseControls && !isOpponent && isActiveTurn} onAdvancePhase={onAdvancePhase} />
     </motion.div>
