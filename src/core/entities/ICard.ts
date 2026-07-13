@@ -86,6 +86,11 @@ export interface IDestroyOpponentEntityEffect {
   action: "DESTROY_OPPONENT_ENTITY";
 }
 
+/** El jugador elige una entity rival del tablero y la voltea a modo DEFENSA. */
+export interface IFlipOpponentEntityToDefenseEffect {
+  action: "FLIP_OPPONENT_ENTITY_TO_DEFENSE";
+}
+
 export interface IDrainOpponentEnergyEffect {
   action: "DRAIN_OPPONENT_ENERGY";
 }
@@ -190,6 +195,7 @@ export type ICardEffect =
   | IDamageIfAllyOnBoardEffect
   | IApplyNoDirectAttacksEffect
   | IDestroyOpponentEntityEffect
+  | IFlipOpponentEntityToDefenseEffect
   | IDrainOpponentEnergyEffect
   | ISetCardDuelProgressEffect
   | IRevealOpponentSetCardEffect

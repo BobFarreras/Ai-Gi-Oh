@@ -6,6 +6,7 @@ import {
   ISelectGraveyardCardPendingTurnAction,
   ISelectOpponentEntityToLockPendingTurnAction,
   ISelectOpponentEntityToDestroyPendingTurnAction,
+  ISelectOpponentEntityToFlipDefensePendingTurnAction,
   ISelectOpponentGraveyardCardPendingTurnAction,
   ISelectOpponentSetCardPendingTurnAction,
 } from "@/core/use-cases/game-engine/state/types";
@@ -116,6 +117,18 @@ export function createOpponentEntityToDestroySelectionPendingAction(
 ): ISelectOpponentEntityToDestroyPendingTurnAction {
   return {
     type: "SELECT_OPPONENT_ENTITY_TO_DESTROY",
+    playerId,
+    executionInstanceId,
+  };
+}
+
+/** Acción pendiente para elegir una entity rival a voltear a defensa. */
+export function createOpponentEntityToFlipDefenseSelectionPendingAction(
+  playerId: string,
+  executionInstanceId: string,
+): ISelectOpponentEntityToFlipDefensePendingTurnAction {
+  return {
+    type: "SELECT_OPPONENT_ENTITY_TO_FLIP_DEFENSE",
     playerId,
     executionInstanceId,
   };

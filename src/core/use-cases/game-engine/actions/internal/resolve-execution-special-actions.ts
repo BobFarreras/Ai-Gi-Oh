@@ -2,6 +2,7 @@
 import {
   CardType,
   IDestroyOpponentEntityEffect,
+  IFlipOpponentEntityToDefenseEffect,
   IFusionSummonEffect,
   ILockOpponentEntityEffect,
   IRevealOpponentSetCardEffect,
@@ -19,6 +20,7 @@ import {
   createGraveyardSelectionPendingAction,
   createOpponentEntityToLockSelectionPendingAction,
   createOpponentEntityToDestroySelectionPendingAction,
+  createOpponentEntityToFlipDefenseSelectionPendingAction,
   createOpponentGraveyardSelectionPendingAction,
   createOpponentSetCardSelectionPendingAction,
 } from "@/core/use-cases/game-engine/state/pending-turn-action-factory";
@@ -137,12 +139,23 @@ function resolveDestroyOpponentEntityEffect(context: ISpecialActionContext): Gam
   };
 }
 
+function resolveFlipOpponentEntityToDefenseEffect(context: ISpecialActionContext): GameState {
+  // Sin entities rivales a las que apuntar: deja la ejecución en SET para reactivarla más tarde.
+  if (context.opponent.activeEntities.length === 0) {
+    return suspendExecutionUntilCondition(context, "FLIP_DEFENSE_WAITING_TARGET");
+  }
+  return {
+    ...context.state,
+    pendingTurnAction: createOpponentEntityToFlipDefenseSelectionPendingAction(context.playerId, context.executionInstanceId),
+  };
+}
+
 /**
  * Resuelve acciones especiales de ejecución que no siguen el pipeline estándar de `applyExecutionEffect`.
  */
 export function resolveExecutionSpecialAction(
   context: ISpecialActionContext,
-  effect: IFusionSummonEffect | GraveyardReturnEffect | OpponentSelectionEffect | ILockOpponentEntityEffect | IDestroyOpponentEntityEffect,
+  effect: IFusionSummonEffect | GraveyardReturnEffect | OpponentSelectionEffect | ILockOpponentEntityEffect | IDestroyOpponentEntityEffect | IFlipOpponentEntityToDefenseEffect,
 ): GameState {
   if (effect.action === "FUSION_SUMMON") {
     return resolveFusionEffect(context, effect);
@@ -155,6 +168,9 @@ export function resolveExecutionSpecialAction(
   }
   if (effect.action === "DESTROY_OPPONENT_ENTITY") {
     return resolveDestroyOpponentEntityEffect(context);
+  }
+  if (effect.action === "FLIP_OPPONENT_ENTITY_TO_DEFENSE") {
+    return resolveFlipOpponentEntityToDefenseEffect(context);
   }
   return resolveOpponentSelectionEffect(context, effect);
 }

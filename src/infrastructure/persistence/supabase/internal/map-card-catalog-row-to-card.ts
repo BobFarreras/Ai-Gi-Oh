@@ -31,6 +31,7 @@ import {
   IDamageIfAllyOnBoardEffect,
   IApplyNoDirectAttacksEffect,
   IDestroyOpponentEntityEffect,
+  IFlipOpponentEntityToDefenseEffect,
   ISetDefenseByCardIdEffect,
   IStealOpponentGraveyardCardToHandEffect,
 } from "@/core/entities/ICard";
@@ -95,6 +96,8 @@ function mapEffect(value: unknown): ICardEffect | undefined {
         : undefined;
     case "DESTROY_OPPONENT_ENTITY":
       return { action: "DESTROY_OPPONENT_ENTITY" } as IDestroyOpponentEntityEffect;
+    case "FLIP_OPPONENT_ENTITY_TO_DEFENSE":
+      return { action: "FLIP_OPPONENT_ENTITY_TO_DEFENSE" } as IFlipOpponentEntityToDefenseEffect;
     case "DRAIN_OPPONENT_ENERGY":
       return { action: "DRAIN_OPPONENT_ENERGY" } as IDrainOpponentEnergyEffect;
     case "SET_CARD_DUEL_PROGRESS":

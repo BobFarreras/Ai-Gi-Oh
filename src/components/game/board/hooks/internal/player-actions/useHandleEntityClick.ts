@@ -96,6 +96,15 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
           params.setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una entity del rival para destruirla." });
           return;
         }
+        // Voltear entity rival a defensa: se resuelve clicando una entity del RIVAL.
+        if (pending.type === "SELECT_OPPONENT_ENTITY_TO_FLIP_DEFENSE") {
+          if (isOpponent && entity) {
+            params.resolvePendingTurnAction(entity.instanceId);
+            return;
+          }
+          params.setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una entity del rival para voltearla a defensa." });
+          return;
+        }
         if (!isOpponent && entity) {
           params.resolvePendingTurnAction(entity.instanceId);
           return;
