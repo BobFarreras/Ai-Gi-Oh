@@ -39,7 +39,8 @@
 | ⬜ | Ítem | Acción/efecto | Fase | Compl. |
 |----|------|---------------|------|--------|
 | ⚠️ | #13 robar magia/trampa del tablero rival | `STEAL_OPPONENT_EXECUTION` (código+tests HECHOS; **sin carta en BD por falta de arte**) | 4 | 🔴 |
-| ⬜ | Cierre: cartas en mazos de IA + heurísticas IA + pase de balance | — | — | — |
+| ✅ | Cierre — Glossary/Códex + mock-cards + heurísticas IA | efectos auto en `EFFECT_CATALOG`; 19 cartas añadidas a `mock-cards` (cartas-ejemplo del glossary + resolubles por IA); `select-opponent-play` con heurísticas de las magias nuevas | — | — |
+| ⬜ | Cierre pendiente: meter cartas en **mazos concretos** de oponentes + pase de balance (con playtest) | — | — | — |
 
 > **Fases 0, 1, 2, 3 completas + las 2 trampas extra (Metasploit, OpenClaw).** Quedan la Fase 4
 > (robos/intercambios, la más grande), la Fase 5 (contra-magia) y el cierre (IA + balance).

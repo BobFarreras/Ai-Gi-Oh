@@ -65,5 +65,13 @@ export const TRAP_CARDS: ICard[] = [
     trigger: "ON_OPPONENT_EXECUTION_ACTIVATED",
     effect: { action: "REDUCE_OPPONENT_DEFENSE", value: 300 },
   }),
+  // Lote de nuevas trampas (fases 3-5). Render por id: /assets/renders/traps/{id}.webp.
+  createTrap({ id: "trap-windows-flag-infect", name: "Bandera de Windows Retro", description: "Cuando el rival activa una trampa, lo infecta: pierde 300 LP al inicio de cada uno de sus turnos.", renderFile: "trap-windows-flag-infect", faction: "BIG_TECH", cost: 2, trigger: "ON_OPPONENT_TRAP_ACTIVATED", effect: { action: "APPLY_DAMAGE_OVER_TIME", value: 300 } }),
+  createTrap({ id: "trap-hugging-heal", name: "Abrazo de Hugging Face", description: "Cuando el rival activa una trampa, recuperas 300 LP al inicio de cada uno de tus turnos.", renderFile: "trap-hugging-heal", faction: "OPEN_SOURCE", cost: 2, trigger: "ON_OPPONENT_TRAP_ACTIVATED", effect: { action: "APPLY_HEAL_OVER_TIME", value: 300 } }),
+  createTrap({ id: "trap-flutter-reflect", name: "Flutter Enjambre", description: "Cuando el rival te ataca directo, anula el golpe y refleja el ATK del atacante a sus LP.", renderFile: "trap-flutter-reflect", faction: "OPEN_SOURCE", cost: 3, trigger: "ON_OPPONENT_DIRECT_ATTACK_DECLARED", effect: { action: "REFLECT_DIRECT_DAMAGE" } }),
+  createTrap({ id: "trap-escudo-metasploit", name: "Escudo Metasploit", description: "Cuando el rival declara un ataque, lo bloquea (sin destruir al atacante).", renderFile: "trap-escudo-metasploit", faction: "OPEN_SOURCE", cost: 2, trigger: "ON_OPPONENT_ATTACK_DECLARED", effect: { action: "NEGATE_ATTACK" } }),
+  createTrap({ id: "trap-openclaw-nullify-buff", name: "OpenClaw Bug Trap", description: "Cuando el rival buffea sus entities, resta ese mismo valor a las entities buffeadas.", renderFile: "trap-openclaw-nullify-buff", faction: "OPEN_SOURCE", cost: 2, trigger: "ON_OPPONENT_STAT_BUFF_APPLIED", effect: { action: "NULLIFY_OPPONENT_BUFF" } }),
+  createTrap({ id: "trap-firewall-counter-magic", name: "Escudo Firewall", description: "Cuando el rival activa una magia, anula su efecto y destruye esa carta.", renderFile: "trap-firewall-counter-magic", faction: "OPEN_SOURCE", cost: 3, trigger: "ON_OPPONENT_EXECUTION_ACTIVATED", effect: { action: "NEGATE_OPPONENT_EXECUTION_AND_DESTROY" } }),
+  createTrap({ id: "trap-typescript-shield", name: "Escudo de Tipos TypeScript", description: "Cada vez que atacan a tu TypeScript, gana 1000 DEF (acumulable). La trampa sigue puesta.", renderFile: "trap-typescript-shield", faction: "OPEN_SOURCE", cost: 2, trigger: "ON_OPPONENT_ATTACK_DECLARED", effect: { action: "REINFORCE_LINKED_ENTITY_ON_ATTACK", linkedCardId: "entity-typescript", value: 1000 } }),
 ];
 

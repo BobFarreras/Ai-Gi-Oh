@@ -199,5 +199,18 @@ export const EXECUTION_CARDS: ICard[] = [
     cost: 4,
     effect: { action: "LOCK_OPPONENT_ENTITY", turns: 3 },
   }),
+  // Lote de nuevas magias (fases 1-4). Render por id: /assets/renders/executions/{id}.webp.
+  createExecution({ id: "exec-figma-boost", name: "Figma Overdrive", description: "+1000 ATK a tu Figma.", renderFile: "exec-figma-boost", faction: "NO_CODE", cost: 2, effect: { action: "BOOST_ATTACK_BY_CARD_ID", targetCardId: "entity-figma", value: 1000 } }),
+  createExecution({ id: "exec-copilot-boost", name: "Copilot Overdrive", description: "+1000 ATK a tu Copilot.", renderFile: "exec-copilot-boost", faction: "BIG_TECH", cost: 2, effect: { action: "BOOST_ATTACK_BY_CARD_ID", targetCardId: "entity-copilot", value: 1000 } }),
+  createExecution({ id: "exec-arch-boost", name: "Arch Overdrive", description: "+1000 ATK a tu Antigrabity.", renderFile: "exec-arch-boost", faction: "OPEN_SOURCE", cost: 2, effect: { action: "BOOST_ATTACK_BY_CARD_ID", targetCardId: "entity-antigrabity", value: 1000 } }),
+  createExecution({ id: "exec-avast-strike", name: "Golpe Naranja", description: "Si tienes a Avast en campo, inflige 2000 de daño al rival.", renderFile: "exec-avast-strike", faction: "NEUTRAL", cost: 3, effect: { action: "DAMAGE_IF_ALLY_ON_BOARD", requiredCardId: "entity-avast", value: 2000 } }),
+  createExecution({ id: "exec-firewall-fortress", name: "Firewall Fortaleza", description: "El rival no puede hacer ataques directos durante 3 turnos.", renderFile: "exec-firewall-fortress", faction: "NEUTRAL", cost: 3, effect: { action: "APPLY_NO_DIRECT_ATTACKS", turns: 3 } }),
+  createExecution({ id: "exec-neural-cloud-destroy", name: "Red Neuronal Cloud", description: "Destruye una entity rival elegida.", renderFile: "exec-neural-cloud-destroy", faction: "NEUTRAL", cost: 4, effect: { action: "DESTROY_OPPONENT_ENTITY" } }),
+  createExecution({ id: "exec-apple-flip-defense", name: "Apple", description: "Voltea una entity rival a modo defensa.", renderFile: "exec-apple-flip-defense", faction: "BIG_TECH", cost: 2, effect: { action: "FLIP_OPPONENT_ENTITY_TO_DEFENSE" } }),
+  createExecution({ id: "exec-metal-cube-sacrifice", name: "Cubo Metálico", description: "Sacrifica una entity propia y gana energía igual a su coste.", renderFile: "exec-metal-cube-sacrifice", faction: "NEUTRAL", cost: 2, effect: { action: "SACRIFICE_ALLY_ENTITY_FOR_ENERGY" } }),
+  createExecution({ id: "exec-data-core-double-summon", name: "Núcleo de Datos", description: "Este turno puedes invocar una entity más de lo normal.", renderFile: "exec-data-core-double-summon", faction: "NEUTRAL", cost: 3, effect: { action: "GRANT_EXTRA_SUMMON", count: 1 } }),
+  createExecution({ id: "exec-reaq-board-swap", name: "reaq m", description: "Intercambia tus entities del tablero con las del rival.", renderFile: "exec-reaq-board-swap", faction: "NEUTRAL", cost: 5, effect: { action: "SWAP_BOARD_ENTITIES" } }),
+  createExecution({ id: "exec-terminal-hand-swap", name: "Terminal Córtice", description: "Intercambia tu mano con la del rival.", renderFile: "exec-terminal-hand-swap", faction: "NEUTRAL", cost: 4, effect: { action: "SWAP_HANDS" } }),
+  createExecution({ id: "exec-octocat-steal-entity", name: "Octocat", description: "Roba una entity del tablero rival a tu campo.", renderFile: "exec-octocat-steal-entity", faction: "NEUTRAL", cost: 6, effect: { action: "STEAL_OPPONENT_ENTITY" } }),
 ];
 
