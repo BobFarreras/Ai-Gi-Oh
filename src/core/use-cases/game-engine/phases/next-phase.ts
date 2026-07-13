@@ -5,6 +5,7 @@ import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/comba
 import { drawTopDeckCard } from "@/core/use-cases/game-engine/state/player-utils";
 import { createDiscardForHandLimitPendingAction } from "@/core/use-cases/game-engine/state/pending-turn-action-factory";
 import { applyMasteryTurnStart } from "@/core/use-cases/game-engine/phases/internal/mastery-turn-start";
+import { applyScheduledRevivals } from "@/core/use-cases/game-engine/phases/internal/apply-scheduled-revivals";
 import { MASTERY_PASSIVE_IDS } from "@/core/services/progression/mastery-passive-ids";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
@@ -90,7 +91,9 @@ export function nextPhase(state: GameState): GameState {
     };
     // Aprendizaje Continuo / Regeneración: efectos de pasiva mastery sobre el jugador que arranca turno.
     const masteryTurnStart = applyMasteryTurnStart(isNextPlayerA ? nextPlayerA : nextPlayerB);
-    const turnStartResolution = resolveTurnStartForPlayer(masteryTurnStart.player, nextActivePlayerId);
+    // Reactivación (Antigrabity): revive del cementerio al arrancar el turno de su dueño.
+    const revival = applyScheduledRevivals(masteryTurnStart.player, state.idFactory);
+    const turnStartResolution = resolveTurnStartForPlayer(revival.player, nextActivePlayerId);
 
     const nextState: GameState = {
       ...state,
@@ -134,6 +137,10 @@ export function nextPhase(state: GameState): GameState {
         targetEntityIds: masteryTurnStart.attackGrowths.map((growth) => growth.instanceId),
         reason: "MASTERY_PASSIVE_ATK_GROWTH",
       });
+    }
+    // Reactivación (Antigrabity): eventos de revive (incluye el auto-sacrificio si el campo estaba lleno).
+    for (const event of revival.events) {
+      withEnergyLog = appendCombatLogEvent(withEnergyLog, nextActivePlayerId, event.eventType, event.payload);
     }
     return withEnergyLog;
   }

@@ -1,5 +1,5 @@
 // src/core/services/progression/mastery-passive-display.ts - Traduce identificadores de pasiva mastery a textos legibles en UI, con magnitud escalada por versión.
-import { MASTERY_PASSIVE_IDS } from "./mastery-passive-ids";
+import { MASTERY_PASSIVE_IDS, REVIVE_NEXT_TURN_PASSIVE_ID } from "./mastery-passive-ids";
 import { resolvePassiveMagnitude } from "./mastery-passive-magnitude";
 
 /** Plantillas de texto: reciben la magnitud ya escalada para reflejar el valor real de la carta. */
@@ -14,6 +14,7 @@ const PASSIVE_TEMPLATE: Record<string, (magnitude: number) => string> = {
   [MASTERY_PASSIVE_IDS.REFLECT_DAMAGE]: (m) => `Cortafuegos Reactivo: al ser atacada, refleja ${m} de daño al rival.`,
   [MASTERY_PASSIVE_IDS.HEAL_ON_TURN]: (m) => `Regeneración: al inicio de cada turno propio, el dueño cura ${m} HP.`,
   [MASTERY_PASSIVE_IDS.ENTITY_ATTACK_BONUS]: (m) => `Sobrecarga: al atacar a una entity rival, gana +${m} ATK en ese ataque.`,
+  [REVIVE_NEXT_TURN_PASSIVE_ID]: () => "Reactivación: al ir al cementerio, revive en tu siguiente turno (si el campo está lleno, sacrifica una entity).",
 };
 
 /**
