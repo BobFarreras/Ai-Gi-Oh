@@ -12,7 +12,8 @@ export type PendingTurnActionType =
   | "SELECT_GRAVEYARD_CARD"
   | "SELECT_OPPONENT_GRAVEYARD_CARD"
   | "SELECT_OPPONENT_SET_CARD"
-  | "SELECT_OPPONENT_ENTITY_TO_LOCK";
+  | "SELECT_OPPONENT_ENTITY_TO_LOCK"
+  | "SELECT_OPPONENT_ENTITY_TO_DESTROY";
 
 interface IBasePendingTurnAction {
   playerId: string;
@@ -57,13 +58,19 @@ export interface ISelectOpponentEntityToLockPendingTurnAction extends IBasePendi
   turns: number;
 }
 
+export interface ISelectOpponentEntityToDestroyPendingTurnAction extends IBasePendingTurnAction {
+  type: "SELECT_OPPONENT_ENTITY_TO_DESTROY";
+  executionInstanceId: string;
+}
+
 export type IPendingTurnAction =
   | IDiscardForHandLimitPendingTurnAction
   | ISelectFusionMaterialsPendingTurnAction
   | ISelectGraveyardCardPendingTurnAction
   | ISelectOpponentGraveyardCardPendingTurnAction
   | ISelectOpponentSetCardPendingTurnAction
-  | ISelectOpponentEntityToLockPendingTurnAction;
+  | ISelectOpponentEntityToLockPendingTurnAction
+  | ISelectOpponentEntityToDestroyPendingTurnAction;
 
 export interface GameState {
   playerA: IPlayer;

@@ -1,6 +1,7 @@
 // src/core/use-cases/game-engine/actions/internal/resolve-execution-special-actions.ts - Encapsula acciones especiales de ejecución que desvían el flujo estándar de resolución.
 import {
   CardType,
+  IDestroyOpponentEntityEffect,
   IFusionSummonEffect,
   ILockOpponentEntityEffect,
   IRevealOpponentSetCardEffect,
@@ -17,6 +18,7 @@ import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import {
   createGraveyardSelectionPendingAction,
   createOpponentEntityToLockSelectionPendingAction,
+  createOpponentEntityToDestroySelectionPendingAction,
   createOpponentGraveyardSelectionPendingAction,
   createOpponentSetCardSelectionPendingAction,
 } from "@/core/use-cases/game-engine/state/pending-turn-action-factory";
@@ -124,12 +126,23 @@ function resolveLockOpponentEntityEffect(context: ISpecialActionContext, effect:
   };
 }
 
+function resolveDestroyOpponentEntityEffect(context: ISpecialActionContext): GameState {
+  // Sin entities rivales a las que apuntar: deja la ejecución en SET para reactivarla más tarde.
+  if (context.opponent.activeEntities.length === 0) {
+    return suspendExecutionUntilCondition(context, "DESTROY_WAITING_TARGET");
+  }
+  return {
+    ...context.state,
+    pendingTurnAction: createOpponentEntityToDestroySelectionPendingAction(context.playerId, context.executionInstanceId),
+  };
+}
+
 /**
  * Resuelve acciones especiales de ejecución que no siguen el pipeline estándar de `applyExecutionEffect`.
  */
 export function resolveExecutionSpecialAction(
   context: ISpecialActionContext,
-  effect: IFusionSummonEffect | GraveyardReturnEffect | OpponentSelectionEffect | ILockOpponentEntityEffect,
+  effect: IFusionSummonEffect | GraveyardReturnEffect | OpponentSelectionEffect | ILockOpponentEntityEffect | IDestroyOpponentEntityEffect,
 ): GameState {
   if (effect.action === "FUSION_SUMMON") {
     return resolveFusionEffect(context, effect);
@@ -139,6 +152,9 @@ export function resolveExecutionSpecialAction(
   }
   if (effect.action === "LOCK_OPPONENT_ENTITY") {
     return resolveLockOpponentEntityEffect(context, effect);
+  }
+  if (effect.action === "DESTROY_OPPONENT_ENTITY") {
+    return resolveDestroyOpponentEntityEffect(context);
   }
   return resolveOpponentSelectionEffect(context, effect);
 }

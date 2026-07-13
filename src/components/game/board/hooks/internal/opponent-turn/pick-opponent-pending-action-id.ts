@@ -56,8 +56,8 @@ export function pickOpponentPendingActionId(context: IOpponentTurnContext, autoP
   if (gameState.pendingTurnAction.type === "SELECT_OPPONENT_SET_CARD") {
     return pickBestOpponentSetCard(context, gameState.pendingTurnAction.zone);
   }
-  if (gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_LOCK") {
-    // Bloquea la entity rival (playerA) con más ataque: la amenaza mayor.
+  if (gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_LOCK" || gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_DESTROY") {
+    // Bloquea/destruye la entity rival (playerA) con más ataque: la amenaza mayor.
     const candidates = gameState.playerA.activeEntities;
     if (candidates.length === 0) return null;
     const best = candidates.reduce((selected, current) =>

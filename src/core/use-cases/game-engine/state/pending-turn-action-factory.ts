@@ -5,6 +5,7 @@ import {
   ISelectFusionMaterialsPendingTurnAction,
   ISelectGraveyardCardPendingTurnAction,
   ISelectOpponentEntityToLockPendingTurnAction,
+  ISelectOpponentEntityToDestroyPendingTurnAction,
   ISelectOpponentGraveyardCardPendingTurnAction,
   ISelectOpponentSetCardPendingTurnAction,
 } from "@/core/use-cases/game-engine/state/types";
@@ -105,5 +106,17 @@ export function createOpponentEntityToLockSelectionPendingAction(
     playerId,
     executionInstanceId,
     turns,
+  };
+}
+
+/** Acción pendiente para elegir una entity rival a destruir. */
+export function createOpponentEntityToDestroySelectionPendingAction(
+  playerId: string,
+  executionInstanceId: string,
+): ISelectOpponentEntityToDestroyPendingTurnAction {
+  return {
+    type: "SELECT_OPPONENT_ENTITY_TO_DESTROY",
+    playerId,
+    executionInstanceId,
   };
 }

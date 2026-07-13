@@ -81,6 +81,11 @@ export interface IApplyNoDirectAttacksEffect {
   turns: number;
 }
 
+/** El jugador elige una entity rival del tablero y la destruye (a la pila de destruidas). */
+export interface IDestroyOpponentEntityEffect {
+  action: "DESTROY_OPPONENT_ENTITY";
+}
+
 export interface IDrainOpponentEnergyEffect {
   action: "DRAIN_OPPONENT_ENERGY";
 }
@@ -184,6 +189,7 @@ export type ICardEffect =
   | IBoostAttackByCardIdEffect
   | IDamageIfAllyOnBoardEffect
   | IApplyNoDirectAttacksEffect
+  | IDestroyOpponentEntityEffect
   | IDrainOpponentEnergyEffect
   | ISetCardDuelProgressEffect
   | IRevealOpponentSetCardEffect

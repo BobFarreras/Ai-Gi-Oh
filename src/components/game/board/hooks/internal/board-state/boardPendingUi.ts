@@ -31,7 +31,9 @@ export function buildBoardPendingUi(
               ? "Selecciona una carta seteada del rival para resolver la ejecución."
               : gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_LOCK"
                 ? "Selecciona una entity del rival para bloquearla."
-                : `Selecciona 2 materiales para fusionar (${pendingFusionMaterialsCount ?? 0}/2).`
+                : gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_DESTROY"
+                  ? "Selecciona una entity del rival para destruirla."
+                  : `Selecciona 2 materiales para fusionar (${pendingFusionMaterialsCount ?? 0}/2).`
       : pendingFusionMaterialsCount !== null
         ? `Selecciona 2 materiales para fusionar (${pendingFusionMaterialsCount}/2).`
         : pendingEntityReplacement
@@ -74,7 +76,7 @@ export function buildBoardPendingUi(
             : [];
           return [...entities, ...executions];
         })()
-      : gameState.pendingTurnAction?.playerId === gameState.playerA.id && gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_LOCK"
+      : gameState.pendingTurnAction?.playerId === gameState.playerA.id && (gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_LOCK" || gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_DESTROY")
         ? gameState.playerB.activeEntities.map((entity) => entity.instanceId)
         : [];
 
