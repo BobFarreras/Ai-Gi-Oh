@@ -3,6 +3,7 @@
 
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
+import { HudStatusBadges } from "@/components/game/board/internal/HudStatusBadges";
 
 interface BoardMobileEnergyBadgeProps {
   currentEnergy: number;
@@ -10,6 +11,10 @@ interface BoardMobileEnergyBadgeProps {
   isPlayerTurn: boolean;
   dockLeftPx?: number;
   bottomPx?: number;
+  /** Estado del jugador: van a la derecha de la energía en móvil (escudo/infección/regeneración). */
+  shieldTurns?: number | null;
+  infectionAmount?: number | null;
+  regenAmount?: number | null;
 }
 
 export function BoardMobileEnergyBadge({
@@ -18,25 +23,25 @@ export function BoardMobileEnergyBadge({
   isPlayerTurn,
   dockLeftPx = 188,
   bottomPx = 10,
+  shieldTurns = null,
+  infectionAmount = null,
+  regenAmount = null,
 }: BoardMobileEnergyBadgeProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="pointer-events-none absolute z-[290] flex h-9 max-w-[calc(100vw-16px)] items-center gap-1.5 border border-yellow-500/45 bg-zinc-950/88 px-2.5 text-yellow-300 shadow-[0_0_15px_rgba(234,179,8,0.25)]"
+      className="pointer-events-none absolute z-[290] flex h-9 max-w-[calc(100vw-16px)] items-center gap-1.5"
       style={{ left: `${dockLeftPx}px`, bottom: `${bottomPx}px` }}
     >
-      <Zap className={`h-3.5 w-3.5 ${isPlayerTurn ? "text-yellow-300" : "text-yellow-500/75"}`} />
-      <span className="text-[11px] font-black uppercase tracking-widest">
-        EN
-      </span>
-      <span className="text-sm font-black italic">
-        {currentEnergy}
-      </span>
-      <span className="text-[10px] font-bold text-yellow-600/80">
-        / {maxEnergy}
-      </span>
+      <div className="flex h-full items-center gap-1.5 border border-yellow-500/45 bg-zinc-950/88 px-2.5 text-yellow-300 shadow-[0_0_15px_rgba(234,179,8,0.25)]">
+        <Zap className={`h-3.5 w-3.5 ${isPlayerTurn ? "text-yellow-300" : "text-yellow-500/75"}`} />
+        <span className="text-[11px] font-black uppercase tracking-widest">EN</span>
+        <span className="text-sm font-black italic">{currentEnergy}</span>
+        <span className="text-[10px] font-bold text-yellow-600/80">/ {maxEnergy}</span>
+      </div>
+      <HudStatusBadges compact shieldTurns={shieldTurns} infectionAmount={infectionAmount} regenAmount={regenAmount} />
     </motion.div>
   );
 }

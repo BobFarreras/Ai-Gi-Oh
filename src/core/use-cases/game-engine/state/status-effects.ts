@@ -7,6 +7,15 @@ export interface IStatusEffectSpec {
   kind: StatusEffectKind;
   targetPlayerId: string;
   remainingTurns: number | null;
+  /** Cuantía por turno (LP) para DAMAGE_OVER_TIME/HEAL_OVER_TIME. */
+  magnitude?: number;
+}
+
+/** Resultado de aplicar los estados de daño/curación por turno al inicio del turno de un jugador. */
+export interface IStatusEffectTurnStartOutcome {
+  healthPoints: number;
+  damageApplied: number;
+  healApplied: number;
 }
 
 /** ¿El jugador tiene activo algún estado que le impide hacer ataques directos? */
@@ -31,9 +40,40 @@ export function addStatusEffects(
       kind: spec.kind,
       targetPlayerId: spec.targetPlayerId,
       remainingTurns: spec.remainingTurns,
+      ...(typeof spec.magnitude === "number" ? { magnitude: spec.magnitude } : {}),
     });
   }
   return next;
+}
+
+/**
+ * Aplica al inicio del turno de `playerId` los estados de daño/curación por turno que le apuntan.
+ * El daño reduce PV (mínimo 0) y la curación sube hasta `maxHealthPoints`. Puro y determinista.
+ */
+export function applyStatusEffectsAtTurnStart(
+  statusEffects: readonly IActiveStatusEffect[] | undefined,
+  playerId: string,
+  currentHealth: number,
+  maxHealth: number,
+): IStatusEffectTurnStartOutcome {
+  let healthPoints = currentHealth;
+  let damageApplied = 0;
+  let healApplied = 0;
+  for (const status of statusEffects ?? []) {
+    if (status.targetPlayerId !== playerId) continue;
+    const magnitude = Math.max(0, status.magnitude ?? 0);
+    if (magnitude === 0) continue;
+    if (status.kind === "DAMAGE_OVER_TIME") {
+      const next = Math.max(0, healthPoints - magnitude);
+      damageApplied += healthPoints - next;
+      healthPoints = next;
+    } else if (status.kind === "HEAL_OVER_TIME") {
+      const next = Math.min(maxHealth, healthPoints + magnitude);
+      healApplied += next - healthPoints;
+      healthPoints = next;
+    }
+  }
+  return { healthPoints, damageApplied, healApplied };
 }
 
 /**

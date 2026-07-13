@@ -1,9 +1,49 @@
 # Guía — Nuevas cartas mágicas y trampa + entity Antigrabity
 
-> Rama sugerida: `feat/new-magic-trap-cards` (desde `develop`) · Fecha: 2026-07-13
-> **Documento de diseño/plan. No se pica código hasta cerrar las decisiones abiertas del final.**
+> Rama: `feat/new-magic-trap-cards` · Fecha: 2026-07-13
+> **Implementación EN CURSO.** Las decisiones abiertas del §7 están resueltas (ver §7-bis y notas).
 > Objetivo: añadir 1 entity con pasiva innata nueva + ~16 cartas mágicas/trampa, muchas con
 > efectos aún NO soportados por el motor, sin crear deuda técnica, vulnerabilidades ni bugs.
+
+---
+
+## 0. Estado de implementación (actualizado 2026-07-13)
+
+**Hecho y verificado (`CI=true pnpm quality:check` en verde por fase):**
+
+| ✅ | Ítem | Acción/efecto nuevo | Migración |
+|----|------|---------------------|-----------|
+| ✅ | Fase 0 — sistema de estados multi-turno | `IActiveStatusEffect` + `status-effects.ts` + tick en `next-phase` | — |
+| ✅ | Antigrabity + pasiva innata "revivir" | `passive-revive-next-turn` + `applyScheduledRevivals` | 098 |
+| ✅ | #1 figma/copilot/arch (+1000 ATK a su entity) | `BOOST_ATTACK_BY_CARD_ID` | 096 |
+| ✅ | #3 Logo Naranja (daño condicional si hay avast) | `DAMAGE_IF_ALLY_ON_BOARD` | 097 |
+| ✅ | #5 Firewall Fortaleza (bloqueo ataque directo 3t) | `APPLY_NO_DIRECT_ATTACKS` + VFX barrera/escudo | 099 |
+| ✅ | #16 Red Neuronal Cloud (destruir entity elegida) | `DESTROY_OPPONENT_ENTITY` + selección | 100 |
+| ✅ | #4 Appel (voltear entity rival a defensa) | `FLIP_OPPONENT_ENTITY_TO_DEFENSE` + selección | 101 |
+| ✅ | #14 Cubo Metálico (sacrificar entity propia por energía) | `SACRIFICE_ALLY_ENTITY_FOR_ENERGY` + selección propia | 102 |
+| ✅ | #10 Bandera Windows (infección -300 LP/turno) | `APPLY_DAMAGE_OVER_TIME` + reacción `ON_OPPONENT_TRAP_ACTIVATED` | 103 |
+| ✅ | #11 Abrazo Hugging (regeneración +300 LP/turno) | `APPLY_HEAL_OVER_TIME` | 104 |
+| ✅ | #9 Flutter Enjambre (anula ataque directo + refleja ATK) | `REFLECT_DIRECT_DAMAGE` + negación transitoria | 105 |
+| ✅ | Badges de estado en HUD (escudo/infección/regeneración), desktop + móvil | `HudStatusBadges` | — |
+
+**Pendiente:**
+
+| ⬜ | Ítem | Acción/efecto | Fase | Compl. |
+|----|------|---------------|------|--------|
+| ⬜ | #2 Núcleo de Datos (doble invocación este turno) | contador `extraSummonsThisTurn` | 2 | 🟡 |
+| ⬜ | Trampa Metasploit (bloquear ataque a entity, sin destruir) | `NEGATE_ATTACK` | — | 🟡 |
+| ⬜ | Trampa OpenClaw (anular buff que el rival aplica) | `NULLIFY_OPPONENT_BUFF` | — | 🟡 |
+| ⬜ | #12 Octocat (robar entity del tablero rival) | `STEAL_OPPONENT_ENTITY` + selección | 4 | 🔴 |
+| ⬜ | #13 robar magia/trampa del tablero rival | `STEAL_OPPONENT_EXECUTION` + selección | 4 | 🔴 |
+| ⬜ | #6 reaq m (intercambiar entities de tablero) | `SWAP_BOARD_ENTITIES` | 4 | 🔴 |
+| ⬜ | #7 Terminal Córtice (intercambiar manos) | `SWAP_HANDS` | 4 | 🔴 |
+| ⬜ | #8 Escudo TypeScript (escudo ligado a entity, +1000 DEF acumulable) | status ligado + stack | 4 | 🔴 |
+| ⬜ | #15 Escudo Firewall (anular y destruir magia rival) | `NEGATE_OPPONENT_EXECUTION_AND_DESTROY` | 5 | 🔴 |
+| ⬜ | Cierre: cartas en mazos de IA + pase de balance + renombrar imágenes restantes | — | — | — |
+
+> **Fase 0, 1 y 3 completas.** Fase 2 casi (solo falta #2). Quedan la Fase 4 (robos/intercambios, la más
+> grande) y la Fase 5 (contra-magia), más las 2 trampas extra (Metasploit, OpenClaw) y el cierre.
+> Migraciones 096-105 aplicadas SOLO a la BD local; ninguna a producción todavía.
 
 ---
 
@@ -118,17 +158,18 @@ Leyenda complejidad: 🟢 bajo (patrón existente) · 🟡 medio (acción nueva 
 
 ## 5. Plan por fases (orden seguro, cada fase entra verificada y en su commit)
 
-- **Fase 0 — Fundaciones (sin cartas):**
+- **✅ Fase 0 — Fundaciones (sin cartas):**
   sistema de `IActiveStatusEffect` (§2) + hooks en `next-phase` y `attack-validation` + helper genérico
   de "seleccionar entity/carta del tablero (propia o rival)". Todo con tests unitarios. Es la base de
   #5, #8, #10, #11 y la pasiva de Antigrabity.
-- **Fase 1 — Antigrabity + efectos 🟢:** entity Antigrabity (sin pasiva), #1, #3. Riesgo mínimo.
-- **Fase 2 — Selección 🟡:** #4, #14, #16 (y #2 doble invocación). Patrón `LOCK` + IA que resuelve.
-- **Fase 3 — Pasiva Antigrabity + status multi-turno 🔴:** revivir, #5, #9, #10, #11 sobre la infra §2.
-- **Fase 4 — Robos/intercambios 🔴:** #12, #13, #6, #7, #8 (escudo ligado). Los de mayor riesgo de
+- **✅ Fase 1 — Antigrabity + efectos 🟢:** entity Antigrabity (sin pasiva), #1, #3. Riesgo mínimo.
+- **🟡 Fase 2 — Selección 🟡:** #4 ✅, #14 ✅, #16 ✅ hechos; **falta #2** (doble invocación). Patrón `LOCK` + IA que resuelve.
+- **✅ Fase 3 — Pasiva Antigrabity + status multi-turno 🔴:** revivir ✅, #5 ✅, #9 ✅, #10 ✅, #11 ✅ sobre la infra §2.
+- **⬜ Fase 4 — Robos/intercambios 🔴:** #12, #13, #6, #7, #8 (escudo ligado). Los de mayor riesgo de
   balance y edge-cases (propiedad de cartas, slots llenos, runtimeId).
-- **Fase 5 — Contra-magia 🔴:** #15 (interceptar la resolución de una magia rival y anularla).
-- **Cierre:** Códex + VFX pulidos + pase de balance + `CI=true pnpm quality:check`.
+- **⬜ Fase 5 — Contra-magia 🔴:** #15 (interceptar la resolución de una magia rival y anularla).
+- **⬜ Extra (trampas nuevas 🟡):** Metasploit (`NEGATE_ATTACK`) y OpenClaw (`NULLIFY_OPPONENT_BUFF`).
+- **⬜ Cierre:** cartas en mazos de IA + Códex + VFX pulidos + pase de balance + `CI=true pnpm quality:check`.
 
 Cada carta, en su fase: contrato → parser → handler → (trigger) → VFX → IA → migración → (mock-cards) →
 Códex → tests. Nada se mergea sin lint+typecheck+test+build en verde.

@@ -51,6 +51,9 @@ export function areEqualPlayerHudProps(previous: PlayerHUDProps, next: PlayerHUD
     areStylesEqual(previous.containerStyle, next.containerStyle) &&
     previous.showPhaseControls === next.showPhaseControls &&
     previous.showEnergy === next.showEnergy &&
-    previous.shieldTurns === next.shieldTurns
+    previous.shieldTurns === next.shieldTurns &&
+    previous.infectionAmount === next.infectionAmount &&
+    previous.regenAmount === next.regenAmount &&
+    previous.showStatusBadges === next.showStatusBadges
   );
 }

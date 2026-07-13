@@ -30,6 +30,10 @@ interface BoardPlayersLayerProps {
   onAdvancePhase: () => void;
   playerShieldTurns?: number | null;
   opponentShieldTurns?: number | null;
+  playerInfectionAmount?: number | null;
+  opponentInfectionAmount?: number | null;
+  playerRegenAmount?: number | null;
+  opponentRegenAmount?: number | null;
 }
 
 export function BoardPlayersLayer({
@@ -57,6 +61,10 @@ export function BoardPlayersLayer({
   onAdvancePhase,
   playerShieldTurns = null,
   opponentShieldTurns = null,
+  playerInfectionAmount = null,
+  opponentInfectionAmount = null,
+  playerRegenAmount = null,
+  opponentRegenAmount = null,
 }: BoardPlayersLayerProps) {
   return (
     <>
@@ -81,6 +89,8 @@ export function BoardPlayersLayer({
         avatarObjectPosition={opponentAvatarObjectPosition}
         dialogueMessage={opponentDialogueMessage}
         shieldTurns={opponentShieldTurns}
+        infectionAmount={opponentInfectionAmount}
+        regenAmount={opponentRegenAmount}
       />
       <PlayerHUD
         isOpponent={false}
@@ -103,6 +113,8 @@ export function BoardPlayersLayer({
         phase={phase}
         onAdvancePhase={onAdvancePhase}
         shieldTurns={playerShieldTurns}
+        infectionAmount={playerInfectionAmount}
+        regenAmount={playerRegenAmount}
       />
     </>
   );

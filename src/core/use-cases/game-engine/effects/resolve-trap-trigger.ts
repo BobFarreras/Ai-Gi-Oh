@@ -1,6 +1,7 @@
 // src/core/use-cases/game-engine/effects/resolve-trap-trigger.ts - Resuelve trampas reactivas incluyendo contra-trampa para negar y destruir trampas rivales.
 import { TrapTrigger } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
+import { applyOpponentTrapActivationReactions } from "@/core/use-cases/game-engine/effects/internal/trap-activation-reactions";
 import { appendTrapResolutionLogs } from "@/core/use-cases/game-engine/effects/internal/trap-logging";
 import { resolveTrapEffect } from "@/core/use-cases/game-engine/effects/internal/trap-effect-resolution";
 import { selectTriggeredTrap } from "@/core/use-cases/game-engine/effects/internal/trap-selection";
@@ -93,8 +94,12 @@ export function resolveTrapTrigger(
   };
 
   const resolved = resolveTrapEffect(playerAfterTrapUse, opponent, trap, context);
-  const baseState = assignPlayers(state, resolved.player, resolved.opponent, isPlayerA);
-  return appendTrapResolutionLogs({
+  const assigned = assignPlayers(state, resolved.player, resolved.opponent, isPlayerA);
+  // Flutter Enjambre: señala a executeAttack que el golpe directo de este atacante queda anulado.
+  const baseState = resolved.negatesDirectAttack && context?.attackerInstanceId
+    ? { ...assigned, directAttackNegatedAttackerInstanceId: context.attackerInstanceId }
+    : assigned;
+  const withTrapLogs = appendTrapResolutionLogs({
     state: baseState,
     reactivePlayerId,
     trigger,
@@ -104,4 +109,6 @@ export function resolveTrapTrigger(
     targetPlayerId: player.id,
     resolved,
   });
+  // Bandera Windows / Abrazo Hugging: el ACTOR reacciona a que el dueño acaba de activar una trampa.
+  return applyOpponentTrapActivationReactions(withTrapLogs, reactivePlayerId);
 }

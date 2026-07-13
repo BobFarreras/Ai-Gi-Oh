@@ -186,6 +186,35 @@ export interface ILockOpponentEntityEffect {
   turns: number;
 }
 
+/**
+ * Trampa reactiva (`ON_OPPONENT_TRAP_ACTIVATED`): cuando el rival activa una trampa, "infecta" al rival
+ * con `value` de daño por turno al inicio de cada uno de sus turnos. `turns` ausente/`null` = hasta el
+ * final del duelo.
+ */
+export interface IApplyDamageOverTimeEffect {
+  action: "APPLY_DAMAGE_OVER_TIME";
+  value: number;
+  turns?: number | null;
+}
+
+/**
+ * Trampa reactiva (`ON_OPPONENT_TRAP_ACTIVATED`): cuando el rival activa una trampa, cura al dueño `value`
+ * al inicio de cada uno de sus turnos. `turns` ausente/`null` = hasta el final del duelo.
+ */
+export interface IApplyHealOverTimeEffect {
+  action: "APPLY_HEAL_OVER_TIME";
+  value: number;
+  turns?: number | null;
+}
+
+/**
+ * Trampa reactiva (`ON_OPPONENT_DIRECT_ATTACK_DECLARED`): cuando el rival te ataca directo, anula ese golpe
+ * (tú no recibes daño) y refleja el ATK de la entity atacante a los LP del rival.
+ */
+export interface IReflectDirectDamageEffect {
+  action: "REFLECT_DIRECT_DAMAGE";
+}
+
 export type ICardEffect =
   | IDamageEffect
   | IHealEffect
@@ -219,7 +248,10 @@ export type ICardEffect =
   | IFusionSummonEffect
   | IDestroyAllTrapsEffect
   | IDiscardOpponentHandCardEffect
-  | ILockOpponentEntityEffect;
+  | ILockOpponentEntityEffect
+  | IApplyDamageOverTimeEffect
+  | IApplyHealOverTimeEffect
+  | IReflectDirectDamageEffect;
 
 export interface ICard {
   readonly id: string;

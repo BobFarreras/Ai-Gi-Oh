@@ -8,6 +8,7 @@ import {
   createTrapEntity,
   trapCounterTrap,
   trapDrainDirectAttackerEnergy,
+  trapFlutterReflect,
   trapNegateAttack,
   trapOnAttack,
 } from "@/core/use-cases/game-engine/effects/trap-triggers.test-fixtures";
@@ -131,6 +132,33 @@ describe("Trap triggers on attack", () => {
     // El counter-trap del jugador se conserva sin usarse (sigue en su zona, no en cementerio).
     expect(next.playerA.activeExecutions.some((entity) => entity.card.id === "trap-counter-trap")).toBe(true);
     expect(next.playerA.graveyard.some((card) => card.id === "trap-counter-trap")).toBe(false);
+  });
+
+  it("Flutter Enjambre refleja el ataque directo al atacante y protege al dueño", () => {
+    const base = createTrapBaseState();
+    const state: GameState = {
+      ...base,
+      playerA: {
+        ...base.playerA,
+        activeEntities: [createTestBoardEntity("a-flutter", attackerCard, "ATTACK")],
+      },
+      playerB: {
+        ...base.playerB,
+        activeExecutions: [createTrapEntity("t-flutter", trapFlutterReflect)],
+      },
+    };
+    const next = GameEngine.executeAttack(state, "p1", "a-flutter");
+    // El atacante (p1) recibe el ATK reflejado (1600); el dueño de la trampa (p2) no recibe daño.
+    expect(next.playerA.healthPoints).toBe(8000 - 1600);
+    expect(next.playerB.healthPoints).toBe(8000);
+    // El atacante queda marcado como usado y la trampa va al cementerio; la marca transitoria se limpia.
+    expect(next.playerA.activeEntities.find((entity) => entity.instanceId === "a-flutter")?.hasAttackedThisTurn).toBe(true);
+    expect(next.playerB.graveyard.some((card) => card.id === "trap-flutter-reflect")).toBe(true);
+    expect(next.directAttackNegatedAttackerInstanceId).toBeUndefined();
+    const reflectDamage = next.combatLog.find(
+      (event) => event.eventType === "DIRECT_DAMAGE" && (event.payload as Record<string, unknown>).targetPlayerId === "p1",
+    );
+    expect(reflectDamage).toBeTruthy();
   });
 
   it("debería drenar energía del atacante y fijar energía del defensor a 10 en ataque directo", () => {

@@ -30,6 +30,9 @@ import {
   IBoostAttackByCardIdEffect,
   IDamageIfAllyOnBoardEffect,
   IApplyNoDirectAttacksEffect,
+  IApplyDamageOverTimeEffect,
+  IApplyHealOverTimeEffect,
+  IReflectDirectDamageEffect,
   IDestroyOpponentEntityEffect,
   IFlipOpponentEntityToDefenseEffect,
   ISacrificeAllyEntityForEnergyEffect,
@@ -95,6 +98,14 @@ function mapEffect(value: unknown): ICardEffect | undefined {
       return typeof value.turns === "number"
         ? ({ action: "APPLY_NO_DIRECT_ATTACKS", turns: value.turns } as IApplyNoDirectAttacksEffect)
         : undefined;
+    case "APPLY_DAMAGE_OVER_TIME":
+      return typeof value.value === "number"
+        ? ({ action: "APPLY_DAMAGE_OVER_TIME", value: value.value, turns: typeof value.turns === "number" ? value.turns : null } as IApplyDamageOverTimeEffect)
+        : undefined;
+    case "APPLY_HEAL_OVER_TIME":
+      return typeof value.value === "number"
+        ? ({ action: "APPLY_HEAL_OVER_TIME", value: value.value, turns: typeof value.turns === "number" ? value.turns : null } as IApplyHealOverTimeEffect)
+        : undefined;
     case "DESTROY_OPPONENT_ENTITY":
       return { action: "DESTROY_OPPONENT_ENTITY" } as IDestroyOpponentEntityEffect;
     case "FLIP_OPPONENT_ENTITY_TO_DEFENSE":
@@ -121,6 +132,8 @@ function mapEffect(value: unknown): ICardEffect | undefined {
         : undefined;
     case "NEGATE_ATTACK_AND_DESTROY_ATTACKER":
       return { action: "NEGATE_ATTACK_AND_DESTROY_ATTACKER" } as INegateAttackAndDestroyAttackerEffect;
+    case "REFLECT_DIRECT_DAMAGE":
+      return { action: "REFLECT_DIRECT_DAMAGE" } as IReflectDirectDamageEffect;
     case "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES":
       return { action: "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES" } as ICopyOpponentBuffToAlliedEntitiesEffect;
     case "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED":

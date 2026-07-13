@@ -3,7 +3,7 @@ import { ICardEffect } from "@/core/entities/ICard";
 import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { ITrapResolutionResult, ITrapTriggerContext } from "@/core/use-cases/game-engine/effects/internal/trap-types";
 
-type TrapAction = "DAMAGE" | "REDUCE_OPPONENT_ATTACK" | "REDUCE_OPPONENT_DEFENSE" | "NEGATE_ATTACK_AND_DESTROY_ATTACKER" | "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES" | "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED" | "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN";
+type TrapAction = "DAMAGE" | "REDUCE_OPPONENT_ATTACK" | "REDUCE_OPPONENT_DEFENSE" | "NEGATE_ATTACK_AND_DESTROY_ATTACKER" | "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES" | "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED" | "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN" | "APPLY_DAMAGE_OVER_TIME" | "APPLY_HEAL_OVER_TIME" | "REFLECT_DIRECT_DAMAGE";
 type TrapEffect = Extract<ICardEffect, { action: TrapAction }>;
 type TrapHandler<K extends TrapAction> = (player: IPlayer, opponent: IPlayer, trap: IBoardEntity, effect: Extract<TrapEffect, { action: K }>, context?: ITrapTriggerContext) => ITrapResolutionResult;
 
@@ -106,6 +106,30 @@ const trapEffectHandlers: { [K in TrapAction]: TrapHandler<K> } = {
       energyGainAmount,
     };
   },
+  // Bandera Windows: infecta a quien activó la trampa (opponent) con daño por turno hasta el final del duelo.
+  APPLY_DAMAGE_OVER_TIME: (player, opponent, _trap, effect) => ({
+    ...createNeutralResult(player, opponent),
+    addedStatusEffects: [{ kind: "DAMAGE_OVER_TIME", targetPlayerId: opponent.id, remainingTurns: effect.turns ?? null, magnitude: effect.value }],
+  }),
+  // Abrazo Hugging: cura al dueño de la trampa (player) por turno hasta el final del duelo.
+  APPLY_HEAL_OVER_TIME: (player, opponent, _trap, effect) => ({
+    ...createNeutralResult(player, opponent),
+    addedStatusEffects: [{ kind: "HEAL_OVER_TIME", targetPlayerId: player.id, remainingTurns: effect.turns ?? null, magnitude: effect.value }],
+  }),
+  // Flutter Enjambre: anula el ataque directo del rival y refleja el ATK del atacante a sus propios LP.
+  REFLECT_DIRECT_DAMAGE: (player, opponent, _trap, _effect, context) => {
+    if (!context?.attackerPlayerId || context.attackerPlayerId !== opponent.id || !context.attackerInstanceId) {
+      return createNeutralResult(player, opponent);
+    }
+    const attacker = opponent.activeEntities.find((entity) => entity.instanceId === context.attackerInstanceId);
+    const reflected = Math.max(0, attacker?.card.attack ?? 0);
+    return {
+      ...createNeutralResult(player, { ...opponent, healthPoints: Math.max(0, opponent.healthPoints - reflected) }),
+      damage: reflected,
+      blockedTargetEntityInstanceId: context.attackerInstanceId,
+      negatesDirectAttack: true,
+    };
+  },
 };
 
 /** Resuelve una trampa registrada; devuelve null cuando la acción no está soportada por el registry. */
@@ -118,6 +142,9 @@ export function resolveTrapEffectFromRegistry(player: IPlayer, opponent: IPlayer
   if (trap.card.effect.action === "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES") return trapEffectHandlers.COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES(player, opponent, trap, trap.card.effect, context);
   if (trap.card.effect.action === "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED") return trapEffectHandlers.FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED(player, opponent, trap, trap.card.effect, context);
   if (trap.card.effect.action === "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN") return trapEffectHandlers.DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN(player, opponent, trap, trap.card.effect, context);
+  if (trap.card.effect.action === "APPLY_DAMAGE_OVER_TIME") return trapEffectHandlers.APPLY_DAMAGE_OVER_TIME(player, opponent, trap, trap.card.effect, context);
+  if (trap.card.effect.action === "APPLY_HEAL_OVER_TIME") return trapEffectHandlers.APPLY_HEAL_OVER_TIME(player, opponent, trap, trap.card.effect, context);
+  if (trap.card.effect.action === "REFLECT_DIRECT_DAMAGE") return trapEffectHandlers.REFLECT_DIRECT_DAMAGE(player, opponent, trap, trap.card.effect, context);
   return null;
 }
 

@@ -37,6 +37,16 @@ export function appendTrapResolutionLogs(params: ITrapLoggingParams): GameState 
       sourceLaneType: "EXECUTIONS",
     });
   }
+  // Flutter Enjambre: el ATK reflejado va a los LP del atacante (rival), con la trampa como origen del VFX.
+  if (resolved.damage > 0 && trap.card.effect?.action === "REFLECT_DIRECT_DAMAGE") {
+    withLogs = appendCombatLogEvent(withLogs, reactivePlayerId, "DIRECT_DAMAGE", {
+      targetPlayerId: targetOpponentId,
+      amount: resolved.damage,
+      sourceCardId: trap.card.id,
+      sourceSlotIndex: trapSlotIndex,
+      sourceLaneType: "EXECUTIONS",
+    });
+  }
   if (resolved.energyLostTargetPlayerId && resolved.energyLostAmount > 0) {
     withLogs = appendCombatLogEvent(withLogs, reactivePlayerId, "ENERGY_LOST", {
       targetPlayerId: resolved.energyLostTargetPlayerId,

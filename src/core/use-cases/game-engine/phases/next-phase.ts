@@ -7,7 +7,7 @@ import { createDiscardForHandLimitPendingAction } from "@/core/use-cases/game-en
 import { applyMasteryTurnStart } from "@/core/use-cases/game-engine/phases/internal/mastery-turn-start";
 import { applyScheduledRevivals } from "@/core/use-cases/game-engine/phases/internal/apply-scheduled-revivals";
 import { MASTERY_PASSIVE_IDS } from "@/core/services/progression/mastery-passive-ids";
-import { tickStatusEffectsOnTurnEnd } from "@/core/use-cases/game-engine/state/status-effects";
+import { applyStatusEffectsAtTurnStart, tickStatusEffectsOnTurnEnd } from "@/core/use-cases/game-engine/state/status-effects";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function resetEntitiesForNewTurn(entities: IBoardEntity[], decrementLocks: boolean): IBoardEntity[] {
@@ -94,7 +94,11 @@ export function nextPhase(state: GameState): GameState {
     const masteryTurnStart = applyMasteryTurnStart(isNextPlayerA ? nextPlayerA : nextPlayerB);
     // Reactivación (Antigrabity): revive del cementerio al arrancar el turno de su dueño.
     const revival = applyScheduledRevivals(masteryTurnStart.player, state.idFactory);
-    const turnStartResolution = resolveTurnStartForPlayer(revival.player, nextActivePlayerId);
+    // Estados multi-turno: descuenta y purga los del jugador saliente antes de aplicar los del entrante.
+    const tickedStatusEffects = tickStatusEffectsOnTurnEnd(state.activeStatusEffects, state.activePlayerId);
+    // Daño/curación por turno (Bandera Windows / Abrazo Hugging): se aplican al jugador que arranca turno.
+    const statusTurnStart = applyStatusEffectsAtTurnStart(tickedStatusEffects, nextActivePlayerId, revival.player.healthPoints, revival.player.maxHealthPoints);
+    const turnStartResolution = resolveTurnStartForPlayer({ ...revival.player, healthPoints: statusTurnStart.healthPoints }, nextActivePlayerId);
 
     const nextState: GameState = {
       ...state,
@@ -102,8 +106,7 @@ export function nextPhase(state: GameState): GameState {
       phase: "MAIN_1",
       activePlayerId: nextActivePlayerId,
       hasNormalSummonedThisTurn: false,
-      // Estados multi-turno: descuenta y purga los del jugador cuyo turno acaba de terminar.
-      activeStatusEffects: tickStatusEffectsOnTurnEnd(state.activeStatusEffects, state.activePlayerId),
+      activeStatusEffects: tickedStatusEffects,
       pendingTurnAction: turnStartResolution.pendingTurnAction,
       playerA: isNextPlayerA ? turnStartResolution.player : nextPlayerA,
       playerB: isNextPlayerA ? nextPlayerB : turnStartResolution.player,
@@ -144,6 +147,22 @@ export function nextPhase(state: GameState): GameState {
     // Reactivación (Antigrabity): eventos de revive (incluye el auto-sacrificio si el campo estaba lleno).
     for (const event of revival.events) {
       withEnergyLog = appendCombatLogEvent(withEnergyLog, nextActivePlayerId, event.eventType, event.payload);
+    }
+    // Bandera Windows: daño por turno → VFX de daño directo en el HUD del jugador afectado.
+    if (statusTurnStart.damageApplied > 0) {
+      withEnergyLog = appendCombatLogEvent(withEnergyLog, nextActivePlayerId, "DIRECT_DAMAGE", {
+        targetPlayerId: nextActivePlayerId,
+        amount: statusTurnStart.damageApplied,
+        source: "STATUS_DAMAGE_OVER_TIME",
+      });
+    }
+    // Abrazo Hugging: curación por turno → VFX de curación en el HUD del jugador afectado.
+    if (statusTurnStart.healApplied > 0) {
+      withEnergyLog = appendCombatLogEvent(withEnergyLog, nextActivePlayerId, "HEAL_APPLIED", {
+        targetPlayerId: nextActivePlayerId,
+        amount: statusTurnStart.healApplied,
+        source: "STATUS_HEAL_OVER_TIME",
+      });
     }
     return withEnergyLog;
   }

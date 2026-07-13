@@ -2,11 +2,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ShieldCheck, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 import Image from "next/image";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
 import { useAnimatedHudValue } from "@/components/game/board/hooks/internal/useAnimatedHudValue";
+import { HudStatusBadges } from "@/components/game/board/internal/HudStatusBadges";
 
 interface HudPortraitCardProps {
   isOpponent: boolean;
@@ -18,9 +19,15 @@ interface HudPortraitCardProps {
   showEnergy?: boolean;
   /** Turnos restantes de escudo "sin ataques directos" que protege a este jugador (null = sin escudo). */
   shieldTurns?: number | null;
+  /** Daño por turno de "infección" (Bandera Windows); null = no infectado. */
+  infectionAmount?: number | null;
+  /** Curación por turno de "regeneración" (Abrazo Hugging); null = sin regeneración. */
+  regenAmount?: number | null;
+  /** Muestra los badges de estado junto a la energía (false en el HUD móvil del jugador: van al dock de energía). */
+  showStatusBadges?: boolean;
 }
 
-export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, avatarObjectPosition, badgeText, showEnergy = true, shieldTurns = null }: HudPortraitCardProps) {
+export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, avatarObjectPosition, badgeText, showEnergy = true, shieldTurns = null, infectionAmount = null, regenAmount = null, showStatusBadges = true }: HudPortraitCardProps) {
   // Animamos LP para que el impacto visual no sea instantáneo.
   const displayedHealthPoints = useAnimatedHudValue(player.healthPoints, 980, 220);
   const healthRatio = Math.max(0, Math.min(1, displayedHealthPoints / Math.max(1, player.maxHealthPoints)));
@@ -70,7 +77,7 @@ export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, a
             />
           </div>
         </div>
-        {showEnergy || shieldTurns != null ? (
+        {showEnergy || (showStatusBadges && (shieldTurns != null || infectionAmount != null || regenAmount != null)) ? (
           <div className={cn("mt-2 md:mt-3 flex items-center gap-1.5", isOpponent ? "flex-row" : "flex-row-reverse")}>
             {showEnergy ? (
               <div
@@ -83,17 +90,7 @@ export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, a
                 <span className="font-black text-yellow-400 text-[clamp(0.88rem,1.5vw,1.1rem)] italic drop-shadow-md">{player.currentEnergy} <span className="text-[10px] md:text-xs text-yellow-600/80 uppercase">/ {player.maxEnergy}</span></span>
               </div>
             ) : null}
-            {shieldTurns != null ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                title="Protegido de ataques directos"
-                className="flex items-center gap-1 rounded-sm border border-cyan-400/40 bg-zinc-950/80 px-2 py-0.5 md:py-1 shadow-[0_0_10px_rgba(34,211,238,0.35)]"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 md:w-4 md:h-4 text-cyan-300 drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]" />
-                <span className="font-black italic text-cyan-200 text-[clamp(0.82rem,1.4vw,1.05rem)]">{shieldTurns}</span>
-              </motion.div>
-            ) : null}
+            {showStatusBadges ? <HudStatusBadges shieldTurns={shieldTurns} infectionAmount={infectionAmount} regenAmount={regenAmount} /> : null}
           </div>
         ) : null}
       </div>

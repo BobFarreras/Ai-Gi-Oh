@@ -25,6 +25,13 @@ export function BoardPlayersSection({
     statusEffects.find((status) => status.kind === "NO_DIRECT_ATTACKS" && status.targetPlayerId === blockedPlayerId)?.remainingTurns ?? null;
   const playerShieldTurns = shieldTurnsProtectedFrom(opponent.id);
   const opponentShieldTurns = shieldTurnsProtectedFrom(player.id);
+  // Infección (daño/turno) y regeneración (cura/turno): la magnitud del estado que apunta a cada jugador.
+  const overTimeAmount = (targetPlayerId: string, kind: "DAMAGE_OVER_TIME" | "HEAL_OVER_TIME"): number | null =>
+    statusEffects.find((status) => status.kind === kind && status.targetPlayerId === targetPlayerId)?.magnitude ?? null;
+  const playerInfectionAmount = overTimeAmount(player.id, "DAMAGE_OVER_TIME");
+  const opponentInfectionAmount = overTimeAmount(opponent.id, "DAMAGE_OVER_TIME");
+  const playerRegenAmount = overTimeAmount(player.id, "HEAL_OVER_TIME");
+  const opponentRegenAmount = overTimeAmount(opponent.id, "HEAL_OVER_TIME");
   if (screen.isResultVisible) return null;
 
   if (!isMobile) {
@@ -54,6 +61,10 @@ export function BoardPlayersSection({
         onAdvancePhase={board.advancePhase}
         playerShieldTurns={playerShieldTurns}
         opponentShieldTurns={opponentShieldTurns}
+        playerInfectionAmount={playerInfectionAmount}
+        opponentInfectionAmount={opponentInfectionAmount}
+        playerRegenAmount={playerRegenAmount}
+        opponentRegenAmount={opponentRegenAmount}
       />
     );
   }
@@ -83,6 +94,8 @@ export function BoardPlayersSection({
         containerStyle={{ top: `${mobileHudLayout.opponentHudTopPx}px` }}
         showPhaseControls={false}
         shieldTurns={opponentShieldTurns}
+        infectionAmount={opponentInfectionAmount}
+        regenAmount={opponentRegenAmount}
       />
       <PlayerHUD
         isOpponent={false}
@@ -109,6 +122,7 @@ export function BoardPlayersSection({
         showPhaseControls={false}
         showEnergy={false}
         shieldTurns={playerShieldTurns}
+        showStatusBadges={false}
       />
       <BoardMobilePhaseControls
         phase={board.gameState.phase}
@@ -124,6 +138,9 @@ export function BoardPlayersSection({
         isPlayerTurn={board.isPlayerTurn}
         dockLeftPx={mobileHudLayout.dockLeftPx}
         bottomPx={mobileHudLayout.energyBottomPx}
+        shieldTurns={playerShieldTurns}
+        infectionAmount={playerInfectionAmount}
+        regenAmount={playerRegenAmount}
       />
     </>
   );

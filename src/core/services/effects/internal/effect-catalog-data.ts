@@ -39,6 +39,9 @@ export const TRAP_EFFECTS: IEffectCatalogItem[] = [
   { category: "TRAP", key: "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES", name: "Copiar buff rival", description: "Copia el buff del rival a tus entidades aliadas.", exampleJson: '{"action":"COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES"}' },
   { category: "TRAP", key: "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED", name: "Forzar a ataque", description: "Fuerza el modo ataque y bloquea la postura de la entidad recién invocada.", exampleJson: '{"action":"FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED"}' },
   { category: "TRAP", key: "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN", name: "Drenaje en ataque directo", description: "En ataque directo: pone al rival a 0 de energía y al dueño a 10.", exampleJson: '{"action":"DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN"}' },
+  { category: "TRAP", key: "APPLY_DAMAGE_OVER_TIME", name: "Infección: daño por turno", description: "Cuando el rival activa una trampa, lo infecta con daño en LP al inicio de cada uno de sus turnos (turns ausente = hasta el final del duelo). No se acumula: se refresca, no suma.", exampleJson: '{"action":"APPLY_DAMAGE_OVER_TIME","value":300}' },
+  { category: "TRAP", key: "APPLY_HEAL_OVER_TIME", name: "Regeneración por turno", description: "Cuando el rival activa una trampa, cura LP al dueño al inicio de cada uno de sus turnos (turns ausente = hasta el final del duelo). No se acumula: se refresca, no suma.", exampleJson: '{"action":"APPLY_HEAL_OVER_TIME","value":300}' },
+  { category: "TRAP", key: "REFLECT_DIRECT_DAMAGE", name: "Reflejar ataque directo", description: "Cuando el rival te ataca directo, anula ese golpe (tú no recibes daño) y refleja el ATK de la entity atacante a los LP del rival.", exampleJson: '{"action":"REFLECT_DIRECT_DAMAGE"}' },
 ];
 
 /** Efectos innatos de entity (se aplican sin importar la versión). */

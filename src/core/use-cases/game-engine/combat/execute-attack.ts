@@ -3,8 +3,9 @@ import { appendDirectAttackLogs, appendEntityBattleLogs } from "@/core/use-cases
 import { resolveDirectAttackState, resolveEntityBattleState } from "@/core/use-cases/game-engine/combat/internal/attack-resolution";
 import { validateAttackDeclaration, validateAttackerEntity } from "@/core/use-cases/game-engine/combat/internal/attack-validation";
 import { resolveReactiveTrapEvent } from "@/core/use-cases/game-engine/effects/internal/trap-trigger-registry";
+import { markAttackerAsUsed } from "@/core/use-cases/game-engine/combat/internal/attack-entities";
 import { GameRuleError } from "@/core/errors/GameRuleError";
-import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
+import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { isDirectAttackBlocked } from "@/core/use-cases/game-engine/state/status-effects";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
@@ -64,6 +65,13 @@ export function executeAttack(
     const { player: directAttacker, opponent: directDefender, isPlayerA: isPlayerADirect } = getPlayerPair(stateAfterDirectTrap, attackerPlayerId);
     const directAttackerEntity = directAttacker.activeEntities.find((entity) => entity.instanceId === attackerInstanceId);
     if (!directAttackerEntity) return stateAfterDirectTrap;
+    // Flutter Enjambre: si una trampa reactiva anuló este ataque directo, el defensor no recibe daño;
+    // solo marcamos al atacante como usado (el reflejo ya lo aplicó y logueó la trampa) y limpiamos la marca.
+    if (stateAfterDirectTrap.directAttackNegatedAttackerInstanceId === attackerInstanceId) {
+      const usedAttacker = { ...directAttacker, activeEntities: markAttackerAsUsed(directAttacker.activeEntities, attackerInstanceId) };
+      const negatedState = assignPlayers(stateAfterDirectTrap, usedAttacker, directDefender, isPlayerADirect);
+      return { ...negatedState, directAttackNegatedAttackerInstanceId: undefined };
+    }
     const resolvedDirectAttack = resolveDirectAttackState({
       state: stateAfterDirectTrap,
       attacker: directAttacker,

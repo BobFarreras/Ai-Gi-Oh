@@ -21,7 +21,33 @@ describe("trap-effect-registry", () => {
       "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES",
       "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED",
       "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN",
+      "APPLY_DAMAGE_OVER_TIME",
+      "APPLY_HEAL_OVER_TIME",
+      "REFLECT_DIRECT_DAMAGE",
     ]);
+  });
+
+  it("REFLECT_DIRECT_DAMAGE refleja el ATK del atacante y marca la anulación del golpe directo", () => {
+    const attackerCard = { id: "atk", name: "Atk", description: "", type: "ENTITY" as const, faction: "BIG_TECH" as const, cost: 3, attack: 1600, defense: 1000 };
+    const opponent = { ...createPlayer("b"), activeEntities: [{ instanceId: "atk-inst", card: attackerCard, mode: "ATTACK" as const, hasAttackedThisTurn: false, isNewlySummoned: false }] };
+    const trap: IBoardEntity = { instanceId: "t-reflect", mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false, card: { id: "trap-flutter-reflect", name: "Flutter", description: "", type: "TRAP", faction: "OPEN_SOURCE", cost: 3, trigger: "ON_OPPONENT_DIRECT_ATTACK_DECLARED", effect: { action: "REFLECT_DIRECT_DAMAGE" } } };
+    const result = resolveTrapEffectFromRegistry(createPlayer("a"), opponent, trap, { attackerPlayerId: "b", attackerInstanceId: "atk-inst" });
+    expect(result?.negatesDirectAttack).toBe(true);
+    expect(result?.damage).toBe(1600);
+    expect(result?.opponent.healthPoints).toBe(4000 - 1600);
+    expect(result?.player.healthPoints).toBe(4000); // el dueño no recibe daño
+  });
+
+  it("APPLY_DAMAGE_OVER_TIME infecta al rival (opponent) con daño por turno indefinido", () => {
+    const trap: IBoardEntity = { instanceId: "t-dot", mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false, card: { id: "trap-windows", name: "Windows", description: "", type: "TRAP", faction: "BIG_TECH", cost: 2, trigger: "ON_OPPONENT_TRAP_ACTIVATED", effect: { action: "APPLY_DAMAGE_OVER_TIME", value: 300 } } };
+    const result = resolveTrapEffectFromRegistry(createPlayer("a"), createPlayer("b"), trap);
+    expect(result?.addedStatusEffects).toEqual([{ kind: "DAMAGE_OVER_TIME", targetPlayerId: "b", remainingTurns: null, magnitude: 300 }]);
+  });
+
+  it("APPLY_HEAL_OVER_TIME cura al dueño (player) por turno indefinido", () => {
+    const trap: IBoardEntity = { instanceId: "t-hot", mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false, card: { id: "trap-hugging", name: "Hugging", description: "", type: "TRAP", faction: "OPEN_SOURCE", cost: 2, trigger: "ON_OPPONENT_TRAP_ACTIVATED", effect: { action: "APPLY_HEAL_OVER_TIME", value: 300 } } };
+    const result = resolveTrapEffectFromRegistry(createPlayer("a"), createPlayer("b"), trap);
+    expect(result?.addedStatusEffects).toEqual([{ kind: "HEAL_OVER_TIME", targetPlayerId: "a", remainingTurns: null, magnitude: 300 }]);
   });
 
   it("retorna estado neutro cuando la trampa no tiene efecto", () => {

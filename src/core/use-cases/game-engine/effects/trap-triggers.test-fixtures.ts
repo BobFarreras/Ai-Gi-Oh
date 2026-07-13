@@ -113,6 +113,39 @@ export const trapDrainDirectAttackerEnergy: ICard = {
   effect: { action: "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN" },
 };
 
+export const trapWindowsInfect: ICard = {
+  id: "trap-windows-flag-infect",
+  name: "Bandera de Windows Retro",
+  description: "",
+  type: "TRAP",
+  faction: "BIG_TECH",
+  cost: 2,
+  trigger: "ON_OPPONENT_TRAP_ACTIVATED",
+  effect: { action: "APPLY_DAMAGE_OVER_TIME", value: 300 },
+};
+
+export const trapHuggingHeal: ICard = {
+  id: "trap-hugging-heal",
+  name: "Abrazo de Hugging Face",
+  description: "",
+  type: "TRAP",
+  faction: "OPEN_SOURCE",
+  cost: 2,
+  trigger: "ON_OPPONENT_TRAP_ACTIVATED",
+  effect: { action: "APPLY_HEAL_OVER_TIME", value: 300 },
+};
+
+export const trapFlutterReflect: ICard = {
+  id: "trap-flutter-reflect",
+  name: "Flutter Enjambre",
+  description: "",
+  type: "TRAP",
+  faction: "OPEN_SOURCE",
+  cost: 3,
+  trigger: "ON_OPPONENT_DIRECT_ATTACK_DECLARED",
+  effect: { action: "REFLECT_DIRECT_DAMAGE" },
+};
+
 export function createTrapEntity(instanceId: string, card: ICard): IBoardEntity {
   return { instanceId, card, mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false };
 }

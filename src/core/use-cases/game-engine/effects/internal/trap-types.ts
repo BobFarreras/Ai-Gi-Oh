@@ -1,5 +1,6 @@
 // src/core/use-cases/game-engine/effects/internal/trap-types.ts - Tipos de contexto y resultado para resolución de trampas.
 import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
+import { IStatusEffectSpec } from "@/core/use-cases/game-engine/state/status-effects";
 
 export interface ITrapTriggerContext {
   attackerPlayerId?: string;
@@ -27,6 +28,10 @@ export interface ITrapResolutionResult {
   destroyedOpponentEntityInstanceId: string | null;
   destroyedOpponentEntitySlotIndex: number | null;
   destroyedOpponentEntityDestination: "GRAVEYARD" | "DESTROYED" | null;
+  /** Estados multi-turno a añadir a GameState (DoT/HoT de Bandera Windows / Abrazo Hugging). */
+  addedStatusEffects?: IStatusEffectSpec[];
+  /** Flutter Enjambre: anula el ataque DIRECTO en curso (el dueño no recibe daño). */
+  negatesDirectAttack?: boolean;
 }
 
 export interface ITriggeredTrap {
