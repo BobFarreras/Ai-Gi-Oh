@@ -7,6 +7,7 @@ import { createDiscardForHandLimitPendingAction } from "@/core/use-cases/game-en
 import { applyMasteryTurnStart } from "@/core/use-cases/game-engine/phases/internal/mastery-turn-start";
 import { applyScheduledRevivals } from "@/core/use-cases/game-engine/phases/internal/apply-scheduled-revivals";
 import { MASTERY_PASSIVE_IDS } from "@/core/services/progression/mastery-passive-ids";
+import { tickStatusEffectsOnTurnEnd } from "@/core/use-cases/game-engine/state/status-effects";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function resetEntitiesForNewTurn(entities: IBoardEntity[], decrementLocks: boolean): IBoardEntity[] {
@@ -101,6 +102,8 @@ export function nextPhase(state: GameState): GameState {
       phase: "MAIN_1",
       activePlayerId: nextActivePlayerId,
       hasNormalSummonedThisTurn: false,
+      // Estados multi-turno: descuenta y purga los del jugador cuyo turno acaba de terminar.
+      activeStatusEffects: tickStatusEffectsOnTurnEnd(state.activeStatusEffects, state.activePlayerId),
       pendingTurnAction: turnStartResolution.pendingTurnAction,
       playerA: isNextPlayerA ? turnStartResolution.player : nextPlayerA,
       playerB: isNextPlayerA ? nextPlayerB : turnStartResolution.player,

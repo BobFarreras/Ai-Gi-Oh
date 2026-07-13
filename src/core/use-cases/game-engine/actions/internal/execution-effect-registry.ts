@@ -29,6 +29,7 @@ type ExecutionAction =
   | "BOOST_DEFENSE_BY_CARD_ID"
   | "BOOST_ATTACK_BY_CARD_ID"
   | "DAMAGE_IF_ALLY_ON_BOARD"
+  | "APPLY_NO_DIRECT_ATTACKS"
   | "DRAIN_OPPONENT_ENERGY"
   | "SET_CARD_DUEL_PROGRESS"
   | "REDUCE_OPPONENT_ATTACK"
@@ -85,6 +86,10 @@ const executionEffectHandlers: { [K in ExecutionAction]: ExecutionHandler<K> } =
       damageAmount: effect.value,
     };
   },
+  APPLY_NO_DIRECT_ATTACKS: (player, opponent, effect) => ({
+    ...createBaseResult(player, opponent),
+    addedStatusEffects: [{ kind: "NO_DIRECT_ATTACKS", targetPlayerId: opponent.id, remainingTurns: Math.max(1, Math.trunc(effect.turns)) }],
+  }),
   DRAIN_OPPONENT_ENERGY: (player, opponent) => {
     const drainedAmount = Math.max(0, opponent.currentEnergy);
     return {
@@ -135,6 +140,7 @@ export function resolveExecutionEffectFromRegistry(player: IPlayer, opponent: IP
   if (effect.action === "BOOST_DEFENSE_BY_CARD_ID") return executionEffectHandlers.BOOST_DEFENSE_BY_CARD_ID(player, opponent, effect);
   if (effect.action === "BOOST_ATTACK_BY_CARD_ID") return executionEffectHandlers.BOOST_ATTACK_BY_CARD_ID(player, opponent, effect);
   if (effect.action === "DAMAGE_IF_ALLY_ON_BOARD") return executionEffectHandlers.DAMAGE_IF_ALLY_ON_BOARD(player, opponent, effect);
+  if (effect.action === "APPLY_NO_DIRECT_ATTACKS") return executionEffectHandlers.APPLY_NO_DIRECT_ATTACKS(player, opponent, effect);
   if (effect.action === "DRAIN_OPPONENT_ENERGY") return executionEffectHandlers.DRAIN_OPPONENT_ENERGY(player, opponent, effect);
   if (effect.action === "SET_CARD_DUEL_PROGRESS") return executionEffectHandlers.SET_CARD_DUEL_PROGRESS(player, opponent, effect);
   if (effect.action === "REDUCE_OPPONENT_ATTACK") return executionEffectHandlers.REDUCE_OPPONENT_ATTACK(player, opponent, effect);

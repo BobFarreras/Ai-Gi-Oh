@@ -75,6 +75,12 @@ export interface IDamageIfAllyOnBoardEffect {
   value: number;
 }
 
+/** Impide al rival hacer ataques directos durante `turns` turnos suyos (puede seguir atacando entities). */
+export interface IApplyNoDirectAttacksEffect {
+  action: "APPLY_NO_DIRECT_ATTACKS";
+  turns: number;
+}
+
 export interface IDrainOpponentEnergyEffect {
   action: "DRAIN_OPPONENT_ENERGY";
 }
@@ -177,6 +183,7 @@ export type ICardEffect =
   | IBoostDefenseByCardIdEffect
   | IBoostAttackByCardIdEffect
   | IDamageIfAllyOnBoardEffect
+  | IApplyNoDirectAttacksEffect
   | IDrainOpponentEnergyEffect
   | ISetCardDuelProgressEffect
   | IRevealOpponentSetCardEffect

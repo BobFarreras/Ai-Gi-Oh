@@ -11,6 +11,7 @@ import { suspendExecutionInSet } from "@/core/use-cases/game-engine/actions/inte
 import { resolveReactiveTrapEvent } from "@/core/use-cases/game-engine/effects/internal/trap-trigger-registry";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
+import { addStatusEffects } from "@/core/use-cases/game-engine/state/status-effects";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 interface IResolveExecutionOptions {
@@ -97,7 +98,7 @@ export function resolveExecution(
     graveyard: [...effectResult.player.graveyard, executionEntity.card],
   };
   const withPlayers = assignPlayers(withTrapResolution, updatedPlayer, effectResult.opponent, isPlayerA);
-  const withBuffTrapResolution = effectResult.buff.stat && effectResult.buff.amount > 0
+  let withBuffTrapResolution = effectResult.buff.stat && effectResult.buff.amount > 0
     ? resolveReactiveTrapEvent(
       withPlayers,
       effectResult.opponent.id,
@@ -109,6 +110,20 @@ export function resolveExecution(
       { skipCounterTrapPlayerIds: options?.skipCounterTrapPlayerIds },
     )
     : withPlayers;
+  // Efectos de estado multi-turno (p.ej. "sin ataques directos"): se añaden a GameState y se loguean.
+  if (effectResult.addedStatusEffects && effectResult.addedStatusEffects.length > 0) {
+    withBuffTrapResolution = {
+      ...withBuffTrapResolution,
+      activeStatusEffects: addStatusEffects(withBuffTrapResolution.activeStatusEffects, effectResult.addedStatusEffects, withBuffTrapResolution.turn),
+    };
+    for (const spec of effectResult.addedStatusEffects) {
+      withBuffTrapResolution = appendCombatLogEvent(withBuffTrapResolution, playerId, "STATUS_EFFECT_APPLIED", {
+        kind: spec.kind,
+        targetPlayerId: spec.targetPlayerId,
+        remainingTurns: spec.remainingTurns,
+      });
+    }
+  }
   return appendExecutionResultLogs(
     withBuffTrapResolution,
     playerId,

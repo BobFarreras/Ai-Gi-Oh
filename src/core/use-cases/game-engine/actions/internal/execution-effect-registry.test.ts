@@ -29,6 +29,7 @@ describe("execution-effect-registry", () => {
       "BOOST_DEFENSE_BY_CARD_ID",
       "BOOST_ATTACK_BY_CARD_ID",
       "DAMAGE_IF_ALLY_ON_BOARD",
+      "APPLY_NO_DIRECT_ATTACKS",
       "DRAIN_OPPONENT_ENERGY",
       "SET_CARD_DUEL_PROGRESS",
       "REDUCE_OPPONENT_ATTACK",
@@ -95,6 +96,13 @@ describe("execution-effect-registry", () => {
     const result = resolveExecutionEffectFromRegistry(createPlayer("a"), opponent, { action: "DAMAGE_IF_ALLY_ON_BOARD", requiredCardId: "entity-avast", value: 2000 })!;
     expect(result.opponent.healthPoints).toBe(8000);
     expect(result.damageAmount).toBe(0);
+  });
+
+  it("APPLY_NO_DIRECT_ATTACKS devuelve un estado NO_DIRECT_ATTACKS contra el rival", () => {
+    const player = createPlayer("a");
+    const opponent = createPlayer("b");
+    const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "APPLY_NO_DIRECT_ATTACKS", turns: 3 })!;
+    expect(result.addedStatusEffects).toEqual([{ kind: "NO_DIRECT_ATTACKS", targetPlayerId: "b", remainingTurns: 3 }]);
   });
 
   it("DESTROY_ALL_TRAPS manda al cementerio del rival solo las trampas", () => {

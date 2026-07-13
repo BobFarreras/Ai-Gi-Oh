@@ -3,7 +3,9 @@ import { appendDirectAttackLogs, appendEntityBattleLogs } from "@/core/use-cases
 import { resolveDirectAttackState, resolveEntityBattleState } from "@/core/use-cases/game-engine/combat/internal/attack-resolution";
 import { validateAttackDeclaration, validateAttackerEntity } from "@/core/use-cases/game-engine/combat/internal/attack-validation";
 import { resolveReactiveTrapEvent } from "@/core/use-cases/game-engine/effects/internal/trap-trigger-registry";
+import { GameRuleError } from "@/core/errors/GameRuleError";
 import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
+import { isDirectAttackBlocked } from "@/core/use-cases/game-engine/state/status-effects";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 interface IExecuteAttackOptions {
@@ -24,6 +26,12 @@ export function executeAttack(
 
   const { player: attacker, opponent: defender } = getPlayerPair(state, attackerPlayerId);
   validateAttackerEntity(attacker.activeEntities.find((entity) => entity.instanceId === attackerInstanceId));
+
+  // Estado "sin ataques directos": el ataque directo (sin objetivo) queda bloqueado; los ataques a
+  // entities siguen permitidos.
+  if (!defenderInstanceId && isDirectAttackBlocked(state.activeStatusEffects, attackerPlayerId)) {
+    throw new GameRuleError("No puedes hacer ataques directos mientras estés bajo el efecto de bloqueo.");
+  }
 
   const stateAfterTrap = resolveReactiveTrapEvent(
     state,

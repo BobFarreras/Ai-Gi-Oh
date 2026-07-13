@@ -29,6 +29,7 @@ import {
   IBoostDefenseByCardIdEffect,
   IBoostAttackByCardIdEffect,
   IDamageIfAllyOnBoardEffect,
+  IApplyNoDirectAttacksEffect,
   ISetDefenseByCardIdEffect,
   IStealOpponentGraveyardCardToHandEffect,
 } from "@/core/entities/ICard";
@@ -86,6 +87,10 @@ function mapEffect(value: unknown): ICardEffect | undefined {
     case "DAMAGE_IF_ALLY_ON_BOARD":
       return typeof value.requiredCardId === "string" && typeof value.value === "number"
         ? ({ action: "DAMAGE_IF_ALLY_ON_BOARD", requiredCardId: value.requiredCardId, value: value.value } as IDamageIfAllyOnBoardEffect)
+        : undefined;
+    case "APPLY_NO_DIRECT_ATTACKS":
+      return typeof value.turns === "number"
+        ? ({ action: "APPLY_NO_DIRECT_ATTACKS", turns: value.turns } as IApplyNoDirectAttacksEffect)
         : undefined;
     case "DRAIN_OPPONENT_ENERGY":
       return { action: "DRAIN_OPPONENT_ENERGY" } as IDrainOpponentEnergyEffect;
