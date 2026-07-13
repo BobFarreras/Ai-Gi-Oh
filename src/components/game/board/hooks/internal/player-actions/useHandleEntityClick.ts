@@ -48,7 +48,8 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
       if (!isPlayerTurn) {
         if (entity && !(isOpponent && entity.mode === "SET")) {
           params.setSelectedCard(entity.card);
-          params.setSelectedBoardEntityInstanceId(null);
+          // Fijar el instanceId (único) desambigua cuando la misma carta está en ambos campos.
+          params.setSelectedBoardEntityInstanceId(entity.instanceId);
         }
         return;
       }
@@ -161,7 +162,8 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
           return;
         }
         params.setSelectedCard(entity.card);
-        params.setSelectedBoardEntityInstanceId(null);
+        // Fijar el instanceId (único) desambigua cuando la misma carta está en ambos campos.
+        params.setSelectedBoardEntityInstanceId(entity.instanceId);
       }
     },
     [params, emitLocalAction],
