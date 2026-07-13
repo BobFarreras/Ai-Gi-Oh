@@ -28,6 +28,7 @@ describe("execution-effect-registry", () => {
       "SET_DEFENSE_BY_CARD_ID",
       "BOOST_DEFENSE_BY_CARD_ID",
       "BOOST_ATTACK_BY_CARD_ID",
+      "DAMAGE_IF_ALLY_ON_BOARD",
       "DRAIN_OPPONENT_ENERGY",
       "SET_CARD_DUEL_PROGRESS",
       "REDUCE_OPPONENT_ATTACK",
@@ -76,6 +77,24 @@ describe("execution-effect-registry", () => {
     const opponent = createPlayer("b");
     const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "BOOST_ATTACK_BY_CARD_ID", targetCardId: "entity-figma", value: 1000 })!;
     expect(result.buff).toEqual({ entityIds: [], stat: "ATTACK", amount: 1000 });
+  });
+
+  it("DAMAGE_IF_ALLY_ON_BOARD golpea 2000 solo si está la entity requerida en campo", () => {
+    const opponent = { ...createPlayer("b"), healthPoints: 8000, maxHealthPoints: 8000 };
+    const withAvast: IPlayer = {
+      ...createPlayer("a"),
+      activeEntities: [{ instanceId: "e1", card: entityCard("entity-avast", 1000), mode: "ATTACK", hasAttackedThisTurn: false, isNewlySummoned: false }],
+    };
+    const hit = resolveExecutionEffectFromRegistry(withAvast, opponent, { action: "DAMAGE_IF_ALLY_ON_BOARD", requiredCardId: "entity-avast", value: 2000 })!;
+    expect(hit.opponent.healthPoints).toBe(6000);
+    expect(hit.damageAmount).toBe(2000);
+  });
+
+  it("DAMAGE_IF_ALLY_ON_BOARD no hace nada si no está la entity requerida", () => {
+    const opponent = { ...createPlayer("b"), healthPoints: 8000, maxHealthPoints: 8000 };
+    const result = resolveExecutionEffectFromRegistry(createPlayer("a"), opponent, { action: "DAMAGE_IF_ALLY_ON_BOARD", requiredCardId: "entity-avast", value: 2000 })!;
+    expect(result.opponent.healthPoints).toBe(8000);
+    expect(result.damageAmount).toBe(0);
   });
 
   it("DESTROY_ALL_TRAPS manda al cementerio del rival solo las trampas", () => {

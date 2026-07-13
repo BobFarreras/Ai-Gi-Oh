@@ -68,6 +68,13 @@ export interface IBoostAttackByCardIdEffect {
   value: number;
 }
 
+/** Inflige `value` de daño al rival SOLO si el jugador tiene en campo una entity con `requiredCardId`. */
+export interface IDamageIfAllyOnBoardEffect {
+  action: "DAMAGE_IF_ALLY_ON_BOARD";
+  requiredCardId: string;
+  value: number;
+}
+
 export interface IDrainOpponentEnergyEffect {
   action: "DRAIN_OPPONENT_ENERGY";
 }
@@ -169,6 +176,7 @@ export type ICardEffect =
   | ISetDefenseByCardIdEffect
   | IBoostDefenseByCardIdEffect
   | IBoostAttackByCardIdEffect
+  | IDamageIfAllyOnBoardEffect
   | IDrainOpponentEnergyEffect
   | ISetCardDuelProgressEffect
   | IRevealOpponentSetCardEffect

@@ -28,6 +28,7 @@ type ExecutionAction =
   | "SET_DEFENSE_BY_CARD_ID"
   | "BOOST_DEFENSE_BY_CARD_ID"
   | "BOOST_ATTACK_BY_CARD_ID"
+  | "DAMAGE_IF_ALLY_ON_BOARD"
   | "DRAIN_OPPONENT_ENERGY"
   | "SET_CARD_DUEL_PROGRESS"
   | "REDUCE_OPPONENT_ATTACK"
@@ -73,6 +74,16 @@ const executionEffectHandlers: { [K in ExecutionAction]: ExecutionHandler<K> } =
   BOOST_ATTACK_BY_CARD_ID: (player, opponent, effect) => {
     const boosted = boostAttackByCardId(player, effect.targetCardId, effect.value);
     return { ...createBaseResult(boosted.updatedPlayer, opponent), buff: { entityIds: boosted.buffIds, stat: "ATTACK", amount: effect.value } };
+  },
+  DAMAGE_IF_ALLY_ON_BOARD: (player, opponent, effect) => {
+    // Solo golpea si el jugador tiene en campo la entity requerida; si no, la magia se consume sin efecto.
+    const hasRequiredAlly = player.activeEntities.some((entity) => entity.card.id === effect.requiredCardId);
+    if (!hasRequiredAlly) return createBaseResult(player, opponent);
+    return {
+      ...createBaseResult(player, { ...opponent, healthPoints: Math.max(0, opponent.healthPoints - effect.value) }),
+      damageTargetPlayerId: opponent.id,
+      damageAmount: effect.value,
+    };
   },
   DRAIN_OPPONENT_ENERGY: (player, opponent) => {
     const drainedAmount = Math.max(0, opponent.currentEnergy);
@@ -123,6 +134,7 @@ export function resolveExecutionEffectFromRegistry(player: IPlayer, opponent: IP
   if (effect.action === "SET_DEFENSE_BY_CARD_ID") return executionEffectHandlers.SET_DEFENSE_BY_CARD_ID(player, opponent, effect);
   if (effect.action === "BOOST_DEFENSE_BY_CARD_ID") return executionEffectHandlers.BOOST_DEFENSE_BY_CARD_ID(player, opponent, effect);
   if (effect.action === "BOOST_ATTACK_BY_CARD_ID") return executionEffectHandlers.BOOST_ATTACK_BY_CARD_ID(player, opponent, effect);
+  if (effect.action === "DAMAGE_IF_ALLY_ON_BOARD") return executionEffectHandlers.DAMAGE_IF_ALLY_ON_BOARD(player, opponent, effect);
   if (effect.action === "DRAIN_OPPONENT_ENERGY") return executionEffectHandlers.DRAIN_OPPONENT_ENERGY(player, opponent, effect);
   if (effect.action === "SET_CARD_DUEL_PROGRESS") return executionEffectHandlers.SET_CARD_DUEL_PROGRESS(player, opponent, effect);
   if (effect.action === "REDUCE_OPPONENT_ATTACK") return executionEffectHandlers.REDUCE_OPPONENT_ATTACK(player, opponent, effect);
