@@ -17,6 +17,7 @@ function createBaseRow(): ICardCatalogRow {
     trigger: null,
     bg_url: "/assets/bgs/bg-tech.webp",
     render_url: "/assets/renders/test.webp",
+    render_url_max_level: null,
     effect: null,
     fusion_recipe_id: null,
     fusion_material_ids: [],
@@ -26,6 +27,12 @@ function createBaseRow(): ICardCatalogRow {
 }
 
 describe("mapCardCatalogRowToCard", () => {
+  it("mapea el arte de nivel máximo cuando el catálogo lo tiene, y lo deja vacío cuando no", () => {
+    expect(mapCardCatalogRowToCard(createBaseRow()).maxLevelRenderUrl).toBeUndefined();
+    const withArt = mapCardCatalogRowToCard({ ...createBaseRow(), render_url_max_level: "/assets/renders/test-100.webp" });
+    expect(withArt.maxLevelRenderUrl).toBe("/assets/renders/test-100.webp");
+  });
+
   it("mapea datos base de carta con stats y render", () => {
     const card = mapCardCatalogRowToCard(createBaseRow());
     expect(card.id).toBe("entity-test");

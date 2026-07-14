@@ -337,6 +337,12 @@ export interface ICard {
   readonly defense?: number;
   readonly bgUrl?: string;
   readonly renderUrl?: string;
+  /**
+   * Arte alternativo que la carta estrena al llegar al nivel máximo. Opcional: si el catálogo no tiene imagen
+   * para esa carta, se sigue usando `renderUrl` (el sistema queda configurado aunque falten las imágenes).
+   * El cambio lo aplica `applyCardProgressionToCard`, así que lo ven tablero, arsenal y ambos clientes de multi.
+   */
+  readonly maxLevelRenderUrl?: string;
   readonly effect?: ICardEffect;
   readonly fusionRecipeId?: string;
   readonly fusionMaterials?: string[];

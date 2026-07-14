@@ -111,7 +111,11 @@ validen posesión — si el chat público hoy no lo hace, es un bug de seguridad
 
 ### Ficha 2 — Caramelos de nivel (+1 a +5)
 
-**Estado.** Diseñado, no implementado.
+**Estado.** Diseñado, no implementado. Imagen entregada: `public/assets/story/USB_Token_Anime-removebg-preview.webp`
+→ **USB Raro** (`candy-usb-raro`). Mover a `public/assets/items/` y renombrar al id.
+
+**Decidido:** solo caramelos de +1 a +5 niveles. **Pueden llegar al nivel máximo** (de 95 a 100 con un +5). El
+freno no es una regla, es la **escasez**: difíciles de encontrar y caros.
 
 **Concepto clave.** Un caramelo **no otorga niveles: otorga XP**. Si otorga niveles directamente, tienes dos
 fuentes de verdad para el nivel (XP acumulada y niveles regalados) y acabas con estados imposibles. El nivel
@@ -146,8 +150,13 @@ lo más importante — `get-match-session-data.ts` lo aplica a **los dos mazos**
 progresión de cada propietario. El motor de combate nunca sabe de dónde salen los números: recibe la carta ya
 resuelta. **Un objeto es una fuente más de bonus dentro de esa función.** El motor no se toca.
 
+**Imágenes entregadas (2026-07-14).** Mover a `public/assets/items/` y renombrar al id:
+- `Placa_Base_Anime-removebg-preview.webp` → **Placa Blindada** (`item-placa-blindada`), objeto de **DEFENSA**.
+- `megustav-removebg-preview.webp` (chip con rayo) → **Núcleo Overclock** (`item-nucleo-overclock`), objeto de
+  **ATAQUE**.
+
 **Pasos.**
-1. Migración `119`: catálogo de objetos (`card_upgrade_items`: id, stat `ATTACK|DEFENSE`, valor, precio,
+1. Migración: catálogo de objetos (`card_upgrade_items`: id, stat `ATTACK|DEFENSE`, valor, precio,
    límite) y objetos aplicados por carta (`player_card_upgrades`: playerId + cardId + itemId + cantidad).
 2. Extender `IPlayerCardProgress` con los bonus agregados (`upgradeAttackBonus`, `upgradeDefenseBonus`) y que
    el repositorio los traiga ya sumados. **Sumados en la lectura, no recalculados en cada capa.**
@@ -239,6 +248,35 @@ En 100 niveles son **20 hitos = 5 ciclos**, es decir **+750 ATK y +750 DEF acumu
    100 les cambia la dificultad sin querer.
 
 **Esfuerzo:** bajo-medio (2 días).
+
+#### Hecho (2026-07-14) — con dos consecuencias que hay que mirar
+
+La curva vive ahora como **tabla de datos** (`CARD_LEVEL_MILESTONES`), no como cadena de `if`, y el Códex lee
+esa misma tabla, así que no puede quedarse mintiendo si se retoca. Migración 119 (`render_url_max_level`)
+aplicada: el arte de nivel 100 se intercambia en `applyCardProgressionToCard` y **cae al render normal mientras
+no haya imagen**, así que el sistema está listo aunque las imágenes no existan.
+
+**Lo que cuesta de verdad llegar** (para una carta que se usa a fondo, ~90 XP por combate):
+
+| Nivel | XP total | Combates aprox. |
+|---|---|---|
+| 30 (tope viejo) | 17.050 | ~190 |
+| 50 (−1 energía) | 47.950 | ~530 |
+| 100 (arte nuevo) | 149.800 | ~1.660 |
+
+Los tramos hasta el 30 son los originales (nadie pierde progreso), y del 30 en adelante la curva se aplana a
+propósito: con el ritmo anterior el nivel 100 habría costado cientos de miles de XP y habría sido decorativo.
+Son constantes en una tabla: si te parece mucho grind, se tocan en un minuto.
+
+**⚠️ Efecto colateral en los rivales de story/arena (decisión tuya).** Los rivales escalan con las MISMAS reglas
+que el jugador y tienen niveles fijos (EASY 0, NORMAL 2, HARD 10, BOSS 20, MASTER/MYTHIC 30). Con la curva nueva:
+- pierden defensa (un rival a nivel 20 tenía +300 DEF y ahora tiene +150),
+- y **pierden el descuento de energía** (estaba en el nivel 30, ahora está en el 50), así que sus cartas cuestan
+  1 más.
+
+O sea que **story y arena se han vuelto un poco más fáciles**. No lo he tocado porque es balance, no un bug: si
+quieres dejarlo como estaba, basta subir los niveles de la tabla `TRAINING_SCALE_BY_DIFFICULTY`
+(`training-card-scaling.ts`) — con nivel 40 se recuperan los +300/+300 de antes.
 
 ---
 
@@ -459,8 +497,8 @@ perfiles de dificultad ya existen y `get-match-session-data.ts` ya sabe resolver
 | A | 1 · Compartir carta en DM | ✅ hecho (+ **agujero de seguridad de CARD_SHARE cerrado**, ver abajo) |
 | A | 6 · Diálogo de premio semanal | ✅ hecho · migración 118 **aplicada a producción** (2026-07-14) |
 | A | 9 · UX de reemplazo de zona | ✅ hecho · ⚠️ el rendimiento en móvil hay que confirmarlo en un dispositivo real |
-| B | 4 · Niveles a 100 | ⏳ pendiente |
-| B | 2 · Caramelos | ⏳ pendiente |
+| B | 4 · Niveles a 100 | ✅ hecho · migración 119 **aplicada** (2026-07-14) · ⚠️ ver "rivales" abajo |
+| B | 2 · Caramelos | ⏳ siguiente |
 | B | 3 · Objetos | ⏳ pendiente |
 | C | 5 · Cartas por reconfiguración | ⏳ pendiente |
 | C | 7 · Magia de ataque en defensa | ⏳ pendiente |

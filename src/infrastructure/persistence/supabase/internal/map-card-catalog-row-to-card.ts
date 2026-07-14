@@ -201,6 +201,7 @@ export function mapCardCatalogRowToCard(row: ICardCatalogRow): ICard {
     trigger: row.trigger ?? undefined,
     bgUrl: row.bg_url ?? undefined,
     renderUrl: row.render_url ?? undefined,
+    maxLevelRenderUrl: row.render_url_max_level ?? undefined,
     effect,
     fusionRecipeId: row.fusion_recipe_id ?? undefined,
     fusionMaterials: row.fusion_material_ids.length > 0 ? row.fusion_material_ids : undefined,

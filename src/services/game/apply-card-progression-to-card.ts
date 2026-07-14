@@ -1,7 +1,7 @@
 // src/services/game/apply-card-progression-to-card.ts - Aplica bonus de nivel a una carta para su uso en combate sin mutar el catálogo base.
 import { ICard, CardType } from "@/core/entities/ICard";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
-import { resolveCardLevelBonuses } from "@/core/services/progression/card-level-bonus-rules";
+import { hasMaxLevelArt, resolveCardLevelBonuses } from "@/core/services/progression/card-level-bonus-rules";
 import { resolveMasteryPassiveLabel } from "@/core/services/progression/mastery-passive-display";
 
 function resolveCombatCost(cost: number, cardType: CardType, level: number): number {
@@ -15,8 +15,13 @@ export function applyCardProgressionToCard(card: ICard, progress: IPlayerCardPro
   const versionTier = progress?.versionTier ?? 0;
   // Si la progresión no fija pasiva (pre-V5 o no asignada), conserva la pasiva innata de la carta base.
   const masteryPassiveSkillId = progress?.masteryPassiveSkillId ?? card.masteryPassiveSkillId ?? null;
+  // Arte de nivel máximo: solo si la carta lo tiene en el catálogo. Si aún no hay imagen, se queda con la
+  // suya de siempre — el sistema está configurado y las imágenes se pueden ir subiendo después, sin tocar código.
+  const renderUrl = hasMaxLevelArt(level) && card.maxLevelRenderUrl ? card.maxLevelRenderUrl : card.renderUrl;
+
   return {
     ...card,
+    renderUrl,
     cost: resolveCombatCost(card.cost, card.type, level),
     attack: typeof card.attack === "number" ? card.attack + bonuses.attackBonus : card.attack,
     defense: typeof card.defense === "number" ? card.defense + bonuses.defenseBonus : card.defense,

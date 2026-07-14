@@ -13,7 +13,7 @@ import { AcademyBackButton } from "@/components/hub/academy/AcademyBackButton";
 import { ACADEMY_HOME_ROUTE } from "@/core/constants/routes/academy-routes";
 import { EFFECT_CATALOG } from "@/core/services/effects/effect-catalog";
 import { EffectCategory, IEffectCatalogItem } from "@/core/services/effects/effect-catalog-types";
-import { resolveCardLevelBonuses } from "@/core/services/progression/card-level-bonus-rules";
+import { CARD_LEVEL_MILESTONES, MAX_LEVEL_ART_LEVEL, resolveCardLevelBonuses } from "@/core/services/progression/card-level-bonus-rules";
 import { getCopiesNeededForNextVersion, MAX_CARD_VERSION_TIER } from "@/core/services/progression/card-version-rules";
 import { CARD_CATALOG } from "@/infrastructure/repositories/internal/card-catalog";
 import { STORY_OPPONENT_NARRATION_CATALOG } from "@/services/story/story-opponent-narration-catalog";
@@ -262,8 +262,10 @@ function EffectsSection({ onSelect }: { onSelect: (item: IEffectCatalogItem) => 
   );
 }
 
-const LEVEL_MILESTONES = [5, 10, 20, 30];
-const LEVEL_TRACK_MAX = 30;
+// Los hitos salen de la MISMA tabla que usa el motor (card-level-bonus-rules): así el Códex no puede quedarse
+// mintiendo si mañana se retoca la curva.
+const LEVEL_MILESTONES = CARD_LEVEL_MILESTONES.map((milestone) => milestone.level);
+const LEVEL_TRACK_MAX = MAX_LEVEL_ART_LEVEL;
 
 function describeLevelDelta(level: number): string[] {
   const current = resolveCardLevelBonuses("ENTITY", level);

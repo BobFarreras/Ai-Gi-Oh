@@ -43,6 +43,6 @@ describe("card-level-rules", () => {
   it("capa XP al máximo de progresión", () => {
     const maxXp = getMaxTotalXpForCardLeveling();
     expect(clampCardTotalXp(maxXp + 999999)).toBe(maxXp);
-    expect(resolveCardLevelFromTotalXp(maxXp + 1)).toBe(30);
+    expect(resolveCardLevelFromTotalXp(maxXp + 1)).toBe(100);
   });
 });

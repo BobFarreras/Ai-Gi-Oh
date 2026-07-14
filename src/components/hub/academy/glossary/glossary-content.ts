@@ -64,8 +64,10 @@ export const CARD_TYPE_GUIDE: ICardTypeGuide[] = [
 // --- Textos de introducción de cada sección (prosa, no datos) ---
 
 export const XP_INTRO = [
-  "Cada vez que usas una Entity en combate, gana experiencia (XP). Al acumular suficiente, sube de nivel.",
-  "Subir de nivel refuerza permanentemente esa carta con bonificaciones fijas al alcanzar ciertos hitos. Cuanto más juegues con una carta, más fuerte se vuelve.",
+  "Cada vez que usas una Entity en combate, gana experiencia (XP). Al acumular suficiente, sube de nivel. El nivel máximo es 100.",
+  "Subir de nivel refuerza permanentemente esa carta: cada 5 niveles alcanzas un HITO que le suma ataque o defensa, siguiendo siempre el mismo ciclo (+50 ATK, +100 ATK, +50 DEF, +100 DEF). Al llegar al 100, una carta acumula +750 de ataque y +750 de defensa.",
+  "Dos hitos son especiales: en el nivel 50 la carta cuesta 1 de energía MENOS para siempre, y en el nivel 100 estrena una ilustración exclusiva.",
+  "Los niveles se ganan jugando, pero también existen los caramelos: objetos raros que regalan niveles de golpe.",
 ];
 
 export const VERSION_INTRO = [

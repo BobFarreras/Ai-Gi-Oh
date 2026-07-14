@@ -38,14 +38,32 @@ function createProgress(level: number): IPlayerCardProgress {
 }
 
 describe("apply-card-progression-to-card", () => {
-  it("aplica bonus ATK/DEF a ENTITY y reducción de coste en nivel 30", () => {
+  it("aplica los bonus de la curva a ENTITY y el descuento de energía en el nivel 50", () => {
+    // Hitos hasta el 20: +50 ATK (5), +100 ATK (10), +50 DEF (15), +100 DEF (20) ⇒ +150/+150.
     const atLevel20 = applyCardProgressionToCard(ENTITY_CARD, createProgress(20));
-    expect(atLevel20.attack).toBe(1300);
-    expect(atLevel20.defense).toBe(1200);
+    expect(atLevel20.attack).toBe(1150);
+    expect(atLevel20.defense).toBe(1050);
     expect(atLevel20.cost).toBe(4);
 
-    const atLevel30 = applyCardProgressionToCard(ENTITY_CARD, createProgress(30));
-    expect(atLevel30.cost).toBe(3);
+    // El descuento de energía ya no está en el 30: ahora se gana en el 50.
+    expect(applyCardProgressionToCard(ENTITY_CARD, createProgress(30)).cost).toBe(4);
+    expect(applyCardProgressionToCard(ENTITY_CARD, createProgress(50)).cost).toBe(3);
+  });
+
+  it("al nivel máximo suma exactamente +750 ATK y +750 DEF", () => {
+    const atLevel100 = applyCardProgressionToCard(ENTITY_CARD, createProgress(100));
+    expect(atLevel100.attack).toBe(1750);
+    expect(atLevel100.defense).toBe(1650);
+  });
+
+  it("estrena el arte de nivel máximo solo al llegar al 100, y cae al render normal si no hay imagen", () => {
+    const withArt: ICard = { ...ENTITY_CARD, renderUrl: "/normal.webp", maxLevelRenderUrl: "/nivel-100.webp" };
+    expect(applyCardProgressionToCard(withArt, createProgress(99)).renderUrl).toBe("/normal.webp");
+    expect(applyCardProgressionToCard(withArt, createProgress(100)).renderUrl).toBe("/nivel-100.webp");
+
+    // Carta sin arte alternativo todavía: al 100 sigue con el suyo (el sistema queda configurado sin imágenes).
+    const withoutArt: ICard = { ...ENTITY_CARD, renderUrl: "/normal.webp" };
+    expect(applyCardProgressionToCard(withoutArt, createProgress(100)).renderUrl).toBe("/normal.webp");
   });
 
   it("conserva la pasiva innata (y su etiqueta) desde V1 aunque la progresión no fije pasiva", () => {
@@ -55,13 +73,13 @@ describe("apply-card-progression-to-card", () => {
     expect(result.masteryPassiveLabel).toContain("Cortafuegos");
   });
 
-  it("en EXECUTION solo reduce coste al nivel 30", () => {
-    const atLevel20 = applyCardProgressionToCard(EXEC_CARD, createProgress(20));
-    expect(atLevel20.cost).toBe(2);
+  it("en EXECUTION solo reduce coste al nivel 50", () => {
     const atLevel30 = applyCardProgressionToCard(EXEC_CARD, createProgress(30));
-    expect(atLevel30.cost).toBe(1);
-    expect(atLevel30.attack).toBeUndefined();
-    expect(atLevel30.defense).toBeUndefined();
+    expect(atLevel30.cost).toBe(2);
+    const atLevel50 = applyCardProgressionToCard(EXEC_CARD, createProgress(50));
+    expect(atLevel50.cost).toBe(1);
+    expect(atLevel50.attack).toBeUndefined();
+    expect(atLevel50.defense).toBeUndefined();
   });
 });
 

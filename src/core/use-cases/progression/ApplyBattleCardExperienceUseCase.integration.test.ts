@@ -75,14 +75,15 @@ describe("ApplyBattleCardExperienceUseCase integration", () => {
 
     expect(results[0].oldLevel).toBe(4);
     expect(results[0].newLevel).toBe(5);
+    // Primer hito de la curva (nivel 5): +50 ATK y nada de defensa todavía.
     const cardForNextCombat = applyCardProgressionToCard(ENTITY_CARD, results[0].progress);
-    expect(cardForNextCombat.attack).toBe(1300);
-    expect(cardForNextCombat.defense).toBe(1100);
+    expect(cardForNextCombat.attack).toBe(1250);
+    expect(cardForNextCombat.defense).toBe(1100); // base intacta: el primer hito de defensa es el nivel 15
   });
 
-  it("en TRAP al nivel 30 no sube ATK/DEF y solo reduce coste", async () => {
+  it("en TRAP al nivel 50 no sube ATK/DEF y solo reduce coste", async () => {
     const repository = new InMemoryPlayerCardProgressRepository();
-    await repository.upsert({ playerId: "p2", cardId: "trap-firewall", level: 30, xp: 400000, versionTier: 0 });
+    await repository.upsert({ playerId: "p2", cardId: "trap-firewall", level: 50, xp: 400000, versionTier: 0 });
     const progress = await repository.getByPlayerAndCard("p2", "trap-firewall");
     const cardForNextCombat = applyCardProgressionToCard(TRAP_CARD, progress);
     expect(cardForNextCombat.cost).toBe(1);

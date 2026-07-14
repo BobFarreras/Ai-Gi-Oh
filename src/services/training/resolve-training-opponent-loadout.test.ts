@@ -105,9 +105,13 @@ describe("resolveTrainingOpponentLoadout", () => {
     const baseInput = { tier: 1, aiDifficulty: "EASY" as const, tierWins: 0, tierMatches: 0, opponents, cardCatalog };
     const atLevel10 = resolveTrainingOpponentLoadout({ ...baseInput, defaultScaling: { versionTier: 1, level: 10, xp: 980 } });
     const atLevel20 = resolveTrainingOpponentLoadout({ ...baseInput, defaultScaling: { versionTier: 2, level: 20, xp: 2800 } });
-    // ENTITY: nivel 10 → +100 ATK/DEF; nivel 20 → +300 (resolveCardLevelBonuses).
-    expect(atLevel10.deck[0]?.attack).toBe(1100);
-    expect(atLevel20.deck[0]?.attack).toBe(1300);
+    // El rival escala con las MISMAS reglas que el jugador (resolveCardLevelBonuses): nivel 10 → +150 ATK
+    // (hitos 5 y 10, ambos de ataque); nivel 20 → +150 ATK (los hitos 15 y 20 son de defensa).
+    expect(atLevel10.deck[0]?.attack).toBe(1150);
+    expect(atLevel20.deck[0]?.attack).toBe(1150);
+    // La defensa sí sube entre el 10 y el 20 (hitos 15 y 20): es el ciclo de la curva.
+    expect(atLevel10.deck[0]?.defense).toBe(1000);
+    expect(atLevel20.deck[0]?.defense).toBe(1150);
   });
 
   it("resuelve deck completo (20) y fusión para un rival del roster", () => {

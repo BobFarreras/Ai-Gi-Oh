@@ -14,6 +14,8 @@ export interface ICardCatalogRow {
   trigger: TrapTrigger | null;
   bg_url: string | null;
   render_url: string | null;
+  /** Arte alternativo al llegar al nivel máximo; null mientras no exista la imagen (cae al render normal). */
+  render_url_max_level: string | null;
   effect: unknown;
   fusion_recipe_id: string | null;
   fusion_material_ids: string[];
@@ -23,4 +25,4 @@ export interface ICardCatalogRow {
 }
 
 export const CARD_CATALOG_SELECT =
-  "id,name,description,type,faction,cost,attack,defense,archetype,trigger,bg_url,render_url,effect,fusion_recipe_id,fusion_material_ids,fusion_energy_requirement,innate_passive_skill_id";
+  "id,name,description,type,faction,cost,attack,defense,archetype,trigger,bg_url,render_url,render_url_max_level,effect,fusion_recipe_id,fusion_material_ids,fusion_energy_requirement,innate_passive_skill_id";
