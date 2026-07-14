@@ -8,12 +8,13 @@ import { applyArenaCardScaling, ITrainingCardScale, resolveDifficultyScale } fro
 import { buildArenaOpponentsFromPresets } from "@/services/training/internal/build-arena-opponents-from-presets";
 
 /**
- * Roster FIJO del ladder de Arena: los MISMOS 6 rivales en TODOS los niveles, en este orden.
+ * Roster FIJO del ladder de Arena: los MISMOS 8 rivales en TODOS los niveles, en este orden.
  * - Cada nivel los presenta más fuertes (la fuerza la aporta el escalado/dificultad del tier).
  * - Se enfrentan EN ORDEN por victorias del nivel: ganas al Nº k para desbloquear al Nº k+1.
- *   6 victorias completan el nivel (ver `requiredWinsInPreviousTier` del catálogo de tiers).
- * Orden (decisión de producto): GenNvim → Helena → Jaku → Mouretech → Soldado → Guill.
- * BigLog (`training-tier-4`) queda fuera del ladder; Mouretech ocupa su puesto.
+ *   8 victorias completan el nivel (ver `requiredWinsInPreviousTier` del catálogo de tiers).
+ * Orden (decisión de producto): GenNvim → Helena → Jaku → Mouretech → Soldado → Guill → Soldado-Laptop → Gokernel.
+ * BigLog (`training-tier-4`) queda fuera del ladder; Mouretech ocupa su puesto. Soldado-Laptop y
+ * Gokernel (rivales del Acto 3) cierran el ladder; Gokernel es el combate final de cada nivel.
  */
 export const ARENA_LADDER_ROSTER: readonly string[] = [
   "training-tier-1", // GenNvim
@@ -22,6 +23,8 @@ export const ARENA_LADDER_ROSTER: readonly string[] = [
   "training-mouretech", // Mouretech (en el puesto de BigLog)
   "training-tier-5", // Soldado
   "training-tier-6", // Guill
+  "training-soldado-laptop", // Soldado-Laptop
+  "training-gokernel", // Gokernel (combate final)
 ];
 
 interface IResolveTrainingOpponentLoadoutInput {
@@ -65,7 +68,7 @@ export interface IArenaLadderEntry {
 }
 
 /**
- * Devuelve los 6 rivales del ladder EN ORDEN con su identidad visual, para pintar el progreso del
+ * Devuelve los 8 rivales del ladder EN ORDEN con su identidad visual, para pintar el progreso del
  * nivel en el lobby (ganados / siguiente / pendientes). Usa el catálogo de BD si se provee.
  */
 export function resolveArenaLadderRoster(opponents?: Record<string, IArenaOpponent>): IArenaLadderEntry[] {
@@ -98,7 +101,7 @@ function toVariantLabel(variant: IArenaDeckVariant): string {
 }
 
 /**
- * Resuelve el rival de arena del combate actual: roster FIJO de 6 (igual en todos los niveles),
+ * Resuelve el rival de arena del combate actual: roster FIJO de 8 (igual en todos los niveles),
  * enfrentado EN ORDEN por victorias del nivel, con la fuerza (escalado + dificultad) FIJA del tier.
  * Acepta opcionalmente el catálogo de BD; sin él usa los presets en código (mismo comportamiento).
  */

@@ -191,4 +191,52 @@ export const TRAINING_OPPONENT_DECK_POOLS: Record<string, ITrainingOpponentDeckV
       fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
     },
   ],
+  "training-soldado-laptop": [
+    {
+      id: "sentinel-firewall",
+      deckCardIds: toDeck([
+        "entity-chatgpt", "entity-gemini", "entity-claude", "entity-kali-linux", "entity-deepseek",
+        "entity-python", "entity-postgress", "entity-nextjs", "entity-react", "entity-openclaw",
+        "exec-fusion-gemgpt", "exec-fusion-kaclauli", "exec-fusion-pytgress", "exec-direct-damage-900",
+        "exec-llm-def-300", "trap-firewall-counter-magic", "trap-flutter-reflect", "trap-kernel-panic",
+        "trap-runtime-punish", "trap-counter-intrusion",
+      ]),
+      fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
+    },
+    {
+      id: "sentinel-swarm",
+      deckCardIds: toDeck([
+        "entity-chatgpt", "entity-gemini", "entity-claude", "entity-kali-linux", "entity-deepseek",
+        "entity-python", "entity-postgress", "entity-nextjs", "entity-react", "entity-vercel",
+        "exec-fusion-gemgpt", "exec-fusion-kaclauli", "exec-fusion-pytgress", "exec-boost-atk-400",
+        "exec-direct-damage-900", "trap-firewall-counter-magic", "trap-flutter-reflect", "trap-kernel-panic",
+        "trap-atk-drain", "trap-runtime-punish",
+      ]),
+      fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
+    },
+  ],
+  "training-gokernel": [
+    {
+      id: "gokernel-overdrive",
+      deckCardIds: toDeck([
+        "entity-chatgpt", "entity-gemini", "entity-claude", "entity-kali-linux", "entity-deepseek",
+        "entity-python", "entity-postgress", "entity-nextjs", "entity-react", "entity-openclaw",
+        "exec-fusion-gemgpt", "exec-fusion-kaclauli", "exec-fusion-pytgress", "exec-boost-atk-400",
+        "exec-direct-damage-900", "exec-direct-damage-600", "trap-kernel-panic", "trap-runtime-punish",
+        "trap-counter-intrusion", "trap-atk-drain",
+      ]),
+      fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
+    },
+    {
+      id: "gokernel-ultra",
+      deckCardIds: toDeck([
+        "entity-chatgpt", "entity-gemini", "entity-claude", "entity-kali-linux", "entity-deepseek",
+        "entity-python", "entity-postgress", "entity-nextjs", "entity-react", "entity-vercel",
+        "exec-fusion-gemgpt", "exec-fusion-kaclauli", "exec-fusion-pytgress", "exec-boost-atk-400",
+        "exec-llm-def-300", "exec-direct-damage-900", "trap-firewall-counter-magic", "trap-kernel-panic",
+        "trap-runtime-punish", "trap-atk-drain",
+      ]),
+      fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
+    },
+  ],
 };

@@ -3,17 +3,24 @@ import { ValidationError } from "@/core/errors/ValidationError";
 import { ITrainingProgress } from "@/core/entities/training/ITrainingProgress";
 import { ITrainingTierDefinition } from "@/core/entities/training/ITrainingTierDefinition";
 
-// Cada nivel = 6 combates contra el MISMO roster fijo (ver ARENA_LADDER_ROSTER), en orden y por
-// victorias; se avanza al ganar los 6 (requiredWinsInPreviousTier = 6). El tier ya NO elige rival:
+// Cada nivel = 8 combates contra el MISMO roster fijo (ver ARENA_LADDER_ROSTER), en orden y por
+// victorias; se avanza al ganar los 8 (requiredWinsInPreviousTier = 8). El tier ya NO elige rival:
 // solo aporta la FUERZA del nivel (dificultad + escalado version/level/xp) y la recompensa. El
 // `deckTemplateId` queda como valor informativo/compatibilidad (el roster es global).
+// requiredWinsInPreviousTier = 8 en los niveles 2..8 porque el roster fijo del ladder tiene 8 rivales
+// (ver ARENA_LADDER_ROSTER): completar un nivel = ganar sus 8 combates. Subir el requisito no re-bloquea
+// a quien ya había desbloqueado un nivel (suelo monótono en resolveTrainingTierAccess).
+// Los niveles 7 (ZENITH) y 8 (SINGULARITY) son de prestigio: MYTHIC ya está en el techo de escalado
+// (versión 5 / nivel 30), así que aportan MÁS RECOMPENSA sobre ese máximo, no más stats de carta.
 const DEFAULT_TRAINING_TIERS: ITrainingTierDefinition[] = [
   { tier: 1, code: "BOOT", requiredWinsInPreviousTier: 0, aiDifficulty: "EASY", deckTemplateId: "training-tier-1", rewardMultiplier: 1 },
-  { tier: 2, code: "SPARK", requiredWinsInPreviousTier: 6, aiDifficulty: "NORMAL", deckTemplateId: "training-tier-2", rewardMultiplier: 1.2, defaultVersionTier: 1, defaultLevel: 10, defaultXp: 980 },
-  { tier: 3, code: "CORE", requiredWinsInPreviousTier: 6, aiDifficulty: "HARD", deckTemplateId: "training-tier-3", rewardMultiplier: 1.4, defaultVersionTier: 3, defaultLevel: 10, defaultXp: 980 },
-  { tier: 4, code: "ASCENT", requiredWinsInPreviousTier: 6, aiDifficulty: "BOSS", deckTemplateId: "training-tier-4", rewardMultiplier: 1.7, defaultVersionTier: 3, defaultLevel: 20, defaultXp: 2800 },
-  { tier: 5, code: "NEXUS", requiredWinsInPreviousTier: 6, aiDifficulty: "MASTER", deckTemplateId: "training-tier-5", rewardMultiplier: 2.1, defaultVersionTier: 3, defaultLevel: 30, defaultXp: 5600 },
-  { tier: 6, code: "APEX", requiredWinsInPreviousTier: 6, aiDifficulty: "MYTHIC", deckTemplateId: "training-tier-6", rewardMultiplier: 2.5, defaultVersionTier: 5, defaultLevel: 30, defaultXp: 9800 },
+  { tier: 2, code: "SPARK", requiredWinsInPreviousTier: 8, aiDifficulty: "NORMAL", deckTemplateId: "training-tier-2", rewardMultiplier: 1.2, defaultVersionTier: 1, defaultLevel: 10, defaultXp: 980 },
+  { tier: 3, code: "CORE", requiredWinsInPreviousTier: 8, aiDifficulty: "HARD", deckTemplateId: "training-tier-3", rewardMultiplier: 1.4, defaultVersionTier: 3, defaultLevel: 10, defaultXp: 980 },
+  { tier: 4, code: "ASCENT", requiredWinsInPreviousTier: 8, aiDifficulty: "BOSS", deckTemplateId: "training-tier-4", rewardMultiplier: 1.7, defaultVersionTier: 3, defaultLevel: 20, defaultXp: 2800 },
+  { tier: 5, code: "NEXUS", requiredWinsInPreviousTier: 8, aiDifficulty: "MASTER", deckTemplateId: "training-tier-5", rewardMultiplier: 2.1, defaultVersionTier: 3, defaultLevel: 30, defaultXp: 5600 },
+  { tier: 6, code: "APEX", requiredWinsInPreviousTier: 8, aiDifficulty: "MYTHIC", deckTemplateId: "training-tier-6", rewardMultiplier: 2.5, defaultVersionTier: 5, defaultLevel: 30, defaultXp: 9800 },
+  { tier: 7, code: "ZENITH", requiredWinsInPreviousTier: 8, aiDifficulty: "MYTHIC", deckTemplateId: "training-soldado-laptop", rewardMultiplier: 2.9, defaultVersionTier: 5, defaultLevel: 30, defaultXp: 9800 },
+  { tier: 8, code: "SINGULARITY", requiredWinsInPreviousTier: 8, aiDifficulty: "MYTHIC", deckTemplateId: "training-gokernel", rewardMultiplier: 3.3, defaultVersionTier: 5, defaultLevel: 30, defaultXp: 9800 },
 ];
 
 interface IResolveTrainingTierCatalogInput {

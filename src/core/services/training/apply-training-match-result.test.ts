@@ -17,7 +17,7 @@ function apply(outcome: IMatchOutcome) {
 describe("applyTrainingMatchResult", () => {
   it("suma victoria y desbloquea tier 2 cuando cumple requisito", () => {
     const base = createInitialTrainingProgress("player-z");
-    const preloaded = { ...base, tierStats: [{ tier: 1, wins: 5, matches: 5 }], totalWins: 5, totalMatches: 5 };
+    const preloaded = { ...base, tierStats: [{ tier: 1, wins: 7, matches: 7 }], totalWins: 7, totalMatches: 7 };
     const result = applyTrainingMatchResult({
       catalog: resolveTrainingTierCatalog(),
       progress: preloaded,
@@ -26,8 +26,8 @@ describe("applyTrainingMatchResult", () => {
       updatedAtIso: "2026-03-17T10:00:00.000Z",
     });
 
-    expect(result.nextProgress.totalWins).toBe(6);
-    expect(result.nextProgress.totalMatches).toBe(6);
+    expect(result.nextProgress.totalWins).toBe(8);
+    expect(result.nextProgress.totalMatches).toBe(8);
     expect(result.nextProgress.highestUnlockedTier).toBe(2);
     expect(result.newlyUnlockedTiers).toEqual([2]);
   });
