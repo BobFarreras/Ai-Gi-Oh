@@ -155,5 +155,8 @@ describe("Trap triggers on execution", () => {
     const tool = next.playerA.activeEntities.find((entity) => entity.instanceId === "p1-tool");
     expect(tool?.card.defense).toBe(400);
     expect(next.playerB.graveyard.some((card) => card.id === "trap-openclaw-nullify-buff")).toBe(true);
+    // El ÚLTIMO STAT_BUFF_APPLIED debe ser el debuff (negativo), para que el VFX muestre -valor y no +valor.
+    const buffEvents = next.combatLog.filter((event) => event.eventType === "STAT_BUFF_APPLIED");
+    expect((buffEvents.at(-1)?.payload as Record<string, unknown>).amount).toBe(-400);
   });
 });

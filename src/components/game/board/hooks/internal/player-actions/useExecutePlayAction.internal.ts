@@ -3,6 +3,7 @@ import { BattleMode } from "@/core/entities/IPlayer";
 import { GameState, GameEngine } from "@/core/use-cases/GameEngine";
 import { LocalActionEmitter } from "@/components/game/board/multiplayer/local-action-emitter";
 import { sleep } from "../sleep";
+import { executionEffectAppliesBuff } from "@/core/services/effects/execution-buff-detection";
 import { addRevealedId, findReactiveTrap, removeRevealedId } from "../trapPreview";
 import { PLAYER_POST_RESOLUTION_MS, PLAYER_TRAP_PREVIEW_MS } from "./constants";
 import { IUsePlayerActionsParams, RequestTrapActivationDecision } from "./types";
@@ -84,11 +85,13 @@ export async function executeActivationPlay(input: IExecuteActivationInput): Pro
 
   input.clearSelection();
   await sleep(1500);
-  // Una ejecución dispara ON_OPPONENT_EXECUTION_ACTIVATED y, si aplica un buff, ON_OPPONENT_STAT_BUFF_APPLIED.
-  // Detectamos ambos para poder decidir el contra-trampa frente a cualquier trampa rival que reaccione.
+  // Una ejecución dispara ON_OPPONENT_EXECUTION_ACTIVATED y, SOLO si aplica un buff, ON_OPPONENT_STAT_BUFF_APPLIED.
+  // La de buff (OpenClaw) solo se considera si la magia jugada realmente buffea; si no, no debe revelarse.
+  const playedExecution = playedState.playerA.activeExecutions.find((entity) => entity.instanceId === executionId);
+  const appliesBuff = executionEffectAppliesBuff(playedExecution?.card.effect);
   const reactiveTrap =
     findReactiveTrap(input.gameState, input.gameState.playerB.id, "ON_OPPONENT_EXECUTION_ACTIVATED") ??
-    findReactiveTrap(input.gameState, input.gameState.playerB.id, "ON_OPPONENT_STAT_BUFF_APPLIED");
+    (appliesBuff ? findReactiveTrap(input.gameState, input.gameState.playerB.id, "ON_OPPONENT_STAT_BUFF_APPLIED") : null);
   const playerCounterTrap = reactiveTrap
     ? findReactiveTrap(input.gameState, input.gameState.playerA.id, "ON_OPPONENT_TRAP_ACTIVATED")
     : null;
