@@ -5,7 +5,8 @@ import { RandomSource, createSeededRandom } from "@/core/services/random/seeded-
 export interface IGameEngineIdFactory {
   createEntityInstanceId: (cardId: string) => string;
   createFusionInstanceId: (cardId: string) => string;
-  createRevivedInstanceId: (cardId: string, slotIndex: number) => string;
+  /** `cardKey` es el runtimeId de la carta (único por copia física), no su cardId de catálogo. */
+  createRevivedInstanceId: (cardKey: string, slotIndex: number) => string;
   createCombatLogEventId: (eventType: CombatLogEventType) => string;
   createTimestampIso: () => string;
 }
@@ -28,7 +29,7 @@ export function createGameEngineIdFactory(
   return {
     createEntityInstanceId: (cardId: string) => `${cardId}-${nowSource()}-${createRandomSuffix(randomSource, 9)}`,
     createFusionInstanceId: (cardId: string) => `${cardId}-${nowSource()}-${createRandomSuffix(randomSource, 9)}`,
-    createRevivedInstanceId: (cardId: string, slotIndex: number) => `revived-${cardId}-${nowSource()}-${slotIndex}`,
+    createRevivedInstanceId: (cardKey: string, slotIndex: number) => `revived-${cardKey}-${nowSource()}-${slotIndex}`,
     createCombatLogEventId: (eventType: CombatLogEventType) => `${eventType}-${nowSource()}-${createRandomSuffix(randomSource, 8)}`,
     createTimestampIso: () => dateSource().toISOString(),
   };
@@ -45,21 +46,26 @@ export const defaultGameEngineIdFactory = createGameEngineIdFactory();
  */
 export function createSeededGameEngineIdFactory(seed: string): IGameEngineIdFactory {
   const randomSource = createSeededRandom(`${seed}:idfactory`);
-  let counter = 0;
-  const nextSuffix = () => {
-    counter += 1;
-    return `${counter}-${createRandomSuffix(randomSource, 6)}`;
+  // Contador EXCLUSIVO del combat log. No lo comparte ningún id de juego: los eventos de log
+  // se generan también fuera del motor (telemetría de turno, EXP al cerrar el duelo) y esos
+  // eventos son locales de un cliente, así que el contador diverge entre clientes. Mientras
+  // solo alimente ids de log (claves de React) esa divergencia es inofensiva.
+  let logCounter = 0;
+  const nextLogSuffix = () => {
+    logCounter += 1;
+    return `${logCounter}-${createRandomSuffix(randomSource, 6)}`;
   };
   return {
-    // El instanceId de entidad se deriva SOLO de la clave (runtimeId único de la
-    // carta), sin contador: así coincide en ambos clientes aunque el consumo del
-    // idFactory para logs/otros ids se desincronice. Es lo que hace que los ataques
-    // (que referencian instanceId) resuelvan en el lado rival.
+    // Todos los ids de instancia (que las acciones de red referencian) se derivan SOLO de datos
+    // del estado —el runtimeId único de la carta, deterministas por seed y propietario—, nunca de
+    // un contador de la fábrica. Así coinciden en ambos clientes pase lo que pase con los logs.
     createEntityInstanceId: (cardKey: string) => `mp-ent-${cardKey}`,
     // cardKey incluye los materiales (deterministas) ⇒ único; sin contador.
     createFusionInstanceId: (cardKey: string) => `mp-fus-${cardKey}`,
-    createRevivedInstanceId: (cardId: string, slotIndex: number) => `mp-rev-${cardId}-${slotIndex}-${nextSuffix()}`,
-    createCombatLogEventId: (eventType) => `mp-log-${eventType}-${nextSuffix()}`,
-    createTimestampIso: () => new Date(counter * 1000).toISOString(),
+    // cardKey es el runtimeId: una copia física de una carta solo existe en un sitio a la vez,
+    // así que el id es único entre las instancias vivas aunque se reviva la misma carta dos veces.
+    createRevivedInstanceId: (cardKey: string, slotIndex: number) => `mp-rev-${cardKey}-${slotIndex}`,
+    createCombatLogEventId: (eventType) => `mp-log-${eventType}-${nextLogSuffix()}`,
+    createTimestampIso: () => new Date(logCounter * 1000).toISOString(),
   };
 }

@@ -17,14 +17,18 @@ function resolveSelectedGraveyardCard(graveyard: readonly ICard[], selectedCardR
   return [targetCard, targetIndex];
 }
 
+/**
+ * El id de la instancia revivida se deriva del runtimeId de la carta (único por copia física y
+ * determinista en ambos clientes), NO del cardId de catálogo: dos copias de la misma carta deben
+ * revivir con ids distintos, y el id debe salir idéntico en los dos clientes de una partida multi.
+ */
 function createRevivedEntity(
-  cardId: string,
-  cardType: CardType,
+  card: ICard,
   cardIndex: number,
   idFactory: IGameEngineIdFactory,
 ): { instanceId: string; mode: BattleMode } {
-  const mode: BattleMode = cardType === "ENTITY" ? "ATTACK" : "SET";
-  return { instanceId: idFactory.createRevivedInstanceId(cardId, cardIndex), mode };
+  const mode: BattleMode = card.type === "ENTITY" ? "ATTACK" : "SET";
+  return { instanceId: idFactory.createRevivedInstanceId(card.runtimeId ?? card.id, cardIndex), mode };
 }
 
 export function applyReturnGraveyardCardToHand(
@@ -76,7 +80,7 @@ export function applyReturnGraveyardCardToField(
         payload: { cardId: destroyedEntity.card.id, ownerPlayerId: player.id, from: "BATTLEFIELD" },
       });
     }
-    const revived = createRevivedEntity(targetCard.id, targetCard.type, nextEntities.length, idFactory);
+    const revived = createRevivedEntity(targetCard, nextEntities.length, idFactory);
     nextEntities = [...nextEntities, { instanceId: revived.instanceId, card: targetCard, mode: revived.mode, hasAttackedThisTurn: false, isNewlySummoned: true }];
   } else {
     if (nextExecutions.length >= 3) {
@@ -88,7 +92,7 @@ export function applyReturnGraveyardCardToField(
         payload: { cardId: destroyedExecution.card.id, ownerPlayerId: player.id, from: "EXECUTION_ZONE" },
       });
     }
-    const revived = createRevivedEntity(targetCard.id, targetCard.type, nextExecutions.length, idFactory);
+    const revived = createRevivedEntity(targetCard, nextExecutions.length, idFactory);
     nextExecutions = [...nextExecutions, { instanceId: revived.instanceId, card: targetCard, mode: revived.mode, hasAttackedThisTurn: false, isNewlySummoned: true }];
   }
   return {
