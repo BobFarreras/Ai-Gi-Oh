@@ -8,7 +8,8 @@ const PRE_TOUR_UNLOCKED_TYPES: ReadonlySet<HubSectionType> = new Set(["TRAINING"
 /** Durante el tour guiado, Market/Arsenal/Story también son accesibles (el tour gestiona qué nodo está activo). */
 const HUB_TOUR_UNLOCKED_TYPES: ReadonlySet<HubSectionType> = new Set(["TRAINING", "MARKET", "HOME", "STORY"]);
 
-function isTutorialGateActive(progress: IPlayerHubProgress): boolean {
+/** El gate del tutorial está activo mientras el jugador no lo ha completado ni saltado. */
+export function isTutorialGateActive(progress: IPlayerHubProgress): boolean {
   return !progress.hasCompletedTutorial && !progress.hasSkippedTutorial;
 }
 
@@ -17,9 +18,15 @@ function isHubTourActive(progress: IPlayerHubProgress): boolean {
   return Boolean(progress.hasSeenAcademyIntro) && isTutorialGateActive(progress);
 }
 
-function resolveTutorialGateLock(section: IHubSection, progress: IPlayerHubProgress): IHubSection {
+/** Regla central de acceso por tipo de sección según el progreso (única fuente de verdad). */
+export function isHubSectionTypeUnlocked(type: HubSectionType, progress: IPlayerHubProgress): boolean {
+  if (!isTutorialGateActive(progress)) return true;
   const unlockedTypes = isHubTourActive(progress) ? HUB_TOUR_UNLOCKED_TYPES : PRE_TOUR_UNLOCKED_TYPES;
-  if (unlockedTypes.has(section.type)) {
+  return unlockedTypes.has(type);
+}
+
+function resolveTutorialGateLock(section: IHubSection, progress: IPlayerHubProgress): IHubSection {
+  if (isHubSectionTypeUnlocked(section.type, progress)) {
     return { ...section, isLocked: false, lockReason: null };
   }
   return {

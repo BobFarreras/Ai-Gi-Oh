@@ -113,6 +113,94 @@ export const trapDrainDirectAttackerEnergy: ICard = {
   effect: { action: "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN" },
 };
 
+export const trapWindowsInfect: ICard = {
+  id: "trap-windows-flag-infect",
+  name: "Bandera de Windows Retro",
+  description: "",
+  type: "TRAP",
+  faction: "BIG_TECH",
+  cost: 2,
+  trigger: "ON_OPPONENT_TRAP_ACTIVATED",
+  effect: { action: "APPLY_DAMAGE_OVER_TIME", value: 300 },
+};
+
+export const trapHuggingHeal: ICard = {
+  id: "trap-hugging-heal",
+  name: "Abrazo de Hugging Face",
+  description: "",
+  type: "TRAP",
+  faction: "OPEN_SOURCE",
+  cost: 2,
+  trigger: "ON_OPPONENT_TRAP_ACTIVATED",
+  effect: { action: "APPLY_HEAL_OVER_TIME", value: 300 },
+};
+
+export const trapFlutterReflect: ICard = {
+  id: "trap-flutter-reflect",
+  name: "Flutter Enjambre",
+  description: "",
+  type: "TRAP",
+  faction: "OPEN_SOURCE",
+  cost: 3,
+  trigger: "ON_OPPONENT_DIRECT_ATTACK_DECLARED",
+  effect: { action: "REFLECT_DIRECT_DAMAGE" },
+};
+
+export const trapMetasploitNegate: ICard = {
+  id: "trap-escudo-metasploit",
+  name: "Escudo Metasploit",
+  description: "",
+  type: "TRAP",
+  faction: "OPEN_SOURCE",
+  cost: 2,
+  trigger: "ON_OPPONENT_ATTACK_DECLARED",
+  effect: { action: "NEGATE_ATTACK" },
+};
+
+export const trapOpenClawNullify: ICard = {
+  id: "trap-openclaw-nullify-buff",
+  name: "OpenClaw Bug Trap",
+  description: "",
+  type: "TRAP",
+  faction: "OPEN_SOURCE",
+  cost: 2,
+  trigger: "ON_OPPONENT_STAT_BUFF_APPLIED",
+  effect: { action: "NULLIFY_OPPONENT_BUFF" },
+};
+
+export const trapFirewallCounterMagic: ICard = {
+  id: "trap-firewall-counter-magic",
+  name: "Escudo Firewall",
+  description: "",
+  type: "TRAP",
+  faction: "OPEN_SOURCE",
+  cost: 3,
+  trigger: "ON_OPPONENT_EXECUTION_ACTIVATED",
+  effect: { action: "NEGATE_OPPONENT_EXECUTION_AND_DESTROY" },
+};
+
+export const typescriptEntity: ICard = {
+  id: "entity-typescript",
+  name: "TypeScript",
+  description: "",
+  type: "ENTITY",
+  faction: "OPEN_SOURCE",
+  cost: 4,
+  attack: 1200,
+  defense: 1000,
+};
+
+export const trapTypescriptShield: ICard = {
+  id: "trap-typescript-shield",
+  name: "Escudo de Tipos TypeScript",
+  description: "",
+  type: "TRAP",
+  faction: "OPEN_SOURCE",
+  cost: 2,
+  trigger: "ON_OPPONENT_ATTACK_DECLARED",
+  effect: { action: "REINFORCE_LINKED_ENTITY_ON_ATTACK", linkedCardId: "entity-typescript", value: 1000 },
+};
+
 export function createTrapEntity(instanceId: string, card: ICard): IBoardEntity {
   return { instanceId, card, mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false };
 }

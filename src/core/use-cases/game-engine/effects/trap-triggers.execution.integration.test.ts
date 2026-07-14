@@ -7,7 +7,9 @@ import {
   createTrapEntity,
   executionCard,
   trapCopyOpponentBuff,
+  trapFirewallCounterMagic,
   trapOnExecution,
+  trapOpenClawNullify,
   trapReduceDefenseOnExecution,
 } from "@/core/use-cases/game-engine/effects/trap-triggers.test-fixtures";
 
@@ -106,5 +108,55 @@ describe("Trap triggers on execution", () => {
     const next = GameEngine.resolveExecution(state, "p1", executionId);
     const copiedBuffEntity = next.playerB.activeEntities.find((entity) => entity.instanceId === "p2-entity");
     expect(copiedBuffEntity?.card.defense).toBe(900);
+  });
+
+  it("Escudo Firewall anula y destruye la magia del rival antes de que se resuelva", () => {
+    const base = createTrapBaseState();
+    let state: GameState = {
+      ...base,
+      phase: "MAIN_1",
+      playerA: { ...base.playerA, hand: [executionCard] }, // DAMAGE OPPONENT 600
+      playerB: { ...base.playerB, activeExecutions: [createTrapEntity("t-fw", trapFirewallCounterMagic)] },
+    };
+    state = GameEngine.playCard(state, "p1", "exec-card", "ACTIVATE");
+    const executionId = state.playerA.activeExecutions[0].instanceId;
+    const next = GameEngine.resolveExecution(state, "p1", executionId);
+    // El daño se anula (p2 intacto); la magia va a destruidos de p1 y el Firewall al cementerio de p2.
+    expect(next.playerB.healthPoints).toBe(8000);
+    expect(next.playerA.activeExecutions).toHaveLength(0);
+    expect((next.playerA.destroyedPile ?? []).some((card) => card.id === "exec-card")).toBe(true);
+    expect(next.playerB.graveyard.some((card) => card.id === "trap-firewall-counter-magic")).toBe(true);
+    expect(next.negatedExecutionInstanceId).toBeUndefined();
+  });
+
+  it("OpenClaw anula el buff que el rival aplica a sus entities (resta el mismo valor)", () => {
+    const base = createTrapBaseState();
+    const buffExecution = {
+      id: "exec-buff-def-openclaw", name: "Buff Defense", description: "", type: "EXECUTION" as const,
+      faction: "OPEN_SOURCE" as const, cost: 1, effect: { action: "BOOST_DEFENSE_BY_ARCHETYPE" as const, archetype: "TOOL" as const, value: 200 },
+    };
+    let state: GameState = {
+      ...base,
+      phase: "MAIN_1",
+      playerA: {
+        ...base.playerA,
+        hand: [buffExecution],
+        activeEntities: [createTestBoardEntity("p1-tool", { ...executionCard, id: "entity-tool-a", type: "ENTITY", attack: 900, defense: 600, archetype: "TOOL" }, "ATTACK")],
+      },
+      playerB: {
+        ...base.playerB,
+        activeExecutions: [createTrapEntity("t-openclaw", trapOpenClawNullify)],
+      },
+    };
+    state = GameEngine.playCard(state, "p1", "exec-buff-def-openclaw", "ACTIVATE");
+    const executionId = state.playerA.activeExecutions[0].instanceId;
+    const next = GameEngine.resolveExecution(state, "p1", executionId);
+    // El buff +200 se aplica (600->800) y OpenClaw penaliza (-2*200): DEF neta 400, por debajo de la base 600.
+    const tool = next.playerA.activeEntities.find((entity) => entity.instanceId === "p1-tool");
+    expect(tool?.card.defense).toBe(400);
+    expect(next.playerB.graveyard.some((card) => card.id === "trap-openclaw-nullify-buff")).toBe(true);
+    // El ÚLTIMO STAT_BUFF_APPLIED debe ser el debuff (negativo), para que el VFX muestre -valor y no +valor.
+    const buffEvents = next.combatLog.filter((event) => event.eventType === "STAT_BUFF_APPLIED");
+    expect((buffEvents.at(-1)?.payload as Record<string, unknown>).amount).toBe(-400);
   });
 });

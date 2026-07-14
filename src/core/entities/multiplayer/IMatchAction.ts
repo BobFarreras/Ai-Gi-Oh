@@ -59,10 +59,15 @@ export interface IStartFusionSummonPayload {
 export interface IAttackPayload {
   attackerInstanceId: string;
   defenderInstanceId?: string;
+  /** El atacante decidió NO activar su contra-trampa (Nullify). Viaja con la acción para que el
+   * replay del rival sea determinista y no auto-active lo que el jugador rechazó. */
+  declineCounterTrap?: boolean;
 }
 
 export interface IResolveExecutionPayload {
   instanceId: string;
+  /** El jugador decidió NO activar su contra-trampa (Nullify) al resolver la ejecución. */
+  declineCounterTrap?: boolean;
 }
 
 export interface IChangeEntityModePayload {

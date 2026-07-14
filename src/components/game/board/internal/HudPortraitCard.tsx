@@ -7,6 +7,7 @@ import Image from "next/image";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { cn } from "@/lib/utils";
 import { useAnimatedHudValue } from "@/components/game/board/hooks/internal/useAnimatedHudValue";
+import { HudStatusBadges } from "@/components/game/board/internal/HudStatusBadges";
 
 interface HudPortraitCardProps {
   isOpponent: boolean;
@@ -16,9 +17,17 @@ interface HudPortraitCardProps {
   avatarObjectPosition?: string;
   badgeText?: string;
   showEnergy?: boolean;
+  /** Turnos restantes de escudo "sin ataques directos" que protege a este jugador (null = sin escudo). */
+  shieldTurns?: number | null;
+  /** Daño por turno de "infección" (Bandera Windows); null = no infectado. */
+  infectionAmount?: number | null;
+  /** Curación por turno de "regeneración" (Abrazo Hugging); null = sin regeneración. */
+  regenAmount?: number | null;
+  /** Muestra los badges de estado junto a la energía (false en el HUD móvil del jugador: van al dock de energía). */
+  showStatusBadges?: boolean;
 }
 
-export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, avatarObjectPosition, badgeText, showEnergy = true }: HudPortraitCardProps) {
+export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, avatarObjectPosition, badgeText, showEnergy = true, shieldTurns = null, infectionAmount = null, regenAmount = null, showStatusBadges = true }: HudPortraitCardProps) {
   // Animamos LP para que el impacto visual no sea instantáneo.
   const displayedHealthPoints = useAnimatedHudValue(player.healthPoints, 980, 220);
   const healthRatio = Math.max(0, Math.min(1, displayedHealthPoints / Math.max(1, player.maxHealthPoints)));
@@ -68,15 +77,20 @@ export function HudPortraitCard({ isOpponent, player, isActiveTurn, avatarUrl, a
             />
           </div>
         </div>
-        {showEnergy ? (
-          <div
-            className={cn(
-              "mt-2 md:mt-3 flex items-center bg-zinc-950/80 border border-yellow-500/30 py-0.5 md:py-1",
-              isOpponent ? "pl-3.5 pr-2.5 md:pl-4 md:pr-3 [clip-path:polygon(10%_0,100%_0,100%_100%,0_100%)]" : "px-2.5 md:px-3 [clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]",
-            )}
-          >
-            <Zap className="w-3.5 h-3.5 md:w-4 md:h-4 text-yellow-400 mr-1.5 md:mr-2 drop-shadow-[0_0_5px_rgba(234,179,8,0.8)]" />
-            <span className="font-black text-yellow-400 text-[clamp(0.88rem,1.5vw,1.1rem)] italic drop-shadow-md">{player.currentEnergy} <span className="text-[10px] md:text-xs text-yellow-600/80 uppercase">/ {player.maxEnergy}</span></span>
+        {showEnergy || (showStatusBadges && (shieldTurns != null || infectionAmount != null || regenAmount != null)) ? (
+          <div className={cn("mt-2 md:mt-3 flex items-center gap-1.5", isOpponent ? "flex-row" : "flex-row-reverse")}>
+            {showEnergy ? (
+              <div
+                className={cn(
+                  "flex items-center bg-zinc-950/80 border border-yellow-500/30 py-0.5 md:py-1",
+                  isOpponent ? "pl-3.5 pr-2.5 md:pl-4 md:pr-3 [clip-path:polygon(10%_0,100%_0,100%_100%,0_100%)]" : "px-2.5 md:px-3 [clip-path:polygon(0_0,100%_0,90%_100%,0_100%)]",
+                )}
+              >
+                <Zap className="w-3.5 h-3.5 md:w-4 md:h-4 text-yellow-400 mr-1.5 md:mr-2 drop-shadow-[0_0_5px_rgba(234,179,8,0.8)]" />
+                <span className="font-black text-yellow-400 text-[clamp(0.88rem,1.5vw,1.1rem)] italic drop-shadow-md">{player.currentEnergy} <span className="text-[10px] md:text-xs text-yellow-600/80 uppercase">/ {player.maxEnergy}</span></span>
+              </div>
+            ) : null}
+            {showStatusBadges ? <HudStatusBadges shieldTurns={shieldTurns} infectionAmount={infectionAmount} regenAmount={regenAmount} /> : null}
           </div>
         ) : null}
       </div>

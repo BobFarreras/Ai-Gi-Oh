@@ -46,10 +46,12 @@ function scoreBattle(attacker: IBoardEntity, defender: IBoardEntity, targetPlaye
   return { attacker, defender, score, isLethal: lethalChance > 0, isHighValueClear, isLosingTrade, defenderDestroyed: result.defenderDestroyed, attackerDestroyed: result.attackerDestroyed, damageToAttackerPlayer: result.damageToAttackerPlayer };
 }
 
-export function buildAttackOptions(opponent: IPlayer, target: IPlayer, profile: IOpponentDifficultyProfile): IAttackOption[] {
+export function buildAttackOptions(opponent: IPlayer, target: IPlayer, profile: IOpponentDifficultyProfile, isDirectAttackBlocked = false): IAttackOption[] {
   const attackers = opponent.activeEntities.filter((entity) => entity.mode === "ATTACK" && !entity.hasAttackedThisTurn && !entity.isNewlySummoned && (entity.lockedTurnsRemaining ?? 0) === 0);
   if (attackers.length === 0) return [];
   if (target.activeEntities.length === 0) {
+    // Estado "sin ataques directos": sin entities rivales y bloqueado ⇒ no hay ataques válidos.
+    if (isDirectAttackBlocked) return [];
     return attackers.map((attacker) => ({
       attacker,
       score: scoreDirectAttack(attacker.card.attack ?? 0, target, profile),

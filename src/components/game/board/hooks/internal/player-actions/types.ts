@@ -5,6 +5,12 @@ import { GameState } from "@/core/use-cases/GameEngine";
 import { IBoardUiError } from "../boardError";
 import { IPendingZoneReplacement } from "../board-state/pending-replacement";
 
+/** Solicita al jugador decidir si activa una trampa reactiva; resuelve `true` (activar) o `false`. */
+export type RequestTrapActivationDecision = (
+  trapCard: ICard,
+  trigger: "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED" | "ON_OPPONENT_TRAP_ACTIVATED",
+) => Promise<boolean>;
+
 export interface IUsePlayerActionsParams {
   gameState: GameState;
   isAnimating: boolean;
@@ -15,6 +21,7 @@ export interface IUsePlayerActionsParams {
   pendingFusionSummon: { cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null;
   assertPlayerTurn: () => boolean;
   applyTransition: (transition: (state: GameState) => GameState) => GameState | null;
+  requestTrapActivationDecision: RequestTrapActivationDecision;
   clearSelection: () => void;
   clearError: () => void;
   resolvePendingTurnAction: (selectedId: string) => void;

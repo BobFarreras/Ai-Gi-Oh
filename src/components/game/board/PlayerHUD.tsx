@@ -37,6 +37,14 @@ export interface PlayerHUDProps {
   containerStyle?: React.CSSProperties;
   showPhaseControls?: boolean;
   showEnergy?: boolean;
+  /** Turnos restantes de escudo "sin ataques directos" que protege a este jugador. */
+  shieldTurns?: number | null;
+  /** Daño por turno de "infección" (Bandera Windows); null = no infectado. */
+  infectionAmount?: number | null;
+  /** Curación por turno de "regeneración" (Abrazo Hugging); null = sin regeneración. */
+  regenAmount?: number | null;
+  /** Muestra los badges de estado junto a la energía (false en móvil del jugador: van al dock de energía). */
+  showStatusBadges?: boolean;
 }
 
 function PlayerHUDComponent({
@@ -65,6 +73,10 @@ function PlayerHUDComponent({
   containerStyle,
   showPhaseControls = true,
   showEnergy = true,
+  shieldTurns = null,
+  infectionAmount = null,
+  regenAmount = null,
+  showStatusBadges = true,
 }: PlayerHUDProps) {
   const { damageTaken, healGained, energyGained, energyLost, isShaking } = useHudFeedback(
     wasDamagedThisAction,
@@ -143,6 +155,10 @@ function PlayerHUDComponent({
         avatarObjectPosition={avatarObjectPosition}
         badgeText={badgeText}
         showEnergy={showEnergy}
+        shieldTurns={shieldTurns}
+        infectionAmount={infectionAmount}
+        regenAmount={regenAmount}
+        showStatusBadges={showStatusBadges}
       />
       <HudPhaseControls phase={phase} isVisible={showPhaseControls && !isOpponent && isActiveTurn} onAdvancePhase={onAdvancePhase} />
     </motion.div>

@@ -27,12 +27,46 @@ describe("execution-effect-registry", () => {
       "BOOST_ATTACK_BY_ARCHETYPE",
       "SET_DEFENSE_BY_CARD_ID",
       "BOOST_DEFENSE_BY_CARD_ID",
+      "BOOST_ATTACK_BY_CARD_ID",
+      "DAMAGE_IF_ALLY_ON_BOARD",
+      "APPLY_NO_DIRECT_ATTACKS",
       "DRAIN_OPPONENT_ENERGY",
       "SET_CARD_DUEL_PROGRESS",
       "REDUCE_OPPONENT_ATTACK",
       "DESTROY_ALL_TRAPS",
       "DISCARD_OPPONENT_HAND_CARD",
+      "GRANT_EXTRA_SUMMON",
+      "SWAP_HANDS",
+      "SWAP_BOARD_ENTITIES",
     ]);
+  });
+
+  it("SWAP_HANDS intercambia las manos de ambos jugadores", () => {
+    const cardA = { id: "ca", name: "ca", description: "", type: "EXECUTION" as const, faction: "NEUTRAL" as const, cost: 1 };
+    const cardB = { id: "cb", name: "cb", description: "", type: "EXECUTION" as const, faction: "NEUTRAL" as const, cost: 1 };
+    const player = { ...createPlayer("a"), hand: [cardA] };
+    const opponent = { ...createPlayer("b"), hand: [cardB] };
+    const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "SWAP_HANDS" })!;
+    expect(result.player.hand).toEqual([cardB]);
+    expect(result.opponent.hand).toEqual([cardA]);
+  });
+
+  it("SWAP_BOARD_ENTITIES intercambia entities y marca como usadas las que recibe el jugador activo", () => {
+    const entA = { instanceId: "ea", card: { id: "ea", name: "ea", description: "", type: "ENTITY" as const, faction: "NEUTRAL" as const, cost: 2, attack: 500, defense: 500 }, mode: "ATTACK" as const, hasAttackedThisTurn: false, isNewlySummoned: false };
+    const entB = { instanceId: "eb", card: { id: "eb", name: "eb", description: "", type: "ENTITY" as const, faction: "NEUTRAL" as const, cost: 2, attack: 900, defense: 900 }, mode: "ATTACK" as const, hasAttackedThisTurn: false, isNewlySummoned: false };
+    const player = { ...createPlayer("a"), activeEntities: [entA] };
+    const opponent = { ...createPlayer("b"), activeEntities: [entB] };
+    const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "SWAP_BOARD_ENTITIES" })!;
+    expect(result.player.activeEntities.map((e) => e.instanceId)).toEqual(["eb"]);
+    expect(result.player.activeEntities[0].hasAttackedThisTurn).toBe(true); // no puede atacar este turno
+    expect(result.opponent.activeEntities.map((e) => e.instanceId)).toEqual(["ea"]);
+  });
+
+  it("GRANT_EXTRA_SUMMON concede invocaciones extra (mínimo 1)", () => {
+    const player = createPlayer("a");
+    const opponent = createPlayer("b");
+    expect(resolveExecutionEffectFromRegistry(player, opponent, { action: "GRANT_EXTRA_SUMMON" })?.grantedExtraSummons).toBe(1);
+    expect(resolveExecutionEffectFromRegistry(player, opponent, { action: "GRANT_EXTRA_SUMMON", count: 2 })?.grantedExtraSummons).toBe(2);
   });
 
   it("devuelve null para acciones delegadas fuera del registry", () => {
@@ -54,6 +88,52 @@ describe("execution-effect-registry", () => {
     const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "REDUCE_OPPONENT_ATTACK", value: 700 })!;
     expect(result.opponent.activeEntities.map((e) => e.card.attack)).toEqual([300, 0]);
     expect(result.buff).toEqual({ entityIds: ["e1", "e2"], stat: "ATTACK", amount: -700 });
+  });
+
+  it("BOOST_ATTACK_BY_CARD_ID solo sube el ATK de las entities propias con ese card id", () => {
+    const player: IPlayer = {
+      ...createPlayer("a"),
+      activeEntities: [
+        { instanceId: "e1", card: entityCard("entity-figma", 1000), mode: "ATTACK", hasAttackedThisTurn: false, isNewlySummoned: false },
+        { instanceId: "e2", card: entityCard("entity-otra", 900), mode: "ATTACK", hasAttackedThisTurn: false, isNewlySummoned: false },
+      ],
+    };
+    const opponent = createPlayer("b");
+    const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "BOOST_ATTACK_BY_CARD_ID", targetCardId: "entity-figma", value: 1000 })!;
+    expect(result.player.activeEntities.map((e) => e.card.attack)).toEqual([2000, 900]);
+    expect(result.buff).toEqual({ entityIds: ["e1"], stat: "ATTACK", amount: 1000 });
+  });
+
+  it("BOOST_ATTACK_BY_CARD_ID es no-op si no hay ninguna entity con ese card id", () => {
+    const player = createPlayer("a");
+    const opponent = createPlayer("b");
+    const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "BOOST_ATTACK_BY_CARD_ID", targetCardId: "entity-figma", value: 1000 })!;
+    expect(result.buff).toEqual({ entityIds: [], stat: "ATTACK", amount: 1000 });
+  });
+
+  it("DAMAGE_IF_ALLY_ON_BOARD golpea 2000 solo si está la entity requerida en campo", () => {
+    const opponent = { ...createPlayer("b"), healthPoints: 8000, maxHealthPoints: 8000 };
+    const withAvast: IPlayer = {
+      ...createPlayer("a"),
+      activeEntities: [{ instanceId: "e1", card: entityCard("entity-avast", 1000), mode: "ATTACK", hasAttackedThisTurn: false, isNewlySummoned: false }],
+    };
+    const hit = resolveExecutionEffectFromRegistry(withAvast, opponent, { action: "DAMAGE_IF_ALLY_ON_BOARD", requiredCardId: "entity-avast", value: 2000 })!;
+    expect(hit.opponent.healthPoints).toBe(6000);
+    expect(hit.damageAmount).toBe(2000);
+  });
+
+  it("DAMAGE_IF_ALLY_ON_BOARD no hace nada si no está la entity requerida", () => {
+    const opponent = { ...createPlayer("b"), healthPoints: 8000, maxHealthPoints: 8000 };
+    const result = resolveExecutionEffectFromRegistry(createPlayer("a"), opponent, { action: "DAMAGE_IF_ALLY_ON_BOARD", requiredCardId: "entity-avast", value: 2000 })!;
+    expect(result.opponent.healthPoints).toBe(8000);
+    expect(result.damageAmount).toBe(0);
+  });
+
+  it("APPLY_NO_DIRECT_ATTACKS devuelve un estado NO_DIRECT_ATTACKS contra el rival", () => {
+    const player = createPlayer("a");
+    const opponent = createPlayer("b");
+    const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "APPLY_NO_DIRECT_ATTACKS", turns: 3 })!;
+    expect(result.addedStatusEffects).toEqual([{ kind: "NO_DIRECT_ATTACKS", targetPlayerId: "b", remainingTurns: 3 }]);
   });
 
   it("DESTROY_ALL_TRAPS manda al cementerio del rival solo las trampas", () => {

@@ -77,7 +77,7 @@ export function useMatchRuntime({
   });
 
   const { toggleCardSelection, executePlayAction, handleEntityClick } = usePlayerActions(
-    buildPlayerActionsParams(uiState, assertPlayerTurn, applyTransition, turnControls.resolvePendingTurnAction),
+    buildPlayerActionsParams(uiState, assertPlayerTurn, applyTransition, turnControls.resolvePendingTurnAction, requestTrapActivationDecision),
   );
 
   const { confirmEntityReplacement, cancelEntityReplacement } = useEntityReplacementActions({ uiState, applyTransition });

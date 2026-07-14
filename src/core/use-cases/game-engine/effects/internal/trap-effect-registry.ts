@@ -3,7 +3,7 @@ import { ICardEffect } from "@/core/entities/ICard";
 import { IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { ITrapResolutionResult, ITrapTriggerContext } from "@/core/use-cases/game-engine/effects/internal/trap-types";
 
-type TrapAction = "DAMAGE" | "REDUCE_OPPONENT_ATTACK" | "REDUCE_OPPONENT_DEFENSE" | "NEGATE_ATTACK_AND_DESTROY_ATTACKER" | "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES" | "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED" | "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN";
+type TrapAction = "DAMAGE" | "REDUCE_OPPONENT_ATTACK" | "REDUCE_OPPONENT_DEFENSE" | "NEGATE_ATTACK_AND_DESTROY_ATTACKER" | "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES" | "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED" | "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN" | "APPLY_DAMAGE_OVER_TIME" | "APPLY_HEAL_OVER_TIME" | "REFLECT_DIRECT_DAMAGE" | "NEGATE_ATTACK" | "NULLIFY_OPPONENT_BUFF" | "NEGATE_OPPONENT_EXECUTION_AND_DESTROY" | "REINFORCE_LINKED_ENTITY_ON_ATTACK";
 type TrapEffect = Extract<ICardEffect, { action: TrapAction }>;
 type TrapHandler<K extends TrapAction> = (player: IPlayer, opponent: IPlayer, trap: IBoardEntity, effect: Extract<TrapEffect, { action: K }>, context?: ITrapTriggerContext) => ITrapResolutionResult;
 
@@ -106,6 +106,87 @@ const trapEffectHandlers: { [K in TrapAction]: TrapHandler<K> } = {
       energyGainAmount,
     };
   },
+  // Bandera Windows: infecta a quien activó la trampa (opponent) con daño por turno hasta el final del duelo.
+  APPLY_DAMAGE_OVER_TIME: (player, opponent, _trap, effect) => ({
+    ...createNeutralResult(player, opponent),
+    addedStatusEffects: [{ kind: "DAMAGE_OVER_TIME", targetPlayerId: opponent.id, remainingTurns: effect.turns ?? null, magnitude: effect.value }],
+  }),
+  // Abrazo Hugging: cura al dueño de la trampa (player) por turno hasta el final del duelo.
+  APPLY_HEAL_OVER_TIME: (player, opponent, _trap, effect) => ({
+    ...createNeutralResult(player, opponent),
+    addedStatusEffects: [{ kind: "HEAL_OVER_TIME", targetPlayerId: player.id, remainingTurns: effect.turns ?? null, magnitude: effect.value }],
+  }),
+  // Flutter Enjambre: anula el ataque directo del rival y refleja el ATK del atacante a sus propios LP.
+  REFLECT_DIRECT_DAMAGE: (player, opponent, _trap, _effect, context) => {
+    if (!context?.attackerPlayerId || context.attackerPlayerId !== opponent.id || !context.attackerInstanceId) {
+      return createNeutralResult(player, opponent);
+    }
+    const attacker = opponent.activeEntities.find((entity) => entity.instanceId === context.attackerInstanceId);
+    const reflected = Math.max(0, attacker?.card.attack ?? 0);
+    return {
+      ...createNeutralResult(player, { ...opponent, healthPoints: Math.max(0, opponent.healthPoints - reflected) }),
+      damage: reflected,
+      blockedTargetEntityInstanceId: context.attackerInstanceId,
+      negatesAttack: true,
+    };
+  },
+  // Escudo TypeScript: solo se activa si atacan a una entity ligada (lo garantiza la selección). Al saltar,
+  // refuerza +DEF a TODAS tus entities ligadas (acumulable). La trampa persiste (keepTrapSet) hasta que
+  // dejen de estar en el campo.
+  REINFORCE_LINKED_ENTITY_ON_ATTACK: (player, opponent, _trap, effect) => {
+    const targetIds = player.activeEntities.filter((entity) => entity.card.id === effect.linkedCardId).map((entity) => entity.instanceId);
+    if (targetIds.length === 0) return { ...createNeutralResult(player, opponent), keepTrapSet: true };
+    const reinforced: IPlayer = {
+      ...player,
+      activeEntities: player.activeEntities.map((entity) =>
+        targetIds.includes(entity.instanceId) ? { ...entity, card: { ...entity.card, defense: Math.max(0, (entity.card.defense ?? 0) + effect.value) } } : entity,
+      ),
+    };
+    return { ...createNeutralResult(reinforced, opponent), keepTrapSet: true, buffTargetEntityIds: targetIds, buffStat: "DEFENSE", buffAmount: effect.value };
+  },
+  // Escudo Metasploit: bloquea el ataque declarado (a entity o directo) sin destruir al atacante.
+  NEGATE_ATTACK: (player, opponent, _trap, _effect, context) => {
+    if (!context?.attackerInstanceId || context.attackerPlayerId !== opponent.id) return createNeutralResult(player, opponent);
+    return { ...createNeutralResult(player, opponent), blockedTargetEntityInstanceId: context.attackerInstanceId, negatesAttack: true };
+  },
+  // Escudo Firewall: anula y destruye la ejecución que el rival acaba de activar (antes de resolverse).
+  NEGATE_OPPONENT_EXECUTION_AND_DESTROY: (player, opponent, _trap, _effect, context) => {
+    const instanceId = context?.activatedExecutionInstanceId;
+    const index = instanceId ? opponent.activeExecutions.findIndex((entity) => entity.instanceId === instanceId) : -1;
+    if (index < 0) return createNeutralResult(player, opponent);
+    const target = opponent.activeExecutions[index];
+    return {
+      ...createNeutralResult(player, {
+        ...opponent,
+        activeExecutions: opponent.activeExecutions.filter((entity) => entity.instanceId !== instanceId),
+        destroyedPile: [...(opponent.destroyedPile ?? []), target.card],
+      }),
+      destroyedOpponentEntityCardId: target.card.id,
+      destroyedOpponentEntityInstanceId: instanceId ?? null,
+      destroyedOpponentEntitySlotIndex: index,
+      destroyedOpponentEntityDestination: "DESTROYED",
+      destroyedOpponentEntityFrom: "EXECUTION_ZONE",
+      negatesExecution: true,
+    };
+  },
+  // OpenClaw Bug Trap: no solo ANULA el buff recién aplicado, sino que penaliza: resta el DOBLE del buff
+  // al valor buffeado, dejando a las entities del rival por DEBAJO de su valor original (efecto negativo).
+  NULLIFY_OPPONENT_BUFF: (player, opponent, _trap, _effect, context) => {
+    if (!context?.buffSourcePlayerId || context.buffSourcePlayerId !== opponent.id) return createNeutralResult(player, opponent);
+    if (!context.buffStat || typeof context.buffAmount !== "number" || context.buffAmount <= 0) return createNeutralResult(player, opponent);
+    const targetIds = context.buffTargetEntityIds ?? [];
+    const stat = context.buffStat === "ATTACK" ? "attack" : "defense";
+    const penalty = 2 * context.buffAmount; // anula (+buff) y además resta otro tanto por debajo de la base.
+    const updatedOpponent: IPlayer = {
+      ...opponent,
+      activeEntities: opponent.activeEntities.map((entity) =>
+        targetIds.includes(entity.instanceId)
+          ? { ...entity, card: { ...entity.card, [stat]: Math.max(0, (entity.card[stat] ?? 0) - penalty) } }
+          : entity,
+      ),
+    };
+    return { ...createNeutralResult(player, updatedOpponent), buffTargetEntityIds: targetIds, buffStat: context.buffStat, buffAmount: -penalty };
+  },
 };
 
 /** Resuelve una trampa registrada; devuelve null cuando la acción no está soportada por el registry. */
@@ -118,6 +199,13 @@ export function resolveTrapEffectFromRegistry(player: IPlayer, opponent: IPlayer
   if (trap.card.effect.action === "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES") return trapEffectHandlers.COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES(player, opponent, trap, trap.card.effect, context);
   if (trap.card.effect.action === "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED") return trapEffectHandlers.FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED(player, opponent, trap, trap.card.effect, context);
   if (trap.card.effect.action === "DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN") return trapEffectHandlers.DIRECT_ATTACK_ENERGY_DRAIN_AND_SET_SELF_TO_TEN(player, opponent, trap, trap.card.effect, context);
+  if (trap.card.effect.action === "APPLY_DAMAGE_OVER_TIME") return trapEffectHandlers.APPLY_DAMAGE_OVER_TIME(player, opponent, trap, trap.card.effect, context);
+  if (trap.card.effect.action === "APPLY_HEAL_OVER_TIME") return trapEffectHandlers.APPLY_HEAL_OVER_TIME(player, opponent, trap, trap.card.effect, context);
+  if (trap.card.effect.action === "REFLECT_DIRECT_DAMAGE") return trapEffectHandlers.REFLECT_DIRECT_DAMAGE(player, opponent, trap, trap.card.effect, context);
+  if (trap.card.effect.action === "NEGATE_ATTACK") return trapEffectHandlers.NEGATE_ATTACK(player, opponent, trap, trap.card.effect, context);
+  if (trap.card.effect.action === "NULLIFY_OPPONENT_BUFF") return trapEffectHandlers.NULLIFY_OPPONENT_BUFF(player, opponent, trap, trap.card.effect, context);
+  if (trap.card.effect.action === "NEGATE_OPPONENT_EXECUTION_AND_DESTROY") return trapEffectHandlers.NEGATE_OPPONENT_EXECUTION_AND_DESTROY(player, opponent, trap, trap.card.effect, context);
+  if (trap.card.effect.action === "REINFORCE_LINKED_ENTITY_ON_ATTACK") return trapEffectHandlers.REINFORCE_LINKED_ENTITY_ON_ATTACK(player, opponent, trap, trap.card.effect, context);
   return null;
 }
 

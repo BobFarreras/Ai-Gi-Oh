@@ -36,6 +36,8 @@ export function areEqualBattlefieldProps(previous: BattlefieldProps, next: Battl
     previous.cardXpActorPlayerId === next.cardXpActorPlayerId &&
     previous.playerId === next.playerId &&
     previous.opponentId === next.opponentId &&
+    previous.playerShieldActive === next.playerShieldActive &&
+    previous.opponentShieldActive === next.opponentShieldActive &&
     previous.viewportBoardScale === next.viewportBoardScale &&
     previous.isMobileLayout === next.isMobileLayout &&
     previous.onGraveyardClick === next.onGraveyardClick &&

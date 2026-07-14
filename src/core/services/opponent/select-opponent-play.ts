@@ -47,10 +47,30 @@ function hasArchetypeEntity(opponent: IPlayer, archetype?: ICard["archetype"]): 
   return opponent.activeEntities.some((entity) => entity.card.archetype === archetype);
 }
 
+function totalAttack(player: IPlayer): number {
+  return player.activeEntities.reduce((sum, entity) => sum + (entity.card.attack ?? 0), 0);
+}
+
+/** Heurística de la IA para las magias del lote nuevo (robos, intercambios, control...). */
+function canActivateNewBatchExecutionNow(effect: NonNullable<ICard["effect"]>, opponent: IPlayer, target: IPlayer): boolean {
+  if (effect.action === "BOOST_ATTACK_BY_CARD_ID") return opponent.activeEntities.some((entity) => entity.card.id === effect.targetCardId);
+  if (effect.action === "DAMAGE_IF_ALLY_ON_BOARD") return opponent.activeEntities.some((entity) => entity.card.id === effect.requiredCardId);
+  if (effect.action === "APPLY_NO_DIRECT_ATTACKS") return true;
+  if (effect.action === "DESTROY_OPPONENT_ENTITY" || effect.action === "FLIP_OPPONENT_ENTITY_TO_DEFENSE") return target.activeEntities.length > 0;
+  if (effect.action === "SACRIFICE_ALLY_ENTITY_FOR_ENERGY") return opponent.activeEntities.length > 0;
+  if (effect.action === "GRANT_EXTRA_SUMMON") return opponent.hand.filter((card) => card.type === "ENTITY").length >= 2 && opponent.activeEntities.length <= 1;
+  if (effect.action === "SWAP_HANDS") return opponent.hand.length < target.hand.length;
+  if (effect.action === "SWAP_BOARD_ENTITIES") return totalAttack(target) > totalAttack(opponent);
+  if (effect.action === "STEAL_OPPONENT_ENTITY") return target.activeEntities.length > 0 && opponent.activeEntities.length < 3;
+  if (effect.action === "STEAL_OPPONENT_EXECUTION") return target.activeExecutions.length > 0;
+  return false;
+}
+
 export function canActivateExecutionNow(card: ICard, opponent: IPlayer, target: IPlayer): boolean {
   if (card.type !== "EXECUTION") return false;
   const effect = card.effect;
   if (!effect) return false;
+  if (canActivateNewBatchExecutionNow(effect, opponent, target)) return true;
   if (effect.action === "DAMAGE" || effect.action === "DRAW_CARD" || effect.action === "RESTORE_ENERGY" || effect.action === "DRAIN_OPPONENT_ENERGY") return true;
   if (effect.action === "REDUCE_OPPONENT_ATTACK" || effect.action === "REDUCE_OPPONENT_DEFENSE") return target.activeEntities.length > 0;
   if (effect.action === "DESTROY_ALL_TRAPS") return target.activeExecutions.some((entity) => entity.card.type === "TRAP");

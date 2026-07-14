@@ -5,6 +5,8 @@ import { IOpponentAttackDecision, IOpponentPlayDecision, IOpponentStrategy } fro
 import { resolveOpponentDifficultyProfile } from "@/core/services/opponent/difficulty/resolve-opponent-difficulty-profile";
 import { IOpponentDifficultyProfile, OpponentDifficulty } from "./difficulty/types";
 import { chooseBestAttack } from "./attackEvaluator";
+import { isDirectAttackBlocked } from "@/core/use-cases/game-engine/state/status-effects";
+import { canNormalSummon } from "@/core/use-cases/game-engine/state/summon-rules";
 import { chooseFusionMaterials } from "@/core/services/opponent/heuristic-fusion-materials";
 import { IStoryAiProfile, normalizeStoryAiProfile } from "@/core/services/opponent/difficulty/story-ai-profile";
 import { buildPlayableCardDecisions } from "@/core/services/opponent/select-opponent-play";
@@ -59,7 +61,7 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
       }
 
       if (card.type === "ENTITY") {
-        if (state.hasNormalSummonedThisTurn || opponent.activeEntities.length >= 3) {
+        if (!canNormalSummon(state) || opponent.activeEntities.length >= 3) {
           continue;
         }
         return { cardId: card.id, mode };
@@ -93,7 +95,7 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
       ),
     };
 
-    return chooseBestAttack(normalizedOpponent, target, this.profile);
+    return chooseBestAttack(normalizedOpponent, target, this.profile, isDirectAttackBlocked(state.activeStatusEffects, opponentId));
   }
 
   public chooseModeChange(state: GameState, opponentId: string): IOpponentModeChangeDecision | null {

@@ -7,6 +7,24 @@ import { BattlefieldZone } from "@/components/game/board/battlefield/Battlefield
 import { BattlefieldViewProps } from "@/components/game/board/battlefield/internal/battlefield-types";
 import { hasActiveBlockingTrap } from "@/components/game/board/battlefield/internal/trap-block-actions";
 
+/** Banda luminosa pegada al borde (superior/inferior) del tablero para el escudo de ataques directos. */
+function DirectAttackBarrier({ edge }: { edge: "top" | "bottom" }) {
+  return (
+    <div aria-hidden className={cn("pointer-events-none absolute inset-x-12 z-20 flex flex-col items-center", edge === "top" ? "top-7" : "bottom-7")}>
+      <motion.div
+        animate={{ opacity: [0.5, 0.95, 0.5] }}
+        transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+        className="h-[3px] w-full rounded-full bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_28px_rgba(34,211,238,0.95)]"
+      />
+      <motion.div
+        animate={{ opacity: [0.22, 0.5, 0.22] }}
+        transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+        className={cn("h-10 w-[92%] bg-gradient-to-b from-cyan-400/40 to-transparent blur-md", edge === "bottom" && "rotate-180")}
+      />
+    </div>
+  );
+}
+
 export function BattlefieldView(props: BattlefieldViewProps) {
   const hasBlockingTrapActivation = hasActiveBlockingTrap([...props.playerActiveExecutions, ...props.opponentActiveExecutions]);
 
@@ -30,6 +48,9 @@ export function BattlefieldView(props: BattlefieldViewProps) {
           )}
         >
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(56,189,248,0.15)_1px,transparent_1px),linear-gradient(to_bottom,rgba(34,211,238,0.12)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none rounded-[3rem]" />
+          {/* Barrera "sin ataques directos": una banda luminosa en el BORDE del tablero del protegido. */}
+          {props.opponentShieldActive ? <DirectAttackBarrier edge="top" /> : null}
+          {props.playerShieldActive ? <DirectAttackBarrier edge="bottom" /> : null}
           <BattlefieldZone
             side="opponent"
             isMobileLayout={props.isMobileLayout}

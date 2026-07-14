@@ -15,6 +15,7 @@ type IHandleEntityClickParams = Pick<
   | "activeAttackerId"
   | "applyTransition"
   | "assertPlayerTurn"
+  | "requestTrapActivationDecision"
   | "clearError"
   | "clearSelection"
   | "gameState"
@@ -47,7 +48,8 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
       if (!isPlayerTurn) {
         if (entity && !(isOpponent && entity.mode === "SET")) {
           params.setSelectedCard(entity.card);
-          params.setSelectedBoardEntityInstanceId(null);
+          // Fijar el instanceId (único) desambigua cuando la misma carta está en ambos campos.
+          params.setSelectedBoardEntityInstanceId(entity.instanceId);
         }
         return;
       }
@@ -83,6 +85,42 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
             return;
           }
           params.setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una entity del rival para bloquearla." });
+          return;
+        }
+        // Destruir entity rival: se resuelve clicando una entity del RIVAL (cualquier modo).
+        if (pending.type === "SELECT_OPPONENT_ENTITY_TO_DESTROY") {
+          if (isOpponent && entity) {
+            params.resolvePendingTurnAction(entity.instanceId);
+            return;
+          }
+          params.setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una entity del rival para destruirla." });
+          return;
+        }
+        // Voltear entity rival a defensa: se resuelve clicando una entity del RIVAL.
+        if (pending.type === "SELECT_OPPONENT_ENTITY_TO_FLIP_DEFENSE") {
+          if (isOpponent && entity) {
+            params.resolvePendingTurnAction(entity.instanceId);
+            return;
+          }
+          params.setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una entity del rival para voltearla a defensa." });
+          return;
+        }
+        // Robar entity rival: se resuelve clicando una entity del RIVAL.
+        if (pending.type === "SELECT_OPPONENT_ENTITY_TO_STEAL") {
+          if (isOpponent && entity && entity.card.type === "ENTITY") {
+            params.resolvePendingTurnAction(entity.instanceId);
+            return;
+          }
+          params.setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una entity del rival para robarla." });
+          return;
+        }
+        // Robar magia/trampa rival: se resuelve clicando una carta de la zona de magias/trampas del RIVAL.
+        if (pending.type === "SELECT_OPPONENT_EXECUTION_TO_STEAL") {
+          if (isOpponent && entity && (entity.card.type === "EXECUTION" || entity.card.type === "TRAP")) {
+            params.resolvePendingTurnAction(entity.instanceId);
+            return;
+          }
+          params.setLastError({ code: "GAME_RULE_ERROR", message: "Selecciona una magia/trampa del rival para robarla." });
           return;
         }
         if (!isOpponent && entity) {
@@ -141,6 +179,7 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
         entity,
         activeAttackerId: params.activeAttackerId,
         applyTransition: params.applyTransition,
+        requestTrapActivationDecision: params.requestTrapActivationDecision,
         clearSelection: params.clearSelection,
         gameState: params.gameState,
         setActiveAttackerId: params.setActiveAttackerId,
@@ -159,7 +198,8 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
           return;
         }
         params.setSelectedCard(entity.card);
-        params.setSelectedBoardEntityInstanceId(null);
+        // Fijar el instanceId (único) desambigua cuando la misma carta está en ambos campos.
+        params.setSelectedBoardEntityInstanceId(entity.instanceId);
       }
     },
     [params, emitLocalAction],

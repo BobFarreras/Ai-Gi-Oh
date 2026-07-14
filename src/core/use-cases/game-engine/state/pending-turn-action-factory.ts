@@ -5,6 +5,11 @@ import {
   ISelectFusionMaterialsPendingTurnAction,
   ISelectGraveyardCardPendingTurnAction,
   ISelectOpponentEntityToLockPendingTurnAction,
+  ISelectOpponentEntityToDestroyPendingTurnAction,
+  ISelectOpponentEntityToFlipDefensePendingTurnAction,
+  ISelectOwnEntityToSacrificePendingTurnAction,
+  ISelectOpponentEntityToStealPendingTurnAction,
+  ISelectOpponentExecutionToStealPendingTurnAction,
   ISelectOpponentGraveyardCardPendingTurnAction,
   ISelectOpponentSetCardPendingTurnAction,
 } from "@/core/use-cases/game-engine/state/types";
@@ -105,5 +110,65 @@ export function createOpponentEntityToLockSelectionPendingAction(
     playerId,
     executionInstanceId,
     turns,
+  };
+}
+
+/** Acción pendiente para elegir una entity rival a destruir. */
+export function createOpponentEntityToDestroySelectionPendingAction(
+  playerId: string,
+  executionInstanceId: string,
+): ISelectOpponentEntityToDestroyPendingTurnAction {
+  return {
+    type: "SELECT_OPPONENT_ENTITY_TO_DESTROY",
+    playerId,
+    executionInstanceId,
+  };
+}
+
+/** Acción pendiente para elegir una entity rival a voltear a defensa. */
+export function createOpponentEntityToFlipDefenseSelectionPendingAction(
+  playerId: string,
+  executionInstanceId: string,
+): ISelectOpponentEntityToFlipDefensePendingTurnAction {
+  return {
+    type: "SELECT_OPPONENT_ENTITY_TO_FLIP_DEFENSE",
+    playerId,
+    executionInstanceId,
+  };
+}
+
+/** Acción pendiente para elegir una entity PROPIA a sacrificar (a cambio de su energía). */
+export function createOwnEntityToSacrificeSelectionPendingAction(
+  playerId: string,
+  executionInstanceId: string,
+): ISelectOwnEntityToSacrificePendingTurnAction {
+  return {
+    type: "SELECT_OWN_ENTITY_TO_SACRIFICE",
+    playerId,
+    executionInstanceId,
+  };
+}
+
+/** Acción pendiente para elegir una entity rival a robar a tu campo. */
+export function createOpponentEntityToStealSelectionPendingAction(
+  playerId: string,
+  executionInstanceId: string,
+): ISelectOpponentEntityToStealPendingTurnAction {
+  return {
+    type: "SELECT_OPPONENT_ENTITY_TO_STEAL",
+    playerId,
+    executionInstanceId,
+  };
+}
+
+/** Acción pendiente para elegir una magia/trampa rival a robar a tu campo. */
+export function createOpponentExecutionToStealSelectionPendingAction(
+  playerId: string,
+  executionInstanceId: string,
+): ISelectOpponentExecutionToStealPendingTurnAction {
+  return {
+    type: "SELECT_OPPONENT_EXECUTION_TO_STEAL",
+    playerId,
+    executionInstanceId,
   };
 }

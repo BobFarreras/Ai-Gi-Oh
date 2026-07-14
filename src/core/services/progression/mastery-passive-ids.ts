@@ -25,3 +25,10 @@ export const MASTERY_PASSIVE_IDS = {
 } as const;
 
 export type MasteryPassiveId = (typeof MASTERY_PASSIVE_IDS)[keyof typeof MASTERY_PASSIVE_IDS];
+
+/**
+ * Pasiva INNATA-only (no mastery) de "Reactivación" (Antigrabity): al ir al cementerio, revive en el
+ * siguiente turno de su dueño. Sin magnitud. Se mantiene FUERA de MASTERY_PASSIVE_IDS para no inflar el
+ * catálogo de las 10 pasivas de maestría (ni el mapeo de arquetipos a V5).
+ */
+export const REVIVE_NEXT_TURN_PASSIVE_ID = "passive-revive-next-turn";

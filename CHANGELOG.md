@@ -6,6 +6,35 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-07-14
+
+### Added
+- **~18 cartas nuevas de magia y trampa** con efectos de motor nuevos, más la entity **Antigrabity** y su poder innato **Reactivación** (revive del cementerio al inicio de su turno). Incluye:
+  - Magia: +1000 ATK a una carta concreta (figma/copilot/arch), Golpe Naranja (daño condicional), Firewall Fortaleza (bloquea ataques directos 3 turnos), Red Neuronal Cloud (destruir entity), Appel (voltear a defensa), Cubo Metálico (sacrificar por energía), Núcleo de Datos (doble invocación), reaq m (intercambiar tablero), Terminal Córtice (intercambiar manos), Octocat (robar entity), Procesador Cuántico (robar magia/trampa).
+  - Trampa: Bandera Windows (infección −300 LP/turno), Abrazo Hugging (regeneración +300 LP/turno), Flutter Enjambre (anula ataque directo y refleja el ATK), Escudo Metasploit (bloquea el ataque), OpenClaw (penaliza el buff rival por debajo de su base), Escudo Firewall (anula y destruye la magia rival), Escudo TypeScript (escudo persistente ligado, +1000 DEF acumulable).
+- **Sistema de estados multi-turno** a nivel de jugador (base de daño/curación por turno y "sin ataques directos").
+- **Badges de estado en el HUD** (escudo, infección, regeneración) en escritorio y móvil.
+- **Ayuda "?" de puntuación** en cada tablero de ranking + sección de rankings en el Códex, con premios en vivo desde la BD.
+- Los recuadros del badge "Estado del Arquitecto" del hub navegan a su sección correspondiente.
+
+### Changed
+- El **contra-trampa Nullify es decidible**: pregunta antes de activarse (también en ataque directo y ante buffs), en vez de saltar solo.
+- **OpenClaw** no solo anula el buff rival: penaliza dejando las entities por debajo de su valor original.
+- **Escudo TypeScript** refuerza TODAS tus TypeScript y solo se activa si el rival ataca a una de ellas.
+- El **glosario/Códex** incluye automáticamente todos los efectos nuevos, con carta de ejemplo real, y la **IA** sabe jugar las magias nuevas.
+
+### Fixed
+- La misma carta presente en ambos campos (p. ej. una fusión) ya no confunde la selección de objetivo en combate.
+- El detalle de una carta V5 explica el efecto del poder sin duplicar el texto.
+- Tocar una carta del combat log abre su detalle también en móvil.
+- El texto de cierre del ranking semanal muestra la hora local (24:00) en vez de 22:00 UTC.
+
+### Internal
+- Migraciones **096–114** (todas aditivas, `INSERT ... ON CONFLICT`): las ~18 cartas nuevas + Antigrabity y sus listings de mercado.
+- Motor: sistema de estados (`IActiveStatusEffect`), negación de ataque generalizada, contra-magia con reordenación de timing (interceptar antes de resolver), trampa persistente (`keepTrapSet`), y condición de activación de trampa por efecto/contexto (`trapActivationConditionMet`).
+- 19 cartas del lote añadidas a `mock-cards` (cartas-ejemplo del Códex y resolubles por la IA) y heurísticas de IA en `select-opponent-play`.
+- Guía maestra del lote (`docs/features/new-cards-magic-trap-guide.md`) documentada por fases.
+
 ## [1.12.0] - 2026-07-12
 
 ### Added
@@ -244,7 +273,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.13.0...HEAD
+[1.13.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.4...v1.11.0
 [1.10.4]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.3...v1.10.4

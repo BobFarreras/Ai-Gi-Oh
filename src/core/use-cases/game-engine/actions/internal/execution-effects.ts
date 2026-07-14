@@ -2,6 +2,7 @@
 import { ICardEffect } from "@/core/entities/ICard";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { IExecutionSystemEvent } from "@/core/use-cases/game-engine/actions/internal/execution-return-effects";
+import { IStatusEffectSpec } from "@/core/use-cases/game-engine/state/status-effects";
 import { resolveExecutionEffectFromRegistry } from "@/core/use-cases/game-engine/actions/internal/execution-effect-registry";
 
 interface IBuffSummary {
@@ -21,6 +22,10 @@ export interface IExecutionEffectResult {
   damageTargetPlayerId: string | null;
   damageAmount: number;
   systemEvents: IExecutionSystemEvent[];
+  /** Estados multi-turno a añadir a GameState (el id se asigna al resolver, con la info del estado). */
+  addedStatusEffects?: IStatusEffectSpec[];
+  /** Invocaciones normales EXTRA concedidas este turno (Núcleo de Datos). */
+  grantedExtraSummons?: number;
 }
 
 function createNeutralResult(player: IPlayer, opponent: IPlayer): IExecutionEffectResult {

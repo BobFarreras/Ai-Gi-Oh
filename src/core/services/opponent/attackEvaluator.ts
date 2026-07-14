@@ -24,8 +24,9 @@ export function chooseBestAttack(
   opponent: IPlayer,
   target: IPlayer,
   profile: IOpponentDifficultyProfile,
+  isDirectAttackBlocked = false,
 ): { attackerInstanceId: string; defenderInstanceId?: string } | null {
-  const options = buildAttackOptions(opponent, target, profile);
+  const options = buildAttackOptions(opponent, target, profile, isDirectAttackBlocked);
 
   if (options.length === 0) {
     return null;

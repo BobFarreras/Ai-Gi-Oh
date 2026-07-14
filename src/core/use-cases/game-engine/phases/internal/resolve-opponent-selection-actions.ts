@@ -1,10 +1,11 @@
 // src/core/use-cases/game-engine/phases/internal/resolve-opponent-selection-actions.ts - Resuelve selecciones pendientes sobre cartas del rival (cementerio o cartas seteadas).
 import { ICard } from "@/core/entities/ICard";
 import { IPlayer } from "@/core/entities/IPlayer";
+import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { assignPlayers } from "@/core/use-cases/game-engine/state/player-utils";
-import { GameState, ISelectOpponentEntityToLockPendingTurnAction, ISelectOpponentGraveyardCardPendingTurnAction, ISelectOpponentSetCardPendingTurnAction } from "@/core/use-cases/game-engine/state/types";
+import { GameState, ISelectOpponentEntityToDestroyPendingTurnAction, ISelectOpponentEntityToFlipDefensePendingTurnAction, ISelectOpponentEntityToLockPendingTurnAction, ISelectOpponentEntityToStealPendingTurnAction, ISelectOpponentExecutionToStealPendingTurnAction, ISelectOpponentGraveyardCardPendingTurnAction, ISelectOpponentSetCardPendingTurnAction, ISelectOwnEntityToSacrificePendingTurnAction } from "@/core/use-cases/game-engine/state/types";
 
 function resolvePendingExecution(player: IPlayer, executionInstanceId: string): { executionCard: ICard; updatedPlayer: IPlayer } {
   const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
@@ -74,6 +75,172 @@ export function resolveOpponentEntityToLockSelectionAction(
     selectedCardId: targetEntity.card.id,
     selectedCardName: targetEntity.card.name,
     turns: pending.turns,
+    executionCardId: execution.executionCard.id,
+  });
+  return appendCombatLogEvent(withMandatoryLog, playerId, "CARD_TO_GRAVEYARD", {
+    cardId: execution.executionCard.id,
+    ownerPlayerId: playerId,
+    from: "EXECUTION_ZONE",
+  });
+}
+
+export function resolveOpponentEntityToDestroySelectionAction(
+  state: GameState,
+  playerId: string,
+  selectedId: string,
+  player: IPlayer,
+  opponent: IPlayer,
+  isPlayerA: boolean,
+  pending: ISelectOpponentEntityToDestroyPendingTurnAction,
+): GameState {
+  const targetIndex = opponent.activeEntities.findIndex((entity) => entity.instanceId === selectedId);
+  const targetEntity = targetIndex >= 0 ? opponent.activeEntities[targetIndex] : null;
+  if (!targetEntity) throw new NotFoundError("La entity seleccionada no está en el campo rival.");
+  const execution = resolvePendingExecution(player, pending.executionInstanceId);
+  const updatedOpponent: IPlayer = {
+    ...opponent,
+    activeEntities: opponent.activeEntities.filter((entity) => entity.instanceId !== selectedId),
+    destroyedPile: [...(opponent.destroyedPile ?? []), targetEntity.card],
+  };
+  const withPlayers = assignPlayers({ ...state, pendingTurnAction: null }, execution.updatedPlayer, updatedOpponent, isPlayerA);
+  const withMandatoryLog = appendCombatLogEvent(withPlayers, playerId, "MANDATORY_ACTION_RESOLVED", {
+    type: "SELECT_OPPONENT_ENTITY_TO_DESTROY",
+    selectedId,
+    selectedCardId: targetEntity.card.id,
+    selectedCardName: targetEntity.card.name,
+    executionCardId: execution.executionCard.id,
+  });
+  const withDestroyedLog = appendCombatLogEvent(withMandatoryLog, playerId, "CARD_TO_DESTROYED", {
+    cardId: targetEntity.card.id,
+    ownerPlayerId: opponent.id,
+    from: "BATTLEFIELD",
+  });
+  return appendCombatLogEvent(withDestroyedLog, playerId, "CARD_TO_GRAVEYARD", {
+    cardId: execution.executionCard.id,
+    ownerPlayerId: playerId,
+    from: "EXECUTION_ZONE",
+  });
+}
+
+export function resolveOpponentEntityToFlipDefenseSelectionAction(
+  state: GameState,
+  playerId: string,
+  selectedId: string,
+  player: IPlayer,
+  opponent: IPlayer,
+  isPlayerA: boolean,
+  pending: ISelectOpponentEntityToFlipDefensePendingTurnAction,
+): GameState {
+  const targetEntity = opponent.activeEntities.find((entity) => entity.instanceId === selectedId);
+  if (!targetEntity) throw new NotFoundError("La entity seleccionada no está en el campo rival.");
+  const execution = resolvePendingExecution(player, pending.executionInstanceId);
+  const updatedOpponent: IPlayer = {
+    ...opponent,
+    activeEntities: opponent.activeEntities.map((entity) =>
+      entity.instanceId === selectedId ? { ...entity, mode: "DEFENSE", isNewlySummoned: false } : entity,
+    ),
+  };
+  const withPlayers = assignPlayers({ ...state, pendingTurnAction: null }, execution.updatedPlayer, updatedOpponent, isPlayerA);
+  const withMandatoryLog = appendCombatLogEvent(withPlayers, playerId, "MANDATORY_ACTION_RESOLVED", {
+    type: "SELECT_OPPONENT_ENTITY_TO_FLIP_DEFENSE",
+    selectedId,
+    selectedCardId: targetEntity.card.id,
+    selectedCardName: targetEntity.card.name,
+    executionCardId: execution.executionCard.id,
+  });
+  return appendCombatLogEvent(withMandatoryLog, playerId, "CARD_TO_GRAVEYARD", {
+    cardId: execution.executionCard.id,
+    ownerPlayerId: playerId,
+    from: "EXECUTION_ZONE",
+  });
+}
+
+export function resolveOwnEntityToSacrificeSelectionAction(
+  state: GameState,
+  playerId: string,
+  selectedId: string,
+  player: IPlayer,
+  opponent: IPlayer,
+  isPlayerA: boolean,
+  pending: ISelectOwnEntityToSacrificePendingTurnAction,
+): GameState {
+  const targetEntity = player.activeEntities.find((entity) => entity.instanceId === selectedId);
+  if (!targetEntity) throw new NotFoundError("La entity seleccionada no está en tu campo.");
+  const execution = resolvePendingExecution(player, pending.executionInstanceId);
+  const energyGain = Math.max(0, targetEntity.card.cost ?? 0);
+  const before = execution.updatedPlayer.currentEnergy;
+  const after = Math.min(execution.updatedPlayer.maxEnergy, before + energyGain);
+  const updatedPlayer: IPlayer = {
+    ...execution.updatedPlayer,
+    currentEnergy: after,
+    activeEntities: execution.updatedPlayer.activeEntities.filter((entity) => entity.instanceId !== selectedId),
+    destroyedPile: [...(execution.updatedPlayer.destroyedPile ?? []), targetEntity.card],
+  };
+  const withPlayers = assignPlayers({ ...state, pendingTurnAction: null }, updatedPlayer, opponent, isPlayerA);
+  let withLogs = appendCombatLogEvent(withPlayers, playerId, "MANDATORY_ACTION_RESOLVED", {
+    type: "SELECT_OWN_ENTITY_TO_SACRIFICE",
+    selectedId,
+    selectedCardId: targetEntity.card.id,
+    executionCardId: execution.executionCard.id,
+  });
+  withLogs = appendCombatLogEvent(withLogs, playerId, "CARD_TO_DESTROYED", { cardId: targetEntity.card.id, ownerPlayerId: playerId, from: "BATTLEFIELD" });
+  withLogs = appendCombatLogEvent(withLogs, playerId, "ENERGY_GAINED", { before, gained: after - before, after, amount: after - before });
+  return appendCombatLogEvent(withLogs, playerId, "CARD_TO_GRAVEYARD", { cardId: execution.executionCard.id, ownerPlayerId: playerId, from: "EXECUTION_ZONE" });
+}
+
+export function resolveOpponentEntityToStealSelectionAction(
+  state: GameState,
+  playerId: string,
+  selectedId: string,
+  player: IPlayer,
+  opponent: IPlayer,
+  isPlayerA: boolean,
+  pending: ISelectOpponentEntityToStealPendingTurnAction,
+): GameState {
+  const targetEntity = opponent.activeEntities.find((entity) => entity.instanceId === selectedId);
+  if (!targetEntity) throw new NotFoundError("La entity seleccionada no está en el campo rival.");
+  const execution = resolvePendingExecution(player, pending.executionInstanceId);
+  if (execution.updatedPlayer.activeEntities.length >= 3) throw new GameRuleError("Tu zona de entidades está llena.");
+  // La entity robada no puede atacar el turno en que cambia de control (evita swing inmediato).
+  const stolenEntity = { ...targetEntity, hasAttackedThisTurn: true, isNewlySummoned: false };
+  const updatedOpponent: IPlayer = { ...opponent, activeEntities: opponent.activeEntities.filter((entity) => entity.instanceId !== selectedId) };
+  const updatedPlayer: IPlayer = { ...execution.updatedPlayer, activeEntities: [...execution.updatedPlayer.activeEntities, stolenEntity] };
+  const withPlayers = assignPlayers({ ...state, pendingTurnAction: null }, updatedPlayer, updatedOpponent, isPlayerA);
+  const withMandatoryLog = appendCombatLogEvent(withPlayers, playerId, "MANDATORY_ACTION_RESOLVED", {
+    type: "SELECT_OPPONENT_ENTITY_TO_STEAL",
+    selectedId,
+    selectedCardId: targetEntity.card.id,
+    selectedCardName: targetEntity.card.name,
+    executionCardId: execution.executionCard.id,
+  });
+  return appendCombatLogEvent(withMandatoryLog, playerId, "CARD_TO_GRAVEYARD", {
+    cardId: execution.executionCard.id,
+    ownerPlayerId: playerId,
+    from: "EXECUTION_ZONE",
+  });
+}
+
+export function resolveOpponentExecutionToStealSelectionAction(
+  state: GameState,
+  playerId: string,
+  selectedId: string,
+  player: IPlayer,
+  opponent: IPlayer,
+  isPlayerA: boolean,
+  pending: ISelectOpponentExecutionToStealPendingTurnAction,
+): GameState {
+  const targetExecution = opponent.activeExecutions.find((entity) => entity.instanceId === selectedId);
+  if (!targetExecution) throw new NotFoundError("La carta seleccionada no está en la zona de magias/trampas rival.");
+  const execution = resolvePendingExecution(player, pending.executionInstanceId);
+  if (execution.updatedPlayer.activeExecutions.length >= 3) throw new GameRuleError("Tu zona de magias/trampas está llena.");
+  const updatedOpponent: IPlayer = { ...opponent, activeExecutions: opponent.activeExecutions.filter((entity) => entity.instanceId !== selectedId) };
+  const updatedPlayer: IPlayer = { ...execution.updatedPlayer, activeExecutions: [...execution.updatedPlayer.activeExecutions, targetExecution] };
+  const withPlayers = assignPlayers({ ...state, pendingTurnAction: null }, updatedPlayer, updatedOpponent, isPlayerA);
+  const withMandatoryLog = appendCombatLogEvent(withPlayers, playerId, "MANDATORY_ACTION_RESOLVED", {
+    type: "SELECT_OPPONENT_EXECUTION_TO_STEAL",
+    selectedId,
+    selectedCardId: targetExecution.card.id,
+    selectedCardName: targetExecution.card.name,
     executionCardId: execution.executionCard.id,
   });
   return appendCombatLogEvent(withMandatoryLog, playerId, "CARD_TO_GRAVEYARD", {

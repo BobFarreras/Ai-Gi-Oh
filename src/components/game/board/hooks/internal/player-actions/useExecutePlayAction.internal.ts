@@ -3,9 +3,10 @@ import { BattleMode } from "@/core/entities/IPlayer";
 import { GameState, GameEngine } from "@/core/use-cases/GameEngine";
 import { LocalActionEmitter } from "@/components/game/board/multiplayer/local-action-emitter";
 import { sleep } from "../sleep";
+import { executionEffectAppliesBuff } from "@/core/services/effects/execution-buff-detection";
 import { addRevealedId, findReactiveTrap, removeRevealedId } from "../trapPreview";
 import { PLAYER_POST_RESOLUTION_MS, PLAYER_TRAP_PREVIEW_MS } from "./constants";
-import { IUsePlayerActionsParams } from "./types";
+import { IUsePlayerActionsParams, RequestTrapActivationDecision } from "./types";
 
 interface IBoardUiError {
   code: "GAME_RULE_ERROR" | "NOT_FOUND_ERROR";
@@ -32,6 +33,7 @@ interface IExecuteActivationInput {
   gameState: GameState;
   selectedCardReference: string;
   applyTransition: IApplyTransition;
+  requestTrapActivationDecision: RequestTrapActivationDecision;
   clearSelection: IUsePlayerActionsParams["clearSelection"];
   setIsAnimating: IUsePlayerActionsParams["setIsAnimating"];
   setLastError: IUsePlayerActionsParams["setLastError"];
@@ -83,7 +85,13 @@ export async function executeActivationPlay(input: IExecuteActivationInput): Pro
 
   input.clearSelection();
   await sleep(1500);
-  const reactiveTrap = findReactiveTrap(input.gameState, input.gameState.playerB.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
+  // Una ejecución dispara ON_OPPONENT_EXECUTION_ACTIVATED y, SOLO si aplica un buff, ON_OPPONENT_STAT_BUFF_APPLIED.
+  // La de buff (OpenClaw) solo se considera si la magia jugada realmente buffea; si no, no debe revelarse.
+  const playedExecution = playedState.playerA.activeExecutions.find((entity) => entity.instanceId === executionId);
+  const appliesBuff = executionEffectAppliesBuff(playedExecution?.card.effect);
+  const reactiveTrap =
+    findReactiveTrap(input.gameState, input.gameState.playerB.id, "ON_OPPONENT_EXECUTION_ACTIVATED") ??
+    (appliesBuff ? findReactiveTrap(input.gameState, input.gameState.playerB.id, "ON_OPPONENT_STAT_BUFF_APPLIED") : null);
   const playerCounterTrap = reactiveTrap
     ? findReactiveTrap(input.gameState, input.gameState.playerA.id, "ON_OPPONENT_TRAP_ACTIVATED")
     : null;
@@ -94,23 +102,30 @@ export async function executeActivationPlay(input: IExecuteActivationInput): Pro
     input.setSelectedCard(reactiveTrap.card);
     await sleep(PLAYER_TRAP_PREVIEW_MS);
   }
-  if (playerCounterTrap) {
+  // El jugador decide si activa su contra-trampa (Nullify) para negar la trampa rival.
+  const activateCounterTrap = playerCounterTrap
+    ? await input.requestTrapActivationDecision(playerCounterTrap.card, "ON_OPPONENT_TRAP_ACTIVATED")
+    : false;
+  if (playerCounterTrap && activateCounterTrap) {
     input.setRevealedEntities((previous) => addRevealedId(previous, playerCounterTrap.instanceId));
     input.setActiveAttackerId(playerCounterTrap.instanceId);
     input.setSelectedCard(playerCounterTrap.card);
     await sleep(PLAYER_TRAP_PREVIEW_MS);
   }
 
-  const resolvedState = input.applyTransition((state) => GameEngine.resolveExecution(state, state.playerA.id, executionId));
+  const declineCounterTrap = Boolean(playerCounterTrap) && !activateCounterTrap;
+  const resolvedState = input.applyTransition((state) =>
+    GameEngine.resolveExecution(state, state.playerA.id, executionId, declineCounterTrap ? { skipCounterTrapPlayerIds: [state.playerA.id] } : undefined),
+  );
   if (resolvedState) {
     // Sincronizar la RESOLUCIÓN del efecto (daño, trampas reactivas, etc.) al rival.
-    input.emitLocalAction({ type: "RESOLVE_EXECUTION", payload: { instanceId: executionId } });
+    input.emitLocalAction({ type: "RESOLVE_EXECUTION", payload: { instanceId: executionId, declineCounterTrap: declineCounterTrap || undefined } });
   }
   if (reactiveTrap) {
     await sleep(PLAYER_POST_RESOLUTION_MS);
     input.setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
   }
-  if (playerCounterTrap) {
+  if (playerCounterTrap && activateCounterTrap) {
     await sleep(PLAYER_POST_RESOLUTION_MS);
     input.setRevealedEntities((previous) => removeRevealedId(previous, playerCounterTrap.instanceId));
   }

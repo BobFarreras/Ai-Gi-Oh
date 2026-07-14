@@ -14,10 +14,12 @@ interface ITrapLoggingParams {
   targetOpponentId: string;
   targetPlayerId: string;
   resolved: ITrapResolutionResult;
+  /** Si la trampa persiste (Escudo TypeScript), no se registra su envío al cementerio. */
+  keepTrapSet?: boolean;
 }
 
 export function appendTrapResolutionLogs(params: ITrapLoggingParams): GameState {
-  const { state, reactivePlayerId, trigger, trap, trapSlotIndex, targetOpponentId, targetPlayerId, resolved } = params;
+  const { state, reactivePlayerId, trigger, trap, trapSlotIndex, targetOpponentId, targetPlayerId, resolved, keepTrapSet } = params;
   let withLogs = appendCombatLogEvent(state, reactivePlayerId, "TRAP_TRIGGERED", {
     trapCardId: trap.card.id,
     trapSlotIndex,
@@ -31,6 +33,16 @@ export function appendTrapResolutionLogs(params: ITrapLoggingParams): GameState 
   if (resolved.damage > 0 && trap.card.effect?.action === "DAMAGE") {
     withLogs = appendCombatLogEvent(withLogs, reactivePlayerId, "DIRECT_DAMAGE", {
       targetPlayerId: trap.card.effect.target === "OPPONENT" ? targetOpponentId : targetPlayerId,
+      amount: resolved.damage,
+      sourceCardId: trap.card.id,
+      sourceSlotIndex: trapSlotIndex,
+      sourceLaneType: "EXECUTIONS",
+    });
+  }
+  // Flutter Enjambre: el ATK reflejado va a los LP del atacante (rival), con la trampa como origen del VFX.
+  if (resolved.damage > 0 && trap.card.effect?.action === "REFLECT_DIRECT_DAMAGE") {
+    withLogs = appendCombatLogEvent(withLogs, reactivePlayerId, "DIRECT_DAMAGE", {
+      targetPlayerId: targetOpponentId,
       amount: resolved.damage,
       sourceCardId: trap.card.id,
       sourceSlotIndex: trapSlotIndex,
@@ -52,7 +64,9 @@ export function appendTrapResolutionLogs(params: ITrapLoggingParams): GameState 
     });
   }
   if (resolved.buffTargetEntityIds.length > 0 && resolved.buffStat && resolved.buffAmount !== 0) {
-    const ownerPlayerId = trap.card.effect?.action === "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES" ? reactivePlayerId : targetOpponentId;
+    // Copiar buff / reforzar entity ligada afectan a entities PROPIAS (dueño = reactivePlayer); el resto (reducir/anular) a las del rival.
+    const buffsOwnEntities = trap.card.effect?.action === "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES" || trap.card.effect?.action === "REINFORCE_LINKED_ENTITY_ON_ATTACK";
+    const ownerPlayerId = buffsOwnEntities ? reactivePlayerId : targetOpponentId;
     withLogs = appendCombatLogEvent(withLogs, reactivePlayerId, "STAT_BUFF_APPLIED", {
       ownerPlayerId,
       stat: resolved.buffStat,
@@ -68,10 +82,12 @@ export function appendTrapResolutionLogs(params: ITrapLoggingParams): GameState 
       {
       cardId: resolved.destroyedOpponentEntityCardId,
       ownerPlayerId: targetOpponentId,
-      from: "BATTLEFIELD",
+      from: resolved.destroyedOpponentEntityFrom ?? "BATTLEFIELD",
     },
     );
   }
+  // Escudo TypeScript: si la trampa persiste, NO se registra su envío al cementerio (sigue puesta).
+  if (keepTrapSet) return withLogs;
   withLogs = appendCombatLogEvent(withLogs, reactivePlayerId, "CARD_TO_GRAVEYARD", {
     cardId: trap.card.id,
     ownerPlayerId: reactivePlayerId,

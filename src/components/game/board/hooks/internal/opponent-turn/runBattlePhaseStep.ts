@@ -59,7 +59,9 @@ export async function runBattlePhaseStep(context: IOpponentTurnContext, timings:
     context.setRevealedEntities((previous) => addRevealedId(previous, targetEntity.instanceId));
     await sleep(320);
   }
-  const reactiveTrap = findReactiveTrap(gameState, gameState.playerA.id, "ON_OPPONENT_ATTACK_DECLARED");
+  const reactiveTrap = findReactiveTrap(gameState, gameState.playerA.id, "ON_OPPONENT_ATTACK_DECLARED", {
+    defenderInstanceId: attackDecision.defenderInstanceId,
+  });
   const shouldActivateReactiveTrap = reactiveTrap
     ? await context.requestTrapActivationDecision(reactiveTrap.card, "ON_OPPONENT_ATTACK_DECLARED")
     : false;

@@ -14,30 +14,27 @@ import { ITrapActivationPrompt } from "@/components/game/board/hooks/internal/bo
 import { composeCardPowerDescription } from "@/core/services/progression/compose-card-power-description";
 
 interface BoardMobilePanelsDialogProps {
-  selectedCard: ICard | null;
   gameState: GameState;
   isHistoryOpen: boolean;
   pendingTrapActivationPrompt?: ITrapActivationPrompt | null;
-  onSelectCard: (card: ICard) => void;
-  onCloseCard: () => void;
   onCloseHistory: () => void;
   onActivatePendingTrap?: () => void;
   onSkipPendingTrap?: () => void;
 }
 
 export function BoardMobilePanelsDialog({
-  selectedCard,
   gameState,
   isHistoryOpen,
   pendingTrapActivationPrompt = null,
-  onSelectCard,
-  onCloseCard,
   onCloseHistory,
   onActivatePendingTrap = () => undefined,
   onSkipPendingTrap = () => undefined,
 }: BoardMobilePanelsDialogProps) {
   const [turnFilter, setTurnFilter] = useState<number | "ALL">("ALL");
   const [actorFilter, setActorFilter] = useState<"ALL" | "PLAYER" | "OPPONENT">("ALL");
+  // Carta inspeccionada desde el combat log. Estado local propio para no acoplarse a la selección
+  // de tablero/mano (que ya tiene su overlay) y evitar detalles duplicados en móvil.
+  const [inspectedCard, setInspectedCard] = useState<ICard | null>(null);
   const pathname = usePathname();
 
   const cardLookup = useMemo(() => {
@@ -62,19 +59,27 @@ export function BoardMobilePanelsDialog({
       return turnMatches && actorMatches;
     });
   }, [actorFilter, gameState.combatLog, gameState.playerA.id, gameState.playerB.id, turnFilter]);
-  const selectedCardOrTrapPromptCard = pendingTrapActivationPrompt?.trapCard ?? selectedCard;
+  // El prompt de trampa tiene prioridad sobre la carta inspeccionada en el log.
+  const selectedCardOrTrapPromptCard = pendingTrapActivationPrompt?.trapCard ?? inspectedCard;
   const liveSelectedCard = useMemo(() => resolveLiveSelectedCard(selectedCardOrTrapPromptCard, gameState), [gameState, selectedCardOrTrapPromptCard]);
   const isTrapPromptForSelectedCard = Boolean(liveSelectedCard && pendingTrapActivationPrompt && pendingTrapActivationPrompt.trapCard.id === liveSelectedCard.id);
   const isTutorialTrapPromptLocked = isTrapPromptForSelectedCard && pathname?.includes("/hub/academy/training/tutorial");
   const detailPanelTopClassName = isTrapPromptForSelectedCard ? "top-[7.4rem]" : "top-[5.2rem]";
 
+  const closeDetail = isTrapPromptForSelectedCard ? onSkipPendingTrap : () => setInspectedCard(null);
+  const closeHistory = () => {
+    setInspectedCard(null);
+    onCloseHistory();
+  };
+
   return (
     <AnimatePresence>
       {liveSelectedCard && (
-        <motion.div initial={{ x: "-100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "-100%", opacity: 0 }} transition={{ type: "spring", stiffness: 420, damping: 34 }} className={`absolute left-0 right-14 ${detailPanelTopClassName} bottom-[8.2rem] z-[270] rounded-r-3xl border-r-2 border-cyan-500/60 bg-zinc-950/92 p-3 backdrop-blur-xl shadow-[14px_0_34px_rgba(0,0,0,0.72)] min-h-0 flex flex-col`}>
+        // z-[280] > historial (z-[270]) para que el detalle desde el log quede legible por encima.
+        <motion.div initial={{ x: "-100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "-100%", opacity: 0 }} transition={{ type: "spring", stiffness: 420, damping: 34 }} className={`absolute left-0 right-14 ${detailPanelTopClassName} bottom-[8.2rem] z-[280] rounded-r-3xl border-r-2 border-cyan-500/60 bg-zinc-950/92 p-3 backdrop-blur-xl shadow-[14px_0_34px_rgba(0,0,0,0.72)] min-h-0 flex flex-col`}>
           <button
             aria-label="Cerrar detalle"
-            onClick={isTutorialTrapPromptLocked ? () => undefined : isTrapPromptForSelectedCard ? onSkipPendingTrap : onCloseCard}
+            onClick={isTutorialTrapPromptLocked ? () => undefined : closeDetail}
             disabled={isTutorialTrapPromptLocked}
             className="absolute right-3 top-3 text-cyan-300 disabled:cursor-not-allowed disabled:opacity-45"
           >
@@ -91,6 +96,16 @@ export function BoardMobilePanelsDialog({
                 <div className="min-w-0">
                   <p className="text-[10px] font-black uppercase tracking-[0.16em] text-fuchsia-200">Decisión de trampa</p>
                   <p className="mt-1 text-xs font-bold text-fuchsia-100">¿Quieres activar esta carta trampa?</p>
+                </div>
+              </div>
+            ) : null}
+            {!isTrapPromptForSelectedCard ? (
+              <div className="mb-3 flex justify-center">
+                {/* Cara completa de la carta (imagen, coste, ATK/DEF, versión). Escala 0.7 → 182x266. */}
+                <div className="relative h-[266px] w-[182px]">
+                  <div style={{ width: "260px", height: "380px", transform: "scale(0.7)", transformOrigin: "top left" }}>
+                    <Card card={liveSelectedCard} disableHoverEffects disableDefaultShadow isPerformanceMode showBackgroundInPerformanceMode />
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -128,7 +143,7 @@ export function BoardMobilePanelsDialog({
         <motion.div initial={{ x: "100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "100%", opacity: 0 }} transition={{ type: "spring", stiffness: 420, damping: 34 }} className="absolute right-0 left-14 top-[5.2rem] bottom-[8.2rem] z-[270] rounded-l-3xl border-l-2 border-rose-500/60 bg-zinc-950/94 p-3 backdrop-blur-xl shadow-[-14px_0_34px_rgba(0,0,0,0.72)] min-h-0 flex flex-col">
           <div className="mb-2 flex items-center justify-between border-b border-zinc-700/80 pb-2">
             <h3 className="text-sm font-black uppercase tracking-widest text-white">Combat Log</h3>
-            <button aria-label="Cerrar historial" onClick={onCloseHistory} className="text-rose-300"><X size={22} /></button>
+            <button aria-label="Cerrar historial" onClick={closeHistory} className="text-rose-300"><X size={22} /></button>
           </div>
           <div className="mb-2 grid grid-cols-2 gap-2">
             <select aria-label="Filtro de turno" value={turnFilter} onChange={(event) => setTurnFilter(event.target.value === "ALL" ? "ALL" : Number(event.target.value))} className="rounded border border-cyan-500/40 bg-black/60 px-2 py-1 text-xs text-zinc-100">
@@ -144,7 +159,7 @@ export function BoardMobilePanelsDialog({
           <div className="min-h-0 flex-1 overflow-y-auto space-y-2 pr-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-500/70 [&::-webkit-scrollbar-track]:bg-transparent">
             {visibleEvents.length === 0 && <p className="text-xs text-zinc-500">No hay eventos para estos filtros.</p>}
             {visibleEvents.slice().reverse().map((event) => (
-              <CombatLogEventRow key={event.id} event={event} playerAId={gameState.playerA.id} playerAName={gameState.playerA.name} playerBId={gameState.playerB.id} playerBName={gameState.playerB.name} cardLookup={cardLookup} onCardClick={onSelectCard} />
+              <CombatLogEventRow key={event.id} event={event} playerAId={gameState.playerA.id} playerAName={gameState.playerA.name} playerBId={gameState.playerB.id} playerBName={gameState.playerB.name} cardLookup={cardLookup} onCardClick={setInspectedCard} />
             ))}
           </div>
         </motion.div>

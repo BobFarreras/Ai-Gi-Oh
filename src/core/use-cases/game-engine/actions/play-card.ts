@@ -45,9 +45,13 @@ export function playCard(state: GameState, playerId: string, cardId: string, mod
     card.type === "ENTITY" && resolvedMode !== "SET" && card.masteryPassiveSkillId === MASTERY_PASSIVE_IDS.DRAW_ON_SUMMON;
   const playerAfterSummon = drawsOnSummon ? drawTopDeckCard(updatedPlayer) : updatedPlayer;
 
+  // Núcleo de Datos: la 2ª+ invocación del turno consume una invocación EXTRA en vez de estar bloqueada.
+  const summonsEntity = card.type === "ENTITY";
+  const usesExtraSummon = summonsEntity && state.hasNormalSummonedThisTurn;
   const nextState = {
     ...state,
-    hasNormalSummonedThisTurn: card.type === "ENTITY" ? true : state.hasNormalSummonedThisTurn,
+    hasNormalSummonedThisTurn: summonsEntity ? true : state.hasNormalSummonedThisTurn,
+    extraSummonsThisTurn: usesExtraSummon ? Math.max(0, (state.extraSummonsThisTurn ?? 0) - 1) : state.extraSummonsThisTurn,
     playerA: isPlayerA ? playerAfterSummon : opponent,
     playerB: isPlayerA ? opponent : playerAfterSummon,
   };

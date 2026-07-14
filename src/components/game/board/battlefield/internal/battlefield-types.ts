@@ -36,6 +36,10 @@ export interface BattlefieldProps {
   cardXpActorPlayerId?: string | null;
   playerId: string;
   opponentId: string;
+  /** Escudo "sin ataques directos" activo protegiendo al jugador local (barrera en su borde del tablero). */
+  playerShieldActive?: boolean;
+  /** Escudo "sin ataques directos" activo protegiendo al rival (barrera en su borde del tablero). */
+  opponentShieldActive?: boolean;
   viewportBoardScale?: number;
   isMobileLayout?: boolean;
   onGraveyardClick: (side: "player" | "opponent") => void;

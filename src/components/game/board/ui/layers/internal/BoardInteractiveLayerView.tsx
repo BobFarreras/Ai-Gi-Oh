@@ -47,6 +47,8 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
           cardXpActorPlayerId={props.lastCardXpActorPlayerId}
           playerId={props.player.id}
           opponentId={props.opponent.id}
+          playerShieldActive={(props.gameState.activeStatusEffects ?? []).some((status) => status.kind === "NO_DIRECT_ATTACKS" && status.targetPlayerId === props.opponent.id)}
+          opponentShieldActive={(props.gameState.activeStatusEffects ?? []).some((status) => status.kind === "NO_DIRECT_ATTACKS" && status.targetPlayerId === props.player.id)}
           viewportBoardScale={props.viewport.boardScale}
           isMobileLayout={props.isMobileLayout}
           onGraveyardClick={props.onGraveyardClick}
@@ -70,7 +72,7 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
           hand={props.player.hand}
           playingCard={props.playingCard}
           stagedCardId={props.stagedCardId}
-          hasSummoned={props.hasNormalSummonedThisTurn}
+          hasSummoned={props.isSummonBlocked}
           isPlayerTurn={props.isPlayerTurn}
           highlightedCardIds={props.pendingDiscardCardIds}
           cardScale={props.viewport.handCardScale}
@@ -88,7 +90,7 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
       {props.isMobileLayout && props.selection.shouldRenderMobileOverlay && (
         <BoardMobileSelectedCardOverlay
           card={props.selection.selectedOverlayCard}
-          hasSummoned={props.hasNormalSummonedThisTurn}
+          hasSummoned={props.isSummonBlocked}
           isPlayerTurn={props.isPlayerTurn}
           source={props.selection.overlaySource}
           isOpponentCard={props.selection.isOpponentBoardSelection}

@@ -11,11 +11,14 @@ import { suspendExecutionInSet } from "@/core/use-cases/game-engine/actions/inte
 import { resolveReactiveTrapEvent } from "@/core/use-cases/game-engine/effects/internal/trap-trigger-registry";
 import { appendCombatLogEvent } from "@/core/use-cases/game-engine/logging/combat-log";
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
+import { addStatusEffects } from "@/core/use-cases/game-engine/state/status-effects";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 interface IResolveExecutionOptions {
   skipReactivePlayerIds?: string[];
   skipTrapEventTypes?: ("EXECUTION_ACTIVATED")[];
+  /** Dueños cuyo contra-trampa (Nullify) no debe auto-activarse (el jugador decide). */
+  skipCounterTrapPlayerIds?: string[];
 }
 
 function appendExecutionResultLogs(
@@ -53,12 +56,17 @@ export function resolveExecution(
   const withTrapResolution = resolveReactiveTrapEvent(
     state,
     getPlayerPair(state, playerId).opponent.id,
-    { type: "EXECUTION_ACTIVATED" },
+    { type: "EXECUTION_ACTIVATED", context: { activatedExecutionInstanceId: executionInstanceId } },
     {
       skipReactivePlayerIds: options?.skipReactivePlayerIds,
       skipEventTypes: options?.skipTrapEventTypes,
+      skipCounterTrapPlayerIds: options?.skipCounterTrapPlayerIds,
     },
   );
+  // Escudo Firewall: si una contra-magia anuló y destruyó esta ejecución, no se resuelve su efecto.
+  if (withTrapResolution.negatedExecutionInstanceId === executionInstanceId) {
+    return { ...withTrapResolution, negatedExecutionInstanceId: undefined };
+  }
   const { player, opponent, isPlayerA } = getPlayerPair(withTrapResolution, playerId);
   const executionEntity = player.activeExecutions.find((entity) => entity.instanceId === executionInstanceId);
   const executionSlotIndex = player.activeExecutions.findIndex((entity) => entity.instanceId === executionInstanceId);
@@ -73,7 +81,12 @@ export function resolveExecution(
     effect.action === "RETURN_GRAVEYARD_CARD_TO_FIELD" ||
     effect.action === "REVEAL_OPPONENT_SET_CARD" ||
     effect.action === "STEAL_OPPONENT_GRAVEYARD_CARD_TO_HAND" ||
-    effect.action === "LOCK_OPPONENT_ENTITY"
+    effect.action === "LOCK_OPPONENT_ENTITY" ||
+    effect.action === "DESTROY_OPPONENT_ENTITY" ||
+    effect.action === "FLIP_OPPONENT_ENTITY_TO_DEFENSE" ||
+    effect.action === "SACRIFICE_ALLY_ENTITY_FOR_ENERGY" ||
+    effect.action === "STEAL_OPPONENT_ENTITY" ||
+    effect.action === "STEAL_OPPONENT_EXECUTION"
   ) {
     return resolveExecutionSpecialAction(
       { state: withTrapResolution, playerId, player, opponent, isPlayerA, executionInstanceId },
@@ -94,17 +107,47 @@ export function resolveExecution(
     graveyard: [...effectResult.player.graveyard, executionEntity.card],
   };
   const withPlayers = assignPlayers(withTrapResolution, updatedPlayer, effectResult.opponent, isPlayerA);
-  const withBuffTrapResolution = effectResult.buff.stat && effectResult.buff.amount > 0
-    ? resolveReactiveTrapEvent(withPlayers, effectResult.opponent.id, {
-      type: "EXECUTION_BUFF_APPLIED",
-      context: { buffSourcePlayerId: playerId, buffStat: effectResult.buff.stat, buffAmount: effectResult.buff.amount },
-    })
-    : withPlayers;
-  return appendExecutionResultLogs(
-    withBuffTrapResolution,
+  // Logueamos los efectos de la ejecución (incl. el buff +X) ANTES de la reacción de trampa al buff, para
+  // que un debuff reactivo (OpenClaw) quede como el ÚLTIMO STAT_BUFF_APPLIED y el VFX muestre el -X final.
+  let withExecutionLogs = appendExecutionResultLogs(
+    withPlayers,
     playerId,
     executionEntity.card.id,
     executionSlotIndex >= 0 ? executionSlotIndex : 0,
     effectResult,
   );
+  // Efectos de estado multi-turno (p.ej. "sin ataques directos"): se añaden a GameState y se loguean.
+  if (effectResult.addedStatusEffects && effectResult.addedStatusEffects.length > 0) {
+    withExecutionLogs = {
+      ...withExecutionLogs,
+      activeStatusEffects: addStatusEffects(withExecutionLogs.activeStatusEffects, effectResult.addedStatusEffects, withExecutionLogs.turn),
+    };
+    for (const spec of effectResult.addedStatusEffects) {
+      withExecutionLogs = appendCombatLogEvent(withExecutionLogs, playerId, "STATUS_EFFECT_APPLIED", {
+        kind: spec.kind,
+        targetPlayerId: spec.targetPlayerId,
+        remainingTurns: spec.remainingTurns,
+      });
+    }
+  }
+  // Núcleo de Datos: concede invocaciones normales extra este turno (contador de GameState).
+  if (effectResult.grantedExtraSummons && effectResult.grantedExtraSummons > 0) {
+    withExecutionLogs = {
+      ...withExecutionLogs,
+      extraSummonsThisTurn: (withExecutionLogs.extraSummonsThisTurn ?? 0) + effectResult.grantedExtraSummons,
+    };
+  }
+  // Reacción al buff (OpenClaw etc.): su debuff se resuelve y loguea DESPUÉS del buff de la ejecución.
+  return effectResult.buff.stat && effectResult.buff.amount > 0
+    ? resolveReactiveTrapEvent(
+      withExecutionLogs,
+      effectResult.opponent.id,
+      {
+        type: "EXECUTION_BUFF_APPLIED",
+        context: { buffSourcePlayerId: playerId, buffStat: effectResult.buff.stat, buffAmount: effectResult.buff.amount, buffTargetEntityIds: effectResult.buff.entityIds },
+      },
+      // Coherencia: si el jugador rechazó su contra-trampa para esta ejecución, también aplica al buff.
+      { skipCounterTrapPlayerIds: options?.skipCounterTrapPlayerIds },
+    )
+    : withExecutionLogs;
 }

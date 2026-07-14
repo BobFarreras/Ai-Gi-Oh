@@ -4,6 +4,7 @@ import { BattleMode, IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { defaultGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
+import { canNormalSummon } from "@/core/use-cases/game-engine/state/summon-rules";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
 
 function resolveEntityDeployMode(mode: BattleMode): Extract<BattleMode, "ATTACK" | "SET"> {
@@ -14,7 +15,7 @@ function resolveEntityDeployMode(mode: BattleMode): Extract<BattleMode, "ATTACK"
 
 function validateCardPlayRules(state: GameState, player: IPlayer, cardType: CardType, mode: BattleMode): BattleMode {
   if (cardType === "ENTITY") {
-    if (state.hasNormalSummonedThisTurn) throw new GameRuleError("Ya has invocado una entidad este turno.");
+    if (!canNormalSummon(state)) throw new GameRuleError("Ya has invocado una entidad este turno.");
     if (player.activeEntities.length >= 3) throw new ValidationError("Tu zona de entidades está llena.");
     return resolveEntityDeployMode(mode);
   }

@@ -4,6 +4,7 @@
 import { useBoard } from "@/components/game/board/hooks/useBoard";
 import { useBoardScreenState } from "@/components/game/board/internal/use-board-screen-state";
 import { BoardInteractiveLayer } from "@/components/game/board/ui/layers/BoardInteractiveLayer";
+import { canNormalSummon } from "@/core/use-cases/game-engine/state/summon-rules";
 
 interface IBoardInteractiveSectionProps {
   board: ReturnType<typeof useBoard>;
@@ -25,7 +26,7 @@ export function BoardInteractiveSection({ board, screen, isMobile, suppressComba
       player={player}
       opponent={opponent}
       phase={board.gameState.phase}
-      hasNormalSummonedThisTurn={board.gameState.hasNormalSummonedThisTurn}
+      isSummonBlocked={!canNormalSummon(board.gameState)}
       selectedCard={board.selectedCard}
       playingCard={board.playingCard}
       stagedCardId={board.stagedCardId}

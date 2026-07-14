@@ -11,8 +11,12 @@ describe("mastery-passive-display", () => {
     expect(resolveMasteryPassiveLabel("passive-attack-energy-plus-1")).toContain("en ataque");
   });
 
-  it("devuelve fallback para pasiva desconocida", () => {
-    expect(resolveMasteryPassiveLabel("unknown-passive-id")).toBe("Pasiva Mastery activa en esta carta.");
+  it("devuelve null para pasiva desconocida (no afirma un poder que no sabe describir)", () => {
+    expect(resolveMasteryPassiveLabel("unknown-passive-id")).toBeNull();
+  });
+
+  it("devuelve null cuando no hay pasiva", () => {
+    expect(resolveMasteryPassiveLabel(null)).toBeNull();
   });
 
   it("escala la magnitud del texto según la versión (innata vs V5)", () => {

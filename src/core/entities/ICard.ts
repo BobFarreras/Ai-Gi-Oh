@@ -62,6 +62,60 @@ export interface IBoostDefenseByCardIdEffect {
   value: number;
 }
 
+export interface IBoostAttackByCardIdEffect {
+  action: "BOOST_ATTACK_BY_CARD_ID";
+  targetCardId: string;
+  value: number;
+}
+
+/** Inflige `value` de daño al rival SOLO si el jugador tiene en campo una entity con `requiredCardId`. */
+export interface IDamageIfAllyOnBoardEffect {
+  action: "DAMAGE_IF_ALLY_ON_BOARD";
+  requiredCardId: string;
+  value: number;
+}
+
+/** Impide al rival hacer ataques directos durante `turns` turnos suyos (puede seguir atacando entities). */
+export interface IApplyNoDirectAttacksEffect {
+  action: "APPLY_NO_DIRECT_ATTACKS";
+  turns: number;
+}
+
+/** El jugador elige una entity rival del tablero y la destruye (a la pila de destruidas). */
+export interface IDestroyOpponentEntityEffect {
+  action: "DESTROY_OPPONENT_ENTITY";
+}
+
+/** El jugador elige una entity rival del tablero y la voltea a modo DEFENSA. */
+export interface IFlipOpponentEntityToDefenseEffect {
+  action: "FLIP_OPPONENT_ENTITY_TO_DEFENSE";
+}
+
+/** El jugador elige una entity PROPIA, la destruye y gana energía igual a su coste. */
+export interface ISacrificeAllyEntityForEnergyEffect {
+  action: "SACRIFICE_ALLY_ENTITY_FOR_ENERGY";
+}
+
+/** Magia (Terminal Córtice): intercambia por completo la mano del jugador con la del rival. */
+export interface ISwapHandsEffect {
+  action: "SWAP_HANDS";
+}
+
+/** Magia (reaq m): intercambia por completo las entities del tablero con las del rival. */
+export interface ISwapBoardEntitiesEffect {
+  action: "SWAP_BOARD_ENTITIES";
+}
+
+/** El jugador elige una entity del tablero rival y la roba a su propio campo. */
+export interface IStealOpponentEntityEffect {
+  action: "STEAL_OPPONENT_ENTITY";
+}
+
+/** El jugador elige una magia/trampa del tablero rival y la roba a su propio campo. */
+export interface IStealOpponentExecutionEffect {
+  action: "STEAL_OPPONENT_EXECUTION";
+}
+
 export interface IDrainOpponentEnergyEffect {
   action: "DRAIN_OPPONENT_ENERGY";
 }
@@ -97,8 +151,24 @@ export interface INegateAttackAndDestroyAttackerEffect {
   action: "NEGATE_ATTACK_AND_DESTROY_ATTACKER";
 }
 
+/**
+ * Trampa (Escudo Metasploit, `ON_OPPONENT_ATTACK_DECLARED`): al declarar el rival un ataque, lo bloquea
+ * (no se resuelve) sin destruir al atacante.
+ */
+export interface INegateAttackEffect {
+  action: "NEGATE_ATTACK";
+}
+
 export interface ICopyOpponentBuffToAlliedEntitiesEffect {
   action: "COPY_OPPONENT_BUFF_TO_ALLIED_ENTITIES";
+}
+
+/**
+ * Trampa (OpenClaw Bug Trap, `ON_OPPONENT_STAT_BUFF_APPLIED`): cuando el rival aplica un buff a sus
+ * entities, resta ese mismo valor a las entities buffeadas (anula el buff).
+ */
+export interface INullifyOpponentBuffEffect {
+  action: "NULLIFY_OPPONENT_BUFF";
 }
 
 export interface IForceSummonedDefenseToAttackLockedEffect {
@@ -127,6 +197,25 @@ export interface INegateOpponentTrapAndDestroyEffect {
   action: "NEGATE_OPPONENT_TRAP_AND_DESTROY";
 }
 
+/**
+ * Trampa (Escudo Firewall, `ON_OPPONENT_EXECUTION_ACTIVATED`): cuando el rival activa una magia, anula su
+ * efecto y destruye esa carta antes de que se resuelva.
+ */
+export interface INegateOpponentExecutionAndDestroyEffect {
+  action: "NEGATE_OPPONENT_EXECUTION_AND_DESTROY";
+}
+
+/**
+ * Trampa PERSISTENTE (Escudo TypeScript, `ON_OPPONENT_ATTACK_DECLARED`): cada vez que el rival ataca a tu
+ * entity con `linkedCardId`, esa entity gana `value` de DEF (acumulable). La trampa NO se consume: sigue
+ * puesta mientras la entity ligada siga en el campo.
+ */
+export interface IReinforceLinkedEntityOnAttackEffect {
+  action: "REINFORCE_LINKED_ENTITY_ON_ATTACK";
+  linkedCardId: string;
+  value: number;
+}
+
 export interface IFusionSummonEffect {
   action: "FUSION_SUMMON";
   recipeId: string;
@@ -152,6 +241,44 @@ export interface ILockOpponentEntityEffect {
   turns: number;
 }
 
+/**
+ * Trampa reactiva (`ON_OPPONENT_TRAP_ACTIVATED`): cuando el rival activa una trampa, "infecta" al rival
+ * con `value` de daño por turno al inicio de cada uno de sus turnos. `turns` ausente/`null` = hasta el
+ * final del duelo.
+ */
+export interface IApplyDamageOverTimeEffect {
+  action: "APPLY_DAMAGE_OVER_TIME";
+  value: number;
+  turns?: number | null;
+}
+
+/**
+ * Trampa reactiva (`ON_OPPONENT_TRAP_ACTIVATED`): cuando el rival activa una trampa, cura al dueño `value`
+ * al inicio de cada uno de sus turnos. `turns` ausente/`null` = hasta el final del duelo.
+ */
+export interface IApplyHealOverTimeEffect {
+  action: "APPLY_HEAL_OVER_TIME";
+  value: number;
+  turns?: number | null;
+}
+
+/**
+ * Trampa reactiva (`ON_OPPONENT_DIRECT_ATTACK_DECLARED`): cuando el rival te ataca directo, anula ese golpe
+ * (tú no recibes daño) y refleja el ATK de la entity atacante a los LP del rival.
+ */
+export interface IReflectDirectDamageEffect {
+  action: "REFLECT_DIRECT_DAMAGE";
+}
+
+/**
+ * Magia (Núcleo de Datos): concede `count` invocaciones normales EXTRA este turno (además de la normal).
+ * `count` ausente = 1.
+ */
+export interface IGrantExtraSummonEffect {
+  action: "GRANT_EXTRA_SUMMON";
+  count?: number;
+}
+
 export type ICardEffect =
   | IDamageEffect
   | IHealEffect
@@ -162,6 +289,12 @@ export type ICardEffect =
   | IBoostAttackByArchetypeEffect
   | ISetDefenseByCardIdEffect
   | IBoostDefenseByCardIdEffect
+  | IBoostAttackByCardIdEffect
+  | IDamageIfAllyOnBoardEffect
+  | IApplyNoDirectAttacksEffect
+  | IDestroyOpponentEntityEffect
+  | IFlipOpponentEntityToDefenseEffect
+  | ISacrificeAllyEntityForEnergyEffect
   | IDrainOpponentEnergyEffect
   | ISetCardDuelProgressEffect
   | IRevealOpponentSetCardEffect
@@ -179,7 +312,19 @@ export type ICardEffect =
   | IFusionSummonEffect
   | IDestroyAllTrapsEffect
   | IDiscardOpponentHandCardEffect
-  | ILockOpponentEntityEffect;
+  | ILockOpponentEntityEffect
+  | IApplyDamageOverTimeEffect
+  | IApplyHealOverTimeEffect
+  | IReflectDirectDamageEffect
+  | IGrantExtraSummonEffect
+  | INegateAttackEffect
+  | INullifyOpponentBuffEffect
+  | ISwapHandsEffect
+  | ISwapBoardEntitiesEffect
+  | IStealOpponentEntityEffect
+  | IStealOpponentExecutionEffect
+  | INegateOpponentExecutionAndDestroyEffect
+  | IReinforceLinkedEntityOnAttackEffect;
 
 export interface ICard {
   readonly id: string;

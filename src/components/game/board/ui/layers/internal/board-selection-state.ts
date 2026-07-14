@@ -7,10 +7,12 @@ function resolveSelectedBoardEntity(
   selectedCard: IBoardInteractiveLayerProps["selectedCard"],
   selectedBoardEntityInstanceId: string | null,
 ): IBoardEntity | null {
-  const selectedById = selectedBoardEntityInstanceId
-    ? entities.find((entity) => entity.instanceId === selectedBoardEntityInstanceId) ?? null
-    : null;
-  if (selectedById) return selectedById;
+  // Con una selección de tablero explícita, la identidad es el instanceId (ÚNICO por entidad). No
+  // caemos a match por carta: dos copias iguales en ambos campos (p.ej. la misma fusión invocada por
+  // los dos jugadores) se confundirían, marcando la selección como "del rival" y bloqueando el ataque.
+  if (selectedBoardEntityInstanceId) {
+    return entities.find((entity) => entity.instanceId === selectedBoardEntityInstanceId) ?? null;
+  }
   if (!selectedCard) return null;
   return (
     entities.find((entity) => {

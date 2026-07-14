@@ -1,5 +1,5 @@
 // src/core/services/progression/mastery-passive-display.ts - Traduce identificadores de pasiva mastery a textos legibles en UI, con magnitud escalada por versión.
-import { MASTERY_PASSIVE_IDS } from "./mastery-passive-ids";
+import { MASTERY_PASSIVE_IDS, REVIVE_NEXT_TURN_PASSIVE_ID } from "./mastery-passive-ids";
 import { resolvePassiveMagnitude } from "./mastery-passive-magnitude";
 
 /** Plantillas de texto: reciben la magnitud ya escalada para reflejar el valor real de la carta. */
@@ -14,15 +14,18 @@ const PASSIVE_TEMPLATE: Record<string, (magnitude: number) => string> = {
   [MASTERY_PASSIVE_IDS.REFLECT_DAMAGE]: (m) => `Cortafuegos Reactivo: al ser atacada, refleja ${m} de daño al rival.`,
   [MASTERY_PASSIVE_IDS.HEAL_ON_TURN]: (m) => `Regeneración: al inicio de cada turno propio, el dueño cura ${m} HP.`,
   [MASTERY_PASSIVE_IDS.ENTITY_ATTACK_BONUS]: (m) => `Sobrecarga: al atacar a una entity rival, gana +${m} ATK en ese ataque.`,
+  [REVIVE_NEXT_TURN_PASSIVE_ID]: () => "Reactivación: al ir al cementerio, revive en tu siguiente turno (si el campo está lleno, sacrifica una entity).",
 };
 
 /**
  * Devuelve el texto de la pasiva con la magnitud correspondiente a la versión.
  * Sin `versionTier` asume el valor pleno (V5), útil para glosarios/referencia.
+ * Devuelve `null` cuando no hay pasiva o no sabemos describir su efecto: preferimos
+ * ocultar la línea antes que afirmar un poder vacío ("Pasiva activa" sin explicar).
  */
 export function resolveMasteryPassiveLabel(passiveSkillId: string | null, versionTier?: number): string | null {
   if (!passiveSkillId) return null;
   const template = PASSIVE_TEMPLATE[passiveSkillId];
-  if (!template) return "Pasiva Mastery activa en esta carta.";
+  if (!template) return null;
   return template(resolvePassiveMagnitude(passiveSkillId, versionTier ?? 5));
 }

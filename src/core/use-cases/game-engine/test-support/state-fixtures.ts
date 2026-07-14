@@ -13,6 +13,7 @@ interface ICreateTestStateConfig {
   hasNormalSummonedThisTurn?: boolean;
   pendingTurnAction?: GameState["pendingTurnAction"];
   combatLog?: GameState["combatLog"];
+  activeStatusEffects?: GameState["activeStatusEffects"];
   idFactory?: GameState["idFactory"];
 }
 
@@ -51,6 +52,7 @@ export function createTestGameState(config?: ICreateTestStateConfig): GameState 
     hasNormalSummonedThisTurn: resolvedConfig.hasNormalSummonedThisTurn ?? false,
     pendingTurnAction: resolvedConfig.pendingTurnAction ?? null,
     combatLog: resolvedConfig.combatLog ?? [],
+    activeStatusEffects: resolvedConfig.activeStatusEffects,
     idFactory: resolvedConfig.idFactory,
   };
 }
