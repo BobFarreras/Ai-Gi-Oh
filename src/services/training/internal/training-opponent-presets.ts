@@ -134,4 +134,38 @@ export const TRAINING_OPPONENT_PRESETS: Record<string, ITrainingOpponentPreset> 
     ]),
     fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
   },
+  // Soldado-Laptop: centinela del Repositorio Fantasma (Acto 3). 7º rival del ladder de arena.
+  // Estrena las trampas nuevas del evento: Escudo Firewall (anula magias) y Flutter Enjambre (refleja ataques).
+  "training-soldado-laptop": {
+    storyOpponentId: "opp-soldado-laptop",
+    codeName: "soldado-laptop",
+    displayName: "Soldado-Laptop",
+    avatarUrl: "/assets/story/opponents/opp-ch3-soldado-laptop/avatar-Soldado-laptop.webp",
+    introUrl: "/assets/story/opponents/opp-ch3-soldado-laptop/intro-Soldado-laptop.webp",
+    deckCardIds: toDeck([
+      "entity-chatgpt", "entity-gemini", "entity-claude", "entity-kali-linux", "entity-deepseek",
+      "entity-python", "entity-postgress", "entity-nextjs", "entity-react", "entity-openclaw",
+      "exec-fusion-gemgpt", "exec-fusion-kaclauli", "exec-fusion-pytgress", "exec-direct-damage-900",
+      "exec-llm-def-300", "trap-firewall-counter-magic", "trap-flutter-reflect", "trap-kernel-panic",
+      "trap-runtime-punish", "trap-counter-intrusion",
+    ]),
+    fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
+  },
+  // Gokernel: guerrero núcleo (homenaje cyber). 8º y ÚLTIMO rival del ladder de arena.
+  // Deck agresivo provisional (a mejorar): beatdown de alto ATK con fusiones y presión directa.
+  "training-gokernel": {
+    storyOpponentId: "opp-gokernel",
+    codeName: "gokernel",
+    displayName: "Gokernel",
+    avatarUrl: "/assets/story/opponents/opp-ch3-gokernel/avatar-Gokernel.webp",
+    introUrl: "/assets/story/opponents/opp-ch3-gokernel/intro-Gokernel.webp",
+    deckCardIds: toDeck([
+      "entity-chatgpt", "entity-gemini", "entity-claude", "entity-kali-linux", "entity-deepseek",
+      "entity-python", "entity-postgress", "entity-nextjs", "entity-react", "entity-openclaw",
+      "exec-fusion-gemgpt", "exec-fusion-kaclauli", "exec-fusion-pytgress", "exec-boost-atk-400",
+      "exec-direct-damage-900", "exec-direct-damage-600", "trap-kernel-panic", "trap-runtime-punish",
+      "trap-counter-intrusion", "trap-atk-drain",
+    ]),
+    fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
+  },
 };

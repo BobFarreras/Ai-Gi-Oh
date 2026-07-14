@@ -24,19 +24,24 @@ function readTierWins(progress: ITrainingProgress, tier: number): number {
 
 /**
  * Resuelve qué tiers se pueden jugar sin depender de UI ni de infraestructura.
+ *
+ * Suelo monótono: un tier ya desbloqueado (por debajo del `highestUnlockedTier` persistido) NUNCA se
+ * re-bloquea, aunque después suba `requiredWinsInPreviousTier` (rebalanceo de la escalera). Así ampliar
+ * el roster/requisitos no le quita a nadie el progreso conseguido; solo aplica a lo aún no desbloqueado.
  */
 export function resolveTrainingTierAccess(input: IResolveTrainingTierAccessInput): ITrainingTierAccessState {
+  const unlockedFloor = Math.max(1, input.progress.highestUnlockedTier ?? 1);
   const tiers = input.catalog.map((tier) => {
     if (tier.tier === 1) {
       return { ...tier, isUnlocked: true, winsInPreviousTier: 0, missingWins: 0 };
     }
     const winsInPreviousTier = readTierWins(input.progress, tier.tier - 1);
-    const isUnlocked = winsInPreviousTier >= tier.requiredWinsInPreviousTier;
+    const isUnlocked = winsInPreviousTier >= tier.requiredWinsInPreviousTier || tier.tier <= unlockedFloor;
     return {
       ...tier,
       isUnlocked,
       winsInPreviousTier,
-      missingWins: Math.max(0, tier.requiredWinsInPreviousTier - winsInPreviousTier),
+      missingWins: isUnlocked ? 0 : Math.max(0, tier.requiredWinsInPreviousTier - winsInPreviousTier),
     };
   });
   const highestUnlockedTier = tiers.filter((item) => item.isUnlocked).at(-1)?.tier ?? 1;

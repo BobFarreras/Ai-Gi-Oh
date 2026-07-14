@@ -6,6 +6,22 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+- **Evento — nuevas cartas en la tienda de Fragmentos**: Flutter Enjambre (400), Escudo Firewall (400), Golpe Naranja (350) y Avast (250).
+- **Nuevas formas de ganar Fragmentos**: ganar combates multijugador (+100) y una misión de evento por **superar el Nivel 5 de la Arena** (300 Fragmentos), retroactiva para quien ya lo haya logrado.
+- **Novedades**: sección del boletín que presenta las cartas nuevas con su render, efecto y acceso a la tienda.
+- **Arena — dos rivales nuevos del Acto 3**: Soldado-Laptop (7º) y Gokernel (8º y último), que cierran el roster del ladder como combates finales de cada nivel; Soldado-Laptop estrena las trampas nuevas del evento.
+- **Arena — Niveles 7 (ZENITH) y 8 (SINGULARITY)**: niveles de prestigio sobre el techo MYTHIC con mayor recompensa (x2.9 y x3.3).
+
+### Changed
+- El roster del ladder de Arena pasa de 6 a 8 rivales: completar un nivel exige ahora 8 victorias.
+- El progreso de Arena es **monótono**: un nivel ya desbloqueado nunca se re-bloquea aunque suba el requisito de victorias.
+- **Novedades**: retiradas las secciones "Motor Overworld v2" y "Próximamente: Nuevas Cartas".
+
+### Internal
+- Migraciones **115** (objetivo de misión de estado `REACH_ARENA_TIER` + misión `evt-launch-arena-tier5`), **116** (oponente `training-soldado-laptop` + niveles 7/8) y **117** (oponente `training-gokernel`, `required_wins_in_previous_tier = 8`). Cada oponente con 2 variantes de mazo. Aplicadas a producción; contenido de evento/novedades/arena sincronizado en `seed.sql`.
+- `resolveTrainingTierAccess` incorpora suelo monótono de nivel desbloqueado; `ARENA_LADDER_ROSTER` y el catálogo de tiers (código) reflejan el roster de 8 y los niveles 7/8.
+
 ## [1.13.0] - 2026-07-14
 
 ### Added
