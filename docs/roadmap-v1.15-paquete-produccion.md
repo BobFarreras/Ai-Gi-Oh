@@ -428,17 +428,53 @@ perfiles de dificultad ya existen y `get-match-session-data.ts` ya sabe resolver
 5. **Ghosts:** modelo asimétrico. Ganar al ghost da menos que ganar a un humano; **perder contra el ghost sí
    resta**; el dueño ausente no gana ni pierde nada.
 
-**Abiertas (bloquean su ficha, no el paquete):**
+6. **Curva nueva y testers:** se asume la bajada de estadísticas de las cartas ya subidas. La curva nueva es
+   **la única** curva (no se respeta la vieja hasta el 30). Hay que **comunicarlo a los jugadores** y explicarlo
+   en el glosario.
+7. **Caramelos:** solo de +1 a +5 niveles. **Pueden llegar al nivel máximo** (un jugador a nivel 95 puede usar
+   un +5 y ponerse a 100). El freno no es una regla: es la **escasez** — difíciles de encontrar y caros.
 
-- **Coste 6:** dijiste "5 → 2400 y 6 → 2400". ¿El 6 era 2600? Con el modelo de topes nuevo esto ya no es un
-  número absoluto sino un presupuesto de objetos, pero conviene confirmar la intención.
-- **Testers y la curva nueva:** el hito de nivel 5 pasa de +100 ATK a +50, así que las cartas ya subidas
-  **bajarían de estadísticas**. ¿Lo asumimos y lo comunicamos, o respetamos la curva vieja hasta el 30 y la nueva
-  se aplica del 30 en adelante?
-- **Caramelos y tope:** ¿un caramelo puede llevar una carta al nivel máximo, o hay un techo de nivel alcanzable
-  solo jugando?
+## 5. Estado de implementación
 
-## 5. Definition of done común
+| Fase | Ficha | Estado |
+|---|---|---|
+| A | 8 · OpenClaw muestra -400 | ✅ hecho |
+| A | 1 · Compartir carta en DM | ✅ hecho (+ **agujero de seguridad de CARD_SHARE cerrado**, ver abajo) |
+| A | 6 · Diálogo de premio semanal | ⏳ pendiente |
+| A | 9 · UX de reemplazo de zona | ⏳ pendiente |
+| B | 4 · Niveles a 100 | ⏳ pendiente |
+| B | 2 · Caramelos | ⏳ pendiente |
+| B | 3 · Objetos | ⏳ pendiente |
+| C | 5 · Cartas por reconfiguración | ⏳ pendiente |
+| C | 7 · Magia de ataque en defensa | ⏳ pendiente |
+| D | 11 · Ghost decks | ⏳ pendiente |
+| — | 10 · 2v2 | ❌ fuera del paquete (release propia) |
+
+**Documentación de cara al jugador:** toda regla nueva de juego (curva de niveles, caramelos, objetos, topes,
+carta de ataque en defensa) tiene que acabar en el glosario de la Academia
+(`src/components/hub/academy/glossary/glossary-content.ts`, y las descripciones técnicas en
+`effect-catalog-data.ts`). Una regla que el jugador no puede consultar no existe.
+
+### Vulnerabilidad encontrada y cerrada al hacer la ficha 1 (CARD_SHARE)
+
+Al ir a enchufar el selector de cartas en el DM se descubrió que **el chat de comunidad ya tenía un agujero en
+producción**, y montar el DM encima lo habría extendido a los privados:
+
+- `reconstructSharedCard` pintaba la carta compartida **entera desde la metadata del mensaje** (nombre, ATK,
+  DEF y, lo grave, `renderUrl` y `bgUrl`), y las rutas guardaban esa metadata **sin validar nada**
+  (`input.metadata ?? {}`).
+- Impacto: un cliente modificado podía publicar una carta inventada con las estadísticas que quisiera y, sobre
+  todo, **apuntar la imagen a una URL externa arbitraria** que se cargaría en el navegador de todo el que
+  abriera el chat (pixel de rastreo con las IPs de los jugadores, o imagen ofensiva).
+- Además, `validateChatMessageInput` aceptaba `kind: "SYSTEM"` **del cliente**: cualquiera podía publicar
+  mensajes que se pintan como avisos oficiales del sistema.
+
+**Arreglo:** del cliente solo se acepta el `cardId`. La instantánea de la carta la construye el servidor
+(`src/services/chat/build-card-share-metadata.ts`) desde la colección y la progresión reales del jugador, lo
+que además **valida la posesión** (no puedes compartir una carta que no tienes). Y las rutas solo admiten
+`TEXT` o `CARD_SHARE`. Cubierto con tests.
+
+## 6. Definition of done común
 
 Ninguna ficha se da por cerrada sin: tests que fallan sin el cambio; `CI=true pnpm quality:check` en verde;
 migración escrita en `docs/supabase/sql/` **y aplicada** a producción con constancia; RLS verificado en las tablas

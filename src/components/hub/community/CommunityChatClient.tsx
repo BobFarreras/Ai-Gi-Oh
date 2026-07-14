@@ -142,26 +142,15 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
     window.setTimeout(() => node.classList.remove("chat-quote-flash"), 1200);
   }, [messagesById]);
 
+  // Solo viaja el cardId: la instantánea de la carta (nombre, stats e imágenes) la construye el servidor
+  // desde la colección real del jugador, así que no tiene sentido —ni sería fiable— mandarla desde aquí.
   const handleShareCard = useCallback(
     async (card: ICard) => {
       setIsPickerOpen(false);
       await send({
         content: `Comparte su ${card.name}`,
         kind: "CARD_SHARE",
-        metadata: {
-          cardId: card.id,
-          name: card.name,
-          type: card.type,
-          faction: card.faction,
-          cost: card.cost,
-          attack: card.attack ?? null,
-          defense: card.defense ?? null,
-          archetype: card.archetype ?? null,
-          renderUrl: card.renderUrl ?? null,
-          bgUrl: card.bgUrl ?? null,
-          versionTier: card.versionTier ?? 0,
-          level: card.level ?? 0,
-        },
+        metadata: { cardId: card.id },
       });
     },
     [send],

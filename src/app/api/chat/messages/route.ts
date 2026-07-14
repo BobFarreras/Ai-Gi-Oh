@@ -10,6 +10,7 @@ import { createSupabaseServiceRoleClient } from "@/infrastructure/persistence/su
 import { GetRecentChatMessagesUseCase } from "@/core/use-cases/chat/GetRecentChatMessagesUseCase";
 import { SendChatMessageUseCase } from "@/core/use-cases/chat/SendChatMessageUseCase";
 import { CHAT_RATE_LIMIT_MAX, CHAT_RATE_LIMIT_WINDOW_MS } from "@/core/services/chat/chat-rate-limit";
+import { buildCardShareMetadata } from "@/services/chat/build-card-share-metadata";
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,13 +46,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Vas demasiado rápido. Espera unos segundos antes de enviar más mensajes." }, { status: 429 });
     }
     const nickname = await getPlayerDisplayName(session, "Operador");
+    // Un usuario solo puede enviar TEXT o CARD_SHARE: "SYSTEM" es del servidor y, si se aceptara del cliente,
+    // cualquiera podría publicar mensajes que se pintan como avisos oficiales del sistema.
+    const kind = payload.kind === "CARD_SHARE" ? "CARD_SHARE" : "TEXT";
+    // La metadata de la carta la construye el servidor desde la colección real del jugador (ver el servicio):
+    // del cliente solo se acepta el cardId.
+    const metadata = kind === "CARD_SHARE"
+      ? await buildCardShareMetadata(userId, (payload.metadata as Record<string, unknown> | undefined)?.cardId)
+      : undefined;
     const message = await new SendChatMessageUseCase(repository).execute({
       userId,
       nickname,
       room: typeof payload.room === "string" ? payload.room : undefined,
       content: typeof payload.content === "string" ? payload.content : "",
-      kind: typeof payload.kind === "string" ? payload.kind : undefined,
-      metadata: payload.metadata && typeof payload.metadata === "object" ? (payload.metadata as Record<string, unknown>) : undefined,
+      kind,
+      metadata,
       replyToMessageId: typeof payload.replyToMessageId === "string" ? payload.replyToMessageId : null,
     });
     return NextResponse.json({ message }, { status: 201 });

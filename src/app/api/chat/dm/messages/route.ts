@@ -9,6 +9,7 @@ import { SupabaseDirectMessageRepository } from "@/infrastructure/persistence/su
 import { createSupabaseServiceRoleClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-service-role-client";
 import { SendDirectMessageUseCase } from "@/core/use-cases/chat/SendDirectMessageUseCase";
 import { CHAT_RATE_LIMIT_MAX, CHAT_RATE_LIMIT_WINDOW_MS } from "@/core/services/chat/chat-rate-limit";
+import { buildCardShareMetadata } from "@/services/chat/build-card-share-metadata";
 
 const DEFAULT_LIMIT = 60;
 const MAX_LIMIT = 100;
@@ -49,12 +50,18 @@ export async function POST(request: NextRequest) {
     if ((await repository.countRecentBySender(userId, sinceIso)) >= CHAT_RATE_LIMIT_MAX) {
       return NextResponse.json({ error: "Vas demasiado rápido. Espera unos segundos." }, { status: 429 });
     }
+    // Igual que en el chat de comunidad: del cliente solo se acepta el cardId; la instantánea de la carta
+    // (nombre, stats e imágenes) la construye el servidor desde la colección real del jugador.
+    const kind = payload.kind === "CARD_SHARE" ? "CARD_SHARE" : "TEXT";
+    const metadata = kind === "CARD_SHARE"
+      ? await buildCardShareMetadata(userId, (payload.metadata as Record<string, unknown> | undefined)?.cardId)
+      : undefined;
     const message = await new SendDirectMessageUseCase(repository).execute({
       senderId: userId,
       conversationId: typeof payload.conversationId === "string" ? payload.conversationId : "",
       content: typeof payload.content === "string" ? payload.content : "",
-      kind: typeof payload.kind === "string" ? payload.kind : undefined,
-      metadata: payload.metadata && typeof payload.metadata === "object" ? (payload.metadata as Record<string, unknown>) : undefined,
+      kind,
+      metadata,
       replyToMessageId: typeof payload.replyToMessageId === "string" ? payload.replyToMessageId : null,
     });
     return NextResponse.json({ message }, { status: 201 });

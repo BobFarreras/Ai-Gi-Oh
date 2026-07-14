@@ -6,9 +6,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, CornerUpLeft, Send, X } from "lucide-react";
+import { ArrowLeft, CornerUpLeft, Layers, Send, X } from "lucide-react";
+import { ICard } from "@/core/entities/ICard";
 import { IChatMessage } from "@/core/entities/chat/IChatMessage";
 import { IDirectMessage } from "@/core/entities/chat/IDirectMessage";
+import { CommunityChatCardPicker } from "@/components/hub/community/CommunityChatCardPicker";
 import { CommunityChatMessage, IQuotedPreview } from "@/components/hub/community/CommunityChatMessage";
 import { getAvatarGradientClasses, getAvatarInitial } from "@/components/hub/internal/avatar-color";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/core/services/chat/validate-chat-message";
@@ -48,6 +50,7 @@ function previewText(message: IDirectMessage): string {
 export function DirectConversationClient({ conversationId, localPlayerId, otherNickname, otherAvatarUrl, initialMessages }: DirectConversationClientProps) {
   const { messages, isSending, error, send, remove, clearError } = useDirectConversation(conversationId, initialMessages);
   const [draft, setDraft] = useState("");
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -105,6 +108,22 @@ export function DirectConversationClient({ conversationId, localPlayerId, otherN
       setReplyingToId(null);
     }
   }
+
+  // Igual que en el chat de comunidad: solo viaja el cardId; el servidor construye la instantánea de la carta
+  // desde la colección real del jugador.
+  const handleShareCard = useCallback(
+    async (card: ICard) => {
+      setIsPickerOpen(false);
+      const ok = await send({
+        content: `Comparte su ${card.name}`,
+        kind: "CARD_SHARE",
+        metadata: { cardId: card.id },
+        replyToMessageId: replyingToId,
+      });
+      if (ok) setReplyingToId(null);
+    },
+    [replyingToId, send],
+  );
 
   return (
     <div className="mx-auto flex h-dvh w-full max-w-3xl flex-col gap-3 px-3 py-3 sm:px-5 sm:py-5">
@@ -174,6 +193,16 @@ export function DirectConversationClient({ conversationId, localPlayerId, otherN
 
         {/* Input */}
         <form onSubmit={handleSubmit} className="flex shrink-0 items-end gap-2 border-t border-cyan-900/50 bg-[#03101c]/80 p-2.5 sm:p-3">
+          <button
+            type="button"
+            aria-label="Compartir una carta"
+            title="Compartir una carta tuya"
+            onClick={() => setIsPickerOpen(true)}
+            disabled={isSending}
+            className="flex h-[42px] w-[42px] shrink-0 items-center justify-center border border-cyan-500/40 bg-cyan-950/30 text-cyan-300 transition hover:border-cyan-300/70 hover:text-cyan-100 disabled:opacity-40"
+          >
+            <Layers className="h-4 w-4" />
+          </button>
           <input
             ref={inputRef}
             value={draft}
@@ -193,6 +222,13 @@ export function DirectConversationClient({ conversationId, localPlayerId, otherN
             <span className="hidden sm:inline">Enviar</span>
           </button>
         </form>
+
+        <CommunityChatCardPicker
+          key={isPickerOpen ? "open" : "closed"}
+          isOpen={isPickerOpen}
+          onClose={() => setIsPickerOpen(false)}
+          onSelect={handleShareCard}
+        />
       </section>
     </div>
   );
