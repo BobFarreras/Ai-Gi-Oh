@@ -22,6 +22,8 @@ export interface IRemoteAnimationContext {
   setRevealedEntities: (value: string[] | ((prev: string[]) => string[])) => void;
   clearSelection: () => void;
   clearError: () => void;
+  /** La acción del rival no pudo aplicarse aquí: los dos clientes ya no comparten el mismo estado. */
+  reportDesync: (action: IMatchActionPayload, error: unknown) => void;
 }
 
 function resolvePlayers(state: GameState, opponentId: string) {
@@ -30,11 +32,19 @@ function resolvePlayers(state: GameState, opponentId: string) {
   return { opponent, local };
 }
 
+/**
+ * Aplica la acción del rival. Si el motor la rechaza aquí, NO es un error recuperable: significa que el
+ * estado local ya no coincide con el suyo (p.ej. una instancia que en su tablero existe y en el nuestro no),
+ * y a partir de ahora las dos partidas divergen. Dejamos el estado como estaba —aplicar a medias sería peor—
+ * pero lo reportamos: tragárselo en silencio hacía que el jugador viera la animación del ataque sin trampas
+ * ni pérdida de LP y siguiera jugando una partida distinta a la del rival.
+ */
 function apply(ctx: IRemoteAnimationContext, opponentId: string, action: IMatchActionPayload): void {
   ctx.applyTransition((state) => {
     try {
       return applyMatchAction(state, opponentId, action);
-    } catch {
+    } catch (error) {
+      ctx.reportDesync(action, error);
       return state;
     }
   });

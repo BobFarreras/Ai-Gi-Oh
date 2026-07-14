@@ -89,6 +89,7 @@ export function useBoard(
     setRevealedEntities: uiState.setRevealedEntities,
     clearSelection: uiState.clearSelection,
     clearError: uiState.clearError,
+    setLastError: uiState.setLastError,
   });
 
   return {

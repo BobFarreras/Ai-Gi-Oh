@@ -4,6 +4,7 @@
 import { MutableRefObject, useCallback, useLayoutEffect, useRef } from "react";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IMatchActionPayload } from "@/core/entities/multiplayer/IMatchAction";
+import { IBoardUiError } from "../hooks/internal/boardError";
 import { animateRemoteAction, IRemoteAnimationContext } from "./animate-remote-action";
 
 interface IUseRemoteOpponentAnimatorParams {
@@ -14,6 +15,7 @@ interface IUseRemoteOpponentAnimatorParams {
   setRevealedEntities: (value: string[] | ((prev: string[]) => string[])) => void;
   clearSelection: () => void;
   clearError: () => void;
+  setLastError: (error: IBoardUiError | null) => void;
 }
 
 /**
@@ -38,6 +40,19 @@ export function useRemoteOpponentAnimator(
       setRevealedEntities: current.setRevealedEntities,
       clearSelection: current.clearSelection,
       clearError: current.clearError,
+      reportDesync: (failedAction, error) => {
+        // En consola para poder diagnosticarlo, y en la UI para el jugador: si su tablero ha dejado de
+        // coincidir con el del rival, seguir jugando a ciegas no lleva a ningún sitio.
+        console.error("[multijugador] acción del rival rechazada por el motor local (desincronización)", {
+          actionType: failedAction.type,
+          payload: failedAction.payload,
+          error,
+        });
+        current.setLastError({
+          code: "GAME_RULE_ERROR",
+          message: "La partida se ha desincronizado con la del rival. El resultado puede no ser fiable.",
+        });
+      },
     };
     // El rival es siempre playerB en el cliente local (el local es playerA).
     const opponentId = current.gameStateRef.current.playerB.id;
