@@ -440,7 +440,7 @@ perfiles de dificultad ya existen y `get-match-session-data.ts` ya sabe resolver
 |---|---|---|
 | A | 8 · OpenClaw muestra -400 | ✅ hecho |
 | A | 1 · Compartir carta en DM | ✅ hecho (+ **agujero de seguridad de CARD_SHARE cerrado**, ver abajo) |
-| A | 6 · Diálogo de premio semanal | ⏳ pendiente |
+| A | 6 · Diálogo de premio semanal | ✅ código hecho · ⚠️ **migración 118 SIN aplicar a producción** |
 | A | 9 · UX de reemplazo de zona | ⏳ pendiente |
 | B | 4 · Niveles a 100 | ⏳ pendiente |
 | B | 2 · Caramelos | ⏳ pendiente |
@@ -454,6 +454,18 @@ perfiles de dificultad ya existen y `get-match-session-data.ts` ya sabe resolver
 carta de ataque en defensa) tiene que acabar en el glosario de la Academia
 (`src/components/hub/academy/glossary/glossary-content.ts`, y las descripciones técnicas en
 `effect-catalog-data.ts`). Una regla que el jugador no puede consultar no existe.
+
+### Pendiente de aplicar en producción: migración 118 (ficha 6)
+
+`docs/supabase/sql/118_weekly_prize_seen.sql` añade la marca `seen_at` al historial semanal y la función
+`ack_weekly_prizes`. **Sin ella, el diálogo del premio no funciona** (el servicio devolverá vacío, sin romper
+nada).
+
+Dato comprobado en producción antes de escribirla: la 094 **sí** está aplicada, y ya hay **1 semana cerrada con
+10 premios repartidos** — es decir, hay jugadores que cobraron Nexus por quedar arriba y no lo saben. Al aplicar
+la 118, la columna nace a `NULL`, así que **esos jugadores verán el aviso de esa semana pasada** la próxima vez
+que entren al hub. Es lo deseable, pero es una decisión consciente: si se prefiere anunciar solo a partir de la
+siguiente semana, la propia migración documenta el `update` para marcar lo viejo como visto.
 
 ### Vulnerabilidad encontrada y cerrada al hacer la ficha 1 (CARD_SHARE)
 

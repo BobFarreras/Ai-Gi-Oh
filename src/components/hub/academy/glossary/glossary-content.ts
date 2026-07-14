@@ -80,6 +80,7 @@ export const MASTERY_INTRO = [
 
 export const RANKINGS_INTRO = [
   "Hay tres clasificaciones y cada una premia algo distinto. Subir en ellas te da prestigio y, en las semanales, recompensas de Nexus.",
+  "Los rankings semanales se cierran los DOMINGOS a las 22:00 UTC (medianoche en España). Al cerrarse, los mejores clasificados de cada tablero cobran su premio en Nexus automáticamente: no hay que reclamar nada, se ingresa solo. La próxima vez que entres al hub te lo anunciamos.",
   "Aquí tienes exactamente qué acciones puntúan en cada ranking.",
 ];
 

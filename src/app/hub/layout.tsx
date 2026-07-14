@@ -3,7 +3,9 @@ import { MultiplayerPresenceProvider } from "@/components/hub/multiplayer/Multip
 import { DailyLoginGate } from "@/components/hub/progression/DailyLoginGate";
 import { DailyLoginProvider } from "@/components/hub/progression/DailyLoginProvider";
 import { ProgressionDock } from "@/components/hub/progression/ProgressionDock";
+import { WeeklyPrizeGate } from "@/components/hub/progression/WeeklyPrizeGate";
 import { getMultiplayerLobbyData } from "@/services/multiplayer/get-multiplayer-lobby-data";
+import { getPendingWeeklyPrizes } from "@/services/ranking/get-pending-weekly-prizes";
 import { getDailyLoginStatus } from "@/services/progression/get-daily-login-status";
 import { getPlayerMissions } from "@/services/progression/get-player-missions";
 import { getEventOverview } from "@/services/progression/get-event-overview";
@@ -11,13 +13,14 @@ import { getActivePromotions } from "@/services/progression/get-active-promotion
 import { getOnboardingCompleted } from "@/services/hub/get-onboarding-completed";
 
 export default async function HubLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const [lobbyData, dailyLoginStatus, missions, eventOverview, promotions, onboardingCompleted] = await Promise.all([
+  const [lobbyData, dailyLoginStatus, missions, eventOverview, promotions, onboardingCompleted, pendingWeeklyPrizes] = await Promise.all([
     getMultiplayerLobbyData(),
     getDailyLoginStatus(),
     getPlayerMissions(),
     getEventOverview(),
     getActivePromotions(),
     getOnboardingCompleted(),
+    getPendingWeeklyPrizes(),
   ]);
   const viewport = <div className="relative min-h-dvh overflow-hidden">{children}</div>;
 
@@ -37,6 +40,9 @@ export default async function HubLayout({ children }: Readonly<{ children: React
       {onboardingCompleted ? (
         <DailyLoginProvider initialStatus={dailyLoginStatus}>
           <DailyLoginGate />
+          {/* Dentro del provider: el aviso del premio semanal espera a que se reclame la diaria para no
+              apilarse encima de ella. */}
+          <WeeklyPrizeGate prizes={pendingWeeklyPrizes} />
           <ProgressionDock missions={missions} eventOverview={eventOverview} promotions={promotions} />
         </DailyLoginProvider>
       ) : null}
