@@ -169,21 +169,23 @@ const trapEffectHandlers: { [K in TrapAction]: TrapHandler<K> } = {
       negatesExecution: true,
     };
   },
-  // OpenClaw Bug Trap: resta el buff recién aplicado a las entities buffeadas del rival (lo anula).
+  // OpenClaw Bug Trap: no solo ANULA el buff recién aplicado, sino que penaliza: resta el DOBLE del buff
+  // al valor buffeado, dejando a las entities del rival por DEBAJO de su valor original (efecto negativo).
   NULLIFY_OPPONENT_BUFF: (player, opponent, _trap, _effect, context) => {
     if (!context?.buffSourcePlayerId || context.buffSourcePlayerId !== opponent.id) return createNeutralResult(player, opponent);
     if (!context.buffStat || typeof context.buffAmount !== "number" || context.buffAmount <= 0) return createNeutralResult(player, opponent);
     const targetIds = context.buffTargetEntityIds ?? [];
     const stat = context.buffStat === "ATTACK" ? "attack" : "defense";
+    const penalty = 2 * context.buffAmount; // anula (+buff) y además resta otro tanto por debajo de la base.
     const updatedOpponent: IPlayer = {
       ...opponent,
       activeEntities: opponent.activeEntities.map((entity) =>
         targetIds.includes(entity.instanceId)
-          ? { ...entity, card: { ...entity.card, [stat]: Math.max(0, (entity.card[stat] ?? 0) - context.buffAmount!) } }
+          ? { ...entity, card: { ...entity.card, [stat]: Math.max(0, (entity.card[stat] ?? 0) - penalty) } }
           : entity,
       ),
     };
-    return { ...createNeutralResult(player, updatedOpponent), buffTargetEntityIds: targetIds, buffStat: context.buffStat, buffAmount: -Math.abs(context.buffAmount) };
+    return { ...createNeutralResult(player, updatedOpponent), buffTargetEntityIds: targetIds, buffStat: context.buffStat, buffAmount: -penalty };
   },
 };
 

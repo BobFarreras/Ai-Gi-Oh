@@ -151,9 +151,9 @@ describe("Trap triggers on execution", () => {
     state = GameEngine.playCard(state, "p1", "exec-buff-def-openclaw", "ACTIVATE");
     const executionId = state.playerA.activeExecutions[0].instanceId;
     const next = GameEngine.resolveExecution(state, "p1", executionId);
-    // El buff +200 se aplica y OpenClaw lo resta: DEF neta vuelve a 600.
+    // El buff +200 se aplica (600->800) y OpenClaw penaliza (-2*200): DEF neta 400, por debajo de la base 600.
     const tool = next.playerA.activeEntities.find((entity) => entity.instanceId === "p1-tool");
-    expect(tool?.card.defense).toBe(600);
+    expect(tool?.card.defense).toBe(400);
     expect(next.playerB.graveyard.some((card) => card.id === "trap-openclaw-nullify-buff")).toBe(true);
   });
 });

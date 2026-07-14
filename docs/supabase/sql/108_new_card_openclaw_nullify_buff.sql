@@ -6,7 +6,7 @@ INSERT INTO public.cards_catalog (
   bg_url, render_url, effect, fusion_recipe_id, fusion_material_ids, fusion_energy_requirement, is_active
 ) VALUES
   ('trap-openclaw-nullify-buff', 'OpenClaw Bug Trap',
-   'Cuando el rival aplica un buff a sus entities, resta ese mismo valor a las entities buffeadas (anula el buff).',
+   'Cuando el rival aplica un buff a sus entities, no solo lo anula: las deja por DEBAJO de su valor original (resta el doble del buff).',
    'TRAP', 'OPEN_SOURCE', 2, NULL, NULL, NULL, 'ON_OPPONENT_STAT_BUFF_APPLIED',
    NULL, '/assets/renders/traps/trap-openclaw-nullify-buff.webp',
    '{"action":"NULLIFY_OPPONENT_BUFF"}', NULL, '{}', NULL, true)
