@@ -185,7 +185,9 @@ const trapEffectHandlers: { [K in TrapAction]: TrapHandler<K> } = {
           : entity,
       ),
     };
-    return { ...createNeutralResult(player, updatedOpponent), buffTargetEntityIds: targetIds, buffStat: context.buffStat, buffAmount: -penalty };
+    // El VFX/log muestra el buff BLOQUEADO (-400 para un buff de +400), no el delta bruto de la estadística
+    // (-800): la carta promete "anula el aumento y le resta ese valor", y eso es lo que el jugador debe leer.
+    return { ...createNeutralResult(player, updatedOpponent), buffTargetEntityIds: targetIds, buffStat: context.buffStat, buffAmount: -context.buffAmount };
   },
 };
 

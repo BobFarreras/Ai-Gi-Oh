@@ -155,8 +155,9 @@ describe("Trap triggers on execution", () => {
     const tool = next.playerA.activeEntities.find((entity) => entity.instanceId === "p1-tool");
     expect(tool?.card.defense).toBe(400);
     expect(next.playerB.graveyard.some((card) => card.id === "trap-openclaw-nullify-buff")).toBe(true);
-    // El ÚLTIMO STAT_BUFF_APPLIED debe ser el debuff (negativo), para que el VFX muestre -valor y no +valor.
+    // El ÚLTIMO STAT_BUFF_APPLIED es el debuff, y muestra el BUFF BLOQUEADO (-200), no el delta bruto de la
+    // estadística (-400): la carta promete "anula el aumento y le resta ese valor", y eso es lo que se lee.
     const buffEvents = next.combatLog.filter((event) => event.eventType === "STAT_BUFF_APPLIED");
-    expect((buffEvents.at(-1)?.payload as Record<string, unknown>).amount).toBe(-400);
+    expect((buffEvents.at(-1)?.payload as Record<string, unknown>).amount).toBe(-200);
   });
 });

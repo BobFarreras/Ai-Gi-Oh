@@ -28,6 +28,12 @@ export interface ITrapResolutionResult {
   energyGainAmount: number;
   buffTargetEntityIds: string[];
   buffStat: "ATTACK" | "DEFENSE" | null;
+  /**
+   * Valor que se MUESTRA en el log y el VFX, que no siempre es el delta real de la estadística. En OpenClaw
+   * (`NULLIFY_OPPONENT_BUFF`) la estadística baja el doble del buff, pero al jugador se le enseña el buff
+   * bloqueado (-400 para un buff de +400), que es lo que la carta promete. No usar este campo para calcular
+   * nada: la estadística ya la deja aplicada el handler.
+   */
   buffAmount: number;
   blockedTargetEntityInstanceId: string | null;
   destroyedOpponentEntityCardId: string | null;

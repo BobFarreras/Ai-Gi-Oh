@@ -63,14 +63,14 @@ describe("trap-effect-registry", () => {
     expect(result?.destroyedOpponentEntityFrom).toBe("EXECUTION_ZONE");
   });
 
-  it("NULLIFY_OPPONENT_BUFF anula el buff y penaliza por debajo (resta el doble del buff)", () => {
+  it("NULLIFY_OPPONENT_BUFF resta el doble del buff, pero MUESTRA el buff bloqueado (no el delta bruto)", () => {
     // La entity ya viene buffeada (+500): base 1000, buffeada 1500. OpenClaw resta 2*500 = 1000 -> 500.
     const buffedCard = { id: "ent", name: "Ent", description: "", type: "ENTITY" as const, faction: "BIG_TECH" as const, cost: 3, attack: 1500, defense: 1000 };
     const opponent = { ...createPlayer("b"), activeEntities: [{ instanceId: "e1", card: buffedCard, mode: "ATTACK" as const, hasAttackedThisTurn: false, isNewlySummoned: false }] };
     const trap: IBoardEntity = { instanceId: "t-oc", mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false, card: { id: "trap-openclaw-nullify-buff", name: "OC", description: "", type: "TRAP", faction: "OPEN_SOURCE", cost: 2, trigger: "ON_OPPONENT_STAT_BUFF_APPLIED", effect: { action: "NULLIFY_OPPONENT_BUFF" } } };
     const result = resolveTrapEffectFromRegistry(createPlayer("a"), opponent, trap, { buffSourcePlayerId: "b", buffStat: "ATTACK", buffAmount: 500, buffTargetEntityIds: ["e1"] });
-    expect(result?.opponent.activeEntities[0].card.attack).toBe(500); // 1500 - 2*500
-    expect(result?.buffAmount).toBe(-1000);
+    expect(result?.opponent.activeEntities[0].card.attack).toBe(500); // aplicado: 1500 - 2*500
+    expect(result?.buffAmount).toBe(-500); // mostrado: el buff bloqueado, no el -1000 de la estadística
   });
 
   it("NEGATE_ATTACK marca la anulación del ataque sin tocar LP ni destruir al atacante", () => {
