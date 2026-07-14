@@ -18,6 +18,7 @@ export const PROGRESSION_ACTION_LABEL: Record<string, string> = {
   OWN_CARDS_AT_VERSION: "Tener cartas a versión ≥",
   OWN_CARDS_TOTAL: "Tener cartas en el almacén",
   OWN_DISTINCT_CARDS: "Tener cartas distintas",
+  REACH_ARENA_TIER: "Desbloquear nivel de la arena ≥",
 };
 
 /** Objetivos de misión disponibles para el admin (acciones + colección). */
@@ -25,11 +26,11 @@ export const MISSION_OBJECTIVE_TYPES = [
   "PLAY_DUEL", "WIN_DUEL", "PLAY_ARENA", "WIN_ARENA", "PLAY_MP_MATCH", "WIN_MP_MATCH",
   "WIN_FLAWLESS_STORY", "WIN_FLAWLESS_TRAINING", "WIN_FLAWLESS_MP",
   "BUY_CARD", "BUY_PACK", "EVOLVE_CARD", "SPEND_NEXUS",
-  "OWN_CARDS_AT_LEVEL", "OWN_CARDS_AT_VERSION", "OWN_CARDS_TOTAL", "OWN_DISTINCT_CARDS",
+  "OWN_CARDS_AT_LEVEL", "OWN_CARDS_AT_VERSION", "OWN_CARDS_TOTAL", "OWN_DISTINCT_CARDS", "REACH_ARENA_TIER",
 ] as const;
 
 /** Objetivos de estado que requieren un umbral (objective_param). */
-export const OBJECTIVE_TYPES_WITH_PARAM = new Set(["OWN_CARDS_AT_LEVEL", "OWN_CARDS_AT_VERSION"]);
+export const OBJECTIVE_TYPES_WITH_PARAM = new Set(["OWN_CARDS_AT_LEVEL", "OWN_CARDS_AT_VERSION", "REACH_ARENA_TIER"]);
 
 /**
  * Objetivos de colección/estado: se evalúan en vivo contra la colección (mission_state_count),
@@ -37,7 +38,7 @@ export const OBJECTIVE_TYPES_WITH_PARAM = new Set(["OWN_CARDS_AT_LEVEL", "OWN_CA
  * nunca como reglas de puntos por acción (no hay dónde guardar el umbral ni se otorgan por evento).
  */
 export const COLLECTION_OBJECTIVE_TYPES = new Set([
-  "OWN_CARDS_AT_LEVEL", "OWN_CARDS_AT_VERSION", "OWN_CARDS_TOTAL", "OWN_DISTINCT_CARDS",
+  "OWN_CARDS_AT_LEVEL", "OWN_CARDS_AT_VERSION", "OWN_CARDS_TOTAL", "OWN_DISTINCT_CARDS", "REACH_ARENA_TIER",
 ]);
 
 /**
