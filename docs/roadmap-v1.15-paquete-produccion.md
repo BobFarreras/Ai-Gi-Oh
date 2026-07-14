@@ -308,6 +308,14 @@ diálogo pagara, un jugador podría cobrarlo N veces recargando.
 
 **Esfuerzo:** medio (2 días). Es la carta más "nueva" del paquete a nivel de reglas.
 
+**Imagen ya entregada (2026-07-14):** `public/assets/renders/executions/Escudo-Firewall-Ofensivo-Carta-Tech.webp`.
+Dos cosas antes de usarla:
+- **Nombre:** la convención es `/assets/renders/executions/{card-id}.webp` (el render se resuelve por el id de
+  la carta). Habrá que renombrarla al id que le demos, p. ej. `exec-escudo-firewall-ofensivo.webp`.
+- **Peso y dimensiones:** 745 KB y **4864×3328 px**, apaisada. La mediana de los renders de ejecución es
+  ~145 KB, y una carta no necesita más de ~1000 px de alto. Reescalar y recomprimir antes de subirla (el
+  proyecto ya arrastra renders de hasta 12 MB; no añadamos otro).
+
 ---
 
 ### Ficha 8 — El VFX de OpenClaw [DECIDIDO: es un bug de presentación]
@@ -339,18 +347,27 @@ Test: con un buff de +400, la entidad rival acaba 400 por debajo de su base **y*
 **Estado.** El motor ya lo soporta (`playCardWithZoneReplacement`, acción `PLAY_CARD_REPLACE_ZONE`). El problema
 es de interacción y de rendimiento en móvil, como bien dices.
 
-**Pasos.**
-1. **Primero medir, después optimizar.** Los "pantallazos" de móvil hay que perfilarlos antes de tocar nada: ya
-   tenemos historial de que el culpable suele ser Framer Motion y los `blur` (está en la memoria de perf). Sin
-   una traza, optimizar es adivinar.
-2. Flujo objetivo: al soltar la carta con la zona llena, entrar en un **modo de selección explícito** (las 3
-   cartas de la zona se resaltan, el resto del tablero se atenúa, un botón cancela). Hoy la interacción es
-   implícita y por eso cuesta.
-3. Confirmación de descarte (se pierde una carta: es irreversible dentro de la partida).
-4. Móvil: objetivos táctiles grandes, nada de hover, y la lista de la zona en un panel inferior en vez de en el
-   tablero.
+**Lo que estaba realmente mal (hecho 2026-07-14).** Al abrir el código, el problema no era el que parecía. El
+motor y el resaltado ya funcionaban; lo que fallaba era esto:
 
-**Esfuerzo:** medio (2-3 días), la mitad de ellos en el perfilado móvil.
+1. **No se podía cancelar.** El modo reemplazo se anunciaba con el banner de "acción obligatoria", que **se
+   autooculta a los 3,5 segundos y no tiene botones**. Si el jugador se lo pensaba, se quedaba con tres cartas
+   brillando, sin instrucción a la vista y sin salida: la única forma de abortar era elegir una carta y decir
+   "No" en la confirmación. De ahí la sensación de que "cuesta". Ahora tiene barra propia
+   (`ZoneReplacementBar`), persistente mientras dure el modo y con **botón de cancelar**.
+2. **El tirón de móvil tenía nombre:** el resaltado usaba `animate-pulse` **en la misma capa que la carta**, que
+   contiene el holograma y el arte. Cada frame del latido repintaba la carta entera, y con tres resaltadas a la
+   vez el coste se multiplicaba. Ahora el aro es estático y el latido vive en una **capa vacía aparte** que solo
+   anima opacidad (se compone en GPU, sin repintar nada). En modo rendimiento no late. Mismo arreglo aplicado al
+   resaltado rojo del atacante, que tenía el mismo defecto.
+3. **`backdrop-blur` a pantalla completa** en la confirmación: de lo más caro que se le puede pedir a un móvil, y
+   solo aportaba 1,5 px de desenfoque. Sustituido por un velo opaco, que da el mismo contraste gratis.
+4. Confirmación rediseñada: botones de 48 px apilados a ancho completo en móvil (es una acción destructiva:
+   fallar el toque significa descartar la carta equivocada) y copy explícito ("No se puede deshacer").
+
+**Pendiente de validar:** la mejora de rendimiento es por construcción (menos repintado, sin filtro de
+desenfoque), pero **no está medida en un móvil real**. Hay que abrir el tablero en un dispositivo, llenar la
+zona y comprobar que el tirón desapareció.
 
 ---
 
@@ -441,7 +458,7 @@ perfiles de dificultad ya existen y `get-match-session-data.ts` ya sabe resolver
 | A | 8 · OpenClaw muestra -400 | ✅ hecho |
 | A | 1 · Compartir carta en DM | ✅ hecho (+ **agujero de seguridad de CARD_SHARE cerrado**, ver abajo) |
 | A | 6 · Diálogo de premio semanal | ✅ hecho · migración 118 **aplicada a producción** (2026-07-14) |
-| A | 9 · UX de reemplazo de zona | ⏳ pendiente |
+| A | 9 · UX de reemplazo de zona | ✅ hecho · ⚠️ el rendimiento en móvil hay que confirmarlo en un dispositivo real |
 | B | 4 · Niveles a 100 | ⏳ pendiente |
 | B | 2 · Caramelos | ⏳ pendiente |
 | B | 3 · Objetos | ⏳ pendiente |

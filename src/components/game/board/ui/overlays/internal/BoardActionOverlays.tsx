@@ -11,6 +11,7 @@ import { EntityReplacementConfirmOverlay } from "../EntityReplacementConfirmOver
 import { DirectDamageBeamOverlay } from "./DirectDamageBeamOverlay";
 import { EffectTargetedOverlay } from "./EffectTargetedOverlay";
 import { MandatoryActionHintBanner } from "./MandatoryActionHintBanner";
+import { ZoneReplacementBar } from "./ZoneReplacementBar";
 import { IBattleBannerMessage } from "../../internal/banner/banner-message-policy";
 
 interface IBoardActionOverlaysProps {
@@ -58,6 +59,15 @@ export function BoardActionOverlays({
         </div>
       ) : null}
       <MandatoryActionHintBanner hint={pendingActionHint} />
+      {/* El reemplazo tiene barra propia (persistente y cancelable) en vez del banner de acción obligatoria:
+          no es obligatorio —se puede abortar— y el jugador necesita la instrucción a la vista todo el rato. */}
+      {pendingEntityReplacement ? (
+        <ZoneReplacementBar
+          zone={pendingEntityReplacement.zone}
+          isChoosing={!pendingEntityReplacementTargetCard}
+          onCancel={onCancelEntityReplacement}
+        />
+      ) : null}
       {pendingEntityReplacement && pendingEntityReplacementTargetCard ? (
         <EntityReplacementConfirmOverlay
           zone={pendingEntityReplacement.zone}

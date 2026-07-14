@@ -32,6 +32,25 @@ interface ISlotCellEntityProps {
   onEntityClick: (entity: IBoardEntity | null, isOpponentSide: boolean, event: MouseEvent) => void;
 }
 
+/**
+ * Latido del resaltado (atacante / seleccionable) en una capa PROPIA y vacía: al no tener hijos, animar su
+ * opacidad se compone en GPU y no obliga a repintar la carta ni su holograma. Es lo que evita el tirón en
+ * móvil cuando hay varias cartas resaltadas a la vez. En modo rendimiento no late: se queda fijo.
+ */
+function PulsingGlow({ tone, isStatic }: { tone: "amber" | "red"; isStatic: boolean }) {
+  const shadow = tone === "amber" ? "shadow-[0_0_35px_rgba(251,191,36,0.8)]" : "shadow-[0_0_30px_rgba(239,68,68,1)]";
+  return (
+    <motion.span
+      aria-hidden
+      className={cn("pointer-events-none absolute inset-0 z-[70] rounded-xl", shadow)}
+      initial={false}
+      animate={isStatic ? { opacity: 0.85 } : { opacity: [0.45, 1, 0.45] }}
+      transition={isStatic ? { duration: 0 } : { duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+      style={{ willChange: "opacity" }}
+    />
+  );
+}
+
 export function SlotCellEntity({
   entity,
   index,
@@ -75,9 +94,12 @@ export function SlotCellEntity({
       exit={{ opacity: [1, 0], scale: [0.28, 0.1], x: targetX, y: 0, transition: { duration: 0.4 } }}
       className={cn(
         "w-65 h-85 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 origin-center cursor-pointer",
-        isAttacking ? "ring-4 ring-red-500 shadow-[0_0_30px_rgba(239,68,68,1)] animate-pulse rounded-xl" : "",
+        // El aro es estático; el latido lo hace una capa aparte (ver PulsingGlow abajo). Antes el
+        // `animate-pulse` iba en ESTE elemento, que contiene la carta entera con su holograma: cada frame
+        // del latido repintaba toda la carta, y con tres resaltadas a la vez se notaba en móvil.
+        isAttacking ? "ring-4 ring-red-500 rounded-xl" : "",
         isBoardEntitySelected ? "ring-4 ring-cyan-300 shadow-[0_0_35px_rgba(34,211,238,0.9)] rounded-xl" : "",
-        isHighlighted ? "ring-4 ring-amber-400 shadow-[0_0_35px_rgba(251,191,36,0.8)] animate-pulse rounded-xl" : "",
+        isHighlighted ? "ring-4 ring-amber-400 rounded-xl" : "",
         isSelectedMaterial ? "ring-4 ring-cyan-300 shadow-[0_0_35px_rgba(34,211,238,0.9)] rounded-xl" : "",
       )}
       data-tutorial-id={!isOpponentSide ? `tutorial-board-player-entity-card-${entity.card.id}` : undefined}
@@ -88,6 +110,8 @@ export function SlotCellEntity({
         onEntityClick(entity, isOpponentSide, event);
       }}
     >
+      {isHighlighted ? <PulsingGlow tone="amber" isStatic={shouldReduceCombatEffects} /> : null}
+      {isAttacking ? <PulsingGlow tone="red" isStatic={shouldReduceCombatEffects} /> : null}
       {visibility.isFaceDown && !forceTrapReveal ? (
         <div className="absolute w-full h-full flex items-center justify-center">
           <CardBack isHorizontal={visibility.isHorizontal} />

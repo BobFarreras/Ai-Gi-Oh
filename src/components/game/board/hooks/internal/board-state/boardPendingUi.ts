@@ -48,16 +48,14 @@ export function buildBoardPendingUi(
     gameState.pendingTurnAction?.playerId === gameState.playerA.id && gameState.pendingTurnAction.type === "SELECT_FUSION_MATERIALS"
       ? gameState.pendingTurnAction.selectedMaterialInstanceIds.length
       : null;
+  // El reemplazo de zona NO sale por aquí: tiene su propia barra (ZoneReplacementBar), persistente y con botón
+  // de cancelar. Este banner es solo para acciones realmente OBLIGATORIAS, que se autoocultan y no se abortan.
   const pendingActionHint =
     gameState.pendingTurnAction?.playerId === gameState.playerA.id
       ? resolvePlayerPendingHint(gameState.pendingTurnAction, pendingFusionMaterialsCount)
       : pendingFusionMaterialsCount !== null
         ? `Selecciona 2 materiales para fusionar (${pendingFusionMaterialsCount}/2).`
-        : pendingEntityReplacement
-          ? pendingEntityReplacement.zone === "ENTITIES"
-            ? "Tu zona de entidades está llena. Elige una entidad del campo para reemplazarla por la nueva invocación."
-            : "Tu zona de ejecuciones está llena. Elige una ejecución del campo para reemplazarla por la nueva carta."
-          : null;
+        : null;
 
   const pendingDiscardCardIds =
     gameState.pendingTurnAction?.playerId === gameState.playerA.id && gameState.pendingTurnAction.type === "DISCARD_FOR_HAND_LIMIT"

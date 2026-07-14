@@ -66,6 +66,25 @@ describe("boardPendingUi", () => {
     expect(pending.pendingOpponentSelectionIds).toEqual(["ent-set", "exec-set"]);
   });
 
+  it("el reemplazo de zona resalta las cartas propias pero NO usa el banner de acción obligatoria", () => {
+    // El reemplazo es cancelable, así que se anuncia con su barra propia (persistente y con botón de salir),
+    // no con el banner de "acción obligatoria", que se autooculta a los segundos y no se puede abortar.
+    const base = createBaseState();
+    const state: GameState = {
+      ...base,
+      playerA: {
+        ...base.playerA,
+        activeExecutions: [
+          { instanceId: "own-trap-1", mode: "SET", card: { id: "t1", type: "TRAP" } },
+          { instanceId: "own-trap-2", mode: "SET", card: { id: "t2", type: "TRAP" } },
+        ] as unknown as GameState["playerA"]["activeExecutions"],
+      },
+    };
+    const pending = buildBoardPendingUi(state, { cardId: "nueva", mode: "SET", zone: "EXECUTIONS" });
+    expect(pending.pendingEntitySelectionIds).toEqual(["own-trap-1", "own-trap-2"]);
+    expect(pending.pendingActionHint).toBeNull();
+  });
+
   it("respeta la zona EXECUTIONS (solo ejecuciones seteadas del rival)", () => {
     const base = createBaseState();
     const state: GameState = {
