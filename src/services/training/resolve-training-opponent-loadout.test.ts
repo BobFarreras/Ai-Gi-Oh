@@ -1,15 +1,15 @@
-// src/services/training/resolve-training-opponent-loadout.test.ts - Valida el ladder fijo de 6 rivales de arena (orden por victorias, fuerza por tier).
+// src/services/training/resolve-training-opponent-loadout.test.ts - Valida el ladder fijo de 8 rivales de arena (orden por victorias, fuerza por tier).
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { IArenaOpponent } from "@/core/entities/training/IArenaOpponent";
 import { resolveTrainingOpponentLoadout } from "@/services/training/resolve-training-opponent-loadout";
 
 describe("resolveTrainingOpponentLoadout", () => {
-  it("enfrenta a los 6 rivales del ladder en orden por victorias del nivel", () => {
-    const names = Array.from({ length: 6 }, (_, wins) =>
+  it("enfrenta a los 8 rivales del ladder en orden por victorias del nivel", () => {
+    const names = Array.from({ length: 8 }, (_, wins) =>
       resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: wins, tierMatches: 0 }).displayName,
     );
-    expect(names).toEqual(["GenNvim", "Helena", "Jaku", "Mouretech", "Soldado", "Guill"]);
+    expect(names).toEqual(["GenNvim", "Helena", "Jaku", "Mouretech", "Soldado", "Guill", "Soldado-Laptop", "Gokernel"]);
   });
 
   it("usa el mismo roster en cualquier nivel (solo cambia la fuerza)", () => {
@@ -17,20 +17,28 @@ describe("resolveTrainingOpponentLoadout", () => {
     const lvl6 = resolveTrainingOpponentLoadout({ tier: 6, aiDifficulty: "MYTHIC", tierWins: 0, tierMatches: 0 });
     expect(lvl1.displayName).toBe("GenNvim");
     expect(lvl6.displayName).toBe("GenNvim");
-    expect(lvl1.ladderSize).toBe(6);
+    expect(lvl1.ladderSize).toBe(8);
   });
 
   it("deja a BigLog fuera del ladder (no aparece en ninguna posición)", () => {
-    const names = Array.from({ length: 6 }, (_, wins) =>
+    const names = Array.from({ length: 8 }, (_, wins) =>
       resolveTrainingOpponentLoadout({ tier: 2, aiDifficulty: "NORMAL", tierWins: wins, tierMatches: 0 }).displayName,
     );
     expect(names).not.toContain("BigLog");
   });
 
+  it("cierra el ladder con Gokernel como combate final (8º)", () => {
+    const loadout = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: 7, tierMatches: 0 });
+    expect(loadout.ladderIndex).toBe(7);
+    expect(loadout.ladderSize).toBe(8);
+    expect(loadout.displayName).toBe("Gokernel");
+    expect(loadout.storyOpponentId).toBe("opp-gokernel");
+  });
+
   it("expone ladderIndex y ladderSize del combate actual", () => {
     const loadout = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: 3, tierMatches: 0 });
     expect(loadout.ladderIndex).toBe(3);
-    expect(loadout.ladderSize).toBe(6);
+    expect(loadout.ladderSize).toBe(8);
     expect(loadout.displayName).toBe("Mouretech");
     expect(loadout.storyOpponentId).toBe("opp-mouretech");
   });

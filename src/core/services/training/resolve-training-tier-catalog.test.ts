@@ -6,10 +6,11 @@ import { resolveTrainingTierCatalog } from "./resolve-training-tier-catalog";
 describe("resolveTrainingTierCatalog", () => {
   it("expone catálogo por defecto válido y ordenado", () => {
     const catalog = resolveTrainingTierCatalog();
-    expect(catalog.map((item) => item.tier)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(catalog.map((item) => item.tier)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
     expect(catalog[0]?.requiredWinsInPreviousTier).toBe(0);
-    expect(catalog[1]?.requiredWinsInPreviousTier).toBe(6);
+    expect(catalog[1]?.requiredWinsInPreviousTier).toBe(8);
     expect(catalog[5]?.deckTemplateId).toBe("training-tier-6");
+    expect(catalog[7]?.code).toBe("SINGULARITY");
   });
 
   it("permite inyectar catálogo personalizado para balanceo", () => {
