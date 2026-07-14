@@ -6,6 +6,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-07-14
+
 ### Added
 - **Evento — nuevas cartas en la tienda de Fragmentos**: Flutter Enjambre (400), Escudo Firewall (400), Golpe Naranja (350) y Avast (250).
 - **Nuevas formas de ganar Fragmentos**: ganar combates multijugador (+100) y una misión de evento por **superar el Nivel 5 de la Arena** (300 Fragmentos), retroactiva para quien ya lo haya logrado.
@@ -289,7 +291,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.13.0...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.14.0...HEAD
+[1.14.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.10.4...v1.11.0
