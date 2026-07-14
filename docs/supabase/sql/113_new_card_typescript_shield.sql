@@ -7,7 +7,7 @@ INSERT INTO public.cards_catalog (
   bg_url, render_url, effect, fusion_recipe_id, fusion_material_ids, fusion_energy_requirement, is_active
 ) VALUES
   ('trap-typescript-shield', 'Escudo de Tipos TypeScript',
-   'Ligada a tu TypeScript: cada vez que la atacan, gana 1000 DEF (acumulable). La trampa sigue puesta mientras esa entity siga en el campo.',
+   'Cuando el rival ataca a una de tus TypeScript, TODAS tus TypeScript ganan 1000 DEF (acumulable). Solo se activa si atacan a una TypeScript. La trampa sigue puesta.',
    'TRAP', 'OPEN_SOURCE', 2, NULL, NULL, NULL, 'ON_OPPONENT_ATTACK_DECLARED',
    NULL, '/assets/renders/traps/trap-typescript-shield.webp',
    '{"action":"REINFORCE_LINKED_ENTITY_ON_ATTACK","linkedCardId":"entity-typescript","value":1000}', NULL, '{}', NULL, true)

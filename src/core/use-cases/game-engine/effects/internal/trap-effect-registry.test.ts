@@ -31,25 +31,25 @@ describe("trap-effect-registry", () => {
     ]);
   });
 
-  it("REINFORCE_LINKED_ENTITY_ON_ATTACK suma DEF a la entity ligada, persiste y acumula", () => {
-    const tsCard = { id: "entity-typescript", name: "TS", description: "", type: "ENTITY" as const, faction: "OPEN_SOURCE" as const, cost: 4, attack: 1200, defense: 1000 };
-    const player = { ...createPlayer("a"), activeEntities: [{ instanceId: "ts", card: tsCard, mode: "DEFENSE" as const, hasAttackedThisTurn: false, isNewlySummoned: false }] };
-    const trap: IBoardEntity = { instanceId: "t-shield", mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false, card: { id: "trap-typescript-shield", name: "Shield", description: "", type: "TRAP", faction: "OPEN_SOURCE", cost: 2, trigger: "ON_OPPONENT_ATTACK_DECLARED", effect: { action: "REINFORCE_LINKED_ENTITY_ON_ATTACK", linkedCardId: "entity-typescript", value: 1000 } } };
-    const first = resolveTrapEffectFromRegistry(player, createPlayer("b"), trap, { attackerPlayerId: "b", attackerInstanceId: "x", defenderInstanceId: "ts" })!;
-    expect(first.keepTrapSet).toBe(true);
-    expect(first.player.activeEntities[0].card.defense).toBe(2000);
-    // Acumula sobre el resultado anterior.
-    const second = resolveTrapEffectFromRegistry(first.player, createPlayer("b"), trap, { attackerPlayerId: "b", attackerInstanceId: "x", defenderInstanceId: "ts" })!;
-    expect(second.player.activeEntities[0].card.defense).toBe(3000);
-  });
-
-  it("REINFORCE_LINKED_ENTITY_ON_ATTACK no refuerza si el atacado no es la entity ligada, pero persiste", () => {
+  it("REINFORCE_LINKED_ENTITY_ON_ATTACK refuerza TODAS tus entities ligadas, persiste y acumula", () => {
+    const tsCard = (defense: number) => ({ id: "entity-typescript", name: "TS", description: "", type: "ENTITY" as const, faction: "OPEN_SOURCE" as const, cost: 4, attack: 1200, defense });
     const otherCard = { id: "entity-otra", name: "O", description: "", type: "ENTITY" as const, faction: "NEUTRAL" as const, cost: 2, attack: 800, defense: 700 };
-    const player = { ...createPlayer("a"), activeEntities: [{ instanceId: "o", card: otherCard, mode: "DEFENSE" as const, hasAttackedThisTurn: false, isNewlySummoned: false }] };
+    const player = { ...createPlayer("a"), activeEntities: [
+      { instanceId: "ts1", card: tsCard(1000), mode: "DEFENSE" as const, hasAttackedThisTurn: false, isNewlySummoned: false },
+      { instanceId: "ts2", card: tsCard(1500), mode: "ATTACK" as const, hasAttackedThisTurn: false, isNewlySummoned: false },
+      { instanceId: "o", card: otherCard, mode: "DEFENSE" as const, hasAttackedThisTurn: false, isNewlySummoned: false },
+    ] };
     const trap: IBoardEntity = { instanceId: "t-shield", mode: "SET", hasAttackedThisTurn: false, isNewlySummoned: false, card: { id: "trap-typescript-shield", name: "Shield", description: "", type: "TRAP", faction: "OPEN_SOURCE", cost: 2, trigger: "ON_OPPONENT_ATTACK_DECLARED", effect: { action: "REINFORCE_LINKED_ENTITY_ON_ATTACK", linkedCardId: "entity-typescript", value: 1000 } } };
-    const result = resolveTrapEffectFromRegistry(player, createPlayer("b"), trap, { attackerPlayerId: "b", attackerInstanceId: "x", defenderInstanceId: "o" })!;
-    expect(result.keepTrapSet).toBe(true);
-    expect(result.player.activeEntities[0].card.defense).toBe(700); // sin cambios
+    const first = resolveTrapEffectFromRegistry(player, createPlayer("b"), trap, { attackerPlayerId: "b", attackerInstanceId: "x", defenderInstanceId: "ts1" })!;
+    expect(first.keepTrapSet).toBe(true);
+    // Ambas TypeScript suben +1000; la entity no-ligada no cambia.
+    expect(first.player.activeEntities.find((e) => e.instanceId === "ts1")?.card.defense).toBe(2000);
+    expect(first.player.activeEntities.find((e) => e.instanceId === "ts2")?.card.defense).toBe(2500);
+    expect(first.player.activeEntities.find((e) => e.instanceId === "o")?.card.defense).toBe(700);
+    expect(first.buffTargetEntityIds).toEqual(["ts1", "ts2"]);
+    // Acumula sobre el resultado anterior.
+    const second = resolveTrapEffectFromRegistry(first.player, createPlayer("b"), trap, { attackerPlayerId: "b", attackerInstanceId: "x", defenderInstanceId: "ts1" })!;
+    expect(second.player.activeEntities.find((e) => e.instanceId === "ts1")?.card.defense).toBe(3000);
   });
 
   it("NEGATE_OPPONENT_EXECUTION_AND_DESTROY destruye la ejecución activada y marca la anulación", () => {

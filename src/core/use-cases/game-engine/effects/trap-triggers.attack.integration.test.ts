@@ -221,6 +221,32 @@ describe("Trap triggers on attack", () => {
     expect(next.playerA.graveyard.some((card) => card.id === "trap-typescript-shield")).toBe(false);
   });
 
+  it("Escudo TypeScript NO se activa si el rival ataca a otra entity (no a la TypeScript)", () => {
+    const base = createTrapBaseState();
+    const otherCard = { id: "entity-otra", name: "Otra", description: "", type: "ENTITY" as const, faction: "NEUTRAL" as const, cost: 2, attack: 900, defense: 1800 };
+    const state: GameState = {
+      ...base,
+      activePlayerId: "p2",
+      playerA: {
+        ...base.playerA,
+        activeEntities: [createTestBoardEntity("ts", typescriptEntity, "DEFENSE"), createTestBoardEntity("otra", otherCard, "DEFENSE")],
+        activeExecutions: [createTrapEntity("shield", trapTypescriptShield)],
+      },
+      playerB: {
+        ...base.playerB,
+        activeEntities: [createTestBoardEntity("atk", attackerCard, "ATTACK")],
+      },
+    };
+    const next = GameEngine.executeAttack(state, "p2", "atk", "otra"); // ataca a la OTRA, no a la TypeScript
+    // La TypeScript no se refuerza y la trampa no se dispara (sigue puesta, sin TRAP_TRIGGERED del escudo).
+    expect(next.playerA.activeEntities.find((entity) => entity.instanceId === "ts")?.card.defense).toBe(1000);
+    expect(next.playerA.activeExecutions.some((entity) => entity.card.id === "trap-typescript-shield")).toBe(true);
+    const shieldTriggered = next.combatLog.some(
+      (event) => event.eventType === "TRAP_TRIGGERED" && (event.payload as Record<string, unknown>).trapCardId === "trap-typescript-shield",
+    );
+    expect(shieldTriggered).toBe(false);
+  });
+
   it("debería drenar energía del atacante y fijar energía del defensor a 10 en ataque directo", () => {
     const base = createTrapBaseState();
     const state: GameState = {

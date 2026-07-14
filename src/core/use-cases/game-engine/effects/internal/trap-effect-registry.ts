@@ -130,21 +130,19 @@ const trapEffectHandlers: { [K in TrapAction]: TrapHandler<K> } = {
       negatesAttack: true,
     };
   },
-  // Escudo TypeScript: si atacan a la entity ligada (linkedCardId) del dueño, le suma DEF (acumulable).
-  // La trampa persiste (keepTrapSet) siempre, para acumular en cada ataque hasta que la entity muera.
-  REINFORCE_LINKED_ENTITY_ON_ATTACK: (player, opponent, _trap, effect, context) => {
-    const defenderId = context?.defenderInstanceId;
-    const defender = defenderId ? player.activeEntities.find((entity) => entity.instanceId === defenderId) : null;
-    if (!defender || defender.card.id !== effect.linkedCardId) {
-      return { ...createNeutralResult(player, opponent), keepTrapSet: true };
-    }
+  // Escudo TypeScript: solo se activa si atacan a una entity ligada (lo garantiza la selección). Al saltar,
+  // refuerza +DEF a TODAS tus entities ligadas (acumulable). La trampa persiste (keepTrapSet) hasta que
+  // dejen de estar en el campo.
+  REINFORCE_LINKED_ENTITY_ON_ATTACK: (player, opponent, _trap, effect) => {
+    const targetIds = player.activeEntities.filter((entity) => entity.card.id === effect.linkedCardId).map((entity) => entity.instanceId);
+    if (targetIds.length === 0) return { ...createNeutralResult(player, opponent), keepTrapSet: true };
     const reinforced: IPlayer = {
       ...player,
       activeEntities: player.activeEntities.map((entity) =>
-        entity.instanceId === defenderId ? { ...entity, card: { ...entity.card, defense: Math.max(0, (entity.card.defense ?? 0) + effect.value) } } : entity,
+        targetIds.includes(entity.instanceId) ? { ...entity, card: { ...entity.card, defense: Math.max(0, (entity.card.defense ?? 0) + effect.value) } } : entity,
       ),
     };
-    return { ...createNeutralResult(reinforced, opponent), keepTrapSet: true, buffTargetEntityIds: [defenderId!], buffStat: "DEFENSE", buffAmount: effect.value };
+    return { ...createNeutralResult(reinforced, opponent), keepTrapSet: true, buffTargetEntityIds: targetIds, buffStat: "DEFENSE", buffAmount: effect.value };
   },
   // Escudo Metasploit: bloquea el ataque declarado (a entity o directo) sin destruir al atacante.
   NEGATE_ATTACK: (player, opponent, _trap, _effect, context) => {

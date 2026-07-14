@@ -76,7 +76,7 @@ export function resolveTrapTrigger(
   context?: ITrapTriggerContext,
   options?: IResolveTrapTriggerOptions,
 ): GameState {
-  const selectedTrap = selectTriggeredTrap(state, reactivePlayerId, trigger);
+  const selectedTrap = selectTriggeredTrap(state, reactivePlayerId, trigger, context);
   if (!selectedTrap) return state;
   const { trap, player, opponent, isPlayerA } = selectedTrap;
   const trapSlotIndex = player.activeExecutions.findIndex((entity) => entity.instanceId === trap.instanceId);
