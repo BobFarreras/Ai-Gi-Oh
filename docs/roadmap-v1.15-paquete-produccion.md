@@ -137,6 +137,28 @@ para subir 2 niveles desde el nivel actual — se calcula con `getTotalXpRequire
 
 **Esfuerzo:** medio (2-3 días).
 
+#### Hecho (2026-07-14): backend del USB Raro
+
+**Cuánta XP concede un caramelo (la pregunta clave).** No es una cantidad fija: el caramelo se define en
+NIVELES y la XP se calcula **en el momento de usarlo**, según dónde esté esa carta. Un "+2" concede la distancia
+exacta entre el nivel actual y el nivel+2. Por eso el mismo USB Raro +2 cuesta **625 XP en el nivel 10 y 4.265 XP
+en el nivel 80** — casi 7 veces más. Es lo que hace que el objeto valga más cuanto más alta esté la carta; con XP
+fija sería inservible en el tramo alto. También conserva el progreso parcial del nivel en curso (no se tira medio
+nivel) y avisa de los niveles que se desperdiciarían al pasarse del 100.
+
+**🔴 Hallazgo grave al aplicar la 120: la base de datos tenía `CHECK (level <= 30)`.** No estaba documentado en
+ningún sitio. Sin ampliarlo, la ficha 4 estaba **coja**: la primera carta que superara el nivel 30 habría
+reventado al guardar, en producción y sin aviso. La 120 lo sube a 100. Lección: al cambiar una regla de dominio,
+buscar también sus copias en la BD (checks, defaults, funciones), no solo en el código.
+
+**Seguridad.** El cliente solo manda `{candyId, cardId, operationId}`; la XP la calcula el servidor con la curva
+y la escritura es una función SQL transaccional que valida la posesión, descuenta el caramelo y es idempotente
+(la clave de operación impide que un doble clic gaste dos). Verificado en producción: `authenticated` **no puede
+insertar** en `player_inventory_items`, así que nadie se regala caramelos desde la consola del navegador.
+
+**Falta:** (a) la UI de usarlo en el detalle de carta del arsenal, y (b) **decidir cómo se consiguen** — hoy no
+hay forma de obtenerlos (el catálogo tiene precio en Nexus, pero no hay tienda que los venda).
+
 ---
 
 ### Ficha 3 — Objetos/mejoras permanentes (+100 ATK, etc.)
@@ -498,7 +520,7 @@ perfiles de dificultad ya existen y `get-match-session-data.ts` ya sabe resolver
 | A | 6 · Diálogo de premio semanal | ✅ hecho · migración 118 **aplicada a producción** (2026-07-14) |
 | A | 9 · UX de reemplazo de zona | ✅ hecho · ⚠️ el rendimiento en móvil hay que confirmarlo en un dispositivo real |
 | B | 4 · Niveles a 100 | ✅ hecho · migración 119 **aplicada** (2026-07-14) · ⚠️ ver "rivales" abajo |
-| B | 2 · Caramelos | ⏳ siguiente |
+| B | 2 · Caramelos (USB Raro) | 🟡 backend hecho (migración 120 **aplicada**) · falta UI y **cómo se consiguen** |
 | B | 3 · Objetos | ⏳ pendiente |
 | C | 5 · Cartas por reconfiguración | ⏳ pendiente |
 | C | 7 · Magia de ataque en defensa | ⏳ pendiente |
