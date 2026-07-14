@@ -520,7 +520,8 @@ perfiles de dificultad ya existen y `get-match-session-data.ts` ya sabe resolver
 | A | 6 · Diálogo de premio semanal | ✅ hecho · migración 118 **aplicada a producción** (2026-07-14) |
 | A | 9 · UX de reemplazo de zona | ✅ hecho · ⚠️ el rendimiento en móvil hay que confirmarlo en un dispositivo real |
 | B | 4 · Niveles a 100 | ✅ hecho · migración 119 **aplicada** (2026-07-14) · ⚠️ ver "rivales" abajo |
-| B | 2 · Caramelos (USB Raro) | 🟡 backend hecho (migración 120 **aplicada**) · falta UI y **cómo se consiguen** |
+| B | 2 · Caramelos (USB Raro) | ✅ hecho: backend + tienda de Objetos en el mercado (migraciones 120 y 121 **aplicadas**) · falta la UI de USARLO en el arsenal |
+| — | 🔴 Cartera escribible por el cliente | **VULNERABILIDAD ABIERTA** (ver abajo) — arreglar antes de publicar |
 | B | 3 · Objetos | ⏳ pendiente |
 | C | 5 · Cartas por reconfiguración | ⏳ pendiente |
 | C | 7 · Magia de ataque en defensa | ⏳ pendiente |
@@ -545,6 +546,37 @@ están en sus carteras y merecen enterarse. El coste es cosmético (el aviso men
 **Cómo validarlo sin esperar al domingo:** la cuenta del owner tiene premio pendiente en ese archivo (3.º de
 Actividad, 575 pts, +350 Nexus). Basta entrar a `/hub` y el diálogo salta. Para repetir la prueba:
 `update public.weekly_leaderboard_history set seen_at = null where player_id = '<id>';`
+
+### 🔴 VULNERABILIDAD ABIERTA: cualquiera puede darse Nexus infinitos
+
+Encontrada el 2026-07-14 al verificar los permisos de la tienda de objetos. **No la hemos introducido nosotros:
+es preexistente y está viva en producción.**
+
+`player_wallets` tiene RLS con esta policy:
+
+```
+player_wallets_update_own | UPDATE | using (auth.uid() = player_id) with check (auth.uid() = player_id)
+```
+
+y `authenticated` tiene el `GRANT UPDATE`. Es decir: **un jugador logueado puede hacer un `PATCH` directo a la
+API REST de Supabase sobre su propia fila y ponerse los Nexus que quiera**, desde la consola del navegador. Con
+eso se compra el catálogo entero, packs y caramelos incluidos. La economía del juego no existe.
+
+**Por qué no se puede arreglar borrando la policy (todavía).** El servidor cobra y paga usando el **cliente de
+sesión del jugador** (`createPlayerRouteRepositories` / `createPlayerRuntimeRepositories` construyen
+`SupabaseWalletRepository` con el cliente de la sesión), así que **depende de esa policy** para poder escribir.
+Si se revoca sin más, dejan de funcionar la compra de cartas, los packs, las recompensas de historia, el ELO de
+multijugador y las misiones.
+
+**Plan de arreglo (una tarea propia, antes de publicar el paquete):**
+1. Que TODA escritura de cartera pase por el cliente de **service-role** (servidor) o por funciones SQL
+   `security definer` — como ya hace la compra de objetos (`buy_level_candy`), que no depende de la policy.
+2. Entonces sí: `drop policy player_wallets_update_own` (y la de INSERT) y `revoke insert, update on
+   player_wallets from authenticated`. Dejar solo `select` de la propia fila.
+3. Repasar el resto de tablas con dinero/valor por el mismo patrón: `player_collection`, `player_card_progress`,
+   `training_progress`… Si `authenticated` puede escribirlas directamente, el problema es el mismo (una carta
+   regalada vale tanto como el Nexus que cuesta).
+4. Test de regresión: intentar el `PATCH` directo con una sesión de jugador y comprobar que la BD lo rechaza.
 
 ### Vulnerabilidad encontrada y cerrada al hacer la ficha 1 (CARD_SHARE)
 

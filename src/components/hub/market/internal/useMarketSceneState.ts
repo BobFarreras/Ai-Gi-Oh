@@ -65,6 +65,13 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     [store],
   );
   const setErrorMessage = useCallback((value: string | null) => store.setState({ errorMessage: value }), [store]);
+  // Saldo tras comprar un objeto: lo devuelve la propia transacción de compra, así que se refleja al momento y
+  // la cabecera no se queda mintiendo hasta la siguiente recarga.
+  const setWalletNexus = useCallback(
+    (nexus: number) =>
+      store.setState((state) => ({ catalog: { ...state.catalog, wallet: { ...state.catalog.wallet, nexus } } })),
+    [store],
+  );
   const setIsPackRevealOpen = useCallback((value: boolean) => store.setState({ isPackRevealOpen: value }), [store]);
   // Reutiliza listados disponibles para evitar filtros repetidos en desktop/mobile.
   const availableListings = useMemo(
@@ -152,6 +159,7 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     setOrderField,
     setOrderDirection,
     setErrorMessage,
+    setWalletNexus,
     setIsPackRevealOpen,
     handleBuyCard,
     handleBuyPack,

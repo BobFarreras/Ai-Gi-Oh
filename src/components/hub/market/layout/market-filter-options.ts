@@ -5,6 +5,8 @@ export const MARKET_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "EXECUTION", label: "Magia" },
   { value: "TRAP", label: "Trampa" },
   { value: "FUSION", label: "Fusión" },
+  // Los objetos no son cartas: al elegir esta opción el mercado cambia de panel (ver MarketItemsPanel).
+  { value: "ITEMS", label: "Objetos" },
 ] as const;
 
 export const MARKET_ORDER_OPTIONS: Array<{ value: string; label: string }> = [

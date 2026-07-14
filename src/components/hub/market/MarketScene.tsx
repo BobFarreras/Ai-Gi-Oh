@@ -4,6 +4,7 @@
 import { MarketHeaderBar } from "@/components/hub/market/layout/MarketHeaderBar";
 import { MarketDesktopGrid } from "@/components/hub/market/layout/MarketDesktopGrid";
 import { MarketMobileStack } from "@/components/hub/market/layout/MarketMobileStack";
+import { MarketItemsPanel } from "@/components/hub/market/items/MarketItemsPanel";
 import { MarketPackRevealOverlay } from "@/components/hub/market/reveal/MarketPackRevealOverlay";
 import { HubErrorDialog } from "@/components/hub/internal/HubErrorDialog";
 import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
@@ -76,7 +77,14 @@ export function MarketScene(props: MarketSceneProps) {
           tutorialForceMobileFiltersOpen={props.tutorialActions ? tutorialForceMobileFiltersOpen : false}
         />
 
-        {isDesktopLayout ? (
+        {state.typeFilter === "ITEMS" ? (
+          // Los objetos tienen su propio panel: no son cartas y no caben en el listado (ni ATK/DEF ni invocación).
+          <MarketItemsPanel
+            walletNexus={state.catalog.wallet.nexus}
+            onWalletChange={state.setWalletNexus}
+            onError={state.setErrorMessage}
+          />
+        ) : isDesktopLayout ? (
           <MarketDesktopGrid
             selectedCard={state.selectedCard}
             selectedListing={state.selectedListing}
