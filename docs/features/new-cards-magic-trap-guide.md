@@ -38,7 +38,7 @@
 
 | ⬜ | Ítem | Acción/efecto | Fase | Compl. |
 |----|------|---------------|------|--------|
-| ⚠️ | #13 robar magia/trampa del tablero rival | `STEAL_OPPONENT_EXECUTION` (código+tests HECHOS; **sin carta en BD por falta de arte**) | 4 | 🔴 |
+| ✅ | #13 Procesador Cuántico (robar magia/trampa del tablero rival) | `STEAL_OPPONENT_EXECUTION` + selección | 4 | 114 |
 | ✅ | Cierre — Glossary/Códex + mock-cards + heurísticas IA | efectos auto en `EFFECT_CATALOG`; 19 cartas añadidas a `mock-cards` (cartas-ejemplo del glossary + resolubles por IA); `select-opponent-play` con heurísticas de las magias nuevas | — | — |
 | ⬜ | Cierre pendiente: meter cartas en **mazos concretos** de oponentes + pase de balance (con playtest) | — | — | — |
 

@@ -10,7 +10,7 @@ import { ITrapTriggerContext, ITriggeredTrap } from "@/core/use-cases/game-engin
  * las trampas se activan con su trigger; algunas exigen más (Escudo TypeScript solo si atacan a SU entity
  * ligada, no a otra). Si no se cumple, la trampa NO se activa (queda puesta y puede reaccionar más tarde).
  */
-function trapActivationConditionMet(trap: IBoardEntity, player: IPlayer, context?: ITrapTriggerContext): boolean {
+export function trapActivationConditionMet(trap: IBoardEntity, player: IPlayer, context?: ITrapTriggerContext): boolean {
   const effect = trap.card.effect;
   if (effect?.action === "REINFORCE_LINKED_ENTITY_ON_ATTACK") {
     const defender = context?.defenderInstanceId

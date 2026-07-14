@@ -63,7 +63,7 @@ export async function handleOpponentEntityClick({
   // jugador pueda decidirse frente a cualquier trampa rival que vaya a saltar.
   const isDirectAttack = !targetId;
   const reactiveTrap =
-    findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_ATTACK_DECLARED") ??
+    findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_ATTACK_DECLARED", { defenderInstanceId: targetId ?? undefined }) ??
     (isDirectAttack ? findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_DIRECT_ATTACK_DECLARED") : null);
   const playerCounterTrap = reactiveTrap
     ? findReactiveTrap(gameState, gameState.playerA.id, "ON_OPPONENT_TRAP_ACTIVATED")

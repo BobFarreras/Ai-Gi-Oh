@@ -212,5 +212,6 @@ export const EXECUTION_CARDS: ICard[] = [
   createExecution({ id: "exec-reaq-board-swap", name: "reaq m", description: "Intercambia tus entities del tablero con las del rival.", renderFile: "exec-reaq-board-swap", faction: "NEUTRAL", cost: 5, effect: { action: "SWAP_BOARD_ENTITIES" } }),
   createExecution({ id: "exec-terminal-hand-swap", name: "Terminal Córtice", description: "Intercambia tu mano con la del rival.", renderFile: "exec-terminal-hand-swap", faction: "NEUTRAL", cost: 4, effect: { action: "SWAP_HANDS" } }),
   createExecution({ id: "exec-octocat-steal-entity", name: "Octocat", description: "Roba una entity del tablero rival a tu campo.", renderFile: "exec-octocat-steal-entity", faction: "NEUTRAL", cost: 6, effect: { action: "STEAL_OPPONENT_ENTITY" } }),
+  createExecution({ id: "exec-steal-opponent-execution", name: "Procesador Cuántico", description: "Roba una magia o trampa puesta del tablero rival a tu zona.", renderFile: "exec-steal-opponent-execution", faction: "NEUTRAL", cost: 5, effect: { action: "STEAL_OPPONENT_EXECUTION" } }),
 ];
 
