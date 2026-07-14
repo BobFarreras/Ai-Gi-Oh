@@ -440,7 +440,7 @@ perfiles de dificultad ya existen y `get-match-session-data.ts` ya sabe resolver
 |---|---|---|
 | A | 8 · OpenClaw muestra -400 | ✅ hecho |
 | A | 1 · Compartir carta en DM | ✅ hecho (+ **agujero de seguridad de CARD_SHARE cerrado**, ver abajo) |
-| A | 6 · Diálogo de premio semanal | ✅ código hecho · ⚠️ **migración 118 SIN aplicar a producción** |
+| A | 6 · Diálogo de premio semanal | ✅ hecho · migración 118 **aplicada a producción** (2026-07-14) |
 | A | 9 · UX de reemplazo de zona | ⏳ pendiente |
 | B | 4 · Niveles a 100 | ⏳ pendiente |
 | B | 2 · Caramelos | ⏳ pendiente |
@@ -455,17 +455,19 @@ carta de ataque en defensa) tiene que acabar en el glosario de la Academia
 (`src/components/hub/academy/glossary/glossary-content.ts`, y las descripciones técnicas en
 `effect-catalog-data.ts`). Una regla que el jugador no puede consultar no existe.
 
-### Pendiente de aplicar en producción: migración 118 (ficha 6)
+### Migración 118 aplicada a producción (2026-07-14)
 
-`docs/supabase/sql/118_weekly_prize_seen.sql` añade la marca `seen_at` al historial semanal y la función
-`ack_weekly_prizes`. **Sin ella, el diálogo del premio no funciona** (el servicio devolverá vacío, sin romper
-nada).
+`118_weekly_prize_seen.sql` (columna `seen_at` + índice + función `ack_weekly_prizes`) está **aplicada**.
+Verificado tras aplicarla: columna e índice creados, la función es `security definer` y `authenticated` puede
+ejecutarla (filtra por `auth.uid()`, así que nadie puede marcar premios ajenos).
 
-Dato comprobado en producción antes de escribirla: la 094 **sí** está aplicada, y ya hay **1 semana cerrada con
-10 premios repartidos** — es decir, hay jugadores que cobraron Nexus por quedar arriba y no lo saben. Al aplicar
-la 118, la columna nace a `NULL`, así que **esos jugadores verán el aviso de esa semana pasada** la próxima vez
-que entren al hub. Es lo deseable, pero es una decisión consciente: si se prefiere anunciar solo a partir de la
-siguiente semana, la propia migración documenta el `update` para marcar lo viejo como visto.
+**Decisión tomada: NO se marcó como visto lo antiguo.** La semana `2026-W28` ya estaba cerrada con **10 premios
+repartidos** que ningún jugador llegó a ver. Se dejan pendientes de avisar a propósito: son Nexus reales que ya
+están en sus carteras y merecen enterarse. El coste es cosmético (el aviso menciona una semana pasada).
+
+**Cómo validarlo sin esperar al domingo:** la cuenta del owner tiene premio pendiente en ese archivo (3.º de
+Actividad, 575 pts, +350 Nexus). Basta entrar a `/hub` y el diálogo salta. Para repetir la prueba:
+`update public.weekly_leaderboard_history set seen_at = null where player_id = '<id>';`
 
 ### Vulnerabilidad encontrada y cerrada al hacer la ficha 1 (CARD_SHARE)
 
