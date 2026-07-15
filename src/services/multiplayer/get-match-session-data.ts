@@ -2,6 +2,7 @@
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { createSupabaseServiceRoleClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-service-role-client";
 import { SupabasePlayerCardProgressRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerCardProgressRepository";
+import { SupabasePlayerCardUpgradesRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerCardUpgradesRepository";
 import { loadCardsByIds } from "@/infrastructure/persistence/supabase/internal/load-cards-by-ids";
 import { ICard } from "@/core/entities/ICard";
 import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
@@ -90,11 +91,15 @@ export async function getMatchSessionData(matchId: string): Promise<IMatchSessio
     .in("player_id", [localPlayerId, opponentId]);
   const nicknameById = new Map((profileRows as IProfileRow[] | null)?.map((p) => [p.player_id, p.nickname]) ?? []);
 
-  // Progresión por carta de cada jugador para reflejar su mazo real (niveles/versiones).
+  // Progresión y mejoras (objetos ATK/DEF) por carta de cada jugador, para reflejar su mazo REAL. Los dos mazos
+  // se resuelven aquí con los mismos datos, así que ambos clientes ven idénticos números sin tocar el transporte.
   const progressRepository = new SupabasePlayerCardProgressRepository(supabase);
-  const [localProgress, opponentProgress] = await Promise.all([
+  const upgradesRepository = new SupabasePlayerCardUpgradesRepository(supabase);
+  const [localProgress, opponentProgress, localUpgradesByCardId, opponentUpgradesByCardId] = await Promise.all([
     progressRepository.listByPlayer(localPlayerId),
     progressRepository.listByPlayer(opponentId),
+    upgradesRepository.getUpgradesByPlayer(localPlayerId),
+    upgradesRepository.getUpgradesByPlayer(opponentId),
   ]);
   const localProgressByCardId = new Map(localProgress.map((p) => [p.cardId, p]));
   const opponentProgressByCardId = new Map(opponentProgress.map((p) => [p.cardId, p]));
@@ -105,19 +110,23 @@ export async function getMatchSessionData(matchId: string): Promise<IMatchSessio
   const allCardIds = [...new Set([...localDeckIds, ...opponentDeckIds, ...localFusionIds, ...opponentFusionIds])];
   const cardById = await loadCardsByIds(supabase, allCardIds, { onlyActive: false });
 
-  const resolveDeck = (ids: string[], progressByCardId: typeof localProgressByCardId): ICard[] =>
+  const resolveDeck = (
+    ids: string[],
+    progressByCardId: typeof localProgressByCardId,
+    upgradesByCardId: typeof localUpgradesByCardId,
+  ): ICard[] =>
     ids
       .map((id) => {
         const base = cardById.get(id);
         if (!base) return null;
-        return applyCardProgressionToCard(base, progressByCardId.get(id) ?? null);
+        return applyCardProgressionToCard(base, progressByCardId.get(id) ?? null, upgradesByCardId.get(id));
       })
       .filter((c): c is ICard => c !== null);
 
-  const localDeck = resolveDeck(localDeckIds, localProgressByCardId);
-  const opponentDeck = resolveDeck(opponentDeckIds, opponentProgressByCardId);
-  const localFusionDeck = resolveDeck(localFusionIds, localProgressByCardId);
-  const opponentFusionDeck = resolveDeck(opponentFusionIds, opponentProgressByCardId);
+  const localDeck = resolveDeck(localDeckIds, localProgressByCardId, localUpgradesByCardId);
+  const opponentDeck = resolveDeck(opponentDeckIds, opponentProgressByCardId, opponentUpgradesByCardId);
+  const localFusionDeck = resolveDeck(localFusionIds, localProgressByCardId, localUpgradesByCardId);
+  const opponentFusionDeck = resolveDeck(opponentFusionIds, opponentProgressByCardId, opponentUpgradesByCardId);
 
   return {
     matchId,

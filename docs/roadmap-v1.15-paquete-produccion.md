@@ -246,6 +246,27 @@ sucesiva (la 5ª cuesta mucho más que la 1ª) y **emparejamiento por poder** en
 
 **Esfuerzo:** medio-alto (4-5 días) — casi todo economía, UI y balance; el motor es una línea.
 
+#### Hecho (2026-07-15)
+
+Confirmado que la intuición del owner era correcta: **el motor no se tocó**. Los bonus de objetos se suman en
+`applyCardProgressionToCard` junto a los de nivel, y ya está. Piezas:
+- **Regla del tope refinada:** los objetos aportan **hasta `presupuesto(coste)` por stat, de forma plana**
+  (600/500/400/300/200 de coste 2 a 6), no "el margen que deja el nivel". Es más intuitivo y respeta el mismo
+  techo absoluto `base + 750 + presupuesto`. Vive en `card-upgrade-rules.ts` y, espejada, en la función SQL
+  `card_upgrade_budget` (mantener en sync).
+- **Migración 123 (aplicada):** catálogo `card_upgrade_items` (Núcleo Overclock +100 ATK / Placa Blindada +100
+  DEF, 2000 Nx), tabla `player_card_upgrades` (bonus agregado por carta) y RPC `buy_card_upgrade_item` /
+  `apply_card_upgrade`, transaccionales e idempotentes. **El tope se valida en la RPC** (server-authoritative);
+  verificado en prod que el jugador no puede escribir la tabla.
+- **Mercado:** la sección Objetos ahora tiene dos grupos — Caramelos y Mejoras de atributos.
+- **Arsenal:** la sección Objetos aplica ambos: eliges objeto → carta → "Usar". Muestra el margen restante y las
+  stats ya con nivel+mejora en la miniatura.
+- **Multijugador:** `get-match-session-data` resuelve los DOS mazos con progresión **y mejoras**, así que ambos
+  clientes ven idénticos los stats mejorados. Sin esto, un objeto habría desincronizado el combate.
+
+**Pendiente de diseño (no bloquea):** coste creciente por mejora sucesiva y emparejamiento por poder. Hoy cada
+mejora cuesta lo mismo (2000 Nx) hasta el tope. Es fácil de subir cuando decidas la curva de precio.
+
 ---
 
 ### Ficha 4 — Niveles hasta 100 y nueva curva de bonus
@@ -530,7 +551,7 @@ perfiles de dificultad ya existen y `get-match-session-data.ts` ya sabe resolver
 | B | 4 · Niveles a 100 | ✅ hecho · migración 119 **aplicada** (2026-07-14) · ⚠️ ver "rivales" abajo |
 | B | 2 · Caramelos (USB Raro) | ✅ **hecho de punta a punta**: backend, sección Objetos en Mercado (comprar) y en Arsenal (usar sobre una carta). Migraciones 120/121 aplicadas |
 | — | 🔒 Tablas de valor escribibles por el cliente | ✅ **CERRADO** (migración 122 aplicada + service-role) |
-| B | 3 · Objetos | ⏳ pendiente |
+| B | 3 · Objetos ATK/DEF | ✅ hecho: backend + tope server-side + compra (Mercado) + aplicar (Arsenal) + combate MP. Migración 123 **aplicada** |
 | C | 5 · Cartas por reconfiguración | ⏳ pendiente |
 | C | 7 · Magia de ataque en defensa | ⏳ pendiente |
 | D | 11 · Ghost decks | ⏳ pendiente |

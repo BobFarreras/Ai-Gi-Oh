@@ -68,6 +68,7 @@ export const XP_INTRO = [
   "Subir de nivel refuerza permanentemente esa carta: cada 5 niveles alcanzas un HITO que le suma ataque o defensa, siguiendo siempre el mismo ciclo (+50 ATK, +100 ATK, +50 DEF, +100 DEF). Al llegar al 100, una carta acumula +750 de ataque y +750 de defensa.",
   "Dos hitos son especiales: en el nivel 50 la carta cuesta 1 de energía MENOS para siempre, y en el nivel 100 estrena una ilustración exclusiva.",
   "Los niveles se ganan jugando, pero también existen los caramelos: objetos raros que regalan niveles de golpe.",
+  "Además de los niveles, puedes reforzar una carta con OBJETOS de mejora (Núcleo Overclock para ataque, Placa Blindada para defensa): dan atributos permanentes. Cada carta admite un tope de mejora según su coste — las cartas baratas admiten mucho más que las caras —, así que una carta de poca energía bien mejorada puede volverse temible. Se compran en el Mercado y se aplican desde el Arsenal.",
 ];
 
 export const VERSION_INTRO = [

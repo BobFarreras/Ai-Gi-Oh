@@ -2,6 +2,7 @@
 import { ICard, CardType } from "@/core/entities/ICard";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { hasMaxLevelArt, resolveCardLevelBonuses } from "@/core/services/progression/card-level-bonus-rules";
+import { EMPTY_CARD_UPGRADE_BONUSES, ICardUpgradeBonuses } from "@/core/services/progression/card-upgrade-rules";
 import { resolveMasteryPassiveLabel } from "@/core/services/progression/mastery-passive-display";
 
 function resolveCombatCost(cost: number, cardType: CardType, level: number): number {
@@ -9,7 +10,16 @@ function resolveCombatCost(cost: number, cardType: CardType, level: number): num
   return Math.max(1, cost - bonuses.energyCostReduction);
 }
 
-export function applyCardProgressionToCard(card: ICard, progress: IPlayerCardProgress | null): ICard {
+/**
+ * Resuelve la carta lista para combate/exhibición: aplica los bonus de NIVEL y los de OBJETOS de mejora
+ * permanente (ATK/DEF). El motor recibe la carta ya resuelta; da igual de dónde salen los números, así que este
+ * es el único punto que hay que tocar (lo usan tablero, arsenal, mercado y los dos clientes de multijugador).
+ */
+export function applyCardProgressionToCard(
+  card: ICard,
+  progress: IPlayerCardProgress | null,
+  upgrades: ICardUpgradeBonuses = EMPTY_CARD_UPGRADE_BONUSES,
+): ICard {
   const level = progress?.level ?? 0;
   const bonuses = resolveCardLevelBonuses(card.type, level);
   const versionTier = progress?.versionTier ?? 0;
@@ -23,8 +33,8 @@ export function applyCardProgressionToCard(card: ICard, progress: IPlayerCardPro
     ...card,
     renderUrl,
     cost: resolveCombatCost(card.cost, card.type, level),
-    attack: typeof card.attack === "number" ? card.attack + bonuses.attackBonus : card.attack,
-    defense: typeof card.defense === "number" ? card.defense + bonuses.defenseBonus : card.defense,
+    attack: typeof card.attack === "number" ? card.attack + bonuses.attackBonus + upgrades.attackBonus : card.attack,
+    defense: typeof card.defense === "number" ? card.defense + bonuses.defenseBonus + upgrades.defenseBonus : card.defense,
     versionTier,
     level,
     xp: progress?.xp ?? 0,
