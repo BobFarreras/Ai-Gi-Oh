@@ -105,6 +105,27 @@ export function useAdminArenaDeckEditor() {
         ),
       }));
     },
+    /** Equipa un objeto: suma su valor al bonus ATK/DEF de la carta (apilable: llamar N veces = N objetos). */
+    equipObject(zone: ArenaDeckZone, index: number, stat: "ATTACK" | "DEFENSE", value: number) {
+      mutateDraft((current) => ({
+        ...current,
+        [zone === "DECK" ? "deck" : "fusion"]: (zone === "DECK" ? current.deck : current.fusion).map((entry, i) => {
+          if (i !== index) return entry;
+          return stat === "ATTACK"
+            ? { ...entry, attackBonus: (entry.attackBonus ?? 0) + value }
+            : { ...entry, defenseBonus: (entry.defenseBonus ?? 0) + value };
+        }),
+      }));
+    },
+    /** Quita todos los objetos equipados de la carta (bonus ATK/DEF a 0). */
+    clearObjects(zone: ArenaDeckZone, index: number) {
+      mutateDraft((current) => ({
+        ...current,
+        [zone === "DECK" ? "deck" : "fusion"]: (zone === "DECK" ? current.deck : current.fusion).map((entry, i) =>
+          i === index ? { ...entry, attackBonus: 0, defenseBonus: 0 } : entry,
+        ),
+      }));
+    },
     async saveVariant(): Promise<void> {
       if (!variant) return;
       const ok = await arena.saveVariant({

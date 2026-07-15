@@ -1,7 +1,9 @@
 // src/components/admin/internal/arena/AdminArenaDeckEditor.tsx - Editor visual de mazos de arena (4 columnas estilo Story): oponentes, mazo, almacén, detalle.
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { IAdminCardUpgradeItemEntry } from "@/core/entities/admin/IAdminShopObjects";
+import { fetchAdminShopObjects } from "@/components/admin/admin-objects-api";
 import { AdminMobileDetailDialog } from "@/components/admin/internal/AdminMobileDetailDialog";
 import { AdminStarterDeckCollectionPanel } from "@/components/admin/internal/AdminStarterDeckCollectionPanel";
 import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
@@ -20,6 +22,16 @@ export function AdminArenaDeckEditor() {
   const ref = editor.selectedDeckRef;
   const entry = editor.selectedEntry;
   const [isMobileInspectorOpen, setIsMobileInspectorOpen] = useState(false);
+  const [upgradeItems, setUpgradeItems] = useState<IAdminCardUpgradeItemEntry[]>([]);
+
+  // Catálogo de objetos de mejora para equipar en las cartas del rival. Fallo → sin picker (edición normal sigue).
+  useEffect(() => {
+    let active = true;
+    fetchAdminShopObjects().then((snapshot) => { if (active) setUpgradeItems(snapshot.upgradeItems); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  const equipDisabled = !editor.isEditMode || !ref;
 
   // Detalle (inspector + escalado) reutilizado en la columna desktop y en el diálogo móvil.
   const detailBody = (
@@ -65,6 +77,47 @@ export function AdminArenaDeckEditor() {
             />
           </label>
         </div>
+      </section>
+
+      {/* Objetos equipados en la carta del rival: elige objetos del catálogo (apilable) → suman ATK/DEF en combate. */}
+      <section className="rounded-xl border border-fuchsia-800/30 bg-[#0a0716]/55 p-3 text-xs text-slate-200">
+        <div className="flex items-center justify-between">
+          <p className="font-black uppercase tracking-[0.18em] text-fuchsia-300">Objetos equipados</p>
+          <div className="flex items-center gap-1.5 font-mono text-[10px]">
+            <span className="rounded bg-rose-500/15 px-1.5 py-0.5 text-rose-300">+{entry?.attackBonus ?? 0} ATK</span>
+            <span className="rounded bg-sky-500/15 px-1.5 py-0.5 text-sky-300">+{entry?.defenseBonus ?? 0} DEF</span>
+          </div>
+        </div>
+        <p className="mt-1 text-[10px] text-slate-400">Cada objeto suma su valor (apilable: p. ej. 4 de ataque + 2 de defensa). Solo cartas del mazo, en modo edición.</p>
+        <div className="mt-2 flex flex-col gap-1.5">
+          {upgradeItems.length === 0 ? (
+            <p className="text-[10px] text-slate-500">No hay objetos de mejora en el catálogo. Créalos en la sección Objetos.</p>
+          ) : (
+            upgradeItems.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                aria-label={`Equipar ${item.name}`}
+                disabled={equipDisabled}
+                onClick={() => ref && editor.equipObject(ref.zone, ref.index, item.stat, item.value)}
+                className="flex h-8 items-center justify-between rounded-md border border-fuchsia-900/50 bg-[#0a0716] px-2.5 text-[11px] text-slate-100 transition hover:border-fuchsia-500 hover:bg-fuchsia-950/40 disabled:opacity-40"
+              >
+                <span className="truncate">{item.name}</span>
+                <span className={`ml-2 shrink-0 font-mono font-bold ${item.stat === "ATTACK" ? "text-rose-300" : "text-sky-300"}`}>+{item.value} {item.stat === "ATTACK" ? "ATK" : "DEF"}</span>
+              </button>
+            ))
+          )}
+        </div>
+        {((entry?.attackBonus ?? 0) > 0 || (entry?.defenseBonus ?? 0) > 0) ? (
+          <button
+            type="button"
+            disabled={equipDisabled}
+            onClick={() => ref && editor.clearObjects(ref.zone, ref.index)}
+            className="mt-1.5 text-[10px] uppercase tracking-wider text-slate-500 underline hover:text-slate-300 disabled:opacity-40"
+          >
+            Quitar objetos
+          </button>
+        ) : null}
       </section>
     </>
   );
