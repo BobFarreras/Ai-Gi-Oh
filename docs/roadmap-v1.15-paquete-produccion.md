@@ -267,6 +267,21 @@ Confirmado que la intuición del owner era correcta: **el motor no se tocó**. L
 **Pendiente de diseño (no bloquea):** coste creciente por mejora sucesiva y emparejamiento por poder. Hoy cada
 mejora cuesta lo mismo (2000 Nx) hasta el tope. Es fácil de subir cuando decidas la curva de precio.
 
+#### Rediseño de UX de objetos (2026-07-15)
+
+A petición del owner, el flujo de usar objetos cambió para ser más claro:
+- **Almacén de objetos = SOLO objetos** (con su imagen), no cartas. Entrar por el conmutador muestra el
+  inventario; para usar un objeto hay que venir desde una carta.
+- **Botón "Equipar objeto"** en el detalle de la carta (`HomeCardInspector`, solo Entity). Lleva a la sección
+  Objetos con esa carta como objetivo.
+- Al elegir el objeto se aplica y salta una **cinemática** (`ArsenalObjectApplyOverlay`, misma familia que la
+  evolución): la carta con glow y el cambio resaltado ("Nivel 12 → 14" / "+100 ATAQUE"), con su sonido.
+- **Comprar objetos** reutiliza el flotante "-N NX" (`MarketNexusSpendFloat`) y el sonido `BUY_CARD`, igual que
+  las cartas. Mercado y almacén muestran la imagen de cada objeto.
+
+Plumbing: `onEquipSelectedCard` viaja por las props del workspace (como `onEvolveSelectedCard`); el conmutador de
+sección sigue siendo una función de render. El objetivo se limpia al volver a Cartas.
+
 ---
 
 ### Ficha 4 — Niveles hasta 100 y nueva curva de bonus

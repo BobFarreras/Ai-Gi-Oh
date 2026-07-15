@@ -103,6 +103,7 @@ export function TutorialArsenalClient(props: ITutorialArsenalClientProps) {
             onInsertSelectedCard={sandbox.insertSelectedCard}
             onRemoveSelectedCard={sandbox.removeSelectedCard}
             onEvolveSelectedCard={sandbox.evolveSelectedCard}
+            onEquipSelectedCard={() => undefined}
             onSelectSlot={selectionHandlers.onSelectSlot}
             onSelectFusionSlot={selectionHandlers.onSelectFusionSlot}
             onSelectCollectionCard={selectionHandlers.onSelectCollectionCard}

@@ -45,6 +45,7 @@ interface ICreateHomeDeckBuilderViewPropsInput {
   onInsertSelectedCard: () => Promise<IHomeActionResult>;
   onRemoveSelectedCard: () => Promise<IHomeActionResult>;
   onEvolveSelectedCard: () => Promise<IHomeActionResult>;
+  onEquipSelectedCard: () => void;
   onBackToHub: () => void;
   onClearError: () => void;
   isExitDialogOpen: boolean;
@@ -87,6 +88,7 @@ export function createHomeDeckBuilderViewProps(input: ICreateHomeDeckBuilderView
     onInsertSelectedCard: input.onInsertSelectedCard,
     onRemoveSelectedCard: input.onRemoveSelectedCard,
     onEvolveSelectedCard: input.onEvolveSelectedCard,
+    onEquipSelectedCard: input.onEquipSelectedCard,
     onSelectSlot: input.onSelectSlot,
     onSelectFusionSlot: input.onSelectFusionSlot,
     onSelectCollectionCard: input.onSelectCollectionCard,

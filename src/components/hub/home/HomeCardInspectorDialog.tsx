@@ -27,6 +27,7 @@ interface HomeCardInspectorDialogProps {
   onInsert: () => Promise<IHomeActionResult>;
   onRemove: () => Promise<IHomeActionResult>;
   onEvolve: () => Promise<IHomeActionResult>;
+  onEquip?: () => void;
   onClose: () => void;
   isTutorialActionStep?: boolean;
   tutorialHighlightTargetId?: string | null;
@@ -48,6 +49,7 @@ export function HomeCardInspectorDialog({
   onInsert,
   onRemove,
   onEvolve,
+  onEquip,
   onClose,
   isTutorialActionStep = false,
   tutorialHighlightTargetId = null,
@@ -124,6 +126,7 @@ export function HomeCardInspectorDialog({
           selectedCardLevel={selectedCardLevel}
           selectedCardXp={selectedCardXp}
           selectedCardMasteryPassiveSkillId={selectedCardMasteryPassiveSkillId}
+          onEquip={onEquip ? () => { onClose(); onEquip(); } : undefined}
         />
         <HomeInspectorActionButtons
           source={selectedCardSource}

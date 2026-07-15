@@ -16,6 +16,7 @@ export function HomeDesktopWorkspace(props: IHomeWorkspaceProps) {
           selectedCardLevel={props.selectedCardLevel}
           selectedCardXp={props.selectedCardXp}
           selectedCardMasteryPassiveSkillId={props.selectedCardMasteryPassiveSkillId}
+          onEquip={props.onEquipSelectedCard}
         />
       </div>
       <div className="min-h-0 min-w-0 overflow-visible rounded-xl border border-cyan-900/30 bg-black/40">

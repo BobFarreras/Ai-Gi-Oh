@@ -127,6 +127,7 @@ export function HomeMobileWorkspace(props: IHomeMobileWorkspaceProps) {
         onInsert={props.onInsertSelectedCard}
         onRemove={props.onRemoveSelectedCard}
         onEvolve={props.onEvolveSelectedCard}
+        onEquip={props.onEquipSelectedCard}
         onClose={() => setIsInspectorOpen(false)}
         isTutorialActionStep={isTutorialActionStep}
         tutorialHighlightTargetId={tutorialHighlightTargetId}

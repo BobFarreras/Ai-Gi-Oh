@@ -3,6 +3,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ICard } from "@/core/entities/ICard";
 import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
 import { ArsenalSection, ArsenalSectionSwitch } from "@/components/hub/home/objects/ArsenalSectionSwitch";
 import { ArsenalObjectsView } from "@/components/hub/home/objects/ArsenalObjectsView";
@@ -25,12 +26,27 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
   const { enqueueDeckMutation } = useDeckMutationQueue();
   const state = useHomeDeckBuilderState(props);
   const [section, setSection] = useState<ArsenalSection>("CARDS");
+  // Carta a la que se equipará un objeto: la fija "Equipar objeto" del detalle y viaja a la sección Objetos.
+  const [objectTargetCard, setObjectTargetCard] = useState<ICard | null>(null);
+  const handleSectionChange = useCallback((next: ArsenalSection) => {
+    // Volver a Cartas por el conmutador limpia el objetivo (dejar de "equipar").
+    if (next === "CARDS") setObjectTargetCard(null);
+    setSection(next);
+  }, []);
   // Función de render (no un nodo): el buscador del arsenal aparece en varios sitios según el breakpoint y el
   // conmutador se pinta junto a él en cada uno.
   const renderSectionSwitch = useCallback(
-    () => <ArsenalSectionSwitch section={section} onSectionChange={setSection} />,
-    [section],
+    () => <ArsenalSectionSwitch section={section} onSectionChange={handleSectionChange} />,
+    [handleSectionChange, section],
   );
+  // "Equipar objeto" (detalle de carta): trae esa carta a la sección Objetos. Solo Entity: son las que suben
+  // atributos con nivel/mejoras.
+  const handleEquipSelectedCard = useCallback(() => {
+    const card = state.selectedCard;
+    if (!card || card.type !== "ENTITY") return;
+    setObjectTargetCard(card);
+    setSection("OBJECTS");
+  }, [state.selectedCard]);
 
   // Tras usar un caramelo, refleja el nuevo nivel/xp de la carta en el estado del arsenal (sin recargar): la
   // progresión es la MISMA fuente que usa el deck-builder para mostrar stats, así que la carta sube al volver.
@@ -143,6 +159,7 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
     onInsertSelectedCard: actions.handleInsertSelectedCard,
     onRemoveSelectedCard: actions.handleRemoveSelectedCard,
     onEvolveSelectedCard: actions.handleEvolveSelectedCard,
+    onEquipSelectedCard: handleEquipSelectedCard,
     onBackToHub: exitGuard.handleBackToHubRequest,
     onClearError: () => state.setErrorMessage(null),
     isExitDialogOpen: exitGuard.isExitDialogOpen,
@@ -170,7 +187,7 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
   if (section === "OBJECTS") {
     return (
       <ArsenalObjectsView
-        collection={state.collectionState}
+        targetCard={objectTargetCard}
         cardProgressById={state.cardProgressById}
         sectionSwitch={renderSectionSwitch()}
         onCardLeveled={handleCardLeveled}

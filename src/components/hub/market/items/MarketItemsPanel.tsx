@@ -6,10 +6,12 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Coins, Package, Shield, Swords } from "lucide-react";
 import { IShopCandyItem, IShopItems, IShopUpgradeItem } from "@/services/market/shop-items";
+import { MarketNexusSpendFloat } from "@/components/hub/market/internal/MarketNexusSpendFloat";
+import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 
 interface IMarketItemsPanelProps {
   walletNexus: number;
@@ -37,11 +39,11 @@ function upgradeToRow(item: IShopUpgradeItem): IBuyableRow {
   return { id: item.id, name: item.name, subtitle: `+${item.value} ${isAttack ? "ATAQUE" : "DEFENSA"} permanente`, icon: isAttack ? Swords : Shield, priceNexus: item.priceNexus, imageUrl: item.imageUrl, owned: item.owned, kind: "UPGRADE" };
 }
 
-function ItemCard({ row, walletNexus, isBuying, onBuy }: { row: IBuyableRow; walletNexus: number; isBuying: boolean; onBuy: (row: IBuyableRow) => void }) {
+function ItemCard({ row, walletNexus, isBuying, spendFloatId, onBuy }: { row: IBuyableRow; walletNexus: number; isBuying: boolean; spendFloatId: number; onBuy: (row: IBuyableRow) => void }) {
   const cannotAfford = walletNexus < row.priceNexus;
   const Icon = row.icon;
   return (
-    <motion.li initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 rounded-xl border border-amber-500/35 bg-[#0a0703]/70 p-3">
+    <motion.li initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="relative flex items-center gap-3 rounded-xl border border-amber-500/35 bg-[#0a0703]/70 p-3">
       <div className="relative h-16 w-16 shrink-0">
         {row.imageUrl ? <Image src={row.imageUrl} alt="" fill sizes="64px" className="object-contain" /> : <Icon className="h-full w-full text-amber-400/60" aria-hidden />}
       </div>
@@ -55,8 +57,10 @@ function ItemCard({ row, walletNexus, isBuying, onBuy }: { row: IBuyableRow; wal
         disabled={cannotAfford || isBuying}
         onClick={() => onBuy(row)}
         aria-label={`Comprar ${row.name} por ${row.priceNexus} Nexus`}
-        className="flex min-h-[44px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg border border-amber-300/70 bg-amber-500/15 px-3 font-display text-xs font-black uppercase tracking-wide text-amber-100 transition hover:bg-amber-500/30 disabled:cursor-not-allowed disabled:opacity-40"
+        className="relative flex min-h-[44px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg border border-amber-300/70 bg-amber-500/15 px-3 font-display text-xs font-black uppercase tracking-wide text-amber-100 transition hover:bg-amber-500/30 disabled:cursor-not-allowed disabled:opacity-40"
       >
+        {/* Mismo flotante "-N NX" que las compras de cartas/packs. */}
+        <MarketNexusSpendFloat amount={row.priceNexus} triggerId={spendFloatId} className="-right-1 -top-1" />
         <span className="flex items-center gap-1"><Coins className="h-3.5 w-3.5" aria-hidden />{row.priceNexus}</span>
         <span className="text-[9px] tracking-widest text-amber-300/80">{isBuying ? "…" : cannotAfford ? "Sin Nexus" : "Comprar"}</span>
       </button>
@@ -67,6 +71,10 @@ function ItemCard({ row, walletNexus, isBuying, onBuy }: { row: IBuyableRow; wal
 export function MarketItemsPanel({ walletNexus, onWalletChange, onError }: IMarketItemsPanelProps) {
   const [items, setItems] = useState<IShopItems | null>(null);
   const [buyingId, setBuyingId] = useState<string | null>(null);
+  // Flotante "-N NX" por objeto: se dispara sobre el objeto recién comprado, igual que en las cartas.
+  const [spendFloat, setSpendFloat] = useState<{ id: string; trigger: number }>({ id: "", trigger: 0 });
+  const spendTimeoutRef = useRef<number | null>(null);
+  const { play } = useHubModuleSfx();
 
   useEffect(() => {
     let active = true;
@@ -76,6 +84,8 @@ export function MarketItemsPanel({ walletNexus, onWalletChange, onError }: IMark
       .catch(() => { if (active) setItems({ candies: [], upgrades: [] }); });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => () => { if (spendTimeoutRef.current !== null) window.clearTimeout(spendTimeoutRef.current); }, []);
 
   const handleBuy = useCallback(
     async (row: IBuyableRow) => {
@@ -91,13 +101,18 @@ export function MarketItemsPanel({ walletNexus, onWalletChange, onError }: IMark
         if (!response.ok) throw new Error(body.error ?? "No se pudo comprar el objeto.");
         if (typeof body.nexus === "number") onWalletChange(body.nexus);
         if (body.items) setItems(body.items);
+        // Mismo sonido y flotante que las compras de cartas.
+        play("BUY_CARD");
+        setSpendFloat((previous) => ({ id: row.id, trigger: previous.trigger + 1 }));
+        if (spendTimeoutRef.current !== null) window.clearTimeout(spendTimeoutRef.current);
+        spendTimeoutRef.current = window.setTimeout(() => setSpendFloat({ id: "", trigger: 0 }), 1280);
       } catch (error) {
         onError(error instanceof Error ? error.message : "No se pudo comprar el objeto.");
       } finally {
         setBuyingId(null);
       }
     },
-    [buyingId, onError, onWalletChange],
+    [buyingId, onError, onWalletChange, play],
   );
 
   if (items === null) {
@@ -118,7 +133,7 @@ export function MarketItemsPanel({ walletNexus, onWalletChange, onError }: IMark
           </div>
         </header>
         <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {candyRows.map((row) => <ItemCard key={row.id} row={row} walletNexus={walletNexus} isBuying={buyingId === row.id} onBuy={handleBuy} />)}
+          {candyRows.map((row) => <ItemCard key={row.id} row={row} walletNexus={walletNexus} isBuying={buyingId === row.id} spendFloatId={spendFloat.id === row.id ? spendFloat.trigger : 0} onBuy={handleBuy} />)}
         </ul>
       </section>
 
@@ -131,7 +146,7 @@ export function MarketItemsPanel({ walletNexus, onWalletChange, onError }: IMark
           </div>
         </header>
         <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {upgradeRows.map((row) => <ItemCard key={row.id} row={row} walletNexus={walletNexus} isBuying={buyingId === row.id} onBuy={handleBuy} />)}
+          {upgradeRows.map((row) => <ItemCard key={row.id} row={row} walletNexus={walletNexus} isBuying={buyingId === row.id} spendFloatId={spendFloat.id === row.id ? spendFloat.trigger : 0} onBuy={handleBuy} />)}
         </ul>
       </section>
     </div>

@@ -5,19 +5,20 @@
 import { ReactNode, useState } from "react";
 import { BackButton } from "@/components/ui/BackButton";
 import { HubErrorDialog } from "@/components/hub/internal/HubErrorDialog";
-import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
+import { ICard } from "@/core/entities/ICard";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { ArsenalObjectsPanel } from "@/components/hub/home/objects/ArsenalObjectsPanel";
 
 interface IArsenalObjectsViewProps {
-  collection: ICollectionCard[];
+  /** Carta objetivo del "Equipar objeto" (null = solo mirar el inventario de objetos). */
+  targetCard: ICard | null;
   cardProgressById: Map<string, IPlayerCardProgress>;
   sectionSwitch: ReactNode;
   onCardLeveled: (cardId: string, level: number, xp: number) => void;
   onBackToHub: () => void;
 }
 
-export function ArsenalObjectsView({ collection, cardProgressById, sectionSwitch, onCardLeveled, onBackToHub }: IArsenalObjectsViewProps) {
+export function ArsenalObjectsView({ targetCard, cardProgressById, sectionSwitch, onCardLeveled, onBackToHub }: IArsenalObjectsViewProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   return (
@@ -28,7 +29,7 @@ export function ArsenalObjectsView({ collection, cardProgressById, sectionSwitch
           <h1 className="text-xl font-black uppercase tracking-widest text-cyan-100 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)] sm:text-2xl">Arsenal</h1>
         </div>
         <ArsenalObjectsPanel
-          collection={collection}
+          targetCard={targetCard}
           cardProgressById={cardProgressById}
           sectionSwitch={sectionSwitch}
           onCardLeveled={onCardLeveled}
