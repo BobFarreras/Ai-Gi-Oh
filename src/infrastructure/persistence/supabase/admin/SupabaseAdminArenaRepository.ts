@@ -12,7 +12,7 @@ import {
 
 interface IOpponentRow { id: string; code_name: string; display_name: string; avatar_url: string; intro_url: string; story_opponent_id: string; is_active: boolean; sort_order: number }
 interface IVariantRow { id: string; opponent_id: string; label: string | null; sort_order: number; is_active: boolean }
-interface ICardRow { variant_id: string; card_id: string; zone: "DECK" | "FUSION"; version_tier: number | null; level: number | null; xp: number | null }
+interface ICardRow { variant_id: string; card_id: string; zone: "DECK" | "FUSION"; version_tier: number | null; level: number | null; xp: number | null; attack_bonus: number | null; defense_bonus: number | null }
 interface ITierRow { tier: number; code: string; required_wins_in_previous_tier: number; ai_difficulty: string; opponent_id: string; reward_multiplier: number; is_active: boolean; default_version_tier: number | null; default_level: number | null; default_xp: number | null }
 
 export class SupabaseAdminArenaRepository {
@@ -22,7 +22,7 @@ export class SupabaseAdminArenaRepository {
     const [opponentsRes, variantsRes, cardsRes] = await Promise.all([
       this.client.from("arena_opponents").select("id,code_name,display_name,avatar_url,intro_url,story_opponent_id,is_active,sort_order").order("sort_order"),
       this.client.from("arena_opponent_deck_variants").select("id,opponent_id,label,sort_order,is_active").order("sort_order"),
-      this.client.from("arena_deck_variant_cards").select("variant_id,card_id,zone,version_tier,level,xp").order("sort_order"),
+      this.client.from("arena_deck_variant_cards").select("variant_id,card_id,zone,version_tier,level,xp,attack_bonus,defense_bonus").order("sort_order"),
     ]);
     if (opponentsRes.error || variantsRes.error || cardsRes.error) throw new ValidationError("No se pudo leer el catálogo de arena.");
     const cardsByVariant = new Map<string, ICardRow[]>();
@@ -31,7 +31,7 @@ export class SupabaseAdminArenaRepository {
       list.push(card);
       cardsByVariant.set(card.variant_id, list);
     }
-    const toEntry = (row: ICardRow): IAdminArenaCardEntry => ({ cardId: row.card_id, versionTier: row.version_tier, level: row.level, xp: row.xp });
+    const toEntry = (row: ICardRow): IAdminArenaCardEntry => ({ cardId: row.card_id, versionTier: row.version_tier, level: row.level, xp: row.xp, attackBonus: row.attack_bonus, defenseBonus: row.defense_bonus });
     const opponents = (opponentsRes.data as IOpponentRow[]).map((row) => ({
       id: row.id, codeName: row.code_name, displayName: row.display_name, avatarUrl: row.avatar_url,
       introUrl: row.intro_url, storyOpponentId: row.story_opponent_id, isActive: row.is_active, sortOrder: row.sort_order, variants: [],
@@ -76,8 +76,8 @@ export class SupabaseAdminArenaRepository {
     const removal = await this.client.from("arena_deck_variant_cards").delete().eq("variant_id", command.id);
     if (removal.error) throw new ValidationError("No se pudo actualizar las cartas de la variante.");
     const rows = [
-      ...command.deckCards.map((card, index) => ({ variant_id: command.id, card_id: card.cardId, zone: "DECK", version_tier: card.versionTier, level: card.level, xp: card.xp, sort_order: index + 1 })),
-      ...command.fusionCards.map((card, index) => ({ variant_id: command.id, card_id: card.cardId, zone: "FUSION", version_tier: card.versionTier, level: card.level, xp: card.xp, sort_order: index + 1 })),
+      ...command.deckCards.map((card, index) => ({ variant_id: command.id, card_id: card.cardId, zone: "DECK", version_tier: card.versionTier, level: card.level, xp: card.xp, attack_bonus: card.attackBonus ?? 0, defense_bonus: card.defenseBonus ?? 0, sort_order: index + 1 })),
+      ...command.fusionCards.map((card, index) => ({ variant_id: command.id, card_id: card.cardId, zone: "FUSION", version_tier: card.versionTier, level: card.level, xp: card.xp, attack_bonus: card.attackBonus ?? 0, defense_bonus: card.defenseBonus ?? 0, sort_order: index + 1 })),
     ];
     if (rows.length > 0) {
       const insertion = await this.client.from("arena_deck_variant_cards").insert(rows);

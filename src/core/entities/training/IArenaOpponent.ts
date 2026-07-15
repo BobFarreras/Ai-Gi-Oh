@@ -6,6 +6,9 @@ export interface IArenaDeckCardEntry {
   versionTier: number | null;
   level: number | null;
   xp: number | null;
+  /** Bonus de objetos equipados (ATK/DEF permanente); null = 0. Se suma como un upgrade más. */
+  attackBonus: number | null;
+  defenseBonus: number | null;
 }
 
 /** Variante de mazo que rota dentro de un oponente. */

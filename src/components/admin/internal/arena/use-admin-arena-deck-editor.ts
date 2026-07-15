@@ -13,7 +13,7 @@ interface IArenaDraft {
   fusion: IAdminArenaCardEntry[];
 }
 
-const EMPTY_ENTRY = (cardId: string): IAdminArenaCardEntry => ({ cardId, versionTier: null, level: null, xp: null });
+const EMPTY_ENTRY = (cardId: string): IAdminArenaCardEntry => ({ cardId, versionTier: null, level: null, xp: null, attackBonus: null, defenseBonus: null });
 
 /** Orquesta selección de oponente/variante y un draft editable de cartas, reutilizando useAdminArena. */
 export function useAdminArenaDeckEditor() {

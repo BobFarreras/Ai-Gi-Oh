@@ -70,7 +70,7 @@ describe("resolveTrainingOpponentLoadout", () => {
     const opponents: Record<string, IArenaOpponent> = {
       "training-tier-1": {
         id: "training-tier-1", codeName: "x", displayName: "Custom X", avatarUrl: "a", introUrl: "i", storyOpponentId: "opp-x",
-        variants: [{ id: "v1", label: "V1", deckCards: [{ cardId: "entity-x", versionTier: 5, level: 30, xp: 9999 }], fusionCards: [] }],
+        variants: [{ id: "v1", label: "V1", deckCards: [{ cardId: "entity-x", versionTier: 5, level: 30, xp: 9999, attackBonus: null, defenseBonus: null }], fusionCards: [] }],
       },
     };
     const loadout = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: 0, tierMatches: 0, opponents, cardCatalog });
@@ -85,7 +85,7 @@ describe("resolveTrainingOpponentLoadout", () => {
     const opponents: Record<string, IArenaOpponent> = {
       "training-tier-1": {
         id: "training-tier-1", codeName: "x", displayName: "X", avatarUrl: "a", introUrl: "i", storyOpponentId: "opp-x",
-        variants: [{ id: "v1", label: null, deckCards: [{ cardId: "entity-x", versionTier: null, level: null, xp: null }], fusionCards: [] }],
+        variants: [{ id: "v1", label: null, deckCards: [{ cardId: "entity-x", versionTier: null, level: null, xp: null, attackBonus: null, defenseBonus: null }], fusionCards: [] }],
       },
     };
     const loadout = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: 0, tierMatches: 0, opponents, cardCatalog, defaultScaling: { versionTier: 3, level: 10, xp: 980 } });
@@ -99,7 +99,7 @@ describe("resolveTrainingOpponentLoadout", () => {
     const opponents: Record<string, IArenaOpponent> = {
       "training-tier-1": {
         id: "training-tier-1", codeName: "x", displayName: "X", avatarUrl: "a", introUrl: "i", storyOpponentId: "opp-x",
-        variants: [{ id: "v1", label: null, deckCards: [{ cardId: "entity-x", versionTier: null, level: null, xp: null }], fusionCards: [] }],
+        variants: [{ id: "v1", label: null, deckCards: [{ cardId: "entity-x", versionTier: null, level: null, xp: null, attackBonus: null, defenseBonus: null }], fusionCards: [] }],
       },
     };
     const baseInput = { tier: 1, aiDifficulty: "EASY" as const, tierWins: 0, tierMatches: 0, opponents, cardCatalog };
@@ -112,6 +112,21 @@ describe("resolveTrainingOpponentLoadout", () => {
     // La defensa sí sube entre el 10 y el 20 (hitos 15 y 20): es el ciclo de la curva.
     expect(atLevel10.deck[0]?.defense).toBe(1000);
     expect(atLevel20.deck[0]?.defense).toBe(1150);
+  });
+
+  it("suma el bonus de objetos equipados (attackBonus/defenseBonus) sobre el escalado de nivel", () => {
+    const card: ICard = { id: "entity-x", name: "X", description: "", type: "ENTITY", faction: "NEUTRAL", cost: 3, attack: 1000, defense: 1000 };
+    const cardCatalog = new Map<string, ICard>([["entity-x", card]]);
+    const opponents: Record<string, IArenaOpponent> = {
+      "training-tier-1": {
+        id: "training-tier-1", codeName: "x", displayName: "X", avatarUrl: "a", introUrl: "i", storyOpponentId: "opp-x",
+        variants: [{ id: "v1", label: null, deckCards: [{ cardId: "entity-x", versionTier: null, level: null, xp: null, attackBonus: 300, defenseBonus: 200 }], fusionCards: [] }],
+      },
+    };
+    // Nivel 10 = +150 ATK; objetos = +300 ATK / +200 DEF. Se suma todo (misma vía que el jugador).
+    const loadout = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: 0, tierMatches: 0, opponents, cardCatalog, defaultScaling: { versionTier: 1, level: 10, xp: 980 } });
+    expect(loadout.deck[0]?.attack).toBe(1000 + 150 + 300);
+    expect(loadout.deck[0]?.defense).toBe(1000 + 0 + 200);
   });
 
   it("resuelve deck completo (20) y fusión para un rival del roster", () => {

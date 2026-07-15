@@ -7,6 +7,9 @@ export interface IAdminArenaCardEntry {
   versionTier: number | null;
   level: number | null;
   xp: number | null;
+  /** Bonus de objetos equipados (ATK/DEF); null = 0. */
+  attackBonus: number | null;
+  defenseBonus: number | null;
 }
 
 export interface IAdminArenaVariant {
