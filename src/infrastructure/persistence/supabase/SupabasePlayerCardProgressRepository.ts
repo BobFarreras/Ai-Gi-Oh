@@ -2,6 +2,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { ValidationError } from "@/core/errors/ValidationError";
+import { createPrivilegedWriteClientResolver } from "@/infrastructure/persistence/supabase/internal/resolve-privileged-write-client";
 import {
   IPlayerCardProgressRepository,
   IUpsertPlayerCardProgressInput,
@@ -42,7 +43,15 @@ function toEntity(row: IPlayerCardProgressRow): IPlayerCardProgress {
 }
 
 export class SupabasePlayerCardProgressRepository implements IPlayerCardProgressRepository {
-  constructor(private readonly client: SupabaseClient) {}
+  /**
+   * La progresión se LEE con el cliente de la sesión, pero se ESCRIBE con service-role: si el jugador pudiera
+   * escribir sus propias filas, se pondría todas las cartas a nivel 100 y versión 5 sin jugar una partida.
+   */
+  private readonly writeClient: () => SupabaseClient;
+
+  constructor(private readonly client: SupabaseClient) {
+    this.writeClient = createPrivilegedWriteClientResolver();
+  }
 
   private async resolveDefaultMasteryPassiveSkillId(cardId: string): Promise<string | null> {
     // Las cartas con pasiva innata la conservan a V5 (no reciben el mapa genérico ni el fallback).
@@ -111,7 +120,7 @@ export class SupabasePlayerCardProgressRepository implements IPlayerCardProgress
       xp: input.xp ?? existing?.xp ?? 0,
       mastery_passive_skill_id: masteryPassiveSkillId,
     };
-    const { data, error } = await this.client
+    const { data, error } = await this.writeClient()
       .from("player_card_progress")
       .upsert(payload, { onConflict: "player_id,card_id" })
       .select("player_id,card_id,version_tier,level,xp,mastery_passive_skill_id,updated_at")

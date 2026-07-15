@@ -3,6 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 import { SupabaseWalletRepository } from "@/infrastructure/persistence/supabase/SupabaseWalletRepository";
 import { ValidationError } from "@/core/errors/ValidationError";
 
+// La cartera se ESCRIBE con service-role (el jugador no puede tocar su propia fila: ver
+// resolve-privileged-write-client.ts). En los tests, el cliente de service-role es el mismo doble, para poder
+// seguir comprobando el uso de la RPC atómica y su fallback.
+const serviceRoleClient: { current: unknown } = { current: null };
+vi.mock("@/infrastructure/persistence/supabase/internal/create-supabase-service-role-client", () => ({
+  createSupabaseServiceRoleClient: () => serviceRoleClient.current,
+}));
+
 function createClientMock(options: {
   rpcResult: { data: unknown; error: { code?: string; message?: string } | null };
   selectResult?: { data: { player_id: string; nexus: number } | null; error: { code?: string; message?: string } | null };
@@ -14,8 +22,10 @@ function createClientMock(options: {
   const selectMock = vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ maybeSingle: selectSingleMock }) });
   const fromMock = vi.fn().mockReturnValue({ select: selectMock, update: updateMock });
   const rpcMock = vi.fn().mockResolvedValue(options.rpcResult);
+  const client = { rpc: rpcMock, from: fromMock };
+  serviceRoleClient.current = client;
   return {
-    client: { rpc: rpcMock, from: fromMock } as never,
+    client: client as never,
     rpcMock,
     fromMock,
   };

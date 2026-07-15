@@ -1,6 +1,7 @@
 // src/infrastructure/persistence/supabase/SupabaseWalletRepository.ts - Implementa wallet Nexus persistida con operaciones atómicas básicas.
 import { SupabaseClient } from "@supabase/supabase-js";
 import { ValidationError } from "@/core/errors/ValidationError";
+import { createPrivilegedWriteClientResolver } from "@/infrastructure/persistence/supabase/internal/resolve-privileged-write-client";
 import { IPlayerWallet } from "@/core/entities/market/IPlayerWallet";
 import { IWalletRepository } from "@/core/repositories/IWalletRepository";
 
@@ -38,7 +39,16 @@ function isBusinessRuleRpcError(error: IWalletMutationError | null): boolean {
 }
 
 export class SupabaseWalletRepository implements IWalletRepository {
-  constructor(private readonly client: SupabaseClient) {}
+  /**
+   * La cartera se LEE con el cliente de la sesión, pero se ESCRIBE siempre con service-role: así la BD puede
+   * prohibirle al jugador tocar su propia fila. Antes, escribir con la sesión obligaba a darle permiso de
+   * UPDATE sobre su monedero, y con eso cualquiera se ponía los Nexus que quisiera desde la consola.
+   */
+  private readonly writeClient: () => SupabaseClient;
+
+  constructor(private readonly client: SupabaseClient) {
+    this.writeClient = createPrivilegedWriteClientResolver();
+  }
 
   async getWallet(playerId: string): Promise<IPlayerWallet> {
     const { data, error } = await this.client
@@ -48,7 +58,7 @@ export class SupabaseWalletRepository implements IWalletRepository {
       .maybeSingle<IWalletRow>();
     if (error) throw new ValidationError("No se pudo obtener el monedero del jugador.");
     if (!data) {
-      const { data: insertedWallet, error: insertError } = await this.client
+      const { data: insertedWallet, error: insertError } = await this.writeClient()
         .from("player_wallets")
         .insert({ player_id: playerId, nexus: 1000 })
         .select("player_id,nexus")
@@ -61,7 +71,7 @@ export class SupabaseWalletRepository implements IWalletRepository {
 
   async debitNexus(playerId: string, amount: number): Promise<IPlayerWallet> {
     if (amount <= 0) throw new ValidationError("El débito Nexus debe ser positivo.");
-    const rpcResult = await this.client.rpc("wallet_debit_nexus", {
+    const rpcResult = await this.writeClient().rpc("wallet_debit_nexus", {
       p_player_id: playerId,
       p_amount: amount,
     });
@@ -86,7 +96,7 @@ export class SupabaseWalletRepository implements IWalletRepository {
     // o no se puede ejecutar por permisos/contexto de sesión.
     const current = await this.getWallet(playerId);
     if (current.nexus < amount) throw new ValidationError("Saldo Nexus insuficiente para completar el débito.");
-    const { data, error } = await this.client
+    const { data, error } = await this.writeClient()
       .from("player_wallets")
       .update({ nexus: current.nexus - amount })
       .eq("player_id", playerId)
@@ -98,7 +108,7 @@ export class SupabaseWalletRepository implements IWalletRepository {
 
   async creditNexus(playerId: string, amount: number): Promise<IPlayerWallet> {
     if (amount <= 0) throw new ValidationError("El crédito Nexus debe ser positivo.");
-    const rpcResult = await this.client.rpc("wallet_credit_nexus", {
+    const rpcResult = await this.writeClient().rpc("wallet_credit_nexus", {
       p_player_id: playerId,
       p_amount: amount,
     });
@@ -122,7 +132,7 @@ export class SupabaseWalletRepository implements IWalletRepository {
     // Fallback temporal para entornos donde la RPC atómica aún no fue desplegada
     // o no se puede ejecutar por permisos/contexto de sesión.
     const current = await this.getWallet(playerId);
-    const { data, error } = await this.client
+    const { data, error } = await this.writeClient()
       .from("player_wallets")
       .update({ nexus: current.nexus + amount })
       .eq("player_id", playerId)

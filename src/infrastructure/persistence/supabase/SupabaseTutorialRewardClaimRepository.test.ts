@@ -2,6 +2,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { SupabaseTutorialRewardClaimRepository } from "@/infrastructure/persistence/supabase/SupabaseTutorialRewardClaimRepository";
 
+// El crédito de Nexus del fallback pasa por el WalletRepository, que escribe con service-role. En el test el
+// cliente de service-role es el mismo doble, para poder seguir observando la RPC de crédito.
+const serviceRoleClient: { current: unknown } = { current: null };
+vi.mock("@/infrastructure/persistence/supabase/internal/create-supabase-service-role-client", () => ({
+  createSupabaseServiceRoleClient: () => serviceRoleClient.current,
+}));
+
 function createClientMock(options: {
   tutorialRpc: { data: unknown; error: { code?: string; message?: string } | null };
   walletRpc?: { data: unknown; error: { code?: string; message?: string } | null };
@@ -21,7 +28,9 @@ function createClientMock(options: {
     }
     throw new Error(`RPC no mockeada: ${fn}`);
   });
-  return { client: { rpc: rpcMock, from: fromMock } as never, fromMock, insertMock };
+  const client = { rpc: rpcMock, from: fromMock };
+  serviceRoleClient.current = client;
+  return { client: client as never, fromMock, insertMock };
 }
 
 describe("SupabaseTutorialRewardClaimRepository", () => {

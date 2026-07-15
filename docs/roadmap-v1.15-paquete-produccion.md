@@ -521,7 +521,7 @@ perfiles de dificultad ya existen y `get-match-session-data.ts` ya sabe resolver
 | A | 9 · UX de reemplazo de zona | ✅ hecho · ⚠️ el rendimiento en móvil hay que confirmarlo en un dispositivo real |
 | B | 4 · Niveles a 100 | ✅ hecho · migración 119 **aplicada** (2026-07-14) · ⚠️ ver "rivales" abajo |
 | B | 2 · Caramelos (USB Raro) | ✅ hecho: backend + tienda de Objetos en el mercado (migraciones 120 y 121 **aplicadas**) · falta la UI de USARLO en el arsenal |
-| — | 🔴 Cartera escribible por el cliente | **VULNERABILIDAD ABIERTA** (ver abajo) — arreglar antes de publicar |
+| — | 🔒 Tablas de valor escribibles por el cliente | ✅ **CERRADO** (migración 122 aplicada + service-role) |
 | B | 3 · Objetos | ⏳ pendiente |
 | C | 5 · Cartas por reconfiguración | ⏳ pendiente |
 | C | 7 · Magia de ataque en defensa | ⏳ pendiente |
@@ -547,10 +547,29 @@ están en sus carteras y merecen enterarse. El coste es cosmético (el aviso men
 Actividad, 575 pts, +350 Nexus). Basta entrar a `/hub` y el diálogo salta. Para repetir la prueba:
 `update public.weekly_leaderboard_history set seen_at = null where player_id = '<id>';`
 
-### 🔴 VULNERABILIDAD ABIERTA: cualquiera puede darse Nexus infinitos
+### 🔒 CERRADA (2026-07-15): el jugador podía escribir sus tablas de valor
 
-Encontrada el 2026-07-14 al verificar los permisos de la tienda de objetos. **No la hemos introducido nosotros:
-es preexistente y está viva en producción.**
+Encontrada al verificar los permisos de la tienda de objetos. **Preexistente, no la introdujimos nosotros.**
+Alcance real (más ancho que la cartera): con un `PATCH`/RPC directo a Supabase desde la consola, un jugador
+podía darse **Nexus infinitos** (`player_wallets`), **regalarse cualquier carta** (`player_collection_cards`) y
+**ponerse todo a nivel 100 / V5** (`player_card_progress`). Además, las RPC `wallet_credit_nexus` /
+`wallet_debit_nexus` no eran `security definer` y estaban al alcance de `authenticated`, así que la puerta seguía
+abierta aunque se cerrara la policy.
+
+**Arreglo aplicado:**
+- Los tres repositorios (cartera, colección, progresión) **escriben con service-role** vía
+  `resolve-privileged-write-client.ts` (leen con la sesión). El `playerId` sigue saliendo siempre de la sesión.
+- Migración 122: `drop` de las policies de INSERT/UPDATE + `revoke` de esos permisos a `authenticated`, y
+  `revoke execute` de las RPC de cartera (solo `service_role`). Al jugador le queda el `select` de sus filas.
+- Verificado en producción tras aplicar: `authenticated` ya no puede escribir ninguna de las tres ni ejecutar
+  las RPC; la lectura sigue OK.
+- Test de regresión (`privileged-writes.test.ts`) que falla si alguien vuelve a escribir con el cliente de
+  sesión — comprobado que caza el revert.
+
+Las tablas de arena/multijugador que tienen permisos pero **ninguna policy de escritura** están de hecho
+protegidas (RLS activo deniega por defecto); se revisaron y no requieren cambios.
+
+<details><summary>Detalle histórico del hallazgo</summary>
 
 `player_wallets` tiene RLS con esta policy:
 
@@ -577,6 +596,8 @@ multijugador y las misiones.
    `training_progress`… Si `authenticated` puede escribirlas directamente, el problema es el mismo (una carta
    regalada vale tanto como el Nexus que cuesta).
 4. Test de regresión: intentar el `PATCH` directo con una sesión de jugador y comprobar que la BD lo rechaza.
+
+</details>
 
 ### Vulnerabilidad encontrada y cerrada al hacer la ficha 1 (CARD_SHARE)
 

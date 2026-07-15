@@ -1,6 +1,7 @@
 // src/infrastructure/persistence/supabase/SupabaseCardCollectionRepository.ts - Repositorio de almacén del jugador con acumulación de copias por carta.
 import { SupabaseClient } from "@supabase/supabase-js";
 import { ValidationError } from "@/core/errors/ValidationError";
+import { createPrivilegedWriteClientResolver } from "@/infrastructure/persistence/supabase/internal/resolve-privileged-write-client";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { ICardCollectionRepository } from "@/core/repositories/ICardCollectionRepository";
 import { assertCardIdsExist } from "@/infrastructure/persistence/supabase/internal/assert-card-ids-exist";
@@ -26,7 +27,15 @@ function wait(ms: number): Promise<void> {
 }
 
 export class SupabaseCardCollectionRepository implements ICardCollectionRepository {
-  constructor(private readonly client: SupabaseClient) {}
+  /**
+   * La colección se LEE con el cliente de la sesión, pero se ESCRIBE con service-role: si el jugador pudiera
+   * escribir sus propias filas, se regalaría cualquier carta del catálogo (que vale exactamente lo que cuesta).
+   */
+  private readonly writeClient: () => SupabaseClient;
+
+  constructor(private readonly client: SupabaseClient) {
+    this.writeClient = createPrivilegedWriteClientResolver();
+  }
 
   async getCollection(playerId: string): Promise<ICollectionCard[]> {
     const { data, error } = await this.client
@@ -65,7 +74,7 @@ export class SupabaseCardCollectionRepository implements ICardCollectionReposito
         .maybeSingle<ICollectionRow>();
       if (error) throw new ValidationError("No se pudo leer el almacén para actualizar cartas.");
       if (!data) {
-        const { error: insertError } = await this.client.from("player_collection_cards").insert({
+        const { error: insertError } = await this.writeClient().from("player_collection_cards").insert({
           player_id: playerId,
           card_id: cardId,
           owned_copies: increment,
@@ -82,7 +91,7 @@ export class SupabaseCardCollectionRepository implements ICardCollectionReposito
                 .eq("card_id", cardId)
                 .maybeSingle<ICollectionRow>();
               if (!retryReadError && retryData) {
-                const { error: retryUpdateError } = await this.client
+                const { error: retryUpdateError } = await this.writeClient()
                   .from("player_collection_cards")
                   .update({ owned_copies: retryData.owned_copies + increment })
                   .eq("player_id", playerId)
@@ -100,7 +109,7 @@ export class SupabaseCardCollectionRepository implements ICardCollectionReposito
         }
         continue;
       }
-      const { error: updateError } = await this.client
+      const { error: updateError } = await this.writeClient()
         .from("player_collection_cards")
         .update({ owned_copies: data.owned_copies + increment })
         .eq("player_id", playerId)
@@ -124,7 +133,7 @@ export class SupabaseCardCollectionRepository implements ICardCollectionReposito
       throw new ValidationError("No hay suficientes copias en el almacén para evolucionar.");
     }
     const nextCopies = data.owned_copies - copies;
-    const { error: updateError } = await this.client
+    const { error: updateError } = await this.writeClient()
       .from("player_collection_cards")
       .update({ owned_copies: nextCopies })
       .eq("player_id", playerId)
