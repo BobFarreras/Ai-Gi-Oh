@@ -40,11 +40,18 @@ export interface IAdminEventRule {
   pointsPer: number;
 }
 
-/** Item de la tienda de un evento. */
+/** Tipo de premio de un item de tienda de evento: carta u objeto del mercado. */
+export type AdminEventRewardKind = "CARD" | "LEVEL_CANDY" | "CARD_UPGRADE";
+
+/** Item de la tienda de un evento: una carta (cardId) o un objeto del mercado (objectId). */
 export interface IAdminEventShopItem {
   id: string;
   eventId: string;
-  cardId: string;
+  rewardKind: AdminEventRewardKind;
+  /** Carta a otorgar (solo cuando rewardKind = CARD). */
+  cardId: string | null;
+  /** Id del caramelo/objeto de mejora (cuando rewardKind ≠ CARD). */
+  objectId: string | null;
   costPoints: number;
   perPlayerLimit: number;
   sortOrder: number;

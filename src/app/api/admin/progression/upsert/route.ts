@@ -49,14 +49,20 @@ export async function POST(request: NextRequest) {
         assertPositiveInt(data.pointsPer, "Los puntos");
         await repository.upsertEventRule(data as never);
         break;
-      case "eventShopItem":
+      case "eventShopItem": {
         assertNonEmpty(data.id, "El id del item");
         assertNonEmpty(data.eventId, "El evento");
-        assertNonEmpty(data.cardId, "La carta");
+        const rewardKind = data.rewardKind === undefined ? "CARD" : data.rewardKind;
+        if (rewardKind !== "CARD" && rewardKind !== "LEVEL_CANDY" && rewardKind !== "CARD_UPGRADE") {
+          throw new ValidationError("Tipo de premio de item inválido.");
+        }
+        if (rewardKind === "CARD") assertNonEmpty(data.cardId, "La carta");
+        else assertNonEmpty(data.objectId, "El objeto");
         assertPositiveInt(data.costPoints, "El coste en puntos");
         assertPositiveInt(data.perPlayerLimit, "El límite por jugador");
-        await repository.upsertEventShopItem(data as never);
+        await repository.upsertEventShopItem({ ...data, rewardKind } as never);
         break;
+      }
       case "loginDay":
         assertPositiveInt(data.dayIndex, "El día");
         assertNonNegInt(data.rewardNexus, "La recompensa Nexus");

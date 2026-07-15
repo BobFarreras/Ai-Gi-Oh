@@ -101,8 +101,13 @@ export class SupabaseProgressionAdminRepository implements IProgressionAdminRepo
   }
 
   async upsertEventShopItem(item: IAdminEventShopItem): Promise<void> {
+    // Coherencia carta XOR objeto (la BD también lo fuerza con un CHECK): una fila es carta o es objeto.
+    const isCard = item.rewardKind === "CARD";
     const { error } = await this.client.from("event_shop_items").upsert({
-      id: item.id, event_id: item.eventId, card_id: item.cardId, cost_points: item.costPoints,
+      id: item.id, event_id: item.eventId, reward_kind: item.rewardKind,
+      card_id: isCard ? item.cardId : null,
+      object_id: isCard ? null : item.objectId,
+      cost_points: item.costPoints,
       per_player_limit: item.perPlayerLimit, sort_order: item.sortOrder, is_active: item.isActive,
     });
     if (error) throw new Error(`No se pudo guardar el item de tienda: ${error.message}`);
@@ -133,7 +138,8 @@ interface IEventRow {
   id: string; name: string; description: string | null; currency_name: string; starts_at: string; ends_at: string; is_active: boolean;
 }
 interface IEventShopItemRow {
-  id: string; event_id: string; card_id: string; cost_points: number; per_player_limit: number; sort_order: number; is_active: boolean;
+  id: string; event_id: string; reward_kind: string; card_id: string | null; object_id: string | null;
+  cost_points: number; per_player_limit: number; sort_order: number; is_active: boolean;
 }
 interface ILoginRow {
   day_index: number; reward_type: string; reward_nexus: number; reward_card_id: string | null; label: string | null;
@@ -155,7 +161,9 @@ function toPromotion(row: IPromotionRow): IAdminPromotionConfig {
 }
 function toShopItem(row: IEventShopItemRow): IAdminEventShopItem {
   return {
-    id: row.id, eventId: row.event_id, cardId: row.card_id, costPoints: row.cost_points,
+    id: row.id, eventId: row.event_id,
+    rewardKind: row.reward_kind === "LEVEL_CANDY" || row.reward_kind === "CARD_UPGRADE" ? row.reward_kind : "CARD",
+    cardId: row.card_id, objectId: row.object_id, costPoints: row.cost_points,
     perPlayerLimit: row.per_player_limit, sortOrder: row.sort_order, isActive: row.is_active,
   };
 }
