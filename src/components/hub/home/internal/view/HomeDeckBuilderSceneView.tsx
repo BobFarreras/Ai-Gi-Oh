@@ -41,8 +41,8 @@ export interface IHomeDeckBuilderSceneViewProps {
   onCloseExitDialog: () => void;
   onConfirmExitToHub: () => void;
   onGoToMarket: () => void;
-  /** Conmutador Cartas/Objetos, inyectado por la Scene y pintado junto al título del arsenal. */
-  sectionSwitch?: ReactNode;
+  /** Conmutador Cartas/Objetos, inyectado por la Scene y pintado junto al buscador del arsenal. */
+  renderSectionSwitch?: () => ReactNode;
 }
 
 export function HomeDeckBuilderSceneView(props: IHomeDeckBuilderSceneViewProps) {
@@ -69,7 +69,7 @@ export function HomeDeckBuilderSceneView(props: IHomeDeckBuilderSceneViewProps) 
             evolveCost={props.copiesRequiredToEvolve}
             onEvolve={props.onEvolveSelectedCard}
             onBackToHub={props.onBackToHub}
-            sectionSwitch={props.sectionSwitch}
+            renderSectionSwitch={props.renderSectionSwitch}
           />
         </div>
         <HomeResponsiveWorkspace {...props.workspaceProps} />

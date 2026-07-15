@@ -26,6 +26,10 @@ export interface IHomeDeckActionBarProps {
   evolveCost: number | null;
   onEvolve: () => Promise<IHomeActionResult>;
   onBackToHub?: () => void;
-  /** Conmutador Cartas/Objetos, pintado junto al título del arsenal. */
-  sectionSwitch?: ReactNode;
+  /**
+   * Conmutador Cartas/Objetos. Es una FUNCIÓN de render (no un nodo) porque el buscador del arsenal aparece en
+   * sitios distintos según el breakpoint, y el conmutador se pinta junto a él en cada uno: un mismo nodo React
+   * no se puede montar varias veces, una función sí.
+   */
+  renderSectionSwitch?: () => ReactNode;
 }

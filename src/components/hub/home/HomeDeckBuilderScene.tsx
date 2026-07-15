@@ -25,7 +25,12 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
   const { enqueueDeckMutation } = useDeckMutationQueue();
   const state = useHomeDeckBuilderState(props);
   const [section, setSection] = useState<ArsenalSection>("CARDS");
-  const sectionSwitch = <ArsenalSectionSwitch section={section} onSectionChange={setSection} />;
+  // Función de render (no un nodo): el buscador del arsenal aparece en varios sitios según el breakpoint y el
+  // conmutador se pinta junto a él en cada uno.
+  const renderSectionSwitch = useCallback(
+    () => <ArsenalSectionSwitch section={section} onSectionChange={setSection} />,
+    [section],
+  );
 
   // Tras usar un caramelo, refleja el nuevo nivel/xp de la carta en el estado del arsenal (sin recargar): la
   // progresión es la MISMA fuente que usa el deck-builder para mostrar stats, así que la carta sube al volver.
@@ -167,13 +172,13 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
       <ArsenalObjectsView
         collection={state.collectionState}
         cardProgressById={state.cardProgressById}
-        sectionSwitch={sectionSwitch}
+        sectionSwitch={renderSectionSwitch()}
         onCardLeveled={handleCardLeveled}
         onBackToHub={() => router.push("/hub")}
       />
     );
   }
 
-  return <HomeDeckBuilderSceneView {...viewProps} sectionSwitch={sectionSwitch} />;
+  return <HomeDeckBuilderSceneView {...viewProps} renderSectionSwitch={renderSectionSwitch} />;
 }
 

@@ -1,7 +1,7 @@
 // src/components/hub/home/HomeDeckFilterControls.tsx - Bloque de búsqueda y filtros responsive para el almacén de Arsenal.
 "use client";
 
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowDownUp, Layers3, ListFilter, Search } from "lucide-react";
 import { GameSelect } from "@/components/ui/GameSelect";
@@ -23,6 +23,8 @@ interface HomeDeckFilterControlsProps {
   onChangeTypeFilter: (value: HomeCollectionTypeFilter) => void;
   onChangeOrderField: (value: HomeCollectionOrderField) => void;
   onToggleOrderDirection: () => void;
+  /** Conmutador Cartas/Objetos, pintado junto al buscador móvil (ver home-deck-action-bar-types). */
+  renderSectionSwitch?: () => ReactNode;
 }
 
 export function HomeDeckFilterControls(props: HomeDeckFilterControlsProps) {
@@ -33,6 +35,7 @@ export function HomeDeckFilterControls(props: HomeDeckFilterControlsProps) {
   return (
     <div className="relative z-30 flex w-full flex-col gap-2">
       <div className="flex items-center gap-2 min-[900px]:hidden">
+        {props.renderSectionSwitch?.()}
         <label className="flex h-[38px] w-full items-center gap-2 rounded-lg border border-cyan-500/30 bg-[#020a14]/80 px-3">
           <Search size={14} className="shrink-0 text-cyan-400" />
           <input

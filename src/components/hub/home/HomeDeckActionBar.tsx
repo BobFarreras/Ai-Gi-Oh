@@ -30,7 +30,7 @@ export function HomeDeckActionBar({
   evolveCost,
   onEvolve,
   onBackToHub,
-  sectionSwitch,
+  renderSectionSwitch,
 }: IHomeDeckActionBarProps) {
   const viewportWidth = useViewportWidth();
   const isDesktopLayout = isDesktopLayoutViewport(viewportWidth);
@@ -52,7 +52,6 @@ export function HomeDeckActionBar({
           <p className="hidden whitespace-nowrap text-[10px] font-black uppercase tracking-[0.3em] text-cyan-300/60 md:block">
             Deck Hub
           </p>
-          {sectionSwitch ? <div className="ml-1">{sectionSwitch}</div> : null}
         </div>
         {isCompactDesktopLayout ? (
           <div className="hidden w-full max-w-[36rem] min-[900px]:block">
@@ -83,6 +82,7 @@ export function HomeDeckActionBar({
                 onRemove={onRemove}
                 onEvolve={onEvolve}
               />
+              {renderSectionSwitch?.()}
               <label className="flex h-[42px] min-w-0 flex-1 items-center gap-2 rounded-lg border border-cyan-500/30 bg-[#020a14]/80 px-3">
                 <Search size={14} className="shrink-0 text-cyan-400" />
                 <input
@@ -119,6 +119,7 @@ export function HomeDeckActionBar({
               onRemove={onRemove}
               onEvolve={onEvolve}
             />
+            {renderSectionSwitch?.()}
             <label className="flex h-[42px] min-w-0 flex-1 items-center gap-2 rounded-lg border border-cyan-500/30 bg-[#020a14]/80 px-3">
               <Search size={14} className="shrink-0 text-cyan-400" />
               <input
@@ -142,6 +143,7 @@ export function HomeDeckActionBar({
             onChangeTypeFilter={onChangeTypeFilter}
             onChangeOrderField={onChangeOrderField}
             onToggleOrderDirection={onToggleOrderDirection}
+            renderSectionSwitch={renderSectionSwitch}
           />
         </div>
       </div>
