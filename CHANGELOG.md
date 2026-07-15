@@ -6,6 +6,34 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-07-15
+
+### Added
+- **Niveles hasta 100 con nueva curva de bonus**: hitos cada 5 niveles con el ciclo +50 ATK / +100 ATK / +50 DEF / +100 DEF (total **+750/+750** al llegar a 100), **−1 de energía en el nivel 50** e **imagen alternativa a nivel 100** (configurada, con fallback al render normal mientras no exista).
+- **Caramelos de nivel (USB Raro)**: objeto que concede la XP exacta para subir de **+1 a +5** niveles (calculada en el servidor según el nivel real de la carta). Se compra en la sección Objetos del Mercado y se usa sobre una carta desde el Arsenal, con animación de subida de nivel.
+- **Objetos de mejora permanente de ATK/DEF**: **Núcleo Overclock** (+100 ATK) y **Placa Blindada** (+100 DEF), con **tope por carta** calculado sobre el coste base (presupuesto 600/500/400/300/200 de coste 2 a 6). El tope lo valida el servidor.
+- **Sección Objetos** propia en Mercado y Arsenal (conmutador Cartas/Objetos): almacén solo-objetos con su imagen, **dos flujos de equipar** (desde la carta o desde el objeto) y **cinemática** de "objeto equipado".
+- **Compartir cartas en los mensajes privados (DM)**, con selector de carta en el compositor.
+- **Aviso del premio semanal de ranking** al entrar al hub: el jugador ve por fin el puesto y los Nexus que ganó al cerrarse la semana.
+
+### Changed
+- **UX de reemplazo de zona** (magia/trampa con las 3 zonas llenas): ahora es **cancelable**, con barra propia persistente y confirmación rediseñada; ya no deja cartas resaltadas sin salida.
+- El **deck activo del Arsenal** muestra las stats reales (nivel/versión/**mejoras**), igual que el almacén, no las base.
+
+### Fixed
+- **OpenClaw** muestra el aumento bloqueado (**−400**) en vez del delta bruto (−800); el efecto (restar el doble) no cambia.
+- **Multijugador**: `instanceId` determinista para cartas revividas (Antigrabity) y las acciones del rival que el motor rechaza dejan de tragarse en silencio.
+- **Rendimiento móvil**: se retira el `backdrop-blur` a pantalla completa de los overlays de fusión, los paneles móviles de descarte/sacrificio y el resaltado del modo reemplazo (el mayor asesino de FPS en móvil).
+
+### Security
+- **Cerrado el agujero de escritura de las tablas de valor**: un jugador podía darse Nexus infinitos, regalarse cartas y ponerse todo a nivel 100/V5 con un `PATCH` directo a Supabase. Ahora toda escritura de cartera/colección/progresión pasa por **service-role** o RPC **security definer** (identidad por `auth.uid()`); la migración **122** revoca a `authenticated` los permisos de escritura y las RPC de cartera. Test de regresión que caza cualquier reintroducción.
+- **Cerrada la vulnerabilidad de CARD_SHARE**: la instantánea de la carta compartida la construye el servidor desde la colección real (valida posesión), no la metadata del cliente; se acaba el poder apuntar la imagen a una URL externa arbitraria. Las rutas de chat solo admiten `TEXT`/`CARD_SHARE`.
+
+### Internal
+- Migraciones **118** (aviso de premio semanal, `seen_at` + `ack_weekly_prizes`), **119** (arte de nivel máximo), **120/121** (caramelos de nivel + compra), **122** (bloqueo de tablas de valor) y **123** (objetos de mejora + RPC `buy_card_upgrade_item`/`apply_card_upgrade`), todas aplicadas a producción.
+- Curva de niveles como **tabla de datos** (`CARD_LEVEL_MILESTONES`), leída también por el Códex. Regla de tope en `card-upgrade-rules.ts` con su espejo SQL `card_upgrade_budget`.
+- `get-match-session-data` resuelve **los dos mazos** con progresión **y mejoras**, así que ambos clientes ven idénticos los stats en combate.
+
 ## [1.14.0] - 2026-07-14
 
 ### Added
@@ -291,7 +319,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.14.0...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.15.0...HEAD
+[1.15.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.11.0...v1.12.0
