@@ -16,10 +16,18 @@ verificar. Estado:
 
 | # | Bug | Estado |
 |---|-----|--------|
-| B1 | Arena niveles 7/8 superados pero **sin Nexus** | 🔍 investigar |
+| B1 | Arena niveles 7/8 superados pero **sin Nexus** | ✅ causa hallada: **la migración 122 (aplicada a prod) rompió TODA escritura de cartera** porque el código de service-role no está desplegado. Se resuelve **al desplegar esta rama** (acopla el código con la 122). Ver nota abajo |
 | B2 | Rendimiento móvil (tirones) en fusiones, activar cartas, descartar con 5 en mano, sacrificar con zona llena | 🔍 investigar/perfilar |
-| B3 | Arsenal: el **deck activo** muestra stats base; debería mostrarlas actualizadas (nivel/versión/mejoras) como el almacén | ⏳ |
+| B3 | Arsenal: el **deck activo** muestra stats base; debería mostrarlas actualizadas (nivel/versión/mejoras) como el almacén | ✅ arreglado: el deck (desktop y móvil) y el detalle hidratan la carta con nivel/versión **+ mejoras**, igual que el almacén; y el almacén ahora incluye también las mejoras |
 | B4 | La cinemática de "objeto equipado" se queda clavada: el botón **Continuar** no cierra | ✅ arreglado (overlay a `fixed` centrado + cierre por fondo) |
+
+**Nota B1 (incidente de coordinación migración/código):** la migración 122 revocó a `authenticated` la escritura
+de `player_wallets`/`player_collection_cards`/`player_card_progress` y las RPC de cartera, pero el código que las
+escribe con service-role (`resolve-privileged-write-client.ts`, `SupabaseWalletRepository` con `writeClient`)
+vive SOLO en esta rama, sin desplegar. En producción, desde el 14/07, todas las recompensas, compras, recepción
+de cartas y guardado de progreso fallan. **No se toca producción ahora** (decisión del owner): al desplegar esta
+rama, el código de service-role se acopla con la 122 y queda todo funcional Y la vuln cerrada. Pendiente al
+desplegar: compensar las recompensas perdidas (p.ej. ~30 combates de arena 7/8) si se desea.
 
 ---
 

@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IDeck } from "@/core/entities/home/IDeck";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
+import { ICardUpgradeBonuses } from "@/core/services/progression/card-upgrade-rules";
 import { HOME_MAX_DUPLICATES, countAssignedCopies, countDeckCopies } from "@/core/services/home/deck-rules";
 import { getCopiesNeededForNextVersion } from "@/core/services/progression/card-version-rules";
 import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
@@ -18,6 +19,7 @@ interface IUseHomeSelectionViewInput {
   deck: IDeck;
   collectionState: ICollectionCard[];
   cardProgressById: Map<string, IPlayerCardProgress>;
+  cardUpgradesById: Map<string, ICardUpgradeBonuses>;
   selectedSlotIndex: number | null;
   selectedFusionSlotIndex: number | null;
   selectedCollectionCardId: string | null;
@@ -36,6 +38,7 @@ export function useHomeSelectionView(input: IUseHomeSelectionViewInput) {
     deck,
     collectionState,
     cardProgressById,
+    cardUpgradesById,
     selectedSlotIndex,
     selectedFusionSlotIndex,
     selectedCollectionCardId,
@@ -59,8 +62,8 @@ export function useHomeSelectionView(input: IUseHomeSelectionViewInput) {
   // no la del catálogo base. La identidad (id/tipo) se preserva, así que insertar/evolucionar no cambia.
   // Memoizado para mantener referencia estable (evita re-renders del inspector en renders ajenos).
   const selectedCard = useMemo(
-    () => (baseSelectedCard ? applyCardProgressionToCard(baseSelectedCard, selectedCardProgress) : null),
-    [baseSelectedCard, selectedCardProgress],
+    () => (baseSelectedCard ? applyCardProgressionToCard(baseSelectedCard, selectedCardProgress, cardUpgradesById.get(baseSelectedCard.id)) : null),
+    [baseSelectedCard, cardUpgradesById, selectedCardProgress],
   );
   const selectedSlotHasCard = selectedSlotIndex !== null && deck.slots[selectedSlotIndex].cardId !== null;
   const selectedFusionSlotHasCard = selectedFusionSlotIndex !== null && deck.fusionSlots[selectedFusionSlotIndex].cardId !== null;
@@ -91,8 +94,8 @@ export function useHomeSelectionView(input: IUseHomeSelectionViewInput) {
     selectedCardStorageCopies >= copiesRequiredToEvolve &&
     evolutionOverlay === null;
   const filteredCollection = useMemo(
-    () => buildHomeCollectionView({ collection: collectionState, nameQuery, typeFilter, orderField, orderDirection, cardProgressById }),
-    [collectionState, nameQuery, orderDirection, orderField, typeFilter, cardProgressById],
+    () => buildHomeCollectionView({ collection: collectionState, nameQuery, typeFilter, orderField, orderDirection, cardProgressById, cardUpgradesById }),
+    [collectionState, nameQuery, orderDirection, orderField, typeFilter, cardProgressById, cardUpgradesById],
   );
   const evolvableCardIds = useMemo(() => {
     const ids = new Set<string>();

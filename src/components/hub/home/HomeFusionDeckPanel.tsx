@@ -2,6 +2,8 @@
 import { IDeck } from "@/core/entities/home/IDeck";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
+import { ICardUpgradeBonuses } from "@/core/services/progression/card-upgrade-rules";
+import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
 import { HomeMiniCard } from "@/components/hub/home/HomeMiniCard";
 import { DragEvent } from "react";
 
@@ -9,6 +11,7 @@ interface HomeFusionDeckPanelProps {
   deck: IDeck;
   collection: ICollectionCard[];
   cardProgressById: Map<string, IPlayerCardProgress>;
+  cardUpgradesById: Map<string, ICardUpgradeBonuses>;
   selectedFusionSlotIndex: number | null;
   selectedCardId: string | null;
   onSelectFusionSlot: (slotIndex: number) => void;
@@ -20,13 +23,16 @@ export function HomeFusionDeckPanel({
   deck,
   collection,
   cardProgressById,
+  cardUpgradesById,
   selectedFusionSlotIndex,
   selectedCardId,
   onSelectFusionSlot,
   onStartDragFusionSlot,
   onDropOnFusionSlot,
 }: HomeFusionDeckPanelProps) {
-  const cardById = new Map(collection.map((entry) => [entry.card.id, entry.card]));
+  const cardById = new Map(
+    collection.map((entry) => [entry.card.id, applyCardProgressionToCard(entry.card, cardProgressById.get(entry.card.id) ?? null, cardUpgradesById.get(entry.card.id))]),
+  );
   
   return (
     // ESTILO WIREFRAME: bg-transparent, sin blur, solo bordes definidos y un levísimo resplandor interno

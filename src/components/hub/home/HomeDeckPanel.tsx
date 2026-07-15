@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { IDeck } from "@/core/entities/home/IDeck";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
+import { ICardUpgradeBonuses } from "@/core/services/progression/card-upgrade-rules";
+import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
 import { HomeMiniCard } from "@/components/hub/home/HomeMiniCard";
 import { HomeFusionDeckPanel } from "@/components/hub/home/HomeFusionDeckPanel";
 import { DragEvent } from "react";
@@ -11,6 +13,7 @@ interface HomeDeckPanelProps {
   deck: IDeck;
   collection: ICollectionCard[];
   cardProgressById: Map<string, IPlayerCardProgress>;
+  cardUpgradesById: Map<string, ICardUpgradeBonuses>;
   selectedSlotIndex: number | null;
   selectedFusionSlotIndex: number | null;
   onSelectSlot: (slotIndex: number) => void;
@@ -26,6 +29,7 @@ export function HomeDeckPanel({
   deck,
   collection,
   cardProgressById,
+  cardUpgradesById,
   selectedSlotIndex,
   selectedFusionSlotIndex,
   onSelectSlot,
@@ -36,7 +40,11 @@ export function HomeDeckPanel({
   onDropOnFusionSlot,
   selectedCardId,
 }: HomeDeckPanelProps) {
-  const cardById = new Map(collection.map((entry) => [entry.card.id, entry.card]));
+  // Hidrata cada carta del deck con nivel/versión + mejoras, igual que el almacén, para que las mini-cartas
+  // muestren las stats REALES (antes salían las base del catálogo).
+  const cardById = new Map(
+    collection.map((entry) => [entry.card.id, applyCardProgressionToCard(entry.card, cardProgressById.get(entry.card.id) ?? null, cardUpgradesById.get(entry.card.id))]),
+  );
   const fusionRecipeCardIds = new Set(["tutorial-chatgpt", "tutorial-gemini", "tutorial-gemgpt-magic"]);
   const highlightedRecipeCardIds = new Set<string>();
 
@@ -90,6 +98,7 @@ export function HomeDeckPanel({
           deck={deck}
           collection={collection}
           cardProgressById={cardProgressById}
+          cardUpgradesById={cardUpgradesById}
           selectedFusionSlotIndex={selectedFusionSlotIndex}
           selectedCardId={selectedCardId}
           onSelectFusionSlot={onSelectFusionSlot}

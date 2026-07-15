@@ -25,6 +25,7 @@ export function HomeDesktopWorkspace(props: IHomeWorkspaceProps) {
           deck={props.deck}
           collection={props.collectionState}
           cardProgressById={props.cardProgressById}
+          cardUpgradesById={props.cardUpgradesById}
           selectedSlotIndex={props.selectedSlotIndex}
           selectedFusionSlotIndex={props.selectedFusionSlotIndex}
           selectedCardId={props.selectedCardId}

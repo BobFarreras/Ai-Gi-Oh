@@ -4,6 +4,7 @@ import { IDeck } from "@/core/entities/home/IDeck";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { ICard } from "@/core/entities/ICard";
+import { ICardUpgradeBonuses } from "@/core/services/progression/card-upgrade-rules";
 import { HomeCollectionOrderDirection, HomeCollectionOrderField, HomeCollectionTypeFilter } from "@/components/hub/home/home-filters";
 import { IHomeActionResult, IHomeWorkspaceProps } from "@/components/hub/home/layout/home-workspace-types";
 import { IHomeEvolutionOverlayState } from "@/components/hub/home/internal/types/home-deck-builder-types";
@@ -14,6 +15,7 @@ interface ICreateHomeDeckBuilderViewPropsInput {
   collectionState: ICollectionCard[];
   filteredCollection: ICollectionCard[];
   cardProgressById: Map<string, IPlayerCardProgress>;
+  cardUpgradesById: Map<string, ICardUpgradeBonuses>;
   evolvableCardIds: Set<string>;
   selectedSlotIndex: number | null;
   selectedFusionSlotIndex: number | null;
@@ -71,6 +73,7 @@ export function createHomeDeckBuilderViewProps(input: ICreateHomeDeckBuilderView
     collectionState: input.collectionState,
     filteredCollection: input.filteredCollection,
     cardProgressById: input.cardProgressById,
+    cardUpgradesById: input.cardUpgradesById,
     evolvableCardIds: input.evolvableCardIds,
     selectedSlotIndex: input.selectedSlotIndex,
     selectedFusionSlotIndex: input.selectedFusionSlotIndex,

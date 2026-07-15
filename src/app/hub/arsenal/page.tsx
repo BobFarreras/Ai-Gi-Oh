@@ -4,6 +4,7 @@ import { HubSectionEntryBurst } from "@/components/hub/sections/HubSectionEntryB
 import { GetHomeDeckBuilderDataUseCase } from "@/core/use-cases/home/GetHomeDeckBuilderDataUseCase";
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { createPlayerRuntimeRepositories } from "@/services/player-persistence/create-player-runtime-repositories";
+import { getPlayerCardUpgrades } from "@/services/progression/get-player-card-upgrades";
 import { sharedDeckRepository } from "@/infrastructure/repositories/singletons";
 
 export default async function ArsenalModulePage() {
@@ -12,9 +13,12 @@ export default async function ArsenalModulePage() {
   const runtimeRepositories = session ? await createPlayerRuntimeRepositories() : null;
   const deckRepository = runtimeRepositories?.deckRepository ?? sharedDeckRepository;
   const getHomeDeckBuilderDataUseCase = new GetHomeDeckBuilderDataUseCase(deckRepository);
-  const [data, cardProgress] = await Promise.all([
+  // Mejoras de objetos (ATK/DEF) por carta: el arsenal debe mostrar las stats reales (nivel/versión + mejoras)
+  // tanto en el almacén como en el deck.
+  const [data, cardProgress, cardUpgrades] = await Promise.all([
     getHomeDeckBuilderDataUseCase.execute(playerId),
     runtimeRepositories?.playerCardProgressRepository.listByPlayer(playerId) ?? Promise.resolve([]),
+    session ? getPlayerCardUpgrades() : Promise.resolve({}),
   ]);
 
   return (
@@ -25,6 +29,7 @@ export default async function ArsenalModulePage() {
         initialDeck={data.deck}
         collection={data.collection}
         initialCardProgress={cardProgress}
+        initialCardUpgrades={cardUpgrades}
       />
     </>
   );

@@ -28,6 +28,7 @@ export default async function TutorialArsenalPage({ searchParams }: ITutorialArs
         initialDeck={mockData.deck}
         collection={mockData.collection}
         initialCardProgress={mockData.cardProgress}
+        initialCardUpgrades={{}}
         returnToHub={returnToHub}
       />
     </>

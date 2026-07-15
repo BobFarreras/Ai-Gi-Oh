@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IDeck } from "@/core/entities/home/IDeck";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
+import { ICardUpgradeBonuses } from "@/core/services/progression/card-upgrade-rules";
 import { HomeCollectionOrderDirection, HomeCollectionOrderField, HomeCollectionTypeFilter } from "@/components/hub/home/home-filters";
 import { IHomeDraggedCardState, IHomeEvolutionOverlayState } from "@/components/hub/home/internal/types/home-deck-builder-types";
 import { useHomeSelectionView } from "@/components/hub/home/internal/hooks/use-home-selection-view";
@@ -13,6 +14,7 @@ interface IUseHomeDeckBuilderStateInput {
   initialDeck: IDeck;
   collection: ICollectionCard[];
   initialCardProgress: IPlayerCardProgress[];
+  initialCardUpgrades: Record<string, ICardUpgradeBonuses>;
 }
 
 /**
@@ -23,6 +25,9 @@ export function useHomeDeckBuilderState(input: IUseHomeDeckBuilderStateInput) {
   const [collectionState, setCollectionState] = useState<ICollectionCard[]>(input.collection);
   const [cardProgressById, setCardProgressById] = useState<Map<string, IPlayerCardProgress>>(
     () => new Map(input.initialCardProgress.map((progress) => [progress.cardId, progress])),
+  );
+  const [cardUpgradesById, setCardUpgradesById] = useState<Map<string, ICardUpgradeBonuses>>(
+    () => new Map(Object.entries(input.initialCardUpgrades)),
   );
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const [selectedFusionSlotIndex, setSelectedFusionSlotIndex] = useState<number | null>(null);
@@ -44,6 +49,7 @@ export function useHomeDeckBuilderState(input: IUseHomeDeckBuilderStateInput) {
     deck,
     collectionState,
     cardProgressById,
+    cardUpgradesById,
     selectedSlotIndex,
     selectedFusionSlotIndex,
     selectedCollectionCardId,
@@ -60,6 +66,8 @@ export function useHomeDeckBuilderState(input: IUseHomeDeckBuilderStateInput) {
     setCollectionState,
     cardProgressById,
     setCardProgressById,
+    cardUpgradesById,
+    setCardUpgradesById,
     selectedSlotIndex,
     setSelectedSlotIndex,
     selectedFusionSlotIndex,

@@ -38,7 +38,7 @@ describe("TutorialArsenalClient", () => {
       card: { id: "mock-evolve-spark", name: "Spark", description: "", type: "ENTITY", faction: "OPEN_SOURCE", cost: 1, attack: 1000, defense: 1000 },
       ownedCopies: 10,
     }];
-    render(<TutorialArsenalClient playerId="p1" initialDeck={deck} collection={collection} initialCardProgress={[]} />);
+    render(<TutorialArsenalClient playerId="p1" initialDeck={deck} collection={collection} initialCardProgress={[]} initialCardUpgrades={{}} />);
     fireEvent.click(screen.getByRole("button", { name: "Empezar" }));
     expect(screen.getByText("Selecciona carta del almacén")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Colección" }));

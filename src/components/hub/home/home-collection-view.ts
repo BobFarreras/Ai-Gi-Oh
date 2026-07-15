@@ -2,6 +2,7 @@
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { HomeCollectionOrderDirection, HomeCollectionOrderField, HomeCollectionTypeFilter } from "@/components/hub/home/home-filters";
+import { ICardUpgradeBonuses } from "@/core/services/progression/card-upgrade-rules";
 import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
 
 interface BuildCollectionViewInput {
@@ -15,6 +16,8 @@ interface BuildCollectionViewInput {
    * base del catálogo), sino en este mapa; por eso el orden por LEVEL/VERSION lo consulta aquí.
    */
   cardProgressById?: Map<string, IPlayerCardProgress>;
+  /** Bonus de objetos de mejora (ATK/DEF) por carta, para que la rejilla muestre las stats reales. */
+  cardUpgradesById?: Map<string, ICardUpgradeBonuses>;
 }
 
 /** Nivel efectivo del jugador para la carta (progreso por jugador; base como fallback determinista). */
@@ -33,7 +36,7 @@ export function buildHomeCollectionView(input: BuildCollectionViewInput): IColle
   // hidratación es neutra (nivel 0 → sin bonus), así que las cartas sin subir quedan igual.
   const hydrated = input.collection.map((entry) => ({
     ...entry,
-    card: applyCardProgressionToCard(entry.card, input.cardProgressById?.get(entry.card.id) ?? null),
+    card: applyCardProgressionToCard(entry.card, input.cardProgressById?.get(entry.card.id) ?? null, input.cardUpgradesById?.get(entry.card.id)),
   }));
   const byType =
     input.typeFilter === "ALL"

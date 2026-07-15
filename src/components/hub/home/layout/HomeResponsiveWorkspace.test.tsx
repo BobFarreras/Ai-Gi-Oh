@@ -25,6 +25,7 @@ function createProps(): IHomeWorkspaceProps {
     collectionState: [],
     filteredCollection: [],
     cardProgressById: new Map(),
+    cardUpgradesById: new Map(),
     evolvableCardIds: new Set(),
     selectedSlotIndex: null,
     selectedFusionSlotIndex: null,

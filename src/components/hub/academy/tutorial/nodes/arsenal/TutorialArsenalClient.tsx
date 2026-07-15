@@ -84,6 +84,7 @@ export function TutorialArsenalClient(props: ITutorialArsenalClientProps) {
             collectionState={sandbox.state.collectionState}
             filteredCollection={sandbox.state.filteredCollection}
             cardProgressById={sandbox.state.cardProgressById}
+            cardUpgradesById={new Map()}
             evolvableCardIds={sandbox.state.evolvableCardIds}
             selectedSlotIndex={sandbox.state.selectedSlotIndex}
             selectedFusionSlotIndex={sandbox.state.selectedFusionSlotIndex}

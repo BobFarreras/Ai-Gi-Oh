@@ -2,6 +2,7 @@
 "use client";
 
 import { useMemo, useState, type PointerEvent } from "react";
+import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
 import { HomeCardInspectorDialog } from "@/components/hub/home/HomeCardInspectorDialog";
 import { buildHomeMobileDeckSlotsView } from "@/components/hub/home/layout/home-mobile-deck-view";
 import { HomeMobileSectionTabs } from "@/components/hub/home/layout/HomeMobileSectionTabs";
@@ -23,7 +24,11 @@ export function HomeMobileWorkspace(props: IHomeMobileWorkspaceProps) {
   const activeSection = props.tutorialForcedSection ?? manualActiveSection;
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [inspectorOrigin, setInspectorOrigin] = useState<IInspectorOrigin>({ x: 0, y: 0 });
-  const cardById = useMemo(() => new Map(props.collectionState.map((entry) => [entry.card.id, entry.card])), [props.collectionState]);
+  // Hidrata con nivel/versión + mejoras para que el deck (y el resto de la vista móvil) muestre las stats reales.
+  const cardById = useMemo(
+    () => new Map(props.collectionState.map((entry) => [entry.card.id, applyCardProgressionToCard(entry.card, props.cardProgressById.get(entry.card.id) ?? null, props.cardUpgradesById.get(entry.card.id))])),
+    [props.cardProgressById, props.cardUpgradesById, props.collectionState],
+  );
   const deckCopiesByCardId = useMemo(() => {
     const copies = new Map<string, number>();
     for (const slot of props.deck.slots) {

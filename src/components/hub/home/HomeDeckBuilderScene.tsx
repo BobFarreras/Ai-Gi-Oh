@@ -56,9 +56,27 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
     [props.playerId, state],
   );
 
+  // Tras aplicar una mejora, refleja el nuevo bonus en el arsenal (deck + almacén) sin recargar.
+  const handleCardUpgraded = useCallback(
+    (cardId: string, stat: "ATTACK" | "DEFENSE", value: number) => {
+      state.setCardUpgradesById((previous) => {
+        const next = new Map(previous);
+        const current = next.get(cardId) ?? { attackBonus: 0, defenseBonus: 0 };
+        next.set(cardId, {
+          attackBonus: current.attackBonus + (stat === "ATTACK" ? value : 0),
+          defenseBonus: current.defenseBonus + (stat === "DEFENSE" ? value : 0),
+        });
+        return next;
+      });
+    },
+    [state],
+  );
+
   const objectsRuntime = useArsenalObjects({
     cardProgressById: state.cardProgressById,
+    cardUpgradesById: state.cardUpgradesById,
     onCardLeveled: handleCardLeveled,
+    onCardUpgraded: handleCardUpgraded,
     onError: (message) => state.setErrorMessage(message),
   });
 
@@ -153,6 +171,7 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
     collectionState: state.collectionState,
     filteredCollection: state.filteredCollection,
     cardProgressById: state.cardProgressById,
+    cardUpgradesById: state.cardUpgradesById,
     evolvableCardIds: state.evolvableCardIds,
     selectedSlotIndex: state.selectedSlotIndex,
     selectedFusionSlotIndex: state.selectedFusionSlotIndex,

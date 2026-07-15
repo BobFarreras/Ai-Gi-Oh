@@ -2,6 +2,7 @@
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IDeck } from "@/core/entities/home/IDeck";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
+import { ICardUpgradeBonuses } from "@/core/services/progression/card-upgrade-rules";
 import { ICard } from "@/core/entities/ICard";
 import { HomeCollectionTypeFilter } from "@/components/hub/home/home-filters";
 import { DragEvent } from "react";
@@ -16,6 +17,7 @@ export interface IHomeWorkspaceProps {
   collectionState: ICollectionCard[];
   filteredCollection: ICollectionCard[];
   cardProgressById: Map<string, IPlayerCardProgress>;
+  cardUpgradesById: Map<string, ICardUpgradeBonuses>;
   evolvableCardIds: Set<string>;
   selectedSlotIndex: number | null;
   selectedFusionSlotIndex: number | null;
