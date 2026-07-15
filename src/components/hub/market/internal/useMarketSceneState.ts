@@ -3,6 +3,7 @@
 
 import { SetStateAction, useCallback, useMemo } from "react";
 import { buildMarketListingView } from "@/components/hub/market/market-listing-view";
+import { MarketSection } from "@/components/hub/market/market-filters";
 import { useSyncSelectedListing } from "@/components/hub/market/internal/useSyncSelectedListing";
 import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { buildMarketVaultCollectionView } from "@/components/hub/market/vault/build-market-vault-collection-view";
@@ -39,6 +40,7 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
   const selectedCard = useMarketStoreSelector(store, (state) => state.selectedCard);
   const nameQuery = useMarketStoreSelector(store, (state) => state.nameQuery);
   const typeFilter = useMarketStoreSelector(store, (state) => state.typeFilter);
+  const section = useMarketStoreSelector(store, (state) => state.section);
   const orderField = useMarketStoreSelector(store, (state) => state.orderField);
   const orderDirection = useMarketStoreSelector(store, (state) => state.orderDirection);
   const errorMessage = useMarketStoreSelector(store, (state) => state.errorMessage);
@@ -65,6 +67,7 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     [store],
   );
   const setErrorMessage = useCallback((value: string | null) => store.setState({ errorMessage: value }), [store]);
+  const setSection = useCallback((value: MarketSection) => store.setState({ section: value }), [store]);
   // Saldo tras comprar un objeto: lo devuelve la propia transacción de compra, así que se refleja al momento y
   // la cabecera no se queda mintiendo hasta la siguiente recarga.
   const setWalletNexus = useCallback(
@@ -142,6 +145,7 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     selectedCard: displaySelectedCard,
     nameQuery,
     typeFilter,
+    section,
     orderField,
     orderDirection,
     errorMessage,
@@ -159,6 +163,7 @@ export function useMarketSceneState(input: UseMarketSceneStateInput) {
     setOrderField,
     setOrderDirection,
     setErrorMessage,
+    setSection,
     setWalletNexus,
     setIsPackRevealOpen,
     handleBuyCard,

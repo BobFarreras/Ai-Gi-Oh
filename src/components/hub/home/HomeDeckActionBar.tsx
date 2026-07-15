@@ -30,6 +30,7 @@ export function HomeDeckActionBar({
   evolveCost,
   onEvolve,
   onBackToHub,
+  sectionSwitch,
 }: IHomeDeckActionBarProps) {
   const viewportWidth = useViewportWidth();
   const isDesktopLayout = isDesktopLayoutViewport(viewportWidth);
@@ -51,6 +52,7 @@ export function HomeDeckActionBar({
           <p className="hidden whitespace-nowrap text-[10px] font-black uppercase tracking-[0.3em] text-cyan-300/60 md:block">
             Deck Hub
           </p>
+          {sectionSwitch ? <div className="ml-1">{sectionSwitch}</div> : null}
         </div>
         {isCompactDesktopLayout ? (
           <div className="hidden w-full max-w-[36rem] min-[900px]:block">

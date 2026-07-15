@@ -65,10 +65,12 @@ export function MarketScene(props: MarketSceneProps) {
           walletBalance={state.catalog.wallet.nexus}
           nameQuery={state.nameQuery}
           typeFilter={state.typeFilter}
+          section={state.section}
           orderField={state.orderField}
           orderDirection={state.orderDirection}
           onNameQueryChange={state.setNameQuery}
           onTypeFilterChange={state.setTypeFilter}
+          onSectionChange={state.setSection}
           onOrderFieldChange={state.setOrderField}
           onOrderDirectionToggle={() =>
             state.setOrderDirection((previous) => (previous === "ASC" ? "DESC" : "ASC"))
@@ -77,7 +79,7 @@ export function MarketScene(props: MarketSceneProps) {
           tutorialForceMobileFiltersOpen={props.tutorialActions ? tutorialForceMobileFiltersOpen : false}
         />
 
-        {state.typeFilter === "ITEMS" ? (
+        {state.section === "ITEMS" ? (
           // Los objetos tienen su propio panel: no son cartas y no caben en el listado (ni ATK/DEF ni invocación).
           <MarketItemsPanel
             walletNexus={state.catalog.wallet.nexus}

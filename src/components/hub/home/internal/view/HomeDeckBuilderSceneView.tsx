@@ -1,6 +1,7 @@
 // src/components/hub/home/internal/view/HomeDeckBuilderSceneView.tsx - Renderiza la vista principal de Arsenal a partir de props del orquestador.
 "use client";
 
+import { ReactNode } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { HomeDeckActionBar } from "@/components/hub/home/HomeDeckActionBar";
 import { HubErrorDialog } from "@/components/hub/internal/HubErrorDialog";
@@ -40,6 +41,8 @@ export interface IHomeDeckBuilderSceneViewProps {
   onCloseExitDialog: () => void;
   onConfirmExitToHub: () => void;
   onGoToMarket: () => void;
+  /** Conmutador Cartas/Objetos, inyectado por la Scene y pintado junto al título del arsenal. */
+  sectionSwitch?: ReactNode;
 }
 
 export function HomeDeckBuilderSceneView(props: IHomeDeckBuilderSceneViewProps) {
@@ -66,6 +69,7 @@ export function HomeDeckBuilderSceneView(props: IHomeDeckBuilderSceneViewProps) 
             evolveCost={props.copiesRequiredToEvolve}
             onEvolve={props.onEvolveSelectedCard}
             onBackToHub={props.onBackToHub}
+            sectionSwitch={props.sectionSwitch}
           />
         </div>
         <HomeResponsiveWorkspace {...props.workspaceProps} />

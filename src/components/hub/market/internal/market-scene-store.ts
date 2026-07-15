@@ -7,12 +7,14 @@ import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
 import { IMarketCardListing } from "@/core/entities/market/IMarketCardListing";
 import { IMarketTransaction } from "@/core/entities/market/IMarketTransaction";
 import { IMarketCatalog } from "@/core/use-cases/market/GetMarketCatalogUseCase";
-import { MarketOrderDirection, MarketOrderField, MarketTypeFilter } from "@/components/hub/market/market-filters";
+import { MarketOrderDirection, MarketOrderField, MarketSection, MarketTypeFilter } from "@/components/hub/market/market-filters";
 
 export interface IMarketSceneStoreState {
   catalog: IMarketCatalog;
   transactions: IMarketTransaction[];
   collection: ICollectionCard[];
+  /** Sección activa: cartas (por defecto) u objetos (USB Raro). */
+  section: MarketSection;
   selectedPackId: string | null;
   selectedListing: IMarketCardListing | null;
   selectedCard: ICard | null;
@@ -34,6 +36,7 @@ function createInitialState(catalog: IMarketCatalog, transactions: IMarketTransa
     catalog,
     transactions,
     collection,
+    section: "CARDS",
     selectedPackId: null,
     selectedListing: initialAvailableListing,
     selectedCard: initialAvailableListing?.card ?? null,

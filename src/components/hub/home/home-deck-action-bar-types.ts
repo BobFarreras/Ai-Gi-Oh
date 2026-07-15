@@ -1,4 +1,5 @@
 // src/components/hub/home/home-deck-action-bar-types.ts - Tipos compartidos entre subcomponentes de la barra de acciones de Arsenal.
+import { ReactNode } from "react";
 import {
   HomeCollectionOrderDirection,
   HomeCollectionOrderField,
@@ -25,4 +26,6 @@ export interface IHomeDeckActionBarProps {
   evolveCost: number | null;
   onEvolve: () => Promise<IHomeActionResult>;
   onBackToHub?: () => void;
+  /** Conmutador Cartas/Objetos, pintado junto al título del arsenal. */
+  sectionSwitch?: ReactNode;
 }

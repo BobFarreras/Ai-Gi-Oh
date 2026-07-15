@@ -1,8 +1,11 @@
 // src/components/hub/home/HomeDeckBuilderScene.tsx - Orquesta estado y acciones de Arsenal delegando render a la vista interna.
 "use client";
 
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
+import { ArsenalSection, ArsenalSectionSwitch } from "@/components/hub/home/objects/ArsenalSectionSwitch";
+import { ArsenalObjectsView } from "@/components/hub/home/objects/ArsenalObjectsView";
 import { countRender } from "@/services/performance/dev-performance-telemetry";
 import { resolveHomeActionErrorMessage } from "@/components/hub/home/internal/errors/home-action-error-message";
 import { useDeckMutationQueue } from "@/components/hub/home/internal/hooks/use-deck-mutation-queue";
@@ -21,6 +24,31 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
   const { play } = useHubModuleSfx();
   const { enqueueDeckMutation } = useDeckMutationQueue();
   const state = useHomeDeckBuilderState(props);
+  const [section, setSection] = useState<ArsenalSection>("CARDS");
+  const sectionSwitch = <ArsenalSectionSwitch section={section} onSectionChange={setSection} />;
+
+  // Tras usar un caramelo, refleja el nuevo nivel/xp de la carta en el estado del arsenal (sin recargar): la
+  // progresión es la MISMA fuente que usa el deck-builder para mostrar stats, así que la carta sube al volver.
+  const handleCardLeveled = useCallback(
+    (cardId: string, level: number, xp: number) => {
+      state.setCardProgressById((previous) => {
+        const next = new Map(previous);
+        const existing = next.get(cardId);
+        next.set(cardId, {
+          playerId: props.playerId,
+          cardId,
+          versionTier: existing?.versionTier ?? 0,
+          masteryPassiveSkillId: existing?.masteryPassiveSkillId ?? null,
+          updatedAtIso: new Date().toISOString(),
+          level,
+          xp,
+        });
+        return next;
+      });
+    },
+    [props.playerId, state],
+  );
+
   const actionDeps = {
     context: state.context,
     deck: state.deck,
@@ -132,6 +160,20 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
       void workspaceHandlers.onDropOnCollectionArea(event);
     },
   });
-  return <HomeDeckBuilderSceneView {...viewProps} />;
+  // El swap de sección va DESPUÉS de todos los hooks (reglas de hooks): en Objetos se cambia el workspace
+  // entero por el panel de objetos, conservando el conmutador para volver.
+  if (section === "OBJECTS") {
+    return (
+      <ArsenalObjectsView
+        collection={state.collectionState}
+        cardProgressById={state.cardProgressById}
+        sectionSwitch={sectionSwitch}
+        onCardLeveled={handleCardLeveled}
+        onBackToHub={() => router.push("/hub")}
+      />
+    );
+  }
+
+  return <HomeDeckBuilderSceneView {...viewProps} sectionSwitch={sectionSwitch} />;
 }
 

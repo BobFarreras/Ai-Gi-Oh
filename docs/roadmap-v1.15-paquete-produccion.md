@@ -156,8 +156,16 @@ y la escritura es una función SQL transaccional que valida la posesión, descue
 (la clave de operación impide que un doble clic gaste dos). Verificado en producción: `authenticated` **no puede
 insertar** en `player_inventory_items`, así que nadie se regala caramelos desde la consola del navegador.
 
-**Falta:** (a) la UI de usarlo en el detalle de carta del arsenal, y (b) **decidir cómo se consiguen** — hoy no
-hay forma de obtenerlos (el catálogo tiene precio en Nexus, pero no hay tienda que los venda).
+**Sección de Objetos (2026-07-15), decisión de UX del owner:** los objetos NO van como un tipo/filtro más —no
+son cartas—, sino como una **sección propia** con su botón:
+- **Mercado:** conmutador Cartas / Objetos en la cabecera (iconos Layers / Package). En Objetos se ocultan los
+  filtros de carta y se muestra `MarketItemsPanel` (comprar USB Raro). El USB Raro ya se compra aquí.
+- **Arsenal:** mismo conmutador junto al título. En Objetos, la Scene cambia todo el workspace por
+  `ArsenalObjectsView`: eliges objeto → eliges carta (solo Entity, que son las que suben ATK/DEF) → "Usar
+  objeto". El nivel lo calcula el servidor y se refleja al momento en la progresión del arsenal.
+
+Nota de implementación: el conmutador se pasa como slot `ReactNode` para no acoplar el tipo de sección por todo
+el árbol del deck-builder (que tiene 3 variantes responsive de la barra de filtros).
 
 ---
 
@@ -520,7 +528,7 @@ perfiles de dificultad ya existen y `get-match-session-data.ts` ya sabe resolver
 | A | 6 · Diálogo de premio semanal | ✅ hecho · migración 118 **aplicada a producción** (2026-07-14) |
 | A | 9 · UX de reemplazo de zona | ✅ hecho · ⚠️ el rendimiento en móvil hay que confirmarlo en un dispositivo real |
 | B | 4 · Niveles a 100 | ✅ hecho · migración 119 **aplicada** (2026-07-14) · ⚠️ ver "rivales" abajo |
-| B | 2 · Caramelos (USB Raro) | ✅ hecho: backend + tienda de Objetos en el mercado (migraciones 120 y 121 **aplicadas**) · falta la UI de USARLO en el arsenal |
+| B | 2 · Caramelos (USB Raro) | ✅ **hecho de punta a punta**: backend, sección Objetos en Mercado (comprar) y en Arsenal (usar sobre una carta). Migraciones 120/121 aplicadas |
 | — | 🔒 Tablas de valor escribibles por el cliente | ✅ **CERRADO** (migración 122 aplicada + service-role) |
 | B | 3 · Objetos | ⏳ pendiente |
 | C | 5 · Cartas por reconfiguración | ⏳ pendiente |
