@@ -76,7 +76,7 @@ export function BoardMobilePanelsDialog({
     <AnimatePresence>
       {liveSelectedCard && (
         // z-[280] > historial (z-[270]) para que el detalle desde el log quede legible por encima.
-        <motion.div initial={{ x: "-100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "-100%", opacity: 0 }} transition={{ type: "spring", stiffness: 420, damping: 34 }} className={`absolute left-0 right-14 ${detailPanelTopClassName} bottom-[8.2rem] z-[280] rounded-r-3xl border-r-2 border-cyan-500/60 bg-zinc-950/92 p-3 backdrop-blur-xl shadow-[14px_0_34px_rgba(0,0,0,0.72)] min-h-0 flex flex-col`}>
+        <motion.div initial={{ x: "-100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "-100%", opacity: 0 }} transition={{ type: "spring", stiffness: 420, damping: 34 }} className={`absolute left-0 right-14 ${detailPanelTopClassName} bottom-[8.2rem] z-[280] rounded-r-3xl border-r-2 border-cyan-500/60 bg-zinc-950/92 p-3 shadow-[14px_0_34px_rgba(0,0,0,0.72)] min-h-0 flex flex-col`}>
           <button
             aria-label="Cerrar detalle"
             onClick={isTutorialTrapPromptLocked ? () => undefined : closeDetail}
@@ -140,7 +140,7 @@ export function BoardMobilePanelsDialog({
       )}
 
       {isHistoryOpen && (
-        <motion.div initial={{ x: "100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "100%", opacity: 0 }} transition={{ type: "spring", stiffness: 420, damping: 34 }} className="absolute right-0 left-14 top-[5.2rem] bottom-[8.2rem] z-[270] rounded-l-3xl border-l-2 border-rose-500/60 bg-zinc-950/94 p-3 backdrop-blur-xl shadow-[-14px_0_34px_rgba(0,0,0,0.72)] min-h-0 flex flex-col">
+        <motion.div initial={{ x: "100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "100%", opacity: 0 }} transition={{ type: "spring", stiffness: 420, damping: 34 }} className="absolute right-0 left-14 top-[5.2rem] bottom-[8.2rem] z-[270] rounded-l-3xl border-l-2 border-rose-500/60 bg-zinc-950/94 p-3 shadow-[-14px_0_34px_rgba(0,0,0,0.72)] min-h-0 flex flex-col">
           <div className="mb-2 flex items-center justify-between border-b border-zinc-700/80 pb-2">
             <h3 className="text-sm font-black uppercase tracking-widest text-white">Combat Log</h3>
             <button aria-label="Cerrar historial" onClick={closeHistory} className="text-rose-300"><X size={22} /></button>

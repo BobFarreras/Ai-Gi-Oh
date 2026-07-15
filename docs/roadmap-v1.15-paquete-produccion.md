@@ -17,9 +17,17 @@ verificar. Estado:
 | # | Bug | Estado |
 |---|-----|--------|
 | B1 | Arena niveles 7/8 superados pero **sin Nexus** | ✅ causa hallada: **la migración 122 (aplicada a prod) rompió TODA escritura de cartera** porque el código de service-role no está desplegado. Se resuelve **al desplegar esta rama** (acopla el código con la 122). Ver nota abajo |
-| B2 | Rendimiento móvil (tirones) en fusiones, activar cartas, descartar con 5 en mano, sacrificar con zona llena | 🔍 investigar/perfilar |
+| B2 | Rendimiento móvil (tirones) en fusiones, activar cartas, descartar con 5 en mano, sacrificar con zona llena | 🟡 causa principal atacada: `backdrop-blur` a pantalla completa sobre el tablero animado en los overlays de esos flujos (ver abajo). Falta **validar en dispositivo real** |
 | B3 | Arsenal: el **deck activo** muestra stats base; debería mostrarlas actualizadas (nivel/versión/mejoras) como el almacén | ✅ arreglado: el deck (desktop y móvil) y el detalle hidratan la carta con nivel/versión **+ mejoras**, igual que el almacén; y el almacén ahora incluye también las mejoras |
 | B4 | La cinemática de "objeto equipado" se queda clavada: el botón **Continuar** no cierra | ✅ arreglado (overlay a `fixed` centrado + cierre por fondo) |
+
+**Nota B2 (rendimiento móvil):** los tres flujos que reporta el usuario (elegir materiales de fusión, cinemática
+de fusión, y los paneles móviles de descarte/sacrificio) muestran un overlay con `backdrop-blur` a pantalla
+completa **sobre el tablero animado**. `backdrop-blur` (sobre todo `-xl`) obliga a difuminar toda la escena en
+cada frame — es, según la memoria de perf del proyecto, el mayor asesino de FPS en móvil. Quitado en
+`FusionMaterialBrowser`, `FusionCinematicLayer` y los dos paneles de `BoardMobilePanelsDialog` (el fondo ya era
+casi opaco, así que apenas cambia el aspecto). **Es la causa más probable pero no está medido en dispositivo**:
+si el tirón persiste, el siguiente sospechoso son los re-renders por-carta de la mano/tablero con Framer Motion.
 
 **Nota B1 (incidente de coordinación migración/código):** la migración 122 revocó a `authenticated` la escritura
 de `player_wallets`/`player_collection_cards`/`player_card_progress` y las RPC de cartera, pero el código que las

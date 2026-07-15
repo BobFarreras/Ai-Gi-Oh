@@ -133,7 +133,7 @@ function FusionPlaybackItem({ item, onDone }: { item: IFusionPlaybackItem; onDon
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 bg-black/70 backdrop-blur-[2px] flex items-center justify-center"
+      className="absolute inset-0 bg-black/80 flex items-center justify-center"
     >
       {phase === "video" && videoSrc ? (
         <motion.div

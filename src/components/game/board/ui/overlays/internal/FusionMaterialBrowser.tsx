@@ -30,7 +30,7 @@ export function FusionMaterialBrowser({ isOpen, candidates, selectedCount, onSel
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           data-tutorial-id="tutorial-board-fusion-browser"
-          className="absolute inset-0 z-[182] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          className="absolute inset-0 z-[182] flex items-center justify-center bg-black/80"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: 24 }}
