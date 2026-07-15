@@ -1,7 +1,7 @@
 // src/components/hub/home/HomeDeckBuilderScene.tsx - Orquesta estado y acciones de Arsenal delegando render a la vista interna.
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ICard } from "@/core/entities/ICard";
 import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
@@ -28,6 +28,12 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
   const { play } = useHubModuleSfx();
   const { enqueueDeckMutation } = useDeckMutationQueue();
   const state = useHomeDeckBuilderState(props);
+  // Cartas BASE (catálogo) por id: la fuente sin hidratar que la cinemática de equipar necesita para no
+  // recontar nivel+objetos (applyCardProgressionToCard los aplica una sola vez, ver useArsenalObjects).
+  const baseCardById = useMemo(
+    () => new Map(state.collectionState.map((entry) => [entry.card.id, entry.card])),
+    [state.collectionState],
+  );
   const [section, setSection] = useState<ArsenalSection>("CARDS");
   // Flujo A: carta elegida primero (desde "Equipar objeto") → se elige el objeto en la sección Objetos.
   const [objectTargetCard, setObjectTargetCard] = useState<ICard | null>(null);
@@ -73,6 +79,7 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
   );
 
   const objectsRuntime = useArsenalObjects({
+    baseCardById: baseCardById,
     cardProgressById: state.cardProgressById,
     cardUpgradesById: state.cardUpgradesById,
     onCardLeveled: handleCardLeveled,

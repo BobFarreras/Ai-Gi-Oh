@@ -19,6 +19,10 @@ import {
 } from "@/components/hub/home/objects/arsenal-objects-shared";
 
 interface IUseArsenalObjectsParams {
+  /** Cartas BASE (catálogo) por id. La cinemática y la validación deben partir de la carta sin resolver: si se
+   *  parte de una ya hidratada (nivel+objetos aplicados), applyCardProgressionToCard vuelve a sumarlos y el valor
+   *  se dispara. La progresión se aplica una sola vez, aquí. */
+  baseCardById: Map<string, ICard>;
   cardProgressById: Map<string, IPlayerCardProgress>;
   cardUpgradesById: Map<string, ICardUpgradeBonuses>;
   onCardLeveled: (cardId: string, level: number, xp: number) => void;
@@ -26,7 +30,7 @@ interface IUseArsenalObjectsParams {
   onError: (message: string) => void;
 }
 
-export function useArsenalObjects({ cardProgressById, cardUpgradesById, onCardLeveled, onCardUpgraded, onError }: IUseArsenalObjectsParams) {
+export function useArsenalObjects({ baseCardById, cardProgressById, cardUpgradesById, onCardLeveled, onCardUpgraded, onError }: IUseArsenalObjectsParams) {
   const [items, setItems] = useState<IShopItems | null>(null);
   const [overlay, setOverlay] = useState<IArsenalObjectApplyResult | null>(null);
   const [applying, setApplying] = useState(false);
@@ -46,8 +50,11 @@ export function useArsenalObjects({ cardProgressById, cardUpgradesById, onCardLe
   );
 
   const canApply = useCallback(
-    (object: ISelectableObject, card: ICard) => canApplyObjectToCard(object, card, cardProgressById.get(card.id) ?? null, cardUpgradesById.get(card.id)),
-    [cardProgressById, cardUpgradesById],
+    (object: ISelectableObject, card: ICard) => {
+      const baseCard = baseCardById.get(card.id) ?? card;
+      return canApplyObjectToCard(object, baseCard, cardProgressById.get(card.id) ?? null, cardUpgradesById.get(card.id));
+    },
+    [baseCardById, cardProgressById, cardUpgradesById],
   );
 
   const apply = useCallback(
@@ -55,7 +62,9 @@ export function useArsenalObjects({ cardProgressById, cardUpgradesById, onCardLe
       if (applying) return;
       setApplying(true);
       try {
-        const outcome = await applyObjectToCard(object, card, cardProgressById.get(card.id) ?? null, cardUpgradesById.get(card.id));
+        // Partir SIEMPRE de la carta base: el card que llega desde el detalle ya viene con nivel+objetos aplicados.
+        const baseCard = baseCardById.get(card.id) ?? card;
+        const outcome = await applyObjectToCard(object, baseCard, cardProgressById.get(card.id) ?? null, cardUpgradesById.get(card.id));
         if (outcome.leveled) onCardLeveled(outcome.leveled.cardId, outcome.leveled.level, outcome.leveled.xp);
         if (object.kind === "UPGRADE" && object.upgrade) onCardUpgraded(card.id, object.upgrade.stat, object.upgrade.value);
         setOverlay(outcome.overlay);
@@ -66,7 +75,7 @@ export function useArsenalObjects({ cardProgressById, cardUpgradesById, onCardLe
         setApplying(false);
       }
     },
-    [applying, cardProgressById, cardUpgradesById, onCardLeveled, onCardUpgraded, onError, reload],
+    [applying, baseCardById, cardProgressById, cardUpgradesById, onCardLeveled, onCardUpgraded, onError, reload],
   );
 
   return {

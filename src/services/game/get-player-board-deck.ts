@@ -16,10 +16,11 @@ export async function getPlayerBoardDeck(): Promise<ICard[] | null> {
   if (!session?.user.id) return null;
   const repositories = await createPlayerRuntimeRepositories();
   const playerId = session.user.id;
-  const [deck, collection, progressRows] = await Promise.all([
+  const [deck, collection, progressRows, upgradesByCardId] = await Promise.all([
     repositories.deckRepository.getDeck(playerId),
     repositories.deckRepository.getCollection(playerId),
     repositories.playerCardProgressRepository.listByPlayer(playerId),
+    repositories.playerCardUpgradesRepository.getUpgradesByPlayer(playerId),
   ]);
   const cardById = new Map(collection.map((entry) => [entry.card.id, entry.card]));
   const progressByCardId = new Map(progressRows.map((progress) => [progress.cardId, progress]));
@@ -28,7 +29,7 @@ export async function getPlayerBoardDeck(): Promise<ICard[] | null> {
       if (!slot.cardId) return null;
       const card = cardById.get(slot.cardId);
       if (!card) return null;
-      return applyCardProgressionToCard(card, progressByCardId.get(slot.cardId) ?? null);
+      return applyCardProgressionToCard(card, progressByCardId.get(slot.cardId) ?? null, upgradesByCardId.get(slot.cardId));
     })
     .filter((card): card is ICard => card !== null);
   if (persistedDeck.length !== HOME_DECK_SIZE) return null;
@@ -40,10 +41,11 @@ export async function getPlayerBoardLoadout(): Promise<IPlayerBoardLoadout> {
   if (!session?.user.id) return { deck: null, fusionDeck: null };
   const repositories = await createPlayerRuntimeRepositories();
   const playerId = session.user.id;
-  const [deck, collection, progressRows] = await Promise.all([
+  const [deck, collection, progressRows, upgradesByCardId] = await Promise.all([
     repositories.deckRepository.getDeck(playerId),
     repositories.deckRepository.getCollection(playerId),
     repositories.playerCardProgressRepository.listByPlayer(playerId),
+    repositories.playerCardUpgradesRepository.getUpgradesByPlayer(playerId),
   ]);
   const cardById = new Map(collection.map((entry) => [entry.card.id, entry.card]));
   const progressByCardId = new Map(progressRows.map((progress) => [progress.cardId, progress]));
@@ -52,7 +54,7 @@ export async function getPlayerBoardLoadout(): Promise<IPlayerBoardLoadout> {
       if (!slot.cardId) return null;
       const card = cardById.get(slot.cardId);
       if (!card) return null;
-      return applyCardProgressionToCard(card, progressByCardId.get(slot.cardId) ?? null);
+      return applyCardProgressionToCard(card, progressByCardId.get(slot.cardId) ?? null, upgradesByCardId.get(slot.cardId));
     })
     .filter((card): card is ICard => card !== null);
   const fusionDeck = deck.fusionSlots
@@ -60,7 +62,7 @@ export async function getPlayerBoardLoadout(): Promise<IPlayerBoardLoadout> {
       if (!slot.cardId) return null;
       const card = cardById.get(slot.cardId);
       if (!card || card.type !== "FUSION") return null;
-      return applyCardProgressionToCard(card, progressByCardId.get(slot.cardId) ?? null);
+      return applyCardProgressionToCard(card, progressByCardId.get(slot.cardId) ?? null, upgradesByCardId.get(slot.cardId));
     })
     .filter((card): card is ICard => card !== null);
   return {
