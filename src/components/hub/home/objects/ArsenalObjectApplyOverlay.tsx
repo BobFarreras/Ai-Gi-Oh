@@ -41,8 +41,20 @@ export function ArsenalObjectApplyOverlay({ result, onClose }: IArsenalObjectApp
   const cardScale = isMobileViewport ? 0.52 : 0.82;
 
   return (
-    <div className="absolute inset-0 z-[440] flex items-center justify-center overflow-hidden bg-black/75 px-3 py-4 backdrop-blur-md sm:px-6" role="dialog" aria-modal="true" aria-label="Objeto aplicado">
-      <motion.div initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.25 }} className="relative flex w-full max-w-xl flex-col items-center">
+    <div
+      className="fixed inset-0 z-[440] flex items-center justify-center overflow-hidden bg-black/75 px-3 py-4 backdrop-blur-md sm:px-6"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Objeto aplicado"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.7 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.25 }}
+        className="relative flex w-full max-w-xl flex-col items-center"
+        onClick={(event) => event.stopPropagation()}
+      >
         <motion.div
           aria-hidden
           initial={{ opacity: 0.4, scale: 0.8 }}

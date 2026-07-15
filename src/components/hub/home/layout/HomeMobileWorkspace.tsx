@@ -128,6 +128,7 @@ export function HomeMobileWorkspace(props: IHomeMobileWorkspaceProps) {
         onRemove={props.onRemoveSelectedCard}
         onEvolve={props.onEvolveSelectedCard}
         onEquip={props.onEquipSelectedCard}
+        equipPendingObjectLabel={props.equipPendingObjectLabel}
         onClose={() => setIsInspectorOpen(false)}
         isTutorialActionStep={isTutorialActionStep}
         tutorialHighlightTargetId={tutorialHighlightTargetId}

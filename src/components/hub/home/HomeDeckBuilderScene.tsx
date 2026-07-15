@@ -7,6 +7,9 @@ import { ICard } from "@/core/entities/ICard";
 import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
 import { ArsenalSection, ArsenalSectionSwitch } from "@/components/hub/home/objects/ArsenalSectionSwitch";
 import { ArsenalObjectsView } from "@/components/hub/home/objects/ArsenalObjectsView";
+import { ArsenalObjectApplyOverlay } from "@/components/hub/home/objects/ArsenalObjectApplyOverlay";
+import { useArsenalObjects } from "@/components/hub/home/objects/use-arsenal-objects";
+import { ISelectableObject } from "@/components/hub/home/objects/arsenal-objects-shared";
 import { countRender } from "@/services/performance/dev-performance-telemetry";
 import { resolveHomeActionErrorMessage } from "@/components/hub/home/internal/errors/home-action-error-message";
 import { useDeckMutationQueue } from "@/components/hub/home/internal/hooks/use-deck-mutation-queue";
@@ -26,27 +29,10 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
   const { enqueueDeckMutation } = useDeckMutationQueue();
   const state = useHomeDeckBuilderState(props);
   const [section, setSection] = useState<ArsenalSection>("CARDS");
-  // Carta a la que se equipará un objeto: la fija "Equipar objeto" del detalle y viaja a la sección Objetos.
+  // Flujo A: carta elegida primero (desde "Equipar objeto") → se elige el objeto en la sección Objetos.
   const [objectTargetCard, setObjectTargetCard] = useState<ICard | null>(null);
-  const handleSectionChange = useCallback((next: ArsenalSection) => {
-    // Volver a Cartas por el conmutador limpia el objetivo (dejar de "equipar").
-    if (next === "CARDS") setObjectTargetCard(null);
-    setSection(next);
-  }, []);
-  // Función de render (no un nodo): el buscador del arsenal aparece en varios sitios según el breakpoint y el
-  // conmutador se pinta junto a él en cada uno.
-  const renderSectionSwitch = useCallback(
-    () => <ArsenalSectionSwitch section={section} onSectionChange={handleSectionChange} />,
-    [handleSectionChange, section],
-  );
-  // "Equipar objeto" (detalle de carta): trae esa carta a la sección Objetos. Solo Entity: son las que suben
-  // atributos con nivel/mejoras.
-  const handleEquipSelectedCard = useCallback(() => {
-    const card = state.selectedCard;
-    if (!card || card.type !== "ENTITY") return;
-    setObjectTargetCard(card);
-    setSection("OBJECTS");
-  }, [state.selectedCard]);
+  // Flujo B: objeto elegido primero (desde la sección Objetos) → se elige la carta en la sección Cartas.
+  const [pendingEquipObject, setPendingEquipObject] = useState<ISelectableObject | null>(null);
 
   // Tras usar un caramelo, refleja el nuevo nivel/xp de la carta en el estado del arsenal (sin recargar): la
   // progresión es la MISMA fuente que usa el deck-builder para mostrar stats, así que la carta sube al volver.
@@ -69,6 +55,46 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
     },
     [props.playerId, state],
   );
+
+  const objectsRuntime = useArsenalObjects({
+    cardProgressById: state.cardProgressById,
+    onCardLeveled: handleCardLeveled,
+    onError: (message) => state.setErrorMessage(message),
+  });
+
+  const handleSectionChange = useCallback((next: ArsenalSection) => {
+    // Cambiar de sección por el conmutador cancela cualquier equipado a medias.
+    setObjectTargetCard(null);
+    setPendingEquipObject(null);
+    setSection(next);
+  }, []);
+  // Función de render (no un nodo): el buscador del arsenal aparece en varios sitios según el breakpoint y el
+  // conmutador se pinta junto a él en cada uno.
+  const renderSectionSwitch = useCallback(
+    () => <ArsenalSectionSwitch section={section} onSectionChange={handleSectionChange} />,
+    [handleSectionChange, section],
+  );
+  // Flujo A — "Equipar objeto" (detalle de carta): trae esa carta a la sección Objetos. Solo Entity.
+  const handleEquipSelectedCard = useCallback(() => {
+    const card = state.selectedCard;
+    if (!card || card.type !== "ENTITY") return;
+    setPendingEquipObject(null);
+    setObjectTargetCard(card);
+    setSection("OBJECTS");
+  }, [state.selectedCard]);
+  // Flujo B — "Equipar" en el detalle del objeto: guarda el objeto y va a Cartas a elegir carta.
+  const handleEquipObject = useCallback((object: ISelectableObject) => {
+    setObjectTargetCard(null);
+    setPendingEquipObject(object);
+    setSection("CARDS");
+  }, []);
+  // Flujo B — "Activar" en el detalle de la carta: aplica el objeto pendiente a la carta seleccionada.
+  const handleActivatePendingObject = useCallback(() => {
+    const card = state.selectedCard;
+    if (!pendingEquipObject || !card || card.type !== "ENTITY") return;
+    void objectsRuntime.apply(pendingEquipObject, card);
+    setPendingEquipObject(null);
+  }, [objectsRuntime, pendingEquipObject, state.selectedCard]);
 
   const actionDeps = {
     context: state.context,
@@ -159,7 +185,9 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
     onInsertSelectedCard: actions.handleInsertSelectedCard,
     onRemoveSelectedCard: actions.handleRemoveSelectedCard,
     onEvolveSelectedCard: actions.handleEvolveSelectedCard,
-    onEquipSelectedCard: handleEquipSelectedCard,
+    // Si hay objeto pendiente (flujo B) el botón del detalle es "Activar"; si no, "Equipar objeto" (flujo A).
+    onEquipSelectedCard: pendingEquipObject ? handleActivatePendingObject : handleEquipSelectedCard,
+    equipPendingObjectLabel: pendingEquipObject?.name ?? null,
     onBackToHub: exitGuard.handleBackToHubRequest,
     onClearError: () => state.setErrorMessage(null),
     isExitDialogOpen: exitGuard.isExitDialogOpen,
@@ -182,20 +210,36 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
       void workspaceHandlers.onDropOnCollectionArea(event);
     },
   });
+  // La cinemática de aplicar objeto se pinta a nivel de Scene (fixed) para cubrir ambas secciones.
+  const objectOverlay = objectsRuntime.overlay ? (
+    <ArsenalObjectApplyOverlay result={objectsRuntime.overlay} onClose={objectsRuntime.closeOverlay} />
+  ) : null;
+
   // El swap de sección va DESPUÉS de todos los hooks (reglas de hooks): en Objetos se cambia el workspace
   // entero por el panel de objetos, conservando el conmutador para volver.
   if (section === "OBJECTS") {
     return (
-      <ArsenalObjectsView
-        targetCard={objectTargetCard}
-        cardProgressById={state.cardProgressById}
-        sectionSwitch={renderSectionSwitch()}
-        onCardLeveled={handleCardLeveled}
-        onBackToHub={() => router.push("/hub")}
-      />
+      <>
+        <ArsenalObjectsView
+          objects={objectsRuntime.objects}
+          isLoading={objectsRuntime.items === null}
+          targetCard={objectTargetCard}
+          canApplyToTarget={(object) => (objectTargetCard ? objectsRuntime.canApply(object, objectTargetCard) : false)}
+          sectionSwitch={renderSectionSwitch()}
+          onApplyToTarget={(object) => { if (objectTargetCard) { void objectsRuntime.apply(object, objectTargetCard); setObjectTargetCard(null); } }}
+          onEquipObject={handleEquipObject}
+          onBackToHub={() => router.push("/hub")}
+        />
+        {objectOverlay}
+      </>
     );
   }
 
-  return <HomeDeckBuilderSceneView {...viewProps} renderSectionSwitch={renderSectionSwitch} />;
+  return (
+    <>
+      <HomeDeckBuilderSceneView {...viewProps} renderSectionSwitch={renderSectionSwitch} />
+      {objectOverlay}
+    </>
+  );
 }
 

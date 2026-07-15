@@ -9,6 +9,20 @@ repo: `117`. Las nuevas empiezan en `118`.
 
 ---
 
+## Bugs reportados por usuarios (2026-07-15) — arreglar antes de seguir con el roadmap
+
+Se tratan con el mismo rigor que las fichas: reproducir/entender, arreglar en el servidor si toca valor, y
+verificar. Estado:
+
+| # | Bug | Estado |
+|---|-----|--------|
+| B1 | Arena niveles 7/8 superados pero **sin Nexus** | 🔍 investigar |
+| B2 | Rendimiento móvil (tirones) en fusiones, activar cartas, descartar con 5 en mano, sacrificar con zona llena | 🔍 investigar/perfilar |
+| B3 | Arsenal: el **deck activo** muestra stats base; debería mostrarlas actualizadas (nivel/versión/mejoras) como el almacén | ⏳ |
+| B4 | La cinemática de "objeto equipado" se queda clavada: el botón **Continuar** no cierra | ✅ arreglado (overlay a `fixed` centrado + cierre por fondo) |
+
+---
+
 ## 0. Principios transversales (aplican a TODAS las fichas)
 
 Estas siete reglas son las que evitan que el paquete se convierta en deuda o en un agujero de seguridad.
@@ -281,6 +295,21 @@ A petición del owner, el flujo de usar objetos cambió para ser más claro:
 
 Plumbing: `onEquipSelectedCard` viaja por las props del workspace (como `onEvolveSelectedCard`); el conmutador de
 sección sigue siendo una función de render. El objetivo se limpia al volver a Cartas.
+
+#### Segunda iteración de UX (2026-07-15)
+
+Ajustes de layout y un segundo flujo de equipar:
+- **Móvil:** el título "Mercado" ahora se ve junto al botón de volver; las tarjetas de objetos van a una columna
+  hasta `md` y no desbordan; en el almacén del arsenal el conmutador Cartas/Objetos queda SIEMPRE a la izquierda
+  y el título "Objetos" a la derecha (posición consistente con la sección Cartas).
+- **Objetos sin opacidad:** todos los objetos del almacén son tocables (antes se atenuaban cuando no había carta
+  objetivo).
+- **Dos flujos de equipar** (lógica unificada en `use-arsenal-objects` + `arsenal-objects-shared`, cinemática a
+  nivel de Scene con posición `fixed` para cubrir ambas secciones):
+  - **Flujo A** (ya existía): detalle de carta → "Equipar objeto" → Objetos → clic en objeto → aplica.
+  - **Flujo B** (nuevo): Objetos → clic en objeto → detalle grande + "Equipar" → sección Cartas → elegir carta →
+    el botón del detalle pasa a "Activar {objeto}" → aplica + cinemática.
+  Cambiar de sección por el conmutador cancela cualquier equipado a medias.
 
 ---
 

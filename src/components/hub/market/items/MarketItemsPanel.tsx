@@ -43,8 +43,8 @@ function ItemCard({ row, walletNexus, isBuying, spendFloatId, onBuy }: { row: IB
   const cannotAfford = walletNexus < row.priceNexus;
   const Icon = row.icon;
   return (
-    <motion.li initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="relative flex items-center gap-3 rounded-xl border border-amber-500/35 bg-[#0a0703]/70 p-3">
-      <div className="relative h-16 w-16 shrink-0">
+    <motion.li initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="relative flex min-w-0 items-center gap-3 overflow-hidden rounded-xl border border-amber-500/35 bg-[#0a0703]/70 p-3">
+      <div className="relative h-14 w-14 shrink-0 sm:h-16 sm:w-16">
         {row.imageUrl ? <Image src={row.imageUrl} alt="" fill sizes="64px" className="object-contain" /> : <Icon className="h-full w-full text-amber-400/60" aria-hidden />}
       </div>
       <div className="min-w-0 flex-1">
@@ -132,7 +132,7 @@ export function MarketItemsPanel({ walletNexus, onWalletChange, onError }: IMark
             <p className="font-mono text-[10px] uppercase tracking-widest text-amber-500/70">Suben de nivel una carta al instante</p>
           </div>
         </header>
-        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {candyRows.map((row) => <ItemCard key={row.id} row={row} walletNexus={walletNexus} isBuying={buyingId === row.id} spendFloatId={spendFloat.id === row.id ? spendFloat.trigger : 0} onBuy={handleBuy} />)}
         </ul>
       </section>
@@ -145,7 +145,7 @@ export function MarketItemsPanel({ walletNexus, onWalletChange, onError }: IMark
             <p className="font-mono text-[10px] uppercase tracking-widest text-amber-500/70">ATK/DEF permanente · se aplican desde el Arsenal</p>
           </div>
         </header>
-        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {upgradeRows.map((row) => <ItemCard key={row.id} row={row} walletNexus={walletNexus} isBuying={buyingId === row.id} spendFloatId={spendFloat.id === row.id ? spendFloat.trigger : 0} onBuy={handleBuy} />)}
         </ul>
       </section>

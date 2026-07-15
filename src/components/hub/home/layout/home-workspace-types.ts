@@ -35,8 +35,10 @@ export interface IHomeWorkspaceProps {
   onInsertSelectedCard: () => Promise<IHomeActionResult>;
   onRemoveSelectedCard: () => Promise<IHomeActionResult>;
   onEvolveSelectedCard: () => Promise<IHomeActionResult>;
-  /** "Equipar objeto": lleva la carta seleccionada a la sección Objetos. Solo tiene efecto en Entity. */
+  /** "Equipar objeto" (flujo A) o "Activar {objeto}" (flujo B): la etiqueta la decide equipPendingObjectLabel. */
   onEquipSelectedCard: () => void;
+  /** Nombre del objeto pendiente de equipar (flujo B). null = botón "Equipar objeto" (flujo A). */
+  equipPendingObjectLabel: string | null;
   onSelectSlot: (slotIndex: number) => void;
   onSelectFusionSlot: (slotIndex: number) => void;
   onSelectCollectionCard: (cardId: string) => void;

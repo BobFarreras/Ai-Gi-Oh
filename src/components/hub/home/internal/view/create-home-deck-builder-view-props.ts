@@ -46,6 +46,8 @@ interface ICreateHomeDeckBuilderViewPropsInput {
   onRemoveSelectedCard: () => Promise<IHomeActionResult>;
   onEvolveSelectedCard: () => Promise<IHomeActionResult>;
   onEquipSelectedCard: () => void;
+  /** Nombre del objeto pendiente de equipar (flujo B): si está, el botón del detalle es "Activar". */
+  equipPendingObjectLabel: string | null;
   onBackToHub: () => void;
   onClearError: () => void;
   isExitDialogOpen: boolean;
@@ -89,6 +91,7 @@ export function createHomeDeckBuilderViewProps(input: ICreateHomeDeckBuilderView
     onRemoveSelectedCard: input.onRemoveSelectedCard,
     onEvolveSelectedCard: input.onEvolveSelectedCard,
     onEquipSelectedCard: input.onEquipSelectedCard,
+    equipPendingObjectLabel: input.equipPendingObjectLabel,
     onSelectSlot: input.onSelectSlot,
     onSelectFusionSlot: input.onSelectFusionSlot,
     onSelectCollectionCard: input.onSelectCollectionCard,

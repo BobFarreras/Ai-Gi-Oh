@@ -15,8 +15,10 @@ interface HomeCardInspectorProps {
   selectedCardMasteryPassiveSkillId: string | null;
   minCardScale?: number;
   maxCardScale?: number;
-  /** "Equipar objeto": abre la sección Objetos con esta carta como objetivo. Solo se ofrece en Entity. */
+  /** Acción de equipar del detalle. Flujo A ("Equipar objeto") o flujo B ("Activar {objeto}"). Solo Entity. */
   onEquip?: () => void;
+  /** Nombre del objeto pendiente (flujo B): si está, el botón es "Activar {nombre}". */
+  equipPendingObjectLabel?: string | null;
 }
 
 export function HomeCardInspector({
@@ -28,6 +30,7 @@ export function HomeCardInspector({
   minCardScale = 0.5,
   maxCardScale = 0.9,
   onEquip,
+  equipPendingObjectLabel = null,
 }: HomeCardInspectorProps) {
   const cardViewportRef = useRef<HTMLDivElement | null>(null);
   const [cardScale, setCardScale] = useState(0.76);
@@ -91,16 +94,17 @@ export function HomeCardInspector({
           <div className="home-modern-scroll mt-2 min-h-0 flex-1 overflow-y-auto pr-1">
             <p className="whitespace-pre-line text-sm leading-relaxed text-slate-200">{detailDescription}</p>
           </div>
-          {/* Equipar objeto: solo Entity (son las que suben ATK/DEF con nivel/mejoras). */}
+          {/* Equipar/Activar: solo Entity (las que suben ATK/DEF con nivel/mejoras). En flujo B (objeto ya
+              elegido) el botón activa ese objeto; en flujo A lleva a elegir el objeto. */}
           {onEquip && selectedCard.type === "ENTITY" ? (
             <button
               type="button"
               onClick={onEquip}
-              aria-label={`Equipar un objeto en ${selectedCard.name}`}
+              aria-label={equipPendingObjectLabel ? `Activar ${equipPendingObjectLabel} en ${selectedCard.name}` : `Equipar un objeto en ${selectedCard.name}`}
               className="mt-2 flex shrink-0 items-center justify-center gap-2 rounded-lg border border-amber-400/60 bg-amber-900/25 px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-amber-100 transition hover:bg-amber-800/35"
             >
               <Wrench size={14} />
-              Equipar objeto
+              {equipPendingObjectLabel ? `Activar ${equipPendingObjectLabel}` : "Equipar objeto"}
             </button>
           ) : null}
         </div>

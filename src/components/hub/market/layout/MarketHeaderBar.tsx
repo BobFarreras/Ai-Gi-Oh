@@ -72,7 +72,7 @@ export function MarketHeaderBar(props: MarketHeaderBarProps) {
       <div className="relative grid gap-4 min-[900px]:grid-cols-[1fr_1.8fr_1.2fr] items-center overflow-visible">
         <div className="flex items-center gap-3 min-[900px]:border-r border-cyan-900/60 min-[900px]:pr-4 min-w-0">
           <BackButton href="/hub" label="" className="flex shrink-0 px-2 py-1.5" />
-          <h1 className="text-lg font-black uppercase tracking-widest text-cyan-100 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)] truncate hidden sm:block">
+          <h1 className="block truncate text-base font-black uppercase tracking-widest text-cyan-100 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)] sm:text-lg">
             Mercado
           </h1>
           <div className="ml-auto flex min-w-[104px] items-center justify-center px-3 py-1 bg-[#020a14]/90 border border-emerald-500/40 rounded-lg shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] shrink-0">

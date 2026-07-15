@@ -45,6 +45,7 @@ function createProps(): IHomeWorkspaceProps {
     onRemoveSelectedCard: vi.fn(async () => ({ ok: true })),
     onEvolveSelectedCard: vi.fn(async () => ({ ok: true })),
     onEquipSelectedCard: vi.fn(),
+    equipPendingObjectLabel: null,
     onSelectSlot: vi.fn(),
     onSelectFusionSlot: vi.fn(),
     onSelectCollectionCard: vi.fn(),
