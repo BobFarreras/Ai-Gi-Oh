@@ -62,3 +62,20 @@ export function resolveCardLevelBonuses(cardType: CardType, level: number): ICar
 export function hasMaxLevelArt(level: number): boolean {
   return (Number.isFinite(level) ? level : 0) >= MAX_LEVEL_ART_LEVEL;
 }
+
+/**
+ * Incremento de ATK/DEF ganado al pasar de `fromLevel` a `toLevel` (feedback de subida de nivel post-combate).
+ * Suma todos los hitos cruzados en el tramo; 0/0 si no se sube o si la carta no tiene stats (magia/trampa).
+ */
+export function resolveLevelUpStatGain(
+  cardType: CardType,
+  fromLevel: number,
+  toLevel: number,
+): { attack: number; defense: number } {
+  const before = resolveCardLevelBonuses(cardType, fromLevel);
+  const after = resolveCardLevelBonuses(cardType, toLevel);
+  return {
+    attack: Math.max(0, after.attackBonus - before.attackBonus),
+    defense: Math.max(0, after.defenseBonus - before.defenseBonus),
+  };
+}
