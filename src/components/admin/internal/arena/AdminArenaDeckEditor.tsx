@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { IAdminCardUpgradeItemEntry } from "@/core/entities/admin/IAdminShopObjects";
+import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
 import { fetchAdminShopObjects } from "@/components/admin/admin-objects-api";
 import { AdminMobileDetailDialog } from "@/components/admin/internal/AdminMobileDetailDialog";
 import { AdminStarterDeckCollectionPanel } from "@/components/admin/internal/AdminStarterDeckCollectionPanel";
@@ -15,6 +16,22 @@ const SCALE_FIELDS: { key: "versionTier" | "level"; label: string; max: number }
   { key: "versionTier", label: "Ver", max: 5 },
   { key: "level", label: "Lvl", max: 30 },
 ];
+
+/** Contador de objetos por stat: valor actual (+N) con botones - / + que quitan/añaden un objeto (su valor). */
+function BonusStepper({ label, colorClass, value, step, disabled, onAdd, onRemove }: { label: string; colorClass: string; value: number; step: number; disabled: boolean; onAdd: () => void; onRemove: () => void }) {
+  const btn = "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-fuchsia-800/50 bg-[#0a0716] text-sm font-black text-fuchsia-200 transition hover:bg-fuchsia-950/50 disabled:opacity-40";
+  return (
+    <div className="rounded-lg border border-fuchsia-900/40 bg-[#0a0716]/70 p-2">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
+      <div className="mt-1 flex items-center justify-between gap-1">
+        <button type="button" aria-label={`Quitar objeto de ${label.toLowerCase()}`} className={btn} disabled={disabled || value <= 0} onClick={onRemove}>−</button>
+        <span className={`font-mono text-sm font-black ${colorClass}`}>+{value}</span>
+        <button type="button" aria-label={`Añadir objeto de ${label.toLowerCase()}`} className={btn} disabled={disabled} onClick={onAdd}>+</button>
+      </div>
+      <p className="mt-0.5 text-center text-[9px] text-slate-500">+{step} por objeto</p>
+    </div>
+  );
+}
 
 export function AdminArenaDeckEditor() {
   const editor = useAdminArenaDeckEditor();
@@ -32,20 +49,35 @@ export function AdminArenaDeckEditor() {
   }, []);
 
   const equipDisabled = !editor.isEditMode || !ref;
+  const attackBonus = entry?.attackBonus ?? 0;
+  const defenseBonus = entry?.defenseBonus ?? 0;
+  // Valor de "un objeto" por stat (del catálogo; fallback 100), para que +/- añada/quite un objeto entero.
+  const attackStep = upgradeItems.find((item) => item.stat === "ATTACK")?.value ?? 100;
+  const defenseStep = upgradeItems.find((item) => item.stat === "DEFENSE")?.value ?? 100;
+  // Carta resuelta para la PREVIEW: base + escalado del entry + objetos, así el ATK/DEF mostrado es el real.
+  const previewCard = editor.selectedCard
+    ? applyCardProgressionToCard(
+        editor.selectedCard,
+        { playerId: "", cardId: editor.selectedCard.id, versionTier: entry?.versionTier ?? 0, level: entry?.level ?? 0, xp: entry?.xp ?? 0, masteryPassiveSkillId: null, updatedAtIso: "" },
+        { attackBonus, defenseBonus },
+      )
+    : null;
 
-  // Detalle (inspector + escalado) reutilizado en la columna desktop y en el diálogo móvil.
+  // Detalle (inspector + escalado + objetos) reutilizado en la columna desktop y en el diálogo móvil.
   const detailBody = (
     <>
-      <HomeCardInspector
-        selectedCard={editor.selectedCard}
-        selectedCardVersionTier={entry?.versionTier ?? 0}
-        selectedCardLevel={entry?.level ?? 0}
-        selectedCardXp={entry?.xp ?? 0}
-        selectedCardMasteryPassiveSkillId={null}
-        minCardScale={0.55}
-        maxCardScale={0.92}
-      />
-      <section className="rounded-xl border border-cyan-800/30 bg-[#031020]/55 p-3 text-xs text-slate-200">
+      <div className="min-h-0 flex-1">
+        <HomeCardInspector
+          selectedCard={previewCard}
+          selectedCardVersionTier={entry?.versionTier ?? 0}
+          selectedCardLevel={entry?.level ?? 0}
+          selectedCardXp={entry?.xp ?? 0}
+          selectedCardMasteryPassiveSkillId={null}
+          minCardScale={0.55}
+          maxCardScale={0.92}
+        />
+      </div>
+      <section className="shrink-0 rounded-xl border border-cyan-800/30 bg-[#031020]/55 p-3 text-xs text-slate-200">
         <p className="font-black uppercase tracking-[0.18em] text-cyan-300">Escalado de la carta</p>
         <p className="mt-1 text-[10px] text-slate-400">Vacío (0) = usa el escalado del tier. Solo cartas del mazo.</p>
         <div className="mt-2 grid grid-cols-3 gap-2">
@@ -79,45 +111,14 @@ export function AdminArenaDeckEditor() {
         </div>
       </section>
 
-      {/* Objetos equipados en la carta del rival: elige objetos del catálogo (apilable) → suman ATK/DEF en combate. */}
-      <section className="rounded-xl border border-fuchsia-800/30 bg-[#0a0716]/55 p-3 text-xs text-slate-200">
-        <div className="flex items-center justify-between">
-          <p className="font-black uppercase tracking-[0.18em] text-fuchsia-300">Objetos equipados</p>
-          <div className="flex items-center gap-1.5 font-mono text-[10px]">
-            <span className="rounded bg-rose-500/15 px-1.5 py-0.5 text-rose-300">+{entry?.attackBonus ?? 0} ATK</span>
-            <span className="rounded bg-sky-500/15 px-1.5 py-0.5 text-sky-300">+{entry?.defenseBonus ?? 0} DEF</span>
-          </div>
+      {/* Objetos equipados: dos secciones (Ataque/Defensa) con +/-. Cada + añade un objeto (su valor); apilable. */}
+      <section className="shrink-0 rounded-xl border border-fuchsia-800/30 bg-[#0a0716]/55 p-3 text-xs text-slate-200">
+        <p className="font-black uppercase tracking-[0.18em] text-fuchsia-300">Objetos equipados</p>
+        <p className="mt-1 text-[10px] text-slate-400">Cada objeto suma su valor al ATK/DEF (apilable). Solo cartas del mazo, en modo edición.</p>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <BonusStepper label="Ataque" colorClass="text-rose-300" value={attackBonus} step={attackStep} disabled={equipDisabled} onAdd={() => ref && editor.adjustBonus(ref.zone, ref.index, "ATTACK", attackStep)} onRemove={() => ref && editor.adjustBonus(ref.zone, ref.index, "ATTACK", -attackStep)} />
+          <BonusStepper label="Defensa" colorClass="text-sky-300" value={defenseBonus} step={defenseStep} disabled={equipDisabled} onAdd={() => ref && editor.adjustBonus(ref.zone, ref.index, "DEFENSE", defenseStep)} onRemove={() => ref && editor.adjustBonus(ref.zone, ref.index, "DEFENSE", -defenseStep)} />
         </div>
-        <p className="mt-1 text-[10px] text-slate-400">Cada objeto suma su valor (apilable: p. ej. 4 de ataque + 2 de defensa). Solo cartas del mazo, en modo edición.</p>
-        <div className="mt-2 flex flex-col gap-1.5">
-          {upgradeItems.length === 0 ? (
-            <p className="text-[10px] text-slate-500">No hay objetos de mejora en el catálogo. Créalos en la sección Objetos.</p>
-          ) : (
-            upgradeItems.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                aria-label={`Equipar ${item.name}`}
-                disabled={equipDisabled}
-                onClick={() => ref && editor.equipObject(ref.zone, ref.index, item.stat, item.value)}
-                className="flex h-8 items-center justify-between rounded-md border border-fuchsia-900/50 bg-[#0a0716] px-2.5 text-[11px] text-slate-100 transition hover:border-fuchsia-500 hover:bg-fuchsia-950/40 disabled:opacity-40"
-              >
-                <span className="truncate">{item.name}</span>
-                <span className={`ml-2 shrink-0 font-mono font-bold ${item.stat === "ATTACK" ? "text-rose-300" : "text-sky-300"}`}>+{item.value} {item.stat === "ATTACK" ? "ATK" : "DEF"}</span>
-              </button>
-            ))
-          )}
-        </div>
-        {((entry?.attackBonus ?? 0) > 0 || (entry?.defenseBonus ?? 0) > 0) ? (
-          <button
-            type="button"
-            disabled={equipDisabled}
-            onClick={() => ref && editor.clearObjects(ref.zone, ref.index)}
-            className="mt-1.5 text-[10px] uppercase tracking-wider text-slate-500 underline hover:text-slate-300 disabled:opacity-40"
-          >
-            Quitar objetos
-          </button>
-        ) : null}
       </section>
     </>
   );
@@ -197,8 +198,8 @@ export function AdminArenaDeckEditor() {
             onStartDragCard={() => undefined}
           />
         </div>
-        {/* Detalle inline solo en desktop; en móvil se abre como diálogo. */}
-        <div className="hidden min-h-0 flex-col gap-2 xl:flex">{detailBody}</div>
+        {/* Detalle inline solo en desktop; en móvil se abre como diálogo. Scroll propio para no cortar la carta. */}
+        <div className="home-modern-scroll hidden min-h-0 flex-col gap-2 overflow-y-auto xl:flex">{detailBody}</div>
       </div>
 
       <AdminMobileDetailDialog isOpen={isMobileInspectorOpen} onClose={() => setIsMobileInspectorOpen(false)} closeAriaLabel="Cerrar detalle de carta">
