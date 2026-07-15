@@ -20,6 +20,7 @@ verificar. Estado:
 | B2 | Rendimiento móvil (tirones) en fusiones, activar cartas, descartar con 5 en mano, sacrificar con zona llena | 🟡 causa principal atacada: `backdrop-blur` a pantalla completa sobre el tablero animado en los overlays de esos flujos (ver abajo). Falta **validar en dispositivo real** |
 | B3 | Arsenal: el **deck activo** muestra stats base; debería mostrarlas actualizadas (nivel/versión/mejoras) como el almacén | ✅ arreglado: el deck (desktop y móvil) y el detalle hidratan la carta con nivel/versión **+ mejoras**, igual que el almacén; y el almacén ahora incluye también las mejoras |
 | B4 | La cinemática de "objeto equipado" se queda clavada: el botón **Continuar** no cierra | ✅ arreglado (overlay a `fixed` centrado + cierre por fondo) |
+| B5 | Comprar una carta (p.ej. 900 Nx) **no cuenta** para la misión "Gasta 1000 Nexus" (SPEND_NEXUS) | ✅ causa hallada y arreglada: **regresión del cierre de seguridad de v1.15**. Migración **124** (rama `fix/spend-nexus-mission-tracking`). Ver nota abajo |
 
 **Nota B2 (rendimiento móvil):** los tres flujos que reporta el usuario (elegir materiales de fusión, cinemática
 de fusión, y los paneles móviles de descarte/sacrificio) muestran un overlay con `backdrop-blur` a pantalla
@@ -28,6 +29,19 @@ cada frame — es, según la memoria de perf del proyecto, el mayor asesino de F
 `FusionMaterialBrowser`, `FusionCinematicLayer` y los dos paneles de `BoardMobilePanelsDialog` (el fondo ya era
 casi opaco, así que apenas cambia el aspecto). **Es la causa más probable pero no está medido en dispositivo**:
 si el tirón persiste, el siguiente sospechoso son los re-renders por-carta de la mano/tablero con Framer Motion.
+
+**Nota B5 (SPEND_NEXUS no cuenta — regresión del cierre de seguridad):** el hook de progresión `SPEND_NEXUS`
+vivía DENTRO de `wallet_debit_nexus`, y esa RPC (mig. 044/060) estaba atada a `auth.uid()`. Al cerrar la vuln de
+la cartera (mig. 122), el código pasó a escribir con **service-role**, donde `auth.uid()` es NULL: la RPC lanzaba
+`42501` y `SupabaseWalletRepository` caía a un **fallback** de `UPDATE` directo que mueve el dinero (por eso la
+carta sí se compra) pero **se salta el hook** → la misión "Gasta 1000 Nexus" no avanza. Reproducido en producción
+(la RPC lanza `42501` bajo service-role) y arreglado con la **migración 124**: como tras la 122 SOLO `service_role`
+ejecuta esas RPC, la identidad pasa a ser el parámetro `p_player_id` (de confianza, lo deriva el servidor de la
+sesión) en `wallet_debit_nexus`/`wallet_credit_nexus`, y la progresión se registra para ese `p_player_id`
+(`record_progression_event_for`, no expuesta al cliente). Esto además **arregla la atomicidad** (ya no se usa el
+fallback lee-luego-escribe). Validado en prod con una transacción de prueba revertida: debitar 900 hace avanzar
+SPEND_NEXUS +900. Se mantiene el candado de la 122 (solo `service_role`). **Pendiente:** aplicar la 124 a
+producción y desplegar/mergear.
 
 **Nota B1 (incidente de coordinación migración/código):** la migración 122 revocó a `authenticated` la escritura
 de `player_wallets`/`player_collection_cards`/`player_card_progress` y las RPC de cartera, pero el código que las
