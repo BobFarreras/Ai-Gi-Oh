@@ -45,12 +45,10 @@ export const NEXUS_ON_BATTLE_WIN_PASSIVE_ID = "passive-nexus-on-battle-win";
 export const NEXUS_PER_BATTLE_WIN = 200;
 
 /**
- * Pasiva INNATA-only "Sobrecarga Energética" (ficha 1 v1.17): cuando ESTA entity gana un combate a una
- * entity rival (la destruye y sobrevive), su dueño gana +1 energía al empezar su SIGUIENTE turno. Es motor
- * puro (no toca economía): se cuenta en el GameState y se concede al inicio del turno. Fuera de
- * MASTERY_PASSIVE_IDS (igual que Reactivación / Recaudación).
+ * Pasiva INNATA "Sobrecarga Energética" (ficha 1 v1.17), portadora: entity-windows92. Cuando ESTA entity
+ * gana un combate a una entity rival (la destruye y sobrevive), su dueño gana energía al empezar su
+ * SIGUIENTE turno. Es motor puro (no toca economía): se cuenta en el GameState y se concede al inicio del
+ * turno. La cantidad ESCALA por versión (base +1, V5 +2) y vive en el catálogo de magnitudes
+ * (`mastery-passive-magnitude.ts`), única fuente. Fuera de MASTERY_PASSIVE_IDS (igual que Reactivación).
  */
 export const ENERGY_ON_BATTLE_WIN_PASSIVE_ID = "passive-energy-on-battle-win";
-
-/** Energía que concede la pasiva de Sobrecarga Energética por cada combate ganado (respeta maxEnergy). */
-export const ENERGY_PER_BATTLE_WIN = 1;

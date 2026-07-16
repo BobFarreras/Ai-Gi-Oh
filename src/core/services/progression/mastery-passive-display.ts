@@ -1,7 +1,6 @@
 // src/core/services/progression/mastery-passive-display.ts - Traduce identificadores de pasiva mastery a textos legibles en UI, con magnitud escalada por versión.
 import {
   ENERGY_ON_BATTLE_WIN_PASSIVE_ID,
-  ENERGY_PER_BATTLE_WIN,
   MASTERY_PASSIVE_IDS,
   NEXUS_ON_BATTLE_WIN_PASSIVE_ID,
   NEXUS_PER_BATTLE_WIN,
@@ -23,7 +22,7 @@ const PASSIVE_TEMPLATE: Record<string, (magnitude: number) => string> = {
   [MASTERY_PASSIVE_IDS.ENTITY_ATTACK_BONUS]: (m) => `Sobrecarga: al atacar a una entity rival, gana +${m} ATK en ese ataque.`,
   [REVIVE_NEXT_TURN_PASSIVE_ID]: () => "Reactivación: al ir al cementerio, revive en tu siguiente turno (si el campo está lleno, sacrifica una entity).",
   [NEXUS_ON_BATTLE_WIN_PASSIVE_ID]: () => `Recaudación: al ganar un combate a una entity rival, ganas ${NEXUS_PER_BATTLE_WIN} Nexus (solo en Story y Arena, con tope diario).`,
-  [ENERGY_ON_BATTLE_WIN_PASSIVE_ID]: () => `Sobrecarga Energética: al ganar un combate a una entity rival, ganas +${ENERGY_PER_BATTLE_WIN} energía al empezar tu siguiente turno.`,
+  [ENERGY_ON_BATTLE_WIN_PASSIVE_ID]: (m) => `Sobrecarga Energética: al ganar un combate a una entity rival, ganas +${m} de energía al empezar tu siguiente turno.`,
 };
 
 /**

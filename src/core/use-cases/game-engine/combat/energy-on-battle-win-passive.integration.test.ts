@@ -30,11 +30,19 @@ function battleState(attacker: IBoardEntity, defender: IBoardEntity): GameState 
 
 describe("pasiva Sobrecarga Energética (energía por combate ganado)", () => {
   it("al ganar un combate, apunta +1 energía pendiente al dueño (no la da en el acto)", () => {
-    const attacker = createEntity("a1", entityCard("condensador", 1500, 300, ENERGY_ON_BATTLE_WIN_PASSIVE_ID), "ATTACK");
+    const attacker = createEntity("a1", entityCard("windows92", 1500, 300, ENERGY_ON_BATTLE_WIN_PASSIVE_ID), "ATTACK");
     const defender = createEntity("d1", entityCard("def", 800, 800), "ATTACK");
     const next = GameEngine.executeAttack(battleState(attacker, defender), "p1", "a1", "d1");
     expect(next.playerB.activeEntities).toHaveLength(0);
     expect(next.pendingEnergyBonusByPlayerId?.p1).toBe(1);
+  });
+
+  it("a V5 la pasiva escala: cada combate ganado apunta +2 (magnitud plena)", () => {
+    const v5Card = { ...entityCard("windows92", 1500, 300, ENERGY_ON_BATTLE_WIN_PASSIVE_ID), versionTier: 5 };
+    const attacker = createEntity("a1", v5Card, "ATTACK");
+    const defender = createEntity("d1", entityCard("def", 800, 800), "ATTACK");
+    const next = GameEngine.executeAttack(battleState(attacker, defender), "p1", "a1", "d1");
+    expect(next.pendingEnergyBonusByPlayerId?.p1).toBe(2);
   });
 
   it("un intercambio o una derrota no apuntan energía", () => {

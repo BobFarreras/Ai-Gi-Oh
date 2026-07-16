@@ -153,9 +153,22 @@ combate" de la ficha 3:
 - Concesión + limpieza al inicio del turno del dueño en `next-phase.ts` (respeta `maxEnergy`; el HUD pulsa).
 - `innate-passive-map`: `entity-condensador`. 4 tests nuevos; 66 verdes en phases+combat.
 
-**Pendiente para cerrarla:** la **carta portadora** (entity floja `entity-condensador`, coste 4) con su
-migración + glosario. **Bloqueada por el arte del render** (a diferencia de la ficha 3, esta entity no tiene
-imagen). Decidir: ¿arte nuevo, o poner la pasiva en una entity existente?
+**CERRADA (2026-07-16, segunda tanda): portadora = `entity-windows92`, migración 133 APLICADA a prod.**
+- **Portadora:** Windows 92 (NEUTRAL, coste 3, 1200/1300, TOOL, render propio → sin arte nuevo). La innata
+  `passive-energy-on-battle-win` va en `cards_catalog.innate_passive_skill_id` + espejo en
+  `innate-passive-map.ts`. El placeholder `entity-condensador` queda eliminado.
+- **Escalado por versión (pedido del usuario):** +1 energía por combate ganado; **+2 al llegar a V5**. La
+  magnitud vive en `mastery-passive-magnitude.ts` (`{ base: 1, v5: 2 }`) y el motor la resuelve por
+  `versionTier` — el valor fijo `ENERGY_PER_BATTLE_WIN` se eliminó (una sola fuente).
+- **Sin doble poder (patrón 079):** Windows 92 sale de `card_mastery_passive_map` (adiós "Caja de
+  Herramientas" a V5 para esta carta); su innata es su identidad a todas las versiones. Progreso existente
+  sincronizado (0 filas afectadas: nadie la tenía con progresión).
+- Migración `133_windows92_energy_passive.sql` también registra ambas pasivas de "ganar combate" en
+  `card_passive_skills` (la FK del progreso lo exige; la de Recaudación queda lista para su Fase B).
+- Tests: caso V5 → +2 añadido (10/10 verdes con los de la ficha 3).
+
+**Nota para la ficha 3 Fase B:** si se quiere el mismo escalado a V5 para la Recaudación (¿200→400 Nexus?),
+decidirlo ANTES de la Fase B — afecta a los topes (600/duelo serían 1,5 combates a V5).
 
 ---
 

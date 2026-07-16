@@ -15,7 +15,8 @@ import {
   resolveEntityAttackBonus,
 } from "@/core/use-cases/game-engine/combat/internal/attack-passives";
 import { buildUpdatedAttacker, buildUpdatedDefender } from "@/core/use-cases/game-engine/combat/internal/attack-player-updates";
-import { ENERGY_PER_BATTLE_WIN, NEXUS_PER_BATTLE_WIN } from "@/core/services/progression/mastery-passive-ids";
+import { ENERGY_ON_BATTLE_WIN_PASSIVE_ID, NEXUS_PER_BATTLE_WIN } from "@/core/services/progression/mastery-passive-ids";
+import { resolvePassiveMagnitude } from "@/core/services/progression/mastery-passive-magnitude";
 
 /** Suma `amount` a un contador de GameState indexado por jugador (Recaudación / Sobrecarga), inmutable. */
 function addToPlayerCounter(
@@ -39,7 +40,9 @@ function applyBattleWinPassives(state: GameState, ownerPlayerId: string, winnerE
     next = { ...next, nexusEarnedByPlayerId: addToPlayerCounter(next.nexusEarnedByPlayerId, ownerPlayerId, NEXUS_PER_BATTLE_WIN) };
   }
   if (hasEnergyOnBattleWinPassive(winnerEntity)) {
-    next = { ...next, pendingEnergyBonusByPlayerId: addToPlayerCounter(next.pendingEnergyBonusByPlayerId, ownerPlayerId, ENERGY_PER_BATTLE_WIN) };
+    // La cantidad escala por versión (base +1, V5 +2): la fuente es el catálogo de magnitudes.
+    const energyPerWin = resolvePassiveMagnitude(ENERGY_ON_BATTLE_WIN_PASSIVE_ID, winnerEntity.card.versionTier);
+    next = { ...next, pendingEnergyBonusByPlayerId: addToPlayerCounter(next.pendingEnergyBonusByPlayerId, ownerPlayerId, energyPerWin) };
   }
   return next;
 }
