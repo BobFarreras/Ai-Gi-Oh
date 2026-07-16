@@ -123,6 +123,7 @@ export function mockDefaultUseBoardReturn() {
     cancelEntityReplacement: vi.fn(),
     activatePendingTrap: vi.fn(),
     skipPendingTrap: vi.fn(),
+    cyclePendingTrap: vi.fn(),
     restartMatch: vi.fn(),
     toggleMute: vi.fn(),
     togglePause: vi.fn(),

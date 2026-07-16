@@ -1,8 +1,8 @@
 // src/components/game/board/hooks/internal/match/useMatchRuntime.internal.ts - Agrupa composición de parámetros y resolución de trampas para mantener useMatchRuntime compacto.
 import { MutableRefObject, useCallback, useEffect, useRef } from "react";
-import { ICard } from "@/core/entities/ICard";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { toBoardUiError } from "../boardError";
+import { ITrapActivationDecision, ITrapEligibleOption, TrapDecisionTrigger } from "../board-state/useBoardUiState";
 import { IUseMatchUiStateResult } from "./useMatchUiState";
 
 interface IMatchRuntimeBasics {
@@ -59,25 +59,45 @@ export function useAssertPlayerTurn({ gameStateRef, uiState, winnerPlayerId }: I
 }
 
 export function useTrapDecisionManager({ uiState }: IUseTrapDecisionManagerInput) {
-  const trapDecisionResolverRef = useRef<((activate: boolean) => void) | null>(null);
+  const trapDecisionResolverRef = useRef<((decision: ITrapActivationDecision) => void) | null>(null);
 
+  // Ficha 4: recibe TODAS las trampas elegibles y resuelve con la que el jugador elija en el carrusel
+  // (o "pasar"). La primera se muestra por defecto; la IA nunca llega aquí (decide en el motor).
   const requestTrapActivationDecision = useCallback(
-    (trapCard: ICard, trigger: "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED" | "ON_OPPONENT_TRAP_ACTIVATED"): Promise<boolean> =>
-      new Promise<boolean>((resolve) => {
+    (traps: ITrapEligibleOption[], trigger: TrapDecisionTrigger): Promise<ITrapActivationDecision> =>
+      new Promise<ITrapActivationDecision>((resolve) => {
+        if (traps.length === 0) {
+          resolve({ activate: false });
+          return;
+        }
         trapDecisionResolverRef.current = resolve;
-        uiState.setSelectedCard(trapCard);
-        uiState.setPendingTrapActivationPrompt({ trapCard, trigger });
+        uiState.setSelectedCard(traps[0].card);
+        uiState.setPendingTrapActivationPrompt({ trigger, trapCard: traps[0].card, eligibleTraps: traps, currentIndex: 0 });
       }),
     [uiState],
   );
 
   const resolveTrapActivationDecision = useCallback(
-    (activate: boolean) => {
+    (decision: ITrapActivationDecision) => {
       uiState.setPendingTrapActivationPrompt(null);
       uiState.clearSelection();
       const resolver = trapDecisionResolverRef.current;
       trapDecisionResolverRef.current = null;
-      resolver?.(activate);
+      resolver?.(decision);
+    },
+    [uiState],
+  );
+
+  // Flecha ‹ ›: mueve el carrusel y sincroniza la carta previsualizada (para que el efecto de abajo no
+  // interprete el cambio como "el jugador se desentendió" y pase).
+  const cyclePendingTrap = useCallback(
+    (direction: -1 | 1) => {
+      const prompt = uiState.pendingTrapActivationPrompt;
+      if (!prompt || prompt.eligibleTraps.length <= 1) return;
+      const nextIndex = (prompt.currentIndex + direction + prompt.eligibleTraps.length) % prompt.eligibleTraps.length;
+      const nextCard = prompt.eligibleTraps[nextIndex].card;
+      uiState.setSelectedCard(nextCard);
+      uiState.setPendingTrapActivationPrompt({ ...prompt, currentIndex: nextIndex, trapCard: nextCard });
     },
     [uiState],
   );
@@ -86,8 +106,8 @@ export function useTrapDecisionManager({ uiState }: IUseTrapDecisionManagerInput
     const prompt = uiState.pendingTrapActivationPrompt;
     if (!prompt) return;
     if (uiState.selectedCard?.id === prompt.trapCard.id) return;
-    resolveTrapActivationDecision(false);
+    resolveTrapActivationDecision({ activate: false });
   }, [resolveTrapActivationDecision, uiState.pendingTrapActivationPrompt, uiState.selectedCard]);
 
-  return { requestTrapActivationDecision, resolveTrapActivationDecision };
+  return { requestTrapActivationDecision, resolveTrapActivationDecision, cyclePendingTrap };
 }

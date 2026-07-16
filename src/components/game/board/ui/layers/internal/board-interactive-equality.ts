@@ -45,6 +45,7 @@ export function areEqualBoardInteractiveLayerProps(previous: IBoardInteractiveLa
     previous.onActivateSelectedExecution === next.onActivateSelectedExecution &&
     previous.onActivatePendingTrap === next.onActivatePendingTrap &&
     previous.onSkipPendingTrap === next.onSkipPendingTrap &&
+    previous.onCyclePendingTrap === next.onCyclePendingTrap &&
     previous.onSetSelectedEntityToAttack === next.onSetSelectedEntityToAttack &&
     previous.onSelectCard === next.onSelectCard &&
     previous.onCloseCard === next.onCloseCard &&

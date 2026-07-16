@@ -18,10 +18,10 @@ Mano, mig. 132), **1** (Sobrecarga Energética en Windows 92 con escalado V5, mi
 objeto en el overworld del Acto 3) y **3 completa** (motor Fase A + carta Recaudador y acreditación
 server-authoritative, mig. 134).
 
-**Paquete B en curso — Ficha 4 (nivel 1, decidido):** FASE MOTOR hecha y commiteada (`194a3c53`,
-retrocompatible, la IA no cambia); **falta la FASE UI** (carrusel ‹ › + wiring de los pasos del rival +
-multi con prueba de 2 clientes). Plan detallado en la ficha 4. Después: **Ficha 5** (IA, empezando por el
-simulador IA-vs-IA).
+**Paquete B en curso — Ficha 4 (nivel 1, decidido):** motor + UI del carrusel HECHOS contra la IA
+(story/arena/training), commiteados y en verde. **Queda solo el carrusel en MULTI** (auto-resuelve la
+primera hoy, sin regresión; darle elección es otra tanda con prueba de 2 clientes — plan en la ficha 4).
+Después: **Ficha 5** (IA, empezando por el simulador IA-vs-IA).
 
 ### Ficha 3, Fase B (acreditación server-authoritative de la pasiva de Nexus)
 
@@ -308,25 +308,26 @@ no tocan).
 
 **DECIDIDO (2026-07-16): solo NIVEL 1.** Las cadenas (nivel 2) quedan para otra release.
 
-**Estado: FASE MOTOR HECHA (commit `194a3c53`), FASE UI PENDIENTE.**
-- **Motor (hecho, retrocompatible):** `findTriggeredTraps` (todas las elegibles) + `selectTriggeredTrap`
-  acepta `chosenTrapInstanceId` REVALIDADO (id que no casa → no activa ninguna; nunca cae a otra). Hilado por
-  `resolve-trap-trigger`, `trap-trigger-registry`, `execute-attack`, `resolve-execution` y `GameEngine`.
-  Sin elección = "la primera" → **la IA no cambia** (usa el default). 10 tests.
-- **Fase UI (PENDIENTE) — carrusel ‹ › en los caminos donde el HUMANO reacciona:**
-  1. `useMatchRuntime.internal.ts` `requestTrapActivationDecision`: recibir la LISTA de elegibles (no una
-     carta) y resolver con `{ activate, chosenTrapInstanceId }` en vez de un booleano.
-  2. `ITrapActivationPrompt` (`useBoardUiState`): añadir `eligibleTraps` + índice actual; `builders.ts`
-     `activatePendingTrap` arrastra el `instanceId` mostrado; `skipPendingTrap` = pasar (todas).
-  3. UI: en `SidePanels.tsx` (desktop) y `BoardMobilePanelsDialog.tsx` (móvil), flechas ‹ › si hay >1
-     elegible (cambian el `selectedCard` previsualizado); "Activar" coge la que se ve, "Pasar" = ninguna.
-  4. Pasos donde el humano reacciona a la IA: `runBattlePhaseStep` y `runMainPhaseStep` usan
-     `findReactiveTraps` (plural) y pasan `chosenTrapInstanceId` a `executeAttack`/`resolveExecution`.
-     (Cuando el humano ATACA y la IA reacciona, la IA sigue con el default "primera": no lleva carrusel.)
-  5. **Multi:** el flujo sí/no del jugador reactivo ya viaja como acción; verificar que el `chosenTrapInstanceId`
-     va en ella y que ambos clientes resuelven la MISMA trampa. **Prueba con 2 clientes (parte del DoD).**
-  - Nota de seguridad: el motor ya revalida el id (fase hecha), así que un cliente modificado no puede
-    disparar trampas que no tocan — la UI solo elige entre las elegibles.
+**Estado: HECHA contra la IA (motor `194a3c53` + UI). Carrusel en MULTI pendiente (otra tanda).**
+- **Motor (retrocompatible):** `findTriggeredTraps` (todas las elegibles) + `selectTriggeredTrap` acepta
+  `chosenTrapInstanceId` REVALIDADO (id que no casa → no activa ninguna). Hilado por todo el motor. Sin
+  elección = "la primera" → la IA no cambia. 10 tests.
+- **UI (hecha) — carrusel ‹ › donde el HUMANO reacciona a la IA (story/arena/training):**
+  - `requestTrapActivationDecision` recibe la LISTA de elegibles y resuelve `{ activate, chosenTrapInstanceId }`;
+    `ITrapActivationPrompt` lleva `eligibleTraps` + `currentIndex`; `cyclePendingTrap(±1)` navega y sincroniza
+    la carta previsualizada (para que el efecto de "desatención" no cancele).
+  - Flechas ‹ › + contador "N/M" en `SidePanels.tsx` (desktop) y `BoardMobilePanelsDialog.tsx` (móvil), solo
+    si hay >1 elegible; "Activar" coge la mostrada, "Cancelar" = pasar.
+  - `runBattlePhaseStep`/`runMainPhaseStep` usan `findReactiveTraps` (plural) y pasan `chosenTrapInstanceId`.
+    Las contra-trampas (Nullify) pasan una lista de 1 (sin carrusel). Tests: manager del carrusel + 157 del
+    tablero/trampas en verde.
+- **PENDIENTE — carrusel en MULTIJUGADOR (otra tanda, con prueba de 2 clientes):** hoy en multi la trampa
+  reactiva del defensor se **auto-resuelve por el motor (primera elegible, determinista)** vía
+  `apply-match-action` (`ATTACK`/`RESOLVE_EXECUTION` no llevan `chosenTrapInstanceId`) — SIN regresión, pero
+  sin carrusel. Para dárselo: cuando el rival ataca, el cliente del defensor debe **preguntarle** (mismo
+  `requestTrapActivationDecision`) y su elección viajar en la acción (`chosenTrapInstanceId` en el payload de
+  `IMatchAction` + `apply-match-action` pasándolo al motor), con ambos clientes resolviendo la misma. Es un
+  flujo de decisión que hoy no existe en multi (el `declineCounterTrap` viaja, pero no una elección de trampa).
 
 ---
 

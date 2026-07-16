@@ -4,7 +4,7 @@
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { useCardLookup, detailPanelClass, historyPanelClass, useDetailCardScale, useVisibleCombatEvents } from "@/components/game/board/internal/side-panels-state";
@@ -27,6 +27,8 @@ interface SidePanelsProps {
   onActivateSelectedExecution?: () => void;
   onActivatePendingTrap?: () => void;
   onSkipPendingTrap?: () => void;
+  /** Ficha 4: navega el carrusel entre trampas elegibles (‹ ›). */
+  onCyclePendingTrap?: (direction: -1 | 1) => void;
 }
 
 export function SidePanels({
@@ -41,6 +43,7 @@ export function SidePanels({
   onActivateSelectedExecution = () => undefined,
   onActivatePendingTrap = () => undefined,
   onSkipPendingTrap = () => undefined,
+  onCyclePendingTrap = () => undefined,
 }: SidePanelsProps) {
   const [turnFilter, setTurnFilter] = useState<number | "ALL">("ALL");
   const [actorFilter, setActorFilter] = useState<"ALL" | "PLAYER" | "OPPONENT">("ALL");
@@ -87,11 +90,37 @@ export function SidePanels({
           >
             <X size={24} />
           </button>
-          <div className="relative mt-1 mb-2 flex justify-center z-10 shrink-0 h-[clamp(10rem,24vh,13rem)] overflow-hidden">
+          <div className="relative mt-1 mb-2 flex items-center justify-center gap-1 z-10 shrink-0 h-[clamp(10rem,24vh,13rem)] overflow-hidden">
+            {/* Ficha 4: carrusel ‹ › cuando el jugador tiene varias trampas elegibles para este disparo. */}
+            {isTrapPromptForSelectedCard && (pendingTrapActivationPrompt?.eligibleTraps.length ?? 0) > 1 ? (
+              <button
+                type="button"
+                aria-label="Trampa anterior"
+                onClick={() => onCyclePendingTrap(-1)}
+                className="shrink-0 rounded-full border border-fuchsia-300/60 bg-fuchsia-950/70 p-1 text-fuchsia-100 hover:bg-fuchsia-800/60"
+              >
+                <ChevronLeft size={20} />
+              </button>
+            ) : null}
             <div key={liveSelectedCard.runtimeId ?? liveSelectedCard.id} className="origin-top" style={{ transform: `scale(${detailCardScale})` }}>
               <Card card={liveSelectedCard} isPerformanceMode={shouldReduceCombatEffects} showBackgroundInPerformanceMode />
             </div>
+            {isTrapPromptForSelectedCard && (pendingTrapActivationPrompt?.eligibleTraps.length ?? 0) > 1 ? (
+              <button
+                type="button"
+                aria-label="Trampa siguiente"
+                onClick={() => onCyclePendingTrap(1)}
+                className="shrink-0 rounded-full border border-fuchsia-300/60 bg-fuchsia-950/70 p-1 text-fuchsia-100 hover:bg-fuchsia-800/60"
+              >
+                <ChevronRight size={20} />
+              </button>
+            ) : null}
           </div>
+          {isTrapPromptForSelectedCard && (pendingTrapActivationPrompt?.eligibleTraps.length ?? 0) > 1 ? (
+            <p className="shrink-0 -mt-1 mb-1 text-center text-[10px] font-black uppercase tracking-[0.16em] text-fuchsia-200">
+              Elige trampa · {(pendingTrapActivationPrompt?.currentIndex ?? 0) + 1}/{pendingTrapActivationPrompt?.eligibleTraps.length}
+            </p>
+          ) : null}
           {(canActivateSelectedExecution || isTrapPromptForSelectedCard) ? (
             <div className="shrink-0 mb-2 flex items-center gap-2 border-y border-zinc-800 py-2">
               <button

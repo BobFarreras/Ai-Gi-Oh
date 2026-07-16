@@ -78,7 +78,7 @@ export async function handleOpponentEntityClick({
   // El jugador decide si activa su contra-trampa (Nullify) para negar la trampa rival, igual que el
   // resto de trampas. Si la rechaza, la trampa rival resuelve con normalidad.
   const activateCounterTrap = playerCounterTrap
-    ? await requestTrapActivationDecision(playerCounterTrap.card, "ON_OPPONENT_TRAP_ACTIVATED")
+    ? (await requestTrapActivationDecision([{ card: playerCounterTrap.card, instanceId: playerCounterTrap.instanceId }], "ON_OPPONENT_TRAP_ACTIVATED")).activate
     : false;
   if (playerCounterTrap && activateCounterTrap) {
     setRevealedEntities((previous) => addRevealedId(previous, playerCounterTrap.instanceId));

@@ -4,7 +4,7 @@
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { Card } from "@/components/game/card/Card";
@@ -20,6 +20,8 @@ interface BoardMobilePanelsDialogProps {
   onCloseHistory: () => void;
   onActivatePendingTrap?: () => void;
   onSkipPendingTrap?: () => void;
+  /** Ficha 4: navega el carrusel entre trampas elegibles (‹ ›). */
+  onCyclePendingTrap?: (direction: -1 | 1) => void;
 }
 
 export function BoardMobilePanelsDialog({
@@ -29,6 +31,7 @@ export function BoardMobilePanelsDialog({
   onCloseHistory,
   onActivatePendingTrap = () => undefined,
   onSkipPendingTrap = () => undefined,
+  onCyclePendingTrap = () => undefined,
 }: BoardMobilePanelsDialogProps) {
   const [turnFilter, setTurnFilter] = useState<number | "ALL">("ALL");
   const [actorFilter, setActorFilter] = useState<"ALL" | "PLAYER" | "OPPONENT">("ALL");
@@ -95,7 +98,23 @@ export function BoardMobilePanelsDialog({
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-black uppercase tracking-[0.16em] text-fuchsia-200">Decisión de trampa</p>
-                  <p className="mt-1 text-xs font-bold text-fuchsia-100">¿Quieres activar esta carta trampa?</p>
+                  {(pendingTrapActivationPrompt?.eligibleTraps.length ?? 0) > 1 ? (
+                    <>
+                      <p className="mt-1 text-xs font-bold text-fuchsia-100">Elige qué trampa activar.</p>
+                      {/* Ficha 4: carrusel ‹ › entre las trampas elegibles (móvil). */}
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <button type="button" aria-label="Trampa anterior" onClick={() => onCyclePendingTrap(-1)} className="rounded-full border border-fuchsia-300/60 bg-fuchsia-950/70 p-0.5 text-fuchsia-100">
+                          <ChevronLeft size={16} />
+                        </button>
+                        <span className="text-[10px] font-black tracking-widest text-fuchsia-200">{(pendingTrapActivationPrompt?.currentIndex ?? 0) + 1}/{pendingTrapActivationPrompt?.eligibleTraps.length}</span>
+                        <button type="button" aria-label="Trampa siguiente" onClick={() => onCyclePendingTrap(1)} className="rounded-full border border-fuchsia-300/60 bg-fuchsia-950/70 p-0.5 text-fuchsia-100">
+                          <ChevronRight size={16} />
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="mt-1 text-xs font-bold text-fuchsia-100">¿Quieres activar esta carta trampa?</p>
+                  )}
                 </div>
               </div>
             ) : null}

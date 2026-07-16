@@ -116,6 +116,7 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
             onActivateSelectedExecution={props.onActivateSelectedExecution}
             onActivatePendingTrap={props.onActivatePendingTrap}
             onSkipPendingTrap={props.onSkipPendingTrap}
+            onCyclePendingTrap={props.onCyclePendingTrap}
           />
         </div>
       )}

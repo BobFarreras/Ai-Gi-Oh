@@ -15,6 +15,17 @@ export function findReactiveTrap(state: GameState, reactivePlayerId: string, tri
   return reactivePlayer.activeExecutions.find((entity) => isMatchingTrap(entity, trigger) && trapActivationConditionMet(entity, reactivePlayer, context)) ?? null;
 }
 
+/** TODAS las trampas reactivas elegibles para el disparo (ficha 4): el motor y la UI comparten el criterio. */
+export function findReactiveTraps(state: GameState, reactivePlayerId: string, trigger: TrapTrigger, context?: ITrapTriggerContext): IBoardEntity[] {
+  const reactivePlayer = state.playerA.id === reactivePlayerId ? state.playerA : state.playerB;
+  return reactivePlayer.activeExecutions.filter((entity) => isMatchingTrap(entity, trigger) && trapActivationConditionMet(entity, reactivePlayer, context));
+}
+
+/** Adapta entities de trampa al formato del carrusel de decisión (carta + instanceId). */
+export function toTrapEligibleOptions(traps: IBoardEntity[]): { card: import("@/core/entities/ICard").ICard; instanceId: string }[] {
+  return traps.map((entity) => ({ card: entity.card, instanceId: entity.instanceId }));
+}
+
 export function addRevealedId(ids: string[], entityId: string): string[] {
   if (ids.includes(entityId)) {
     return ids;
