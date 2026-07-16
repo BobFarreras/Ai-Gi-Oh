@@ -1,4 +1,6 @@
-// src/components/admin/internal/arena/AdminArenaCardDialog.tsx - Diálogo modal para editar una carta del mazo de arena (carta, versión, nivel, xp).
+// src/components/admin/internal/arena/AdminArenaCardDialog.tsx - Diálogo modal para editar una carta del mazo de
+// arena (carta, versión, nivel, xp). Los objetos equipados se gestionan en el editor visual de mazos
+// (AdminArenaDeckEditor → "Objetos equipados"), no aquí.
 "use client";
 
 import { createPortal } from "react-dom";

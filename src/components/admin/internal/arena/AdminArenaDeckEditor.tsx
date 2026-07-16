@@ -1,7 +1,11 @@
 // src/components/admin/internal/arena/AdminArenaDeckEditor.tsx - Editor visual de mazos de arena (4 columnas estilo Story): oponentes, mazo, almacén, detalle.
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { IAdminCardUpgradeItemEntry } from "@/core/entities/admin/IAdminShopObjects";
+import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
+import { fetchAdminShopObjects } from "@/components/admin/admin-objects-api";
+import { BonusStepper, CollapsibleSection } from "@/components/admin/internal/DetailBonusControls";
 import { AdminMobileDetailDialog } from "@/components/admin/internal/AdminMobileDetailDialog";
 import { AdminStarterDeckCollectionPanel } from "@/components/admin/internal/AdminStarterDeckCollectionPanel";
 import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
@@ -20,22 +24,46 @@ export function AdminArenaDeckEditor() {
   const ref = editor.selectedDeckRef;
   const entry = editor.selectedEntry;
   const [isMobileInspectorOpen, setIsMobileInspectorOpen] = useState(false);
+  const [upgradeItems, setUpgradeItems] = useState<IAdminCardUpgradeItemEntry[]>([]);
 
-  // Detalle (inspector + escalado) reutilizado en la columna desktop y en el diálogo móvil.
+  // Catálogo de objetos de mejora para equipar en las cartas del rival. Fallo → sin picker (edición normal sigue).
+  useEffect(() => {
+    let active = true;
+    fetchAdminShopObjects().then((snapshot) => { if (active) setUpgradeItems(snapshot.upgradeItems); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  const equipDisabled = !editor.isEditMode || !ref;
+  const attackBonus = entry?.attackBonus ?? 0;
+  const defenseBonus = entry?.defenseBonus ?? 0;
+  // Valor de "un objeto" por stat (del catálogo; fallback 100), para que +/- añada/quite un objeto entero.
+  const attackStep = upgradeItems.find((item) => item.stat === "ATTACK")?.value ?? 100;
+  const defenseStep = upgradeItems.find((item) => item.stat === "DEFENSE")?.value ?? 100;
+  // Carta resuelta para la PREVIEW: base + escalado del entry + objetos, así el ATK/DEF mostrado es el real.
+  const previewCard = editor.selectedCard
+    ? applyCardProgressionToCard(
+        editor.selectedCard,
+        { playerId: "", cardId: editor.selectedCard.id, versionTier: entry?.versionTier ?? 0, level: entry?.level ?? 0, xp: entry?.xp ?? 0, masteryPassiveSkillId: null, updatedAtIso: "" },
+        { attackBonus, defenseBonus },
+      )
+    : null;
+
+  // Detalle (inspector + escalado + objetos) reutilizado en la columna desktop y en el diálogo móvil.
   const detailBody = (
     <>
-      <HomeCardInspector
-        selectedCard={editor.selectedCard}
-        selectedCardVersionTier={entry?.versionTier ?? 0}
-        selectedCardLevel={entry?.level ?? 0}
-        selectedCardXp={entry?.xp ?? 0}
-        selectedCardMasteryPassiveSkillId={null}
-        minCardScale={0.55}
-        maxCardScale={0.92}
-      />
-      <section className="rounded-xl border border-cyan-800/30 bg-[#031020]/55 p-3 text-xs text-slate-200">
-        <p className="font-black uppercase tracking-[0.18em] text-cyan-300">Escalado de la carta</p>
-        <p className="mt-1 text-[10px] text-slate-400">Vacío (0) = usa el escalado del tier. Solo cartas del mazo.</p>
+      <div className="min-h-0 flex-1">
+        <HomeCardInspector
+          selectedCard={previewCard}
+          selectedCardVersionTier={entry?.versionTier ?? 0}
+          selectedCardLevel={entry?.level ?? 0}
+          selectedCardXp={entry?.xp ?? 0}
+          selectedCardMasteryPassiveSkillId={null}
+          minCardScale={0.55}
+          maxCardScale={0.92}
+        />
+      </div>
+      <CollapsibleSection title="Escalado de la carta" accent="cyan">
+        <p className="text-[10px] text-slate-400">Vacío (0) = usa el escalado del tier. Solo cartas del mazo.</p>
         <div className="mt-2 grid grid-cols-3 gap-2">
           {SCALE_FIELDS.map((field) => (
             <label key={field.key} className="text-[10px] text-slate-400">
@@ -65,7 +93,16 @@ export function AdminArenaDeckEditor() {
             />
           </label>
         </div>
-      </section>
+      </CollapsibleSection>
+
+      {/* Objetos equipados: dos secciones (Ataque/Defensa) con +/-. Cada + añade un objeto (su valor); apilable. */}
+      <CollapsibleSection title="Objetos equipados" accent="fuchsia">
+        <p className="text-[10px] text-slate-400">Cada objeto suma su valor al ATK/DEF (apilable). Solo cartas del mazo, en modo edición.</p>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <BonusStepper label="Ataque" colorClass="text-rose-300" value={attackBonus} step={attackStep} disabled={equipDisabled} onAdd={() => ref && editor.adjustBonus(ref.zone, ref.index, "ATTACK", attackStep)} onRemove={() => ref && editor.adjustBonus(ref.zone, ref.index, "ATTACK", -attackStep)} />
+          <BonusStepper label="Defensa" colorClass="text-sky-300" value={defenseBonus} step={defenseStep} disabled={equipDisabled} onAdd={() => ref && editor.adjustBonus(ref.zone, ref.index, "DEFENSE", defenseStep)} onRemove={() => ref && editor.adjustBonus(ref.zone, ref.index, "DEFENSE", -defenseStep)} />
+        </div>
+      </CollapsibleSection>
     </>
   );
 
@@ -144,7 +181,8 @@ export function AdminArenaDeckEditor() {
             onStartDragCard={() => undefined}
           />
         </div>
-        {/* Detalle inline solo en desktop; en móvil se abre como diálogo. */}
+        {/* Detalle inline solo en desktop; en móvil se abre como diálogo. La carta ocupa el espacio flexible;
+            las secciones plegables no le comen alto. */}
         <div className="hidden min-h-0 flex-col gap-2 xl:flex">{detailBody}</div>
       </div>
 

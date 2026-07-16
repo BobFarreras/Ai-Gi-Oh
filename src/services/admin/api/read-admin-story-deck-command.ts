@@ -34,12 +34,15 @@ function readOptionalDuelConfig(payload: JsonObject): IAdminSaveStoryDeckCommand
     slotOverrides: slotOverrides.map((entry) => {
       if (!entry || typeof entry !== "object" || Array.isArray(entry)) throw new ValidationError("slotOverrides contiene entradas inválidas.");
       const slot = entry as JsonObject;
+      const readNullableNumber = (raw: unknown): number | null => (typeof raw === "number" && Number.isFinite(raw) ? raw : null);
       return {
         slotIndex: Number(slot.slotIndex ?? -1),
         cardId: String(slot.cardId ?? ""),
         versionTier: Number(slot.versionTier ?? 0),
         level: Number(slot.level ?? 0),
         xp: Number(slot.xp ?? 0),
+        attackOverride: readNullableNumber(slot.attackOverride),
+        defenseOverride: readNullableNumber(slot.defenseOverride),
       };
     }),
   };

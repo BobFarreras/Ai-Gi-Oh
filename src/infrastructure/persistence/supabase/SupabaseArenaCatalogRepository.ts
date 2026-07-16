@@ -7,7 +7,7 @@ import { OpponentDifficulty } from "@/core/services/opponent/difficulty/types";
 interface ITierRow { tier: number; code: string; required_wins_in_previous_tier: number; ai_difficulty: string; opponent_id: string; reward_multiplier: number; default_version_tier: number | null; default_level: number | null; default_xp: number | null }
 interface IOpponentRow { id: string; code_name: string; display_name: string; avatar_url: string; intro_url: string; story_opponent_id: string }
 interface IVariantRow { id: string; opponent_id: string; label: string | null }
-interface ICardRow { variant_id: string; card_id: string; zone: "DECK" | "FUSION"; version_tier: number | null; level: number | null; xp: number | null }
+interface ICardRow { variant_id: string; card_id: string; zone: "DECK" | "FUSION"; version_tier: number | null; level: number | null; xp: number | null; attack_bonus: number | null; defense_bonus: number | null }
 
 export class SupabaseArenaCatalogRepository {
   constructor(private readonly client: SupabaseClient) {}
@@ -38,7 +38,7 @@ export class SupabaseArenaCatalogRepository {
     const [opponentsRes, variantsRes, cardsRes] = await Promise.all([
       this.client.from("arena_opponents").select("id,code_name,display_name,avatar_url,intro_url,story_opponent_id").eq("is_active", true).order("sort_order", { ascending: true }),
       this.client.from("arena_opponent_deck_variants").select("id,opponent_id,label").eq("is_active", true).order("sort_order", { ascending: true }),
-      this.client.from("arena_deck_variant_cards").select("variant_id,card_id,zone,version_tier,level,xp").order("sort_order", { ascending: true }),
+      this.client.from("arena_deck_variant_cards").select("variant_id,card_id,zone,version_tier,level,xp,attack_bonus,defense_bonus").order("sort_order", { ascending: true }),
     ]);
     if (opponentsRes.error || variantsRes.error || cardsRes.error || !opponentsRes.data) return {};
 
@@ -48,7 +48,7 @@ export class SupabaseArenaCatalogRepository {
       list.push(card);
       cardsByVariant.set(card.variant_id, list);
     }
-    const toEntry = (row: ICardRow): IArenaDeckCardEntry => ({ cardId: row.card_id, versionTier: row.version_tier, level: row.level, xp: row.xp });
+    const toEntry = (row: ICardRow): IArenaDeckCardEntry => ({ cardId: row.card_id, versionTier: row.version_tier, level: row.level, xp: row.xp, attackBonus: row.attack_bonus, defenseBonus: row.defense_bonus });
 
     const opponents: Record<string, IArenaOpponent> = {};
     for (const opponent of opponentsRes.data as IOpponentRow[]) {

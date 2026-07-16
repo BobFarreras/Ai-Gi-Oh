@@ -25,7 +25,7 @@ export function AdminArenaCardList({ title, cards, validCards, onChange }: IAdmi
     setEditingIndex(null);
   };
   const addCard = () => {
-    onChange([...cards, { cardId: validCards[0]?.id ?? "", versionTier: null, level: null, xp: null }]);
+    onChange([...cards, { cardId: validCards[0]?.id ?? "", versionTier: null, level: null, xp: null, attackBonus: null, defenseBonus: null }]);
     setEditingIndex(cards.length);
   };
 
@@ -38,7 +38,7 @@ export function AdminArenaCardList({ title, cards, validCards, onChange }: IAdmi
       <div className="grid grid-cols-[repeat(auto-fill,minmax(52px,1fr))] gap-1.5">
         {cards.map((card, index) => {
           const resolved = cardById.get(card.cardId);
-          const hasOverride = card.versionTier !== null || card.level !== null || card.xp !== null;
+          const hasOverride = card.versionTier !== null || card.level !== null || card.xp !== null || (card.attackBonus ?? 0) > 0 || (card.defenseBonus ?? 0) > 0;
           return (
             <button key={index} type="button" aria-label={`Editar ${resolved?.name ?? card.cardId}`} className="group relative aspect-[13/19] rounded transition hover:ring-2 hover:ring-cyan-400" onClick={() => setEditingIndex(index)}>
               {resolved ? <CardThumbnail card={resolved} versionTier={card.versionTier ?? 0} level={card.level ?? undefined} xp={card.xp ?? 0} /> : <div className="h-full w-full rounded border border-dashed border-slate-700" />}

@@ -58,6 +58,8 @@ export function applyArenaCardScaling(
       level: entry.level ?? baseScale.level,
       xp: entry.xp ?? baseScale.xp,
     };
-    return [applyCardProgressionToCard(card, toOpponentProgress(card, scale))];
+    // Objetos equipados en la carta del rival: mismo canal de upgrades que el jugador (suma plana ATK/DEF).
+    const upgrades = { attackBonus: entry.attackBonus ?? 0, defenseBonus: entry.defenseBonus ?? 0 };
+    return [applyCardProgressionToCard(card, toOpponentProgress(card, scale), upgrades)];
   });
 }

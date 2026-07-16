@@ -3,7 +3,7 @@
 // serializa/reproduce igual en multijugador.
 
 /** Tipos de estado soportados. */
-export type StatusEffectKind = "NO_DIRECT_ATTACKS" | "DAMAGE_OVER_TIME" | "HEAL_OVER_TIME";
+export type StatusEffectKind = "NO_DIRECT_ATTACKS" | "DAMAGE_OVER_TIME" | "HEAL_OVER_TIME" | "DEFENSE_CAN_ATTACK";
 
 export interface IActiveStatusEffect {
   /** Identificador determinista (mismo en ambos clientes). */

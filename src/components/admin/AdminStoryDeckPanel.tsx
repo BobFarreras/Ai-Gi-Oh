@@ -1,14 +1,17 @@
 // src/components/admin/AdminStoryDeckPanel.tsx - Panel principal para administrar mazos Story por oponente con edición visual y guardado seguro.
 "use client";
 import Image from "next/image";
-import { DragEvent, memo, useMemo, useState } from "react";
+import { DragEvent, memo, useEffect, useMemo, useState } from "react";
 import { IAdminStoryDeckApiResponse } from "@/components/admin/admin-story-deck-api";
+import { IAdminCardUpgradeItemEntry } from "@/core/entities/admin/IAdminShopObjects";
 import { AdminMobileDetailDialog } from "@/components/admin/internal/AdminMobileDetailDialog";
 import { AdminStarterDeckCollectionPanel } from "@/components/admin/internal/AdminStarterDeckCollectionPanel";
 import { AdminStoryDeckSlotsPanel } from "@/components/admin/internal/AdminStoryDeckSlotsPanel";
 import { AdminStoryDuelCatalog } from "@/components/admin/internal/AdminStoryDuelCatalog";
 import { AdminStoryOpponentCatalog } from "@/components/admin/internal/AdminStoryOpponentCatalog";
+import { BonusStepper, CollapsibleSection } from "@/components/admin/internal/DetailBonusControls";
 import { readAdminStarterDeckDragData, writeAdminStarterDeckDragData } from "@/components/admin/internal/admin-starter-deck-dnd";
+import { fetchAdminShopObjects } from "@/components/admin/admin-objects-api";
 import { useAdminStoryDeckEditor } from "@/components/admin/internal/use-admin-story-deck-editor";
 import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
 
@@ -35,6 +38,35 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
   const selectedSlotLevels = editor.selectedSlotIndex === null ? null : (editor.draftSlotLevels[editor.selectedSlotIndex] ?? null);
   const isDuelMode = !editor.isBaseDeckMode && editor.selectedDuelId !== null;
   const hasErrorFeedback = editor.feedback.toLowerCase().includes("no se pudo");
+
+  // Catálogo de objetos de mejora para equipar en las cartas del rival de Story. Fallo → sin picker.
+  const [upgradeItems, setUpgradeItems] = useState<IAdminCardUpgradeItemEntry[]>([]);
+  useEffect(() => {
+    let active = true;
+    fetchAdminShopObjects().then((snapshot) => { if (active) setUpgradeItems(snapshot.upgradeItems); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+  const attackStep = upgradeItems.find((item) => item.stat === "ATTACK")?.value ?? 100;
+  const defenseStep = upgradeItems.find((item) => item.stat === "DEFENSE")?.value ?? 100;
+  // Story NO aplica curva de nivel: el combate usa attackOverride ?? base. La preview refleja eso mismo.
+  const baseAttack = typeof selectedCard?.attack === "number" ? selectedCard.attack : null;
+  const baseDefense = typeof selectedCard?.defense === "number" ? selectedCard.defense : null;
+  const effectiveAttack = selectedSlotLevels?.attackOverride ?? baseAttack;
+  const effectiveDefense = selectedSlotLevels?.defenseOverride ?? baseDefense;
+  const attackBonus = baseAttack !== null && effectiveAttack !== null ? Math.max(0, effectiveAttack - baseAttack) : 0;
+  const defenseBonus = baseDefense !== null && effectiveDefense !== null ? Math.max(0, effectiveDefense - baseDefense) : 0;
+  const previewCard = selectedCard ? { ...selectedCard, attack: effectiveAttack ?? selectedCard.attack, defense: effectiveDefense ?? selectedCard.defense } : null;
+  const objectsDisabled = editor.selectedSlotIndex === null || editor.isBaseDeckMode || !isDuelMode;
+  const idx = editor.selectedSlotIndex;
+  function stepObject(stat: "ATTACK" | "DEFENSE", direction: 1 | -1) {
+    if (idx === null) return;
+    const base = stat === "ATTACK" ? baseAttack : baseDefense;
+    if (base === null) return;
+    const step = stat === "ATTACK" ? attackStep : defenseStep;
+    const current = (stat === "ATTACK" ? selectedSlotLevels?.attackOverride : selectedSlotLevels?.defenseOverride) ?? base;
+    const next = current + direction * step;
+    editor.setDraftSlotOverrideByIndex(idx, stat, next <= base ? null : next);
+  }
 
   function onDropOnSlot(slotIndex: number, event: DragEvent<HTMLElement>): void {
     if (!editor.isEditMode) return;
@@ -400,20 +432,22 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
         />
         </div>
 
-        {/* Detalle (inspector + escalado): inline solo en desktop; en móvil se abre como diálogo. */}
+        {/* Detalle (inspector + escalado + objetos): inline solo en desktop; en móvil se abre como diálogo.
+            La carta ocupa el espacio flexible; las secciones plegables no le comen alto. */}
         <div className="hidden min-h-0 flex-col gap-2 xl:flex">
-          <HomeCardInspector
-            selectedCard={selectedCard}
-            selectedCardVersionTier={selectedSlotLevels?.versionTier ?? 0}
-            selectedCardLevel={selectedSlotLevels?.level ?? 0}
-            selectedCardXp={selectedSlotLevels?.xp ?? 0}
-            selectedCardMasteryPassiveSkillId={null}
-            minCardScale={0.62}
-            maxCardScale={0.95}
-          />
-          <section className="rounded-xl border border-cyan-800/30 bg-[#031020]/55 p-3 text-xs text-slate-200">
-            <p className="font-black uppercase tracking-[0.18em] text-cyan-300">Escalado Slot</p>
-            <p className="mt-1 text-[10px] text-slate-400">Afecta todas las copias de la misma carta en este deck.</p>
+          <div className="min-h-0 flex-1">
+            <HomeCardInspector
+              selectedCard={previewCard}
+              selectedCardVersionTier={selectedSlotLevels?.versionTier ?? 0}
+              selectedCardLevel={selectedSlotLevels?.level ?? 0}
+              selectedCardXp={selectedSlotLevels?.xp ?? 0}
+              selectedCardMasteryPassiveSkillId={null}
+              minCardScale={0.62}
+              maxCardScale={0.95}
+            />
+          </div>
+          <CollapsibleSection title="Escalado Slot" accent="cyan">
+            <p className="text-[10px] text-slate-400">Afecta todas las copias de la misma carta en este deck.</p>
             <div className="mt-2 grid grid-cols-3 gap-2">
               <label className="text-[10px] text-slate-400">
                 Ver
@@ -454,13 +488,23 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
                 />
               </label>
             </div>
-          </section>
+          </CollapsibleSection>
+
+          {/* Objetos equipados: dos secciones (Ataque/Defensa) con +/-. Cada + añade un objeto (su valor);
+              apilable → cartas fuertes por oponente. Se guarda como stats absolutas (override) del rival. */}
+          <CollapsibleSection title="Objetos equipados" accent="fuchsia">
+            <p className="text-[10px] text-slate-400">Cada objeto suma su valor al ATK/DEF del rival (apilable). Solo en duelo, en modo edición.</p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <BonusStepper label="Ataque" colorClass="text-rose-300" value={attackBonus} step={attackStep} disabled={objectsDisabled || baseAttack === null} onAdd={() => stepObject("ATTACK", 1)} onRemove={() => stepObject("ATTACK", -1)} />
+              <BonusStepper label="Defensa" colorClass="text-sky-300" value={defenseBonus} step={defenseStep} disabled={objectsDisabled || baseDefense === null} onAdd={() => stepObject("DEFENSE", 1)} onRemove={() => stepObject("DEFENSE", -1)} />
+            </div>
+          </CollapsibleSection>
         </div>
       </div>
 
       <AdminMobileDetailDialog isOpen={isMobileInspectorOpen} onClose={() => setIsMobileInspectorOpen(false)} closeAriaLabel="Cerrar detalle de carta">
         <HomeCardInspector
-          selectedCard={selectedCard}
+          selectedCard={previewCard}
           selectedCardVersionTier={selectedSlotLevels?.versionTier ?? 0}
           selectedCardLevel={selectedSlotLevels?.level ?? 0}
           selectedCardXp={selectedSlotLevels?.xp ?? 0}

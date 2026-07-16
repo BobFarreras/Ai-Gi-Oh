@@ -24,12 +24,15 @@ export function validateAttackDeclaration(state: GameState, attackerPlayerId: st
 
 export function validateAttackerEntity(
   attackerEntity: IBoardEntity | undefined,
+  canAttackFromDefense = false,
 ): IBoardEntity {
   if (!attackerEntity) {
     throw new NotFoundError("La carta atacante no está en el campo");
   }
 
-  if (attackerEntity.mode !== "ATTACK") {
+  // Normalmente solo atacan las de modo ATAQUE; con "Escudo Firewall Ofensivo" activo, una entidad en
+  // DEFENSA (boca arriba) también puede atacar (usando su DEF; ver attack-resolution). SET (boca abajo) no.
+  if (attackerEntity.mode !== "ATTACK" && !(attackerEntity.mode === "DEFENSE" && canAttackFromDefense)) {
     throw new GameRuleError("Solo las cartas en modo ATAQUE pueden atacar");
   }
 

@@ -28,7 +28,7 @@ function readCardEntries(value: unknown, field: string): IAdminArenaCardEntry[] 
   if (!Array.isArray(value)) throw new ValidationError(`${field} debe ser una lista de cartas.`);
   return value.map((raw) => {
     const entry = raw as Raw;
-    return { cardId: asString(entry.cardId, "La carta"), versionTier: asOptionalNumber(entry.versionTier), level: asOptionalNumber(entry.level), xp: asOptionalNumber(entry.xp) };
+    return { cardId: asString(entry.cardId, "La carta"), versionTier: asOptionalNumber(entry.versionTier), level: asOptionalNumber(entry.level), xp: asOptionalNumber(entry.xp), attackBonus: asOptionalNumber(entry.attackBonus), defenseBonus: asOptionalNumber(entry.defenseBonus) };
   });
 }
 

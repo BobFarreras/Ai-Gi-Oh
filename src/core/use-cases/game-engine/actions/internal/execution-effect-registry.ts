@@ -30,6 +30,7 @@ type ExecutionAction =
   | "BOOST_ATTACK_BY_CARD_ID"
   | "DAMAGE_IF_ALLY_ON_BOARD"
   | "APPLY_NO_DIRECT_ATTACKS"
+  | "ALLOW_DEFENSE_MODE_ATTACK"
   | "DRAIN_OPPONENT_ENERGY"
   | "SET_CARD_DUEL_PROGRESS"
   | "REDUCE_OPPONENT_ATTACK"
@@ -92,6 +93,11 @@ const executionEffectHandlers: { [K in ExecutionAction]: ExecutionHandler<K> } =
   APPLY_NO_DIRECT_ATTACKS: (player, opponent, effect) => ({
     ...createBaseResult(player, opponent),
     addedStatusEffects: [{ kind: "NO_DIRECT_ATTACKS", targetPlayerId: opponent.id, remainingTurns: Math.max(1, Math.trunc(effect.turns)) }],
+  }),
+  // Escudo Firewall Ofensivo: este turno, TUS entidades en defensa pueden atacar con su DEF (sin cambiar de modo).
+  ALLOW_DEFENSE_MODE_ATTACK: (player, opponent) => ({
+    ...createBaseResult(player, opponent),
+    addedStatusEffects: [{ kind: "DEFENSE_CAN_ATTACK", targetPlayerId: player.id, remainingTurns: 1 }],
   }),
   DRAIN_OPPONENT_ENERGY: (player, opponent) => {
     const drainedAmount = Math.max(0, opponent.currentEnergy);
@@ -157,6 +163,7 @@ export function resolveExecutionEffectFromRegistry(player: IPlayer, opponent: IP
   if (effect.action === "BOOST_ATTACK_BY_CARD_ID") return executionEffectHandlers.BOOST_ATTACK_BY_CARD_ID(player, opponent, effect);
   if (effect.action === "DAMAGE_IF_ALLY_ON_BOARD") return executionEffectHandlers.DAMAGE_IF_ALLY_ON_BOARD(player, opponent, effect);
   if (effect.action === "APPLY_NO_DIRECT_ATTACKS") return executionEffectHandlers.APPLY_NO_DIRECT_ATTACKS(player, opponent, effect);
+  if (effect.action === "ALLOW_DEFENSE_MODE_ATTACK") return executionEffectHandlers.ALLOW_DEFENSE_MODE_ATTACK(player, opponent, effect);
   if (effect.action === "DRAIN_OPPONENT_ENERGY") return executionEffectHandlers.DRAIN_OPPONENT_ENERGY(player, opponent, effect);
   if (effect.action === "SET_CARD_DUEL_PROGRESS") return executionEffectHandlers.SET_CARD_DUEL_PROGRESS(player, opponent, effect);
   if (effect.action === "REDUCE_OPPONENT_ATTACK") return executionEffectHandlers.REDUCE_OPPONENT_ATTACK(player, opponent, effect);

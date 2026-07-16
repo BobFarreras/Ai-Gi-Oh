@@ -4,6 +4,7 @@
 import { motion } from "framer-motion";
 import { Card } from "@/components/game/card/Card";
 import { ICard } from "@/core/entities/ICard";
+import { resolveLevelUpStatGain } from "@/core/services/progression/card-level-bonus-rules";
 import { IAppliedCardExperienceResult } from "@/core/use-cases/progression/ApplyBattleCardExperienceUseCase";
 import { useDuelCardExperienceAnimation } from "./use-duel-card-experience-animation";
 import { DuelResultCardDensity } from "./duel-result-card-density";
@@ -35,6 +36,11 @@ export function DuelResultExperienceCard({ entry, card, density }: DuelResultExp
     masteryPassiveSkillId: entry.progress.masteryPassiveSkillId,
     masteryPassiveLabel: card.masteryPassiveLabel ?? null,
   };
+
+  // Incremento de atributo acumulado hasta el nivel que la animación va mostrando (crece a la par que sube).
+  // Solo entidades ganan ATK/DEF; magias/trampas devuelven 0/0 y no pintan badge.
+  const statGain = resolveLevelUpStatGain(card.type, entry.oldLevel, animation.displayLevel);
+  const hasStatGain = statGain.attack > 0 || statGain.defense > 0;
 
   return (
     <motion.article 
@@ -92,7 +98,29 @@ export function DuelResultExperienceCard({ entry, card, density }: DuelResultExp
           <span className={`${isCompact ? "text-[7px]" : "text-[9px] sm:text-[10px]"} font-bold text-cyan-500 uppercase tracking-wider`}>Lv {entry.oldLevel}</span>
           <span className={`${isCompact ? "text-[7px]" : "text-[9px] sm:text-[10px]"} font-black text-cyan-300 uppercase tracking-wider drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]`}>Lv {animation.displayLevel}</span>
         </div>
-        
+
+        {/* Incremento de atributo al subir de nivel: p. ej. "+50 ATK". Aparece pulsando con cada subida. */}
+        {hasStatGain && (
+          <motion.div
+            key={`stat-gain-${entry.cardId}-${animation.levelUpPulseTick}`}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0, scale: animation.levelUpPulseTick > 0 ? [1, 1.12, 1] : 1 }}
+            transition={{ duration: 0.4 }}
+            className={`flex justify-center gap-1 ${isCompact ? "mb-1" : "mb-1.5"}`}
+          >
+            {statGain.attack > 0 && (
+              <span className={`rounded-sm bg-rose-500/15 px-1.5 py-0.5 font-black uppercase tracking-wider text-rose-300 ${isCompact ? "text-[7px]" : "text-[9px] sm:text-[10px]"}`}>
+                +{statGain.attack} ATK
+              </span>
+            )}
+            {statGain.defense > 0 && (
+              <span className={`rounded-sm bg-sky-500/15 px-1.5 py-0.5 font-black uppercase tracking-wider text-sky-300 ${isCompact ? "text-[7px]" : "text-[9px] sm:text-[10px]"}`}>
+                +{statGain.defense} DEF
+              </span>
+            )}
+          </motion.div>
+        )}
+
         {/* Barra de Progreso */}
         <div className={`${isCompact ? "h-1" : "h-1.5 sm:h-2"} w-full overflow-hidden rounded-full bg-zinc-950/80 shadow-inner`}>
           <motion.div

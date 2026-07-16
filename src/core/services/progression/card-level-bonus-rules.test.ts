@@ -1,6 +1,6 @@
 // src/core/services/progression/card-level-bonus-rules.test.ts - Pruebas de la curva de bonus por nivel.
 import { describe, expect, it } from "vitest";
-import { CARD_LEVEL_MILESTONES, hasMaxLevelArt, resolveCardLevelBonuses } from "./card-level-bonus-rules";
+import { CARD_LEVEL_MILESTONES, hasMaxLevelArt, resolveCardLevelBonuses, resolveLevelUpStatGain } from "./card-level-bonus-rules";
 
 describe("card-level-bonus-rules", () => {
   it("sigue el ciclo +50 ATK / +100 ATK / +50 DEF / +100 DEF cada 5 niveles", () => {
@@ -38,5 +38,23 @@ describe("card-level-bonus-rules", () => {
   it("el arte alternativo se desbloquea solo en el nivel 100", () => {
     expect(hasMaxLevelArt(99)).toBe(false);
     expect(hasMaxLevelArt(100)).toBe(true);
+  });
+
+  describe("resolveLevelUpStatGain", () => {
+    it("da el incremento del hito cruzado (nivel 4 → 5 ⇒ +50 ATK)", () => {
+      expect(resolveLevelUpStatGain("ENTITY", 4, 5)).toEqual({ attack: 50, defense: 0 });
+    });
+
+    it("acumula varios hitos en un salto grande (nivel 4 → 20 ⇒ +150 ATK / +150 DEF)", () => {
+      expect(resolveLevelUpStatGain("ENTITY", 4, 20)).toEqual({ attack: 150, defense: 150 });
+    });
+
+    it("es 0/0 si no se cruza ningún hito (subir dentro del mismo tramo)", () => {
+      expect(resolveLevelUpStatGain("ENTITY", 5, 9)).toEqual({ attack: 0, defense: 0 });
+    });
+
+    it("es 0/0 para cartas sin ATK/DEF (magia/trampa)", () => {
+      expect(resolveLevelUpStatGain("TRAP", 0, 100)).toEqual({ attack: 0, defense: 0 });
+    });
   });
 });

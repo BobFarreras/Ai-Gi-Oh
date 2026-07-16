@@ -73,6 +73,19 @@ describe("apply-card-progression-to-card", () => {
     expect(result.masteryPassiveLabel).toContain("Cortafuegos");
   });
 
+  it("combina nivel + objetos de mejora en una sola pasada (fuente única de la verdad)", () => {
+    // Nivel 20 = +150/+150; objetos = +300 ATK / +200 DEF. Se suman UNA vez sobre la base.
+    const result = applyCardProgressionToCard(ENTITY_CARD, createProgress(20), { attackBonus: 300, defenseBonus: 200 });
+    expect(result.attack).toBe(1000 + 150 + 300);
+    expect(result.defense).toBe(900 + 150 + 200);
+  });
+
+  it("sin objetos deja solo el bonus de nivel (los objetos no se inventan)", () => {
+    const result = applyCardProgressionToCard(ENTITY_CARD, createProgress(20));
+    expect(result.attack).toBe(1150);
+    expect(result.defense).toBe(1050);
+  });
+
   it("en EXECUTION solo reduce coste al nivel 50", () => {
     const atLevel30 = applyCardProgressionToCard(EXEC_CARD, createProgress(30));
     expect(atLevel30.cost).toBe(2);

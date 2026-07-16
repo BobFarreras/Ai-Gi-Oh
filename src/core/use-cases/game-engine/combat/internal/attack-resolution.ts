@@ -14,6 +14,14 @@ import {
 } from "@/core/use-cases/game-engine/combat/internal/attack-passives";
 import { buildUpdatedAttacker, buildUpdatedDefender } from "@/core/use-cases/game-engine/combat/internal/attack-player-updates";
 
+/**
+ * Stat ofensivo del atacante: su ATK normal, o su DEF si ataca estando en modo DEFENSA (Escudo Firewall
+ * Ofensivo). Una entidad en defensa solo llega aquí como atacante si el estado lo permitió (ver validación).
+ */
+function resolveAttackerOffense(attackerEntity: IBoardEntity): number {
+  return attackerEntity.mode === "DEFENSE" ? (attackerEntity.card.defense ?? 0) : (attackerEntity.card.attack ?? 0);
+}
+
 interface IResolveDirectAttackParams {
   state: GameState;
   attacker: IPlayer;
@@ -26,7 +34,7 @@ interface IResolveDirectAttackParams {
 export function resolveDirectAttackState(params: IResolveDirectAttackParams): { state: GameState; damage: number } {
   const { state, attacker, defender, attackerEntity, attackerInstanceId, isPlayerA } = params;
   validateDirectAttack(defender.activeEntities.length > 0);
-  const damage = (attackerEntity.card.attack ?? 0) + resolveDirectHitBonus(attackerEntity);
+  const damage = resolveAttackerOffense(attackerEntity) + resolveDirectHitBonus(attackerEntity);
   const updatedAttacker: IPlayer = {
     ...attacker,
     activeEntities: markAttackerAsUsed(attacker.activeEntities, attackerInstanceId),
@@ -65,7 +73,7 @@ export function resolveEntityBattleState(params: IResolveEntityBattleParams): { 
 
   const isDefenderInDefenseMode = defenderEntity.mode === "DEFENSE" || defenderEntity.mode === "SET";
   // Sobrecarga: el bonus de ATK es efímero (solo este ataque); no se persiste en la carta.
-  const attackerAttackBase = (attackerEntity.card.attack ?? 0) + resolveEntityAttackBonus(attackerEntity);
+  const attackerAttackBase = resolveAttackerOffense(attackerEntity) + resolveEntityAttackBonus(attackerEntity);
   const attackerAttackAfterPassive = applyAttackDrainByDefenderPassive(attackerAttackBase, defenderEntity);
   const passiveAttackReduction = Math.max(0, attackerAttackBase - attackerAttackAfterPassive);
   const defenderStat = isDefenderInDefenseMode ? (defenderEntity.card.defense ?? 0) : (defenderEntity.card.attack ?? 0);

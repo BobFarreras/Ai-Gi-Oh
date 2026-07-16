@@ -46,10 +46,28 @@ function formatRemaining(endsAt: string): string {
   return days > 0 ? `Termina en ${days}d ${hours}h` : `Termina en ${hours}h`;
 }
 
+function ObjectTile({ item, soldOut }: { item: IEventShopItem; soldOut: boolean }) {
+  return (
+    <div className={`flex aspect-[13/19] w-full flex-col items-center justify-center gap-2 border border-fuchsia-700/40 bg-[#100a20]/80 p-2 text-center ${soldOut ? "opacity-40 grayscale" : "drop-shadow-[0_0_18px_rgba(232,121,249,0.35)]"}`}>
+      {item.objectImageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={item.objectImageUrl} alt={item.objectName ?? "Objeto"} className="h-16 w-16 object-contain sm:h-20 sm:w-20" />
+      ) : (
+        <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-fuchsia-800/50 text-fuchsia-300 sm:h-20 sm:w-20">
+          <svg viewBox="0 0 24 24" className="h-8 w-8 fill-none stroke-current" strokeWidth="1.6" strokeLinejoin="round"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9L12 2z" /><path d="M12 2v9l8-4.5M12 11L4 6.5" /></svg>
+        </div>
+      )}
+      <p className="line-clamp-2 font-display text-[11px] font-bold uppercase tracking-wide text-fuchsia-100 sm:text-xs">{item.objectName ?? "Objeto"}</p>
+      {item.objectDetail ? <p className="font-mono text-[10px] uppercase tracking-wider text-emerald-300">{item.objectDetail}</p> : null}
+    </div>
+  );
+}
+
 function ShopItem({ item, balance, onRedeemed, cardMap }: { item: IEventShopItem; balance: number; onRedeemed: (itemId: string, newBalance: number) => void; cardMap: Map<string, ICard> }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const card = cardMap.get(item.cardId) ?? null;
+  const isCard = item.rewardKind === "CARD";
+  const card = item.cardId ? cardMap.get(item.cardId) ?? null : null;
   const soldOut = item.owned >= item.perPlayerLimit;
   const affordable = balance >= item.costPoints;
 
@@ -65,7 +83,7 @@ function ShopItem({ item, balance, onRedeemed, cardMap }: { item: IEventShopItem
       if (!response.ok) throw new Error("redeem failed");
       const data = (await response.json()) as { balance: number };
       onRedeemed(item.itemId, data.balance);
-      track("event_item_redeemed", "shop", { itemId: item.itemId, cardId: item.cardId, costPoints: item.costPoints });
+      track("event_item_redeemed", "shop", { itemId: item.itemId, cardId: item.cardId ?? item.objectId ?? "", costPoints: item.costPoints });
     } catch {
       setError("No se pudo canjear.");
     } finally {
@@ -76,18 +94,22 @@ function ShopItem({ item, balance, onRedeemed, cardMap }: { item: IEventShopItem
   return (
     <div className="flex flex-col gap-2 border border-fuchsia-900/40 bg-[#0a0716]/70 p-2 sm:gap-2.5 sm:p-3" style={{ clipPath: "polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px)" }}>
       <div className="relative mx-auto w-full">
-        {card ? (
-          <div className={`w-full ${soldOut ? "opacity-40 grayscale" : "drop-shadow-[0_0_18px_rgba(232,121,249,0.35)]"}`}>
-            <ResponsiveGameCard card={card} />
-          </div>
+        {isCard ? (
+          card ? (
+            <div className={`w-full ${soldOut ? "opacity-40 grayscale" : "drop-shadow-[0_0_18px_rgba(232,121,249,0.35)]"}`}>
+              <ResponsiveGameCard card={card} />
+            </div>
+          ) : (
+            <div className="flex aspect-[13/19] w-full items-center justify-center border border-slate-700 bg-slate-900 text-[10px] text-slate-500">{item.cardId}</div>
+          )
         ) : (
-          <div className="flex aspect-[13/19] w-full items-center justify-center border border-slate-700 bg-slate-900 text-[10px] text-slate-500">{item.cardId}</div>
+          <ObjectTile item={item} soldOut={soldOut} />
         )}
         {soldOut ? (
-          <div className="absolute inset-0 flex items-center justify-center font-display text-sm font-bold uppercase tracking-widest text-emerald-300">Obtenida</div>
+          <div className="absolute inset-0 flex items-center justify-center font-display text-sm font-bold uppercase tracking-widest text-emerald-300">Obtenido</div>
         ) : null}
       </div>
-      <p className="text-center font-mono text-[11px] uppercase tracking-wider text-slate-400">{item.owned}/{item.perPlayerLimit} canjeada(s)</p>
+      <p className="text-center font-mono text-[11px] uppercase tracking-wider text-slate-400">{item.owned}/{item.perPlayerLimit} canjeado(s)</p>
       <button
         type="button"
         disabled={busy || soldOut || !affordable}
@@ -112,7 +134,7 @@ export function EventPanel({ overview, eventMissions, onClose }: IEventPanelProp
   const [items, setItems] = useState(overview.items);
   const [showEarn, setShowEarn] = useState(false);
   const hasEarnInfo = overview.earnRules.length > 0 || eventMissions.length > 0;
-  const cardIds = useMemo(() => items.map((i) => i.cardId), [items]);
+  const cardIds = useMemo(() => items.filter((i) => i.rewardKind === "CARD" && i.cardId).map((i) => i.cardId as string), [items]);
   const cardMap = useCardsByids(cardIds);
 
   function handleRedeemed(itemId: string, newBalance: number) {

@@ -3,6 +3,7 @@ import { SupabaseCardCollectionRepository } from "@/infrastructure/persistence/s
 import { SupabaseDeckRepository } from "@/infrastructure/persistence/supabase/SupabaseDeckRepository";
 import { SupabaseMarketRepository } from "@/infrastructure/persistence/supabase/SupabaseMarketRepository";
 import { SupabasePlayerCardProgressRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerCardProgressRepository";
+import { SupabasePlayerCardUpgradesRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerCardUpgradesRepository";
 import { SupabaseTransactionRepository } from "@/infrastructure/persistence/supabase/SupabaseTransactionRepository";
 import { SupabaseWalletRepository } from "@/infrastructure/persistence/supabase/SupabaseWalletRepository";
 import { createSupabaseServerClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-server-client";
@@ -14,6 +15,7 @@ export interface IPlayerRuntimeRepositories {
   transactionRepository: SupabaseTransactionRepository;
   deckRepository: SupabaseDeckRepository;
   playerCardProgressRepository: SupabasePlayerCardProgressRepository;
+  playerCardUpgradesRepository: SupabasePlayerCardUpgradesRepository;
 }
 
 export async function createPlayerRuntimeRepositories(): Promise<IPlayerRuntimeRepositories> {
@@ -25,5 +27,6 @@ export async function createPlayerRuntimeRepositories(): Promise<IPlayerRuntimeR
   const transactionRepository = new SupabaseTransactionRepository(client);
   const deckRepository = new SupabaseDeckRepository(client, collectionRepository);
   const playerCardProgressRepository = new SupabasePlayerCardProgressRepository(client);
-  return { marketRepository, walletRepository, collectionRepository, transactionRepository, deckRepository, playerCardProgressRepository };
+  const playerCardUpgradesRepository = new SupabasePlayerCardUpgradesRepository(client);
+  return { marketRepository, walletRepository, collectionRepository, transactionRepository, deckRepository, playerCardProgressRepository, playerCardUpgradesRepository };
 }

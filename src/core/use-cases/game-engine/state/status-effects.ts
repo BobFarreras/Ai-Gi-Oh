@@ -23,6 +23,11 @@ export function isDirectAttackBlocked(statusEffects: readonly IActiveStatusEffec
   return (statusEffects ?? []).some((status) => status.kind === "NO_DIRECT_ATTACKS" && status.targetPlayerId === playerId);
 }
 
+/** Escudo Firewall Ofensivo: este turno, las entidades en defensa del jugador pueden atacar (con su DEF). */
+export function canAttackFromDefense(statusEffects: readonly IActiveStatusEffect[] | undefined, playerId: string): boolean {
+  return (statusEffects ?? []).some((status) => status.kind === "DEFENSE_CAN_ATTACK" && status.targetPlayerId === playerId);
+}
+
 /**
  * Inserta nuevos estados con id determinista (`kind-target-turn`). Si ya existe un estado del mismo tipo
  * para el mismo jugador, lo REEMPLAZA (refresca su duración) en vez de acumular duplicados.

@@ -13,7 +13,7 @@ interface IArenaDraft {
   fusion: IAdminArenaCardEntry[];
 }
 
-const EMPTY_ENTRY = (cardId: string): IAdminArenaCardEntry => ({ cardId, versionTier: null, level: null, xp: null });
+const EMPTY_ENTRY = (cardId: string): IAdminArenaCardEntry => ({ cardId, versionTier: null, level: null, xp: null, attackBonus: null, defenseBonus: null });
 
 /** Orquesta selección de oponente/variante y un draft editable de cartas, reutilizando useAdminArena. */
 export function useAdminArenaDeckEditor() {
@@ -103,6 +103,17 @@ export function useAdminArenaDeckEditor() {
         [zone === "DECK" ? "deck" : "fusion"]: (zone === "DECK" ? current.deck : current.fusion).map((entry, i) =>
           i === index ? { ...entry, [field]: value } : entry,
         ),
+      }));
+    },
+    /** Ajusta el bonus ATK/DEF de la carta en `delta` (un objeto = +/- su valor). Nunca baja de 0. */
+    adjustBonus(zone: ArenaDeckZone, index: number, stat: "ATTACK" | "DEFENSE", delta: number) {
+      mutateDraft((current) => ({
+        ...current,
+        [zone === "DECK" ? "deck" : "fusion"]: (zone === "DECK" ? current.deck : current.fusion).map((entry, i) => {
+          if (i !== index) return entry;
+          const key = stat === "ATTACK" ? "attackBonus" : "defenseBonus";
+          return { ...entry, [key]: Math.max(0, (entry[key] ?? 0) + delta) };
+        }),
       }));
     },
     async saveVariant(): Promise<void> {

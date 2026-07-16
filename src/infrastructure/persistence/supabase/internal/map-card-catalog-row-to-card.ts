@@ -32,6 +32,7 @@ import {
   IBoostAttackByCardIdEffect,
   IDamageIfAllyOnBoardEffect,
   IApplyNoDirectAttacksEffect,
+  IAllowDefenseModeAttackEffect,
   IApplyDamageOverTimeEffect,
   IApplyHealOverTimeEffect,
   IReflectDirectDamageEffect,
@@ -107,6 +108,8 @@ function mapEffect(value: unknown): ICardEffect | undefined {
       return typeof value.turns === "number"
         ? ({ action: "APPLY_NO_DIRECT_ATTACKS", turns: value.turns } as IApplyNoDirectAttacksEffect)
         : undefined;
+    case "ALLOW_DEFENSE_MODE_ATTACK":
+      return { action: "ALLOW_DEFENSE_MODE_ATTACK" } as IAllowDefenseModeAttackEffect;
     case "APPLY_DAMAGE_OVER_TIME":
       return typeof value.value === "number"
         ? ({ action: "APPLY_DAMAGE_OVER_TIME", value: value.value, turns: typeof value.turns === "number" ? value.turns : null } as IApplyDamageOverTimeEffect)

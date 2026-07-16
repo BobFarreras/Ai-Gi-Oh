@@ -46,6 +46,12 @@ export class SupabaseEventRepository implements IEventRepository {
       throw new ValidationError(error?.message ?? "No se pudo canjear el item de evento.");
     }
     const result = data as IEventRedeemResult;
-    return { applied: result.applied, cardId: result.cardId, balance: result.balance };
+    return {
+      applied: result.applied,
+      rewardKind: result.rewardKind,
+      cardId: result.cardId ?? null,
+      objectId: result.objectId ?? null,
+      balance: result.balance,
+    };
   }
 }

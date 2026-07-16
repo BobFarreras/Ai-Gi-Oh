@@ -11,7 +11,7 @@ interface IAdminSidebarNavProps {
 
 interface IAdminSidebarItem {
   href: string;
-  icon: "catalog" | "market" | "starter" | "story" | "audit" | "analytics" | "liveops" | "effects" | "arena";
+  icon: "catalog" | "market" | "objects" | "starter" | "story" | "audit" | "analytics" | "liveops" | "effects" | "arena";
   label: string;
   description: string;
 }
@@ -22,6 +22,7 @@ function buildItems(portalSlug: string): IAdminSidebarItem[] {
     { href: `${base}/catalog`, icon: "catalog", label: "Catálogo", description: "Card Catalog" },
     { href: `${base}/effects`, icon: "effects", label: "Efectos", description: "Glosario de poderes" },
     { href: `${base}/market`, icon: "market", label: "Market", description: "Listings & Packs" },
+    { href: `${base}/objects`, icon: "objects", label: "Objetos", description: "Caramelos & Mejoras" },
     { href: `${base}/starter-deck`, icon: "starter", label: "Starter Deck", description: "Plantilla inicial" },
     { href: `${base}/story-decks`, icon: "story", label: "Story Decks", description: "Oponentes & Duelos" },
     { href: `${base}/arena`, icon: "arena", label: "Arena", description: "Oponentes & Tiers" },
@@ -49,6 +50,13 @@ function AdminNavIcon({ icon, isActive }: { icon: IAdminSidebarItem["icon"]; isA
         <path d="M3 9l1.5-5h15L21 9" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         <rect x="3" y="9" width="18" height="12" rx="1.5" strokeWidth="1.6" />
         <path d="M9 9v3a3 3 0 006 0V9" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  if (icon === "objects")
+    return (
+      <svg viewBox="0 0 24 24" className={cls}>
+        <path d="M12 2l8 4.5v9L12 20l-8-4.5v-9L12 2z" strokeWidth="1.6" strokeLinejoin="round" />
+        <path d="M12 2v9l8-4.5M12 11L4 6.5M12 11v9" strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round" />
       </svg>
     );
   if (icon === "starter")

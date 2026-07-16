@@ -5,7 +5,7 @@ import { TRAINING_OPPONENT_DECK_POOLS } from "@/services/training/internal/train
 
 /** Cada cardId del catálogo en código no lleva overrides (usa el escalado por dificultad). */
 function toEntries(cardIds: string[]): IArenaDeckCardEntry[] {
-  return cardIds.map((cardId) => ({ cardId, versionTier: null, level: null, xp: null }));
+  return cardIds.map((cardId) => ({ cardId, versionTier: null, level: null, xp: null, attackBonus: null, defenseBonus: null }));
 }
 
 /** Construye el mapa de oponentes de arena desde las constantes en código, idéntico a la BD sembrada. */

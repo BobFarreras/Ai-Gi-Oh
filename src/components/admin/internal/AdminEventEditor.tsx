@@ -1,12 +1,16 @@
 // src/components/admin/internal/AdminEventEditor.tsx - Editor completo de un evento: datos básicos, reglas de puntos (cómo se ganan) y tienda de canje (con cartas reales).
 "use client";
 
-import { useMemo, useState } from "react";
-import { IAdminEvent, IAdminEventRule, IAdminEventShopItem, IAdminMissionDefinition } from "@/core/entities/progression/ILiveOpsAdmin";
+import { useEffect, useMemo, useState } from "react";
+import { AdminEventRewardKind, IAdminEvent, IAdminEventRule, IAdminEventShopItem, IAdminMissionDefinition } from "@/core/entities/progression/ILiveOpsAdmin";
+import { IAdminShopObjectsSnapshot } from "@/core/entities/admin/IAdminShopObjects";
 import { ACTION_OBJECTIVE_TYPES, MISSION_OBJECTIVE_TYPES, OBJECTIVE_TYPES_WITH_PARAM, progressionActionLabel } from "@/core/services/progression/action-labels";
+import { fetchAdminShopObjects } from "@/components/admin/admin-objects-api";
 import { AdminEventChallengeRow } from "./AdminEventChallengeRow";
 import { LiveOpsField, LiveOpsNumber, LiveOpsToggle, LiveOpsSaveBar, LiveOpsCardPicker } from "./live-ops/live-ops-controls";
 import { saveLiveOps, deleteLiveOps } from "./live-ops/save-live-ops";
+
+const EMPTY_OBJECTS: IAdminShopObjectsSnapshot = { candies: [], upgradeItems: [] };
 
 function isoToLocalInput(iso: string): string {
   const date = new Date(iso);
@@ -38,12 +42,12 @@ function RuleRow({ eventId, rule, onDelete }: { eventId: string; rule: IAdminEve
   );
 }
 
-/** Deriva el id del item desde la carta: `${evento}-${carta}`. Así el id nunca queda desincronizado del contenido. */
-function deriveShopItemId(eventId: string, cardId: string, fallbackId: string): string {
-  return cardId ? `${eventId}-${cardId}` : fallbackId;
+/** Deriva el id del item desde su contenido: `${evento}-${carta|objeto}`. Así el id nunca queda desincronizado. */
+function deriveShopItemId(eventId: string, ref: string, fallbackId: string): string {
+  return ref ? `${eventId}-${ref}` : fallbackId;
 }
 
-function ShopItemRow({ item, eventId, wasPersisted }: { item: IAdminEventShopItem; eventId: string; wasPersisted: boolean }) {
+function ShopItemRow({ item, eventId, objects, wasPersisted }: { item: IAdminEventShopItem; eventId: string; objects: IAdminShopObjectsSnapshot; wasPersisted: boolean }) {
   const [draft, setDraft] = useState<IAdminEventShopItem>(item);
   // Último id realmente persistido (null si el item aún no se ha guardado nunca).
   const [lastSavedId, setLastSavedId] = useState<string | null>(wasPersisted ? item.id : null);
@@ -52,13 +56,21 @@ function ShopItemRow({ item, eventId, wasPersisted }: { item: IAdminEventShopIte
     setDraft((prev) => ({ ...prev, [key]: value }));
   }
 
-  const derivedId = deriveShopItemId(eventId, draft.cardId, draft.id);
+  // Al cambiar el tipo de premio se limpia la referencia contraria (carta ↔ objeto).
+  function changeRewardKind(kind: AdminEventRewardKind) {
+    setDraft((prev) => ({ ...prev, rewardKind: kind, cardId: kind === "CARD" ? prev.cardId : null, objectId: kind === "CARD" ? null : prev.objectId }));
+  }
+
+  const isCard = draft.rewardKind === "CARD";
+  const objectOptions = draft.rewardKind === "LEVEL_CANDY" ? objects.candies : draft.rewardKind === "CARD_UPGRADE" ? objects.upgradeItems : [];
+  const ref = isCard ? (draft.cardId ?? "") : (draft.objectId ?? "");
+  const derivedId = deriveShopItemId(eventId, ref, draft.id);
 
   async function handleSave(): Promise<boolean> {
-    if (!draft.cardId) return false; // sin carta no hay item válido que tarifar
+    if (isCard ? !draft.cardId : !draft.objectId) return false; // sin referencia no hay item válido que tarifar
     const ok = await saveLiveOps("eventShopItem", { ...draft, id: derivedId });
     if (!ok) return false;
-    // Si la carta cambió, el id cambia: borra la fila anterior para no dejar huérfanos.
+    // Si la referencia cambió, el id cambia: borra la fila anterior para no dejar huérfanos.
     if (lastSavedId && lastSavedId !== derivedId) await deleteLiveOps("eventShopItem", lastSavedId);
     setLastSavedId(derivedId);
     return true;
@@ -67,7 +79,34 @@ function ShopItemRow({ item, eventId, wasPersisted }: { item: IAdminEventShopIte
   return (
     <div className="flex gap-3 border border-fuchsia-900/40 bg-[#0a0716]/70 p-3">
       <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <LiveOpsCardPicker cardId={draft.cardId} onChange={(value) => update("cardId", value)} />
+        <label className="flex flex-col gap-1">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-fuchsia-500/70">Premio</span>
+          <select
+            aria-label="Tipo de premio del item"
+            className="w-full border border-fuchsia-900/60 bg-[#0a0716] px-2.5 py-1.5 text-sm text-slate-100 outline-none focus:border-fuchsia-400"
+            value={draft.rewardKind}
+            onChange={(event) => changeRewardKind(event.target.value as AdminEventRewardKind)}
+          >
+            <option value="CARD">Carta</option>
+            <option value="LEVEL_CANDY">Caramelo de nivel</option>
+            <option value="CARD_UPGRADE">Objeto de mejora</option>
+          </select>
+        </label>
+        {isCard ? (
+          <LiveOpsCardPicker cardId={draft.cardId ?? ""} onChange={(value) => update("cardId", value)} />
+        ) : (
+          <select
+            aria-label="Objeto del item"
+            className="w-full border border-fuchsia-900/60 bg-[#0a0716] px-2.5 py-1.5 text-sm text-slate-100 outline-none focus:border-fuchsia-400"
+            value={draft.objectId ?? ""}
+            onChange={(event) => update("objectId", event.target.value || null)}
+          >
+            <option value="">— Elige un objeto —</option>
+            {objectOptions.map((option) => (
+              <option key={option.id} value={option.id}>{option.name}{option.isActive ? "" : " (inactivo)"}</option>
+            ))}
+          </select>
+        )}
         <div className="grid grid-cols-2 gap-2">
           <LiveOpsNumber label="Coste (pts)" value={draft.costPoints} min={1} onChange={(value) => update("costPoints", value)} />
           <LiveOpsNumber label="Límite/jugador" value={draft.perPlayerLimit} min={1} onChange={(value) => update("perPlayerLimit", value)} />
@@ -88,8 +127,18 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
   const [rules, setRules] = useState<IAdminEventRule[]>(event.rules ?? []);
   const [items, setItems] = useState<IAdminEventShopItem[]>(event.items ?? []);
   const [missions, setMissions] = useState<IAdminMissionDefinition[]>(event.missions ?? []);
+  const [objects, setObjects] = useState<IAdminShopObjectsSnapshot>(EMPTY_OBJECTS);
   const [newAction, setNewAction] = useState("");
   const [newMissionObjective, setNewMissionObjective] = useState("");
+
+  // Catálogo de objetos del mercado para el picker de items tipo objeto (Fase 2). Fallo → picker vacío.
+  useEffect(() => {
+    let active = true;
+    fetchAdminShopObjects()
+      .then((snapshot) => { if (active) setObjects(snapshot); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   function update<K extends keyof EventDraft>(key: K, value: EventDraft[K]) {
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -113,9 +162,9 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
   const initialItemIds = useMemo(() => new Set((event.items ?? []).map((item) => item.id)), [event.items]);
 
   function addItem() {
-    // id temporal hasta que se elija carta; al guardar, ShopItemRow lo sustituye por `${evento}-${carta}`.
+    // id temporal hasta que se elija contenido; al guardar, ShopItemRow lo sustituye por `${evento}-${ref}`.
     const id = `${draft.id}-nuevo-${Math.random().toString(36).slice(2, 7)}`;
-    setItems((prev) => [...prev, { id, eventId: draft.id, cardId: "", costPoints: 100, perPlayerLimit: 1, sortOrder: prev.length + 1, isActive: true }]);
+    setItems((prev) => [...prev, { id, eventId: draft.id, rewardKind: "CARD", cardId: "", objectId: null, costPoints: 100, perPlayerLimit: 1, sortOrder: prev.length + 1, isActive: true }]);
   }
   function addMission(objectiveType: string) {
     if (!objectiveType) return;
@@ -208,10 +257,10 @@ export function AdminEventEditor({ event }: { event: IAdminEvent }) {
       <div className="mt-5">
         <div className="mb-2 flex items-center justify-between">
           <h4 className="font-mono text-[11px] font-black uppercase tracking-[0.2em] text-fuchsia-400/80">Tienda de canje</h4>
-          <button type="button" onClick={addItem} className="h-8 border border-fuchsia-500/60 px-3 font-mono text-[11px] font-bold uppercase text-fuchsia-200 hover:bg-fuchsia-500/10">+ Añadir carta</button>
+          <button type="button" onClick={addItem} className="h-8 border border-fuchsia-500/60 px-3 font-mono text-[11px] font-bold uppercase text-fuchsia-200 hover:bg-fuchsia-500/10">+ Añadir item</button>
         </div>
         <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
-          {items.map((item) => <ShopItemRow key={item.id} item={item} eventId={draft.id} wasPersisted={initialItemIds.has(item.id)} />)}
+          {items.map((item) => <ShopItemRow key={item.id} item={item} eventId={draft.id} objects={objects} wasPersisted={initialItemIds.has(item.id)} />)}
         </div>
       </div>
     </div>

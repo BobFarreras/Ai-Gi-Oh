@@ -471,6 +471,29 @@ diálogo pagara, un jugador podría cobrarlo N veces recargando.
 
 **Esfuerzo:** medio (2 días). Es la carta más "nueva" del paquete a nivel de reglas.
 
+#### Decisiones cerradas (2026-07-16) y plan mapeado en el código
+
+**Carta:** `Escudo Firewall Ofensivo` — magia/ejecución, **coste 2**. Efecto nuevo `ALLOW_DEFENSE_MODE_ATTACK`.
+**Reglas:** la entidad elegida **sigue en modo DEFENSA** (así conserva su DEF si la atacan) pero puede atacar ese
+turno **usando su DEF como ataque**; puede atacar a entidades y **directo a los LP** como un ataque normal;
+marca efímera que se limpia al acabar el turno; marcador visual obligatorio en el tablero.
+
+**Touch points verificados (patrón a copiar: `SACRIFICE_ALLY_ENTITY_FOR_ENERGY`, que ya selecciona entidad propia):**
+1. `ICard.ts` + `map-card-catalog-row-to-card.ts`: nuevo efecto `ALLOW_DEFENSE_MODE_ATTACK` (data-driven).
+2. `IPlayer.IBoardEntity`: flag efímero `canAttackFromDefenseThisTurn`.
+3. `resolve-execution-special-actions.ts`: dispatch → pending action (suspende en SET si no hay entidades propias).
+4. `pending-turn-action-factory.ts` + `state/types.ts`: creador + tipo `SELECT_OWN_ENTITY_TO_ENABLE_DEFENSE_ATTACK`.
+5. `resolve-opponent-selection-actions.ts` + `resolve-pending-turn-action.ts`: resolver que pone el flag (copia de
+   `resolveOwnEntityToSacrificeSelectionAction`, sin sacrificar).
+6. `attack-validation.ts`: permitir atacar si el flag está puesto aunque el modo sea DEFENSE/SET.
+7. `attack-resolution.ts` (líneas 29 y 68): stat ofensiva = DEF cuando el flag está puesto (directo + entre entidades).
+8. `next-phase.ts` (`resetEntitiesForNewTurn`): limpiar el flag.
+9. Cliente: `boardPendingUi.ts` (selección de entidad propia) + `pick-opponent-pending-action-id.ts` (IA) + marcador VFX.
+10. Migración `130` (carta en `cards_catalog` + imagen renombrada al id) + glosario (`glossary-content.ts`, `effect-catalog-data.ts`).
+11. Tests: activar→flag; atacar desde defensa usa DEF (entidad y directo); flag no sobrevive al turno; MP con 2 clientes.
+
+**Imagen:** `Escudo-Firewall-Ofensivo-Carta-Tech.webp` (745 KB, 4864×3328). Renombrar al id (`exec-…`) y **recomprimir/reescalar** (~1000 px alto) antes de subir.
+
 **Imagen ya entregada (2026-07-14):** `public/assets/renders/executions/Escudo-Firewall-Ofensivo-Carta-Tech.webp`.
 Dos cosas antes de usarla:
 - **Nombre:** la convención es `/assets/renders/executions/{card-id}.webp` (el render se resuelve por el id de
@@ -626,8 +649,8 @@ perfiles de dificultad ya existen y `get-match-session-data.ts` ya sabe resolver
 | B | 2 · Caramelos (USB Raro) | ✅ **hecho de punta a punta**: backend, sección Objetos en Mercado (comprar) y en Arsenal (usar sobre una carta). Migraciones 120/121 aplicadas |
 | — | 🔒 Tablas de valor escribibles por el cliente | ✅ **CERRADO** (migración 122 aplicada + service-role) |
 | B | 3 · Objetos ATK/DEF | ✅ hecho: backend + tope server-side + compra (Mercado) + aplicar (Arsenal) + combate MP. Migración 123 **aplicada** |
-| C | 5 · Cartas por reconfiguración | ⏳ pendiente |
-| C | 7 · Magia de ataque en defensa | ⏳ pendiente |
+| C | 5 · Cartas por reconfiguración | ✅ hecho (era **solo análisis**: los efectos son data-driven; una carta "igual con otro número/entidad" es una migración, no código) |
+| C | 7 · Magia de ataque en defensa | ✅ hecho · migración 130 **aplicada** · carta `Escudo Firewall Ofensivo` (efecto `ALLOW_DEFENSE_MODE_ATTACK`, estado de turno, **sin selección**) · ⚠️ falta prueba MP con 2 clientes |
 | D | 11 · Ghost decks | ⏳ pendiente |
 | — | 10 · 2v2 | ❌ fuera del paquete (release propia) |
 

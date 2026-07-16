@@ -29,6 +29,7 @@ export interface IUseAdminStoryDeckEditorResult {
   clearDraftRewardCard: () => void;
   draftSlotLevels: IStorySlotLevelDraft[];
   setDraftSlotLevelByIndex: (slotIndex: number, key: "versionTier" | "level" | "xp", value: number) => void;
+  setDraftSlotOverrideByIndex: (slotIndex: number, stat: "ATTACK" | "DEFENSE", value: number | null) => void;
   applyMassSlotLevels: (input: { versionTier: number; level: number; xp: number }) => void;
   setDraftCardIdBySlot: (slotIndex: number, cardId: string) => void;
   clearSlotCardByIndex: (slotIndex: number) => void;

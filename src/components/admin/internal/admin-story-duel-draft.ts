@@ -7,6 +7,9 @@ export interface IStorySlotLevelDraft {
   versionTier: number;
   level: number;
   xp: number;
+  /** Stats absolutas del rival por objetos equipados; null = usa el ATK/DEF base de la carta. */
+  attackOverride: number | null;
+  defenseOverride: number | null;
 }
 
 const STORY_DUEL_FUSION_SLOTS = 2;
@@ -46,7 +49,7 @@ export function resolveDraftSlotLevels(data: IAdminStoryDeckApiResponse, duelId:
   const size = Math.max(draftCardIds.length, maxOverrideSlot + 1);
   return Array.from({ length: size }, (_, slotIndex) => {
     const override = data.duelDeckOverrides.find((row) => row.duelId === duelId && row.slotIndex === slotIndex);
-    return { versionTier: override?.versionTier ?? 0, level: override?.level ?? 0, xp: override?.xp ?? 0 };
+    return { versionTier: override?.versionTier ?? 0, level: override?.level ?? 0, xp: override?.xp ?? 0, attackOverride: override?.attackOverride ?? null, defenseOverride: override?.defenseOverride ?? null };
   });
 }
 
