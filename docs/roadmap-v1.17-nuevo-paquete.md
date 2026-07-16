@@ -11,11 +11,21 @@ Guía previa a picar código para el nuevo batch de ideas. Igual que la guía de
 
 ---
 
-## ▶ PRÓXIMA SESIÓN — retomar aquí
+## ▶ ESTADO ACTUAL — Paquete A (retomar aquí)
 
-**Ficha 3, Fase B (acreditación server-authoritative de la pasiva de Nexus).** La Fase A del motor ya está
-hecha, commiteada (`397c8b43`) e inerte. Empezar por el **paso 1: la migración** (es el candado de
-seguridad y todo lo demás lo llama). Orden concreto:
+Hecho y commiteado: **9b** (rastro de objetos), **2** (Borrado de Mano). Motores de combate hechos e
+**inertes**: **1** (Sobrecarga Energética, `f1336075`) y **3 Fase A** (Recaudación, `397c8b43`).
+
+**Tres frentes abiertos, por orden de arranque sugerido:**
+- **A) Cartas portadoras de fichas 1 y 3** (rápido, cierra dos fichas): la de la **3** (`entity-recaudador`)
+  YA tiene arte (`recaudar_nexus.webp`) → hacer su migración + Fase B de acreditación (ver abajo). La de la
+  **1** (`entity-condensador`) está **bloqueada por arte** (decidir: arte nuevo o pasiva en entity existente).
+- **B) Ficha 3 Fase B** (acreditación de Nexus server-authoritative) — plan justo debajo.
+- **C) Ficha 9** (nodo de story con objetos) — plan actualizado en su ficha; sin empezar.
+
+### Ficha 3, Fase B (acreditación server-authoritative de la pasiva de Nexus)
+
+Empezar por el **paso 1: la migración** (es el candado de seguridad y todo lo demás lo llama). Orden concreto:
 
 1. **Migración `133`** (aplicar a prod al terminar, como la 131/132):
    - Entity nueva `entity-recaudador`: stats **flojas** a propósito (p.ej. ATK 400 / DEF 300, coste 2),
@@ -131,6 +141,21 @@ pasiva necesita, ya implementados para otras:
   instancia). Decidirlo y documentarlo en el glosario.
 
 **Esfuerzo:** bajo-medio (1-2 días con tests).
+
+**Estado (2026-07-16): MOTOR HECHO (commit `f1336075`, inerte). Falta la carta portadora (bloqueada por arte).**
+Confirmado el mecanismo con el usuario: "cuando una entity gana un combate a otra entity, +1 energía al dueño
+en su siguiente turno". Implementado 100% en el motor (no toca economía), reutilizando el hook de "ganar un
+combate" de la ficha 3:
+- `ENERGY_ON_BATTLE_WIN_PASSIVE_ID` + valor 1 + texto de glosario.
+- `GameState.pendingEnergyBonusByPlayerId` (por jugador, determinista → multi correcto).
+- Enganche unificado con la Recaudación en `applyBattleWinPassives` (`resolveEntityBattleState`): gana quien
+  destruye y sobrevive; el intercambio no cuenta.
+- Concesión + limpieza al inicio del turno del dueño en `next-phase.ts` (respeta `maxEnergy`; el HUD pulsa).
+- `innate-passive-map`: `entity-condensador`. 4 tests nuevos; 66 verdes en phases+combat.
+
+**Pendiente para cerrarla:** la **carta portadora** (entity floja `entity-condensador`, coste 4) con su
+migración + glosario. **Bloqueada por el arte del render** (a diferencia de la ficha 3, esta entity no tiene
+imagen). Decidir: ¿arte nuevo, o poner la pasiva en una entity existente?
 
 ---
 
@@ -446,7 +471,29 @@ eventos y arena, así que "entregar un objeto a un jugador" tiene tubería serve
 4. Admin: que el editor de story permita configurar el objeto del nodo (el admin ya edita nodos/mazos).
 5. Test: reclamar nodo → aparece en el inventario del arsenal; reclamado dos veces → una sola entrega.
 
-**Esfuerzo:** bajo-medio (1-2 días).
+**Verificado en el código (2026-07-16, antes de empezar):**
+- Los nodos de recompensa del overworld **están definidos en CÓDIGO**, no en BD: `findStoryVirtualNodeDefinition`
+  (`story-map-definition-registry`) resuelve el nodo, y el reclamo vive en
+  `/api/story/overworld/claim-reward/route.ts`. → **NO hay migración de nodo** y **el "admin editor" (paso 4)
+  NO aplica** a estos nodos (se edita el código de `act-N-map-definition.ts`).
+- **Idempotencia ya resuelta:** el candado es `interactedNodeIds` del estado compacto del jugador (check antes
+  de otorgar, guardar después) — mismo patrón que REWARD_NEXUS/REWARD_CARD. Reutilizar tal cual.
+- **Falta una vía de "entregar objeto al inventario":** el canje de eventos hace el `insert into
+  player_inventory_items ... on conflict quantity+1` **inline** dentro de `redeem_event_shop_item` (mig. 128);
+  no hay función reutilizable. → hace falta una **RPC nueva `grant_inventory_item(p_item_type, p_item_id,
+  p_quantity)` `security definer`** (migración) que el route llame, porque `player_inventory_items` no es
+  escribible por el cliente (solo RPC/service-role).
+- **Ripple del tipo:** `StoryWorldNodeType` se usa en ~33 sitios; añadir `REWARD_OBJECT` hará saltar los
+  `switch` exhaustivos en typecheck (bueno: los localiza). Añadir `rewardObjectType/rewardObjectId/quantity`
+  a `IStoryMapVirtualNodeDefinition`.
+
+**Pasos reales (actualizados):** (1) `REWARD_OBJECT` al union + campos en la definición; (2) RPC
+`grant_inventory_item` (migración) + repositorio; (3) el route reparte por tipo (Nexus/Card/**Object**);
+(4) un nodo REWARD_OBJECT en un `act-N-map-definition.ts`; (5) UI: `floatingReward` tono OBJECT + icono;
+(6) test reclamar→inventario / doble→una entrega.
+
+**Esfuerzo:** bajo-medio (1-2 días). **Sin empezar** — siguiente candidata tras cerrar las cartas
+portadoras de las fichas 1 y 3.
 
 ---
 
