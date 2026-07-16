@@ -114,3 +114,47 @@ describe("processStoryDuelCompletion (penalización de Nexus)", () => {
     expect((await wallet.getWallet(PLAYER_ID)).nexus).toBe(1000);
   });
 });
+
+describe("processStoryDuelCompletion (Recaudación: Nexus de la pasiva)", () => {
+  const OPERATION_ID = "3f2c1a10-9b8d-4e5f-a6b7-c8d9e0f1a2b3";
+
+  function buildParamsWithClaim(outcome: StoryDuelOutcome) {
+    const wallet = new InMemoryWalletRepository([{ playerId: PLAYER_ID, nexus: 1000 }]);
+    const creditCalls: Array<{ playerId: string; earned: number; operationId: string } | null> = [];
+    const params = {
+      ...buildParams(outcome, wallet),
+      payload: { chapter: 2, duelIndex: 4, outcome, passiveNexusEarned: 400, passiveNexusOperationId: OPERATION_ID },
+      // Mock de la acreditación: registra la llamada y devuelve lo pedido (la RPC real topa en BD).
+      creditPassiveNexus: async (playerId: string, claim: { earned: number; operationId: string } | null) => {
+        creditCalls.push(claim ? { playerId, ...claim } : null);
+        return claim ? claim.earned : 0;
+      },
+    };
+    return { params, creditCalls };
+  }
+
+  it("acredita en duelos TERMINADOS: también al perder (los combates ganados ya ocurrieron)", async () => {
+    for (const outcome of ["WON", "LOST"] as const) {
+      const { params, creditCalls } = buildParamsWithClaim(outcome);
+      const result = await processStoryDuelCompletion(params);
+      expect(result.passiveNexusCredited).toBe(400);
+      expect(creditCalls).toEqual([{ playerId: PLAYER_ID, earned: 400, operationId: OPERATION_ID }]);
+    }
+  });
+
+  it("al ABANDONAR no se acredita nada (rendirse no paga)", async () => {
+    const { params, creditCalls } = buildParamsWithClaim("ABANDONED");
+    const result = await processStoryDuelCompletion(params);
+    expect(result.passiveNexusCredited).toBe(0);
+    expect(creditCalls).toEqual([null]);
+  });
+
+  it("sin reporte de la pasiva el cierre funciona igual y acredita 0", async () => {
+    const wallet = new InMemoryWalletRepository([{ playerId: PLAYER_ID, nexus: 1000 }]);
+    const result = await processStoryDuelCompletion({
+      ...buildParams("WON", wallet),
+      creditPassiveNexus: async () => 0,
+    });
+    expect(result.passiveNexusCredited).toBe(0);
+  });
+});

@@ -15,6 +15,7 @@ import { resolveStoryRewardCards } from "@/services/story/resolve-story-reward-c
 import { resolveStoryDuelReturnNode } from "@/app/api/story/duels/complete/internal/resolve-story-duel-return-node";
 import { buildOverworldTilemap, isKnownOverworldMap } from "@/services/story/overworld/resolve-overworld-tilemap";
 import { STORY_DEFEAT_NEXUS_PENALTY } from "@/services/story/duel-flow/story-defeat-penalty";
+import { CreditPassiveNexusFn, creditPassiveNexus, parsePassiveNexusClaim } from "@/services/progression/credit-passive-nexus";
 
 interface IProcessStoryDuelCompletionParams {
   playerId: string;
@@ -26,6 +27,8 @@ interface IProcessStoryDuelCompletionParams {
   walletRepository: IWalletRepository;
   collectionRepository: ICardCollectionRepository;
   loadCardsByIds: (cardIds: string[]) => Promise<Map<string, ICard>>;
+  /** Inyectable en tests; por defecto la acreditación real vía RPC service-role. */
+  creditPassiveNexus?: CreditPassiveNexusFn;
 }
 
 function mapRewardCards(cardsById: Map<string, ICard>, rewardCardIds: string[]): ICard[] {
@@ -108,6 +111,10 @@ export async function processStoryDuelCompletion(params: IProcessStoryDuelComple
     await resetOverworldToActStart(params.playerId, params.storyWorldRepository);
     penaltyNexus = await penalizeDefeatNexus(params.playerId, params.walletRepository);
   }
+  // Recaudación (ficha 3): paga en duelos TERMINADOS (ganados o perdidos), nunca al abandonar. La RPC
+  // aplica idempotencia y topes (600/duelo, 1200/día); aquí solo validamos la forma del reporte.
+  const passiveClaim = input.outcome === "ABANDONED" ? null : parsePassiveNexusClaim(params.payload);
+  const passiveNexusCredited = await (params.creditPassiveNexus ?? creditPassiveNexus)(params.playerId, passiveClaim);
   const duel = await resolveDuelFromPayload(params.payload, params.opponentRepository);
   const duelProgress = await params.storyProgressRepository.registerDuelResult(params.playerId, duel.id, didWin);
   const firstVictory = didWin
@@ -125,7 +132,7 @@ export async function processStoryDuelCompletion(params: IProcessStoryDuelComple
     storyWorldRepository: params.storyWorldRepository,
   });
   if (!shouldGrantStandardRewards && !shouldGrantBossRepeatCardReward) {
-    return { duelProgress, rewarded: false, rewardNexus: 0, rewardPlayerExperience: 0, rewardCardIds: [], rewardCards: [], penaltyNexus, outcome: input.outcome, duelNodeId: duel.id, returnNodeId };
+    return { duelProgress, rewarded: false, rewardNexus: 0, rewardPlayerExperience: 0, rewardCardIds: [], rewardCards: [], penaltyNexus, passiveNexusCredited, outcome: input.outcome, duelNodeId: duel.id, returnNodeId };
   }
   const rewardCardIds = shouldGrantBossRepeatCardReward
     ? resolveBossRepeatRewardCardIds(duel)
@@ -154,6 +161,7 @@ export async function processStoryDuelCompletion(params: IProcessStoryDuelComple
     rewardCardIds,
     rewardCards,
     penaltyNexus,
+    passiveNexusCredited,
     ...(playerProgress ? { playerProgress } : {}),
     outcome: input.outcome,
     duelNodeId: duel.id,

@@ -11,15 +11,15 @@ Guía previa a picar código para el nuevo batch de ideas. Igual que la guía de
 
 ---
 
-## ▶ ESTADO ACTUAL — Paquete A (retomar aquí)
+## ▶ ESTADO ACTUAL — PAQUETE A COMPLETO ✅
 
-Hecho y commiteado: **9b** (rastro de objetos), **2** (Borrado de Mano), **1** (Sobrecarga Energética en
-Windows 92 con escalado V5, migración 133 aplicada) y **9** (caché de objeto en el overworld del Acto 3).
-De la **3** está la Fase A del motor (`397c8b43`, inerte).
+Hecho, commiteado y con migraciones aplicadas: **9b** (rastro de objetos, mig. 131), **2** (Borrado de
+Mano, mig. 132), **1** (Sobrecarga Energética en Windows 92 con escalado V5, mig. 133), **9** (caché de
+objeto en el overworld del Acto 3) y **3 completa** (motor Fase A + carta Recaudador y acreditación
+server-authoritative, mig. 134).
 
-**ÚNICO frente abierto del Paquete A: la Ficha 3 Fase B** (carta `entity-recaudador` — su arte
-`recaudar_nexus.webp` ya está recomprimido y sin trackear — + acreditación de Nexus server-authoritative).
-Plan justo debajo. Después: Paquete B (fichas 4 y 5).
+**Siguiente: Paquete B — Ficha 4** (elegir qué trampa activar; nivel 1 recomendado) y después **Ficha 5**
+(IA, empezando por el simulador). Pendiente de decidir en la 4: ¿solo nivel 1 o también cadenas?
 
 ### Ficha 3, Fase B (acreditación server-authoritative de la pasiva de Nexus)
 
@@ -204,22 +204,27 @@ farmearlo cueste. Sigue siendo economía server-authoritative, con la misma ment
 **Decisiones cerradas (2026-07-16):** paga solo en **Story y Arena** (nunca training ni multi/ranked);
 topes **600/duelo (máx. 3 combates) y 1200/día**.
 
-**Estado de implementación:**
-- **Fase A — motor (HECHO, commit `397c8b43`, inerte):** `NEXUS_ON_BATTLE_WIN_PASSIVE_ID` + valor 200,
+**Estado de implementación: COMPLETA (2026-07-16, segunda tanda).**
+- **Fase A — motor (commit `397c8b43`):** `NEXUS_ON_BATTLE_WIN_PASSIVE_ID` + valor 200,
   `GameState.nexusEarnedByPlayerId` (contador por jugador, determinista), enganche en
-  `resolveEntityBattleState` (gana quien destruye y sobrevive; el intercambio no cuenta), texto de glosario,
-  entrada en `innate-passive-map` (`entity-recaudador`), 5 tests. Ninguna carta usa aún la pasiva.
-- **Fase B — carta + acreditación (PENDIENTE):**
-  1. Migración: entity nueva `entity-recaudador` (stats flojas, `innate_passive_skill_id`, render
-     `recaudar_nexus.webp` ya recomprimido a 151 KB, market listing) + tabla de tope diario
-     `passive_nexus_daily` + tabla de idempotencia + RPC `credit_passive_nexus(p_amount, p_operation_id)`
-     `security definer`: dedupe por operación, `least(amount, 600)` por duelo, `least(·, 1200 − ya_hoy)`
-     diario, acredita en `player_wallets`, devuelve lo realmente acreditado.
-  2. Cliente: al cerrar Story y Arena, leer `state.nexusEarnedByPlayerId[miId]` y enviarlo con un
-     `operationId` (uuid por cierre) en el payload.
-  3. Servidor (Story: `process-story-duel-completion`; Arena: `/api/training/matches/complete`): llamar la
-     RPC solo si el duelo terminó; devolver lo acreditado para el HUD.
-  4. Glosario/HUD (explicar el tope y cuándo paga) + tests (topes cortan, idempotencia, modos) + prueba real.
+  `resolveEntityBattleState` (gana quien destruye y sobrevive; el intercambio no cuenta), 5 tests.
+- **Fase B — carta + acreditación (migración 134 APLICADA a prod):**
+  - **Carta:** `entity-recaudador` (NEUTRAL, coste 2, 400/300, TOOL), innata desde V0, fuera del mapa V5
+    (patrón 079), render `recaudador.webp` (movido de executions/ a renders/: es una entity), listing EPIC
+    1500. Diseño: floja a propósito — invertir en ella (niveles/objetos, +600 de presupuesto por coste 2)
+    es la estrategia para que el "impresor de Nexus" funcione.
+  - **RPC `credit_passive_nexus(p_player_id, p_amount, p_operation_id)`:** idempotente por operación,
+    topes `least(amount, 600)`/duelo y `least(·, 1200 − hoy)` diario (día UTC, `FOR UPDATE` contra cierres
+    simultáneos), acredita vía `wallet_credit_nexus` (tubería post-122/124). **EXECUTE solo service_role**
+    (verificado en prod: `authenticated` no puede ejecutarla ni tocar `passive_nexus_daily`/`_operations`).
+  - **Decisión:** topes fijos sin escalado V5; el árbol de habilidades (ficha 8) podrá subir el rango.
+  - **Cliente:** el board añade `passiveNexusEarned` (del GameState) al resultado del duelo; Story y Arena
+    lo envían con un `operationId` estable por duelo (uuid en ref: los reintentos reutilizan la clave).
+  - **Servidor:** Story acredita en WON/LOST y NUNCA en ABANDONED (rendirse no paga); Arena en sus cierres
+    (WIN/LOSE/DRAW, siempre terminados). La acreditación es no-fatal (si falla, el cierre del duelo sigue)
+    y lo acreditado vuelve como `passiveNexusCredited` (se suma al Nexus mostrado en el resumen).
+  - Tests: 14 en server (validador de forma, WON/LOST pagan, ABANDONED no, arena con mock) + los 5 del motor.
+  - **Multi/ranked NO paga:** su cierre (`/api/multiplayer/match/finish`) simplemente no llama la RPC.
 
 **Antiguo diseño (descartado):** era una magia coste 4 de +600 Nexus con `EARN_WALLET_NEXUS` y tope de
 activaciones/día. Se sustituye por la pasiva de entity. El resto de esta ficha se conserva como referencia

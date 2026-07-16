@@ -57,13 +57,16 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
   const [rewardSummary, setRewardSummary] = useState<IDuelResultRewardSummary | null>(null);
   const [resultTransition, setResultTransition] = useState<IStoryDuelTransition | null>(null);
   const hasPostedResultRef = useRef(false);
+  // Clave de idempotencia de la Recaudación: UNA por instancia de duelo. Si el post falla y se reintenta,
+  // se reutiliza la misma → el servidor nunca acredita dos veces el mismo cierre.
+  const passiveNexusOperationIdRef = useRef<string>(crypto.randomUUID());
 
   const returnBasePath = input.returnBasePath ?? "/hub/story";
   const handleResultAction = (): void => {
     pushBackToStory(resultTransition ?? buildFallbackTransition(input), returnBasePath);
   };
 
-  const handleMatchResolved = async (result: { winnerPlayerId: string | "DRAW"; playerId: string; flawless?: boolean }): Promise<void> => {
+  const handleMatchResolved = async (result: { winnerPlayerId: string | "DRAW"; playerId: string; flawless?: boolean; passiveNexusEarned?: number }): Promise<void> => {
     if (hasPostedResultRef.current) return;
     hasPostedResultRef.current = true;
     setIsBossSoundtrackStopped(true);
@@ -77,6 +80,9 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
         outcome,
         completionTicket: input.completionTicket,
         flawless: result.flawless ?? false,
+        // Recaudación: solo se reporta en duelos TERMINADOS (el abandono ni lo envía). El servidor topa.
+        passiveNexusEarned: result.passiveNexusEarned ?? 0,
+        passiveNexusOperationId: passiveNexusOperationIdRef.current,
       });
       setResultTransition({
         outcome,
@@ -85,7 +91,8 @@ export function useStoryDuelResultSync(input: IStoryDuelResultSyncInput) {
         penaltyNexus: payload.penaltyNexus,
       });
       setRewardSummary({
-        rewardNexus: payload.rewardNexus,
+        // El Nexus de la Recaudación acreditado se suma al total mostrado: es Nexus recibido en este cierre.
+        rewardNexus: payload.rewardNexus + payload.passiveNexusCredited,
         rewardPlayerExperience: payload.rewardPlayerExperience,
         rewardCards: payload.rewardCards,
       });

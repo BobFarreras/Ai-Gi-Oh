@@ -23,6 +23,9 @@ export async function POST(request: NextRequest) {
         chapter: validatedTicket.chapter,
         duelIndex: validatedTicket.duelIndex,
         outcome: payload.outcome,
+        // Recaudación (ficha 3): reporte del motor + clave de idempotencia; el proceso valida y topa.
+        passiveNexusEarned: payload.passiveNexusEarned,
+        passiveNexusOperationId: payload.passiveNexusOperationId,
       },
       opponentRepository: context.opponentRepository,
       storyProgressRepository: context.storyProgressRepository,
