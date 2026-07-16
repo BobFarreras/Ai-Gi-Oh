@@ -11,6 +11,34 @@ Guía previa a picar código para el nuevo batch de ideas. Igual que la guía de
 
 ---
 
+## ▶ PRÓXIMA SESIÓN — retomar aquí
+
+**Ficha 3, Fase B (acreditación server-authoritative de la pasiva de Nexus).** La Fase A del motor ya está
+hecha, commiteada (`397c8b43`) e inerte. Empezar por el **paso 1: la migración** (es el candado de
+seguridad y todo lo demás lo llama). Orden concreto:
+
+1. **Migración `133`** (aplicar a prod al terminar, como la 131/132):
+   - Entity nueva `entity-recaudador`: stats **flojas** a propósito (p.ej. ATK 400 / DEF 300, coste 2),
+     `innate_passive_skill_id = 'passive-nexus-on-battle-win'`, render `/assets/renders/executions/recaudar_nexus.webp`
+     (ya recomprimido a 151 KB, sin trackear en git — añadirlo en el commit de la Fase B), market listing.
+   - Tabla `passive_nexus_daily (player_id, day, nexus_credited)` + tabla de idempotencia
+     `passive_nexus_operations (operation_id, player_id, created_at)`.
+   - RPC `credit_passive_nexus(p_amount int, p_operation_id uuid) returns int` `security definer`: dedupe por
+     operación → si repetida devuelve 0; `least(greatest(p_amount,0), 600)` (tope por duelo); luego
+     `least(·, 1200 − ya_hoy)` (tope diario); acredita en `player_wallets` (upsert `on conflict`); suma al
+     diario; devuelve lo realmente acreditado. **El reloj es del servidor** (`now()` / día UTC).
+2. **Cliente:** al cerrar Story y Arena, leer `state.nexusEarnedByPlayerId[miPlayerId]` y enviarlo con un
+   `operationId` (uuid nuevo por cierre) en el payload de completion.
+3. **Servidor:** en `process-story-duel-completion.ts` y en `/api/training/matches/complete` llamar la RPC
+   (solo si el duelo terminó) y devolver lo acreditado para el HUD.
+4. **Glosario/HUD** (explicar el tope y que paga al final) + **tests** (topes cortan, idempotencia, solo
+   Story/Arena) + **prueba real**.
+
+Decisiones ya cerradas: paga solo en **Story y Arena**; topes **600/duelo (3 combates) y 1200/día**.
+Detalle completo abajo en la Ficha 3.
+
+---
+
 ## 0. Principios transversales
 
 Son los mismos siete de `docs/roadmap-v1.15-paquete-produccion.md` §0 y siguen mandando. Resumen operativo,
