@@ -1,7 +1,7 @@
 // src/components/admin/internal/arena/AdminArenaDeckEditor.tsx - Editor visual de mazos de arena (4 columnas estilo Story): oponentes, mazo, almacén, detalle.
 "use client";
 
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { IAdminCardUpgradeItemEntry } from "@/core/entities/admin/IAdminShopObjects";
 import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
 import { fetchAdminShopObjects } from "@/components/admin/admin-objects-api";
@@ -16,6 +16,22 @@ const SCALE_FIELDS: { key: "versionTier" | "level"; label: string; max: number }
   { key: "versionTier", label: "Ver", max: 5 },
   { key: "level", label: "Lvl", max: 30 },
 ];
+
+/** Sección plegable (plegada por defecto) para que no le coman espacio a la carta del detalle. */
+function CollapsibleSection({ title, accent, defaultOpen = false, children }: { title: string; accent: "cyan" | "fuchsia"; defaultOpen?: boolean; children: ReactNode }) {
+  const border = accent === "cyan" ? "border-cyan-800/30" : "border-fuchsia-800/30";
+  const bg = accent === "cyan" ? "bg-[#031020]/55" : "bg-[#0a0716]/55";
+  const text = accent === "cyan" ? "text-cyan-300" : "text-fuchsia-300";
+  return (
+    <details open={defaultOpen} className={`group shrink-0 rounded-xl border ${border} ${bg} text-xs text-slate-200`}>
+      <summary className={`flex cursor-pointer list-none items-center justify-between p-3 font-black uppercase tracking-[0.18em] ${text}`}>
+        {title}
+        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current transition-transform group-open:rotate-180"><path d="M6 9l6 6 6-6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      </summary>
+      <div className="px-3 pb-3">{children}</div>
+    </details>
+  );
+}
 
 /** Contador de objetos por stat: valor actual (+N) con botones - / + que quitan/añaden un objeto (su valor). */
 function BonusStepper({ label, colorClass, value, step, disabled, onAdd, onRemove }: { label: string; colorClass: string; value: number; step: number; disabled: boolean; onAdd: () => void; onRemove: () => void }) {
@@ -77,9 +93,8 @@ export function AdminArenaDeckEditor() {
           maxCardScale={0.92}
         />
       </div>
-      <section className="shrink-0 rounded-xl border border-cyan-800/30 bg-[#031020]/55 p-3 text-xs text-slate-200">
-        <p className="font-black uppercase tracking-[0.18em] text-cyan-300">Escalado de la carta</p>
-        <p className="mt-1 text-[10px] text-slate-400">Vacío (0) = usa el escalado del tier. Solo cartas del mazo.</p>
+      <CollapsibleSection title="Escalado de la carta" accent="cyan">
+        <p className="text-[10px] text-slate-400">Vacío (0) = usa el escalado del tier. Solo cartas del mazo.</p>
         <div className="mt-2 grid grid-cols-3 gap-2">
           {SCALE_FIELDS.map((field) => (
             <label key={field.key} className="text-[10px] text-slate-400">
@@ -109,17 +124,16 @@ export function AdminArenaDeckEditor() {
             />
           </label>
         </div>
-      </section>
+      </CollapsibleSection>
 
       {/* Objetos equipados: dos secciones (Ataque/Defensa) con +/-. Cada + añade un objeto (su valor); apilable. */}
-      <section className="shrink-0 rounded-xl border border-fuchsia-800/30 bg-[#0a0716]/55 p-3 text-xs text-slate-200">
-        <p className="font-black uppercase tracking-[0.18em] text-fuchsia-300">Objetos equipados</p>
-        <p className="mt-1 text-[10px] text-slate-400">Cada objeto suma su valor al ATK/DEF (apilable). Solo cartas del mazo, en modo edición.</p>
+      <CollapsibleSection title="Objetos equipados" accent="fuchsia">
+        <p className="text-[10px] text-slate-400">Cada objeto suma su valor al ATK/DEF (apilable). Solo cartas del mazo, en modo edición.</p>
         <div className="mt-2 grid grid-cols-2 gap-2">
           <BonusStepper label="Ataque" colorClass="text-rose-300" value={attackBonus} step={attackStep} disabled={equipDisabled} onAdd={() => ref && editor.adjustBonus(ref.zone, ref.index, "ATTACK", attackStep)} onRemove={() => ref && editor.adjustBonus(ref.zone, ref.index, "ATTACK", -attackStep)} />
           <BonusStepper label="Defensa" colorClass="text-sky-300" value={defenseBonus} step={defenseStep} disabled={equipDisabled} onAdd={() => ref && editor.adjustBonus(ref.zone, ref.index, "DEFENSE", defenseStep)} onRemove={() => ref && editor.adjustBonus(ref.zone, ref.index, "DEFENSE", -defenseStep)} />
         </div>
-      </section>
+      </CollapsibleSection>
     </>
   );
 
@@ -198,8 +212,9 @@ export function AdminArenaDeckEditor() {
             onStartDragCard={() => undefined}
           />
         </div>
-        {/* Detalle inline solo en desktop; en móvil se abre como diálogo. Scroll propio para no cortar la carta. */}
-        <div className="home-modern-scroll hidden min-h-0 flex-col gap-2 overflow-y-auto xl:flex">{detailBody}</div>
+        {/* Detalle inline solo en desktop; en móvil se abre como diálogo. La carta ocupa el espacio flexible;
+            las secciones plegables no le comen alto. */}
+        <div className="hidden min-h-0 flex-col gap-2 xl:flex">{detailBody}</div>
       </div>
 
       <AdminMobileDetailDialog isOpen={isMobileInspectorOpen} onClose={() => setIsMobileInspectorOpen(false)} closeAriaLabel="Cerrar detalle de carta">
