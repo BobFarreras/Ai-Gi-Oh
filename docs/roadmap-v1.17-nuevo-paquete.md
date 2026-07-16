@@ -130,10 +130,40 @@ la mano") — cambiarla luego es una migración de una línea, pero la primera i
 
 ---
 
-### Ficha 3 — Magia: "al tirarla ganas 600 Nexus" (coste 4)
+### Ficha 3 — Nexus dentro del combate
 
-**DECIDIDO (2026-07-16): son 600 Nexus de MONEDA, acreditados en `player_wallets`.** No es una cura: es
-economía dentro del combate, y se diseña con esa mentalidad.
+**REDISEÑADA (2026-07-16): NO es una carta, es una pasiva innata de una entity.** En vez de una magia de
++600 Nexus, una **entity floja** con la pasiva "Recaudación": cada vez que gana un combate a una entity
+rival (la destruye y sobrevive), su dueño gana **200 Nexus**. La entity es floja a propósito para que
+farmearlo cueste. Sigue siendo economía server-authoritative, con la misma mentalidad de la cartera.
+
+**Decisiones cerradas (2026-07-16):** paga solo en **Story y Arena** (nunca training ni multi/ranked);
+topes **600/duelo (máx. 3 combates) y 1200/día**.
+
+**Estado de implementación:**
+- **Fase A — motor (HECHO, commit `397c8b43`, inerte):** `NEXUS_ON_BATTLE_WIN_PASSIVE_ID` + valor 200,
+  `GameState.nexusEarnedByPlayerId` (contador por jugador, determinista), enganche en
+  `resolveEntityBattleState` (gana quien destruye y sobrevive; el intercambio no cuenta), texto de glosario,
+  entrada en `innate-passive-map` (`entity-recaudador`), 5 tests. Ninguna carta usa aún la pasiva.
+- **Fase B — carta + acreditación (PENDIENTE):**
+  1. Migración: entity nueva `entity-recaudador` (stats flojas, `innate_passive_skill_id`, render
+     `recaudar_nexus.webp` ya recomprimido a 151 KB, market listing) + tabla de tope diario
+     `passive_nexus_daily` + tabla de idempotencia + RPC `credit_passive_nexus(p_amount, p_operation_id)`
+     `security definer`: dedupe por operación, `least(amount, 600)` por duelo, `least(·, 1200 − ya_hoy)`
+     diario, acredita en `player_wallets`, devuelve lo realmente acreditado.
+  2. Cliente: al cerrar Story y Arena, leer `state.nexusEarnedByPlayerId[miId]` y enviarlo con un
+     `operationId` (uuid por cierre) en el payload.
+  3. Servidor (Story: `process-story-duel-completion`; Arena: `/api/training/matches/complete`): llamar la
+     RPC solo si el duelo terminó; devolver lo acreditado para el HUD.
+  4. Glosario/HUD (explicar el tope y cuándo paga) + tests (topes cortan, idempotencia, modos) + prueba real.
+
+**Antiguo diseño (descartado):** era una magia coste 4 de +600 Nexus con `EARN_WALLET_NEXUS` y tope de
+activaciones/día. Se sustituye por la pasiva de entity. El resto de esta ficha se conserva como referencia
+del modelo de seguridad (idéntico: el cliente cuenta, el servidor acredita con topes).
+
+---
+
+#### Referencia del modelo de seguridad (del diseño antiguo, sigue aplicando)
 
 **Cómo tiene que funcionar (innegociable, es la cartera otra vez):**
 1. **El motor del cliente NO toca la cartera.** Al activarse la carta, el motor solo registra el hecho en
@@ -519,14 +549,19 @@ El ADR, cuando toque, decide: modelo de asientos (2 equipos × 2), reglas de tur
 2. **Ficha 6:** el defensor ausente **sí pierde puntos** (pocos). Sustituye la decisión de v1.15. Números
    de partida: K/4 atacante, K/8 defensor, ~3 defensas/día por deck.
 
+**Cerradas (2026-07-16, segunda tanda):**
+
+3. **Ficha 2:** descarta **hasta 3** (`count:3`), no la mano entera. Implementada (commit `9a1679cc`,
+   migración 132 aplicada).
+4. **Ficha 3:** rediseñada a **pasiva de entity floja** (+200 Nexus por combate ganado); paga solo en
+   Story/Arena; topes 600/duelo y 1200/día. Fase A del motor hecha (commit `397c8b43`); Fase B pendiente.
+
 **Pendientes:**
 
-1. **Ficha 2:** ¿"toda la mano" de verdad, o tope ("hasta 3")? (Se puede lanzar con todo y bajar luego,
-   pero mejor decidirlo con el simulador de la ficha 5.)
 2. **Ficha 4:** ¿nivel 1 solo (elegir cuál activar) o también cadenas de varias trampas? (Recomendado:
    nivel 1 primero, cadenas en otra release.)
-3. **Ficha 3/6 (números):** el tope diario de la carta de Nexus y los K exactos de los ghosts se validan
-   con datos, pero hacen falta valores iniciales antes de implementar.
+5. **Ficha 6 (números):** los K exactos de los ghosts se validan con datos, pero hacen falta valores
+   iniciales antes de implementar.
 4. **Ficha 7:** ¿subastas solo del sistema (recomendado) o también entre jugadores?
 5. **Ficha 8:** lista v1 de nodos/habilidades del árbol y si "editar las 5 primeras cartas" entra en ranked
    o solo PvE (recomendado: PvE primero).
