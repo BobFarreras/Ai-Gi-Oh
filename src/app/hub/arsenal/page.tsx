@@ -7,7 +7,14 @@ import { createPlayerRuntimeRepositories } from "@/services/player-persistence/c
 import { getPlayerCardUpgrades } from "@/services/progression/get-player-card-upgrades";
 import { sharedDeckRepository } from "@/infrastructure/repositories/singletons";
 
-export default async function ArsenalModulePage() {
+interface IArsenalModulePageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function ArsenalModulePage({ searchParams }: IArsenalModulePageProps) {
+  const resolvedSearchParams = await searchParams;
+  // "?seccion=objetos": el aviso de canje del evento enlaza directo a la sección Objetos.
+  const initialSection = resolvedSearchParams.seccion === "objetos" ? ("OBJECTS" as const) : ("CARDS" as const);
   const session = await getCurrentUserSession();
   const playerId = session?.user.id ?? "local-player";
   const runtimeRepositories = session ? await createPlayerRuntimeRepositories() : null;
@@ -30,6 +37,7 @@ export default async function ArsenalModulePage() {
         collection={data.collection}
         initialCardProgress={cardProgress}
         initialCardUpgrades={cardUpgrades}
+        initialSection={initialSection}
       />
     </>
   );

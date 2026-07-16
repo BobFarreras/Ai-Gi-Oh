@@ -434,23 +434,62 @@ privacidad escrita. **Decisión tuya antes de mover nada.**
 
 ---
 
-### Ficha 9b (mini) — Rastro visible de los objetos equipados
+### Ficha 9b — Rastro visible de los objetos equipados
 
 **Origen:** reporte de usuario (2026-07-16): "compré el objeto del evento y no me sale en el arsenal".
 Investigado en producción: **no era un bug** — el canje del evento entrega bien (verificadas RPC, inventario,
 RLS y catálogo). El jugador había **equipado él mismo** el objeto 33 segundos después de canjearlo (su carta
-tiene el +200 ATK), y al ver luego el almacén vacío creyó haber perdido la compra. El objeto se consume al
-aplicarse y no deja rastro visible *como objeto*: este ticket se va a repetir.
+tiene el +200 ATK), y al ver luego el almacén vacío creyó haber perdido la compra. Verificado luego en el
+código (2026-07-16): el flujo B de equipar (objeto → "Equipar" → sección Cartas) deja el objeto "armado"
+de forma invisible mientras se navega, y el botón del detalle pasa a "Activar {objeto}" — un toque lo
+consume. La cinemática de aplicar ya existe y se mantiene como confirmación visual; lo que falta es RASTRO
+posterior. Diseño cerrado con las dos mejoras de abajo (decisión 2026-07-16).
 
-**Pasos (baratos, solo UI):**
-1. En el detalle de la carta, junto a las stats ya sumadas, listar las mejoras aplicadas
-   ("Mejoras: 2× Núcleo Overclock · +200 ATK"). El dato ya existe (`player_card_upgrades` guarda el bonus
-   agregado por carta; si se quiere el desglose por objeto haría falta ampliar la tabla — empezar por el
-   agregado, que no toca BD).
-2. Al canjear un objeto en la tienda del evento, aviso claro de destino: "Añadido a tus Objetos del
+**Diseño (decidido):**
+
+1. **Badges de mejora en la cara de la carta** (`Card.tsx` → `CardFrameArtAndProgress`): en el contenedor
+   de la imagen, icono pequeño arriba-izquierda con `×N` de mejoras de ATK aplicadas y arriba-derecha lo
+   mismo para DEF. Solo si N > 0. Props opcionales (mismo patrón que `level`/`versionTier`): quien tenga el
+   dato lo pasa (arsenal); el tablero de combate no los pasa y no cambia. Ojo perf: `Card` está memoizada y
+   se usa en el tablero — los badges son estáticos, sin animación.
+2. **Historial de equipamientos**: botón junto al conmutador Cartas/Objetos (`ArsenalSectionSwitch`, icono
+   reloj/scroll) que abre el historial: objeto (imagen+nombre), carta destino, `+valor stat` y fecha.
+3. Al canjear un objeto en la tienda del evento, aviso claro de destino: "Añadido a tus Objetos del
    arsenal", con enlace a la sección.
 
-**Esfuerzo:** bajo (medio día).
+**El dato que falta (migración `131+`).** `player_card_upgrades` solo guarda el **bonus agregado** por
+carta/stat, no las veces ni cuándo; y no hay tabla de historial. Derivar `×N` como `bonus / 100` es frágil
+(`card_upgrade_items.value` es editable por admin). Solución única para 1 y 2:
+- Tabla `player_card_upgrade_log` (append-only): player, item_id, card_id, stat, value, applied_at.
+  **Escrita solo desde las RPC** `apply_card_upgrade` (y la de caramelos, para que el historial cubra ambos
+  tipos de objeto); RLS de solo-lectura del propio jugador, sin write para `authenticated` (mismo patrón 123).
+- `×N` por stat y el historial salen los dos de esta tabla.
+- Backfill de lo ya aplicado: generar filas sintéticas desde `player_card_upgrades` (hoy es exacto porque
+  ambos objetos valen 100; fecha = desconocida, usar la de la migración y marcarlo).
+
+**Esfuerzo:** bajo-medio (1 día: migración + badges + panel de historial).
+
+**Estado (2026-07-16): IMPLEMENTADA y migración APLICADA a prod** en `feat/paquete-v1.17`.
+
+- Migración `131_card_upgrade_log.sql` aplicada (backfill de contadores hecho: p.ej. `entity-unreal-engine`
+  quedó 3×ATK/2×DEF). Historial de caramelos empieza desde hoy; el de mejoras ATK/DEF viene completo.
+- **Fuente única de los badges:** los contadores viven en `player_card_upgrades` (counts) y se adjuntan a la
+  carta en `applyCardProgressionToCard` como `ICard.upgradeCounts` — el ÚNICO punto que hidrata cartas para
+  tablero, arsenal, mercado y ambos clientes de multi. Por eso el badge sale en **combate (mano), detalle,
+  deck y almacén** sin plumbing por pantalla: `Card` lo resuelve `prop ?? card.upgradeCounts`, y
+  `CardThumbnail` (deck/almacén) lo lee de la carta. El tipo `ICardUpgradeCounts` tiene una única definición
+  en `card-upgrade-rules.ts`. (Nota: en tablero, la carta EN JUEGO muestra el holograma 3D encima; el badge
+  se ve nítido en mano y en todo el arsenal.)
+- **Badge en la animación al 1er objeto:** el overlay pinta la carta ya hidratada con el nuevo count, así que
+  al aplicar el primer objeto el icono aparece en la carta de la cinemática.
+- **Diseño de los sellos (`CardUpgradeBadges`, fuente visual única):** estética del sello de coste (fondo
+  negro, borde y texto oro, esquina biselada externa) para que se integre en el marco. Dos variantes:
+  `detail` = icono + ×N (carta grande, detalle/combate); `compact` = SOLO icono (miniaturas de deck/almacén,
+  donde el ×N tapaba el arte). ATK a la izquierda, DEF a la derecha en ambas.
+- **Overlay más robusto:** el fogonazo radial era `absolute` sin `pointer-events-none` y tapaba el botón
+  "Continuar" (de ahí que "a veces no hiciera nada"); arreglado. Además autocierre ~2s tras la animación.
+- Historial en la sección Objetos (`ArsenalObjectHistoryDialog` + `GET /api/progression/upgrade/history`) y
+  aviso de destino en el canje del evento con deep-link `/hub/arsenal?seccion=objetos`.
 
 ---
 

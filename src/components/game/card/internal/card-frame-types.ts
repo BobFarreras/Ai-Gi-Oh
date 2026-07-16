@@ -1,6 +1,10 @@
 // src/components/game/card/internal/card-frame-types.ts - Tipos compartidos del frame visual de carta.
 import { ICard } from "@/core/entities/ICard";
 
+// El tipo vive en la capa core (única definición); se re-exporta aquí por comodidad de los componentes.
+export type { ICardUpgradeCounts } from "@/core/services/progression/card-upgrade-rules";
+import type { ICardUpgradeCounts } from "@/core/services/progression/card-upgrade-rules";
+
 export interface ICardFrameProps {
   card: ICard;
   factionStyles: { wrapper: string; inner: string };
@@ -16,5 +20,6 @@ export interface ICardFrameProps {
   xp: number;
   masteryPassiveLabel?: string | null;
   prioritizeMediaLoading?: boolean;
+  upgradeCounts?: ICardUpgradeCounts | null;
 }
 

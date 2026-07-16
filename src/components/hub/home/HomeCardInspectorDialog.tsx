@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { ICard } from "@/core/entities/ICard";
+import { ICardUpgradeCounts } from "@/components/game/card/internal/card-frame-types";
 import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
 import { HomeInspectorActionButtons } from "@/components/hub/home/HomeInspectorActionButtons";
 import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
@@ -29,6 +30,7 @@ interface HomeCardInspectorDialogProps {
   onEvolve: () => Promise<IHomeActionResult>;
   onEquip?: () => void;
   equipPendingObjectLabel?: string | null;
+  upgradeCounts?: ICardUpgradeCounts | null;
   onClose: () => void;
   isTutorialActionStep?: boolean;
   tutorialHighlightTargetId?: string | null;
@@ -52,6 +54,7 @@ export function HomeCardInspectorDialog({
   onEvolve,
   onEquip,
   equipPendingObjectLabel = null,
+  upgradeCounts = null,
   onClose,
   isTutorialActionStep = false,
   tutorialHighlightTargetId = null,
@@ -130,6 +133,7 @@ export function HomeCardInspectorDialog({
           selectedCardMasteryPassiveSkillId={selectedCardMasteryPassiveSkillId}
           onEquip={onEquip ? () => { onClose(); onEquip(); } : undefined}
           equipPendingObjectLabel={equipPendingObjectLabel}
+          upgradeCounts={upgradeCounts}
         />
         <HomeInspectorActionButtons
           source={selectedCardSource}

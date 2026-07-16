@@ -1,5 +1,7 @@
 // src/core/entities/ICard.ts - Define contratos de carta base y metadatos runtime para el motor de juego.
 // src/core/entities/ICard.ts - Define contratos de carta base, triggers de trampa y efectos de combate/recuperación.
+import type { ICardUpgradeCounts } from "@/core/services/progression/card-upgrade-rules";
+
 export type CardType = "ENTITY" | "EXECUTION" | "TRAP" | "FUSION" | "ENVIRONMENT";
 export type Faction = "OPEN_SOURCE" | "BIG_TECH" | "NO_CODE" | "NEUTRAL";
 export type CardArchetype = "LLM" | "FRAMEWORK" | "DB" | "IDE" | "LANGUAGE" | "TOOL" | "SECURITY";
@@ -361,4 +363,10 @@ export interface ICard {
   readonly xp?: number;
   readonly masteryPassiveSkillId?: string | null;
   readonly masteryPassiveLabel?: string | null;
+  /**
+   * Veces que la carta recibió objetos de mejora por stat (badges ×N de la cara). Lo fija
+   * `applyCardProgressionToCard` desde los counts de `player_card_upgrades`, así que es la MISMA fuente para
+   * tablero, arsenal, mercado y ambos clientes de multi. Ausente = sin mejoras (no se pinta nada).
+   */
+  readonly upgradeCounts?: ICardUpgradeCounts | null;
 }

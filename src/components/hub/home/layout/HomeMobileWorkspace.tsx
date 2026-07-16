@@ -2,6 +2,7 @@
 "use client";
 
 import { useMemo, useState, type PointerEvent } from "react";
+import { resolveCardUpgradeCounts } from "@/core/services/progression/card-upgrade-rules";
 import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
 import { HomeCardInspectorDialog } from "@/components/hub/home/HomeCardInspectorDialog";
 import { buildHomeMobileDeckSlotsView } from "@/components/hub/home/layout/home-mobile-deck-view";
@@ -134,6 +135,7 @@ export function HomeMobileWorkspace(props: IHomeMobileWorkspaceProps) {
         onEvolve={props.onEvolveSelectedCard}
         onEquip={props.onEquipSelectedCard}
         equipPendingObjectLabel={props.equipPendingObjectLabel}
+        upgradeCounts={resolveCardUpgradeCounts(props.selectedCard ? props.cardUpgradesById.get(props.selectedCard.id) : undefined)}
         onClose={() => setIsInspectorOpen(false)}
         isTutorialActionStep={isTutorialActionStep}
         tutorialHighlightTargetId={tutorialHighlightTargetId}

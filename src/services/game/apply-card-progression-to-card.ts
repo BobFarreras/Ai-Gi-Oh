@@ -2,7 +2,7 @@
 import { ICard, CardType } from "@/core/entities/ICard";
 import { IPlayerCardProgress } from "@/core/entities/progression/IPlayerCardProgress";
 import { hasMaxLevelArt, resolveCardLevelBonuses } from "@/core/services/progression/card-level-bonus-rules";
-import { EMPTY_CARD_UPGRADE_BONUSES, ICardUpgradeBonuses } from "@/core/services/progression/card-upgrade-rules";
+import { EMPTY_CARD_UPGRADE_BONUSES, ICardUpgradeBonuses, resolveCardUpgradeCounts } from "@/core/services/progression/card-upgrade-rules";
 import { resolveMasteryPassiveLabel } from "@/core/services/progression/mastery-passive-display";
 
 function resolveCombatCost(cost: number, cardType: CardType, level: number): number {
@@ -41,6 +41,8 @@ export function applyCardProgressionToCard(
     masteryPassiveSkillId,
     // La etiqueta se muestra siempre que haya pasiva (innata desde V0 o de maestría a V5), con la magnitud de su versión.
     masteryPassiveLabel: masteryPassiveSkillId ? resolveMasteryPassiveLabel(masteryPassiveSkillId, versionTier) : null,
+    // Badges ×N de objetos: van con la carta ya hidratada, así los ven todos los render (tablero incluido).
+    upgradeCounts: resolveCardUpgradeCounts(upgrades),
   };
 }
 
