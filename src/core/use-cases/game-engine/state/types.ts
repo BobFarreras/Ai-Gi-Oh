@@ -121,6 +121,12 @@ export interface GameState {
    */
   nexusEarnedByPlayerId?: Record<string, number>;
   /**
+   * Energía pendiente de conceder por la pasiva de Sobrecarga Energética (ficha 1 v1.17), por jugador
+   * (playerId → energía). Se acumula al ganar un combate y se concede (respetando maxEnergy) al INICIO del
+   * siguiente turno de ese jugador, limpiándose entonces. Determinista → correcto en multi.
+   */
+  pendingEnergyBonusByPlayerId?: Record<string, number>;
+  /**
    * Transitorio dentro de una misma resolución de ataque: instanceId del atacante cuyo ataque ha sido
    * ANULADO por una trampa reactiva sin destruir al atacante (Flutter Enjambre en directo / Escudo
    * Metasploit a entity). `executeAttack` lo consume y lo limpia; no persiste entre acciones.

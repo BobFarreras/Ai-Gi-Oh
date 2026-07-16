@@ -1,6 +1,6 @@
 // src/core/use-cases/game-engine/combat/internal/attack-passives.ts - Reglas puras de pasivas mastery aplicadas durante combate (magnitud escalada por versión).
 import { IBoardEntity } from "@/core/entities/IPlayer";
-import { MASTERY_PASSIVE_IDS, NEXUS_ON_BATTLE_WIN_PASSIVE_ID } from "@/core/services/progression/mastery-passive-ids";
+import { ENERGY_ON_BATTLE_WIN_PASSIVE_ID, MASTERY_PASSIVE_IDS, NEXUS_ON_BATTLE_WIN_PASSIVE_ID } from "@/core/services/progression/mastery-passive-ids";
 import { resolvePassiveMagnitude } from "@/core/services/progression/mastery-passive-magnitude";
 
 /** Magnitud de una pasiva concreta para esta entity (0 si no la tiene). */
@@ -37,4 +37,9 @@ export function resolveEnergyRefundOnDeath(entity: IBoardEntity): number {
 /** Recaudación: ¿esta entity lleva la pasiva innata que gana Nexus al ganar un combate a otra entity? */
 export function hasNexusOnBattleWinPassive(entity: IBoardEntity): boolean {
   return entity.card.masteryPassiveSkillId === NEXUS_ON_BATTLE_WIN_PASSIVE_ID;
+}
+
+/** Sobrecarga Energética: ¿esta entity da +1 energía a su dueño al ganar un combate a otra entity? */
+export function hasEnergyOnBattleWinPassive(entity: IBoardEntity): boolean {
+  return entity.card.masteryPassiveSkillId === ENERGY_ON_BATTLE_WIN_PASSIVE_ID;
 }

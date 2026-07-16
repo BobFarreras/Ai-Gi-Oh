@@ -14,6 +14,8 @@ interface ICreateTestStateConfig {
   pendingTurnAction?: GameState["pendingTurnAction"];
   combatLog?: GameState["combatLog"];
   activeStatusEffects?: GameState["activeStatusEffects"];
+  nexusEarnedByPlayerId?: GameState["nexusEarnedByPlayerId"];
+  pendingEnergyBonusByPlayerId?: GameState["pendingEnergyBonusByPlayerId"];
   idFactory?: GameState["idFactory"];
 }
 
@@ -53,6 +55,8 @@ export function createTestGameState(config?: ICreateTestStateConfig): GameState 
     pendingTurnAction: resolvedConfig.pendingTurnAction ?? null,
     combatLog: resolvedConfig.combatLog ?? [],
     activeStatusEffects: resolvedConfig.activeStatusEffects,
+    nexusEarnedByPlayerId: resolvedConfig.nexusEarnedByPlayerId,
+    pendingEnergyBonusByPlayerId: resolvedConfig.pendingEnergyBonusByPlayerId,
     idFactory: resolvedConfig.idFactory,
   };
 }

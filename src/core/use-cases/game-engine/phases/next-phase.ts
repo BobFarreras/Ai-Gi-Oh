@@ -77,7 +77,11 @@ export function nextPhase(state: GameState): GameState {
     const nextActivePlayerBeforeGain = isNextPlayerA ? state.playerA : state.playerB;
     const masteryEnergyBonus = resolveMasteryEnergyBonus(nextActivePlayerBeforeGain);
     const totalMasteryBonus = masteryEnergyBonus.defenseBonus + masteryEnergyBonus.attackBonus;
-    const turnEnergyGain = 2 + totalMasteryBonus;
+    // Sobrecarga Energética (ficha 1): energía acumulada por combates ganados en turnos anteriores; se
+    // concede ahora (al arrancar el turno de su dueño) y se limpia después.
+    const pendingEnergyBonus = state.pendingEnergyBonusByPlayerId?.[nextActivePlayerId] ?? 0;
+    const totalTurnStartBonus = totalMasteryBonus + pendingEnergyBonus;
+    const turnEnergyGain = 2 + totalTurnStartBonus;
     const previousEnergy = isNextPlayerA ? state.playerA.currentEnergy : state.playerB.currentEnergy;
     const nextPlayerA = {
       ...state.playerA,
@@ -111,6 +115,10 @@ export function nextPhase(state: GameState): GameState {
       pendingTurnAction: turnStartResolution.pendingTurnAction,
       playerA: isNextPlayerA ? turnStartResolution.player : nextPlayerA,
       playerB: isNextPlayerA ? nextPlayerB : turnStartResolution.player,
+      // Sobrecarga Energética: ya concedida arriba; se limpia el pendiente del jugador que arranca turno.
+      pendingEnergyBonusByPlayerId: pendingEnergyBonus > 0
+        ? { ...state.pendingEnergyBonusByPlayerId, [nextActivePlayerId]: 0 }
+        : state.pendingEnergyBonusByPlayerId,
     };
 
     const energyAfterGain = isNextPlayerA ? nextState.playerA.currentEnergy : nextState.playerB.currentEnergy;
@@ -126,7 +134,8 @@ export function nextPhase(state: GameState): GameState {
       after: energyAfterGain,
       masteryDefenseBonus: masteryEnergyBonus.defenseBonus,
       masteryAttackBonus: masteryEnergyBonus.attackBonus,
-      ...(totalMasteryBonus > 0 ? { amount: totalMasteryBonus } : {}),
+      ...(pendingEnergyBonus > 0 ? { battleWinEnergyBonus: pendingEnergyBonus } : {}),
+      ...(totalTurnStartBonus > 0 ? { amount: totalTurnStartBonus } : {}),
     });
     // Regeneración: cura de inicio de turno → VFX de curación en el HUD del jugador activo.
     if (masteryTurnStart.healAmount > 0) {

@@ -8,26 +8,40 @@ import { markAttackerAsUsed } from "@/core/use-cases/game-engine/combat/internal
 import { validateDirectAttack } from "@/core/use-cases/game-engine/combat/internal/attack-validation";
 import {
   applyAttackDrainByDefenderPassive,
+  hasEnergyOnBattleWinPassive,
   hasNexusOnBattleWinPassive,
   resolveDefenderReflectDamage,
   resolveDirectHitBonus,
   resolveEntityAttackBonus,
 } from "@/core/use-cases/game-engine/combat/internal/attack-passives";
 import { buildUpdatedAttacker, buildUpdatedDefender } from "@/core/use-cases/game-engine/combat/internal/attack-player-updates";
-import { NEXUS_PER_BATTLE_WIN } from "@/core/services/progression/mastery-passive-ids";
+import { ENERGY_PER_BATTLE_WIN, NEXUS_PER_BATTLE_WIN } from "@/core/services/progression/mastery-passive-ids";
+
+/** Suma `amount` a un contador de GameState indexado por jugador (Recaudación / Sobrecarga), inmutable. */
+function addToPlayerCounter(
+  counter: Record<string, number> | undefined,
+  ownerPlayerId: string,
+  amount: number,
+): Record<string, number> {
+  const current = counter ?? {};
+  return { ...current, [ownerPlayerId]: (current[ownerPlayerId] ?? 0) + amount };
+}
 
 /**
- * Recaudación (ficha 3): si `winnerEntity` lleva la pasiva y ganó el combate (destruyó al rival y sobrevivió),
- * suma NEXUS_PER_BATTLE_WIN al contador de su dueño en el GameState. Solo cuenta; el servidor acredita y
- * aplica los topes al cerrar el duelo. Un intercambio (ambas destruidas) NO es victoria.
+ * Pasivas de "ganar un combate" (fichas 1 y 3): si `winnerEntity` ganó (destruyó al rival y sobrevivió; un
+ * intercambio NO cuenta), aplica su pasiva al contador correspondiente del GameState. El motor solo cuenta:
+ * la Recaudación la acredita el servidor al cerrar el duelo; la energía se concede al inicio del turno.
  */
-function creditNexusOnBattleWin(state: GameState, ownerPlayerId: string, winnerEntity: IBoardEntity, won: boolean): GameState {
-  if (!won || !hasNexusOnBattleWinPassive(winnerEntity)) return state;
-  const current = state.nexusEarnedByPlayerId ?? {};
-  return {
-    ...state,
-    nexusEarnedByPlayerId: { ...current, [ownerPlayerId]: (current[ownerPlayerId] ?? 0) + NEXUS_PER_BATTLE_WIN },
-  };
+function applyBattleWinPassives(state: GameState, ownerPlayerId: string, winnerEntity: IBoardEntity, won: boolean): GameState {
+  if (!won) return state;
+  let next = state;
+  if (hasNexusOnBattleWinPassive(winnerEntity)) {
+    next = { ...next, nexusEarnedByPlayerId: addToPlayerCounter(next.nexusEarnedByPlayerId, ownerPlayerId, NEXUS_PER_BATTLE_WIN) };
+  }
+  if (hasEnergyOnBattleWinPassive(winnerEntity)) {
+    next = { ...next, pendingEnergyBonusByPlayerId: addToPlayerCounter(next.pendingEnergyBonusByPlayerId, ownerPlayerId, ENERGY_PER_BATTLE_WIN) };
+  }
+  return next;
 }
 
 /**
@@ -120,12 +134,12 @@ export function resolveEntityBattleState(params: IResolveEntityBattleParams): { 
     result.damageToDefenderPlayer,
     result.attackerDestroyed,
   );
-  // Recaudación: gana quien destruye a la otra entity y sobrevive (un intercambio no cuenta).
+  // Pasivas de victoria (Recaudación / Sobrecarga): gana quien destruye a la otra entity y sobrevive.
   const attackerWon = result.defenderDestroyed && !result.attackerDestroyed;
   const defenderWon = result.attackerDestroyed && !result.defenderDestroyed;
   let nextState = assignPlayers(state, updatedAttacker.player, updatedDefender.player, isPlayerA);
-  nextState = creditNexusOnBattleWin(nextState, attacker.id, attackerEntity, attackerWon);
-  nextState = creditNexusOnBattleWin(nextState, defender.id, defenderEntity, defenderWon);
+  nextState = applyBattleWinPassives(nextState, attacker.id, attackerEntity, attackerWon);
+  nextState = applyBattleWinPassives(nextState, defender.id, defenderEntity, defenderWon);
   return {
     state: nextState,
     result: {
