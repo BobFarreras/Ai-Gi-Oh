@@ -129,24 +129,34 @@ la mano") — cambiarla luego es una migración de una línea, pero la primera i
 
 ---
 
-### Ficha 3 — Magia: "al tirarla ganas 600 nexus" (coste 4)
+### Ficha 3 — Magia: "al tirarla ganas 600 Nexus" (coste 4)
 
-**⚠️ Decisión previa: ¿600 de QUÉ?** En el juego "Nexus" es la **moneda** (Nexus Coins) y los puntos de vida
-son `healthPoints` (8000). Las dos lecturas son features distintas:
+**DECIDIDO (2026-07-16): son 600 Nexus de MONEDA, acreditados en `player_wallets`.** No es una cura: es
+economía dentro del combate, y se diseña con esa mentalidad.
 
-- **(a) 600 de vida (LP).** Efecto `HEAL` ya existe → **es una migración pura**, cero código. Balance: hay
-  que compararla con las curas existentes para ponerle coste justo.
-- **(b) 600 Nexus de moneda.** Esto es **economía, no combate**, y es peligrosa: una carta que imprime
-  moneda es farmeable (duelos de entrenamiento, amistosos, rendirse y repetir…). Si de verdad la quieres
-  así, las reglas mínimas: el Nexus lo acredita el **servidor al cerrar el duelo** (nunca el motor del
-  cliente), solo en modos con recompensa (story/arena, no entrenamiento ni amistosos), con tope diario, y
-  registrado con la misma tubería idempotente de recompensas que ya usa la cartera (post-122/124). Aun así,
-  queda una palanca de inflación permanente en el catálogo.
+**Cómo tiene que funcionar (innegociable, es la cartera otra vez):**
+1. **El motor del cliente NO toca la cartera.** Al activarse la carta, el motor solo registra el hecho en
+   el estado/log del duelo (p.ej. contador `nexusEarnedInDuel` o eventos en el combat log). El HUD puede
+   enseñar "+600 Nexus (al final del duelo)" como feedback.
+2. **El servidor acredita al cerrar el duelo**, junto al resto de recompensas, por la tubería idempotente
+   post-122/124 (service-role, `wallet_credit_nexus` con `p_player_id` de la sesión). Es el mismo camino
+   que ya usan las recompensas de story/arena: el crédito de esta carta es una línea más de ese cálculo,
+   validada contra el registro de la partida — nunca "el cliente dice que activó la carta 5 veces".
+3. **Anti-farmeo (obligatorio):** la carta imprime moneda, así que sin frenos es una granja (entrenamiento,
+   amistosos, rendirse y repetir). Reglas mínimas: solo acredita en **modos con recompensa** (story/arena/
+   ranked, NO entrenamiento ni amistosos), solo si el duelo **termina** (rendirse antes de acabar = no
+   cobra), y **tope diario** de Nexus ganado por esta vía (p.ej. 3 activaciones/día; contador en servidor).
+   Los números son tuyos, pero el tope tiene que existir desde el día 1: subirlo luego es fácil, bajarlo
+   tras el abuso no.
+4. En multi, la activación es visible para ambos clientes (es un efecto de ejecución normal); la
+   acreditación sigue siendo solo del servidor al validar el resultado.
 
-**Recomendación:** (a), y si lo que buscas es "carta que da dinero", mejor una **misión o evento** que
-premie usarla, no un efecto de catálogo. Si eliges (a), la ficha entera es: migración de la carta + glosario.
+**Pasos.** Nuevo `action` (p.ej. `EARN_WALLET_NEXUS { value }`, agnóstico al valor — principio 5) + handler
+que solo registra el evento + suma en el cierre de duelo del servidor con tope diario + migración de la
+carta (coste 4) + VFX/HUD + glosario (explicar el tope y cuándo paga, o parecerá un bug).
 
-**Esfuerzo:** (a) bajo (horas) · (b) medio y con superficie de seguridad seria.
+**Esfuerzo:** medio (2-3 días). Casi todo está en el cierre de duelo del servidor y sus tests (incluido
+"rendirse no paga" y "el tope corta").
 
 ---
 
@@ -253,13 +263,12 @@ solo la parte pública (nick/avatar, nada de inventario).
 - **Emparejamiento por ventana de ELO ±50:** el servidor busca candidatos dentro de `[miELO−50, miELO+50]`
   y elige él (el jugador no escoge víctima — anti-farmeo). Decidir el fallback si no hay nadie en la
   ventana: ampliar a ±100 o no ofrecer combate (recomendado: ampliar con menos puntos).
-- **Puntuación reducida en ambos lados:** ganar da pocos puntos, y **el defensor ausente también pierde
-  pocos**. ⚠️ **Esto CAMBIA la decisión cerrada en v1.15** ("el dueño del ghost no gana ni pierde nada").
-  Se adopta tu regla nueva, pero conviene dejarla escrita con números: sugerencia inicial K/4 para el
-  atacante y K/8 para el defensor (sobre el K de un duelo vivo), y revisar tras una semana de datos. Un
-  jugador que duerme no debe poder ser "granjeado" hasta el suelo del ranking: con el límite de que **cada
-  deck solo puede ser atacado N veces al día** (p.ej. 3) se cierra ese agujero — este freno es nuevo y
-  necesario justo porque ahora el defensor pierde puntos.
+- **Puntuación reducida en ambos lados — DECIDIDO (2026-07-16):** ganar da pocos puntos y **el defensor
+  ausente también pierde pocos**. (Esto sustituye formalmente la decisión de v1.15 de que "el dueño del
+  ghost no gana ni pierde nada".) Números de partida: K/4 para el atacante y K/8 para el defensor (sobre el
+  K de un duelo vivo), a revisar tras una semana de datos. Un jugador que duerme no debe poder ser
+  "granjeado" hasta el suelo del ranking: con el límite de que **cada deck solo puede ser atacado N veces
+  al día** (p.ej. 3) se cierra ese agujero — este freno es necesario justo porque el defensor pierde puntos.
 
 **Piezas verificadas sobre las que se monta:** ELO y cierre de partida (`match-elo-persistence.ts`,
 `/api/multiplayer/match/finish`), resolución de mazos ajenos con progresión y objetos
@@ -441,19 +450,27 @@ El ADR, cuando toque, decide: modelo de asientos (2 equipos × 2), reglas de tur
 
 ---
 
-## 4. Decisiones que necesito de ti antes de empezar
+## 4. Decisiones
 
-1. **Ficha 3:** ¿los "600 nexus" son vida (LP) o moneda? (Recomendado: vida.)
-2. **Ficha 2:** ¿"toda la mano" de verdad, o tope ("hasta 3")? (Se puede lanzar con todo y bajar luego,
+**Cerradas (2026-07-16):**
+
+1. **Ficha 3:** los 600 son **Nexus de moneda**, acreditados en `player_wallets` por el servidor al cerrar
+   el duelo, con tope diario y solo en modos con recompensa (detalle en la ficha).
+2. **Ficha 6:** el defensor ausente **sí pierde puntos** (pocos). Sustituye la decisión de v1.15. Números
+   de partida: K/4 atacante, K/8 defensor, ~3 defensas/día por deck.
+
+**Pendientes:**
+
+1. **Ficha 2:** ¿"toda la mano" de verdad, o tope ("hasta 3")? (Se puede lanzar con todo y bajar luego,
    pero mejor decidirlo con el simulador de la ficha 5.)
-3. **Ficha 4:** ¿nivel 1 solo (elegir cuál activar) o también cadenas de varias trampas? (Recomendado:
+2. **Ficha 4:** ¿nivel 1 solo (elegir cuál activar) o también cadenas de varias trampas? (Recomendado:
    nivel 1 primero, cadenas en otra release.)
-4. **Ficha 6:** confirmar el cambio respecto a v1.15 — el defensor ausente **sí pierde** puntos (pocos) — y
-   validar los frenos: 5 ataques/día por jugador y ~3 defensas/día por deck.
-5. **Ficha 7:** ¿subastas solo del sistema (recomendado) o también entre jugadores?
-6. **Ficha 8:** lista v1 de nodos/habilidades del árbol y si "editar las 5 primeras cartas" entra en ranked
+3. **Ficha 3/6 (números):** el tope diario de la carta de Nexus y los K exactos de los ghosts se validan
+   con datos, pero hacen falta valores iniciales antes de implementar.
+4. **Ficha 7:** ¿subastas solo del sistema (recomendado) o también entre jugadores?
+5. **Ficha 8:** lista v1 de nodos/habilidades del árbol y si "editar las 5 primeras cartas" entra en ranked
    o solo PvE (recomendado: PvE primero).
-7. **Ficha 10:** ¿ruta A, B o C para el avatar? (Recomendado: C ya, B después.)
+6. **Ficha 10:** ¿ruta A, B o C para el avatar? (Recomendado: C ya, B después.)
 
 ## 5. Definition of done común
 
