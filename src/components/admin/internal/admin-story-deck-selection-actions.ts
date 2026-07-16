@@ -1,6 +1,7 @@
 // src/components/admin/internal/admin-story-deck-selection-actions.ts - Acciones de selección para sincronizar duelo y modo de edición en el panel Story Deck.
 import { IAdminStoryDeckApiResponse } from "@/components/admin/admin-story-deck-api";
 import {
+  IStorySlotLevelDraft,
   resolveDraft,
   resolveDraftByDuel,
   resolveDraftFusionCardIds,
@@ -21,7 +22,7 @@ interface IApplyDuelSelectionInput {
   setSelectedDuelDifficulty: (value: StoryOpponentDifficulty) => void;
   setDuelAiStyle: (value: "balanced" | "aggressive" | "combo" | "control") => void;
   setDuelAiAggression: (value: number) => void;
-  setDraftSlotLevels: (value: Array<{ versionTier: number; level: number; xp: number }>) => void;
+  setDraftSlotLevels: (value: IStorySlotLevelDraft[]) => void;
   setDraftFusionCardIds: (value: string[]) => void;
   setDraftRewardCardIds: (value: string[]) => void;
 }
@@ -33,7 +34,7 @@ interface ICloneDuelConfigInput {
   setDuelAiStyle: (value: "balanced" | "aggressive" | "combo" | "control") => void;
   setDuelAiAggression: (value: number) => void;
   setDraftCardIds: (value: Array<string | null>) => void;
-  setDraftSlotLevels: (value: Array<{ versionTier: number; level: number; xp: number }>) => void;
+  setDraftSlotLevels: (value: IStorySlotLevelDraft[]) => void;
   setDraftFusionCardIds: (value: string[]) => void;
   setDraftRewardCardIds: (value: string[]) => void;
   setIsBaseDeckMode: (next: boolean) => void;
@@ -70,7 +71,7 @@ export function applyDeckModeSelection(
   selectedDuelId: string | null,
   setIsBaseDeckMode: (next: boolean) => void,
   setDraftCardIds: (value: Array<string | null>) => void,
-  setDraftSlotLevels: (value: Array<{ versionTier: number; level: number; xp: number }>) => void,
+  setDraftSlotLevels: (value: IStorySlotLevelDraft[]) => void,
   setDraftFusionCardIds: (value: string[]) => void,
   setDraftRewardCardIds: (value: string[]) => void,
 ): void {

@@ -1,5 +1,6 @@
 // src/components/admin/internal/admin-story-deck-load-flow.ts - Ejecuta recarga de datos del editor Story y aplica snapshot en estado local.
 import { fetchAdminStoryDeckData, IAdminStoryDeckApiResponse } from "@/components/admin/admin-story-deck-api";
+import { IStorySlotLevelDraft } from "@/components/admin/internal/admin-story-duel-draft";
 import { buildStoryDeckLoadSnapshot } from "@/components/admin/internal/admin-story-deck-load-state";
 
 interface IExecuteAdminStoryDeckLoadInput {
@@ -11,7 +12,7 @@ interface IExecuteAdminStoryDeckLoadInput {
   setSelectedDuelDifficulty: (value: "ROOKIE" | "STANDARD" | "ELITE" | "BOSS" | "MYTHIC") => void;
   setDuelAiStyle: (value: "balanced" | "aggressive" | "combo" | "control") => void;
   setDuelAiAggression: (value: number) => void;
-  setDraftSlotLevels: (value: Array<{ versionTier: number; level: number; xp: number }>) => void;
+  setDraftSlotLevels: (value: IStorySlotLevelDraft[]) => void;
   setDraftFusionCardIds: (value: string[]) => void;
   setDraftRewardCardIds: (value: string[]) => void;
   setIsBaseDeckMode: (value: boolean) => void;

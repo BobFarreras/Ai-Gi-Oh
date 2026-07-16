@@ -8,6 +8,9 @@ export interface IAdminSaveStoryDuelDeckOverrideCommand {
   versionTier: number;
   level: number;
   xp: number;
+  /** Stats absolutas por objetos equipados; null = ATK/DEF base de la carta. */
+  attackOverride: number | null;
+  defenseOverride: number | null;
 }
 
 export interface IAdminSaveStoryDuelConfigCommand {

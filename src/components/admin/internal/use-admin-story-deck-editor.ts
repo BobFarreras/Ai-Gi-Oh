@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from "react";
 import { IAdminStoryDeckApiResponse } from "@/components/admin/admin-story-deck-api";
-import { applyMassLevels, applySlotLevelToSameCards, copyLevelsFromSimilarCard, extendLevelsToSlot } from "@/components/admin/internal/admin-story-deck-editor-state";
+import { applyMassLevels, applySlotLevelToSameCards, applySlotOverrideToSameCards, copyLevelsFromSimilarCard, extendLevelsToSlot } from "@/components/admin/internal/admin-story-deck-editor-state";
 import { IUseAdminStoryDeckEditorResult } from "@/components/admin/internal/admin-story-deck-editor-types";
 import { IStorySlotLevelDraft } from "@/components/admin/internal/admin-story-duel-draft";
 import { buildStoryDeckLoadSnapshot } from "@/components/admin/internal/admin-story-deck-load-state";
@@ -90,6 +90,7 @@ export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse)
     clearDraftRewardCard: () => setDraftRewardCardIds([]),
     draftSlotLevels,
     setDraftSlotLevelByIndex: (slotIndex, key, value) => setDraftSlotLevels((current) => applySlotLevelToSameCards(current, draftCardIds, slotIndex, key, value)),
+    setDraftSlotOverrideByIndex: (slotIndex, stat, value) => setDraftSlotLevels((current) => applySlotOverrideToSameCards(current, draftCardIds, slotIndex, stat, value)),
     applyMassSlotLevels: (input) => setDraftSlotLevels((current) => applyMassLevels(current, draftCardIds, input)),
     setDraftCardIdBySlot: (slotIndex, cardId) => {
       setDraftCardIds((current) => {

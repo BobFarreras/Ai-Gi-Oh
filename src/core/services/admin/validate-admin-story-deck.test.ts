@@ -14,7 +14,7 @@ function buildCommand(partial?: Partial<IAdminSaveStoryDeckCommand>): IAdminSave
       aiProfile: { style: "balanced", aggression: 0.4 },
       fusionCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
       rewardCardIds: ["exec-fusion-gemgpt"],
-      slotOverrides: [{ slotIndex: 0, cardId: "entity-chatgpt", versionTier: 0, level: 0, xp: 0 }],
+      slotOverrides: [{ slotIndex: 0, cardId: "entity-chatgpt", versionTier: 0, level: 0, xp: 0, attackOverride: null, defenseOverride: null }],
     },
     ...partial,
   };

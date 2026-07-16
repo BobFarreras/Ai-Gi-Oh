@@ -39,7 +39,7 @@ describe("SaveAdminStoryDeckUseCase", () => {
         aiProfile: { style: "combo", aggression: 0.66 },
         fusionCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
         rewardCardIds: ["entity-python"],
-        slotOverrides: [{ slotIndex: 0, cardId: "entity-python", versionTier: 2, level: 12, xp: 1400 }],
+        slotOverrides: [{ slotIndex: 0, cardId: "entity-python", versionTier: 2, level: 12, xp: 1400, attackOverride: null, defenseOverride: null }],
       },
     });
     expect(repository.saveDeck).toHaveBeenCalledWith("deck-1", [], expect.any(Object), false);

@@ -36,8 +36,8 @@ export async function executeAdminStoryDeckSave(input: IExecuteAdminStoryDeckSav
       rewardCardIds: input.draftRewardCardIds.filter((cardId) => cardId.trim().length > 0),
       slotOverrides: input.draftCardIds.flatMap((cardId, slotIndex) => {
         if (!cardId) return [];
-        const levels = input.draftSlotLevels[slotIndex] ?? { versionTier: 0, level: 0, xp: 0 };
-        return [{ slotIndex, cardId, versionTier: levels.versionTier, level: levels.level, xp: levels.xp }];
+        const levels = input.draftSlotLevels[slotIndex] ?? { versionTier: 0, level: 0, xp: 0, attackOverride: null, defenseOverride: null };
+        return [{ slotIndex, cardId, versionTier: levels.versionTier, level: levels.level, xp: levels.xp, attackOverride: levels.attackOverride, defenseOverride: levels.defenseOverride }];
       }),
     } : null,
     updateBaseDeck: input.isBaseDeckMode,
