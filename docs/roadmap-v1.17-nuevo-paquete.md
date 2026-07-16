@@ -58,7 +58,8 @@ porque cada ficha de este paquete choca con al menos uno:
 ## 2. Orden recomendado
 
 - **Paquete A — contenido barato y valor inmediato:** fichas 2, 3 y 1 (las tres cartas nuevas; dos son casi
-  solo migración) y ficha 9 (nodo de objetos en story).
+  solo migración), ficha 9 (nodo de objetos en story) y ficha 9b (rastro visible de objetos equipados —
+  nace de un reporte de usuario ya investigado: no era bug, era UX).
 - **Paquete B — experiencia de combate:** ficha 4 (elegir trampa) y ficha 5 (IA). La 4 antes que la 5,
   porque la IA también tendrá que decidir "qué trampa activo" cuando haya varias.
 - **Paquete C — features con economía/backend:** ficha 6 (ghosts) y ficha 7 (subastas). Independientes
@@ -430,6 +431,26 @@ luego enchufar A o B.
 
 **Recomendación:** C ahora (un día), B después si la demanda existe, A solo con presupuesto y política de
 privacidad escrita. **Decisión tuya antes de mover nada.**
+
+---
+
+### Ficha 9b (mini) — Rastro visible de los objetos equipados
+
+**Origen:** reporte de usuario (2026-07-16): "compré el objeto del evento y no me sale en el arsenal".
+Investigado en producción: **no era un bug** — el canje del evento entrega bien (verificadas RPC, inventario,
+RLS y catálogo). El jugador había **equipado él mismo** el objeto 33 segundos después de canjearlo (su carta
+tiene el +200 ATK), y al ver luego el almacén vacío creyó haber perdido la compra. El objeto se consume al
+aplicarse y no deja rastro visible *como objeto*: este ticket se va a repetir.
+
+**Pasos (baratos, solo UI):**
+1. En el detalle de la carta, junto a las stats ya sumadas, listar las mejoras aplicadas
+   ("Mejoras: 2× Núcleo Overclock · +200 ATK"). El dato ya existe (`player_card_upgrades` guarda el bonus
+   agregado por carta; si se quiere el desglose por objeto haría falta ampliar la tabla — empezar por el
+   agregado, que no toca BD).
+2. Al canjear un objeto en la tienda del evento, aviso claro de destino: "Añadido a tus Objetos del
+   arsenal", con enlace a la sección.
+
+**Esfuerzo:** bajo (medio día).
 
 ---
 
