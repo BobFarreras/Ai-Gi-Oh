@@ -32,3 +32,14 @@ export type MasteryPassiveId = (typeof MASTERY_PASSIVE_IDS)[keyof typeof MASTERY
  * catálogo de las 10 pasivas de maestría (ni el mapeo de arquetipos a V5).
  */
 export const REVIVE_NEXT_TURN_PASSIVE_ID = "passive-revive-next-turn";
+
+/**
+ * Pasiva INNATA-only "Recaudación" (ficha 3 v1.17): cuando ESTA entity gana un combate a una entity rival
+ * (la destruye y sobrevive), su dueño gana Nexus de moneda. El motor solo CUENTA en el GameState; el
+ * servidor acredita al cerrar el duelo (idempotente, con topes por duelo y diarios). Va en una entity floja
+ * para que farmearlo cueste. Fuera de MASTERY_PASSIVE_IDS (igual que Reactivación).
+ */
+export const NEXUS_ON_BATTLE_WIN_PASSIVE_ID = "passive-nexus-on-battle-win";
+
+/** Nexus que otorga la pasiva de Recaudación por cada combate ganado (el servidor aplica los topes). */
+export const NEXUS_PER_BATTLE_WIN = 200;

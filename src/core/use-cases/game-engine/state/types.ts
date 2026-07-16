@@ -115,6 +115,12 @@ export interface GameState {
   /** Efectos de estado multi-turno a nivel de jugador (p.ej. "sin ataques directos N turnos"). */
   activeStatusEffects?: IActiveStatusEffect[];
   /**
+   * Nexus de moneda acumulado en este duelo por la pasiva de Recaudación (ficha 3 v1.17), por jugador
+   * (playerId → Nexus). El motor SOLO cuenta aquí; el servidor lo acredita al cerrar el duelo, con topes.
+   * Vive en el GameState → determinista en multi. No es LP ni energía: es un contador de recompensa diferida.
+   */
+  nexusEarnedByPlayerId?: Record<string, number>;
+  /**
    * Transitorio dentro de una misma resolución de ataque: instanceId del atacante cuyo ataque ha sido
    * ANULADO por una trampa reactiva sin destruir al atacante (Flutter Enjambre en directo / Escudo
    * Metasploit a entity). `executeAttack` lo consume y lo limpia; no persiste entre acciones.

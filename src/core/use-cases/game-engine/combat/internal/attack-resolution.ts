@@ -8,11 +8,27 @@ import { markAttackerAsUsed } from "@/core/use-cases/game-engine/combat/internal
 import { validateDirectAttack } from "@/core/use-cases/game-engine/combat/internal/attack-validation";
 import {
   applyAttackDrainByDefenderPassive,
+  hasNexusOnBattleWinPassive,
   resolveDefenderReflectDamage,
   resolveDirectHitBonus,
   resolveEntityAttackBonus,
 } from "@/core/use-cases/game-engine/combat/internal/attack-passives";
 import { buildUpdatedAttacker, buildUpdatedDefender } from "@/core/use-cases/game-engine/combat/internal/attack-player-updates";
+import { NEXUS_PER_BATTLE_WIN } from "@/core/services/progression/mastery-passive-ids";
+
+/**
+ * Recaudación (ficha 3): si `winnerEntity` lleva la pasiva y ganó el combate (destruyó al rival y sobrevivió),
+ * suma NEXUS_PER_BATTLE_WIN al contador de su dueño en el GameState. Solo cuenta; el servidor acredita y
+ * aplica los topes al cerrar el duelo. Un intercambio (ambas destruidas) NO es victoria.
+ */
+function creditNexusOnBattleWin(state: GameState, ownerPlayerId: string, winnerEntity: IBoardEntity, won: boolean): GameState {
+  if (!won || !hasNexusOnBattleWinPassive(winnerEntity)) return state;
+  const current = state.nexusEarnedByPlayerId ?? {};
+  return {
+    ...state,
+    nexusEarnedByPlayerId: { ...current, [ownerPlayerId]: (current[ownerPlayerId] ?? 0) + NEXUS_PER_BATTLE_WIN },
+  };
+}
 
 /**
  * Stat ofensivo del atacante: su ATK normal, o su DEF si ataca estando en modo DEFENSA (Escudo Firewall
@@ -104,8 +120,14 @@ export function resolveEntityBattleState(params: IResolveEntityBattleParams): { 
     result.damageToDefenderPlayer,
     result.attackerDestroyed,
   );
+  // Recaudación: gana quien destruye a la otra entity y sobrevive (un intercambio no cuenta).
+  const attackerWon = result.defenderDestroyed && !result.attackerDestroyed;
+  const defenderWon = result.attackerDestroyed && !result.defenderDestroyed;
+  let nextState = assignPlayers(state, updatedAttacker.player, updatedDefender.player, isPlayerA);
+  nextState = creditNexusOnBattleWin(nextState, attacker.id, attackerEntity, attackerWon);
+  nextState = creditNexusOnBattleWin(nextState, defender.id, defenderEntity, defenderWon);
   return {
-    state: assignPlayers(state, updatedAttacker.player, updatedDefender.player, isPlayerA),
+    state: nextState,
     result: {
       ...result,
       passiveAttackReduction,
