@@ -1,6 +1,7 @@
 // src/components/game/board/hooks/internal/player-actions/handleOwnEntityClick.ts - Gestiona clics sobre entidades propias según fase, acciones pendientes y animaciones.
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { GameEngine } from "@/core/use-cases/GameEngine";
+import { canAttackFromDefense } from "@/core/use-cases/game-engine/state/status-effects";
 import { IUsePlayerActionsParams } from "./types";
 import { MouseEvent } from "react";
 
@@ -109,6 +110,16 @@ export async function handleOwnEntityClick({
   }
 
   if (entity.hasAttackedThisTurn) return "handled";
+  // Escudo Firewall Ofensivo: con el estado activo, una defensora (boca arriba) se selecciona como ATACANTE
+  // (atacará con su DEF), SIN cambiar de modo ni voltearse. Las SET (boca abajo) no.
+  if (entity.mode === "DEFENSE" && canAttackFromDefense(gameState.activeStatusEffects, gameState.playerA.id)) {
+    setActiveAttackerId((previous) => (previous === entity.instanceId ? null : entity.instanceId));
+    setSelectedCard(entity.card);
+    setSelectedBoardEntityInstanceId(entity.instanceId);
+    setPlayingCard(null);
+    setLastError(null);
+    return "handled";
+  }
   if (entity.mode === "DEFENSE" || entity.mode === "SET") {
     // Doble click sobre una entidad en DEFENSA (boca arriba) la devuelve a ATAQUE: es el inverso
     // simétrico del doble-click ATTACK->DEFENSE de más abajo. Las cartas SET (boca abajo) no se

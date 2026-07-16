@@ -650,7 +650,7 @@ perfiles de dificultad ya existen y `get-match-session-data.ts` ya sabe resolver
 | — | 🔒 Tablas de valor escribibles por el cliente | ✅ **CERRADO** (migración 122 aplicada + service-role) |
 | B | 3 · Objetos ATK/DEF | ✅ hecho: backend + tope server-side + compra (Mercado) + aplicar (Arsenal) + combate MP. Migración 123 **aplicada** |
 | C | 5 · Cartas por reconfiguración | ✅ hecho (era **solo análisis**: los efectos son data-driven; una carta "igual con otro número/entidad" es una migración, no código) |
-| C | 7 · Magia de ataque en defensa | 🟡 decisiones cerradas + motor mapeado (ver abajo); pendiente picar |
+| C | 7 · Magia de ataque en defensa | ✅ hecho · migración 130 **aplicada** · carta `Escudo Firewall Ofensivo` (efecto `ALLOW_DEFENSE_MODE_ATTACK`, estado de turno, **sin selección**) · ⚠️ falta prueba MP con 2 clientes |
 | D | 11 · Ghost decks | ⏳ pendiente |
 | — | 10 · 2v2 | ❌ fuera del paquete (release propia) |
 

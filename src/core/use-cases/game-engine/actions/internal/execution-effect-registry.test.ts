@@ -30,6 +30,7 @@ describe("execution-effect-registry", () => {
       "BOOST_ATTACK_BY_CARD_ID",
       "DAMAGE_IF_ALLY_ON_BOARD",
       "APPLY_NO_DIRECT_ATTACKS",
+      "ALLOW_DEFENSE_MODE_ATTACK",
       "DRAIN_OPPONENT_ENERGY",
       "SET_CARD_DUEL_PROGRESS",
       "REDUCE_OPPONENT_ATTACK",

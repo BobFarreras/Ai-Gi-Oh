@@ -81,6 +81,11 @@ export interface IApplyNoDirectAttacksEffect {
   turns: number;
 }
 
+/** Este turno, tus entidades en DEFENSA pueden atacar usando su DEF (sin cambiar de modo). */
+export interface IAllowDefenseModeAttackEffect {
+  action: "ALLOW_DEFENSE_MODE_ATTACK";
+}
+
 /** El jugador elige una entity rival del tablero y la destruye (a la pila de destruidas). */
 export interface IDestroyOpponentEntityEffect {
   action: "DESTROY_OPPONENT_ENTITY";
@@ -292,6 +297,7 @@ export type ICardEffect =
   | IBoostAttackByCardIdEffect
   | IDamageIfAllyOnBoardEffect
   | IApplyNoDirectAttacksEffect
+  | IAllowDefenseModeAttackEffect
   | IDestroyOpponentEntityEffect
   | IFlipOpponentEntityToDefenseEffect
   | ISacrificeAllyEntityForEnergyEffect
