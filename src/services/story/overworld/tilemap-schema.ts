@@ -20,6 +20,7 @@ export type OverworldObjectKind =
   | "BOSS"
   | "REWARD_CARD"
   | "REWARD_NEXUS"
+  | "REWARD_OBJECT"
   | "EVENT"
   | "NPC"
   | "SUBMISSION"

@@ -14,6 +14,8 @@ const SOLDADO_LAPTOP = "/assets/story/opponents/opp-ch3-soldado-laptop/avatar-So
 const NEXUS = "/assets/renders/nexus.webp";
 // Render de la carta de recompensa (fusion-pytgress): se muestra en el nodo, como en el Acto 1.
 const PYTGRESS = "/assets/renders/pytgress.webp";
+// Objeto de inventario (ficha 9): el arte de los objetos ya existe en /assets/items/.
+const USB_RARO = "/assets/items/candy-usb-raro.webp";
 
 interface IMutableTilemap {
   ground: number[][];
@@ -187,6 +189,8 @@ export function buildAct3OverworldTilemap(): IOverworldTilemap {
       { id: "story-ch3-cache-1", kind: "REWARD_NEXUS", tileX: 5, tileY: 17, sprite: "nexus", trigger: "ADJACENT_ACTION", imageSrc: NEXUS },
       { id: "story-ch3-cache-card", kind: "REWARD_CARD", tileX: 9, tileY: 17, sprite: "pytgress", trigger: "ADJACENT_ACTION", imageSrc: PYTGRESS },
       { id: "story-ch3-cache-2", kind: "REWARD_NEXUS", tileX: 16, tileY: 18, sprite: "nexus", trigger: "ADJACENT_ACTION", imageSrc: NEXUS },
+      // Caché de objeto (ficha 9): USB Raro +1 al inventario, en la sala del puzzle de la placa.
+      { id: "story-ch3-cache-object", kind: "REWARD_OBJECT", tileX: 7, tileY: 19, sprite: "usb-raro", trigger: "ADJACENT_ACTION", imageSrc: USB_RARO },
 
       // ── Rivales (ids reales del capítulo 3) ───────────────────────────────
       // 1-4: Soldado-Laptop (centinelas del acto). 5: Jaku (eco, aparición media). 6: Jaku (jefe).

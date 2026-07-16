@@ -13,15 +13,13 @@ Guía previa a picar código para el nuevo batch de ideas. Igual que la guía de
 
 ## ▶ ESTADO ACTUAL — Paquete A (retomar aquí)
 
-Hecho y commiteado: **9b** (rastro de objetos), **2** (Borrado de Mano). Motores de combate hechos e
-**inertes**: **1** (Sobrecarga Energética, `f1336075`) y **3 Fase A** (Recaudación, `397c8b43`).
+Hecho y commiteado: **9b** (rastro de objetos), **2** (Borrado de Mano), **1** (Sobrecarga Energética en
+Windows 92 con escalado V5, migración 133 aplicada) y **9** (caché de objeto en el overworld del Acto 3).
+De la **3** está la Fase A del motor (`397c8b43`, inerte).
 
-**Tres frentes abiertos, por orden de arranque sugerido:**
-- **A) Cartas portadoras de fichas 1 y 3** (rápido, cierra dos fichas): la de la **3** (`entity-recaudador`)
-  YA tiene arte (`recaudar_nexus.webp`) → hacer su migración + Fase B de acreditación (ver abajo). La de la
-  **1** (`entity-condensador`) está **bloqueada por arte** (decidir: arte nuevo o pasiva en entity existente).
-- **B) Ficha 3 Fase B** (acreditación de Nexus server-authoritative) — plan justo debajo.
-- **C) Ficha 9** (nodo de story con objetos) — plan actualizado en su ficha; sin empezar.
+**ÚNICO frente abierto del Paquete A: la Ficha 3 Fase B** (carta `entity-recaudador` — su arte
+`recaudar_nexus.webp` ya está recomprimido y sin trackear — + acreditación de Nexus server-authoritative).
+Plan justo debajo. Después: Paquete B (fichas 4 y 5).
 
 ### Ficha 3, Fase B (acreditación server-authoritative de la pasiva de Nexus)
 
@@ -505,8 +503,24 @@ eventos y arena, así que "entregar un objeto a un jugador" tiene tubería serve
 (4) un nodo REWARD_OBJECT en un `act-N-map-definition.ts`; (5) UI: `floatingReward` tono OBJECT + icono;
 (6) test reclamar→inventario / doble→una entrega.
 
-**Esfuerzo:** bajo-medio (1-2 días). **Sin empezar** — siguiente candidata tras cerrar las cartas
-portadoras de las fichas 1 y 3.
+**Estado (2026-07-16, segunda tanda): IMPLEMENTADA (v1 en el overworld, SIN migración).**
+- **Tipos:** `REWARD_OBJECT` en `StoryWorldNodeType` y `OverworldObjectKind` (+ `VALID_KINDS` del validador);
+  `rewardObjectType/Id/Quantity` en `IStoryMapVirtualNodeDefinition`. El typecheck localizó los switch
+  exhaustivos (solo `resolve-story-node-interaction`).
+- **Entrega SIN migración ni RPC:** `SupabasePlayerInventoryRepository.grantItem` escribe
+  `player_inventory_items` con **service-role** (patrón cartera post-122) validando el catálogo. Se descartó
+  la RPC `grant_inventory_item`: ejecutable por `authenticated` sería un grifo de objetos desde la consola.
+- **Ruta:** `claim-reward` usa el resolutor puro `resolveClaimRewardPlan` (testeado) y devuelve
+  `rewardObject {name, imageUrl, quantity}` para la etiqueta flotante. Idempotencia por `interactedNodeIds`
+  (mismo candado que Nexus/carta).
+- **Contenido v1:** caché `story-ch3-cache-object` (USB Raro +1) en la sala del puzzle del Acto 3,
+  tile (7,19), arte `/assets/items/candy-usb-raro.webp`.
+- **UI overworld:** gates de interacción (engine + DevScene), presentación del intent, labels/acentos de
+  Renderer2D y minimapa. La etiqueta flotante muestra `+{nombre del objeto}`.
+- **Fuera de la v1:** el mapa clásico de circuito (actos 1-2, vía `/world/interact`) no tiene nodos de
+  objeto; si algún día los lleva, añadir el tono OBJECT al `floatingReward` del circuito. El paso 4 (admin)
+  no aplica: estos nodos viven en código.
+- Tests: 88 verdes en story/overworld (resolutor nuevo + validación del tilemap con la caché colocada).
 
 ---
 
