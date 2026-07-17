@@ -19,11 +19,36 @@ objeto en el overworld del Acto 3) y **3 completa** (motor Fase A + carta Recaud
 server-authoritative, mig. 134).
 
 **Paquete B en curso.** **Ficha 4** (nivel 1): motor + UI del carrusel HECHOS contra la IA (falta solo el
-carrusel en MULTI, otra tanda). **Ficha 5** (IA) en curso: fases 1 (simulador, `eaf3e940`), 2 (posición al
-invocar, `7f4b1bdd`), 3 (reemplazo de zona llena, `35b6f95e`) y 4 (fusión: no arrancar fusiones inviables +
-hallazgo de que la fusión es frágil/deck-limitada) HECHAS. Pendientes: **fase 5 (combos por-efecto — el
-usuario pidió los combos TypeScript y Flutter Enjambre como primeros casos)**, fase 6 (criterio de trampa
-para la IA, que enlaza con la ficha 4) y la **auditoría de mazos de fusión** (dato, no código).
+carrusel en MULTI, otra tanda). **Ficha 5** (IA) muy avanzada. HECHAS:
+
+- Fase 1 (simulador IA-vs-IA, `eaf3e940`), 2 (posición al invocar, `7f4b1bdd`), 3 (reemplazo de zona llena,
+  `35b6f95e`), 4 (no arrancar fusiones inviables + hallazgo fusión frágil, `4ca70dd8`).
+- **Repliegue universal** (`b3760c8d`): TODOS los perfiles (EASY→MYTHIC) repliegan a defensa una entity que
+  perdería el intercambio (no regalar trample).
+- **Fase 5 — combos por-efecto** (`e1c8288b`): sinergias data-driven (`resolveSynergyBonus`). Piezas de combo
+  (Escudo TypeScript ligado a la entity, magia de atacar-en-defensa) y **cebo de trampa reactiva** (Flutter
+  Enjambre: no invocar para que el rival ataque directo). 2º caso del usuario incluido.
+- **Gating escalonado por tier** (`bc6c57cc`): `IOpponentSkillSet` como dato. Hallazgo (simulador robusto,
+  asientos intercambiados): la escalera es monótona pero los números están **saturados** (BOSS/MASTER/MYTHIC
+  jugaban idéntico). Reglas básicas para todos; **combos → HARD+**, **cebo de trampa → MASTER+**. La dificultad
+  ahora se nota. (El tuning fino de números es otro eje, medido por oráculo pobre — pendiente si se quiere.)
+- **FUSIÓN — arreglada de raíz y ahora efectiva** (`84abcd40`→`84fd51ee`): la IA no hacía NINGUNA fusión (0 en
+  simulador). Tres bugs genéricos, no per-fusión: (a) el matcher exigía `requiredEnergyPerMaterial`/`requiredTotalEnergy`
+  que **el motor ignora** → rechazaba pares válidos; (b) `chooseFusionSetupPlay` era ciego a la exec ya seteada;
+  (c) los materiales se invocaban en ataque y morían. Ahora: ancla por defensa, no atacar con materiales
+  pendientes, **auto-derivación del `fusionDeck`** desde los execs del mazo (meter `exec-fusion-X` basta),
+  **protección de descarte** (no tirar la exec con el par en mesa) y **ahorro de energía** para completar.
+  **Fusión = jugada universal** (todos los tiers), no solo BOSS+. Regresión de las **7 recetas** cubierta por
+  tests (matcher + derivación + completado). Guía: `docs/game-engine/anadir-una-fusion.md`.
+- **Fixes de UI del prompt de trampa reactiva** (`9938ecdb`, `d931c824`): desktop, imagen de la carta centrada
+  y completa (patrón de caja escalada); móvil, la flecha › del carrusel ya no cancela la trampa (el overlay de
+  carta seleccionada, z-320, tapaba el prompt e interceptaba el tap → se oculta durante el prompt; flechas más
+  grandes de 44px con `stopPropagation`).
+
+Pendientes: **fase 6** (criterio de "qué trampa activa" la IA, enlaza con la ficha 4), **tuning fino de números
+de perfil** (opcional), la **auditoría de mazos de fusión** (dato, no código) y el carrusel de la ficha 4 en
+**MULTI** (otra tanda). Límite conocido de fusión: bajo presión alta (rival ~2000+ ATK) la IA evita fusiones
+suicidas (materiales frágiles) — mejora futura: proteger/buffear el material ancla.
 
 ### Ficha 3, Fase B (acreditación server-authoritative de la pasiva de Nexus)
 
@@ -422,7 +447,9 @@ no tocan).
      FUSION + materiales?) y decidir si la fusión debe apoyarse en PROTECCIÓN (trampa/defensa que mantenga
      vivo un material un turno) — esto se solapa con la fase 5 (combos). Dar mazos de fusión a rivales
      concretos es dato de mazo.
-5. **Combos por-efecto (petición del usuario, 2026-07-16):** tabla data-driven de sinergias que la heurística
+5. **Combos por-efecto (petición del usuario, 2026-07-16) — ✅ HECHO** (`e1c8288b`, `bc6c57cc`; fusión efectiva
+   `84abcd40`→`84fd51ee`). Ver el resumen en "ESTADO ACTUAL" arriba. Lo de abajo es el diseño original.
+   Tabla data-driven de sinergias que la heurística
    consulte, en vez de `if`s por carta. Empezar con 4-5 combos reales, **el primero el del usuario**:
    TypeScript en DEFENSA + Escudo TypeScript (`REINFORCE_LINKED_ENTITY_ON_ATTACK`, linked a `entity-typescript`)
    + magia de atacar en defensa (`ALLOW_DEFENSE_MODE_ATTACK`).
@@ -443,7 +470,7 @@ no tocan).
      trampa. Ojo: enlaza con `shouldSkipPlayForEnergy`/`shouldHoldFragileFrontline` (ya existe la idea de
      "esperar"), pero aquí la condición es "tengo trampa reactiva armada + el rival va a atacar".
    - **Esfuerzo:** medio; lo caro es diseñar bien qué combos merecen la pena.
-6. Las trampas múltiples de la ficha 4 nivel 1: darle a la IA el criterio de "cuál activo".
+6. **Fase 6 — PENDIENTE.** Las trampas múltiples de la ficha 4 nivel 1: darle a la IA el criterio de "cuál activo".
 
 **A tener en cuenta.** Los perfiles (`difficultyProfiles.ts`, `story-ai-profile.ts`) son datos: gran parte
 de la mejora es tuning de números + mazos, no código nuevo. Y cualquier mejora sube la dificultad real de
@@ -574,10 +601,12 @@ primero, diagrama bonito después.
 el código: `playerExperience` se acumula pero **hoy no compra nada ni hay nivel visible** → el doc introduce la
 curva XP→nivel→puntos como fuente única (derivada, sin columna). Anclado a hooks reales: economía en
 `match-reward-policy`/cierre de duelo (servidor), combate en `create-initial-game-state` (`openingHandSize`,
-`maxHealthPoints`, `maxEnergy` ya parametrizables) + `next-phase.ts`. Catálogo v1 de 12 nodos / ~22 puntos en 3
-ramas (Economía/Combate/Arsenal), efectos data-driven (`kind` + resolver central), migración `135` (catálogo +
-`player_skill_unlocks` + RPC `unlock_skill_node` idempotente con RLS). **Combate = PvE en v1** (fairness). Página
-= constelación SVG/HTML con la estética cyber del juego. Decisiones abiertas (respec, ranked, curva, rama
+`maxHealthPoints`, `maxEnergy` ya parametrizables) + `next-phase.ts`. **Nodos con RANGOS (estilo RPG: sube un
+nodo a Nv.5 para abrir el siguiente)** — escalables (LP/%, `maxRank` 3-5) + keystones (permisos, `maxRank` 1);
+prerequisitos POR RANGO. Catálogo v1 de 11 nodos / ~42 puntos para maxear en 3 ramas
+(Economía/Combate/Arsenal), efectos data-driven (`kind` + `valuePerRank` + resolver central), migración `135`
+(catálogo + `player_skill_ranks` + RPC `rank_up_skill_node` idempotente con RLS). **Combate = PvE en v1**
+(fairness). Página = constelación SVG/HTML con la estética cyber del juego y anillos segmentados por rango. Decisiones abiertas (respec, ranked, curva, rama
 Arsenal) listadas en §10 del doc. **0 código: cerrar §10 antes de picar.**
 
 ---
