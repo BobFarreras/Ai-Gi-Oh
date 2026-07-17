@@ -71,6 +71,35 @@ function chooseExecutionToReplace(opponent: IPlayer): string | null {
     scoreExecutionSacrifice(current) < scoreExecutionSacrifice(worst) ? current : worst).instanceId;
 }
 
+/** Amenaza rival total en ATAQUE: si casi te mata, no te puedes permitir ahorrar/esperar. */
+function lethalPressure(opponent: IPlayer, target: IPlayer): boolean {
+  const totalAttack = target.activeEntities
+    .filter((entity) => entity.mode === "ATTACK")
+    .reduce((sum, entity) => sum + (entity.card.attack ?? 0), 0);
+  return totalAttack >= opponent.healthPoints;
+}
+
+/**
+ * ¿Conviene NO gastar energía este turno para poder activar una fusión ya lista? Caso del usuario: tienes el
+ * par en mesa y el ejecutable en mano, pero te faltan un par de puntos de energía; mejor esperar sin gastar y
+ * activarla el turno siguiente que malgastar la energía (y acabar descartando el ejecutable por límite de mano).
+ * Universal (todos los tiers) porque la fusión es un pilar. No aplica si el rival te puede matar ya.
+ */
+export function shouldHoldEnergyForFusion(opponent: IPlayer, target: IPlayer): boolean {
+  if (lethalPressure(opponent, target)) return false;
+  for (const recipeId of workingFusionRecipeIds(opponent)) {
+    const ready = chooseFusionMaterialsByRecipeId(opponent.activeEntities, recipeId) !== null;
+    if (!ready) continue;
+    const execInHand = opponent.hand.find(
+      (card) => card.type === "EXECUTION" && card.effect?.action === "FUSION_SUMMON" && card.effect.recipeId === recipeId,
+    );
+    // Par listo + ejecutable en mano pero sin energía suficiente para activarlo → banca energía (pasa el turno).
+    // Si el ejecutable ya está SET en mesa, reactivarlo es GRATIS: no hay que esperar (se activa solo).
+    if (execInHand && execInHand.cost > opponent.currentEnergy) return true;
+  }
+  return false;
+}
+
 /**
  * Prioriza jugadas de setup de materiales/ejecución para completar fusión en turnos siguientes.
  */

@@ -13,7 +13,7 @@ import { buildPlayableCardDecisions } from "@/core/services/opponent/select-oppo
 import { shouldHoldFragileFrontline, shouldHoldToBaitReactiveTrap } from "@/core/services/opponent/opponent-tactical-context";
 import { IOpponentModeChangeDecision } from "@/core/services/opponent/types";
 import { shouldSkipPlayForEnergy } from "@/core/services/opponent/opponent-energy-plan";
-import { chooseFusionSetupPlay } from "@/core/services/opponent/opponent-fusion-plan";
+import { chooseFusionSetupPlay, shouldHoldEnergyForFusion } from "@/core/services/opponent/opponent-fusion-plan";
 import { isPendingFusionMaterial } from "@/core/services/opponent/opponent-fusion-execution";
 import { chooseEntityZoneReplacement, chooseExecutionZoneReplacement } from "@/core/services/opponent/opponent-zone-replacement";
 
@@ -47,6 +47,11 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
     const fusionSetupPlay = chooseFusionSetupPlay(state, opponent, target, playable);
     if (fusionSetupPlay) {
       return fusionSetupPlay;
+    }
+    // Par de fusión listo + ejecutable en mano sin energía suficiente: no malgastar energía este turno; esperar
+    // y activarla el siguiente (petición del usuario). Pasa el turno guardando la energía.
+    if (shouldHoldEnergyForFusion(opponent, target)) {
+      return null;
     }
     if (shouldSkipPlayForEnergy({ opponent, target, profile: this.profile, aiProfile: this.aiProfile, playableDecisions: playable })) {
       return null;

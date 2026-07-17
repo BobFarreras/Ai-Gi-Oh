@@ -89,3 +89,28 @@ export function createPlayerDeckB(randomFn: RandomSource = Math.random): ICard[]
 export function createDefaultFusionDeck(): ICard[] {
   return FUSION_CARDS.slice(0, 2).map((card) => ({ ...card }));
 }
+
+/**
+ * Cartas resultado de fusión que necesita un mazo: una por cada ejecutable FUSION_SUMMON presente. Sirve para
+ * garantizar que meter `exec-fusion-X` en el mazo baste para poder fusionar (sin tener que configurar aparte el
+ * bloque de fusión). Antes, execs sin su resultado en el fusionDeck eran cartas muertas (no fusionaban jamás).
+ */
+export function fusionResultsForDeck(deck: readonly ICard[]): ICard[] {
+  const recipeIds = new Set<string>();
+  for (const card of deck) {
+    if (card.type === "EXECUTION" && card.effect?.action === "FUSION_SUMMON" && card.effect.recipeId) {
+      recipeIds.add(card.effect.recipeId);
+    }
+  }
+  return [...recipeIds].flatMap((recipeId) => {
+    const fusion = cardCatalog[recipeId];
+    return fusion && fusion.type === "FUSION" ? [{ ...fusion }] : [];
+  });
+}
+
+/** Une un bloque de fusión con los resultados que faltan para los execs del mazo (sin duplicar por id). */
+export function withDerivedFusionResults(deck: readonly ICard[], fusionDeck: readonly ICard[]): ICard[] {
+  const present = new Set(fusionDeck.map((card) => card.id));
+  const missing = fusionResultsForDeck(deck).filter((card) => !present.has(card.id));
+  return [...fusionDeck.map((card) => ({ ...card })), ...missing];
+}
