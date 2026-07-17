@@ -23,6 +23,40 @@ export function canActivateFusionExecutionNow(opponent: IPlayer, executionCard: 
   return chooseFusionMaterialsByRecipeId(opponent.activeEntities, recipeId) !== null;
 }
 
+/** ¿La receta ya tiene sus 2 materiales en mesa listos para fusionar? */
+function fusionReady(opponent: IPlayer, recipeId: string): boolean {
+  return chooseFusionMaterialsByRecipeId(opponent.activeEntities, recipeId) !== null;
+}
+
+/**
+ * Recetas hacia las que la IA está TRABAJANDO ahora mismo: tiene el ejecutable FUSION_SUMMON (en mano o ya
+ * SET en el tablero) y la carta resultado en su fusionDeck. Sirve para proteger sus materiales (invocarlos en
+ * defensa, no atacar con ellos) hasta completar la fusión.
+ */
+export function workingFusionRecipeIds(opponent: IPlayer): string[] {
+  const fromHand = opponent.hand;
+  const fromBoard = opponent.activeExecutions.map((entity) => entity.card);
+  const recipeIds = new Set<string>();
+  for (const card of [...fromHand, ...fromBoard]) {
+    if (card.type !== "EXECUTION" || card.effect?.action !== "FUSION_SUMMON") continue;
+    const recipeId = card.effect.recipeId;
+    if (recipeId && resolveFusionCardFromDeck(opponent, recipeId)) recipeIds.add(recipeId);
+  }
+  return [...recipeIds];
+}
+
+/** ¿Esta entity propia es material requerido de alguna fusión pendiente (aún no completada)? Protegerla. */
+export function isPendingFusionMaterial(card: ICard, opponent: IPlayer): boolean {
+  for (const recipeId of workingFusionRecipeIds(opponent)) {
+    if (fusionReady(opponent, recipeId)) continue; // ya tiene el par: se activará, no hace falta seguir protegiendo
+    const recipe = getFusionRecipeByResultId(recipeId);
+    const isRequiredId = Boolean(recipe?.requiredMaterialIds?.includes(card.id));
+    const isRequiredArch = Boolean(card.archetype && recipe?.requiredArchetypes?.includes(card.archetype));
+    if (isRequiredId || isRequiredArch) return true;
+  }
+  return false;
+}
+
 export function resolveFusionMaterialGaps(opponent: IPlayer, recipeId: string): IFusionMaterialGaps {
   const recipe = getFusionRecipeByResultId(recipeId);
   if (!recipe) return { missingCardIds: [], missingArchetypes: [] };

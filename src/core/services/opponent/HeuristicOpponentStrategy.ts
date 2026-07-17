@@ -14,6 +14,7 @@ import { shouldHoldFragileFrontline, shouldHoldToBaitReactiveTrap } from "@/core
 import { IOpponentModeChangeDecision } from "@/core/services/opponent/types";
 import { shouldSkipPlayForEnergy } from "@/core/services/opponent/opponent-energy-plan";
 import { chooseFusionSetupPlay } from "@/core/services/opponent/opponent-fusion-plan";
+import { isPendingFusionMaterial } from "@/core/services/opponent/opponent-fusion-execution";
 import { chooseEntityZoneReplacement, chooseExecutionZoneReplacement } from "@/core/services/opponent/opponent-zone-replacement";
 
 function getPlayers(state: GameState, opponentId: string): { opponent: IPlayer; target: IPlayer } {
@@ -109,11 +110,17 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
 
   public chooseAttack(state: GameState, opponentId: string): IOpponentAttackDecision | null {
     const { opponent, target } = getPlayers(state, opponentId);
+    // Los tiers con planificación de fusión (BOSS+) NO atacan con materiales de una fusión pendiente: hay que
+    // conservarlos vivos hasta juntar el par. Se marcan como "ya atacaron" en la copia local para excluirlos
+    // como atacantes, sin sacarlos del tablero (siguen defendiendo). Ficha 5: fusión efectiva.
+    const protectMaterials = this.profile.skill.fusionPlanning;
     const normalizedOpponent: IPlayer = {
       ...opponent,
-      activeEntities: opponent.activeEntities.map((entity) =>
-        entity.isNewlySummoned ? { ...entity, isNewlySummoned: false } : entity,
-      ),
+      activeEntities: opponent.activeEntities.map((entity) => {
+        const holdForFusion = protectMaterials && isPendingFusionMaterial(entity.card, opponent);
+        if (holdForFusion) return { ...entity, hasAttackedThisTurn: true };
+        return entity.isNewlySummoned ? { ...entity, isNewlySummoned: false } : entity;
+      }),
     };
 
     return chooseBestAttack(normalizedOpponent, target, this.profile, isDirectAttackBlocked(state.activeStatusEffects, opponentId));

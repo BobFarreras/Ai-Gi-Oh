@@ -11,14 +11,18 @@ import { getDifficultyProfile } from "./difficulty/difficultyProfiles";
 import { createBaseState, createBoardEntity } from "./HeuristicOpponentStrategy.test-fixtures";
 import { EXECUTION_CARDS } from "@/core/data/mock-cards/executions";
 import { ENTITY_CARDS } from "@/core/data/mock-cards/entities";
+import { FUSION_CARDS } from "@/core/data/mock-cards/fusions";
 
 const fusionExec = { ...EXECUTION_CARDS.find((card) => card.id === "exec-fusion-pytgress")! };
+const pytgress = { ...FUSION_CARDS.find((card) => card.id === "fusion-pytgress")! }; // carta resultado
 const python = { ...ENTITY_CARDS.find((card) => card.id === "entity-python")! }; // material (LANGUAGE)
 const postgress = { ...ENTITY_CARDS.find((card) => card.id === "entity-postgress")! }; // material (DB)
 
 function botWith(overrides: Partial<IPlayer>): IPlayer {
   const base = createBaseState().playerB;
-  return { ...base, currentEnergy: 10, hand: [], activeEntities: [], activeExecutions: [], ...overrides };
+  // fusionDeck con la carta resultado: la IA solo planifica una fusión que PUEDE completar (si no está en el
+  // fusionDeck, el ejecutable nunca activaría → planificar materiales sería en balde).
+  return { ...base, currentEnergy: 10, hand: [], activeEntities: [], activeExecutions: [], fusionDeck: [{ ...pytgress }], ...overrides };
 }
 
 function plan(state: GameState, bot: IPlayer, target: IPlayer) {

@@ -572,6 +572,7 @@ describe("HeuristicOpponentStrategy ejecuciones especiales", () => {
       ...base,
       playerB: {
         ...base.playerB,
+        fusionDeck: [{ id: "fusion-gemgpt", name: "GemGPT", description: "", type: "FUSION" as const, faction: "BIG_TECH" as const, cost: 6, attack: 2800, defense: 2100 }],
         hand: [createFusionExecutionCard("fusion-gemgpt")],
         activeExecutions: [
           {
