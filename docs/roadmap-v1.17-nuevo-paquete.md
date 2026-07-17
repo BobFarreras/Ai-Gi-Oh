@@ -18,10 +18,11 @@ Mano, mig. 132), **1** (Sobrecarga Energética en Windows 92 con escalado V5, mi
 objeto en el overworld del Acto 3) y **3 completa** (motor Fase A + carta Recaudador y acreditación
 server-authoritative, mig. 134).
 
-**Paquete B en curso — Ficha 4 (nivel 1, decidido):** motor + UI del carrusel HECHOS contra la IA
-(story/arena/training), commiteados y en verde. **Queda solo el carrusel en MULTI** (auto-resuelve la
-primera hoy, sin regresión; darle elección es otra tanda con prueba de 2 clientes — plan en la ficha 4).
-Después: **Ficha 5** (IA, empezando por el simulador IA-vs-IA).
+**Paquete B en curso.** **Ficha 4** (nivel 1): motor + UI del carrusel HECHOS contra la IA (falta solo el
+carrusel en MULTI, otra tanda). **Ficha 5** (IA) en curso: fase 1 (simulador, `eaf3e940`) y fase 2 (posición
+al invocar para todos los perfiles, `7f4b1bdd`) HECHAS. Pendientes fases 3 (reemplazo de zona llena), 4
+(fusiones: auditar mazos) y **5 (combos por-efecto — el usuario pidió el combo TypeScript como primer caso)**,
+más la 6 (criterio de trampa para la IA, que enlaza con la ficha 4).
 
 ### Ficha 3, Fase B (acreditación server-authoritative de la pasiva de Nexus)
 
@@ -382,8 +383,22 @@ no tocan).
 3. **Reemplazo de zona llena** en la selección normal de jugadas.
 4. **Fusión:** tras la auditoría de mazos, subir la prioridad del plan de fusión en perfiles altos y dar
    mazos con fusión a rivales concretos ("expertos en fusión" — es dato de mazo, no código).
-5. **Combos por-efecto:** tabla data-driven de sinergias (efecto ↔ condición de uso óptimo) que la
-   heurística consulte, en vez de `if`s por carta. Empezar con 4-5 combos reales del catálogo.
+5. **Combos por-efecto (petición del usuario, 2026-07-16):** tabla data-driven de sinergias que la heurística
+   consulte, en vez de `if`s por carta. Empezar con 4-5 combos reales, **el primero el del usuario**:
+   TypeScript en DEFENSA + Escudo TypeScript (`REINFORCE_LINKED_ENTITY_ON_ATTACK`, linked a `entity-typescript`)
+   + magia de atacar en defensa (`ALLOW_DEFENSE_MODE_ATTACK`).
+   - **Estado real hoy (verificado):** la IA tiene sinergia por-carta PARCIAL —no juega buffs "a la carta X"
+     ni "por arquetipo" sin el compañero en mesa (`canActivateExecutionNow`)— y el planificador de fusión ya
+     es un combo multi-carta real (precedente de que "planear" es factible). PERO: `scoreTrap` puntúa la
+     trampa **solo por coste** (setearía el Escudo TypeScript sin tener la entity → trampa muerta), y
+     `ALLOW_DEFENSE_MODE_ATTACK` / `REINFORCE_LINKED_ENTITY_ON_ATTACK` **no están en la lógica de la IA** (no
+     los conoce → la magia acabaría boca abajo sin usarse). No planifica proactivamente conservar/montar piezas.
+   - **Enfoque (NO look-ahead global, caro y frágil):** (a) **gating de piezas** —una trampa/magia solo
+     puntúa alto si sus compañeros están o van a estar en mesa (`scoreTrap` debe mirar `linkedCardId` y si
+     tienes esa entity); (b) **prioridad de conjunto** —con 2 de 3 piezas, subir prioridad de jugar/guardar
+     la 3ª, reutilizando el patrón del planificador de fusión; (c) tabla de combos como DATOS
+     (`{ core, pieces[], plan }`), no `if`s. Validar con el simulador (fase 1) que no desbalancea.
+   - **Esfuerzo:** medio; lo caro es diseñar bien qué combos merecen la pena.
 6. Las trampas múltiples de la ficha 4 nivel 1: darle a la IA el criterio de "cuál activo".
 
 **A tener en cuenta.** Los perfiles (`difficultyProfiles.ts`, `story-ai-profile.ts`) son datos: gran parte
