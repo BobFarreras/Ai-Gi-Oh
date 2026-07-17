@@ -570,6 +570,16 @@ farmeable desde consola sería la vuln de la cartera otra vez).
 **Esfuerzo:** alto (una semana larga con diseño incluido). Candidato a partirse: backend+2 habilidades
 primero, diagrama bonito después.
 
+**Estado (2026-07-17): DISEÑO Y ARQUITECTURA CERRADOS en `docs/features/skill-tree-design.md`.** Verificado en
+el código: `playerExperience` se acumula pero **hoy no compra nada ni hay nivel visible** → el doc introduce la
+curva XP→nivel→puntos como fuente única (derivada, sin columna). Anclado a hooks reales: economía en
+`match-reward-policy`/cierre de duelo (servidor), combate en `create-initial-game-state` (`openingHandSize`,
+`maxHealthPoints`, `maxEnergy` ya parametrizables) + `next-phase.ts`. Catálogo v1 de 12 nodos / ~22 puntos en 3
+ramas (Economía/Combate/Arsenal), efectos data-driven (`kind` + resolver central), migración `135` (catálogo +
+`player_skill_unlocks` + RPC `unlock_skill_node` idempotente con RLS). **Combate = PvE en v1** (fairness). Página
+= constelación SVG/HTML con la estética cyber del juego. Decisiones abiertas (respec, ranked, curva, rama
+Arsenal) listadas en §10 del doc. **0 código: cerrar §10 antes de picar.**
+
 ---
 
 ### Ficha 9 — Nodo de story que da objetos (USB Raro, mejoras de atributos)

@@ -101,14 +101,25 @@ export function BoardMobilePanelsDialog({
                   {(pendingTrapActivationPrompt?.eligibleTraps.length ?? 0) > 1 ? (
                     <>
                       <p className="mt-1 text-xs font-bold text-fuchsia-100">Elige qué trampa activar.</p>
-                      {/* Ficha 4: carrusel ‹ › entre las trampas elegibles (móvil). */}
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <button type="button" aria-label="Trampa anterior" onClick={() => onCyclePendingTrap(-1)} className="rounded-full border border-fuchsia-300/60 bg-fuchsia-950/70 p-0.5 text-fuchsia-100">
-                          <ChevronLeft size={16} />
+                      {/* Ficha 4: carrusel ‹ › entre las trampas elegibles (móvil). Targets grandes (44px) y
+                          stopPropagation para que el tap no se lo coma ningún overlay/deselección. */}
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          aria-label="Trampa anterior"
+                          onClick={(event) => { event.stopPropagation(); onCyclePendingTrap(-1); }}
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-fuchsia-300/70 bg-fuchsia-800/70 text-fuchsia-50 shadow-[0_0_14px_rgba(217,70,239,0.5)] active:scale-90 active:bg-fuchsia-600"
+                        >
+                          <ChevronLeft size={24} />
                         </button>
-                        <span className="text-[10px] font-black tracking-widest text-fuchsia-200">{(pendingTrapActivationPrompt?.currentIndex ?? 0) + 1}/{pendingTrapActivationPrompt?.eligibleTraps.length}</span>
-                        <button type="button" aria-label="Trampa siguiente" onClick={() => onCyclePendingTrap(1)} className="rounded-full border border-fuchsia-300/60 bg-fuchsia-950/70 p-0.5 text-fuchsia-100">
-                          <ChevronRight size={16} />
+                        <span className="rounded-full bg-fuchsia-950/70 px-2 py-1 text-xs font-black tracking-widest text-fuchsia-100">{(pendingTrapActivationPrompt?.currentIndex ?? 0) + 1}/{pendingTrapActivationPrompt?.eligibleTraps.length}</span>
+                        <button
+                          type="button"
+                          aria-label="Trampa siguiente"
+                          onClick={(event) => { event.stopPropagation(); onCyclePendingTrap(1); }}
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-fuchsia-300/70 bg-fuchsia-800/70 text-fuchsia-50 shadow-[0_0_14px_rgba(217,70,239,0.5)] active:scale-90 active:bg-fuchsia-600"
+                        >
+                          <ChevronRight size={24} />
                         </button>
                       </div>
                     </>
