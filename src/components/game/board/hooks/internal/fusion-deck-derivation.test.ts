@@ -28,4 +28,15 @@ describe("derivación del bloque de fusión desde los execs del mazo", () => {
   it("un mazo sin execs de fusión no deriva nada", () => {
     expect(fusionResultsForDeck([{ ...plainEntity }])).toEqual([]);
   });
+
+  it("LAS 7 fusiones: cada exec-fusion-X del catálogo deriva su carta resultado fusion-X", () => {
+    const allFusionExecs = EXECUTION_CARDS.filter((c) => c.effect?.action === "FUSION_SUMMON");
+    expect(allFusionExecs.length).toBe(7);
+    for (const exec of allFusionExecs) {
+      const recipeId = exec.effect?.action === "FUSION_SUMMON" ? exec.effect.recipeId : "";
+      const derived = fusionResultsForDeck([{ ...exec }]);
+      expect(derived.map((c) => c.id), `derivación de ${exec.id}`).toEqual([recipeId]);
+      expect(derived[0]?.type).toBe("FUSION");
+    }
+  });
 });
