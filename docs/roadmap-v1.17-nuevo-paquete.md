@@ -356,9 +356,17 @@ no tocan).
   Escudo TypeScript + Firewall Ofensivo como combo).
 
 **Plan por fases (cada una medible, no "hacer la IA lista" de golpe):**
-1. **Simulador primero.** Un harness IA-vs-IA (motor puro, sin UI, ya es determinista) que juegue N duelos
-   entre perfiles y saque win-rate y métricas (fusiones hechas, reemplazos, LP perdidos por mala posición).
-   Sin esto no se puede afirmar que un cambio "mejora" la IA — es el test de regresión del balance.
+1. **Simulador primero. HECHO.** Harness IA-vs-IA en `src/core/services/opponent/simulation/`:
+   `simulateAiMatch` (duelo completo dirigiendo AMBOS lados con `runOpponentStep`, guard de "no atacar en el
+   turno 1"), `runAiSimulationBatch` (N duelos, win-rate/empates/turnos/métricas: invocaciones ATK/DEF,
+   fusiones, ataques, LP final), `buildSimulationDeck`/`reshuffleDeck` (mazos deterministas del catálogo mock,
+   barajados por partida para que NO sea espejo). Determinista por seed → comparable antes/después.
+   - **Fix de robustez encontrado y aplicado:** el picker del core `pickPendingSelectionId` no resolvía
+     LOCK/DESTROY/FLIP/SACRIFICE/STEAL-entity/execution (la UI sí, con otro picker) → la IA se colgaba con
+     esas cartas. Completado (mirror del picker de la UI). Ahora `stuck=0` en todos los perfiles.
+   - **BASELINE medido (antes de mejorar):** con los mazos mock, los perfiles altos **rinden peor**:
+     MASTER pierde a EASY ~35/65, HARD pierde a EASY ~45/55. Justo el objetivo de las fases 2+. La IA invoca
+     casi siempre en ATAQUE (~4-5/partida) y casi nunca en DEFENSA (~1) → señal directa para la fase 2.
 2. **Posición al invocar** para todos los perfiles (comparar contra el tablero rival; mantener las
    excepciones estratégicas ya existentes: presión agresiva, buffs propios, efectos que piden ataque).
 3. **Reemplazo de zona llena** en la selección normal de jugadas.

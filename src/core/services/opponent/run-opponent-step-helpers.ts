@@ -76,6 +76,27 @@ export function pickPendingSelectionId(state: GameState, opponentId: string): st
     });
     return best.instanceId;
   }
+  // Bloquear / destruir / voltear / robar la entity RIVAL con más ataque (la mayor amenaza).
+  if (
+    state.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_LOCK" ||
+    state.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_DESTROY" ||
+    state.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_FLIP_DEFENSE" ||
+    state.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_STEAL"
+  ) {
+    if (opponent.activeEntities.length === 0) return null;
+    return opponent.activeEntities.reduce((best, current) => ((current.card.attack ?? 0) > (best.card.attack ?? 0) ? current : best)).instanceId;
+  }
+  // Robar la magia/trampa rival más valiosa (cuerpo + coste).
+  if (state.pendingTurnAction.type === "SELECT_OPPONENT_EXECUTION_TO_STEAL") {
+    if (opponent.activeExecutions.length === 0) return null;
+    const score = (entity: IPlayer["activeExecutions"][number]) => (entity.card.attack ?? 0) + (entity.card.defense ?? 0) + entity.card.cost * 80;
+    return opponent.activeExecutions.reduce((best, current) => (score(current) > score(best) ? current : best)).instanceId;
+  }
+  // Sacrificar la entity PROPIA de menor ataque (la de menor valor).
+  if (state.pendingTurnAction.type === "SELECT_OWN_ENTITY_TO_SACRIFICE") {
+    if (player.activeEntities.length === 0) return null;
+    return player.activeEntities.reduce((weakest, current) => ((current.card.attack ?? 0) < (weakest.card.attack ?? 0) ? current : weakest)).instanceId;
+  }
   return null;
 }
 
