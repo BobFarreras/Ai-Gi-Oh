@@ -42,14 +42,11 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
   public choosePlay(state: GameState, opponentId: string): IOpponentPlayDecision | null {
     const { opponent, target } = getPlayers(state, opponentId);
     const playable = buildPlayableCardDecisions({ opponent, target, profile: this.profile, aiProfile: this.aiProfile });
-    // Gating escalonado (ficha 5): planificar proactivamente una fusión (conservar/montar materiales) es
-    // skill de experto (BOSS+). Los tiers bajos aún pueden COMPLETAR una fusión obvia en el bucle de abajo,
-    // pero no la planean.
-    if (this.profile.skill.fusionPlanning) {
-      const fusionSetupPlay = chooseFusionSetupPlay(state, opponent, target, playable);
-      if (fusionSetupPlay) {
-        return fusionSetupPlay;
-      }
+    // Planificar/completar fusiones es jugada BÁSICA universal (todos los tiers): montar la fusión si se tienen
+    // las piezas. Un EASY también debe saber hacerla.
+    const fusionSetupPlay = chooseFusionSetupPlay(state, opponent, target, playable);
+    if (fusionSetupPlay) {
+      return fusionSetupPlay;
     }
     if (shouldSkipPlayForEnergy({ opponent, target, profile: this.profile, aiProfile: this.aiProfile, playableDecisions: playable })) {
       return null;
@@ -110,15 +107,13 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
 
   public chooseAttack(state: GameState, opponentId: string): IOpponentAttackDecision | null {
     const { opponent, target } = getPlayers(state, opponentId);
-    // Los tiers con planificación de fusión (BOSS+) NO atacan con materiales de una fusión pendiente: hay que
-    // conservarlos vivos hasta juntar el par. Se marcan como "ya atacaron" en la copia local para excluirlos
-    // como atacantes, sin sacarlos del tablero (siguen defendiendo). Ficha 5: fusión efectiva.
-    const protectMaterials = this.profile.skill.fusionPlanning;
+    // NO atacar con materiales de una fusión pendiente (universal): hay que conservarlos vivos hasta juntar el
+    // par. Se marcan como "ya atacaron" en la copia local para excluirlos como atacantes, sin sacarlos del
+    // tablero (siguen defendiendo). Ficha 5: fusión efectiva.
     const normalizedOpponent: IPlayer = {
       ...opponent,
       activeEntities: opponent.activeEntities.map((entity) => {
-        const holdForFusion = protectMaterials && isPendingFusionMaterial(entity.card, opponent);
-        if (holdForFusion) return { ...entity, hasAttackedThisTurn: true };
+        if (isPendingFusionMaterial(entity.card, opponent)) return { ...entity, hasAttackedThisTurn: true };
         return entity.isNewlySummoned ? { ...entity, isNewlySummoned: false } : entity;
       }),
     };

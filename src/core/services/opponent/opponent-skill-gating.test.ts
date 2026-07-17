@@ -14,11 +14,6 @@ describe("skill gating por tier (ficha 5)", () => {
     for (const d of ["HARD", "BOSS", "MASTER", "MYTHIC"] as const) expect(getDifficultyProfile(d).skill.combos, d).toBe(true);
   });
 
-  it("fusionPlanning: BOSS+ sí, HARD e inferiores no", () => {
-    for (const d of ["EASY", "NORMAL", "HARD"] as const) expect(getDifficultyProfile(d).skill.fusionPlanning, d).toBe(false);
-    for (const d of ["BOSS", "MASTER", "MYTHIC"] as const) expect(getDifficultyProfile(d).skill.fusionPlanning, d).toBe(true);
-  });
-
   it("baitReactiveTrap: MASTER+ sí, BOSS e inferiores no", () => {
     for (const d of ["EASY", "NORMAL", "HARD", "BOSS"] as const) expect(getDifficultyProfile(d).skill.baitReactiveTrap, d).toBe(false);
     for (const d of ["MASTER", "MYTHIC"] as const) expect(getDifficultyProfile(d).skill.baitReactiveTrap, d).toBe(true);
@@ -28,7 +23,7 @@ describe("skill gating por tier (ficha 5)", () => {
     for (let i = 1; i < ALL.length; i++) {
       const prev = getDifficultyProfile(ALL[i - 1]).skill;
       const cur = getDifficultyProfile(ALL[i]).skill;
-      for (const k of ["combos", "fusionPlanning", "baitReactiveTrap"] as const) {
+      for (const k of ["combos", "baitReactiveTrap"] as const) {
         expect(Number(cur[k]) >= Number(prev[k]), `${ALL[i]}.${k} no puede retroceder`).toBe(true);
       }
     }

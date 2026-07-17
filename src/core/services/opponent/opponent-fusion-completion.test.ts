@@ -41,7 +41,8 @@ function completesFusion(exec: ICard): { recipeId: string; fused: boolean } {
     },
     activePlayerId: "p2",
   };
-  const strategy = new HeuristicOpponentStrategy({ difficulty: "MASTER" });
+  // EASY a propósito: la fusión es jugada BÁSICA universal; si el tier más flojo la completa, todos lo hacen.
+  const strategy = new HeuristicOpponentStrategy({ difficulty: "EASY" });
   let fused = false;
   for (let i = 0; i < 8 && state.phase === "MAIN_1"; i++) {
     const next = runOpponentStep(state, "p2", strategy);

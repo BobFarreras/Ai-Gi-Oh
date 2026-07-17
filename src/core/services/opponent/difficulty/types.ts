@@ -24,11 +24,11 @@ export interface ICampaignProgress {
 export interface IOpponentSkillSet {
   /** Reconoce sinergias de combo (Escudo TypeScript ligado, magia de atacar-en-defensa). HARD+. */
   combos: boolean;
-  /** Planifica proactivamente montar/conservar materiales para una fusión. BOSS+. */
-  fusionPlanning: boolean;
   /** Retrasa invocar para cebar una trampa reactiva de ataque-directo (Flutter Enjambre). MASTER+. */
   baitReactiveTrap: boolean;
 }
+// Nota: planificar/completar FUSIONES es una jugada BÁSICA universal (todos los tiers), como replegar o no
+// regalar entities — NO va en el skill set. Un EASY también debe saber montar su fusión si tiene las piezas.
 
 /**
  * Perfil numérico que controla el comportamiento táctico del oponente.
