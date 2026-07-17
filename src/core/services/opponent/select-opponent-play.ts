@@ -6,6 +6,7 @@ import { IStoryAiProfile } from "@/core/services/opponent/difficulty/story-ai-pr
 import { scoreEntity, scoreExecution, scoreFusion, scoreTrap } from "@/core/services/opponent/heuristic-score";
 import { canActivateFusionExecutionNow } from "@/core/services/opponent/opponent-fusion-execution";
 import { resolveTacticalCardBonus } from "@/core/services/opponent/opponent-tactical-context";
+import { resolveSynergyBonus } from "@/core/services/opponent/opponent-synergy";
 
 export interface IPlayableCardDecision {
   card: ICard;
@@ -63,6 +64,10 @@ function canActivateNewBatchExecutionNow(effect: NonNullable<ICard["effect"]>, o
   if (effect.action === "BOOST_ATTACK_BY_CARD_ID") return opponent.activeEntities.some((entity) => entity.card.id === effect.targetCardId);
   if (effect.action === "DAMAGE_IF_ALLY_ON_BOARD") return opponent.activeEntities.some((entity) => entity.card.id === effect.requiredCardId);
   if (effect.action === "APPLY_NO_DIRECT_ATTACKS") return true;
+  // Atacar en defensa: activar solo si hay muros en defensa que se beneficien (si no, se setea/espera).
+  if (effect.action === "ALLOW_DEFENSE_MODE_ATTACK") {
+    return opponent.activeEntities.some((entity) => (entity.mode === "DEFENSE" || entity.mode === "SET") && (entity.card.defense ?? 0) >= 1200);
+  }
   if (effect.action === "DESTROY_OPPONENT_ENTITY" || effect.action === "FLIP_OPPONENT_ENTITY_TO_DEFENSE") return target.activeEntities.length > 0;
   if (effect.action === "SACRIFICE_ALLY_ENTITY_FOR_ENERGY") return opponent.activeEntities.length > 0;
   if (effect.action === "GRANT_EXTRA_SUMMON") return opponent.hand.filter((card) => card.type === "ENTITY").length >= 2 && opponent.activeEntities.length <= 1;
@@ -127,11 +132,13 @@ function scoreCardWithContext(
         : card.type === "TRAP"
           ? scoreTrap(card)
           : scoreExecution(card, profile);
-  if (card.type === "TRAP") return aiProfile.style === "control" ? base + 220 : base;
-  if (card.type !== "EXECUTION") return base;
+  const synergy = resolveSynergyBonus(card, opponent);
+  if (card.type === "TRAP") return (aiProfile.style === "control" ? base + 220 : base) + synergy;
+  if (card.type !== "EXECUTION") return base + synergy;
   const mode = resolveExecutionMode(card, opponent, target);
   const effect = card.effect;
-  const activateBonus = mode === "ACTIVATE" ? 460 : -220;
+  // La sinergia se suma vía activateBonus, que entra en TODOS los returns de la rama de ejecución.
+  const activateBonus = (mode === "ACTIVATE" ? 460 : -220) + synergy;
   if (!effect) return base + activateBonus;
   if (effect.action === "DAMAGE" && effect.target === "OPPONENT") {
     const lethalBonus = effect.value >= target.healthPoints ? 9000 : 0;

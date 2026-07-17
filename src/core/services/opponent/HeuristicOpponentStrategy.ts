@@ -10,7 +10,7 @@ import { canNormalSummon } from "@/core/use-cases/game-engine/state/summon-rules
 import { chooseFusionMaterials } from "@/core/services/opponent/heuristic-fusion-materials";
 import { IStoryAiProfile, normalizeStoryAiProfile } from "@/core/services/opponent/difficulty/story-ai-profile";
 import { buildPlayableCardDecisions } from "@/core/services/opponent/select-opponent-play";
-import { shouldHoldFragileFrontline } from "@/core/services/opponent/opponent-tactical-context";
+import { shouldHoldFragileFrontline, shouldHoldToBaitReactiveTrap } from "@/core/services/opponent/opponent-tactical-context";
 import { IOpponentModeChangeDecision } from "@/core/services/opponent/types";
 import { shouldSkipPlayForEnergy } from "@/core/services/opponent/opponent-energy-plan";
 import { chooseFusionSetupPlay } from "@/core/services/opponent/opponent-fusion-plan";
@@ -51,6 +51,9 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
     for (const decision of playable) {
       const { card, mode } = decision;
       if (shouldHoldFragileFrontline({ card, mode, opponent, target, profile: this.profile, aiProfile: this.aiProfile })) {
+        continue;
+      }
+      if (shouldHoldToBaitReactiveTrap({ card, mode, opponent, target })) {
         continue;
       }
       if (card.type === "FUSION") {
