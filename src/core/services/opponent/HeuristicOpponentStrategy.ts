@@ -14,6 +14,7 @@ import { shouldHoldFragileFrontline } from "@/core/services/opponent/opponent-ta
 import { IOpponentModeChangeDecision } from "@/core/services/opponent/types";
 import { shouldSkipPlayForEnergy } from "@/core/services/opponent/opponent-energy-plan";
 import { chooseFusionSetupPlay } from "@/core/services/opponent/opponent-fusion-plan";
+import { chooseEntityZoneReplacement, chooseExecutionZoneReplacement } from "@/core/services/opponent/opponent-zone-replacement";
 
 function getPlayers(state: GameState, opponentId: string): { opponent: IPlayer; target: IPlayer } {
   if (state.playerA.id === opponentId) {
@@ -61,22 +62,33 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
       }
 
       if (card.type === "ENTITY") {
-        if (!canNormalSummon(state) || opponent.activeEntities.length >= 3) {
+        if (!canNormalSummon(state)) {
           continue;
+        }
+        // Zona de entities llena: ficha 5 fase 3 — rotar la peor si la nueva es claramente mejor.
+        if (opponent.activeEntities.length >= 3) {
+          const replaceEntityInstanceId = chooseEntityZoneReplacement(opponent, card);
+          if (!replaceEntityInstanceId) continue;
+          return { cardId: card.id, mode, replaceEntityInstanceId };
         }
         return { cardId: card.id, mode };
       }
 
       if (card.type === "EXECUTION") {
+        // Zona de magias/trampas llena: reemplazar la peor puesta si la nueva compensa.
         if (opponent.activeExecutions.length >= 3) {
-          continue;
+          const replaceExecutionInstanceId = chooseExecutionZoneReplacement(opponent, card);
+          if (!replaceExecutionInstanceId) continue;
+          return { cardId: card.id, mode, replaceExecutionInstanceId };
         }
         return { cardId: card.id, mode };
       }
 
       if (card.type === "TRAP") {
         if (opponent.activeExecutions.length >= 3) {
-          continue;
+          const replaceExecutionInstanceId = chooseExecutionZoneReplacement(opponent, card);
+          if (!replaceExecutionInstanceId) continue;
+          return { cardId: card.id, mode: "SET", replaceExecutionInstanceId };
         }
 
         return { cardId: card.id, mode: "SET" };

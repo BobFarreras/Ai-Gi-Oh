@@ -19,10 +19,10 @@ objeto en el overworld del Acto 3) y **3 completa** (motor Fase A + carta Recaud
 server-authoritative, mig. 134).
 
 **Paquete B en curso.** **Ficha 4** (nivel 1): motor + UI del carrusel HECHOS contra la IA (falta solo el
-carrusel en MULTI, otra tanda). **Ficha 5** (IA) en curso: fase 1 (simulador, `eaf3e940`) y fase 2 (posición
-al invocar para todos los perfiles, `7f4b1bdd`) HECHAS. Pendientes fases 3 (reemplazo de zona llena), 4
-(fusiones: auditar mazos) y **5 (combos por-efecto — el usuario pidió el combo TypeScript como primer caso)**,
-más la 6 (criterio de trampa para la IA, que enlaza con la ficha 4).
+carrusel en MULTI, otra tanda). **Ficha 5** (IA) en curso: fases 1 (simulador, `eaf3e940`), 2 (posición al
+invocar, `7f4b1bdd`) y 3 (reemplazo de zona llena) HECHAS. Pendientes fase 4 (fusiones: auditar mazos), **5
+(combos por-efecto — el usuario pidió los combos TypeScript y Flutter Enjambre como primeros casos)** y 6
+(criterio de trampa para la IA, que enlaza con la ficha 4).
 
 ### Ficha 3, Fase B (acreditación server-authoritative de la pasiva de Nexus)
 
@@ -380,7 +380,13 @@ no tocan).
    en defensa el caso que perderían; la amenaza en defensa no encoge. 57 tests de IA en verde.
    - Nota: en espejo (ambos lados con la mejora) el win-rate no cambia; el beneficio es contra el HUMANO (que
      no recibe el cambio) y como base para las fases siguientes.
-3. **Reemplazo de zona llena** en la selección normal de jugadas.
+3. **Reemplazo de zona llena. HECHO.** Nuevo `opponent-zone-replacement.ts`: con 3 entities o 3
+   magias/trampas, `choosePlay` ya no descarta la carta nueva —propone SUSTITUIR a la peor puesta si la nueva
+   la supera por un margen (600 entities / 500 ejecuciones, para no rotar por nimiedades). Reusa las
+   decisiones `replaceEntityInstanceId`/`replaceExecutionInstanceId` que el motor y la UI ya ejecutaban (solo
+   las proponía el plan de fusión). Nunca toca una magia en modo ACTIVATE (resolviéndose). Requiere
+   `canNormalSummon` para las entities. Tests: helper (peor carta, margen, ACTIVATE intocable) + integración
+   en `choosePlay` (rota con mejora clara, no rota sin ella). 63 tests de IA en verde.
 4. **Fusión:** tras la auditoría de mazos, subir la prioridad del plan de fusión en perfiles altos y dar
    mazos con fusión a rivales concretos ("expertos en fusión" — es dato de mazo, no código).
 5. **Combos por-efecto (petición del usuario, 2026-07-16):** tabla data-driven de sinergias que la heurística
@@ -398,6 +404,11 @@ no tocan).
      tienes esa entity); (b) **prioridad de conjunto** —con 2 de 3 piezas, subir prioridad de jugar/guardar
      la 3ª, reutilizando el patrón del planificador de fusión; (c) tabla de combos como DATOS
      (`{ core, pieces[], plan }`), no `if`s. Validar con el simulador (fase 1) que no desbalancea.
+   - **Segundo caso del usuario (2026-07-16):** *no invocar* una entity aún porque tienes una trampa reactiva
+     (p.ej. **Flutter Enjambre**) y prefieres que salte PRIMERO con el ataque rival, y ya invocarás el turno
+     siguiente. Es "sinergia negativa/tempo": la IA debe reconocer que retrasar el desarrollo maximiza la
+     trampa. Ojo: enlaza con `shouldSkipPlayForEnergy`/`shouldHoldFragileFrontline` (ya existe la idea de
+     "esperar"), pero aquí la condición es "tengo trampa reactiva armada + el rival va a atacar".
    - **Esfuerzo:** medio; lo caro es diseñar bien qué combos merecen la pena.
 6. Las trampas múltiples de la ficha 4 nivel 1: darle a la IA el criterio de "cuál activo".
 
