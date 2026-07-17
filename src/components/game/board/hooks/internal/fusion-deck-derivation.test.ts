@@ -31,7 +31,8 @@ describe("derivación del bloque de fusión desde los execs del mazo", () => {
 
   it("LAS 7 fusiones: cada exec-fusion-X del catálogo deriva su carta resultado fusion-X", () => {
     const allFusionExecs = EXECUTION_CARDS.filter((c) => c.effect?.action === "FUSION_SUMMON");
-    expect(allFusionExecs.length).toBe(7);
+    // Tripwire: al añadir una fusión, sube el conteo. Guía: docs/game-engine/anadir-una-fusion.md
+    expect(allFusionExecs.length, "¿fusión nueva? actualiza el conteo y revisa docs/game-engine/anadir-una-fusion.md").toBe(7);
     for (const exec of allFusionExecs) {
       const recipeId = exec.effect?.action === "FUSION_SUMMON" ? exec.effect.recipeId : "";
       const derived = fusionResultsForDeck([{ ...exec }]);

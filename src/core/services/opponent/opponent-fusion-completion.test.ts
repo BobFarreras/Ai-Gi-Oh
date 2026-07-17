@@ -55,7 +55,9 @@ function completesFusion(exec: ICard): { recipeId: string; fused: boolean } {
 
 describe("la IA completa TODAS las fusiones (regresión fusión efectiva)", () => {
   it("hay ejecutable de fusión para las 7 recetas", () => {
-    expect(fusionExecs.length).toBe(7);
+    // Tripwire: al añadir una fusión nueva, sube este número y re-ejecuta (el bucle de abajo la cubre).
+    // Guía: docs/game-engine/anadir-una-fusion.md
+    expect(fusionExecs.length, "¿fusión nueva? actualiza el conteo y revisa docs/game-engine/anadir-una-fusion.md").toBe(7);
   });
 
   for (const exec of fusionExecs) {
