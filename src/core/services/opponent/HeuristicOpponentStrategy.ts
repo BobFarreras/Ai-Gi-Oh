@@ -41,9 +41,14 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
   public choosePlay(state: GameState, opponentId: string): IOpponentPlayDecision | null {
     const { opponent, target } = getPlayers(state, opponentId);
     const playable = buildPlayableCardDecisions({ opponent, target, profile: this.profile, aiProfile: this.aiProfile });
-    const fusionSetupPlay = chooseFusionSetupPlay(state, opponent, target, playable);
-    if (fusionSetupPlay) {
-      return fusionSetupPlay;
+    // Gating escalonado (ficha 5): planificar proactivamente una fusión (conservar/montar materiales) es
+    // skill de experto (BOSS+). Los tiers bajos aún pueden COMPLETAR una fusión obvia en el bucle de abajo,
+    // pero no la planean.
+    if (this.profile.skill.fusionPlanning) {
+      const fusionSetupPlay = chooseFusionSetupPlay(state, opponent, target, playable);
+      if (fusionSetupPlay) {
+        return fusionSetupPlay;
+      }
     }
     if (shouldSkipPlayForEnergy({ opponent, target, profile: this.profile, aiProfile: this.aiProfile, playableDecisions: playable })) {
       return null;
@@ -53,7 +58,8 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
       if (shouldHoldFragileFrontline({ card, mode, opponent, target, profile: this.profile, aiProfile: this.aiProfile })) {
         continue;
       }
-      if (shouldHoldToBaitReactiveTrap({ card, mode, opponent, target })) {
+      // Gating escalonado (ficha 5): cebar una trampa reactiva retrasando el desarrollo es skill de experto (MASTER+).
+      if (this.profile.skill.baitReactiveTrap && shouldHoldToBaitReactiveTrap({ card, mode, opponent, target })) {
         continue;
       }
       if (card.type === "FUSION") {

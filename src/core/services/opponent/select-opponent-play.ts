@@ -132,7 +132,9 @@ function scoreCardWithContext(
         : card.type === "TRAP"
           ? scoreTrap(card)
           : scoreExecution(card, profile);
-  const synergy = resolveSynergyBonus(card, opponent);
+  // Gating escalonado (ficha 5): solo los tiers con skill `combos` (HARD+) reconocen sinergias de combo;
+  // EASY/NORMAL juegan las piezas "a ciegas" (más simples/peores), sin priorizar montarlas ni evitar quemarlas.
+  const synergy = profile.skill.combos ? resolveSynergyBonus(card, opponent) : 0;
   if (card.type === "TRAP") return (aiProfile.style === "control" ? base + 220 : base) + synergy;
   if (card.type !== "EXECUTION") return base + synergy;
   const mode = resolveExecutionMode(card, opponent, target);

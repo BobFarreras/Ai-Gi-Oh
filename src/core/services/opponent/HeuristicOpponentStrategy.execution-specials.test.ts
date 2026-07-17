@@ -564,8 +564,9 @@ describe("HeuristicOpponentStrategy ejecuciones especiales", () => {
     expect(decision?.replaceEntityInstanceId === "filler-1" || decision?.replaceEntityInstanceId === "filler-2").toBe(true);
   });
 
-  it("si la zona de ejecuciones está llena, reemplaza una slot para setear la mágica de fusión", () => {
-    const strategy = new HeuristicOpponentStrategy({ difficulty: "EASY" });
+  it("si la zona de ejecuciones está llena, reemplaza una slot para setear la mágica de fusión (planificación: BOSS+)", () => {
+    // Ficha 5: planificar fusiones es skill de experto (BOSS+); EASY ya no lo hace (gating escalonado).
+    const strategy = new HeuristicOpponentStrategy({ difficulty: "BOSS" });
     const base = createBaseState();
     const state = {
       ...base,
