@@ -41,7 +41,7 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
   public choosePlay(state: GameState, opponentId: string): IOpponentPlayDecision | null {
     const { opponent, target } = getPlayers(state, opponentId);
     const playable = buildPlayableCardDecisions({ opponent, target, profile: this.profile, aiProfile: this.aiProfile });
-    const fusionSetupPlay = chooseFusionSetupPlay(state, opponent, playable);
+    const fusionSetupPlay = chooseFusionSetupPlay(state, opponent, target, playable);
     if (fusionSetupPlay) {
       return fusionSetupPlay;
     }

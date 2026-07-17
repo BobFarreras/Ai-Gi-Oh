@@ -20,9 +20,10 @@ server-authoritative, mig. 134).
 
 **Paquete B en curso.** **Ficha 4** (nivel 1): motor + UI del carrusel HECHOS contra la IA (falta solo el
 carrusel en MULTI, otra tanda). **Ficha 5** (IA) en curso: fases 1 (simulador, `eaf3e940`), 2 (posición al
-invocar, `7f4b1bdd`) y 3 (reemplazo de zona llena) HECHAS. Pendientes fase 4 (fusiones: auditar mazos), **5
-(combos por-efecto — el usuario pidió los combos TypeScript y Flutter Enjambre como primeros casos)** y 6
-(criterio de trampa para la IA, que enlaza con la ficha 4).
+invocar, `7f4b1bdd`), 3 (reemplazo de zona llena, `35b6f95e`) y 4 (fusión: no arrancar fusiones inviables +
+hallazgo de que la fusión es frágil/deck-limitada) HECHAS. Pendientes: **fase 5 (combos por-efecto — el
+usuario pidió los combos TypeScript y Flutter Enjambre como primeros casos)**, fase 6 (criterio de trampa
+para la IA, que enlaza con la ficha 4) y la **auditoría de mazos de fusión** (dato, no código).
 
 ### Ficha 3, Fase B (acreditación server-authoritative de la pasiva de Nexus)
 
@@ -387,8 +388,22 @@ no tocan).
    las proponía el plan de fusión). Nunca toca una magia en modo ACTIVATE (resolviéndose). Requiere
    `canNormalSummon` para las entities. Tests: helper (peor carta, margen, ACTIVATE intocable) + integración
    en `choosePlay` (rota con mejora clara, no rota sin ella). 63 tests de IA en verde.
-4. **Fusión:** tras la auditoría de mazos, subir la prioridad del plan de fusión en perfiles altos y dar
-   mazos con fusión a rivales concretos ("expertos en fusión" — es dato de mazo, no código).
+4. **Fusión. HECHO (con un hallazgo importante) + auditoría de mazos pendiente (dato).**
+   - **Tooling:** `buildFusionSimulationDeck` — mazo capaz de fusionar (ejecutable + materiales + fusion-deck)
+     para medir la fusión en el simulador.
+   - **Hallazgo (simulador):** el planificador de fusión FUNCIONA (propone materiales y setea el ejecutable),
+     pero la fusión es un **combo frágil de 2 materiales**: se ensamblan de uno en uno al descubierto y el
+     rival mata cada material antes de juntar el par → 0 fusiones en la práctica con stats representativas, y
+     un mazo "todo fusión" **pierde ~100%** (9/20 cartas son piezas de combo muertas si no fusiona → es un
+     mazo peor de por sí, no un fallo de la IA). Confirmado que la vía de COMPLETAR la fusión sí funciona
+     cuando los materiales sobreviven (test).
+   - **Mejora aplicada:** la IA **ya no arranca fusiones inviables** —no invoca un material cuya DEF no
+     aguantará al mejor atacante rival (antes "alimentaba materiales a la muerte" toda la partida)—; si la
+     fusión ya está empezada, la termina. Tests directos de la lógica (`opponent-fusion-plan.test.ts`).
+   - **Pendiente (DATO, no código):** auditar los mazos reales de story/arena (¿cuántos rivales llevan
+     FUSION + materiales?) y decidir si la fusión debe apoyarse en PROTECCIÓN (trampa/defensa que mantenga
+     vivo un material un turno) — esto se solapa con la fase 5 (combos). Dar mazos de fusión a rivales
+     concretos es dato de mazo. Subir prioridad en perfiles altos solo tiene sentido si el mazo puede fusionar.
 5. **Combos por-efecto (petición del usuario, 2026-07-16):** tabla data-driven de sinergias que la heurística
    consulte, en vez de `if`s por carta. Empezar con 4-5 combos reales, **el primero el del usuario**:
    TypeScript en DEFENSA + Escudo TypeScript (`REINFORCE_LINKED_ENTITY_ON_ATTACK`, linked a `entity-typescript`)

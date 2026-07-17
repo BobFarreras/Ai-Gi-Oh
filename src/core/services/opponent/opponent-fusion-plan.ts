@@ -8,6 +8,20 @@ import { GameState } from "@/core/use-cases/GameEngine";
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { getFusionRecipeByResultId } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 
+/** Mayor ATK entre los rivales EN ATAQUE: la amenaza que mataría a un material recién invocado. */
+function rivalAttackThreat(target: IPlayer): number {
+  return target.activeEntities.reduce((best, entity) => (entity.mode === "ATTACK" ? Math.max(best, entity.card.attack ?? 0) : best), 0);
+}
+
+/** ¿Ya hay algún material de la receta en mesa? (fusión ya empezada = no abortar a mitad). */
+function hasStartedRecipe(opponent: IPlayer, recipeId: string): boolean {
+  const recipe = getFusionRecipeByResultId(recipeId);
+  if (!recipe) return false;
+  return opponent.activeEntities.some((entity) =>
+    Boolean(recipe.requiredMaterialIds?.includes(entity.card.id)) ||
+    Boolean(entity.card.archetype && recipe.requiredArchetypes?.includes(entity.card.archetype)));
+}
+
 function matchesFusionMaterialGap(card: ICard, recipeId: string, opponent: IPlayer): boolean {
   if (card.type !== "ENTITY") return false;
   const gaps = resolveFusionMaterialGaps(opponent, recipeId);
@@ -59,16 +73,22 @@ function chooseExecutionToReplace(opponent: IPlayer): string | null {
 /**
  * Prioriza jugadas de setup de materiales/ejecución para completar fusión en turnos siguientes.
  */
-export function chooseFusionSetupPlay(state: GameState, opponent: IPlayer, playable: IPlayableCardDecision[]): IOpponentPlayDecision | null {
+export function chooseFusionSetupPlay(state: GameState, opponent: IPlayer, target: IPlayer, playable: IPlayableCardDecision[]): IOpponentPlayDecision | null {
   const fusionExecutionDecisions = playable.filter((decision) =>
     decision.card.type === "EXECUTION" && decision.card.effect?.action === "FUSION_SUMMON");
   if (fusionExecutionDecisions.length === 0) return null;
+  const threat = rivalAttackThreat(target);
   if (!state.hasNormalSummonedThisTurn) {
     for (const fusionExecution of fusionExecutionDecisions) {
       const recipeId = fusionExecution.card.effect?.action === "FUSION_SUMMON" ? fusionExecution.card.effect.recipeId : null;
       if (!recipeId) continue;
       const materialPlay = playable.find((decision) => matchesFusionMaterialGap(decision.card, recipeId, opponent));
       if (!materialPlay) continue;
+      // Ficha 5 fase 4: NO arrancar una fusión inviable. Un material recién invocado se pone en DEFENSA; si su
+      // DEF no aguanta al mejor atacante rival, moriría antes de juntar el par y sería tirar la partida (visto
+      // en el simulador: mazos de fusión perdían el 100%). Si la fusión YA está empezada, se termina.
+      const materialSurvives = (materialPlay.card.defense ?? 0) >= threat;
+      if (!hasStartedRecipe(opponent, recipeId) && threat > 0 && !materialSurvives) continue;
       if (opponent.activeEntities.length < 3) return { cardId: materialPlay.card.id, mode: materialPlay.mode };
       const replaceEntityInstanceId = chooseEntityToReplace(opponent, recipeId);
       if (replaceEntityInstanceId) return { cardId: materialPlay.card.id, mode: materialPlay.mode, replaceEntityInstanceId };

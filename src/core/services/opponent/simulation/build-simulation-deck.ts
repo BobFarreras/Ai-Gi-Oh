@@ -6,6 +6,7 @@ import { createSeededRandom } from "@/core/services/random/seeded-rng";
 import { ENTITY_CARDS } from "@/core/data/mock-cards/entities";
 import { EXECUTION_CARDS } from "@/core/data/mock-cards/executions";
 import { TRAP_CARDS } from "@/core/data/mock-cards/traps";
+import { FUSION_CARDS } from "@/core/data/mock-cards/fusions";
 
 export interface ISimulationDeckMix {
   entities: number;
@@ -48,4 +49,32 @@ export function buildSimulationDeck(seed: string, mix: ISimulationDeckMix = DEFA
     ...take(EXECUTION_CARDS, mix.executions, random),
     ...take(TRAP_CARDS, mix.traps, random),
   ];
+}
+
+/**
+ * Mazo capaz de FUSIONAR (ficha 5 fase 4): incluye el ejecutable de fusión, copias de los dos materiales de
+ * la receta y relleno; el `fusionDeck` lleva la carta resultado. Sirve para verificar/medir que el
+ * planificador de fusión de la IA monta la fusión cuando el mazo tiene las piezas.
+ */
+export function buildFusionSimulationDeck(seed: string, recipeId = "fusion-pytgress"): { deck: ICard[]; fusionDeck: ICard[] } {
+  const random = createSeededRandom(seed);
+  const fusion = FUSION_CARDS.find((card) => card.id === recipeId);
+  const fusionExecution = EXECUTION_CARDS.find((card) => card.effect?.action === "FUSION_SUMMON" && card.effect.recipeId === recipeId);
+  if (!fusion || !fusionExecution) throw new Error(`Receta de fusión no encontrada para el sim: ${recipeId}`);
+  const materialIds = fusion.fusionMaterials ?? [];
+  const materials = materialIds.flatMap((id) => {
+    const card = ENTITY_CARDS.find((entity) => entity.id === id);
+    return card ? [{ ...card }] : [];
+  });
+  // 3 ejecutables + 3 copias de cada material + relleno de entidades = 20 cartas.
+  const copies = <T,>(card: T, n: number): T[] => Array.from({ length: n }, () => ({ ...card }));
+  const fusionPieces = [
+    ...copies(fusionExecution, 3),
+    ...materials.flatMap((material) => copies(material, 3)),
+  ];
+  const fillerCount = Math.max(0, 20 - fusionPieces.length);
+  return {
+    deck: [...fusionPieces, ...take(ENTITY_CARDS, fillerCount, random)],
+    fusionDeck: [{ ...fusion }],
+  };
 }
