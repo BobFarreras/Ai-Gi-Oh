@@ -3,6 +3,8 @@ import { ICard } from "@/core/entities/ICard";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { pickPendingFusionMaterialInstanceId } from "@/core/services/opponent/opponent-pending-fusion-material";
 import { canActivateExecutionNow } from "@/core/services/opponent/select-opponent-play";
+import { workingFusionRecipeIds } from "@/core/services/opponent/opponent-fusion-execution";
+import { chooseFusionMaterialsByRecipeId } from "@/core/services/opponent/heuristic-fusion-materials";
 import { getFusionRecipeByResultId } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 import { GameState } from "@/core/use-cases/GameEngine";
 
@@ -12,16 +14,22 @@ function getPlayerPairById(state: GameState, playerId: string): { player: IPlaye
     : { player: state.playerB, opponent: state.playerA };
 }
 
+/** ¿La carta (entity) es material requerido de alguna fusión hacia la que la IA ya trabaja (exec en mano o SET)? */
+function isMaterialForWorkingFusion(card: ICard, player: IPlayer): boolean {
+  for (const recipeId of workingFusionRecipeIds(player)) {
+    const recipe = getFusionRecipeByResultId(recipeId);
+    if (!recipe) continue;
+    if (recipe.requiredMaterialIds?.includes(card.id)) return true;
+    if (card.archetype && recipe.requiredArchetypes?.includes(card.archetype)) return true;
+  }
+  return false;
+}
+
 function scoreCardForDiscard(card: ICard, player: IPlayer): number {
   if (card.type === "ENTITY") {
     let score = (card.attack ?? 0) + (card.defense ?? 0) - card.cost * 180;
-    const isFusionMaterialCandidate = player.hand.some((handCard) => {
-      if (handCard.type !== "EXECUTION" || handCard.effect?.action !== "FUSION_SUMMON") return false;
-      const recipe = getFusionRecipeByResultId(handCard.effect.recipeId);
-      if (!recipe) return false;
-      return Boolean(recipe.requiredMaterialIds?.includes(card.id) || (card.archetype && recipe.requiredArchetypes?.includes(card.archetype)));
-    });
-    if (isFusionMaterialCandidate) score += 1200;
+    // Material de una fusión en marcha (exec en mano O ya SET en mesa): protegerlo mucho, es una pieza clave.
+    if (isMaterialForWorkingFusion(card, player)) score += 6000;
     return score;
   }
 
@@ -29,7 +37,17 @@ function scoreCardForDiscard(card: ICard, player: IPlayer): number {
   let effectValue = effect && "value" in effect && typeof effect.value === "number" ? effect.value : 0;
   if (card.type === "EXECUTION" && effect?.action === "FUSION_SUMMON") {
     const hasFusionCard = player.fusionDeck?.some((fusionCard) => fusionCard.id === effect.recipeId) ?? false;
-    effectValue += hasFusionCard ? 1800 : 600;
+    // El ejecutable de fusión es IMPRESCINDIBLE: sin él no hay fusión. Cuanto más cerca del par, más intocable.
+    // Si el par YA está en mesa, JAMÁS descartarlo (era el bug: se tiraba con los 2 materiales listos).
+    if (!hasFusionCard) {
+      effectValue += 600; // no está la carta resultado en el fusionDeck: no puede completarse, valor bajo
+    } else if (chooseFusionMaterialsByRecipeId(player.activeEntities, effect.recipeId) !== null) {
+      effectValue += 100_000; // par listo: descartarlo tiraría una fusión hecha
+    } else if (player.activeEntities.some((entity) => isMaterialForWorkingFusion(entity.card, player)) || player.hand.some((handCard) => handCard.type === "ENTITY" && isMaterialForWorkingFusion(handCard, player))) {
+      effectValue += 8000; // ya hay/viene material: conservar el ejecutable para completar
+    } else {
+      effectValue += 2400; // aún sin materiales, pero es la única pieza que no se puede sustituir
+    }
   }
   return effectValue - card.cost * 140;
 }
