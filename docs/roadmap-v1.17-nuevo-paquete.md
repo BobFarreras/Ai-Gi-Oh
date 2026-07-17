@@ -369,6 +369,14 @@ no tocan).
    - **BASELINE medido (antes de mejorar):** con los mazos mock, los perfiles altos **rinden peor**:
      MASTER pierde a EASY ~35/65, HARD pierde a EASY ~45/55. Justo el objetivo de las fases 2+. La IA invoca
      casi siempre en ATAQUE (~4-5/partida) y casi nunca en DEFENSA (~1) → señal directa para la fase 2.
+2b. **Repliegue de una entity YA en el tablero (HECHO — reporte del usuario 2026-07-16, "hasta el más
+   flojo debe saber esta regla").** La fase 2 arreglaba la posición AL INVOCAR, pero una entity que ya
+   estaba en ATAQUE se quedaba ahí muriendo. `chooseAttackerToDefend` era demasiado estricto (solo replegaba
+   si la defensa sobrevivía). Ahora, para TODOS los perfiles: si `ataque < mejor atacante rival` (pierde el
+   intercambio), repliega a DEFENSA —sobreviva o no la defensa— porque en ATAQUE muere Y regala trample, y en
+   DEFENSA no. Se mantiene el guard anti-oscilación (no repliega si puede ganar un intercambio). Test: los 6
+   perfiles (EASY→MYTHIC) repliegan el caso que perdería.
+
 2. **Posición al invocar para todos los perfiles. HECHO.** `resolveEntityMode` ahora, para TODOS los
    perfiles (antes solo MASTER/MYTHIC), invoca en DEFENSA una recién invocada que NO gana el intercambio
    contra el mejor atacante rival EN ATAQUE (`rivalAttackThreat`). Fundamento en las reglas de combate
@@ -400,10 +408,20 @@ no tocan).
    - **Mejora aplicada:** la IA **ya no arranca fusiones inviables** —no invoca un material cuya DEF no
      aguantará al mejor atacante rival (antes "alimentaba materiales a la muerte" toda la partida)—; si la
      fusión ya está empezada, la termina. Tests directos de la lógica (`opponent-fusion-plan.test.ts`).
+   - **Corrección del usuario (2026-07-16) — la energía NO es el freno:** verificado en las reglas de fusión
+     (`fuse-cards.rules`): "permite la fusión aunque la energía sea inferior al coste" (solo drena a 0), y
+     `canActivateFusionExecutionNow` no mira energía. Es decir: **magia de fusión SET + 2 materiales en el
+     campo + activar es suficiente**, sin necesidad de energía plena. El único freno real es que los
+     materiales SOBREVIVAN hasta juntar el par.
+   - **Estrategia que pide el usuario (para cuando se retome):** mantener en mesa un material FUERTE (que no
+     lo destruyan), y cuando toque, invocar el segundo material y activar la magia. → la IA debería: preferir
+     materiales survivables como "ancla", proteger el material-ancla (defensa/trampa) y activar en cuanto el
+     par esté completo (no antes, no después). El gate actual ya evita invocar un material que muere; falta
+     el "preferir/mantener el ancla".
    - **Pendiente (DATO, no código):** auditar los mazos reales de story/arena (¿cuántos rivales llevan
      FUSION + materiales?) y decidir si la fusión debe apoyarse en PROTECCIÓN (trampa/defensa que mantenga
      vivo un material un turno) — esto se solapa con la fase 5 (combos). Dar mazos de fusión a rivales
-     concretos es dato de mazo. Subir prioridad en perfiles altos solo tiene sentido si el mazo puede fusionar.
+     concretos es dato de mazo.
 5. **Combos por-efecto (petición del usuario, 2026-07-16):** tabla data-driven de sinergias que la heurística
    consulte, en vez de `if`s por carta. Empezar con 4-5 combos reales, **el primero el del usuario**:
    TypeScript en DEFENSA + Escudo TypeScript (`REINFORCE_LINKED_ENTITY_ON_ATTACK`, linked a `entity-typescript`)

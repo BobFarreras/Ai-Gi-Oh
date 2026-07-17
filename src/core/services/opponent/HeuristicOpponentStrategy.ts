@@ -153,11 +153,13 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
   }
 
   /**
-   * Repliega a DEFENSA una entity que está en ATAQUE cuando es un tanque amenazado: su defensa
-   * sobreviviría al mayor atacante rival pero su ataque no. Antes se quedaban en ATAQUE (menor valor)
-   * y morían regalando daño. Sólo se replega si NO puede ganar ningún intercambio atacando, lo que
-   * garantiza que la fase de promoción no la vuelva a pasar a ATAQUE (sin oscilación): cada repliegue
-   * reduce de forma monótona el número de tanques en ATAQUE candidatos.
+   * Repliega a DEFENSA una entity en ATAQUE que va a PERDER el intercambio contra el mejor atacante rival.
+   * Regla base del juego (CombatService) que TODOS los perfiles deben conocer: si la matan estando en
+   * ATAQUE, además reparte "trample" (daño directo a su dueño); en DEFENSA, si la matan NO hay daño
+   * penetrante, y su DEF puede incluso rebotar. Por eso, si `ataque < amenaza rival`, DEFENSA es SIEMPRE
+   * mejor (sobreviva o no la defensa) — antes solo se replegaba si la defensa aguantaba, dejando morir en
+   * ataque a las que no. Sólo se replega si NO puede ganar ningún intercambio atacando (anti-oscilación con
+   * la fase de promoción: cada repliegue reduce de forma monótona los tanques en ATAQUE candidatos).
    */
   private chooseAttackerToDefend(opponent: IPlayer, target: IPlayer): IOpponentModeChangeDecision | null {
     const attackers = opponent.activeEntities.filter((entity) =>
@@ -177,11 +179,11 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
     const orderedTanks = [...attackers].sort((left, right) => (right.card.defense ?? 0) - (left.card.defense ?? 0));
     for (const tank of orderedTanks) {
       const attack = tank.card.attack ?? 0;
-      const defense = tank.card.defense ?? 0;
       // Guard anti-oscilación: si podría ganar un intercambio atacando, la promoción lo re-subiría.
       if (targetStats.some((stat) => attack >= stat)) continue;
       if ((this.profile.key === "MASTER" || this.profile.key === "MYTHIC") && canPressureSet && attack >= 1700) continue;
-      if (defense > attack && defense >= rivalThreat && attack < rivalThreat) {
+      // Pierde el intercambio contra el mayor atacante rival → en ataque muere Y regala trample. DEFENSA mejor.
+      if (attack < rivalThreat) {
         return { instanceId: tank.instanceId, newMode: "DEFENSE" };
       }
     }
