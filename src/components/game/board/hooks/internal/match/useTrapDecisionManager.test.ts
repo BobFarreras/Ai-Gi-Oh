@@ -67,6 +67,36 @@ describe("useTrapDecisionManager (carrusel ficha 4)", () => {
     expect(store.prompt).toBeNull();
   });
 
+  it("NO pasa la trampa si la selección sigue en una trampa elegible (render intermedio al ciclar en móvil)", () => {
+    const { stub, store } = createUiStateStub();
+    // Estado del render intermedio del ciclado: la selección ya es trap-b, pero prompt.trapCard aún es trap-a.
+    store.prompt = {
+      trigger: "ON_OPPONENT_ATTACK_DECLARED",
+      trapCard: trapCard("trap-a"),
+      eligibleTraps: [
+        { card: trapCard("trap-a"), instanceId: "t1" },
+        { card: trapCard("trap-b"), instanceId: "t2" },
+      ],
+      currentIndex: 1,
+    };
+    store.selectedCard = trapCard("trap-b");
+    renderHook(() => useTrapDecisionManager({ uiState: stub }));
+    expect(store.prompt).not.toBeNull(); // no se canceló: trap-b es una trampa elegible
+  });
+
+  it("SÍ pasa la trampa si el jugador selecciona una carta ajena a las elegibles", () => {
+    const { stub, store } = createUiStateStub();
+    store.prompt = {
+      trigger: "ON_OPPONENT_ATTACK_DECLARED",
+      trapCard: trapCard("trap-a"),
+      eligibleTraps: [{ card: trapCard("trap-a"), instanceId: "t1" }],
+      currentIndex: 0,
+    };
+    store.selectedCard = trapCard("otra-carta"); // carta fuera de las elegibles → deselect real
+    renderHook(() => useTrapDecisionManager({ uiState: stub }));
+    expect(store.prompt).toBeNull(); // se pasó la trampa
+  });
+
   it("sin trampas elegibles resuelve 'pasar' sin abrir prompt", async () => {
     const { stub, store } = createUiStateStub();
     const { result } = renderHook(() => useTrapDecisionManager({ uiState: stub }));

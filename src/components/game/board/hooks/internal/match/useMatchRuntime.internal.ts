@@ -105,7 +105,14 @@ export function useTrapDecisionManager({ uiState }: IUseTrapDecisionManagerInput
   useEffect(() => {
     const prompt = uiState.pendingTrapActivationPrompt;
     if (!prompt) return;
-    if (uiState.selectedCard?.id === prompt.trapCard.id) return;
+    // Se pasa la trampa solo si el jugador deselecciona o elige una carta AJENA a las trampas elegibles. El
+    // ciclado (‹ ›) mueve la selección a OTRA trampa elegible: como `cyclePendingTrap` hace dos setState
+    // (selectedCard + prompt), si no se batchean juntos habría un render intermedio donde selectedCard ya es la
+    // nueva pero prompt.trapCard sigue siendo la vieja; comparar contra la LISTA (que no cambia al ciclar), en
+    // vez de contra prompt.trapCard, evita ese falso "deselect" que en móvil cancelaba la trampa al pulsar ›.
+    const selectedId = uiState.selectedCard?.id;
+    const isOnEligibleTrap = Boolean(selectedId && prompt.eligibleTraps.some((option) => option.card.id === selectedId));
+    if (isOnEligibleTrap) return;
     resolveTrapActivationDecision({ activate: false });
   }, [resolveTrapActivationDecision, uiState.pendingTrapActivationPrompt, uiState.selectedCard]);
 

@@ -102,8 +102,17 @@ export function SidePanels({
                 <ChevronLeft size={20} />
               </button>
             ) : null}
-            <div key={liveSelectedCard.runtimeId ?? liveSelectedCard.id} className="origin-top" style={{ transform: `scale(${detailCardScale})` }}>
-              <Card card={liveSelectedCard} isPerformanceMode={shouldReduceCombatEffects} showBackgroundInPerformanceMode />
+            {/* La caja EXTERNA toma el tamaño YA escalado (260x380 * scale) para que el flex la centre bien; el
+                escalado va desde top-left dentro. Con `origin-top` sin caja escalada, la carta (380px de layout)
+                desbordaba un contenedor de ~200px y `overflow-hidden` la recortaba por arriba/abajo. */}
+            <div
+              key={liveSelectedCard.runtimeId ?? liveSelectedCard.id}
+              className="relative shrink-0"
+              style={{ width: 260 * detailCardScale, height: 380 * detailCardScale }}
+            >
+              <div style={{ width: 260, height: 380, transform: `scale(${detailCardScale})`, transformOrigin: "top left" }}>
+                <Card card={liveSelectedCard} isPerformanceMode={shouldReduceCombatEffects} showBackgroundInPerformanceMode />
+              </div>
             </div>
             {isTrapPromptForSelectedCard && (pendingTrapActivationPrompt?.eligibleTraps.length ?? 0) > 1 ? (
               <button
