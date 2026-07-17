@@ -42,7 +42,9 @@ export function shouldHoldFragileFrontline(input: {
   aiProfile: IStoryAiProfile;
 }): boolean {
   if (input.card.type !== "ENTITY" && input.card.type !== "FUSION") return false;
-  if (input.mode !== "ATTACK") return false;
+  // Aguantar aplica tanto si el frágil iría en ATAQUE como en DEFENSA (ficha 5 fase 2: ahora los frágiles se
+  // invocan en defensa): en ambos casos, si hay una trampa protectora en mano, es mejor prepararla primero.
+  if (input.mode !== "ATTACK" && input.mode !== "DEFENSE") return false;
   if (input.profile.key === "EASY" || input.profile.key === "NORMAL") return false;
   const bestThreat = rivalBestAttack(input.target);
   const attack = input.card.attack ?? 0;

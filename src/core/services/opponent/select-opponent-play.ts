@@ -23,6 +23,10 @@ function resolveEntityMode(
   const attack = card.attack ?? 0;
   const defense = card.defense ?? 0;
   const rivalBestAttack = target.activeEntities.reduce((best, entity) => Math.max(best, entity.card.attack ?? 0), 0);
+  // Amenaza REAL a una recién invocada: el mayor ATK entre rivales EN ATAQUE (los que pueden golpearla el
+  // próximo turno). Una entity en DEFENSA/SET no ataca, así que no cuenta como amenaza inmediata.
+  const rivalAttackThreat = target.activeEntities.reduce(
+    (best, entity) => (entity.mode === "ATTACK" ? Math.max(best, entity.card.attack ?? 0) : best), 0);
   const hasOwnAttacker = opponent.activeEntities.some((entity) => entity.mode === "ATTACK" && !entity.isNewlySummoned);
   const hasHiddenTarget = target.activeEntities.some((entity) => entity.mode === "SET");
   const shouldForcePressure =
@@ -30,8 +34,11 @@ function resolveEntityMode(
     (aiProfile.style === "aggressive" || aiProfile.style === "combo" || aiProfile.aggression >= 0.58) &&
     attack >= Math.max(1200, Math.trunc(defense * 0.85));
   if (shouldForcePressure) return "ATTACK";
-  if ((profile.key === "MASTER" || profile.key === "MYTHIC") && rivalBestAttack > attack && defense >= rivalBestAttack) return "DEFENSE";
   if (hasHiddenTarget && attack >= 1700 && aiProfile.aggression >= 0.5) return "ATTACK";
+  // Ficha 5 fase 2 (TODOS los perfiles): la recién invocada no ataca este turno. Si NO gana el intercambio
+  // contra el mejor atacante rival, en ATAQUE solo se expone al trample (daño directo al perderlo); en
+  // DEFENSA no hay daño penetrante y su DEF puede rebotar. La promoción a ataque llega luego, cuando compensa.
+  if (rivalAttackThreat > 0 && attack < rivalAttackThreat) return "DEFENSE";
   if (defense > attack && defense >= rivalBestAttack) return "DEFENSE";
   return attack >= defense ? "ATTACK" : "DEFENSE";
 }

@@ -367,8 +367,18 @@ no tocan).
    - **BASELINE medido (antes de mejorar):** con los mazos mock, los perfiles altos **rinden peor**:
      MASTER pierde a EASY ~35/65, HARD pierde a EASY ~45/55. Justo el objetivo de las fases 2+. La IA invoca
      casi siempre en ATAQUE (~4-5/partida) y casi nunca en DEFENSA (~1) → señal directa para la fase 2.
-2. **Posición al invocar** para todos los perfiles (comparar contra el tablero rival; mantener las
-   excepciones estratégicas ya existentes: presión agresiva, buffs propios, efectos que piden ataque).
+2. **Posición al invocar para todos los perfiles. HECHO.** `resolveEntityMode` ahora, para TODOS los
+   perfiles (antes solo MASTER/MYTHIC), invoca en DEFENSA una recién invocada que NO gana el intercambio
+   contra el mejor atacante rival EN ATAQUE (`rivalAttackThreat`). Fundamento en las reglas de combate
+   (`CombatService`): la recién invocada no ataca ese turno; en ATAQUE, si la matan reparte "trample" (daño
+   directo) — en DEFENSA no hay daño penetrante y su DEF puede rebotar. Se mantienen las excepciones
+   (presión agresiva/combo, objetivo SET con ATK≥1700). La amenaza en DEFENSA/SET no fuerza defensa (no
+   golpea). `shouldHoldFragileFrontline` extendido a modo DEFENSA (prepara la trampa protectora antes de
+   comprometer un frágil, también cuando iría en defensa). Medido con el simulador: la IA pasa de ~1.1 a
+   ~2.0 invocaciones en defensa/partida (deja de alimentar entities). Tests nuevos: los 4 perfiles invocan
+   en defensa el caso que perderían; la amenaza en defensa no encoge. 57 tests de IA en verde.
+   - Nota: en espejo (ambos lados con la mejora) el win-rate no cambia; el beneficio es contra el HUMANO (que
+     no recibe el cambio) y como base para las fases siguientes.
 3. **Reemplazo de zona llena** en la selección normal de jugadas.
 4. **Fusión:** tras la auditoría de mazos, subir la prioridad del plan de fusión en perfiles altos y dar
    mazos con fusión a rivales concretos ("expertos en fusión" — es dato de mazo, no código).
