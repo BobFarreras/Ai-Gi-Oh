@@ -7,6 +7,7 @@ import { ITrainingMatchClaimRepository } from "@/core/repositories/ITrainingMatc
 import { ITrainingProgressRepository } from "@/core/repositories/ITrainingProgressRepository";
 import { IWalletRepository } from "@/core/repositories/IWalletRepository";
 import { IPlayerProgressRepository } from "@/core/repositories/IPlayerProgressRepository";
+import { ISkillTreeRepository } from "@/core/repositories/ISkillTreeRepository";
 
 interface IProcessTrainingMatchCompletionInput {
   playerId: string;
@@ -17,6 +18,8 @@ interface IProcessTrainingMatchCompletionInput {
     trainingProgressRepository: ITrainingProgressRepository;
     walletRepository: IWalletRepository;
     playerProgressRepository: IPlayerProgressRepository;
+    /** Árbol de habilidades (ficha 8): aplica los modificadores de economía a la recompensa (no-fatal). */
+    skillTreeRepository?: ISkillTreeRepository;
     /** Inyectable en tests; por defecto la acreditación real vía RPC service-role. */
     creditPassiveNexus?: CreditPassiveNexusFn;
   };

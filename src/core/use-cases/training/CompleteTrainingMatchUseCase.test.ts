@@ -4,6 +4,8 @@ import { ITrainingMatchClaimRepository } from "@/core/repositories/ITrainingMatc
 import { ITrainingProgressRepository } from "@/core/repositories/ITrainingProgressRepository";
 import { IWalletRepository } from "@/core/repositories/IWalletRepository";
 import { IPlayerProgressRepository } from "@/core/repositories/IPlayerProgressRepository";
+import { ISkillTreeNode } from "@/core/entities/progression/ISkillTreeNode";
+import { ISkillTreeRepository } from "@/core/repositories/ISkillTreeRepository";
 import { createInitialTrainingProgress } from "@/core/services/training/resolve-training-tier-catalog";
 import { CompleteTrainingMatchUseCase } from "./CompleteTrainingMatchUseCase";
 
@@ -79,5 +81,67 @@ describe("CompleteTrainingMatchUseCase", () => {
     expect(output.reward).toEqual({ nexus: 0, playerExperience: 0 });
     expect(vi.mocked(deps.walletRepository.creditNexus)).not.toHaveBeenCalled();
     expect(vi.mocked(deps.trainingProgressRepository.upsert)).not.toHaveBeenCalled();
+  });
+
+  it("aplica los modificadores de economía del árbol a la recompensa (+10% Nexus y XP)", async () => {
+    const deps = createDependencies();
+    vi.mocked(deps.claimRepository.tryReserveMatch).mockResolvedValue(true);
+    vi.mocked(deps.trainingProgressRepository.getByPlayerId).mockResolvedValue(createInitialTrainingProgress("p1"));
+    vi.mocked(deps.trainingProgressRepository.upsert).mockImplementation(async (progress) => progress);
+    vi.mocked(deps.playerProgressRepository.getByPlayerId).mockResolvedValue({
+      playerId: "p1", hasCompletedTutorial: false, medals: 0, storyChapter: 1, playerExperience: 100,
+      updatedAtIso: "2026-07-18T09:00:00.000Z",
+    });
+    vi.mocked(deps.playerProgressRepository.update).mockImplementation(async (input) => ({
+      playerId: input.playerId, hasCompletedTutorial: false, medals: 0, storyChapter: 1,
+      playerExperience: input.playerExperience ?? 0, updatedAtIso: "2026-07-18T10:00:00.000Z",
+    }));
+
+    // Comisión Nv.5 (+10% Nexus) + Aprendizaje Nv.5 (+10% XP).
+    const skillTreeRepository: ISkillTreeRepository = {
+      getActiveCatalog: vi.fn(async (): Promise<ISkillTreeNode[]> => [
+        { id: "node-econ-comision", branch: "ECONOMY", tier: 1, maxRank: 5, costPerRank: 1,
+          effect: { kind: "NEXUS_REWARD_MULT", valuePerRank: 0.02 }, prerequisites: [], display: { name: "Comisión", blurb: "" } },
+        { id: "node-econ-aprendizaje", branch: "ECONOMY", tier: 1, maxRank: 5, costPerRank: 1,
+          effect: { kind: "XP_REWARD_MULT", valuePerRank: 0.02 }, prerequisites: [], display: { name: "Aprendizaje", blurb: "" } },
+      ]),
+      getPlayerRanks: vi.fn(async () => [{ nodeId: "node-econ-comision", rank: 5 }, { nodeId: "node-econ-aprendizaje", rank: 5 }]),
+      rankUp: vi.fn(),
+    };
+
+    const useCase = new CompleteTrainingMatchUseCase({ ...deps, skillTreeRepository });
+    const output = await useCase.execute({ playerId: "p1", battleId: "b-eco", tier: 1, outcome: "WIN", updatedAtIso: "2026-07-18T10:00:00.000Z" });
+
+    // Base WIN tier 1 = { nexus: 30, xp: 80 } → +10% = { 33, 88 }.
+    expect(output.reward).toEqual({ nexus: 33, playerExperience: 88 });
+    expect(vi.mocked(deps.walletRepository.creditNexus)).toHaveBeenCalledWith("p1", 33);
+    expect(vi.mocked(deps.playerProgressRepository.update)).toHaveBeenCalledWith({ playerId: "p1", playerExperience: 188 });
+  });
+
+  it("NO-FATAL: si el árbol falla, la recompensa base se aplica igual (el duelo no se rompe)", async () => {
+    const deps = createDependencies();
+    vi.mocked(deps.claimRepository.tryReserveMatch).mockResolvedValue(true);
+    vi.mocked(deps.trainingProgressRepository.getByPlayerId).mockResolvedValue(createInitialTrainingProgress("p1"));
+    vi.mocked(deps.trainingProgressRepository.upsert).mockImplementation(async (progress) => progress);
+    vi.mocked(deps.playerProgressRepository.getByPlayerId).mockResolvedValue({
+      playerId: "p1", hasCompletedTutorial: false, medals: 0, storyChapter: 1, playerExperience: 0,
+      updatedAtIso: "2026-07-18T09:00:00.000Z",
+    });
+    vi.mocked(deps.playerProgressRepository.update).mockImplementation(async (input) => ({
+      playerId: input.playerId, hasCompletedTutorial: false, medals: 0, storyChapter: 1,
+      playerExperience: input.playerExperience ?? 0, updatedAtIso: "2026-07-18T10:00:00.000Z",
+    }));
+
+    const skillTreeRepository: ISkillTreeRepository = {
+      getActiveCatalog: vi.fn(async () => { throw new Error("tablas del árbol no migradas"); }),
+      getPlayerRanks: vi.fn(async () => []),
+      rankUp: vi.fn(),
+    };
+
+    const useCase = new CompleteTrainingMatchUseCase({ ...deps, skillTreeRepository });
+    const output = await useCase.execute({ playerId: "p1", battleId: "b-fail", tier: 1, outcome: "WIN", updatedAtIso: "2026-07-18T10:00:00.000Z" });
+
+    expect(output.reward).toEqual({ nexus: 30, playerExperience: 80 });
+    expect(vi.mocked(deps.walletRepository.creditNexus)).toHaveBeenCalledWith("p1", 30);
   });
 });

@@ -1,6 +1,7 @@
 // src/app/api/training/matches/complete/route.ts - Registra cierre de combate de entrenamiento con progreso y recompensas escaladas.
 import { NextRequest, NextResponse } from "next/server";
 import { SupabasePlayerProgressRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerProgressRepository";
+import { SupabaseSkillTreeRepository } from "@/infrastructure/persistence/supabase/SupabaseSkillTreeRepository";
 import { getAuthenticatedUserId } from "@/services/auth/api/internal/get-authenticated-user-id";
 import { createPlayerRouteRepositories } from "@/services/player-persistence/create-player-route-repositories";
 import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
         trainingProgressRepository: repositories.trainingProgressRepository,
         walletRepository: repositories.walletRepository,
         playerProgressRepository: new SupabasePlayerProgressRepository(repositories.client),
+        skillTreeRepository: new SupabaseSkillTreeRepository(repositories.client),
       },
     });
     await recordProgressionEvent(repositories.client, resolveDuelProgressionActions("TRAINING", payload.outcome === "WIN", payload.flawless === true));

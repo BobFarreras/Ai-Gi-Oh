@@ -6,10 +6,13 @@ import { ITrainingMatchClaimRepository } from "@/core/repositories/ITrainingMatc
 import { ITrainingProgressRepository } from "@/core/repositories/ITrainingProgressRepository";
 import { IWalletRepository } from "@/core/repositories/IWalletRepository";
 import { IPlayerProgressRepository } from "@/core/repositories/IPlayerProgressRepository";
+import { ISkillTreeRepository } from "@/core/repositories/ISkillTreeRepository";
 import { applyTrainingMatchResult } from "@/core/services/training/apply-training-match-result";
+import { applySkillEconomyToReward } from "@/core/services/match/rewards/apply-skill-economy-to-reward";
 import { createInitialTrainingProgress, resolveTrainingTierCatalog } from "@/core/services/training/resolve-training-tier-catalog";
 import { resolveTrainingTierReward } from "@/core/services/training/resolve-training-tier-reward";
 import { GetOrCreatePlayerProgressUseCase } from "@/core/use-cases/player/GetOrCreatePlayerProgressUseCase";
+import { GetPlayerSkillModifiersUseCase } from "@/core/use-cases/progression/GetPlayerSkillModifiersUseCase";
 
 interface ICompleteTrainingMatchInput {
   playerId: string;
@@ -31,6 +34,8 @@ interface ICompleteTrainingMatchDependencies {
   trainingProgressRepository: ITrainingProgressRepository;
   walletRepository: IWalletRepository;
   playerProgressRepository: IPlayerProgressRepository;
+  /** Árbol de habilidades (ficha 8): si se inyecta, aplica los modificadores de economía a la recompensa. */
+  skillTreeRepository?: ISkillTreeRepository;
 }
 
 export class CompleteTrainingMatchUseCase {
@@ -59,7 +64,8 @@ export class CompleteTrainingMatchUseCase {
     });
     await this.dependencies.trainingProgressRepository.upsert(trainingResolution.nextProgress);
 
-    const reward = resolveTrainingTierReward(input.outcome, tierConfig.rewardMultiplier);
+    const baseReward = resolveTrainingTierReward(input.outcome, tierConfig.rewardMultiplier);
+    const reward = await this.applySkillTreeEconomy(input.playerId, baseReward, input.outcome);
     if (reward.nexus > 0) await this.dependencies.walletRepository.creditNexus(input.playerId, reward.nexus);
 
     const progressUseCase = new GetOrCreatePlayerProgressUseCase(this.dependencies.playerProgressRepository);
@@ -75,5 +81,21 @@ export class CompleteTrainingMatchUseCase {
       highestUnlockedTier: trainingResolution.nextProgress.highestUnlockedTier,
       newlyUnlockedTiers: trainingResolution.newlyUnlockedTiers,
     };
+  }
+
+  /**
+   * Aplica los modificadores de economía del árbol a la recompensa. NO-FATAL: si el árbol no está inyectado, o
+   * falla (p.ej. tablas aún no migradas), devuelve la recompensa base — el cierre del duelo nunca se rompe por
+   * el árbol (mismo criterio que la acreditación de Recaudación).
+   */
+  private async applySkillTreeEconomy(playerId: string, base: IMatchReward, outcome: IMatchOutcome): Promise<IMatchReward> {
+    const skillTreeRepository = this.dependencies.skillTreeRepository;
+    if (!skillTreeRepository) return base;
+    try {
+      const modifiers = await new GetPlayerSkillModifiersUseCase(skillTreeRepository).execute(playerId);
+      return applySkillEconomyToReward({ base, economy: modifiers.economy, outcome });
+    } catch {
+      return base;
+    }
   }
 }
