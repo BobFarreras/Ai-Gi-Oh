@@ -606,7 +606,11 @@ nodo a Nv.5 para abrir el siguiente)** — escalables (LP/%, `maxRank` 3-5) + ke
 prerequisitos POR RANGO. Catálogo v1 de 11 nodos / ~42 puntos para maxear en 3 ramas
 (Economía/Combate/Arsenal), efectos data-driven (`kind` + `valuePerRank` + resolver central), migración `135`
 (catálogo + `player_skill_ranks` + RPC `rank_up_skill_node` idempotente con RLS). **Combate = PvE en v1**
-(fairness). Página = constelación SVG/HTML con la estética cyber del juego y anillos segmentados por rango. Decisiones abiertas (respec, ranked, curva, rama
+(fairness). Página = constelación SVG/HTML con la estética cyber del juego y anillos segmentados por rango.
+**Guía de implementación** en `docs/features/skill-tree-implementation-guide.md`: motor de efectos (3 familias
+de enganche), catálogo completo de 14 habilidades (incluidas las 4 fuertes del usuario como keystones caros) y
+ranking de dificultad. **Hallazgo clave:** el mazo es ÚNICO por jugador hoy (`player_deck_slots` por
+`player_id`), así que "2 mazos + selector" (idea del usuario) es refactor 🔴🔴 → sub-tanda propia, no v1. Decisiones abiertas (respec, ranked, curva, rama
 Arsenal) listadas en §10 del doc. **0 código: cerrar §10 antes de picar.**
 
 ---

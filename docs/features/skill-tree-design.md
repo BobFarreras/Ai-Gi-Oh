@@ -4,6 +4,10 @@
 > cambiar un árbol publicado es doloroso). Rama de trabajo prevista: `feat/paquete-v1.17`.
 > Última migración en el repo: `134`. Las de esta ficha empiezan en `135`.
 > Estado: **DISEÑO. 0 código.**
+>
+> **Compañero:** [`skill-tree-implementation-guide.md`](./skill-tree-implementation-guide.md) — el motor de
+> efectos concreto, el catálogo COMPLETO de habilidades (incluidas las fuertes del usuario) y el ranking de
+> dificultad (fácil/dato vs. refactor). Léelo para saber por dónde empezar a picar.
 
 ---
 
@@ -233,53 +237,55 @@ interface IPlayerSkillModifiers {
 
 ---
 
-## 5. Catálogo de nodos v1 (propuesta cerrada, ~22 puntos)
+## 5. Catálogo de nodos v1 (propuesta cerrada, ~40 puntos para maxear)
 
-Estructura: **1 nodo raíz** (desbloquea el árbol) + **3 ramas** de estilo. Las aristas son los `prerequisites`.
+Estructura: **1 nodo raíz** (enciende el árbol) + **3 ramas** de estilo. Cada rama es una **cadena con gates de
+rango**: un escalable barato al principio que hay que subir hasta cierto Nv. para abrir el keystone del final —
+justo el ritmo "profesional" que pediste ("sube esta hasta Nv.5 para desbloquear la siguiente").
 
 ```
-                       ┌─ [Núcleo del Operador] (raíz, coste 1) ─┐
-                       │        +250 LP iniciales                │
-        ┌──────────────┼─────────────────────┬──────────────────┼───────────────┐
-     ECONOMÍA        COMBATE               ARSENAL
-   (Mercantil)     (Duelo, PvE)          (Utilidad)
+                       ┌─ [Núcleo del Operador]  (Nv. 1/1, 1 pt) ─┐
+                       │        +300 LP iniciales                 │
+        ┌──────────────┼──────────────────────┬──────────────────┼───────────────┐
+     ECONOMÍA        COMBATE                ARSENAL
+   (Mercantil)     (Duelo, PvE)            (Utilidad)
 ```
 
-### Raíz — `node-core` · coste 1
-- **Núcleo del Operador** — `STARTING_LP_BONUS +250`. Prereq de todo lo demás. (Un tótem barato que "enciende"
-  el árbol y ya se nota en combate.)
+Notación: **Nv. X/Y** = rango actual sugerido / `maxRank`; **coste** = `cost_per_rank` (puntos por rango);
+**gate** = prerequisito por rango.
+
+### Raíz — `node-core` · Nv. 1/1 · 1 pt
+- **Núcleo del Operador** — keystone barato. `STARTING_LP_BONUS value 300`. Gate de todo el árbol.
 
 ### Rama A — ECONOMÍA · "Protocolo Mercantil" (servidor, todos los modos)
-| id | nombre | coste | prereq | efecto |
-|---|---|---|---|---|
-| `node-econ-nexus-1` | Comisión Base | 1 | core | `NEXUS_REWARD_MULT +0.05` |
-| `node-econ-xp-1` | Aprendizaje Acelerado | 1 | core | `XP_REWARD_MULT +0.10` |
-| `node-econ-nexus-2` | Comisión Ampliada | 2 | nexus-1 | `NEXUS_REWARD_MULT +0.05` (acumula → +10%) |
-| `node-econ-recaudacion` | Recaudador Mejorado | 2 | nexus-1 | `PASSIVE_NEXUS_CAP_BONUS perWin+50, daily+400` |
-| `node-econ-capstone` | Golpe de Suerte | 3 | nexus-2 + recaudacion | `FIRST_WIN_DOUBLE_NEXUS` (1ª victoria/día ×2) |
+| id | nombre | maxRank | coste/rango | gate | efecto (por rango) |
+|---|---|---|---|---|---|
+| `node-econ-nexus` | Comisión | **5** | 1 | core Nv.1 | `NEXUS_REWARD_MULT +0.02` → **Nv.5 = +10%** |
+| `node-econ-xp` | Aprendizaje | **5** | 1 | core Nv.1 | `XP_REWARD_MULT +0.02` → Nv.5 = +10% |
+| `node-econ-recaudo` | Recaudador Mejorado | **3** | 2 | **Comisión Nv.3** | `PASSIVE_NEXUS_CAP_BONUS perWin+25, daily+200` |
+| `node-econ-suerte` | Golpe de Suerte | 1 | 3 | **Recaudo Nv.3 + Aprendizaje Nv.3** | `FIRST_WIN_DOUBLE_NEXUS` |
 
 ### Rama B — COMBATE · "Protocolo de Duelo" (preparación de partida, **PvE en v1**)
-| id | nombre | coste | prereq | efecto |
-|---|---|---|---|---|
-| `node-cbt-lp` | Blindaje Reforzado | 1 | core | `STARTING_LP_BONUS +500` |
-| `node-cbt-energy1` | Arranque en Frío | 2 | core | `TURN1_ENERGY_BONUS +1` |
-| `node-cbt-hand` | Mano Extendida | 2 | lp | `OPENING_HAND_BONUS +1` (3→4) |
-| `node-cbt-mulligan` | Rebarajar | 2 | hand | `OPENING_MULLIGAN 1` |
-| `node-cbt-capstone` | Apertura Calculada | 3 | mulligan + energy1 | `EDIT_OPENING_DECK 5` (elegir las 5 primeras) |
+| id | nombre | maxRank | coste/rango | gate | efecto (por rango) |
+|---|---|---|---|---|---|
+| `node-cbt-shield` | Blindaje Reforzado | **5** | 1 | core Nv.1 | `STARTING_LP_BONUS +100` → **Nv.5 = +500 LP** |
+| `node-cbt-energy` | Arranque en Frío | 1 | 2 | **Blindaje Nv.3** | `TURN1_ENERGY_BONUS +1` |
+| `node-cbt-hand` | Mano Extendida | 1 | 3 | **Blindaje Nv.5** | `OPENING_HAND_BONUS +1` (3→4) |
+| `node-cbt-opening` | Apertura Calculada | 1 | 4 | **Mano Nv.1 + Arranque Nv.1** | `EDIT_OPENING_DECK 5` + `OPENING_MULLIGAN` |
 
 ### Rama C — ARSENAL · "Protocolo de Red" (meta, todos los modos)
-| id | nombre | coste | prereq | efecto |
-|---|---|---|---|---|
-| `node-ars-ghost` | Cazador de Redes | 1 | core | `GHOST_DAILY_LIMIT_BONUS +1` (5→6, ficha 6) |
-| `node-ars-xp-2` | Veterano | 2 | core | `XP_REWARD_MULT +0.10` (acumula con econ-xp-1) |
+| id | nombre | maxRank | coste/rango | gate | efecto (por rango) |
+|---|---|---|---|---|---|
+| `node-ars-veteran` | Veterano | **5** | 1 | core Nv.1 | `XP_REWARD_MULT +0.02` (acumula con Aprendizaje) |
+| `node-ars-ghost` | Cazador de Redes | **3** | 1 | **Veterano Nv.3** | `GHOST_DAILY_LIMIT_BONUS +1` → Nv.3 = +3 (ficha 6) |
 
-> **Honestidad de diseño:** la rama Arsenal es la más fina porque hoy hay POCOS hooks de "colección/utilidad"
-> baratos y server-safe (ghosts es de ficha 6, aún no implementada). Se deja deliberadamente corta en v1 en vez
-> de inventar nodos sin enganche real. Crecerá cuando lleguen ghosts (6) y subastas (7). **Alternativa si se
-> quiere v1 más pequeña: 2 ramas (Economía + Combate) y aparcar Arsenal.**
+> **Honestidad de diseño:** la rama Arsenal sigue siendo la más fina (pocos hooks de "colección/utilidad"
+> baratos y server-safe; ghosts es de ficha 6, aún sin implementar). Crecerá con ghosts (6) y subastas (7).
+> **Alternativa v1 más pequeña: 2 ramas (Economía + Combate) y aparcar Arsenal.**
 
-Total: 1 + 12 + 3 = **~22 puntos** repartidos en 12 nodos. Ningún nodo es obligatorio para otro de otra rama →
-el jugador se especializa.
+Coste de MAXEAR todo: raíz 1 + Economía (5+5+6+3=19) + Combate (5+2+3+4=14) + Arsenal (5+3=8) = **~42 puntos** →
+nivel ~43. **Nadie maxea el árbol; hay que elegir hasta qué rango subir cada nodo y qué keystone perseguir.**
+Ése es el juego de decisión del modelo de rangos.
 
 ---
 
@@ -332,13 +338,19 @@ Esto encaja con "candidato a partirse: backend + 2 habilidades primero" — la p
 ### Lenguaje visual (tokens ya existentes en `globals.css`)
 - Fondo: `--board-bg-base #070b16` con los radiales cian/índigo del `body`; capa de "estrellas" tenue con
   `spaceDrift`/`hubScan` (ya definidas) para la sensación de mapa estelar vivo.
-- **Nodos**: círculos con anillo. Tres estados visuales claros:
-  - **Desbloqueado** — relleno cian sólido, glow `--board-glow-cyan`, anillo brillante (pulso `cyberPulse`).
-  - **Disponible** (prereq cumplido + puntos suficientes) — anillo cian animado, centro hueco, "llamada a la
-    acción" (un `nodeScan` o pulso suave). Es donde el ojo va.
-  - **Bloqueado** — gris-azulado apagado (`--board-text-muted` al 30%), sin glow, aristas punteadas.
-- **Aristas** (prerequisitos): líneas finas `--board-line`; las que conectan nodos ya desbloqueados se "cargan"
-  con un gradiente cian (energía fluyendo, reusar `flowSweep`/`beamPulse`). Refuerza la lectura del progreso.
+- **Nodos con RANGO**: círculo con **anillo segmentado** = el rango. El anillo se divide en `maxRank` arcos; los
+  arcos ya comprados van encendidos (cian sólido) y los pendientes apagados — se lee el "3/5" de un vistazo, como
+  en PoE/Diablo. Bajo el nombre, un contador `Nv. 3/5`. Estados visuales:
+  - **Al tope** (`rango == maxRank`) — anillo entero encendido, glow `--board-glow-cyan`, pulso `cyberPulse`.
+  - **Parcial** (`0 < rango < maxRank`) — arcos comprados encendidos, resto apagado; si hay puntos, un arco
+    "siguiente" parpadea invitando a subirlo.
+  - **Disponible** (`rango 0`, gate cumplido + puntos) — anillo cian animado, centro hueco (`nodeScan`). Ojo aquí.
+  - **Bloqueado por gate** — apagado (`--board-text-muted` al 30%), sin glow, y **etiqueta del gate** en la
+    arista ("Blindaje Nv.5") para que se vea QUÉ hay que subir para abrirlo.
+- **Aristas con gate de rango**: líneas finas `--board-line`. Una arista se "carga" con gradiente cian
+  (`flowSweep`/`beamPulse`) **solo cuando el nodo origen alcanza el `minRank` del gate** — visualiza literalmente
+  "he subido esto hasta Nv.5 → se ha abierto el camino al siguiente". Mientras no llega, la arista va punteada y
+  apagada con el "Nv.X" requerido escrito encima.
 - **Ramas por color de acento** (mismo criterio que el Códex, que ya usa `accent` por tipo): Economía = ámbar/oro
   (`text-amber-300`, coherente con el coste de carta), Combate = cian/sky, Arsenal = índigo/violeta. El acento
   tiñe el anillo y el icono, no el fondo.
@@ -350,11 +362,13 @@ Esto encaja con "candidato a partirse: backend + 2 habilidades primero" — la p
 - **Lienzo del árbol**: raíz abajo-centro, ramas abriéndose hacia arriba (metáfora de "crecer"). Scroll/zoom
   suave en móvil; en desktop cabe entero. Responsivo: en móvil, el árbol scrollea vertical dentro de un
   contenedor `overflow` propio (nunca scroll horizontal de la página).
-- **Panel de nodo** (al tocar/hover): tarjeta lateral (desktop) o hoja inferior (móvil) con icono, nombre, blurb
-  del glosario, coste, prerequisitos que faltan (si los hay) y botón **"Desbloquear ({coste} pts)"** —
-  deshabilitado con motivo si no llega ("Necesitas nivel X" / "Requiere {nodo}").
-- **Feedback de desbloqueo**: al confirmar, animación de "encendido" del nodo + carga de sus aristas
-  (`flowSweep`) + toast. Optimista pero **el estado real lo confirma la RPC** (si falla, revertir el pintado).
+- **Panel de nodo** (al tocar/hover): tarjeta lateral (desktop) o hoja inferior (móvil) con icono, nombre,
+  `Nv. actual/max`, y **el efecto en el rango actual → el del siguiente** ("+300 LP → +400 LP") para que se vea
+  qué compra el punto. Coste del siguiente rango, gates que falten, y botón **"Subir a Nv.{rango+1} ({coste}
+  pts)"** — deshabilitado con motivo si no llega ("Necesitas nivel X" / "Requiere Blindaje Nv.5" / "Al tope").
+- **Feedback de subida**: al confirmar, se enciende el arco nuevo del anillo + si alcanza un `minRank` de gate,
+  se "carga" la arista al nodo dependiente (`flowSweep`) + toast. Optimista pero **el estado real lo confirma la
+  RPC** (si falla, revertir el pintado).
 
 ### Dónde vive en el hub
 - Entrada nueva en el hub del Operador (junto a "Configurar Operador" / perfil, `HubProfileNameDialog` es el
@@ -399,9 +413,11 @@ Esto encaja con "candidato a partirse: backend + 2 habilidades primero" — la p
 
 - **F0 — Diseño (este doc).** Cerrar §10. Bloqueante.
 - **F1 — Backend de progresión + economía (todos los modos):** `resolvePlayerLevel` + curva (con test),
-  migración `135` (catálogo + unlocks + operaciones + RPC `unlock_skill_node` con RLS y verificación de
-  rechazo), resolver `resolvePlayerSkillModifiers`, y enganche de los 4 efectos de economía en el cierre de
-  duelo del servidor. Nodos de economía jugables end-to-end. Tests: topes, idempotencia, prereq, puntos.
+  migración `135` (catálogo con `max_rank`/`cost_per_rank` + `player_skill_ranks` + operaciones + RPC
+  `rank_up_skill_node` con RLS y verificación de rechazo), resolver `resolvePlayerSkillModifiers` (suma
+  `efecto·rango`), y enganche de los 4 efectos de economía en el cierre de duelo del servidor. Nodos de
+  economía subibles end-to-end. Tests: **gate por rango** (no sube el keystone sin el prereq a Nv.N), tope de
+  `max_rank`, idempotencia por operación, puntos insuficientes.
 - **F2 — Habilidades de combate (PvE):** enganche de `STARTING_LP_BONUS`, `OPENING_HAND_BONUS`,
   `TURN1_ENERGY_BONUS` en el builder de Story/Arena/Training + `next-phase.ts`. Mulligan y editar-apertura
   como paso de UI. Nodos de combate jugables. Tests de motor (mano de 4, +LP, energía turno 1).
@@ -415,6 +431,6 @@ Esto encaja con "candidato a partirse: backend + 2 habilidades primero" — la p
 ## 12. Definition of Done (la común de v1.15/§5 del roadmap)
 
 Tests que fallan sin el cambio; `CI=true pnpm quality:check` en verde con exit code real; migración `135` en
-`docs/supabase/sql/` **y aplicada** con constancia; **RLS verificado** (intentar `insert` en
-`player_skill_unlocks` y `update` del catálogo como `authenticated` → rechazo); glosario actualizado; y para las
+`docs/supabase/sql/` **y aplicada** con constancia; **RLS verificado** (intentar `insert`/`update` en
+`player_skill_ranks` y `update` del catálogo como `authenticated` → rechazo); glosario actualizado; y para las
 habilidades de combate, prueba real en un duelo PvE (mano de 4, +LP, energía turno 1 visibles).
