@@ -2,9 +2,12 @@
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { IStoryDuelDefinition } from "@/core/entities/opponent/IStoryDuelDefinition";
+import { IPlayerProgress } from "@/core/entities/player/IPlayerProgress";
+import { ISkillTreeNode } from "@/core/entities/progression/ISkillTreeNode";
 import { ICardCollectionRepository } from "@/core/repositories/ICardCollectionRepository";
 import { IOpponentRepository } from "@/core/repositories/IOpponentRepository";
 import { IPlayerProgressRepository } from "@/core/repositories/IPlayerProgressRepository";
+import { ISkillTreeRepository } from "@/core/repositories/ISkillTreeRepository";
 import { IPlayerStoryDuelProgressRepository } from "@/core/repositories/IPlayerStoryDuelProgressRepository";
 import { IPlayerStoryWorldRepository } from "@/core/repositories/IPlayerStoryWorldRepository";
 import { StoryDuelOutcome } from "@/services/story/duel-flow/story-duel-outcome";
@@ -156,5 +159,67 @@ describe("processStoryDuelCompletion (Recaudación: Nexus de la pasiva)", () => 
       creditPassiveNexus: async () => 0,
     });
     expect(result.passiveNexusCredited).toBe(0);
+  });
+});
+
+describe("processStoryDuelCompletion (economía del árbol de habilidades)", () => {
+  function buildRewardOpponentRepository(): IOpponentRepository {
+    const duel: IStoryDuelDefinition = { ...buildDuel(), rewardNexus: 100, rewardPlayerExperience: 200 };
+    return { listStoryDuels: async () => [], getStoryDuel: async () => duel };
+  }
+
+  function buildProgressRepository(): IPlayerProgressRepository {
+    const current: IPlayerProgress = {
+      playerId: PLAYER_ID, hasCompletedTutorial: true, medals: 0, storyChapter: 2,
+      playerExperience: 0, updatedAtIso: "2026-07-18T00:00:00.000Z",
+    };
+    return {
+      getByPlayerId: async () => current,
+      create: async () => current,
+      update: async (input) => ({ ...current, playerExperience: input.playerExperience ?? 0 }),
+    };
+  }
+
+  function economyTree(throwing = false): ISkillTreeRepository {
+    return {
+      getActiveCatalog: async (): Promise<ISkillTreeNode[]> => {
+        if (throwing) throw new Error("tablas del árbol no migradas");
+        return [
+          { id: "node-econ-comision", branch: "ECONOMY", tier: 1, maxRank: 5, costPerRank: 1,
+            effect: { kind: "NEXUS_REWARD_MULT", valuePerRank: 0.02 }, prerequisites: [], display: { name: "Comisión", blurb: "" } },
+          { id: "node-econ-aprendizaje", branch: "ECONOMY", tier: 1, maxRank: 5, costPerRank: 1,
+            effect: { kind: "XP_REWARD_MULT", valuePerRank: 0.02 }, prerequisites: [], display: { name: "Aprendizaje", blurb: "" } },
+        ];
+      },
+      getPlayerRanks: async () => [{ nodeId: "node-econ-comision", rank: 5 }, { nodeId: "node-econ-aprendizaje", rank: 5 }],
+      rankUp: async () => ({ ok: true, nodeId: "", rank: 0 }),
+    };
+  }
+
+  it("boostea Nexus y XP de la primera victoria (+10%)", async () => {
+    const wallet = new InMemoryWalletRepository([{ playerId: PLAYER_ID, nexus: 1000 }]);
+    const result = await processStoryDuelCompletion({
+      ...buildParams("WON", wallet),
+      opponentRepository: buildRewardOpponentRepository(),
+      playerProgressRepository: buildProgressRepository(),
+      skillTreeRepository: economyTree(),
+      creditPassiveNexus: async () => 0,
+    });
+    expect(result.rewardNexus).toBe(110);
+    expect(result.rewardPlayerExperience).toBe(220);
+    expect((await wallet.getWallet(PLAYER_ID)).nexus).toBe(1110);
+  });
+
+  it("NO-FATAL: si el árbol falla, se acredita la recompensa base", async () => {
+    const wallet = new InMemoryWalletRepository([{ playerId: PLAYER_ID, nexus: 1000 }]);
+    const result = await processStoryDuelCompletion({
+      ...buildParams("WON", wallet),
+      opponentRepository: buildRewardOpponentRepository(),
+      playerProgressRepository: buildProgressRepository(),
+      skillTreeRepository: economyTree(true),
+      creditPassiveNexus: async () => 0,
+    });
+    expect(result.rewardNexus).toBe(100);
+    expect(result.rewardPlayerExperience).toBe(200);
   });
 });

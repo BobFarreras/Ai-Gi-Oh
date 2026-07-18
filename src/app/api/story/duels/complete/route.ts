@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
       playerProgressRepository: context.playerProgressRepository,
       walletRepository: context.repositories.walletRepository,
       collectionRepository: context.repositories.collectionRepository,
+      skillTreeRepository: context.skillTreeRepository,
       loadCardsByIds: context.loadCardsByIds,
     });
     await recordProgressionEvent(context.repositories.client, resolveDuelProgressionActions("STORY", result.outcome === "WON", payload.flawless === true));

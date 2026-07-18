@@ -2,13 +2,17 @@
 import { ICard } from "@/core/entities/ICard";
 import { IStoryDuelDefinition } from "@/core/entities/opponent/IStoryDuelDefinition";
 import { ValidationError } from "@/core/errors/ValidationError";
+import { IMatchReward } from "@/core/entities/match/IMatchReward";
 import { ICardCollectionRepository } from "@/core/repositories/ICardCollectionRepository";
 import { IOpponentRepository } from "@/core/repositories/IOpponentRepository";
 import { IPlayerProgressRepository } from "@/core/repositories/IPlayerProgressRepository";
 import { IPlayerStoryDuelProgressRepository } from "@/core/repositories/IPlayerStoryDuelProgressRepository";
 import { IPlayerStoryWorldRepository } from "@/core/repositories/IPlayerStoryWorldRepository";
+import { ISkillTreeRepository } from "@/core/repositories/ISkillTreeRepository";
 import { IWalletRepository } from "@/core/repositories/IWalletRepository";
 import { GetOrCreatePlayerProgressUseCase } from "@/core/use-cases/player/GetOrCreatePlayerProgressUseCase";
+import { GetPlayerSkillModifiersUseCase } from "@/core/use-cases/progression/GetPlayerSkillModifiersUseCase";
+import { applySkillEconomyToReward } from "@/core/services/match/rewards/apply-skill-economy-to-reward";
 import { resolveStoryDuelCompletionInput } from "@/services/story/duel-flow/resolve-story-duel-completion-input";
 import { didWinFromStoryOutcome } from "@/services/story/duel-flow/story-duel-outcome";
 import { resolveStoryRewardCards } from "@/services/story/resolve-story-reward-cards";
@@ -27,8 +31,24 @@ interface IProcessStoryDuelCompletionParams {
   walletRepository: IWalletRepository;
   collectionRepository: ICardCollectionRepository;
   loadCardsByIds: (cardIds: string[]) => Promise<Map<string, ICard>>;
+  /** Árbol de habilidades (ficha 8): aplica los modificadores de economía a la recompensa (no-fatal). */
+  skillTreeRepository?: ISkillTreeRepository;
   /** Inyectable en tests; por defecto la acreditación real vía RPC service-role. */
   creditPassiveNexus?: CreditPassiveNexusFn;
+}
+
+/**
+ * Aplica la economía del árbol a la recompensa de Story (solo en primera victoria → outcome WIN). NO-FATAL: sin
+ * árbol o ante un fallo (tablas sin migrar), devuelve la base — el cierre del duelo nunca se rompe por el árbol.
+ */
+async function applyStoryEconomy(params: IProcessStoryDuelCompletionParams, base: IMatchReward): Promise<IMatchReward> {
+  if (!params.skillTreeRepository || (base.nexus <= 0 && base.playerExperience <= 0)) return base;
+  try {
+    const modifiers = await new GetPlayerSkillModifiersUseCase(params.skillTreeRepository).execute(params.playerId);
+    return applySkillEconomyToReward({ base, economy: modifiers.economy, outcome: "WIN" });
+  } catch {
+    return base;
+  }
 }
 
 function mapRewardCards(cardsById: Map<string, ICard>, rewardCardIds: string[]): ICard[] {
@@ -137,8 +157,13 @@ export async function processStoryDuelCompletion(params: IProcessStoryDuelComple
   const rewardCardIds = shouldGrantBossRepeatCardReward
     ? resolveBossRepeatRewardCardIds(duel)
     : resolveStoryRewardCards(duel.rewardCards);
-  const rewardNexus = shouldGrantStandardRewards ? duel.rewardNexus : 0;
-  const rewardPlayerExperience = shouldGrantStandardRewards ? duel.rewardPlayerExperience : 0;
+  const baseReward = {
+    nexus: shouldGrantStandardRewards ? duel.rewardNexus : 0,
+    playerExperience: shouldGrantStandardRewards ? duel.rewardPlayerExperience : 0,
+  };
+  const adjustedReward = await applyStoryEconomy(params, baseReward);
+  const rewardNexus = adjustedReward.nexus;
+  const rewardPlayerExperience = adjustedReward.playerExperience;
   if (rewardNexus > 0) await params.walletRepository.creditNexus(params.playerId, rewardNexus);
   if (rewardCardIds.length > 0) await params.collectionRepository.addCards(params.playerId, rewardCardIds);
   const cardsById = rewardCardIds.length > 0 ? await params.loadCardsByIds(rewardCardIds) : new Map<string, ICard>();
