@@ -96,6 +96,8 @@ export async function applyObjectToCard(
   const nextUpgrades: ICardUpgradeBonuses = {
     attackBonus: current.attackBonus + (stat === "ATTACK" ? object.upgrade!.value : 0),
     defenseBonus: current.defenseBonus + (stat === "DEFENSE" ? object.upgrade!.value : 0),
+    attackCount: (current.attackCount ?? 0) + (stat === "ATTACK" ? 1 : 0),
+    defenseCount: (current.defenseCount ?? 0) + (stat === "DEFENSE" ? 1 : 0),
   };
   return {
     overlay: {

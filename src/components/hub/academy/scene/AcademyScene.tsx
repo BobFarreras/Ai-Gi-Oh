@@ -15,6 +15,7 @@ import { useDocumentVisibility } from "@/components/hub/internal/use-document-vi
 import { supportsWebGL } from "@/components/hub/internal/hub-webgl-support";
 import {
   ACADEMY_GLOSSARY_ROUTE,
+  ACADEMY_SKILL_TREE_ROUTE,
   ACADEMY_TRAINING_ARENA_ROUTE,
   ACADEMY_TUTORIAL_MAP_ROUTE,
 } from "@/core/constants/routes/academy-routes";
@@ -56,7 +57,7 @@ function playBackSfx(): void {
 
 // Títulos del carrusel móvil en el MISMO orden que ACADEMY_NODES de AcademyWorld3D. Se mantienen
 // locales para no arrastrar el chunk 3D al bundle base; la barra fija del HUD pinta el del nodo activo.
-const ACADEMY_MODULE_TITLES = ["Arena", "Tutorial", "Documentación"];
+const ACADEMY_MODULE_TITLES = ["Arena", "Tutorial", "Documentación", "Habilidades"];
 const ACADEMY_MODULE_COUNT = ACADEMY_MODULE_TITLES.length;
 
 export function AcademyScene() {
@@ -82,6 +83,7 @@ export function AcademyScene() {
     router.prefetch(ACADEMY_TUTORIAL_MAP_ROUTE);
     router.prefetch(ACADEMY_TRAINING_ARENA_ROUTE);
     router.prefetch(ACADEMY_GLOSSARY_ROUTE);
+    router.prefetch(ACADEMY_SKILL_TREE_ROUTE);
   }, [canRender3D, router]);
 
   // Al montarse el mundo 3D, el SFX de "terminal" suena tras una espera para cuadrar con la

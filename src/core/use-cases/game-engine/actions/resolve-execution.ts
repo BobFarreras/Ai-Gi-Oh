@@ -19,6 +19,8 @@ interface IResolveExecutionOptions {
   skipTrapEventTypes?: ("EXECUTION_ACTIVATED")[];
   /** Dueños cuyo contra-trampa (Nullify) no debe auto-activarse (el jugador decide). */
   skipCounterTrapPlayerIds?: string[];
+  /** Ficha 4: trampa concreta que el jugador reactivo eligió activar entre sus elegibles (revalidada). */
+  chosenTrapInstanceId?: string;
 }
 
 function appendExecutionResultLogs(
@@ -61,6 +63,7 @@ export function resolveExecution(
       skipReactivePlayerIds: options?.skipReactivePlayerIds,
       skipEventTypes: options?.skipTrapEventTypes,
       skipCounterTrapPlayerIds: options?.skipCounterTrapPlayerIds,
+      chosenTrapInstanceId: options?.chosenTrapInstanceId,
     },
   );
   // Escudo Firewall: si una contra-magia anuló y destruyó esta ejecución, no se resuelve su efecto.

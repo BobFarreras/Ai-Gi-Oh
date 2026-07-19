@@ -4,12 +4,16 @@ import { BattleMode, IBoardEntity } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IBoardUiError } from "../boardError";
 import { IPendingZoneReplacement } from "../board-state/pending-replacement";
+import { ITrapActivationDecision, ITrapEligibleOption, TrapDecisionTrigger } from "../board-state/useBoardUiState";
 
-/** Solicita al jugador decidir si activa una trampa reactiva; resuelve `true` (activar) o `false`. */
+/**
+ * Solicita al jugador decidir qué trampa reactiva activar (ficha 4): recibe TODAS las elegibles y resuelve
+ * con la elegida (o "pasar"). Para un único candidato (contra-trampa) se pasa una lista de un elemento.
+ */
 export type RequestTrapActivationDecision = (
-  trapCard: ICard,
-  trigger: "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED" | "ON_OPPONENT_TRAP_ACTIVATED",
-) => Promise<boolean>;
+  traps: ITrapEligibleOption[],
+  trigger: TrapDecisionTrigger,
+) => Promise<ITrapActivationDecision>;
 
 export interface IUsePlayerActionsParams {
   gameState: GameState;

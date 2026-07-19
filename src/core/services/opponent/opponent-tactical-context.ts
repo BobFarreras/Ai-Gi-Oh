@@ -30,6 +30,41 @@ function hasTrapAlreadySet(opponent: IPlayer): boolean {
   return opponent.activeExecutions.some((entity) => entity.card.type === "TRAP");
 }
 
+/** Trampa reactiva armada que SOLO salta con un ataque directo (Flutter Enjambre: REFLECT_DIRECT_DAMAGE). */
+function hasArmedDirectOnlyTrap(opponent: IPlayer): boolean {
+  return opponent.activeExecutions.some(
+    (entity) =>
+      entity.card.type === "TRAP" &&
+      entity.mode === "SET" &&
+      entity.card.trigger === "ON_OPPONENT_DIRECT_ATTACK_DECLARED" &&
+      entity.card.effect?.action === "REFLECT_DIRECT_DAMAGE",
+  );
+}
+
+/** El rival tiene con qué atacar directo (entity en ATAQUE con ATK útil). */
+function rivalCanAttackDirect(target: IPlayer): boolean {
+  return target.activeEntities.some((entity) => entity.mode === "ATTACK" && (entity.card.attack ?? 0) > 0);
+}
+
+/**
+ * Ficha 5 fase 5 (2º caso del usuario): NO invocar todavía para cebar una trampa reactiva de ataque-directo.
+ * Si tienes una Flutter Enjambre armada, el tablero propio vacío y el rival puede atacar directo, invocar
+ * una entity bloquearía ese ataque y la trampa nunca saltaría. Retrasar el desarrollo un turno maximiza la
+ * trampa (y una entity recién invocada no podría atacar este turno igualmente, así que el coste es mínimo).
+ */
+export function shouldHoldToBaitReactiveTrap(input: {
+  card: ICard;
+  mode: "ATTACK" | "DEFENSE" | "SET" | "ACTIVATE";
+  opponent: IPlayer;
+  target: IPlayer;
+}): boolean {
+  if (input.card.type !== "ENTITY") return false; // fusión es swing raro y valioso: no la frenamos por el cebo
+  if (input.mode !== "ATTACK" && input.mode !== "DEFENSE") return false; // solo invocaciones rompen el cebo
+  if (input.opponent.activeEntities.length !== 0) return false; // con tablero ya poblado el rival no ataca directo
+  if (!hasArmedDirectOnlyTrap(input.opponent)) return false;
+  return rivalCanAttackDirect(input.target);
+}
+
 /**
  * Decide si conviene esperar antes de exponer un atacante frágil en mesa.
  */
@@ -42,7 +77,9 @@ export function shouldHoldFragileFrontline(input: {
   aiProfile: IStoryAiProfile;
 }): boolean {
   if (input.card.type !== "ENTITY" && input.card.type !== "FUSION") return false;
-  if (input.mode !== "ATTACK") return false;
+  // Aguantar aplica tanto si el frágil iría en ATAQUE como en DEFENSA (ficha 5 fase 2: ahora los frágiles se
+  // invocan en defensa): en ambos casos, si hay una trampa protectora en mano, es mejor prepararla primero.
+  if (input.mode !== "ATTACK" && input.mode !== "DEFENSE") return false;
   if (input.profile.key === "EASY" || input.profile.key === "NORMAL") return false;
   const bestThreat = rivalBestAttack(input.target);
   const attack = input.card.attack ?? 0;

@@ -32,6 +32,9 @@ export function resolveCardUpgradeBudget(baseCost: number): number {
 export interface ICardUpgradeBonuses {
   attackBonus: number;
   defenseBonus: number;
+  /** Veces que se aplicó un objeto de ATK/DEF (badges ×N de la carta). Opcionales: solo el arsenal los usa. */
+  attackCount?: number;
+  defenseCount?: number;
 }
 
 export const EMPTY_CARD_UPGRADE_BONUSES: ICardUpgradeBonuses = { attackBonus: 0, defenseBonus: 0 };
@@ -44,6 +47,19 @@ export function canApplyCardUpgrade(baseCost: number, stat: CardUpgradeStat, cur
   const budget = resolveCardUpgradeBudget(baseCost);
   const currentForStat = stat === "ATTACK" ? current.attackBonus : current.defenseBonus;
   return value > 0 && currentForStat + value <= budget;
+}
+
+/** Veces que una carta recibió objetos de mejora por stat (badges ×N de la cara). Única definición del tipo. */
+export interface ICardUpgradeCounts {
+  attack: number;
+  defense: number;
+}
+
+/** Contadores ×N para los badges de la carta; null si no hay ninguna aplicación (no se pinta nada). */
+export function resolveCardUpgradeCounts(bonuses: ICardUpgradeBonuses | undefined): ICardUpgradeCounts | null {
+  const attack = bonuses?.attackCount ?? 0;
+  const defense = bonuses?.defenseCount ?? 0;
+  return attack > 0 || defense > 0 ? { attack, defense } : null;
 }
 
 /** Cuánto margen de mejora queda para cada stat (para pintarlo en la UI). */

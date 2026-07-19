@@ -2,19 +2,24 @@
 import { ICard } from "@/core/entities/ICard";
 import { IStoryDuelDefinition } from "@/core/entities/opponent/IStoryDuelDefinition";
 import { ValidationError } from "@/core/errors/ValidationError";
+import { IMatchReward } from "@/core/entities/match/IMatchReward";
 import { ICardCollectionRepository } from "@/core/repositories/ICardCollectionRepository";
 import { IOpponentRepository } from "@/core/repositories/IOpponentRepository";
 import { IPlayerProgressRepository } from "@/core/repositories/IPlayerProgressRepository";
 import { IPlayerStoryDuelProgressRepository } from "@/core/repositories/IPlayerStoryDuelProgressRepository";
 import { IPlayerStoryWorldRepository } from "@/core/repositories/IPlayerStoryWorldRepository";
+import { ISkillTreeRepository } from "@/core/repositories/ISkillTreeRepository";
 import { IWalletRepository } from "@/core/repositories/IWalletRepository";
 import { GetOrCreatePlayerProgressUseCase } from "@/core/use-cases/player/GetOrCreatePlayerProgressUseCase";
+import { GetPlayerSkillModifiersUseCase } from "@/core/use-cases/progression/GetPlayerSkillModifiersUseCase";
+import { applySkillEconomyToReward } from "@/core/services/match/rewards/apply-skill-economy-to-reward";
 import { resolveStoryDuelCompletionInput } from "@/services/story/duel-flow/resolve-story-duel-completion-input";
 import { didWinFromStoryOutcome } from "@/services/story/duel-flow/story-duel-outcome";
 import { resolveStoryRewardCards } from "@/services/story/resolve-story-reward-cards";
 import { resolveStoryDuelReturnNode } from "@/app/api/story/duels/complete/internal/resolve-story-duel-return-node";
 import { buildOverworldTilemap, isKnownOverworldMap } from "@/services/story/overworld/resolve-overworld-tilemap";
 import { STORY_DEFEAT_NEXUS_PENALTY } from "@/services/story/duel-flow/story-defeat-penalty";
+import { CreditPassiveNexusFn, creditPassiveNexus, parsePassiveNexusClaim } from "@/services/progression/credit-passive-nexus";
 
 interface IProcessStoryDuelCompletionParams {
   playerId: string;
@@ -26,6 +31,24 @@ interface IProcessStoryDuelCompletionParams {
   walletRepository: IWalletRepository;
   collectionRepository: ICardCollectionRepository;
   loadCardsByIds: (cardIds: string[]) => Promise<Map<string, ICard>>;
+  /** Árbol de habilidades (ficha 8): aplica los modificadores de economía a la recompensa (no-fatal). */
+  skillTreeRepository?: ISkillTreeRepository;
+  /** Inyectable en tests; por defecto la acreditación real vía RPC service-role. */
+  creditPassiveNexus?: CreditPassiveNexusFn;
+}
+
+/**
+ * Aplica la economía del árbol a la recompensa de Story (solo en primera victoria → outcome WIN). NO-FATAL: sin
+ * árbol o ante un fallo (tablas sin migrar), devuelve la base — el cierre del duelo nunca se rompe por el árbol.
+ */
+async function applyStoryEconomy(params: IProcessStoryDuelCompletionParams, base: IMatchReward): Promise<IMatchReward> {
+  if (!params.skillTreeRepository || (base.nexus <= 0 && base.playerExperience <= 0)) return base;
+  try {
+    const modifiers = await new GetPlayerSkillModifiersUseCase(params.skillTreeRepository).execute(params.playerId);
+    return applySkillEconomyToReward({ base, economy: modifiers.economy, outcome: "WIN" });
+  } catch {
+    return base;
+  }
 }
 
 function mapRewardCards(cardsById: Map<string, ICard>, rewardCardIds: string[]): ICard[] {
@@ -108,6 +131,10 @@ export async function processStoryDuelCompletion(params: IProcessStoryDuelComple
     await resetOverworldToActStart(params.playerId, params.storyWorldRepository);
     penaltyNexus = await penalizeDefeatNexus(params.playerId, params.walletRepository);
   }
+  // Recaudación (ficha 3): paga en duelos TERMINADOS (ganados o perdidos), nunca al abandonar. La RPC
+  // aplica idempotencia y topes (600/duelo, 1200/día); aquí solo validamos la forma del reporte.
+  const passiveClaim = input.outcome === "ABANDONED" ? null : parsePassiveNexusClaim(params.payload);
+  const passiveNexusCredited = await (params.creditPassiveNexus ?? creditPassiveNexus)(params.playerId, passiveClaim);
   const duel = await resolveDuelFromPayload(params.payload, params.opponentRepository);
   const duelProgress = await params.storyProgressRepository.registerDuelResult(params.playerId, duel.id, didWin);
   const firstVictory = didWin
@@ -125,13 +152,18 @@ export async function processStoryDuelCompletion(params: IProcessStoryDuelComple
     storyWorldRepository: params.storyWorldRepository,
   });
   if (!shouldGrantStandardRewards && !shouldGrantBossRepeatCardReward) {
-    return { duelProgress, rewarded: false, rewardNexus: 0, rewardPlayerExperience: 0, rewardCardIds: [], rewardCards: [], penaltyNexus, outcome: input.outcome, duelNodeId: duel.id, returnNodeId };
+    return { duelProgress, rewarded: false, rewardNexus: 0, rewardPlayerExperience: 0, rewardCardIds: [], rewardCards: [], penaltyNexus, passiveNexusCredited, outcome: input.outcome, duelNodeId: duel.id, returnNodeId };
   }
   const rewardCardIds = shouldGrantBossRepeatCardReward
     ? resolveBossRepeatRewardCardIds(duel)
     : resolveStoryRewardCards(duel.rewardCards);
-  const rewardNexus = shouldGrantStandardRewards ? duel.rewardNexus : 0;
-  const rewardPlayerExperience = shouldGrantStandardRewards ? duel.rewardPlayerExperience : 0;
+  const baseReward = {
+    nexus: shouldGrantStandardRewards ? duel.rewardNexus : 0,
+    playerExperience: shouldGrantStandardRewards ? duel.rewardPlayerExperience : 0,
+  };
+  const adjustedReward = await applyStoryEconomy(params, baseReward);
+  const rewardNexus = adjustedReward.nexus;
+  const rewardPlayerExperience = adjustedReward.playerExperience;
   if (rewardNexus > 0) await params.walletRepository.creditNexus(params.playerId, rewardNexus);
   if (rewardCardIds.length > 0) await params.collectionRepository.addCards(params.playerId, rewardCardIds);
   const cardsById = rewardCardIds.length > 0 ? await params.loadCardsByIds(rewardCardIds) : new Map<string, ICard>();
@@ -154,6 +186,7 @@ export async function processStoryDuelCompletion(params: IProcessStoryDuelComple
     rewardCardIds,
     rewardCards,
     penaltyNexus,
+    passiveNexusCredited,
     ...(playerProgress ? { playerProgress } : {}),
     outcome: input.outcome,
     duelNodeId: duel.id,

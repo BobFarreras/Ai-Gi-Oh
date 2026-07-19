@@ -4,7 +4,7 @@
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { Card } from "@/components/game/card/Card";
@@ -20,6 +20,8 @@ interface BoardMobilePanelsDialogProps {
   onCloseHistory: () => void;
   onActivatePendingTrap?: () => void;
   onSkipPendingTrap?: () => void;
+  /** Ficha 4: navega el carrusel entre trampas elegibles (‹ ›). */
+  onCyclePendingTrap?: (direction: -1 | 1) => void;
 }
 
 export function BoardMobilePanelsDialog({
@@ -29,6 +31,7 @@ export function BoardMobilePanelsDialog({
   onCloseHistory,
   onActivatePendingTrap = () => undefined,
   onSkipPendingTrap = () => undefined,
+  onCyclePendingTrap = () => undefined,
 }: BoardMobilePanelsDialogProps) {
   const [turnFilter, setTurnFilter] = useState<number | "ALL">("ALL");
   const [actorFilter, setActorFilter] = useState<"ALL" | "PLAYER" | "OPPONENT">("ALL");
@@ -95,7 +98,34 @@ export function BoardMobilePanelsDialog({
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-black uppercase tracking-[0.16em] text-fuchsia-200">Decisión de trampa</p>
-                  <p className="mt-1 text-xs font-bold text-fuchsia-100">¿Quieres activar esta carta trampa?</p>
+                  {(pendingTrapActivationPrompt?.eligibleTraps.length ?? 0) > 1 ? (
+                    <>
+                      <p className="mt-1 text-xs font-bold text-fuchsia-100">Elige qué trampa activar.</p>
+                      {/* Ficha 4: carrusel ‹ › entre las trampas elegibles (móvil). Targets grandes (44px) y
+                          stopPropagation para que el tap no se lo coma ningún overlay/deselección. */}
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          aria-label="Trampa anterior"
+                          onClick={(event) => { event.stopPropagation(); onCyclePendingTrap(-1); }}
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-fuchsia-300/70 bg-fuchsia-800/70 text-fuchsia-50 shadow-[0_0_14px_rgba(217,70,239,0.5)] active:scale-90 active:bg-fuchsia-600"
+                        >
+                          <ChevronLeft size={24} />
+                        </button>
+                        <span className="rounded-full bg-fuchsia-950/70 px-2 py-1 text-xs font-black tracking-widest text-fuchsia-100">{(pendingTrapActivationPrompt?.currentIndex ?? 0) + 1}/{pendingTrapActivationPrompt?.eligibleTraps.length}</span>
+                        <button
+                          type="button"
+                          aria-label="Trampa siguiente"
+                          onClick={(event) => { event.stopPropagation(); onCyclePendingTrap(1); }}
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-fuchsia-300/70 bg-fuchsia-800/70 text-fuchsia-50 shadow-[0_0_14px_rgba(217,70,239,0.5)] active:scale-90 active:bg-fuchsia-600"
+                        >
+                          <ChevronRight size={24} />
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="mt-1 text-xs font-bold text-fuchsia-100">¿Quieres activar esta carta trampa?</p>
+                  )}
                 </div>
               </div>
             ) : null}

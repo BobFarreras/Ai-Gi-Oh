@@ -21,6 +21,15 @@ export interface ICreateInitialBoardStateInput {
   preserveDeckOrder?: boolean;
   /** Fábrica de ids determinista (multijugador) para instanceId idénticos en ambos clientes. */
   idFactory?: IGameEngineIdFactory;
+  /**
+   * Modificadores de COMBATE del árbol de habilidades (ficha 8), aplicados SOLO al jugador local (playerA)
+   * en modos PvE. El rival nunca los recibe. Se aplican tras crear el estado base (createInitialGameState los
+   * repartiría a ambos jugadores).
+   */
+  playerStartingLpBonus?: number;
+  playerMaxEnergyBonus?: number;
+  /** Arranque en Frío (ficha 8): +energía one-time en el primer turno del jugador, por encima del tope. */
+  playerTurn1EnergyBonus?: number;
 }
 
 export function createInitialBoardState(input?: ICreateInitialBoardStateInput): GameState {
@@ -44,5 +53,26 @@ export function createInitialBoardState(input?: ICreateInitialBoardStateInput): 
     idFactory: input?.idFactory,
   });
 
-  return baseState;
+  const lpBonus = Math.max(0, Math.floor(input?.playerStartingLpBonus ?? 0));
+  const energyBonus = Math.max(0, Math.floor(input?.playerMaxEnergyBonus ?? 0));
+  const turn1EnergyBonus = Math.max(0, Math.floor(input?.playerTurn1EnergyBonus ?? 0));
+  if (lpBonus === 0 && energyBonus === 0 && turn1EnergyBonus === 0) return baseState;
+  const a = baseState.playerA;
+  // Arranque en Frío: si el jugador local ARRANCA (turno 1 ya activo), se concede ahora, por encima del tope;
+  // si no arranca, se difiere a su primer turno vía next-phase (firstTurnEnergyBonusByPlayerId).
+  const isPlayerAStarter = baseState.activePlayerId === a.id;
+  const starterTurn1Energy = isPlayerAStarter ? turn1EnergyBonus : 0;
+  return {
+    ...baseState,
+    playerA: {
+      ...a,
+      maxHealthPoints: a.maxHealthPoints + lpBonus,
+      healthPoints: a.healthPoints + lpBonus,
+      maxEnergy: a.maxEnergy + energyBonus,
+      currentEnergy: a.currentEnergy + energyBonus + starterTurn1Energy,
+    },
+    firstTurnEnergyBonusByPlayerId: !isPlayerAStarter && turn1EnergyBonus > 0
+      ? { ...baseState.firstTurnEnergyBonusByPlayerId, [a.id]: turn1EnergyBonus }
+      : baseState.firstTurnEnergyBonusByPlayerId,
+  };
 }

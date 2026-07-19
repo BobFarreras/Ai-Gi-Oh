@@ -3,7 +3,7 @@ import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
 import { createMatchSeed } from "@/core/services/random/create-match-seed";
 import { createSeededRandom } from "@/core/services/random/seeded-rng";
-import { createDefaultFusionDeck, createPlayerDeckA, createPlayerDeckB, shuffleDeck } from "../initialDeckFactory";
+import { createDefaultFusionDeck, createPlayerDeckA, createPlayerDeckB, shuffleDeck, withDerivedFusionResults } from "../initialDeckFactory";
 
 interface IBoardPlayerConfig {
   id: string;
@@ -70,6 +70,11 @@ export function createBoardMatchConfig(input?: ICreateBoardMatchConfigInput): IB
   const opponentDeckBase = input?.opponentDeck && input.opponentDeck.length > 0 ? input.opponentDeck : createPlayerDeckB(randomSource);
   const opponentFusionDeckBase = input?.opponentFusionDeck ?? createDefaultFusionDeck();
 
+  // Garantía de consistencia: el bloque de fusión SIEMPRE incluye el resultado de cada ejecutable FUSION_SUMMON
+  // del mazo. Meter `exec-fusion-X` en el mazo basta para poder fusionar; ya no hay execs muertos sin resultado.
+  const playerFusionDeck = withDerivedFusionResults(playerDeckBase, playerFusionDeckBase);
+  const opponentFusionDeck = withDerivedFusionResults(opponentDeckBase, opponentFusionDeckBase);
+
   const preserveDeckOrder = Boolean(input?.preserveDeckOrder);
   const cloneDeck = (deck: ICard[]): ICard[] => deck.map((card) => ({ ...card }));
   const resolveDeck = (deck: ICard[]): ICard[] => (preserveDeckOrder ? cloneDeck(deck) : shuffleDeck(cloneDeck(deck), randomSource));
@@ -82,13 +87,13 @@ export function createBoardMatchConfig(input?: ICreateBoardMatchConfigInput): IB
       id: playerId,
       name: playerName,
       deck: resolveDeck(playerDeckBase),
-      fusionDeck: playerFusionDeckBase.map((card) => ({ ...card })),
+      fusionDeck: playerFusionDeck,
     },
     playerB: {
       id: opponentId,
       name: opponentName,
       deck: resolveDeck(opponentDeckBase),
-      fusionDeck: opponentFusionDeckBase.map((card) => ({ ...card })),
+      fusionDeck: opponentFusionDeck,
     },
     randomSource,
   };

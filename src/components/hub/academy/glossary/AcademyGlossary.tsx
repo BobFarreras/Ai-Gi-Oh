@@ -26,6 +26,7 @@ import {
   OPPONENT_BIOS,
   OPPONENT_ORDER,
   RANKINGS_INTRO,
+  SKILL_TREE_INTRO,
   STORY_FACTIONS,
   STORY_HERO,
   STORY_LORE_INTRO,
@@ -35,7 +36,7 @@ import {
   XP_INTRO,
 } from "./glossary-content";
 
-type SectionId = "types" | "effects" | "levels" | "versions" | "mastery" | "rankings" | "story" | "opponents";
+type SectionId = "types" | "effects" | "levels" | "versions" | "mastery" | "skilltree" | "rankings" | "story" | "opponents";
 
 const SECTIONS: { id: SectionId; label: string }[] = [
   { id: "types", label: "Tipos de carta" },
@@ -43,9 +44,16 @@ const SECTIONS: { id: SectionId; label: string }[] = [
   { id: "levels", label: "Niveles y XP" },
   { id: "versions", label: "Versiones" },
   { id: "mastery", label: "Pasivas de maestría" },
+  { id: "skilltree", label: "Árbol de Operador" },
   { id: "rankings", label: "Rankings" },
   { id: "story", label: "Historia" },
   { id: "opponents", label: "Oponentes" },
+];
+
+const SKILL_TREE_BRANCHES = [
+  { name: "Economía", accent: "text-amber-300", box: "border-amber-400/35 bg-amber-400/5", scope: "Todos los modos", desc: "Más Nexus y experiencia por duelo." },
+  { name: "Combate", accent: "text-cyan-300", box: "border-cyan-400/35 bg-cyan-400/5", scope: "Solo Historia y Arena", desc: "Más LP iniciales, más techo de energía y energía extra en tu primer turno." },
+  { name: "Arsenal", accent: "text-violet-300", box: "border-violet-400/35 bg-violet-400/5", scope: "Utilidad", desc: "Mejoras de meta-juego (más experiencia y, más adelante, otras)." },
 ];
 
 const EFFECT_GROUPS: { category: EffectCategory; label: string; accent: string }[] = [
@@ -412,6 +420,33 @@ function MasterySection({ onSelect }: { onSelect: (item: IEffectCatalogItem) => 
   );
 }
 
+function SkillTreeSection() {
+  return (
+    <Panel>
+      <SectionHeading kicker="Progresión" title="Árbol de Operador" intro={SKILL_TREE_INTRO} />
+      <motion.div variants={listStagger} initial="hidden" animate="show" className="grid gap-3 sm:grid-cols-3">
+        {SKILL_TREE_BRANCHES.map((branch) => (
+          <motion.div key={branch.name} variants={itemFade} className={`rounded-2xl border p-4 ${branch.box}`}>
+            <h3 className={`text-lg font-black ${branch.accent}`} style={HEADING_FONT}>
+              {branch.name}
+            </h3>
+            <span className={`mt-1 inline-block rounded-md border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${branch.accent}`} style={{ borderColor: "currentColor" }}>
+              {branch.scope}
+            </span>
+            <p className="mt-2.5 text-[13.5px] leading-6 text-slate-300">{branch.desc}</p>
+          </motion.div>
+        ))}
+      </motion.div>
+      <div className="mt-5 rounded-xl border border-cyan-400/30 bg-cyan-400/5 p-4">
+        <p className="text-[13.5px] leading-6 text-cyan-100/90">
+          Recuerda: las ventajas de la rama de <span className="font-black text-cyan-300">Combate</span> solo tienen efecto en
+          Historia y Arena. En Multijugador todos compiten en igualdad de condiciones.
+        </p>
+      </div>
+    </Panel>
+  );
+}
+
 function RankingsSection() {
   return (
     <Panel>
@@ -689,6 +724,8 @@ export function AcademyGlossary() {
         return <VersionsSection />;
       case "mastery":
         return <MasterySection onSelect={setSelected} />;
+      case "skilltree":
+        return <SkillTreeSection />;
       case "rankings":
         return <RankingsSection />;
       case "story":

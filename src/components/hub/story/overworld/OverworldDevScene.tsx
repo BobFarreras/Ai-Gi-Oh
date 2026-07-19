@@ -389,6 +389,7 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
           rewardNexus?: number;
           rewardCardId?: string | null;
           rewardCard?: ICard | null;
+          rewardObject?: { name: string; quantity: number } | null;
         };
         if (res.ok) {
           markEventSeen(object.id);
@@ -404,14 +405,18 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
             setCardPickup(data.rewardCard);
             return;
           }
-          if (isKey || (!data.alreadyClaimed && ((data.rewardNexus ?? 0) > 0 || data.rewardCardId))) {
+          if (isKey || (!data.alreadyClaimed && ((data.rewardNexus ?? 0) > 0 || data.rewardCardId || data.rewardObject))) {
             if (!isKey && (data.rewardNexus ?? 0) > 0) sfxRef.current?.playRewardNexus();
             else sfxRef.current?.playRewardCard();
-            // El objeto se encoge hacia el jugador; si es Nexus (no llave), sube el valor flotante.
+            // El objeto se encoge hacia el jugador; si es Nexus u objeto (no llave), sube la etiqueta flotante.
             engine.collectReward({
               objectId: object.id,
               imageSrc: object.imageSrc,
-              floatingLabel: !isKey && (data.rewardNexus ?? 0) > 0 ? `+${data.rewardNexus}` : null,
+              floatingLabel: !isKey && (data.rewardNexus ?? 0) > 0
+                ? `+${data.rewardNexus}`
+                : !isKey && data.rewardObject
+                  ? `+${data.rewardObject.name}`
+                  : null,
               onDone: () => {
                 // Puertas/puente reevalúan sus requisitos con el nodo recién interactuado.
                 engine.updateProgress(buildProgress(initialCompleted, seenEventIdsRef.current));
@@ -560,7 +565,7 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
           // Recompensas: se otorgan en servidor (una sola vez) al pulsar el botón estando al lado
           // (ADJACENT_ACTION). Su celda está bloqueada, así que el jugador se para enfrente y decide;
           // solo las mitades de la llave congelan la escena porque después narran.
-          if (!intent.isBlocked && (object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD")) {
+          if (!intent.isBlocked && (object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD" || object.kind === "REWARD_OBJECT")) {
             if (seenEventIdsRef.current.has(object.id)) return;
             if (ACT2_KEY_NODE_IDS.includes(object.id)) engine.setInteractionSuspended(true);
             void claimReward(object);

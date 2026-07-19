@@ -8,6 +8,8 @@ interface IPlayerCardUpgradeRow {
   card_id: string;
   attack_bonus: number;
   defense_bonus: number;
+  attack_count: number | null;
+  defense_count: number | null;
 }
 
 export class SupabasePlayerCardUpgradesRepository {
@@ -17,14 +19,19 @@ export class SupabasePlayerCardUpgradesRepository {
   async getUpgradesByPlayer(playerId: string): Promise<Map<string, ICardUpgradeBonuses>> {
     const { data, error } = await this.client
       .from("player_card_upgrades")
-      .select("card_id, attack_bonus, defense_bonus")
+      .select("card_id, attack_bonus, defense_bonus, attack_count, defense_count")
       .eq("player_id", playerId);
     // Un fallo de lectura no debe tumbar el flujo: sin bonus de objetos la carta usa sus stats base+nivel.
     if (error || !data) return new Map();
     return new Map(
       (data as IPlayerCardUpgradeRow[]).map((row) => [
         row.card_id,
-        { attackBonus: row.attack_bonus, defenseBonus: row.defense_bonus },
+        {
+          attackBonus: row.attack_bonus,
+          defenseBonus: row.defense_bonus,
+          attackCount: row.attack_count ?? 0,
+          defenseCount: row.defense_count ?? 0,
+        },
       ]),
     );
   }

@@ -1,6 +1,6 @@
 // src/core/services/progression/card-upgrade-rules.test.ts - Modelo de topes de los objetos de mejora ATK/DEF.
 import { describe, expect, it } from "vitest";
-import { canApplyCardUpgrade, resolveCardUpgradeBudget, resolveRemainingUpgradeBudget } from "./card-upgrade-rules";
+import { canApplyCardUpgrade, resolveCardUpgradeBudget, resolveCardUpgradeCounts, resolveRemainingUpgradeBudget } from "./card-upgrade-rules";
 
 describe("card-upgrade-rules", () => {
   it("el presupuesto decrece con el coste base (la carta barata gana más)", () => {
@@ -29,5 +29,14 @@ describe("card-upgrade-rules", () => {
 
   it("informa del margen restante por stat", () => {
     expect(resolveRemainingUpgradeBudget(3, { attackBonus: 200, defenseBonus: 500 })).toEqual({ attackBonus: 300, defenseBonus: 0 });
+  });
+
+  it("los contadores ×N solo existen si hay alguna aplicación (null = sin badges)", () => {
+    expect(resolveCardUpgradeCounts(undefined)).toBeNull();
+    expect(resolveCardUpgradeCounts({ attackBonus: 0, defenseBonus: 0 })).toBeNull();
+    // Filas anteriores a la migración 131 pueden venir sin contadores: sin ellos no se inventa nada.
+    expect(resolveCardUpgradeCounts({ attackBonus: 200, defenseBonus: 0 })).toBeNull();
+    expect(resolveCardUpgradeCounts({ attackBonus: 200, defenseBonus: 0, attackCount: 2, defenseCount: 0 })).toEqual({ attack: 2, defense: 0 });
+    expect(resolveCardUpgradeCounts({ attackBonus: 100, defenseBonus: 300, attackCount: 1, defenseCount: 3 })).toEqual({ attack: 1, defense: 3 });
   });
 });

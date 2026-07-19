@@ -28,7 +28,7 @@ interface IUseBoardScreenStateInput {
   duelResultRewardSummary?: IDuelResultRewardSummary | null;
   narrationPack?: IMatchNarrationPack | null;
   isNarrationLocked?: boolean;
-  onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string; flawless: boolean }) => void;
+  onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string; flawless: boolean; passiveNexusEarned: number }) => void;
   /** Ganador comunicado externamente (multijugador Realtime); prioridad si el motor local no detecta fin. */
   externalWinnerPlayerId?: string | "DRAW" | null;
 }
@@ -87,7 +87,10 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
     // Flawless: el jugador local gana sin haber perdido LP (salud al máximo).
     const localPlayer = board.gameState.playerA.id === playerId ? board.gameState.playerA : board.gameState.playerB;
     const flawless = board.winnerPlayerId === playerId && localPlayer.healthPoints >= localPlayer.maxHealthPoints;
-    onMatchResolved({ winnerPlayerId: board.winnerPlayerId, playerId, mode, matchSeed: board.matchSeed, flawless });
+    // Recaudación (ficha 3): Nexus contado por el motor para el jugador LOCAL. El servidor lo acredita al
+    // cerrar el duelo con sus topes; aquí solo viaja el contador del GameState.
+    const passiveNexusEarned = board.gameState.nexusEarnedByPlayerId?.[playerId] ?? 0;
+    onMatchResolved({ winnerPlayerId: board.winnerPlayerId, playerId, mode, matchSeed: board.matchSeed, flawless, passiveNexusEarned });
     resolvedWinnerRef.current = board.winnerPlayerId;
   }, [board.matchSeed, board.winnerPlayerId, board.gameState.playerA, board.gameState.playerB, mode, onMatchResolved, playerId]);
   useEffect(() => {

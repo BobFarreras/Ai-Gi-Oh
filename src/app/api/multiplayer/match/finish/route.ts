@@ -8,6 +8,8 @@ import { createPlayerRouteRepositories } from "@/services/player-persistence/cre
 import { recordProgressionEvent } from "@/services/progression/record-progression-event";
 import { resolveDuelProgressionActions } from "@/core/services/progression/resolve-progression-actions";
 import { resolveMatchReward } from "@/core/services/match/rewards/match-reward-policy";
+import { applySkillEconomyToReward } from "@/core/services/match/rewards/apply-skill-economy-to-reward";
+import { getPlayerEconomyModifiers } from "@/services/progression/get-player-economy-modifiers";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { createSupabaseServiceRoleClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-service-role-client";
 import { SupabaseWalletRepository } from "@/infrastructure/persistence/supabase/SupabaseWalletRepository";
@@ -62,6 +64,11 @@ export async function POST(request: NextRequest) {
     const outcomeRaw = readRequiredStringField(payload, "outcome", "El resultado de partida es obligatorio.");
     const outcome = parseOutcome(outcomeRaw);
 
+    // Economía del árbol (ficha 8): escala el Nexus de recompensa. No-fatal; misma familia segura que Story/
+    // Arena (solo cambia cuánto ganas, no el combate → sí aplica en multi). Multi no acredita XP, solo Nexus.
+    const economy = await getPlayerEconomyModifiers();
+    const resolveReward = () => applySkillEconomyToReward({ base: resolveMatchReward({ mode: "MULTIPLAYER", outcome }), economy, outcome });
+
     const { data: matchSession, error: sessionError } = await repositories.client
       .from("match_sessions")
       .select("id, player_a_id, player_b_id, status, winner_id")
@@ -77,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     // Path idempotente: la partida ya está cerrada por el otro jugador.
     if (matchSession.status === "FINISHED" || matchSession.status === "ABANDONED") {
-      const reward = resolveMatchReward({ mode: "MULTIPLAYER", outcome });
+      const reward = resolveReward();
       const eloChange = await resolveIdempotentEloChange(serviceClient, matchId, playerId, matchSession.player_a_id);
       return NextResponse.json({ ok: true, reward, eloChange, alreadyFinished: true }, { status: 200, headers: response.headers });
     }
@@ -94,7 +101,7 @@ export async function POST(request: NextRequest) {
       .in("status", ["WAITING", "ACTIVE"]);
 
     if (updateError) {
-      const reward = resolveMatchReward({ mode: "MULTIPLAYER", outcome });
+      const reward = resolveReward();
       const eloChange = await resolveIdempotentEloChange(serviceClient, matchId, playerId, matchSession.player_a_id);
       return NextResponse.json({ ok: true, reward, eloChange, alreadyFinished: true }, { status: 200, headers: response.headers });
     }
@@ -105,7 +112,7 @@ export async function POST(request: NextRequest) {
     await saveMatchEloSnapshot(serviceClient, matchId, eloChanges);
 
     // Acreditar recompensas al jugador que llama.
-    const reward = resolveMatchReward({ mode: "MULTIPLAYER", outcome });
+    const reward = resolveReward();
     if (reward.nexus > 0) {
       await new SupabaseWalletRepository(repositories.client).creditNexus(playerId, reward.nexus);
     }

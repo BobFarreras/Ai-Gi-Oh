@@ -16,6 +16,21 @@ export interface ICampaignProgress {
 }
 
 /**
+ * Jugadas AVANZADAS habilitadas por tier (ficha 5: gating de comportamiento escalonado). Las jugadas
+ * BÁSICAS —no regalar entities, replegar a defensa, invocar en defensa si se pierde el intercambio— las
+ * hacen TODOS los perfiles y NO están aquí. Aquí solo lo que distingue a un experto: reconocer combos,
+ * planificar fusiones y cebar trampas reactivas. Así subir de dificultad se nota de verdad.
+ */
+export interface IOpponentSkillSet {
+  /** Reconoce sinergias de combo (Escudo TypeScript ligado, magia de atacar-en-defensa). HARD+. */
+  combos: boolean;
+  /** Retrasa invocar para cebar una trampa reactiva de ataque-directo (Flutter Enjambre). MASTER+. */
+  baitReactiveTrap: boolean;
+}
+// Nota: planificar/completar FUSIONES es una jugada BÁSICA universal (todos los tiers), como replegar o no
+// regalar entities — NO va en el skill set. Un EASY también debe saber montar su fusión si tiene las piezas.
+
+/**
  * Perfil numérico que controla el comportamiento táctico del oponente.
  * No define reglas del juego; solo pondera decisiones heurísticas.
  */
@@ -38,5 +53,7 @@ export interface IOpponentDifficultyProfile {
   entityTempoBias: number;
   /** Umbral mínimo de score para permitir un ataque. */
   minAttackScore: number;
+  /** Jugadas avanzadas habilitadas en este tier (gating escalonado; ficha 5). */
+  skill: IOpponentSkillSet;
 }
 

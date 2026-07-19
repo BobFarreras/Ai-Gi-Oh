@@ -16,6 +16,8 @@ export interface ITrapReactiveResolutionOptions {
   skipEventTypes?: TrapReactiveEvent["type"][];
   /** Dueños cuyo contra-trampa (Nullify) no debe auto-activarse (el jugador lo decide). */
   skipCounterTrapPlayerIds?: string[];
+  /** Ficha 4: trampa concreta que el jugador reactivo eligió activar (revalidada en la selección). */
+  chosenTrapInstanceId?: string;
 }
 
 /** Dispara resolución de trampa desde un evento reactivo del motor usando mapping centralizado. */
@@ -28,7 +30,10 @@ export function resolveReactiveTrapEvent(
   if (options?.skipReactivePlayerIds?.includes(reactivePlayerId) && options?.skipEventTypes?.includes(event.type)) {
     return state;
   }
-  const trapOptions = { skipCounterTrapPlayerIds: options?.skipCounterTrapPlayerIds };
+  const trapOptions = {
+    skipCounterTrapPlayerIds: options?.skipCounterTrapPlayerIds,
+    chosenTrapInstanceId: options?.chosenTrapInstanceId,
+  };
   if (event.type === "ATTACK_DECLARED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_ATTACK_DECLARED", event.context, trapOptions);
   if (event.type === "DIRECT_ATTACK_DECLARED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_DIRECT_ATTACK_DECLARED", event.context, trapOptions);
   if (event.type === "ENTITY_SET_PLAYED") return resolveTrapTrigger(state, reactivePlayerId, "ON_OPPONENT_ENTITY_SET_PLAYED", event.context, trapOptions);

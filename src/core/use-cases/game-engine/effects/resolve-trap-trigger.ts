@@ -67,6 +67,12 @@ export interface IResolveTrapTriggerOptions {
    * acción (el `opponent` del jugador reactivo), por eso se compara contra `opponent.id`.
    */
   skipCounterTrapPlayerIds?: string[];
+  /**
+   * Ficha 4: instanceId de la trampa que el jugador reactivo eligió activar (cuando tiene varias elegibles).
+   * Se revalida en `selectTriggeredTrap`; si no está entre las elegibles, no se activa ninguna. Ausente =
+   * criterio por defecto (la primera elegible), que es lo que usa la IA.
+   */
+  chosenTrapInstanceId?: string;
 }
 
 export function resolveTrapTrigger(
@@ -76,7 +82,7 @@ export function resolveTrapTrigger(
   context?: ITrapTriggerContext,
   options?: IResolveTrapTriggerOptions,
 ): GameState {
-  const selectedTrap = selectTriggeredTrap(state, reactivePlayerId, trigger, context);
+  const selectedTrap = selectTriggeredTrap(state, reactivePlayerId, trigger, context, options?.chosenTrapInstanceId);
   if (!selectedTrap) return state;
   const { trap, player, opponent, isPlayerA } = selectedTrap;
   const trapSlotIndex = player.activeExecutions.findIndex((entity) => entity.instanceId === trap.instanceId);

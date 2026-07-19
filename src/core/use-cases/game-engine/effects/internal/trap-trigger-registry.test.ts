@@ -28,4 +28,21 @@ describe("trap-trigger-registry", () => {
     resolveReactiveTrapEvent(state as never, "player-b", { type: "DIRECT_ATTACK_DECLARED", context: { attackerPlayerId: "player-a", attackerInstanceId: "entity-1" } });
     expect(resolveTrapTriggerMock).toHaveBeenCalledWith(state, "player-b", "ON_OPPONENT_DIRECT_ATTACK_DECLARED", { attackerPlayerId: "player-a", attackerInstanceId: "entity-1" }, { skipCounterTrapPlayerIds: undefined });
   });
+
+  it("propaga la trampa elegida (ficha 4) al resolver", () => {
+    const state = { turn: 1 };
+    resolveReactiveTrapEvent(
+      state as never,
+      "player-b",
+      { type: "ATTACK_DECLARED", context: { attackerPlayerId: "player-a", attackerInstanceId: "entity-1" } },
+      { chosenTrapInstanceId: "trap-2" },
+    );
+    expect(resolveTrapTriggerMock).toHaveBeenCalledWith(
+      state,
+      "player-b",
+      "ON_OPPONENT_ATTACK_DECLARED",
+      { attackerPlayerId: "player-a", attackerInstanceId: "entity-1" },
+      { skipCounterTrapPlayerIds: undefined, chosenTrapInstanceId: "trap-2" },
+    );
+  });
 });

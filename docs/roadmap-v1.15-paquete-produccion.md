@@ -651,7 +651,7 @@ perfiles de dificultad ya existen y `get-match-session-data.ts` ya sabe resolver
 | B | 3 · Objetos ATK/DEF | ✅ hecho: backend + tope server-side + compra (Mercado) + aplicar (Arsenal) + combate MP. Migración 123 **aplicada** |
 | C | 5 · Cartas por reconfiguración | ✅ hecho (era **solo análisis**: los efectos son data-driven; una carta "igual con otro número/entidad" es una migración, no código) |
 | C | 7 · Magia de ataque en defensa | ✅ hecho · migración 130 **aplicada** · carta `Escudo Firewall Ofensivo` (efecto `ALLOW_DEFENSE_MODE_ATTACK`, estado de turno, **sin selección**) · ⚠️ falta prueba MP con 2 clientes |
-| D | 11 · Ghost decks | ⏳ pendiente |
+| D | 11 · Ghost decks | ➡️ **movida al paquete v1.17** (ficha 6 de `docs/roadmap-v1.17-nuevo-paquete.md`, con reglas nuevas: 5/día, ventana ±50 ELO, el defensor sí pierde pocos puntos) |
 | — | 10 · 2v2 | ❌ fuera del paquete (release propia) |
 
 **Documentación de cara al jugador:** toda regla nueva de juego (curva de niveles, caramelos, objetos, topes,

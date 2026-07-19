@@ -4,6 +4,7 @@ import { SupabaseOpponentRepository } from "@/infrastructure/persistence/supabas
 import { SupabasePlayerProgressRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerProgressRepository";
 import { SupabasePlayerStoryDuelProgressRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerStoryDuelProgressRepository";
 import { SupabasePlayerStoryWorldRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerStoryWorldRepository";
+import { SupabaseSkillTreeRepository } from "@/infrastructure/persistence/supabase/SupabaseSkillTreeRepository";
 import { loadCardsByIds } from "@/infrastructure/persistence/supabase/internal/load-cards-by-ids";
 import { createStoryRouteContext } from "@/services/story/api/create-story-route-context";
 
@@ -16,6 +17,7 @@ export async function createStoryDuelCompletionRouteContext(request: NextRequest
     storyProgressRepository: new SupabasePlayerStoryDuelProgressRepository(client),
     storyWorldRepository: new SupabasePlayerStoryWorldRepository(client),
     playerProgressRepository: new SupabasePlayerProgressRepository(client),
+    skillTreeRepository: new SupabaseSkillTreeRepository(client),
     loadCardsByIds: (cardIds: string[]) => loadCardsByIds(client, cardIds),
   };
 }

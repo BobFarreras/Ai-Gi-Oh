@@ -8,6 +8,10 @@ interface IPostStoryDuelCompletionInput {
   outcome: StoryDuelOutcome;
   completionTicket: string;
   flawless?: boolean;
+  /** Recaudación (ficha 3): Nexus contado por el motor en el duelo. El servidor lo topa y acredita. */
+  passiveNexusEarned?: number;
+  /** Clave de idempotencia del cierre (uuid único por duelo; reintentos la reutilizan). */
+  passiveNexusOperationId?: string;
 }
 
 export interface IPostStoryDuelCompletionOutput {
@@ -16,6 +20,8 @@ export interface IPostStoryDuelCompletionOutput {
   rewardCards: ICard[];
   /** Nexus perdido por derrota/abandono (0 si ganaste o no había saldo). */
   penaltyNexus: number;
+  /** Nexus de la pasiva Recaudación realmente acreditado por el servidor (tras topes). */
+  passiveNexusCredited: number;
   duelNodeId: string;
   returnNodeId: string;
 }
@@ -41,6 +47,7 @@ export async function postStoryDuelCompletion(
     rewardPlayerExperience: payload.rewardPlayerExperience ?? 0,
     rewardCards: payload.rewardCards ?? [],
     penaltyNexus: payload.penaltyNexus ?? 0,
+    passiveNexusCredited: payload.passiveNexusCredited ?? 0,
     duelNodeId: payload.duelNodeId ?? "",
     returnNodeId: payload.returnNodeId ?? "story-ch1-player-start",
   };

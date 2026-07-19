@@ -8,7 +8,9 @@ import { createSupabasePlayerStoryWorldRepository } from "@/infrastructure/persi
 import { createPlayerRouteRepositories } from "@/services/player-persistence/create-player-route-repositories";
 import { createSupabaseRouteClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-route-client";
 import { loadCardsByIds } from "@/infrastructure/persistence/supabase/internal/load-cards-by-ids";
+import { SupabasePlayerInventoryRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerInventoryRepository";
 import { findStoryVirtualNodeDefinition } from "@/services/story/map-definitions/story-map-definition-registry";
+import { resolveClaimRewardPlan } from "@/app/api/story/overworld/claim-reward/internal/resolve-claim-reward";
 
 const NODE_ID_PATTERN = /^story-[a-z0-9-]{1,80}$/i;
 
@@ -27,8 +29,8 @@ export async function POST(request: NextRequest) {
     }
 
     // El servidor deriva la recompensa del registro de nodos (no confía en el cliente).
-    const definition = findStoryVirtualNodeDefinition(nodeId);
-    if (!definition || (definition.nodeType !== "REWARD_NEXUS" && definition.nodeType !== "REWARD_CARD")) {
+    const plan = resolveClaimRewardPlan(findStoryVirtualNodeDefinition(nodeId));
+    if (!plan) {
       return NextResponse.json({ error: "El nodo no es una recompensa." }, { status: 400 });
     }
 
@@ -36,16 +38,23 @@ export async function POST(request: NextRequest) {
     const compact = await worldRepository.getCompactStateByPlayerId(playerId);
     // Recompensa de un solo uso: si ya está en interacted, no se vuelve a otorgar.
     if (compact.interactedNodeIds.includes(nodeId)) {
-      return NextResponse.json({ alreadyClaimed: true, rewardNexus: 0, rewardCardId: null }, { status: 200 });
+      return NextResponse.json({ alreadyClaimed: true, rewardNexus: 0, rewardCardId: null, rewardObject: null }, { status: 200 });
     }
 
-    const rewardNexus = definition.nodeType === "REWARD_NEXUS" ? definition.rewardNexus : 0;
-    const rewardCardId = definition.nodeType === "REWARD_CARD" ? definition.rewardCardId ?? null : null;
-
+    const { rewardNexus, rewardCardId } = plan;
     const response = NextResponse.json({ ok: true }, { status: 200 });
     const repositories = await createPlayerRouteRepositories(request, response);
     if (rewardNexus > 0) await repositories.walletRepository.creditNexus(playerId, rewardNexus);
     if (rewardCardId) await repositories.collectionRepository.addCards(playerId, [rewardCardId]);
+    // Objetos de inventario (caramelos/mejoras): entrega con service-role, validada contra el catálogo.
+    const grantedObject = plan.rewardObject
+      ? await new SupabasePlayerInventoryRepository(createSupabaseRouteClient(request, response)).grantItem(
+          playerId,
+          plan.rewardObject.itemType,
+          plan.rewardObject.itemId,
+          plan.rewardObject.quantity,
+        )
+      : null;
 
     await worldRepository.saveCompactStateByPlayerId(playerId, {
       currentNodeId: compact.currentNodeId,
@@ -63,7 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { alreadyClaimed: false, rewardNexus, rewardCardId, rewardCard },
+      { alreadyClaimed: false, rewardNexus, rewardCardId, rewardCard, rewardObject: grantedObject },
       { status: 200, headers: response.headers },
     );
   } catch (error) {

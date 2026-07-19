@@ -24,6 +24,11 @@ export interface IStoryMapVirtualNodeDefinition {
   difficulty: StoryOpponentDifficulty;
   rewardNexus: number;
   rewardCardId?: string;
+  /** Solo REWARD_OBJECT: objeto del inventario a entregar (caramelo o mejora). Mismos tipos que la BD. */
+  rewardObjectType?: "LEVEL_CANDY" | "CARD_UPGRADE";
+  rewardObjectId?: string;
+  /** Copias a entregar (por defecto 1). */
+  rewardObjectQuantity?: number;
   rewardPlayerExperience: number;
   isBossDuel: boolean;
   unlockRequirementNodeId: string | null;

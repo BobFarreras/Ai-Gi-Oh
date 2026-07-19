@@ -3,6 +3,7 @@ import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IOpponentStrategy } from "@/core/services/opponent/types";
+import { RequestTrapActivationDecision } from "../match/useMatchRuntime.builders";
 
 export interface IOpponentTurnContext {
   gameState: GameState;
@@ -14,10 +15,7 @@ export interface IOpponentTurnContext {
   setActiveAttackerId: (value: string | null) => void;
   setRevealedEntities: (value: string[] | ((prev: string[]) => string[])) => void;
   setSelectedCard: (card: ICard | null) => void;
-  requestTrapActivationDecision: (
-    trapCard: ICard,
-    trigger: "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED" | "ON_OPPONENT_TRAP_ACTIVATED",
-  ) => Promise<boolean>;
+  requestTrapActivationDecision: RequestTrapActivationDecision;
 }
 
 export interface IOpponentStepTimings {

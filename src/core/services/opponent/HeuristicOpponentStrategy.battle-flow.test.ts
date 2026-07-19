@@ -273,4 +273,32 @@ describe("HeuristicOpponentStrategy BATTLE flow", () => {
 
     expect(strategy.chooseModeChange(state, "p2")).toBeNull();
   });
+
+  it("ficha 5: TODOS los perfiles repliegan a DEFENSA una entity que perderá el intercambio, aunque su defensa tampoco aguante (evita el trample)", () => {
+    // Bot con una entity en ATAQUE 1200/1000. Rival atacante 2000: la mata en ataque (y regala 800 de
+    // trample) y también rompe su defensa (1000 < 2000). En DEFENSA muere sin regalar daño → siempre mejor.
+    // Antes solo se replegaba si la defensa sobrevivía; ahora del perfil más flojo al más experto.
+    const baseState = createBaseState();
+    const state: GameState = {
+      ...baseState,
+      phase: "BATTLE",
+      playerA: {
+        ...baseState.playerA,
+        activeEntities: [
+          createBoardEntity("p1-crusher", { id: "p1-crusher-card", name: "Crusher", description: "", type: "ENTITY", faction: "BIG_TECH", cost: 5, attack: 2000, defense: 1500 }),
+        ],
+      },
+      playerB: {
+        ...baseState.playerB,
+        hand: [],
+        activeEntities: [
+          createBoardEntity("p2-mid", { id: "p2-mid-card", name: "Mid", description: "", type: "ENTITY", faction: "OPEN_SOURCE", cost: 3, attack: 1200, defense: 1000 }),
+        ],
+      },
+    };
+    for (const difficulty of ["EASY", "NORMAL", "HARD", "BOSS", "MASTER", "MYTHIC"] as const) {
+      const strategy = new HeuristicOpponentStrategy({ difficulty });
+      expect(strategy.chooseModeChange(state, "p2"), `perfil ${difficulty}`).toEqual({ instanceId: "p2-mid", newMode: "DEFENSE" });
+    }
+  });
 });

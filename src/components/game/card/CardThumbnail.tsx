@@ -7,6 +7,7 @@ import { ICard } from "@/core/entities/ICard";
 import { getCardLevelProgressMetrics } from "@/core/services/progression/card-level-rules";
 import { cn } from "@/lib/utils";
 import { resolveTypeBadge } from "./internal/card-frame-meta";
+import { CardUpgradeBadges } from "./internal/CardUpgradeBadges";
 import { CardThumbnailFooter } from "./internal/CardThumbnailFooter";
 import { CARD_THUMBNAIL_CLIP_PATHS, getCardTypeStyles } from "./internal/styles";
 
@@ -41,6 +42,8 @@ function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelect
   const isMasteryTier = versionTier >= 5;
   const shouldBypassImageOptimization = Boolean(card.renderUrl?.startsWith("/assets/renders/"));
   const levelMetrics = typeof level === "number" ? getCardLevelProgressMetrics(level, xp) : null;
+  // Badges ×N de objetos: misma fuente que la carta grande (card.upgradeCounts). Solo si hay mejoras.
+  const upgradeCounts = card.upgradeCounts ?? null;
   const [isArtLoaded, setIsArtLoaded] = useState(false);
   // Skeleton solo si se pidió, hay arte que cargar y aún no ha pintado (se retira al primer onLoad/onError).
   const shouldRenderArtSkeleton = showArtSkeleton && Boolean(card.renderUrl) && !isArtLoaded;
@@ -112,6 +115,8 @@ function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelect
               className={coverRender ? "z-10 object-cover object-top" : "z-10 object-contain p-px"}
             />
           ) : null}
+          {/* Solo iconos (sin ×N): en miniaturas el número tapaba el arte. Mismo sello que la carta grande. */}
+          <CardUpgradeBadges counts={upgradeCounts} variant="compact" />
         </div>
         {/* Nombre y barra de nivel. min-w-0 + block evita que el nombre empuje el ancho de la carta. */}
         <span className="z-10 block w-full min-w-0 truncate px-0.5 pt-0.5 text-center text-[7px] font-black uppercase leading-tight text-white">

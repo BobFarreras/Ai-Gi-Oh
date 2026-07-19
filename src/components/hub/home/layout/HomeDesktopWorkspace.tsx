@@ -1,6 +1,7 @@
 // src/components/hub/home/layout/HomeDesktopWorkspace.tsx - Distribución de escritorio para inspector, deck y almacén del Arsenal.
 "use client";
 
+import { resolveCardUpgradeCounts } from "@/core/services/progression/card-upgrade-rules";
 import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
 import { HomeCollectionPanel } from "@/components/hub/home/HomeCollectionPanel";
 import { HomeDeckPanel } from "@/components/hub/home/HomeDeckPanel";
@@ -18,6 +19,7 @@ export function HomeDesktopWorkspace(props: IHomeWorkspaceProps) {
           selectedCardMasteryPassiveSkillId={props.selectedCardMasteryPassiveSkillId}
           onEquip={props.onEquipSelectedCard}
           equipPendingObjectLabel={props.equipPendingObjectLabel}
+          upgradeCounts={resolveCardUpgradeCounts(props.selectedCard ? props.cardUpgradesById.get(props.selectedCard.id) : undefined)}
         />
       </div>
       <div className="min-h-0 min-w-0 overflow-visible rounded-xl border border-cyan-900/30 bg-black/40">

@@ -8,6 +8,7 @@ import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
 import { ArsenalSection, ArsenalSectionSwitch } from "@/components/hub/home/objects/ArsenalSectionSwitch";
 import { ArsenalObjectsView } from "@/components/hub/home/objects/ArsenalObjectsView";
 import { ArsenalObjectApplyOverlay } from "@/components/hub/home/objects/ArsenalObjectApplyOverlay";
+import { ArsenalObjectHistoryDialog } from "@/components/hub/home/objects/ArsenalObjectHistoryDialog";
 import { useArsenalObjects } from "@/components/hub/home/objects/use-arsenal-objects";
 import { ISelectableObject } from "@/components/hub/home/objects/arsenal-objects-shared";
 import { countRender } from "@/services/performance/dev-performance-telemetry";
@@ -34,11 +35,18 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
     () => new Map(state.collectionState.map((entry) => [entry.card.id, entry.card])),
     [state.collectionState],
   );
-  const [section, setSection] = useState<ArsenalSection>("CARDS");
+  // Nombres de carta para el historial de objetos (pinta "objeto → carta" sin cargar nada extra).
+  const cardNameById = useMemo(
+    () => new Map(state.collectionState.map((entry) => [entry.card.id, entry.card.name])),
+    [state.collectionState],
+  );
+  const [section, setSection] = useState<ArsenalSection>(props.initialSection ?? "CARDS");
   // Flujo A: carta elegida primero (desde "Equipar objeto") → se elige el objeto en la sección Objetos.
   const [objectTargetCard, setObjectTargetCard] = useState<ICard | null>(null);
   // Flujo B: objeto elegido primero (desde la sección Objetos) → se elige la carta en la sección Cartas.
   const [pendingEquipObject, setPendingEquipObject] = useState<ISelectableObject | null>(null);
+  // Historial de objetos aplicados (ficha 9b): se abre desde el botón junto al conmutador, en Objetos.
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   // Tras usar un caramelo, refleja el nuevo nivel/xp de la carta en el estado del arsenal (sin recargar): la
   // progresión es la MISMA fuente que usa el deck-builder para mostrar stats, así que la carta sube al volver.
@@ -71,6 +79,8 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
         next.set(cardId, {
           attackBonus: current.attackBonus + (stat === "ATTACK" ? value : 0),
           defenseBonus: current.defenseBonus + (stat === "DEFENSE" ? value : 0),
+          attackCount: (current.attackCount ?? 0) + (stat === "ATTACK" ? 1 : 0),
+          defenseCount: (current.defenseCount ?? 0) + (stat === "DEFENSE" ? 1 : 0),
         });
         return next;
       });
@@ -94,9 +104,15 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
     setSection(next);
   }, []);
   // Función de render (no un nodo): el buscador del arsenal aparece en varios sitios según el breakpoint y el
-  // conmutador se pinta junto a él en cada uno.
+  // conmutador se pinta junto a él en cada uno. El botón de historial solo aparece en la sección Objetos.
   const renderSectionSwitch = useCallback(
-    () => <ArsenalSectionSwitch section={section} onSectionChange={handleSectionChange} />,
+    () => (
+      <ArsenalSectionSwitch
+        section={section}
+        onSectionChange={handleSectionChange}
+        onOpenHistory={section === "OBJECTS" ? () => setIsHistoryOpen(true) : undefined}
+      />
+    ),
     [handleSectionChange, section],
   );
   // Flujo A — "Equipar objeto" (detalle de carta): trae esa carta a la sección Objetos. Solo Entity.
@@ -255,6 +271,11 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
           onApplyToTarget={(object) => { if (objectTargetCard) { void objectsRuntime.apply(object, objectTargetCard); setObjectTargetCard(null); } }}
           onEquipObject={handleEquipObject}
           onBackToHub={() => router.push("/hub")}
+        />
+        <ArsenalObjectHistoryDialog
+          isOpen={isHistoryOpen}
+          cardNameById={cardNameById}
+          onClose={() => setIsHistoryOpen(false)}
         />
         {objectOverlay}
       </>

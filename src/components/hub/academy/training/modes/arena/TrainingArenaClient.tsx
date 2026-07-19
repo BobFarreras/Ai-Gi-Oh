@@ -33,6 +33,9 @@ interface ITrainingArenaClientProps {
   selectedTier: number;
   completionTicket: string;
   completionBattleId: string;
+  playerStartingLpBonus?: number;
+  playerMaxEnergyBonus?: number;
+  playerTurn1EnergyBonus?: number;
   tiers: Array<{
     tier: number;
     code: string;
@@ -57,6 +60,8 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
   const [resultAction, setResultAction] = useState(() => ({ label: "Volver a selección", href: ACADEMY_HOME_ROUTE }));
   const [isTierSwitching, startTierTransition] = useTransition();
   const hasPostedRef = useRef(false);
+  // Clave de idempotencia de la Recaudación: UNA por instancia de duelo (los reintentos la reutilizan).
+  const passiveNexusOperationIdRef = useRef<string>(crypto.randomUUID());
   const selectedTierMeta = props.tiers.find((tier) => tier.tier === props.selectedTier) ?? props.tiers[0];
   // Recuerda el último nivel elegido: al volver a Arena sin ?tier, el server lo lee de esta cookie.
   useEffect(() => {
@@ -89,7 +94,7 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
   /**
    * Sincroniza cierre de duelo una única vez para mantener idempotencia por `matchSeed`.
    */
-  async function handleMatchResolved(result: { winnerPlayerId: string | "DRAW"; playerId: string; matchSeed: string; flawless?: boolean }) {
+  async function handleMatchResolved(result: { winnerPlayerId: string | "DRAW"; playerId: string; matchSeed: string; flawless?: boolean; passiveNexusEarned?: number }) {
     if (hasPostedRef.current) return;
     hasPostedRef.current = true;
     const outcome = resolveOutcome(result);
@@ -101,9 +106,13 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
         outcome: resolveOutcome(result),
         completionTicket: props.completionTicket,
         flawless: result.flawless ?? false,
+        // Recaudación (ficha 3): reporte del motor; el servidor topa y acredita. Clave estable por duelo.
+        passiveNexusEarned: result.passiveNexusEarned ?? 0,
+        passiveNexusOperationId: passiveNexusOperationIdRef.current,
       });
       setRewardSummary({
-        rewardNexus: payload.reward.nexus,
+        // El Nexus de la Recaudación acreditado se suma al total mostrado: es Nexus recibido en este cierre.
+        rewardNexus: payload.reward.nexus + payload.passiveNexusCredited,
         rewardPlayerExperience: payload.reward.playerExperience,
         rewardCards: [],
       });
@@ -151,6 +160,9 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
             opponentDeck: props.opponentDeck,
             opponentFusionDeck: props.opponentFusionDeck,
             opponentName: props.opponentName,
+            playerStartingLpBonus: props.playerStartingLpBonus,
+            playerMaxEnergyBonus: props.playerMaxEnergyBonus,
+            playerTurn1EnergyBonus: props.playerTurn1EnergyBonus,
           }}
           playerAvatarUrl="/assets/story/player/bob.webp"
           opponentAvatarUrl={props.opponentAvatarUrl}

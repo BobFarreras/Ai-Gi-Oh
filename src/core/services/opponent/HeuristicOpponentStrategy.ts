@@ -10,10 +10,12 @@ import { canNormalSummon } from "@/core/use-cases/game-engine/state/summon-rules
 import { chooseFusionMaterials } from "@/core/services/opponent/heuristic-fusion-materials";
 import { IStoryAiProfile, normalizeStoryAiProfile } from "@/core/services/opponent/difficulty/story-ai-profile";
 import { buildPlayableCardDecisions } from "@/core/services/opponent/select-opponent-play";
-import { shouldHoldFragileFrontline } from "@/core/services/opponent/opponent-tactical-context";
+import { shouldHoldFragileFrontline, shouldHoldToBaitReactiveTrap } from "@/core/services/opponent/opponent-tactical-context";
 import { IOpponentModeChangeDecision } from "@/core/services/opponent/types";
 import { shouldSkipPlayForEnergy } from "@/core/services/opponent/opponent-energy-plan";
-import { chooseFusionSetupPlay } from "@/core/services/opponent/opponent-fusion-plan";
+import { chooseFusionSetupPlay, shouldHoldEnergyForFusion } from "@/core/services/opponent/opponent-fusion-plan";
+import { isPendingFusionMaterial } from "@/core/services/opponent/opponent-fusion-execution";
+import { chooseEntityZoneReplacement, chooseExecutionZoneReplacement } from "@/core/services/opponent/opponent-zone-replacement";
 
 function getPlayers(state: GameState, opponentId: string): { opponent: IPlayer; target: IPlayer } {
   if (state.playerA.id === opponentId) {
@@ -40,9 +42,16 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
   public choosePlay(state: GameState, opponentId: string): IOpponentPlayDecision | null {
     const { opponent, target } = getPlayers(state, opponentId);
     const playable = buildPlayableCardDecisions({ opponent, target, profile: this.profile, aiProfile: this.aiProfile });
-    const fusionSetupPlay = chooseFusionSetupPlay(state, opponent, playable);
+    // Planificar/completar fusiones es jugada BÁSICA universal (todos los tiers): montar la fusión si se tienen
+    // las piezas. Un EASY también debe saber hacerla.
+    const fusionSetupPlay = chooseFusionSetupPlay(state, opponent, target, playable);
     if (fusionSetupPlay) {
       return fusionSetupPlay;
+    }
+    // Par de fusión listo + ejecutable en mano sin energía suficiente: no malgastar energía este turno; esperar
+    // y activarla el siguiente (petición del usuario). Pasa el turno guardando la energía.
+    if (shouldHoldEnergyForFusion(opponent, target)) {
+      return null;
     }
     if (shouldSkipPlayForEnergy({ opponent, target, profile: this.profile, aiProfile: this.aiProfile, playableDecisions: playable })) {
       return null;
@@ -50,6 +59,10 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
     for (const decision of playable) {
       const { card, mode } = decision;
       if (shouldHoldFragileFrontline({ card, mode, opponent, target, profile: this.profile, aiProfile: this.aiProfile })) {
+        continue;
+      }
+      // Gating escalonado (ficha 5): cebar una trampa reactiva retrasando el desarrollo es skill de experto (MASTER+).
+      if (this.profile.skill.baitReactiveTrap && shouldHoldToBaitReactiveTrap({ card, mode, opponent, target })) {
         continue;
       }
       if (card.type === "FUSION") {
@@ -61,22 +74,33 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
       }
 
       if (card.type === "ENTITY") {
-        if (!canNormalSummon(state) || opponent.activeEntities.length >= 3) {
+        if (!canNormalSummon(state)) {
           continue;
+        }
+        // Zona de entities llena: ficha 5 fase 3 — rotar la peor si la nueva es claramente mejor.
+        if (opponent.activeEntities.length >= 3) {
+          const replaceEntityInstanceId = chooseEntityZoneReplacement(opponent, card);
+          if (!replaceEntityInstanceId) continue;
+          return { cardId: card.id, mode, replaceEntityInstanceId };
         }
         return { cardId: card.id, mode };
       }
 
       if (card.type === "EXECUTION") {
+        // Zona de magias/trampas llena: reemplazar la peor puesta si la nueva compensa.
         if (opponent.activeExecutions.length >= 3) {
-          continue;
+          const replaceExecutionInstanceId = chooseExecutionZoneReplacement(opponent, card);
+          if (!replaceExecutionInstanceId) continue;
+          return { cardId: card.id, mode, replaceExecutionInstanceId };
         }
         return { cardId: card.id, mode };
       }
 
       if (card.type === "TRAP") {
         if (opponent.activeExecutions.length >= 3) {
-          continue;
+          const replaceExecutionInstanceId = chooseExecutionZoneReplacement(opponent, card);
+          if (!replaceExecutionInstanceId) continue;
+          return { cardId: card.id, mode: "SET", replaceExecutionInstanceId };
         }
 
         return { cardId: card.id, mode: "SET" };
@@ -88,11 +112,15 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
 
   public chooseAttack(state: GameState, opponentId: string): IOpponentAttackDecision | null {
     const { opponent, target } = getPlayers(state, opponentId);
+    // NO atacar con materiales de una fusión pendiente (universal): hay que conservarlos vivos hasta juntar el
+    // par. Se marcan como "ya atacaron" en la copia local para excluirlos como atacantes, sin sacarlos del
+    // tablero (siguen defendiendo). Ficha 5: fusión efectiva.
     const normalizedOpponent: IPlayer = {
       ...opponent,
-      activeEntities: opponent.activeEntities.map((entity) =>
-        entity.isNewlySummoned ? { ...entity, isNewlySummoned: false } : entity,
-      ),
+      activeEntities: opponent.activeEntities.map((entity) => {
+        if (isPendingFusionMaterial(entity.card, opponent)) return { ...entity, hasAttackedThisTurn: true };
+        return entity.isNewlySummoned ? { ...entity, isNewlySummoned: false } : entity;
+      }),
     };
 
     return chooseBestAttack(normalizedOpponent, target, this.profile, isDirectAttackBlocked(state.activeStatusEffects, opponentId));
@@ -141,11 +169,13 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
   }
 
   /**
-   * Repliega a DEFENSA una entity que está en ATAQUE cuando es un tanque amenazado: su defensa
-   * sobreviviría al mayor atacante rival pero su ataque no. Antes se quedaban en ATAQUE (menor valor)
-   * y morían regalando daño. Sólo se replega si NO puede ganar ningún intercambio atacando, lo que
-   * garantiza que la fase de promoción no la vuelva a pasar a ATAQUE (sin oscilación): cada repliegue
-   * reduce de forma monótona el número de tanques en ATAQUE candidatos.
+   * Repliega a DEFENSA una entity en ATAQUE que va a PERDER el intercambio contra el mejor atacante rival.
+   * Regla base del juego (CombatService) que TODOS los perfiles deben conocer: si la matan estando en
+   * ATAQUE, además reparte "trample" (daño directo a su dueño); en DEFENSA, si la matan NO hay daño
+   * penetrante, y su DEF puede incluso rebotar. Por eso, si `ataque < amenaza rival`, DEFENSA es SIEMPRE
+   * mejor (sobreviva o no la defensa) — antes solo se replegaba si la defensa aguantaba, dejando morir en
+   * ataque a las que no. Sólo se replega si NO puede ganar ningún intercambio atacando (anti-oscilación con
+   * la fase de promoción: cada repliegue reduce de forma monótona los tanques en ATAQUE candidatos).
    */
   private chooseAttackerToDefend(opponent: IPlayer, target: IPlayer): IOpponentModeChangeDecision | null {
     const attackers = opponent.activeEntities.filter((entity) =>
@@ -165,11 +195,11 @@ export class HeuristicOpponentStrategy implements IOpponentStrategy {
     const orderedTanks = [...attackers].sort((left, right) => (right.card.defense ?? 0) - (left.card.defense ?? 0));
     for (const tank of orderedTanks) {
       const attack = tank.card.attack ?? 0;
-      const defense = tank.card.defense ?? 0;
       // Guard anti-oscilación: si podría ganar un intercambio atacando, la promoción lo re-subiría.
       if (targetStats.some((stat) => attack >= stat)) continue;
       if ((this.profile.key === "MASTER" || this.profile.key === "MYTHIC") && canPressureSet && attack >= 1700) continue;
-      if (defense > attack && defense >= rivalThreat && attack < rivalThreat) {
+      // Pierde el intercambio contra el mayor atacante rival → en ataque muere Y regala trample. DEFENSA mejor.
+      if (attack < rivalThreat) {
         return { instanceId: tank.instanceId, newMode: "DEFENSE" };
       }
     }

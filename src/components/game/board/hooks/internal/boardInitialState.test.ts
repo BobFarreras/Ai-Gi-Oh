@@ -41,6 +41,38 @@ describe("boardInitialState", () => {
     expect(firstState.playerA.hand.map((card) => card.id)).toEqual(secondState.playerA.hand.map((card) => card.id));
   });
 
+  it("aplica el bonus de combate del árbol SOLO al jugador local (playerA), nunca al rival", () => {
+    const base = createInitialBoardState();
+    const state = createInitialBoardState({ playerStartingLpBonus: 300, playerMaxEnergyBonus: 2 });
+    expect(state.playerA.maxHealthPoints).toBe(base.playerA.maxHealthPoints + 300);
+    expect(state.playerA.healthPoints).toBe(base.playerA.healthPoints + 300);
+    expect(state.playerA.maxEnergy).toBe(base.playerA.maxEnergy + 2);
+    expect(state.playerA.currentEnergy).toBe(base.playerA.currentEnergy + 2);
+    // El rival queda intacto.
+    expect(state.playerB.maxHealthPoints).toBe(base.playerB.maxHealthPoints);
+    expect(state.playerB.maxEnergy).toBe(base.playerB.maxEnergy);
+  });
+
+  it("sin bonus deja el estado base sin tocar", () => {
+    const state = createInitialBoardState({ playerStartingLpBonus: 0, playerMaxEnergyBonus: 0 });
+    expect(state.playerA.maxHealthPoints).toBe(8000);
+    expect(state.playerA.maxEnergy).toBe(10);
+  });
+
+  it("Arranque en Frío: si el jugador ARRANCA, concede la energía extra en el turno 1 por encima del tope", () => {
+    const state = createInitialBoardState({ playerId: "me", starterPlayerId: "me", opponentId: "rival", playerTurn1EnergyBonus: 1 });
+    // maxEnergy 10, pero el turno 1 (ya activo) arranca con 11.
+    expect(state.playerA.currentEnergy).toBe(11);
+    expect(state.playerA.maxEnergy).toBe(10);
+    expect(state.firstTurnEnergyBonusByPlayerId?.me ?? 0).toBe(0);
+  });
+
+  it("Arranque en Frío: si el jugador NO arranca, difiere la energía a su primer turno (motor)", () => {
+    const state = createInitialBoardState({ playerId: "me", starterPlayerId: "rival", opponentId: "rival", playerTurn1EnergyBonus: 1 });
+    expect(state.playerA.currentEnergy).toBe(10); // aún no se concede
+    expect(state.firstTurnEnergyBonusByPlayerId?.me).toBe(1);
+  });
+
   it("permite inyectar identidad de jugador y oponente sin hardcode local", () => {
     const state = createInitialBoardState({
       playerId: "player-123",

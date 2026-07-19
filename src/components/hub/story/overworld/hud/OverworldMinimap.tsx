@@ -20,6 +20,7 @@ const DOT: Partial<Record<OverworldObjectKind, string>> = {
   BOSS: "#c026d3",
   REWARD_CARD: "#f59e0b",
   REWARD_NEXUS: "#22d3ee",
+  REWARD_OBJECT: "#fbbf24",
   EVENT: "#2dd4bf",
   WARP: "#818cf8",
   GATE: "#eab308",

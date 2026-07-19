@@ -86,6 +86,21 @@ describe("apply-card-progression-to-card", () => {
     expect(result.defense).toBe(1050);
   });
 
+  it("adjunta los contadores ×N de objetos a la carta (fuente única de los badges)", () => {
+    // Con counts: la carta hidratada los lleva → tablero, arsenal y overlay pintan el badge sin props extra.
+    const withCounts = applyCardProgressionToCard(ENTITY_CARD, createProgress(20), {
+      attackBonus: 300,
+      defenseBonus: 200,
+      attackCount: 3,
+      defenseCount: 2,
+    });
+    expect(withCounts.upgradeCounts).toEqual({ attack: 3, defense: 2 });
+  });
+
+  it("sin mejoras la carta no lleva contadores (null = no se pinta badge)", () => {
+    expect(applyCardProgressionToCard(ENTITY_CARD, createProgress(20)).upgradeCounts).toBeNull();
+  });
+
   it("en EXECUTION solo reduce coste al nivel 50", () => {
     const atLevel30 = applyCardProgressionToCard(EXEC_CARD, createProgress(30));
     expect(atLevel30.cost).toBe(2);

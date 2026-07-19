@@ -13,6 +13,9 @@ import { isMobileLayoutViewport } from "@/components/internal/layout-breakpoints
 
 const CARD_WIDTH_PX = 260;
 const CARD_HEIGHT_PX = 380;
+// La cinemática dura ~1.1s; tras ella se deja 2s para que el jugador vea el resultado (y el badge nuevo en la
+// carta) y se cierra sola. Es la red de seguridad por si el botón "Continuar" no registra el toque.
+const AUTO_CLOSE_MS = 1100 + 2000;
 
 export interface IArsenalObjectApplyResult {
   card: ICard;
@@ -37,6 +40,12 @@ export function ArsenalObjectApplyOverlay({ result, onClose }: IArsenalObjectApp
     if (!result) return;
     play("EVOLUTION_OVERLAY");
   }, [result, play]);
+  // Autocierre: se reprograma en cada aplicación (result cambia) y se limpia al desmontar o cerrar a mano.
+  useEffect(() => {
+    if (!result) return;
+    const timer = window.setTimeout(onClose, AUTO_CLOSE_MS);
+    return () => window.clearTimeout(timer);
+  }, [result, onClose]);
   if (!result) return null;
   const cardScale = isMobileViewport ? 0.52 : 0.82;
 
@@ -60,7 +69,7 @@ export function ArsenalObjectApplyOverlay({ result, onClose }: IArsenalObjectApp
           initial={{ opacity: 0.4, scale: 0.8 }}
           animate={{ opacity: [0.4, 0.9, 0.35], scale: [0.8, 1.45, 1.05] }}
           transition={{ duration: 1.1, times: [0, 0.55, 1] }}
-          className="absolute h-[280px] w-[280px] rounded-full bg-[radial-gradient(circle,rgba(251,146,60,0.35),rgba(245,158,11,0.22),transparent_70%)] blur-2xl sm:h-[440px] sm:w-[440px]"
+          className="pointer-events-none absolute h-[280px] w-[280px] rounded-full bg-[radial-gradient(circle,rgba(251,146,60,0.35),rgba(245,158,11,0.22),transparent_70%)] blur-2xl sm:h-[440px] sm:w-[440px]"
         />
         <motion.div
           className="mb-4 rounded border border-amber-400/45 bg-[#1a1206]/85 px-4 py-2 text-center font-display text-sm font-black uppercase tracking-[0.16em] text-amber-100 sm:text-base"

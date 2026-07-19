@@ -87,7 +87,10 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
           onPlayAction={props.onPlayAction}
         />
       )}
-      {props.isMobileLayout && props.selection.shouldRenderMobileOverlay && (
+      {/* Durante un prompt de decisión de trampa NO se muestra el overlay de carta seleccionada: su z (320) queda
+          por encima del diálogo del prompt (280) y sus taps (cerrar) interceptaban las flechas del carrusel, lo
+          que en móvil deseleccionaba y cancelaba la trampa. El prompt tiene su propio detalle + acciones. */}
+      {props.isMobileLayout && props.selection.shouldRenderMobileOverlay && !props.pendingTrapActivationPrompt && (
         <BoardMobileSelectedCardOverlay
           card={props.selection.selectedOverlayCard}
           hasSummoned={props.isSummonBlocked}
@@ -116,6 +119,7 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
             onActivateSelectedExecution={props.onActivateSelectedExecution}
             onActivatePendingTrap={props.onActivatePendingTrap}
             onSkipPendingTrap={props.onSkipPendingTrap}
+            onCyclePendingTrap={props.onCyclePendingTrap}
           />
         </div>
       )}
