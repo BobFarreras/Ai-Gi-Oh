@@ -166,9 +166,10 @@ function resolveAcademyLayout(viewportWidth: number): ResolvedLayout {
     arenaPos: [-1.8, 0, -1.9],
     docPos: [1.8, 0, -1.9],
     skillTreePos: [5.4, 0, 0.2],
-    cameraPosition: [0, 2.7, 12.6],
+    // Cámara algo más cerca + FOV más cerrado = más zoom en desktop (los 4 pilares siguen en cuadro).
+    cameraPosition: [0, 2.6, 11.2],
     lookAtTarget: [0, 1.5, -0.5],
-    fov: 50,
+    fov: 46,
     pillarScale: 1,
   };
 }
@@ -179,15 +180,25 @@ function AcademyCameraRig({ target, zoom }: { target: [number, number, number]; 
   const camera = useThree((state) => state.camera);
   const zoomTargetVec = useMemo(() => (zoom ? new THREE.Vector3(...zoom.targetPos) : null), [zoom]);
   const zoomCenterVec = useMemo(() => (zoom ? new THREE.Vector3(...zoom.center) : null), [zoom]);
+  // Punto al que mira la cámara, animado. Arranca en el target de reposo (la vista REAL actual) para
+  // que el zoom no "salte" de orientación: tanto la posición como el lookAt transicionan desde el estado
+  // real de la cámara hacia el nodo.
+  const lookAtRef = useRef(new THREE.Vector3(...target));
   useEffect(() => {
-    // Fuera del zoom, la cámara mira al centro de la escena (se re-orienta al cambiar el layout).
-    if (!zoom) camera.lookAt(new THREE.Vector3(...target));
+    // Fuera del zoom, la cámara mira al centro de la escena (se re-orienta al cambiar el layout) y el
+    // punto de mirada animado se resincroniza, para que el PRÓXIMO zoom empiece desde la vista real.
+    if (!zoom) {
+      lookAtRef.current.set(target[0], target[1], target[2]);
+      camera.lookAt(lookAtRef.current);
+    }
   }, [camera, target, zoom]);
   useFrame((_, delta) => {
     if (!zoomTargetVec || !zoomCenterVec) return;
-    // Acerca la cámara al holograma pulsado y la mantiene mirándolo (lerp/lookAt son métodos).
-    camera.position.lerp(zoomTargetVec, 1 - Math.exp(-ZOOM_LAMBDA * delta));
-    camera.lookAt(zoomCenterVec);
+    const t = 1 - Math.exp(-ZOOM_LAMBDA * delta);
+    // Posición Y orientación se acercan suavemente DESDE el estado actual → sin salto al iniciar.
+    camera.position.lerp(zoomTargetVec, t);
+    lookAtRef.current.lerp(zoomCenterVec, t);
+    camera.lookAt(lookAtRef.current);
   });
   return null;
 }
