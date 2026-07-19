@@ -28,6 +28,8 @@ export interface ICreateInitialBoardStateInput {
    */
   playerStartingLpBonus?: number;
   playerMaxEnergyBonus?: number;
+  /** Arranque en Frío (ficha 8): +energía one-time en el primer turno del jugador, por encima del tope. */
+  playerTurn1EnergyBonus?: number;
 }
 
 export function createInitialBoardState(input?: ICreateInitialBoardStateInput): GameState {
@@ -53,8 +55,13 @@ export function createInitialBoardState(input?: ICreateInitialBoardStateInput): 
 
   const lpBonus = Math.max(0, Math.floor(input?.playerStartingLpBonus ?? 0));
   const energyBonus = Math.max(0, Math.floor(input?.playerMaxEnergyBonus ?? 0));
-  if (lpBonus === 0 && energyBonus === 0) return baseState;
+  const turn1EnergyBonus = Math.max(0, Math.floor(input?.playerTurn1EnergyBonus ?? 0));
+  if (lpBonus === 0 && energyBonus === 0 && turn1EnergyBonus === 0) return baseState;
   const a = baseState.playerA;
+  // Arranque en Frío: si el jugador local ARRANCA (turno 1 ya activo), se concede ahora, por encima del tope;
+  // si no arranca, se difiere a su primer turno vía next-phase (firstTurnEnergyBonusByPlayerId).
+  const isPlayerAStarter = baseState.activePlayerId === a.id;
+  const starterTurn1Energy = isPlayerAStarter ? turn1EnergyBonus : 0;
   return {
     ...baseState,
     playerA: {
@@ -62,7 +69,10 @@ export function createInitialBoardState(input?: ICreateInitialBoardStateInput): 
       maxHealthPoints: a.maxHealthPoints + lpBonus,
       healthPoints: a.healthPoints + lpBonus,
       maxEnergy: a.maxEnergy + energyBonus,
-      currentEnergy: a.currentEnergy + energyBonus,
+      currentEnergy: a.currentEnergy + energyBonus + starterTurn1Energy,
     },
+    firstTurnEnergyBonusByPlayerId: !isPlayerAStarter && turn1EnergyBonus > 0
+      ? { ...baseState.firstTurnEnergyBonusByPlayerId, [a.id]: turn1EnergyBonus }
+      : baseState.firstTurnEnergyBonusByPlayerId,
   };
 }

@@ -35,6 +35,7 @@ export interface IStoryDuelRuntimeData {
   /** Bonus de combate del árbol (ficha 8) SOLO para el jugador local. */
   playerStartingLpBonus: number;
   playerMaxEnergyBonus: number;
+  playerTurn1EnergyBonus: number;
 }
 
 function applyStoryDeckEntryToCard(
@@ -120,5 +121,6 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
     opponentAiProfile: normalizeStoryAiProfile(duel.opponentAiProfile, duel.opponentDifficulty),
     playerStartingLpBonus: combatModifiers.startingLpBonus,
     playerMaxEnergyBonus: combatModifiers.maxEnergyBonus,
+    playerTurn1EnergyBonus: combatModifiers.turn1EnergyBonus,
   };
 }

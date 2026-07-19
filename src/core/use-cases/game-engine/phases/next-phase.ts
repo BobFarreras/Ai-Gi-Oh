@@ -82,16 +82,19 @@ export function nextPhase(state: GameState): GameState {
     const pendingEnergyBonus = state.pendingEnergyBonusByPlayerId?.[nextActivePlayerId] ?? 0;
     const totalTurnStartBonus = totalMasteryBonus + pendingEnergyBonus;
     const turnEnergyGain = 2 + totalTurnStartBonus;
+    // Arranque en Frío (ficha 8): +energía one-time en el PRIMER turno del jugador, POR ENCIMA del tope (se suma
+    // tras el clamp). Solo para el no-starter; al starter se le aplica en la inicialización del tablero.
+    const firstTurnEnergyBonus = state.firstTurnEnergyBonusByPlayerId?.[nextActivePlayerId] ?? 0;
     const previousEnergy = isNextPlayerA ? state.playerA.currentEnergy : state.playerB.currentEnergy;
     const nextPlayerA = {
       ...state.playerA,
-      currentEnergy: isNextPlayerA ? Math.min(state.playerA.maxEnergy, state.playerA.currentEnergy + turnEnergyGain) : state.playerA.currentEnergy,
+      currentEnergy: isNextPlayerA ? Math.min(state.playerA.maxEnergy, state.playerA.currentEnergy + turnEnergyGain) + firstTurnEnergyBonus : state.playerA.currentEnergy,
       // El jugador cuyo turno termina (el saliente) descuenta los bloqueos de sus entities.
       activeEntities: resetEntitiesForNewTurn(state.playerA.activeEntities, !isNextPlayerA),
     };
     const nextPlayerB = {
       ...state.playerB,
-      currentEnergy: isNextPlayerA ? state.playerB.currentEnergy : Math.min(state.playerB.maxEnergy, state.playerB.currentEnergy + turnEnergyGain),
+      currentEnergy: isNextPlayerA ? state.playerB.currentEnergy : Math.min(state.playerB.maxEnergy, state.playerB.currentEnergy + turnEnergyGain) + firstTurnEnergyBonus,
       activeEntities: resetEntitiesForNewTurn(state.playerB.activeEntities, isNextPlayerA),
     };
     // Aprendizaje Continuo / Regeneración: efectos de pasiva mastery sobre el jugador que arranca turno.
@@ -119,6 +122,10 @@ export function nextPhase(state: GameState): GameState {
       pendingEnergyBonusByPlayerId: pendingEnergyBonus > 0
         ? { ...state.pendingEnergyBonusByPlayerId, [nextActivePlayerId]: 0 }
         : state.pendingEnergyBonusByPlayerId,
+      // Arranque en Frío: one-time, se limpia tras concederlo en el primer turno del jugador.
+      firstTurnEnergyBonusByPlayerId: firstTurnEnergyBonus > 0
+        ? { ...state.firstTurnEnergyBonusByPlayerId, [nextActivePlayerId]: 0 }
+        : state.firstTurnEnergyBonusByPlayerId,
     };
 
     const energyAfterGain = isNextPlayerA ? nextState.playerA.currentEnergy : nextState.playerB.currentEnergy;

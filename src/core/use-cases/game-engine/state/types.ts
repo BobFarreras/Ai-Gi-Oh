@@ -127,6 +127,13 @@ export interface GameState {
    */
   pendingEnergyBonusByPlayerId?: Record<string, number>;
   /**
+   * Energía extra one-time del árbol de habilidades "Arranque en Frío" (ficha 8), por jugador. Se concede en
+   * el PRIMER turno de ese jugador POR ENCIMA del tope (a diferencia de la Sobrecarga, que respeta maxEnergy)
+   * y se limpia entonces. Al starter se le aplica en la inicialización (su turno 1 ya está activo); al no-starter
+   * se le concede vía next-phase al arrancar su primer turno. Solo PvE. Determinista → correcto en multi.
+   */
+  firstTurnEnergyBonusByPlayerId?: Record<string, number>;
+  /**
    * Transitorio dentro de una misma resolución de ataque: instanceId del atacante cuyo ataque ha sido
    * ANULADO por una trampa reactiva sin destruir al atacante (Flutter Enjambre en directo / Escudo
    * Metasploit a entity). `executeAttack` lo consume y lo limpia; no persiste entre acciones.

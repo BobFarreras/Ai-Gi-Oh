@@ -85,6 +85,7 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
         completionBattleId={completionBattleId}
         playerStartingLpBonus={runtime.combatModifiers.startingLpBonus}
         playerMaxEnergyBonus={runtime.combatModifiers.maxEnergyBonus}
+        playerTurn1EnergyBonus={runtime.combatModifiers.turn1EnergyBonus}
         selectedTier={runtime.effectiveTier}
         tiers={runtime.tiers.map((tier) => ({
           tier: tier.tier,

@@ -149,6 +149,11 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
             ))}
           </div>
           <p className="mt-2.5 text-xs leading-relaxed text-slate-400">{node.node.display.blurb}</p>
+          {node.node.branch === "COMBAT" && (
+            <p className="mt-1.5 flex items-center gap-1 font-display text-[9px] uppercase tracking-wider text-cyan-300/70">
+              <Bolt className="h-3 w-3" /> Efecto solo en Story y Arena
+            </p>
+          )}
           {!node.prerequisitesMet && (
             <div className="mt-2 flex items-center gap-1.5 text-[11px] text-amber-300/90">
               <Lock className="h-3.5 w-3.5" />
