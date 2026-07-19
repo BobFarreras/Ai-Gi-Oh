@@ -4,7 +4,7 @@
 // la autoridad es el servidor (tras subir, re-lee el estado — nada de puntos en el cliente).
 "use client";
 
-import { useMemo, useState, type ComponentType } from "react";
+import { useMemo, useRef, useState, type ComponentType } from "react";
 import {
   BatteryCharging, Bolt, CircleDollarSign, Coins, Cpu, Crown, GraduationCap, Heart, Lock, Medal,
   ShieldHalf, type LucideProps,
@@ -53,6 +53,8 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeBranch, setActiveBranch] = useState<BranchTab>("COMBAT");
+  // Retiene el último nodo mostrado en el bottom-sheet para animar la SALIDA con contenido (no vacío).
+  const sheetNodeRef = useRef<ISkillTreeNodeView | null>(null);
 
   const viewportWidth = useViewportWidth();
   // Móvil / pantallas estrechas: una rama a la vez con selector (sin scroll). Desktop: árbol completo.
@@ -125,43 +127,50 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
   }
 
   const xpPct = tree.xpForNext > 0 ? Math.min(100, Math.round((tree.xpIntoLevel / tree.xpForNext) * 100)) : 0;
+  const pointsAvailable = tree.pointsAvailable;
   const showPanel = Boolean(selected && visibleIds.has(selected.node.id));
-  const panelColor = selected ? branchColor(selected.node.branch) : "#22d3ee";
-  const panelBody = selected ? (
-    <>
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-25" />
-      <div className="relative">
-        <div className="flex items-center justify-between gap-2">
-          <div className="font-display text-sm tracking-wide text-slate-100">{selected.node.display.name}</div>
-          <div className="font-display text-xs" style={{ color: panelColor }}>Nv. {selected.rank}/{selected.node.maxRank}</div>
-        </div>
-        <div className="mt-2 flex gap-1">
-          {Array.from({ length: selected.node.maxRank }).map((_, i) => (
-            <span key={i} className="h-1.5 flex-1 rounded-full" style={{ background: i < selected.rank ? panelColor : "rgba(100,116,139,0.3)", boxShadow: i < selected.rank ? `0 0 6px ${panelColor}` : "none" }} />
-          ))}
-        </div>
-        <p className="mt-2.5 text-xs leading-relaxed text-slate-400">{selected.node.display.blurb}</p>
-        {!selected.prerequisitesMet && (
-          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-amber-300/90">
-            <Lock className="h-3.5 w-3.5" />
-            {selected.node.prerequisites.map((p) => `${nodeById.get(p.nodeId)?.node.display.name ?? p.nodeId} Nv.${p.minRank}`).join(" · ")}
+  // Nodo que pinta el bottom-sheet: el actual si está abierto; si no, el último (para animar la salida).
+  if (showPanel && selected) sheetNodeRef.current = selected;
+  const sheetNode = showPanel ? selected : sheetNodeRef.current;
+
+  function renderPanel(node: ISkillTreeNodeView) {
+    const c = branchColor(node.node.branch);
+    return (
+      <>
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-25" />
+        <div className="relative">
+          <div className="flex items-center justify-between gap-2">
+            <div className="font-display text-sm tracking-wide text-slate-100">{node.node.display.name}</div>
+            <div className="font-display text-xs" style={{ color: c }}>Nv. {node.rank}/{node.node.maxRank}</div>
           </div>
-        )}
-        <button
-          type="button"
-          disabled={busy || !selected.isUnlockable}
-          onClick={() => rankUp(selected.node.id)}
-          className="mt-3 w-full border border-cyan-400/60 bg-cyan-400/15 py-2 font-display text-xs uppercase tracking-widest text-cyan-100 shadow-[0_0_16px_rgba(34,211,238,0.25)] transition enabled:hover:bg-cyan-400/25 disabled:cursor-not-allowed disabled:opacity-40"
-          style={{ clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)" }}
-        >
-          {selected.isMaxed ? "Al máximo"
-            : !selected.prerequisitesMet ? "Bloqueado"
-            : selected.nextCost !== null && tree.pointsAvailable < selected.nextCost ? "Puntos insuficientes"
-            : `Subir a Nv.${selected.rank + 1} · ${selected.nextCost} pt`}
-        </button>
-      </div>
-    </>
-  ) : null;
+          <div className="mt-2 flex gap-1">
+            {Array.from({ length: node.node.maxRank }).map((_, i) => (
+              <span key={i} className="h-1.5 flex-1 rounded-full" style={{ background: i < node.rank ? c : "rgba(100,116,139,0.3)", boxShadow: i < node.rank ? `0 0 6px ${c}` : "none" }} />
+            ))}
+          </div>
+          <p className="mt-2.5 text-xs leading-relaxed text-slate-400">{node.node.display.blurb}</p>
+          {!node.prerequisitesMet && (
+            <div className="mt-2 flex items-center gap-1.5 text-[11px] text-amber-300/90">
+              <Lock className="h-3.5 w-3.5" />
+              {node.node.prerequisites.map((p) => `${nodeById.get(p.nodeId)?.node.display.name ?? p.nodeId} Nv.${p.minRank}`).join(" · ")}
+            </div>
+          )}
+          <button
+            type="button"
+            disabled={busy || !node.isUnlockable}
+            onClick={() => rankUp(node.node.id)}
+            className="mt-3 w-full border border-cyan-400/60 bg-cyan-400/15 py-2 font-display text-xs uppercase tracking-widest text-cyan-100 shadow-[0_0_16px_rgba(34,211,238,0.25)] transition enabled:hover:bg-cyan-400/25 disabled:cursor-not-allowed disabled:opacity-40"
+            style={{ clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)" }}
+          >
+            {node.isMaxed ? "Al máximo"
+              : !node.prerequisitesMet ? "Bloqueado"
+              : node.nextCost !== null && pointsAvailable < node.nextCost ? "Puntos insuficientes"
+              : `Subir a Nv.${node.rank + 1} · ${node.nextCost} pt`}
+          </button>
+        </div>
+      </>
+    );
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col px-3 py-2 sm:py-4">
@@ -365,12 +374,12 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
         </div>
 
         {/* Detalle FLOTANTE (solo desktop): panel a la derecha, no tapa nodos relevantes */}
-        {showPanel && !isBranchMode && (
+        {showPanel && !isBranchMode && selected && (
           <div
             className="absolute bottom-3 right-3 z-10 w-80 border border-cyan-400/40 bg-[#04101d]/95 p-4 shadow-[0_0_30px_rgba(34,211,238,0.18)] backdrop-blur-md"
             style={{ clipPath: "polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px)" }}
           >
-            {panelBody}
+            {renderPanel(selected)}
           </div>
         )}
       </div>
@@ -380,21 +389,22 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
         <AcademyBackButton label="Volver a Academia" href="/hub/academy" />
       </div>
 
-      {/* Detalle como DIÁLOGO (móvil): bottom-sheet overlay → no ocupa sitio ni tapa el árbol */}
-      {showPanel && isBranchMode && (
+      {/* Detalle como DIÁLOGO (móvil): bottom-sheet SIEMPRE montado → desliza desde abajo al abrir y se
+          esconde abajo al cerrar. Sin oscurecer la página (backdrop transparente solo para cerrar al tocar). */}
+      {isBranchMode && (
         <div
-          className="fixed inset-0 z-50 flex items-end"
+          className={`fixed inset-0 z-50 flex items-end ${showPanel ? "" : "pointer-events-none"}`}
           role="dialog"
           aria-modal="true"
+          aria-hidden={!showPanel}
           onClick={() => setSelectedId(null)}
         >
-          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
           <div
-            className="relative w-full border-t border-cyan-400/40 bg-[#04101d]/98 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(34,211,238,0.2)]"
+            className={`relative w-full border-t border-cyan-400/40 bg-[#04101d] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(34,211,238,0.25)] transition-transform duration-300 ease-out ${showPanel ? "translate-y-0" : "translate-y-full"}`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-600" />
-            {panelBody}
+            {sheetNode && renderPanel(sheetNode)}
           </div>
         </div>
       )}
