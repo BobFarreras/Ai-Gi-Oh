@@ -8,12 +8,12 @@ export interface INodePosition {
   y: number;
 }
 
-export const SKILL_TREE_VIEWBOX = { width: 820, height: 540 };
+export const SKILL_TREE_VIEWBOX = { width: 1000, height: 660 };
 
-const BRANCH_X: Record<string, number> = { ROOT: 410, COMBAT: 190, ARSENAL: 410, ECONOMY: 630 };
-const BASE_Y = 490; // fila de la raíz (tier 0), abajo
-const ROW_HEIGHT = 95; // cada tier sube esta distancia
-const SIBLING_GAP = 92; // separación horizontal entre nodos del mismo tier/rama
+const BRANCH_X: Record<string, number> = { ROOT: 500, COMBAT: 210, ARSENAL: 500, ECONOMY: 790 };
+const BASE_Y = 590; // fila de la raíz (tier 0), abajo
+const ROW_HEIGHT = 124; // cada tier sube esta distancia
+const SIBLING_GAP = 128; // separación horizontal entre nodos del mismo tier/rama
 
 export function resolveSkillTreeLayout(nodes: readonly ISkillTreeNodeView[]): Map<string, INodePosition> {
   const byBranchTier = new Map<string, ISkillTreeNodeView[]>();

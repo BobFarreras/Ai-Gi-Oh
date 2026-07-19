@@ -140,7 +140,7 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
         style={{ boxShadow: "0 0 40px rgba(34,211,238,0.06) inset, 0 0 0 1px rgba(34,211,238,0.04)" }}
       >
         <div
-          className="relative mx-auto w-full min-w-[680px] overflow-hidden rounded-xl"
+          className="relative mx-auto w-full min-w-[820px] overflow-hidden rounded-xl"
           style={{
             aspectRatio: `${vb.width} / ${vb.height}`,
             background:
@@ -174,21 +174,14 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
                 const color = branchColor(view.node.branch);
                 return (
                   <g key={`${view.node.id}-${prereq.nodeId}`}>
-                    {met && <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={color} strokeOpacity={0.22} strokeWidth={7} strokeLinecap="round" />}
+                    {met && <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={color} strokeOpacity={0.2} strokeWidth={8} strokeLinecap="round" />}
                     <line
                       x1={from.x} y1={from.y} x2={to.x} y2={to.y}
-                      stroke={met ? color : "#2a3852"} strokeOpacity={met ? 0.9 : 0.85}
-                      strokeWidth={met ? 2.2 : 1.6} strokeLinecap="round"
-                      strokeDasharray={met ? undefined : "4 5"}
+                      className={met ? "skill-edge-flow" : undefined}
+                      stroke={met ? color : "#2a3852"} strokeOpacity={met ? 0.95 : 0.8}
+                      strokeWidth={met ? 2.4 : 1.6} strokeLinecap="round"
+                      strokeDasharray={met ? undefined : "3 6"}
                     />
-                    {!met && (
-                      <>
-                        <rect x={(from.x + to.x) / 2 - 20} y={(from.y + to.y) / 2 - 17} width={40} height={15} rx={7} fill="#0a1424" stroke={color} strokeOpacity={0.35} />
-                        <text x={(from.x + to.x) / 2} y={(from.y + to.y) / 2 - 6} textAnchor="middle" fontSize="9.5" fill="#9fb2cf" style={{ fontFamily: "var(--font-orbitron)" }}>
-                          Nv.{prereq.minRank}
-                        </text>
-                      </>
-                    )}
                   </g>
                 );
               }),
@@ -263,7 +256,7 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
                   )}
                 </span>
                 {/* Nombre + rango */}
-                <span className="mt-1 max-w-[86px] text-center text-[10px] leading-tight text-slate-300" style={{ textShadow: "0 1px 6px rgba(2,11,22,0.9)" }}>
+                <span className="mt-1.5 max-w-[104px] text-center font-display text-[9.5px] uppercase leading-tight tracking-wide text-slate-300" style={{ textShadow: "0 1px 6px rgba(2,11,22,0.9)" }}>
                   {view.node.display.name}
                 </span>
                 {view.node.maxRank > 1 && (
@@ -325,13 +318,6 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
             </div>
           </div>
         )}
-      </div>
-
-      {/* Leyenda */}
-      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-slate-500">
-        <span className="inline-flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee]" />al máximo</span>
-        <span className="inline-flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full border border-cyan-400" />disponible</span>
-        <span className="inline-flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full border border-slate-600 bg-slate-800" />bloqueado</span>
       </div>
     </div>
   );

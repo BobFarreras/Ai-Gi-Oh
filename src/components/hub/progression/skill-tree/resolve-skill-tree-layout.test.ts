@@ -16,8 +16,8 @@ describe("resolveSkillTreeLayout", () => {
   it("coloca la raíz abajo-centro", () => {
     const pos = resolveSkillTreeLayout([view("root", "ROOT", 0)]);
     const root = pos.get("root")!;
-    expect(root.x).toBe(410);
-    expect(root.y).toBe(490);
+    expect(root.x).toBe(500);
+    expect(root.y).toBe(590);
   });
 
   it("los tiers más altos suben (menor y) y las ramas van a columnas distintas", () => {

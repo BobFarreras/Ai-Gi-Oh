@@ -107,6 +107,21 @@
   100% { transform: translateX(235%) skewX(-16deg); opacity: 0; }
 }
 
+/* Árbol de habilidades (ficha 8): flujo de energía por las aristas activas. Solo desktop, se apaga con
+   reduce-motion. El resto de plataformas ven la arista sólida (sin dasharray). */
+@keyframes skillEdgeFlow {
+  to { stroke-dashoffset: -14; }
+}
+@media (min-width: 1024px) {
+  .skill-edge-flow {
+    stroke-dasharray: 6 8;
+    animation: skillEdgeFlow 0.9s linear infinite;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skill-edge-flow { animation: none; stroke-dasharray: none; }
+}
+
 body {
   background:
     radial-gradient(circle at 18% 22%, rgba(56, 189, 248, 0.24), transparent 46%),
