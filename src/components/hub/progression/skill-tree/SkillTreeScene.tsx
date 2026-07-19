@@ -164,20 +164,20 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
   ) : null;
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-3 py-4">
-      {/* Cabecera HUD */}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-cyan-500/25 bg-slate-950/60 px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full border border-cyan-400/70 text-cyan-300 shadow-[0_0_16px_rgba(34,211,238,0.35)]">
-            <Bolt className="h-5 w-5" />
+    <div className="mx-auto flex w-full max-w-5xl flex-col px-3 py-2 sm:py-4">
+      {/* Cabecera HUD (compacta en móvil: una sola fila) */}
+      <div className="mb-2 flex items-center justify-between gap-2 rounded-xl border border-cyan-500/25 bg-slate-950/60 px-3 py-2 sm:mb-3 sm:gap-4 sm:px-4 sm:py-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-cyan-400/70 text-cyan-300 shadow-[0_0_16px_rgba(34,211,238,0.35)] sm:h-11 sm:w-11">
+            <Bolt className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
-          <div>
-            <div className="font-display text-[11px] tracking-[0.2em] text-cyan-300/80">OPERADOR</div>
-            <div className="font-display text-lg tracking-wide text-slate-100">NIVEL {tree.level}</div>
+          <div className="leading-none">
+            <div className="hidden font-display text-[11px] tracking-[0.2em] text-cyan-300/80 sm:block">OPERADOR</div>
+            <div className="font-display text-sm tracking-wide text-slate-100 sm:text-lg">NIVEL {tree.level}</div>
           </div>
         </div>
-        <div className="min-w-[180px] flex-1 sm:max-w-xs">
-          <div className="mb-1 flex justify-between text-[11px] text-slate-400">
+        <div className="min-w-0 flex-1 sm:max-w-xs">
+          <div className="mb-1 flex justify-between text-[10px] text-slate-400 sm:text-[11px]">
             <span>XP</span>
             <span>{tree.xpIntoLevel.toLocaleString()} / {tree.xpForNext.toLocaleString()}</span>
           </div>
@@ -185,9 +185,9 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
             <div className="h-full rounded bg-gradient-to-r from-sky-500 to-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.7)]" style={{ width: `${xpPct}%` }} />
           </div>
         </div>
-        <div className="text-right">
-          <div className="font-display text-[11px] uppercase tracking-widest text-amber-300/80">Puntos</div>
-          <div className="font-display text-2xl font-medium text-amber-200 drop-shadow-[0_0_12px_rgba(250,204,21,0.5)]">{tree.pointsAvailable}</div>
+        <div className="text-right leading-none">
+          <div className="font-display text-[9px] uppercase tracking-widest text-amber-300/80 sm:text-[11px]">Puntos</div>
+          <div className="font-display text-lg font-medium text-amber-200 drop-shadow-[0_0_12px_rgba(250,204,21,0.5)] sm:text-2xl">{tree.pointsAvailable}</div>
         </div>
       </div>
 
@@ -228,7 +228,11 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
         <div
           className="relative overflow-hidden rounded-xl"
           style={{
-            width: `min(100%, calc(72vh * ${vb.width} / ${vb.height}))`,
+            // Móvil: limita por el ALTO disponible (reserva header+selector+botón) → todo cabe sin scroll.
+            // Desktop: limita por 72vh. En ambos, el ancho nunca pasa del 100% del contenedor.
+            width: isBranchMode
+              ? `min(100%, calc((100dvh - 218px) * ${vb.width} / ${vb.height}))`
+              : `min(100%, calc(72vh * ${vb.width} / ${vb.height}))`,
             aspectRatio: `${vb.width} / ${vb.height}`,
             background:
               "radial-gradient(circle at 18% 12%, rgba(56,189,248,0.14), transparent 42%)," +
@@ -371,20 +375,29 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
         )}
       </div>
 
-      {/* Detalle DEBAJO (móvil): en flujo normal, nunca tapa el árbol */}
-      {showPanel && isBranchMode && (
-        <div
-          className="relative mt-3 border border-cyan-400/40 bg-[#04101d]/95 p-4 shadow-[0_0_24px_rgba(34,211,238,0.15)]"
-          style={{ clipPath: "polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px)" }}
-        >
-          {panelBody}
-        </div>
-      )}
-
       {/* Volver a Academia: abajo, centrado */}
-      <div className="mt-5 flex justify-center">
+      <div className="mt-3 flex justify-center sm:mt-5">
         <AcademyBackButton label="Volver a Academia" href="/hub/academy" />
       </div>
+
+      {/* Detalle como DIÁLOGO (móvil): bottom-sheet overlay → no ocupa sitio ni tapa el árbol */}
+      {showPanel && isBranchMode && (
+        <div
+          className="fixed inset-0 z-50 flex items-end"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setSelectedId(null)}
+        >
+          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
+          <div
+            className="relative w-full border-t border-cyan-400/40 bg-[#04101d]/98 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(34,211,238,0.2)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-600" />
+            {panelBody}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
