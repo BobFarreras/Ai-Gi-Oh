@@ -9,8 +9,12 @@ import {
   BatteryCharging, Bolt, CircleDollarSign, Coins, Cpu, Crown, GraduationCap, Heart, Lock, Medal,
   ShieldHalf, type LucideProps,
 } from "lucide-react";
+import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
 import { ISkillTreeNodeView, ISkillTreeView } from "@/core/services/progression/skill-tree/resolve-skill-tree-view";
-import { SKILL_TREE_VIEWBOX, resolveSkillTreeLayout } from "./resolve-skill-tree-layout";
+import { resolveSkillTreeLayout, skillTreeViewBox } from "./resolve-skill-tree-layout";
+
+type BranchTab = "COMBAT" | "ECONOMY" | "ARSENAL";
+const BRANCH_TABS: BranchTab[] = ["COMBAT", "ECONOMY", "ARSENAL"];
 
 const BRANCH: Record<string, { color: string; label: string }> = {
   ROOT: { color: "#38e0f0", label: "" },
@@ -47,9 +51,22 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeBranch, setActiveBranch] = useState<BranchTab>("COMBAT");
 
-  const layout = useMemo(() => (tree ? resolveSkillTreeLayout(tree.nodes) : new Map()), [tree]);
+  const viewportWidth = useViewportWidth();
+  // Móvil / pantallas estrechas: una rama a la vez con selector (sin scroll). Desktop: árbol completo.
+  const isBranchMode = viewportWidth < 900;
+  const mode = isBranchMode ? "branch" : "full";
+  const vb = skillTreeViewBox(mode);
+
   const nodeById = useMemo(() => new Map((tree?.nodes ?? []).map((n) => [n.node.id, n])), [tree]);
+  const visibleNodes = useMemo(() => {
+    const all = tree?.nodes ?? [];
+    if (!isBranchMode) return all;
+    return all.filter((n) => n.node.branch === "ROOT" || n.node.branch === activeBranch);
+  }, [tree, isBranchMode, activeBranch]);
+  const layout = useMemo(() => resolveSkillTreeLayout(visibleNodes, mode), [visibleNodes, mode]);
+  const visibleIds = useMemo(() => new Set(visibleNodes.map((n) => n.node.id)), [visibleNodes]);
   const selected = selectedId ? nodeById.get(selectedId) ?? null : null;
 
   if (!tree) {
@@ -102,7 +119,6 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
   }
 
   const xpPct = tree.xpForNext > 0 ? Math.min(100, Math.round((tree.xpIntoLevel / tree.xpForNext) * 100)) : 0;
-  const vb = SKILL_TREE_VIEWBOX;
 
   return (
     <div className="mx-auto w-full max-w-5xl px-3 py-4">
@@ -134,14 +150,42 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
 
       {error && <div className="mb-3 rounded-lg border border-rose-500/40 bg-rose-950/30 px-3 py-2 text-sm text-rose-200">{error}</div>}
 
-      {/* Constelación */}
+      {/* Selector de rama (solo móvil / pantallas estrechas): una sección a la vez, sin scroll */}
+      {isBranchMode && (
+        <div className="mb-3 flex gap-2">
+          {BRANCH_TABS.map((b) => {
+            const active = activeBranch === b;
+            const c = BRANCH[b].color;
+            return (
+              <button
+                key={b}
+                type="button"
+                onClick={() => { setActiveBranch(b); setSelectedId(null); }}
+                className="flex-1 border py-2 font-display text-[10px] uppercase tracking-widest transition"
+                style={{
+                  color: active ? "#04101d" : c,
+                  background: active ? c : `${c}14`,
+                  borderColor: active ? c : `${c}55`,
+                  boxShadow: active ? `0 0 16px ${c}66` : "none",
+                  clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)",
+                }}
+              >
+                {BRANCH[b].label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Constelación (caja adaptable: encaja en pantalla por ancho y alto, sin scroll) */}
       <div
-        className="relative overflow-x-auto rounded-2xl border border-cyan-500/25 p-1"
+        className="relative flex justify-center rounded-2xl border border-cyan-500/25 p-1"
         style={{ boxShadow: "0 0 40px rgba(34,211,238,0.06) inset, 0 0 0 1px rgba(34,211,238,0.04)" }}
       >
         <div
-          className="relative mx-auto w-full min-w-[820px] overflow-hidden rounded-xl"
+          className="relative overflow-hidden rounded-xl"
           style={{
+            width: `min(100%, calc(72vh * ${vb.width} / ${vb.height}))`,
             aspectRatio: `${vb.width} / ${vb.height}`,
             background:
               "radial-gradient(circle at 18% 12%, rgba(56,189,248,0.14), transparent 42%)," +
@@ -164,11 +208,11 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
 
           {/* Aristas (SVG, con glow) */}
           <svg viewBox={`0 0 ${vb.width} ${vb.height}`} preserveAspectRatio="xMidYMid meet" className="absolute inset-0 h-full w-full" aria-hidden>
-            {tree.nodes.map((view) =>
+            {visibleNodes.map((view) =>
               view.node.prerequisites.map((prereq) => {
                 const from = layout.get(prereq.nodeId);
                 const to = layout.get(view.node.id);
-                if (!from || !to) return null;
+                if (!from || !to || !visibleIds.has(prereq.nodeId)) return null;
                 const source = nodeById.get(prereq.nodeId);
                 const met = source ? source.rank >= prereq.minRank : false;
                 const color = branchColor(view.node.branch);
@@ -188,9 +232,9 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
             )}
           </svg>
 
-          {/* Etiquetas de rama */}
-          {(["COMBAT", "ARSENAL", "ECONOMY"] as const).map((b) => {
-            const leftPct = b === "COMBAT" ? 190 / vb.width : b === "ARSENAL" ? 410 / vb.width : 630 / vb.width;
+          {/* Etiquetas de rama (solo en modo completo; en móvil las cubre el selector) */}
+          {!isBranchMode && (["COMBAT", "ARSENAL", "ECONOMY"] as const).map((b) => {
+            const leftPct = b === "COMBAT" ? 210 / vb.width : b === "ARSENAL" ? 500 / vb.width : 790 / vb.width;
             return (
               <div
                 key={b}
@@ -203,7 +247,7 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
           })}
 
           {/* Nodos (HTML holográfico) */}
-          {tree.nodes.map((view) => {
+          {visibleNodes.map((view) => {
             const pos = layout.get(view.node.id);
             if (!pos) return null;
             const color = branchColor(view.node.branch);
@@ -270,7 +314,7 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
         </div>
 
         {/* Panel del nodo seleccionado (holo-panel estilo hub) */}
-        {selected && (
+        {selected && visibleIds.has(selected.node.id) && (
           <div
             className="absolute bottom-3 left-3 right-3 z-10 border border-cyan-400/40 bg-[#04101d]/95 p-4 shadow-[0_0_30px_rgba(34,211,238,0.18)] backdrop-blur-md sm:left-auto sm:w-80"
             style={{ clipPath: "polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px)" }}
