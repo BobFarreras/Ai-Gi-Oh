@@ -73,9 +73,6 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
   if (!tree) {
     return (
       <div className="mx-auto w-full max-w-5xl px-3 py-4">
-        <div className="mb-3">
-          <AcademyBackButton label="Volver a Academia" href="/hub/academy" />
-        </div>
         <div className="flex min-h-[50vh] flex-col items-center justify-center gap-2 px-6 text-center text-cyan-200/70">
           {!authenticated ? (
             <p>Inicia sesión para ver tu árbol de Operador.</p>
@@ -85,6 +82,9 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
               <p className="text-xs text-slate-500">Las tablas del árbol no están migradas en esta base de datos (migraciones 136/137).</p>
             </>
           )}
+        </div>
+        <div className="mt-5 flex justify-center">
+          <AcademyBackButton label="Volver a Academia" href="/hub/academy" />
         </div>
       </div>
     );
@@ -125,13 +125,46 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
   }
 
   const xpPct = tree.xpForNext > 0 ? Math.min(100, Math.round((tree.xpIntoLevel / tree.xpForNext) * 100)) : 0;
+  const showPanel = Boolean(selected && visibleIds.has(selected.node.id));
+  const panelColor = selected ? branchColor(selected.node.branch) : "#22d3ee";
+  const panelBody = selected ? (
+    <>
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-25" />
+      <div className="relative">
+        <div className="flex items-center justify-between gap-2">
+          <div className="font-display text-sm tracking-wide text-slate-100">{selected.node.display.name}</div>
+          <div className="font-display text-xs" style={{ color: panelColor }}>Nv. {selected.rank}/{selected.node.maxRank}</div>
+        </div>
+        <div className="mt-2 flex gap-1">
+          {Array.from({ length: selected.node.maxRank }).map((_, i) => (
+            <span key={i} className="h-1.5 flex-1 rounded-full" style={{ background: i < selected.rank ? panelColor : "rgba(100,116,139,0.3)", boxShadow: i < selected.rank ? `0 0 6px ${panelColor}` : "none" }} />
+          ))}
+        </div>
+        <p className="mt-2.5 text-xs leading-relaxed text-slate-400">{selected.node.display.blurb}</p>
+        {!selected.prerequisitesMet && (
+          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-amber-300/90">
+            <Lock className="h-3.5 w-3.5" />
+            {selected.node.prerequisites.map((p) => `${nodeById.get(p.nodeId)?.node.display.name ?? p.nodeId} Nv.${p.minRank}`).join(" · ")}
+          </div>
+        )}
+        <button
+          type="button"
+          disabled={busy || !selected.isUnlockable}
+          onClick={() => rankUp(selected.node.id)}
+          className="mt-3 w-full border border-cyan-400/60 bg-cyan-400/15 py-2 font-display text-xs uppercase tracking-widest text-cyan-100 shadow-[0_0_16px_rgba(34,211,238,0.25)] transition enabled:hover:bg-cyan-400/25 disabled:cursor-not-allowed disabled:opacity-40"
+          style={{ clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)" }}
+        >
+          {selected.isMaxed ? "Al máximo"
+            : !selected.prerequisitesMet ? "Bloqueado"
+            : selected.nextCost !== null && tree.pointsAvailable < selected.nextCost ? "Puntos insuficientes"
+            : `Subir a Nv.${selected.rank + 1} · ${selected.nextCost} pt`}
+        </button>
+      </div>
+    </>
+  ) : null;
 
   return (
     <div className="mx-auto w-full max-w-5xl px-3 py-4">
-      <div className="mb-3">
-        <AcademyBackButton label="Volver a Academia" href="/hub/academy" />
-      </div>
-
       {/* Cabecera HUD */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-cyan-500/25 bg-slate-950/60 px-4 py-3">
         <div className="flex items-center gap-3">
@@ -327,55 +360,30 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
           })}
         </div>
 
-        {/* Panel del nodo seleccionado (holo-panel estilo hub) */}
-        {selected && visibleIds.has(selected.node.id) && (
+        {/* Detalle FLOTANTE (solo desktop): panel a la derecha, no tapa nodos relevantes */}
+        {showPanel && !isBranchMode && (
           <div
-            className="absolute bottom-3 left-3 right-3 z-10 border border-cyan-400/40 bg-[#04101d]/95 p-4 shadow-[0_0_30px_rgba(34,211,238,0.18)] backdrop-blur-md sm:left-auto sm:w-80"
+            className="absolute bottom-3 right-3 z-10 w-80 border border-cyan-400/40 bg-[#04101d]/95 p-4 shadow-[0_0_30px_rgba(34,211,238,0.18)] backdrop-blur-md"
             style={{ clipPath: "polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px)" }}
           >
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-25" />
-            <div className="relative">
-              <div className="flex items-center justify-between gap-2">
-                <div className="font-display text-sm tracking-wide text-slate-100">{selected.node.display.name}</div>
-                <div className="font-display text-xs" style={{ color: branchColor(selected.node.branch) }}>
-                  Nv. {selected.rank}/{selected.node.maxRank}
-                </div>
-              </div>
-              {/* Pips de rango */}
-              <div className="mt-2 flex gap-1">
-                {Array.from({ length: selected.node.maxRank }).map((_, i) => (
-                  <span
-                    key={i}
-                    className="h-1.5 flex-1 rounded-full"
-                    style={{
-                      background: i < selected.rank ? branchColor(selected.node.branch) : "rgba(100,116,139,0.3)",
-                      boxShadow: i < selected.rank ? `0 0 6px ${branchColor(selected.node.branch)}` : "none",
-                    }}
-                  />
-                ))}
-              </div>
-              <p className="mt-2.5 text-xs leading-relaxed text-slate-400">{selected.node.display.blurb}</p>
-              {!selected.prerequisitesMet && (
-                <div className="mt-2 flex items-center gap-1.5 text-[11px] text-amber-300/90">
-                  <Lock className="h-3.5 w-3.5" />
-                  {selected.node.prerequisites.map((p) => `${nodeById.get(p.nodeId)?.node.display.name ?? p.nodeId} Nv.${p.minRank}`).join(" · ")}
-                </div>
-              )}
-              <button
-                type="button"
-                disabled={busy || !selected.isUnlockable}
-                onClick={() => rankUp(selected.node.id)}
-                className="mt-3 w-full border border-cyan-400/60 bg-cyan-400/15 py-2 font-display text-xs uppercase tracking-widest text-cyan-100 shadow-[0_0_16px_rgba(34,211,238,0.25)] transition enabled:hover:bg-cyan-400/25 disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)" }}
-              >
-                {selected.isMaxed ? "Al máximo"
-                  : !selected.prerequisitesMet ? "Bloqueado"
-                  : selected.nextCost !== null && tree.pointsAvailable < selected.nextCost ? "Puntos insuficientes"
-                  : `Subir a Nv.${selected.rank + 1} · ${selected.nextCost} pt`}
-              </button>
-            </div>
+            {panelBody}
           </div>
         )}
+      </div>
+
+      {/* Detalle DEBAJO (móvil): en flujo normal, nunca tapa el árbol */}
+      {showPanel && isBranchMode && (
+        <div
+          className="relative mt-3 border border-cyan-400/40 bg-[#04101d]/95 p-4 shadow-[0_0_24px_rgba(34,211,238,0.15)]"
+          style={{ clipPath: "polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px)" }}
+        >
+          {panelBody}
+        </div>
+      )}
+
+      {/* Volver a Academia: abajo, centrado */}
+      <div className="mt-5 flex justify-center">
+        <AcademyBackButton label="Volver a Academia" href="/hub/academy" />
       </div>
     </div>
   );
