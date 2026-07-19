@@ -9,6 +9,7 @@ import {
   BatteryCharging, Bolt, CircleDollarSign, Coins, Cpu, Crown, GraduationCap, Heart, Lock, Medal,
   ShieldHalf, type LucideProps,
 } from "lucide-react";
+import { AcademyBackButton } from "@/components/hub/academy/AcademyBackButton";
 import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
 import { ISkillTreeNodeView, ISkillTreeView } from "@/core/services/progression/skill-tree/resolve-skill-tree-view";
 import { resolveSkillTreeLayout, skillTreeViewBox } from "./resolve-skill-tree-layout";
@@ -71,15 +72,20 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
 
   if (!tree) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2 px-6 text-center text-cyan-200/70">
-        {!authenticated ? (
-          <p>Inicia sesión para ver tu árbol de Operador.</p>
-        ) : (
-          <>
-            <p className="text-slate-200">El árbol de habilidades aún no está disponible.</p>
-            <p className="text-xs text-slate-500">Las tablas del árbol no están migradas en esta base de datos (migraciones 136/137).</p>
-          </>
-        )}
+      <div className="mx-auto w-full max-w-5xl px-3 py-4">
+        <div className="mb-3">
+          <AcademyBackButton label="Volver a Academia" href="/hub/academy" />
+        </div>
+        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-2 px-6 text-center text-cyan-200/70">
+          {!authenticated ? (
+            <p>Inicia sesión para ver tu árbol de Operador.</p>
+          ) : (
+            <>
+              <p className="text-slate-200">El árbol de habilidades aún no está disponible.</p>
+              <p className="text-xs text-slate-500">Las tablas del árbol no están migradas en esta base de datos (migraciones 136/137).</p>
+            </>
+          )}
+        </div>
       </div>
     );
   }
@@ -122,6 +128,10 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
 
   return (
     <div className="mx-auto w-full max-w-5xl px-3 py-4">
+      <div className="mb-3">
+        <AcademyBackButton label="Volver a Academia" href="/hub/academy" />
+      </div>
+
       {/* Cabecera HUD */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-cyan-500/25 bg-slate-950/60 px-4 py-3">
         <div className="flex items-center gap-3">
@@ -260,7 +270,7 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
               <button
                 type="button"
                 key={view.node.id}
-                onClick={() => setSelectedId(view.node.id)}
+                onClick={() => setSelectedId((prev) => (prev === view.node.id ? null : view.node.id))}
                 className="group absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center focus:outline-none"
                 style={{ left: `${(pos.x / vb.width) * 100}%`, top: `${(pos.y / vb.height) * 100}%` }}
                 aria-label={`${view.node.display.name} nivel ${view.rank} de ${view.node.maxRank}`}
@@ -270,7 +280,7 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
                   className="relative flex h-[52px] w-[52px] items-center justify-center rounded-full p-[3px] transition-transform group-hover:scale-110"
                   style={{
                     background: `conic-gradient(${color} ${pct}%, rgba(100,116,139,0.28) ${pct}%)`,
-                    boxShadow: dim ? "none" : `0 0 18px ${color}55`,
+                    boxShadow: isSelected ? `0 0 24px ${color}` : dim ? "none" : `0 0 18px ${color}55`,
                     opacity: dim ? 0.6 : 1,
                   }}
                 >
@@ -278,11 +288,15 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
                   {state === "available" && (
                     <span className="absolute -inset-1 animate-ping rounded-full border" style={{ borderColor: `${color}99` }} />
                   )}
-                  {/* Núcleo */}
+                  {/* Anillo de selección (marca el nodo activo sin translucir el núcleo → sin "queso") */}
+                  {isSelected && (
+                    <span className="absolute -inset-[3px] rounded-full" style={{ border: `2px solid ${color}`, boxShadow: `0 0 12px ${color}aa` }} />
+                  )}
+                  {/* Núcleo (SIEMPRE opaco: solo el borde de 3px muestra el anillo cónico) */}
                   <span
                     className="flex h-full w-full items-center justify-center rounded-full"
                     style={{
-                      background: isSelected ? `${color}26` : "#0a1120",
+                      background: "#0a1120",
                       border: `1.5px solid ${isSelected ? color : dim ? "rgba(100,116,139,0.5)" : `${color}aa`}`,
                     }}
                   >
