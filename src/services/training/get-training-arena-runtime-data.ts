@@ -5,10 +5,13 @@ import { createSupabaseTrainingProgressRepository } from "@/infrastructure/persi
 import { getArenaCatalog } from "@/services/training/get-arena-catalog";
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { getPlayerBoardLoadout } from "@/services/game/get-player-board-deck";
+import { getPlayerCombatModifiers } from "@/services/progression/get-player-combat-modifiers";
 import { getPlayerDisplayName } from "@/services/player-profile/get-player-display-name";
 
 export async function getTrainingArenaRuntimeData(selectedTier: number) {
-  const [session, loadout, arenaCatalog] = await Promise.all([getCurrentUserSession(), getPlayerBoardLoadout(), getArenaCatalog()]);
+  const [session, loadout, arenaCatalog, combatModifiers] = await Promise.all([
+    getCurrentUserSession(), getPlayerBoardLoadout(), getArenaCatalog(), getPlayerCombatModifiers(),
+  ]);
   const playerId = session?.user.id ?? "local-player";
   const playerDisplayName = await getPlayerDisplayName(session, "Arquitecto");
   // Tiers desde BD si existen; si no, catálogo en código (sin cambio de comportamiento).
@@ -20,10 +23,10 @@ export async function getTrainingArenaRuntimeData(selectedTier: number) {
       selectedTier,
       catalog,
     });
-    return { loadout, progress, playerId, playerDisplayName, arenaOpponents: arenaCatalog.opponents, arenaCardCatalog: arenaCatalog.cardCatalog, ...state };
+    return { loadout, combatModifiers, progress, playerId, playerDisplayName, arenaOpponents: arenaCatalog.opponents, arenaCardCatalog: arenaCatalog.cardCatalog, ...state };
   }
   const trainingRepository = await createSupabaseTrainingProgressRepository();
   const progress = (await trainingRepository.getByPlayerId(session.user.id)) ?? createInitialTrainingProgress(session.user.id);
   const state = new GetTrainingArenaStateUseCase().execute({ progress, selectedTier, catalog });
-  return { loadout, progress, playerId, playerDisplayName, arenaOpponents: arenaCatalog.opponents, arenaCardCatalog: arenaCatalog.cardCatalog, ...state };
+  return { loadout, combatModifiers, progress, playerId, playerDisplayName, arenaOpponents: arenaCatalog.opponents, arenaCardCatalog: arenaCatalog.cardCatalog, ...state };
 }

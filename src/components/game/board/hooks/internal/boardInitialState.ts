@@ -21,6 +21,13 @@ export interface ICreateInitialBoardStateInput {
   preserveDeckOrder?: boolean;
   /** Fábrica de ids determinista (multijugador) para instanceId idénticos en ambos clientes. */
   idFactory?: IGameEngineIdFactory;
+  /**
+   * Modificadores de COMBATE del árbol de habilidades (ficha 8), aplicados SOLO al jugador local (playerA)
+   * en modos PvE. El rival nunca los recibe. Se aplican tras crear el estado base (createInitialGameState los
+   * repartiría a ambos jugadores).
+   */
+  playerStartingLpBonus?: number;
+  playerMaxEnergyBonus?: number;
 }
 
 export function createInitialBoardState(input?: ICreateInitialBoardStateInput): GameState {
@@ -44,5 +51,18 @@ export function createInitialBoardState(input?: ICreateInitialBoardStateInput): 
     idFactory: input?.idFactory,
   });
 
-  return baseState;
+  const lpBonus = Math.max(0, Math.floor(input?.playerStartingLpBonus ?? 0));
+  const energyBonus = Math.max(0, Math.floor(input?.playerMaxEnergyBonus ?? 0));
+  if (lpBonus === 0 && energyBonus === 0) return baseState;
+  const a = baseState.playerA;
+  return {
+    ...baseState,
+    playerA: {
+      ...a,
+      maxHealthPoints: a.maxHealthPoints + lpBonus,
+      healthPoints: a.healthPoints + lpBonus,
+      maxEnergy: a.maxEnergy + energyBonus,
+      currentEnergy: a.currentEnergy + energyBonus,
+    },
+  };
 }

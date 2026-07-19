@@ -41,6 +41,24 @@ describe("boardInitialState", () => {
     expect(firstState.playerA.hand.map((card) => card.id)).toEqual(secondState.playerA.hand.map((card) => card.id));
   });
 
+  it("aplica el bonus de combate del árbol SOLO al jugador local (playerA), nunca al rival", () => {
+    const base = createInitialBoardState();
+    const state = createInitialBoardState({ playerStartingLpBonus: 300, playerMaxEnergyBonus: 2 });
+    expect(state.playerA.maxHealthPoints).toBe(base.playerA.maxHealthPoints + 300);
+    expect(state.playerA.healthPoints).toBe(base.playerA.healthPoints + 300);
+    expect(state.playerA.maxEnergy).toBe(base.playerA.maxEnergy + 2);
+    expect(state.playerA.currentEnergy).toBe(base.playerA.currentEnergy + 2);
+    // El rival queda intacto.
+    expect(state.playerB.maxHealthPoints).toBe(base.playerB.maxHealthPoints);
+    expect(state.playerB.maxEnergy).toBe(base.playerB.maxEnergy);
+  });
+
+  it("sin bonus deja el estado base sin tocar", () => {
+    const state = createInitialBoardState({ playerStartingLpBonus: 0, playerMaxEnergyBonus: 0 });
+    expect(state.playerA.maxHealthPoints).toBe(8000);
+    expect(state.playerA.maxEnergy).toBe(10);
+  });
+
   it("permite inyectar identidad de jugador y oponente sin hardcode local", () => {
     const state = createInitialBoardState({
       playerId: "player-123",

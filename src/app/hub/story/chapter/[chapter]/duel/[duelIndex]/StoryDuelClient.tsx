@@ -37,6 +37,8 @@ interface StoryDuelClientProps {
   completionTicket: string;
   returnBasePath?: string;
   resultActionLabel?: string;
+  playerStartingLpBonus?: number;
+  playerMaxEnergyBonus?: number;
 }
 
 export function StoryDuelClient(props: StoryDuelClientProps) {
@@ -103,6 +105,8 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
           opponentFusionDeck: props.opponentFusionDeck,
           starterPlayerId: coinToss.starterPlayerId,
           openingHandSize: 4,
+          playerStartingLpBonus: props.playerStartingLpBonus,
+          playerMaxEnergyBonus: props.playerMaxEnergyBonus,
         }}
         opponentAvatarUrl={presentationRuntime.opponentAvatarUrl}
         playerAvatarUrl={presentationRuntime.playerAvatarUrl}
