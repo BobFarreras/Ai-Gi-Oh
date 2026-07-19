@@ -5,6 +5,7 @@ import { IStoryAiProfile, normalizeStoryAiProfile } from "@/core/services/oppone
 import { StoryOpponentDifficulty } from "@/core/entities/opponent/IStoryDuelDefinition";
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { getPlayerBoardLoadout } from "@/services/game/get-player-board-deck";
+import { getPlayerCombatModifiers } from "@/services/progression/get-player-combat-modifiers";
 import { createSupabaseOpponentRepository } from "@/infrastructure/persistence/supabase/create-supabase-opponent-repository";
 import { createSupabasePlayerStoryDuelProgressRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-story-duel-progress-repository";
 import { createSupabasePlayerStoryWorldRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-story-world-repository";
@@ -31,6 +32,10 @@ export interface IStoryDuelRuntimeData {
   opponentAvatarUrl?: string | null;
   opponentDifficulty: StoryOpponentDifficulty;
   opponentAiProfile: IStoryAiProfile;
+  /** Bonus de combate del árbol (ficha 8) SOLO para el jugador local. */
+  playerStartingLpBonus: number;
+  playerMaxEnergyBonus: number;
+  playerTurn1EnergyBonus: number;
 }
 
 function applyStoryDeckEntryToCard(
@@ -63,7 +68,7 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
   const session = await getCurrentUserSession();
   if (!session) return null;
   const playerDisplayName = await getPlayerDisplayName(session, "Arquitecto");
-  const loadout = await getPlayerBoardLoadout();
+  const [loadout, combatModifiers] = await Promise.all([getPlayerBoardLoadout(), getPlayerCombatModifiers()]);
   const playerDeck = loadout.deck ?? [];
   const playerFusionDeck = loadout.fusionDeck ?? [];
   const opponentRepository = await createSupabaseOpponentRepository();
@@ -114,5 +119,8 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
     opponentAvatarUrl: duel.opponentAvatarUrl ?? null,
     opponentDifficulty: duel.opponentDifficulty,
     opponentAiProfile: normalizeStoryAiProfile(duel.opponentAiProfile, duel.opponentDifficulty),
+    playerStartingLpBonus: combatModifiers.startingLpBonus,
+    playerMaxEnergyBonus: combatModifiers.maxEnergyBonus,
+    playerTurn1EnergyBonus: combatModifiers.turn1EnergyBonus,
   };
 }

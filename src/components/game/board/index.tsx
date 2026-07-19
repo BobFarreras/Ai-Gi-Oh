@@ -44,7 +44,7 @@ interface IBoardProps {
   suppressCombatFeedback?: boolean;
   suppressCombatBanners?: boolean;
   opponentStrategyOverride?: IOpponentStrategy | null;
-  onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string; flawless: boolean }) => void;
+  onMatchResolved?: (result: { winnerPlayerId: string | "DRAW"; playerId: string; mode: IMatchMode; matchSeed: string; flawless: boolean; passiveNexusEarned: number }) => void;
   onTutorialFlowFinished?: () => void;
   /**
    * Ganador comunicado por una fuente externa al motor local (ej. notificación

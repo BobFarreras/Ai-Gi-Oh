@@ -6,6 +6,7 @@ import { Wrench } from "lucide-react";
 import { ICard } from "@/core/entities/ICard";
 import { resolveMasteryPassiveLabel } from "@/core/services/progression/mastery-passive-display";
 import { Card } from "@/components/game/card/Card";
+import { ICardUpgradeCounts } from "@/components/game/card/internal/card-frame-types";
 
 interface HomeCardInspectorProps {
   selectedCard: ICard | null;
@@ -19,6 +20,8 @@ interface HomeCardInspectorProps {
   onEquip?: () => void;
   /** Nombre del objeto pendiente (flujo B): si está, el botón es "Activar {nombre}". */
   equipPendingObjectLabel?: string | null;
+  /** Badges ×N de objetos aplicados a la carta seleccionada (rastro visible de la ficha 9b). */
+  upgradeCounts?: ICardUpgradeCounts | null;
 }
 
 export function HomeCardInspector({
@@ -31,6 +34,7 @@ export function HomeCardInspector({
   maxCardScale = 0.9,
   onEquip,
   equipPendingObjectLabel = null,
+  upgradeCounts = null,
 }: HomeCardInspectorProps) {
   const cardViewportRef = useRef<HTMLDivElement | null>(null);
   const [cardScale, setCardScale] = useState(0.76);
@@ -83,6 +87,7 @@ export function HomeCardInspector({
                   level={selectedCardLevel}
                   xp={selectedCardXp}
                   masteryPassiveLabel={masteryPassiveLabel}
+                  upgradeCounts={upgradeCounts}
                 />
               </div>
             </div>

@@ -62,6 +62,7 @@ export function BoardInteractiveSection({ board, screen, isMobile, suppressComba
       onActivateSelectedExecution={screen.handleActivateSelectedExecution}
       onActivatePendingTrap={board.activatePendingTrap}
       onSkipPendingTrap={board.skipPendingTrap}
+      onCyclePendingTrap={board.cyclePendingTrap}
       onSelectCard={board.previewCard}
       onCloseCard={board.clearSelection}
       onSetSelectedEntityToAttack={board.setSelectedEntityToAttack}

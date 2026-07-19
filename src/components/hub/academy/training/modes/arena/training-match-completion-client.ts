@@ -7,6 +7,10 @@ interface IPostTrainingMatchCompletionInput {
   outcome: IMatchOutcome;
   completionTicket: string;
   flawless?: boolean;
+  /** Recaudación (ficha 3): Nexus contado por el motor en el duelo. El servidor lo topa y acredita. */
+  passiveNexusEarned?: number;
+  /** Clave de idempotencia del cierre (uuid único por duelo; reintentos la reutilizan). */
+  passiveNexusOperationId?: string;
 }
 
 export interface IPostTrainingMatchCompletionOutput {
@@ -15,6 +19,8 @@ export interface IPostTrainingMatchCompletionOutput {
     nexus: number;
     playerExperience: number;
   };
+  /** Nexus de la pasiva Recaudación realmente acreditado por el servidor (tras topes). */
+  passiveNexusCredited: number;
   highestUnlockedTier: number;
   newlyUnlockedTiers: number[];
 }
@@ -34,6 +40,7 @@ export async function postTrainingMatchCompletion(input: IPostTrainingMatchCompl
   return {
     applied: payload.applied ?? false,
     reward: payload.reward ?? { nexus: 0, playerExperience: 0 },
+    passiveNexusCredited: payload.passiveNexusCredited ?? 0,
     highestUnlockedTier: payload.highestUnlockedTier ?? 1,
     newlyUnlockedTiers: payload.newlyUnlockedTiers ?? [],
   };

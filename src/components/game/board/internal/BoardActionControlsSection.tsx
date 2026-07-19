@@ -29,6 +29,7 @@ export function BoardActionControlsSection({ board, screen, isMobile }: IBoardVi
           onCloseHistory={() => board.setIsHistoryOpen(false)}
           onActivatePendingTrap={board.activatePendingTrap}
           onSkipPendingTrap={board.skipPendingTrap}
+          onCyclePendingTrap={board.cyclePendingTrap}
         />
       )}
       {isMobile ? (

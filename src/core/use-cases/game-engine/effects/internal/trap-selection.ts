@@ -21,22 +21,32 @@ export function trapActivationConditionMet(trap: IBoardEntity, player: IPlayer, 
   return true;
 }
 
-function findTriggeredTrap(player: IPlayer, trigger: TrapTrigger, context?: ITrapTriggerContext): IBoardEntity | null {
-  return (
-    player.activeExecutions.find(
-      (entity) => entity.card.type === "TRAP" && entity.mode === "SET" && entity.card.trigger === trigger && trapActivationConditionMet(entity, player, context),
-    ) ?? null
+/** TODAS las trampas del jugador que casan con el disparo (SET, mismo trigger, condición cumplida), en orden
+ *  de colocación. La UI de la ficha 4 ofrece elegir entre ellas; el orden es el criterio por defecto. */
+export function findTriggeredTraps(player: IPlayer, trigger: TrapTrigger, context?: ITrapTriggerContext): IBoardEntity[] {
+  return player.activeExecutions.filter(
+    (entity) => entity.card.type === "TRAP" && entity.mode === "SET" && entity.card.trigger === trigger && trapActivationConditionMet(entity, player, context),
   );
 }
 
+/**
+ * Trampa a resolver para este disparo. Por defecto, la primera elegible (criterio histórico). Si el jugador
+ * reactivo eligió una concreta (`chosenTrapInstanceId`, ficha 4), se REVALIDA que esté entre las elegibles:
+ * un id que no casa (cliente modificado) no activa NADA (null), nunca "cae" a otra trampa que no eligió.
+ */
 export function selectTriggeredTrap(
   state: GameState,
   reactivePlayerId: string,
   trigger: TrapTrigger,
   context?: ITrapTriggerContext,
+  chosenTrapInstanceId?: string,
 ): ITriggeredTrap | null {
   const { player, opponent, isPlayerA } = getPlayerPair(state, reactivePlayerId);
-  const trap = findTriggeredTrap(player, trigger, context);
+  const eligible = findTriggeredTraps(player, trigger, context);
+  if (eligible.length === 0) return null;
+  const trap = chosenTrapInstanceId
+    ? eligible.find((entity) => entity.instanceId === chosenTrapInstanceId) ?? null
+    : eligible[0];
   if (!trap) return null;
   return { trap, player, opponent, isPlayerA };
 }

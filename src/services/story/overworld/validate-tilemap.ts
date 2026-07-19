@@ -22,6 +22,7 @@ const VALID_KINDS: ReadonlySet<OverworldObjectKind> = new Set([
   "BOSS",
   "REWARD_CARD",
   "REWARD_NEXUS",
+  "REWARD_OBJECT",
   "EVENT",
   "NPC",
   "SUBMISSION",

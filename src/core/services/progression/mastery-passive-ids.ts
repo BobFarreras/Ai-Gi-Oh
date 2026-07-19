@@ -32,3 +32,23 @@ export type MasteryPassiveId = (typeof MASTERY_PASSIVE_IDS)[keyof typeof MASTERY
  * catálogo de las 10 pasivas de maestría (ni el mapeo de arquetipos a V5).
  */
 export const REVIVE_NEXT_TURN_PASSIVE_ID = "passive-revive-next-turn";
+
+/**
+ * Pasiva INNATA-only "Recaudación" (ficha 3 v1.17): cuando ESTA entity gana un combate a una entity rival
+ * (la destruye y sobrevive), su dueño gana Nexus de moneda. El motor solo CUENTA en el GameState; el
+ * servidor acredita al cerrar el duelo (idempotente, con topes por duelo y diarios). Va en una entity floja
+ * para que farmearlo cueste. Fuera de MASTERY_PASSIVE_IDS (igual que Reactivación).
+ */
+export const NEXUS_ON_BATTLE_WIN_PASSIVE_ID = "passive-nexus-on-battle-win";
+
+/** Nexus que otorga la pasiva de Recaudación por cada combate ganado (el servidor aplica los topes). */
+export const NEXUS_PER_BATTLE_WIN = 200;
+
+/**
+ * Pasiva INNATA "Sobrecarga Energética" (ficha 1 v1.17), portadora: entity-windows92. Cuando ESTA entity
+ * gana un combate a una entity rival (la destruye y sobrevive), su dueño gana energía al empezar su
+ * SIGUIENTE turno. Es motor puro (no toca economía): se cuenta en el GameState y se concede al inicio del
+ * turno. La cantidad ESCALA por versión (base +1, V5 +2) y vive en el catálogo de magnitudes
+ * (`mastery-passive-magnitude.ts`), única fuente. Fuera de MASTERY_PASSIVE_IDS (igual que Reactivación).
+ */
+export const ENERGY_ON_BATTLE_WIN_PASSIVE_ID = "passive-energy-on-battle-win";

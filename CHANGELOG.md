@@ -6,6 +6,34 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-07-20
+
+### Added
+- **Árbol de Habilidades del Operador (ficha 8)**: progresión personal del jugador. La experiencia de duelo sube tu NIVEL de Operador y cada nivel da un PUNTO de habilidad. El árbol tiene nodos por RANGOS (subes uno hasta cierto nivel para desbloquear el siguiente) en tres ramas:
+  - **Economía** (todos los modos: Historia, Arena y Multijugador): más Nexus y XP por duelo.
+  - **Combate** (SOLO Historia y Arena, por fairness): más LP iniciales, más techo de energía (hasta 12) y energía extra en tu primer turno ("Arranque en Frío", concedida por encima del tope).
+  - **Arsenal** (utilidad): más experiencia.
+  - Página de constelación holográfica (adaptable a desktop/móvil con selector de rama), acceso desde la Academia (pilar "Habilidades") y sección propia en el Códex. Backend server-authoritative: nivel/puntos derivados de la XP, desbloqueo por RPC `security definer` idempotente que valida gate-por-rango, tope y puntos.
+- **Sobrecarga Energética (ficha 1)**: la entity **Windows 92** gana +1 energía (+2 a V5) para su dueño cada vez que gana un combate a una entity rival.
+- **Borrado de Mano (ficha 2)**: magia que hace al rival descartar hasta 3 cartas.
+- **Recaudador (ficha 3)**: entity floja cuya pasiva "Recaudación" acredita Nexus por cada combate ganado, con acreditación server-authoritative (idempotente, topes 600/duelo y 1200/día, solo Historia/Arena).
+- **Elegir qué trampa activar (ficha 4)**: cuando varias trampas pueden reaccionar a la misma acción, un carrusel deja elegir cuál (desktop y móvil).
+- **Nodo de objeto en el overworld (ficha 9)**: caché de objetos (USB Raro) reclamable en el mapa del Acto 3.
+- **Rastro visible de objetos equipados (ficha 9b)**: badges de mejora en la cara de la carta e historial de equipamientos en el Arsenal.
+
+### Changed
+- **IA de oponentes mucho más fuerte (ficha 5)**: simulador IA-vs-IA para medir, posición al invocar inteligente para todos los perfiles, repliegue de entities que perderían el intercambio, reemplazo de carta con la zona llena, la IA ahora sí fusiona (y no arranca fusiones inviables) y combos por-efecto (piezas y cebo de trampa reactiva), con gating de comportamiento por tier.
+
+### Fixed
+- **Móvil (prompt de trampa)**: el overlay de carta tapaba las flechas del carrusel de trampa y podía cancelar la activación; corregido.
+
+### Security
+- **Cierre de `player_progress`**: la XP del jugador era escribible por el cliente (`authenticated`), lo que con el árbol de habilidades habría permitido inflar la XP y desbloquear todo el árbol. Ahora `player_progress` se escribe solo con service-role (patrón de la cartera), con regresión que lo cubre. Migración **135** (se aplica DESPUÉS de desplegar el código, para no romper el guardado de XP con el código antiguo).
+
+### Internal
+- Migraciones **131** (log de mejoras de carta), **132** (Borrado de Mano), **133** (Windows 92 + pasiva de energía), **134** (Recaudador + RPC `credit_passive_nexus`), **135** (cierre de `player_progress`, pendiente de aplicar tras deploy), **136** (tablas + RPC del árbol) y **137** (catálogo v1 del árbol). Las 131–134 y 136–137 aplicadas a producción; la **135** queda para después del despliegue del código.
+- Motor: la economía del árbol se aplica en el cierre de duelo (Story/Training/Multi) de forma NO-FATAL; los modificadores de combate se aplican solo al jugador local en la preparación de partida PvE.
+
 ## [1.15.1] - 2026-07-15
 
 ### Fixed

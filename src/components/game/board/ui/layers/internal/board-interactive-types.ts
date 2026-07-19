@@ -58,6 +58,7 @@ export interface IBoardInteractiveLayerProps {
   onActivateSelectedExecution: () => void;
   onActivatePendingTrap?: () => void;
   onSkipPendingTrap?: () => void;
+  onCyclePendingTrap?: (direction: -1 | 1) => void;
   onSetSelectedEntityToAttack?: () => void;
   onSelectCard: (card: ICard) => void;
   onCloseCard: () => void;

@@ -147,6 +147,7 @@ export function useBoard(
     pendingTrapActivationPrompt: runtime.pendingTrapActivationPrompt,
     activatePendingTrap: runtime.activatePendingTrap,
     skipPendingTrap: runtime.skipPendingTrap,
+    cyclePendingTrap: runtime.cyclePendingTrap,
     matchSeed,
     playTimerExpired: audio.playTimerExpired,
     playTimerWarning: audio.playTimerWarning,

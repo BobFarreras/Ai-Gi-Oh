@@ -31,6 +31,11 @@ const PRESENTATIONS: Record<OverworldObjectKind, IIntentPresentation> = {
     title: "Cache de Nexus",
     body: "Sumará Nexus a tu cuenta con su animación de recolección.",
   },
+  REWARD_OBJECT: {
+    actionVerb: "Recoger objeto",
+    title: "Caché de suministros",
+    body: "Añadirá el objeto a tus Objetos del arsenal (caramelos de nivel o mejoras de ATK/DEF).",
+  },
   EVENT: {
     actionVerb: "Investigar",
     title: "Evento narrativo",

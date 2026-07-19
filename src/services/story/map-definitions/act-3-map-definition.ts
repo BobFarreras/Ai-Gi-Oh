@@ -52,5 +52,7 @@ export const storyAct3MapDefinition: IStoryActMapDefinition = {
     v({ id: "story-ch3-cache-1", duelIndex: 306, nodeType: "REWARD_NEXUS", title: "Caché de Nexus", rewardNexus: 420, unlockRequirementNodeId: null, position: { x: 200, y: 400 } }),
     v({ id: "story-ch3-cache-2", duelIndex: 307, nodeType: "REWARD_NEXUS", title: "Caché de Nexus", rewardNexus: 480, unlockRequirementNodeId: null, position: { x: 400, y: 400 } }),
     v({ id: "story-ch3-cache-card", duelIndex: 308, nodeType: "REWARD_CARD", title: "Fragmento de Datos", rewardCardId: "fusion-pytgress", unlockRequirementNodeId: null, position: { x: 600, y: 400 } }),
+    // Caché de OBJETO (ficha 9 v1.17): un USB Raro +1 al inventario del arsenal, tras el puzzle de la placa.
+    v({ id: "story-ch3-cache-object", duelIndex: 310, nodeType: "REWARD_OBJECT", title: "Caché de Suministros", rewardObjectType: "LEVEL_CANDY", rewardObjectId: "candy-usb-raro-1", rewardObjectQuantity: 1, unlockRequirementNodeId: null, position: { x: 800, y: 400 } }),
   ],
 };

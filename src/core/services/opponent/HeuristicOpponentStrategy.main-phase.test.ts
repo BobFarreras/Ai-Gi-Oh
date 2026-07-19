@@ -14,6 +14,43 @@ describe("HeuristicOpponentStrategy MAIN_1", () => {
     expect(decision?.cardId).toBe("bot-entity");
   });
 
+  it("ficha 5 fase 3: con la zona de entities llena, ROTA la peor por una nueva claramente mejor", () => {
+    const strategy = new HeuristicOpponentStrategy({ difficulty: "HARD" });
+    const base = createBaseState();
+    const weak = { id: "bot-weak", name: "Weak", description: "", type: "ENTITY" as const, faction: "NEUTRAL" as const, cost: 2, attack: 800, defense: 700 };
+    const state: GameState = {
+      ...base,
+      playerB: {
+        ...base.playerB,
+        currentEnergy: 10,
+        // Zona llena con tres entities flojas; en mano una muy superior.
+        activeEntities: [createBoardEntity("bot-e1", weak), createBoardEntity("bot-e2", { ...weak, id: "bot-weak-2" }), createBoardEntity("bot-e3", { ...weak, id: "bot-weak-3" })],
+        hand: [{ id: "bot-titan", name: "Titan", description: "", type: "ENTITY", faction: "NEUTRAL", cost: 6, attack: 2500, defense: 1700 }],
+      },
+    };
+    const decision = strategy.choosePlay(state, "p2");
+    expect(decision?.cardId).toBe("bot-titan");
+    expect(decision?.replaceEntityInstanceId).toBe("bot-e1"); // la peor (todas iguales → la primera)
+  });
+
+  it("ficha 5 fase 3: con la zona llena y sin mejora clara, NO rota (mantiene el tablero)", () => {
+    const strategy = new HeuristicOpponentStrategy({ difficulty: "HARD" });
+    const base = createBaseState();
+    const solid = { id: "bot-solid", name: "Solid", description: "", type: "ENTITY" as const, faction: "NEUTRAL" as const, cost: 4, attack: 1500, defense: 1100 };
+    const state: GameState = {
+      ...base,
+      playerB: {
+        ...base.playerB,
+        currentEnergy: 10,
+        activeEntities: [createBoardEntity("bot-e1", solid), createBoardEntity("bot-e2", { ...solid, id: "bot-solid-2" }), createBoardEntity("bot-e3", { ...solid, id: "bot-solid-3" })],
+        hand: [{ id: "bot-similar", name: "Similar", description: "", type: "ENTITY", faction: "NEUTRAL", cost: 4, attack: 1600, defense: 1100 }],
+      },
+    };
+    const decision = strategy.choosePlay(state, "p2");
+    // No hay jugada de entity que compense el reemplazo (ni otra carta) → no juega entity de relleno.
+    expect(decision?.replaceEntityInstanceId).toBeUndefined();
+  });
+
   it("debería mantener MAIN_1 mientras existan jugadas útiles", () => {
     const strategy = new HeuristicOpponentStrategy();
     const baseState = createBaseState();

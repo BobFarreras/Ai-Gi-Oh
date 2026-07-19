@@ -3,6 +3,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { IPlayerProgress } from "@/core/entities/player/IPlayerProgress";
 import { IPlayerProgressRepository, IUpdatePlayerProgressInput } from "@/core/repositories/IPlayerProgressRepository";
+import { createPrivilegedWriteClientResolver } from "@/infrastructure/persistence/supabase/internal/resolve-privileged-write-client";
 
 interface IPlayerProgressRow {
   player_id: string;
@@ -29,7 +30,17 @@ function toEntity(row: IPlayerProgressRow): IPlayerProgress {
 }
 
 export class SupabasePlayerProgressRepository implements IPlayerProgressRepository {
-  constructor(private readonly client: SupabaseClient) {}
+  /**
+   * El progreso se LEE con el cliente de la sesión (SELECT own), pero se ESCRIBE siempre con service-role: así
+   * la BD puede prohibirle al jugador tocar su propia fila. Antes, escribir con la sesión obligaba a darle
+   * permiso de UPDATE sobre `player_progress`, y con eso cualquiera se subía `player_experience` (y por tanto
+   * los puntos del árbol de habilidades) con un PATCH directo desde la consola. Mismo patrón que la cartera.
+   */
+  private readonly writeClient: () => SupabaseClient;
+
+  constructor(private readonly client: SupabaseClient) {
+    this.writeClient = createPrivilegedWriteClientResolver();
+  }
 
   async getByPlayerId(playerId: string): Promise<IPlayerProgress | null> {
     const { data, error } = await this.client
@@ -42,7 +53,7 @@ export class SupabasePlayerProgressRepository implements IPlayerProgressReposito
   }
 
   async create(progress: IPlayerProgress): Promise<IPlayerProgress> {
-    const { data, error } = await this.client
+    const { data, error } = await this.writeClient()
       .from("player_progress")
       .insert({
         player_id: progress.playerId,
@@ -82,7 +93,7 @@ export class SupabasePlayerProgressRepository implements IPlayerProgressReposito
     if (input.medals !== undefined) updatePayload.medals = input.medals;
     if (input.storyChapter !== undefined) updatePayload.story_chapter = input.storyChapter;
     if (input.playerExperience !== undefined) updatePayload.player_experience = input.playerExperience;
-    const { data, error } = await this.client
+    const { data, error } = await this.writeClient()
       .from("player_progress")
       .update(updatePayload)
       .eq("player_id", input.playerId)

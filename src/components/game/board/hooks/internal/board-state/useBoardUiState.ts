@@ -6,9 +6,28 @@ import { IBoardUiError } from "../boardError";
 import { IPendingZoneReplacement } from "./pending-replacement";
 import { useBoardStateSelector, useLocalBoardStateStore } from "./board-state-store";
 
+export type TrapDecisionTrigger = "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED" | "ON_OPPONENT_TRAP_ACTIVATED";
+
+/** Una trampa candidata a activarse ante un disparo (ficha 4): su carta para previsualizar + su instanceId. */
+export interface ITrapEligibleOption {
+  card: ICard;
+  instanceId: string;
+}
+
+/** Decisión del jugador reactivo: activar (con la trampa elegida) o pasar. */
+export interface ITrapActivationDecision {
+  activate: boolean;
+  chosenTrapInstanceId?: string;
+}
+
 export interface ITrapActivationPrompt {
-  trigger: "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED" | "ON_OPPONENT_TRAP_ACTIVATED";
+  trigger: TrapDecisionTrigger;
+  /** Carta actualmente en el carrusel (= eligibleTraps[currentIndex].card). Se conserva para el detalle. */
   trapCard: ICard;
+  /** Todas las trampas elegibles para este disparo, en orden de colocación (ficha 4). */
+  eligibleTraps: ITrapEligibleOption[];
+  /** Índice de la trampa mostrada en el carrusel. */
+  currentIndex: number;
 }
 
 export function useBoardUiState(

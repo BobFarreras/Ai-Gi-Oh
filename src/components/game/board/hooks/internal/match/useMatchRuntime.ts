@@ -45,7 +45,7 @@ export function useMatchRuntime({
   useAutoClearBoardError(uiState);
   const applyTransition = useApplyTransition({ gameStateRef, uiState });
   const assertPlayerTurn = useAssertPlayerTurn({ gameStateRef, uiState, winnerPlayerId });
-  const { requestTrapActivationDecision, resolveTrapActivationDecision } = useTrapDecisionManager({ uiState });
+  const { requestTrapActivationDecision, resolveTrapActivationDecision, cyclePendingTrap } = useTrapDecisionManager({ uiState });
 
   useOpponentTurn(buildOpponentTurnParams({
     uiState,
@@ -93,5 +93,6 @@ export function useMatchRuntime({
     cancelEntityReplacement,
     pendingTrapActivationPrompt: uiState.pendingTrapActivationPrompt,
     resolveTrapActivationDecision,
+    cyclePendingTrap,
   });
 }

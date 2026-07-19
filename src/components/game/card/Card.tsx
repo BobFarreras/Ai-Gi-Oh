@@ -8,6 +8,7 @@ import { resolveMasteryPassiveLabel } from "@/core/services/progression/mastery-
 import { CARD_CLIP_PATHS, getCardTypeStyles } from "./internal/styles";
 import { CardFrame } from "./internal/CardFrame";
 import { CardHologram } from "./internal/CardHologram";
+import { ICardUpgradeCounts } from "./internal/card-frame-types";
 
 interface CardProps {
   card: ICard;
@@ -26,6 +27,8 @@ interface CardProps {
   xp?: number;
   masteryPassiveLabel?: string | null;
   prioritizeMediaLoading?: boolean;
+  /** Badges ×N de objetos aplicados (ATK/DEF). Solo el arsenal los pasa; el tablero no. */
+  upgradeCounts?: ICardUpgradeCounts | null;
 }
 
 function isBoardMode(mode?: BattleMode): boolean {
@@ -49,6 +52,7 @@ function CardComponent({
   xp,
   masteryPassiveLabel,
   prioritizeMediaLoading = false,
+  upgradeCounts = null,
 }: CardProps) {
   const isOnBoard = isBoardMode(boardMode);
   const isDefense = boardMode === "DEFENSE";
@@ -58,6 +62,9 @@ function CardComponent({
   const resolvedXp = xp ?? card.xp ?? 0;
   const resolvedMasteryPassiveLabel =
     masteryPassiveLabel ?? card.masteryPassiveLabel ?? resolveMasteryPassiveLabel(card.masteryPassiveSkillId ?? null, resolvedVersionTier);
+  // Badges de mejoras: la prop manda (override puntual), pero por defecto salen de la carta ya hidratada —
+  // así el tablero de combate, el overlay de aplicar y el mercado los muestran sin pasar props extra.
+  const resolvedUpgradeCounts = upgradeCounts ?? card.upgradeCounts ?? null;
   const wrapperStyle = clipToFrameShape ? { transformStyle: "preserve-3d" as const, clipPath: CARD_CLIP_PATHS.outer } : { transformStyle: "preserve-3d" as const };
 
   return (
@@ -77,6 +84,7 @@ function CardComponent({
         xp={resolvedXp}
         masteryPassiveLabel={resolvedMasteryPassiveLabel}
         prioritizeMediaLoading={prioritizeMediaLoading}
+        upgradeCounts={resolvedUpgradeCounts}
       />
       {shouldRenderHologram && <CardHologram card={card} isDefense={isDefense} mode={hologramMode} />}
     </div>

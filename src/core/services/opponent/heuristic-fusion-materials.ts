@@ -31,24 +31,16 @@ function matchesRecipeByArchetype(materials: [IBoardEntity, IBoardEntity], recip
   return pendingArchetypes.length === 0;
 }
 
-function matchesRecipeByEnergy(materials: [IBoardEntity, IBoardEntity], recipe: IFusionRecipe): boolean {
-  const requiredEnergyPerMaterial = recipe.requiredEnergyPerMaterial ?? null;
-  if (requiredEnergyPerMaterial !== null && materials.some((material) => material.card.cost < requiredEnergyPerMaterial)) {
-    return false;
-  }
-  if (recipe.requiredTotalEnergy) {
-    const totalCost = materials[0].card.cost + materials[1].card.cost;
-    return totalCost >= recipe.requiredTotalEnergy;
-  }
-  return true;
-}
-
 function chooseFusionMaterialsFromRecipe(activeEntities: IBoardEntity[], recipe: IFusionRecipe | null): [string, string] | null {
   if (!recipe || activeEntities.length < 2) return null;
+  // IMPORTANTE: el matcher debe reflejar EXACTAMENTE lo que el motor valida (validate-materials-against-recipe):
+  // SOLO requiredMaterialIds + requiredArchetypes. Los campos requiredEnergyPerMaterial/requiredTotalEnergy de
+  // las recetas son letra muerta (el motor los ignora: validateFusionEnergy es no-op). Si la IA los exigía,
+  // rechazaba pares que el jugador SÍ puede fusionar (p.ej. fusion-pytgress: python cost 3 < 4 exigido) y JAMÁS
+  // reconocía que podía fusionar → 0 fusiones. Alineado con el motor, la IA ya monta la fusión.
   const validPair = buildMaterialPairs(activeEntities).find((materials) =>
     matchesRecipeByMaterialIds(materials, recipe) &&
-    matchesRecipeByArchetype(materials, recipe) &&
-    matchesRecipeByEnergy(materials, recipe));
+    matchesRecipeByArchetype(materials, recipe));
   return validPair ? [validPair[0].instanceId, validPair[1].instanceId] : null;
 }
 

@@ -29,17 +29,20 @@ vi.mock("@/components/game/board/ui/CombatLogEventRow", () => ({
 }));
 
 function createTrapPrompt(): ITrapActivationPrompt {
+  const trapCard = {
+    id: "trap-mobile-1",
+    name: "Proxy Firewall Trap",
+    description: "Cancela ataque rival",
+    type: "TRAP" as const,
+    faction: "OPEN_SOURCE" as const,
+    cost: 1,
+    effect: { action: "NEGATE_ATTACK_AND_DESTROY_ATTACKER" as const },
+  };
   return {
     trigger: "ON_OPPONENT_ATTACK_DECLARED",
-    trapCard: {
-      id: "trap-mobile-1",
-      name: "Proxy Firewall Trap",
-      description: "Cancela ataque rival",
-      type: "TRAP",
-      faction: "OPEN_SOURCE",
-      cost: 1,
-      effect: { action: "NEGATE_ATTACK_AND_DESTROY_ATTACKER" },
-    },
+    trapCard,
+    eligibleTraps: [{ card: trapCard, instanceId: "trap-mobile-1-inst" }],
+    currentIndex: 0,
   };
 }
 

@@ -5,8 +5,11 @@ import { GameState } from "@/core/use-cases/GameEngine";
 import { IOpponentStrategy } from "@/core/services/opponent/types";
 import type { MouseEvent } from "react";
 import type { useBoardTurnControls } from "../board-state/useBoardTurnControls";
+import { ITrapActivationDecision, ITrapEligibleOption, TrapDecisionTrigger } from "../board-state/useBoardUiState";
 import { IUsePlayerActionsParams } from "../player-actions/types";
 import { IUseMatchUiStateResult } from "./useMatchUiState";
+
+export type RequestTrapActivationDecision = (traps: ITrapEligibleOption[], trigger: TrapDecisionTrigger) => Promise<ITrapActivationDecision>;
 
 interface IBuildOpponentTurnParamsInput {
   uiState: IUseMatchUiStateResult;
@@ -14,7 +17,7 @@ interface IBuildOpponentTurnParamsInput {
   disableOpponentAutomation: boolean;
   opponentStrategy: IOpponentStrategy;
   winnerPlayerId: string | "DRAW" | null;
-  requestTrapActivationDecision: (trapCard: ICard, trigger: "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED" | "ON_OPPONENT_TRAP_ACTIVATED") => Promise<boolean>;
+  requestTrapActivationDecision: RequestTrapActivationDecision;
   applyTransition: (transition: (state: GameState) => GameState) => GameState | null;
 }
 
@@ -28,7 +31,8 @@ interface IBuildMatchRuntimeResultInput {
   confirmEntityReplacement: () => void;
   cancelEntityReplacement: () => void;
   pendingTrapActivationPrompt: IUseMatchUiStateResult["pendingTrapActivationPrompt"];
-  resolveTrapActivationDecision: (activate: boolean) => void;
+  resolveTrapActivationDecision: (decision: ITrapActivationDecision) => void;
+  cyclePendingTrap: (direction: -1 | 1) => void;
 }
 
 export function buildOpponentTurnParams(input: IBuildOpponentTurnParamsInput) {
@@ -55,7 +59,7 @@ export function buildPlayerActionsParams(
   assertPlayerTurn: () => boolean,
   applyTransition: (transition: (state: GameState) => GameState) => GameState | null,
   resolvePendingTurnAction: (selectedId: string) => void,
-  requestTrapActivationDecision: IBuildOpponentTurnParamsInput["requestTrapActivationDecision"],
+  requestTrapActivationDecision: RequestTrapActivationDecision,
 ): IUsePlayerActionsParams {
   return {
     gameState: uiState.gameState,
@@ -106,7 +110,12 @@ export function buildMatchRuntimeResult(input: IBuildMatchRuntimeResultInput) {
     confirmEntityReplacement: input.confirmEntityReplacement,
     cancelEntityReplacement: input.cancelEntityReplacement,
     pendingTrapActivationPrompt: input.pendingTrapActivationPrompt,
-    activatePendingTrap: () => input.resolveTrapActivationDecision(true),
-    skipPendingTrap: () => input.resolveTrapActivationDecision(false),
+    activatePendingTrap: () => {
+      const prompt = input.pendingTrapActivationPrompt;
+      const chosenTrapInstanceId = prompt?.eligibleTraps[prompt.currentIndex]?.instanceId;
+      input.resolveTrapActivationDecision({ activate: true, chosenTrapInstanceId });
+    },
+    skipPendingTrap: () => input.resolveTrapActivationDecision({ activate: false }),
+    cyclePendingTrap: input.cyclePendingTrap,
   };
 }

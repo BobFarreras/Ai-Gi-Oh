@@ -187,7 +187,7 @@ export class OverworldEngine {
       const tileKey = toGridPositionKey({ tileX: object.tileX, tileY: object.tileY });
       const isBump = object.trigger === "BUMP";
       const isActionReward =
-        (object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD") &&
+        (object.kind === "REWARD_NEXUS" || object.kind === "REWARD_CARD" || object.kind === "REWARD_OBJECT") &&
         object.trigger === "ADJACENT_ACTION";
       if (isBump) this.bumpObjectByTileKey.set(tileKey, object.id);
       if ((isBump || isActionReward) && !this.collectedObjectIds.has(object.id)) {

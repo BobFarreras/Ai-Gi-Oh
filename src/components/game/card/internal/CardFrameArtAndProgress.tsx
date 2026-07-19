@@ -1,6 +1,8 @@
 // src/components/game/card/internal/CardFrameArtAndProgress.tsx - Bloque central con arte, nombre y progreso de nivel.
 import Image from "next/image";
 import { ICard } from "@/core/entities/ICard";
+import { ICardUpgradeCounts } from "./card-frame-types";
+import { CardUpgradeBadges } from "./CardUpgradeBadges";
 
 interface CardFrameArtAndProgressProps {
   card: ICard;
@@ -11,6 +13,7 @@ interface CardFrameArtAndProgressProps {
   isPerformanceMode?: boolean;
   showBackgroundInPerformanceMode?: boolean;
   prioritizeMediaLoading?: boolean;
+  upgradeCounts?: ICardUpgradeCounts | null;
 }
 
 export function CardFrameArtAndProgress({
@@ -22,6 +25,7 @@ export function CardFrameArtAndProgress({
   isPerformanceMode = false,
   showBackgroundInPerformanceMode = false,
   prioritizeMediaLoading = false,
+  upgradeCounts = null,
 }: CardFrameArtAndProgressProps) {
   const isSpellOrTrap = card.type === "EXECUTION" || card.type === "TRAP";
   const shouldBypassImageOptimization = Boolean(card.renderUrl?.startsWith("/assets/renders/"));
@@ -66,6 +70,7 @@ export function CardFrameArtAndProgress({
         {!disableHoverEffects && !isPerformanceMode ? (
           <div className="absolute top-0 h-0.5 w-full bg-cyan-400/50 opacity-0 group-hover:animate-[ping_2s_infinite] group-hover:opacity-100" />
         ) : null}
+        <CardUpgradeBadges counts={upgradeCounts ?? null} variant="detail" />
       </div>
       <div className="flex w-full flex-1 items-center justify-center py-1">
         <h2 className={isPerformanceMode ? "line-clamp-2 w-full text-center text-[17px] font-black uppercase leading-tight tracking-tight text-white" : "line-clamp-2 w-full text-center text-[17px] font-black uppercase leading-tight tracking-tight text-white drop-shadow-[0_2px_5px_rgba(0,0,0,1)]"}>

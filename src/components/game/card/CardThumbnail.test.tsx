@@ -50,4 +50,18 @@ describe("CardThumbnail", () => {
     const { container } = render(<CardThumbnail card={entityCard} versionTier={5} level={3} />);
     expect(container.querySelectorAll("[class*='animate-']")).toHaveLength(0);
   });
+
+  it("marca las mejoras con SOLO el icono (sin ×N) para no tapar el arte de la miniatura", () => {
+    render(<CardThumbnail card={{ ...entityCard, upgradeCounts: { attack: 2, defense: 1 } }} />);
+    // El sello existe (accesible con su cuenta), pero no pinta el número sobre la miniatura.
+    expect(screen.getByLabelText("2 mejoras de ataque")).toBeInTheDocument();
+    expect(screen.getByLabelText("1 mejora de defensa")).toBeInTheDocument();
+    expect(screen.queryByText(/×2|×1/)).not.toBeInTheDocument();
+  });
+
+  it("sin upgradeCounts no pinta badges (cartas sin mejoras ni el tablero base)", () => {
+    render(<CardThumbnail card={entityCard} />);
+    expect(screen.queryByLabelText(/mejoras de ataque/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/mejoras de defensa/)).not.toBeInTheDocument();
+  });
 });

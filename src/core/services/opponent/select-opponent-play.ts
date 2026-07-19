@@ -6,6 +6,7 @@ import { IStoryAiProfile } from "@/core/services/opponent/difficulty/story-ai-pr
 import { scoreEntity, scoreExecution, scoreFusion, scoreTrap } from "@/core/services/opponent/heuristic-score";
 import { canActivateFusionExecutionNow } from "@/core/services/opponent/opponent-fusion-execution";
 import { resolveTacticalCardBonus } from "@/core/services/opponent/opponent-tactical-context";
+import { resolveSynergyBonus } from "@/core/services/opponent/opponent-synergy";
 
 export interface IPlayableCardDecision {
   card: ICard;
@@ -23,6 +24,10 @@ function resolveEntityMode(
   const attack = card.attack ?? 0;
   const defense = card.defense ?? 0;
   const rivalBestAttack = target.activeEntities.reduce((best, entity) => Math.max(best, entity.card.attack ?? 0), 0);
+  // Amenaza REAL a una recién invocada: el mayor ATK entre rivales EN ATAQUE (los que pueden golpearla el
+  // próximo turno). Una entity en DEFENSA/SET no ataca, así que no cuenta como amenaza inmediata.
+  const rivalAttackThreat = target.activeEntities.reduce(
+    (best, entity) => (entity.mode === "ATTACK" ? Math.max(best, entity.card.attack ?? 0) : best), 0);
   const hasOwnAttacker = opponent.activeEntities.some((entity) => entity.mode === "ATTACK" && !entity.isNewlySummoned);
   const hasHiddenTarget = target.activeEntities.some((entity) => entity.mode === "SET");
   const shouldForcePressure =
@@ -30,8 +35,11 @@ function resolveEntityMode(
     (aiProfile.style === "aggressive" || aiProfile.style === "combo" || aiProfile.aggression >= 0.58) &&
     attack >= Math.max(1200, Math.trunc(defense * 0.85));
   if (shouldForcePressure) return "ATTACK";
-  if ((profile.key === "MASTER" || profile.key === "MYTHIC") && rivalBestAttack > attack && defense >= rivalBestAttack) return "DEFENSE";
   if (hasHiddenTarget && attack >= 1700 && aiProfile.aggression >= 0.5) return "ATTACK";
+  // Ficha 5 fase 2 (TODOS los perfiles): la recién invocada no ataca este turno. Si NO gana el intercambio
+  // contra el mejor atacante rival, en ATAQUE solo se expone al trample (daño directo al perderlo); en
+  // DEFENSA no hay daño penetrante y su DEF puede rebotar. La promoción a ataque llega luego, cuando compensa.
+  if (rivalAttackThreat > 0 && attack < rivalAttackThreat) return "DEFENSE";
   if (defense > attack && defense >= rivalBestAttack) return "DEFENSE";
   return attack >= defense ? "ATTACK" : "DEFENSE";
 }
@@ -56,6 +64,10 @@ function canActivateNewBatchExecutionNow(effect: NonNullable<ICard["effect"]>, o
   if (effect.action === "BOOST_ATTACK_BY_CARD_ID") return opponent.activeEntities.some((entity) => entity.card.id === effect.targetCardId);
   if (effect.action === "DAMAGE_IF_ALLY_ON_BOARD") return opponent.activeEntities.some((entity) => entity.card.id === effect.requiredCardId);
   if (effect.action === "APPLY_NO_DIRECT_ATTACKS") return true;
+  // Atacar en defensa: activar solo si hay muros en defensa que se beneficien (si no, se setea/espera).
+  if (effect.action === "ALLOW_DEFENSE_MODE_ATTACK") {
+    return opponent.activeEntities.some((entity) => (entity.mode === "DEFENSE" || entity.mode === "SET") && (entity.card.defense ?? 0) >= 1200);
+  }
   if (effect.action === "DESTROY_OPPONENT_ENTITY" || effect.action === "FLIP_OPPONENT_ENTITY_TO_DEFENSE") return target.activeEntities.length > 0;
   if (effect.action === "SACRIFICE_ALLY_ENTITY_FOR_ENERGY") return opponent.activeEntities.length > 0;
   if (effect.action === "GRANT_EXTRA_SUMMON") return opponent.hand.filter((card) => card.type === "ENTITY").length >= 2 && opponent.activeEntities.length <= 1;
@@ -120,11 +132,15 @@ function scoreCardWithContext(
         : card.type === "TRAP"
           ? scoreTrap(card)
           : scoreExecution(card, profile);
-  if (card.type === "TRAP") return aiProfile.style === "control" ? base + 220 : base;
-  if (card.type !== "EXECUTION") return base;
+  // Gating escalonado (ficha 5): solo los tiers con skill `combos` (HARD+) reconocen sinergias de combo;
+  // EASY/NORMAL juegan las piezas "a ciegas" (más simples/peores), sin priorizar montarlas ni evitar quemarlas.
+  const synergy = profile.skill.combos ? resolveSynergyBonus(card, opponent) : 0;
+  if (card.type === "TRAP") return (aiProfile.style === "control" ? base + 220 : base) + synergy;
+  if (card.type !== "EXECUTION") return base + synergy;
   const mode = resolveExecutionMode(card, opponent, target);
   const effect = card.effect;
-  const activateBonus = mode === "ACTIVATE" ? 460 : -220;
+  // La sinergia se suma vía activateBonus, que entra en TODOS los returns de la rama de ejecución.
+  const activateBonus = (mode === "ACTIVATE" ? 460 : -220) + synergy;
   if (!effect) return base + activateBonus;
   if (effect.action === "DAMAGE" && effect.target === "OPPONENT") {
     const lethalBonus = effect.value >= target.healthPoints ? 9000 : 0;

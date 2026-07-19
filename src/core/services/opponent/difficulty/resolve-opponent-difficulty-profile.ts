@@ -54,5 +54,7 @@ export function resolveOpponentDifficultyProfile(input: { difficulty: OpponentDi
     executionAggroBias: Number((base.executionAggroBias * style.executionAggroBias * aggressionFactor).toFixed(3)),
     entityTempoBias: Number((base.entityTempoBias * style.entityTempoBias).toFixed(3)),
     minAttackScore: clampMinAttackScore(base.minAttackScore * style.minAttackScore * riskAverseFactor),
+    // El skill set es capacidad de tier, no lo modula el ai_profile (estilo/agresión): pasa tal cual.
+    skill: base.skill,
   };
 }

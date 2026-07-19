@@ -17,6 +17,7 @@ vi.mock("@/infrastructure/persistence/supabase/internal/create-supabase-service-
 
 const { SupabaseWalletRepository } = await import("./SupabaseWalletRepository");
 const { SupabasePlayerCardProgressRepository } = await import("./SupabasePlayerCardProgressRepository");
+const { SupabasePlayerProgressRepository } = await import("./SupabasePlayerProgressRepository");
 
 /** Cliente de sesión falso: si alguien intenta ESCRIBIR con él, el test falla. */
 function createSessionClientSpy() {
@@ -83,6 +84,31 @@ describe("escrituras privilegiadas", () => {
     const repository = new SupabasePlayerCardProgressRepository(createSessionClientSpy());
     const progress = await repository.upsert({ playerId: "p1", cardId: "entity-x", level: 12, xp: 2000 });
     expect(progress.level).toBe(12);
+    expect(createSupabaseServiceRoleClient).toHaveBeenCalled();
+  });
+
+  it("la XP/progreso global se ACTUALIZA con service-role, nunca con la sesión (ficha 8: puntos del árbol)", async () => {
+    stubServiceRoleWrites({
+      player_id: "p1", has_completed_tutorial: true, has_seen_academy_intro: true, has_skipped_tutorial: false,
+      medals: 3, story_chapter: 2, player_experience: 5000, updated_at: "2026-07-18T00:00:00.000Z",
+    });
+    const repository = new SupabasePlayerProgressRepository(createSessionClientSpy());
+    const progress = await repository.update({ playerId: "p1", playerExperience: 5000 });
+    expect(progress.playerExperience).toBe(5000);
+    expect(createSupabaseServiceRoleClient).toHaveBeenCalled();
+  });
+
+  it("el progreso global se CREA con service-role, nunca con la sesión del jugador", async () => {
+    stubServiceRoleWrites({
+      player_id: "p1", has_completed_tutorial: false, has_seen_academy_intro: false, has_skipped_tutorial: false,
+      medals: 0, story_chapter: 1, player_experience: 0, updated_at: "2026-07-18T00:00:00.000Z",
+    });
+    const repository = new SupabasePlayerProgressRepository(createSessionClientSpy());
+    const progress = await repository.create({
+      playerId: "p1", hasCompletedTutorial: false, medals: 0, storyChapter: 1, playerExperience: 0,
+      updatedAtIso: "2026-07-18T00:00:00.000Z",
+    });
+    expect(progress.playerId).toBe("p1");
     expect(createSupabaseServiceRoleClient).toHaveBeenCalled();
   });
 });

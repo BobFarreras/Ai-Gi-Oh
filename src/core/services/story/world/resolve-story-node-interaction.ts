@@ -22,6 +22,8 @@ function mapTypeToAction(type: StoryWorldNodeType): IStoryNodeInteraction {
       return { actionKind: "CLAIM_REWARD", actionLabel: "Coger carta", requiresBattle: false };
     case "REWARD_NEXUS":
       return { actionKind: "CLAIM_REWARD", actionLabel: "Coger NEXUS", requiresBattle: false };
+    case "REWARD_OBJECT":
+      return { actionKind: "CLAIM_REWARD", actionLabel: "Coger objeto", requiresBattle: false };
     case "EVENT":
       return { actionKind: "TRIGGER_EVENT", actionLabel: "Activar evento", requiresBattle: false };
     case "MOVE":

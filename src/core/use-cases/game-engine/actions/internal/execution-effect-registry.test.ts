@@ -159,4 +159,24 @@ describe("execution-effect-registry", () => {
     expect(result.opponent.hand.map((c) => c.id)).toEqual(["h2"]);
     expect(result.opponent.graveyard.map((c) => c.id)).toEqual(["h1"]);
   });
+
+  it("DISCARD_OPPONENT_HAND_CARD con count 3 (carta Borrado de Mano) tira las 3 más antiguas", () => {
+    const player = createPlayer("a");
+    const opponent: IPlayer = {
+      ...createPlayer("b"),
+      hand: [entityCard("h1", 100), entityCard("h2", 200), entityCard("h3", 300), entityCard("h4", 400)],
+    };
+    const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "DISCARD_OPPONENT_HAND_CARD", count: 3 })!;
+    expect(result.opponent.hand.map((c) => c.id)).toEqual(["h4"]);
+    expect(result.opponent.graveyard.map((c) => c.id)).toEqual(["h1", "h2", "h3"]);
+    expect(result.systemEvents).toHaveLength(3);
+  });
+
+  it("DISCARD_OPPONENT_HAND_CARD con count mayor que la mano no revienta (clampa a lo que hay)", () => {
+    const player = createPlayer("a");
+    const opponent: IPlayer = { ...createPlayer("b"), hand: [entityCard("h1", 100), entityCard("h2", 200)] };
+    const result = resolveExecutionEffectFromRegistry(player, opponent, { action: "DISCARD_OPPONENT_HAND_CARD", count: 3 })!;
+    expect(result.opponent.hand).toEqual([]);
+    expect(result.opponent.graveyard.map((c) => c.id)).toEqual(["h1", "h2"]);
+  });
 });

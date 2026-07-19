@@ -14,6 +14,8 @@ interface IExecuteAttackOptions {
   skipTrapEventTypes?: ("ATTACK_DECLARED" | "DIRECT_ATTACK_DECLARED")[];
   /** Dueños cuyo contra-trampa (Nullify) no debe auto-activarse (el jugador decide). */
   skipCounterTrapPlayerIds?: string[];
+  /** Ficha 4: trampa concreta que el defensor eligió activar entre sus elegibles (revalidada). */
+  chosenTrapInstanceId?: string;
 }
 
 /**
@@ -56,6 +58,7 @@ export function executeAttack(
       skipReactivePlayerIds: options?.skipReactivePlayerIds,
       skipEventTypes: options?.skipTrapEventTypes,
       skipCounterTrapPlayerIds: options?.skipCounterTrapPlayerIds,
+      chosenTrapInstanceId: options?.chosenTrapInstanceId,
     },
   );
   const { player: currentAttacker, opponent: currentDefender, isPlayerA } = getPlayerPair(stateAfterTrap, attackerPlayerId);
@@ -80,6 +83,7 @@ export function executeAttack(
         skipReactivePlayerIds: options?.skipReactivePlayerIds,
         skipEventTypes: options?.skipTrapEventTypes,
         skipCounterTrapPlayerIds: options?.skipCounterTrapPlayerIds,
+        chosenTrapInstanceId: options?.chosenTrapInstanceId,
       },
     );
     const { player: directAttacker, opponent: directDefender, isPlayerA: isPlayerADirect } = getPlayerPair(stateAfterDirectTrap, attackerPlayerId);

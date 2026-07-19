@@ -12,6 +12,7 @@ const DIFFICULTY_PROFILES: Record<OpponentDifficulty, IOpponentDifficultyProfile
     executionAggroBias: 0.9,
     entityTempoBias: 0.82,
     minAttackScore: -1800,
+    skill: { combos: false, baitReactiveTrap: false },
   },
   NORMAL: {
     key: "NORMAL",
@@ -23,6 +24,7 @@ const DIFFICULTY_PROFILES: Record<OpponentDifficulty, IOpponentDifficultyProfile
     executionAggroBias: 1.15,
     entityTempoBias: 1.05,
     minAttackScore: 20,
+    skill: { combos: false, baitReactiveTrap: false },
   },
   HARD: {
     key: "HARD",
@@ -34,6 +36,7 @@ const DIFFICULTY_PROFILES: Record<OpponentDifficulty, IOpponentDifficultyProfile
     executionAggroBias: 1.5,
     entityTempoBias: 1.3,
     minAttackScore: 140,
+    skill: { combos: true, baitReactiveTrap: false },
   },
   BOSS: {
     key: "BOSS",
@@ -45,6 +48,7 @@ const DIFFICULTY_PROFILES: Record<OpponentDifficulty, IOpponentDifficultyProfile
     executionAggroBias: 1.95,
     entityTempoBias: 1.46,
     minAttackScore: 250,
+    skill: { combos: true, baitReactiveTrap: false },
   },
   MASTER: {
     key: "MASTER",
@@ -56,6 +60,7 @@ const DIFFICULTY_PROFILES: Record<OpponentDifficulty, IOpponentDifficultyProfile
     executionAggroBias: 2.18,
     entityTempoBias: 1.62,
     minAttackScore: 320,
+    skill: { combos: true, baitReactiveTrap: true },
   },
   MYTHIC: {
     key: "MYTHIC",
@@ -67,6 +72,7 @@ const DIFFICULTY_PROFILES: Record<OpponentDifficulty, IOpponentDifficultyProfile
     executionAggroBias: 2.45,
     entityTempoBias: 1.76,
     minAttackScore: 390,
+    skill: { combos: true, baitReactiveTrap: true },
   },
 };
 

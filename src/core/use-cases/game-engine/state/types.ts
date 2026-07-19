@@ -115,6 +115,25 @@ export interface GameState {
   /** Efectos de estado multi-turno a nivel de jugador (p.ej. "sin ataques directos N turnos"). */
   activeStatusEffects?: IActiveStatusEffect[];
   /**
+   * Nexus de moneda acumulado en este duelo por la pasiva de Recaudación (ficha 3 v1.17), por jugador
+   * (playerId → Nexus). El motor SOLO cuenta aquí; el servidor lo acredita al cerrar el duelo, con topes.
+   * Vive en el GameState → determinista en multi. No es LP ni energía: es un contador de recompensa diferida.
+   */
+  nexusEarnedByPlayerId?: Record<string, number>;
+  /**
+   * Energía pendiente de conceder por la pasiva de Sobrecarga Energética (ficha 1 v1.17), por jugador
+   * (playerId → energía). Se acumula al ganar un combate y se concede (respetando maxEnergy) al INICIO del
+   * siguiente turno de ese jugador, limpiándose entonces. Determinista → correcto en multi.
+   */
+  pendingEnergyBonusByPlayerId?: Record<string, number>;
+  /**
+   * Energía extra one-time del árbol de habilidades "Arranque en Frío" (ficha 8), por jugador. Se concede en
+   * el PRIMER turno de ese jugador POR ENCIMA del tope (a diferencia de la Sobrecarga, que respeta maxEnergy)
+   * y se limpia entonces. Al starter se le aplica en la inicialización (su turno 1 ya está activo); al no-starter
+   * se le concede vía next-phase al arrancar su primer turno. Solo PvE. Determinista → correcto en multi.
+   */
+  firstTurnEnergyBonusByPlayerId?: Record<string, number>;
+  /**
    * Transitorio dentro de una misma resolución de ataque: instanceId del atacante cuyo ataque ha sido
    * ANULADO por una trampa reactiva sin destruir al atacante (Flutter Enjambre en directo / Escudo
    * Metasploit a entity). `executeAttack` lo consume y lo limpia; no persiste entre acciones.

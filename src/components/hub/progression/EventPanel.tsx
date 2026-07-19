@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { IEventOverview, IEventShopItem } from "@/core/entities/progression/IEvent";
 import { IMissionView } from "@/core/entities/progression/IMission";
@@ -66,6 +67,8 @@ function ObjectTile({ item, soldOut }: { item: IEventShopItem; soldOut: boolean 
 function ShopItem({ item, balance, onRedeemed, cardMap }: { item: IEventShopItem; balance: number; onRedeemed: (itemId: string, newBalance: number) => void; cardMap: Map<string, ICard> }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Aviso de destino tras canjear un objeto (ficha 9b): sin él, el jugador no sabe dónde ha ido a parar.
+  const [showObjectDestination, setShowObjectDestination] = useState(false);
   const isCard = item.rewardKind === "CARD";
   const card = item.cardId ? cardMap.get(item.cardId) ?? null : null;
   const soldOut = item.owned >= item.perPlayerLimit;
@@ -83,6 +86,7 @@ function ShopItem({ item, balance, onRedeemed, cardMap }: { item: IEventShopItem
       if (!response.ok) throw new Error("redeem failed");
       const data = (await response.json()) as { balance: number };
       onRedeemed(item.itemId, data.balance);
+      if (!isCard) setShowObjectDestination(true);
       track("event_item_redeemed", "shop", { itemId: item.itemId, cardId: item.cardId ?? item.objectId ?? "", costPoints: item.costPoints });
     } catch {
       setError("No se pudo canjear.");
@@ -125,6 +129,14 @@ function ShopItem({ item, balance, onRedeemed, cardMap }: { item: IEventShopItem
         )}
       </button>
       {error ? <p className="text-center text-xs text-rose-300">{error}</p> : null}
+      {showObjectDestination ? (
+        <p className="text-center text-[11px] leading-snug text-emerald-300">
+          Añadido a tus Objetos del arsenal.{" "}
+          <Link href="/hub/arsenal?seccion=objetos" className="font-bold text-emerald-200 underline underline-offset-2 hover:text-emerald-100">
+            Verlo
+          </Link>
+        </p>
+      ) : null}
     </div>
   );
 }

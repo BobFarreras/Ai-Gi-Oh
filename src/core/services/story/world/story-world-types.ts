@@ -8,6 +8,7 @@ export type StoryWorldNodeType =
   | "BOSS"
   | "REWARD_CARD"
   | "REWARD_NEXUS"
+  | "REWARD_OBJECT"
   | "EVENT";
 
 export interface IStoryWorldNode {

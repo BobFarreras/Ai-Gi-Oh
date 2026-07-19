@@ -1,7 +1,7 @@
 // src/components/game/board/hooks/internal/opponent-turn/runMainPhaseStep.ts - Ejecuta el paso principal del turno rival resolviendo pendientes y acciones jugables.
 import { GameEngine } from "@/core/use-cases/GameEngine";
 import { canActivateExecutionNow } from "@/core/services/opponent/select-opponent-play";
-import { addRevealedId, findReactiveTrap, removeRevealedId } from "../trapPreview";
+import { addRevealedId, findReactiveTrap, findReactiveTraps, removeRevealedId, toTrapEligibleOptions } from "../trapPreview";
 import { sleep } from "../sleep";
 import { IOpponentAutoPick, IOpponentStepTimings, IOpponentTurnContext } from "./types";
 import { pickOpponentPendingActionId } from "./pick-opponent-pending-action-id";
@@ -31,10 +31,16 @@ export async function runMainPhaseStep(
 
   const pendingExecution = gameState.playerB.activeExecutions.find((entity) => entity.mode === "ACTIVATE");
   if (pendingExecution) {
-    const reactiveTrap = findReactiveTrap(gameState, gameState.playerA.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
-    const shouldActivateReactiveTrap = reactiveTrap
-      ? await context.requestTrapActivationDecision(reactiveTrap.card, "ON_OPPONENT_EXECUTION_ACTIVATED")
-      : false;
+    // Ficha 4: el humano elige cuál de sus trampas reactivas a magia activar (carrusel).
+    const reactiveTraps = findReactiveTraps(gameState, gameState.playerA.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
+    const trapDecision = reactiveTraps.length > 0
+      ? await context.requestTrapActivationDecision(toTrapEligibleOptions(reactiveTraps), "ON_OPPONENT_EXECUTION_ACTIVATED")
+      : { activate: false };
+    const shouldActivateReactiveTrap = trapDecision.activate;
+    const chosenTrapInstanceId = trapDecision.chosenTrapInstanceId;
+    const reactiveTrap = shouldActivateReactiveTrap
+      ? reactiveTraps.find((entity) => entity.instanceId === chosenTrapInstanceId) ?? reactiveTraps[0] ?? null
+      : reactiveTraps[0] ?? null;
     const opponentCounterTrap = reactiveTrap
       ? findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_TRAP_ACTIVATED")
       : null;
@@ -61,6 +67,7 @@ export async function runMainPhaseStep(
       GameEngine.resolveExecution(state, opponentId, pendingExecution.instanceId, {
         skipReactivePlayerIds: shouldActivateReactiveTrap ? [] : [state.playerA.id],
         skipTrapEventTypes: shouldActivateReactiveTrap ? [] : ["EXECUTION_ACTIVATED"],
+        chosenTrapInstanceId: shouldActivateReactiveTrap ? chosenTrapInstanceId : undefined,
       }),
     );
     await sleep(timings.postResolutionMs);

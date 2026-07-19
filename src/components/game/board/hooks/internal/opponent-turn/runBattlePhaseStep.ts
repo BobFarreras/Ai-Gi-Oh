@@ -1,6 +1,6 @@
 // src/components/game/board/hooks/internal/opponent-turn/runBattlePhaseStep.ts - Ejecuta paso de batalla del oponente con timings y resolución de trampas.
 import { GameEngine } from "@/core/use-cases/GameEngine";
-import { addRevealedId, findReactiveTrap, removeRevealedId } from "../trapPreview";
+import { addRevealedId, findReactiveTrap, findReactiveTraps, removeRevealedId, toTrapEligibleOptions } from "../trapPreview";
 import { sleep } from "../sleep";
 import { IOpponentStepTimings, IOpponentTurnContext } from "./types";
 
@@ -59,12 +59,19 @@ export async function runBattlePhaseStep(context: IOpponentTurnContext, timings:
     context.setRevealedEntities((previous) => addRevealedId(previous, targetEntity.instanceId));
     await sleep(320);
   }
-  const reactiveTrap = findReactiveTrap(gameState, gameState.playerA.id, "ON_OPPONENT_ATTACK_DECLARED", {
+  // Ficha 4: si el humano tiene varias trampas elegibles, elige cuál activar en el carrusel.
+  const reactiveTraps = findReactiveTraps(gameState, gameState.playerA.id, "ON_OPPONENT_ATTACK_DECLARED", {
     defenderInstanceId: attackDecision.defenderInstanceId,
   });
-  const shouldActivateReactiveTrap = reactiveTrap
-    ? await context.requestTrapActivationDecision(reactiveTrap.card, "ON_OPPONENT_ATTACK_DECLARED")
-    : false;
+  const trapDecision = reactiveTraps.length > 0
+    ? await context.requestTrapActivationDecision(toTrapEligibleOptions(reactiveTraps), "ON_OPPONENT_ATTACK_DECLARED")
+    : { activate: false };
+  const shouldActivateReactiveTrap = trapDecision.activate;
+  const chosenTrapInstanceId = trapDecision.chosenTrapInstanceId;
+  // Trampa a animar: la elegida (o la primera como respaldo para el revelado).
+  const reactiveTrap = shouldActivateReactiveTrap
+    ? reactiveTraps.find((entity) => entity.instanceId === chosenTrapInstanceId) ?? reactiveTraps[0] ?? null
+    : reactiveTraps[0] ?? null;
   const opponentCounterTrap = reactiveTrap
     ? findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_TRAP_ACTIVATED")
     : null;
@@ -91,6 +98,7 @@ export async function runBattlePhaseStep(context: IOpponentTurnContext, timings:
     GameEngine.executeAttack(state, opponentId, attackDecision.attackerInstanceId, attackDecision.defenderInstanceId, {
       skipReactivePlayerIds: shouldActivateReactiveTrap ? [] : [state.playerA.id],
       skipTrapEventTypes: shouldActivateReactiveTrap ? [] : ["ATTACK_DECLARED"],
+      chosenTrapInstanceId: shouldActivateReactiveTrap ? chosenTrapInstanceId : undefined,
     }),
   );
   await sleep(timings.postResolutionMs);
