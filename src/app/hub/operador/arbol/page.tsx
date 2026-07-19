@@ -5,11 +5,11 @@ import { HubSectionEntryBurst } from "@/components/hub/sections/HubSectionEntryB
 import { getSkillTreeState } from "@/services/progression/get-skill-tree-state";
 
 export default async function SkillTreePage() {
-  const tree = await getSkillTreeState();
+  const { authenticated, tree } = await getSkillTreeState();
   return (
     <>
       <HubSectionEntryBurst />
-      <SkillTreeScene initialTree={tree} />
+      <SkillTreeScene initialTree={tree} authenticated={authenticated} />
     </>
   );
 }

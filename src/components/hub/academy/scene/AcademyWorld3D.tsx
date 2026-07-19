@@ -14,6 +14,7 @@ import { resolveHubRenderProfile } from "@/components/hub/internal/hub-render-pr
 import { useHubDeviceCapability } from "@/components/hub/internal/use-hub-device-capability";
 import {
   ACADEMY_GLOSSARY_ROUTE,
+  ACADEMY_SKILL_TREE_ROUTE,
   ACADEMY_TRAINING_ARENA_ROUTE,
   ACADEMY_TUTORIAL_MAP_ROUTE,
 } from "@/core/constants/routes/academy-routes";
@@ -22,6 +23,7 @@ import { HologramPillar } from "./HologramPillar";
 const TUTORIAL_TEXTURE = "/assets/story/opponents/opp-ch1-biglog/intro-BigLog.webp";
 const ARENA_TEXTURE = "/assets/story/opponents/opp-ch1-guill/intro-Guill.webp";
 const DOC_NODE_TEXTURE = "/assets/story/servidor-doc.webp";
+const SKILL_TREE_TEXTURE = "/assets/story/player/intro-Jugador.webp";
 
 type Vec3 = [number, number, number];
 
@@ -65,6 +67,15 @@ const ACADEMY_NODES: AcademyNodeConfig[] = [
     floatOffset: 2.2,
     activationDelaySeconds: 0.36,
   },
+  {
+    key: "skill-tree",
+    textureUrl: SKILL_TREE_TEXTURE,
+    title: "Habilidades",
+    route: ACADEMY_SKILL_TREE_ROUTE,
+    baseY: 0.38,
+    floatOffset: 1.6,
+    activationDelaySeconds: 0.54,
+  },
 ];
 
 /** Número de nodos del carrusel (compartido con el HUD que pinta las flechas). */
@@ -87,8 +98,9 @@ interface ZoomState {
 // sobre el botón "Volver al Menú"; atrás-arriba pequeño para dejar ver su título.
 const MOBILE_CAROUSEL_SLOTS: Vec3[] = [
   [0, 0, 3.2],
-  [1.3, 0, -0.2],
-  [-1.3, 0, -5.0],
+  [1.5, 0, 0.2],
+  [-1.5, 0, -2.4],
+  [0, 0, -5.6],
 ];
 
 interface AcademyWorld3DProps {
@@ -106,10 +118,11 @@ interface ResolvedLayout {
   tutorialPos: Vec3;
   arenaPos: Vec3;
   docPos: Vec3;
+  skillTreePos: Vec3;
   cameraPosition: Vec3;
   lookAtTarget: Vec3;
   fov: number;
-  /** Escala de los pilares (en móvil se achican para que quepan los 3). */
+  /** Escala de los pilares (en móvil se achican para que quepan). */
   pillarScale: number;
 }
 
@@ -122,10 +135,12 @@ interface ResolvedLayout {
  */
 function resolveAcademyLayout(viewportWidth: number): ResolvedLayout {
   if (viewportWidth < 640) {
+    // Móvil: estas posiciones se ignoran (el carrusel usa MOBILE_CAROUSEL_SLOTS); solo cuentan cámara/FOV/escala.
     return {
       arenaPos: MOBILE_CAROUSEL_SLOTS[0],
       tutorialPos: MOBILE_CAROUSEL_SLOTS[1],
       docPos: MOBILE_CAROUSEL_SLOTS[2],
+      skillTreePos: MOBILE_CAROUSEL_SLOTS[3],
       cameraPosition: [0, 3.9, 11],
       lookAtTarget: [0, 0.9, -1.4],
       fov: 50,
@@ -133,23 +148,27 @@ function resolveAcademyLayout(viewportWidth: number): ResolvedLayout {
     };
   }
   if (viewportWidth < 900) {
+    // Tablet: 4 pilares (posiciones de primera pasada — afinar en preview).
     return {
-      tutorialPos: [-3.2, 0, 0],
-      arenaPos: [0, 0, -1.5],
-      docPos: [3.2, 0, 0],
-      cameraPosition: [0, 2.7, 12.6],
-      lookAtTarget: [0, 1.45, 0],
-      fov: 52,
-      pillarScale: 1,
+      tutorialPos: [-4.4, 0, 0.1],
+      arenaPos: [-1.5, 0, -1.6],
+      docPos: [1.5, 0, -1.6],
+      skillTreePos: [4.4, 0, 0.1],
+      cameraPosition: [0, 2.8, 13.6],
+      lookAtTarget: [0, 1.45, -0.6],
+      fov: 56,
+      pillarScale: 0.92,
     };
   }
+  // Desktop: 4 pilares (posiciones de primera pasada — afinar en preview).
   return {
-    tutorialPos: [-4.2, 0, 0],
-    arenaPos: [0, 0, -1.9],
-    docPos: [4.2, 0, 0],
-    cameraPosition: [0, 2.6, 11.2],
-    lookAtTarget: [0, 1.5, 0],
-    fov: 45,
+    tutorialPos: [-5.4, 0, 0.2],
+    arenaPos: [-1.8, 0, -1.9],
+    docPos: [1.8, 0, -1.9],
+    skillTreePos: [5.4, 0, 0.2],
+    cameraPosition: [0, 2.7, 12.6],
+    lookAtTarget: [0, 1.5, -0.5],
+    fov: 50,
     pillarScale: 1,
   };
 }
@@ -285,7 +304,8 @@ export function AcademyWorld3D({
             [
               { node: ACADEMY_NODES[1], pos: layout.tutorialPos }, // Tutorial (izquierda)
               { node: ACADEMY_NODES[0], pos: layout.arenaPos }, // Arena (centro-atrás)
-              { node: ACADEMY_NODES[2], pos: layout.docPos }, // Documentación (derecha)
+              { node: ACADEMY_NODES[2], pos: layout.docPos }, // Documentación (centro-atrás)
+              { node: ACADEMY_NODES[3], pos: layout.skillTreePos }, // Habilidades (derecha)
             ].map(({ node, pos }) => (
               <HologramPillar
                 key={node.key}

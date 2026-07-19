@@ -27,9 +27,10 @@ function nodeColor(view: ISkillTreeNodeView): string {
 
 interface ISkillTreeSceneProps {
   initialTree: ISkillTreeView | null;
+  authenticated: boolean;
 }
 
-export function SkillTreeScene({ initialTree }: ISkillTreeSceneProps) {
+export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeSceneProps) {
   const [tree, setTree] = useState<ISkillTreeView | null>(initialTree);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -41,8 +42,15 @@ export function SkillTreeScene({ initialTree }: ISkillTreeSceneProps) {
 
   if (!tree) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center text-cyan-200/70">
-        Inicia sesión para ver tu árbol de Operador.
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2 px-6 text-center text-cyan-200/70">
+        {!authenticated ? (
+          <p>Inicia sesión para ver tu árbol de Operador.</p>
+        ) : (
+          <>
+            <p className="text-slate-200">El árbol de habilidades aún no está disponible.</p>
+            <p className="text-xs text-slate-500">Las tablas del árbol no están migradas en esta base de datos (migraciones 136/137).</p>
+          </>
+        )}
       </div>
     );
   }
