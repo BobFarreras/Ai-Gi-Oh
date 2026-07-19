@@ -93,6 +93,15 @@ export const STORY_OVERVIEW = [
   "La Arena de Práctica usa a estos mismos rivales por niveles de dificultad, para entrenar sin afectar a la historia.",
 ];
 
+export const SKILL_TREE_INTRO = [
+  "El Árbol de Habilidades del Operador es TU progresión personal (distinta de la de las cartas). Cada duelo te da experiencia de Operador; al acumularla subes de NIVEL, y cada nivel te da un PUNTO de habilidad para gastar en el árbol.",
+  "El árbol tiene nodos organizados en tres ramas. Cada nodo se sube por RANGOS: gastas puntos para subirlo de nivel (p.ej. Nv.3/5), y algunos nodos solo se desbloquean cuando el anterior llega a cierto rango. No hay puntos suficientes para todo: tienes que elegir tu camino.",
+  "Rama de ECONOMÍA: más Nexus y experiencia por duelo. Funciona en TODOS los modos (Historia, Arena y Multijugador): solo cambia cuánto ganas, no el combate.",
+  "Rama de COMBATE: ventajas dentro del duelo (más LP iniciales, más techo de energía, energía extra en tu primer turno). IMPORTANTE: estas ventajas SOLO tienen efecto en HISTORIA y ARENA, nunca en Multijugador — allí todos compiten en igualdad.",
+  "Rama de ARSENAL: utilidades de meta-juego (más experiencia, y más adelante otras mejoras).",
+  "Se accede al árbol desde la Academia (pilar \"Habilidades\"). Reasignar puntos y las ramas avanzadas llegarán en futuras actualizaciones.",
+];
+
 // --- Trama del juego (lore narrativo; contexto tomado de la intro cinematográfica del landing) ---
 
 export const STORY_LORE_INTRO = {
