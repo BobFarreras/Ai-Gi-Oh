@@ -1,28 +1,40 @@
 // src/components/hub/progression/skill-tree/SkillTreeScene.tsx - Constelación del árbol de habilidades del
-// Operador (ficha 8). Pinta el estado que sirve GET /api/progression/skill-tree y sube rangos vía
-// POST .../rank-up. La autoridad es el servidor: tras subir, re-lee el estado (nada de puntos en el cliente).
+// Operador (ficha 8). Aristas en SVG (con glow) + nodos como botones HTML holográficos (iconos lucide, anillo
+// de progreso por rango, estados). Pinta GET /api/progression/skill-tree y sube rangos vía POST .../rank-up:
+// la autoridad es el servidor (tras subir, re-lee el estado — nada de puntos en el cliente).
 "use client";
 
-import { useMemo, useState } from "react";
-import { Bolt, Lock } from "lucide-react";
+import { useMemo, useState, type ComponentType } from "react";
+import {
+  BatteryCharging, Bolt, CircleDollarSign, Coins, Cpu, Crown, GraduationCap, Heart, Lock, Medal,
+  ShieldHalf, type LucideProps,
+} from "lucide-react";
 import { ISkillTreeNodeView, ISkillTreeView } from "@/core/services/progression/skill-tree/resolve-skill-tree-view";
 import { SKILL_TREE_VIEWBOX, resolveSkillTreeLayout } from "./resolve-skill-tree-layout";
 
-const BRANCH_COLOR: Record<string, string> = {
-  ROOT: "#22d3ee",
-  COMBAT: "#22d3ee",
-  ECONOMY: "#f59e0b",
-  ARSENAL: "#a78bfa",
+const BRANCH: Record<string, { color: string; label: string }> = {
+  ROOT: { color: "#38e0f0", label: "" },
+  COMBAT: { color: "#22d3ee", label: "COMBATE" },
+  ECONOMY: { color: "#f5b23a", label: "ECONOMÍA" },
+  ARSENAL: { color: "#a78bfa", label: "ARSENAL" },
 };
 
-const BRANCH_LABEL: Record<string, string> = {
-  COMBAT: "COMBATE",
-  ECONOMY: "ECONOMÍA",
-  ARSENAL: "ARSENAL",
+const NODE_ICON: Record<string, ComponentType<LucideProps>> = {
+  core: Cpu, nexus: CircleDollarSign, xp: GraduationCap, "shield-half": ShieldHalf,
+  coins: Coins, crown: Crown, heart: Heart, bolt: Bolt, battery: BatteryCharging, medal: Medal,
 };
 
-function nodeColor(view: ISkillTreeNodeView): string {
-  return BRANCH_COLOR[view.node.branch] ?? "#22d3ee";
+type NodeState = "maxed" | "partial" | "available" | "locked";
+
+function branchColor(branch: string): string {
+  return BRANCH[branch]?.color ?? "#22d3ee";
+}
+
+function resolveState(view: ISkillTreeNodeView): NodeState {
+  if (view.isMaxed) return "maxed";
+  if (view.rank > 0) return "partial";
+  if (view.isUnlockable) return "available";
+  return "locked";
 }
 
 interface ISkillTreeSceneProps {
@@ -90,11 +102,12 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
   }
 
   const xpPct = tree.xpForNext > 0 ? Math.min(100, Math.round((tree.xpIntoLevel / tree.xpForNext) * 100)) : 0;
+  const vb = SKILL_TREE_VIEWBOX;
 
   return (
     <div className="mx-auto w-full max-w-5xl px-3 py-4">
       {/* Cabecera HUD */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-cyan-500/25 bg-slate-950/60 px-4 py-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-cyan-500/25 bg-slate-950/60 px-4 py-3">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-full border border-cyan-400/70 text-cyan-300 shadow-[0_0_16px_rgba(34,211,238,0.35)]">
             <Bolt className="h-5 w-5" />
@@ -122,112 +135,203 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
       {error && <div className="mb-3 rounded-lg border border-rose-500/40 bg-rose-950/30 px-3 py-2 text-sm text-rose-200">{error}</div>}
 
       {/* Constelación */}
-      <div className="relative overflow-hidden rounded-xl border border-cyan-500/20 bg-[#070b16]">
-        <svg viewBox={`0 0 ${SKILL_TREE_VIEWBOX.width} ${SKILL_TREE_VIEWBOX.height}`} className="w-full" role="img" aria-label="Árbol de habilidades del Operador">
-          {/* Aristas (prerequisitos) */}
-          {tree.nodes.map((view) =>
-            view.node.prerequisites.map((prereq) => {
-              const from = layout.get(prereq.nodeId);
-              const to = layout.get(view.node.id);
-              if (!from || !to) return null;
-              const source = nodeById.get(prereq.nodeId);
-              const met = source ? source.rank >= prereq.minRank : false;
-              return (
-                <g key={`${view.node.id}-${prereq.nodeId}`}>
-                  <line
-                    x1={from.x} y1={from.y} x2={to.x} y2={to.y}
-                    stroke={met ? nodeColor(view) : "#334155"}
-                    strokeOpacity={met ? 0.75 : 0.9}
-                    strokeWidth={2}
-                    strokeDasharray={met ? undefined : "5 4"}
-                  />
-                  {!met && (
-                    <text x={(from.x + to.x) / 2} y={(from.y + to.y) / 2 - 4} textAnchor="middle" fontSize="10" fill="#8091ad">
-                      Nv.{prereq.minRank}
-                    </text>
-                  )}
-                </g>
-              );
-            }),
-          )}
+      <div
+        className="relative overflow-x-auto rounded-2xl border border-cyan-500/25 p-1"
+        style={{ boxShadow: "0 0 40px rgba(34,211,238,0.06) inset, 0 0 0 1px rgba(34,211,238,0.04)" }}
+      >
+        <div
+          className="relative mx-auto w-full min-w-[680px] overflow-hidden rounded-xl"
+          style={{
+            aspectRatio: `${vb.width} / ${vb.height}`,
+            background:
+              "radial-gradient(circle at 18% 12%, rgba(56,189,248,0.14), transparent 42%)," +
+              "radial-gradient(circle at 84% 86%, rgba(129,140,248,0.16), transparent 46%)," +
+              "radial-gradient(circle at 60% 40%, rgba(245,178,58,0.06), transparent 50%)," +
+              "linear-gradient(160deg,#060b17 0%,#04070f 100%)",
+          }}
+        >
+          {/* Rejilla + scanline tenues */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.35]"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(34,211,238,0.08) 1px, transparent 1px)," +
+                "linear-gradient(90deg, rgba(34,211,238,0.08) 1px, transparent 1px)",
+              backgroundSize: "40px 40px",
+            }}
+          />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.22)_50%)] bg-[length:100%_4px] opacity-25" />
 
-          {/* Nodos */}
+          {/* Aristas (SVG, con glow) */}
+          <svg viewBox={`0 0 ${vb.width} ${vb.height}`} preserveAspectRatio="xMidYMid meet" className="absolute inset-0 h-full w-full" aria-hidden>
+            {tree.nodes.map((view) =>
+              view.node.prerequisites.map((prereq) => {
+                const from = layout.get(prereq.nodeId);
+                const to = layout.get(view.node.id);
+                if (!from || !to) return null;
+                const source = nodeById.get(prereq.nodeId);
+                const met = source ? source.rank >= prereq.minRank : false;
+                const color = branchColor(view.node.branch);
+                return (
+                  <g key={`${view.node.id}-${prereq.nodeId}`}>
+                    {met && <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={color} strokeOpacity={0.22} strokeWidth={7} strokeLinecap="round" />}
+                    <line
+                      x1={from.x} y1={from.y} x2={to.x} y2={to.y}
+                      stroke={met ? color : "#2a3852"} strokeOpacity={met ? 0.9 : 0.85}
+                      strokeWidth={met ? 2.2 : 1.6} strokeLinecap="round"
+                      strokeDasharray={met ? undefined : "4 5"}
+                    />
+                    {!met && (
+                      <>
+                        <rect x={(from.x + to.x) / 2 - 20} y={(from.y + to.y) / 2 - 17} width={40} height={15} rx={7} fill="#0a1424" stroke={color} strokeOpacity={0.35} />
+                        <text x={(from.x + to.x) / 2} y={(from.y + to.y) / 2 - 6} textAnchor="middle" fontSize="9.5" fill="#9fb2cf" style={{ fontFamily: "var(--font-orbitron)" }}>
+                          Nv.{prereq.minRank}
+                        </text>
+                      </>
+                    )}
+                  </g>
+                );
+              }),
+            )}
+          </svg>
+
+          {/* Etiquetas de rama */}
+          {(["COMBAT", "ARSENAL", "ECONOMY"] as const).map((b) => {
+            const leftPct = b === "COMBAT" ? 190 / vb.width : b === "ARSENAL" ? 410 / vb.width : 630 / vb.width;
+            return (
+              <div
+                key={b}
+                className="pointer-events-none absolute top-2 -translate-x-1/2 font-display text-[10px] tracking-[0.28em]"
+                style={{ left: `${leftPct * 100}%`, color: BRANCH[b].color, opacity: 0.7, textShadow: `0 0 10px ${BRANCH[b].color}55` }}
+              >
+                {BRANCH[b].label}
+              </div>
+            );
+          })}
+
+          {/* Nodos (HTML holográfico) */}
           {tree.nodes.map((view) => {
             const pos = layout.get(view.node.id);
             if (!pos) return null;
-            const color = nodeColor(view);
+            const color = branchColor(view.node.branch);
+            const state = resolveState(view);
             const isSelected = selectedId === view.node.id;
-            const state = view.isMaxed ? "maxed" : view.rank > 0 ? "partial" : view.isUnlockable ? "available" : "locked";
-            const fill = state === "maxed" || state === "partial" ? `${color}22` : "#141a2e";
-            const stroke = state === "locked" ? "#475569" : color;
-            const opacity = state === "locked" ? 0.55 : 1;
-            const glow = state === "maxed" || state === "available";
+            const pct = view.node.maxRank > 0 ? (view.rank / view.node.maxRank) * 100 : 0;
+            const Icon = NODE_ICON[view.node.display.icon ?? ""] ?? Cpu;
+            const dim = state === "locked";
             return (
-              <g
+              <button
+                type="button"
                 key={view.node.id}
-                opacity={opacity}
                 onClick={() => setSelectedId(view.node.id)}
-                style={{ cursor: "pointer" }}
+                className="group absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center focus:outline-none"
+                style={{ left: `${(pos.x / vb.width) * 100}%`, top: `${(pos.y / vb.height) * 100}%` }}
+                aria-label={`${view.node.display.name} nivel ${view.rank} de ${view.node.maxRank}`}
               >
-                {glow && <circle cx={pos.x} cy={pos.y} r={30} fill="none" stroke={color} strokeWidth={1.5} strokeOpacity={0.5} />}
-                <circle cx={pos.x} cy={pos.y} r={24} fill={fill} stroke={stroke} strokeWidth={isSelected ? 4 : state === "available" ? 2.5 : 2} strokeDasharray={state === "available" ? "5 4" : undefined} />
-                <text x={pos.x} y={pos.y + 4} textAnchor="middle" fontSize="12" fill={state === "locked" ? "#94a3b8" : color} fontWeight="500">
-                  {view.node.branch === "ROOT" ? "◈" : view.rank > 0 ? view.rank : state === "locked" ? "🔒" : "+"}
-                </text>
-                <text x={pos.x} y={pos.y - 32} textAnchor="middle" fontSize="10.5" fill="#cbd5e1">{view.node.display.name}</text>
+                {/* Anillo de progreso por rango */}
+                <span
+                  className="relative flex h-[52px] w-[52px] items-center justify-center rounded-full p-[3px] transition-transform group-hover:scale-110"
+                  style={{
+                    background: `conic-gradient(${color} ${pct}%, rgba(100,116,139,0.28) ${pct}%)`,
+                    boxShadow: dim ? "none" : `0 0 18px ${color}55`,
+                    opacity: dim ? 0.6 : 1,
+                  }}
+                >
+                  {/* Anillo pulsante para "disponible" */}
+                  {state === "available" && (
+                    <span className="absolute -inset-1 animate-ping rounded-full border" style={{ borderColor: `${color}99` }} />
+                  )}
+                  {/* Núcleo */}
+                  <span
+                    className="flex h-full w-full items-center justify-center rounded-full"
+                    style={{
+                      background: isSelected ? `${color}26` : "#0a1120",
+                      border: `1.5px solid ${isSelected ? color : dim ? "rgba(100,116,139,0.5)" : `${color}aa`}`,
+                    }}
+                  >
+                    {dim ? (
+                      <Lock className="h-4 w-4 text-slate-500" />
+                    ) : (
+                      <Icon className="h-[22px] w-[22px]" style={{ color }} />
+                    )}
+                  </span>
+                  {/* Marca de "al máximo" */}
+                  {state === "maxed" && (
+                    <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#0a1120] text-[9px]" style={{ border: `1px solid ${color}`, color }}>
+                      ✓
+                    </span>
+                  )}
+                </span>
+                {/* Nombre + rango */}
+                <span className="mt-1 max-w-[86px] text-center text-[10px] leading-tight text-slate-300" style={{ textShadow: "0 1px 6px rgba(2,11,22,0.9)" }}>
+                  {view.node.display.name}
+                </span>
                 {view.node.maxRank > 1 && (
-                  <text x={pos.x} y={pos.y + 40} textAnchor="middle" fontSize="10" fill={color} fillOpacity={0.9}>
-                    Nv. {view.rank}/{view.node.maxRank}
-                  </text>
+                  <span className="font-display text-[9px] tracking-wider" style={{ color: dim ? "#64748b" : color }}>
+                    {view.rank}/{view.node.maxRank}
+                  </span>
                 )}
-              </g>
+              </button>
             );
           })}
+        </div>
 
-          {/* Etiquetas de rama */}
-          {(["COMBAT", "ARSENAL", "ECONOMY"] as const).map((branch) => {
-            const x = branch === "COMBAT" ? 190 : branch === "ARSENAL" ? 410 : 630;
-            return (
-              <text key={branch} x={x} y={30} textAnchor="middle" fontSize="11" letterSpacing="2" fill={BRANCH_COLOR[branch]} fillOpacity={0.7} className="font-display">
-                {BRANCH_LABEL[branch]}
-              </text>
-            );
-          })}
-        </svg>
-
-        {/* Panel del nodo seleccionado */}
+        {/* Panel del nodo seleccionado (holo-panel estilo hub) */}
         {selected && (
-          <div className="absolute bottom-3 left-3 right-3 rounded-xl border border-cyan-500/30 bg-slate-950/90 p-4 backdrop-blur sm:left-auto sm:w-72">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-slate-100">{selected.node.display.name}</div>
-              <div className="text-xs" style={{ color: nodeColor(selected) }}>Nv. {selected.rank}/{selected.node.maxRank}</div>
-            </div>
-            <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{selected.node.display.blurb}</p>
-            {!selected.prerequisitesMet && (
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
-                <Lock className="h-3.5 w-3.5" />
-                {selected.node.prerequisites.map((p) => `${nodeById.get(p.nodeId)?.node.display.name ?? p.nodeId} Nv.${p.minRank}`).join(", ")}
+          <div
+            className="absolute bottom-3 left-3 right-3 z-10 border border-cyan-400/40 bg-[#04101d]/95 p-4 shadow-[0_0_30px_rgba(34,211,238,0.18)] backdrop-blur-md sm:left-auto sm:w-80"
+            style={{ clipPath: "polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px)" }}
+          >
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-25" />
+            <div className="relative">
+              <div className="flex items-center justify-between gap-2">
+                <div className="font-display text-sm tracking-wide text-slate-100">{selected.node.display.name}</div>
+                <div className="font-display text-xs" style={{ color: branchColor(selected.node.branch) }}>
+                  Nv. {selected.rank}/{selected.node.maxRank}
+                </div>
               </div>
-            )}
-            <button
-              type="button"
-              disabled={busy || !selected.isUnlockable}
-              onClick={() => rankUp(selected.node.id)}
-              className="mt-3 w-full rounded-lg border border-cyan-400/60 bg-cyan-400/15 py-2 text-sm text-cyan-100 shadow-[0_0_16px_rgba(34,211,238,0.2)] transition enabled:hover:bg-cyan-400/25 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {selected.isMaxed ? "Al máximo"
-                : !selected.prerequisitesMet ? "Bloqueado"
-                : selected.nextCost !== null && tree.pointsAvailable < selected.nextCost ? "Puntos insuficientes"
-                : `Subir a Nv.${selected.rank + 1} · ${selected.nextCost} pt`}
-            </button>
+              {/* Pips de rango */}
+              <div className="mt-2 flex gap-1">
+                {Array.from({ length: selected.node.maxRank }).map((_, i) => (
+                  <span
+                    key={i}
+                    className="h-1.5 flex-1 rounded-full"
+                    style={{
+                      background: i < selected.rank ? branchColor(selected.node.branch) : "rgba(100,116,139,0.3)",
+                      boxShadow: i < selected.rank ? `0 0 6px ${branchColor(selected.node.branch)}` : "none",
+                    }}
+                  />
+                ))}
+              </div>
+              <p className="mt-2.5 text-xs leading-relaxed text-slate-400">{selected.node.display.blurb}</p>
+              {!selected.prerequisitesMet && (
+                <div className="mt-2 flex items-center gap-1.5 text-[11px] text-amber-300/90">
+                  <Lock className="h-3.5 w-3.5" />
+                  {selected.node.prerequisites.map((p) => `${nodeById.get(p.nodeId)?.node.display.name ?? p.nodeId} Nv.${p.minRank}`).join(" · ")}
+                </div>
+              )}
+              <button
+                type="button"
+                disabled={busy || !selected.isUnlockable}
+                onClick={() => rankUp(selected.node.id)}
+                className="mt-3 w-full border border-cyan-400/60 bg-cyan-400/15 py-2 font-display text-xs uppercase tracking-widest text-cyan-100 shadow-[0_0_16px_rgba(34,211,238,0.25)] transition enabled:hover:bg-cyan-400/25 disabled:cursor-not-allowed disabled:opacity-40"
+                style={{ clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)" }}
+              >
+                {selected.isMaxed ? "Al máximo"
+                  : !selected.prerequisitesMet ? "Bloqueado"
+                  : selected.nextCost !== null && tree.pointsAvailable < selected.nextCost ? "Puntos insuficientes"
+                  : `Subir a Nv.${selected.rank + 1} · ${selected.nextCost} pt`}
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-      <div className="mt-2 flex items-center justify-center gap-3 text-[11px] text-slate-500">
-        <span className="inline-flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee]" />al máximo</span>
-        <span className="inline-flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-full border border-cyan-400" />parcial/disponible</span>
-        <span className="inline-flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-full bg-slate-600" />bloqueado</span>
+      {/* Leyenda */}
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-slate-500">
+        <span className="inline-flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee]" />al máximo</span>
+        <span className="inline-flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full border border-cyan-400" />disponible</span>
+        <span className="inline-flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full border border-slate-600 bg-slate-800" />bloqueado</span>
       </div>
     </div>
   );
