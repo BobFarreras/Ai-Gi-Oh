@@ -1,5 +1,5 @@
 // vitest.config.ts - Configura Vitest para entorno JSDOM, alias y filtros de salida de consola en tests.
-import { defineConfig } from 'vitest/config';
+import { defineConfig, configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
@@ -9,7 +9,12 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./setup.ts'],
     globals: true,
-    exclude: ['e2e/**', 'node_modules/**', '.next/**'],
+    // Se PARTE de los excludes por defecto de Vitest (node_modules, dist, .git…) y se añaden:
+    //  - `e2e/**`: specs de Playwright (usan su propio runner; no deben correr en Vitest).
+    //  - `.next/**`: build de Next.
+    //  - `**/.claude/**`: worktrees y utillería interna de Claude Code. SIN esto, Vitest barría los tests
+    //    DUPLICADos del worktree (contaminaba tests por estado compartido) y sus specs e2e de Playwright.
+    exclude: [...configDefaults.exclude, 'e2e/**', '.next/**', '**/.claude/**'],
     onConsoleLog(log) {
       if (log.includes("THREE.WARNING: Multiple instances of Three.js being imported.")) {
         return false;
