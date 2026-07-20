@@ -23,6 +23,9 @@ export interface BoardStatusOverlaysProps {
   isPaused: boolean;
   /** Multi: la pausa no detiene el reloj; el overlay lo advierte para no engañar al jugador. */
   isMultiplayer?: boolean;
+  /** Multi: turnos propios ya consumidos en pausa y su límite, para el aviso "X/N" del menú de pausa. */
+  pausedTurnsUsed?: number;
+  maxPausedTurns?: number;
   onResumePause: () => void;
   onExitPause?: () => void;
   /** Solo Story: Nexus perdido al abandonar el combate (para el aviso del menú de pausa). */

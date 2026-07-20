@@ -81,6 +81,8 @@ export function mockDefaultUseBoardReturn() {
     isPlayerTurn: true,
     isMuted: false,
     isPaused: false,
+    pausedTurnTimeouts: 0,
+    registerPausedTurnTimeout: () => 0,
     isAutoPhaseEnabled: true,
     isTurnHelpEnabled: true,
     isFusionCinematicActive: false,

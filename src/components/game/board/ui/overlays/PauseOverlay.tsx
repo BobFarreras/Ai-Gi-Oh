@@ -8,13 +8,16 @@ interface PauseOverlayProps {
   isPaused: boolean;
   /** Multi: la pausa NO congela el reloj de turno; se avisa para que el jugador no pierda el turno sin saberlo. */
   isMultiplayer?: boolean;
+  /** Multi: turnos propios ya consumidos en pausa y su límite; al alcanzarlo se pierde por abandono. */
+  pausedTurnsUsed?: number;
+  maxPausedTurns?: number;
   onResume: () => void;
   onExit?: () => void;
   /** Solo Story: Nexus que se perderá al abandonar el combate (0/omitido = sin aviso económico). */
   abandonPenaltyNexus?: number;
 }
 
-export function PauseOverlay({ isPaused, isMultiplayer = false, onResume, onExit, abandonPenaltyNexus = 0 }: PauseOverlayProps) {
+export function PauseOverlay({ isPaused, isMultiplayer = false, pausedTurnsUsed = 0, maxPausedTurns = 0, onResume, onExit, abandonPenaltyNexus = 0 }: PauseOverlayProps) {
   const router = useRouter();
   
   if (!isPaused) return null;
@@ -40,10 +43,18 @@ export function PauseOverlay({ isPaused, isMultiplayer = false, onResume, onExit
           Pausa Táctica
         </h2>
         {isMultiplayer ? (
-          <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-300">
-            <TriangleAlert size={14} />
-            El reloj de turno sigue corriendo
-          </p>
+          <div className="mt-3 flex flex-col items-center gap-1.5">
+            <p className="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-300">
+              <TriangleAlert size={14} />
+              El reloj de turno sigue corriendo
+            </p>
+            {maxPausedTurns > 0 ? (
+              <p className="text-[11px] font-mono text-rose-300/80">
+                Turnos en pausa: <span className="font-black text-rose-200">{Math.min(pausedTurnsUsed, maxPausedTurns)}</span>/{maxPausedTurns}
+                {" · "}al límite pierdes la partida
+              </p>
+            ) : null}
+          </div>
         ) : null}
         <p className="mt-3 text-sm text-red-200/60 font-mono">
           {abandonPenaltyNexus > 0 ? (

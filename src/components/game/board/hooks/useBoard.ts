@@ -125,6 +125,8 @@ export function useBoard(
     isPlayerTurn: uiState.isPlayerTurn,
     isMuted: uiState.isMuted,
     isPaused: uiState.isPaused,
+    pausedTurnTimeouts: uiState.pausedTurnTimeouts,
+    registerPausedTurnTimeout: uiState.registerPausedTurnTimeout,
     isAutoPhaseEnabled: uiState.isAutoPhaseEnabled,
     isTurnHelpEnabled: uiState.isTurnHelpEnabled,
     isFusionCinematicActive: uiState.isFusionCinematicActive,

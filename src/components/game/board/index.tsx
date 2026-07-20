@@ -18,7 +18,8 @@ import { BoardInteractiveSection } from "@/components/game/board/internal/BoardI
 import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 import { BoardTutorialFlowOverlay } from "@/components/game/board/internal/BoardTutorialFlowOverlay";
 import { ReactiveTrapDecisionTimer } from "@/components/game/board/multiplayer/ReactiveTrapDecisionTimer";
-import { useLayoutEffect } from "react";
+import { MAX_PAUSED_TURNS_MULTIPLAYER } from "@/components/game/board/multiplayer/pause-turn-limit";
+import { useCallback, useLayoutEffect } from "react";
 import { useBoardViewportMetrics } from "./hooks/internal/layout/use-board-viewport-metrics";
 
 export type BoardBossThemeVariant = "CRIMSON" | "AMBER" | "VIOLET" | "CYAN";
@@ -54,12 +55,17 @@ interface IBoardProps {
    * garantizando que el overlay de resultado se muestre al perdedor.
    */
   externalWinnerPlayerId?: string | "DRAW" | null;
+  /**
+   * Multijugador: el jugador local pierde por permanecer demasiados turnos en pausa (anti-AFK). El cliente
+   * lo traduce en victoria del rival (finish + overlay de derrota local). Ver MAX_PAUSED_TURNS_MULTIPLAYER.
+   */
+  onLocalForfeit?: () => void;
   /** Callback que recibe applyTransition al montar el Board. Permite que clientes externos (ej. multijugador) apliquen acciones al estado de partida. */
   applyTransitionRef?: React.MutableRefObject<((transition: (state: import("@/core/use-cases/GameEngine").GameState) => import("@/core/use-cases/GameEngine").GameState) => import("@/core/use-cases/GameEngine").GameState | null) | null>;
   /** Recibe applyRemoteAction: aplica una acción del rival CON su coreografía visual (multijugador). */
   applyRemoteActionRef?: React.MutableRefObject<((action: import("@/core/entities/multiplayer/IMatchAction").IMatchActionPayload) => Promise<void>) | null>;
 }
-export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, opponentAvatarObjectPosition, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, abandonPenaltyNexus = 0, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId }: IBoardProps) {
+export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, opponentAvatarObjectPosition, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, abandonPenaltyNexus = 0, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId, onLocalForfeit }: IBoardProps) {
   countRender("Board");
   const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme, disableOpponentAutomation, opponentStrategyOverride);
   useLayoutEffect(() => {
@@ -100,6 +106,20 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
     onMatchResolved,
     externalWinnerPlayerId,
   });
+  const isMultiplayer = mode === "MULTIPLAYER";
+  // Timeout de turno. En multi, si el jugador está en pausa cuenta como "turno pausado" (anti-AFK): al llegar
+  // al límite pierde (forfeit → victoria del rival); en caso contrario, cede el turno entero al rival.
+  const handleTurnTimeout = useCallback(() => {
+    board.playTimerExpired();
+    if (isMultiplayer && board.isPaused) {
+      const pausedTurns = board.registerPausedTurnTimeout();
+      if (pausedTurns >= MAX_PAUSED_TURNS_MULTIPLAYER) {
+        onLocalForfeit?.();
+        return;
+      }
+    }
+    board.handleTimerExpired();
+  }, [board, isMultiplayer, onLocalForfeit]);
   return (
     <div className={boardRootClassName} style={viewportMetrics.height ? { height: `${viewportMetrics.height}px` } : undefined} onClick={board.clearSelection}>
       <div className={boardAmbientClassName} />
@@ -118,7 +138,9 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
             abandonPenaltyNexus={abandonPenaltyNexus}
             isTurnTimerEnabled={isTurnTimerEnabled}
             suppressCombatBanners={suppressCombatBanners}
-            isMultiplayer={mode === "MULTIPLAYER"}
+            isMultiplayer={isMultiplayer}
+            onTurnTimeout={handleTurnTimeout}
+            pausedTurnsUsed={board.pausedTurnTimeouts}
           />
           <BoardPlayersSection
             board={board}
