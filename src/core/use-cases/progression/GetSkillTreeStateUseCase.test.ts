@@ -21,7 +21,7 @@ function progressRepo(experience: number | null): IPlayerProgressRepository {
 }
 
 function skillRepo(catalog: ISkillTreeNode[], ranks: { nodeId: string; rank: number }[]): ISkillTreeRepository {
-  return { getActiveCatalog: vi.fn(async () => catalog), getPlayerRanks: vi.fn(async () => ranks), rankUp: vi.fn() };
+  return { getActiveCatalog: vi.fn(async () => catalog), getPlayerRanks: vi.fn(async () => ranks), rankUp: vi.fn(), respec: vi.fn() };
 }
 
 describe("GetSkillTreeStateUseCase", () => {

@@ -47,3 +47,16 @@ export interface IRankUpResult {
   pointsSpent?: number;
   pointsAvailable?: number;
 }
+
+/**
+ * Resultado de `respec_skill_tree` (reasignación total del árbol). Borra todos los rangos del jugador si tiene
+ * la "llave" (un nodo con efecto `GRANT_RESPEC_TOKEN`). `ok=false` con `reason='no_respec_key'` = sin llave;
+ * `duplicate=true` = la operación ya se procesó (idempotencia).
+ */
+export interface IRespecResult {
+  ok: boolean;
+  reason?: "bad_args" | "no_respec_key";
+  duplicate?: boolean;
+  /** Nº de nodos borrados (solo si `ok` y no `duplicate`). */
+  cleared?: number;
+}

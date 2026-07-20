@@ -286,7 +286,7 @@ Notación: **Nv. X/Y** = rango actual sugerido / `maxRank`; **coste** = `cost_pe
 |---|---|---|---|---|---|---|
 | `node-ars-veterano` | Veterano | **5** | 1 | core Nv.1 | `XP_REWARD_MULT +0.02` (acumula con Aprendizaje) | ✅ |
 | `node-ars-doble-mazo` | Doble Arsenal | **1** | 2 | Veterano Nv.1 | `UNLOCK_SECOND_DECK` (2º mazo + selector) | ❌ F7 |
-| `node-ars-reasignar` | Reasignación | 1 | 1 | core Nv.1 | `GRANT_RESPEC_TOKEN 1` (un respec gratis) | ❌ F4+ |
+| `node-ars-reasignar` | Reasignación | 1 | 1 | core Nv.1 | `GRANT_RESPEC_TOKEN 1` — desbloquea el respec (reset total del árbol) | ✅ |
 | `node-ars-cazador` | Cazador de Redes | **3** | 1 | Veterano Nv.3 | `GHOST_DAILY_LIMIT_BONUS +1` → +3 (ficha 6) | ❌ F8 |
 
 > **Cambio de jerarquía Arsenal (2026-07-20):** Doble Arsenal pasa de tier 3 (remate) a **tier 2** (segundo nodo

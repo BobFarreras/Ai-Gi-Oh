@@ -7,11 +7,12 @@
 import { useMemo, useRef, useState, type ComponentType } from "react";
 import {
   BatteryCharging, Bolt, CircleDollarSign, Coins, Cpu, Crown, GraduationCap, Heart, Lock, Medal,
-  ShieldHalf, type LucideProps,
+  RotateCcw, ShieldHalf, type LucideProps,
 } from "lucide-react";
 import { AcademyBackButton } from "@/components/hub/academy/AcademyBackButton";
 import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
 import { ISkillTreeNodeView, ISkillTreeView } from "@/core/services/progression/skill-tree/resolve-skill-tree-view";
+import { canRespecSkillTree } from "@/core/services/progression/skill-tree/skill-tree-respec-eligibility";
 import { resolveSkillTreeLayout, skillTreeViewBox } from "./resolve-skill-tree-layout";
 
 type BranchTab = "COMBAT" | "ECONOMY" | "ARSENAL";
@@ -27,6 +28,7 @@ const BRANCH: Record<string, { color: string; label: string }> = {
 const NODE_ICON: Record<string, ComponentType<LucideProps>> = {
   core: Cpu, nexus: CircleDollarSign, xp: GraduationCap, "shield-half": ShieldHalf,
   coins: Coins, crown: Crown, heart: Heart, bolt: Bolt, battery: BatteryCharging, medal: Medal,
+  rotate: RotateCcw,
 };
 
 type NodeState = "maxed" | "partial" | "available" | "locked";
@@ -53,6 +55,7 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeBranch, setActiveBranch] = useState<BranchTab>("COMBAT");
+  const [confirmingRespec, setConfirmingRespec] = useState(false);
   // Retiene el último nodo mostrado en el bottom-sheet para animar la SALIDA con contenido (no vacío).
   const sheetNodeRef = useRef<ISkillTreeNodeView | null>(null);
 
@@ -126,8 +129,34 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
     }
   }
 
+  async function respec() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/progression/skill-tree/respec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ operationId: crypto.randomUUID() }),
+      });
+      const result = (await res.json()) as { ok?: boolean; reason?: string };
+      if (!res.ok || result.ok === false) {
+        setError(result.reason === "no_respec_key" ? "Necesitas la habilidad Reasignación." : "No se pudo reasignar.");
+      } else {
+        setSelectedId(null);
+      }
+      await refetch();
+    } catch {
+      setError("Error de red al reasignar.");
+    } finally {
+      setBusy(false);
+      setConfirmingRespec(false);
+    }
+  }
+
   const xpPct = tree.xpForNext > 0 ? Math.min(100, Math.round((tree.xpIntoLevel / tree.xpForNext) * 100)) : 0;
   const pointsAvailable = tree.pointsAvailable;
+  // Reasignar (respec): solo si el jugador tiene la "llave" (nodo Reasignación desbloqueado). Modelo A.
+  const canRespec = canRespecSkillTree(tree.nodes);
   const showPanel = Boolean(selected && visibleIds.has(selected.node.id));
   // Nodo que pinta el bottom-sheet: el actual si está abierto; si no, el último (para animar la salida).
   if (showPanel && selected) sheetNodeRef.current = selected;
@@ -203,6 +232,18 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
           <div className="font-display text-[9px] uppercase tracking-widest text-amber-300/80 sm:text-[11px]">Puntos</div>
           <div className="font-display text-lg font-medium text-amber-200 drop-shadow-[0_0_12px_rgba(250,204,21,0.5)] sm:text-2xl">{tree.pointsAvailable}</div>
         </div>
+        {canRespec && (
+          <button
+            type="button"
+            aria-label="Reasignar puntos del árbol"
+            disabled={busy}
+            onClick={() => setConfirmingRespec(true)}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-violet-400/50 text-violet-300 transition enabled:hover:border-violet-300 enabled:hover:bg-violet-500/15 disabled:opacity-40 sm:h-9 sm:w-auto sm:gap-1.5 sm:px-3"
+          >
+            <RotateCcw className="h-4 w-4" />
+            <span className="hidden font-display text-[10px] uppercase tracking-widest sm:inline">Reasignar</span>
+          </button>
+        )}
       </div>
 
       {error && <div className="mb-3 rounded-lg border border-rose-500/40 bg-rose-950/30 px-3 py-2 text-sm text-rose-200">{error}</div>}
@@ -413,6 +454,39 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
             {sheetNode && renderPanel(sheetNode)}
           </div>
         </>
+      )}
+
+      {/* Confirmación de reasignación: acción DESTRUCTIVA (resetea todo el árbol), por eso pide confirmar. */}
+      {confirmingRespec && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
+          <div className="w-full max-w-sm rounded-2xl border border-violet-400/40 bg-[#0a0714]/95 p-6 text-center shadow-[0_0_50px_rgba(167,139,250,0.25)]">
+            <RotateCcw className="mx-auto mb-3 h-8 w-8 text-violet-300" />
+            <h2 className="font-display text-lg uppercase tracking-wide text-slate-100">Reasignar árbol</h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">
+              Se reiniciarán <span className="font-bold text-violet-200">todos</span> tus nodos y recuperarás los
+              puntos para repartirlos de nuevo. También se pierde la propia habilidad <span className="text-violet-200">Reasignación</span>
+              {" "}(tendrás que recomprarla para volver a reasignar). Tu nivel y tu XP no cambian.
+            </p>
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setConfirmingRespec(false)}
+                className="flex-1 rounded-lg border border-slate-600 py-2.5 font-display text-xs uppercase tracking-widest text-slate-300 transition enabled:hover:bg-slate-800/60 disabled:opacity-40"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={respec}
+                className="flex-1 rounded-lg border border-violet-400/60 bg-violet-500/20 py-2.5 font-display text-xs uppercase tracking-widest text-violet-100 transition enabled:hover:bg-violet-500/30 disabled:opacity-40"
+              >
+                {busy ? "Reasignando…" : "Reasignar"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

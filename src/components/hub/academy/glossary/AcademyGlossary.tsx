@@ -443,6 +443,14 @@ function SkillTreeSection() {
           Historia y Arena. En Multijugador todos compiten en igualdad de condiciones.
         </p>
       </div>
+      <div className="mt-3 rounded-xl border border-violet-400/30 bg-violet-400/5 p-4">
+        <p className="text-[13.5px] leading-6 text-violet-100/90">
+          <span className="font-black text-violet-300">Reasignar (respec):</span> con la habilidad{" "}
+          <span className="font-black text-violet-200">Reasignación</span> (rama Arsenal) puedes reiniciar el árbol y
+          recuperar todos tus puntos para repartirlos de nuevo. El reset borra también esa habilidad, así que para
+          volver a reasignar tendrás que recomprarla. Tu nivel y tu XP nunca cambian.
+        </p>
+      </div>
     </Panel>
   );
 }

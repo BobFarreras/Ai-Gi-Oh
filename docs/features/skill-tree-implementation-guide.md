@@ -137,7 +137,7 @@ Leyenda de tier (detalle en §3): 🟢 **Fácil** (dato / reusa hook) · 🟡 **
 |---|---|---|---|---|---|---|---|
 | `node-ars-veterano` | Veterano | 5 | 1 | core | `XP_REWARD_MULT +0.02/r` (acumula con Aprendizaje) | 🟢 | ✅ |
 | **`node-ars-doble-mazo`** ★ TUYA | **Doble Arsenal** | **1** | **2** | **Veterano Nv.1** | `UNLOCK_SECOND_DECK` (2º mazo + selector de principal) | 🔴🔴 | ❌ F7 |
-| `node-ars-reasignar` | Reasignación | 1 | 1 | core | `GRANT_RESPEC_TOKEN 1` (un respec gratis) | 🟡 | ❌ F4+ |
+| `node-ars-reasignar` | Reasignación | 1 | 1 | core | `GRANT_RESPEC_TOKEN 1` — desbloquea respec (reset total, modelo A: gratis con llave) | 🟡 | ✅ (mig. 138) |
 | `node-ars-cazador` | Cazador de Redes | 3 | 1 | Veterano Nv.3 | `GHOST_DAILY_LIMIT_BONUS +1/r` → +3 ghosts/día | 🟡 | ❌ F8 |
 
 > **Doble Arsenal reubicado** de tier 3 a **tier 2** (segundo nodo desbloqueable), gate simplificado a Veterano
