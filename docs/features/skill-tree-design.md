@@ -285,7 +285,7 @@ Notación: **Nv. X/Y** = rango actual sugerido / `maxRank`; **coste** = `cost_pe
 | id | nombre | maxRank | coste/rango | gate | efecto (por rango) | Estado |
 |---|---|---|---|---|---|---|
 | `node-ars-veterano` | Veterano | **5** | 1 | core Nv.1 | `XP_REWARD_MULT +0.02` (acumula con Aprendizaje) | ✅ |
-| `node-ars-doble-mazo` | Doble Arsenal | **1** | **5** | **Veterano Nv.5** | `UNLOCK_SECOND_DECK` (2º mazo + selector) | 🟡 Backend hecho (mig. 140); UI pendiente |
+| `node-ars-doble-mazo` | Doble Arsenal | **1** | **5** | **Veterano Nv.5** | `UNLOCK_SECOND_DECK` (2º mazo + switcher) | ✅ (mig. 140 backend + 141 activar) |
 | `node-ars-reasignar` | Reasignación | 1 | 1 | core Nv.1 | `GRANT_RESPEC_TOKEN 1` — desbloquea el respec (reset total del árbol) | ✅ |
 | `node-ars-cazador` | Cazador de Redes | **3** | 1 | Veterano Nv.3 | `GHOST_DAILY_LIMIT_BONUS +1` → +3 (ficha 6) | ❌ F8 |
 
