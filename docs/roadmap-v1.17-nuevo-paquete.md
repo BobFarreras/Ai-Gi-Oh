@@ -21,7 +21,7 @@ Leyenda: ✅ hecha y en prod · 🟡 parcial (falta una parte concreta) · ❌ p
 | 1 | Pasiva entity: +1 energía al ganar combate (+2 a V5) | ✅ Hecha | — Windows 92, mig 133 |
 | 2 | Magia: descartar mano rival (decidido: hasta 3) | ✅ Hecha | — mig 132 |
 | 3 | Nexus en combate → pasiva "Recaudación" (Recaudador) | ✅ Hecha | — Fase A+B, mig 134 |
-| 4 | Elegir qué trampa activar cuando hay varias | 🟡 Parcial | Vs IA: ✅. En multi: **cimiento del motor + transporte HECHO y testeado** (commit `7279b454`, defer/resolve determinista, inactivo hasta cablear cliente). Falta el **cableado de cliente + prueba de 2 clientes** → guía en `docs/features/multi-reactive-trap-carousel-handoff.md` |
+| 4 | Elegir qué trampa activar cuando hay varias | 🟡 Casi | Vs IA: ✅. En multi: motor+transporte ✅ (`7279b454`) y **cableado de cliente HECHO + tests verdes** (atacante difiere y emite `ATTACK` diferido; defensor elige con el mismo carrusel y emite `RESOLVE_REACTIVE_TRAP`; atacante lo recibe, revela y desbloquea; auto-pasar a 15s si el defensor no decide). **Solo falta la prueba manual de 2 clientes reales** (no automatizable) → guía en `docs/features/multi-reactive-trap-carousel-handoff.md` |
 | 5 | Mejorar la IA de oponentes | 🟡 Casi | La IA **ya es más lista y SÍ fusiona** (fases 1-5 ✅: posición al invocar, repliegue, reemplazo de zona, fusión efectiva, combos). Solo quedan flecos menores: **fase 6** (criterio de la IA para elegir "qué trampa" cuando tiene varias — hoy usa "la primera"), tuning fino de perfiles (opcional) y auditoría de mazos de fusión (dato, no código) |
 | 6 | Ghosts (combate asíncrono vs decks ausentes) | ❌ Pendiente | Todo — diseño cerrado, 0 código. Siguiente natural del Paquete C |
 | 7 | Subastas de objetos | ❌ Pendiente | Todo — diseño listo; decidir solo-sistema vs P2P |
@@ -377,13 +377,34 @@ no tocan).
   - `runBattlePhaseStep`/`runMainPhaseStep` usan `findReactiveTraps` (plural) y pasan `chosenTrapInstanceId`.
     Las contra-trampas (Nullify) pasan una lista de 1 (sin carrusel). Tests: manager del carrusel + 157 del
     tablero/trampas en verde.
-- **PENDIENTE — carrusel en MULTIJUGADOR (otra tanda, con prueba de 2 clientes):** hoy en multi la trampa
-  reactiva del defensor se **auto-resuelve por el motor (primera elegible, determinista)** vía
-  `apply-match-action` (`ATTACK`/`RESOLVE_EXECUTION` no llevan `chosenTrapInstanceId`) — SIN regresión, pero
-  sin carrusel. Para dárselo: cuando el rival ataca, el cliente del defensor debe **preguntarle** (mismo
-  `requestTrapActivationDecision`) y su elección viajar en la acción (`chosenTrapInstanceId` en el payload de
-  `IMatchAction` + `apply-match-action` pasándolo al motor), con ambos clientes resolviendo la misma. Es un
-  flujo de decisión que hoy no existe en multi (el `declineCounterTrap` viaja, pero no una elección de trampa).
+- **Carrusel en MULTIJUGADOR — CABLEADO DE CLIENTE HECHO (tests verdes; falta solo la prueba de 2 clientes reales).**
+  Sobre el cimiento del motor/transporte (`7279b454`), el cliente ya hace el flujo extremo a extremo:
+  - **Atacante** (`handleOpponentEntityClick`): si `isMultiplayer` (nuevo flag explícito hilado por
+    `buildPlayerActionsParams`→`IUsePlayerActionsParams`, no heurística) **y** el defensor tiene ≥1 trampa
+    reactiva elegible, ejecuta `executeAttack` con `deferReactiveTraps: true` y **emite** `ATTACK` diferido.
+    Mantiene la decisión de contra-trampa (Nullify) del atacante ANTES (viaja como `declineCounterTrap`).
+    NO pre-revela ninguna trampa concreta del rival. El tablero queda **bloqueado** ("esperando al rival").
+  - **Defensor** (`animate-remote-action.ts`, caso `ATTACK` → `maybeResolveLocalReactiveTrap`): tras aplicar
+    el ataque diferido detecta la pausa que le apunta, reúne las elegibles **por los `eligibleTrapInstanceIds`
+    de la pausa** (cero drift con el motor), abre el **mismo** carrusel `requestTrapActivationDecision`, aplica
+    la decisión localmente y **emite** `RESOLVE_REACTIVE_TRAP`.
+  - **Atacante receptor** (nuevo caso `RESOLVE_REACTIVE_TRAP`): revela la trampa activada, aplica y
+    **desbloquea** el tablero.
+  - **Turn-guard:** el servidor (`/api/multiplayer/match/action`) ya solo valida participación/tipo/secuencia
+    (no exige turno), así que el defensor puede emitir sin tocar la ruta; el candado de "quién puede" lo pone
+    el motor (`resolveReactiveTrapDecision` exige que el emisor sea el defensor de la pausa).
+  - **Fallback desconexión/AFK:** el cliente del defensor **auto-pasa a los 15s** (mismo `RESOLVE_REACTIVE_TRAP`
+    "pasar", determinista); la desconexión dura la cubre el abandono a 60s (victoria del atacante).
+  - **UX (banner + contador):** `ReactiveTrapDecisionTimer` (montado en `Board`, dirigido por
+    `pendingReactiveTrapDecision`) muestra en AMBOS clientes un banner con cuenta atrás de 15s: al defensor
+    "Elige tu trampa reactiva" y al atacante "Esperando la decisión del rival". Es no bloqueante
+    (`pointer-events-none`), así que el carrusel del defensor sigue usable.
+  - **Tests (verdes):** timeout auto-pasa/cancela (manager), atacante difiere+emite y single-player intacto
+    (`handleOpponentEntityClick.test.ts`), defensor elige/pasa+emite y atacante recibe+revela+desbloquea
+    (`animate-remote-action.reactive-trap.test.ts`).
+  - **FALTA (no automatizable):** la **prueba de 2 clientes reales** (defensor con 2+ trampas del mismo
+    trigger): verificar elección, que el atacante ve la trampa correcta, "pasar", ataque directo y desconexión,
+    con **ambos tableros idénticos**. Solo tras esa prueba se marca la ficha ✅.
 
 ---
 

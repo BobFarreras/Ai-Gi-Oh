@@ -21,6 +21,8 @@ interface IHandleOpponentEntityClickParams extends Pick<
 > {
   /** Entidad objetivo del rival; `null` representa intento de ataque directo. */
   entity: IBoardEntity | null;
+  /** Ficha 4: en multi el ataque DIFIERE la trampa reactiva del defensor para que la elija en su cliente. */
+  isMultiplayer: boolean;
   /** Emisor de la acción al rival en multijugador (noop en otros modos). */
   emitLocalAction: LocalActionEmitter;
 }
@@ -41,6 +43,7 @@ export async function handleOpponentEntityClick({
   setIsAnimating,
   setRevealedEntities,
   setSelectedCard,
+  isMultiplayer,
   emitLocalAction,
 }: IHandleOpponentEntityClickParams): Promise<"handled" | "pass"> {
   if (!activeAttackerId) {
@@ -68,6 +71,44 @@ export async function handleOpponentEntityClick({
   const playerCounterTrap = reactiveTrap
     ? findReactiveTrap(gameState, gameState.playerA.id, "ON_OPPONENT_TRAP_ACTIVATED")
     : null;
+
+  // Ficha 4 (multi): si el defensor (rival) tiene una trampa reactiva elegible, NO la resolvemos aquí.
+  // DIFERIMOS el ataque para que el defensor elija cuál activar (o pasar) en SU cliente. No pre-revelamos
+  // ninguna trampa concreta del rival —la que salte la decide él—; el atacante sí decide ANTES su
+  // contra-trampa (Nullify), y ese `declineCounterTrap` viaja en la pausa igual que en single-player.
+  if (isMultiplayer && reactiveTrap) {
+    const activateCounterTrap = playerCounterTrap
+      ? (await requestTrapActivationDecision([{ card: playerCounterTrap.card, instanceId: playerCounterTrap.instanceId }], "ON_OPPONENT_TRAP_ACTIVATED")).activate
+      : false;
+    const declineCounterTrap = Boolean(playerCounterTrap) && !activateCounterTrap;
+    const deferred = applyTransition((state) =>
+      GameEngine.executeAttack(state, state.playerA.id, attackerId, targetId, {
+        deferReactiveTraps: true,
+        ...(declineCounterTrap ? { skipCounterTrapPlayerIds: [state.playerA.id] } : {}),
+      }),
+    );
+    // Si el motor pausó (había ≥1 elegible), el tablero queda BLOQUEADO "esperando la decisión del rival":
+    // el RESOLVE_REACTIVE_TRAP remoto del defensor lo desbloqueará al aplicarse (animate-remote-action).
+    if (deferred?.pendingReactiveTrapDecision) {
+      emitLocalAction({
+        type: "ATTACK",
+        payload: { attackerInstanceId: attackerId, defenderInstanceId: targetId, deferReactiveTraps: true, declineCounterTrap: declineCounterTrap || undefined },
+      });
+      setSelectedCard(null);
+      setActiveAttackerId(null);
+      // Deliberadamente NO liberamos isAnimating: el turno espera la elección remota, no un error.
+      return "handled";
+    }
+    // Defensivo: si no pausó (la trampa dejó de ser elegible), cerramos como un ataque normal ya resuelto.
+    if (deferred) {
+      emitLocalAction({ type: "ATTACK", payload: { attackerInstanceId: attackerId, defenderInstanceId: targetId, declineCounterTrap: declineCounterTrap || undefined } });
+    }
+    setSelectedCard(null);
+    setActiveAttackerId(null);
+    setIsAnimating(false);
+    return "handled";
+  }
+
   if (reactiveTrap) {
     setRevealedEntities((previous) => addRevealedId(previous, reactiveTrap.instanceId));
     setActiveAttackerId(reactiveTrap.instanceId);

@@ -60,11 +60,30 @@ export function useAssertPlayerTurn({ gameStateRef, uiState, winnerPlayerId }: I
 
 export function useTrapDecisionManager({ uiState }: IUseTrapDecisionManagerInput) {
   const trapDecisionResolverRef = useRef<((decision: ITrapActivationDecision) => void) | null>(null);
+  // Ficha 4 (multi): timer de auto-pasar si el defensor no decide (AFK). Solo el flujo remoto lo activa.
+  const trapDecisionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resolveTrapActivationDecision = useCallback(
+    (decision: ITrapActivationDecision) => {
+      if (trapDecisionTimeoutRef.current) {
+        clearTimeout(trapDecisionTimeoutRef.current);
+        trapDecisionTimeoutRef.current = null;
+      }
+      uiState.setPendingTrapActivationPrompt(null);
+      uiState.clearSelection();
+      const resolver = trapDecisionResolverRef.current;
+      trapDecisionResolverRef.current = null;
+      resolver?.(decision);
+    },
+    [uiState],
+  );
 
   // Ficha 4: recibe TODAS las trampas elegibles y resuelve con la que el jugador elija en el carrusel
-  // (o "pasar"). La primera se muestra por defecto; la IA nunca llega aquí (decide en el motor).
+  // (o "pasar"). La primera se muestra por defecto; la IA nunca llega aquí (decide en el motor). En multi,
+  // `autoPassAfterMs` arma un temporizador que auto-pasa si el defensor no responde (evita colgar al atacante);
+  // el fallback emite la MISMA acción "pasar" en ese cliente, así que ambos siguen convergiendo.
   const requestTrapActivationDecision = useCallback(
-    (traps: ITrapEligibleOption[], trigger: TrapDecisionTrigger): Promise<ITrapActivationDecision> =>
+    (traps: ITrapEligibleOption[], trigger: TrapDecisionTrigger, options?: { autoPassAfterMs?: number }): Promise<ITrapActivationDecision> =>
       new Promise<ITrapActivationDecision>((resolve) => {
         if (traps.length === 0) {
           resolve({ activate: false });
@@ -73,19 +92,14 @@ export function useTrapDecisionManager({ uiState }: IUseTrapDecisionManagerInput
         trapDecisionResolverRef.current = resolve;
         uiState.setSelectedCard(traps[0].card);
         uiState.setPendingTrapActivationPrompt({ trigger, trapCard: traps[0].card, eligibleTraps: traps, currentIndex: 0 });
+        if (options?.autoPassAfterMs && options.autoPassAfterMs > 0) {
+          trapDecisionTimeoutRef.current = setTimeout(() => {
+            trapDecisionTimeoutRef.current = null;
+            resolveTrapActivationDecision({ activate: false });
+          }, options.autoPassAfterMs);
+        }
       }),
-    [uiState],
-  );
-
-  const resolveTrapActivationDecision = useCallback(
-    (decision: ITrapActivationDecision) => {
-      uiState.setPendingTrapActivationPrompt(null);
-      uiState.clearSelection();
-      const resolver = trapDecisionResolverRef.current;
-      trapDecisionResolverRef.current = null;
-      resolver?.(decision);
-    },
-    [uiState],
+    [uiState, resolveTrapActivationDecision],
   );
 
   // Flecha ‹ ›: mueve el carrusel y sincroniza la carta previsualizada (para que el efecto de abajo no

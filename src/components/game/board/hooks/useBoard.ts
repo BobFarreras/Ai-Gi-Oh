@@ -14,6 +14,9 @@ import { useMatchUiState } from "./internal/match/useMatchUiState";
 import { resolveWinnerPlayerId } from "./internal/match/board-derived-state";
 import { useExecutionActivation } from "./internal/match/useExecutionActivation";
 import { useRemoteOpponentAnimator } from "@/components/game/board/multiplayer/useRemoteOpponentAnimator";
+import { useLocalActionEmitter } from "@/components/game/board/multiplayer/local-action-emitter";
+import { REACTIVE_TRAP_DECISION_TIMEOUT_MS } from "@/components/game/board/multiplayer/reactive-trap-decision";
+import { ITrapEligibleOption } from "./internal/board-state/useBoardUiState";
 
 export function useBoard(
   initialPlayerDeck?: ICard[],
@@ -80,6 +83,16 @@ export function useBoard(
     clearSelection: uiState.clearSelection,
   });
 
+  // Ficha 4 (multi): el defensor recibe el ataque diferido y elige su trampa reactiva con el MISMO carrusel
+  // que contra la IA (mismo `requestTrapActivationDecision`), pero con auto-pasar por timeout para no colgar
+  // al atacante. El emisor viaja por contexto (noop fuera de multi).
+  const emitLocalAction = useLocalActionEmitter();
+  const requestReactiveTrapDecision = useCallback(
+    (traps: ITrapEligibleOption[]) =>
+      runtime.requestTrapActivationDecision(traps, "ON_OPPONENT_ATTACK_DECLARED", { autoPassAfterMs: REACTIVE_TRAP_DECISION_TIMEOUT_MS }),
+    [runtime],
+  );
+
   // Aplicador de acciones del rival con coreografía visual (solo se usa en multijugador).
   const applyRemoteAction = useRemoteOpponentAnimator({
     gameStateRef,
@@ -90,6 +103,8 @@ export function useBoard(
     clearSelection: uiState.clearSelection,
     clearError: uiState.clearError,
     setLastError: uiState.setLastError,
+    requestReactiveTrapDecision,
+    emitLocalAction,
   });
 
   return {

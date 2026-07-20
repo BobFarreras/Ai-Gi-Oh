@@ -4,6 +4,16 @@
 > (commit `7279b454`, rama `fix/testers-bugs-mobile-traps-replacement`). Falta **solo el cableado del
 > cliente** + la prueba de 2 clientes reales. NO hay nada roto: el transporte nuevo está inactivo y el flag
 > de diferir está apagado por defecto, así que el multi actual se comporta igual que antes.
+>
+> **ACTUALIZACIÓN — CABLEADO DE CLIENTE HECHO (tests verdes).** Implementado el flujo extremo a extremo
+> (atacante difiere+emite `ATTACK` diferido; defensor elige con el mismo carrusel y emite
+> `RESOLVE_REACTIVE_TRAP`; atacante recibe, revela y desbloquea; auto-pasar a 15s si el defensor no decide).
+> `pnpm typecheck` y `pnpm lint` limpios; tests de cliente verdes. **Solo queda la prueba manual de 2 clientes
+> reales** (ver "Cómo probar"), que NO es automatizable. Detalle en `docs/roadmap-v1.17-nuevo-paquete.md` (ficha 4).
+> Ficheros tocados: `handleOpponentEntityClick.ts`, `useHandleEntityClick.ts`, `usePlayerActions.ts`,
+> `player-actions/types.ts`, `useMatchRuntime.ts`/`.builders.ts`/`.internal.ts`, `useBoard.ts`,
+> `useRemoteOpponentAnimator.ts`, `animate-remote-action.ts`. El turn-guard NO necesitó tocar la ruta del
+> servidor (ya solo valida participación/tipo/secuencia; el candado de "quién" es del motor).
 
 ## Objetivo
 

@@ -13,10 +13,13 @@ import { ITrapActivationDecision, ITrapEligibleOption, TrapDecisionTrigger } fro
 export type RequestTrapActivationDecision = (
   traps: ITrapEligibleOption[],
   trigger: TrapDecisionTrigger,
+  options?: { autoPassAfterMs?: number },
 ) => Promise<ITrapActivationDecision>;
 
 export interface IUsePlayerActionsParams {
   gameState: GameState;
+  /** Ficha 4: en multijugador el ataque DEFIERE la trampa reactiva para que el defensor elija en su cliente. */
+  isMultiplayer: boolean;
   isAnimating: boolean;
   playingCard: ICard | null;
   activeAttackerId: string | null;

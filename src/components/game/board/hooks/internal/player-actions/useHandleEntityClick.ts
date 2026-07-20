@@ -16,6 +16,7 @@ type IHandleEntityClickParams = Pick<
   | "activeAttackerId"
   | "applyTransition"
   | "assertPlayerTurn"
+  | "isMultiplayer"
   | "requestTrapActivationDecision"
   | "clearError"
   | "clearSelection"
@@ -203,6 +204,7 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
         setIsAnimating: params.setIsAnimating,
         setRevealedEntities: params.setRevealedEntities,
         setSelectedCard: params.setSelectedCard,
+        isMultiplayer: params.isMultiplayer,
         emitLocalAction,
       });
       if (result === "handled") return;

@@ -17,6 +17,7 @@ import { BoardActionControlsSection } from "@/components/game/board/internal/Boa
 import { BoardInteractiveSection } from "@/components/game/board/internal/BoardInteractiveSection";
 import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 import { BoardTutorialFlowOverlay } from "@/components/game/board/internal/BoardTutorialFlowOverlay";
+import { ReactiveTrapDecisionTimer } from "@/components/game/board/multiplayer/ReactiveTrapDecisionTimer";
 import { useLayoutEffect } from "react";
 import { useBoardViewportMetrics } from "./hooks/internal/layout/use-board-viewport-metrics";
 
@@ -136,6 +137,8 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
         isMobile={isMobile}
         suppressCombatFeedback={suppressCombatFeedback}
       />
+      {/* Ficha 4 (multi): banner + contador de la decisión de trampa reactiva (defensor decide / atacante espera). */}
+      <ReactiveTrapDecisionTimer pending={board.gameState.pendingReactiveTrapDecision} localPlayerId={player.id} />
       {mode === "TUTORIAL" && !isMatchStartLocked ? (
         <BoardTutorialFlowOverlay
           combatLog={board.gameState.combatLog}

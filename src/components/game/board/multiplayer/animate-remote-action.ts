@@ -4,6 +4,8 @@ import { IMatchActionPayload } from "@/core/entities/multiplayer/IMatchAction";
 import { applyMatchAction } from "@/core/services/multiplayer/apply-match-action";
 import { addRevealedId, removeRevealedId } from "@/components/game/board/hooks/internal/trapPreview";
 import { sleep } from "@/components/game/board/hooks/internal/sleep";
+import { ITrapActivationDecision, ITrapEligibleOption } from "@/components/game/board/hooks/internal/board-state/useBoardUiState";
+import { LocalActionEmitter } from "@/components/game/board/multiplayer/local-action-emitter";
 
 const TIMINGS = {
   playRevealMs: 950,
@@ -24,6 +26,10 @@ export interface IRemoteAnimationContext {
   clearError: () => void;
   /** La acción del rival no pudo aplicarse aquí: los dos clientes ya no comparten el mismo estado. */
   reportDesync: (action: IMatchActionPayload, error: unknown) => void;
+  /** Ficha 4 (multi): pide al DEFENSOR local que elija su trampa reactiva (mismo carrusel que vs IA). */
+  requestReactiveTrapDecision: (traps: ITrapEligibleOption[]) => Promise<ITrapActivationDecision>;
+  /** Emite la acción del jugador local hacia el rival (para que el atacante converja). */
+  emitLocalAction: LocalActionEmitter;
 }
 
 function resolvePlayers(state: GameState, opponentId: string) {
@@ -48,6 +54,37 @@ function apply(ctx: IRemoteAnimationContext, opponentId: string, action: IMatchA
       return state;
     }
   });
+}
+
+/**
+ * Ficha 4 (multi): tras aplicar el ATTACK diferido del rival, el estado queda en pausa apuntando al jugador
+ * LOCAL (el defensor). Le mostramos el MISMO carrusel que contra la IA para que elija su trampa reactiva (o
+ * pase), aplicamos la decisión localmente y la EMITIMOS como `RESOLVE_REACTIVE_TRAP` para que el atacante
+ * converja. La resolución es una acción propia que ambos clientes aplican igual → sin desincronización.
+ */
+async function maybeResolveLocalReactiveTrap(ctx: IRemoteAnimationContext): Promise<void> {
+  const state = ctx.getState();
+  const pending = state.pendingReactiveTrapDecision;
+  const localPlayerId = state.playerA.id;
+  // Solo actuamos en el cliente del DEFENSOR (la pausa le apunta). En el del atacante la pausa apunta al rival.
+  if (!pending || pending.defenderPlayerId !== localPlayerId) return;
+
+  // Reunimos las entities elegibles EXACTAS que consideró el motor (por instanceId de la pausa): así el
+  // carrusel ofrece justo lo que el motor revalidará al resolver, sin recomputar ni arriesgar drift.
+  const eligible: ITrapEligibleOption[] = pending.eligibleTrapInstanceIds
+    .map((id) => state.playerA.activeExecutions.find((execution) => execution.instanceId === id))
+    .filter((execution): execution is NonNullable<typeof execution> => Boolean(execution))
+    .map((execution) => ({ card: execution.card, instanceId: execution.instanceId }));
+
+  const decision = eligible.length > 0 ? await ctx.requestReactiveTrapDecision(eligible) : { activate: false };
+  const resolveAction: IMatchActionPayload = {
+    type: "RESOLVE_REACTIVE_TRAP",
+    payload: { activate: decision.activate, chosenTrapInstanceId: decision.chosenTrapInstanceId },
+  };
+  // Aplicamos localmente (atribuido al defensor local) ANTES de emitir: si el motor la rechazara, no
+  // propagamos una acción que nos desincronizaría. `applyTransition` captura el error y devuelve null.
+  const applied = ctx.applyTransition((current) => applyMatchAction(current, localPlayerId, resolveAction));
+  if (applied) ctx.emitLocalAction(resolveAction);
 }
 
 /**
@@ -77,8 +114,32 @@ export async function animateRemoteAction(
       }
       await sleep(TIMINGS.attackWindupMs);
       apply(ctx, opponentId, action);
+      // Ficha 4 (multi): si el ataque venía diferido, ahora el DEFENSOR local elige su trampa reactiva y la
+      // resolución se emite. En un ataque normal (sin pausa) esto es un no-op y el flujo sigue igual.
+      await maybeResolveLocalReactiveTrap(ctx);
       await sleep(TIMINGS.postResolutionMs);
       if (target && defenderId) ctx.setRevealedEntities((prev) => removeRevealedId(prev, defenderId));
+      ctx.setActiveAttackerId(null);
+      ctx.setIsAnimating(false);
+      return;
+    }
+
+    // Ficha 4 (multi): el ATACANTE recibe la resolución que el defensor eligió. Revelamos la trampa activada
+    // (si activó una) para que el atacante VEA cuál saltó, aplicamos, y liberamos el bloqueo de "esperando
+    // al rival" que dejó puesto el ataque diferido. Si el defensor pasó, solo aplicamos.
+    case "RESOLVE_REACTIVE_TRAP": {
+      const chosenTrapInstanceId = action.payload.activate ? action.payload.chosenTrapInstanceId : undefined;
+      const chosenTrap = chosenTrapInstanceId
+        ? opponent.activeExecutions.find((execution) => execution.instanceId === chosenTrapInstanceId) ?? null
+        : null;
+      ctx.setIsAnimating(true);
+      if (chosenTrap) {
+        ctx.setRevealedEntities((prev) => addRevealedId(prev, chosenTrap.instanceId));
+        await sleep(TIMINGS.executionPreviewMs);
+      }
+      apply(ctx, opponentId, action);
+      await sleep(TIMINGS.postResolutionMs);
+      if (chosenTrap) ctx.setRevealedEntities((prev) => removeRevealedId(prev, chosenTrap.instanceId));
       ctx.setActiveAttackerId(null);
       ctx.setIsAnimating(false);
       return;

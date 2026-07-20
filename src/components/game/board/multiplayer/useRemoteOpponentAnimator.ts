@@ -5,6 +5,8 @@ import { MutableRefObject, useCallback, useLayoutEffect, useRef } from "react";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IMatchActionPayload } from "@/core/entities/multiplayer/IMatchAction";
 import { IBoardUiError } from "../hooks/internal/boardError";
+import { ITrapActivationDecision, ITrapEligibleOption } from "../hooks/internal/board-state/useBoardUiState";
+import { LocalActionEmitter } from "./local-action-emitter";
 import { animateRemoteAction, IRemoteAnimationContext } from "./animate-remote-action";
 
 interface IUseRemoteOpponentAnimatorParams {
@@ -16,6 +18,10 @@ interface IUseRemoteOpponentAnimatorParams {
   clearSelection: () => void;
   clearError: () => void;
   setLastError: (error: IBoardUiError | null) => void;
+  /** Ficha 4 (multi): carrusel de trampa reactiva para el DEFENSOR cuando recibe un ataque diferido. */
+  requestReactiveTrapDecision: (traps: ITrapEligibleOption[]) => Promise<ITrapActivationDecision>;
+  /** Emisor de la acción local (para propagar la resolución de trampa al atacante). */
+  emitLocalAction: LocalActionEmitter;
 }
 
 /**
@@ -53,6 +59,8 @@ export function useRemoteOpponentAnimator(
           message: "La partida se ha desincronizado con la del rival. El resultado puede no ser fiable.",
         });
       },
+      requestReactiveTrapDecision: current.requestReactiveTrapDecision,
+      emitLocalAction: current.emitLocalAction,
     };
     // El rival es siempre playerB en el cliente local (el local es playerA).
     const opponentId = current.gameStateRef.current.playerB.id;
