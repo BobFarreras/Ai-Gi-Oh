@@ -47,6 +47,7 @@ export function BoardStatusAndTopBarSection({
         pendingTrapActivationPrompt={board.pendingTrapActivationPrompt}
         pendingEntityReplacement={board.pendingEntityReplacement}
         pendingEntityReplacementTargetCard={screen.pendingReplacementTargetCard}
+        isMobile={isMobile}
         combatLog={board.gameState.combatLog}
         playerAId={player.id}
         playerAName={player.name}

@@ -1,6 +1,7 @@
 // src/components/game/board/internal/BoardInteractiveSection.tsx - Sección de interacción del tablero aislada para reducir complejidad del contenedor principal.
 "use client";
 
+import { useCallback, useEffect, useRef } from "react";
 import { useBoard } from "@/components/game/board/hooks/useBoard";
 import { useBoardScreenState } from "@/components/game/board/internal/use-board-screen-state";
 import { BoardInteractiveLayer } from "@/components/game/board/ui/layers/BoardInteractiveLayer";
@@ -17,6 +18,17 @@ interface IBoardInteractiveSectionProps {
  * Renderiza capa interactiva solo cuando no hay overlay final de duelo.
  */
 export function BoardInteractiveSection({ board, screen, isMobile, suppressCombatFeedback = false }: IBoardInteractiveSectionProps) {
+  // Callback ESTABLE para el botón "Eliminar" (móvil): pasarlo a BoardInteractiveLayer (memoizado) con una
+  // función inline lo rompía y re-renderizaba el tablero en cada cambio de estado — en móvil eso se comía
+  // toques (había que pulsar varias veces). El ref mantiene la identidad fija apuntando a los métodos vivos.
+  const replacementActionsRef = useRef({ play: board.playButtonClick, confirm: board.confirmEntityReplacement });
+  useEffect(() => {
+    replacementActionsRef.current = { play: board.playButtonClick, confirm: board.confirmEntityReplacement };
+  });
+  const handleConfirmReplacement = useCallback(() => {
+    replacementActionsRef.current.play();
+    replacementActionsRef.current.confirm();
+  }, []);
   if (screen.isResultVisible) return null;
   const player = board.gameState.playerA;
   const opponent = board.gameState.playerB;
@@ -68,6 +80,8 @@ export function BoardInteractiveSection({ board, screen, isMobile, suppressComba
       onSetSelectedEntityToAttack={board.setSelectedEntityToAttack}
       onCloseHistory={() => board.setIsHistoryOpen(false)}
       isMobileLayout={isMobile}
+      pendingEntityReplacement={board.pendingEntityReplacement}
+      onConfirmReplacement={handleConfirmReplacement}
     />
   );
 }

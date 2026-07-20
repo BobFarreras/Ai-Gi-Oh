@@ -130,7 +130,12 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
           />
         </>
       ) : null}
-      <BoardInteractiveSection board={board} screen={screen} isMobile={isMobile} suppressCombatFeedback={suppressCombatFeedback} />
+      <BoardInteractiveSection
+        board={board}
+        screen={screen}
+        isMobile={isMobile}
+        suppressCombatFeedback={suppressCombatFeedback}
+      />
       {mode === "TUTORIAL" && !isMatchStartLocked ? (
         <BoardTutorialFlowOverlay
           combatLog={board.gameState.combatLog}

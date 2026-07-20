@@ -92,7 +92,9 @@ export function BattleBannerCenter({
   }
 
   return (
-    <div className="absolute top-[42%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[145] pointer-events-none">
+    // z máximo: el banner de combate/efectos debe verse SIEMPRE por encima de cartas y overlays (en móvil el
+    // overlay de carta seleccionada, z-320, lo tapaba). Es pointer-events-none: no bloquea la interacción.
+    <div className="absolute top-[42%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[340] pointer-events-none">
       <AnimatePresence mode="wait">
         <motion.div
           key={activeMessage.id}

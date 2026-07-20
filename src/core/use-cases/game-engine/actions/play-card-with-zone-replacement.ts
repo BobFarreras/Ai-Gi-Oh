@@ -53,6 +53,38 @@ function removeFromZone(player: IPlayer, zone: ReplacementZoneType, instanceId: 
   return { ...player, activeExecutions: player.activeExecutions.filter((entity) => entity.instanceId !== instanceId) };
 }
 
+/**
+ * Sacrifica (envía al cementerio) una carta de la zona llena para dejar sitio, SIN jugar aún la nueva.
+ * Se expone aparte de `playCardWithZoneReplacement` para poder animar el descarte y la jugada por separado
+ * (la carta sacrificada vuela al cementerio y solo después aparece/activa la nueva). El estado resultante
+ * de "sacrificio + playCard" es idéntico al de la versión atómica, así que el determinismo se mantiene.
+ */
+export function discardBoardCardForZoneReplacement(
+  state: GameState,
+  playerId: string,
+  sacrificedEntityInstanceId: string,
+  zone: ReplacementZoneType,
+): GameState {
+  assertMainPhaseActionAllowed(state, playerId);
+
+  const { player, opponent, isPlayerA } = getPlayerPair(state, playerId);
+  const rules = ZONE_RULES[zone];
+  const zoneEntities = resolveZoneEntities(player, zone);
+  if (zoneEntities.length < rules.minimumOccupiedSlots) throw new ValidationError(rules.zoneFullMessage);
+
+  const sacrificedEntity = zoneEntities.find((entity) => entity.instanceId === sacrificedEntityInstanceId);
+  if (!sacrificedEntity) throw new NotFoundError(rules.zoneNotFullMessage);
+
+  const playerAfterSacrifice = removeFromZone(player, zone, sacrificedEntityInstanceId);
+  const updatedPlayerAfterSacrifice = { ...playerAfterSacrifice, graveyard: [...playerAfterSacrifice.graveyard, sacrificedEntity.card] };
+  return appendCombatLogEvent(
+    assignPlayers(state, updatedPlayerAfterSacrifice, opponent, isPlayerA),
+    playerId,
+    "CARD_TO_GRAVEYARD",
+    { cardId: sacrificedEntity.card.id, ownerPlayerId: playerId, from: "BATTLEFIELD", reason: rules.replacementReason },
+  );
+}
+
 export function playCardWithZoneReplacement(
   state: GameState,
   playerId: string,
@@ -63,26 +95,13 @@ export function playCardWithZoneReplacement(
 ): GameState {
   assertMainPhaseActionAllowed(state, playerId);
 
-  const { player, opponent, isPlayerA } = getPlayerPair(state, playerId);
+  const { player } = getPlayerPair(state, playerId);
   const card = player.hand.find((currentCard) => currentCard.runtimeId === cardId || currentCard.id === cardId);
   if (!card) throw new NotFoundError("La carta no está en la mano.");
 
   const rules = ZONE_RULES[zone];
   if (!rules.acceptedCardTypes.includes(card.type)) throw new ValidationError(rules.invalidCardMessage);
 
-  const zoneEntities = resolveZoneEntities(player, zone);
-  if (zoneEntities.length < rules.minimumOccupiedSlots) throw new ValidationError(rules.zoneFullMessage);
-
-  const sacrificedEntity = zoneEntities.find((entity) => entity.instanceId === sacrificedEntityInstanceId);
-  if (!sacrificedEntity) throw new NotFoundError(rules.zoneNotFullMessage);
-
-  const playerAfterSacrifice = removeFromZone(player, zone, sacrificedEntityInstanceId);
-  const updatedPlayerAfterSacrifice = { ...playerAfterSacrifice, graveyard: [...playerAfterSacrifice.graveyard, sacrificedEntity.card] };
-  const stateAfterSacrifice = appendCombatLogEvent(
-    assignPlayers(state, updatedPlayerAfterSacrifice, opponent, isPlayerA),
-    playerId,
-    "CARD_TO_GRAVEYARD",
-    { cardId: sacrificedEntity.card.id, ownerPlayerId: playerId, from: "BATTLEFIELD", reason: rules.replacementReason },
-  );
+  const stateAfterSacrifice = discardBoardCardForZoneReplacement(state, playerId, sacrificedEntityInstanceId, zone);
   return playCard(stateAfterSacrifice, playerId, cardId, mode);
 }

@@ -40,6 +40,9 @@ interface CardThumbnailProps {
 function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelected = false, className, coverRender = false, showArtSkeleton = false }: CardThumbnailProps) {
   const factionStyles = getCardTypeStyles(card);
   const isMasteryTier = versionTier >= 5;
+  // Magia/trampa: el arte es una ilustración a sangre; debe LLENAR la zona (object-cover) y nunca
+  // llevar el bg-tech detrás (se veía recortada y con fondo). Igual criterio que la carta grande.
+  const isSpellOrTrap = card.type === "EXECUTION" || card.type === "TRAP";
   const shouldBypassImageOptimization = Boolean(card.renderUrl?.startsWith("/assets/renders/"));
   const levelMetrics = typeof level === "number" ? getCardLevelProgressMetrics(level, xp) : null;
   // Badges ×N de objetos: misma fuente que la carta grande (card.upgradeCounts). Solo si hay mejoras.
@@ -92,7 +95,7 @@ function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelect
               className="absolute inset-0 z-0 animate-pulse bg-[linear-gradient(110deg,rgba(30,41,59,0.65),rgba(51,65,85,0.85),rgba(30,41,59,0.65))]"
             />
           ) : null}
-          {card.bgUrl ? (
+          {card.bgUrl && !isSpellOrTrap ? (
             <Image
               src={card.bgUrl}
               alt=""
@@ -112,7 +115,7 @@ function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelect
               unoptimized={shouldBypassImageOptimization}
               onLoad={() => setIsArtLoaded(true)}
               onError={() => setIsArtLoaded(true)}
-              className={coverRender ? "z-10 object-cover object-top" : "z-10 object-contain p-px"}
+              className={isSpellOrTrap || coverRender ? "z-10 object-cover object-top" : "z-10 object-contain p-px"}
             />
           ) : null}
           {/* Solo iconos (sin ×N): en miniaturas el número tapaba el arte. Mismo sello que la carta grande. */}

@@ -4,6 +4,7 @@ import { useLocalActionEmitter } from "@/components/game/board/multiplayer/local
 import { IUsePlayerActionsParams } from "./types";
 import { handleOwnEntityClick } from "./handleOwnEntityClick";
 import { handleOpponentEntityClick } from "./handleOpponentEntityClick";
+import { isDirectAttackBlocked } from "@/core/use-cases/game-engine/state/status-effects";
 import { sleep } from "../sleep";
 import { addRevealedId, removeRevealedId } from "../trapPreview";
 
@@ -171,6 +172,22 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
         params.setLastError({
           code: "GAME_RULE_ERROR",
           message: "Una entidad no puede atacar a la zona de magias/trampas del rival. Ataca a una entidad rival (o directamente si no tiene ninguna).",
+        });
+        return;
+      }
+
+      // Ataque directo (sin objetivo) bajo el estado "sin ataques directos": el motor lo rechaza igualmente,
+      // pero hay que cortar AQUÍ, antes de que handleOpponentEntityClick revele la trampa reactiva del rival.
+      // Si no, la trampa se volteaba (y el rival la veía) y solo DESPUÉS aparecía el aviso de bloqueo.
+      if (
+        params.activeAttackerId &&
+        !entity &&
+        isDirectAttackBlocked(params.gameState.activeStatusEffects, params.gameState.playerA.id)
+      ) {
+        params.setLastError({
+          code: "GAME_RULE_ERROR",
+          tone: "blocked",
+          message: "No puedes hacer ataques directos mientras estés bajo el efecto de bloqueo.",
         });
         return;
       }

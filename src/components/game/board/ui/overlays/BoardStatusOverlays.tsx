@@ -16,6 +16,7 @@ export function BoardStatusOverlays({
   pendingTrapActivationPrompt = null,
   pendingEntityReplacement,
   pendingEntityReplacementTargetCard,
+  isMobile = false,
   combatLog,
   playerAId,
   playerAName,
@@ -62,6 +63,7 @@ export function BoardStatusOverlays({
         pendingTrapActivationPrompt={pendingTrapActivationPrompt}
         pendingEntityReplacement={pendingEntityReplacement}
         pendingEntityReplacementTargetCard={pendingEntityReplacementTargetCard}
+        isMobile={isMobile}
         combatLog={combatLog}
         playerAId={playerAId}
         playerAName={playerAName}

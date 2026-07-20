@@ -19,6 +19,7 @@ interface IBoardActionOverlaysProps {
   pendingTrapActivationPrompt?: ITrapActivationPrompt | null;
   pendingEntityReplacement: IPendingZoneReplacement | null;
   pendingEntityReplacementTargetCard: ICard | null;
+  isMobile?: boolean;
   combatLog: ICombatLogEvent[];
   playerAId: string;
   playerAName: string;
@@ -35,6 +36,7 @@ export function BoardActionOverlays({
   pendingTrapActivationPrompt = null,
   pendingEntityReplacement,
   pendingEntityReplacementTargetCard,
+  isMobile = false,
   combatLog,
   playerAId,
   playerAName,
@@ -68,7 +70,10 @@ export function BoardActionOverlays({
           onCancel={onCancelEntityReplacement}
         />
       ) : null}
-      {pendingEntityReplacement && pendingEntityReplacementTargetCard ? (
+      {/* En móvil no hay diálogo: la carta a descartar se muestra en el overlay de selección con un botón
+          "Eliminar" que descarta directamente (pulsarlo ya implica la intención). En escritorio el panel
+          lateral muestra la carta y esta confirmación evita descartes accidentales con el ratón. */}
+      {pendingEntityReplacement && pendingEntityReplacementTargetCard && !isMobile ? (
         <EntityReplacementConfirmOverlay
           zone={pendingEntityReplacement.zone}
           targetCard={pendingEntityReplacementTargetCard}

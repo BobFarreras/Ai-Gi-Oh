@@ -13,6 +13,8 @@ export interface BoardStatusOverlaysProps {
   pendingTrapActivationPrompt?: ITrapActivationPrompt | null;
   pendingEntityReplacement: IPendingZoneReplacement | null;
   pendingEntityReplacementTargetCard: ICard | null;
+  /** Layout móvil: no muestra el diálogo de confirmación de reemplazo (el botón "Eliminar" descarta directo). */
+  isMobile?: boolean;
   combatLog: ICombatLogEvent[];
   playerAId: string;
   playerAName: string;

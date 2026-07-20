@@ -3,7 +3,7 @@ import { BattleMode } from "../entities/IPlayer";
 import { changeEntityMode } from "./game-engine/actions/change-entity-mode";
 import { playCard } from "./game-engine/actions/play-card";
 import { playCardWithEntityReplacement } from "./game-engine/actions/play-card-with-entity-replacement";
-import { playCardWithZoneReplacement, ReplacementZoneType } from "./game-engine/actions/play-card-with-zone-replacement";
+import { discardBoardCardForZoneReplacement, playCardWithZoneReplacement, ReplacementZoneType } from "./game-engine/actions/play-card-with-zone-replacement";
 import { resolveExecution } from "./game-engine/actions/resolve-execution";
 import { executeAttack } from "./game-engine/combat/execute-attack";
 import { fuseCards } from "./game-engine/fusion/fuse-cards";
@@ -48,6 +48,16 @@ export class GameEngine {
     zone: ReplacementZoneType,
   ): GameState {
     return playCardWithZoneReplacement(state, playerId, cardId, mode, sacrificedEntityInstanceId, zone);
+  }
+
+  /** Solo el sacrificio del reemplazo de zona (envía la carta al cementerio); la nueva se juega aparte. */
+  public static discardBoardCardForZoneReplacement(
+    state: GameState,
+    playerId: string,
+    sacrificedEntityInstanceId: string,
+    zone: ReplacementZoneType,
+  ): GameState {
+    return discardBoardCardForZoneReplacement(state, playerId, sacrificedEntityInstanceId, zone);
   }
 
   /** Ejecuta una declaración de ataque y resuelve daño, destrucción y trampas reactivas. */
