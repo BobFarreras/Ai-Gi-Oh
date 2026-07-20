@@ -18,7 +18,6 @@ import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { IHomeDeckBuilderSceneProps } from "@/components/hub/home/internal/types/home-deck-builder-types";
 import { useHomeWorkspaceHandlers } from "@/components/hub/home/internal/hooks/use-home-workspace-handlers";
 import { HomeDeckBuilderSceneView } from "@/components/hub/home/internal/view/HomeDeckBuilderSceneView";
-import { DeckSlotSwitcher } from "@/components/hub/home/DeckSlotSwitcher";
 import { readCurrentDeckAction } from "@/services/home/deck-builder/deck-builder-actions";
 import { createHomeDeckBuilderViewProps } from "@/components/hub/home/internal/view/create-home-deck-builder-view-props";
 import { useHomeDeckBuilderState } from "@/components/hub/home/internal/hooks/use-home-deck-builder-state";
@@ -246,8 +245,12 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
     onNavigate: (href) => router.push(href),
     play,
   });
+  const secondDeckControls = props.hasSecondDeck
+    ? { editingDeckSlot: state.editingDeckSlot, busy: deckSwitchBusy, onSwitch: switchEditingDeck, onActivate: activateEditingDeck }
+    : null;
   const viewProps = createHomeDeckBuilderViewProps({
     deck: state.deck,
+    secondDeck: secondDeckControls,
     collectionState: state.collectionState,
     filteredCollection: state.filteredCollection,
     cardProgressById: state.cardProgressById,
@@ -341,16 +344,6 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
 
   return (
     <>
-      {props.hasSecondDeck ? (
-        <div className="mx-auto w-full max-w-6xl px-2 pt-2 sm:px-4">
-          <DeckSlotSwitcher
-            editingDeckSlot={state.editingDeckSlot}
-            busy={deckSwitchBusy}
-            onSwitch={switchEditingDeck}
-            onActivate={activateEditingDeck}
-          />
-        </div>
-      ) : null}
       <HomeDeckBuilderSceneView {...viewProps} renderSectionSwitch={renderSectionSwitch} />
       {objectOverlay}
     </>

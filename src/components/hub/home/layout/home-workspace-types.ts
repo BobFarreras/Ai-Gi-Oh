@@ -12,7 +12,17 @@ export interface IHomeActionResult {
   message?: string;
 }
 
+/** Doble Arsenal (ficha 8): controles del 2º mazo, integrados en el header y el panel del deck. null = sin habilidad. */
+export interface ISecondDeckControls {
+  editingDeckSlot: "PRINCIPAL" | "SECONDARY";
+  busy: boolean;
+  onSwitch: (slot: "PRINCIPAL" | "SECONDARY") => void;
+  onActivate: () => void;
+}
+
 export interface IHomeWorkspaceProps {
+  /** Doble Arsenal: controles del 2º mazo para el panel del deck ("hacer principal" en móvil). null si no aplica. */
+  secondDeck?: ISecondDeckControls | null;
   deck: IDeck;
   collectionState: ICollectionCard[];
   filteredCollection: ICollectionCard[];

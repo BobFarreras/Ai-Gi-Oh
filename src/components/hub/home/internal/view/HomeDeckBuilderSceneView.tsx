@@ -11,10 +11,13 @@ import { IHomeWorkspaceProps } from "@/components/hub/home/layout/home-workspace
 import { HomeCollectionOrderDirection, HomeCollectionOrderField, HomeCollectionTypeFilter } from "@/components/hub/home/home-filters";
 import { IHomeEvolutionOverlayState } from "@/components/hub/home/internal/types/home-deck-builder-types";
 import { HomeIncompleteDeckExitDialog } from "@/components/hub/home/internal/view/HomeIncompleteDeckExitDialog";
+import { ISecondDeckControls } from "@/components/hub/home/layout/home-workspace-types";
 
 export interface IHomeDeckBuilderSceneViewProps {
   deckCardCount: number;
   deckSize: number;
+  /** Doble Arsenal: controles del 2º mazo (header + panel). null si el jugador no tiene la habilidad. */
+  secondDeck?: ISecondDeckControls | null;
   canInsertSelectedCard: boolean;
   canRemoveSelectedCard: boolean;
   canEvolveSelectedCard: boolean;
@@ -53,6 +56,7 @@ export function HomeDeckBuilderSceneView(props: IHomeDeckBuilderSceneViewProps) 
           <HomeDeckActionBar
             deckCount={props.deckCardCount}
             deckSize={props.deckSize}
+            secondDeck={props.secondDeck}
             canInsert={props.canInsertSelectedCard}
             canRemove={props.canRemoveSelectedCard}
             typeFilter={props.typeFilter}

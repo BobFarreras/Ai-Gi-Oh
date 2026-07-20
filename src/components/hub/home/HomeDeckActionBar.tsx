@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { BackButton } from "@/components/ui/BackButton";
 import { HomeDeckActionButtons } from "@/components/hub/home/HomeDeckActionButtons";
 import { HomeDeckFilterControls } from "@/components/hub/home/HomeDeckFilterControls";
+import { HomeDeckSlotControls } from "@/components/hub/home/HomeDeckSlotControls";
 import { useViewportWidth } from "@/components/hub/internal/use-viewport-width";
 import { isDesktopLayoutViewport } from "@/components/internal/layout-breakpoints";
 import { IHomeDeckActionBarProps } from "@/components/hub/home/home-deck-action-bar-types";
@@ -14,6 +15,7 @@ const COMPACT_DESKTOP_MAX_WIDTH_PX = 1200;
 export function HomeDeckActionBar({
   deckCount,
   deckSize,
+  secondDeck,
   canInsert,
   canRemove,
   typeFilter,
@@ -45,13 +47,18 @@ export function HomeDeckActionBar({
           <h1 className="whitespace-nowrap text-xl font-black uppercase tracking-widest text-cyan-100 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)] sm:text-2xl">
             Arsenal
           </h1>
-          <span className="rounded border border-cyan-500/45 bg-cyan-900/25 px-2 py-0.5 text-[11px] font-black tracking-[0.12em] text-cyan-100 md:hidden">
-            {deckCount}/{deckSize}
-          </span>
+          {/* En móvil, cuando hay 2º mazo, el contador 20/20 se oculta (queda en el panel del deck) y su sitio
+              lo ocupa el desplegable del Doble Arsenal. */}
+          {!secondDeck && (
+            <span className="rounded border border-cyan-500/45 bg-cyan-900/25 px-2 py-0.5 text-[11px] font-black tracking-[0.12em] text-cyan-100 md:hidden">
+              {deckCount}/{deckSize}
+            </span>
+          )}
           <span className="hidden select-none text-cyan-500/50 sm:inline">|</span>
           <p className="hidden whitespace-nowrap text-[10px] font-black uppercase tracking-[0.3em] text-cyan-300/60 md:block">
             Deck Hub
           </p>
+          {secondDeck ? <HomeDeckSlotControls secondDeck={secondDeck} /> : null}
         </div>
         {isCompactDesktopLayout ? (
           <div className="hidden w-full max-w-[36rem] min-[900px]:block">
