@@ -6,6 +6,24 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.18.0] - 2026-07-20
+
+### Added
+- **Reasignación del árbol (respec)**: la habilidad **Reasignación** (rama Arsenal) permite reiniciar el árbol de habilidades y recuperar todos los puntos para repartirlos de nuevo. El reset borra también la propia habilidad (hay que recomprarla para volver a reasignar). El nivel y la XP no cambian. RPC `security definer` idempotente, gateada data-driven por la llave.
+- **Rebarajar la mano de apertura (mulligan)**: la habilidad **Rebarajar** (rama Combate) muestra un overlay pre-duelo en Historia y Arena con tu mano inicial y permite rehacerla una vez. Solo PvE.
+- **Doble Arsenal (2º mazo)**: la habilidad **Doble Arsenal** (rama Arsenal, gate Veterano Nv.5) desbloquea un segundo mazo. El arsenal muestra un switcher para intercambiar activo ↔ 2º mazo (swap atómico); editas siempre el mazo activo con el constructor normal. Combate/IA sin cambios (siempre usan el activo).
+
+### Changed
+- **Pausa en Multijugador (anti-AFK)**: el reloj de turno ya **no se congela** al pausar; al agotarse, el turno se cede entero al rival. Además, un jugador solo puede permanecer **3 turnos en pausa**: al tercero, gana el rival por abandono. El menú de pausa avisa de que el reloj sigue corriendo. Nada de esto afecta a los modos PvE.
+- **SEO / indexación**: la landing pasa a Server Component con el contenido SEO renderizado en servidor (h1, descripción, CTAs) + `<noscript>`; los crawlers ya no se redirigen de `/` a `/hub`; canonicals explícitos en `/`, `/login` y `/register`.
+
+### Fixed
+- **Móvil (banners de combate)**: los banners de "trampa reactiva" y "acción obligatoria" quedaban tapados/cortados por el HUD del oponente; ahora se muestran por encima. Se rediseñó el banner de trampa reactiva (panel con gradiente, icono y texto más legible).
+
+### Internal
+- Migraciones **138** (RPC de respec + activar Reasignación), **139** (activar Rebarajar), **140** (tablas del 2º mazo + RPC `swap_active_deck` + re-gate de Doble Arsenal a Veterano Nv.5/coste 5) y **141** (activar Doble Arsenal). Se aplican **DESPUÉS** de desplegar el código (las activaciones necesitan el código en producción).
+- Blindaje del `quality:check`: `vitest` ignora el worktree de Claude Code y los specs de Playwright (eliminando ruido y contaminación entre tests); tests de la curva de XP del árbol actualizados a la curva doblada.
+
 ## [1.17.0] - 2026-07-20
 
 ### Added
@@ -352,7 +370,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.15.1...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.0...HEAD
+[1.18.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.17.0...v1.18.0
 [1.15.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.13.0...v1.14.0
