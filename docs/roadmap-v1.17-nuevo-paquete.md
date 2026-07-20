@@ -2,12 +2,41 @@
 
 Guía previa a picar código para el nuevo batch de ideas. Igual que la guía de v1.15: cada ficha dice
 **qué existe ya** (verificado en el código, no supuesto), **los pasos**, **los conceptos a tener en cuenta**,
-**la superficie de seguridad** y **las decisiones que faltan**. Nada de esta guía está implementado.
+**la superficie de seguridad** y **las decisiones que faltan**.
 
-- **Rama de trabajo:** `feat/paquete-v1.17` (creada desde `develop`, que ya lleva la release v1.16.0).
-- **Última migración en el repo:** `130`. Las nuevas empiezan en `131`.
+- **Rama de trabajo:** `feat/paquete-v1.17` (creada desde `develop`). **El grueso del paquete ya salió en la
+  release `v1.17.0`** (árbol de habilidades + fichas 1-5, 9, 9b).
+- **Última migración en el repo:** `137` (skill tree catalog). Las nuevas empiezan en `138`.
 - **Ficha heredada:** los *ghost decks* (ficha 11 del roadmap v1.15, que quedó pendiente) se mueven aquí
   como **ficha 6**, con las reglas nuevas que has añadido (5/día, ventana de ±50 de ELO).
+
+---
+
+## 📊 Índice de estado — visión rápida (actualizado 2026-07-20)
+
+Leyenda: ✅ hecha y en prod · 🟡 parcial (falta una parte concreta) · ❌ pendiente (0 código) · ⏸️ fuera de alcance.
+
+| # | Ficha | Estado | Qué falta / siguiente paso |
+|---|-------|--------|----------------------------|
+| 1 | Pasiva entity: +1 energía al ganar combate (+2 a V5) | ✅ Hecha | — Windows 92, mig 133 |
+| 2 | Magia: descartar mano rival (decidido: hasta 3) | ✅ Hecha | — mig 132 |
+| 3 | Nexus en combate → pasiva "Recaudación" (Recaudador) | ✅ Hecha | — Fase A+B, mig 134 |
+| 4 | Elegir qué trampa activar cuando hay varias | 🟡 Parcial | El selector YA funciona **vs la IA** (Story/Arena/Training). Falta **solo en multijugador vs humano**: la acción de multi no lleva `chosenTrapInstanceId`, así que la trampa reactiva se auto-activa (la primera elegible) |
+| 5 | Mejorar la IA de oponentes | 🟡 Casi | La IA **ya es más lista y SÍ fusiona** (fases 1-5 ✅: posición al invocar, repliegue, reemplazo de zona, fusión efectiva, combos). Solo quedan flecos menores: **fase 6** (criterio de la IA para elegir "qué trampa" cuando tiene varias — hoy usa "la primera"), tuning fino de perfiles (opcional) y auditoría de mazos de fusión (dato, no código) |
+| 6 | Ghosts (combate asíncrono vs decks ausentes) | ❌ Pendiente | Todo — diseño cerrado, 0 código. Siguiente natural del Paquete C |
+| 7 | Subastas de objetos | ❌ Pendiente | Todo — diseño listo; decidir solo-sistema vs P2P |
+| 8 | Árbol de Operador (nodos con XP) | ✅ Hecha | — mig 136+137, salió en v1.17.0 |
+| 9 | Nodo de story que da objetos | ✅ Hecha | — v1 en overworld, sin migración |
+| 9b | Rastro visible de objetos equipados | ✅ Hecha | — mig 131 |
+| 10 | Avatar desde selfie con IA | ❌ Pendiente | **Decisión de producto:** ruta A/B/C (rec. C ya) |
+| 11 | 2v2 (parejas) | ⏸️ Fuera de alcance | Release propia con ADR previo |
+
+**Resumen:** 6 hechas (1, 2, 3, 8, 9, 9b) · 2 casi hechas con una parte concreta pendiente (4, 5) ·
+3 pendientes de picar/decidir (6, 7, 10) · 1 fuera de alcance (11).
+
+**Siguiente recomendado:** cerrar los flecos de combate ya empezados — **Ficha 4 (carrusel en multi)** y
+**Ficha 5 (fase 6)** — antes de abrir un frente nuevo de backend (Ficha 6 ghosts). La Ficha 10 solo necesita
+una decisión de producto (ruta C es un día de trabajo y cero riesgo).
 
 ---
 
@@ -611,7 +640,16 @@ prerequisitos POR RANGO. Catálogo v1 de 11 nodos / ~42 puntos para maxear en 3 
 de enganche), catálogo completo de 14 habilidades (incluidas las 4 fuertes del usuario como keystones caros) y
 ranking de dificultad. **Hallazgo clave:** el mazo es ÚNICO por jugador hoy (`player_deck_slots` por
 `player_id`), así que "2 mazos + selector" (idea del usuario) es refactor 🔴🔴 → sub-tanda propia, no v1. Decisiones abiertas (respec, ranked, curva, rama
-Arsenal) listadas en §10 del doc. **0 código: cerrar §10 antes de picar.**
+Arsenal) listadas en §10 del doc.
+
+**Estado (2026-07-17→v1.17.0): IMPLEMENTADA y en PROD ✅.** "Árbol de Operador" completo, migraciones `136`
+(foundation: `player_skill_ranks` + RPC `rank_up_skill_node` idempotente con RLS) y `137` (catálogo v1),
+aplicadas. Motor de efectos data-driven (`resolve-player-skill-modifiers` + `resolve-modifiers-from-catalog`),
+API (`/api/progression/skill-tree` + `/rank-up`), constelación SVG holográfica (`SkillTreeScene`) adaptada a
+móvil (bottom-sheet, selector de rama, fit-to-screen), enganches de combate PvE (+LP inicial, +techo de
+energía, Arranque en Frío = energía turno 1) en Story y Arena — también acreditado en el cierre de multi — y
+sección "Árbol de Operador" en el Códex de la Academia. Las decisiones de §10 se cerraron al implementarlo:
+combate = **solo PvE** (Story/Arena), sin respec en v1, curva XP→nivel→puntos derivada (sin columna).
 
 ---
 
@@ -808,16 +846,19 @@ El ADR, cuando toque, decide: modelo de asientos (2 equipos × 2), reglas de tur
 4. **Ficha 3:** rediseñada a **pasiva de entity floja** (+200 Nexus por combate ganado); paga solo en
    Story/Arena; topes 600/duelo y 1200/día. Fase A del motor hecha (commit `397c8b43`); Fase B pendiente.
 
-**Pendientes:**
+**Cerradas (2026-07-17, con la implementación):**
 
-2. **Ficha 4:** ¿nivel 1 solo (elegir cuál activar) o también cadenas de varias trampas? (Recomendado:
-   nivel 1 primero, cadenas en otra release.)
-5. **Ficha 6 (números):** los K exactos de los ghosts se validan con datos, pero hacen falta valores
-   iniciales antes de implementar.
-4. **Ficha 7:** ¿subastas solo del sistema (recomendado) o también entre jugadores?
-5. **Ficha 8:** lista v1 de nodos/habilidades del árbol y si "editar las 5 primeras cartas" entra en ranked
-   o solo PvE (recomendado: PvE primero).
-6. **Ficha 10:** ¿ruta A, B o C para el avatar? (Recomendado: C ya, B después.)
+5. **Ficha 4:** solo **nivel 1** (elegir cuál activar); las cadenas de varias trampas quedan para otra
+   release. Implementado contra la IA; solo falta el carrusel en multi (implementación, no decisión).
+6. **Ficha 8:** combate del árbol = **solo PvE** (Story/Arena), sin respec en v1, curva XP→nivel→puntos
+   derivada. Salió en v1.17.0.
+
+**Pendientes (decisión de producto, bloquean su ficha):**
+
+7. **Ficha 6 (números):** los K exactos de los ghosts se validan con datos, pero hacen falta valores
+   iniciales antes de implementar (arranque sugerido en la ficha: K/4 atacante, K/8 defensor, ~3 def/día).
+8. **Ficha 7:** ¿subastas solo del sistema (recomendado) o también entre jugadores?
+9. **Ficha 10:** ¿ruta A, B o C para el avatar? (Recomendado: C ya, B después.)
 
 ## 5. Definition of done común
 
