@@ -2,6 +2,12 @@
 # SEO para AI-GI-OH — Guía de Implementación
 
 > Análisis de problemas de indexing en Google Search Console y plan de acción para mejorar la visibilidad en búsquedas.
+>
+> **Estado (2026-07-20):** Nivel 1 (técnico) IMPLEMENTADO — Solución A (landing como Server Component con SEO
+> server-rendered + `<noscript>`; parte interactiva en `LandingInteractive.tsx`), Solución B (crawlers excluidos
+> del redirect `/`→`/hub` en `middleware.ts`) y Solución C (canonicals explícitos en `/`, `/login`, `/register`).
+> Sitemap sin cambios: solo hay 3 rutas públicas (el resto está tras auth). Pendiente: Nivel 2 (contenido:
+> blog/guías/FAQ) y Nivel 3 (off-page), que son trabajo de contenido/marketing, no técnico.
 
 ---
 

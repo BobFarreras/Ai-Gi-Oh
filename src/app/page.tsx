@@ -1,131 +1,47 @@
-// src/app/page.tsx - Landing principal con persistencia de intro, audio contextual y acceso a login/registro.
-"use client";
+// src/app/page.tsx - Landing (Server Component). Renderiza en servidor el contenido SEO (h1, descripción, CTAs)
+// para que los crawlers lo indexen SIN ejecutar JS, y monta la isla interactiva (intro terminal → narrativa →
+// showcase) que se hidrata en cliente. El <noscript> garantiza una landing usable sin JavaScript.
+import type { Metadata } from "next";
+import { LandingInteractive } from "@/components/landing/LandingInteractive";
+import { SITE_NAME, SITE_TAGLINE, SITE_LONG_DESCRIPTION } from "@/core/constants/site";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, RotateCcw } from "lucide-react";
-import { AnimatePresence, motion, Variants } from "framer-motion";
-import { CommunityLinks } from "@/components/landing/CommunityLinks";
-import { CrawlText } from "@/components/landing/CrawlText";
-import { CyberBackground } from "@/components/landing/CyberBackground";
-import { HeroCards } from "@/components/landing/HeroCards";
-import { LANDING_PENDING_ACCESS_CODE_STORAGE_KEY, normalizeLandingAccessCode } from "@/components/landing/internal/landing-access-code-storage";
-import { TerminalPrompt } from "@/components/landing/TerminalPrompt";
-import { useLandingAudio } from "@/components/landing/useLandingAudio";
-
-type LandingPhase = "TERMINAL" | "NARRATIVE" | "SHOWCASE";
-const LANDING_INTRO_SEEN_KEY = "landing-intro-seen";
+export const metadata: Metadata = {
+  // Canonical explícito de la home (se resuelve contra metadataBase del layout).
+  alternates: { canonical: "/" },
+};
 
 export default function HomePage() {
-  const [phase, setPhase] = useState<LandingPhase>("TERMINAL");
-  const [isReady, setIsReady] = useState(false);
-  const [userCode, setUserCode] = useState("");
-  const { playButtonClick, playTerminalBoot, playHeroCardDeploy, stopNarrationTrack } = useLandingAudio({ isNarrativeActive: phase === "NARRATIVE" });
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      const introSeen = window.localStorage.getItem(LANDING_INTRO_SEEN_KEY) === "1";
-      if (introSeen) setPhase("SHOWCASE");
-      setIsReady(true);
-    }, 0);
-    return () => window.clearTimeout(timeoutId);
-  }, []);
-
-  const toNarrative = (code: string) => {
-    const normalizedCode = normalizeLandingAccessCode(code) ?? code;
-    setUserCode(normalizedCode);
-    window.localStorage.setItem(LANDING_PENDING_ACCESS_CODE_STORAGE_KEY, normalizedCode);
-    setPhase("NARRATIVE");
-  };
-  const toShowcase = () => {
-    stopNarrationTrack();
-    window.localStorage.setItem(LANDING_INTRO_SEEN_KEY, "1");
-    setPhase("SHOWCASE");
-  };
-  const replayIntro = () => {
-    playButtonClick();
-    stopNarrationTrack();
-    window.localStorage.removeItem(LANDING_INTRO_SEEN_KEY);
-    setUserCode("");
-    setPhase("TERMINAL");
-  };
-  useEffect(() => {
-    if (phase !== "TERMINAL") return;
-    playTerminalBoot();
-  }, [phase, playTerminalBoot]);
-
-  const containerVariants: Variants = useMemo(() => ({ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.3, delayChildren: 0.2 } } }), []);
-  const itemVariants: Variants = useMemo(() => ({ hidden: { opacity: 0, y: 30, scale: 0.9 }, visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 100, damping: 15 } } }), []);
-
   return (
-    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#010308] selection:bg-cyan-500/30">
-      <CyberBackground />
-      {!isReady ? null : (
-        <>
-          {phase === "SHOWCASE" ? <CommunityLinks onAction={playButtonClick} /> : null}
+    <>
+      {/* Contenido SEO server-rendered: siempre presente en el HTML para los crawlers, oculto visualmente
+          (la landing interactiva es la experiencia real). Es el ÚNICO h1 de la página. */}
+      <section className="sr-only">
+        <h1>{SITE_NAME} — {SITE_TAGLINE}</h1>
+        <p>{SITE_LONG_DESCRIPTION}</p>
+        <nav aria-label="Accesos principales">
+          <a href="/register">Registrarse gratis</a>
+          <a href="/login">Iniciar sesión</a>
+        </nav>
+      </section>
 
-          <AnimatePresence mode="wait">
-            {phase === "TERMINAL" ? <TerminalPrompt key="terminal" onComplete={toNarrative} onAction={playButtonClick} /> : null}
-          </AnimatePresence>
+      {/* Isla interactiva (cliente). */}
+      <LandingInteractive />
 
-          <AnimatePresence>
-            {phase === "NARRATIVE" ? (
-              <motion.div key="narrative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.5 } }} className="absolute inset-0 z-40">
-                <CrawlText accessCode={userCode} onSkip={toShowcase} onAction={playButtonClick} />
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {phase === "SHOWCASE" ? (
-              <motion.div key="showcase" variants={containerVariants} initial="hidden" animate="visible" className="absolute inset-0 z-30 flex h-dvh flex-col items-center justify-between overflow-x-visible overflow-y-auto px-4 py-8 pointer-events-auto md:overflow-x-hidden sm:px-6">
-                <motion.header variants={itemVariants} className="relative mt-2 flex-shrink-0 text-center">
-                  <h1 className="bg-gradient-to-br from-white via-cyan-100 to-cyan-600 bg-clip-text text-4xl font-black uppercase tracking-tighter text-transparent drop-shadow-[0_0_15px_rgba(6,182,212,0.6)] md:text-5xl lg:text-6xl">AI-GI-OH</h1>
-                  <span className="mt-2 block font-mono text-lg tracking-[0.3em] text-cyan-500 md:text-xl lg:text-2xl">THE AGI WARS</span>
-                </motion.header>
-
-                <motion.div variants={itemVariants} className="flex min-h-[300px] w-full max-w-5xl flex-1 items-center justify-center">
-                  <HeroCards onCardReveal={playHeroCardDeploy} />
-                </motion.div>
-
-                <motion.footer variants={itemVariants} className="flex w-full max-w-3xl flex-shrink-0 flex-col items-center justify-center gap-4 sm:flex-row">
-                  <Link href="/register" onClick={playButtonClick} className="group relative flex h-14 w-full items-center justify-center overflow-hidden bg-cyan-500 px-4 font-mono text-xs font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-cyan-400 hover:shadow-[0_0_30px_rgba(6,182,212,0.8)] sm:h-16 sm:w-1/2 sm:px-8 sm:text-sm" style={{ clipPath: "polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)" }}>
-                    <span aria-hidden className="landing-cta-shine landing-cta-primary" />
-                    <span>Compilar ID</span>
-                  </Link>
-                  <Link href="/login" onClick={playButtonClick} className="group relative flex h-14 w-full items-center justify-center overflow-hidden border border-cyan-500/50 bg-black/60 px-4 font-mono text-xs font-bold uppercase tracking-[0.2em] text-cyan-400 backdrop-blur-md transition-all hover:border-cyan-300 hover:bg-cyan-900/40 hover:text-cyan-200 sm:h-16 sm:w-1/2 sm:px-8 sm:text-sm" style={{ clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))" }}>
-                    <span aria-hidden className="landing-cta-shine landing-cta-secondary" />
-                    Conexión Red
-                  </Link>
-                </motion.footer>
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
-          {phase === "SHOWCASE" ? (
-            <button
-              aria-label="Reproducir secuencia terminal y narración"
-              onClick={replayIntro}
-              className="fixed right-4 top-4 z-[80] flex h-11 w-11 items-center justify-center border border-cyan-500/45 bg-black/75 text-cyan-300 transition-all hover:border-cyan-300 hover:text-cyan-100 md:bottom-6 md:right-6 md:top-auto md:h-auto md:w-auto md:px-4 md:py-3 md:font-mono md:text-[10px] md:font-black md:uppercase md:tracking-[0.16em]"
-            >
-              <RotateCcw className="h-4 w-4 md:hidden" />
-              <span className="hidden md:inline">Reproducir Intro</span>
-            </button>
-          ) : null}
-          {phase === "TERMINAL" ? (
-            <button
-              aria-label="Ir directo a la landing"
-              onClick={() => {
-                playButtonClick();
-                toShowcase();
-              }}
-              className="fixed left-4 top-4 z-[80] flex h-11 w-11 items-center justify-center border border-cyan-500/45 bg-black/75 text-cyan-300 transition-all hover:border-cyan-300 hover:text-cyan-100 md:bottom-6 md:left-auto md:right-6 md:top-auto md:h-auto md:w-auto md:px-4 md:py-3 md:font-mono md:text-[10px] md:font-black md:uppercase md:tracking-[0.16em]"
-            >
-              <ArrowLeft className="h-4 w-4 md:hidden" />
-              <span className="hidden md:inline">Ir a Landing</span>
-            </button>
-          ) : null}
-        </>
-      )}
-    </main>
+      {/* Fallback sin JavaScript: la isla no renderiza nada útil sin JS, así que damos una landing estática
+          con los CTAs para usuarios/crawlers sin ejecución de scripts. */}
+      <noscript>
+        <div className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-[#010308] px-6 text-center text-white">
+          <div>
+            <p className="text-4xl font-black uppercase tracking-tighter text-cyan-400">{SITE_NAME}</p>
+            <p className="mt-2 font-mono tracking-[0.3em] text-cyan-600">{SITE_TAGLINE.toUpperCase()}</p>
+          </div>
+          <p className="max-w-2xl text-lg text-cyan-100/80">{SITE_LONG_DESCRIPTION}</p>
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <a href="/register" className="bg-cyan-500 px-6 py-3 font-mono font-black uppercase tracking-widest text-black">Registrarse gratis</a>
+            <a href="/login" className="border border-cyan-500/60 px-6 py-3 font-mono font-bold uppercase tracking-widest text-cyan-300">Iniciar sesión</a>
+          </div>
+        </div>
+      </noscript>
+    </>
   );
 }

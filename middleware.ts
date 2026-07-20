@@ -14,6 +14,20 @@ function isAdminEntryRoute(pathname: string): boolean {
   return pathname === "/admin" || pathname.startsWith("/admin/");
 }
 
+// Crawlers de buscadores/redes sociales. Si Googlebot obtiene una cookie de sesión (p. ej. tras crawlear
+// /login), NO debe ser redirigido de "/" a "/hub" (que es noindex) → si no, Search Console marca la home
+// como "Página con redirección" y no la indexa. Los usuarios reales sí se redirigen.
+const CRAWLER_USER_AGENTS = [
+  "googlebot", "bingbot", "slurp", "duckduckbot", "baiduspider", "yandex", "applebot",
+  "facebookexternalhit", "twitterbot", "linkedinbot", "whatsapp", "telegrambot", "discordbot",
+];
+
+function isCrawler(userAgent: string | null): boolean {
+  if (!userAgent) return false;
+  const lower = userAgent.toLowerCase();
+  return CRAWLER_USER_AGENTS.some((agent) => lower.includes(agent));
+}
+
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request });
   const pathname = request.nextUrl.pathname;
@@ -36,8 +50,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Si ya hay sesión activa, saltar la landing y entrar directo al hub.
-  if (pathname === "/" && user) {
+  // Si ya hay sesión activa, saltar la landing y entrar directo al hub. Los crawlers NUNCA se redirigen
+  // desde "/": deben ver e indexar la landing pública (evita "Página con redirección" en Search Console).
+  if (pathname === "/" && user && !isCrawler(request.headers.get("user-agent"))) {
     return NextResponse.redirect(new URL("/hub", request.url));
   }
 
