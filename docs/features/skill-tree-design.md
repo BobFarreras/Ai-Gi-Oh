@@ -278,7 +278,7 @@ Notación: **Nv. X/Y** = rango actual sugerido / `maxRank`; **coste** = `cost_pe
 | `node-cbt-blindaje` | Blindaje Reforzado | **5** | 1 | core Nv.1 | `STARTING_LP_BONUS +100` → **Nv.5 = +500 LP** | ✅ |
 | `node-cbt-arranque` | Arranque en Frío | 1 | 2 | Blindaje Nv.3 | `TURN1_ENERGY_BONUS +1` | ✅ |
 | `node-cbt-nucleo` | Núcleo Sobrecargado | **2** | 3 | Arranque Nv.1 | `MAX_ENERGY_BONUS +1` → **techo 10 → 12** | ✅ |
-| `node-cbt-rebarajar` | Rebarajar | 1 | 2 | Blindaje Nv.5 | `OPENING_MULLIGAN` (rehacer la mano 1 vez) | ❌ F6 |
+| `node-cbt-rebarajar` | Rebarajar | 1 | 2 | Blindaje Nv.5 | `OPENING_MULLIGAN` (rehacer la mano 1 vez) | ✅ (mig. 139) |
 | `node-cbt-apertura` | Apertura Programada | 1 | 4 | Núcleo Nv.2 + Rebarajar Nv.1 | `EDIT_OPENING_DECK 5` | ❌ F6 |
 
 ### Rama C — ARSENAL · "Protocolo de Red" (meta, todos los modos)

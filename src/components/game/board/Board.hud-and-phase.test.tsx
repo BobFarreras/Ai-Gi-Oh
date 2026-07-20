@@ -55,6 +55,7 @@ function createUseBoardMock(isPlayerTurn = true): ReturnType<typeof useBoardModu
     battleExperienceCardLookup: {},
     isBattleExperiencePending: false,
     restartMatch: vi.fn(),
+    mulligan: { isPending: false, reshuffled: false, keep: vi.fn(), reshuffle: vi.fn() },
   } as unknown as ReturnType<typeof useBoardModule.useBoard>;
 }
 

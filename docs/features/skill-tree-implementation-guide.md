@@ -126,7 +126,7 @@ Leyenda de tier (detalle en §3): 🟢 **Fácil** (dato / reusa hook) · 🟡 **
 | `node-cbt-blindaje` | Blindaje Reforzado | 5 | 1 | core | `STARTING_LP_BONUS +100/r` → +500 LP | 🟢 | ✅ |
 | `node-cbt-arranque` | Arranque en Frío | 1 | 2 | Blindaje Nv.3 | `TURN1_ENERGY_BONUS +1` (solo turno 1) | 🟡 | ✅ |
 | `node-cbt-nucleo` | Núcleo Sobrecargado | 2 | 3 | Arranque Nv.1 | `MAX_ENERGY_BONUS +1/r` → techo 10 → 12 | 🟢 | ✅ |
-| `node-cbt-rebarajar` | Rebarajar | 1 | 2 | Blindaje Nv.5 | `OPENING_MULLIGAN` (rehacer la mano 1 vez) | 🟡 | ❌ F6 |
+| `node-cbt-rebarajar` | Rebarajar | 1 | 2 | Blindaje Nv.5 | `OPENING_MULLIGAN` (rehacer la mano 1 vez) | 🟡 | ✅ (mig. 139) |
 | **`node-cbt-apertura`** ★ TUYA | **Apertura Programada** | **1** | **4** | **Núcleo Nv.2 + Rebarajar Nv.1** | `EDIT_OPENING_DECK 5` (eliges SIN random tus 5 primeras cartas) | 🔴 | ❌ F6 |
 
 > **Combate 🟢 completado (Blindaje, Arranque, Núcleo).** Pendientes: Rebarajar y Apertura (F6 — necesitan UI pre-duelo).

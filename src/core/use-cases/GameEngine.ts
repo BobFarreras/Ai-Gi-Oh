@@ -10,6 +10,8 @@ import { resolveReactiveTrapDecision } from "./game-engine/combat/resolve-reacti
 import { fuseCards } from "./game-engine/fusion/fuse-cards";
 import { startFusionSummon } from "./game-engine/fusion/start-fusion-summon";
 import { nextPhase } from "./game-engine/phases/next-phase";
+import { mulliganOpeningHand } from "./game-engine/state/mulligan-opening-hand";
+import { RandomSource } from "@/core/services/random/seeded-rng";
 import { resolvePendingTurnAction } from "./game-engine/phases/resolve-pending-turn-action";
 import { createInitialGameState } from "./game-engine/state/create-initial-game-state";
 import { GameState } from "./game-engine/state/types";
@@ -108,6 +110,11 @@ export class GameEngine {
   /** Avanza la fase/turno aplicando mantenimiento, energía y acción obligatoria inicial. */
   public static nextPhase(state: GameState): GameState {
     return nextPhase(state);
+  }
+
+  /** Rebaraja la mano de apertura del jugador (habilidad OPENING_MULLIGAN, PvE). No toca al rival. */
+  public static mulliganOpeningHand(state: GameState, playerId: string, randomSource: RandomSource): GameState {
+    return mulliganOpeningHand(state, playerId, randomSource);
   }
 
   /** Resuelve una ejecución activa y aplica su efecto o acción pendiente derivada. */

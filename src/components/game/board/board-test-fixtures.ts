@@ -83,6 +83,7 @@ export function mockDefaultUseBoardReturn() {
     isPaused: false,
     pausedTurnTimeouts: 0,
     registerPausedTurnTimeout: () => 0,
+    mulligan: { isPending: false, reshuffled: false, keep: () => {}, reshuffle: () => {} },
     isAutoPhaseEnabled: true,
     isTurnHelpEnabled: true,
     isFusionCinematicActive: false,

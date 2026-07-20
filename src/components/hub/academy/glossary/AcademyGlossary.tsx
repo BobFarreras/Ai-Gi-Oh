@@ -443,6 +443,14 @@ function SkillTreeSection() {
           Historia y Arena. En Multijugador todos compiten en igualdad de condiciones.
         </p>
       </div>
+      <div className="mt-3 rounded-xl border border-cyan-400/30 bg-cyan-400/5 p-4">
+        <p className="text-[13.5px] leading-6 text-cyan-100/90">
+          <span className="font-black text-cyan-300">Rebarajar (mano de apertura):</span> con la habilidad{" "}
+          <span className="font-black text-cyan-200">Rebarajar</span> (rama Combate), al empezar un combate de
+          Historia o Arena verás tu mano inicial y podrás rehacerla <span className="font-black">una vez</span>.
+          Si vas segundo, tu carta extra se roba después, como siempre.
+        </p>
+      </div>
       <div className="mt-3 rounded-xl border border-violet-400/30 bg-violet-400/5 p-4">
         <p className="text-[13.5px] leading-6 text-violet-100/90">
           <span className="font-black text-violet-300">Reasignar (respec):</span> con la habilidad{" "}

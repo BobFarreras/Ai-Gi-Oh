@@ -36,6 +36,7 @@ export interface IStoryDuelRuntimeData {
   playerStartingLpBonus: number;
   playerMaxEnergyBonus: number;
   playerTurn1EnergyBonus: number;
+  playerOpeningMulligan: boolean;
 }
 
 function applyStoryDeckEntryToCard(
@@ -122,5 +123,6 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
     playerStartingLpBonus: combatModifiers.startingLpBonus,
     playerMaxEnergyBonus: combatModifiers.maxEnergyBonus,
     playerTurn1EnergyBonus: combatModifiers.turn1EnergyBonus,
+    playerOpeningMulligan: combatModifiers.openingMulligan,
   };
 }

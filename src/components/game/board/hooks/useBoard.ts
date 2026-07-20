@@ -1,11 +1,12 @@
 // src/components/game/board/hooks/useBoard.ts - Compone runtime, estado UI, progresión y audio del duelo en un contrato único para la capa visual.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GameState } from "@/core/use-cases/GameEngine";
+import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
 import { ICampaignProgress } from "@/core/services/opponent/difficulty/types";
 import { IOpponentStrategy } from "@/core/services/opponent/types";
 import { createMatchSeed } from "@/core/services/random/create-match-seed";
+import { createSeededRandom } from "@/core/services/random/seeded-rng";
 import { createInitialBoardState, ICreateInitialBoardStateInput } from "./internal/boardInitialState";
 import { useMatchAudio } from "./internal/match/useMatchAudio";
 import { useMatchProgression } from "./internal/match/useMatchProgression";
@@ -26,6 +27,7 @@ export function useBoard(
   disableBaseSoundtrack = false,
   disableOpponentAutomation = false,
   opponentStrategyOverride: IOpponentStrategy | null = null,
+  enableOpeningMulligan = false,
 ) {
   const [campaignProgress] = useState<ICampaignProgress>({ chapterIndex: 1, duelIndex: 1, victories: 0 });
   const [matchSeed] = useState(() => createMatchSeed());
@@ -36,6 +38,12 @@ export function useBoard(
   const gameStateRef = useRef<GameState>(createInitialState());
   const uiState = useMatchUiState({ gameStateRef, createInitialState });
   const winnerPlayerId = useMemo(() => resolveWinnerPlayerId(uiState.gameState), [uiState.gameState]);
+  // Mulligan de apertura (ficha 8, PvE): tras el coin toss, si el jugador tiene la habilidad y aún no decidió,
+  // se ofrece rebarajar la mano 1 vez. Mientras esté pendiente, el arranque sigue "bloqueado" (la IA no juega).
+  const [mulliganResolved, setMulliganResolved] = useState(false);
+  const [mulliganReshuffled, setMulliganReshuffled] = useState(false);
+  const isMulliganPending = enableOpeningMulligan && !isMatchStartLocked && !mulliganResolved;
+  const matchStartLockedEffective = isMatchStartLocked || (enableOpeningMulligan && !mulliganResolved);
   useEffect(() => {
     if (mode !== "TUTORIAL" || !uiState.isAutoPhaseEnabled) return;
     uiState.setIsAutoPhaseEnabled(false);
@@ -46,10 +54,18 @@ export function useBoard(
     gameStateRef,
     uiState,
     winnerPlayerId,
-    isMatchStartLocked,
+    isMatchStartLocked: matchStartLockedEffective,
     disableOpponentAutomation,
     opponentStrategyOverride,
   });
+  const keepMulligan = useCallback(() => setMulliganResolved(true), []);
+  const reshuffleOpeningHand = useCallback(() => {
+    if (mulliganReshuffled) return;
+    // Seed fresco por rebaraje (PvE, no requiere determinismo compartido): distinto orden garantizado.
+    const rng = createSeededRandom(`${matchSeed}-mulligan-${Date.now()}`);
+    runtime.applyTransition((state) => GameEngine.mulliganOpeningHand(state, state.playerA.id, rng));
+    setMulliganReshuffled(true);
+  }, [matchSeed, mulliganReshuffled, runtime]);
   const progression = useMatchProgression({
     mode,
     gameState: uiState.gameState,
@@ -71,6 +87,8 @@ export function useBoard(
   const restartMatch = useCallback(() => {
     progression.resetBattleProgression();
     uiState.restartMatch();
+    setMulliganResolved(false);
+    setMulliganReshuffled(false);
   }, [progression, uiState]);
   const { canActivateSelectedExecution, activateSelectedExecution } = useExecutionActivation({
     gameState: uiState.gameState,
@@ -133,6 +151,8 @@ export function useBoard(
     setIsFusionCinematicActive: uiState.setIsFusionCinematicActive,
     winnerPlayerId,
     restartMatch,
+    // Mulligan de apertura (PvE): estado + acciones para el overlay pre-duelo.
+    mulligan: { isPending: isMulliganPending, reshuffled: mulliganReshuffled, keep: keepMulligan, reshuffle: reshuffleOpeningHand },
     toggleMute: uiState.toggleMute,
     togglePause: uiState.togglePause,
     toggleAutoPhase: uiState.toggleAutoPhase,

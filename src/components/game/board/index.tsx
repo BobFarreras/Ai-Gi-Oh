@@ -18,6 +18,7 @@ import { BoardInteractiveSection } from "@/components/game/board/internal/BoardI
 import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 import { BoardTutorialFlowOverlay } from "@/components/game/board/internal/BoardTutorialFlowOverlay";
 import { ReactiveTrapDecisionTimer } from "@/components/game/board/multiplayer/ReactiveTrapDecisionTimer";
+import { MulliganOverlay } from "@/components/game/board/ui/overlays/MulliganOverlay";
 import { MAX_PAUSED_TURNS_MULTIPLAYER } from "@/components/game/board/multiplayer/pause-turn-limit";
 import { useCallback, useLayoutEffect } from "react";
 import { useBoardViewportMetrics } from "./hooks/internal/layout/use-board-viewport-metrics";
@@ -60,14 +61,16 @@ interface IBoardProps {
    * lo traduce en victoria del rival (finish + overlay de derrota local). Ver MAX_PAUSED_TURNS_MULTIPLAYER.
    */
   onLocalForfeit?: () => void;
+  /** PvE: habilita el overlay de mulligan de apertura (habilidad OPENING_MULLIGAN del árbol). */
+  enableOpeningMulligan?: boolean;
   /** Callback que recibe applyTransition al montar el Board. Permite que clientes externos (ej. multijugador) apliquen acciones al estado de partida. */
   applyTransitionRef?: React.MutableRefObject<((transition: (state: import("@/core/use-cases/GameEngine").GameState) => import("@/core/use-cases/GameEngine").GameState) => import("@/core/use-cases/GameEngine").GameState | null) | null>;
   /** Recibe applyRemoteAction: aplica una acción del rival CON su coreografía visual (multijugador). */
   applyRemoteActionRef?: React.MutableRefObject<((action: import("@/core/entities/multiplayer/IMatchAction").IMatchActionPayload) => Promise<void>) | null>;
 }
-export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, opponentAvatarObjectPosition, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, abandonPenaltyNexus = 0, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId, onLocalForfeit }: IBoardProps) {
+export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, opponentAvatarObjectPosition, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, abandonPenaltyNexus = 0, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId, onLocalForfeit, enableOpeningMulligan = false }: IBoardProps) {
   countRender("Board");
-  const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme, disableOpponentAutomation, opponentStrategyOverride);
+  const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme, disableOpponentAutomation, opponentStrategyOverride, enableOpeningMulligan);
   useLayoutEffect(() => {
     if (applyTransitionRef) applyTransitionRef.current = board.applyTransition;
     if (applyRemoteActionRef) applyRemoteActionRef.current = board.applyRemoteAction;
@@ -171,6 +174,15 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
         pending={board.gameState.pendingReactiveTrapDecision}
         localPlayerId={player.id}
       />
+      {/* Ficha 8 (PvE): overlay de mulligan de apertura, solo si el jugador tiene la habilidad y no ha decidido. */}
+      {board.mulligan.isPending ? (
+        <MulliganOverlay
+          hand={player.hand}
+          reshuffled={board.mulligan.reshuffled}
+          onReshuffle={board.mulligan.reshuffle}
+          onKeep={board.mulligan.keep}
+        />
+      ) : null}
       {mode === "TUTORIAL" && !isMatchStartLocked ? (
         <BoardTutorialFlowOverlay
           combatLog={board.gameState.combatLog}
