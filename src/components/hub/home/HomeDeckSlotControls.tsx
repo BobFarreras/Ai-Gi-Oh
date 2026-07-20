@@ -70,7 +70,7 @@ export function HomeDeckSlotControls({ secondDeck }: { secondDeck: ISecondDeckCo
           <ChevronDown className="h-3 w-3" />
         </button>
         {open && (
-          <div className="absolute left-0 top-full z-30 mt-1 w-36 overflow-hidden rounded-lg border border-violet-400/40 bg-[#0a0714]/95 shadow-[0_8px_24px_rgba(0,0,0,0.5)] backdrop-blur">
+          <div className="absolute left-0 top-full z-50 mt-1 w-36 overflow-hidden rounded-lg border border-violet-400/40 bg-[#0a0714]/95 shadow-[0_8px_24px_rgba(0,0,0,0.5)] backdrop-blur">
             {(["PRINCIPAL", "SECONDARY"] as const).map((slot) => {
               const active = secondDeck.editingDeckSlot === slot;
               return (
