@@ -21,6 +21,9 @@ interface IUseHomeDeckBuilderStateInput {
  * Centraliza estado mutable del builder y conecta derivados de selección en una sola salida tipada.
  */
 export function useHomeDeckBuilderState(input: IUseHomeDeckBuilderStateInput) {
+  // Doble Arsenal: qué mazo se está editando (PRINCIPAL = activo, SECONDARY = 2º mazo/banco). Al cambiar, la
+  // escena recarga el mazo correspondiente en `deck`. La caché se separa por slot para no mezclar snapshots.
+  const [editingDeckSlot, setEditingDeckSlot] = useState<"PRINCIPAL" | "SECONDARY">("PRINCIPAL");
   const [deck, setDeck] = useState<IDeck>(() => readCachedDeck(input.playerId, input.initialDeck));
   const [collectionState, setCollectionState] = useState<ICollectionCard[]>(input.collection);
   const [cardProgressById, setCardProgressById] = useState<Map<string, IPlayerCardProgress>>(
@@ -40,10 +43,11 @@ export function useHomeDeckBuilderState(input: IUseHomeDeckBuilderStateInput) {
   const [evolutionOverlay, setEvolutionOverlay] = useState<IHomeEvolutionOverlayState | null>(null);
   const [draggedCard, setDraggedCard] = useState<IHomeDraggedCardState | null>(null);
   useEffect(() => {
-    writeCachedDeck(input.playerId, deck);
-  }, [deck, input.playerId]);
-  // Contexto único que consumen acciones y handlers para mantener consistencia de snapshot.
-  const context = { playerId: input.playerId, deck, collection: collectionState };
+    writeCachedDeck(input.playerId, deck, editingDeckSlot);
+  }, [deck, editingDeckSlot, input.playerId]);
+  // Contexto único que consumen acciones y handlers para mantener consistencia de snapshot. `deckSlot` decide
+  // si las operaciones escriben en el mazo activo o en el 2º mazo (banco).
+  const context = { playerId: input.playerId, deck, collection: collectionState, deckSlot: editingDeckSlot };
   const deckCardCount = useMemo(() => deck.slots.filter((slot) => slot.cardId !== null).length, [deck.slots]);
   const selectionView = useHomeSelectionView({
     deck,
@@ -89,6 +93,8 @@ export function useHomeDeckBuilderState(input: IUseHomeDeckBuilderStateInput) {
     draggedCard,
     setDraggedCard,
     context,
+    editingDeckSlot,
+    setEditingDeckSlot,
     deckCardCount,
     ...selectionView,
   };

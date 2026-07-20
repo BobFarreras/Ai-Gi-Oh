@@ -18,7 +18,8 @@ import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { IHomeDeckBuilderSceneProps } from "@/components/hub/home/internal/types/home-deck-builder-types";
 import { useHomeWorkspaceHandlers } from "@/components/hub/home/internal/hooks/use-home-workspace-handlers";
 import { HomeDeckBuilderSceneView } from "@/components/hub/home/internal/view/HomeDeckBuilderSceneView";
-import { SecondDeckSwitcher } from "@/components/hub/home/SecondDeckSwitcher";
+import { DeckSlotSwitcher } from "@/components/hub/home/DeckSlotSwitcher";
+import { readCurrentDeckAction } from "@/services/home/deck-builder/deck-builder-actions";
 import { createHomeDeckBuilderViewProps } from "@/components/hub/home/internal/view/create-home-deck-builder-view-props";
 import { useHomeDeckBuilderState } from "@/components/hub/home/internal/hooks/use-home-deck-builder-state";
 import { useHomeDeckBuilderActions } from "@/components/hub/home/internal/hooks/use-home-deck-builder-actions";
@@ -48,6 +49,8 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
   const [pendingEquipObject, setPendingEquipObject] = useState<ISelectableObject | null>(null);
   // Historial de objetos aplicados (ficha 9b): se abre desde el botón junto al conmutador, en Objetos.
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  // Doble Arsenal: bloqueo mientras se cambia/activa de mazo (evita dobles clics).
+  const [deckSwitchBusy, setDeckSwitchBusy] = useState(false);
 
   // Tras usar un caramelo, refleja el nuevo nivel/xp de la carta en el estado del arsenal (sin recargar): la
   // progresión es la MISMA fuente que usa el deck-builder para mostrar stats, así que la carta sube al volver.
@@ -137,6 +140,59 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
     void objectsRuntime.apply(pendingEquipObject, card);
     setPendingEquipObject(null);
   }, [objectsRuntime, pendingEquipObject, state.selectedCard]);
+
+  // Doble Arsenal: cambia la VISTA de edición entre el mazo activo y el 2º mazo (banco). Carga del servidor el
+  // mazo del slot elegido (el 2º empieza vacío) y lo pone en el builder.
+  const switchEditingDeck = useCallback(
+    async (slot: "PRINCIPAL" | "SECONDARY") => {
+      if (deckSwitchBusy || slot === state.editingDeckSlot) return;
+      setDeckSwitchBusy(true);
+      try {
+        const nextDeck = await readCurrentDeckAction({ playerId: props.playerId, deck: state.deck, collection: state.collectionState, deckSlot: slot });
+        state.setEditingDeckSlot(slot);
+        state.setDeck(nextDeck);
+        state.setSelectedSlotIndex(null);
+        state.setSelectedFusionSlotIndex(null);
+        state.setSelectedCollectionCardId(null);
+        state.setErrorMessage(null);
+      } catch {
+        state.setErrorMessage("No se pudo cargar el mazo.");
+      } finally {
+        setDeckSwitchBusy(false);
+      }
+    },
+    [deckSwitchBusy, props.playerId, state],
+  );
+
+  // "Hacer principal": intercambia activo <-> 2º mazo (RPC atómica). Tras el swap, el mazo que editábamos (2º)
+  // pasa a ser el activo; mostramos el principal recargado.
+  const activateEditingDeck = useCallback(async () => {
+    if (deckSwitchBusy) return;
+    setDeckSwitchBusy(true);
+    try {
+      const res = await fetch("/api/home/deck/swap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ operationId: crypto.randomUUID() }),
+      });
+      const result = (await res.json()) as { ok?: boolean; reason?: string };
+      if (!res.ok || result.ok === false) {
+        state.setErrorMessage(result.reason === "no_second_deck" ? "Necesitas la habilidad Doble Arsenal." : "No se pudo activar el mazo.");
+        return;
+      }
+      const activeDeck = await readCurrentDeckAction({ playerId: props.playerId, deck: state.deck, collection: state.collectionState, deckSlot: "PRINCIPAL" });
+      state.setEditingDeckSlot("PRINCIPAL");
+      state.setDeck(activeDeck);
+      state.setSelectedSlotIndex(null);
+      state.setSelectedFusionSlotIndex(null);
+      state.setSelectedCollectionCardId(null);
+      state.setErrorMessage(null);
+    } catch {
+      state.setErrorMessage("Error de red al activar el mazo.");
+    } finally {
+      setDeckSwitchBusy(false);
+    }
+  }, [deckSwitchBusy, props.playerId, state]);
 
   const actionDeps = {
     context: state.context,
@@ -285,8 +341,17 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
 
   return (
     <>
+      {props.hasSecondDeck ? (
+        <div className="mx-auto w-full max-w-6xl px-2 pt-2 sm:px-4">
+          <DeckSlotSwitcher
+            editingDeckSlot={state.editingDeckSlot}
+            busy={deckSwitchBusy}
+            onSwitch={switchEditingDeck}
+            onActivate={activateEditingDeck}
+          />
+        </div>
+      ) : null}
       <HomeDeckBuilderSceneView {...viewProps} renderSectionSwitch={renderSectionSwitch} />
-      {props.hasSecondDeck ? <SecondDeckSwitcher /> : null}
       {objectOverlay}
     </>
   );

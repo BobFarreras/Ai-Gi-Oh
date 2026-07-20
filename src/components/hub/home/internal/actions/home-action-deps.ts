@@ -10,6 +10,8 @@ export interface IHomeDeckActionContext {
   playerId: string;
   deck: IDeck;
   collection: ICollectionCard[];
+  /** Doble Arsenal: "SECONDARY" edita el 2º mazo (banco); por defecto el activo. */
+  deckSlot?: "PRINCIPAL" | "SECONDARY";
 }
 
 export interface IHomeActionDeps {

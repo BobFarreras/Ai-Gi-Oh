@@ -7,6 +7,13 @@ interface IDeckActionContext {
   playerId: string;
   deck: IDeck;
   collection: ICollectionCard[];
+  /** Doble Arsenal: si es "SECONDARY", las operaciones editan el 2º mazo (banco) vía ?slot=SECONDARY. */
+  deckSlot?: "PRINCIPAL" | "SECONDARY";
+}
+
+/** Añade ?slot=SECONDARY a la ruta cuando se está editando el 2º mazo. */
+function withSlot(path: string, context: IDeckActionContext): string {
+  return context.deckSlot === "SECONDARY" ? `${path}${path.includes("?") ? "&" : "?"}slot=SECONDARY` : path;
 }
 
 async function parseDeckResponse(response: Response): Promise<IDeck> {
@@ -19,8 +26,7 @@ async function parseDeckResponse(response: Response): Promise<IDeck> {
 }
 
 export async function addCardToDeckAction(context: IDeckActionContext, cardId: string): Promise<IDeck> {
-  void context;
-  const response = await fetch("/api/home/deck/add", {
+  const response = await fetch(withSlot("/api/home/deck/add", context), {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ cardId }),
@@ -30,8 +36,7 @@ export async function addCardToDeckAction(context: IDeckActionContext, cardId: s
 }
 
 export async function removeCardFromDeckAction(context: IDeckActionContext, slotIndex: number): Promise<IDeck> {
-  void context;
-  const response = await fetch("/api/home/deck/remove", {
+  const response = await fetch(withSlot("/api/home/deck/remove", context), {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ slotIndex }),
@@ -41,8 +46,7 @@ export async function removeCardFromDeckAction(context: IDeckActionContext, slot
 }
 
 export async function addCardToDeckSlotAction(context: IDeckActionContext, cardId: string, slotIndex: number): Promise<IDeck> {
-  void context;
-  const response = await fetch("/api/home/deck/add-slot", {
+  const response = await fetch(withSlot("/api/home/deck/add-slot", context), {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ cardId, slotIndex }),
@@ -52,8 +56,7 @@ export async function addCardToDeckSlotAction(context: IDeckActionContext, cardI
 }
 
 export async function addCardToFusionDeckAction(context: IDeckActionContext, cardId: string, slotIndex: number): Promise<IDeck> {
-  void context;
-  const response = await fetch("/api/home/deck/fusion/add", {
+  const response = await fetch(withSlot("/api/home/deck/fusion/add", context), {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ cardId, slotIndex }),
@@ -63,8 +66,7 @@ export async function addCardToFusionDeckAction(context: IDeckActionContext, car
 }
 
 export async function removeCardFromFusionDeckAction(context: IDeckActionContext, slotIndex: number): Promise<IDeck> {
-  void context;
-  const response = await fetch("/api/home/deck/fusion/remove", {
+  const response = await fetch(withSlot("/api/home/deck/fusion/remove", context), {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ slotIndex }),
@@ -74,8 +76,7 @@ export async function removeCardFromFusionDeckAction(context: IDeckActionContext
 }
 
 export async function readCurrentDeckAction(context: IDeckActionContext): Promise<IDeck> {
-  void context;
-  const response = await fetch("/api/home/deck/current", { method: "GET", cache: "no-store" });
+  const response = await fetch(withSlot("/api/home/deck/current", context), { method: "GET", cache: "no-store" });
   return parseDeckResponse(response);
 }
 
@@ -87,8 +88,7 @@ export async function moveDeckCardAction(context: IDeckActionContext, fromIndex:
 }
 
 export async function saveDeckAction(context: IDeckActionContext): Promise<IDeck> {
-  void context;
-  const response = await fetch("/api/home/deck/save", { method: "POST", cache: "no-store" });
+  const response = await fetch(withSlot("/api/home/deck/save", context), { method: "POST", cache: "no-store" });
   return parseDeckResponse(response);
 }
 
