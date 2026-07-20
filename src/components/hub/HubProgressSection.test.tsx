@@ -1,14 +1,17 @@
 // src/components/hub/HubProgressSection.test.tsx - Verifica navegación de los recuadros del badge y su gateo por tutorial.
 import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { HubProgressSection } from "./HubProgressSection";
 import { IPlayerHubProgress } from "@/core/entities/hub/IPlayerHubProgress";
 
 const pushMock = vi.fn();
+const fetchMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock }),
 }));
+
+const HUD_STATS_RESPONSE = { eloRating: 1200, nexus: 500, collectionCount: 12 };
 
 const COMPLETED: IPlayerHubProgress = {
   playerId: "p1",
@@ -28,7 +31,16 @@ const PRE_TOUR: IPlayerHubProgress = {
   hasSkippedTutorial: false,
 };
 
-beforeEach(() => pushMock.mockClear());
+beforeEach(() => {
+  pushMock.mockClear();
+  fetchMock.mockReset();
+  fetchMock.mockResolvedValue({ ok: true, json: () => Promise.resolve(HUD_STATS_RESPONSE) });
+  vi.stubGlobal("fetch", fetchMock);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("HubProgressSection", () => {
   it("navega a la Arena al pulsar Medallas y reproduce el sonido del HUD", () => {
@@ -49,10 +61,14 @@ describe("HubProgressSection", () => {
     expect(pushMock).toHaveBeenCalledWith("/hub/story");
   });
 
-  it("mantiene Academy accesible aunque el tutorial esté pendiente", () => {
+  it("mantiene Academy accesible aunque el tutorial esté pendiente", async () => {
     render(<HubProgressSection progress={PRE_TOUR} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Ir a Academy" }));
+    // Tutorial ahora está en la segunda fila: expandir "Ver más" primero.
+    fireEvent.click(screen.getByRole("button", { name: "Ver más estadísticas" }));
+    // Stats se cargan async: esperar a que aparezca el botón de Academy.
+    const academyBtn = await screen.findByRole("button", { name: "Ir a Academy" });
+    fireEvent.click(academyBtn);
 
     expect(pushMock).toHaveBeenCalledWith("/hub/academy");
   });

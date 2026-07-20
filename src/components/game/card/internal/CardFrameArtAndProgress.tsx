@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ICard } from "@/core/entities/ICard";
 import { ICardUpgradeCounts } from "./card-frame-types";
 import { CardUpgradeBadges } from "./CardUpgradeBadges";
+import { getCardImageClassName, isSpellOrTrap, shouldRenderCardBackground } from "./spell-trap-image-utils";
 
 interface CardFrameArtAndProgressProps {
   card: ICard;
@@ -27,22 +28,21 @@ export function CardFrameArtAndProgress({
   prioritizeMediaLoading = false,
   upgradeCounts = null,
 }: CardFrameArtAndProgressProps) {
-  const isSpellOrTrap = card.type === "EXECUTION" || card.type === "TRAP";
+  const cardIsSpellOrTrap = isSpellOrTrap(card);
   const shouldBypassImageOptimization = Boolean(card.renderUrl?.startsWith("/assets/renders/"));
   const renderImageSizes = isPerformanceMode ? "88px" : "260px";
   const renderImageQuality = isPerformanceMode ? 45 : 75;
   const backgroundImageSizes = isPerformanceMode ? "72px" : "260px";
   const backgroundImageQuality = isPerformanceMode ? 28 : 75;
-  const shouldRenderBackground = !isSpellOrTrap && Boolean(card.bgUrl) && (!isPerformanceMode || showBackgroundInPerformanceMode);
-  const renderClassName = isSpellOrTrap
-    ? "absolute inset-0 z-10 object-cover"
-    : isPerformanceMode
-      ? "absolute inset-0 z-10 object-contain p-1"
-      : "absolute inset-0 z-10 object-contain p-1 drop-shadow-[0_4px_6px_rgba(0,0,0,0.65)]";
+  const shouldRenderBg = shouldRenderCardBackground(card) && (!isPerformanceMode || showBackgroundInPerformanceMode);
+  const renderClassName = `absolute inset-0 ${getCardImageClassName(card, {
+    includePadding: !isPerformanceMode,
+    includeDropShadow: !isPerformanceMode,
+  })}`;
   return (
     <div className="relative z-10 mt-2 flex flex-grow flex-col items-center justify-start px-3">
       <div className="group relative mb-1.5 flex h-36 w-full shrink-0 items-center justify-center overflow-hidden rounded-sm bg-black shadow-[inset_0_0_30px_rgba(0,0,0,1)]">
-        {shouldRenderBackground ? (
+        {shouldRenderBg ? (
           <Image
             src={card.bgUrl!}
             alt=""
@@ -53,7 +53,7 @@ export function CardFrameArtAndProgress({
             className={isPerformanceMode ? "absolute inset-0 z-0 object-cover opacity-55 saturate-75" : "absolute inset-0 z-0 object-cover"}
           />
         ) : null}
-        {!isPerformanceMode && !isSpellOrTrap ? <div className="absolute inset-0 z-0 bg-cyan-500/10 mix-blend-overlay" /> : null}
+        {!isPerformanceMode && !cardIsSpellOrTrap ? <div className="absolute inset-0 z-0 bg-cyan-500/10 mix-blend-overlay" /> : null}
         {!isOnBoard && card.renderUrl && (
           <Image
             src={card.renderUrl}

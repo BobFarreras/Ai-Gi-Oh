@@ -236,7 +236,7 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
 
       {/* Constelación (caja adaptable: encaja en pantalla por ancho y alto, sin scroll) */}
       <div
-        className="relative flex justify-center rounded-2xl border border-cyan-500/25 p-1"
+        className={`relative flex justify-center rounded-2xl border border-cyan-500/25 p-1 ${isBranchMode && showPanel ? "z-[51]" : ""}`}
         style={{ boxShadow: "0 0 40px rgba(34,211,238,0.06) inset, 0 0 0 1px rgba(34,211,238,0.04)" }}
       >
         <div
@@ -395,23 +395,24 @@ export function SkillTreeScene({ initialTree, authenticated }: ISkillTreeScenePr
       </div>
 
       {/* Detalle como DIÁLOGO (móvil): bottom-sheet SIEMPRE montado → desliza desde abajo al abrir y se
-          esconde abajo al cerrar. Sin oscurecer la página (backdrop transparente solo para cerrar al tocar). */}
+          esconde abajo al cerrar. Backdrop y sheet separados: backdrop z-50 cierra al tocar fuera,
+          constellation z-51 recibe clics en nodos, sheet z-[52] siempre visible arriba de todo. */}
       {isBranchMode && (
-        <div
-          className={`fixed inset-0 z-50 flex items-end ${showPanel ? "" : "pointer-events-none"}`}
-          role="dialog"
-          aria-modal="true"
-          aria-hidden={!showPanel}
-          onClick={() => setSelectedId(null)}
-        >
+        <>
           <div
-            className={`relative w-full border-t border-cyan-400/40 bg-[#04101d] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(34,211,238,0.25)] transition-transform duration-300 ease-out ${showPanel ? "translate-y-0" : "translate-y-full"}`}
-            onClick={(e) => e.stopPropagation()}
+            className={`fixed inset-0 z-50 ${showPanel ? "" : "pointer-events-none"}`}
+            onClick={() => setSelectedId(null)}
+          />
+          <div
+            className={`fixed inset-x-0 bottom-0 z-[52] w-full border-t border-cyan-400/40 bg-[#04101d] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(34,211,238,0.25)] transition-transform duration-300 ease-out ${showPanel ? "translate-y-0" : "translate-y-full"}`}
+            role="dialog"
+            aria-modal="true"
+            aria-hidden={!showPanel}
           >
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-600" />
             {sheetNode && renderPanel(sheetNode)}
           </div>
-        </div>
+        </>
       )}
     </div>
   );

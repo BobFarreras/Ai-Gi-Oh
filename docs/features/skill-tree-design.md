@@ -8,6 +8,9 @@
 > **Compañero:** [`skill-tree-implementation-guide.md`](./skill-tree-implementation-guide.md) — el motor de
 > efectos concreto, el catálogo COMPLETO de habilidades (incluidas las fuertes del usuario) y el ranking de
 > dificultad (fácil/dato vs. refactor). Léelo para saber por dónde empezar a picar.
+>
+> **Companion adicional:** [`opponent-skill-abilities-implementation-guide.md`](./opponent-skill-abilities-implementation-guide.md) —
+> cómo otorgar habilidades de combate del árbol a los oponentes de Arena y Story, editables desde el admin panel.
 
 ---
 
@@ -82,13 +85,14 @@ que pueda desincronizarse.
   `src/core/services/progression/player-level.ts`. Curva propuesta (creciente, tuneable — es dato):
 
   ```
-  xpParaNivel(n) = 400 + 200·(n − 1)     // coste del nivel n→n+1
+  xpParaNivel(n) = 750 + 400·(n − 1)     // coste del nivel n→n+1
   xpAcumuladaHastaNivel(L) = Σ            // suma cerrada, O(1)
   ```
 
-  Con esto: L2 a 400 XP, L5 ≈ 2.400, L10 ≈ 7.900, L20 ≈ 28.800. Una victoria de story tier 5 da 550 XP; un
-  jugador activo llega a ~L15-20 en unas semanas. **Los números son de partida y se tunean con datos** (igual
-  que los K de ghosts): subir la curva luego es indoloro, bajarla tras el abuso no.
+  Con esto: L2 a 750 XP, L5 ≈ 5.400, L10 ≈ 21.150, L20 ≈ 82.650. Una victoria de story tier 5 da 550 XP; un
+  jugador activo llega a ~L13-15 en unas semanas. **Curva casi doble vs. diseño original** (ajustada 2026-07-20
+  para mayor duración del grind). Los números se tunean con datos: subir la curva luego es indoloro, bajarla
+  tras el abuso no.
 - **Puntos de habilidad** = `level − 1` (1 punto por nivel a partir del 2), menos los ya gastados. Con nodos
   rankeables, **maximizar TODO el árbol v1 cuesta ~40 puntos** (§5) → cae sobre L41. Nadie lo maxea pronto; hay
   que **elegir rama y decidir hasta qué rango subir cada nodo**. Ése es justo el juego de decisión que da el
@@ -254,37 +258,43 @@ justo el ritmo "profesional" que pediste ("sube esta hasta Nv.5 para desbloquear
 Notación: **Nv. X/Y** = rango actual sugerido / `maxRank`; **coste** = `cost_per_rank` (puntos por rango);
 **gate** = prerequisito por rango.
 
-### Raíz — `node-core` · Nv. 1/1 · 1 pt
+> **Estado de implementación (2026-07-20):** ✅ = implementado y activo en DB, ❌ = pendiente (feature no construida).
+
+### Raíz — `node-core` · Nv. 1/1 · 1 pt ✅ IMPLEMENTADO
 - **Núcleo del Operador** — keystone barato. `STARTING_LP_BONUS value 300`. Gate de todo el árbol.
 
 ### Rama A — ECONOMÍA · "Protocolo Mercantil" (servidor, todos los modos)
-| id | nombre | maxRank | coste/rango | gate | efecto (por rango) |
-|---|---|---|---|---|---|
-| `node-econ-nexus` | Comisión | **5** | 1 | core Nv.1 | `NEXUS_REWARD_MULT +0.02` → **Nv.5 = +10%** |
-| `node-econ-xp` | Aprendizaje | **5** | 1 | core Nv.1 | `XP_REWARD_MULT +0.02` → Nv.5 = +10% |
-| `node-econ-recaudo` | Recaudador Mejorado | **3** | 2 | **Comisión Nv.3** | `PASSIVE_NEXUS_CAP_BONUS perWin+25, daily+200` |
-| `node-econ-suerte` | Golpe de Suerte | 1 | 3 | **Recaudo Nv.3 + Aprendizaje Nv.3** | `FIRST_WIN_DOUBLE_NEXUS` |
+| id | nombre | maxRank | coste/rango | gate | efecto (por rango) | Estado |
+|---|---|---|---|---|---|---|
+| `node-econ-comision` | Comisión | **5** | 1 | core Nv.1 | `NEXUS_REWARD_MULT +0.02` → **Nv.5 = +10%** | ✅ |
+| `node-econ-aprendizaje` | Aprendizaje | **5** | 1 | core Nv.1 | `XP_REWARD_MULT +0.02` → Nv.5 = +10% | ✅ |
+| `node-econ-consuelo` | Premio de Consuelo | **3** | 1 | core Nv.1 | `LOSS_CONSOLATION_MULT +0.10/r` | ✅ |
+| `node-econ-recaudo` | Recaudador Mejorado | **3** | 2 | Comisión Nv.3 | `PASSIVE_NEXUS_CAP_BONUS perWin+25, daily+200` | ✅ |
+| `node-econ-socio` | Socio Mayoritario | **4** | 3 | Comisión Nv.5 + Recaudo Nv.3 | `NEXUS_REWARD_MULT +0.5` → **×3 al máximo** | ✅ |
 
 ### Rama B — COMBATE · "Protocolo de Duelo" (preparación de partida, **PvE en v1**)
-| id | nombre | maxRank | coste/rango | gate | efecto (por rango) |
-|---|---|---|---|---|---|
-| `node-cbt-shield` | Blindaje Reforzado | **5** | 1 | core Nv.1 | `STARTING_LP_BONUS +100` → **Nv.5 = +500 LP** |
-| `node-cbt-energy` | Arranque en Frío | 1 | 2 | **Blindaje Nv.3** | `TURN1_ENERGY_BONUS +1` |
-| `node-cbt-hand` | Mano Extendida | 1 | 3 | **Blindaje Nv.5** | `OPENING_HAND_BONUS +1` (3→4) |
-| `node-cbt-opening` | Apertura Calculada | 1 | 4 | **Mano Nv.1 + Arranque Nv.1** | `EDIT_OPENING_DECK 5` + `OPENING_MULLIGAN` |
+| id | nombre | maxRank | coste/rango | gate | efecto (por rango) | Estado |
+|---|---|---|---|---|---|---|
+| `node-cbt-blindaje` | Blindaje Reforzado | **5** | 1 | core Nv.1 | `STARTING_LP_BONUS +100` → **Nv.5 = +500 LP** | ✅ |
+| `node-cbt-arranque` | Arranque en Frío | 1 | 2 | Blindaje Nv.3 | `TURN1_ENERGY_BONUS +1` | ✅ |
+| `node-cbt-nucleo` | Núcleo Sobrecargado | **2** | 3 | Arranque Nv.1 | `MAX_ENERGY_BONUS +1` → **techo 10 → 12** | ✅ |
+| `node-cbt-rebarajar` | Rebarajar | 1 | 2 | Blindaje Nv.5 | `OPENING_MULLIGAN` (rehacer la mano 1 vez) | ❌ F6 |
+| `node-cbt-apertura` | Apertura Programada | 1 | 4 | Núcleo Nv.2 + Rebarajar Nv.1 | `EDIT_OPENING_DECK 5` | ❌ F6 |
 
 ### Rama C — ARSENAL · "Protocolo de Red" (meta, todos los modos)
-| id | nombre | maxRank | coste/rango | gate | efecto (por rango) |
-|---|---|---|---|---|---|
-| `node-ars-veteran` | Veterano | **5** | 1 | core Nv.1 | `XP_REWARD_MULT +0.02` (acumula con Aprendizaje) |
-| `node-ars-ghost` | Cazador de Redes | **3** | 1 | **Veterano Nv.3** | `GHOST_DAILY_LIMIT_BONUS +1` → Nv.3 = +3 (ficha 6) |
+| id | nombre | maxRank | coste/rango | gate | efecto (por rango) | Estado |
+|---|---|---|---|---|---|---|
+| `node-ars-veterano` | Veterano | **5** | 1 | core Nv.1 | `XP_REWARD_MULT +0.02` (acumula con Aprendizaje) | ✅ |
+| `node-ars-doble-mazo` | Doble Arsenal | **1** | 2 | Veterano Nv.1 | `UNLOCK_SECOND_DECK` (2º mazo + selector) | ❌ F7 |
+| `node-ars-reasignar` | Reasignación | 1 | 1 | core Nv.1 | `GRANT_RESPEC_TOKEN 1` (un respec gratis) | ❌ F4+ |
+| `node-ars-cazador` | Cazador de Redes | **3** | 1 | Veterano Nv.3 | `GHOST_DAILY_LIMIT_BONUS +1` → +3 (ficha 6) | ❌ F8 |
 
-> **Honestidad de diseño:** la rama Arsenal sigue siendo la más fina (pocos hooks de "colección/utilidad"
-> baratos y server-safe; ghosts es de ficha 6, aún sin implementar). Crecerá con ghosts (6) y subastas (7).
-> **Alternativa v1 más pequeña: 2 ramas (Economía + Combate) y aparcar Arsenal.**
+> **Cambio de jerarquía Arsenal (2026-07-20):** Doble Arsenal pasa de tier 3 (remate) a **tier 2** (segundo nodo
+> desbloqueable), con gate reducido a Veterano Nv.1 (antes era Veterano Nv.5 + Cazador Nv.1). Coste reducido
+> de 5 a **2 puntos**. Razón: hacer el2º mazo accesible antes para que más jugadores lo experimenten.
 
-Coste de MAXEAR todo: raíz 1 + Economía (5+5+6+3=19) + Combate (5+2+3+4=14) + Arsenal (5+3=8) = **~42 puntos** →
-nivel ~43. **Nadie maxea el árbol; hay que elegir hasta qué rango subir cada nodo y qué keystone perseguir.**
+Coste de MAXEAR todo: raíz 1 + Economía (5+5+3+6+12=31) + Combate (5+2+6+2+4=19) + Arsenal (5+2+1+3=11) = **~62 puntos** →
+nivel ~63. **Nadie maxea el árbol; hay que elegir hasta qué rango subir cada nodo y qué keystone perseguir.**
 Ése es el juego de decisión del modelo de rangos.
 
 ---
@@ -396,16 +406,19 @@ Esto encaja con "candidato a partirse: backend + 2 habilidades primero" — la p
 
 ## 10. Decisiones abiertas (cerrar ANTES de picar)
 
-1. **Respec**: ¿existe en v1? Recomendado: **sí, con coste en Nexus** a partir de la 2ª vez (sink económico; la
-   1ª gratis para animar a experimentar). Alternativa: sin respec en v1 (más simple, pero castiga el error).
-2. **Combate en ranked**: confirmado PvE-only en v1 (recomendado). Ranked = ADR posterior.
-3. **Curva de XP y costes**: los números del §2/§5 son de partida. ¿Se validan con los datos de XP ya
-   acumulada de los jugadores actuales antes de fijar la curva? (Recomendado: sí — mirar la distribución real
-   de `playerExperience` en prod para no dejar a nadie ya en L40 el día 1, ni la curva inalcanzable.)
-4. **Rama Arsenal**: ¿entra en v1 (2 nodos finos) o se aparca hasta ghosts/subastas (v1 = 2 ramas)? Recomendado:
-   **2 ramas en v1** (Economía + Combate), Arsenal cuando haya hooks reales — evita nodos anémicos.
-5. **`FIRST_WIN_DOUBLE_NEXUS`**: ¿×2 sobre el Nexus de duelo, o también sobre la Recaudación (ficha 3)?
-   Recomendado: solo el Nexus de recompensa de duelo (la Recaudación ya tiene sus topes; doblarla complica).
+**Cerradas:**
+1. **Respec**: `GRANT_RESPEC_TOKEN` como nodo (F4+). RPC de respec consume tokens. Coste Nexus a partir de 2ª vez.
+2. **Combate en ranked**: confirmado PvE-only en v1.
+3. **Curva de XP y costes**: Doblada (750/400) el 2026-07-20. Primer nivel = 750 XP (~9 wins training Tier 1). Nivel 51 = 530.000 XP.
+4. **Rama Arsenal**: entra en v1 con 4 nodos (Veterano, Doble Arsenal, Reasignación, Cazador).
+5. **`FIRST_WIN_DOUBLE_NEXUS`**: eliminado del catálogo v1 (no hay nodo con este efecto).
+6. **`LOSS_CONSOLATION_MULT`**: eliminado del catálogo v1. Economy branch simplificada a: Comisión, Aprendizaje, Recaudador, Socio Mayoritario.
+7. **Doble Arsenal**: nodo de tier 2 en Arsenal (segundo desbloqueable), gate Veterano Nv.1, coste 2 pts.
+8. **Oponentes con habilidades**: Sistema de `opponent_skill_ranks` reutilizando catálogo de combate. Ver `opponent-skill-abilities-implementation-guide.md`.
+
+**Abiertas:**
+9. **`EDIT_OPENING_DECK`**: ¿5 cartas fijas o hasta 5? Y si algún día entra en ranked — ADR. F6.
+10. **Respec coste exacto**: ¿gratis 1ª vez + Nexus después? ¿O siempre Nexus? Decidir al llegar a F4+.
 
 ---
 

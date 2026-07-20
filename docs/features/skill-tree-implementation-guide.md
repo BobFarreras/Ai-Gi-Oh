@@ -2,7 +2,10 @@
 
 > Compañero de [`skill-tree-design.md`](./skill-tree-design.md) (arquitectura y UI). Este documento es lo que
 > se lee **antes de picar código**: cómo funciona el motor de efectos, la LISTA completa de habilidades que
-> crearemos, y **qué es fácil (dato) vs. qué necesita refactorización**. Estado: **DISEÑO. 0 código.**
+> crearemos, y **qué es fácil (dato) vs. qué necesita refactorización**.
+>
+> **Estado (2026-07-20):** F1 completa (motor + curva doblada), F2 completa (economía completa), F3 completa
+> (combate 🟢 — Blindaje, Arranque, Núcleo). F4-F8 pendientes.
 
 ---
 
@@ -102,54 +105,43 @@ Cada familia tiene **un** punto de enganche, y por eso añadir habilidades luego
 Leyenda de tier (detalle en §3): 🟢 **Fácil** (dato / reusa hook) · 🟡 **Media** (hook nuevo contenido) ·
 🔴 **Alta** (refactor / schema / UI nueva). "★ TUYA" = una de tus tres ideas (fuertes → caras, gate profundo).
 
+> **Estado de implementación (2026-07-20):** ✅ = implementado, ❌ = pendiente.
+
 ### Rama A — ECONOMÍA · "Protocolo Mercantil" (servidor, TODOS los modos)
 
-| id | nombre | maxRank | coste/r | gate | efecto | tier |
-|---|---|---|---|---|---|---|
-| `econ-comision` | Comisión | 5 | 1 | core | `NEXUS_REWARD_MULT +0.02/r` → +10% | 🟢 |
-| `econ-aprendizaje` | Aprendizaje | 5 | 1 | core | `XP_REWARD_MULT +0.02/r` → +10% | 🟢 |
-| `econ-consuelo` | Premio de Consuelo | 3 | 1 | core | `LOSS_CONSOLATION_MULT +0.10/r` (menos castigo al perder) | 🟢 |
-| `econ-recaudo` | Recaudador Mejorado | 3 | 2 | Comisión Nv.3 | `PASSIVE_NEXUS_CAP_BONUS perWin+25, daily+200` | 🟢 |
-| **`econ-socio`** ★ TUYA | **Socio Mayoritario** | **4** | **3** | **Comisión Nv.5 + Recaudo Nv.3** | `NEXUS_REWARD_MULT` grande: **+0.5 / +1.0 / +1.5 / +2.0** (hasta **×3** el Nexus del duelo) | 🟢 (número fuerte, código trivial) |
+| id | nombre | maxRank | coste/r | gate | efecto | tier | Estado |
+|---|---|---|---|---|---|---|---|
+| `node-econ-comision` | Comisión | 5 | 1 | core | `NEXUS_REWARD_MULT +0.02/r` → +10% | 🟢 | ✅ |
+| `node-econ-aprendizaje` | Aprendizaje | 5 | 1 | core | `XP_REWARD_MULT +0.02/r` → +10% | 🟢 | ✅ |
+| `node-econ-consuelo` | Premio de Consuelo | 3 | 1 | core | `LOSS_CONSOLATION_MULT +0.10/r` (menos castigo al perder) | 🟢 | ✅ |
+| `node-econ-recaudo` | Recaudador Mejorado | 3 | 2 | Comisión Nv.3 | `PASSIVE_NEXUS_CAP_BONUS perWin+25, daily+200` | 🟢 | ✅ |
+| **`node-econ-socio`** ★ TUYA | **Socio Mayoritario** | **4** | **3** | **Comisión Nv.5 + Recaudo Nv.3** | `NEXUS_REWARD_MULT` grande: **+0.5 / +1.0 / +1.5 / +2.0** (hasta **×3** el Nexus del duelo) | 🟢 | ✅ |
 
-> **Tu idea de economía** = `econ-socio`. Es el MISMO enganche que Comisión (🟢 trivial de codificar), solo que
-> con números fuertes → lo hago **keystone caro y al fondo de la rama** (gate: Comisión al máximo).
-> **CONFIRMADO (usuario): multiplicador %** — "+0,5 / 1 / 1,5 / 2" acumulable (rango 4 = +200% ⇒ **×3** el Nexus
-> del duelo, además de lo que aporte Comisión). Usa el `kind` `NEXUS_REWARD_MULT` con `valuePerRank` grande.
+> **Todos los nodos de economía están implementados y activos.**
 
 ### Rama B — COMBATE · "Protocolo de Duelo" (preparación de partida, **PvE en v1**)
 
-| id | nombre | maxRank | coste/r | gate | efecto | tier |
-|---|---|---|---|---|---|---|
-| `cbt-blindaje` | Blindaje Reforzado | 5 | 1 | core | `STARTING_LP_BONUS +100/r` → +500 LP | 🟢 |
-| `cbt-arranque` | Arranque en Frío | 1 | 2 | Blindaje Nv.3 | `TURN1_ENERGY_BONUS +1` (solo turno 1) | 🟡 |
-| `cbt-rebarajar` | Rebarajar | 1 | 2 | Blindaje Nv.5 | `OPENING_MULLIGAN` (rehacer la mano 1 vez) | 🟡 |
-| **`cbt-nucleo`** ★ TUYA | **Núcleo Sobrecargado** | **2** | **3** | **Arranque Nv.1** | `MAX_ENERGY_BONUS +1/r` → **techo 10 → 12** | 🟢 (param) — pero fuerte |
-| **`cbt-apertura`** ★ TUYA | **Apertura Programada** | **1** | **4** | **Núcleo Nv.2 + Rebarajar Nv.1** | `EDIT_OPENING_DECK 5` (eliges SIN random tus 5 primeras cartas) | 🔴 |
+| id | nombre | maxRank | coste/r | gate | efecto | tier | Estado |
+|---|---|---|---|---|---|---|---|
+| `node-cbt-blindaje` | Blindaje Reforzado | 5 | 1 | core | `STARTING_LP_BONUS +100/r` → +500 LP | 🟢 | ✅ |
+| `node-cbt-arranque` | Arranque en Frío | 1 | 2 | Blindaje Nv.3 | `TURN1_ENERGY_BONUS +1` (solo turno 1) | 🟡 | ✅ |
+| `node-cbt-nucleo` | Núcleo Sobrecargado | 2 | 3 | Arranque Nv.1 | `MAX_ENERGY_BONUS +1/r` → techo 10 → 12 | 🟢 | ✅ |
+| `node-cbt-rebarajar` | Rebarajar | 1 | 2 | Blindaje Nv.5 | `OPENING_MULLIGAN` (rehacer la mano 1 vez) | 🟡 | ❌ F6 |
+| **`node-cbt-apertura`** ★ TUYA | **Apertura Programada** | **1** | **4** | **Núcleo Nv.2 + Rebarajar Nv.1** | `EDIT_OPENING_DECK 5` (eliges SIN random tus 5 primeras cartas) | 🔴 | ❌ F6 |
 
-> **Tus dos ideas de combate** = `cbt-nucleo` (empezar con 12 energía) y `cbt-apertura` (elegir las 5 primeras).
-> - **12 de energía** — **CONFIRMADO (usuario): tope 12, o sea +2 como mucho** (`MAX_ENERGY_BONUS +1/r`,
->   `maxRank 2`). Código trivial (subir el `maxEnergy` del builder), pero **fuerte de balance** (sube el techo
->   TODA la partida) → gate profundo para que llegar a 12 cueste. Solo PvE.
-> - **Elegir las 5 primeras**: 🔴 la más cara de picar (necesita **pantalla pre-duelo** para ordenar la cima
->   del mazo y pasar ese orden al builder). Es la habilidad estrella → keystone al fondo del todo.
+> **Combate 🟢 completado (Blindaje, Arranque, Núcleo).** Pendientes: Rebarajar y Apertura (F6 — necesitan UI pre-duelo).
 
 ### Rama C — ARSENAL · "Protocolo de Red" (meta/utilidad, TODOS los modos)
 
-| id | nombre | maxRank | coste/r | gate | efecto | tier |
-|---|---|---|---|---|---|---|
-| `ars-veterano` | Veterano | 5 | 1 | core | `XP_REWARD_MULT +0.02/r` (acumula con Aprendizaje) | 🟢 |
-| `ars-reasignar` | Reasignación | 1 | 1 | core | `GRANT_RESPEC_TOKEN 1` (un respec gratis) | 🟡 |
-| `ars-cazador` | Cazador de Redes | 3 | 1 | Veterano Nv.3 | `GHOST_DAILY_LIMIT_BONUS +1/r` → +3 ghosts/día | 🟡 (depende de ficha 6) |
-| **`ars-doble-mazo`** ★ TUYA | **Doble Arsenal** | **1** | **5** | **Veterano Nv.5 + Cazador Nv.1** | `UNLOCK_SECOND_DECK` (2º mazo + selector de principal) | 🔴🔴 |
+| id | nombre | maxRank | coste/r | gate | efecto | tier | Estado |
+|---|---|---|---|---|---|---|---|
+| `node-ars-veterano` | Veterano | 5 | 1 | core | `XP_REWARD_MULT +0.02/r` (acumula con Aprendizaje) | 🟢 | ✅ |
+| **`node-ars-doble-mazo`** ★ TUYA | **Doble Arsenal** | **1** | **2** | **Veterano Nv.1** | `UNLOCK_SECOND_DECK` (2º mazo + selector de principal) | 🔴🔴 | ❌ F7 |
+| `node-ars-reasignar` | Reasignación | 1 | 1 | core | `GRANT_RESPEC_TOKEN 1` (un respec gratis) | 🟡 | ❌ F4+ |
+| `node-ars-cazador` | Cazador de Redes | 3 | 1 | Veterano Nv.3 | `GHOST_DAILY_LIMIT_BONUS +1/r` → +3 ghosts/día | 🟡 | ❌ F8 |
 
-> **Tu idea de arsenal** = `ars-doble-mazo`: un 2º mazo en el arsenal y un selector rápido de cuál es el
-> "principal" (el que entra a los combates). Es la habilidad de **mayor refactorización de todo el árbol**
-> (§3.4) → la más cara (5 pts) y con el gate más profundo. **La haría en su propia sub-tanda**, no en la v1 del
-> árbol, para no bloquear el resto.
-
-**Resumen:** 14 nodos, 3 ramas, ~55 pts para maxear todo (nadie lo hará). Tus 4 ideas quedan como los remates
-caros y profundos; las 10 moderadas rellenan el camino y son casi todas 🟢/🟡.
+> **Doble Arsenal reubicado** de tier 3 a **tier 2** (segundo nodo desbloqueable), gate simplificado a Veterano
+> Nv.1, coste reducido de 5 a 2 pts. Solo Veterano está implementado en Arsenal.
 
 ---
 
@@ -196,6 +188,9 @@ fila de datos + una línea en el resolver/enganche de su familia.
     filas = un deck); `player_fusion_deck_slots` igual. `IDeck` tiene `playerId` como identidad. Todo el juego
     llama `getDeck(playerId)` y recibe ESE deck (`getPlayerBoardDeck`/`getPlayerBoardLoadout`, el builder, la
     IA de simulación, etc.).
+  - **Cambio de jerarquía (2026-07-20):** Doble Arsenal pasa de tier 3 (remate) a **tier 2** (segundo nodo
+    desbloqueable en Arsenal), gate simplificado a Veterano Nv.1 (antes era Veterano Nv.5 + Cazador Nv.1),
+    coste reducido de 5 a **2 pts**. Razón: hacer el 2º mazo accesible antes.
   - **Lo que hay que tocar:**
     1. **Schema (migración):** añadir dimensión `deck_slot` (1|2) a `player_deck_slots` y
        `player_fusion_deck_slots` → PK `(player_id, deck_slot, slot_index)`; + puntero de **mazo activo**
@@ -226,35 +221,36 @@ fila de datos + una línea en el resolver/enganche de su familia.
 
 ### 3.5 Orden de trabajo recomendado
 
-| Fase | Contenido | Por qué aquí |
-|---|---|---|
-| **F1** | Motor (§1) + curva de nivel + migración `135` (tablas + RPC) | Todo lo demás lo necesita. |
-| **F2** | Economía completa (🟢) — incluida tu `Socio Mayoritario` | Máximo valor / mínimo esfuerzo; todos los modos; sin riesgo de combate. La XP muerta empieza a comprar. |
-| **F3** | Combate 🟢 — `Blindaje`, `Núcleo Sobrecargado` (12 energía) | Params triviales; ya se nota en PvE. |
-| **F4** | Combate 🟡 — `Arranque en Frío`, `Rebarajar` | Hooks contenidos en `next-phase`/pre-duelo. |
-| **F5** | Página del árbol (constelación) + glosario | La capa bonita; el sistema ya funciona por API para QA. |
-| **F6** | 🔴 `Apertura Programada` (elegir 5) | Pantalla pre-duelo; feature propia. |
-| **F7** | 🔴🔴 `Doble Arsenal` (2º mazo) | Refactor de mazos; sub-tanda aparte. Cerrar antes las decisiones de §3.4. |
-| **(F8)** | `Cazador de Redes` | Se activa cuando exista la ficha 6 (ghosts). |
+| Fase | Contenido | Por qué aquí | Estado |
+|---|---|---|---|
+| **F1** | Motor (§1) + curva de nivel + migración `135` (tablas + RPC) | Todo lo demás lo necesita. | ✅ COMPLETA |
+| **F2** | Economía completa (🟢) — incluida tu `Socio Mayoritario` | Máximo valor / mínimo esfuerzo; todos los modos; sin riesgo de combate. La XP muerta empieza a comprar. | ✅ COMPLETA |
+| **F3** | Combate 🟢 — `Blindaje`, `Arranque`, `Núcleo Sobrecargado` (12 energía) | Params triviales; ya se nota en PvE. | ✅ COMPLETA |
+| **F4** | Combate 🟡 — `Arranque en Frío`, `Rebarajar` | Hooks contenidos en `next-phase`/pre-duelo. | ⏳ PENDIENTE |
+| **F5** | Página del árbol (constelación) + glosario | La capa bonita; el sistema ya funciona por API para QA. | ⏳ PENDIENTE |
+| **F6** | 🔴 `Apertura Programada` (elegir 5) | Pantalla pre-duelo; feature propia. | ⏳ PENDIENTE |
+| **F7** | 🔴🔴 `Doble Arsenal` (2º mazo) | Refactor de mazos; sub-tanda aparte. Cerrar antes las decisiones de §3.4. | ⏳ PENDIENTE |
+| **(F8)** | `Cazador de Redes` | Se activa cuando exista la ficha 6 (ghosts). | ⏳ PENDIENTE |
 
-**Regla:** F1→F2 ya es un entregable con valor (economía en todos los modos). Combate PvE (F3-F4) es la
-siguiente tanda. Las dos 🔴 (F6, F7) son features propias y NO deben bloquear la salida del árbol.
+**Regla:** F1→F3 ya completadas (economía + combate 🟢 en PvE). Combate 🟡 (F4) es la siguiente tanda. Las 🔴 (F6, F7) son features propias y NO deben bloquear la salida del árbol.
+
+**Curva XP actual (doblada 2026-07-20):** `FIRST_LEVEL_UP_COST = 750`, `LEVEL_UP_COST_STEP = 400`. Nivel 2 = 750 XP (~9 wins training Tier 1). Nivel 51 = 530.000 XP.
 
 ---
 
 ## 4. Decisiones
 
-**Cerradas (usuario, 2026-07-18):**
+**Cerradas (2026-07-20):**
 1. **`Socio Mayoritario`** = **multiplicador %** ("+0,5/1/1,5/2" acumulable, ×3 al máximo). `kind`
-   `NEXUS_REWARD_MULT`.
-2. **`MAX_ENERGY_BONUS`** = **tope 12** (`maxRank 2`, +1/rango). Probar en duelos internos antes de publicar.
-3. **Arrancar por la F1** (motor), sin esperar a cerrar las decisiones de abajo — son de fases lejanas o
-   tuneables, y la F1 es agnóstica a ellas.
+   `NEXUS_REWARD_MULT`. ✅ Implementado.
+2. **`MAX_ENERGY_BONUS`** = **tope 12** (`maxRank 2`, +1/rango). ✅ Implementado.
+3. **Arrancar por la F1** (motor), sin esperar a cerrar las decisiones de abajo. ✅ F1+F2+F3 completas.
+4. **Curva XP→nivel**: doblada a 750/400 (2026-07-20). Nivel 2 = 750 XP.
+5. **Doble Arsenal**: nodo de tier 2 (no tier 3), gate Veterano Nv.1, coste 2 pts (no 5).
+6. **Oponentes con habilidades**: Sistema `opponent_skill_ranks` reutilizando catálogo de combate. Ver `opponent-skill-abilities-implementation-guide.md`.
 
-**Abiertas (NO bloquean la F1 — decidir al llegar a su fase):**
-4. **`Doble Arsenal` en v1 o sub-tanda propia**: recomiendo sub-tanda (§3.4). Se decide antes de la F7.
-5. **`EDIT_OPENING_DECK`: ¿5 cartas fijas o hasta 5?** Y si algún día entra en ranked (hoy PvE) — ADR. F6.
-6. **Respec + tokens**: ¿`GRANT_RESPEC_TOKEN` como nodo, o respec con coste en Nexus? **No va en la migración
+**Abiertas (NO bloquean la F4 — decidir al llegar a su fase):**
+7. **`EDIT_OPENING_DECK`: ¿5 cartas fijas o hasta 5?** Y si algún día entra en ranked (hoy PvE) — ADR. F6.
+8. **Respec + tokens**: ¿`GRANT_RESPEC_TOKEN` como nodo, o respec con coste en Nexus? **No va en la migración
    `135`** — es aditivo, se añade en F4+. (Se solapa con el design §10.1.)
-7. **Curva XP→nivel**: fijar la constante en la F1 **tras mirar la distribución real de `playerExperience` en
-   prod** (para no dejar a nadie ya en nivel 40 el día 1). Es un dato, no un debate.
+9. **`OPENING_MULLIGAN`**: rebarajar la mano 1 vez. Contenido en PvE; en multi necesitaría seed servidor.
