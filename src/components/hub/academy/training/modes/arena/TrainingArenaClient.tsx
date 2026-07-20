@@ -36,6 +36,7 @@ interface ITrainingArenaClientProps {
   playerStartingLpBonus?: number;
   playerMaxEnergyBonus?: number;
   playerTurn1EnergyBonus?: number;
+  playerOpeningMulligan?: boolean;
   tiers: Array<{
     tier: number;
     code: string;
@@ -173,6 +174,7 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
           onResultAction={() => window.location.replace(resultAction.href)}
           onExitMatch={() => window.location.replace(ACADEMY_HOME_ROUTE)}
           onMatchResolved={handleMatchResolved}
+          enableOpeningMulligan={props.playerOpeningMulligan}
         />
       ) : null}
     </div>

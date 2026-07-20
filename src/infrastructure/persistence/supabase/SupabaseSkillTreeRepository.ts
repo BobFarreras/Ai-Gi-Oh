@@ -6,10 +6,11 @@ import { ValidationError } from "@/core/errors/ValidationError";
 import {
   IPlayerSkillRank,
   IRankUpResult,
+  IRespecResult,
   ISkillNodePrerequisite,
   ISkillTreeNode,
 } from "@/core/entities/progression/ISkillTreeNode";
-import { IRankUpSkillNodeCommand, ISkillTreeRepository } from "@/core/repositories/ISkillTreeRepository";
+import { IRankUpSkillNodeCommand, IRespecSkillTreeCommand, ISkillTreeRepository } from "@/core/repositories/ISkillTreeRepository";
 import { SkillEffect } from "@/core/services/progression/skill-tree/skill-effect-types";
 import { createPrivilegedWriteClientResolver } from "@/infrastructure/persistence/supabase/internal/resolve-privileged-write-client";
 
@@ -85,6 +86,21 @@ export class SupabaseSkillTreeRepository implements ISkillTreeRepository {
       duplicate: payload.duplicate === true,
       pointsSpent: typeof payload.points_spent === "number" ? payload.points_spent : undefined,
       pointsAvailable: typeof payload.points_available === "number" ? payload.points_available : undefined,
+    };
+  }
+
+  async respec(command: IRespecSkillTreeCommand): Promise<IRespecResult> {
+    const { data, error } = await this.writeClient().rpc("respec_skill_tree", {
+      p_player_id: command.playerId,
+      p_operation_id: command.operationId,
+    });
+    if (error) throw new ValidationError("No se pudo reasignar el árbol de habilidades.");
+    const payload = (data ?? {}) as Record<string, unknown>;
+    return {
+      ok: payload.ok === true,
+      reason: payload.reason as IRespecResult["reason"],
+      duplicate: payload.duplicate === true,
+      cleared: typeof payload.cleared === "number" ? payload.cleared : undefined,
     };
   }
 }

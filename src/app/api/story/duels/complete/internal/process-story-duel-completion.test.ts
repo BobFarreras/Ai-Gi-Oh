@@ -193,6 +193,7 @@ describe("processStoryDuelCompletion (economía del árbol de habilidades)", () 
       },
       getPlayerRanks: async () => [{ nodeId: "node-econ-comision", rank: 5 }, { nodeId: "node-econ-aprendizaje", rank: 5 }],
       rankUp: async () => ({ ok: true, nodeId: "", rank: 0 }),
+      respec: async () => ({ ok: true }),
     };
   }
 

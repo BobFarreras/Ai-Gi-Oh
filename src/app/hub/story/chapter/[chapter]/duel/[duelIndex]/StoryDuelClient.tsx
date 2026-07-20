@@ -40,6 +40,7 @@ interface StoryDuelClientProps {
   playerStartingLpBonus?: number;
   playerMaxEnergyBonus?: number;
   playerTurn1EnergyBonus?: number;
+  playerOpeningMulligan?: boolean;
 }
 
 export function StoryDuelClient(props: StoryDuelClientProps) {
@@ -117,6 +118,7 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
         opponentStrategyOverride={opponentStrategy}
         narrationPack={narrationPack}
         isMatchStartLocked={isCoinTossVisible}
+        enableOpeningMulligan={props.playerOpeningMulligan}
         duelResultRewardSummary={rewardSummary}
         resultActionLabel={props.resultActionLabel ?? "Volver al mapa Story"}
         onResultAction={handleResultAction}

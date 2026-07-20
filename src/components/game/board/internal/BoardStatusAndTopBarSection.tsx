@@ -5,6 +5,7 @@ import { BoardMobileTopBar } from "@/components/game/board/ui/layout/BoardMobile
 import { BoardTopBar } from "@/components/game/board/ui/layout/BoardTopBar";
 import { IFusionMaterialCandidate } from "@/components/game/board/ui/overlays/internal/FusionMaterialBrowser";
 import { IBoardViewSectionProps } from "@/components/game/board/internal/board-view-types";
+import { MAX_PAUSED_TURNS_MULTIPLAYER } from "@/components/game/board/multiplayer/pause-turn-limit";
 
 export function BoardStatusAndTopBarSection({
   board,
@@ -18,8 +19,21 @@ export function BoardStatusAndTopBarSection({
   abandonPenaltyNexus = 0,
   isTurnTimerEnabled = true,
   suppressCombatBanners = false,
+  isMultiplayer = false,
+  onTurnTimeout,
+  pausedTurnsUsed = 0,
 }: IBoardViewSectionProps) {
   if (screen.isResultVisible) return null;
+  // En multi el reloj de turno NO se detiene al pausar: un jugador no puede congelar la partida al rival
+  // indefinidamente. El menú de pausa sigue disponible, pero el temporizador corre y auto-pasa al agotarse.
+  const isTimerPaused = isMultiplayer ? false : board.isPaused;
+  // Board construye onTurnTimeout (incluye la lógica anti-AFK en multi). Fallback defensivo al comportamiento base.
+  const handleTimeUp =
+    onTurnTimeout ??
+    (() => {
+      board.playTimerExpired();
+      board.handleTimerExpired();
+    });
   const pendingFusionAction =
     board.gameState.pendingTurnAction?.type === "SELECT_FUSION_MATERIALS" &&
     board.gameState.pendingTurnAction.playerId === player.id
@@ -47,12 +61,16 @@ export function BoardStatusAndTopBarSection({
         pendingTrapActivationPrompt={board.pendingTrapActivationPrompt}
         pendingEntityReplacement={board.pendingEntityReplacement}
         pendingEntityReplacementTargetCard={screen.pendingReplacementTargetCard}
+        isMobile={isMobile}
         combatLog={board.gameState.combatLog}
         playerAId={player.id}
         playerAName={player.name}
         playerBId={opponent.id}
         playerBName={opponent.name}
         isPaused={board.isPaused}
+        isMultiplayer={isMultiplayer}
+        pausedTurnsUsed={pausedTurnsUsed}
+        maxPausedTurns={MAX_PAUSED_TURNS_MULTIPLAYER}
         onResumePause={() => {
           board.playButtonClick();
           board.togglePause();
@@ -111,13 +129,10 @@ export function BoardStatusAndTopBarSection({
           pendingActionType={board.gameState.pendingTurnAction?.type ?? null}
           pendingActionPlayerId={board.gameState.pendingTurnAction?.playerId ?? null}
           isActive={board.isPlayerTurn}
-          isPaused={board.isPaused}
+          isPaused={isTimerPaused}
           hasWinner={Boolean(board.winnerPlayerId)}
           isTimerEnabled={isTurnTimerEnabled}
-          onTimeUp={() => {
-            board.playTimerExpired();
-            board.handleTimerExpired();
-          }}
+          onTimeUp={handleTimeUp}
           onWarning={board.playTimerWarning}
         />
       ) : (
@@ -127,13 +142,10 @@ export function BoardStatusAndTopBarSection({
           pendingActionType={board.gameState.pendingTurnAction?.type ?? null}
           pendingActionPlayerId={board.gameState.pendingTurnAction?.playerId ?? null}
           isPlayerTurn={board.isPlayerTurn}
-          isPaused={board.isPaused}
+          isPaused={isTimerPaused}
           hasWinner={Boolean(board.winnerPlayerId)}
           isTimerEnabled={isTurnTimerEnabled}
-          onTimeUp={() => {
-            board.playTimerExpired();
-            board.handleTimerExpired();
-          }}
+          onTimeUp={handleTimeUp}
           onWarning={board.playTimerWarning}
         />
       )}

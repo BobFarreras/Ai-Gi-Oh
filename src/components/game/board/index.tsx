@@ -17,7 +17,10 @@ import { BoardActionControlsSection } from "@/components/game/board/internal/Boa
 import { BoardInteractiveSection } from "@/components/game/board/internal/BoardInteractiveSection";
 import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 import { BoardTutorialFlowOverlay } from "@/components/game/board/internal/BoardTutorialFlowOverlay";
-import { useLayoutEffect } from "react";
+import { ReactiveTrapDecisionTimer } from "@/components/game/board/multiplayer/ReactiveTrapDecisionTimer";
+import { MulliganOverlay } from "@/components/game/board/ui/overlays/MulliganOverlay";
+import { MAX_PAUSED_TURNS_MULTIPLAYER } from "@/components/game/board/multiplayer/pause-turn-limit";
+import { useCallback, useLayoutEffect } from "react";
 import { useBoardViewportMetrics } from "./hooks/internal/layout/use-board-viewport-metrics";
 
 export type BoardBossThemeVariant = "CRIMSON" | "AMBER" | "VIOLET" | "CYAN";
@@ -53,14 +56,21 @@ interface IBoardProps {
    * garantizando que el overlay de resultado se muestre al perdedor.
    */
   externalWinnerPlayerId?: string | "DRAW" | null;
+  /**
+   * Multijugador: el jugador local pierde por permanecer demasiados turnos en pausa (anti-AFK). El cliente
+   * lo traduce en victoria del rival (finish + overlay de derrota local). Ver MAX_PAUSED_TURNS_MULTIPLAYER.
+   */
+  onLocalForfeit?: () => void;
+  /** PvE: habilita el overlay de mulligan de apertura (habilidad OPENING_MULLIGAN del árbol). */
+  enableOpeningMulligan?: boolean;
   /** Callback que recibe applyTransition al montar el Board. Permite que clientes externos (ej. multijugador) apliquen acciones al estado de partida. */
   applyTransitionRef?: React.MutableRefObject<((transition: (state: import("@/core/use-cases/GameEngine").GameState) => import("@/core/use-cases/GameEngine").GameState) => import("@/core/use-cases/GameEngine").GameState | null) | null>;
   /** Recibe applyRemoteAction: aplica una acción del rival CON su coreografía visual (multijugador). */
   applyRemoteActionRef?: React.MutableRefObject<((action: import("@/core/entities/multiplayer/IMatchAction").IMatchActionPayload) => Promise<void>) | null>;
 }
-export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, opponentAvatarObjectPosition, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, abandonPenaltyNexus = 0, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId }: IBoardProps) {
+export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, opponentAvatarObjectPosition, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, abandonPenaltyNexus = 0, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId, onLocalForfeit, enableOpeningMulligan = false }: IBoardProps) {
   countRender("Board");
-  const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme, disableOpponentAutomation, opponentStrategyOverride);
+  const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme, disableOpponentAutomation, opponentStrategyOverride, enableOpeningMulligan);
   useLayoutEffect(() => {
     if (applyTransitionRef) applyTransitionRef.current = board.applyTransition;
     if (applyRemoteActionRef) applyRemoteActionRef.current = board.applyRemoteAction;
@@ -99,6 +109,20 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
     onMatchResolved,
     externalWinnerPlayerId,
   });
+  const isMultiplayer = mode === "MULTIPLAYER";
+  // Timeout de turno. En multi, si el jugador está en pausa cuenta como "turno pausado" (anti-AFK): al llegar
+  // al límite pierde (forfeit → victoria del rival); en caso contrario, cede el turno entero al rival.
+  const handleTurnTimeout = useCallback(() => {
+    board.playTimerExpired();
+    if (isMultiplayer && board.isPaused) {
+      const pausedTurns = board.registerPausedTurnTimeout();
+      if (pausedTurns >= MAX_PAUSED_TURNS_MULTIPLAYER) {
+        onLocalForfeit?.();
+        return;
+      }
+    }
+    board.handleTimerExpired();
+  }, [board, isMultiplayer, onLocalForfeit]);
   return (
     <div className={boardRootClassName} style={viewportMetrics.height ? { height: `${viewportMetrics.height}px` } : undefined} onClick={board.clearSelection}>
       <div className={boardAmbientClassName} />
@@ -117,6 +141,9 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
             abandonPenaltyNexus={abandonPenaltyNexus}
             isTurnTimerEnabled={isTurnTimerEnabled}
             suppressCombatBanners={suppressCombatBanners}
+            isMultiplayer={isMultiplayer}
+            onTurnTimeout={handleTurnTimeout}
+            pausedTurnsUsed={board.pausedTurnTimeouts}
           />
           <BoardPlayersSection
             board={board}
@@ -130,7 +157,32 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
           />
         </>
       ) : null}
-      <BoardInteractiveSection board={board} screen={screen} isMobile={isMobile} suppressCombatFeedback={suppressCombatFeedback} />
+      <BoardInteractiveSection
+        board={board}
+        screen={screen}
+        isMobile={isMobile}
+        suppressCombatFeedback={suppressCombatFeedback}
+      />
+      {/* Ficha 4 (multi): banner + contador de la decisión de trampa reactiva (defensor decide / atacante espera).
+          El `key` ligado a la pausa remonta el contador en cada ataque nuevo, reiniciando la cuenta atrás. */}
+      <ReactiveTrapDecisionTimer
+        key={
+          board.gameState.pendingReactiveTrapDecision
+            ? `${board.gameState.pendingReactiveTrapDecision.attackerInstanceId}:${board.gameState.pendingReactiveTrapDecision.defenderPlayerId}`
+            : "trap-timer-idle"
+        }
+        pending={board.gameState.pendingReactiveTrapDecision}
+        localPlayerId={player.id}
+      />
+      {/* Ficha 8 (PvE): overlay de mulligan de apertura, solo si el jugador tiene la habilidad y no ha decidido. */}
+      {board.mulligan.isPending ? (
+        <MulliganOverlay
+          hand={player.hand}
+          reshuffled={board.mulligan.reshuffled}
+          onReshuffle={board.mulligan.reshuffle}
+          onKeep={board.mulligan.keep}
+        />
+      ) : null}
       {mode === "TUTORIAL" && !isMatchStartLocked ? (
         <BoardTutorialFlowOverlay
           combatLog={board.gameState.combatLog}

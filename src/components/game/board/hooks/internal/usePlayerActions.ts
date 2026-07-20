@@ -44,6 +44,7 @@ export function usePlayerActions(params: IUsePlayerActionsParams): IPlayerAction
     activeAttackerId: params.activeAttackerId,
     applyTransition: params.applyTransition,
     assertPlayerTurn: params.assertPlayerTurn,
+    isMultiplayer: params.isMultiplayer,
     requestTrapActivationDecision: params.requestTrapActivationDecision,
     clearError: params.clearError,
     clearSelection: params.clearSelection,

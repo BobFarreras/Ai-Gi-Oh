@@ -93,6 +93,9 @@ export function MultiplayerMatchClient({
   const [eloChange, setEloChange] = useState<EloChange | null>(null);
   const [matchFinished, setMatchFinished] = useState(false);
   const [isCoinTossVisible, setIsCoinTossVisible] = useState(true);
+  // Anti-AFK: el jugador local pierde por quedarse demasiados turnos en pausa. Fuerza el overlay de derrota
+  // local (externalWinnerPlayerId = rival) además del finish al servidor, que avisa al rival de su victoria.
+  const [forfeitWinnerPlayerId, setForfeitWinnerPlayerId] = useState<string | null>(null);
   const applyTransitionRef = useRef<((transition: (state: GameState) => GameState) => GameState | null) | null>(null);
   const applyRemoteActionRef = useRef<((action: IMatchActionPayload) => Promise<void>) | null>(null);
   const finishCalledRef = useRef(false);
@@ -164,6 +167,14 @@ export function MultiplayerMatchClient({
     },
     [localPlayerId, finishMatch, matchId],
   );
+
+  // El Board avisa cuando el jugador local agota su límite de turnos en pausa (anti-AFK): pierde la partida.
+  const handleLocalForfeit = useCallback(() => {
+    if (finishCalledRef.current) return;
+    track("duel_ended", "gameplay", { mode: "MULTIPLAYER", matchId, source: "pause_afk_timeout" });
+    setForfeitWinnerPlayerId(opponentId);
+    void finishMatch("LOSE");
+  }, [finishMatch, matchId, opponentId]);
 
   const handleForfeitVictory = useCallback(() => {
     track("duel_ended", "gameplay", { mode: "MULTIPLAYER", matchId, source: "forfeit_opponent_abandoned" });
@@ -288,7 +299,8 @@ export function MultiplayerMatchClient({
         duelResultRewardSummary={duelResultRewardSummary}
         resultActionLabel="Volver al lobby"
         onResultAction={handleResultAction}
-        externalWinnerPlayerId={remoteWinnerPlayerId}
+        externalWinnerPlayerId={remoteWinnerPlayerId ?? forfeitWinnerPlayerId}
+        onLocalForfeit={handleLocalForfeit}
       />
 
       <MultiplayerCoinTossOverlay

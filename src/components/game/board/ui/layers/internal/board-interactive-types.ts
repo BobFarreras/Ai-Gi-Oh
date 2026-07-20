@@ -4,6 +4,7 @@ import { BattleMode, IBoardEntity } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IBoardViewportMetrics } from "@/components/game/board/hooks/internal/layout/board-layout-metrics";
 import { ITrapActivationPrompt } from "@/components/game/board/hooks/internal/board-state/useBoardUiState";
+import { IPendingZoneReplacement } from "@/components/game/board/hooks/internal/board-state/pending-replacement";
 
 export interface IBoardLayerPlayerState {
   id: string;
@@ -64,6 +65,10 @@ export interface IBoardInteractiveLayerProps {
   onCloseCard: () => void;
   onCloseHistory: () => void;
   isMobileLayout?: boolean;
+  /** Reemplazo de zona llena en curso (magia/trampa o entities): habilita el botón "Eliminar" en móvil. */
+  pendingEntityReplacement?: IPendingZoneReplacement | null;
+  /** Móvil: pulsar "Eliminar" descarta la carta seleccionada y coloca la nueva (sin diálogo). */
+  onConfirmReplacement?: () => void;
 }
 
 export interface IBoardSelectionState {

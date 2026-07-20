@@ -3,12 +3,15 @@ import { BattleMode } from "../entities/IPlayer";
 import { changeEntityMode } from "./game-engine/actions/change-entity-mode";
 import { playCard } from "./game-engine/actions/play-card";
 import { playCardWithEntityReplacement } from "./game-engine/actions/play-card-with-entity-replacement";
-import { playCardWithZoneReplacement, ReplacementZoneType } from "./game-engine/actions/play-card-with-zone-replacement";
+import { discardBoardCardForZoneReplacement, playCardWithZoneReplacement, ReplacementZoneType } from "./game-engine/actions/play-card-with-zone-replacement";
 import { resolveExecution } from "./game-engine/actions/resolve-execution";
 import { executeAttack } from "./game-engine/combat/execute-attack";
+import { resolveReactiveTrapDecision } from "./game-engine/combat/resolve-reactive-trap-decision";
 import { fuseCards } from "./game-engine/fusion/fuse-cards";
 import { startFusionSummon } from "./game-engine/fusion/start-fusion-summon";
 import { nextPhase } from "./game-engine/phases/next-phase";
+import { mulliganOpeningHand } from "./game-engine/state/mulligan-opening-hand";
+import { RandomSource } from "@/core/services/random/seeded-rng";
 import { resolvePendingTurnAction } from "./game-engine/phases/resolve-pending-turn-action";
 import { createInitialGameState } from "./game-engine/state/create-initial-game-state";
 import { GameState } from "./game-engine/state/types";
@@ -50,15 +53,37 @@ export class GameEngine {
     return playCardWithZoneReplacement(state, playerId, cardId, mode, sacrificedEntityInstanceId, zone);
   }
 
+  /** Solo el sacrificio del reemplazo de zona (envía la carta al cementerio); la nueva se juega aparte. */
+  public static discardBoardCardForZoneReplacement(
+    state: GameState,
+    playerId: string,
+    sacrificedEntityInstanceId: string,
+    zone: ReplacementZoneType,
+  ): GameState {
+    return discardBoardCardForZoneReplacement(state, playerId, sacrificedEntityInstanceId, zone);
+  }
+
   /** Ejecuta una declaración de ataque y resuelve daño, destrucción y trampas reactivas. */
   public static executeAttack(
     state: GameState,
     attackerPlayerId: string,
     attackerInstanceId: string,
     defenderInstanceId?: string,
-    options?: { skipReactivePlayerIds?: string[]; skipTrapEventTypes?: ("ATTACK_DECLARED" | "DIRECT_ATTACK_DECLARED")[]; skipCounterTrapPlayerIds?: string[]; chosenTrapInstanceId?: string },
+    options?: { skipReactivePlayerIds?: string[]; skipTrapEventTypes?: ("ATTACK_DECLARED" | "DIRECT_ATTACK_DECLARED")[]; skipCounterTrapPlayerIds?: string[]; chosenTrapInstanceId?: string; deferReactiveTraps?: boolean },
   ): GameState {
     return executeAttack(state, attackerPlayerId, attackerInstanceId, defenderInstanceId, options);
+  }
+
+  /**
+   * Ficha 4 (multi): continúa un ataque pausado con la decisión de trampa reactiva del defensor (activar la
+   * elegida o pasar). Ambos clientes aplican esta acción y convergen al mismo estado.
+   */
+  public static resolveReactiveTrapDecision(
+    state: GameState,
+    defenderPlayerId: string,
+    decision: { activate: boolean; chosenTrapInstanceId?: string },
+  ): GameState {
+    return resolveReactiveTrapDecision(state, defenderPlayerId, decision);
   }
 
   /** Resuelve una invocación por fusión estándar desde carta de fusión en mano. */
@@ -85,6 +110,11 @@ export class GameEngine {
   /** Avanza la fase/turno aplicando mantenimiento, energía y acción obligatoria inicial. */
   public static nextPhase(state: GameState): GameState {
     return nextPhase(state);
+  }
+
+  /** Rebaraja la mano de apertura del jugador (habilidad OPENING_MULLIGAN, PvE). No toca al rival. */
+  public static mulliganOpeningHand(state: GameState, playerId: string, randomSource: RandomSource): GameState {
+    return mulliganOpeningHand(state, playerId, randomSource);
   }
 
   /** Resuelve una ejecución activa y aplica su efecto o acción pendiente derivada. */

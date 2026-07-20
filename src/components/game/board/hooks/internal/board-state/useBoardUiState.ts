@@ -1,5 +1,5 @@
 // src/components/game/board/hooks/internal/board-state/useBoardUiState.ts - Gestiona estado UI local del tablero y flujos pendientes de interacción.
-import { MutableRefObject, useCallback, useState } from "react";
+import { MutableRefObject, useCallback, useRef, useState } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IBoardUiError } from "../boardError";
@@ -55,6 +55,10 @@ export function useBoardUiState(
   const [isFusionCinematicActive, setIsFusionCinematicActive] = useState(false);
   const [isMuted, setIsMuted] = useState<boolean>(() => (typeof window !== "undefined" ? window.localStorage.getItem("board-muted") === "1" : false));
   const [isPaused, setIsPaused] = useState(false);
+  // Multi: nº de turnos propios que se han auto-pasado estando en pausa (anti-AFK). Se reinicia al reanudar.
+  // El ref es la fuente de verdad para la lógica (lectura síncrona en el timeout); el estado solo alimenta la UI.
+  const [pausedTurnTimeouts, setPausedTurnTimeouts] = useState(0);
+  const pausedTurnTimeoutsRef = useRef(0);
   const [isAutoPhaseEnabled, setIsAutoPhaseEnabled] = useState<boolean>(() => (typeof window !== "undefined" ? window.localStorage.getItem("board-auto-phase") !== "0" : true));
   const [isTurnHelpEnabled, setIsTurnHelpEnabled] = useState<boolean>(() => (typeof window !== "undefined" ? window.localStorage.getItem("board-turn-help") !== "0" : true));
 
@@ -88,7 +92,20 @@ export function useBoardUiState(
     });
   }, []);
   const togglePause = useCallback(() => {
-    setIsPaused((previous) => !previous);
+    setIsPaused((previous) => {
+      // Reanudar (pausa→activa) reinicia el contador anti-AFK: solo penaliza permanecer en pausa de forma continua.
+      if (previous) {
+        pausedTurnTimeoutsRef.current = 0;
+        setPausedTurnTimeouts(0);
+      }
+      return !previous;
+    });
+  }, []);
+  /** Multi: registra un turno propio auto-pasado en pausa y devuelve el nuevo total (para decidir el forfeit). */
+  const registerPausedTurnTimeout = useCallback(() => {
+    pausedTurnTimeoutsRef.current += 1;
+    setPausedTurnTimeouts(pausedTurnTimeoutsRef.current);
+    return pausedTurnTimeoutsRef.current;
   }, []);
   const toggleAutoPhase = useCallback(() => {
     setIsAutoPhaseEnabled((previous) => {
@@ -109,6 +126,8 @@ export function useBoardUiState(
     clearSelection();
     clearError();
     setIsPaused(false);
+    pausedTurnTimeoutsRef.current = 0;
+    setPausedTurnTimeouts(0);
   }, [clearError, clearSelection, createInitialState, gameStateRef, setGameState]);
 
   return {
@@ -147,6 +166,8 @@ export function useBoardUiState(
     setIsMuted,
     isPaused,
     setIsPaused,
+    pausedTurnTimeouts,
+    registerPausedTurnTimeout,
     isAutoPhaseEnabled,
     setIsAutoPhaseEnabled,
     toggleAutoPhase,

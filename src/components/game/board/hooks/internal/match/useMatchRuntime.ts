@@ -64,6 +64,9 @@ export function useMatchRuntime({
     selectedCard: uiState.selectedCard,
     winnerPlayerId,
     isAnimating: uiState.isActionLocked,
+    // Lock SIN pausa: el timeout de turno (anti-AFK) debe poder auto-pasar aunque el jugador esté en pausa,
+    // pero SÍ debe respetar animaciones/cinemáticas reales en curso.
+    animationLock: uiState.isAnimating || uiState.isFusionCinematicActive,
     isPlayerTurn: uiState.isPlayerTurn,
     isAutoPhaseEnabled: uiState.isAutoPhaseEnabled,
     isTurnHelpEnabled: uiState.isTurnHelpEnabled,
@@ -77,7 +80,7 @@ export function useMatchRuntime({
   });
 
   const { toggleCardSelection, executePlayAction, handleEntityClick } = usePlayerActions(
-    buildPlayerActionsParams(uiState, assertPlayerTurn, applyTransition, turnControls.resolvePendingTurnAction, requestTrapActivationDecision),
+    buildPlayerActionsParams(uiState, assertPlayerTurn, applyTransition, turnControls.resolvePendingTurnAction, requestTrapActivationDecision, mode === "MULTIPLAYER"),
   );
 
   const { confirmEntityReplacement, cancelEntityReplacement } = useEntityReplacementActions({ uiState, applyTransition });
@@ -92,6 +95,7 @@ export function useMatchRuntime({
     confirmEntityReplacement,
     cancelEntityReplacement,
     pendingTrapActivationPrompt: uiState.pendingTrapActivationPrompt,
+    requestTrapActivationDecision,
     resolveTrapActivationDecision,
     cyclePendingTrap,
   });

@@ -4,6 +4,7 @@ import { useLocalActionEmitter } from "@/components/game/board/multiplayer/local
 import { IUsePlayerActionsParams } from "./types";
 import { handleOwnEntityClick } from "./handleOwnEntityClick";
 import { handleOpponentEntityClick } from "./handleOpponentEntityClick";
+import { isDirectAttackBlocked } from "@/core/use-cases/game-engine/state/status-effects";
 import { sleep } from "../sleep";
 import { addRevealedId, removeRevealedId } from "../trapPreview";
 
@@ -15,6 +16,7 @@ type IHandleEntityClickParams = Pick<
   | "activeAttackerId"
   | "applyTransition"
   | "assertPlayerTurn"
+  | "isMultiplayer"
   | "requestTrapActivationDecision"
   | "clearError"
   | "clearSelection"
@@ -175,6 +177,22 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
         return;
       }
 
+      // Ataque directo (sin objetivo) bajo el estado "sin ataques directos": el motor lo rechaza igualmente,
+      // pero hay que cortar AQUÍ, antes de que handleOpponentEntityClick revele la trampa reactiva del rival.
+      // Si no, la trampa se volteaba (y el rival la veía) y solo DESPUÉS aparecía el aviso de bloqueo.
+      if (
+        params.activeAttackerId &&
+        !entity &&
+        isDirectAttackBlocked(params.gameState.activeStatusEffects, params.gameState.playerA.id)
+      ) {
+        params.setLastError({
+          code: "GAME_RULE_ERROR",
+          tone: "blocked",
+          message: "No puedes hacer ataques directos mientras estés bajo el efecto de bloqueo.",
+        });
+        return;
+      }
+
       const result = await handleOpponentEntityClick({
         entity,
         activeAttackerId: params.activeAttackerId,
@@ -186,6 +204,7 @@ export function useHandleEntityClick(params: IHandleEntityClickParams) {
         setIsAnimating: params.setIsAnimating,
         setRevealedEntities: params.setRevealedEntities,
         setSelectedCard: params.setSelectedCard,
+        isMultiplayer: params.isMultiplayer,
         emitLocalAction,
       });
       if (result === "handled") return;

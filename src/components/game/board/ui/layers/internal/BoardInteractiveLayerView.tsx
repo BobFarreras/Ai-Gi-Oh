@@ -99,10 +99,12 @@ export function BoardInteractiveLayerView(props: IBoardInteractiveLayerViewProps
           isOpponentCard={props.selection.isOpponentBoardSelection}
           canActivateExecutionFromBoard={props.selection.overlaySource === "BOARD" && props.canActivateSelectedExecution}
           canSetEntityToAttackFromBoard={props.selection.overlaySource === "BOARD" && Boolean(props.canSetSelectedEntityToAttack)}
+          canRemoveForReplacement={props.selection.overlaySource === "BOARD" && !props.selection.isOpponentBoardSelection && Boolean(props.pendingEntityReplacement)}
           onClose={props.onCloseCard}
           onPlayAction={props.onPlayAction}
           onActivateExecutionFromBoard={props.onActivateSelectedExecution}
           onSetEntityToAttackFromBoard={props.onSetSelectedEntityToAttack ?? (() => undefined)}
+          onRemoveForReplacement={props.onConfirmReplacement ?? (() => undefined)}
         />
       )}
       {!props.isMobileLayout && (

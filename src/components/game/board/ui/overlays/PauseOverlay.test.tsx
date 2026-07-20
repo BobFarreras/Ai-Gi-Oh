@@ -26,4 +26,14 @@ describe("PauseOverlay", () => {
     fireEvent.click(screen.getByText("Desconectar y Salir"));
     expect(onExit).toHaveBeenCalledTimes(1);
   });
+
+  it("en multi advierte que el reloj de turno sigue corriendo", () => {
+    render(<PauseOverlay isPaused isMultiplayer onResume={vi.fn()} />);
+    expect(screen.getByText("El reloj de turno sigue corriendo")).toBeInTheDocument();
+  });
+
+  it("fuera de multi NO muestra el aviso del reloj", () => {
+    render(<PauseOverlay isPaused onResume={vi.fn()} />);
+    expect(screen.queryByText("El reloj de turno sigue corriendo")).not.toBeInTheDocument();
+  });
 });

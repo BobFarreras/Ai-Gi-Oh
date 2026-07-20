@@ -1,7 +1,7 @@
 // src/components/hub/HubProgressSection.tsx - Widget HUD con métricas de progreso del arquitecto en el hub.
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Coins, Library, Medal, ShieldCheck, Trophy, type LucideIcon } from "lucide-react";
 import { IPlayerHubProgress } from "@/core/entities/hub/IPlayerHubProgress";
@@ -110,6 +110,11 @@ export function HubProgressSection({ progress, onToggleSound }: HubProgressSecti
   const league = stats ? getEloLeague(stats.eloRating) : null;
   const leagueLabel = league ? getLeagueStyle(league).label : "";
 
+  // Carga stats al montar: Nexus se muestra en la primera fila, se necesita inmediatamente.
+  useEffect(() => {
+    void loadStats();
+  }, []);
+
   // Gateo alineado con HubAccessPolicy (única fuente de verdad). Arena y Academy son TRAINING
   // (siempre accesibles); el Ranking no es una sección del hub, se bloquea mientras el gate siga activo.
   const gateActive = isTutorialGateActive(progress);
@@ -174,7 +179,7 @@ export function HubProgressSection({ progress, onToggleSound }: HubProgressSecti
           <div className="grid w-full grid-cols-3 gap-1 sm:gap-2">
             <ProgressItem label="Medallas" value={progress.medals} icon={Medal} tone="amber" href="/hub/academy/training/arena" navLabel="Ir a la Arena" onNavigate={navigate} />
             <ProgressItem label="Capítulo" value={progress.storyChapter} icon={BookOpen} tone="cyan" href="/hub/story" navLabel="Ir a Historia" locked={storyLocked} onNavigate={navigate} />
-            <ProgressItem label="Tutorial" value={tutorialValue} icon={ShieldCheck} tone={tutorialTone} href="/hub/academy" navLabel="Ir a Academy" onNavigate={navigate} />
+            <ProgressItem label="Nexus" value={stats ? stats.nexus.toLocaleString() : "…"} icon={Coins} tone="amber" href="/hub/market" navLabel="Ir al Mercado" locked={marketLocked} onNavigate={navigate} />
           </div>
 
           {showExtra ? (
@@ -186,7 +191,7 @@ export function HubProgressSection({ progress, onToggleSound }: HubProgressSecti
               ) : stats ? (
                 <>
                   <ProgressItem label={league ? `Liga ${leagueLabel}` : "Ranking"} value={stats.eloRating} icon={Trophy} tone={league ? LEAGUE_TONE[league] : "violet"} href="/hub/ranking" navLabel="Ir al Ranking" locked={gateActive} onNavigate={navigate} />
-                  <ProgressItem label="Nexus" value={stats.nexus.toLocaleString()} icon={Coins} tone="amber" href="/hub/market" navLabel="Ir al Mercado" locked={marketLocked} onNavigate={navigate} />
+                  <ProgressItem label="Tutorial" value={tutorialValue} icon={ShieldCheck} tone={tutorialTone} href="/hub/academy" navLabel="Ir a Academy" onNavigate={navigate} />
                   <ProgressItem label="Colección" value={stats.collectionCount} icon={Library} tone="cyan" href="/hub/arsenal" navLabel="Ir al Arsenal" locked={arsenalLocked} onNavigate={navigate} />
                 </>
               ) : null}

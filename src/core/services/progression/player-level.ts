@@ -4,9 +4,9 @@
 // (ficha 8) se derivan del nivel. Función pura, sin efectos ni persistencia.
 
 /** XP para pasar de nivel 1 → 2. */
-const FIRST_LEVEL_UP_COST = 400;
+const FIRST_LEVEL_UP_COST = 750;
 /** Cada nivel siguiente cuesta este incremento más que el anterior (curva creciente). */
-const LEVEL_UP_COST_STEP = 200;
+const LEVEL_UP_COST_STEP = 400;
 
 export interface IPlayerLevelState {
   /** Nivel actual (>= 1). */

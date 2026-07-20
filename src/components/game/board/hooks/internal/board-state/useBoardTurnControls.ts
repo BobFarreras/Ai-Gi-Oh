@@ -17,6 +17,8 @@ interface IUseBoardTurnControlsParams {
   selectedCard: ICard | null;
   winnerPlayerId: string | "DRAW" | null;
   isAnimating: boolean;
+  /** Lock SIN pausa (animación/cinemática reales): lo usa el timeout de turno para poder auto-pasar en pausa. */
+  animationLock: boolean;
   isPlayerTurn: boolean;
   isAutoPhaseEnabled: boolean;
   isTurnHelpEnabled: boolean;
@@ -50,6 +52,7 @@ export function useBoardTurnControls({
   selectedCard,
   winnerPlayerId,
   isAnimating,
+  animationLock,
   isPlayerTurn,
   isAutoPhaseEnabled,
   isTurnHelpEnabled,
@@ -126,11 +129,37 @@ export function useBoardTurnControls({
     onAutoAdvanced: telemetry.logAutoPhaseAdvanced,
   });
 
+  // Variantes del timeout que usan `animationLock` (sin pausa) en vez de `isAnimating` (con pausa): así el
+  // auto-pase anti-AFK funciona aunque el jugador esté en pausa, pero sigue respetando animaciones reales.
+  // Los controles del jugador (botón/auto-avance) siguen usando las versiones con pausa de arriba.
+  const advancePhaseOnTimeout = useCallback(() => {
+    if (winnerPlayerId || animationLock || !assertPlayerTurn()) return;
+    const nextState = applyTransition((state) => GameEngine.nextPhase(state));
+    if (!nextState) return;
+    clearSelection();
+    clearError();
+    emitLocalAction({ type: "NEXT_PHASE", payload: {} });
+  }, [animationLock, applyTransition, assertPlayerTurn, clearError, clearSelection, emitLocalAction, winnerPlayerId]);
+
+  const resolvePendingTurnActionOnTimeout = useCallback(
+    (selectedId: string) => {
+      if (animationLock || !assertPlayerTurn()) return;
+      const nextState = applyTransition((state) => GameEngine.resolvePendingTurnAction(state, state.playerA.id, selectedId));
+      if (!nextState) return;
+      clearSelection();
+      clearError();
+      emitLocalAction({ type: "RESOLVE_PENDING_TURN_ACTION", payload: { selectedId } });
+    },
+    [animationLock, applyTransition, assertPlayerTurn, clearError, clearSelection, emitLocalAction],
+  );
+
   const handleTimerExpired = useHandleTimerExpired({
     gameStateRef,
-    isAnimating,
-    executeAdvancePhase,
-    resolvePendingTurnAction,
+    isAnimating: animationLock,
+    executeAdvancePhase: advancePhaseOnTimeout,
+    resolvePendingTurnAction: resolvePendingTurnActionOnTimeout,
+    // Multi: el timeout cede el turno entero al rival ("cambiar al otro jugador"), no solo una fase.
+    endEntireTurn: mode === "MULTIPLAYER",
   });
 
   const resolvePendingHandDiscard = useCallback(

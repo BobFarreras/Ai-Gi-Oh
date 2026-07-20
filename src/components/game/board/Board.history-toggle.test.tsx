@@ -53,6 +53,7 @@ function createUseBoardMock(setIsHistoryOpen: (value: (previous: boolean) => boo
     isBattleExperiencePending: false,
     restartMatch: vi.fn(),
     setIsHistoryOpen,
+    mulligan: { isPending: false, reshuffled: false, keep: vi.fn(), reshuffle: vi.fn() },
   } as unknown as ReturnType<typeof useBoardModule.useBoard>;
 }
 

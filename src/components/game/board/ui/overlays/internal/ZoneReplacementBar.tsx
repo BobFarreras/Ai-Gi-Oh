@@ -21,7 +21,9 @@ export function ZoneReplacementBar({ zone, isChoosing, onCancel }: IZoneReplacem
   const zoneLabel = zone === "ENTITIES" ? "entidades" : "magias/trampas";
 
   return (
-    <div className="absolute left-1/2 top-[5%] z-[170] w-[92%] max-w-xl -translate-x-1/2 rounded-xl border border-amber-300/60 bg-amber-950/95 px-3 py-2.5 text-amber-100 shadow-[0_0_35px_rgba(251,191,36,0.28)]">
+    // z por encima del HUD móvil (z-280) y del overlay de carta (z-320): esta instrucción debe leerse siempre;
+    // antes el retrato/HUD del jugador la tapaba en móvil.
+    <div className="absolute left-1/2 top-[5%] z-[330] w-[92%] max-w-xl -translate-x-1/2 rounded-xl border border-amber-300/60 bg-amber-950/95 px-3 py-2.5 text-amber-100 shadow-[0_0_35px_rgba(251,191,36,0.28)]">
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-amber-300">

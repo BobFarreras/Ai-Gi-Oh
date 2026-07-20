@@ -107,6 +107,7 @@ describe("CompleteTrainingMatchUseCase", () => {
       ]),
       getPlayerRanks: vi.fn(async () => [{ nodeId: "node-econ-comision", rank: 5 }, { nodeId: "node-econ-aprendizaje", rank: 5 }]),
       rankUp: vi.fn(),
+      respec: vi.fn(),
     };
 
     const useCase = new CompleteTrainingMatchUseCase({ ...deps, skillTreeRepository });
@@ -136,6 +137,7 @@ describe("CompleteTrainingMatchUseCase", () => {
       getActiveCatalog: vi.fn(async () => { throw new Error("tablas del árbol no migradas"); }),
       getPlayerRanks: vi.fn(async () => []),
       rankUp: vi.fn(),
+      respec: vi.fn(),
     };
 
     const useCase = new CompleteTrainingMatchUseCase({ ...deps, skillTreeRepository });

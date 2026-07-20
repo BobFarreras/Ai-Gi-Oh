@@ -21,17 +21,17 @@ function progressRepo(experience: number | null): IPlayerProgressRepository {
 }
 
 function skillRepo(catalog: ISkillTreeNode[], ranks: { nodeId: string; rank: number }[]): ISkillTreeRepository {
-  return { getActiveCatalog: vi.fn(async () => catalog), getPlayerRanks: vi.fn(async () => ranks), rankUp: vi.fn() };
+  return { getActiveCatalog: vi.fn(async () => catalog), getPlayerRanks: vi.fn(async () => ranks), rankUp: vi.fn(), respec: vi.fn() };
 }
 
 describe("GetSkillTreeStateUseCase", () => {
   it("deriva nivel/puntos de la XP y compone la vista por nodo", async () => {
-    const useCase = new GetSkillTreeStateUseCase(skillRepo([node("a")], [{ nodeId: "a", rank: 2 }]), progressRepo(15400));
+    const useCase = new GetSkillTreeStateUseCase(skillRepo([node("a")], [{ nodeId: "a", rank: 2 }]), progressRepo(5400));
     const view = await useCase.execute("p1");
-    expect(view.level).toBe(12);       // XP 15400 = nivel 12
-    expect(view.pointsTotal).toBe(11);
+    expect(view.level).toBe(5);         // XP 5400 = nivel 5
+    expect(view.pointsTotal).toBe(4);
     expect(view.pointsSpent).toBe(2);  // rango 2 * coste 1
-    expect(view.pointsAvailable).toBe(9);
+    expect(view.pointsAvailable).toBe(2);
     expect(view.nodes[0].rank).toBe(2);
   });
 

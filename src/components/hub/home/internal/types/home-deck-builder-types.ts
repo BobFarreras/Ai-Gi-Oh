@@ -13,6 +13,8 @@ export interface IHomeDeckBuilderSceneProps {
   initialCardUpgrades: Record<string, ICardUpgradeBonuses>;
   /** Sección con la que abre el arsenal ("?seccion=objetos" desde el aviso de canje del evento). */
   initialSection?: "CARDS" | "OBJECTS";
+  /** Doble Arsenal (ficha 8): el jugador tiene desbloqueado el 2º mazo → muestra el switcher de intercambio. */
+  hasSecondDeck?: boolean;
 }
 
 export interface IHomeEvolutionOverlayState {

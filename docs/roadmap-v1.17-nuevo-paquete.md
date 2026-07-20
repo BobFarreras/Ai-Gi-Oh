@@ -2,12 +2,41 @@
 
 Guía previa a picar código para el nuevo batch de ideas. Igual que la guía de v1.15: cada ficha dice
 **qué existe ya** (verificado en el código, no supuesto), **los pasos**, **los conceptos a tener en cuenta**,
-**la superficie de seguridad** y **las decisiones que faltan**. Nada de esta guía está implementado.
+**la superficie de seguridad** y **las decisiones que faltan**.
 
-- **Rama de trabajo:** `feat/paquete-v1.17` (creada desde `develop`, que ya lleva la release v1.16.0).
-- **Última migración en el repo:** `130`. Las nuevas empiezan en `131`.
+- **Rama de trabajo:** `feat/paquete-v1.17` (creada desde `develop`). **El grueso del paquete ya salió en la
+  release `v1.17.0`** (árbol de habilidades + fichas 1-5, 9, 9b).
+- **Última migración en el repo:** `137` (skill tree catalog). Las nuevas empiezan en `138`.
 - **Ficha heredada:** los *ghost decks* (ficha 11 del roadmap v1.15, que quedó pendiente) se mueven aquí
   como **ficha 6**, con las reglas nuevas que has añadido (5/día, ventana de ±50 de ELO).
+
+---
+
+## 📊 Índice de estado — visión rápida (actualizado 2026-07-20)
+
+Leyenda: ✅ hecha y en prod · 🟡 parcial (falta una parte concreta) · ❌ pendiente (0 código) · ⏸️ fuera de alcance.
+
+| # | Ficha | Estado | Qué falta / siguiente paso |
+|---|-------|--------|----------------------------|
+| 1 | Pasiva entity: +1 energía al ganar combate (+2 a V5) | ✅ Hecha | — Windows 92, mig 133 |
+| 2 | Magia: descartar mano rival (decidido: hasta 3) | ✅ Hecha | — mig 132 |
+| 3 | Nexus en combate → pasiva "Recaudación" (Recaudador) | ✅ Hecha | — Fase A+B, mig 134 |
+| 4 | Elegir qué trampa activar cuando hay varias | 🟡 Casi | Vs IA: ✅. En multi: motor+transporte ✅ (`7279b454`) y **cableado de cliente HECHO + tests verdes** (atacante difiere y emite `ATTACK` diferido; defensor elige con el mismo carrusel y emite `RESOLVE_REACTIVE_TRAP`; atacante lo recibe, revela y desbloquea; auto-pasar a 15s si el defensor no decide). **Solo falta la prueba manual de 2 clientes reales** (no automatizable) → guía en `docs/features/multi-reactive-trap-carousel-handoff.md` |
+| 5 | Mejorar la IA de oponentes | 🟡 Casi | La IA **ya es más lista y SÍ fusiona** (fases 1-5 ✅: posición al invocar, repliegue, reemplazo de zona, fusión efectiva, combos). Solo quedan flecos menores: **fase 6** (criterio de la IA para elegir "qué trampa" cuando tiene varias — hoy usa "la primera"), tuning fino de perfiles (opcional) y auditoría de mazos de fusión (dato, no código) |
+| 6 | Ghosts (combate asíncrono vs decks ausentes) | ❌ Pendiente | Todo — diseño cerrado, 0 código. Siguiente natural del Paquete C |
+| 7 | Subastas de objetos | ❌ Pendiente | Todo — diseño listo; decidir solo-sistema vs P2P |
+| 8 | Árbol de Operador (nodos con XP) | ✅ Hecha | — mig 136+137, salió en v1.17.0 |
+| 9 | Nodo de story que da objetos | ✅ Hecha | — v1 en overworld, sin migración |
+| 9b | Rastro visible de objetos equipados | ✅ Hecha | — mig 131 |
+| 10 | Avatar desde selfie con IA | ❌ Pendiente | **Decisión de producto:** ruta A/B/C (rec. C ya) |
+| 11 | 2v2 (parejas) | ⏸️ Fuera de alcance | Release propia con ADR previo |
+
+**Resumen:** 6 hechas (1, 2, 3, 8, 9, 9b) · 2 casi hechas con una parte concreta pendiente (4, 5) ·
+3 pendientes de picar/decidir (6, 7, 10) · 1 fuera de alcance (11).
+
+**Siguiente recomendado:** cerrar los flecos de combate ya empezados — **Ficha 4 (carrusel en multi)** y
+**Ficha 5 (fase 6)** — antes de abrir un frente nuevo de backend (Ficha 6 ghosts). La Ficha 10 solo necesita
+una decisión de producto (ruta C es un día de trabajo y cero riesgo).
 
 ---
 
@@ -348,13 +377,34 @@ no tocan).
   - `runBattlePhaseStep`/`runMainPhaseStep` usan `findReactiveTraps` (plural) y pasan `chosenTrapInstanceId`.
     Las contra-trampas (Nullify) pasan una lista de 1 (sin carrusel). Tests: manager del carrusel + 157 del
     tablero/trampas en verde.
-- **PENDIENTE — carrusel en MULTIJUGADOR (otra tanda, con prueba de 2 clientes):** hoy en multi la trampa
-  reactiva del defensor se **auto-resuelve por el motor (primera elegible, determinista)** vía
-  `apply-match-action` (`ATTACK`/`RESOLVE_EXECUTION` no llevan `chosenTrapInstanceId`) — SIN regresión, pero
-  sin carrusel. Para dárselo: cuando el rival ataca, el cliente del defensor debe **preguntarle** (mismo
-  `requestTrapActivationDecision`) y su elección viajar en la acción (`chosenTrapInstanceId` en el payload de
-  `IMatchAction` + `apply-match-action` pasándolo al motor), con ambos clientes resolviendo la misma. Es un
-  flujo de decisión que hoy no existe en multi (el `declineCounterTrap` viaja, pero no una elección de trampa).
+- **Carrusel en MULTIJUGADOR — CABLEADO DE CLIENTE HECHO (tests verdes; falta solo la prueba de 2 clientes reales).**
+  Sobre el cimiento del motor/transporte (`7279b454`), el cliente ya hace el flujo extremo a extremo:
+  - **Atacante** (`handleOpponentEntityClick`): si `isMultiplayer` (nuevo flag explícito hilado por
+    `buildPlayerActionsParams`→`IUsePlayerActionsParams`, no heurística) **y** el defensor tiene ≥1 trampa
+    reactiva elegible, ejecuta `executeAttack` con `deferReactiveTraps: true` y **emite** `ATTACK` diferido.
+    Mantiene la decisión de contra-trampa (Nullify) del atacante ANTES (viaja como `declineCounterTrap`).
+    NO pre-revela ninguna trampa concreta del rival. El tablero queda **bloqueado** ("esperando al rival").
+  - **Defensor** (`animate-remote-action.ts`, caso `ATTACK` → `maybeResolveLocalReactiveTrap`): tras aplicar
+    el ataque diferido detecta la pausa que le apunta, reúne las elegibles **por los `eligibleTrapInstanceIds`
+    de la pausa** (cero drift con el motor), abre el **mismo** carrusel `requestTrapActivationDecision`, aplica
+    la decisión localmente y **emite** `RESOLVE_REACTIVE_TRAP`.
+  - **Atacante receptor** (nuevo caso `RESOLVE_REACTIVE_TRAP`): revela la trampa activada, aplica y
+    **desbloquea** el tablero.
+  - **Turn-guard:** el servidor (`/api/multiplayer/match/action`) ya solo valida participación/tipo/secuencia
+    (no exige turno), así que el defensor puede emitir sin tocar la ruta; el candado de "quién puede" lo pone
+    el motor (`resolveReactiveTrapDecision` exige que el emisor sea el defensor de la pausa).
+  - **Fallback desconexión/AFK:** el cliente del defensor **auto-pasa a los 15s** (mismo `RESOLVE_REACTIVE_TRAP`
+    "pasar", determinista); la desconexión dura la cubre el abandono a 60s (victoria del atacante).
+  - **UX (banner + contador):** `ReactiveTrapDecisionTimer` (montado en `Board`, dirigido por
+    `pendingReactiveTrapDecision`) muestra en AMBOS clientes un banner con cuenta atrás de 15s: al defensor
+    "Elige tu trampa reactiva" y al atacante "Esperando la decisión del rival". Es no bloqueante
+    (`pointer-events-none`), así que el carrusel del defensor sigue usable.
+  - **Tests (verdes):** timeout auto-pasa/cancela (manager), atacante difiere+emite y single-player intacto
+    (`handleOpponentEntityClick.test.ts`), defensor elige/pasa+emite y atacante recibe+revela+desbloquea
+    (`animate-remote-action.reactive-trap.test.ts`).
+  - **FALTA (no automatizable):** la **prueba de 2 clientes reales** (defensor con 2+ trampas del mismo
+    trigger): verificar elección, que el atacante ve la trampa correcta, "pasar", ataque directo y desconexión,
+    con **ambos tableros idénticos**. Solo tras esa prueba se marca la ficha ✅.
 
 ---
 
@@ -611,7 +661,16 @@ prerequisitos POR RANGO. Catálogo v1 de 11 nodos / ~42 puntos para maxear en 3 
 de enganche), catálogo completo de 14 habilidades (incluidas las 4 fuertes del usuario como keystones caros) y
 ranking de dificultad. **Hallazgo clave:** el mazo es ÚNICO por jugador hoy (`player_deck_slots` por
 `player_id`), así que "2 mazos + selector" (idea del usuario) es refactor 🔴🔴 → sub-tanda propia, no v1. Decisiones abiertas (respec, ranked, curva, rama
-Arsenal) listadas en §10 del doc. **0 código: cerrar §10 antes de picar.**
+Arsenal) listadas en §10 del doc.
+
+**Estado (2026-07-17→v1.17.0): IMPLEMENTADA y en PROD ✅.** "Árbol de Operador" completo, migraciones `136`
+(foundation: `player_skill_ranks` + RPC `rank_up_skill_node` idempotente con RLS) y `137` (catálogo v1),
+aplicadas. Motor de efectos data-driven (`resolve-player-skill-modifiers` + `resolve-modifiers-from-catalog`),
+API (`/api/progression/skill-tree` + `/rank-up`), constelación SVG holográfica (`SkillTreeScene`) adaptada a
+móvil (bottom-sheet, selector de rama, fit-to-screen), enganches de combate PvE (+LP inicial, +techo de
+energía, Arranque en Frío = energía turno 1) en Story y Arena — también acreditado en el cierre de multi — y
+sección "Árbol de Operador" en el Códex de la Academia. Las decisiones de §10 se cerraron al implementarlo:
+combate = **solo PvE** (Story/Arena), sin respec en v1, curva XP→nivel→puntos derivada (sin columna).
 
 ---
 
@@ -808,16 +867,19 @@ El ADR, cuando toque, decide: modelo de asientos (2 equipos × 2), reglas de tur
 4. **Ficha 3:** rediseñada a **pasiva de entity floja** (+200 Nexus por combate ganado); paga solo en
    Story/Arena; topes 600/duelo y 1200/día. Fase A del motor hecha (commit `397c8b43`); Fase B pendiente.
 
-**Pendientes:**
+**Cerradas (2026-07-17, con la implementación):**
 
-2. **Ficha 4:** ¿nivel 1 solo (elegir cuál activar) o también cadenas de varias trampas? (Recomendado:
-   nivel 1 primero, cadenas en otra release.)
-5. **Ficha 6 (números):** los K exactos de los ghosts se validan con datos, pero hacen falta valores
-   iniciales antes de implementar.
-4. **Ficha 7:** ¿subastas solo del sistema (recomendado) o también entre jugadores?
-5. **Ficha 8:** lista v1 de nodos/habilidades del árbol y si "editar las 5 primeras cartas" entra en ranked
-   o solo PvE (recomendado: PvE primero).
-6. **Ficha 10:** ¿ruta A, B o C para el avatar? (Recomendado: C ya, B después.)
+5. **Ficha 4:** solo **nivel 1** (elegir cuál activar); las cadenas de varias trampas quedan para otra
+   release. Implementado contra la IA; solo falta el carrusel en multi (implementación, no decisión).
+6. **Ficha 8:** combate del árbol = **solo PvE** (Story/Arena), sin respec en v1, curva XP→nivel→puntos
+   derivada. Salió en v1.17.0.
+
+**Pendientes (decisión de producto, bloquean su ficha):**
+
+7. **Ficha 6 (números):** los K exactos de los ghosts se validan con datos, pero hacen falta valores
+   iniciales antes de implementar (arranque sugerido en la ficha: K/4 atacante, K/8 defensor, ~3 def/día).
+8. **Ficha 7:** ¿subastas solo del sistema (recomendado) o también entre jugadores?
+9. **Ficha 10:** ¿ruta A, B o C para el avatar? (Recomendado: C ya, B después.)
 
 ## 5. Definition of done común
 

@@ -4,10 +4,10 @@ import { EXECUTION_CARDS } from "@/core/data/mock-cards/executions";
 import { FUSION_CARDS } from "@/core/data/mock-cards/fusions";
 import { TRAP_CARDS } from "@/core/data/mock-cards/traps";
 import { ICollectionCard } from "@/core/entities/home/ICollectionCard";
-import { IDeck } from "@/core/entities/home/IDeck";
+import { IDeck, IDeckSwapResult } from "@/core/entities/home/IDeck";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ICardCollectionRepository } from "@/core/repositories/ICardCollectionRepository";
-import { IDeckRepository } from "@/core/repositories/IDeckRepository";
+import { IDeckRepository, ISwapActiveDeckCommand } from "@/core/repositories/IDeckRepository";
 import { HOME_DECK_SIZE, HOME_FUSION_DECK_SIZE } from "@/core/services/home/deck-rules";
 import { InMemoryPlayerPersistenceStore } from "@/infrastructure/repositories/state/InMemoryPlayerPersistenceStore";
 import { IPlayerPersistenceStore } from "@/infrastructure/repositories/state/IPlayerPersistenceStore";
@@ -25,6 +25,8 @@ function createEmptyDeck(playerId: string): IDeck {
 
 export class InMemoryDeckRepository implements IDeckRepository {
   private readonly store: IPlayerPersistenceStore;
+  /** Doble Arsenal: 2º mazo (banco) en memoria por jugador. */
+  private readonly bankDecks = new Map<string, IDeck>();
 
   constructor(
     private readonly collection: ICollectionCard[] = STARTER_COLLECTION,
@@ -52,6 +54,25 @@ export class InMemoryDeckRepository implements IDeckRepository {
 
   async saveDeck(deck: IDeck): Promise<void> {
     this.store.saveDeck(deck);
+  }
+
+  async getBankDeck(playerId: string): Promise<IDeck> {
+    const existing = this.bankDecks.get(playerId);
+    if (existing) {
+      return { playerId, slots: existing.slots.map((s) => ({ ...s })), fusionSlots: existing.fusionSlots.map((s) => ({ ...s })) };
+    }
+    // Bootstrap: copia del activo.
+    const active = await this.getDeck(playerId);
+    this.bankDecks.set(playerId, active);
+    return { playerId, slots: active.slots.map((s) => ({ ...s })), fusionSlots: active.fusionSlots.map((s) => ({ ...s })) };
+  }
+
+  async swapActiveDeck(command: ISwapActiveDeckCommand): Promise<IDeckSwapResult> {
+    const active = await this.getDeck(command.playerId);
+    const bank = await this.getBankDeck(command.playerId);
+    this.store.saveDeck({ ...bank, playerId: command.playerId });
+    this.bankDecks.set(command.playerId, { ...active, playerId: command.playerId });
+    return { ok: true };
   }
 
   async getCollection(playerId: string): Promise<ICollectionCard[]> {
