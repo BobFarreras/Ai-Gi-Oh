@@ -78,7 +78,9 @@ export function MulliganOverlay({ reshuffled, onReshuffle, onKeep }: MulliganOve
   };
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[500]">
+    // Captura clics (transparente, SIN oscurecer): mientras se decide el mulligan no se puede invocar/jugar,
+    // pero la mano sigue visible detrás. Debes elegir Conservar/Rebarajar antes de empezar a jugar.
+    <div className="absolute inset-0 z-[500]">
       <AnimatePresence>
         {!reshuffling && (
           <motion.div
