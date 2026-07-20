@@ -107,4 +107,51 @@ describe("useTrapDecisionManager (carrusel ficha 4)", () => {
     await expect(decision!).resolves.toEqual({ activate: false });
     expect(store.prompt).toBeNull();
   });
+
+  it("multi: auto-pasa por timeout si el defensor no decide (fallback determinista)", async () => {
+    vi.useFakeTimers();
+    try {
+      const { stub, store } = createUiStateStub();
+      const { result } = renderHook(() => useTrapDecisionManager({ uiState: stub }));
+      let decision: Promise<{ activate: boolean }>;
+      act(() => {
+        decision = result.current.requestTrapActivationDecision(
+          [{ card: trapCard("trap-a"), instanceId: "t1" }],
+          "ON_OPPONENT_ATTACK_DECLARED",
+          { autoPassAfterMs: 15000 },
+        );
+      });
+      expect(store.prompt).not.toBeNull();
+      await act(async () => {
+        vi.advanceTimersByTime(15000);
+      });
+      await expect(decision!).resolves.toEqual({ activate: false });
+      expect(store.prompt).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("multi: decidir a tiempo cancela el timeout (no auto-pasa después)", async () => {
+    vi.useFakeTimers();
+    try {
+      const { stub, store } = createUiStateStub();
+      const { result } = renderHook(() => useTrapDecisionManager({ uiState: stub }));
+      let decision: Promise<{ activate: boolean; chosenTrapInstanceId?: string }>;
+      act(() => {
+        decision = result.current.requestTrapActivationDecision(
+          [{ card: trapCard("trap-a"), instanceId: "t1" }],
+          "ON_OPPONENT_ATTACK_DECLARED",
+          { autoPassAfterMs: 15000 },
+        );
+      });
+      act(() => result.current.resolveTrapActivationDecision({ activate: true, chosenTrapInstanceId: "t1" }));
+      await expect(decision!).resolves.toEqual({ activate: true, chosenTrapInstanceId: "t1" });
+      // Aunque venza el temporizador, no vuelve a resolver (el resolver ya se consumió) ni reabre el prompt.
+      act(() => vi.advanceTimersByTime(15000));
+      expect(store.prompt).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

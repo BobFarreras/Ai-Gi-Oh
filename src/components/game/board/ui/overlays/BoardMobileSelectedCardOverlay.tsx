@@ -2,7 +2,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Box, Shield, Sword, X, Zap } from "lucide-react";
+import { Box, Shield, Sword, Trash2, X, Zap } from "lucide-react";
 import { Card } from "@/components/game/card/Card";
 import { ICard } from "@/core/entities/ICard";
 import { BattleMode } from "@/core/entities/IPlayer";
@@ -15,10 +15,14 @@ interface BoardMobileSelectedCardOverlayProps {
   isOpponentCard?: boolean;
   canActivateExecutionFromBoard?: boolean;
   canSetEntityToAttackFromBoard?: boolean;
+  /** Reemplazo de zona llena: esta carta propia puede descartarse para dejar sitio (muestra "Eliminar"). */
+  canRemoveForReplacement?: boolean;
   onClose: () => void;
   onPlayAction: (mode: BattleMode, event: React.MouseEvent) => void;
   onActivateExecutionFromBoard?: () => void;
   onSetEntityToAttackFromBoard?: () => void;
+  /** Pulsar "Eliminar": solicita el diálogo de confirmación del reemplazo (no descarta directamente). */
+  onRemoveForReplacement?: () => void;
 }
 
 export function BoardMobileSelectedCardOverlay({
@@ -29,10 +33,12 @@ export function BoardMobileSelectedCardOverlay({
   isOpponentCard = false,
   canActivateExecutionFromBoard = false,
   canSetEntityToAttackFromBoard = false,
+  canRemoveForReplacement = false,
   onClose,
   onPlayAction,
   onActivateExecutionFromBoard,
   onSetEntityToAttackFromBoard,
+  onRemoveForReplacement,
 }: BoardMobileSelectedCardOverlayProps) {
   if (!isPlayerTurn && source === "HAND") return null;
   const isEntity = card?.type === "ENTITY";
@@ -69,6 +75,20 @@ export function BoardMobileSelectedCardOverlay({
   );
   const boardActionButton = isOpponentCard ? null : (
     <>
+      {/* Reemplazo de zona llena: "Eliminar" no descarta al vuelo — abre la confirmación (¿descartar?). Así
+          en móvil el jugador ve primero QUÉ carta va a descartar y decide con el botón, como el atk/def. */}
+      {canRemoveForReplacement ? (
+        <button
+          aria-label="Eliminar esta carta para dejar sitio"
+          onClick={(event) => {
+            event.stopPropagation();
+            onRemoveForReplacement?.();
+          }}
+          className="flex items-center gap-1 rounded border border-red-300/90 bg-red-600/85 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_0_16px_rgba(239,68,68,0.85)]"
+        >
+          <Trash2 size={12} /> Eliminar
+        </button>
+      ) : null}
       {isExecution && canActivateExecutionFromBoard ? (
         <button
           aria-label="Activar ejecución desde tablero"

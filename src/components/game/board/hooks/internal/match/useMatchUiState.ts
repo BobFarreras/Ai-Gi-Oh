@@ -47,8 +47,10 @@ export interface IUseMatchUiStateResult {
   pendingFusionSummon: { cardId: string; mode: "ATTACK" | "DEFENSE"; materials: string[] } | null;
   pendingTrapActivationPrompt: ITrapActivationPrompt | null;
   isFusionCinematicActive: boolean;
+  isAnimating: boolean;
   isMuted: boolean;
   isPaused: boolean;
+  pausedTurnTimeouts: number;
   isAutoPhaseEnabled: boolean;
   isTurnHelpEnabled: boolean;
   isPlayerTurn: boolean;
@@ -77,6 +79,7 @@ export interface IUseMatchUiStateResult {
   clearError: () => void;
   toggleMute: () => void;
   togglePause: () => void;
+  registerPausedTurnTimeout: () => number;
   toggleAutoPhase: () => void;
   disableTurnHelp: () => void;
   restartMatch: () => void;

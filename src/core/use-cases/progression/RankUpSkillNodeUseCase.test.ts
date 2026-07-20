@@ -36,12 +36,12 @@ const ok: IRankUpResult = { ok: true, nodeId: "node-core", rank: 1 };
 
 describe("RankUpSkillNodeUseCase", () => {
   it("deriva los puntos disponibles de la XP del servidor y los pasa a la RPC", async () => {
-    // XP 1000 = nivel 3 = 2 puntos disponibles.
+    // XP 1000 = nivel 2 = 1 punto disponible (curva doblada: FIRST=750, STEP=400).
     const { repo, rankUp } = skillRepoSpy(ok);
     const useCase = new RankUpSkillNodeUseCase(repo, progressWith(1000));
     await useCase.execute({ playerId: "p1", nodeId: "node-core", operationId: "op-1" });
     expect(rankUp).toHaveBeenCalledWith({
-      playerId: "p1", nodeId: "node-core", availablePoints: 2, operationId: "op-1",
+      playerId: "p1", nodeId: "node-core", availablePoints: 1, operationId: "op-1",
     });
   });
 
@@ -61,11 +61,11 @@ describe("RankUpSkillNodeUseCase", () => {
   });
 
   it("nunca lee la XP del cliente: solo del repositorio de progreso", async () => {
-    const progressRepo = progressWith(39478); // jugador máximo de prod → nivel 19 → 18 puntos
+    const progressRepo = progressWith(39478); // jugador máximo de prod → nivel 13 → 12 puntos (curva doblada)
     const { repo, rankUp } = skillRepoSpy(ok);
     await new RankUpSkillNodeUseCase(repo, progressRepo).execute({ playerId: "p1", nodeId: "node-core", operationId: "op-3" });
     expect(progressRepo.getByPlayerId).toHaveBeenCalledWith("p1");
-    expect(rankUp).toHaveBeenCalledWith(expect.objectContaining({ availablePoints: 18 }));
+    expect(rankUp).toHaveBeenCalledWith(expect.objectContaining({ availablePoints: 12 }));
   });
 
   it("rechaza entradas vacías", async () => {

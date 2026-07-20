@@ -18,6 +18,7 @@ import { useHubModuleSfx } from "@/components/hub/internal/use-hub-module-sfx";
 import { IHomeDeckBuilderSceneProps } from "@/components/hub/home/internal/types/home-deck-builder-types";
 import { useHomeWorkspaceHandlers } from "@/components/hub/home/internal/hooks/use-home-workspace-handlers";
 import { HomeDeckBuilderSceneView } from "@/components/hub/home/internal/view/HomeDeckBuilderSceneView";
+import { SecondDeckSwitcher } from "@/components/hub/home/SecondDeckSwitcher";
 import { createHomeDeckBuilderViewProps } from "@/components/hub/home/internal/view/create-home-deck-builder-view-props";
 import { useHomeDeckBuilderState } from "@/components/hub/home/internal/hooks/use-home-deck-builder-state";
 import { useHomeDeckBuilderActions } from "@/components/hub/home/internal/hooks/use-home-deck-builder-actions";
@@ -285,6 +286,7 @@ export function HomeDeckBuilderScene(props: IHomeDeckBuilderSceneProps) {
   return (
     <>
       <HomeDeckBuilderSceneView {...viewProps} renderSectionSwitch={renderSectionSwitch} />
+      {props.hasSecondDeck ? <SecondDeckSwitcher /> : null}
       {objectOverlay}
     </>
   );

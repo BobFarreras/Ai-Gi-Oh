@@ -11,9 +11,11 @@ export interface IPlayerCombatModifiers {
   maxEnergyBonus: number;
   turn1EnergyBonus: number;
   openingHandBonus: number;
+  /** Rebarajar la mano de apertura 1 vez (habilidad OPENING_MULLIGAN, solo PvE). */
+  openingMulligan: boolean;
 }
 
-const EMPTY: IPlayerCombatModifiers = { startingLpBonus: 0, maxEnergyBonus: 0, turn1EnergyBonus: 0, openingHandBonus: 0 };
+const EMPTY: IPlayerCombatModifiers = { startingLpBonus: 0, maxEnergyBonus: 0, turn1EnergyBonus: 0, openingHandBonus: 0, openingMulligan: false };
 
 export async function getPlayerCombatModifiers(): Promise<IPlayerCombatModifiers> {
   const session = await getCurrentUserSession();
@@ -26,6 +28,7 @@ export async function getPlayerCombatModifiers(): Promise<IPlayerCombatModifiers
       maxEnergyBonus: modifiers.combat.maxEnergyBonus,
       turn1EnergyBonus: modifiers.combat.turn1EnergyBonus,
       openingHandBonus: modifiers.combat.openingHandBonus,
+      openingMulligan: modifiers.combat.openingMulligan,
     };
   } catch {
     return EMPTY;

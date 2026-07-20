@@ -13,16 +13,16 @@ function node(id: string, overrides: Partial<ISkillTreeNode> = {}): ISkillTreeNo
   };
 }
 
-// XP acumulada del nivel 12 (100·11·14 = 15400) → 11 puntos totales.
+// XP 15400 → nivel 8 → 7 puntos totales (curva doblada: FIRST=750, STEP=400).
 const level = resolvePlayerLevel(15400);
 
 describe("resolveSkillTreeView", () => {
   it("calcula puntos gastados y disponibles a partir de rangos", () => {
     const catalog = [node("a", { costPerRank: 1 }), node("b", { costPerRank: 2 })];
     const view = resolveSkillTreeView(catalog, [{ nodeId: "a", rank: 3 }, { nodeId: "b", rank: 1 }], level);
-    // gastado = 1*3 + 2*1 = 5; total 11 → disponible 6.
+    // gastado = 1*3 + 2*1 = 5; total 7 → disponible 2.
     expect(view.pointsSpent).toBe(5);
-    expect(view.pointsAvailable).toBe(6);
+    expect(view.pointsAvailable).toBe(2);
   });
 
   it("marca un nodo al tope y sin coste siguiente", () => {

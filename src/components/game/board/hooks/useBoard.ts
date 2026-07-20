@@ -1,11 +1,12 @@
 // src/components/game/board/hooks/useBoard.ts - Compone runtime, estado UI, progresión y audio del duelo en un contrato único para la capa visual.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GameState } from "@/core/use-cases/GameEngine";
+import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { ICard } from "@/core/entities/ICard";
 import { IMatchMode } from "@/core/entities/match";
 import { ICampaignProgress } from "@/core/services/opponent/difficulty/types";
 import { IOpponentStrategy } from "@/core/services/opponent/types";
 import { createMatchSeed } from "@/core/services/random/create-match-seed";
+import { createSeededRandom } from "@/core/services/random/seeded-rng";
 import { createInitialBoardState, ICreateInitialBoardStateInput } from "./internal/boardInitialState";
 import { useMatchAudio } from "./internal/match/useMatchAudio";
 import { useMatchProgression } from "./internal/match/useMatchProgression";
@@ -14,6 +15,9 @@ import { useMatchUiState } from "./internal/match/useMatchUiState";
 import { resolveWinnerPlayerId } from "./internal/match/board-derived-state";
 import { useExecutionActivation } from "./internal/match/useExecutionActivation";
 import { useRemoteOpponentAnimator } from "@/components/game/board/multiplayer/useRemoteOpponentAnimator";
+import { useLocalActionEmitter } from "@/components/game/board/multiplayer/local-action-emitter";
+import { REACTIVE_TRAP_DECISION_TIMEOUT_MS } from "@/components/game/board/multiplayer/reactive-trap-decision";
+import { ITrapEligibleOption } from "./internal/board-state/useBoardUiState";
 
 export function useBoard(
   initialPlayerDeck?: ICard[],
@@ -23,6 +27,7 @@ export function useBoard(
   disableBaseSoundtrack = false,
   disableOpponentAutomation = false,
   opponentStrategyOverride: IOpponentStrategy | null = null,
+  enableOpeningMulligan = false,
 ) {
   const [campaignProgress] = useState<ICampaignProgress>({ chapterIndex: 1, duelIndex: 1, victories: 0 });
   const [matchSeed] = useState(() => createMatchSeed());
@@ -33,6 +38,12 @@ export function useBoard(
   const gameStateRef = useRef<GameState>(createInitialState());
   const uiState = useMatchUiState({ gameStateRef, createInitialState });
   const winnerPlayerId = useMemo(() => resolveWinnerPlayerId(uiState.gameState), [uiState.gameState]);
+  // Mulligan de apertura (ficha 8, PvE): tras el coin toss, si el jugador tiene la habilidad y aún no decidió,
+  // se ofrece rebarajar la mano 1 vez. Mientras esté pendiente, el arranque sigue "bloqueado" (la IA no juega).
+  const [mulliganResolved, setMulliganResolved] = useState(false);
+  const [mulliganReshuffled, setMulliganReshuffled] = useState(false);
+  const isMulliganPending = enableOpeningMulligan && !isMatchStartLocked && !mulliganResolved;
+  const matchStartLockedEffective = isMatchStartLocked || (enableOpeningMulligan && !mulliganResolved);
   useEffect(() => {
     if (mode !== "TUTORIAL" || !uiState.isAutoPhaseEnabled) return;
     uiState.setIsAutoPhaseEnabled(false);
@@ -43,10 +54,18 @@ export function useBoard(
     gameStateRef,
     uiState,
     winnerPlayerId,
-    isMatchStartLocked,
+    isMatchStartLocked: matchStartLockedEffective,
     disableOpponentAutomation,
     opponentStrategyOverride,
   });
+  const keepMulligan = useCallback(() => setMulliganResolved(true), []);
+  const reshuffleOpeningHand = useCallback(() => {
+    if (mulliganReshuffled) return;
+    // Seed fresco por rebaraje (PvE, no requiere determinismo compartido): distinto orden garantizado.
+    const rng = createSeededRandom(`${matchSeed}-mulligan-${Date.now()}`);
+    runtime.applyTransition((state) => GameEngine.mulliganOpeningHand(state, state.playerA.id, rng));
+    setMulliganReshuffled(true);
+  }, [matchSeed, mulliganReshuffled, runtime]);
   const progression = useMatchProgression({
     mode,
     gameState: uiState.gameState,
@@ -68,6 +87,8 @@ export function useBoard(
   const restartMatch = useCallback(() => {
     progression.resetBattleProgression();
     uiState.restartMatch();
+    setMulliganResolved(false);
+    setMulliganReshuffled(false);
   }, [progression, uiState]);
   const { canActivateSelectedExecution, activateSelectedExecution } = useExecutionActivation({
     gameState: uiState.gameState,
@@ -80,6 +101,16 @@ export function useBoard(
     clearSelection: uiState.clearSelection,
   });
 
+  // Ficha 4 (multi): el defensor recibe el ataque diferido y elige su trampa reactiva con el MISMO carrusel
+  // que contra la IA (mismo `requestTrapActivationDecision`), pero con auto-pasar por timeout para no colgar
+  // al atacante. El emisor viaja por contexto (noop fuera de multi).
+  const emitLocalAction = useLocalActionEmitter();
+  const requestReactiveTrapDecision = useCallback(
+    (traps: ITrapEligibleOption[]) =>
+      runtime.requestTrapActivationDecision(traps, "ON_OPPONENT_ATTACK_DECLARED", { autoPassAfterMs: REACTIVE_TRAP_DECISION_TIMEOUT_MS }),
+    [runtime],
+  );
+
   // Aplicador de acciones del rival con coreografía visual (solo se usa en multijugador).
   const applyRemoteAction = useRemoteOpponentAnimator({
     gameStateRef,
@@ -90,6 +121,8 @@ export function useBoard(
     clearSelection: uiState.clearSelection,
     clearError: uiState.clearError,
     setLastError: uiState.setLastError,
+    requestReactiveTrapDecision,
+    emitLocalAction,
   });
 
   return {
@@ -110,12 +143,16 @@ export function useBoard(
     isPlayerTurn: uiState.isPlayerTurn,
     isMuted: uiState.isMuted,
     isPaused: uiState.isPaused,
+    pausedTurnTimeouts: uiState.pausedTurnTimeouts,
+    registerPausedTurnTimeout: uiState.registerPausedTurnTimeout,
     isAutoPhaseEnabled: uiState.isAutoPhaseEnabled,
     isTurnHelpEnabled: uiState.isTurnHelpEnabled,
     isFusionCinematicActive: uiState.isFusionCinematicActive,
     setIsFusionCinematicActive: uiState.setIsFusionCinematicActive,
     winnerPlayerId,
     restartMatch,
+    // Mulligan de apertura (PvE): estado + acciones para el overlay pre-duelo.
+    mulligan: { isPending: isMulliganPending, reshuffled: mulliganReshuffled, keep: keepMulligan, reshuffle: reshuffleOpeningHand },
     toggleMute: uiState.toggleMute,
     togglePause: uiState.togglePause,
     toggleAutoPhase: uiState.toggleAutoPhase,

@@ -50,6 +50,8 @@ export function areEqualBoardInteractiveLayerProps(previous: IBoardInteractiveLa
     previous.onSelectCard === next.onSelectCard &&
     previous.onCloseCard === next.onCloseCard &&
     previous.onCloseHistory === next.onCloseHistory &&
-    previous.isMobileLayout === next.isMobileLayout
+    previous.isMobileLayout === next.isMobileLayout &&
+    previous.pendingEntityReplacement === next.pendingEntityReplacement &&
+    previous.onConfirmReplacement === next.onConfirmReplacement
   );
 }

@@ -9,7 +9,11 @@ import { ITrapActivationDecision, ITrapEligibleOption, TrapDecisionTrigger } fro
 import { IUsePlayerActionsParams } from "../player-actions/types";
 import { IUseMatchUiStateResult } from "./useMatchUiState";
 
-export type RequestTrapActivationDecision = (traps: ITrapEligibleOption[], trigger: TrapDecisionTrigger) => Promise<ITrapActivationDecision>;
+export type RequestTrapActivationDecision = (
+  traps: ITrapEligibleOption[],
+  trigger: TrapDecisionTrigger,
+  options?: { autoPassAfterMs?: number },
+) => Promise<ITrapActivationDecision>;
 
 interface IBuildOpponentTurnParamsInput {
   uiState: IUseMatchUiStateResult;
@@ -31,6 +35,8 @@ interface IBuildMatchRuntimeResultInput {
   confirmEntityReplacement: () => void;
   cancelEntityReplacement: () => void;
   pendingTrapActivationPrompt: IUseMatchUiStateResult["pendingTrapActivationPrompt"];
+  /** Ficha 4 (multi): lo consume el animador remoto para que el DEFENSOR elija su trampa reactiva. */
+  requestTrapActivationDecision: RequestTrapActivationDecision;
   resolveTrapActivationDecision: (decision: ITrapActivationDecision) => void;
   cyclePendingTrap: (direction: -1 | 1) => void;
 }
@@ -60,9 +66,11 @@ export function buildPlayerActionsParams(
   applyTransition: (transition: (state: GameState) => GameState) => GameState | null,
   resolvePendingTurnAction: (selectedId: string) => void,
   requestTrapActivationDecision: RequestTrapActivationDecision,
+  isMultiplayer: boolean,
 ): IUsePlayerActionsParams {
   return {
     gameState: uiState.gameState,
+    isMultiplayer,
     isAnimating: uiState.isActionLocked,
     playingCard: uiState.playingCard,
     activeAttackerId: uiState.activeAttackerId,
@@ -110,6 +118,7 @@ export function buildMatchRuntimeResult(input: IBuildMatchRuntimeResultInput) {
     confirmEntityReplacement: input.confirmEntityReplacement,
     cancelEntityReplacement: input.cancelEntityReplacement,
     pendingTrapActivationPrompt: input.pendingTrapActivationPrompt,
+    requestTrapActivationDecision: input.requestTrapActivationDecision,
     activatePendingTrap: () => {
       const prompt = input.pendingTrapActivationPrompt;
       const chosenTrapInstanceId = prompt?.eligibleTraps[prompt.currentIndex]?.instanceId;

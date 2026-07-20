@@ -1,9 +1,16 @@
 // src/app/(auth)/login/page.tsx - Página de acceso con fondo dinámico y formulario de login.
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { BackToLandingButton } from "@/components/auth/BackToLandingButton";
 import { CyberBackground } from "@/components/landing/CyberBackground";
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
+
+export const metadata: Metadata = {
+  title: "Iniciar sesión",
+  description: "Accede a tu cuenta de AI-GI-OH: The AGI Wars y continúa tu campaña, tu colección y tus duelos online.",
+  alternates: { canonical: "/login" },
+};
 
 export default async function LoginPage() {
   // Si ya hay sesión válida (cookies persisten 400 días), no hace falta volver a loguear.

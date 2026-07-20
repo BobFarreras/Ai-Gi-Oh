@@ -12,6 +12,7 @@ export const MATCH_ACTION_TYPES = [
   "RESOLVE_EXECUTION",
   "CHANGE_ENTITY_MODE",
   "RESOLVE_PENDING_TURN_ACTION",
+  "RESOLVE_REACTIVE_TRAP",
 ] as const;
 
 export type MatchActionType =
@@ -24,7 +25,8 @@ export type MatchActionType =
   | "NEXT_PHASE"
   | "RESOLVE_EXECUTION"
   | "CHANGE_ENTITY_MODE"
-  | "RESOLVE_PENDING_TURN_ACTION";
+  | "RESOLVE_PENDING_TURN_ACTION"
+  | "RESOLVE_REACTIVE_TRAP";
 
 export interface IPlayCardPayload {
   cardId: string;
@@ -62,6 +64,16 @@ export interface IAttackPayload {
   /** El atacante decidió NO activar su contra-trampa (Nullify). Viaja con la acción para que el
    * replay del rival sea determinista y no auto-active lo que el jugador rechazó. */
   declineCounterTrap?: boolean;
+  /** Ficha 4 (multi): si el defensor tiene trampas reactivas elegibles, PAUSA el ataque en ambos clientes
+   * (para que el defensor elija en el suyo). La resolución llega luego como `RESOLVE_REACTIVE_TRAP`. */
+  deferReactiveTraps?: boolean;
+}
+
+export interface IResolveReactiveTrapPayload {
+  /** El defensor activa una trampa (`true`) o pasa sin activar ninguna (`false`). */
+  activate: boolean;
+  /** Trampa elegida al activar; se revalida en el motor (id que no casa ⇒ no activa nada). */
+  chosenTrapInstanceId?: string;
 }
 
 export interface IResolveExecutionPayload {
@@ -89,4 +101,5 @@ export type IMatchActionPayload =
   | { type: "NEXT_PHASE"; payload: Record<string, never> }
   | { type: "RESOLVE_EXECUTION"; payload: IResolveExecutionPayload }
   | { type: "CHANGE_ENTITY_MODE"; payload: IChangeEntityModePayload }
-  | { type: "RESOLVE_PENDING_TURN_ACTION"; payload: IResolvePendingTurnActionPayload };
+  | { type: "RESOLVE_PENDING_TURN_ACTION"; payload: IResolvePendingTurnActionPayload }
+  | { type: "RESOLVE_REACTIVE_TRAP"; payload: IResolveReactiveTrapPayload };
