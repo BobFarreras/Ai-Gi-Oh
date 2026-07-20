@@ -34,7 +34,8 @@ export function MandatoryActionHintBanner({ hint }: IMandatoryActionHintBannerPr
           transition={{ duration: 0.3 }}
           // Arriba del todo, compacto y sin capturar clics: el jugador puede seleccionar las
           // cartas resaltadas aunque el aviso siga visible, y desaparece solo en unos segundos.
-          className="pointer-events-none absolute left-1/2 top-[5%] z-[155] w-[92%] max-w-xl -translate-x-1/2 rounded-xl border border-amber-300/60 bg-amber-950/90 px-4 py-2.5 text-center text-amber-100 shadow-[0_0_35px_rgba(251,191,36,0.28)]"
+          // z-[315]: por encima del PlayerHUD móvil (z-[280]) y docks (z-[290]-[310]) para que no lo tapen.
+          className="pointer-events-none absolute left-1/2 top-[5%] z-[315] w-[92%] max-w-xl -translate-x-1/2 rounded-xl border border-amber-300/60 bg-amber-950/90 px-4 py-2.5 text-center text-amber-100 shadow-[0_0_35px_rgba(251,191,36,0.28)]"
         >
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-amber-300">Acción obligatoria</p>
           <p className="mt-0.5 text-sm font-bold leading-tight sm:text-base">{hint}</p>

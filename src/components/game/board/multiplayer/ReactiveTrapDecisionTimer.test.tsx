@@ -31,9 +31,9 @@ describe("ReactiveTrapDecisionTimer (ficha 4)", () => {
     expect(screen.getByText("15")).toBeTruthy();
   });
 
-  it("ATACANTE (la pausa apunta al rival): muestra 'Esperando la decisión del rival'", () => {
+  it("ATACANTE (la pausa apunta al rival): muestra 'Esperando al rival'", () => {
     render(<ReactiveTrapDecisionTimer pending={pendingFor("rival")} localPlayerId="me" />);
-    expect(screen.getByText("Esperando la decisión del rival")).toBeTruthy();
+    expect(screen.getByText("Esperando al rival")).toBeTruthy();
   });
 
   it("la cuenta atrás decrementa con el tiempo", () => {
