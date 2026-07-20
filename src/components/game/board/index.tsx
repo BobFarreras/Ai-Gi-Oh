@@ -118,6 +118,7 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
             abandonPenaltyNexus={abandonPenaltyNexus}
             isTurnTimerEnabled={isTurnTimerEnabled}
             suppressCombatBanners={suppressCombatBanners}
+            isMultiplayer={mode === "MULTIPLAYER"}
           />
           <BoardPlayersSection
             board={board}
@@ -137,8 +138,17 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
         isMobile={isMobile}
         suppressCombatFeedback={suppressCombatFeedback}
       />
-      {/* Ficha 4 (multi): banner + contador de la decisión de trampa reactiva (defensor decide / atacante espera). */}
-      <ReactiveTrapDecisionTimer pending={board.gameState.pendingReactiveTrapDecision} localPlayerId={player.id} />
+      {/* Ficha 4 (multi): banner + contador de la decisión de trampa reactiva (defensor decide / atacante espera).
+          El `key` ligado a la pausa remonta el contador en cada ataque nuevo, reiniciando la cuenta atrás. */}
+      <ReactiveTrapDecisionTimer
+        key={
+          board.gameState.pendingReactiveTrapDecision
+            ? `${board.gameState.pendingReactiveTrapDecision.attackerInstanceId}:${board.gameState.pendingReactiveTrapDecision.defenderPlayerId}`
+            : "trap-timer-idle"
+        }
+        pending={board.gameState.pendingReactiveTrapDecision}
+        localPlayerId={player.id}
+      />
       {mode === "TUTORIAL" && !isMatchStartLocked ? (
         <BoardTutorialFlowOverlay
           combatLog={board.gameState.combatLog}

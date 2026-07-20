@@ -18,8 +18,12 @@ export function BoardStatusAndTopBarSection({
   abandonPenaltyNexus = 0,
   isTurnTimerEnabled = true,
   suppressCombatBanners = false,
+  isMultiplayer = false,
 }: IBoardViewSectionProps) {
   if (screen.isResultVisible) return null;
+  // En multi el reloj de turno NO se detiene al pausar: un jugador no puede congelar la partida al rival
+  // indefinidamente. El menú de pausa sigue disponible, pero el temporizador corre y auto-pasa al agotarse.
+  const isTimerPaused = isMultiplayer ? false : board.isPaused;
   const pendingFusionAction =
     board.gameState.pendingTurnAction?.type === "SELECT_FUSION_MATERIALS" &&
     board.gameState.pendingTurnAction.playerId === player.id
@@ -54,6 +58,7 @@ export function BoardStatusAndTopBarSection({
         playerBId={opponent.id}
         playerBName={opponent.name}
         isPaused={board.isPaused}
+        isMultiplayer={isMultiplayer}
         onResumePause={() => {
           board.playButtonClick();
           board.togglePause();
@@ -112,7 +117,7 @@ export function BoardStatusAndTopBarSection({
           pendingActionType={board.gameState.pendingTurnAction?.type ?? null}
           pendingActionPlayerId={board.gameState.pendingTurnAction?.playerId ?? null}
           isActive={board.isPlayerTurn}
-          isPaused={board.isPaused}
+          isPaused={isTimerPaused}
           hasWinner={Boolean(board.winnerPlayerId)}
           isTimerEnabled={isTurnTimerEnabled}
           onTimeUp={() => {
@@ -128,7 +133,7 @@ export function BoardStatusAndTopBarSection({
           pendingActionType={board.gameState.pendingTurnAction?.type ?? null}
           pendingActionPlayerId={board.gameState.pendingTurnAction?.playerId ?? null}
           isPlayerTurn={board.isPlayerTurn}
-          isPaused={board.isPaused}
+          isPaused={isTimerPaused}
           hasWinner={Boolean(board.winnerPlayerId)}
           isTimerEnabled={isTurnTimerEnabled}
           onTimeUp={() => {

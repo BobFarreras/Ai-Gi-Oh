@@ -21,6 +21,8 @@ export interface BoardStatusOverlaysProps {
   playerBId: string;
   playerBName: string;
   isPaused: boolean;
+  /** Multi: la pausa no detiene el reloj; el overlay lo advierte para no engañar al jugador. */
+  isMultiplayer?: boolean;
   onResumePause: () => void;
   onExitPause?: () => void;
   /** Solo Story: Nexus perdido al abandonar el combate (para el aviso del menú de pausa). */

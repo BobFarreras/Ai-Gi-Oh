@@ -24,20 +24,20 @@ export function ReactiveTrapDecisionTimer({ pending, localPlayerId }: IReactiveT
   // La pausa apunta al defensor: si es el jugador local, ÉL decide; si no, el local es el atacante que espera.
   const isDecider = isActive && pending?.defenderPlayerId === localPlayerId;
 
+  // La cuenta atrás arranca en TOTAL_SECONDS y se resetea por remontaje: el padre pasa un `key` ligado a la
+  // identidad de la pausa (ver board/index.tsx), así cada ataque nuevo estrena estado sin setState en el render.
   const [secondsLeft, setSecondsLeft] = useState(TOTAL_SECONDS);
   const startRef = useRef(0);
 
   useEffect(() => {
     if (!isActive) return;
     startRef.current = Date.now();
-    setSecondsLeft(TOTAL_SECONDS);
     const intervalId = setInterval(() => {
       const remaining = Math.max(0, REACTIVE_TRAP_DECISION_TIMEOUT_MS - (Date.now() - startRef.current));
       setSecondsLeft(Math.ceil(remaining / 1000));
     }, 250);
     return () => clearInterval(intervalId);
-    // Se reinicia cuando aparece una pausa NUEVA (otro ataque). Durante la misma pausa el GameState es estable.
-  }, [isActive, pending?.attackerInstanceId, pending?.defenderPlayerId]);
+  }, [isActive]);
 
   if (!isActive) return null;
 

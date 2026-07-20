@@ -19,4 +19,6 @@ export interface IBoardViewSectionProps {
   abandonPenaltyNexus?: number;
   isTurnTimerEnabled?: boolean;
   suppressCombatBanners?: boolean;
+  /** Multijugador: la pausa NO detiene el reloj de turno (evita congelar la partida al rival indefinidamente). */
+  isMultiplayer?: boolean;
 }

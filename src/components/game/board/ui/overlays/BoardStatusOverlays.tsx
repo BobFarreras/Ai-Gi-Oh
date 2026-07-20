@@ -23,6 +23,7 @@ export function BoardStatusOverlays({
   playerBId,
   playerBName,
   isPaused,
+  isMultiplayer = false,
   onResumePause,
   onExitPause,
   abandonPenaltyNexus = 0,
@@ -74,7 +75,7 @@ export function BoardStatusOverlays({
         onConfirmEntityReplacement={onConfirmEntityReplacement}
         onCancelEntityReplacement={onCancelEntityReplacement}
       />
-      <PauseOverlay isPaused={isPaused} onResume={onResumePause} onExit={onExitPause} abandonPenaltyNexus={abandonPenaltyNexus} />
+      <PauseOverlay isPaused={isPaused} isMultiplayer={isMultiplayer} onResume={onResumePause} onExit={onExitPause} abandonPenaltyNexus={abandonPenaltyNexus} />
       <TurnAdvanceGuardOverlay warning={pendingAdvanceWarning} onConfirm={onConfirmAdvancePhase} onCancel={onCancelAdvancePhase} />
       <FusionCinematicLayer
         events={combatLog}

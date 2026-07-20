@@ -6,13 +6,15 @@ import { useRouter } from "next/navigation";
 
 interface PauseOverlayProps {
   isPaused: boolean;
+  /** Multi: la pausa NO congela el reloj de turno; se avisa para que el jugador no pierda el turno sin saberlo. */
+  isMultiplayer?: boolean;
   onResume: () => void;
   onExit?: () => void;
   /** Solo Story: Nexus que se perderá al abandonar el combate (0/omitido = sin aviso económico). */
   abandonPenaltyNexus?: number;
 }
 
-export function PauseOverlay({ isPaused, onResume, onExit, abandonPenaltyNexus = 0 }: PauseOverlayProps) {
+export function PauseOverlay({ isPaused, isMultiplayer = false, onResume, onExit, abandonPenaltyNexus = 0 }: PauseOverlayProps) {
   const router = useRouter();
   
   if (!isPaused) return null;
@@ -37,6 +39,12 @@ export function PauseOverlay({ isPaused, onResume, onExit, abandonPenaltyNexus =
         <h2 className="mt-2 text-3xl font-black text-white uppercase tracking-wider drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">
           Pausa Táctica
         </h2>
+        {isMultiplayer ? (
+          <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-300">
+            <TriangleAlert size={14} />
+            El reloj de turno sigue corriendo
+          </p>
+        ) : null}
         <p className="mt-3 text-sm text-red-200/60 font-mono">
           {abandonPenaltyNexus > 0 ? (
             <>
