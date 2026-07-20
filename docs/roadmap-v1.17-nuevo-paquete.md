@@ -21,7 +21,7 @@ Leyenda: ✅ hecha y en prod · 🟡 parcial (falta una parte concreta) · ❌ p
 | 1 | Pasiva entity: +1 energía al ganar combate (+2 a V5) | ✅ Hecha | — Windows 92, mig 133 |
 | 2 | Magia: descartar mano rival (decidido: hasta 3) | ✅ Hecha | — mig 132 |
 | 3 | Nexus en combate → pasiva "Recaudación" (Recaudador) | ✅ Hecha | — Fase A+B, mig 134 |
-| 4 | Elegir qué trampa activar cuando hay varias | 🟡 Parcial | El selector YA funciona **vs la IA** (Story/Arena/Training). Falta **solo en multijugador vs humano**: la acción de multi no lleva `chosenTrapInstanceId`, así que la trampa reactiva se auto-activa (la primera elegible) |
+| 4 | Elegir qué trampa activar cuando hay varias | 🟡 Parcial | Vs IA: ✅. En multi: **cimiento del motor + transporte HECHO y testeado** (commit `7279b454`, defer/resolve determinista, inactivo hasta cablear cliente). Falta el **cableado de cliente + prueba de 2 clientes** → guía en `docs/features/multi-reactive-trap-carousel-handoff.md` |
 | 5 | Mejorar la IA de oponentes | 🟡 Casi | La IA **ya es más lista y SÍ fusiona** (fases 1-5 ✅: posición al invocar, repliegue, reemplazo de zona, fusión efectiva, combos). Solo quedan flecos menores: **fase 6** (criterio de la IA para elegir "qué trampa" cuando tiene varias — hoy usa "la primera"), tuning fino de perfiles (opcional) y auditoría de mazos de fusión (dato, no código) |
 | 6 | Ghosts (combate asíncrono vs decks ausentes) | ❌ Pendiente | Todo — diseño cerrado, 0 código. Siguiente natural del Paquete C |
 | 7 | Subastas de objetos | ❌ Pendiente | Todo — diseño listo; decidir solo-sistema vs P2P |
