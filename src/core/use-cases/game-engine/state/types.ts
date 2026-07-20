@@ -100,6 +100,26 @@ export type IPendingTurnAction =
   | ISelectOpponentEntityToStealPendingTurnAction
   | ISelectOpponentExecutionToStealPendingTurnAction;
 
+/**
+ * Ficha 4 (multijugador): decisión pendiente del DEFENSOR sobre qué trampa reactiva activa (o pasar) ante un
+ * ataque. Vive en el GameState para que AMBOS clientes tengan la misma pausa (determinista) y la elección
+ * viaje como una acción propia (`RESOLVE_REACTIVE_TRAP`) que los dos resuelven igual. En single-player NO se
+ * usa: el ataque resuelve la trampa en el sitio (el flag `deferReactiveTraps` está apagado por defecto).
+ */
+export interface IPendingReactiveTrapDecision {
+  /** Jugador que debe elegir (dueño de las trampas reactivas). */
+  defenderPlayerId: string;
+  attackerPlayerId: string;
+  attackerInstanceId: string;
+  /** Entity objetivo; ausente = ataque directo. */
+  defenderInstanceId?: string;
+  isDirectAttack: boolean;
+  /** instanceIds de las trampas elegibles (para el carrusel y para revalidar la elección). */
+  eligibleTrapInstanceIds: string[];
+  /** El atacante ya decidió NO auto-activar su contra-trampa (Nullify); viaja para que la resolución sea igual. */
+  declineCounterTrap?: boolean;
+}
+
 export interface GameState {
   playerA: IPlayer;
   playerB: IPlayer;
@@ -144,5 +164,10 @@ export interface GameState {
    * antes de resolverse. `resolveExecution` lo consume y lo limpia; no persiste entre acciones.
    */
   negatedExecutionInstanceId?: string;
+  /**
+   * Ficha 4 (multi): ataque en pausa esperando que el defensor elija su trampa reactiva. Solo se rellena en
+   * multijugador (con `deferReactiveTraps`); se consume con `resolveReactiveTrapDecision`. No persiste entre turnos.
+   */
+  pendingReactiveTrapDecision?: IPendingReactiveTrapDecision | null;
   idFactory?: IGameEngineIdFactory;
 }

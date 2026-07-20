@@ -3,6 +3,7 @@ import { appendDirectAttackLogs, appendEntityBattleLogs } from "@/core/use-cases
 import { resolveDirectAttackState, resolveEntityBattleState } from "@/core/use-cases/game-engine/combat/internal/attack-resolution";
 import { validateAttackDeclaration, validateAttackerEntity } from "@/core/use-cases/game-engine/combat/internal/attack-validation";
 import { resolveReactiveTrapEvent } from "@/core/use-cases/game-engine/effects/internal/trap-trigger-registry";
+import { findTriggeredTraps } from "@/core/use-cases/game-engine/effects/internal/trap-selection";
 import { markAttackerAsUsed } from "@/core/use-cases/game-engine/combat/internal/attack-entities";
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { assignPlayers, getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
@@ -16,6 +17,13 @@ interface IExecuteAttackOptions {
   skipCounterTrapPlayerIds?: string[];
   /** Ficha 4: trampa concreta que el defensor eligió activar entre sus elegibles (revalidada). */
   chosenTrapInstanceId?: string;
+  /**
+   * Ficha 4 (multi): si el defensor tiene ≥1 trampa reactiva elegible, PAUSA el ataque (devuelve estado con
+   * `pendingReactiveTrapDecision`) en vez de resolverlo, para que el defensor elija en su cliente. Off por
+   * defecto → single-player resuelve en el sitio como siempre. La resolución real la hace luego
+   * `resolveReactiveTrapDecision` re-llamando a este `executeAttack` con la elección y el flag apagado.
+   */
+  deferReactiveTraps?: boolean;
 }
 
 /**
@@ -48,6 +56,31 @@ export function executeAttack(
   // entities siguen permitidos.
   if (!defenderInstanceId && isDirectAttackBlocked(state.activeStatusEffects, attackerPlayerId)) {
     throw new GameRuleError("No puedes hacer ataques directos mientras estés bajo el efecto de bloqueo.");
+  }
+
+  // Ficha 4 (multi): si el defensor tiene trampas reactivas elegibles, pausamos aquí para que ELIJA en su
+  // cliente. La pausa vive en el estado (determinista en ambos clientes); la elección llega como acción y
+  // `resolveReactiveTrapDecision` re-entra a este ataque con el flag apagado. Off ⇒ single-player intacto.
+  if (options?.deferReactiveTraps) {
+    const trapContext = { attackerPlayerId, attackerInstanceId, defenderInstanceId };
+    const eligibleTraps = [
+      ...findTriggeredTraps(defender, "ON_OPPONENT_ATTACK_DECLARED", trapContext),
+      ...(!defenderInstanceId ? findTriggeredTraps(defender, "ON_OPPONENT_DIRECT_ATTACK_DECLARED", trapContext) : []),
+    ];
+    if (eligibleTraps.length > 0) {
+      return {
+        ...state,
+        pendingReactiveTrapDecision: {
+          defenderPlayerId: defender.id,
+          attackerPlayerId,
+          attackerInstanceId,
+          defenderInstanceId,
+          isDirectAttack: !defenderInstanceId,
+          eligibleTrapInstanceIds: eligibleTraps.map((trap) => trap.instanceId),
+          declineCounterTrap: options?.skipCounterTrapPlayerIds?.includes(attackerPlayerId) ? true : undefined,
+        },
+      };
+    }
   }
 
   const stateAfterTrap = resolveReactiveTrapEvent(

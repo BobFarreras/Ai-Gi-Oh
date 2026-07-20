@@ -36,6 +36,14 @@ export function applyMatchAction(state: GameState, playerId: string, action: IMa
     case "ATTACK":
       return GameEngine.executeAttack(state, playerId, action.payload.attackerInstanceId, action.payload.defenderInstanceId, {
         skipCounterTrapPlayerIds: action.payload.declineCounterTrap ? [playerId] : undefined,
+        deferReactiveTraps: action.payload.deferReactiveTraps,
+      });
+    case "RESOLVE_REACTIVE_TRAP":
+      // `playerId` es QUIEN emitió la acción; el motor exige que sea el defensor de la pausa (un atacante que
+      // intente forzar la elección de trampa del rival es rechazado). La trampa elegida se revalida además.
+      return GameEngine.resolveReactiveTrapDecision(state, playerId, {
+        activate: action.payload.activate,
+        chosenTrapInstanceId: action.payload.chosenTrapInstanceId,
       });
     case "NEXT_PHASE":
       return GameEngine.nextPhase(state);
