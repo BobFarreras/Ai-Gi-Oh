@@ -285,7 +285,7 @@ Notación: **Nv. X/Y** = rango actual sugerido / `maxRank`; **coste** = `cost_pe
 | id | nombre | maxRank | coste/rango | gate | efecto (por rango) | Estado |
 |---|---|---|---|---|---|---|
 | `node-ars-veterano` | Veterano | **5** | 1 | core Nv.1 | `XP_REWARD_MULT +0.02` (acumula con Aprendizaje) | ✅ |
-| `node-ars-doble-mazo` | Doble Arsenal | **1** | 2 | Veterano Nv.1 | `UNLOCK_SECOND_DECK` (2º mazo + selector) | ❌ F7 |
+| `node-ars-doble-mazo` | Doble Arsenal | **1** | **5** | **Veterano Nv.5** | `UNLOCK_SECOND_DECK` (2º mazo + selector) | 🟡 Backend hecho (mig. 140); UI pendiente |
 | `node-ars-reasignar` | Reasignación | 1 | 1 | core Nv.1 | `GRANT_RESPEC_TOKEN 1` — desbloquea el respec (reset total del árbol) | ✅ |
 | `node-ars-cazador` | Cazador de Redes | **3** | 1 | Veterano Nv.3 | `GHOST_DAILY_LIMIT_BONUS +1` → +3 (ficha 6) | ❌ F8 |
 
@@ -413,7 +413,10 @@ Esto encaja con "candidato a partirse: backend + 2 habilidades primero" — la p
 4. **Rama Arsenal**: entra en v1 con 4 nodos (Veterano, Doble Arsenal, Reasignación, Cazador).
 5. **`FIRST_WIN_DOUBLE_NEXUS`**: eliminado del catálogo v1 (no hay nodo con este efecto).
 6. **`LOSS_CONSOLATION_MULT`**: eliminado del catálogo v1. Economy branch simplificada a: Comisión, Aprendizaje, Recaudador, Socio Mayoritario.
-7. **Doble Arsenal**: nodo de tier 2 en Arsenal (segundo desbloqueable), gate Veterano Nv.1, coste 2 pts.
+7. **Doble Arsenal**: RE-GATEADO (2026-07-20) a **profundo/veterano** — gate **Veterano Nv.5**, coste **5 pts**
+   (antes Veterano Nv.1/coste 2). Razón: `UNLOCK_SECOND_DECK` es potente y aplica en todos los modos, así que
+   debe ser para jugadores con horas. Enfoque de implementación: "editar-activo + swap" (banco = copia inicial,
+   RPC `swap_active_deck` atómica; combate/IA/builder intactos). Fase 1 (backend, mig. 140) hecha; Fase 2 (UI).
 8. **Oponentes con habilidades**: Sistema de `opponent_skill_ranks` reutilizando catálogo de combate. Ver `opponent-skill-abilities-implementation-guide.md`.
 
 **Abiertas:**

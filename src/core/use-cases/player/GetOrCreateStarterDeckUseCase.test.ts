@@ -43,6 +43,8 @@ class FakeDeckRepository implements IDeckRepository {
     if (!playerId.trim()) throw new Error("playerId inválido en test");
     return [];
   }
+  async getBankDeck(): Promise<IDeck> { return this.deck; }
+  async swapActiveDeck(): Promise<{ ok: boolean }> { return { ok: true }; }
   currentDeck(): IDeck { return this.deck; }
 }
 

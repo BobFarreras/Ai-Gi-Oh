@@ -6,6 +6,7 @@ import { EvolveCardVersionUseCase } from "@/core/use-cases/home/EvolveCardVersio
 import { RemoveCardFromFusionDeckUseCase } from "@/core/use-cases/home/RemoveCardFromFusionDeckUseCase";
 import { RemoveCardFromDeckUseCase } from "@/core/use-cases/home/RemoveCardFromDeckUseCase";
 import { SaveDeckUseCase } from "@/core/use-cases/home/SaveDeckUseCase";
+import { SwapActiveDeckUseCase } from "@/core/use-cases/home/SwapActiveDeckUseCase";
 import { getAuthenticatedUserId } from "@/services/auth/api/internal/get-authenticated-user-id";
 import { createPlayerRouteRepositories } from "@/services/player-persistence/create-player-route-repositories";
 
@@ -22,6 +23,7 @@ export async function createHomeRouteContext(request: NextRequest) {
     removeCardUseCase: new RemoveCardFromDeckUseCase(repositories.deckRepository),
     removeFusionCardUseCase: new RemoveCardFromFusionDeckUseCase(repositories.deckRepository),
     saveDeckUseCase: new SaveDeckUseCase(repositories.deckRepository),
+    swapActiveDeckUseCase: new SwapActiveDeckUseCase(repositories.deckRepository),
     evolveCardVersionUseCase: new EvolveCardVersionUseCase(
       repositories.collectionRepository,
       repositories.deckRepository,

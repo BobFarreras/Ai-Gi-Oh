@@ -9,3 +9,10 @@ export interface IDeck {
   slots: IDeckCardSlot[];
   fusionSlots: IDeckCardSlot[];
 }
+
+/** Resultado de `swap_active_deck` (Doble Arsenal). `reason='no_second_deck'` = el jugador no tiene la llave. */
+export interface IDeckSwapResult {
+  ok: boolean;
+  reason?: "bad_args" | "no_second_deck";
+  duplicate?: boolean;
+}
