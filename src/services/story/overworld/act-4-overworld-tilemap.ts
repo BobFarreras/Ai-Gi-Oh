@@ -9,6 +9,11 @@ import { GROUND_TILE, OVERLAY_TILE } from "@/services/story/overworld/overworld-
 const MAP_WIDTH = 52;
 const MAP_HEIGHT = 56;
 
+// Avatares (ya existen en assets). GenNvim reutiliza el del apprentice; Midutech el del oponente de arena.
+const SOLDADO = "/assets/story/opponents/opp-ch4-soldado-terminal/avatar-Soldado-terminal.webp";
+const GENNVIM = "/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.webp";
+const MIDUTECH = "/assets/story/opponents/opp-ch1-midutech/avatar-Midutech.webp";
+
 interface IMutableTilemap {
   ground: number[][];
   overlay: number[][];
@@ -134,6 +139,17 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   markSolid(map, 30, 52); // teleport (salir)
   markSolid(map, 32, 33); // botón de reinicio de cajas (rescate anti soft-lock)
 
+  // Rivales (sólidos): al vencerlos se teletransportan y liberan su casilla.
+  markSolid(map, 26, 46); // duel-1 Soldado-Terminal (corredor de entrada, chokepoint único)
+  markSolid(map, 17, 40); // duel-2 (rama izquierda baja)
+  markSolid(map, 36, 29); // duel-3 (acceso a la rama derecha alta / botón de la cinta)
+  markSolid(map, 16, 29); // duel-4 (rama izquierda alta)
+  markSolid(map, 30, 17); // duel-5 (guardia del terminal)
+  markSolid(map, 26, 9); // duel-6 GenNvim (boss 1, mitad baja de la sala del jefe)
+  markSolid(map, 26, 4); // duel-7 Midutech (boss final, mitad alta, tras la puerta post-jefe)
+  // Muro de atrezzo que parte la sala del jefe en dos; hueco en x=26 con la puerta post-GenNvim.
+  for (let x = 18; x <= 34; x++) if (x !== 26) placeStructure(map, x, 6, OVERLAY_TILE.SERVER_RACK);
+
   return validateOverworldTilemap({
     schemaVersion: 2,
     id: "act-4",
@@ -163,6 +179,19 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       // ── Laberinto: puzzle 2 = botón que INVIERTE la cinta del puente lab->terminal (belt-toggle) ────
       // Está en la rama derecha alta (otra sala); al accionarlo, la cinta del puente pasa de bajar a subir.
       { id: "story-ch4-belt-button", kind: "SWITCH", tileX: 43, tileY: 29, sprite: "switch", trigger: "ADJACENT_ACTION", beltToggleRect: { x0: 26, y0: 22, x1: 26, y1: 24 } },
+
+      // ── Rivales (ids reales del capítulo 4; duelHref -> /hub/story/chapter/4/duel/N) ─────────────────
+      // 1-5: Soldado-Terminal (centinelas). 6: GenNvim (boss 1). 7: Midutech (boss final).
+      { id: "story-ch4-duel-1", kind: "DUEL", tileX: 26, tileY: 46, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/1", imageSrc: SOLDADO, facing: "UP", visionRange: 3 },
+      { id: "story-ch4-duel-2", kind: "DUEL", tileX: 17, tileY: 40, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/2", imageSrc: SOLDADO, facing: "RIGHT", visionRange: 3 },
+      { id: "story-ch4-duel-3", kind: "DUEL", tileX: 36, tileY: 29, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/3", imageSrc: SOLDADO, facing: "LEFT", visionRange: 3, patrolAxis: "V", patrolLength: 2, patrolSweep: true },
+      { id: "story-ch4-duel-4", kind: "DUEL", tileX: 16, tileY: 29, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/4", imageSrc: SOLDADO, facing: "RIGHT", visionRange: 3 },
+      { id: "story-ch4-duel-5", kind: "DUEL", tileX: 30, tileY: 17, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/5", imageSrc: SOLDADO, facing: "DOWN", visionRange: 3 },
+      { id: "story-ch4-duel-6", kind: "BOSS", tileX: 26, tileY: 9, sprite: "gennvim", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/6", imageSrc: GENNVIM, facing: "DOWN", visionRange: 3, visionRect: { x0: 18, y0: 7, x1: 34, y1: 11 } },
+      { id: "story-ch4-duel-7", kind: "BOSS", tileX: 26, tileY: 4, sprite: "midutech", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/7", imageSrc: MIDUTECH, facing: "DOWN", visionRange: 3, visionRect: { x0: 18, y0: 3, x1: 34, y1: 5 } },
+
+      // ── Puerta post-GenNvim: SOLO abre tras vencer a GenNvim (duel-6); sella a Midutech ──────────────
+      { id: "story-a4-gate-postboss", kind: "GATE", tileX: 26, tileY: 6, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: ["story-ch4-duel-6"] },
     ],
     spawns: [{ id: "spawn-entry", tileX: 26, tileY: 51, facing: "UP" }],
     defaultSpawnId: "spawn-entry",

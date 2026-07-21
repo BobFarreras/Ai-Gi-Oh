@@ -9,26 +9,35 @@ import {
 } from "@/services/story/overworld/tilemap-runtime";
 import { resolveMovementContext } from "@/core/services/story/overworld/movement-rules";
 import { findGridPath } from "@/core/services/story/overworld/pathfinding";
-import { IOverworldProgressState } from "@/core/services/story/overworld/overworld-types";
+import { IOverworldProgressState, toGridPositionKey } from "@/core/services/story/overworld/overworld-types";
 import { findStoryVirtualNodeDefinition } from "@/services/story/map-definitions/story-map-definition-registry";
 import { GROUND_TILE, invertBeltKind, resolveBeltDirection } from "@/services/story/overworld/overworld-tile-kinds";
 
 const PLATE = "story-ch4-plate-lab";
+const DUEL_1 = "story-ch4-duel-1";
+const GENNVIM = "story-ch4-duel-6";
 
-function contextFor(interacted: string[] = []) {
+function contextFor(progress: { completed?: string[]; interacted?: string[] } = {}) {
   const tilemap = buildAct4OverworldTilemap();
+  const completed = new Set<string>(progress.completed ?? []);
   const state: IOverworldProgressState = {
     visitedNodeIds: new Set<string>(),
-    interactedNodeIds: new Set<string>(interacted),
-    completedNodeIds: new Set<string>(),
+    interactedNodeIds: new Set<string>(progress.interacted ?? []),
+    completedNodeIds: completed,
   };
+  // Rivales vencidos liberan su casilla (se teletransportan), como en el engine.
+  const openTileKeys = new Set<string>(
+    tilemap.objects
+      .filter((object) => (object.kind === "DUEL" || object.kind === "BOSS") && completed.has(object.id))
+      .map((object) => toGridPositionKey({ tileX: object.tileX, tileY: object.tileY })),
+  );
   return {
     tilemap,
     context: resolveMovementContext({
       collisionGrid: buildCollisionGridFromTilemap(tilemap),
       gates: listGatesFromTilemap(tilemap),
       progress: state,
-      openTileKeys: new Set<string>(),
+      openTileKeys,
     }),
   };
 }
@@ -81,12 +90,36 @@ describe("buildAct4OverworldTilemap", () => {
     expect(hasBelt).toBe(true);
   });
 
-  it("la compuerta del laberinto exige la placa: sin pulsarla el jefe es inalcanzable", () => {
-    const bossRoomTile = { tileX: 26, tileY: 7 };
-    const locked = contextFor([]);
-    expect(findGridPath(spawnTile(locked.tilemap), bossRoomTile, locked.context)).toBeNull();
-    const opened = contextFor([PLATE]);
-    expect(findGridPath(spawnTile(opened.tilemap), bossRoomTile, opened.context)).not.toBeNull();
+  it("GenNvim (boss 1) exige vencer al centinela de entrada y pulsar la placa", () => {
+    const approach = { tileX: 26, tileY: 10 }; // casilla contigua (debajo) de GenNvim (26,9)
+    // Sin nada: el centinela de entrada (duel-1) bloquea el único corredor de subida.
+    expect(findGridPath(spawnTile(buildAct4OverworldTilemap()), approach, contextFor({}).context)).toBeNull();
+    // Centinela vencido pero sin placa: la compuerta terminal->jefe sigue cerrada.
+    const noPlate = contextFor({ completed: [DUEL_1] });
+    expect(findGridPath(spawnTile(noPlate.tilemap), approach, noPlate.context)).toBeNull();
+    // Centinela vencido + placa: GenNvim es alcanzable.
+    const ready = contextFor({ completed: [DUEL_1], interacted: [PLATE] });
+    expect(findGridPath(spawnTile(ready.tilemap), approach, ready.context)).not.toBeNull();
+  });
+
+  it("Midutech (boss final) exige haber vencido a GenNvim: la puerta post-jefe lo sella", () => {
+    const approach = { tileX: 26, tileY: 5 }; // casilla contigua (debajo) de Midutech (26,4)
+    // Con placa y entrada despejadas pero GenNvim vivo: la puerta post-jefe sella a Midutech.
+    const beforeBoss = contextFor({ completed: [DUEL_1], interacted: [PLATE] });
+    expect(findGridPath(spawnTile(beforeBoss.tilemap), approach, beforeBoss.context)).toBeNull();
+    // GenNvim vencido: se libera su casilla y se abre la puerta post-jefe -> Midutech alcanzable.
+    const afterBoss = contextFor({ completed: [DUEL_1, GENNVIM], interacted: [PLATE] });
+    expect(findGridPath(spawnTile(afterBoss.tilemap), approach, afterBoss.context)).not.toBeNull();
+  });
+
+  it("coloca los 7 rivales del capítulo 4 y marca a GenNvim/Midutech como BOSS", () => {
+    const objects = buildAct4OverworldTilemap().objects;
+    const ids = new Set(objects.map((object) => object.id));
+    for (let n = 1; n <= 7; n++) expect(ids.has(`story-ch4-duel-${n}`)).toBe(true);
+    const bosses = objects.filter((object) => object.kind === "BOSS").map((object) => object.id).sort();
+    expect(bosses).toEqual(["story-ch4-duel-6", "story-ch4-duel-7"]);
+    const postBossGate = objects.find((object) => object.id === "story-a4-gate-postboss")!;
+    expect(postBossGate.gateRequiredNodeIds).toEqual(["story-ch4-duel-6"]);
   });
 
   it("la compuerta terminal→jefe requiere exactamente la placa del laberinto", () => {
