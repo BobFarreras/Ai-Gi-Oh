@@ -13,8 +13,9 @@ import { IOverworldProgressState, toGridPositionKey } from "@/core/services/stor
 import { findStoryVirtualNodeDefinition } from "@/services/story/map-definitions/story-map-definition-registry";
 import { GROUND_TILE, invertBeltKind, resolveBeltDirection } from "@/services/story/overworld/overworld-tile-kinds";
 
-const PLATE = "story-ch4-plate-lab";
+const SLOT = "story-ch4-belt-slot";
 const DUEL_1 = "story-ch4-duel-1";
+const DUEL_5 = "story-ch4-duel-5";
 const GENNVIM = "story-ch4-duel-6";
 
 function contextFor(progress: { completed?: string[]; interacted?: string[] } = {}) {
@@ -90,25 +91,25 @@ describe("buildAct4OverworldTilemap", () => {
     expect(hasBelt).toBe(true);
   });
 
-  it("GenNvim (boss 1) exige vencer al centinela de entrada y pulsar la placa", () => {
+  it("GenNvim (boss 1) exige vencer al centinela de entrada (duel-1) y al de antesala (duel-5)", () => {
     const approach = { tileX: 26, tileY: 10 }; // casilla contigua (debajo) de GenNvim (26,9)
     // Sin nada: el centinela de entrada (duel-1) bloquea el único corredor de subida.
     expect(findGridPath(spawnTile(buildAct4OverworldTilemap()), approach, contextFor({}).context)).toBeNull();
-    // Centinela vencido pero sin placa: la compuerta terminal->jefe sigue cerrada.
-    const noPlate = contextFor({ completed: [DUEL_1] });
-    expect(findGridPath(spawnTile(noPlate.tilemap), approach, noPlate.context)).toBeNull();
-    // Centinela vencido + placa: GenNvim es alcanzable.
-    const ready = contextFor({ completed: [DUEL_1], interacted: [PLATE] });
+    // Entrada despejada pero sin duel-5: la compuerta terminal->jefe sigue cerrada.
+    const noGate = contextFor({ completed: [DUEL_1] });
+    expect(findGridPath(spawnTile(noGate.tilemap), approach, noGate.context)).toBeNull();
+    // duel-1 + duel-5 vencidos: GenNvim es alcanzable.
+    const ready = contextFor({ completed: [DUEL_1, DUEL_5] });
     expect(findGridPath(spawnTile(ready.tilemap), approach, ready.context)).not.toBeNull();
   });
 
   it("Midutech (boss final) exige haber vencido a GenNvim: la puerta post-jefe lo sella", () => {
     const approach = { tileX: 26, tileY: 5 }; // casilla contigua (debajo) de Midutech (26,4)
-    // Con placa y entrada despejadas pero GenNvim vivo: la puerta post-jefe sella a Midutech.
-    const beforeBoss = contextFor({ completed: [DUEL_1], interacted: [PLATE] });
+    // Con la compuerta abierta pero GenNvim vivo: la puerta post-jefe sella a Midutech.
+    const beforeBoss = contextFor({ completed: [DUEL_1, DUEL_5] });
     expect(findGridPath(spawnTile(beforeBoss.tilemap), approach, beforeBoss.context)).toBeNull();
     // GenNvim vencido: se libera su casilla y se abre la puerta post-jefe -> Midutech alcanzable.
-    const afterBoss = contextFor({ completed: [DUEL_1, GENNVIM], interacted: [PLATE] });
+    const afterBoss = contextFor({ completed: [DUEL_1, DUEL_5, GENNVIM] });
     expect(findGridPath(spawnTile(afterBoss.tilemap), approach, afterBoss.context)).not.toBeNull();
   });
 
@@ -133,13 +134,12 @@ describe("buildAct4OverworldTilemap", () => {
     expect(findGridPath(spawnTile(cleared.tilemap), approach, cleared.context)).not.toBeNull();
   });
 
-  it("laberinto: la subida central es una cinta que sube, flanqueada por trampas que bajan", () => {
-    const ground = buildAct4OverworldTilemap().layers.ground;
-    for (const y of [26, 27, 28, 29, 30]) {
-      expect(resolveBeltDirection(ground[y][26])).toBe("UP"); // centro sube
-      expect(resolveBeltDirection(ground[y][25])).toBe("DOWN"); // trampa izq
-      expect(resolveBeltDirection(ground[y][27])).toBe("DOWN"); // trampa der
-    }
+  it("laberinto de servidores: hay muros de atrezzo (overlay) en la sala del laberinto", () => {
+    const overlay = buildAct4OverworldTilemap().layers.overlay;
+    // Al menos algunos muros de servidor dentro del laberinto (y 26..32) forman los pasillos.
+    let walls = 0;
+    for (let y = 26; y <= 32; y++) for (let x = 18; x <= 34; x++) if (overlay[y]?.[x]) walls++;
+    expect(walls).toBeGreaterThan(8);
   });
 
   it("coloca los 7 rivales del capítulo 4 y marca a GenNvim/Midutech como BOSS", () => {
@@ -152,30 +152,29 @@ describe("buildAct4OverworldTilemap", () => {
     expect(postBossGate.gateRequiredNodeIds).toEqual(["story-ch4-duel-6"]);
   });
 
-  it("la compuerta terminal→jefe requiere exactamente la placa del laberinto", () => {
+  it("la compuerta terminal→jefe requiere vencer al centinela de antesala (duel-5)", () => {
     const gate = buildAct4OverworldTilemap().objects.find((object) => object.id === "story-a4-gate-boss")!;
-    expect(gate.gateRequiredNodeIds).toContain(PLATE);
+    expect(gate.gateRequiredNodeIds).toContain(DUEL_5);
   });
 
-  it("la placa y el botón de la cinta son EVENT persistibles en el registro (mark-interacted)", () => {
-    for (const id of [PLATE, "story-ch4-belt-button"]) {
-      const definition = findStoryVirtualNodeDefinition(id);
-      expect(definition).not.toBeNull();
-      expect(definition!.nodeType).toBe("EVENT");
-    }
+  it("la ranura del módulo es un EVENT persistible en el registro (mark-interacted, belt fijo)", () => {
+    const definition = findStoryVirtualNodeDefinition(SLOT);
+    expect(definition).not.toBeNull();
+    expect(definition!.nodeType).toBe("EVENT");
   });
 
-  it("belt-toggle: el puente lab→terminal es una cinta EN CONTRA y el botón la controla e invierte", () => {
+  it("belt-toggle: el puente lab→terminal baja EN CONTRA y la RANURA (placa) lo controla e invierte", () => {
     const tilemap = buildAct4OverworldTilemap();
     // El puente (x=26, y=22..24) baja (BELT_DOWN) por defecto: no se sube.
     for (const y of [22, 23, 24]) {
       expect(resolveBeltDirection(tilemap.layers.ground[y][26])).toBe("DOWN");
     }
-    // El botón (SWITCH) controla justo esas casillas.
-    const button = tilemap.objects.find((object) => object.id === "story-ch4-belt-button")!;
-    expect(button.kind).toBe("SWITCH");
-    expect(button.beltToggleRect).toEqual({ x0: 26, y0: 22, x1: 26, y1: 24 });
-    // Invertir el tile de cinta lo pone a subir (lo que hace el engine al accionar el botón).
+    // La ranura (PLATE) controla justo esas casillas: al insertar la caja, el engine invierte la cinta.
+    const slot = tilemap.objects.find((object) => object.id === SLOT)!;
+    expect(slot.kind).toBe("PLATE");
+    expect(slot.beltToggleRect).toEqual({ x0: 26, y0: 22, x1: 26, y1: 24 });
+    // Hay un módulo (caja) para insertar en la ranura.
+    expect(tilemap.objects.some((object) => object.kind === "BOX")).toBe(true);
     expect(invertBeltKind(GROUND_TILE.BELT_DOWN)).toBe(GROUND_TILE.BELT_UP);
   });
 });

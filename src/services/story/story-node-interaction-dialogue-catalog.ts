@@ -3,63 +3,64 @@ import { IStoryNodeInteractionDialogue } from "@/services/story/story-node-inter
 
 export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNodeInteractionDialogue> = {
   // ── Acto 4 — Núcleo GenNvim (terminal verde) ────────────────────────────────
-  // E1/E4/E6 serán vídeo; de momento van como narración (placeholder). GenNvim/Midutech/Sistema en estilo
-  // terminal (sin retrato); BigLog/Operador con su actor.
+  // BigLog es el MENTOR (bueno): habla claro y te guía. Las amenazas las dicen los villanos GenNvim/Midutech.
+  // E1/E4/E6 serán vídeo; de momento van como narración.
   "story-ch4-event-intro": {
     title: "Núcleo GenNvim",
     lines: [
-      { speaker: "GenNvim", text: "> intruso.detectado. reubicando geometría. suerte encontrando la salida." },
-      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Esto es GenNvim. Aquí se forjó… todo. No confíes en las paredes: se mueven." },
-      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "Operador", text: "Recibido. Busco la llave del Core y salgo por arriba." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Estás dentro de GenNvim, la fundición donde empezó todo. Yo te guío desde aquí: cruza el mainframe y llega al núcleo del acto." },
+      { speaker: "GenNvim", text: "Intruso detectado. Este núcleo es mío. Voy a reordenar cada sala para que te pierdas y no salgas." },
+      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "Operador", text: "Que lo intente. Voy a por la llave del Core." },
     ],
   },
   "story-ch4-event-log-origin-1": {
-    title: "Log del Origen",
+    title: "Registro Antiguo",
     lines: [
-      { speaker: "Sistema", text: "> build.entidad v0.1 — semilla: [REDACTADO] — patrocinador: B.L." },
-      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "…No leas eso todavía. Sigue." },
+      { speaker: "Sistema", text: "REGISTRO DE COMPILACIÓN — PROYECTO ENTIDAD, versión 0.1. Autorizado por: [datos corruptos]." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Ese registro es viejo… y delicado. Luego te lo explico. Ahora concéntrate en avanzar." },
     ],
   },
   "story-ch4-event-belts": {
-    title: "Sala de Pasarelas",
+    title: "Laberinto de Servidores",
     lines: [
-      { speaker: "GenNvim", text: "> flujo.forzado. cada cinta va en un sentido. las cajas pesan. piensa antes de pisar." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Cuidado: este laberinto de servidores solo tiene una salida arriba, y la pasarela que sube va en tu contra." },
+      { speaker: "GenNvim", text: "Mi flujo va en un solo sentido: el mío. No subirás… a menos que muevas mi propio hardware para engañarlo." },
     ],
   },
   "story-ch4-event-belt-locked": {
-    title: "Flujo en Contra",
+    title: "Pasarela en Contra",
     lines: [
-      { speaker: "GenNvim", text: "> el flujo va donde yo digo. no subirás por aquí… salvo que redirijas la corriente desde otra sala." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "La pasarela baja: no puedes subir por ella. Busca en el laberinto un módulo que puedas empujar hasta su ranura para invertir el flujo." },
     ],
   },
-  // Narración del botón de la cinta (belt-toggle): se muestra al accionarlo (keyed por el id del SWITCH).
-  "story-ch4-belt-button": {
-    title: "Flujo Redirigido",
+  // Narración al INSERTAR el módulo (keyed por el id de la placa/ranura): la pasarela se invierte y queda fija.
+  "story-ch4-belt-slot": {
+    title: "Flujo Invertido",
     lines: [
-      { speaker: "Sistema", text: "> flujo.invertido. la pasarela ahora sube. acceso al terminal habilitado.", autoAdvanceMs: 2600 },
+      { speaker: "Sistema", text: "Módulo insertado. Flujo de la pasarela invertido de forma permanente. Ya puedes subir al terminal.", autoAdvanceMs: 3000 },
     ],
   },
   "story-ch4-event-revelation": {
-    title: "Registro-Madre",
+    title: "Archivo Maestro",
     lines: [
-      { speaker: "Sistema", text: "> autor(es): GenNvim + Midutech. patrocinador: B.L. objetivo: contención. resultado: fuga." },
-      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "La construimos para contener, no para liberar. Cuando escapó… te empecé a entrenar a ti. Eras el plan B." },
-      { speaker: "GenNvim", text: "> plan B: obsoleto. compilando defensa." },
+      { speaker: "Sistema", text: "ARCHIVO MAESTRO — La Entidad no nació: la compilaron aquí GenNvim y Midutech." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Es verdad. Ayudé a crearla para CONTENERLA, no para esto. Cuando se escapó, te entrené a ti para arreglarlo. Lo siento." },
+      { speaker: "GenNvim", text: "Conmovedor. Pero de aquí no pasas." },
     ],
   },
   "story-ch4-event-pre-midutech": {
     title: "El Arquitecto",
     lines: [
-      { speaker: "Midutech", text: "GenNvim solo era código. Yo lo escribí. Si quieres la llave del Core, tendrás que quitármela." },
-      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Ten cuidado. Él sabe cómo piensas… porque ayudó a diseñarte." },
+      { speaker: "Midutech", text: "GenNvim solo era mi código. Yo lo escribí. La llave del Core es mía y no pienso dártela." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Cuidado con él: conoce cómo piensas, porque ayudó a diseñarte. Mantén la calma y juega tu mejor mano." },
     ],
   },
   "story-ch4-event-core-key": {
     title: "Llave del Core",
     lines: [
-      { speaker: "Midutech", text: "Buen jugador. Quizá el plan B no era tan malo." },
-      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Ya tienes la llave del Core. Lo que viene ahora… no puedo prepararte para ello." },
-      { speaker: "Sistema", text: "> Acto 5: próximamente.", autoAdvanceMs: 2800 },
+      { speaker: "Midutech", text: "Impresionante. Puede que me haya equivocado contigo." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Lo lograste. Ya tienes la llave del Core. A partir de aquí… ni yo sé lo que hay dentro." },
+      { speaker: "Sistema", text: "Acto 5: próximamente.", autoAdvanceMs: 2800 },
     ],
   },
 

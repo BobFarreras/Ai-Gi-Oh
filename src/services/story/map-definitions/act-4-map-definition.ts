@@ -39,12 +39,9 @@ export const storyAct4MapDefinition: IStoryActMapDefinition = {
   act: 4,
   nodes: [],
   virtualNodes: [
-    // Placa de presión del laberinto: al pulsarla (caja encima) se enclava y persiste (mark-interacted),
-    // manteniendo abierta la compuerta terminal->jefe (evita el soft-lock tras un duelo).
-    v({ id: "story-ch4-plate-lab", duelIndex: 401, nodeType: "EVENT", title: "Placa del Laberinto", unlockRequirementNodeId: null, position: { x: 200, y: 200 } }),
-    // Botón que invierte la cinta del puente (belt-toggle): al accionarlo se enclava (persiste) y la pasarela
-    // pasa de bajar a subir, abriendo el paso al terminal.
-    v({ id: "story-ch4-belt-button", duelIndex: 402, nodeType: "EVENT", title: "Botón de Flujo", unlockRequirementNodeId: null, position: { x: 400, y: 200 } }),
+    // Ranura del módulo (placa con beltToggleRect): al insertar la caja se enclava y PERSISTE (mark-interacted),
+    // invirtiendo la pasarela del puente de forma permanente (aunque la caja se mueva luego, no hay soft-lock).
+    v({ id: "story-ch4-belt-slot", duelIndex: 401, nodeType: "EVENT", title: "Ranura del Módulo", unlockRequirementNodeId: null, position: { x: 200, y: 200 } }),
     // Eventos narrativos (E1-E6 + puzzle). Persisten como EVENT vía mark-interacted; la narración vive en
     // story-node-interaction-dialogue-catalog. E1/E4/E6 serán vídeo (placeholder de narración de momento).
     v({ id: "story-ch4-event-intro", duelIndex: 403, nodeType: "EVENT", title: "Núcleo GenNvim", unlockRequirementNodeId: null, position: { x: 600, y: 200 } }),

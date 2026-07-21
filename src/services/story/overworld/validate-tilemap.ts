@@ -254,7 +254,7 @@ function validateObject(
   // v2 — belt-toggle: solo SWITCH invierte cintas al activarse.
   let beltToggleRect: IOverworldTilemapObject["beltToggleRect"];
   if (raw.beltToggleRect !== undefined) {
-    if (kind !== "SWITCH") fail(path, `solo SWITCH admite beltToggleRect; kind actual: ${kind}`);
+    if (kind !== "SWITCH" && kind !== "PLATE") fail(path, `solo SWITCH/PLATE admiten beltToggleRect; kind actual: ${kind}`);
     if (!isRecord(raw.beltToggleRect)) fail(`${path}.beltToggleRect`, "se esperaba un rect {x0,y0,x1,y1}");
     const x0 = assertBoundedInteger(raw.beltToggleRect.x0, `${path}.beltToggleRect.x0`, 0, width - 1);
     const y0 = assertBoundedInteger(raw.beltToggleRect.y0, `${path}.beltToggleRect.y0`, 0, height - 1);

@@ -232,7 +232,7 @@ export class OverworldEngine {
     this.switchLightSources = this.buildSwitchLightSources(init.tilemap.objects);
     this.recomputeLights();
     this.beltToggleControllers = init.tilemap.objects
-      .filter((object) => object.kind === "SWITCH" && object.beltToggleRect)
+      .filter((object) => (object.kind === "SWITCH" || object.kind === "PLATE") && object.beltToggleRect)
       .map((object) => ({ id: object.id, rect: object.beltToggleRect! }));
     this.initBoxesAndPlates(init.tilemap.objects);
 

@@ -116,18 +116,19 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   carveCorridor(map, { x: 15, y: 29 }, { x: 17, y: 29 }); // laberinto -> sala izq alta (aumento DEF, guardia duel-4)
   carveCorridor(map, { x: 35, y: 29 }, { x: 37, y: 29 }); // laberinto -> sala der alta (botón cinta, guardia duel-3)
 
-  // Laberinto de pasarelas (estilo Pokémon): la subida por el centro (x=26) es una cinta que SUBE, flanqueada
-  // por cintas que BAJAN (x=25 y x=27): si te sales del centro, la corriente te arrastra de vuelta al fondo.
-  for (const y of [26, 27, 28, 29, 30]) {
-    placeBelt(map, 26, y, GROUND_TILE.BELT_UP); // subida central (la buena)
-    placeBelt(map, 25, y, GROUND_TILE.BELT_DOWN); // trampa izquierda
-    placeBelt(map, 27, y, GROUND_TILE.BELT_DOWN); // trampa derecha
-  }
+  // Laberinto de SERVIDORES: muros de atrezzo forman los pasillos. La única subida al puente exige empujar el
+  // módulo (caja) hasta su RANURA (placa con beltToggleRect), que invierte la pasarela de forma PERMANENTE.
+  const labWalls: Array<[number, number]> = [
+    [22, 32], [23, 32], [24, 32], [28, 32], [29, 32], [30, 32],
+    [20, 28], [21, 28], [22, 28], [31, 28], [32, 28], [33, 28],
+    [22, 26], [23, 26], [29, 26], [30, 26],
+  ];
+  for (const [x, y] of labWalls) placeStructure(map, x, y, OVERLAY_TILE.SERVER_RACK);
 
-  // Puente lab -> terminal: cinta EN CONTRA (empuja hacia abajo). No se sube hasta invertir su sentido con el
-  // botón de la rama derecha alta (belt-toggle). El botón se marca sólido (se usa desde el lado).
+  // Puente lab -> terminal: cinta EN CONTRA (empuja hacia abajo). No se sube hasta insertar el módulo en la
+  // ranura (belt-toggle sobre la placa): al hacerlo, la pasarela se invierte y queda fija (onPlatePressed la
+  // enclava permanentemente), así que aunque la caja se mueva/resetee después no hay soft-lock.
   for (const y of [22, 23, 24]) placeBelt(map, 26, y, GROUND_TILE.BELT_DOWN);
-  markSolid(map, 43, 29); // botón que invierte la cinta del puente
 
   // Estructuras decorativas variadas (racks + unidades de refrigeración + pilones) en esquinas que no estorban.
   const racks: Array<[number, number]> = [[20, 53], [32, 53], [4, 44], [48, 37], [4, 25], [48, 33]];
@@ -184,17 +185,14 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       // Retorno al Acto 3 (se pisa). El avance al Acto 5 se añadirá con el jefe (Acto 5 = "próximamente").
       { id: "story-ch4-transition-to-act3", kind: "WARP", tileX: 20, tileY: 50, sprite: "portal", trigger: "STEP_ON", warp: { toMapId: "act-3", toSpawnId: "spawn-entry", direction: "backward" } },
 
-      // ── Laberinto: puzzle 1 = caja empujable + placa → compuerta terminal→jefe ─────────────────────
-      // Empuja la caja sobre la placa para abrir la compuerta del tramo alto (terminal -> jefe).
-      { id: "story-ch4-box-lab", kind: "BOX", tileX: 24, tileY: 31, sprite: "box", trigger: "ADJACENT_ACTION" },
-      { id: "story-ch4-plate-lab", kind: "PLATE", tileX: 21, tileY: 31, sprite: "plate", trigger: "ADJACENT_ACTION" },
-      { id: "story-a4-gate-boss", kind: "GATE", tileX: 26, tileY: 12, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: ["story-ch4-plate-lab"] },
-      // Botón de rescate: si la caja se empotra contra una pared, la devuelve a su sitio.
+      // ── Laberinto de servidores: empuja el MÓDULO (caja) hasta su RANURA (placa) para invertir la ──
+      // pasarela del puente de forma PERMANENTE. Empuja la caja a la izquierda por y=27 hasta el hueco (22,27).
+      { id: "story-ch4-maze-box", kind: "BOX", tileX: 24, tileY: 27, sprite: "box", trigger: "ADJACENT_ACTION" },
+      { id: "story-ch4-belt-slot", kind: "PLATE", tileX: 22, tileY: 27, sprite: "slot", trigger: "ADJACENT_ACTION", beltToggleRect: { x0: 26, y0: 22, x1: 26, y1: 24 } },
+      // Botón de rescate: si la caja se empotra contra una pared, la devuelve a su sitio (anti soft-lock).
       { id: "story-a4-box-reset", kind: "BOX_RESET", tileX: 32, tileY: 33, sprite: "reset", trigger: "ADJACENT_ACTION" },
-
-      // ── Laberinto: puzzle 2 = botón que INVIERTE la cinta del puente lab->terminal (belt-toggle) ────
-      // Está en la rama derecha alta (otra sala); al accionarlo, la cinta del puente pasa de bajar a subir.
-      { id: "story-ch4-belt-button", kind: "SWITCH", tileX: 43, tileY: 29, sprite: "switch", trigger: "ADJACENT_ACTION", beltToggleRect: { x0: 26, y0: 22, x1: 26, y1: 24 } },
+      // Compuerta terminal->jefe: requiere vencer al centinela de antesala (duel-5).
+      { id: "story-a4-gate-boss", kind: "GATE", tileX: 26, tileY: 12, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: ["story-ch4-duel-5"] },
 
       // ── Rivales (ids reales del capítulo 4; duelHref -> /hub/story/chapter/4/duel/N) ─────────────────
       // 1-5: Soldado-Terminal (centinelas). 6: GenNvim (boss 1). 7: Midutech (boss final).

@@ -510,6 +510,12 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
             markEventSeen(plateId);
             void markOverworldEventInteracted(plateId);
             engine.updateProgress(buildProgress(initialCompleted, seenEventIdsRef.current));
+            // Si la placa es una "ranura" con narración (p.ej. el módulo que invierte la pasarela), la muestra.
+            const slotDialogue = resolveOverworldEventDialogue(plateId);
+            if (slotDialogue && slotDialogue.lines.length > 0) {
+              engine.setInteractionSuspended(true);
+              setNarration({ title: slotDialogue.title, lines: slotDialogue.lines, lineIndex: 0, isCutscene: false });
+            }
           }
         },
         onCutsceneEnd: () => {
