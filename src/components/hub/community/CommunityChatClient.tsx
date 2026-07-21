@@ -15,8 +15,8 @@ import { IOnlinePlayer, OnlinePlayerStatus } from "@/core/entities/multiplayer/I
 import { CommunityChatMessage, IQuotedPreview } from "@/components/hub/community/CommunityChatMessage";
 import { useOnlinePlayersContext } from "@/components/hub/multiplayer/MultiplayerPresenceProvider";
 import { CommunityChatCardPicker } from "@/components/hub/community/CommunityChatCardPicker";
+import { ChatComposerTextarea } from "@/components/hub/community/ChatComposerTextarea";
 import { sendInvitation } from "@/app/hub/multiplayer/actions/send-invitation";
-import { CHAT_MESSAGE_MAX_LENGTH } from "@/core/services/chat/validate-chat-message";
 import { CHAT_REACTION_EMOJIS } from "@/core/services/chat/chat-reactions";
 import { useCommunityChat } from "@/core/hooks/chat/use-community-chat";
 
@@ -58,7 +58,7 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
   const [paletteFor, setPaletteFor] = useState<string | null>(null);
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const router = useRouter();
   const [openingDmFor, setOpeningDmFor] = useState<string | null>(null);
   const unreadDms = useUnreadDirectMessages();
@@ -228,8 +228,8 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
     );
   };
 
-  async function handleSubmit(event: React.FormEvent): Promise<void> {
-    event.preventDefault();
+  async function handleSubmit(event?: React.FormEvent): Promise<void> {
+    event?.preventDefault();
     const content = draft.trim();
     if (!content || isSending) return;
     const ok = await send({ content, replyToMessageId: replyingToId });
@@ -370,14 +370,13 @@ export function CommunityChatClient({ room, localPlayerId, localNickname, active
               <Layers className="h-4 w-4" />
             </button>
             <div className="flex flex-1 flex-col">
-              <input
+              <ChatComposerTextarea
                 ref={inputRef}
                 value={draft}
-                onChange={(event) => setDraft(event.target.value.slice(0, CHAT_MESSAGE_MAX_LENGTH))}
+                onChange={setDraft}
+                onSubmit={() => void handleSubmit()}
                 placeholder="Escribe un mensaje…"
-                aria-label="Escribe un mensaje"
-                maxLength={CHAT_MESSAGE_MAX_LENGTH}
-                className="w-full rounded-lg border border-cyan-900/60 bg-[#020a14] px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:border-cyan-400 placeholder:text-slate-600"
+                ariaLabel="Escribe un mensaje"
               />
             </div>
             <button
