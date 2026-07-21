@@ -35,8 +35,12 @@ export type OverworldObjectKind =
   | "PLATE" // placa de presión (se "pulsa" con una caja encima; abre un GATE en vivo).
   | "BOX_RESET"; // botón que devuelve las cajas a su posición inicial (anti soft-lock).
 
-/** Ambiente lumínico del mapa. `DARK` activa el pase de oscuridad + radios de luz. */
-export type OverworldAmbient = "NORMAL" | "DARK";
+/**
+ * Ambiente visual del mapa.
+ * - `DARK` activa el pase de oscuridad + radios de luz (Acto 3).
+ * - `TERMINAL` tiñe el mundo de verde fósforo ciberpunk (Acto 4, GenNvim): rejilla neón verde y scanlines.
+ */
+export type OverworldAmbient = "NORMAL" | "DARK" | "TERMINAL";
 
 /** Rectángulo de celdas (inclusivo) que un interruptor ilumina por completo. */
 export interface IOverworldLightRect {

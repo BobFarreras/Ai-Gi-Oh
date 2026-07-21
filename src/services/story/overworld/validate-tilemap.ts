@@ -36,7 +36,7 @@ const VALID_KINDS: ReadonlySet<OverworldObjectKind> = new Set([
   "PLATE",
   "BOX_RESET",
 ]);
-const VALID_AMBIENTS = new Set(["NORMAL", "DARK"]);
+const VALID_AMBIENTS = new Set(["NORMAL", "DARK", "TERMINAL"]);
 const VALID_TRIGGERS: ReadonlySet<OverworldObjectTrigger> = new Set([
   "ADJACENT_ACTION",
   "STEP_ON",
@@ -337,7 +337,7 @@ export function validateOverworldTilemap(raw: unknown): IOverworldTilemap {
   let ambient: IOverworldTilemap["ambient"];
   if (raw.ambient !== undefined) {
     const ambientValue = assertNonEmptyString(raw.ambient, "$.ambient");
-    if (!VALID_AMBIENTS.has(ambientValue)) fail("$.ambient", "se esperaba 'NORMAL' o 'DARK'");
+    if (!VALID_AMBIENTS.has(ambientValue)) fail("$.ambient", "se esperaba 'NORMAL', 'DARK' o 'TERMINAL'");
     ambient = ambientValue as IOverworldTilemap["ambient"];
   }
 

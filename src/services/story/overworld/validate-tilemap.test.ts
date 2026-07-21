@@ -181,9 +181,14 @@ describe("validateOverworldTilemap", () => {
     expect(tilemap.objects.at(-1)?.lightRect).toEqual({ x0: 0, y0: 0, x1: 2, y1: 1 });
   });
 
+  it("acepta ambient TERMINAL (verde, Acto 4)", () => {
+    const tilemap = validateOverworldTilemap({ ...buildValidRawTilemap(), ambient: "TERMINAL" });
+    expect(tilemap.ambient).toBe("TERMINAL");
+  });
+
   it("rechaza ambient desconocido", () => {
     expect(() => validateOverworldTilemap({ ...buildValidRawTilemap(), ambient: "FOGGY" })).toThrow(
-      /'NORMAL' o 'DARK'/,
+      /'NORMAL', 'DARK' o 'TERMINAL'/,
     );
   });
 
