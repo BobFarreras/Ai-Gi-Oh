@@ -186,7 +186,7 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
 
       // ── Rivales (ids reales del capítulo 4; duelHref -> /hub/story/chapter/4/duel/N) ─────────────────
       // 1-5: Soldado-Terminal (centinelas). 6: GenNvim (boss 1). 7: Midutech (boss final).
-      { id: "story-ch4-duel-1", kind: "DUEL", tileX: 26, tileY: 46, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/1", imageSrc: SOLDADO, facing: "UP", visionRange: 3 },
+      { id: "story-ch4-duel-1", kind: "DUEL", tileX: 26, tileY: 46, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/1", imageSrc: SOLDADO, facing: "DOWN", visionRange: 3 },
       { id: "story-ch4-duel-2", kind: "DUEL", tileX: 17, tileY: 40, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/2", imageSrc: SOLDADO, facing: "RIGHT", visionRange: 3 },
       { id: "story-ch4-duel-3", kind: "DUEL", tileX: 36, tileY: 29, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/3", imageSrc: SOLDADO, facing: "LEFT", visionRange: 3, patrolAxis: "V", patrolLength: 2, patrolSweep: true },
       { id: "story-ch4-duel-4", kind: "DUEL", tileX: 16, tileY: 29, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/4", imageSrc: SOLDADO, facing: "RIGHT", visionRange: 3 },

@@ -53,6 +53,7 @@ const REREADABLE_EVENT_IDS = new Set<string>(["story-ch3-event-corrupt-log"]);
 // Evento de intro que se dispara al PRIMER paso del jugador en el acto (no por trigger de suelo).
 const FIRST_STEP_INTRO_BY_MAP: Record<string, string> = {
   "act-3": "story-ch3-event-intro",
+  "act-4": "story-ch4-event-intro",
 };
 
 function seenEventsStorageKey(playerId: string, mapId: string): string {

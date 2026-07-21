@@ -234,8 +234,6 @@ export class OverworldEngine {
     this.beltToggleControllers = init.tilemap.objects
       .filter((object) => object.kind === "SWITCH" && object.beltToggleRect)
       .map((object) => ({ id: object.id, rect: object.beltToggleRect! }));
-    this.snapshotBaseBeltKinds();
-    this.applyBeltToggles();
     this.initBoxesAndPlates(init.tilemap.objects);
 
     const spawn =
@@ -270,6 +268,10 @@ export class OverworldEngine {
         activeMove: null,
       },
     };
+    // Belt-toggle: snapshot del sentido base + aplicar estado inicial. DESPUÉS de asignar this.world (ambos
+    // métodos mutan/leen this.world.tilemap.layers.ground). El sentido de cinta no afecta al movementContext.
+    this.snapshotBaseBeltKinds();
+    this.applyBeltToggles();
     this.recomputeBlockedObjects();
   }
 
