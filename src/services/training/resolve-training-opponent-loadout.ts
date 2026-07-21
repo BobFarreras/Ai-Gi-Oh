@@ -12,15 +12,15 @@ import { buildArenaOpponentsFromPresets } from "@/services/training/internal/bui
  * - Cada nivel los presenta más fuertes (la fuerza la aporta el escalado/dificultad del tier).
  * - Se enfrentan EN ORDEN por victorias del nivel: ganas al Nº k para desbloquear al Nº k+1.
  *   8 victorias completan el nivel (ver `requiredWinsInPreviousTier` del catálogo de tiers).
- * Orden (decisión de producto): GenNvim → Helena → Jaku → Mouretech → Soldado → Guill → Soldado-Laptop → Gokernel.
- * BigLog (`training-tier-4`) queda fuera del ladder; Mouretech ocupa su puesto. Soldado-Laptop y
+ * Orden (decisión de producto): GenNvim → Helena → Jaku → Midutech → Soldado → Guill → Soldado-Laptop → Gokernel.
+ * BigLog (`training-tier-4`) queda fuera del ladder; Midutech ocupa su puesto. Soldado-Laptop y
  * Gokernel (rivales del Acto 3) cierran el ladder; Gokernel es el combate final de cada nivel.
  */
 export const ARENA_LADDER_ROSTER: readonly string[] = [
   "training-tier-1", // GenNvim
   "training-tier-2", // Helena
   "training-tier-3", // Jaku
-  "training-mouretech", // Mouretech (en el puesto de BigLog)
+  "training-midutech", // Midutech (en el puesto de BigLog)
   "training-tier-5", // Soldado
   "training-tier-6", // Guill
   "training-soldado-laptop", // Soldado-Laptop

@@ -55,7 +55,7 @@ Tono visual: **terminal verde fósforo** sobre negro, scanlines, texto tipo log,
 ### 3.2 Personajes
 - **BigLog** (mentor/narrador): aparece por voz/registro guiando y, al final, confesando su parte en el origen (tensión emocional).
 - **GenNvim** (antagonista-sistema): el kernel de la fundición. **Primer boss** del acto + evento de revelación. Voz fría, en segunda persona, estilo mensajes de compilador.
-- **Midutech** (antagonista-corporación): el **arquitecto humano** detrás de GenNvim (guiño a midudev; su primo de arena es **Mouretech** = mouredev, ya existente en `086_arena_opponents_guill_mouretech.sql`). Es el **boss final** del acto y guarda la llave del Core.
+- **Midutech** (antagonista-corporación): el **arquitecto humano** detrás de GenNvim (guiño a midudev). **Reutiliza el oponente de arena Midutech** (antes llamado Mouretech —fue un error de nombre, renombrado en repo + BD por la migración 144—; assets en `opp-ch1-midutech`). Es el **boss final** del acto y guarda la llave del Core.
 - **Soldado-Terminal** (nuevo, `opp-ch4-soldado-terminal`): el centinela-proceso del acto (duelos regulares), equivalente al Soldado-Laptop del Acto 3.
 
 > **Dos bosses** (tu decisión): GenNvim (sistema, con evento) y Midutech (corp, final). La llave del Core cae al vencer a Midutech.
@@ -274,7 +274,7 @@ Cada fase: rama viva, tests en verde, y validación visual tuya antes de avanzar
 
 **Cerradas:**
 1. **Vídeos**: 3 vídeos (E1 intro, E4 revelación GenNvim, E6 cierre/llave) + 3 diálogos (E2, E3, E5). ✔
-2. **Bosses/roster**: 2 bosses = **GenNvim** (evento + boss) y **Midutech** (boss final; guiño a midudev, primo del Mouretech de arena) + **nuevo soldado del acto** (`Soldado-Terminal`) para los 5 duelos regulares. ✔
+2. **Bosses/roster**: 2 bosses = **GenNvim** (evento + boss) y **Midutech** (boss final; guiño a midudev, primo del Midutech de arena) + **nuevo soldado del acto** (`Soldado-Terminal`) para los 5 duelos regulares. ✔
 3. **Tamaño**: 56×60 de momento (lo revisas). ✔
 4. **Acto 5**: no se crea ahora; warp final = "próximamente". ✔
 5. **Objetos**: ids confirmados (§6.4). ✔
@@ -362,11 +362,18 @@ puzzle nuevos:
   vencer a GenNvim (pedido explícito del usuario).
 
 ### 15.7 Nota de numeración de migración
-La migración de contenido del Acto 4 pasa a ser la **144** (la 143 la ocupó `opponent_skill_ranks`).
+- **143** = `opponent_skill_ranks` (rama feat/opponent-skill-abilities).
+- **144** = rename Mouretech → Midutech (aplicada a prod).
+- **145** = contenido del Acto 4 (Soldado-Terminal, GenNvim, Midutech, duelos/mazos).
 
-### 15.8 Orden de implementación propuesto (siguientes fases)
-- **Fase 2.5** (motor): mecánica belt-toggle (schema + core + renderer + movimiento) con tests. *Requiere OK.*
+### 15.8 Avatares (ya disponibles, tu decisión resuelta)
+- **Soldado-Terminal**: `opp-ch4-soldado-terminal` (los dejaste).
+- **GenNvim**: reutiliza `opp-ch1-apprentice/*GenNvim*`.
+- **Midutech**: reutiliza `opp-ch1-midutech/*Midutech*` (el de arena, ya renombrado).
+
+### 15.9 Orden de implementación propuesto (siguientes fases)
+- **Fase 2.5** (motor): mecánica belt-toggle — **HECHA**.
 - **Fase 3** (contenido): pasillos de atrezzo + chokepoints + rivales + puertas por victoria + eventos con
-  narración + migración 144 (Soldado-Terminal, GenNvim, Midutech). Aquí se les asignan habilidades de combate.
+  narración + migración **145** (Soldado-Terminal, GenNvim, Midutech). Aquí se les asignan habilidades de combate.
 - **Fase 4**: objetos/recompensas (USB/aumentos) en salas laterales.
 - **Fase 5-6**: pulido, cierre (llave del Core), QA.
