@@ -6,6 +6,11 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.18.2] - 2026-07-21
+
+### Fixed
+- **Arte de magias/trampas (UI)**: unificado el encaje de la ilustración a sangre en todas las secciones (detalle, deck, arsenal y mercado). Ahora todas rellenan su caja igual (`object-cover` centrado con un ligero zoom) y llevan un **sombreado de bordes** (`CardArtVignette`) para que la imagen "salga de la oscuridad", con marco uniforme y sin recortes desiguales según la proporción de cada arte. Fuente única en `spell-trap-image-utils`.
+
 ## [1.18.1] - 2026-07-21
 
 ### Fixed
@@ -376,7 +381,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.1...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.2...HEAD
+[1.18.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.1...v1.18.2
 [1.18.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.0...v1.18.1
 [1.18.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.17.0...v1.18.0
 [1.15.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.15.0...v1.15.1

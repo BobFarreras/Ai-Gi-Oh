@@ -10,7 +10,8 @@ import { resolveTypeBadge } from "./internal/card-frame-meta";
 import { CardUpgradeBadges } from "./internal/CardUpgradeBadges";
 import { CardThumbnailFooter } from "./internal/CardThumbnailFooter";
 import { CARD_THUMBNAIL_CLIP_PATHS, getCardTypeStyles } from "./internal/styles";
-import { getCardImageClassName, shouldRenderCardBackground } from "./internal/spell-trap-image-utils";
+import { CardArtVignette } from "./internal/CardArtVignette";
+import { getCardImageClassName, shouldRenderCardBackground, shouldRenderSpellTrapVignette } from "./internal/spell-trap-image-utils";
 
 interface CardThumbnailProps {
   card: ICard;
@@ -46,6 +47,7 @@ function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelect
   const upgradeCounts = card.upgradeCounts ?? null;
   const [isArtLoaded, setIsArtLoaded] = useState(false);
   const shouldRenderArtSkeleton = showArtSkeleton && Boolean(card.renderUrl) && !isArtLoaded;
+  const hasSpellTrapVignette = shouldRenderSpellTrapVignette(card, { coverRender });
   const renderImageClassName = getCardImageClassName(card, { coverRender });
 
   return (
@@ -115,6 +117,7 @@ function CardThumbnailComponent({ card, versionTier = 0, level, xp = 0, isSelect
               className={renderImageClassName}
             />
           ) : null}
+          {hasSpellTrapVignette ? <CardArtVignette /> : null}
           {/* Solo iconos (sin ×N): en miniaturas el número tapaba el arte. Mismo sello que la carta grande. */}
           <CardUpgradeBadges counts={upgradeCounts} variant="compact" />
         </div>
