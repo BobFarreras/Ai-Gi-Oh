@@ -5,11 +5,13 @@ import {
   HomeCollectionOrderField,
   HomeCollectionTypeFilter,
 } from "@/components/hub/home/home-filters";
-import { IHomeActionResult } from "@/components/hub/home/layout/home-workspace-types";
+import { IHomeActionResult, ISecondDeckControls } from "@/components/hub/home/layout/home-workspace-types";
 
 export interface IHomeDeckActionBarProps {
   deckCount: number;
   deckSize: number;
+  /** Doble Arsenal: controles del 2º mazo integrados en el header (switch de vista + hacer principal). */
+  secondDeck?: ISecondDeckControls | null;
   canInsert: boolean;
   canRemove: boolean;
   typeFilter: HomeCollectionTypeFilter;

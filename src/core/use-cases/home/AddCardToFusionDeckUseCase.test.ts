@@ -11,6 +11,7 @@ class FakeDeckRepository implements IDeckRepository {
   async saveDeck(deck: IDeck): Promise<void> { this.deck = deck; }
   async getCollection(playerId: string): Promise<ICollectionCard[]> { void playerId; return this.collection; }
   async getBankDeck(): Promise<IDeck> { return this.deck; }
+  async saveBankDeck(): Promise<void> {}
   async swapActiveDeck(): Promise<{ ok: boolean }> { return { ok: true }; }
 }
 

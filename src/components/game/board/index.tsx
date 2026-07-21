@@ -177,7 +177,6 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
       {/* Ficha 8 (PvE): overlay de mulligan de apertura, solo si el jugador tiene la habilidad y no ha decidido. */}
       {board.mulligan.isPending ? (
         <MulliganOverlay
-          hand={player.hand}
           reshuffled={board.mulligan.reshuffled}
           onReshuffle={board.mulligan.reshuffle}
           onKeep={board.mulligan.keep}

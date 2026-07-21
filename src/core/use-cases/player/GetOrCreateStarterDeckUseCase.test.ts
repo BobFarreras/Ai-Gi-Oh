@@ -44,6 +44,7 @@ class FakeDeckRepository implements IDeckRepository {
     return [];
   }
   async getBankDeck(): Promise<IDeck> { return this.deck; }
+  async saveBankDeck(): Promise<void> {}
   async swapActiveDeck(): Promise<{ ok: boolean }> { return { ok: true }; }
   currentDeck(): IDeck { return this.deck; }
 }

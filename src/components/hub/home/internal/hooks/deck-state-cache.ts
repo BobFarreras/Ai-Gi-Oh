@@ -9,8 +9,10 @@ interface IHomeDeckCachePayload {
   deck: IDeck;
 }
 
-function getCacheKey(playerId: string): string {
-  return `${HOME_DECK_CACHE_PREFIX}${playerId}`;
+export type DeckCacheSlot = "PRINCIPAL" | "SECONDARY";
+
+function getCacheKey(playerId: string, slot: DeckCacheSlot = "PRINCIPAL"): string {
+  return `${HOME_DECK_CACHE_PREFIX}${playerId}${slot === "SECONDARY" ? ":secondary" : ""}`;
 }
 
 function isDeckShapeCompatible(candidate: IDeck, reference: IDeck): boolean {
@@ -25,12 +27,12 @@ function hasConfiguredCards(deck: IDeck): boolean {
 }
 
 /** Lee deck cacheado en cliente si es reciente y compatible con el shape actual. */
-export function readCachedDeck(playerId: string, fallback: IDeck): IDeck {
+export function readCachedDeck(playerId: string, fallback: IDeck, slot: DeckCacheSlot = "PRINCIPAL"): IDeck {
   if (typeof window === "undefined") return fallback;
   // El snapshot server-side es fuente de verdad cuando ya contiene cartas configuradas.
   if (hasConfiguredCards(fallback)) return fallback;
   try {
-    const raw = window.sessionStorage.getItem(getCacheKey(playerId));
+    const raw = window.sessionStorage.getItem(getCacheKey(playerId, slot));
     if (!raw) return fallback;
     const parsed = JSON.parse(raw) as IHomeDeckCachePayload;
     if (!parsed || typeof parsed.savedAt !== "number" || !parsed.deck) return fallback;
@@ -42,11 +44,11 @@ export function readCachedDeck(playerId: string, fallback: IDeck): IDeck {
 }
 
 /** Guarda snapshot local reciente del deck para rehidratar estado tras refresh/remount. */
-export function writeCachedDeck(playerId: string, deck: IDeck): void {
+export function writeCachedDeck(playerId: string, deck: IDeck, slot: DeckCacheSlot = "PRINCIPAL"): void {
   if (typeof window === "undefined") return;
   try {
     const payload: IHomeDeckCachePayload = { savedAt: Date.now(), deck };
-    window.sessionStorage.setItem(getCacheKey(playerId), JSON.stringify(payload));
+    window.sessionStorage.setItem(getCacheKey(playerId, slot), JSON.stringify(payload));
   } catch {
     // Cache best-effort: nunca bloquea flujo principal del builder.
   }

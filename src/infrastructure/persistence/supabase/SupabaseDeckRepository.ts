@@ -134,23 +134,45 @@ export class SupabaseDeckRepository implements IDeckRepository {
     if (mainError || fusionError) throw new ValidationError("No se pudo cargar el segundo mazo del jugador.");
     const mainRows = (mainData ?? []) as IDeckSlotRow[];
     const fusionRows = (fusionData ?? []) as IFusionDeckSlotRow[];
-    // Bootstrap: si el banco nunca se inicializó, se siembra como copia del mazo activo (no vacío).
+    // Bootstrap: si el banco nunca se inicializó, se crea VACÍO (el jugador aún no ha construido su 2º mazo).
     if (mainRows.length === 0) {
-      const active = await this.getDeck(playerId);
-      const bankMain = active.slots.map((slot) => ({ player_id: playerId, slot_index: slot.index, card_id: slot.cardId }));
-      const bankFusion = active.fusionSlots.map((slot) => ({ player_id: playerId, slot_index: slot.index, card_id: slot.cardId }));
+      const emptyMain = createDefaultDeckSlots(playerId);
+      const emptyFusion = createDefaultFusionDeckSlots(playerId);
       const [{ error: insMainError }, { error: insFusionError }] = await Promise.all([
-        this.client.from("player_deck_bank").insert(bankMain),
-        this.client.from("player_deck_bank_fusion").insert(bankFusion),
+        this.client.from("player_deck_bank").insert(emptyMain),
+        this.client.from("player_deck_bank_fusion").insert(emptyFusion),
       ]);
       if (insMainError || insFusionError) throw new ValidationError("No se pudo inicializar el segundo mazo del jugador.");
-      return { playerId, slots: active.slots.map((s) => ({ index: s.index, cardId: s.cardId })), fusionSlots: active.fusionSlots.map((s) => ({ index: s.index, cardId: s.cardId })) };
+      return {
+        playerId,
+        slots: emptyMain.map((row) => ({ index: row.slot_index, cardId: row.card_id })),
+        fusionSlots: emptyFusion.map((row) => ({ index: row.slot_index, cardId: row.card_id })),
+      };
     }
     return {
       playerId,
       slots: mainRows.map((row) => ({ index: row.slot_index, cardId: row.card_id })),
       fusionSlots: fusionRows.map((row) => ({ index: row.slot_index, cardId: row.card_id })),
     };
+  }
+
+  async saveBankDeck(deck: IDeck): Promise<void> {
+    for (const slot of deck.slots) {
+      const { error } = await this.client
+        .from("player_deck_bank")
+        .update({ card_id: slot.cardId })
+        .eq("player_id", deck.playerId)
+        .eq("slot_index", slot.index);
+      if (error) throw new ValidationError("No se pudo guardar el segundo mazo del jugador.");
+    }
+    for (const slot of deck.fusionSlots) {
+      const { error } = await this.client
+        .from("player_deck_bank_fusion")
+        .update({ card_id: slot.cardId })
+        .eq("player_id", deck.playerId)
+        .eq("slot_index", slot.index);
+      if (error) throw new ValidationError("No se pudo guardar el bloque de fusión del segundo mazo.");
+    }
   }
 
   async swapActiveDeck(command: ISwapActiveDeckCommand): Promise<IDeckSwapResult> {

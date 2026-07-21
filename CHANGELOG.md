@@ -6,6 +6,12 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.18.1] - 2026-07-21
+
+### Fixed
+- **Doble Arsenal (2º mazo)**: rediseño de la UI. El 2º mazo ahora **nace vacío** y se construye/edita como un mazo independiente **sin** activarlo; el selector se **integra en el header** del arsenal (en desktop: toggle "Principal / 2º mazo" + "Hacer principal"; en móvil: un desplegable para cambiar la vista y el "Hacer principal" en la sección "Deck Activo"). Corrige que el control anterior no se veía y no permitía construir el 2º mazo. Combate/IA sin cambios (siempre usan el mazo activo).
+- **Rebarajar (mulligan)**: el overlay ya **no oscurece** el tablero ni repite las cartas (se ven en la propia mano). Ahora es un prompt con solo la decisión, con **animación de rebaraje** (4 cartas suben al mazo y 4 nuevas bajan) y **bloqueo de invocar** hasta elegir Conservar/Rebarajar.
+
 ## [1.18.0] - 2026-07-20
 
 ### Added
@@ -370,7 +376,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.0...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.1...HEAD
+[1.18.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.0...v1.18.1
 [1.18.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.17.0...v1.18.0
 [1.15.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.14.0...v1.15.0

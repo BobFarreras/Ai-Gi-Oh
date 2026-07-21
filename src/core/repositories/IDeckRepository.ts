@@ -12,8 +12,10 @@ export interface IDeckRepository {
   getDeck(playerId: string): Promise<IDeck>;
   saveDeck(deck: IDeck): Promise<void>;
   getCollection(playerId: string): Promise<ICollectionCard[]>;
-  /** Doble Arsenal: lee el 2º mazo (banco); si nunca se inicializó, lo siembra como copia del activo. */
+  /** Doble Arsenal: lee el 2º mazo (banco); si nunca se inicializó, lo crea VACÍO (el jugador aún no lo ha construido). */
   getBankDeck(playerId: string): Promise<IDeck>;
+  /** Doble Arsenal: guarda el 2º mazo (banco). Mismo contrato que saveDeck pero sobre las tablas del banco. */
+  saveBankDeck(deck: IDeck): Promise<void>;
   /** Doble Arsenal: intercambia activo <-> banco vía RPC service-role (atómico, idempotente, gateado por el nodo). */
   swapActiveDeck(command: ISwapActiveDeckCommand): Promise<IDeckSwapResult>;
 }
