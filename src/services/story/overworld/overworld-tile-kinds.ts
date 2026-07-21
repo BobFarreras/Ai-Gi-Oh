@@ -40,6 +40,8 @@ export const OVERLAY_TILE = {
   SERVER_RACK: 3,
   HOLO_SCREEN: 4,
   CRATE: 5,
+  COOLING_UNIT: 6, // unidad de refrigeración con rejillas y ventilador giratorio
+  DATA_PYLON: 7, // pilón/antena de datos con baliza pulsante
 } as const;
 
 export type GroundTileKind = (typeof GROUND_TILE)[keyof typeof GROUND_TILE];

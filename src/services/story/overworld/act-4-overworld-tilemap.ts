@@ -59,6 +59,12 @@ function placeStructure(map: IMutableTilemap, tileX: number, tileY: number, kind
   map.collision[tileY][tileX] = 0;
 }
 
+/** Convierte una casilla en cinta transportadora (arrastra al jugador en la dirección dada). */
+function placeBelt(map: IMutableTilemap, tileX: number, tileY: number, kind: number): void {
+  map.ground[tileY][tileX] = kind;
+  map.collision[tileY][tileX] = 1;
+}
+
 /** Marca la casilla de un servicio/rival como sólida (obstáculo con el que se interactúa desde el lado). */
 function markSolid(map: IMutableTilemap, tileX: number, tileY: number): void {
   if (map.collision[tileY]?.[tileX] !== 1) {
@@ -102,12 +108,17 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   carveCorridor(map, { x: 15, y: 29 }, { x: 17, y: 29 }); // laberinto <-> sala izq alta
   carveCorridor(map, { x: 35, y: 29 }, { x: 37, y: 29 }); // laberinto <-> sala der alta
 
-  // Estructuras decorativas (racks/pantallas) en esquinas que no estorban el paso.
-  const racks: Array<[number, number]> = [
-    [20, 53], [32, 53], [20, 37], [32, 44], [4, 44], [15, 37], [37, 44], [48, 37],
-    [4, 25], [14, 33], [38, 25], [48, 33], [18, 25], [34, 34],
-  ];
+  // Laberinto (Fase 2): cinta de ascenso en el lado derecho del laberinto (un solo sentido: se sube por ella
+  // y se baja por el suelo abierto de al lado, así que no atrapa). Da sabor de "pasarela" a la sala.
+  for (const y of [28, 29, 30, 31, 32]) placeBelt(map, 31, y, GROUND_TILE.BELT_UP);
+
+  // Estructuras decorativas variadas (racks + unidades de refrigeración + pilones) en esquinas que no estorban.
+  const racks: Array<[number, number]> = [[20, 53], [32, 53], [4, 44], [48, 37], [4, 25], [48, 33]];
   for (const [x, y] of racks) placeStructure(map, x, y, OVERLAY_TILE.SERVER_RACK);
+  const coolers: Array<[number, number]> = [[20, 37], [37, 44], [14, 33], [18, 25]];
+  for (const [x, y] of coolers) placeStructure(map, x, y, OVERLAY_TILE.COOLING_UNIT);
+  const pylons: Array<[number, number]> = [[32, 44], [15, 37], [38, 25], [34, 34]];
+  for (const [x, y] of pylons) placeStructure(map, x, y, OVERLAY_TILE.DATA_PYLON);
   for (const [x, y] of [[18, 3], [34, 3]] as Array<[number, number]>) {
     placeStructure(map, x, y, OVERLAY_TILE.HOLO_SCREEN);
   }
@@ -116,6 +127,7 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   markSolid(map, 23, 52); // market
   markSolid(map, 25, 52); // arsenal
   markSolid(map, 30, 52); // teleport (salir)
+  markSolid(map, 32, 33); // botón de reinicio de cajas (rescate anti soft-lock)
 
   return validateOverworldTilemap({
     schemaVersion: 2,
@@ -134,6 +146,14 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       { id: "story-a4-teleport-hub", kind: "TELEPORT", tileX: 30, tileY: 52, sprite: "teleport", trigger: "ADJACENT_ACTION" },
       // Retorno al Acto 3 (se pisa). El avance al Acto 5 se añadirá con el jefe (Acto 5 = "próximamente").
       { id: "story-ch4-transition-to-act3", kind: "WARP", tileX: 20, tileY: 50, sprite: "portal", trigger: "STEP_ON", warp: { toMapId: "act-3", toSpawnId: "spawn-entry", direction: "backward" } },
+
+      // ── Laberinto (Fase 2): caja empujable + placa → compuerta hacia las plantas altas ─────────────
+      // Empuja la caja hacia la izquierda sobre la placa para abrir la compuerta que sube al terminal/jefe.
+      { id: "story-ch4-box-lab", kind: "BOX", tileX: 24, tileY: 31, sprite: "box", trigger: "ADJACENT_ACTION" },
+      { id: "story-ch4-plate-lab", kind: "PLATE", tileX: 21, tileY: 31, sprite: "plate", trigger: "ADJACENT_ACTION" },
+      { id: "story-a4-gate-lab", kind: "GATE", tileX: 26, tileY: 24, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: ["story-ch4-plate-lab"] },
+      // Botón de rescate: si la caja se empotra contra una pared, la devuelve a su sitio.
+      { id: "story-a4-box-reset", kind: "BOX_RESET", tileX: 32, tileY: 33, sprite: "reset", trigger: "ADJACENT_ACTION" },
     ],
     spawns: [{ id: "spawn-entry", tileX: 26, tileY: 51, facing: "UP" }],
     defaultSpawnId: "spawn-entry",

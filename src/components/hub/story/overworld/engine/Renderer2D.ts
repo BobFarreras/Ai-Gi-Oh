@@ -1110,6 +1110,8 @@ export class Renderer2D {
         if (kind === OVERLAY_TILE.SERVER_RACK) this.drawServerRack(screenX, screenY, size, timeMs, tileX + tileY);
         else if (kind === OVERLAY_TILE.HOLO_SCREEN) this.drawHoloScreen(screenX, screenY, size, timeMs);
         else if (kind === OVERLAY_TILE.CRATE) this.drawCrate(screenX, screenY, size);
+        else if (kind === OVERLAY_TILE.COOLING_UNIT) this.drawCoolingUnit(screenX, screenY, size, timeMs, tileX + tileY);
+        else if (kind === OVERLAY_TILE.DATA_PYLON) this.drawDataPylon(screenX, screenY, size, timeMs);
         else this.drawPillar(screenX, screenY, size, timeMs, tileX);
       }
     }
@@ -1157,6 +1159,76 @@ export class Renderer2D {
     }
     context.fillStyle = "#0a1220";
     context.fillRect(screenX + size * 0.44, screenY + size * 0.7, size * 0.12, size * 0.22);
+  }
+
+  /** Unidad de refrigeración: caja con rejillas de ventilación y un ventilador giratorio. */
+  private drawCoolingUnit(screenX: number, screenY: number, size: number, timeMs: number, seed: number): void {
+    const context = this.context;
+    const x = screenX + size * 0.14;
+    const y = screenY + size * 0.2;
+    const w = size * 0.72;
+    const h = size * 0.66;
+    context.fillStyle = "rgba(0,0,0,0.35)";
+    context.fillRect(screenX + size * 0.18, screenY + size * 0.86, size * 0.64, size * 0.1);
+    context.fillStyle = "#0c1626";
+    context.fillRect(x, y, w, h);
+    context.strokeStyle = "rgba(52, 211, 153, 0.5)";
+    context.lineWidth = 2;
+    context.strokeRect(x, y, w, h);
+    // Rejillas de ventilación (mitad izquierda).
+    context.strokeStyle = "rgba(148, 163, 184, 0.4)";
+    context.lineWidth = 1;
+    for (let slat = 0; slat < 4; slat++) {
+      const slatY = y + h * (0.2 + slat * 0.2);
+      context.beginPath();
+      context.moveTo(x + w * 0.1, slatY);
+      context.lineTo(x + w * 0.58, slatY);
+      context.stroke();
+    }
+    // Ventilador (derecha), gira con el tiempo.
+    const fanX = x + w * 0.78;
+    const fanY = y + h * 0.5;
+    const radius = Math.min(w, h) * 0.22;
+    const spin = timeMs / 400 + seed;
+    context.strokeStyle = `rgba(34, 211, 238, ${0.4 + Math.sin(timeMs / 300) * 0.2})`;
+    context.lineWidth = 2;
+    context.beginPath();
+    context.arc(fanX, fanY, radius, 0, Math.PI * 2);
+    context.stroke();
+    for (let blade = 0; blade < 3; blade++) {
+      const angle = spin + blade * ((Math.PI * 2) / 3);
+      context.beginPath();
+      context.moveTo(fanX, fanY);
+      context.lineTo(fanX + Math.cos(angle) * radius, fanY + Math.sin(angle) * radius);
+      context.stroke();
+    }
+  }
+
+  /** Pilón de datos: mástil delgado con struts y una baliza verde pulsante en la punta. */
+  private drawDataPylon(screenX: number, screenY: number, size: number, timeMs: number): void {
+    const context = this.context;
+    const cx = screenX + size * 0.5;
+    context.fillStyle = "rgba(0,0,0,0.3)";
+    context.fillRect(screenX + size * 0.34, screenY + size * 0.88, size * 0.32, size * 0.08);
+    context.fillStyle = "#0a1526";
+    context.fillRect(cx - size * 0.06, screenY + size * 0.14, size * 0.12, size * 0.76);
+    context.strokeStyle = "rgba(52, 211, 153, 0.45)";
+    context.lineWidth = 2;
+    context.strokeRect(cx - size * 0.06, screenY + size * 0.14, size * 0.12, size * 0.76);
+    // Struts diagonales hasta la base.
+    context.strokeStyle = "rgba(148, 163, 184, 0.35)";
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(cx - size * 0.2, screenY + size * 0.86);
+    context.lineTo(cx, screenY + size * 0.5);
+    context.lineTo(cx + size * 0.2, screenY + size * 0.86);
+    context.stroke();
+    // Baliza pulsante.
+    const glow = 0.5 + Math.sin(timeMs / 300) * 0.4;
+    context.fillStyle = `rgba(74, 222, 128, ${glow})`;
+    context.beginPath();
+    context.arc(cx, screenY + size * 0.12, size * 0.1, 0, Math.PI * 2);
+    context.fill();
   }
 
   private drawCrate(screenX: number, screenY: number, size: number): void {
