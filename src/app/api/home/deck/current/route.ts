@@ -5,7 +5,8 @@ import { createHomeRouteContext } from "@/app/api/home/internal/create-home-rout
 export async function GET(request: NextRequest) {
   try {
     const context = await createHomeRouteContext(request);
-    const deck = await context.repositories.deckRepository.getDeck(context.playerId);
+    // Slot-aware: con ?slot=SECONDARY devuelve el 2º mazo (banco); si no, el activo.
+    const deck = await context.deckRepository.getDeck(context.playerId);
     return NextResponse.json(deck, { status: 200, headers: context.response.headers });
   } catch (error) {
     const message = error instanceof Error ? error.message : "No se pudo cargar el deck actual.";

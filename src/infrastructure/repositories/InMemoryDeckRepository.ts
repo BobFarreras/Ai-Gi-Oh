@@ -61,10 +61,14 @@ export class InMemoryDeckRepository implements IDeckRepository {
     if (existing) {
       return { playerId, slots: existing.slots.map((s) => ({ ...s })), fusionSlots: existing.fusionSlots.map((s) => ({ ...s })) };
     }
-    // Bootstrap: copia del activo.
-    const active = await this.getDeck(playerId);
-    this.bankDecks.set(playerId, active);
-    return { playerId, slots: active.slots.map((s) => ({ ...s })), fusionSlots: active.fusionSlots.map((s) => ({ ...s })) };
+    // Bootstrap: 2º mazo VACÍO (el jugador aún no lo ha construido).
+    const empty = createEmptyDeck(playerId);
+    this.bankDecks.set(playerId, empty);
+    return { playerId, slots: empty.slots.map((s) => ({ ...s })), fusionSlots: empty.fusionSlots.map((s) => ({ ...s })) };
+  }
+
+  async saveBankDeck(deck: IDeck): Promise<void> {
+    this.bankDecks.set(deck.playerId, { playerId: deck.playerId, slots: deck.slots.map((s) => ({ ...s })), fusionSlots: deck.fusionSlots.map((s) => ({ ...s })) });
   }
 
   async swapActiveDeck(command: ISwapActiveDeckCommand): Promise<IDeckSwapResult> {

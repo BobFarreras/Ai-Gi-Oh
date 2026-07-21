@@ -2,6 +2,7 @@
 "use client";
 
 import { useMemo, useState, type PointerEvent } from "react";
+import { Star } from "lucide-react";
 import { resolveCardUpgradeCounts } from "@/core/services/progression/card-upgrade-rules";
 import { applyCardProgressionToCard } from "@/services/game/apply-card-progression-to-card";
 import { HomeCardInspectorDialog } from "@/components/hub/home/HomeCardInspectorDialog";
@@ -95,11 +96,30 @@ export function HomeMobileWorkspace(props: IHomeMobileWorkspaceProps) {
     <div className="mt-4 flex min-h-0 flex-1 flex-col gap-3" onPointerDownCapture={capturePointerOrigin}>
       <HomeMobileSectionTabs activeSection={activeSection} onChangeSection={setManualActiveSection} />
       <section className="min-h-0 flex-1 rounded-xl border border-cyan-900/40 bg-[#020b16]/75 p-3 shadow-[0_0_20px_rgba(6,78,100,0.2)]">
-        <div className="mb-3 flex items-center justify-between border-b border-cyan-900/45 pb-2">
-          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200">
-            {activeSection === "DECK" ? "Deck Activo" : "Almacén"}
-          </h2>
-          <span className="text-xs font-bold text-cyan-100/80">
+        <div className="mb-3 flex items-center justify-between gap-2 border-b border-cyan-900/45 pb-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200">
+              {activeSection !== "DECK"
+                ? "Almacén"
+                : props.secondDeck?.editingDeckSlot === "SECONDARY"
+                  ? "2º Mazo"
+                  : "Deck Activo"}
+            </h2>
+            {/* Doble Arsenal (móvil): "Hacer principal" vive aquí, en la sección del deck, al editar el 2º mazo. */}
+            {activeSection === "DECK" && props.secondDeck?.editingDeckSlot === "SECONDARY" && (
+              <button
+                type="button"
+                disabled={props.secondDeck.busy}
+                onClick={props.secondDeck.onActivate}
+                aria-label="Hacer principal este mazo"
+                className="inline-flex shrink-0 items-center gap-1 rounded-md border border-violet-400/60 bg-violet-500/20 px-2 py-0.5 font-display text-[9px] font-black uppercase tracking-widest text-violet-100 transition enabled:hover:bg-violet-500/30 disabled:opacity-50"
+              >
+                <Star className="h-3 w-3" />
+                {props.secondDeck.busy ? "…" : "Hacer principal"}
+              </button>
+            )}
+          </div>
+          <span className="shrink-0 text-xs font-bold text-cyan-100/80">
             {activeSection === "DECK" ? `${deckCount}/20` : `${props.filteredCollection.length} cartas`}
           </span>
         </div>

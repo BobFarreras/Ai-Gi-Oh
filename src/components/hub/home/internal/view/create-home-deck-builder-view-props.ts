@@ -36,6 +36,7 @@ interface ICreateHomeDeckBuilderViewPropsInput {
   copiesRequiredToEvolve: number | null;
   deckCardCount: number;
   deckSize: number;
+  secondDeck?: import("@/components/hub/home/layout/home-workspace-types").ISecondDeckControls | null;
   errorMessage: string | null;
   evolutionOverlay: IHomeEvolutionOverlayState | null;
   evolutionCard: ICard | null;
@@ -69,6 +70,7 @@ interface ICreateHomeDeckBuilderViewPropsInput {
 
 export function createHomeDeckBuilderViewProps(input: ICreateHomeDeckBuilderViewPropsInput): IHomeDeckBuilderSceneViewProps {
   const workspaceProps: IHomeWorkspaceProps = {
+    secondDeck: input.secondDeck ?? null,
     deck: input.deck,
     collectionState: input.collectionState,
     filteredCollection: input.filteredCollection,
@@ -109,6 +111,7 @@ export function createHomeDeckBuilderViewProps(input: ICreateHomeDeckBuilderView
   return {
     deckCardCount: input.deckCardCount,
     deckSize: input.deckSize,
+    secondDeck: input.secondDeck ?? null,
     canInsertSelectedCard: input.canInsertSelectedCard,
     canRemoveSelectedCard: input.canRemoveSelectedCard,
     canEvolveSelectedCard: input.canEvolveSelectedCard,
