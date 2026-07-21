@@ -307,3 +307,66 @@ Cada fase: rama viva, tests en verde, y validación visual tuya antes de avanzar
 - Flujo de diseño de actos: `docs/story/acts/ACT-BUILD-GUIDE.md`.
 - Schema: `src/services/story/overworld/tilemap-schema.ts`.
 - SQL de referencia: `docs/supabase/sql/090_story_act3_jaku_flow.sql`.
+
+---
+
+## 15. Diseño detallado del recorrido y puzzles (acordado 2026-07-21)
+
+Refinamiento del layout sobre el esqueleto (Fases 1-2 ya implementadas: ambiente verde + laberinto de
+caja/placa). El objetivo es **forzar el recorrido y los combates** con puzzles encadenados y pasillos.
+
+### 15.1 Estado ya implementado
+- Fase 1: mapa `act-4` (52×56), verde TERMINAL, salas + corredores + spawn + servicios + retorno.
+- Fase 2: **1er puzzle** = caja empujable → placa → compuerta `story-a4-gate-lab` (obligatorio: sin la placa el
+  jefe es inalcanzable) + una cinta de ascenso + botón de reinicio. 2 atrezzo nuevos (refrigeración, pilón).
+
+### 15.2 Mecánica NUEVA a implementar: interruptor que invierte una cinta (belt-toggle)
+Pedido: el **puente de subida** a la sala de arriba lleva una **cinta en sentido contrario** (te empuja hacia
+abajo, no puedes subir); un **botón en OTRA sala** invierte su sentido para poder pasar.
+- **Schema**: `SWITCH` gana un campo `beltToggleRect?` (o `beltGroupId`) que referencia las casillas-cinta que
+  controla. (Alternativa más simple si no queremos motor nuevo: el botón es un `SWITCH` que abre un `GATE` en
+  el puente — se pasa por una compuerta, no por inversión de cinta. **Decisión del usuario**: quiere inversión.)
+- **Core** (regla pura, testeable, tipo `lighting.ts`/`push-rules.ts`): `resolveBeltDirection` considera si el
+  grupo está invertido según `interactedNodeIds` (el botón, al accionarse, marca `interacted` y persiste).
+- **Renderer**: dibuja los chevrones de la cinta en su **sentido vigente** (invertido o no).
+- **Movimiento**: el arrastre respeta el sentido vigente; con la cinta en contra no se sube (hay que activar el
+  botón primero). Siempre debe existir un camino de retorno (no atrapar).
+
+### 15.3 Recorrido encadenado (fuerza el orden)
+1. **Entrada** — evento **E1** (intro, será vídeo → de momento EVENT con narración).
+2. **Hub** → pasillos de atrezzo hacia las ramas. **Chokepoint**: rival sólido en el corredor de subida (combate obligatorio).
+3. **Laberinto central** — puzzle caja→placa (hecho) abre la compuerta hacia las ramas altas.
+4. **Puente al terminal** — lleva la **cinta EN CONTRA** (belt-toggle). No se sube todavía.
+5. **Rama alta** (p.ej. derecha) — contiene el **botón** que invierte la cinta del puente. Para llegar, otro **chokepoint** con rival. Evento **E2** (log del origen) en una consola de esta rama.
+6. Cinta invertida → se **sube al terminal** — evento **E4** (revelación, será vídeo) → **puerta del jefe**.
+7. **GenNvim (boss 1)** en su sala (`visionRect`). Evento **E5** al caer.
+8. **Puerta post-GenNvim** (`GATE` con `gateRequiredNodeIds:[duelo GenNvim]`): **solo abre tras vencer a GenNvim**. Da acceso a **Midutech (boss final)** y a la cámara de recompensas.
+9. **Midutech** → llave del Core, evento **E6** → warp "Acto 5: próximamente".
+
+### 15.4 Pasillos de atrezzo + chokepoints de rivales
+- Estrechar salas con **muros de atrezzo** (racks / refrigeración / pilones = colisión) para crear **pasillos de
+  1 casilla**. En cada pasillo clave, un **rival sólido** (`markSolid` + `DUEL`): no se pasa sin vencerlo, como
+  en el Acto 3. Posiciones: subida del hub, entrada a cada rama, antesala del terminal, sala del jefe.
+- Los rivales llevan `facing`/`visionRange` (haz) y algunos `patrolAxis`/`patrolSweep` (patrulla) para esquiva.
+
+### 15.5 Eventos y narraciones (placeholders de vídeo)
+Los **vídeo** (E1, E4, E6) se implementan **ya como EVENT con narración** (texto en §4); se cambiarán por el
+vídeo cuando lo entregues. Los diálogo (E2, E3, E5) igual, con retrato. Todos como nodos `story-ch4-event-*`
+registrados en `act-4-map-definition.ts` (nodeType EVENT) + entradas en el catálogo de diálogos. Eventos de
+puzzle nuevos:
+- `story-ch4-event-belt-locked`: al pisar el puente con la cinta en contra → GenNvim se burla ("el flujo va donde yo digo").
+- `story-ch4-event-belt-toggled`: al invertir la cinta con el botón → confirmación ("flujo redirigido").
+
+### 15.6 Puertas por victoria del jefe
+- `story-a4-gate-postboss` con `gateRequiredNodeIds: [<duelo GenNvim>]`: sella Midutech + recompensas hasta
+  vencer a GenNvim (pedido explícito del usuario).
+
+### 15.7 Nota de numeración de migración
+La migración de contenido del Acto 4 pasa a ser la **144** (la 143 la ocupó `opponent_skill_ranks`).
+
+### 15.8 Orden de implementación propuesto (siguientes fases)
+- **Fase 2.5** (motor): mecánica belt-toggle (schema + core + renderer + movimiento) con tests. *Requiere OK.*
+- **Fase 3** (contenido): pasillos de atrezzo + chokepoints + rivales + puertas por victoria + eventos con
+  narración + migración 144 (Soldado-Terminal, GenNvim, Midutech). Aquí se les asignan habilidades de combate.
+- **Fase 4**: objetos/recompensas (USB/aumentos) en salas laterales.
+- **Fase 5-6**: pulido, cierre (llave del Core), QA.
