@@ -1,9 +1,11 @@
 // src/components/game/card/internal/CardFrameArtAndProgress.tsx - Bloque central con arte, nombre y progreso de nivel.
 import Image from "next/image";
 import { ICard } from "@/core/entities/ICard";
+import { cn } from "@/lib/utils";
 import { ICardUpgradeCounts } from "./card-frame-types";
 import { CardUpgradeBadges } from "./CardUpgradeBadges";
-import { getCardImageClassName, isSpellOrTrap, shouldRenderCardBackground } from "./spell-trap-image-utils";
+import { CardArtVignette } from "./CardArtVignette";
+import { getCardImageClassName, isSpellOrTrap, shouldRenderCardBackground, shouldRenderSpellTrapVignette } from "./spell-trap-image-utils";
 
 interface CardFrameArtAndProgressProps {
   card: ICard;
@@ -35,13 +37,22 @@ export function CardFrameArtAndProgress({
   const backgroundImageSizes = isPerformanceMode ? "72px" : "260px";
   const backgroundImageQuality = isPerformanceMode ? 28 : 75;
   const shouldRenderBg = shouldRenderCardBackground(card) && (!isPerformanceMode || showBackgroundInPerformanceMode);
+  // Viñeteado sobre el arte de magias/trampas (no cuando la carta está en el tablero: ahí no se pinta el render).
+  const hasSpellTrapVignette = !isOnBoard && shouldRenderSpellTrapVignette(card);
   const renderClassName = `absolute inset-0 ${getCardImageClassName(card, {
     includePadding: !isPerformanceMode,
     includeDropShadow: !isPerformanceMode,
   })}`;
   return (
     <div className="relative z-10 mt-2 flex flex-grow flex-col items-center justify-start px-3">
-      <div className="group relative mb-1.5 flex h-36 w-full shrink-0 items-center justify-center overflow-hidden rounded-sm bg-black shadow-[inset_0_0_30px_rgba(0,0,0,1)]">
+      {/* Magias/trampas: el arte a sangre crece para ocupar el espacio libre (no hay ATK/DEF que mostrar) →
+          más imagen en detalle/inspector/combate. Entidades mantienen la franja fija h-36. */}
+      <div
+        className={cn(
+          "group relative mb-1.5 flex w-full items-center justify-center overflow-hidden rounded-sm bg-black shadow-[inset_0_0_30px_rgba(0,0,0,1)]",
+          cardIsSpellOrTrap ? "min-h-[9rem] flex-1" : "h-36 shrink-0",
+        )}
+      >
         {shouldRenderBg ? (
           <Image
             src={card.bgUrl!}
@@ -67,12 +78,13 @@ export function CardFrameArtAndProgress({
             className={renderClassName}
           />
         )}
+        {hasSpellTrapVignette && card.renderUrl ? <CardArtVignette /> : null}
         {!disableHoverEffects && !isPerformanceMode ? (
           <div className="absolute top-0 h-0.5 w-full bg-cyan-400/50 opacity-0 group-hover:animate-[ping_2s_infinite] group-hover:opacity-100" />
         ) : null}
         <CardUpgradeBadges counts={upgradeCounts ?? null} variant="detail" />
       </div>
-      <div className="flex w-full flex-1 items-center justify-center py-1">
+      <div className={cn("flex w-full items-center justify-center py-1", cardIsSpellOrTrap ? "shrink-0" : "flex-1")}>
         <h2 className={isPerformanceMode ? "line-clamp-2 w-full text-center text-[17px] font-black uppercase leading-tight tracking-tight text-white" : "line-clamp-2 w-full text-center text-[17px] font-black uppercase leading-tight tracking-tight text-white drop-shadow-[0_2px_5px_rgba(0,0,0,1)]"}>
           {card.name}
         </h2>
