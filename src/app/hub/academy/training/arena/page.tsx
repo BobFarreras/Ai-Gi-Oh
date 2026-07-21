@@ -7,6 +7,7 @@ import { HOME_DECK_SIZE } from "@/core/services/home/deck-rules";
 import { getTrainingArenaRuntimeData } from "@/services/training/get-training-arena-runtime-data";
 import { resolveArenaLadderRoster, resolveTrainingOpponentLoadout } from "@/services/training/resolve-training-opponent-loadout";
 import { buildStoryOpponentNarrationPack } from "@/services/story/build-story-opponent-narration-pack";
+import { getOpponentCombatModifiers } from "@/services/progression/get-opponent-combat-modifiers";
 import { issueTrainingCompletionTicket } from "@/services/security/duel-completion-ticket";
 
 interface TrainingArenaPageProps {
@@ -45,6 +46,9 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
     avatarUrl: entry.avatarUrl,
   }));
   const ladderWins = currentTierStats?.wins ?? 0;
+  // Habilidades de combate del rival de arena, asignadas desde admin POR TIER (el rival cambia por combate,
+  // así que el bonus es del tier). La clave `arena-tier-N` coincide con la del editor del panel de estructura.
+  const opponentCombatModifiers = await getOpponentCombatModifiers(`arena-tier-${currentTier?.tier ?? 1}`, "arena");
   const narrationPack = buildStoryOpponentNarrationPack({
     opponentId: opponentLoadout.storyOpponentId,
     opponentName: opponentLoadout.displayName,
@@ -87,6 +91,9 @@ export default async function TrainingArenaPage({ searchParams }: TrainingArenaP
         playerMaxEnergyBonus={runtime.combatModifiers.maxEnergyBonus}
         playerTurn1EnergyBonus={runtime.combatModifiers.turn1EnergyBonus}
         playerOpeningMulligan={runtime.combatModifiers.openingMulligan}
+        opponentStartingLpBonus={opponentCombatModifiers.startingLpBonus}
+        opponentMaxEnergyBonus={opponentCombatModifiers.maxEnergyBonus}
+        opponentTurn1EnergyBonus={opponentCombatModifiers.turn1EnergyBonus}
         selectedTier={runtime.effectiveTier}
         tiers={runtime.tiers.map((tier) => ({
           tier: tier.tier,

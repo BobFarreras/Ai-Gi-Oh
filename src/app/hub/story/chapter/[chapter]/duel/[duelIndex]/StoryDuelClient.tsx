@@ -41,6 +41,9 @@ interface StoryDuelClientProps {
   playerMaxEnergyBonus?: number;
   playerTurn1EnergyBonus?: number;
   playerOpeningMulligan?: boolean;
+  opponentStartingLpBonus?: number;
+  opponentMaxEnergyBonus?: number;
+  opponentTurn1EnergyBonus?: number;
 }
 
 export function StoryDuelClient(props: StoryDuelClientProps) {
@@ -110,6 +113,9 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
           playerStartingLpBonus: props.playerStartingLpBonus,
           playerMaxEnergyBonus: props.playerMaxEnergyBonus,
           playerTurn1EnergyBonus: props.playerTurn1EnergyBonus,
+          opponentStartingLpBonus: props.opponentStartingLpBonus,
+          opponentMaxEnergyBonus: props.opponentMaxEnergyBonus,
+          opponentTurn1EnergyBonus: props.opponentTurn1EnergyBonus,
         }}
         opponentAvatarUrl={presentationRuntime.opponentAvatarUrl}
         playerAvatarUrl={presentationRuntime.playerAvatarUrl}

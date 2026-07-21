@@ -73,6 +73,38 @@ describe("boardInitialState", () => {
     expect(state.firstTurnEnergyBonusByPlayerId?.me).toBe(1);
   });
 
+  it("aplica el bonus de habilidad del OPONENTE al rival (playerB), sin tocar al jugador local", () => {
+    const base = createInitialBoardState();
+    const state = createInitialBoardState({ opponentStartingLpBonus: 500, opponentMaxEnergyBonus: 1 });
+    expect(state.playerB.maxHealthPoints).toBe(base.playerB.maxHealthPoints + 500);
+    expect(state.playerB.healthPoints).toBe(base.playerB.healthPoints + 500);
+    expect(state.playerB.maxEnergy).toBe(base.playerB.maxEnergy + 1);
+    expect(state.playerB.currentEnergy).toBe(base.playerB.currentEnergy + 1);
+    // El jugador local queda intacto.
+    expect(state.playerA.maxHealthPoints).toBe(base.playerA.maxHealthPoints);
+    expect(state.playerA.maxEnergy).toBe(base.playerA.maxEnergy);
+  });
+
+  it("Arranque en Frío del oponente: si el rival ARRANCA, concede su energía de turno 1 por encima del tope", () => {
+    const state = createInitialBoardState({ playerId: "me", opponentId: "rival", starterPlayerId: "rival", opponentTurn1EnergyBonus: 1 });
+    expect(state.playerB.currentEnergy).toBe(11);
+    expect(state.playerB.maxEnergy).toBe(10);
+    expect(state.firstTurnEnergyBonusByPlayerId?.rival ?? 0).toBe(0);
+  });
+
+  it("Arranque en Frío del oponente: si el rival NO arranca, difiere su energía a su primer turno", () => {
+    const state = createInitialBoardState({ playerId: "me", opponentId: "rival", starterPlayerId: "me", opponentTurn1EnergyBonus: 1 });
+    expect(state.playerB.currentEnergy).toBe(10);
+    expect(state.firstTurnEnergyBonusByPlayerId?.rival).toBe(1);
+  });
+
+  it("aplica bonus a jugador y oponente a la vez sin interferencia entre lados", () => {
+    const base = createInitialBoardState();
+    const state = createInitialBoardState({ playerStartingLpBonus: 300, opponentStartingLpBonus: 500 });
+    expect(state.playerA.maxHealthPoints).toBe(base.playerA.maxHealthPoints + 300);
+    expect(state.playerB.maxHealthPoints).toBe(base.playerB.maxHealthPoints + 500);
+  });
+
   it("permite inyectar identidad de jugador y oponente sin hardcode local", () => {
     const state = createInitialBoardState({
       playerId: "player-123",

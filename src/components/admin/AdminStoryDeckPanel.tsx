@@ -9,6 +9,7 @@ import { AdminStarterDeckCollectionPanel } from "@/components/admin/internal/Adm
 import { AdminStoryDeckSlotsPanel } from "@/components/admin/internal/AdminStoryDeckSlotsPanel";
 import { AdminStoryDuelCatalog } from "@/components/admin/internal/AdminStoryDuelCatalog";
 import { AdminStoryOpponentCatalog } from "@/components/admin/internal/AdminStoryOpponentCatalog";
+import { OpponentCombatSkillEditor } from "@/components/admin/internal/shared/OpponentCombatSkillEditor";
 import { BonusStepper, CollapsibleSection } from "@/components/admin/internal/DetailBonusControls";
 import { readAdminStarterDeckDragData, writeAdminStarterDeckDragData } from "@/components/admin/internal/admin-starter-deck-dnd";
 import { fetchAdminShopObjects } from "@/components/admin/admin-objects-api";
@@ -196,6 +197,14 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
               Guardar
             </button>
           </div>
+
+          {/* Grupo: habilidades de combate del COMBATE seleccionado (cada duelo del oponente tiene las suyas) */}
+          {isDuelMode && selectedDuel ? (
+            <div className="flex items-center gap-1.5 rounded-lg border border-amber-700/40 bg-amber-950/10 p-1">
+              <span className="text-[9px] font-black uppercase tracking-wider text-amber-400/80" title={selectedDuel.title}>Ch{selectedDuel.chapter}-{selectedDuel.duelIndex}</span>
+              <OpponentCombatSkillEditor opponentId={selectedDuel.duelId} opponentType="story" />
+            </div>
+          ) : null}
 
           {/* Grupo: acciones de slot */}
           {editor.isEditMode && (
