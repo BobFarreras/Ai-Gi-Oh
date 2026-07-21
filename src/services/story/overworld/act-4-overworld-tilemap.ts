@@ -150,6 +150,10 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   // Muro de atrezzo que parte la sala del jefe en dos; hueco en x=26 con la puerta post-GenNvim.
   for (let x = 18; x <= 34; x++) if (x !== 26) placeStructure(map, x, 6, OVERLAY_TILE.SERVER_RACK);
 
+  // Consolas de eventos narrativos (se usan desde el lado).
+  markSolid(map, 9, 29); // E2: log del origen (rama izquierda alta)
+  markSolid(map, 24, 18); // E4: registro-madre (terminal)
+
   return validateOverworldTilemap({
     schemaVersion: 2,
     id: "act-4",
@@ -192,6 +196,10 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
 
       // ── Puerta post-GenNvim: SOLO abre tras vencer a GenNvim (duel-6); sella a Midutech ──────────────
       { id: "story-a4-gate-postboss", kind: "GATE", tileX: 26, tileY: 6, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: ["story-ch4-duel-6"] },
+
+      // ── Eventos narrativos en el mundo (consolas). El resto (intro, jefes) se disparan por escena. ───
+      { id: "story-ch4-event-log-origin-1", kind: "EVENT", tileX: 9, tileY: 29, sprite: "console", trigger: "ADJACENT_ACTION" },
+      { id: "story-ch4-event-revelation", kind: "EVENT", tileX: 24, tileY: 18, sprite: "console", trigger: "ADJACENT_ACTION" },
     ],
     spawns: [{ id: "spawn-entry", tileX: 26, tileY: 51, facing: "UP" }],
     defaultSpawnId: "spawn-entry",

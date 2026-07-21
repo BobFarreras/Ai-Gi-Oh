@@ -2,6 +2,66 @@
 import { IStoryNodeInteractionDialogue } from "@/services/story/story-node-interaction-dialogue-types";
 
 export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNodeInteractionDialogue> = {
+  // ── Acto 4 — Núcleo GenNvim (terminal verde) ────────────────────────────────
+  // E1/E4/E6 serán vídeo; de momento van como narración (placeholder). GenNvim/Midutech/Sistema en estilo
+  // terminal (sin retrato); BigLog/Operador con su actor.
+  "story-ch4-event-intro": {
+    title: "Núcleo GenNvim",
+    lines: [
+      { speaker: "GenNvim", text: "> intruso.detectado. reubicando geometría. suerte encontrando la salida." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Esto es GenNvim. Aquí se forjó… todo. No confíes en las paredes: se mueven." },
+      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "Operador", text: "Recibido. Busco la llave del Core y salgo por arriba." },
+    ],
+  },
+  "story-ch4-event-log-origin-1": {
+    title: "Log del Origen",
+    lines: [
+      { speaker: "Sistema", text: "> build.entidad v0.1 — semilla: [REDACTADO] — patrocinador: B.L." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "…No leas eso todavía. Sigue." },
+    ],
+  },
+  "story-ch4-event-belts": {
+    title: "Sala de Pasarelas",
+    lines: [
+      { speaker: "GenNvim", text: "> flujo.forzado. cada cinta va en un sentido. las cajas pesan. piensa antes de pisar." },
+    ],
+  },
+  "story-ch4-event-belt-locked": {
+    title: "Flujo en Contra",
+    lines: [
+      { speaker: "GenNvim", text: "> el flujo va donde yo digo. no subirás por aquí… salvo que redirijas la corriente desde otra sala." },
+    ],
+  },
+  "story-ch4-event-belt-toggled": {
+    title: "Flujo Redirigido",
+    lines: [
+      { speaker: "Sistema", text: "> flujo.invertido. la pasarela ahora sube. acceso al terminal habilitado.", autoAdvanceMs: 2600 },
+    ],
+  },
+  "story-ch4-event-revelation": {
+    title: "Registro-Madre",
+    lines: [
+      { speaker: "Sistema", text: "> autor(es): GenNvim + Midutech. patrocinador: B.L. objetivo: contención. resultado: fuga." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "La construimos para contener, no para liberar. Cuando escapó… te empecé a entrenar a ti. Eras el plan B." },
+      { speaker: "GenNvim", text: "> plan B: obsoleto. compilando defensa." },
+    ],
+  },
+  "story-ch4-event-pre-midutech": {
+    title: "El Arquitecto",
+    lines: [
+      { speaker: "Midutech", text: "GenNvim solo era código. Yo lo escribí. Si quieres la llave del Core, tendrás que quitármela." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Ten cuidado. Él sabe cómo piensas… porque ayudó a diseñarte." },
+    ],
+  },
+  "story-ch4-event-core-key": {
+    title: "Llave del Core",
+    lines: [
+      { speaker: "Midutech", text: "Buen jugador. Quizá el plan B no era tan malo." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Ya tienes la llave del Core. Lo que viene ahora… no puedo prepararte para ello." },
+      { speaker: "Sistema", text: "> Acto 5: próximamente.", autoAdvanceMs: 2800 },
+    ],
+  },
+
   // ── Acto 3 — Repositorio Fantasma (Jaku) ────────────────────────────────────
   "story-ch3-event-intro": {
     title: "Umbral del Repositorio",

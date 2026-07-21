@@ -45,5 +45,15 @@ export const storyAct4MapDefinition: IStoryActMapDefinition = {
     // Botón que invierte la cinta del puente (belt-toggle): al accionarlo se enclava (persiste) y la pasarela
     // pasa de bajar a subir, abriendo el paso al terminal.
     v({ id: "story-ch4-belt-button", duelIndex: 402, nodeType: "EVENT", title: "Botón de Flujo", unlockRequirementNodeId: null, position: { x: 400, y: 200 } }),
+    // Eventos narrativos (E1-E6 + puzzle). Persisten como EVENT vía mark-interacted; la narración vive en
+    // story-node-interaction-dialogue-catalog. E1/E4/E6 serán vídeo (placeholder de narración de momento).
+    v({ id: "story-ch4-event-intro", duelIndex: 403, nodeType: "EVENT", title: "Núcleo GenNvim", unlockRequirementNodeId: null, position: { x: 600, y: 200 } }),
+    v({ id: "story-ch4-event-log-origin-1", duelIndex: 404, nodeType: "EVENT", title: "Log del Origen", unlockRequirementNodeId: null, position: { x: 800, y: 200 } }),
+    v({ id: "story-ch4-event-belts", duelIndex: 405, nodeType: "EVENT", title: "Sala de Pasarelas", unlockRequirementNodeId: null, position: { x: 1000, y: 200 } }),
+    v({ id: "story-ch4-event-belt-locked", duelIndex: 406, nodeType: "EVENT", title: "Flujo en Contra", unlockRequirementNodeId: null, position: { x: 200, y: 400 } }),
+    v({ id: "story-ch4-event-belt-toggled", duelIndex: 407, nodeType: "EVENT", title: "Flujo Redirigido", unlockRequirementNodeId: null, position: { x: 400, y: 400 } }),
+    v({ id: "story-ch4-event-revelation", duelIndex: 408, nodeType: "EVENT", title: "Registro-Madre", unlockRequirementNodeId: null, position: { x: 600, y: 400 } }),
+    v({ id: "story-ch4-event-pre-midutech", duelIndex: 409, nodeType: "EVENT", title: "El Arquitecto", unlockRequirementNodeId: null, position: { x: 800, y: 400 } }),
+    v({ id: "story-ch4-event-core-key", duelIndex: 410, nodeType: "EVENT", title: "Llave del Core", unlockRequirementNodeId: null, position: { x: 1000, y: 400 } }),
   ],
 };
