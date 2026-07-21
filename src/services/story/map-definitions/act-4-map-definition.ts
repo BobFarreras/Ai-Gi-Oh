@@ -51,7 +51,6 @@ export const storyAct4MapDefinition: IStoryActMapDefinition = {
     v({ id: "story-ch4-event-log-origin-1", duelIndex: 404, nodeType: "EVENT", title: "Log del Origen", unlockRequirementNodeId: null, position: { x: 800, y: 200 } }),
     v({ id: "story-ch4-event-belts", duelIndex: 405, nodeType: "EVENT", title: "Sala de Pasarelas", unlockRequirementNodeId: null, position: { x: 1000, y: 200 } }),
     v({ id: "story-ch4-event-belt-locked", duelIndex: 406, nodeType: "EVENT", title: "Flujo en Contra", unlockRequirementNodeId: null, position: { x: 200, y: 400 } }),
-    v({ id: "story-ch4-event-belt-toggled", duelIndex: 407, nodeType: "EVENT", title: "Flujo Redirigido", unlockRequirementNodeId: null, position: { x: 400, y: 400 } }),
     v({ id: "story-ch4-event-revelation", duelIndex: 408, nodeType: "EVENT", title: "Registro-Madre", unlockRequirementNodeId: null, position: { x: 600, y: 400 } }),
     v({ id: "story-ch4-event-pre-midutech", duelIndex: 409, nodeType: "EVENT", title: "El Arquitecto", unlockRequirementNodeId: null, position: { x: 800, y: 400 } }),
     v({ id: "story-ch4-event-core-key", duelIndex: 410, nodeType: "EVENT", title: "Llave del Core", unlockRequirementNodeId: null, position: { x: 1000, y: 400 } }),

@@ -643,6 +643,12 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
             void markOverworldEventInteracted(object.id);
             playDeviceSound();
             engine.updateProgress(buildProgress(initialCompleted, seenEventIdsRef.current));
+            // Si el interruptor lleva narración (p.ej. el botón que invierte la cinta), la muestra al accionarse.
+            const switchDialogue = resolveOverworldEventDialogue(object.id);
+            if (switchDialogue && switchDialogue.lines.length > 0) {
+              engine.setInteractionSuspended(true);
+              setNarration({ title: switchDialogue.title, lines: switchDialogue.lines, lineIndex: 0, isCutscene: false });
+            }
             return;
           }
           // Acción adyacente (pulsar A frente a un nodo): abre el panel → congela mientras esté abierto.

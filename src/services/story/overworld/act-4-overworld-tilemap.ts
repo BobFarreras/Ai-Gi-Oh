@@ -197,9 +197,16 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       // ── Puerta post-GenNvim: SOLO abre tras vencer a GenNvim (duel-6); sella a Midutech ──────────────
       { id: "story-a4-gate-postboss", kind: "GATE", tileX: 26, tileY: 6, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: ["story-ch4-duel-6"] },
 
-      // ── Eventos narrativos en el mundo (consolas). El resto (intro, jefes) se disparan por escena. ───
+      // ── Eventos narrativos ────────────────────────────────────────────────────────────────────────
+      // Consolas (se leen pulsando al lado): E2 log del origen, E4 registro-madre.
       { id: "story-ch4-event-log-origin-1", kind: "EVENT", tileX: 9, tileY: 29, sprite: "console", trigger: "ADJACENT_ACTION" },
       { id: "story-ch4-event-revelation", kind: "EVENT", tileX: 24, tileY: 18, sprite: "console", trigger: "ADJACENT_ACTION" },
+      // Triggers ocultos (se pisan, una vez): E3 al entrar al laberinto; belt-locked al llegar al puente en
+      // contra; E5 tras vencer a GenNvim (celda naturalmente sellada por su casilla sólida); E6 tras Midutech.
+      { id: "story-ch4-event-belts", kind: "EVENT", tileX: 26, tileY: 34, sprite: "hidden", trigger: "STEP_ON", hidden: true },
+      { id: "story-ch4-event-belt-locked", kind: "EVENT", tileX: 26, tileY: 25, sprite: "hidden", trigger: "STEP_ON", hidden: true },
+      { id: "story-ch4-event-pre-midutech", kind: "EVENT", tileX: 26, tileY: 7, sprite: "hidden", trigger: "STEP_ON", hidden: true },
+      { id: "story-ch4-event-core-key", kind: "EVENT", tileX: 26, tileY: 3, sprite: "hidden", trigger: "STEP_ON", hidden: true },
     ],
     spawns: [{ id: "spawn-entry", tileX: 26, tileY: 51, facing: "UP" }],
     defaultSpawnId: "spawn-entry",

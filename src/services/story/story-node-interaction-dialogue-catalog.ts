@@ -32,7 +32,8 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
       { speaker: "GenNvim", text: "> el flujo va donde yo digo. no subirás por aquí… salvo que redirijas la corriente desde otra sala." },
     ],
   },
-  "story-ch4-event-belt-toggled": {
+  // Narración del botón de la cinta (belt-toggle): se muestra al accionarlo (keyed por el id del SWITCH).
+  "story-ch4-belt-button": {
     title: "Flujo Redirigido",
     lines: [
       { speaker: "Sistema", text: "> flujo.invertido. la pasarela ahora sube. acceso al terminal habilitado.", autoAdvanceMs: 2600 },
