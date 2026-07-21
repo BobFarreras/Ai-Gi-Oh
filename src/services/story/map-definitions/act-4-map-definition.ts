@@ -40,7 +40,10 @@ export const storyAct4MapDefinition: IStoryActMapDefinition = {
   nodes: [],
   virtualNodes: [
     // Placa de presión del laberinto: al pulsarla (caja encima) se enclava y persiste (mark-interacted),
-    // manteniendo abierta la compuerta que da acceso a las plantas altas (evita el soft-lock tras un duelo).
+    // manteniendo abierta la compuerta terminal->jefe (evita el soft-lock tras un duelo).
     v({ id: "story-ch4-plate-lab", duelIndex: 401, nodeType: "EVENT", title: "Placa del Laberinto", unlockRequirementNodeId: null, position: { x: 200, y: 200 } }),
+    // Botón que invierte la cinta del puente (belt-toggle): al accionarlo se enclava (persiste) y la pasarela
+    // pasa de bajar a subir, abriendo el paso al terminal.
+    v({ id: "story-ch4-belt-button", duelIndex: 402, nodeType: "EVENT", title: "Botón de Flujo", unlockRequirementNodeId: null, position: { x: 400, y: 200 } }),
   ],
 };

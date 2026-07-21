@@ -113,6 +113,11 @@ export interface IOverworldTilemapObject {
   lightRadius?: number;
   /** Solo SWITCH: sala completa (rect de celdas) que se ilumina al activarse. */
   lightRect?: IOverworldLightRect;
+  /**
+   * Solo SWITCH: rect de casillas-cinta cuyo sentido se INVIERTE mientras el interruptor está accionado
+   * (belt-toggle). Un botón en una sala puede así abrir/cerrar el paso por una pasarela de otra sala.
+   */
+  beltToggleRect?: IOverworldLightRect;
 }
 
 export interface IOverworldTilemapSpawn {

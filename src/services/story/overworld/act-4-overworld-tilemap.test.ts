@@ -11,6 +11,7 @@ import { resolveMovementContext } from "@/core/services/story/overworld/movement
 import { findGridPath } from "@/core/services/story/overworld/pathfinding";
 import { IOverworldProgressState } from "@/core/services/story/overworld/overworld-types";
 import { findStoryVirtualNodeDefinition } from "@/services/story/map-definitions/story-map-definition-registry";
+import { GROUND_TILE, invertBeltKind, resolveBeltDirection } from "@/services/story/overworld/overworld-tile-kinds";
 
 const PLATE = "story-ch4-plate-lab";
 
@@ -88,14 +89,30 @@ describe("buildAct4OverworldTilemap", () => {
     expect(findGridPath(spawnTile(opened.tilemap), bossRoomTile, opened.context)).not.toBeNull();
   });
 
-  it("la compuerta requiere exactamente la placa del laberinto", () => {
-    const gate = buildAct4OverworldTilemap().objects.find((object) => object.id === "story-a4-gate-lab")!;
+  it("la compuerta terminal→jefe requiere exactamente la placa del laberinto", () => {
+    const gate = buildAct4OverworldTilemap().objects.find((object) => object.id === "story-a4-gate-boss")!;
     expect(gate.gateRequiredNodeIds).toContain(PLATE);
   });
 
-  it("la placa es un EVENT persistible en el registro (mark-interacted, anti soft-lock)", () => {
-    const definition = findStoryVirtualNodeDefinition(PLATE);
-    expect(definition).not.toBeNull();
-    expect(definition!.nodeType).toBe("EVENT");
+  it("la placa y el botón de la cinta son EVENT persistibles en el registro (mark-interacted)", () => {
+    for (const id of [PLATE, "story-ch4-belt-button"]) {
+      const definition = findStoryVirtualNodeDefinition(id);
+      expect(definition).not.toBeNull();
+      expect(definition!.nodeType).toBe("EVENT");
+    }
+  });
+
+  it("belt-toggle: el puente lab→terminal es una cinta EN CONTRA y el botón la controla e invierte", () => {
+    const tilemap = buildAct4OverworldTilemap();
+    // El puente (x=26, y=22..24) baja (BELT_DOWN) por defecto: no se sube.
+    for (const y of [22, 23, 24]) {
+      expect(resolveBeltDirection(tilemap.layers.ground[y][26])).toBe("DOWN");
+    }
+    // El botón (SWITCH) controla justo esas casillas.
+    const button = tilemap.objects.find((object) => object.id === "story-ch4-belt-button")!;
+    expect(button.kind).toBe("SWITCH");
+    expect(button.beltToggleRect).toEqual({ x0: 26, y0: 22, x1: 26, y1: 24 });
+    // Invertir el tile de cinta lo pone a subir (lo que hace el engine al accionar el botón).
+    expect(invertBeltKind(GROUND_TILE.BELT_DOWN)).toBe(GROUND_TILE.BELT_UP);
   });
 });

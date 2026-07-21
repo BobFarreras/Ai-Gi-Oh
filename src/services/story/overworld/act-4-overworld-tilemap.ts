@@ -112,6 +112,11 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   // y se baja por el suelo abierto de al lado, así que no atrapa). Da sabor de "pasarela" a la sala.
   for (const y of [28, 29, 30, 31, 32]) placeBelt(map, 31, y, GROUND_TILE.BELT_UP);
 
+  // Puente lab -> terminal: cinta EN CONTRA (empuja hacia abajo). No se sube hasta invertir su sentido con el
+  // botón de la rama derecha alta (belt-toggle). El botón se marca sólido (se usa desde el lado).
+  for (const y of [22, 23, 24]) placeBelt(map, 26, y, GROUND_TILE.BELT_DOWN);
+  markSolid(map, 43, 29); // botón que invierte la cinta del puente
+
   // Estructuras decorativas variadas (racks + unidades de refrigeración + pilones) en esquinas que no estorban.
   const racks: Array<[number, number]> = [[20, 53], [32, 53], [4, 44], [48, 37], [4, 25], [48, 33]];
   for (const [x, y] of racks) placeStructure(map, x, y, OVERLAY_TILE.SERVER_RACK);
@@ -147,13 +152,17 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       // Retorno al Acto 3 (se pisa). El avance al Acto 5 se añadirá con el jefe (Acto 5 = "próximamente").
       { id: "story-ch4-transition-to-act3", kind: "WARP", tileX: 20, tileY: 50, sprite: "portal", trigger: "STEP_ON", warp: { toMapId: "act-3", toSpawnId: "spawn-entry", direction: "backward" } },
 
-      // ── Laberinto (Fase 2): caja empujable + placa → compuerta hacia las plantas altas ─────────────
-      // Empuja la caja hacia la izquierda sobre la placa para abrir la compuerta que sube al terminal/jefe.
+      // ── Laberinto: puzzle 1 = caja empujable + placa → compuerta terminal→jefe ─────────────────────
+      // Empuja la caja sobre la placa para abrir la compuerta del tramo alto (terminal -> jefe).
       { id: "story-ch4-box-lab", kind: "BOX", tileX: 24, tileY: 31, sprite: "box", trigger: "ADJACENT_ACTION" },
       { id: "story-ch4-plate-lab", kind: "PLATE", tileX: 21, tileY: 31, sprite: "plate", trigger: "ADJACENT_ACTION" },
-      { id: "story-a4-gate-lab", kind: "GATE", tileX: 26, tileY: 24, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: ["story-ch4-plate-lab"] },
+      { id: "story-a4-gate-boss", kind: "GATE", tileX: 26, tileY: 12, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: ["story-ch4-plate-lab"] },
       // Botón de rescate: si la caja se empotra contra una pared, la devuelve a su sitio.
       { id: "story-a4-box-reset", kind: "BOX_RESET", tileX: 32, tileY: 33, sprite: "reset", trigger: "ADJACENT_ACTION" },
+
+      // ── Laberinto: puzzle 2 = botón que INVIERTE la cinta del puente lab->terminal (belt-toggle) ────
+      // Está en la rama derecha alta (otra sala); al accionarlo, la cinta del puente pasa de bajar a subir.
+      { id: "story-ch4-belt-button", kind: "SWITCH", tileX: 43, tileY: 29, sprite: "switch", trigger: "ADJACENT_ACTION", beltToggleRect: { x0: 26, y0: 22, x1: 26, y1: 24 } },
     ],
     spawns: [{ id: "spawn-entry", tileX: 26, tileY: 51, facing: "UP" }],
     defaultSpawnId: "spawn-entry",

@@ -31,7 +31,7 @@ import {
   buildCollisionGridFromTilemap,
   listGatesFromTilemap,
 } from "@/services/story/overworld/tilemap-runtime";
-import { resolveBeltDirection } from "@/services/story/overworld/overworld-tile-kinds";
+import { invertBeltKind, resolveBeltDirection } from "@/services/story/overworld/overworld-tile-kinds";
 import { resolveCameraOffset } from "@/components/hub/story/overworld/engine/camera-math";
 import {
   DEFAULT_ENGINE_CONFIG,
@@ -93,6 +93,10 @@ export class OverworldEngine {
   private progress: IOverworldProgressState;
   private readonly switchLightSources: ISwitchLightSource[];
   private activeLights: IOverworldLight[] = [];
+  // Interruptores que INVIERTEN cintas: cada uno controla un rect de casillas-cinta. `baseBeltKinds` guarda el
+  // sentido original de esas casillas para poder invertirlo/restaurarlo según si el interruptor está accionado.
+  private readonly beltToggleControllers: Array<{ id: string; rect: { x0: number; y0: number; x1: number; y1: number } }>;
+  private readonly baseBeltKinds: Map<string, number> = new Map();
   // Cajas empujables (sokoban): posición lógica viva + celdas que bloquean + animación de deslizado.
   private boxPositions = new Map<string, IGridPosition>();
   private boxHomePositions = new Map<string, IGridPosition>();
@@ -227,6 +231,11 @@ export class OverworldEngine {
     this.actors = new OpponentActorManager(init.tilemap.objects, this.config.tilesPerSecond);
     this.switchLightSources = this.buildSwitchLightSources(init.tilemap.objects);
     this.recomputeLights();
+    this.beltToggleControllers = init.tilemap.objects
+      .filter((object) => object.kind === "SWITCH" && object.beltToggleRect)
+      .map((object) => ({ id: object.id, rect: object.beltToggleRect! }));
+    this.snapshotBaseBeltKinds();
+    this.applyBeltToggles();
     this.initBoxesAndPlates(init.tilemap.objects);
 
     const spawn =
@@ -270,6 +279,7 @@ export class OverworldEngine {
     this.rebuildMovementContext();
     this.recomputeBlockedObjects();
     this.recomputeLights();
+    this.applyBeltToggles();
   }
 
   /** Construye las fuentes de luz de los interruptores del mapa (radio o sala). */
@@ -299,6 +309,40 @@ export class OverworldEngine {
   /** Recalcula las luces encendidas (interruptores ya accionados) tras un cambio de progreso. */
   private recomputeLights(): void {
     this.activeLights = resolveActiveLights(this.switchLightSources, this.progress.interactedNodeIds);
+  }
+
+  /** Guarda el sentido ORIGINAL de las casillas-cinta controladas por interruptores (para invertir/restaurar). */
+  private snapshotBaseBeltKinds(): void {
+    const ground = this.world.tilemap.layers.ground;
+    for (const controller of this.beltToggleControllers) {
+      for (let tileY = controller.rect.y0; tileY <= controller.rect.y1; tileY++) {
+        for (let tileX = controller.rect.x0; tileX <= controller.rect.x1; tileX++) {
+          if (resolveBeltDirection(ground[tileY]?.[tileX]) === null) continue;
+          this.baseBeltKinds.set(`${tileX},${tileY}`, ground[tileY][tileX]);
+        }
+      }
+    }
+  }
+
+  /**
+   * Aplica el estado de los interruptores de cinta: una casilla se INVIERTE respecto a su sentido base si algún
+   * interruptor que la controla está accionado (interacted); si no, vuelve a su sentido base. Muta la capa
+   * ground, así que movimiento y render leen el sentido vigente sin fontanería extra.
+   */
+  private applyBeltToggles(): void {
+    if (this.baseBeltKinds.size === 0) return;
+    const ground = this.world.tilemap.layers.ground;
+    const activeControllers = this.beltToggleControllers.filter((controller) =>
+      this.progress.interactedNodeIds.has(controller.id),
+    );
+    for (const [key, baseKind] of this.baseBeltKinds) {
+      const [tileX, tileY] = key.split(",").map(Number);
+      const inverted = activeControllers.some(
+        (controller) =>
+          tileX >= controller.rect.x0 && tileX <= controller.rect.x1 && tileY >= controller.rect.y0 && tileY <= controller.rect.y1,
+      );
+      ground[tileY][tileX] = inverted ? invertBeltKind(baseKind) : baseKind;
+    }
   }
 
   private rebuildMovementContext(): void {

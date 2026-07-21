@@ -15,6 +15,22 @@ export const GROUND_TILE = {
   BELT_RIGHT: 9,
 } as const;
 
+/** Invierte el sentido de un tile de cinta (UP↔DOWN, LEFT↔RIGHT). Otros tiles se devuelven sin cambio. */
+export function invertBeltKind(tileKind: number): number {
+  switch (tileKind) {
+    case GROUND_TILE.BELT_UP:
+      return GROUND_TILE.BELT_DOWN;
+    case GROUND_TILE.BELT_DOWN:
+      return GROUND_TILE.BELT_UP;
+    case GROUND_TILE.BELT_LEFT:
+      return GROUND_TILE.BELT_RIGHT;
+    case GROUND_TILE.BELT_RIGHT:
+      return GROUND_TILE.BELT_LEFT;
+    default:
+      return tileKind;
+  }
+}
+
 /** Dirección de arrastre de cada tile de cinta. `null` si el tile no es cinta. */
 export function resolveBeltDirection(
   tileKind: number | undefined,
