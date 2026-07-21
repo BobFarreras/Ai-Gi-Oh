@@ -2,7 +2,7 @@
 import { ChatMessageKind } from "@/core/entities/chat/IChatMessage";
 import { ValidationError } from "@/core/errors/ValidationError";
 
-export const CHAT_MESSAGE_MAX_LENGTH = 500;
+export const CHAT_MESSAGE_MAX_LENGTH = 4000;
 export const CHAT_ROOM_MAX_LENGTH = 40;
 const VALID_KINDS: ReadonlySet<ChatMessageKind> = new Set(["TEXT", "CARD_SHARE", "SYSTEM"]);
 

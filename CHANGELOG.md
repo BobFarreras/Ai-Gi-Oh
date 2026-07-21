@@ -6,6 +6,9 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Changed
+- **Chat estilo WhatsApp**: el campo de escritura (chat general y DM) pasa de `<input>` de una línea a un `<textarea>` multilínea con auto-crecimiento y scrollbar del juego. Enter envía (escritorio) y Shift+Enter / Enter en táctil hace salto de línea; los saltos se respetan al mostrar el mensaje. El límite de longitud sube de 500 a **4000** caracteres (migración **142** relaja el `CHECK` de `chat_messages` y `dm_messages`; aplicar ANTES o a la vez que el deploy del código).
+
 ## [1.18.2] - 2026-07-21
 
 ### Fixed

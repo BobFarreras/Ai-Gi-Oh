@@ -12,8 +12,8 @@ import { IChatMessage } from "@/core/entities/chat/IChatMessage";
 import { IDirectMessage } from "@/core/entities/chat/IDirectMessage";
 import { CommunityChatCardPicker } from "@/components/hub/community/CommunityChatCardPicker";
 import { CommunityChatMessage, IQuotedPreview } from "@/components/hub/community/CommunityChatMessage";
+import { ChatComposerTextarea } from "@/components/hub/community/ChatComposerTextarea";
 import { getAvatarGradientClasses, getAvatarInitial } from "@/components/hub/internal/avatar-color";
-import { CHAT_MESSAGE_MAX_LENGTH } from "@/core/services/chat/validate-chat-message";
 import { useDirectConversation } from "@/core/hooks/chat/use-direct-conversation";
 
 interface DirectConversationClientProps {
@@ -53,7 +53,7 @@ export function DirectConversationClient({ conversationId, localPlayerId, otherN
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   const messagesById = useMemo(() => {
     const map = new Map<string, IDirectMessage>();
@@ -98,8 +98,8 @@ export function DirectConversationClient({ conversationId, localPlayerId, otherN
     window.setTimeout(() => node.classList.remove("chat-quote-flash"), 1200);
   }, [messagesById]);
 
-  async function handleSubmit(event: React.FormEvent): Promise<void> {
-    event.preventDefault();
+  async function handleSubmit(event?: React.FormEvent): Promise<void> {
+    event?.preventDefault();
     const content = draft.trim();
     if (!content || isSending) return;
     const ok = await send({ content, replyToMessageId: replyingToId });
@@ -203,14 +203,14 @@ export function DirectConversationClient({ conversationId, localPlayerId, otherN
           >
             <Layers className="h-4 w-4" />
           </button>
-          <input
+          <ChatComposerTextarea
             ref={inputRef}
             value={draft}
-            onChange={(event) => setDraft(event.target.value.slice(0, CHAT_MESSAGE_MAX_LENGTH))}
+            onChange={setDraft}
+            onSubmit={() => void handleSubmit()}
             placeholder="Escribe un mensaje privado…"
-            aria-label="Escribe un mensaje privado"
-            maxLength={CHAT_MESSAGE_MAX_LENGTH}
-            className="flex-1 rounded-lg border border-cyan-900/60 bg-[#020a14] px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:border-cyan-400 placeholder:text-slate-600"
+            ariaLabel="Escribe un mensaje privado"
+            className="flex-1"
           />
           <button
             type="submit"
