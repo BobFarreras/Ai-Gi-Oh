@@ -54,5 +54,9 @@ export const storyAct4MapDefinition: IStoryActMapDefinition = {
     v({ id: "story-ch4-event-revelation", duelIndex: 408, nodeType: "EVENT", title: "Registro-Madre", unlockRequirementNodeId: null, position: { x: 600, y: 400 } }),
     v({ id: "story-ch4-event-pre-midutech", duelIndex: 409, nodeType: "EVENT", title: "El Arquitecto", unlockRequirementNodeId: null, position: { x: 800, y: 400 } }),
     v({ id: "story-ch4-event-core-key", duelIndex: 410, nodeType: "EVENT", title: "Llave del Core", unlockRequirementNodeId: null, position: { x: 1000, y: 400 } }),
+    // Recompensas-objeto (una vez, vía claim-reward): USB en el laberinto + aumentos ATK/DEF tras rivales.
+    v({ id: "story-ch4-cache-usb", duelIndex: 411, nodeType: "REWARD_OBJECT", title: "USB Raro", rewardObjectType: "LEVEL_CANDY", rewardObjectId: "candy-usb-raro-1", rewardObjectQuantity: 1, unlockRequirementNodeId: null, position: { x: 200, y: 600 } }),
+    v({ id: "story-ch4-cache-atk", duelIndex: 412, nodeType: "REWARD_OBJECT", title: "Núcleo Overclock", rewardObjectType: "CARD_UPGRADE", rewardObjectId: "item-nucleo-overclock", rewardObjectQuantity: 1, unlockRequirementNodeId: null, position: { x: 400, y: 600 } }),
+    v({ id: "story-ch4-cache-def", duelIndex: 413, nodeType: "REWARD_OBJECT", title: "Placa Blindada", rewardObjectType: "CARD_UPGRADE", rewardObjectId: "item-placa-blindada", rewardObjectQuantity: 1, unlockRequirementNodeId: null, position: { x: 600, y: 600 } }),
   ],
 };

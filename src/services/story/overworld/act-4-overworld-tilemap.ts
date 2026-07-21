@@ -13,6 +13,10 @@ const MAP_HEIGHT = 56;
 const SOLDADO = "/assets/story/opponents/opp-ch4-soldado-terminal/avatar-Soldado-terminal.webp";
 const GENNVIM = "/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.webp";
 const MIDUTECH = "/assets/story/opponents/opp-ch1-midutech/avatar-Midutech.webp";
+// Objetos de recompensa (arte ya existente en /assets/items/).
+const USB = "/assets/items/candy-usb-raro.webp";
+const ATK_AUGMENT = "/assets/items/item-nucleo-overclock.webp";
+const DEF_AUGMENT = "/assets/items/item-placa-blindada.webp";
 
 interface IMutableTilemap {
   ground: number[][];
@@ -107,15 +111,18 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   // Ramas bajas (izquierda / derecha) desde el hub.
   carveCorridor(map, { x: 16, y: 40 }, { x: 19, y: 40 }); // hub -> rama izq baja
   carveCorridor(map, { x: 33, y: 40 }, { x: 36, y: 40 }); // hub -> rama der baja
-  // Ramas altas (recompensas) desde las ramas bajas y desde el laberinto.
-  carveCorridor(map, { x: 9, y: 34 }, { x: 9, y: 36 }); // rama izq baja -> sala izq alta
-  carveCorridor(map, { x: 43, y: 34 }, { x: 43, y: 36 }); // rama der baja -> sala der alta
-  carveCorridor(map, { x: 15, y: 29 }, { x: 17, y: 29 }); // laberinto <-> sala izq alta
-  carveCorridor(map, { x: 35, y: 29 }, { x: 37, y: 29 }); // laberinto <-> sala der alta
+  // Ramas altas SOLO desde el laberinto (las ramas bajas quedan selladas): así sus rivales-guardia son
+  // OBLIGATORIOS — no se llega al aumento de DEF ni al botón de la cinta sin vencerlos.
+  carveCorridor(map, { x: 15, y: 29 }, { x: 17, y: 29 }); // laberinto -> sala izq alta (aumento DEF, guardia duel-4)
+  carveCorridor(map, { x: 35, y: 29 }, { x: 37, y: 29 }); // laberinto -> sala der alta (botón cinta, guardia duel-3)
 
-  // Laberinto (Fase 2): cinta de ascenso en el lado derecho del laberinto (un solo sentido: se sube por ella
-  // y se baja por el suelo abierto de al lado, así que no atrapa). Da sabor de "pasarela" a la sala.
-  for (const y of [28, 29, 30, 31, 32]) placeBelt(map, 31, y, GROUND_TILE.BELT_UP);
+  // Laberinto de pasarelas (estilo Pokémon): la subida por el centro (x=26) es una cinta que SUBE, flanqueada
+  // por cintas que BAJAN (x=25 y x=27): si te sales del centro, la corriente te arrastra de vuelta al fondo.
+  for (const y of [26, 27, 28, 29, 30]) {
+    placeBelt(map, 26, y, GROUND_TILE.BELT_UP); // subida central (la buena)
+    placeBelt(map, 25, y, GROUND_TILE.BELT_DOWN); // trampa izquierda
+    placeBelt(map, 27, y, GROUND_TILE.BELT_DOWN); // trampa derecha
+  }
 
   // Puente lab -> terminal: cinta EN CONTRA (empuja hacia abajo). No se sube hasta invertir su sentido con el
   // botón de la rama derecha alta (belt-toggle). El botón se marca sólido (se usa desde el lado).
@@ -138,6 +145,11 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   markSolid(map, 25, 52); // arsenal
   markSolid(map, 30, 52); // teleport (salir)
   markSolid(map, 32, 33); // botón de reinicio de cajas (rescate anti soft-lock)
+
+  // Recompensas-objeto (se recogen pulsando al lado): USB en el laberinto; aumentos ATK/DEF en salas guardadas.
+  markSolid(map, 30, 29); // USB Raro (dentro del laberinto)
+  markSolid(map, 7, 41); // aumento de ATAQUE (rama izq baja, tras el guardia duel-2)
+  markSolid(map, 7, 29); // aumento de DEFENSA (rama izq alta, tras el guardia duel-4)
 
   // Rivales (sólidos): al vencerlos se teletransportan y liberan su casilla.
   markSolid(map, 26, 46); // duel-1 Soldado-Terminal (corredor de entrada, chokepoint único)
@@ -193,6 +205,11 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       { id: "story-ch4-duel-5", kind: "DUEL", tileX: 30, tileY: 17, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/5", imageSrc: SOLDADO, facing: "DOWN", visionRange: 3 },
       { id: "story-ch4-duel-6", kind: "BOSS", tileX: 26, tileY: 9, sprite: "gennvim", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/6", imageSrc: GENNVIM, facing: "DOWN", visionRange: 3, visionRect: { x0: 18, y0: 7, x1: 34, y1: 11 } },
       { id: "story-ch4-duel-7", kind: "BOSS", tileX: 26, tileY: 4, sprite: "midutech", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/7", imageSrc: MIDUTECH, facing: "DOWN", visionRange: 3, visionRect: { x0: 18, y0: 3, x1: 34, y1: 5 } },
+
+      // ── Recompensas-objeto: USB en el laberinto + aumentos ATK/DEF tras rivales obligatorios ────────
+      { id: "story-ch4-cache-usb", kind: "REWARD_OBJECT", tileX: 30, tileY: 29, sprite: "usb-raro", trigger: "ADJACENT_ACTION", imageSrc: USB },
+      { id: "story-ch4-cache-atk", kind: "REWARD_OBJECT", tileX: 7, tileY: 41, sprite: "atk-augment", trigger: "ADJACENT_ACTION", imageSrc: ATK_AUGMENT },
+      { id: "story-ch4-cache-def", kind: "REWARD_OBJECT", tileX: 7, tileY: 29, sprite: "def-augment", trigger: "ADJACENT_ACTION", imageSrc: DEF_AUGMENT },
 
       // ── Puerta post-GenNvim: SOLO abre tras vencer a GenNvim (duel-6); sella a Midutech ──────────────
       { id: "story-a4-gate-postboss", kind: "GATE", tileX: 26, tileY: 6, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: ["story-ch4-duel-6"] },

@@ -112,6 +112,36 @@ describe("buildAct4OverworldTilemap", () => {
     expect(findGridPath(spawnTile(afterBoss.tilemap), approach, afterBoss.context)).not.toBeNull();
   });
 
+  it("coloca los 3 objetos (USB + aumentos ATK/DEF) y están registrados para claim-reward", () => {
+    const objects = buildAct4OverworldTilemap().objects;
+    const caches = objects.filter((object) => object.kind === "REWARD_OBJECT").map((object) => object.id).sort();
+    expect(caches).toEqual(["story-ch4-cache-atk", "story-ch4-cache-def", "story-ch4-cache-usb"]);
+    for (const id of caches) {
+      const definition = findStoryVirtualNodeDefinition(id);
+      expect(definition?.nodeType).toBe("REWARD_OBJECT");
+    }
+  });
+
+  it("el aumento de DEFENSA está tras el guardia duel-4 (rama alta sellada): obligatorio vencerlo", () => {
+    // El objeto (7,29) es sólido (se recoge desde el lado): comprobamos la casilla contigua (8,29).
+    const approach = { tileX: 8, tileY: 29 };
+    // Sin vencer a duel-4: la sala izq alta (y su aumento) es inalcanzable.
+    const locked = contextFor({ completed: [DUEL_1] });
+    expect(findGridPath(spawnTile(locked.tilemap), approach, locked.context)).toBeNull();
+    // Vencido duel-4 (y duel-1 para entrar): alcanzable.
+    const cleared = contextFor({ completed: [DUEL_1, "story-ch4-duel-4"] });
+    expect(findGridPath(spawnTile(cleared.tilemap), approach, cleared.context)).not.toBeNull();
+  });
+
+  it("laberinto: la subida central es una cinta que sube, flanqueada por trampas que bajan", () => {
+    const ground = buildAct4OverworldTilemap().layers.ground;
+    for (const y of [26, 27, 28, 29, 30]) {
+      expect(resolveBeltDirection(ground[y][26])).toBe("UP"); // centro sube
+      expect(resolveBeltDirection(ground[y][25])).toBe("DOWN"); // trampa izq
+      expect(resolveBeltDirection(ground[y][27])).toBe("DOWN"); // trampa der
+    }
+  });
+
   it("coloca los 7 rivales del capítulo 4 y marca a GenNvim/Midutech como BOSS", () => {
     const objects = buildAct4OverworldTilemap().objects;
     const ids = new Set(objects.map((object) => object.id));
