@@ -116,26 +116,86 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   carveCorridor(map, { x: 15, y: 29 }, { x: 17, y: 29 }); // laberinto -> sala izq alta (aumento DEF, guardia duel-4)
   carveCorridor(map, { x: 35, y: 29 }, { x: 37, y: 29 }); // laberinto -> sala der alta (botón cinta, guardia duel-3)
 
-  // Laberinto SERPENTEANTE de SERVIDORES (calcado del diseño de referencia): 8 bandas horizontales de racks que
-  // cruzan la sala dejando UNA sola abertura que ALTERNA de lado en cada banda -> pasillos de 1 casilla que
-  // obligan a zigzaguear de la entrada (abajo, x=26) hasta la salida (arriba, x=26). La franja y=29 queda abierta:
-  // es la fila central con las salidas laterales (izq aumento DEF / der botón) y el USB de camino.
-  const wallRow = (rowY: number, x0: number, x1: number): void => {
-    for (let x = x0; x <= x1; x++) placeStructure(map, x, rowY, OVERLAY_TILE.SERVER_RACK);
+  // Embudo de salida (y=25/26): pared de servidores con hueco SOLO en x=26. La cámara del módulo (y=27) queda
+  // abierta; el módulo (caja) en (26,27) TAPA el embudo -> hay que empujarlo a su RANURA (22,27), lo que invierte
+  // la pasarela de forma PERMANENTE (onPlatePressed la enclava -> aunque la caja se mueva/resetee, no hay soft-lock).
+  for (const funnelY of [25, 26]) {
+    for (let x = 18; x <= 34; x++) if (x !== 26) placeStructure(map, x, funnelY, OVERLAY_TILE.SERVER_RACK);
+  }
+
+  // Laberinto REAL (maze perfecto, backtracker determinista): pasillos de 1 casilla con BIFURCACIONES y
+  // CALLEJONES SIN SALIDA (un único camino correcto; equivocarte te mete en ramas muertas). Paredes = servidores.
+  // Cuelga bajo la cámara del módulo (y=27..40); se entra por abajo (x=26) y se sale a la cámara por el hueco (30,28).
+  const MAZE_X0 = 18;
+  const MAZE_Y0 = 29;
+  const MAZE_COLS = 9; // nodos en x = 18,20,...,34
+  const MAZE_ROWS = 6; // nodos en y = 29,31,...,39
+  const nodeX = (i: number): number => MAZE_X0 + 2 * i;
+  const nodeY = (j: number): number => MAZE_Y0 + 2 * j;
+  const carve = (x: number, y: number): void => {
+    map.overlay[y][x] = 0;
+    map.collision[y][x] = 1;
   };
-  // Embudo de salida: y=26 solo tiene hueco en x=26, TAPADO por el módulo (caja) en (26,27). No se sube al puente
-  // sin apartar la caja; y apartarla a su RANURA (22,27) invierte la pasarela de forma PERMANENTE (anti soft-lock).
-  wallRow(26, 18, 25);
-  wallRow(26, 27, 34);
-  // y=27 abierta: fila del MÓDULO + RANURA. Bandas alternas hacia abajo (der/izq/der/izq/der/izq/der):
-  wallRow(28, 18, 31); // hueco DERECHA (x=32..34): se llega a la fila del módulo por la derecha
-  // y=29 abierta (fila central: salidas laterales + USB)
-  wallRow(30, 21, 34); // hueco IZQUIERDA (x=18..20)
-  wallRow(32, 18, 31); // hueco DERECHA
-  wallRow(34, 21, 34); // hueco IZQUIERDA
-  wallRow(36, 18, 31); // hueco DERECHA
-  wallRow(38, 21, 34); // hueco IZQUIERDA
-  wallRow(40, 18, 31); // hueco DERECHA (la entrada por x=26 obliga a rodear a la derecha desde la primera banda)
+  // 1) Tapiar todo el cuerpo del laberinto (y=28 borde superior .. y=40 borde inferior) con servidores.
+  for (let y = 28; y <= 40; y++) for (let x = 18; x <= 34; x++) placeStructure(map, x, y, OVERLAY_TILE.SERVER_RACK);
+  // 2) Vaciar los nodos de la malla.
+  for (let j = 0; j < MAZE_ROWS; j++) for (let i = 0; i < MAZE_COLS; i++) carve(nodeX(i), nodeY(j));
+  // 3) Backtracker con PRNG determinista (mulberry32, semilla fija): abre la pared entre nodos vecinos.
+  let mazeSeed = 0x1a2b3c4d >>> 0;
+  const rng = (): number => {
+    mazeSeed = (mazeSeed + 0x6d2b79f5) >>> 0;
+    let t = mazeSeed;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const visited = new Set<string>();
+  const stack: Array<[number, number]> = [[4, 5]]; // arranca en el nodo de entrada (x=26, y=39)
+  visited.add("4,5");
+  while (stack.length > 0) {
+    const [ci, cj] = stack[stack.length - 1];
+    const options: Array<[number, number]> = [];
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as Array<[number, number]>) {
+      const ni = ci + di;
+      const nj = cj + dj;
+      if (ni >= 0 && ni < MAZE_COLS && nj >= 0 && nj < MAZE_ROWS && !visited.has(`${ni},${nj}`)) options.push([ni, nj]);
+    }
+    if (options.length === 0) {
+      stack.pop();
+      continue;
+    }
+    const [ni, nj] = options[Math.floor(rng() * options.length)];
+    carve((nodeX(ci) + nodeX(ni)) / 2, (nodeY(cj) + nodeY(nj)) / 2);
+    visited.add(`${ni},${nj}`);
+    stack.push([ni, nj]);
+  }
+  // 4) Conexiones fijas: entrada (breach del borde inferior en x=26) y salida a la cámara del módulo (breach en 30,28).
+  carve(26, 40); // nodo entrada (26,39) -> antesala (y41/42) -> corredor del hub
+  carve(30, 28); // nodo (30,29) -> cámara del módulo (30,27)
+  // 5) El USB va en un CALLEJÓN SIN SALIDA real (nodo de grado 1), como los objetos escondidos de Pokémon.
+  const nodeDegree = (i: number, j: number): number => {
+    const x = nodeX(i);
+    const y = nodeY(j);
+    let d = 0;
+    if (i < MAZE_COLS - 1 && map.collision[y][x + 1] === 1) d++;
+    if (i > 0 && map.collision[y][x - 1] === 1) d++;
+    if (j < MAZE_ROWS - 1 && map.collision[y + 1][x] === 1) d++;
+    if (j > 0 && map.collision[y - 1][x] === 1) d++;
+    return d;
+  };
+  const reserved = new Set(["4,5", "6,0", "0,0", "8,0"]); // entrada, salida-cámara, salidas laterales (izq/der)
+  let usbTileX = 20;
+  let usbTileY = 39;
+  outer: for (let j = MAZE_ROWS - 1; j >= 0; j--) {
+    for (let i = 0; i < MAZE_COLS; i++) {
+      if (reserved.has(`${i},${j}`)) continue;
+      if (nodeDegree(i, j) === 1) {
+        usbTileX = nodeX(i);
+        usbTileY = nodeY(j);
+        break outer;
+      }
+    }
+  }
 
   // Puente lab -> terminal: cinta EN CONTRA (empuja hacia abajo). No se sube hasta insertar el módulo en la
   // ranura (belt-toggle sobre la placa): al hacerlo, la pasarela se invierte y queda fija (onPlatePressed la
@@ -160,7 +220,7 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   markSolid(map, 18, 41); // botón de reinicio de cajas (rescate anti soft-lock, esquina de la entrada al lab)
 
   // Recompensas-objeto (se recogen pulsando al lado): USB en el laberinto; aumentos ATK/DEF en salas guardadas.
-  markSolid(map, 34, 37); // USB Raro (recoveco de borde del laberinto: detour, no tapa el pasillo)
+  markSolid(map, usbTileX, usbTileY); // USB Raro (callejón sin salida del laberinto: detour, no tapa el paso)
   markSolid(map, 7, 49); // aumento de ATAQUE (rama izq baja, tras el guardia duel-2)
   markSolid(map, 7, 29); // aumento de DEFENSA (rama izq alta, tras el guardia duel-4)
 
@@ -218,7 +278,7 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       { id: "story-ch4-duel-7", kind: "BOSS", tileX: 26, tileY: 4, sprite: "midutech", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/7", imageSrc: MIDUTECH, facing: "DOWN", visionRange: 3, visionRect: { x0: 18, y0: 3, x1: 34, y1: 5 } },
 
       // ── Recompensas-objeto: USB en el laberinto + aumentos ATK/DEF tras rivales obligatorios ────────
-      { id: "story-ch4-cache-usb", kind: "REWARD_OBJECT", tileX: 34, tileY: 37, sprite: "usb-raro", trigger: "ADJACENT_ACTION", imageSrc: USB },
+      { id: "story-ch4-cache-usb", kind: "REWARD_OBJECT", tileX: usbTileX, tileY: usbTileY, sprite: "usb-raro", trigger: "ADJACENT_ACTION", imageSrc: USB },
       { id: "story-ch4-cache-atk", kind: "REWARD_OBJECT", tileX: 7, tileY: 49, sprite: "atk-augment", trigger: "ADJACENT_ACTION", imageSrc: ATK_AUGMENT },
       { id: "story-ch4-cache-def", kind: "REWARD_OBJECT", tileX: 7, tileY: 29, sprite: "def-augment", trigger: "ADJACENT_ACTION", imageSrc: DEF_AUGMENT },
 
