@@ -72,7 +72,7 @@ Archivo: `src/components/hub/academy/scene/HologramPillar.tsx`.
 ### Modelo ACTUAL (revisado en código + BD)
 
 **BD (`arena_*`, proyecto activo):**
-- `arena_opponents` — **7 oponentes**: `training-tier-1` GenNvim · `training-tier-2` Helena · `training-tier-3` Jaku · `training-tier-4` BigLog · `training-tier-5` Soldado · `training-tier-6` Guill · `training-mouretech` Mouretech. Cada uno con **2 variantes de mazo** (20 cartas DECK + 2 FUSION).
+- `arena_opponents` — **7 oponentes**: `training-tier-1` GenNvim · `training-tier-2` Helena · `training-tier-3` Jaku · `training-tier-4` BigLog · `training-tier-5` Soldado · `training-tier-6` Guill · `training-midutech` Midutech. Cada uno con **2 variantes de mazo** (20 cartas DECK + 2 FUSION).
 - `arena_tiers` — **6 tiers**, cada uno con UN `opponent_id` "firma" y `required_wins_in_previous_tier = 5` (tier 1 = 0):
 
   | tier | code | dificultad | opponent_id | escalado (V/L/xp) |
@@ -80,13 +80,13 @@ Archivo: `src/components/hub/academy/scene/HologramPillar.tsx`.
   | 1 | BOOT | EASY | training-tier-1 | — |
   | 2 | SPARK | NORMAL | training-tier-2 | 1 / 10 / 980 |
   | 3 | CORE | HARD | training-tier-3 | 3 / 10 / 980 |
-  | 4 | ASCENT | BOSS | training-mouretech | 3 / 20 / 2800 |
+  | 4 | ASCENT | BOSS | training-midutech | 3 / 20 / 2800 |
   | 5 | NEXUS | MASTER | training-tier-5 | 3 / 30 / 5600 |
   | 6 | APEX | MYTHIC | training-tier-6 | 5 / 30 / 9800 |
 
 **Lógica ([`resolve-training-opponent-loadout.ts`](../src/services/training/resolve-training-opponent-loadout.ts)):**
 - El rival de cada combate = `roster[tierMatches % roster.length]`, donde el `roster` es **variable por tier** (`resolveRosterTemplateIds`): en tier 1 un "showcase" de 5, en tiers >1 el rival del tier + todos los anteriores.
-- Comodín aleatorio (Mouretech) con 25% de probabilidad por combate.
+- Comodín aleatorio (Midutech) con 25% de probabilidad por combate.
 - **Dificultad adaptativa** por win-rate (`resolveAdaptiveDifficulty`).
 - Avanzar de nivel = **5 victorias** en el tier anterior ([`resolve-training-tier-access.ts`](../src/core/services/training/resolve-training-tier-access.ts)).
 - El rival "siguiente" se resuelve server-side en [`arena/page.tsx`](../src/app/hub/academy/training/arena/page.tsx) a partir de `tierWins`/`tierMatches` del progreso.
@@ -100,9 +100,9 @@ Archivo: `src/components/hub/academy/scene/HologramPillar.tsx`.
 - Nivel 1 = 6 combates en el orden de `arena_opponents`.
 
 ### Decisiones (CONFIRMADAS por el usuario)
-1. **Roster fijo de 6, en orden:** `GenNvim → Helena → Jaku → Mouretech → Soldado → Guill`
-   = `["training-tier-1","training-tier-2","training-tier-3","training-mouretech","training-tier-5","training-tier-6"]`.
-   **BigLog (`training-tier-4`) queda FUERA del ladder** (Mouretech ocupa su hueco).
+1. **Roster fijo de 6, en orden:** `GenNvim → Helena → Jaku → Midutech → Soldado → Guill`
+   = `["training-tier-1","training-tier-2","training-tier-3","training-midutech","training-tier-5","training-tier-6"]`.
+   **BigLog (`training-tier-4`) queda FUERA del ladder** (Midutech ocupa su hueco).
 2. **Índice del rival dentro del nivel = por VICTORIAS** (`tierWins`): enfrentas al rival Nº = victorias en el nivel; hay que **ganar al #1 para pasar al #2** (una derrota repite rival).
 3. **Avance de nivel:** **6 victorias** completan el nivel y desbloquean el siguiente (`required_wins_in_previous_tier`: 5 → **6**).
 4. **Nº de niveles:** mantener **6** (escalado BOOT→APEX), reutilizando el escalado por tier.
@@ -127,7 +127,7 @@ Lobby / cliente: [`TrainingArenaLobby.tsx`](../src/components/hub/academy/traini
 - `arena_tiers.required_wins_in_previous_tier`: **5 → 6** (tiers 2..6).
 - Revisar/definir el **escalado por tier** para que la curva 1→6 sea coherente (tier 1 sin escalado o V0/L1; hasta V5/L30 en APEX). Ajustar `default_version_tier/level/xp` si hace falta.
 - `opponent_id` de cada tier deja de usarse para elegir rival (el roster es global). Dejar el que haya; no romper la FK.
-- **No** hace falta tocar `arena_opponents` ni las variantes salvo que se decida excluir/mover a Mouretech.
+- **No** hace falta tocar `arena_opponents` ni las variantes salvo que se decida excluir/mover a Midutech.
 - Aplicar con `apply_migration` y añadir el `.sql` a `docs/supabase/sql/` (convención del repo). `pnpm db:validate` debe seguir verde.
 
 ### Tests a actualizar/añadir

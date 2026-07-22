@@ -88,10 +88,40 @@ const OBJECT_ACCENT: Record<OverworldObjectKind, string> = {
 /** Radio (en celdas) de la luz que acompaña al jugador en mapas DARK. */
 const DARK_PLAYER_LIGHT_TILES = 2.7;
 
-const BACKGROUND = "#05070f";
-const GRID_LINE = "rgba(56, 189, 248, 0.07)";
-const LANE_CORE = "#0e2a3d";
-const LANE_GLOW = "rgba(34, 211, 238, 0.55)";
+/** Paleta del mundo por ambiente. El default es cian; TERMINAL (Acto 4) lo tiñe de verde fósforo. */
+interface IAmbientPalette {
+  background: string;
+  gridLine: string;
+  laneCore: string;
+  laneGlow: string;
+  /** Componentes "r, g, b" de la vena animada del circuito (alpha dinámico aparte). */
+  veinRgb: string;
+  /** Tinte de pantalla completa al final del frame (null = sin tinte). */
+  tint: string | null;
+}
+
+const DEFAULT_PALETTE: IAmbientPalette = {
+  background: "#05070f",
+  gridLine: "rgba(56, 189, 248, 0.07)",
+  laneCore: "#0e2a3d",
+  laneGlow: "rgba(34, 211, 238, 0.55)",
+  veinRgb: "34, 211, 238",
+  tint: null,
+};
+
+/** Verde terminal ciberpunk (GenNvim ≈ Vim/Neovim): fondo casi negro, rejilla y lanes en verde neón. */
+const TERMINAL_PALETTE: IAmbientPalette = {
+  background: "#020a05",
+  gridLine: "rgba(52, 211, 153, 0.11)",
+  laneCore: "#0b3a1e",
+  laneGlow: "rgba(74, 222, 128, 0.55)",
+  veinRgb: "74, 222, 128",
+  tint: "rgba(16, 90, 45, 0.12)",
+};
+
+function resolveAmbientPalette(ambient: IOverworldTilemap["ambient"]): IAmbientPalette {
+  return ambient === "TERMINAL" ? TERMINAL_PALETTE : DEFAULT_PALETTE;
+}
 
 /**
  * Renderer imperativo cibernético: rejilla neón, lanes de circuito e imágenes reales.
@@ -109,6 +139,8 @@ export class Renderer2D {
   private readonly gateOpenProgress = new Map<string, number>();
   private lastRenderMs = 0;
   private frameDeltaMs = 16;
+  /** Paleta activa (por ambiente), resuelta al inicio de cada render. */
+  private palette: IAmbientPalette = DEFAULT_PALETTE;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -159,6 +191,7 @@ export class Renderer2D {
     options: IRenderOptions,
   ): void {
     const { tilemap } = world;
+    this.palette = resolveAmbientPalette(tilemap.ambient);
     // Delta de frame para animaciones basadas en estado (apertura de puertas/puente).
     this.frameDeltaMs = this.lastRenderMs === 0 ? 16 : Math.max(0, Math.min(120, options.timeMs - this.lastRenderMs));
     this.lastRenderMs = options.timeMs;
@@ -298,10 +331,10 @@ export class Renderer2D {
     const context = this.context;
     const viewW = viewport.cssWidth;
     const viewH = viewport.cssHeight;
-    context.fillStyle = BACKGROUND;
+    context.fillStyle = this.palette.background;
     context.fillRect(0, 0, viewW, viewH);
     // Rejilla técnica alineada al mundo (se desplaza con la cámara).
-    context.strokeStyle = GRID_LINE;
+    context.strokeStyle = this.palette.gridLine;
     context.lineWidth = 1;
     context.beginPath();
     const startX = camera.x % tileSize;
@@ -518,14 +551,14 @@ export class Renderer2D {
     const size = tilemap.tileSize;
     const screenX = camera.x + tileX * size;
     const screenY = camera.y + tileY * size;
-    context.fillStyle = LANE_CORE;
+    context.fillStyle = this.palette.laneCore;
     context.fillRect(screenX + 2, screenY + 2, size - 4, size - 4);
 
     const ground = tilemap.layers.ground;
     const isLane = (x: number, y: number): boolean => ground[y]?.[x] === GROUND_TILE.PATH;
     // Vena de energía central que conecta lanes contiguas.
     const pulse = 0.55 + Math.sin(timeMs / 500 + (tileX + tileY) * 0.6) * 0.25;
-    context.strokeStyle = `rgba(34, 211, 238, ${pulse})`;
+    context.strokeStyle = `rgba(${this.palette.veinRgb}, ${pulse})`;
     context.lineWidth = Math.max(2, size * 0.08);
     context.lineCap = "round";
     const cx = screenX + size / 2;
@@ -541,7 +574,7 @@ export class Renderer2D {
     if (isLane(tileX, tileY - 1)) context.lineTo(cx, screenY);
     context.stroke();
     // Nodo central.
-    context.fillStyle = LANE_GLOW;
+    context.fillStyle = this.palette.laneGlow;
     context.beginPath();
     context.arc(cx, cy, size * 0.06, 0, Math.PI * 2);
     context.fill();
@@ -1077,6 +1110,8 @@ export class Renderer2D {
         if (kind === OVERLAY_TILE.SERVER_RACK) this.drawServerRack(screenX, screenY, size, timeMs, tileX + tileY);
         else if (kind === OVERLAY_TILE.HOLO_SCREEN) this.drawHoloScreen(screenX, screenY, size, timeMs);
         else if (kind === OVERLAY_TILE.CRATE) this.drawCrate(screenX, screenY, size);
+        else if (kind === OVERLAY_TILE.COOLING_UNIT) this.drawCoolingUnit(screenX, screenY, size, timeMs, tileX + tileY);
+        else if (kind === OVERLAY_TILE.DATA_PYLON) this.drawDataPylon(screenX, screenY, size, timeMs);
         else this.drawPillar(screenX, screenY, size, timeMs, tileX);
       }
     }
@@ -1124,6 +1159,76 @@ export class Renderer2D {
     }
     context.fillStyle = "#0a1220";
     context.fillRect(screenX + size * 0.44, screenY + size * 0.7, size * 0.12, size * 0.22);
+  }
+
+  /** Unidad de refrigeración: caja con rejillas de ventilación y un ventilador giratorio. */
+  private drawCoolingUnit(screenX: number, screenY: number, size: number, timeMs: number, seed: number): void {
+    const context = this.context;
+    const x = screenX + size * 0.14;
+    const y = screenY + size * 0.2;
+    const w = size * 0.72;
+    const h = size * 0.66;
+    context.fillStyle = "rgba(0,0,0,0.35)";
+    context.fillRect(screenX + size * 0.18, screenY + size * 0.86, size * 0.64, size * 0.1);
+    context.fillStyle = "#0c1626";
+    context.fillRect(x, y, w, h);
+    context.strokeStyle = "rgba(52, 211, 153, 0.5)";
+    context.lineWidth = 2;
+    context.strokeRect(x, y, w, h);
+    // Rejillas de ventilación (mitad izquierda).
+    context.strokeStyle = "rgba(148, 163, 184, 0.4)";
+    context.lineWidth = 1;
+    for (let slat = 0; slat < 4; slat++) {
+      const slatY = y + h * (0.2 + slat * 0.2);
+      context.beginPath();
+      context.moveTo(x + w * 0.1, slatY);
+      context.lineTo(x + w * 0.58, slatY);
+      context.stroke();
+    }
+    // Ventilador (derecha), gira con el tiempo.
+    const fanX = x + w * 0.78;
+    const fanY = y + h * 0.5;
+    const radius = Math.min(w, h) * 0.22;
+    const spin = timeMs / 400 + seed;
+    context.strokeStyle = `rgba(34, 211, 238, ${0.4 + Math.sin(timeMs / 300) * 0.2})`;
+    context.lineWidth = 2;
+    context.beginPath();
+    context.arc(fanX, fanY, radius, 0, Math.PI * 2);
+    context.stroke();
+    for (let blade = 0; blade < 3; blade++) {
+      const angle = spin + blade * ((Math.PI * 2) / 3);
+      context.beginPath();
+      context.moveTo(fanX, fanY);
+      context.lineTo(fanX + Math.cos(angle) * radius, fanY + Math.sin(angle) * radius);
+      context.stroke();
+    }
+  }
+
+  /** Pilón de datos: mástil delgado con struts y una baliza verde pulsante en la punta. */
+  private drawDataPylon(screenX: number, screenY: number, size: number, timeMs: number): void {
+    const context = this.context;
+    const cx = screenX + size * 0.5;
+    context.fillStyle = "rgba(0,0,0,0.3)";
+    context.fillRect(screenX + size * 0.34, screenY + size * 0.88, size * 0.32, size * 0.08);
+    context.fillStyle = "#0a1526";
+    context.fillRect(cx - size * 0.06, screenY + size * 0.14, size * 0.12, size * 0.76);
+    context.strokeStyle = "rgba(52, 211, 153, 0.45)";
+    context.lineWidth = 2;
+    context.strokeRect(cx - size * 0.06, screenY + size * 0.14, size * 0.12, size * 0.76);
+    // Struts diagonales hasta la base.
+    context.strokeStyle = "rgba(148, 163, 184, 0.35)";
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(cx - size * 0.2, screenY + size * 0.86);
+    context.lineTo(cx, screenY + size * 0.5);
+    context.lineTo(cx + size * 0.2, screenY + size * 0.86);
+    context.stroke();
+    // Baliza pulsante.
+    const glow = 0.5 + Math.sin(timeMs / 300) * 0.4;
+    context.fillStyle = `rgba(74, 222, 128, ${glow})`;
+    context.beginPath();
+    context.arc(cx, screenY + size * 0.12, size * 0.1, 0, Math.PI * 2);
+    context.fill();
   }
 
   private drawCrate(screenX: number, screenY: number, size: number): void {
@@ -1296,6 +1401,12 @@ export class Renderer2D {
     gradient.addColorStop(1, "rgba(0,0,0,0.5)");
     context.fillStyle = gradient;
     context.fillRect(0, 0, this.cssWidth, this.cssHeight);
+    // Tinte de ambiente (TERMINAL): un velo verde a pantalla completa que armoniza los acentos cian
+    // restantes hacia el look de terminal. Un solo fillRect: coste despreciable.
+    if (this.palette.tint) {
+      context.fillStyle = this.palette.tint;
+      context.fillRect(0, 0, this.cssWidth, this.cssHeight);
+    }
   }
 }
 

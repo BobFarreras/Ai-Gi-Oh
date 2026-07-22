@@ -36,7 +36,7 @@ const VALID_KINDS: ReadonlySet<OverworldObjectKind> = new Set([
   "PLATE",
   "BOX_RESET",
 ]);
-const VALID_AMBIENTS = new Set(["NORMAL", "DARK"]);
+const VALID_AMBIENTS = new Set(["NORMAL", "DARK", "TERMINAL"]);
 const VALID_TRIGGERS: ReadonlySet<OverworldObjectTrigger> = new Set([
   "ADJACENT_ACTION",
   "STEP_ON",
@@ -251,6 +251,19 @@ function validateObject(
     }
   }
 
+  // v2 — belt-toggle: solo SWITCH invierte cintas al activarse.
+  let beltToggleRect: IOverworldTilemapObject["beltToggleRect"];
+  if (raw.beltToggleRect !== undefined) {
+    if (kind !== "SWITCH" && kind !== "PLATE") fail(path, `solo SWITCH/PLATE admiten beltToggleRect; kind actual: ${kind}`);
+    if (!isRecord(raw.beltToggleRect)) fail(`${path}.beltToggleRect`, "se esperaba un rect {x0,y0,x1,y1}");
+    const x0 = assertBoundedInteger(raw.beltToggleRect.x0, `${path}.beltToggleRect.x0`, 0, width - 1);
+    const y0 = assertBoundedInteger(raw.beltToggleRect.y0, `${path}.beltToggleRect.y0`, 0, height - 1);
+    const x1 = assertBoundedInteger(raw.beltToggleRect.x1, `${path}.beltToggleRect.x1`, 0, width - 1);
+    const y1 = assertBoundedInteger(raw.beltToggleRect.y1, `${path}.beltToggleRect.y1`, 0, height - 1);
+    if (x1 < x0 || y1 < y0) fail(`${path}.beltToggleRect`, "se esperaba x0<=x1 e y0<=y1");
+    beltToggleRect = { x0, y0, x1, y1 };
+  }
+
   return {
     id,
     kind,
@@ -271,6 +284,7 @@ function validateObject(
     hidden,
     lightRadius,
     lightRect,
+    beltToggleRect,
   };
 }
 
@@ -337,7 +351,7 @@ export function validateOverworldTilemap(raw: unknown): IOverworldTilemap {
   let ambient: IOverworldTilemap["ambient"];
   if (raw.ambient !== undefined) {
     const ambientValue = assertNonEmptyString(raw.ambient, "$.ambient");
-    if (!VALID_AMBIENTS.has(ambientValue)) fail("$.ambient", "se esperaba 'NORMAL' o 'DARK'");
+    if (!VALID_AMBIENTS.has(ambientValue)) fail("$.ambient", "se esperaba 'NORMAL', 'DARK' o 'TERMINAL'");
     ambient = ambientValue as IOverworldTilemap["ambient"];
   }
 

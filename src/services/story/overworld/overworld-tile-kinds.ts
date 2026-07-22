@@ -15,6 +15,22 @@ export const GROUND_TILE = {
   BELT_RIGHT: 9,
 } as const;
 
+/** Invierte el sentido de un tile de cinta (UP↔DOWN, LEFT↔RIGHT). Otros tiles se devuelven sin cambio. */
+export function invertBeltKind(tileKind: number): number {
+  switch (tileKind) {
+    case GROUND_TILE.BELT_UP:
+      return GROUND_TILE.BELT_DOWN;
+    case GROUND_TILE.BELT_DOWN:
+      return GROUND_TILE.BELT_UP;
+    case GROUND_TILE.BELT_LEFT:
+      return GROUND_TILE.BELT_RIGHT;
+    case GROUND_TILE.BELT_RIGHT:
+      return GROUND_TILE.BELT_LEFT;
+    default:
+      return tileKind;
+  }
+}
+
 /** Dirección de arrastre de cada tile de cinta. `null` si el tile no es cinta. */
 export function resolveBeltDirection(
   tileKind: number | undefined,
@@ -40,6 +56,8 @@ export const OVERLAY_TILE = {
   SERVER_RACK: 3,
   HOLO_SCREEN: 4,
   CRATE: 5,
+  COOLING_UNIT: 6, // unidad de refrigeración con rejillas y ventilador giratorio
+  DATA_PYLON: 7, // pilón/antena de datos con baliza pulsante
 } as const;
 
 export type GroundTileKind = (typeof GROUND_TILE)[keyof typeof GROUND_TILE];

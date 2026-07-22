@@ -1,5 +1,8 @@
 <!-- docs/story/acts/act-4/README.md - Especificación funcional del Acto 4 orientada a cierre corporativo y preparación del Core final. -->
-# Acto 4 - Rascacielos de Silicio (GenNvim)
+# Acto 4 - Núcleo GenNvim (terminal verde)
+
+> **Guía de implementación (fuente de verdad):** [ACT-4-IMPLEMENTATION-GUIDE.md](./ACT-4-IMPLEMENTATION-GUIDE.md).
+> Este README es el stub original (sistema de nodos). El Acto 4 se construye sobre el **motor overworld** (como el Acto 3): mapa grande tipo laberinto, ambiente terminal verde, cajas+cintas, puertas por victoria y objetos. Ver la guía.
 
 ## Resumen narrativo
 1. GenNvim controla el acceso a infraestructura crítica.
