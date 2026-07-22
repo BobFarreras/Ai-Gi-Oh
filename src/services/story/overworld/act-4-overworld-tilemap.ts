@@ -201,9 +201,9 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   carveCorridor(map, { x: 15, y: 29 }, { x: 17, y: 29 }); // laberinto 2 -> sala izq alta (aumento DEF, guardia duel-4)
   carveCorridor(map, { x: 35, y: 29 }, { x: 37, y: 29 }); // laberinto 2 -> sala der alta (botón cinta, guardia duel-3)
 
-  // Embudo de salida (y=25/26): pared de servidores con hueco SOLO en x=26. La cámara del módulo (y=27) queda
-  // abierta; el módulo (caja) en (26,27) TAPA el embudo -> hay que empujarlo a su RANURA (22,27), lo que invierte
-  // la pasarela de forma PERMANENTE (onPlatePressed la enclava -> aunque la caja se mueva/resetee, no hay soft-lock).
+  // Embudo de salida (y=25/26): pared de servidores con hueco SOLO en x=26. La cámara (y=27) queda abierta, pero el
+  // puente que sube (cinta) va EN CONTRA: no se sube hasta accionar el INTERRUPTOR del laberinto 2 (belt-toggle),
+  // que invierte la pasarela de forma PERMANENTE (se marca interactuado -> queda fija; anti soft-lock).
   for (const funnelY of [25, 26]) {
     for (let x = 18; x <= 34; x++) if (x !== 26) placeStructure(map, x, funnelY, OVERLAY_TILE.SERVER_RACK);
   }
@@ -214,6 +214,11 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   const hubMaze = carveMaze(map, { bodyY0: 46, bodyY1: 58, nodeX0: 18, nodeY0: 47, cols: 9, rows: 6, seed: 0x51ce7a2f, start: [4, 5] });
   hubMaze.carve(26, 58); // entrada (abajo) desde la sala de entrada
   hubMaze.carve(26, 46); // salida (arriba) hacia el laberinto 2
+  // Carta ANTIGRABITY escondida en un rincón (callejón sin salida) del laberinto 1.
+  const [cardTileX, cardTileY] = hubMaze.findDeadEnd(
+    new Set(["4,5", "4,0", "0,2", "8,2"]), // reservados: entrada, salida, salidas laterales (izq ATK / der DEF)
+    [20, 47],
+  );
 
   // LABERINTO 2 (sala del módulo, y=25..42): maze real + puzzle. Nodos 9x6 en x=18..34, y=29..39. La cámara del
   // módulo cuelga arriba (y=27); se entra por abajo (breach x=26 en y=40) y se sale a la cámara por el hueco (30,28).
@@ -246,26 +251,26 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   markSolid(map, 23, 67); // market
   markSolid(map, 25, 67); // arsenal
   markSolid(map, 30, 67); // teleport (salir)
-  markSolid(map, 18, 41); // botón de reinicio de cajas (rescate anti soft-lock, esquina de la entrada al lab 2)
+  markSolid(map, 22, 27); // INTERRUPTOR que invierte la pasarela del puente (belt-toggle), en la cámara del laberinto 2
 
-  // Recompensas-objeto (se recogen pulsando al lado): USB en el laberinto 2; aumentos ATK/DEF en salas guardadas.
-  markSolid(map, usbTileX, usbTileY); // USB Raro (callejón sin salida del laberinto 2: detour, no tapa el paso)
-  markSolid(map, 7, 51); // aumento de ATAQUE (rama izq baja del laberinto 1, tras el guardia duel-2)
-  markSolid(map, 7, 29); // aumento de DEFENSA (rama izq alta del laberinto 2, tras el guardia duel-4)
+  // Recompensas (pulsar A al lado): USB (laberinto 2) + carta ANTIGRABITY (laberinto 1) + aumentos ATK/DEF.
+  markSolid(map, usbTileX, usbTileY); // USB Raro (callejón sin salida del laberinto 2)
+  markSolid(map, cardTileX, cardTileY); // carta ANTIGRABITY (callejón sin salida del laberinto 1)
+  markSolid(map, 7, 51); // aumento de ATAQUE (rama izq del laberinto 1, tras el guardia duel-2)
+  markSolid(map, 44, 51); // aumento de DEFENSA (rama der del laberinto 1, tras el guardia duel-3)
 
   // Rivales (sólidos): al vencerlos se teletransportan y liberan su casilla.
   markSolid(map, 26, 61); // duel-1 Soldado-Terminal (corredor de entrada, chokepoint único)
-  markSolid(map, 16, 51); // duel-2 (rama izquierda del laberinto 1, guardia del aumento ATK)
-  markSolid(map, 36, 29); // duel-3 (acceso a la rama derecha alta / botón de la cinta)
-  markSolid(map, 16, 29); // duel-4 (rama izquierda alta)
+  markSolid(map, 16, 51); // duel-2 (rama izq del laberinto 1, guardia del aumento ATK)
+  markSolid(map, 36, 51); // duel-3 (rama der del laberinto 1, guardia del aumento DEF)
+  markSolid(map, 16, 29); // duel-4 (rama izq del laberinto 2, guardia de la sala de la Hydra)
   markSolid(map, 30, 17); // duel-5 (guardia del terminal)
   markSolid(map, 26, 9); // duel-6 GenNvim (boss 1, mitad baja de la sala del jefe)
   markSolid(map, 26, 4); // duel-7 Midutech (boss final, mitad alta, tras la puerta post-jefe)
   // Muro de atrezzo que parte la sala del jefe en dos; hueco en x=26 con la puerta post-GenNvim.
   for (let x = 18; x <= 34; x++) if (x !== 26) placeStructure(map, x, 6, OVERLAY_TILE.SERVER_RACK);
 
-  // Consolas de eventos narrativos (se usan desde el lado).
-  markSolid(map, 9, 29); // E2: log del origen (rama izquierda alta)
+  // Consola de evento narrativo del terminal (se usa desde el lado).
   markSolid(map, 24, 18); // E4: registro-madre (terminal)
 
   return validateOverworldTilemap({
@@ -286,13 +291,9 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       // Retorno al Acto 3 (se pisa). El avance al Acto 5 se añadirá con el jefe (Acto 5 = "próximamente").
       { id: "story-ch4-transition-to-act3", kind: "WARP", tileX: 20, tileY: 65, sprite: "portal", trigger: "STEP_ON", warp: { toMapId: "act-3", toSpawnId: "spawn-entry", direction: "backward" } },
 
-      // ── Laberinto de servidores: el MÓDULO (caja) TAPA el embudo de salida en (26,27); la única forma de subir ──
-      // es empujarlo a la izquierda por la fila y=27 hasta su RANURA (22,27), lo que invierte la pasarela del puente
-      // de forma PERMANENTE (el jugador se topa con la cinta en contra y ha de volver a colocar el módulo).
-      { id: "story-ch4-maze-box", kind: "BOX", tileX: 26, tileY: 27, sprite: "box", trigger: "ADJACENT_ACTION" },
-      { id: "story-ch4-belt-slot", kind: "PLATE", tileX: 22, tileY: 27, sprite: "slot", trigger: "ADJACENT_ACTION", beltToggleRect: { x0: 26, y0: 22, x1: 26, y1: 24 } },
-      // Botón de rescate: si la caja se empotra contra una pared, la devuelve a su sitio (anti soft-lock).
-      { id: "story-a4-box-reset", kind: "BOX_RESET", tileX: 18, tileY: 41, sprite: "reset", trigger: "ADJACENT_ACTION" },
+      // ── Laberinto 2: el puente que sube (cinta) va EN CONTRA. El INTERRUPTOR de la cámara invierte la pasarela ──
+      // de forma PERMANENTE (belt-toggle: al accionarlo se marca interactuado y la cinta queda subiendo para siempre).
+      { id: "story-ch4-belt-switch", kind: "SWITCH", tileX: 22, tileY: 27, sprite: "switch", trigger: "ADJACENT_ACTION", beltToggleRect: { x0: 26, y0: 22, x1: 26, y1: 24 } },
       // Compuerta terminal->jefe: requiere vencer al centinela de antesala (duel-5).
       { id: "story-a4-gate-boss", kind: "GATE", tileX: 26, tileY: 12, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: ["story-ch4-duel-5"] },
 
@@ -300,23 +301,24 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       // 1-5: Soldado-Terminal (centinelas). 6: GenNvim (boss 1). 7: Midutech (boss final).
       { id: "story-ch4-duel-1", kind: "DUEL", tileX: 26, tileY: 61, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/1", imageSrc: SOLDADO, facing: "DOWN", visionRange: 3 },
       { id: "story-ch4-duel-2", kind: "DUEL", tileX: 16, tileY: 51, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/2", imageSrc: SOLDADO, facing: "RIGHT", visionRange: 3 },
-      { id: "story-ch4-duel-3", kind: "DUEL", tileX: 36, tileY: 29, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/3", imageSrc: SOLDADO, facing: "LEFT", visionRange: 3, patrolAxis: "V", patrolLength: 2, patrolSweep: true },
+      { id: "story-ch4-duel-3", kind: "DUEL", tileX: 36, tileY: 51, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/3", imageSrc: SOLDADO, facing: "LEFT", visionRange: 3 },
       { id: "story-ch4-duel-4", kind: "DUEL", tileX: 16, tileY: 29, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/4", imageSrc: SOLDADO, facing: "RIGHT", visionRange: 3 },
       { id: "story-ch4-duel-5", kind: "DUEL", tileX: 30, tileY: 17, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/5", imageSrc: SOLDADO, facing: "DOWN", visionRange: 3 },
       { id: "story-ch4-duel-6", kind: "BOSS", tileX: 26, tileY: 9, sprite: "gennvim", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/6", imageSrc: GENNVIM, facing: "DOWN", visionRange: 3, visionRect: { x0: 18, y0: 7, x1: 34, y1: 11 } },
       { id: "story-ch4-duel-7", kind: "BOSS", tileX: 26, tileY: 4, sprite: "midutech", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/7", imageSrc: MIDUTECH, facing: "DOWN", visionRange: 3, visionRect: { x0: 18, y0: 3, x1: 34, y1: 5 } },
 
-      // ── Recompensas-objeto: USB en el laberinto + aumentos ATK/DEF tras rivales obligatorios ────────
+      // ── Recompensas: USB + aumentos ATK/DEF (objetos) + carta ANTIGRABITY (recompensa de carta) ──────
       { id: "story-ch4-cache-usb", kind: "REWARD_OBJECT", tileX: usbTileX, tileY: usbTileY, sprite: "usb-raro", trigger: "ADJACENT_ACTION", imageSrc: USB },
       { id: "story-ch4-cache-atk", kind: "REWARD_OBJECT", tileX: 7, tileY: 51, sprite: "atk-augment", trigger: "ADJACENT_ACTION", imageSrc: ATK_AUGMENT },
-      { id: "story-ch4-cache-def", kind: "REWARD_OBJECT", tileX: 7, tileY: 29, sprite: "def-augment", trigger: "ADJACENT_ACTION", imageSrc: DEF_AUGMENT },
+      { id: "story-ch4-cache-def", kind: "REWARD_OBJECT", tileX: 44, tileY: 51, sprite: "def-augment", trigger: "ADJACENT_ACTION", imageSrc: DEF_AUGMENT },
+      // Carta ANTIGRABITY escondida en un rincón del laberinto 1; al cogerla salta un aviso de BigLog.
+      { id: "story-ch4-card-antigrabity", kind: "REWARD_CARD", tileX: cardTileX, tileY: cardTileY, sprite: "card", trigger: "ADJACENT_ACTION" },
 
       // ── Puerta post-GenNvim: SOLO abre tras vencer a GenNvim (duel-6); sella a Midutech ──────────────
       { id: "story-a4-gate-postboss", kind: "GATE", tileX: 26, tileY: 6, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: ["story-ch4-duel-6"] },
 
       // ── Eventos narrativos ────────────────────────────────────────────────────────────────────────
-      // Consolas (se leen pulsando al lado): E2 log del origen, E4 registro-madre.
-      { id: "story-ch4-event-log-origin-1", kind: "EVENT", tileX: 9, tileY: 29, sprite: "console", trigger: "ADJACENT_ACTION" },
+      // Consola del terminal (se lee pulsando al lado): E4 registro-madre.
       { id: "story-ch4-event-revelation", kind: "EVENT", tileX: 24, tileY: 18, sprite: "console", trigger: "ADJACENT_ACTION" },
       // Triggers ocultos (se pisan, una vez): E3 al entrar al laberinto; belt-locked al llegar al puente en
       // contra; E5 tras vencer a GenNvim (celda naturalmente sellada por su casilla sólida); E6 tras Midutech.

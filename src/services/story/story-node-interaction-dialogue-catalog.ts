@@ -8,36 +8,36 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
   "story-ch4-event-intro": {
     title: "Núcleo GenNvim",
     lines: [
-      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Estás dentro de GenNvim, la fundición donde empezó todo. Yo te guío desde aquí: cruza el mainframe y llega al núcleo del acto." },
-      { speaker: "GenNvim", text: "Intruso detectado. Este núcleo es mío. Voy a reordenar cada sala para que te pierdas y no salgas." },
-      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "Operador", text: "Que lo intente. Voy a por la llave del Core." },
+      { speaker: "GenNvim", text: "Vaya… un intruso en mi núcleo. Bienvenido a mis laberintos. Si logras cruzarlos todos, quizá seas digno de presentarte ante mi señor, Midutech. Aunque lo dudo mucho." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Tranquilo, yo te guío desde aquí. Cruza el mainframe sala por sala: cada una es un laberinto de GenNvim." },
+      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "Operador", text: "Pues a cruzarlos." },
     ],
   },
-  "story-ch4-event-log-origin-1": {
-    title: "Registro Antiguo",
+  // Aviso de BigLog al COGER la carta Antigrabity (keyed por el id del nodo de recompensa de carta).
+  "story-ch4-card-antigrabity": {
+    title: "Antigrabity",
     lines: [
-      { speaker: "Sistema", text: "REGISTRO DE COMPILACIÓN — PROYECTO ENTIDAD, versión 0.1. Autorizado por: [datos corruptos]." },
-      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Ese registro es viejo… y delicado. Luego te lo explico. Ahora concéntrate en avanzar." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Operador, nos han informado de que en este sector están fabricando cartas muy poderosas con código oscuro. La que acabas de coger es una de ellas. ¡Ten cuidado!" },
     ],
   },
   "story-ch4-event-belts": {
     title: "Laberinto de Servidores",
     lines: [
       { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Cuidado: este laberinto de servidores solo tiene una salida arriba, y la pasarela que sube va en tu contra." },
-      { speaker: "GenNvim", text: "Mi flujo va en un solo sentido: el mío. No subirás… a menos que muevas mi propio hardware para engañarlo." },
+      { speaker: "GenNvim", text: "Mi flujo va en un solo sentido: el mío. No subirás… salvo que encuentres el interruptor que lo gobierna." },
     ],
   },
   "story-ch4-event-belt-locked": {
     title: "Pasarela en Contra",
     lines: [
-      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "La pasarela baja: no puedes subir por ella. Busca en el laberinto un módulo que puedas empujar hasta su ranura para invertir el flujo." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "La pasarela baja: no puedes subir por ella. Busca el interruptor del laberinto —cerca del pasillo del guardia de la izquierda— y acciónalo para invertir el flujo." },
     ],
   },
-  // Narración al INSERTAR el módulo (keyed por el id de la placa/ranura): la pasarela se invierte y queda fija.
-  "story-ch4-belt-slot": {
+  // Narración al ACCIONAR el interruptor (keyed por el id del SWITCH): la pasarela se invierte y queda fija.
+  "story-ch4-belt-switch": {
     title: "Flujo Invertido",
     lines: [
-      { speaker: "Sistema", text: "Módulo insertado. Flujo de la pasarela invertido de forma permanente. Ya puedes subir al terminal.", autoAdvanceMs: 3000 },
+      { speaker: "Sistema", text: "Interruptor accionado. Flujo de la pasarela invertido de forma permanente. Ya puedes subir al terminal.", autoAdvanceMs: 3000 },
     ],
   },
   "story-ch4-event-revelation": {

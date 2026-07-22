@@ -13,8 +13,9 @@ import { IOverworldProgressState, toGridPositionKey } from "@/core/services/stor
 import { findStoryVirtualNodeDefinition } from "@/services/story/map-definitions/story-map-definition-registry";
 import { GROUND_TILE, invertBeltKind, resolveBeltDirection } from "@/services/story/overworld/overworld-tile-kinds";
 
-const SLOT = "story-ch4-belt-slot";
+const SWITCH_ID = "story-ch4-belt-switch";
 const DUEL_1 = "story-ch4-duel-1";
+const DUEL_3 = "story-ch4-duel-3";
 const DUEL_5 = "story-ch4-duel-5";
 const GENNVIM = "story-ch4-duel-6";
 
@@ -80,12 +81,11 @@ describe("buildAct4OverworldTilemap", () => {
     expect(tilemap.width * tilemap.height).toBeGreaterThan(40 * 44);
   });
 
-  it("estrena el laberinto: caja empujable, placa, botón de reinicio y una cinta", () => {
+  it("estrena el laberinto: interruptor del puente, carta de recompensa y una cinta", () => {
     const tilemap = buildAct4OverworldTilemap();
     const kinds = tilemap.objects.map((object) => object.kind);
-    expect(kinds).toContain("BOX");
-    expect(kinds).toContain("PLATE");
-    expect(kinds).toContain("BOX_RESET");
+    expect(kinds).toContain("SWITCH");
+    expect(kinds).toContain("REWARD_CARD");
     // Al menos una casilla de cinta (índices BELT_* 6..9) en la capa ground.
     const hasBelt = tilemap.layers.ground.some((row) => row.some((cell) => cell >= 6 && cell <= 9));
     expect(hasBelt).toBe(true);
@@ -123,14 +123,14 @@ describe("buildAct4OverworldTilemap", () => {
     }
   });
 
-  it("el aumento de DEFENSA está tras el guardia duel-4 (rama alta sellada): obligatorio vencerlo", () => {
-    // El objeto (7,29) es sólido (se recoge desde el lado): comprobamos la casilla contigua (8,29).
-    const approach = { tileX: 8, tileY: 29 };
-    // Sin vencer a duel-4: la sala izq alta (y su aumento) es inalcanzable.
+  it("el aumento de DEFENSA está tras el guardia duel-3 (rama der del laberinto 1): obligatorio vencerlo", () => {
+    // El objeto (44,51) es sólido (se recoge desde el lado): comprobamos la casilla contigua (43,51).
+    const approach = { tileX: 43, tileY: 51 };
+    // Sin vencer a duel-3: la sala der del laberinto 1 (y su aumento DEF) es inalcanzable.
     const locked = contextFor({ completed: [DUEL_1] });
     expect(findGridPath(spawnTile(locked.tilemap), approach, locked.context)).toBeNull();
-    // Vencido duel-4 (y duel-1 para entrar): alcanzable.
-    const cleared = contextFor({ completed: [DUEL_1, "story-ch4-duel-4"] });
+    // Vencido duel-3 (y duel-1 para entrar): alcanzable.
+    const cleared = contextFor({ completed: [DUEL_1, DUEL_3] });
     expect(findGridPath(spawnTile(cleared.tilemap), approach, cleared.context)).not.toBeNull();
   });
 
@@ -157,24 +157,22 @@ describe("buildAct4OverworldTilemap", () => {
     expect(gate.gateRequiredNodeIds).toContain(DUEL_5);
   });
 
-  it("la ranura del módulo es un EVENT persistible en el registro (mark-interacted, belt fijo)", () => {
-    const definition = findStoryVirtualNodeDefinition(SLOT);
+  it("el interruptor del puente es un EVENT persistible en el registro (mark-interacted, belt fijo)", () => {
+    const definition = findStoryVirtualNodeDefinition(SWITCH_ID);
     expect(definition).not.toBeNull();
     expect(definition!.nodeType).toBe("EVENT");
   });
 
-  it("belt-toggle: el puente lab→terminal baja EN CONTRA y la RANURA (placa) lo controla e invierte", () => {
+  it("belt-toggle: el puente lab→terminal baja EN CONTRA y el INTERRUPTOR (switch) lo controla e invierte", () => {
     const tilemap = buildAct4OverworldTilemap();
     // El puente (x=26, y=22..24) baja (BELT_DOWN) por defecto: no se sube.
     for (const y of [22, 23, 24]) {
       expect(resolveBeltDirection(tilemap.layers.ground[y][26])).toBe("DOWN");
     }
-    // La ranura (PLATE) controla justo esas casillas: al insertar la caja, el engine invierte la cinta.
-    const slot = tilemap.objects.find((object) => object.id === SLOT)!;
-    expect(slot.kind).toBe("PLATE");
-    expect(slot.beltToggleRect).toEqual({ x0: 26, y0: 22, x1: 26, y1: 24 });
-    // Hay un módulo (caja) para insertar en la ranura.
-    expect(tilemap.objects.some((object) => object.kind === "BOX")).toBe(true);
+    // El interruptor (SWITCH) controla justo esas casillas: al accionarlo, el engine invierte la cinta.
+    const beltSwitch = tilemap.objects.find((object) => object.id === SWITCH_ID)!;
+    expect(beltSwitch.kind).toBe("SWITCH");
+    expect(beltSwitch.beltToggleRect).toEqual({ x0: 26, y0: 22, x1: 26, y1: 24 });
     expect(invertBeltKind(GROUND_TILE.BELT_DOWN)).toBe(GROUND_TILE.BELT_UP);
   });
 });

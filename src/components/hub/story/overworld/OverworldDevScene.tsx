@@ -340,10 +340,23 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
     engineRef.current?.updateProgress(buildProgress(initialCompleted, seenEventIdsRef.current));
   }, [initialCompleted]);
 
-  // Fin del revelado de carta: reevalúa el progreso (por si desbloquea algo) y devuelve el control.
+  // Nodo de carta cuyo aviso narrativo debe saltar al terminar el revelado (p.ej. Antigrabity -> BigLog).
+  const pendingCardNarrationRef = useRef<string | null>(null);
+  // Fin del revelado de carta: reevalúa el progreso (por si desbloquea algo) y devuelve el control. Si la carta
+  // lleva narración asociada (mismo id de nodo), la muestra antes de devolver el control.
   const completeCardPickup = useCallback((): void => {
     setCardPickup(null);
     engineRef.current?.updateProgress(buildProgress(initialCompleted, seenEventIdsRef.current));
+    const cardNodeId = pendingCardNarrationRef.current;
+    pendingCardNarrationRef.current = null;
+    if (cardNodeId) {
+      const dialogue = resolveOverworldEventDialogue(cardNodeId);
+      if (dialogue && dialogue.lines.length > 0) {
+        engineRef.current?.setInteractionSuspended(true);
+        setNarration({ title: dialogue.title, lines: dialogue.lines, lineIndex: 0, isCutscene: false });
+        return;
+      }
+    }
     engineRef.current?.setInteractionSuspended(false);
   }, [initialCompleted]);
 
@@ -403,6 +416,8 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
             sfxRef.current?.playRewardCard();
             engine.setInteractionSuspended(true);
             engine.markObjectCollected(object.id);
+            // Si la carta tiene aviso narrativo (p.ej. Antigrabity -> BigLog), saltará al cerrar el revelado.
+            pendingCardNarrationRef.current = resolveOverworldEventDialogue(object.id) ? object.id : null;
             setCardPickup(data.rewardCard);
             return;
           }
