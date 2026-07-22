@@ -17,6 +17,9 @@ const MIDUTECH = "/assets/story/opponents/opp-ch1-midutech/avatar-Midutech.webp"
 const USB = "/assets/items/candy-usb-raro.webp";
 const ATK_AUGMENT = "/assets/items/item-nucleo-overclock.webp";
 const DEF_AUGMENT = "/assets/items/item-placa-blindada.webp";
+// Arte de las cartas de recompensa (para que el nodo del mapa muestre la propia carta).
+const CARD_ANTIGRABITY = "/assets/renders/antigrabity.webp";
+const CARD_HYDRA = "/assets/renders/executions/exec-hydra-attack-down.webp";
 
 interface IMutableTilemap {
   ground: number[][];
@@ -91,12 +94,16 @@ interface IMazeSpec {
   rows: number; // nodos en y = nodeY0, nodeY0+2, ...
   seed: number; // semilla fija -> laberinto determinista (idéntico en cada build)
   start: [number, number]; // nodo (i,j) donde arranca el backtracker
+  wallKind?: number; // atrezzo de los muros del maze (por defecto SERVER_RACK)
 }
 interface IMazeHandle {
   nodeX: (i: number) => number;
   nodeY: (j: number) => number;
   carve: (x: number, y: number) => void;
   findDeadEnd: (reserved: Set<string>, fallback: [number, number]) => [number, number];
+  // Dada la celda de un nodo (x,y), devuelve la ÚNICA celda-pasillo transitable contigua (para un callejón de
+  // grado 1 es su acceso). Sirve para plantar un rival sólido que bloquee el único camino a un callejón.
+  openApproach: (x: number, y: number) => [number, number] | null;
 }
 
 /**
@@ -107,6 +114,7 @@ interface IMazeHandle {
  */
 function carveMaze(map: IMutableTilemap, spec: IMazeSpec): IMazeHandle {
   const { bodyY0, bodyY1, nodeX0, nodeY0, cols, rows, seed, start } = spec;
+  const wallKind = spec.wallKind ?? OVERLAY_TILE.SERVER_RACK;
   const nodeX = (i: number): number => nodeX0 + 2 * i;
   const nodeY = (j: number): number => nodeY0 + 2 * j;
   const carve = (x: number, y: number): void => {
@@ -115,7 +123,7 @@ function carveMaze(map: IMutableTilemap, spec: IMazeSpec): IMazeHandle {
   };
   // 1) Tapiar el cuerpo; 2) vaciar los nodos de la malla.
   for (let y = bodyY0; y <= bodyY1; y++) for (let x = nodeX(0); x <= nodeX(cols - 1); x++) {
-    placeStructure(map, x, y, OVERLAY_TILE.SERVER_RACK);
+    placeStructure(map, x, y, wallKind);
   }
   for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) carve(nodeX(i), nodeY(j));
   // 3) Backtracker determinista: abre la pared entre nodos vecinos no visitados.
@@ -165,7 +173,13 @@ function carveMaze(map: IMutableTilemap, spec: IMazeSpec): IMazeHandle {
     }
     return fallback;
   };
-  return { nodeX, nodeY, carve, findDeadEnd };
+  const openApproach = (x: number, y: number): [number, number] | null => {
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as Array<[number, number]>) {
+      if (map.collision[y + dy]?.[x + dx] === 1) return [x + dx, y + dy];
+    }
+    return null;
+  };
+  return { nodeX, nodeY, carve, findDeadEnd, openApproach };
 }
 
 /**
@@ -198,12 +212,13 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   carveCorridor(map, { x: 15, y: 51 }, { x: 17, y: 51 }); // laberinto 1 -> rama izq baja (aumento ATK, guardia duel-2)
   carveCorridor(map, { x: 35, y: 51 }, { x: 36, y: 51 }); // laberinto 1 -> rama der baja (sala opcional)
   // Ramas altas desde el laberinto 2: rivales-guardia OBLIGATORIOS (no se llega al aumento de DEF ni al botón).
-  carveCorridor(map, { x: 15, y: 29 }, { x: 17, y: 29 }); // laberinto 2 -> sala izq alta (aumento DEF, guardia duel-4)
-  carveCorridor(map, { x: 35, y: 29 }, { x: 37, y: 29 }); // laberinto 2 -> sala der alta (botón cinta, guardia duel-3)
+  carveCorridor(map, { x: 15, y: 29 }, { x: 17, y: 29 }); // laberinto 2 -> maze leftUp (carta Hydra, guardia duel-4)
+  carveCorridor(map, { x: 35, y: 29 }, { x: 37, y: 29 }); // laberinto 2 -> maze rightUp (sala opcional con nodo de evento)
 
   // Embudo de salida (y=25/26): pared de servidores con hueco SOLO en x=26. La cámara (y=27) queda abierta, pero el
   // puente que sube (cinta) va EN CONTRA: no se sube hasta accionar el INTERRUPTOR del laberinto 2 (belt-toggle),
-  // que invierte la pasarela de forma PERMANENTE (se marca interactuado -> queda fija; anti soft-lock).
+  // que invierte la pasarela. Es REVERSIBLE: hay un SEGUNDO interruptor arriba (en el terminal) que la vuelve a
+  // bajar, para poder regresar (si no, la pasarela subiendo te rebota y quedarías atrapado arriba).
   for (const funnelY of [25, 26]) {
     for (let x = 18; x <= 34; x++) if (x !== 26) placeStructure(map, x, funnelY, OVERLAY_TILE.SERVER_RACK);
   }
@@ -220,6 +235,23 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
     [20, 47],
   );
 
+  // LABERINTO leftLow (rama izq baja, x=4..15, y=47..55): maze que guarda el AUMENTO ATK. Nodos 6x3 en
+  // x=4,6,8,10,12,14 / y=49,51,53. Entra desde el laberinto 1 por el corredor (15,51)-(17,51) (guardado por duel-2
+  // en (16,51)) hasta el nodo (14,51)=(i5,j1). El aumento ATK va en un callejón sin salida.
+  const leftLowMaze = carveMaze(map, { bodyY0: 47, bodyY1: 55, nodeX0: 4, nodeY0: 49, cols: 6, rows: 3, seed: 0x2c9f4e11, start: [5, 1] });
+  const [atkTileX, atkTileY] = leftLowMaze.findDeadEnd(new Set(["5,1"]), [4, 49]);
+
+  // LABERINTO rightLow (rama der baja, x=37..48, y=47..55): maze que guarda el AUMENTO DEF. Nodos 6x3 en
+  // x=38,40,42,44,46,48 / y=49,51,53. Entra desde el laberinto 1 por el corredor (35,51)-(36,51) (guardado por
+  // duel-3 en (36,51)) hasta el nodo (38,51)=(i0,j1). El aumento DEF va en un callejón sin salida.
+  const rightLowMaze = carveMaze(map, { bodyY0: 47, bodyY1: 55, nodeX0: 38, nodeY0: 49, cols: 6, rows: 3, seed: 0x5d8a3b22, start: [0, 1] });
+  const [defTileX, defTileY] = rightLowMaze.findDeadEnd(new Set(["0,1"]), [48, 49]);
+  // Las salas bajas son de ancho PAR (12): el maze (ancho impar) deja una franja de suelo sobrante en el borde
+  // interior (x=15 en leftLow, x=37 en rightLow). La tapiamos salvo la casilla de entrada (y=51), para que la
+  // entrada sea una sola celda y el aumento quede DENTRO del laberinto (sin pasillo abierto que lo rodee).
+  for (let y = 47; y <= 55; y++) if (y !== 51) placeStructure(map, 15, y, OVERLAY_TILE.SERVER_RACK);
+  for (let y = 47; y <= 55; y++) if (y !== 51) placeStructure(map, 37, y, OVERLAY_TILE.COOLING_UNIT);
+
   // LABERINTO 2 (sala del módulo, y=25..42): maze real + puzzle. Nodos 9x6 en x=18..34, y=29..39. La cámara del
   // módulo cuelga arriba (y=27); se entra por abajo (breach x=26 en y=40) y se sale a la cámara por el hueco (30,28).
   const labMaze = carveMaze(map, { bodyY0: 28, bodyY1: 40, nodeX0: 18, nodeY0: 29, cols: 9, rows: 6, seed: 0x1a2b3c4d, start: [4, 5] });
@@ -231,9 +263,25 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
     [20, 39],
   );
 
-  // Puente lab -> terminal: cinta EN CONTRA (empuja hacia abajo). No se sube hasta insertar el módulo en la
-  // ranura (belt-toggle sobre la placa): al hacerlo, la pasarela se invierte y queda fija (onPlatePressed la
-  // enclava permanentemente), así que aunque la caja se mueva/resetee después no hay soft-lock.
+  // LABERINTO leftUp (sala izq alta, x=4..14, y=25..33): maze real que guarda la carta HYDRA. Nodos 6x3 en
+  // x=4,6,8,10,12,14 / y=27,29,31. La entrada viene del laberinto 2 por el corredor (15,29)-(17,29) (guardado por
+  // duel-4 en (16,29)) hasta el nodo (14,29)=(i5,j1), ya contiguo al corredor.
+  const hydraMaze = carveMaze(map, { bodyY0: 25, bodyY1: 33, nodeX0: 4, nodeY0: 27, cols: 6, rows: 3, seed: 0x4a3d1b7e, start: [5, 1] });
+  // Carta HYDRA en el callejón sin salida más profundo (reservando el nodo de entrada).
+  const [hydraTileX, hydraTileY] = hydraMaze.findDeadEnd(new Set(["5,1"]), [4, 27]);
+  // duel-8 (GenNvim) en la ÚNICA celda de acceso al callejón de la Hydra: obligatorio vencerlo para coger la carta.
+  const hydraApproach = hydraMaze.openApproach(hydraTileX, hydraTileY) ?? [hydraTileX - 1, hydraTileY];
+  const [duel8TileX, duel8TileY] = hydraApproach;
+
+  // LABERINTO rightUp (sala der alta, x=38..48, y=25..33): maze OPCIONAL con atrezzo distinto (unidades de
+  // refrigeración en vez de racks) y un nodo de EVENTO al fondo. Nodos 6x3 en x=38,40,42,44,46,48 / y=27,29,31.
+  // Entra desde el laberinto 2 por el corredor (35,29)-(37,29) hasta el nodo (38,29)=(i0,j1). Sin guardia.
+  const rightUpMaze = carveMaze(map, { bodyY0: 25, bodyY1: 33, nodeX0: 38, nodeY0: 27, cols: 6, rows: 3, seed: 0x7f2e9a15, start: [0, 1], wallKind: OVERLAY_TILE.COOLING_UNIT });
+  const [rightUpTileX, rightUpTileY] = rightUpMaze.findDeadEnd(new Set(["0,1"]), [48, 27]); // reserva el nodo de entrada
+
+  // Puente lab -> terminal: cinta EN CONTRA (empuja hacia abajo). No se sube hasta accionar el interruptor de la
+  // cámara (belt-toggle), que la invierte. El interruptor es REVERSIBLE (toggle en runtime) y hay otro gemelo en
+  // el terminal: subes con el de abajo y bajas con el de arriba. Sin soft-lock (siempre alcanzas un interruptor).
   for (const y of [22, 23, 24]) placeBelt(map, 26, y, GROUND_TILE.BELT_DOWN);
 
   // Estructuras decorativas (racks + refrigeración + pilones) en esquinas de las salas que no estorban el paso.
@@ -251,19 +299,22 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   markSolid(map, 23, 67); // market
   markSolid(map, 25, 67); // arsenal
   markSolid(map, 30, 67); // teleport (salir)
-  markSolid(map, 22, 27); // INTERRUPTOR que invierte la pasarela del puente (belt-toggle), en la cámara del laberinto 2
+  markSolid(map, 22, 27); // INTERRUPTOR (abajo) que invierte la pasarela del puente (belt-toggle), en la cámara del laberinto 2
+  markSolid(map, 28, 20); // INTERRUPTOR (arriba) gemelo, en el terminal: revierte la pasarela para poder bajar/volver
 
   // Recompensas (pulsar A al lado): USB (laberinto 2) + carta ANTIGRABITY (laberinto 1) + aumentos ATK/DEF.
   markSolid(map, usbTileX, usbTileY); // USB Raro (callejón sin salida del laberinto 2)
   markSolid(map, cardTileX, cardTileY); // carta ANTIGRABITY (callejón sin salida del laberinto 1)
-  markSolid(map, 7, 51); // aumento de ATAQUE (rama izq del laberinto 1, tras el guardia duel-2)
-  markSolid(map, 44, 51); // aumento de DEFENSA (rama der del laberinto 1, tras el guardia duel-3)
+  markSolid(map, hydraTileX, hydraTileY); // carta HYDRA (callejón sin salida del maze leftUp, tras duel-8)
+  markSolid(map, atkTileX, atkTileY); // aumento de ATAQUE (callejón del maze leftLow, tras el guardia duel-2)
+  markSolid(map, defTileX, defTileY); // aumento de DEFENSA (callejón del maze rightLow, tras el guardia duel-3)
 
   // Rivales (sólidos): al vencerlos se teletransportan y liberan su casilla.
   markSolid(map, 26, 61); // duel-1 Soldado-Terminal (corredor de entrada, chokepoint único)
   markSolid(map, 16, 51); // duel-2 (rama izq del laberinto 1, guardia del aumento ATK)
   markSolid(map, 36, 51); // duel-3 (rama der del laberinto 1, guardia del aumento DEF)
-  markSolid(map, 16, 29); // duel-4 (rama izq del laberinto 2, guardia de la sala de la Hydra)
+  markSolid(map, 16, 29); // duel-4 (rama izq del laberinto 2, guardia de la ENTRADA del maze de la Hydra)
+  markSolid(map, duel8TileX, duel8TileY); // duel-8 GenNvim (guardia del callejón de la carta Hydra, dentro del maze leftUp)
   markSolid(map, 30, 17); // duel-5 (guardia del terminal)
   markSolid(map, 26, 9); // duel-6 GenNvim (boss 1, mitad baja de la sala del jefe)
   markSolid(map, 26, 4); // duel-7 Midutech (boss final, mitad alta, tras la puerta post-jefe)
@@ -272,6 +323,7 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
 
   // Consola de evento narrativo del terminal (se usa desde el lado).
   markSolid(map, 24, 18); // E4: registro-madre (terminal)
+  markSolid(map, rightUpTileX, rightUpTileY); // nodo de EVENTO al fondo del maze rightUp (consola, se usa desde el lado)
 
   return validateOverworldTilemap({
     schemaVersion: 2,
@@ -292,8 +344,11 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       { id: "story-ch4-transition-to-act3", kind: "WARP", tileX: 20, tileY: 65, sprite: "portal", trigger: "STEP_ON", warp: { toMapId: "act-3", toSpawnId: "spawn-entry", direction: "backward" } },
 
       // ── Laberinto 2: el puente que sube (cinta) va EN CONTRA. El INTERRUPTOR de la cámara invierte la pasarela ──
-      // de forma PERMANENTE (belt-toggle: al accionarlo se marca interactuado y la cinta queda subiendo para siempre).
+      // (belt-toggle REVERSIBLE): con el de abajo subes; con el gemelo de arriba (en el terminal) vuelves a bajar.
       { id: "story-ch4-belt-switch", kind: "SWITCH", tileX: 22, tileY: 27, sprite: "switch", trigger: "ADJACENT_ACTION", beltToggleRect: { x0: 26, y0: 22, x1: 26, y1: 24 } },
+      // Interruptor GEMELO en el terminal: mismo rect de cinta. Al ser el belt-toggle REVERSIBLE, subes con el de
+      // abajo y bajas con este; evita quedar atrapado arriba (la pasarela subiendo rebota al intentar bajar).
+      { id: "story-ch4-belt-switch-top", kind: "SWITCH", tileX: 28, tileY: 20, sprite: "switch", trigger: "ADJACENT_ACTION", beltToggleRect: { x0: 26, y0: 22, x1: 26, y1: 24 } },
       // Compuerta terminal->jefe: requiere vencer al centinela de antesala (duel-5).
       { id: "story-a4-gate-boss", kind: "GATE", tileX: 26, tileY: 12, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: ["story-ch4-duel-5"] },
 
@@ -306,13 +361,18 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       { id: "story-ch4-duel-5", kind: "DUEL", tileX: 30, tileY: 17, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/5", imageSrc: SOLDADO, facing: "DOWN", visionRange: 3 },
       { id: "story-ch4-duel-6", kind: "BOSS", tileX: 26, tileY: 9, sprite: "gennvim", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/6", imageSrc: GENNVIM, facing: "DOWN", visionRange: 3, visionRect: { x0: 18, y0: 7, x1: 34, y1: 11 } },
       { id: "story-ch4-duel-7", kind: "BOSS", tileX: 26, tileY: 4, sprite: "midutech", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/7", imageSrc: MIDUTECH, facing: "DOWN", visionRange: 3, visionRect: { x0: 18, y0: 3, x1: 34, y1: 5 } },
+      // duel-8: GenNvim (DUEL, no BOSS) custodia el callejón de la carta Hydra dentro del maze leftUp.
+      { id: "story-ch4-duel-8", kind: "DUEL", tileX: duel8TileX, tileY: duel8TileY, sprite: "gennvim", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/8", imageSrc: GENNVIM, facing: "DOWN", visionRange: 2 },
 
       // ── Recompensas: USB + aumentos ATK/DEF (objetos) + carta ANTIGRABITY (recompensa de carta) ──────
       { id: "story-ch4-cache-usb", kind: "REWARD_OBJECT", tileX: usbTileX, tileY: usbTileY, sprite: "usb-raro", trigger: "ADJACENT_ACTION", imageSrc: USB },
-      { id: "story-ch4-cache-atk", kind: "REWARD_OBJECT", tileX: 7, tileY: 51, sprite: "atk-augment", trigger: "ADJACENT_ACTION", imageSrc: ATK_AUGMENT },
-      { id: "story-ch4-cache-def", kind: "REWARD_OBJECT", tileX: 44, tileY: 51, sprite: "def-augment", trigger: "ADJACENT_ACTION", imageSrc: DEF_AUGMENT },
-      // Carta ANTIGRABITY escondida en un rincón del laberinto 1; al cogerla salta un aviso de BigLog.
-      { id: "story-ch4-card-antigrabity", kind: "REWARD_CARD", tileX: cardTileX, tileY: cardTileY, sprite: "card", trigger: "ADJACENT_ACTION" },
+      { id: "story-ch4-cache-atk", kind: "REWARD_OBJECT", tileX: atkTileX, tileY: atkTileY, sprite: "atk-augment", trigger: "ADJACENT_ACTION", imageSrc: ATK_AUGMENT },
+      { id: "story-ch4-cache-def", kind: "REWARD_OBJECT", tileX: defTileX, tileY: defTileY, sprite: "def-augment", trigger: "ADJACENT_ACTION", imageSrc: DEF_AUGMENT },
+      // Carta ANTIGRABITY escondida en un rincón del laberinto 1; el nodo muestra el arte de la carta y al cogerla
+      // se revela la Card real y luego salta el aviso de BigLog.
+      { id: "story-ch4-card-antigrabity", kind: "REWARD_CARD", tileX: cardTileX, tileY: cardTileY, sprite: "card", trigger: "ADJACENT_ACTION", imageSrc: CARD_ANTIGRABITY },
+      // Carta HYDRA al fondo del maze leftUp, tras vencer a duel-8 (GenNvim). El nodo muestra el arte de la carta.
+      { id: "story-ch4-card-hydra", kind: "REWARD_CARD", tileX: hydraTileX, tileY: hydraTileY, sprite: "card", trigger: "ADJACENT_ACTION", imageSrc: CARD_HYDRA },
 
       // ── Puerta post-GenNvim: SOLO abre tras vencer a GenNvim (duel-6); sella a Midutech ──────────────
       { id: "story-a4-gate-postboss", kind: "GATE", tileX: 26, tileY: 6, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: ["story-ch4-duel-6"] },
@@ -320,10 +380,13 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       // ── Eventos narrativos ────────────────────────────────────────────────────────────────────────
       // Consola del terminal (se lee pulsando al lado): E4 registro-madre.
       { id: "story-ch4-event-revelation", kind: "EVENT", tileX: 24, tileY: 18, sprite: "console", trigger: "ADJACENT_ACTION" },
-      // Triggers ocultos (se pisan, una vez): E3 al entrar al laberinto; belt-locked al llegar al puente en
-      // contra; E5 tras vencer a GenNvim (celda naturalmente sellada por su casilla sólida); E6 tras Midutech.
-      { id: "story-ch4-event-belts", kind: "EVENT", tileX: 26, tileY: 42, sprite: "hidden", trigger: "STEP_ON", hidden: true },
+      // Consola de evento al fondo del maze rightUp (sala opcional). Narración placeholder (a reescribir).
+      { id: "story-ch4-event-rightup", kind: "EVENT", tileX: rightUpTileX, tileY: rightUpTileY, sprite: "console", trigger: "ADJACENT_ACTION" },
+      // Triggers ocultos (se pisan, una vez): belt-locked al llegar al puente en contra; E5 tras vencer a GenNvim
+      // (celda naturalmente sellada por su casilla sólida); E6 tras Midutech.
       { id: "story-ch4-event-belt-locked", kind: "EVENT", tileX: 26, tileY: 25, sprite: "hidden", trigger: "STEP_ON", hidden: true },
+      // Al entrar al maze leftUp (nodo de entrada 14,29): GenNvim advierte por la carta Hydra, antes de duel-8.
+      { id: "story-ch4-event-hydra", kind: "EVENT", tileX: 14, tileY: 29, sprite: "hidden", trigger: "STEP_ON", hidden: true },
       { id: "story-ch4-event-pre-midutech", kind: "EVENT", tileX: 26, tileY: 7, sprite: "hidden", trigger: "STEP_ON", hidden: true },
       { id: "story-ch4-event-core-key", kind: "EVENT", tileX: 26, tileY: 3, sprite: "hidden", trigger: "STEP_ON", hidden: true },
     ],

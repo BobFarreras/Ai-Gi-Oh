@@ -94,9 +94,15 @@ export class OverworldEngine {
   private readonly switchLightSources: ISwitchLightSource[];
   private activeLights: IOverworldLight[] = [];
   // Interruptores que INVIERTEN cintas: cada uno controla un rect de casillas-cinta. `baseBeltKinds` guarda el
-  // sentido original de esas casillas para poder invertirlo/restaurarlo según si el interruptor está accionado.
+  // sentido original de esas casillas para poder invertirlo/restaurarlo. El estado (qué interruptores están
+  // "activos") es de RUNTIME y REVERSIBLE (`activeBeltToggleIds`): cada pulsación de un interruptor voltea su
+  // pertenencia, y una casilla se invierte si un número IMPAR de sus interruptores está activo (paridad XOR).
+  // Así dos interruptores en extremos opuestos del puente (abajo/arriba) permiten subir y bajar a voluntad. No
+  // persiste: al recargar vuelve al sentido base (siempre hay un interruptor alcanzable en cada extremo → sin
+  // soft-lock).
   private readonly beltToggleControllers: Array<{ id: string; rect: { x0: number; y0: number; x1: number; y1: number } }>;
   private readonly baseBeltKinds: Map<string, number> = new Map();
+  private readonly activeBeltToggleIds = new Set<string>();
   // Cajas empujables (sokoban): posición lógica viva + celdas que bloquean + animación de deslizado.
   private boxPositions = new Map<string, IGridPosition>();
   private boxHomePositions = new Map<string, IGridPosition>();
@@ -335,16 +341,30 @@ export class OverworldEngine {
     if (this.baseBeltKinds.size === 0) return;
     const ground = this.world.tilemap.layers.ground;
     const activeControllers = this.beltToggleControllers.filter((controller) =>
-      this.progress.interactedNodeIds.has(controller.id),
+      this.activeBeltToggleIds.has(controller.id),
     );
     for (const [key, baseKind] of this.baseBeltKinds) {
       const [tileX, tileY] = key.split(",").map(Number);
-      const inverted = activeControllers.some(
+      // Paridad: la casilla se invierte si un número IMPAR de sus interruptores activos la cubre. Con dos
+      // interruptores sobre el mismo puente, cada pulsación (de cualquiera) alterna el sentido → reversible.
+      const coveringActive = activeControllers.filter(
         (controller) =>
           tileX >= controller.rect.x0 && tileX <= controller.rect.x1 && tileY >= controller.rect.y0 && tileY <= controller.rect.y1,
-      );
-      ground[tileY][tileX] = inverted ? invertBeltKind(baseKind) : baseKind;
+      ).length;
+      ground[tileY][tileX] = coveringActive % 2 === 1 ? invertBeltKind(baseKind) : baseKind;
     }
+  }
+
+  /**
+   * Interruptor REVERSIBLE de cinta: alterna la pertenencia del interruptor al conjunto activo y recalcula el
+   * sentido de las cintas que controla. Reutilizable (a diferencia de un SWITCH persistido de un solo uso): sirve
+   * para subir por el puente y luego, con otro interruptor al otro extremo, volver a bajar. No persiste.
+   */
+  toggleBelt(controllerId: string): void {
+    if (!this.beltToggleControllers.some((controller) => controller.id === controllerId)) return;
+    if (this.activeBeltToggleIds.has(controllerId)) this.activeBeltToggleIds.delete(controllerId);
+    else this.activeBeltToggleIds.add(controllerId);
+    this.applyBeltToggles();
   }
 
   private rebuildMovementContext(): void {

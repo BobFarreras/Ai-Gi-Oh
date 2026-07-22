@@ -656,15 +656,30 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
             playDeviceSound();
             return;
           }
-          // Interruptor de luz (mapas oscuros): enciende la sala al instante, sin panel. Se marca
-          // como interactuado (persistido) para que siga encendido tras un combate/refresco.
           if (!intent.isBlocked && object.kind === "SWITCH") {
+            // Interruptor de CINTA (belt-toggle): REVERSIBLE. Cada pulsación invierte el puente (subir/bajar);
+            // no se persiste (estado de runtime, resetea a base al recargar). La narración se muestra solo la
+            // primera vez para no repetirla en cada uso.
+            if (object.beltToggleRect) {
+              playDeviceSound();
+              engine.toggleBelt(object.id);
+              if (!seenEventIdsRef.current.has(object.id)) {
+                markEventSeen(object.id);
+                const beltDialogue = resolveOverworldEventDialogue(object.id);
+                if (beltDialogue && beltDialogue.lines.length > 0) {
+                  engine.setInteractionSuspended(true);
+                  setNarration({ title: beltDialogue.title, lines: beltDialogue.lines, lineIndex: 0, isCutscene: false });
+                }
+              }
+              return;
+            }
+            // Interruptor de luz (mapas oscuros): enciende la sala al instante, sin panel. De un solo uso: se
+            // marca como interactuado (persistido) para que siga encendido tras un combate/refresco.
             if (seenEventIdsRef.current.has(object.id)) return;
             markEventSeen(object.id);
             void markOverworldEventInteracted(object.id);
             playDeviceSound();
             engine.updateProgress(buildProgress(initialCompleted, seenEventIdsRef.current));
-            // Si el interruptor lleva narración (p.ej. el botón que invierte la cinta), la muestra al accionarse.
             const switchDialogue = resolveOverworldEventDialogue(object.id);
             if (switchDialogue && switchDialogue.lines.length > 0) {
               engine.setInteractionSuspended(true);

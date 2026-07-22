@@ -14,9 +14,12 @@ import { findStoryVirtualNodeDefinition } from "@/services/story/map-definitions
 import { GROUND_TILE, invertBeltKind, resolveBeltDirection } from "@/services/story/overworld/overworld-tile-kinds";
 
 const SWITCH_ID = "story-ch4-belt-switch";
+const SWITCH_TOP_ID = "story-ch4-belt-switch-top";
 const DUEL_1 = "story-ch4-duel-1";
 const DUEL_3 = "story-ch4-duel-3";
+const DUEL_4 = "story-ch4-duel-4";
 const DUEL_5 = "story-ch4-duel-5";
+const DUEL_8 = "story-ch4-duel-8";
 const GENNVIM = "story-ch4-duel-6";
 
 function contextFor(progress: { completed?: string[]; interacted?: string[] } = {}) {
@@ -47,6 +50,19 @@ function contextFor(progress: { completed?: string[]; interacted?: string[] } = 
 function spawnTile(tilemap: ReturnType<typeof buildAct4OverworldTilemap>) {
   const spawn = tilemap.spawns[0];
   return { tileX: spawn.tileX, tileY: spawn.tileY };
+}
+
+// Celda transitable contigua a un objeto sólido (desde la que se interactúa/recoge).
+function approachOf(
+  tilemap: ReturnType<typeof buildAct4OverworldTilemap>,
+  object: { tileX: number; tileY: number },
+): { tileX: number; tileY: number } | null {
+  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as Array<[number, number]>) {
+    const tileX = object.tileX + dx;
+    const tileY = object.tileY + dy;
+    if (tilemap.collision[tileY]?.[tileX] === 1) return { tileX, tileY };
+  }
+  return null;
 }
 
 describe("buildAct4OverworldTilemap", () => {
@@ -123,15 +139,30 @@ describe("buildAct4OverworldTilemap", () => {
     }
   });
 
-  it("el aumento de DEFENSA está tras el guardia duel-3 (rama der del laberinto 1): obligatorio vencerlo", () => {
-    // El objeto (44,51) es sólido (se recoge desde el lado): comprobamos la casilla contigua (43,51).
-    const approach = { tileX: 43, tileY: 51 };
-    // Sin vencer a duel-3: la sala der del laberinto 1 (y su aumento DEF) es inalcanzable.
+  it("el aumento de DEFENSA está en el maze rightLow tras el guardia duel-3: obligatorio vencerlo", () => {
+    // El aumento DEF es sólido (se recoge desde el lado); su callejón está dentro del maze rightLow, cuya única
+    // entrada (corredor) la guarda duel-3. Comprobamos la casilla contigua al objeto.
+    const tilemap = buildAct4OverworldTilemap();
+    const def = tilemap.objects.find((object) => object.id === "story-ch4-cache-def")!;
+    const approach = approachOf(tilemap, def);
+    expect(approach).not.toBeNull();
+    // Sin vencer a duel-3: el maze rightLow (y su aumento DEF) es inalcanzable.
     const locked = contextFor({ completed: [DUEL_1] });
-    expect(findGridPath(spawnTile(locked.tilemap), approach, locked.context)).toBeNull();
+    expect(findGridPath(spawnTile(locked.tilemap), approach!, locked.context)).toBeNull();
     // Vencido duel-3 (y duel-1 para entrar): alcanzable.
     const cleared = contextFor({ completed: [DUEL_1, DUEL_3] });
-    expect(findGridPath(spawnTile(cleared.tilemap), approach, cleared.context)).not.toBeNull();
+    expect(findGridPath(spawnTile(cleared.tilemap), approach!, cleared.context)).not.toBeNull();
+  });
+
+  it("el aumento de ATAQUE está en el maze leftLow tras el guardia duel-2: obligatorio vencerlo", () => {
+    const tilemap = buildAct4OverworldTilemap();
+    const atk = tilemap.objects.find((object) => object.id === "story-ch4-cache-atk")!;
+    const approach = approachOf(tilemap, atk);
+    expect(approach).not.toBeNull();
+    const locked = contextFor({ completed: [DUEL_1] });
+    expect(findGridPath(spawnTile(locked.tilemap), approach!, locked.context)).toBeNull();
+    const cleared = contextFor({ completed: [DUEL_1, "story-ch4-duel-2"] });
+    expect(findGridPath(spawnTile(cleared.tilemap), approach!, cleared.context)).not.toBeNull();
   });
 
   it("laberinto de servidores: hay muros de atrezzo (overlay) en la sala del laberinto", () => {
@@ -142,14 +173,34 @@ describe("buildAct4OverworldTilemap", () => {
     expect(walls).toBeGreaterThan(8);
   });
 
-  it("coloca los 7 rivales del capítulo 4 y marca a GenNvim/Midutech como BOSS", () => {
+  it("coloca los 8 rivales del capítulo 4 (duel-8 es DUEL) y marca a GenNvim/Midutech como BOSS", () => {
     const objects = buildAct4OverworldTilemap().objects;
     const ids = new Set(objects.map((object) => object.id));
-    for (let n = 1; n <= 7; n++) expect(ids.has(`story-ch4-duel-${n}`)).toBe(true);
+    for (let n = 1; n <= 8; n++) expect(ids.has(`story-ch4-duel-${n}`)).toBe(true);
+    // duel-8 (guardián de la Hydra) es DUEL, no BOSS.
+    expect(objects.find((object) => object.id === "story-ch4-duel-8")?.kind).toBe("DUEL");
     const bosses = objects.filter((object) => object.kind === "BOSS").map((object) => object.id).sort();
     expect(bosses).toEqual(["story-ch4-duel-6", "story-ch4-duel-7"]);
     const postBossGate = objects.find((object) => object.id === "story-a4-gate-postboss")!;
     expect(postBossGate.gateRequiredNodeIds).toEqual(["story-ch4-duel-6"]);
+  });
+
+  it("la carta HYDRA está tras el guardia duel-8 (dentro del maze leftUp): obligatorio vencerlo", () => {
+    // duel-8 es sólido y ocupa la ÚNICA celda contigua al callejón de la Hydra: sin vencerlo, la carta es
+    // inalcanzable (nadie puede pararse a su lado). Al vencerlo se libera esa celda.
+    const tilemap = buildAct4OverworldTilemap();
+    const duel8 = tilemap.objects.find((object) => object.id === DUEL_8)!;
+    const hydra = tilemap.objects.find((object) => object.id === "story-ch4-card-hydra")!;
+    // La celda de duel-8 es la contigua a la carta Hydra (su acceso).
+    const adjacency = Math.abs(duel8.tileX - hydra.tileX) + Math.abs(duel8.tileY - hydra.tileY);
+    expect(adjacency).toBe(1);
+    const target = { tileX: duel8.tileX, tileY: duel8.tileY };
+    // Con duel-1 (subir) + duel-4 (entrar al maze) pero SIN duel-8: la celda contigua a la Hydra está bloqueada.
+    const locked = contextFor({ completed: [DUEL_1, DUEL_4] });
+    expect(findGridPath(spawnTile(locked.tilemap), target, locked.context)).toBeNull();
+    // + duel-8 vencido: se libera su celda (contigua a la Hydra) → alcanzable.
+    const cleared = contextFor({ completed: [DUEL_1, DUEL_4, DUEL_8] });
+    expect(findGridPath(spawnTile(cleared.tilemap), target, cleared.context)).not.toBeNull();
   });
 
   it("la compuerta terminal→jefe requiere vencer al centinela de antesala (duel-5)", () => {
@@ -157,22 +208,23 @@ describe("buildAct4OverworldTilemap", () => {
     expect(gate.gateRequiredNodeIds).toContain(DUEL_5);
   });
 
-  it("el interruptor del puente es un EVENT persistible en el registro (mark-interacted, belt fijo)", () => {
-    const definition = findStoryVirtualNodeDefinition(SWITCH_ID);
-    expect(definition).not.toBeNull();
-    expect(definition!.nodeType).toBe("EVENT");
-  });
-
-  it("belt-toggle: el puente lab→terminal baja EN CONTRA y el INTERRUPTOR (switch) lo controla e invierte", () => {
+  it("belt-toggle REVERSIBLE: dos interruptores (abajo/arriba) controlan la MISMA cinta del puente", () => {
     const tilemap = buildAct4OverworldTilemap();
-    // El puente (x=26, y=22..24) baja (BELT_DOWN) por defecto: no se sube.
+    const rect = { x0: 26, y0: 22, x1: 26, y1: 24 };
+    // El puente (x=26, y=22..24) baja (BELT_DOWN) por defecto: no se sube sin accionar un interruptor.
     for (const y of [22, 23, 24]) {
       expect(resolveBeltDirection(tilemap.layers.ground[y][26])).toBe("DOWN");
     }
-    // El interruptor (SWITCH) controla justo esas casillas: al accionarlo, el engine invierte la cinta.
-    const beltSwitch = tilemap.objects.find((object) => object.id === SWITCH_ID)!;
-    expect(beltSwitch.kind).toBe("SWITCH");
-    expect(beltSwitch.beltToggleRect).toEqual({ x0: 26, y0: 22, x1: 26, y1: 24 });
     expect(invertBeltKind(GROUND_TILE.BELT_DOWN)).toBe(GROUND_TILE.BELT_UP);
+    // Interruptor de ABAJO (cámara del laberinto 2) e interruptor de ARRIBA (terminal): mismo beltToggleRect.
+    const bottom = tilemap.objects.find((object) => object.id === SWITCH_ID)!;
+    const top = tilemap.objects.find((object) => object.id === SWITCH_TOP_ID)!;
+    expect(bottom.kind).toBe("SWITCH");
+    expect(top.kind).toBe("SWITCH");
+    expect(bottom.beltToggleRect).toEqual(rect);
+    expect(top.beltToggleRect).toEqual(rect);
+    // El de arriba está en el terminal (y<=21) para poder revertir la cinta y bajar; el de abajo en la cámara (y>=25).
+    expect(top.tileY).toBeLessThanOrEqual(21);
+    expect(bottom.tileY).toBeGreaterThanOrEqual(25);
   });
 });

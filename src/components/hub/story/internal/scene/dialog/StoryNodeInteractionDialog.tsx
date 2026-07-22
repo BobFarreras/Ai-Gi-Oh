@@ -22,7 +22,7 @@ interface IStoryNodeInteractionDialogProps {
   centerNextButton?: boolean;
 }
 
-const DEFAULT_AUTO_ADVANCE_MS = 7000;
+const DEFAULT_AUTO_ADVANCE_MS = 10000;
 
 export function StoryNodeInteractionDialog({
   isOpen,

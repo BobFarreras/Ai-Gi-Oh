@@ -11,57 +11,86 @@ Esta guía tiene 2 partes: **(A)** cómo está el acto AHORA y **(B) HANDOFF**: 
 
 ## A. Estado actual (ya hecho y validado)
 
-Mapa `act-4` (verde TERMINAL, **52×70**). Flujo vertical de abajo (entrada) a arriba (jefes). Hay **DOS laberintos reales**
-(maze perfecto por backtracker determinista, semilla fija) generados con el helper `carveMaze(map, spec)`.
+Mapa `act-4` (verde TERMINAL, **52×70**). Flujo vertical de abajo (entrada) a arriba (jefes). Hay **SEIS laberintos
+reales** (maze perfecto por backtracker determinista, semilla fija) generados con `carveMaze(map, spec)`: hub,
+laberinto 2 (módulo), leftLow (ATK), rightLow (DEF), leftUp (Hydra) y rightUp (evento). Las salas NO-laberinto son
+entrada/servicios, terminal y sala de jefes.
 
 ### Recorrido (ruta crítica)
 ```
-Entrada (E1 intro, GenNvim vídeo) -> duel-1 (obligatorio)
+Entrada (E1 intro, GenNvim habla con SU avatar) -> duel-1 (obligatorio)
   -> LABERINTO 1 (hub, y45..59): maze real
-       · rincón (callejón): carta ANTIGRABITY (REWARD_CARD) -> aviso de BigLog al cogerla
-       · sala izq (rama): AUMENTO ATK tras duel-2
-       · sala der (rama): AUMENTO DEF tras duel-3
+       · rincón (callejón): carta ANTIGRABITY (REWARD_CARD, muestra el arte) -> aviso de BigLog al cogerla
+       · rama izq baja = LABERINTO leftLow (x4-15): AUMENTO ATK en callejón, tras duel-2
+       · rama der baja = LABERINTO rightLow (x37-48): AUMENTO DEF en callejón, tras duel-3
   -> corredor (26,43-44)
   -> LABERINTO 2 (sala módulo, y25..42): maze real
        · callejón: USB Raro (REWARD_OBJECT)
-       · cámara arriba (y27): INTERRUPTOR (SWITCH belt-toggle) -> invierte la pasarela del puente PERMANENTE
-       · sala izq alta (leftUp, x4-14): [PASO 4 pendiente] -> maze con carta Hydra + combate GenNvim
-       · sala der alta (rightUp, x38-48): [PASO 5 pendiente] -> maze con nodo de evento
-  -> puente/cinta (26,22-24) -> Terminal (consola E4) + duel-5 (abre gate-boss)
+       · cámara arriba (y27): INTERRUPTOR de cinta (belt-toggle, REVERSIBLE)
+       · sala izq alta = LABERINTO leftUp (x4-14): carta HYDRA en callejón, guardada por duel-8 (GenNvim)
+       · sala der alta = LABERINTO rightUp (x38-48, atrezzo COOLING_UNIT): nodo de evento (opcional)
+  -> puente/cinta (26,22-24) -> Terminal (consola E4 + 2º interruptor de cinta) + duel-5 (abre gate-boss)
   -> GenNvim (duel-6, JEFE 1) -> E5 -> puerta post-jefe -> Midutech (duel-7, JEFE FINAL) -> E6
 ```
 
-### Mecánica del puente (PASO 3, ya hecho)
+### Mecánica del puente (PASO 3, ya hecho) — ahora REVERSIBLE
 - El puente que sube (cinta `BELT_DOWN` en `x=26, y=22..24`) va **en contra**: no se sube.
-- Un **INTERRUPTOR** (`SWITCH` con `beltToggleRect: {x0:26,y0:22,x1:26,y1:24}`, id `story-ch4-belt-switch`, en `(22,27)`)
-  lo **invierte de forma permanente** al accionarlo (se marca interactuado → persiste; anti soft-lock).
-- El motor ya cablea el belt-toggle para `SWITCH`/`PLATE` con `beltToggleRect` (ver `OverworldEngine` + `OverworldDevScene` línea ~646).
+- **DOS interruptores** controlan el MISMO `beltToggleRect: {x0:26,y0:22,x1:26,y1:24}`: `story-ch4-belt-switch` (abajo,
+  cámara del laberinto 2, `(22,27)`) y `story-ch4-belt-switch-top` (arriba, terminal, `(28,20)`). Cada pulsación
+  **invierte** la cinta (toggle en runtime, paridad XOR): subes con el de abajo y **vuelves a bajar** con el de arriba.
+  No persiste (resetea a base al recargar); sin soft-lock porque siempre alcanzas un interruptor. Motor:
+  `OverworldEngine.toggleBelt()` + `applyBeltToggles` (XOR sobre `activeBeltToggleIds`); escena: rama SWITCH con
+  `beltToggleRect` en `OverworldDevScene` (re-disparable, narración solo la 1ª vez).
 
 ### Objetos y rivales (posiciones actuales)
+Las posiciones marcadas `(auto)` las calcula `findDeadEnd` del maze correspondiente (no son fijas: dependen de la
+semilla). Los aumentos ATK/DEF y las cartas van SIEMPRE en un callejón del maze de su sala.
+
 | Cosa | id | Tile | Nota |
 |---|---|---|---|
-| Interruptor puente | `story-ch4-belt-switch` (SWITCH) | (22,27) | belt-toggle |
-| Carta Antigrabity | `story-ch4-card-antigrabity` (REWARD_CARD) | callejón laberinto 1 (auto) | `rewardCardId: entity-antigrabity` |
-| USB Raro | `story-ch4-cache-usb` | callejón laberinto 2 (auto) | REWARD_OBJECT |
-| Aumento ATK | `story-ch4-cache-atk` | (7,51) | tras duel-2 |
-| Aumento DEF | `story-ch4-cache-def` | (44,51) | tras duel-3 |
+| Interruptor puente (abajo) | `story-ch4-belt-switch` (SWITCH) | (22,27) | belt-toggle reversible |
+| Interruptor puente (arriba) | `story-ch4-belt-switch-top` (SWITCH) | (28,20) | gemelo, revierte la cinta para bajar |
+| Carta Antigrabity | `story-ch4-card-antigrabity` (REWARD_CARD) | callejón hub (auto) | `entity-antigrabity`; `imageSrc` = arte |
+| Carta Hydra | `story-ch4-card-hydra` (REWARD_CARD) | callejón leftUp (auto) | `exec-hydra-attack-down`; tras duel-8 |
+| USB Raro | `story-ch4-cache-usb` (REWARD_OBJECT) | callejón laberinto 2 (auto) | LEVEL_CANDY |
+| Aumento ATK | `story-ch4-cache-atk` (REWARD_OBJECT) | callejón leftLow (auto) | tras duel-2 |
+| Aumento DEF | `story-ch4-cache-def` (REWARD_OBJECT) | callejón rightLow (auto) | tras duel-3 |
 | duel-1 | `story-ch4-duel-1` | (26,61) | entrada, obligatorio |
-| duel-2 | `story-ch4-duel-2` | (16,51) | guardia ATK (laberinto 1 izq) |
-| duel-3 | `story-ch4-duel-3` | (36,51) | guardia DEF (laberinto 1 der) |
-| duel-4 | `story-ch4-duel-4` | (16,29) | guardia entrada leftUp (laberinto 2 izq) |
+| duel-2 | `story-ch4-duel-2` | (16,51) | guardia entrada leftLow (ATK) |
+| duel-3 | `story-ch4-duel-3` | (36,51) | guardia entrada rightLow (DEF) |
+| duel-4 | `story-ch4-duel-4` | (16,29) | guardia entrada leftUp (Hydra) |
 | duel-5 | `story-ch4-duel-5` | (30,17) | antesala terminal (abre gate-boss) |
-| duel-6 | `story-ch4-duel-6` | (26,9) | GenNvim JEFE 1 |
-| duel-7 | `story-ch4-duel-7` | (26,4) | Midutech JEFE FINAL |
+| duel-6 | `story-ch4-duel-6` (BOSS) | (26,9) | GenNvim JEFE 1 |
+| duel-7 | `story-ch4-duel-7` (BOSS) | (26,4) | Midutech JEFE FINAL |
+| duel-8 | `story-ch4-duel-8` | acceso callejón leftUp (auto) | GenNvim (DUEL) guardia carta Hydra |
 
 ### Narraciones (catálogo `src/services/story/story-node-interaction-dialogue-catalog.ts`)
-Ya reescritas (SIN "la Entidad"): `story-ch4-event-intro` (E1, GenNvim vídeo → "digno de ver a Midutech"),
-`story-ch4-card-antigrabity` (BigLog aviso), `story-ch4-event-belts`, `story-ch4-event-belt-locked`,
-`story-ch4-belt-switch` (Flujo Invertido). **Personajes:** BigLog = mentor (bueno); GenNvim/Midutech = villanos
-(ellos dicen las amenazas); Sistema = terminal. Vídeos: E1, E4, E6.
+Sin "la Entidad": `story-ch4-event-intro` (E1), `story-ch4-card-antigrabity` (aviso BigLog), `story-ch4-event-hydra`
+(GenNvim antes de duel-8), `story-ch4-event-belt-locked`, `story-ch4-belt-switch` / `-top` (Flujo Invertido/Redirigido),
+`story-ch4-event-rightup` (placeholder), E4/E5/E6. **Avatares:** las líneas de GenNvim/Midutech llevan `portraitUrl`
+(su cara, no la de BigLog por defecto). **Personajes:** BigLog = mentor; GenNvim/Midutech = villanos; Sistema = terminal.
+Vídeos previstos: E1, E4, E6 (de momento narración). **Timing:** `DEFAULT_AUTO_ADVANCE_MS = 10s` en
+`StoryNodeInteractionDialog`. **Eliminado:** `story-ch4-event-belts` (ya no existe).
 
 ---
 
-## B. HANDOFF — lo que falta (pasos 4 y 5)
+## B. HANDOFF — pasos 4 y 5 (✅ HECHOS 2026-07-22)
+
+> **Estado:** PASO 4 (maze leftUp + carta Hydra `story-ch4-card-hydra` + `story-ch4-duel-8` GenNvim + evento
+> `story-ch4-event-hydra`) y PASO 5 (maze rightUp con `wallKind: COOLING_UNIT` + evento `story-ch4-event-rightup`,
+> narración placeholder) implementados y con tests verdes. `carveMaze` gana `wallKind` y `openApproach`. Migración
+> `146_story_act4_hydra_duel.sql` **creada** (opp-ch4-gennvim-hydra + deck + duel-8, unlock `story-ch4-duel-4`).
+> **PENDIENTE: aplicar 146 a prod** (junto con 145, en el release del acto). El detalle técnico original queda abajo.
+>
+> **Ajustes posteriores (2026-07-22, 2ª tanda):** (1) mazes también en `leftLow` (aumento ATK) y `rightLow`
+> (aumento DEF): TODAS las salas de rama son laberinto (entrada/terminal/jefe no). Las salas bajas son de ancho
+> par → se tapia la franja sobrante del borde para que la entrada sea 1 celda. (2) Nodos `REWARD_CARD` de
+> Antigrabity/Hydra llevan `imageSrc` con el arte de la carta (el nodo muestra la carta; al cogerla se revela la
+> Card real y luego salta la narración). (3) Líneas de GenNvim/Midutech con `portraitUrl` → muestran SU avatar.
+> (4) Evento `story-ch4-event-belts` ELIMINADO (tilemap + map-def + catálogo). (5) Narración más lenta:
+> `DEFAULT_AUTO_ADVANCE_MS` 7s→10s + líneas "Sistema" del acto a 5-6s.
+
+### (histórico) Lo que faltaba (pasos 4 y 5)
 
 ### Helper de laberinto (ya existe, reutilízalo)
 `carveMaze(map, spec)` en `act-4-overworld-tilemap.ts`. `spec = { bodyY0, bodyY1, nodeX0, nodeY0, cols, rows, seed, start:[i,j] }`.
