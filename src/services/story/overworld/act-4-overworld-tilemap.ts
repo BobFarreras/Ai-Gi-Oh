@@ -120,6 +120,9 @@ interface IMazeHandle {
   // Dada la celda de un nodo (x,y), devuelve la ÚNICA celda-pasillo transitable contigua (para un callejón de
   // grado 1 es su acceso). Sirve para plantar un rival sólido que bloquee el único camino a un callejón.
   openApproach: (x: number, y: number) => [number, number] | null;
+  // Todas las celdas transitables contiguas a (x,y). Con `length === 1` la celda es un callejón sin salida:
+  // sirve para AFIRMAR la topología (que un nicho lo siga siendo) sin depender de leer el mapa a ojo.
+  openNeighbors: (x: number, y: number) => Array<[number, number]>;
 }
 
 /**
@@ -189,13 +192,15 @@ function carveMaze(map: IMutableTilemap, spec: IMazeSpec): IMazeHandle {
     }
     return fallback;
   };
-  const openApproach = (x: number, y: number): [number, number] | null => {
+  const openNeighbors = (x: number, y: number): Array<[number, number]> => {
+    const neighbors: Array<[number, number]> = [];
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as Array<[number, number]>) {
-      if (map.collision[y + dy]?.[x + dx] === 1) return [x + dx, y + dy];
+      if (map.collision[y + dy]?.[x + dx] === 1) neighbors.push([x + dx, y + dy]);
     }
-    return null;
+    return neighbors;
   };
-  return { nodeX, nodeY, carve, findDeadEnd, openApproach };
+  const openApproach = (x: number, y: number): [number, number] | null => openNeighbors(x, y)[0] ?? null;
+  return { nodeX, nodeY, carve, findDeadEnd, openApproach, openNeighbors };
 }
 
 /**
@@ -250,6 +255,23 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
     new Set(["4,5", "4,0", "0,2", "8,2"]), // reservados: entrada, salida, salidas laterales (izq ATK / der DEF)
     [20, 47],
   );
+  // CENTINELA MÓVIL del laberinto 1 (duel-9): el maze deja de ser estático. Vive en el NICHO sin salida que
+  // cuelga del corredor de salida (nodos i2 de la malla): asoma al pasillo y se vuelve a meter. Patrulla en
+  // VERTICAL, así que su haz barre el corredor de lado a lado (`patrolSweep`); cuando está arriba vigila hacia
+  // la izquierda, que es por donde llega el jugador camino de la salida, y cuando se agacha se puede cruzar.
+  const sentinelTile = { tileX: hubMaze.nodeX(2), tileY: hubMaze.nodeY(0) };
+  const sentinelNookTile = { tileX: hubMaze.nodeX(2), tileY: hubMaze.nodeY(1) };
+  const sentinelPatrolLength = (sentinelNookTile.tileY - sentinelTile.tileY) as number; // 2 celdas: pasillo -> fondo del nicho
+  // El nicho DEBE seguir siendo un callejón que sólo sube hacia el corredor: si el maze cambiara de semilla y
+  // esto pasara a ser un cruce, el centinela patrullaría por una ruta viva. Se comprueba, no se supone.
+  const sentinelNookNeighbors = hubMaze.openNeighbors(sentinelNookTile.tileX, sentinelNookTile.tileY);
+  if (
+    sentinelNookNeighbors.length !== 1 ||
+    sentinelNookNeighbors[0][0] !== sentinelTile.tileX ||
+    sentinelNookNeighbors[0][1] !== sentinelNookTile.tileY - 1
+  ) {
+    throw new Error("act-4-overworld: el nicho del centinela del laberinto 1 ya no es un callejón hacia el corredor.");
+  }
 
   // LABERINTO leftLow (rama izq baja, x=4..15, y=47..55): maze que guarda el AUMENTO ATK. Nodos 6x3 en
   // x=4,6,8,10,12,14 / y=49,51,53. Entra desde el laberinto 1 por el corredor (15,51)-(17,51) (guardado por duel-2
@@ -299,10 +321,12 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   };
 
   // LABERINTO rightUp (sala der alta, x=38..48, y=25..33): maze OPCIONAL con atrezzo distinto (unidades de
-  // refrigeración en vez de racks) y un nodo de EVENTO al fondo. Nodos 6x3 en x=38,40,42,44,46,48 / y=27,29,31.
-  // Entra desde el laberinto 2 por el corredor (35,29)-(37,29) hasta el nodo (38,29)=(i0,j1). Sin guardia.
+  // refrigeración en vez de racks). Al fondo, en un callejón, vive el INTERRUPTOR de la pasarela: la sala deja de
+  // ser un adorno y pasa a ser obligatoria para subir. Nodos 6x3 en x=38,40,42,44,46,48 / y=27,29,31.
+  // Entra desde el laberinto 2 por el corredor (35,29)-(37,29) hasta el nodo (38,29)=(i0,j1). Sin guardia: el
+  // interruptor es SIEMPRE alcanzable (anti soft-lock).
   const rightUpMaze = carveMaze(map, { bodyY0: 25, bodyY1: 33, nodeX0: 38, nodeY0: 27, cols: 6, rows: 3, seed: 0x7f2e9a15, start: [0, 1], wallKind: OVERLAY_TILE.COOLING_UNIT });
-  const [rightUpTileX, rightUpTileY] = rightUpMaze.findDeadEnd(new Set(["0,1"]), [48, 27]); // reserva el nodo de entrada
+  const [beltSwitchTileX, beltSwitchTileY] = rightUpMaze.findDeadEnd(new Set(["0,1"]), [48, 27]); // reserva el nodo de entrada
 
   // Puente lab -> terminal: cinta EN CONTRA (empuja hacia abajo). No se sube hasta accionar el interruptor de la
   // cámara (belt-toggle), que la invierte. El interruptor es REVERSIBLE (toggle en runtime) y hay otro gemelo en
@@ -324,7 +348,7 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   markSolid(map, 23, 67); // market
   markSolid(map, 25, 67); // arsenal
   markSolid(map, 30, 67); // teleport (salir)
-  markSolid(map, 22, 27); // INTERRUPTOR (abajo) que invierte la pasarela del puente (belt-toggle), en la cámara del laberinto 2
+  markSolid(map, beltSwitchTileX, beltSwitchTileY); // INTERRUPTOR (abajo) del puente, al fondo del maze rightUp
   markSolid(map, 28, 20); // INTERRUPTOR (arriba) gemelo, en el terminal: revierte la pasarela para poder bajar/volver
 
   // Recompensas (pulsar A al lado): USB (laberinto 2) + carta ANTIGRABITY (laberinto 1) + aumentos ATK/DEF.
@@ -340,6 +364,7 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   markSolid(map, 36, 51); // duel-3 (rama der del laberinto 1, guardia del aumento DEF)
   markSolid(map, 16, 29); // duel-4 (rama izq del laberinto 2, guardia de la ENTRADA del maze de la Hydra)
   // duel-8 (GenNvim) NO ocupa casilla: aparece por cutscene en la emboscada del pasillo de la Hydra.
+  // duel-9 (centinela que patrulla el laberinto 1) TAMPOCO: si ocupara casilla sellaría el corredor de salida.
   markSolid(map, 30, 17); // duel-5 (guardia del terminal)
   markSolid(map, 26, 9); // duel-6 GenNvim (boss 1, mitad baja de la sala del jefe)
   markSolid(map, 26, 4); // duel-7 Midutech (boss final, mitad alta, tras la puerta post-jefe)
@@ -348,7 +373,6 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
 
   // Consola de evento narrativo del terminal (se usa desde el lado).
   markSolid(map, 24, 18); // E4: registro-madre (terminal)
-  markSolid(map, rightUpTileX, rightUpTileY); // nodo de EVENTO al fondo del maze rightUp (consola, se usa desde el lado)
 
   return validateOverworldTilemap({
     schemaVersion: 2,
@@ -368,9 +392,10 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       // Retorno al Acto 3 (se pisa). El avance al Acto 5 se añadirá con el jefe (Acto 5 = "próximamente").
       { id: "story-ch4-transition-to-act3", kind: "WARP", tileX: 20, tileY: 65, sprite: "portal", trigger: "STEP_ON", warp: { toMapId: "act-3", toSpawnId: "spawn-entry", direction: "backward" } },
 
-      // ── Laberinto 2: el puente que sube (cinta) va EN CONTRA. El INTERRUPTOR de la cámara invierte la pasarela ──
-      // (belt-toggle REVERSIBLE): con el de abajo subes; con el gemelo de arriba (en el terminal) vuelves a bajar.
-      { id: "story-ch4-belt-switch", kind: "SWITCH", tileX: 22, tileY: 27, sprite: "switch", trigger: "ADJACENT_ACTION", beltToggleRect: { x0: 26, y0: 22, x1: 26, y1: 24 } },
+      // ── El puente que sube (cinta) va EN CONTRA. El INTERRUPTOR del fondo del maze rightUp invierte la pasarela ──
+      // (belt-toggle REVERSIBLE): con este subes; con el gemelo de arriba (en el terminal) vuelves a bajar. Vive en
+      // el callejón de la sala derecha alta: esa sala deja de ser un adorno y hay que recorrer su laberinto.
+      { id: "story-ch4-belt-switch", kind: "SWITCH", tileX: beltSwitchTileX, tileY: beltSwitchTileY, sprite: "switch", trigger: "ADJACENT_ACTION", beltToggleRect: { x0: 26, y0: 22, x1: 26, y1: 24 } },
       // Interruptor GEMELO en el terminal: mismo rect de cinta. Al ser el belt-toggle REVERSIBLE, subes con el de
       // abajo y bajas con este; evita quedar atrapado arriba (la pasarela subiendo rebota al intentar bajar).
       { id: "story-ch4-belt-switch-top", kind: "SWITCH", tileX: 28, tileY: 20, sprite: "switch", trigger: "ADJACENT_ACTION", beltToggleRect: { x0: 26, y0: 22, x1: 26, y1: 24 } },
@@ -390,6 +415,12 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       // "fantasma" (hidden, sin visionRange → sin actor) que solo existe para el combate que lanza la cutscene de
       // emboscada. Su casilla nominal es el acceso al callejón, para que el nodo viva donde ocurre la escena.
       { id: HYDRA_AMBUSH_DUEL_ID, kind: "DUEL", tileX: duel8TileX, tileY: duel8TileY, sprite: "gennvim", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/8", imageSrc: GENNVIM, facing: "DOWN", hidden: true },
+      // duel-9: CENTINELA que patrulla el laberinto 1. A propósito NO lleva markSolid: un rival sólido paseando
+      // por un pasillo de una casilla podría sellar el maze, y aquí patrulla justo sobre la ruta de salida. Al no
+      // ocupar casilla nunca bloquea nada; el reto es cruzar el corredor cuando su haz está mirando al otro lado.
+      // `facing: "RIGHT"` es la orientación INICIAL: con patrolSweep, al rebotar queda mirando a la izquierda
+      // (hacia la llegada del jugador) cada vez que asoma al pasillo.
+      { id: "story-ch4-duel-9", kind: "DUEL", tileX: sentinelTile.tileX, tileY: sentinelTile.tileY, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/9", imageSrc: SOLDADO, facing: "RIGHT", visionRange: 3, patrolAxis: "V", patrolLength: sentinelPatrolLength, patrolSweep: true },
 
       // ── Recompensas: USB + aumentos ATK/DEF (objetos) + carta ANTIGRABITY (recompensa de carta) ──────
       { id: "story-ch4-cache-usb", kind: "REWARD_OBJECT", tileX: usbTileX, tileY: usbTileY, sprite: "usb-raro", trigger: "ADJACENT_ACTION", imageSrc: USB },
@@ -408,11 +439,8 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       // ── Eventos narrativos ────────────────────────────────────────────────────────────────────────
       // Consola del terminal (se lee pulsando al lado): E4 registro-madre.
       { id: "story-ch4-event-revelation", kind: "EVENT", tileX: 24, tileY: 18, sprite: "console", trigger: "ADJACENT_ACTION" },
-      // Consola de evento al fondo del maze rightUp (sala opcional). Narración placeholder (a reescribir).
-      { id: "story-ch4-event-rightup", kind: "EVENT", tileX: rightUpTileX, tileY: rightUpTileY, sprite: "console", trigger: "ADJACENT_ACTION" },
-      // Triggers ocultos (se pisan, una vez): belt-locked al llegar al puente en contra; E5 tras vencer a GenNvim
-      // (celda naturalmente sellada por su casilla sólida); E6 tras Midutech.
-      { id: "story-ch4-event-belt-locked", kind: "EVENT", tileX: 26, tileY: 25, sprite: "hidden", trigger: "STEP_ON", hidden: true },
+      // Triggers ocultos (se pisan, una vez): E5 tras vencer a GenNvim (celda naturalmente sellada por su casilla
+      // sólida) y E6 tras Midutech. La pasarela NO narra nada: el jugador descubre solo que la cinta va en contra.
       // EMBOSCADA de la Hydra: trigger oculto DOS casillas antes del acceso a la carta. Al pisarlo, GenNvim
       // aparece por detrás (teletransporte en desktop / entrando andando en móvil), narra y arranca duel-8.
       { id: HYDRA_AMBUSH_TRIGGER_ID, kind: "EVENT", tileX: ambushTile.tileX, tileY: ambushTile.tileY, sprite: "hidden", trigger: "STEP_ON", hidden: true },

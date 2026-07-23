@@ -25,6 +25,7 @@ const DUEL_3 = "story-ch4-duel-3";
 const DUEL_4 = "story-ch4-duel-4";
 const DUEL_5 = "story-ch4-duel-5";
 const DUEL_8 = "story-ch4-duel-8";
+const DUEL_9 = "story-ch4-duel-9";
 const GENNVIM = "story-ch4-duel-6";
 
 function contextFor(progress: { completed?: string[]; interacted?: string[] } = {}) {
@@ -68,6 +69,32 @@ function approachOf(
     if (tilemap.collision[tileY]?.[tileX] === 1) return { tileX, tileY };
   }
   return null;
+}
+
+// ¿Se llega de `from` a `target` si se tapia una casilla concreta? (BFS crudo sobre la rejilla, sin gates ni
+// progreso: sirve para razonar sobre "esta celda es ruta única" dentro de una sala.)
+function isReachableWithBlockedTile(
+  tilemap: ReturnType<typeof buildAct4OverworldTilemap>,
+  from: { tileX: number; tileY: number },
+  target: { tileX: number; tileY: number },
+  blocked: { tileX: number; tileY: number },
+): boolean {
+  const key = (tileX: number, tileY: number) => `${tileX},${tileY}`;
+  const seen = new Set<string>([key(from.tileX, from.tileY)]);
+  const queue: Array<{ tileX: number; tileY: number }> = [{ tileX: from.tileX, tileY: from.tileY }];
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    if (current.tileX === target.tileX && current.tileY === target.tileY) return true;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as Array<[number, number]>) {
+      const tileX = current.tileX + dx;
+      const tileY = current.tileY + dy;
+      if (tileX === blocked.tileX && tileY === blocked.tileY) continue;
+      if (tilemap.collision[tileY]?.[tileX] !== 1 || seen.has(key(tileX, tileY))) continue;
+      seen.add(key(tileX, tileY));
+      queue.push({ tileX, tileY });
+    }
+  }
+  return false;
 }
 
 describe("buildAct4OverworldTilemap", () => {
@@ -178,10 +205,10 @@ describe("buildAct4OverworldTilemap", () => {
     expect(walls).toBeGreaterThan(8);
   });
 
-  it("coloca los 8 rivales del capítulo 4 (duel-8 es DUEL) y marca a GenNvim/Midutech como BOSS", () => {
+  it("coloca los 9 rivales del capítulo 4 (duel-8/9 son DUEL) y marca a GenNvim/Midutech como BOSS", () => {
     const objects = buildAct4OverworldTilemap().objects;
     const ids = new Set(objects.map((object) => object.id));
-    for (let n = 1; n <= 8; n++) expect(ids.has(`story-ch4-duel-${n}`)).toBe(true);
+    for (let n = 1; n <= 9; n++) expect(ids.has(`story-ch4-duel-${n}`)).toBe(true);
     // duel-8 (guardián de la Hydra) es DUEL, no BOSS.
     expect(objects.find((object) => object.id === "story-ch4-duel-8")?.kind).toBe("DUEL");
     const bosses = objects.filter((object) => object.kind === "BOSS").map((object) => object.id).sort();
@@ -250,15 +277,74 @@ describe("buildAct4OverworldTilemap", () => {
       expect(resolveBeltDirection(tilemap.layers.ground[y][26])).toBe("DOWN");
     }
     expect(invertBeltKind(GROUND_TILE.BELT_DOWN)).toBe(GROUND_TILE.BELT_UP);
-    // Interruptor de ABAJO (cámara del laberinto 2) e interruptor de ARRIBA (terminal): mismo beltToggleRect.
+    // Interruptor de ABAJO (fondo del maze rightUp) e interruptor de ARRIBA (terminal): mismo beltToggleRect.
     const bottom = tilemap.objects.find((object) => object.id === SWITCH_ID)!;
     const top = tilemap.objects.find((object) => object.id === SWITCH_TOP_ID)!;
     expect(bottom.kind).toBe("SWITCH");
     expect(top.kind).toBe("SWITCH");
     expect(bottom.beltToggleRect).toEqual(rect);
     expect(top.beltToggleRect).toEqual(rect);
-    // El de arriba está en el terminal (y<=21) para poder revertir la cinta y bajar; el de abajo en la cámara (y>=25).
+    // El de arriba está en el terminal (y<=21) para poder revertir la cinta y bajar; el de abajo vive DENTRO del
+    // laberinto de la sala derecha alta (x>=38, y=25..33), que deja así de ser una sala opcional de adorno.
     expect(top.tileY).toBeLessThanOrEqual(21);
+    expect(bottom.tileX).toBeGreaterThanOrEqual(38);
     expect(bottom.tileY).toBeGreaterThanOrEqual(25);
+    expect(bottom.tileY).toBeLessThanOrEqual(33);
+  });
+
+  it("el interruptor del maze rightUp es SIEMPRE alcanzable (sin guardia): anti soft-lock del puente", () => {
+    // La sala derecha alta no tiene rival en su corredor, así que basta con haber despejado la entrada (duel-1)
+    // para poder llegar a invertir la pasarela. Si esto falla, el jugador se queda sin poder subir al terminal.
+    const tilemap = buildAct4OverworldTilemap();
+    const bottom = tilemap.objects.find((object) => object.id === SWITCH_ID)!;
+    const approach = approachOf(tilemap, bottom);
+    expect(approach).not.toBeNull();
+    const opened = contextFor({ completed: [DUEL_1] });
+    expect(findGridPath(spawnTile(opened.tilemap), approach!, opened.context)).not.toBeNull();
+  });
+
+  it("duel-9 patrulla el laberinto 1 en vertical y su recorrido sale del nicho al corredor", () => {
+    const tilemap = buildAct4OverworldTilemap();
+    const sentinel = tilemap.objects.find((object) => object.id === DUEL_9)!;
+    expect(sentinel.kind).toBe("DUEL");
+    expect(sentinel.patrolAxis).toBe("V");
+    expect(sentinel.patrolLength).toBeGreaterThan(0);
+    expect(sentinel.patrolSweep).toBe(true);
+    expect(sentinel.visionRange).toBeGreaterThan(0);
+    // Dentro del cuerpo del laberinto 1 (y=46..58, x=18..34).
+    expect(sentinel.tileY).toBeGreaterThanOrEqual(46);
+    expect(sentinel.tileY).toBeLessThanOrEqual(58);
+    expect(sentinel.tileX).toBeGreaterThanOrEqual(18);
+    expect(sentinel.tileX).toBeLessThanOrEqual(34);
+    // Todo su recorrido (origen..origen+length) es suelo transitable: si no, rebotaría contra un muro.
+    for (let offset = 0; offset <= sentinel.patrolLength!; offset++) {
+      expect(tilemap.collision[sentinel.tileY + offset][sentinel.tileX]).toBe(1);
+    }
+  });
+
+  it("el centinela NO sella el laberinto: no ocupa casilla (si la ocupara, la salida quedaría aislada)", () => {
+    const tilemap = buildAct4OverworldTilemap();
+    const sentinel = tilemap.objects.find((object) => object.id === DUEL_9)!;
+    const exitTile = { tileX: 26, tileY: 44 }; // corredor laberinto 1 -> laberinto 2
+    // 1) Con el centinela vivo (sin vencerlo) la salida del laberinto sigue siendo alcanzable.
+    const alive = contextFor({ completed: [DUEL_1] });
+    expect(findGridPath(spawnTile(alive.tilemap), exitTile, alive.context)).not.toBeNull();
+    // 2) Y esta es la razón por la que NO se le marca como sólido: su casilla del corredor es ruta única dentro
+    //    del laberinto, así que un cuerpo ahí cortaría el paso a la salida. El assert deja constancia del porqué.
+    const mazeEntry = { tileX: 26, tileY: 59 }; // boca del laberinto 1, ya pasado duel-1
+    expect(isReachableWithBlockedTile(tilemap, mazeEntry, exitTile, { tileX: 0, tileY: 0 })).toBe(true);
+    expect(
+      isReachableWithBlockedTile(tilemap, mazeEntry, exitTile, { tileX: sentinel.tileX, tileY: sentinel.tileY }),
+    ).toBe(false);
+  });
+
+  it("la pasarela ya no narra nada y la sala derecha alta no tiene consola de evento", () => {
+    // B.1/B.2: se borraron el aviso de la pasarela (story-ch4-event-belt-locked) y la consola placeholder de
+    // rightUp (story-ch4-event-rightup), que quedó sustituida por el interruptor.
+    const ids = new Set(buildAct4OverworldTilemap().objects.map((object) => object.id));
+    expect(ids.has("story-ch4-event-belt-locked")).toBe(false);
+    expect(ids.has("story-ch4-event-rightup")).toBe(false);
+    expect(findStoryVirtualNodeDefinition("story-ch4-event-belt-locked")).toBeNull();
+    expect(findStoryVirtualNodeDefinition("story-ch4-event-rightup")).toBeNull();
   });
 });

@@ -33,14 +33,9 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
       { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Operador, nos han informado de que en este sector están fabricando cartas muy poderosas con código oscuro. La que acabas de coger es una de ellas. ¡Ten cuidado!" },
     ],
   },
-  "story-ch4-event-belt-locked": {
-    title: "Pasarela en Contra",
-    lines: [
-      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "La pasarela baja: no puedes subir por ella. Busca el interruptor del laberinto —cerca del pasillo del guardia de la izquierda— y acciónalo para invertir el flujo." },
-    ],
-  },
   // Narración al ACCIONAR el interruptor de ABAJO (solo la 1ª vez): invierte la pasarela para poder subir. Es
-  // reversible; hay un interruptor gemelo arriba para volver a bajar.
+  // reversible; hay un interruptor gemelo arriba para volver a bajar. (La pasarela en contra NO se narra: el
+  // jugador la descubre pisándola.)
   "story-ch4-belt-switch": {
     title: "Flujo Invertido",
     lines: [
@@ -61,13 +56,6 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
     lines: [
       // Solo habla GenNvim: al cerrar SU línea arranca el combate (sin réplica de BigLog que corte el ritmo).
       { actorId: "opp-ch4-gennvim", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: GENNVIM_PORTRAIT, speaker: "GenNvim", text: "Ni un paso más. ¿Creías que iba a dejar esa carta sin vigilancia? Esa Hydra es para mi señor Midutech. Si la quieres, tendrás que arrancármela en combate." },
-    ],
-  },
-  // PLACEHOLDER (a reescribir): consola neutra al fondo del maze rightUp (sala opcional). Sin "la Entidad".
-  "story-ch4-event-rightup": {
-    title: "Consola Olvidada",
-    lines: [
-      { speaker: "Sistema", text: "Consola de mantenimiento. Registro corrupto: solo quedan fragmentos ilegibles. No hay nada de valor… por ahora.", autoAdvanceMs: 6000 },
     ],
   },
   "story-ch4-event-revelation": {
