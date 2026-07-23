@@ -58,6 +58,7 @@ export const OVERLAY_TILE = {
   CRATE: 5,
   COOLING_UNIT: 6, // unidad de refrigeración con rejillas y ventilador giratorio
   DATA_PYLON: 7, // pilón/antena de datos con baliza pulsante
+  CARD_FORGE: 8, // fábrica de cartas: chasis con ranura y una carta holográfica saliendo (Acto 4)
 } as const;
 
 export type GroundTileKind = (typeof GROUND_TILE)[keyof typeof GROUND_TILE];

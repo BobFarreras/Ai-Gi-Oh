@@ -118,6 +118,13 @@ export interface IOverworldTilemapObject {
    * (belt-toggle). Un botón en una sala puede así abrir/cerrar el paso por una pasarela de otra sala.
    */
   beltToggleRect?: IOverworldLightRect;
+  /**
+   * Solo SWITCH/PLATE con `beltToggleRect`: QUÉ posición manda este interruptor. `INVERT` deja la cinta al revés
+   * de su sentido base; `RESTORE` (por defecto en el gemelo de vuelta) la devuelve al base. Dos interruptores
+   * sobre el mismo rect con modos opuestos forman UNA palanca de dos posiciones: siempre hay exactamente uno
+   * encendido, y volver a pulsar el que ya manda no hace nada.
+   */
+  beltToggleMode?: "INVERT" | "RESTORE";
 }
 
 export interface IOverworldTilemapSpawn {

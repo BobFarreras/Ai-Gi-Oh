@@ -264,6 +264,17 @@ function validateObject(
     beltToggleRect = { x0, y0, x1, y1 };
   }
 
+  // Posición que manda el interruptor sobre su cinta (INVERT por defecto: la deja al revés del sentido base).
+  let beltToggleMode: IOverworldTilemapObject["beltToggleMode"];
+  if (raw.beltToggleMode !== undefined) {
+    if (beltToggleRect === undefined) fail(`${path}.beltToggleMode`, "beltToggleMode requiere beltToggleRect");
+    const modeValue = assertNonEmptyString(raw.beltToggleMode, `${path}.beltToggleMode`);
+    if (modeValue !== "INVERT" && modeValue !== "RESTORE") {
+      fail(`${path}.beltToggleMode`, "se esperaba 'INVERT' o 'RESTORE'");
+    }
+    beltToggleMode = modeValue;
+  }
+
   return {
     id,
     kind,
@@ -285,6 +296,7 @@ function validateObject(
     lightRadius,
     lightRect,
     beltToggleRect,
+    beltToggleMode,
   };
 }
 

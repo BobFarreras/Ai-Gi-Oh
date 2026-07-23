@@ -1,9 +1,8 @@
 <!-- docs/story/acts/act-4/ACT-4-HANDOFF-2026-07-23.md - Handoff del pulido del Acto 4: lo hecho el 2026-07-23 y los 4 pasos siguientes con detalle técnico para que otro agente los ejecute sin contexto previo. -->
 # Acto 4 — Handoff 2026-07-23 (pulido)
 
-> **Rama:** `feat/opponent-skill-abilities`. **Estado del árbol:** todo lo de la parte A está **implementado y en verde**
-> (lint + typecheck + 1613 tests) pero **SIN COMMITEAR**. Lo primero que debe hacer quien siga: revisar `git status`
-> y commitear (ver §A.6).
+> **Rama:** `feat/opponent-skill-abilities`. **Estado:** las partes A **y B** están implementadas, commiteadas y
+> en verde. Lo único que queda del acto es **aplicar a prod las migraciones 145, 146 y 147**.
 >
 > Documentos hermanos: [ACT-4-FLOW.md](./ACT-4-FLOW.md) (mapa/ids/recorrido, **fuente de verdad**) y
 > [ACT-4-IMPLEMENTATION-GUIDE.md](./ACT-4-IMPLEMENTATION-GUIDE.md) (historia + textos).
@@ -74,13 +73,77 @@ modificados: src/services/story/overworld/act-4-overworld-tilemap.ts (+ .test.ts
 ```
 
 ### A.6 Pendiente inmediato
-1. **Commitear** (nada de lo anterior está en git). Antes: `CI=true pnpm quality:check` completo.
-2. **Aplicar a prod las migraciones 145 y 146** (`docs/supabase/sql/`) si no se ha hecho: sin ellas duel-6/7/8 no
-   existen en BD y entrar al combate falla. Sigue pendiente desde el 2026-07-22.
+1. ~~Commitear~~ hecho.
+2. **Aplicar a prod las migraciones 145, 146 y 147** (`docs/supabase/sql/`): sin ellas duel-6/7/8/9/10 no existen
+   en BD y entrar al combate falla. Sigue pendiente desde el 2026-07-22.
 
 ---
 
-## B. FUTURAS MEJORAS (en orden de ejecución sugerido)
+## B. MEJORAS — ✅ TODAS HECHAS (2026-07-23, 2ª tanda)
+
+> Las cuatro se implementaron en la rama `feat/opponent-skill-abilities`, con lint + typecheck + tests en verde.
+> Debajo queda **qué se hizo realmente** (y en qué se desvió del plan) y, más abajo, el plan original como
+> histórico. **Pendiente:** aplicar a prod las migraciones **145, 146 y 147**.
+
+### ✅ B.1 — Narración de la pasarela: eliminada
+`story-ch4-event-belt-locked` borrado del tilemap, del map-definition y del catálogo. La cinta en contra se
+descubre pisándola.
+
+### ✅ B.2 — Interruptor de la pasarela en la sala derecha alta
+`story-ch4-belt-switch` vive ahora en el callejón del maze `rightUp` (posición derivada con `findDeadEnd`, no
+hardcodeada) y sustituye a la consola placeholder `story-ch4-event-rightup`, que se borró de los tres sitios. La
+sala opcional pasa a ser **obligatoria** para poder subir; no tiene guardia, así que el interruptor es siempre
+alcanzable (test de reachability con sólo `duel-1` vencido).
+
+### ✅ B.2-bis — Interruptores SIN narración y con estado visual (petición posterior del usuario)
+- Se borraron las narraciones de `story-ch4-belt-switch` y `-top`: ahora **la propia palanca cuenta el estado**.
+- El modelo pasó de **paridad XOR** a **palanca de dos posiciones**: nuevo campo de tilemap
+  `beltToggleMode: "INVERT" | "RESTORE"` (schema + validador). El estado vive **por rect de cinta**
+  (`invertedBeltRectKeys`), no por interruptor → los dos extremos **no se pueden desincronizar** y pulsar el que
+  ya manda **no hace nada** (antes, pulsar dos veces el de abajo te dejaba la cinta al revés de lo que decía).
+- `OverworldEngine.toggleBelt()` devuelve si cambió algo y expone `resolveActiveBeltSwitchIds()`;
+  `IRenderOptions.activeBeltSwitchIds` llega al `Renderer2D`, que dibuja el interruptor **ENCENDIDO** (halo
+  verde, placa iluminada, palanca arriba, piloto fijo) o **APAGADO** (gris, palanca abajo).
+- **Los interruptores de LUZ del Acto 3 no se tocan**: al no tener `beltToggleRect` se dibujan en el estado
+  "neutro" de siempre y conservan su narración.
+
+### ✅ B.3 — Centinela que patrulla el laberinto 1 (`story-ch4-duel-9`)
+Vive en el **nicho sin salida** que cuelga del corredor de salida del hub (derivado con `nodeX/nodeY` +
+`openNeighbors`, nuevo en `carveMaze`, que **afirma** que el nicho sigue siendo callejón). Patrulla en **vertical**
+con `patrolSweep`, así que su haz barre el pasillo a lo largo: cuando asoma vigila hacia la izquierda (por donde
+llega el jugador) y cuando se agacha se puede cruzar.
+
+> **Desvío del plan a propósito:** el plan pedía patrulla horizontal y `markSolid`. **No lleva `markSolid`**: su
+> casilla del pasillo es ruta única y un cuerpo ahí **sellaría la salida del laberinto**. Hay un test que lo deja
+> por escrito (bloquear esa casilla deja la salida inalcanzable).
+
+### ✅ B.4 — Sala de la Fábrica de Cartas + escena de los dos villanos (`story-ch4-duel-10`)
+Medio laberinto en la mitad baja de `roomTerminal` (`carveMaze`, cuerpo y16-21, nodos x22-32 / y17,19,21). La
+mitad alta (y13-15) queda despejada y ahí se **reubicaron** `duel-5` (22,14), la consola E4 (26,14) y el
+interruptor gemelo (30,14) — un test comprueba que ninguno quedó sepultado bajo el maze.
+
+- **Cámara de la Fábrica:** nicho tallado a mano en la franja x20-21 (fuera de la malla), colgando del nodo
+  (22,19). **La máquina son DOS casillas** (`OVERLAY_TILE.CARD_FORGE = 8`, dibujada procedural en
+  `Renderer2D.drawCardForge`: chasis, ranura encendida y carta holográfica ascendente) justo **encima** de los
+  villanos, que están **hombro con hombro mirando hacia ARRIBA**.
+- **La escena es OBLIGATORIA:** el trigger es la **única boca de salida** del medio laberinto (nodo (22,17), con
+  el breach abierto encima). Hay test: tapiando esa casilla, la mitad alta —y con ella el jefe— es inalcanzable.
+- **Guion** (`act-4-card-forge-cutscene.ts`): aparecen los dos de espaldas → **paso `EVENT`** con las tres
+  líneas exactas del usuario → Midutech **se desmaterializa** con la carta (`DESPAWN_NPC` + `effect: "TELEPORT"`,
+  nuevo) → GenNvim se gira (`NPC_FACE`, nuevo) y **sube por el pasillo** hasta pegarse al jugador → cierra la
+  cutscene → desafío de GenNvim (`story-ch4-duel-10` en el catálogo) → combate.
+- **Motor, multi-NPC:** `cutsceneNpc` pasó a `Map<string, …>`; `SPAWN_NPC`/`NPC_WALK_TO`/`DESPAWN_NPC` aceptan
+  `npcId` (default `DEFAULT_CUTSCENE_NPC_ID = "main"`, así las escenas de un actor no cambian);
+  `IRenderOptions.cutsceneNpcs` es una lista y `drawCutsceneNpc` se llama en bucle.
+- Enganche: entrada nueva en `AMBUSH_BY_TRIGGER_ID` (`OverworldDevScene.tsx`). **Sin UI nueva.**
+
+### Migración 147 (nueva, PENDIENTE de aplicar a prod)
+`docs/supabase/sql/147_story_act4_patrol_duel.sql`: `story-ch4-duel-9` (deck propio del Soldado-Terminal) y
+`story-ch4-duel-10` (reutiliza `opp-ch4-gennvim-hydra` y su deck, de la 146).
+
+---
+
+## B-histórico. El plan original de las 4 mejoras
 
 > Los cuatro pasos son independientes salvo que B.2 depende de B.1 (misma zona narrativa).
 > Regla del acto: **nada de coordenadas a mano si se pueden derivar** — usa `traceWalkableCorridor`,
@@ -204,6 +267,7 @@ catálogo). Nada de UI nueva.
 ---
 
 ## C. Avisos que siguen abiertos (heredados)
+- **Aplicar 145 + 146 + 147 a prod** — lo único que bloquea jugar el acto entero (duel-6/7/8/9/10).
 - **E4/E6** (`story-ch4-event-revelation`, `story-ch4-event-core-key`) mencionan "la Entidad" con textos **no
   definitivos**: el usuario rehará esa parte. La escena B.4 sí usa "la Entidad" **a propósito** (texto suyo).
 - **E4/E6 serán vídeo** algún día (E1 ya lo es).

@@ -25,6 +25,25 @@ export const HYDRA_AMBUSH_DUEL_ID = "story-ch4-duel-8";
  */
 export const HYDRA_MAZE_ENTRY_TILE = { tileX: 14, tileY: 29 } as const;
 
+// ── FÁBRICA DE CARTAS (sala del terminal) ────────────────────────────────────
+/** Fila de la MÁQUINA (dos casillas contiguas) y fila donde esperan los dos villanos, justo debajo. */
+const CARD_FORGE_MACHINE_TILE_Y = 18;
+const CARD_FORGE_VILLAIN_TILE_Y = 19;
+/** GenNvim, pegado a la boca del nicho: es el que se gira y te corta la salida. */
+export const CARD_FORGE_GENNVIM_TILE = { tileX: 21, tileY: CARD_FORGE_VILLAIN_TILE_Y } as const;
+/** Midutech, al fondo: suelta su línea, se lleva la carta y se desmaterializa. */
+export const CARD_FORGE_MIDUTECH_TILE = { tileX: 20, tileY: CARD_FORGE_VILLAIN_TILE_Y } as const;
+/**
+ * Distancia máxima (en casillas de pasillo) entre el trigger de la escena y GenNvim. El trigger es la BOCA DE
+ * SALIDA del medio laberinto —ruta obligatoria, así que la escena no se puede saltar— y la cámara de la Fábrica
+ * cuelga justo debajo: si un cambio de semilla la alejara, la escena arrancaría fuera de cámara.
+ */
+export const CARD_FORGE_MAX_TILES_FROM_MACHINE = 4;
+/** Id del trigger oculto que lanza la escena de la Fábrica (y del diálogo de los tres villanos). */
+export const CARD_FORGE_TRIGGER_ID = "story-ch4-event-card-forge";
+/** Id del duelo con GenNvim al terminar la escena. */
+export const CARD_FORGE_DUEL_ID = "story-ch4-duel-10";
+
 // Avatares (ya existen en assets). GenNvim reutiliza el del apprentice; Midutech el del oponente de arena.
 const SOLDADO = "/assets/story/opponents/opp-ch4-soldado-terminal/avatar-Soldado-terminal.webp";
 const GENNVIM = "/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.webp";
@@ -328,6 +347,29 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   const rightUpMaze = carveMaze(map, { bodyY0: 25, bodyY1: 33, nodeX0: 38, nodeY0: 27, cols: 6, rows: 3, seed: 0x7f2e9a15, start: [0, 1], wallKind: OVERLAY_TILE.COOLING_UNIT });
   const [beltSwitchTileX, beltSwitchTileY] = rightUpMaze.findDeadEnd(new Set(["0,1"]), [48, 27]); // reserva el nodo de entrada
 
+  // MEDIO LABERINTO del terminal (mitad baja de la sala, y=16..21) + CÁMARA DE LA FÁBRICA DE CARTAS. La mitad
+  // alta (y=13..15) queda despejada: ahí viven el centinela duel-5, la consola E4 y el interruptor gemelo.
+  // El maze ocupa x=22..32 (nodos en x=22,24,...,32 / y=17,19,21). Se entra por abajo desde la cinta, que
+  // desemboca en el nodo (26,21), y se sale por el breach (26,16) hacia la mitad alta.
+  const forgeMaze = carveMaze(map, { bodyY0: 16, bodyY1: 21, nodeX0: 22, nodeY0: 17, cols: 6, rows: 3, seed: 0x3e7b19c4, start: [2, 2] });
+  // La SALIDA se abre sobre el nodo (22,17), la esquina de la que cuelga la cámara de la Fábrica: así el único
+  // camino de salida pasa por delante de la escena y no se la puede saltar nadie.
+  const forgeExitTile = { tileX: forgeMaze.nodeX(0), tileY: forgeMaze.nodeY(0) };
+  forgeMaze.carve(forgeExitTile.tileX, forgeExitTile.tileY - 1); // breach hacia la mitad alta del terminal
+  // Franja izquierda de la sala (x=20..21) fuera de la malla: se tapia entera salvo la CÁMARA DE LA FÁBRICA,
+  // un nicho tallado a mano de dos celdas que cuelga del nodo (22,19). Así caben los DOS villanos hombro con
+  // hombro mirando hacia arriba a la máquina, cosa que un pasillo de una casilla no permite.
+  for (let tileY = 16; tileY <= 21; tileY++) {
+    for (const tileX of [20, 21]) {
+      if (tileY === CARD_FORGE_VILLAIN_TILE_Y) continue; // suelo del nicho (donde están los villanos)
+      // La MÁQUINA son las dos casillas justo encima de ellos: dos tiles contiguos que leen como un solo bloque.
+      placeStructure(map, tileX, tileY, tileY === CARD_FORGE_MACHINE_TILE_Y ? OVERLAY_TILE.CARD_FORGE : OVERLAY_TILE.SERVER_RACK);
+    }
+  }
+  // El trigger de la escena vive en esa misma boca de salida: al llegar a ella, el jugador tiene la Fábrica a
+  // dos-tres casillas por debajo y ve la escena entera desde arriba.
+  const forgeTriggerTile = forgeExitTile;
+
   // Puente lab -> terminal: cinta EN CONTRA (empuja hacia abajo). No se sube hasta accionar el interruptor de la
   // cámara (belt-toggle), que la invierte. El interruptor es REVERSIBLE (toggle en runtime) y hay otro gemelo en
   // el terminal: subes con el de abajo y bajas con el de arriba. Sin soft-lock (siempre alcanzas un interruptor).
@@ -349,7 +391,7 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   markSolid(map, 25, 67); // arsenal
   markSolid(map, 30, 67); // teleport (salir)
   markSolid(map, beltSwitchTileX, beltSwitchTileY); // INTERRUPTOR (abajo) del puente, al fondo del maze rightUp
-  markSolid(map, 28, 20); // INTERRUPTOR (arriba) gemelo, en el terminal: revierte la pasarela para poder bajar/volver
+  markSolid(map, 30, 14); // INTERRUPTOR (arriba) gemelo, en la mitad ALTA del terminal (fuera del medio laberinto)
 
   // Recompensas (pulsar A al lado): USB (laberinto 2) + carta ANTIGRABITY (laberinto 1) + aumentos ATK/DEF.
   markSolid(map, usbTileX, usbTileY); // USB Raro (callejón sin salida del laberinto 2)
@@ -365,14 +407,14 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   markSolid(map, 16, 29); // duel-4 (rama izq del laberinto 2, guardia de la ENTRADA del maze de la Hydra)
   // duel-8 (GenNvim) NO ocupa casilla: aparece por cutscene en la emboscada del pasillo de la Hydra.
   // duel-9 (centinela que patrulla el laberinto 1) TAMPOCO: si ocupara casilla sellaría el corredor de salida.
-  markSolid(map, 30, 17); // duel-5 (guardia del terminal)
+  markSolid(map, 22, 14); // duel-5 (guardia del terminal): vigila la salida del medio laberinto, en la mitad alta
   markSolid(map, 26, 9); // duel-6 GenNvim (boss 1, mitad baja de la sala del jefe)
   markSolid(map, 26, 4); // duel-7 Midutech (boss final, mitad alta, tras la puerta post-jefe)
   // Muro de atrezzo que parte la sala del jefe en dos; hueco en x=26 con la puerta post-GenNvim.
   for (let x = 18; x <= 34; x++) if (x !== 26) placeStructure(map, x, 6, OVERLAY_TILE.SERVER_RACK);
 
-  // Consola de evento narrativo del terminal (se usa desde el lado).
-  markSolid(map, 24, 18); // E4: registro-madre (terminal)
+  // Consola de evento narrativo del terminal (se usa desde el lado), en la mitad alta de la sala.
+  markSolid(map, 26, 14); // E4: registro-madre (terminal)
 
   return validateOverworldTilemap({
     schemaVersion: 2,
@@ -392,13 +434,15 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       // Retorno al Acto 3 (se pisa). El avance al Acto 5 se añadirá con el jefe (Acto 5 = "próximamente").
       { id: "story-ch4-transition-to-act3", kind: "WARP", tileX: 20, tileY: 65, sprite: "portal", trigger: "STEP_ON", warp: { toMapId: "act-3", toSpawnId: "spawn-entry", direction: "backward" } },
 
-      // ── El puente que sube (cinta) va EN CONTRA. El INTERRUPTOR del fondo del maze rightUp invierte la pasarela ──
-      // (belt-toggle REVERSIBLE): con este subes; con el gemelo de arriba (en el terminal) vuelves a bajar. Vive en
-      // el callejón de la sala derecha alta: esa sala deja de ser un adorno y hay que recorrer su laberinto.
-      { id: "story-ch4-belt-switch", kind: "SWITCH", tileX: beltSwitchTileX, tileY: beltSwitchTileY, sprite: "switch", trigger: "ADJACENT_ACTION", beltToggleRect: { x0: 26, y0: 22, x1: 26, y1: 24 } },
-      // Interruptor GEMELO en el terminal: mismo rect de cinta. Al ser el belt-toggle REVERSIBLE, subes con el de
-      // abajo y bajas con este; evita quedar atrapado arriba (la pasarela subiendo rebota al intentar bajar).
-      { id: "story-ch4-belt-switch-top", kind: "SWITCH", tileX: 28, tileY: 20, sprite: "switch", trigger: "ADJACENT_ACTION", beltToggleRect: { x0: 26, y0: 22, x1: 26, y1: 24 } },
+      // ── El puente que sube (cinta) va EN CONTRA. Los DOS interruptores son las dos posiciones de UNA palanca
+      // sobre el mismo rect de cinta: el de abajo la INVIERTE (se sube) y el gemelo del terminal la RESTAURA (se
+      // baja). Siempre hay exactamente uno encendido —se ve en el propio dibujo del interruptor—, y pulsar el que
+      // ya manda no hace nada. El de abajo vive en el callejón de la sala derecha alta: esa sala deja de ser un
+      // adorno y hay que recorrer su laberinto para poder subir.
+      { id: "story-ch4-belt-switch", kind: "SWITCH", tileX: beltSwitchTileX, tileY: beltSwitchTileY, sprite: "switch", trigger: "ADJACENT_ACTION", beltToggleRect: { x0: 26, y0: 22, x1: 26, y1: 24 }, beltToggleMode: "INVERT" },
+      // Interruptor GEMELO en el terminal: devuelve la pasarela a su sentido base para poder bajar. Evita quedar
+      // atrapado arriba (la pasarela subiendo te rebota al intentar bajar).
+      { id: "story-ch4-belt-switch-top", kind: "SWITCH", tileX: 30, tileY: 14, sprite: "switch", trigger: "ADJACENT_ACTION", beltToggleRect: { x0: 26, y0: 22, x1: 26, y1: 24 }, beltToggleMode: "RESTORE" },
       // Compuerta terminal->jefe: requiere vencer al centinela de antesala (duel-5).
       { id: "story-a4-gate-boss", kind: "GATE", tileX: 26, tileY: 12, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: ["story-ch4-duel-5"] },
 
@@ -408,7 +452,7 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       { id: "story-ch4-duel-2", kind: "DUEL", tileX: 16, tileY: 51, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/2", imageSrc: SOLDADO, facing: "RIGHT", visionRange: 3 },
       { id: "story-ch4-duel-3", kind: "DUEL", tileX: 36, tileY: 51, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/3", imageSrc: SOLDADO, facing: "LEFT", visionRange: 3 },
       { id: "story-ch4-duel-4", kind: "DUEL", tileX: 16, tileY: 29, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/4", imageSrc: SOLDADO, facing: "RIGHT", visionRange: 3 },
-      { id: "story-ch4-duel-5", kind: "DUEL", tileX: 30, tileY: 17, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/5", imageSrc: SOLDADO, facing: "DOWN", visionRange: 3 },
+      { id: "story-ch4-duel-5", kind: "DUEL", tileX: 22, tileY: 14, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/5", imageSrc: SOLDADO, facing: "DOWN", visionRange: 3 },
       { id: "story-ch4-duel-6", kind: "BOSS", tileX: 26, tileY: 9, sprite: "gennvim", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/6", imageSrc: GENNVIM, facing: "DOWN", visionRange: 3, visionRect: { x0: 18, y0: 7, x1: 34, y1: 11 } },
       { id: "story-ch4-duel-7", kind: "BOSS", tileX: 26, tileY: 4, sprite: "midutech", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/7", imageSrc: MIDUTECH, facing: "DOWN", visionRange: 3, visionRect: { x0: 18, y0: 3, x1: 34, y1: 5 } },
       // duel-8: GenNvim (DUEL, no BOSS) custodia la carta Hydra. NO se dibuja ni bloquea el pasillo: es un nodo
@@ -421,6 +465,10 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       // `facing: "RIGHT"` es la orientación INICIAL: con patrolSweep, al rebotar queda mirando a la izquierda
       // (hacia la llegada del jugador) cada vez que asoma al pasillo.
       { id: "story-ch4-duel-9", kind: "DUEL", tileX: sentinelTile.tileX, tileY: sentinelTile.tileY, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/9", imageSrc: SOLDADO, facing: "RIGHT", visionRange: 3, patrolAxis: "V", patrolLength: sentinelPatrolLength, patrolSweep: true },
+      // duel-10: GenNvim en la CÁMARA DE LA FÁBRICA DE CARTAS. Como duel-8, es un nodo "fantasma" (hidden, sin
+      // visionRange → sin actor, sin markSolid): existe sólo para el combate que lanza la escena. Su casilla
+      // nominal es donde GenNvim se planta durante la cutscene.
+      { id: CARD_FORGE_DUEL_ID, kind: "DUEL", tileX: CARD_FORGE_GENNVIM_TILE.tileX, tileY: CARD_FORGE_GENNVIM_TILE.tileY, sprite: "gennvim", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/10", imageSrc: GENNVIM, facing: "DOWN", hidden: true },
 
       // ── Recompensas: USB + aumentos ATK/DEF (objetos) + carta ANTIGRABITY (recompensa de carta) ──────
       { id: "story-ch4-cache-usb", kind: "REWARD_OBJECT", tileX: usbTileX, tileY: usbTileY, sprite: "usb-raro", trigger: "ADJACENT_ACTION", imageSrc: USB },
@@ -438,12 +486,16 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
 
       // ── Eventos narrativos ────────────────────────────────────────────────────────────────────────
       // Consola del terminal (se lee pulsando al lado): E4 registro-madre.
-      { id: "story-ch4-event-revelation", kind: "EVENT", tileX: 24, tileY: 18, sprite: "console", trigger: "ADJACENT_ACTION" },
+      { id: "story-ch4-event-revelation", kind: "EVENT", tileX: 26, tileY: 14, sprite: "console", trigger: "ADJACENT_ACTION" },
       // Triggers ocultos (se pisan, una vez): E5 tras vencer a GenNvim (celda naturalmente sellada por su casilla
       // sólida) y E6 tras Midutech. La pasarela NO narra nada: el jugador descubre solo que la cinta va en contra.
       // EMBOSCADA de la Hydra: trigger oculto DOS casillas antes del acceso a la carta. Al pisarlo, GenNvim
       // aparece por detrás (teletransporte en desktop / entrando andando en móvil), narra y arranca duel-8.
       { id: HYDRA_AMBUSH_TRIGGER_ID, kind: "EVENT", tileX: ambushTile.tileX, tileY: ambushTile.tileY, sprite: "hidden", trigger: "STEP_ON", hidden: true },
+      // FÁBRICA DE CARTAS: trigger oculto a dos casillas de la máquina. Al pisarlo aparecen GenNvim y Midutech
+      // de espaldas, mirando la forja; hablan, Midutech se lleva la carta y se desmaterializa, y GenNvim se gira
+      // hacia ti con el callejón a tu espalda → duel-10.
+      { id: CARD_FORGE_TRIGGER_ID, kind: "EVENT", tileX: forgeTriggerTile.tileX, tileY: forgeTriggerTile.tileY, sprite: "hidden", trigger: "STEP_ON", hidden: true },
       { id: "story-ch4-event-pre-midutech", kind: "EVENT", tileX: 26, tileY: 7, sprite: "hidden", trigger: "STEP_ON", hidden: true },
       { id: "story-ch4-event-core-key", kind: "EVENT", tileX: 26, tileY: 3, sprite: "hidden", trigger: "STEP_ON", hidden: true },
     ],

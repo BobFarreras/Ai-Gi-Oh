@@ -33,22 +33,9 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
       { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Operador, nos han informado de que en este sector están fabricando cartas muy poderosas con código oscuro. La que acabas de coger es una de ellas. ¡Ten cuidado!" },
     ],
   },
-  // Narración al ACCIONAR el interruptor de ABAJO (solo la 1ª vez): invierte la pasarela para poder subir. Es
-  // reversible; hay un interruptor gemelo arriba para volver a bajar. (La pasarela en contra NO se narra: el
-  // jugador la descubre pisándola.)
-  "story-ch4-belt-switch": {
-    title: "Flujo Invertido",
-    lines: [
-      { speaker: "Sistema", text: "Interruptor accionado. Flujo de la pasarela invertido: ahora sube. Hay otro interruptor arriba para revertirlo y bajar.", autoAdvanceMs: 6000 },
-    ],
-  },
-  // Narración al ACCIONAR el interruptor de ARRIBA (terminal), solo la 1ª vez: revierte la pasarela para bajar.
-  "story-ch4-belt-switch-top": {
-    title: "Flujo Redirigido",
-    lines: [
-      { speaker: "Sistema", text: "Interruptor accionado. Flujo de la pasarela revertido: ahora baja. Úsalo para volver a las salas inferiores.", autoAdvanceMs: 6000 },
-    ],
-  },
+  // Los interruptores de la pasarela (story-ch4-belt-switch / -top) NO narran: se dibujan encendidos/apagados
+  // en el mapa y esa es toda la información que hace falta. Tampoco lo hace la pasarela en contra: se descubre
+  // pisándola.
   // EMBOSCADA de GenNvim: salta al pisar el trigger a dos casillas de la carta Hydra, tras la cutscene en la
   // que aparece POR DETRÁS (teletransporte en desktop, entrando andando en móvil). Al cerrarla → duel-8.
   "story-ch4-event-hydra": {
@@ -56,6 +43,25 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
     lines: [
       // Solo habla GenNvim: al cerrar SU línea arranca el combate (sin réplica de BigLog que corte el ritmo).
       { actorId: "opp-ch4-gennvim", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: GENNVIM_PORTRAIT, speaker: "GenNvim", text: "Ni un paso más. ¿Creías que iba a dejar esa carta sin vigilancia? Esa Hydra es para mi señor Midutech. Si la quieres, tendrás que arrancármela en combate." },
+    ],
+  },
+  // FÁBRICA DE CARTAS (sala del terminal): las tres líneas se dicen DENTRO de la cutscene, con los dos villanos
+  // todavía de espaldas mirando la máquina. Al cerrarlas, Midutech se desmaterializa con la carta y GenNvim sube
+  // a por ti (su desafío es la entrada "story-ch4-duel-10", justo debajo).
+  "story-ch4-event-card-forge": {
+    title: "La Carta Suprema",
+    lines: [
+      { actorId: "opp-ch4-gennvim", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: GENNVIM_PORTRAIT, speaker: "GenNvim", text: "Hemos podido crear la carta suprema." },
+      { actorId: "opp-ch4-midutech", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: MIDUTECH_PORTRAIT, speaker: "Midutech", text: "Con esto la Entidad podrá controlar todo el ciberespacio." },
+      { actorId: "opp-ch4-midutech", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: MIDUTECH_PORTRAIT, speaker: "Midutech", text: "Voy a llevármela." },
+    ],
+  },
+  // Desafío de GenNvim al girarse y pillarte en el callejón: al cerrarlo arranca duel-10 (sin réplica de BigLog,
+  // que cortaría el ritmo, igual que en la emboscada de la Hydra).
+  "story-ch4-duel-10": {
+    title: "Testigo Incómodo",
+    lines: [
+      { actorId: "opp-ch4-gennvim", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: GENNVIM_PORTRAIT, speaker: "GenNvim", text: "¿Cuánto llevas ahí? Da igual: de esta sala no sales a contarlo." },
     ],
   },
   "story-ch4-event-revelation": {

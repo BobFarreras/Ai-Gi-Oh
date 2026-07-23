@@ -35,7 +35,10 @@ import { buildOverworldTilemap, resolveOverworldActId } from "@/services/story/o
 import { buildAct1EchoCutscene } from "@/services/story/overworld/act-1-echo-cutscene";
 import { buildAct2BigLogCutscene } from "@/services/story/overworld/act-2-biglog-cutscene";
 import { buildAct4HydraAmbushCutscene } from "@/services/story/overworld/act-4-hydra-cutscene";
+import { buildAct4CardForgeCutscene } from "@/services/story/overworld/act-4-card-forge-cutscene";
 import {
+  CARD_FORGE_DUEL_ID,
+  CARD_FORGE_TRIGGER_ID,
   HYDRA_AMBUSH_DUEL_ID,
   HYDRA_AMBUSH_TRIGGER_ID,
 } from "@/services/story/overworld/act-4-overworld-tilemap";
@@ -139,6 +142,13 @@ const AMBUSH_BY_TRIGGER_ID: Record<string, IOverworldAmbush> = {
     duelId: HYDRA_AMBUSH_DUEL_ID,
     dialogueNodeId: HYDRA_AMBUSH_TRIGGER_ID,
     buildCutscene: buildAct4HydraAmbushCutscene,
+  },
+  // Acto 4: la FÁBRICA DE CARTAS. La cutscene ya narra las tres líneas de los villanos (paso EVENT); la
+  // narración final de la emboscada es el desafío de GenNvim al girarse, keyed por el id del duelo.
+  [CARD_FORGE_TRIGGER_ID]: {
+    duelId: CARD_FORGE_DUEL_ID,
+    dialogueNodeId: CARD_FORGE_DUEL_ID,
+    buildCutscene: buildAct4CardForgeCutscene,
   },
 };
 
@@ -701,20 +711,12 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
             return;
           }
           if (!intent.isBlocked && object.kind === "SWITCH") {
-            // Interruptor de CINTA (belt-toggle): REVERSIBLE. Cada pulsación invierte el puente (subir/bajar);
-            // no se persiste (estado de runtime, resetea a base al recargar). La narración se muestra solo la
-            // primera vez para no repetirla en cada uso.
+            // Interruptor de CINTA (belt-toggle): REVERSIBLE y SIN narración. Cada interruptor manda una
+            // posición del puente y se dibuja encendido/apagado, así que la propia palanca ya cuenta el estado
+            // (pulsar el que ya manda no hace nada). No se persiste: resetea al sentido base al recargar.
             if (object.beltToggleRect) {
               playDeviceSound();
               engine.toggleBelt(object.id);
-              if (!seenEventIdsRef.current.has(object.id)) {
-                markEventSeen(object.id);
-                const beltDialogue = resolveOverworldEventDialogue(object.id);
-                if (beltDialogue && beltDialogue.lines.length > 0) {
-                  engine.setInteractionSuspended(true);
-                  setNarration({ title: beltDialogue.title, lines: beltDialogue.lines, lineIndex: 0, isCutscene: false });
-                }
-              }
               return;
             }
             // Interruptor de luz (mapas oscuros): enciende la sala al instante, sin panel. De un solo uso: se

@@ -7,45 +7,54 @@
 
 Esta guía tiene 2 partes: **(A)** cómo está el acto AHORA y **(B) HANDOFF**: los pasos 4 y 5 que faltan, con el cómo técnico.
 
-> **▶ Pulido posterior y trabajo pendiente:** [ACT-4-HANDOFF-2026-07-23.md](./ACT-4-HANDOFF-2026-07-23.md) —
-> emboscada de la Hydra + vídeo de intro (hechos) y las 4 mejoras siguientes (narración de la pasarela,
-> interruptor a la sala derecha, rival patrullando y sala de la Fábrica de Cartas).
+> **▶ Pulido posterior:** [ACT-4-HANDOFF-2026-07-23.md](./ACT-4-HANDOFF-2026-07-23.md) — emboscada de la Hydra,
+> vídeo de intro y las 4 mejoras B.1-B.4 (**todas hechas**: pasarela sin narración, interruptor en la sala
+> derecha, centinela patrullando y sala de la Fábrica de Cartas). **Único pendiente: aplicar 145/146/147 a prod.**
 
 ---
 
 ## A. Estado actual (ya hecho y validado)
 
-Mapa `act-4` (verde TERMINAL, **52×70**). Flujo vertical de abajo (entrada) a arriba (jefes). Hay **SEIS laberintos
+Mapa `act-4` (verde TERMINAL, **52×70**). Flujo vertical de abajo (entrada) a arriba (jefes). Hay **SIETE laberintos
 reales** (maze perfecto por backtracker determinista, semilla fija) generados con `carveMaze(map, spec)`: hub,
-laberinto 2 (módulo), leftLow (ATK), rightLow (DEF), leftUp (Hydra) y rightUp (evento). Las salas NO-laberinto son
-entrada/servicios, terminal y sala de jefes.
+laberinto 2 (módulo), leftLow (ATK), rightLow (DEF), leftUp (Hydra), rightUp (interruptor) y el **medio laberinto
+del terminal** (mitad baja de la sala, con la Fábrica de Cartas). Las salas NO-laberinto son entrada/servicios, la
+mitad alta del terminal y la sala de jefes.
 
 ### Recorrido (ruta crítica)
 ```
 Entrada (E1 intro, GenNvim habla con SU avatar) -> duel-1 (obligatorio)
   -> LABERINTO 1 (hub, y45..59): maze real
        · rincón (callejón): carta ANTIGRABITY (REWARD_CARD, muestra el arte) -> aviso de BigLog al cogerla
+       · CENTINELA duel-9: patrulla en vertical el nicho que da al corredor de salida (esquivable)
        · rama izq baja = LABERINTO leftLow (x4-15): AUMENTO ATK en callejón, tras duel-2
        · rama der baja = LABERINTO rightLow (x37-48): AUMENTO DEF en callejón, tras duel-3
   -> corredor (26,43-44)
   -> LABERINTO 2 (sala módulo, y25..42): maze real
        · callejón: USB Raro (REWARD_OBJECT)
-       · cámara arriba (y27): INTERRUPTOR de cinta (belt-toggle, REVERSIBLE)
        · sala izq alta = LABERINTO leftUp (x4-14): carta HYDRA en callejón; a 2 casillas de ella, EMBOSCADA de
          GenNvim (duel-8): aparece por detrás (teletransporte en desktop / andando en móvil) -> narra -> combate
-       · sala der alta = LABERINTO rightUp (x38-48, atrezzo COOLING_UNIT): nodo de evento (opcional)
-  -> puente/cinta (26,22-24) -> Terminal (consola E4 + 2º interruptor de cinta) + duel-5 (abre gate-boss)
+       · sala der alta = LABERINTO rightUp (x38-48, atrezzo COOLING_UNIT): INTERRUPTOR de la cinta en su
+         callejón (obligatorio: sin él la pasarela va en contra y no se sube)
+  -> puente/cinta (26,22-24)
+  -> Terminal: MEDIO LABERINTO en la mitad baja (y16..21) + CÁMARA DE LA FÁBRICA DE CARTAS en su callejón
+       · la ÚNICA boca de salida del maze (22,17) es el trigger: escena de GenNvim + Midutech ante la máquina
+         -> 3 líneas -> Midutech se desmaterializa con la carta -> GenNvim te corta el paso -> duel-10
+       · mitad alta (y13..15): duel-5 (abre gate-boss), consola E4 y 2º interruptor de cinta
   -> GenNvim (duel-6, JEFE 1) -> E5 -> puerta post-jefe -> Midutech (duel-7, JEFE FINAL) -> E6
 ```
 
-### Mecánica del puente (PASO 3, ya hecho) — ahora REVERSIBLE
+### Mecánica del puente — PALANCA DE DOS POSICIONES (sin narración, con estado visible)
 - El puente que sube (cinta `BELT_DOWN` en `x=26, y=22..24`) va **en contra**: no se sube.
-- **DOS interruptores** controlan el MISMO `beltToggleRect: {x0:26,y0:22,x1:26,y1:24}`: `story-ch4-belt-switch` (abajo,
-  cámara del laberinto 2, `(22,27)`) y `story-ch4-belt-switch-top` (arriba, terminal, `(28,20)`). Cada pulsación
-  **invierte** la cinta (toggle en runtime, paridad XOR): subes con el de abajo y **vuelves a bajar** con el de arriba.
-  No persiste (resetea a base al recargar); sin soft-lock porque siempre alcanzas un interruptor. Motor:
-  `OverworldEngine.toggleBelt()` + `applyBeltToggles` (XOR sobre `activeBeltToggleIds`); escena: rama SWITCH con
-  `beltToggleRect` en `OverworldDevScene` (re-disparable, narración solo la 1ª vez).
+- **DOS interruptores** controlan el MISMO `beltToggleRect: {x0:26,y0:22,x1:26,y1:24}` y son las **dos posiciones
+  de una misma palanca**, vía `beltToggleMode`: `story-ch4-belt-switch` (**INVERT**, en el callejón del maze
+  `rightUp`) hace que la cinta suba, y `story-ch4-belt-switch-top` (**RESTORE**, mitad alta del terminal, `(30,14)`)
+  la devuelve a bajar. **Siempre hay exactamente uno encendido** y pulsar el que ya manda **no hace nada**.
+- **No narran nada**: el propio interruptor se dibuja ENCENDIDO (halo verde, palanca arriba, piloto fijo) o
+  APAGADO (gris, palanca abajo). Motor: el estado vive por rect (`invertedBeltRectKeys`), `toggleBelt()` devuelve
+  si cambió y `resolveActiveBeltSwitchIds()` alimenta `IRenderOptions.activeBeltSwitchIds` → `Renderer2D.drawSwitch`.
+- No persiste (resetea a base al recargar); sin soft-lock porque siempre alcanzas el otro interruptor.
+- **Ojo:** los interruptores de LUZ (Acto 3) no llevan `beltToggleRect` → se dibujan neutros y conservan su narración.
 
 ### Objetos y rivales (posiciones actuales)
 Las posiciones marcadas `(auto)` las calcula `findDeadEnd` del maze correspondiente (no son fijas: dependen de la
@@ -53,8 +62,8 @@ semilla). Los aumentos ATK/DEF y las cartas van SIEMPRE en un callejón del maze
 
 | Cosa | id | Tile | Nota |
 |---|---|---|---|
-| Interruptor puente (abajo) | `story-ch4-belt-switch` (SWITCH) | (22,27) | belt-toggle reversible |
-| Interruptor puente (arriba) | `story-ch4-belt-switch-top` (SWITCH) | (28,20) | gemelo, revierte la cinta para bajar |
+| Interruptor puente (subir) | `story-ch4-belt-switch` (SWITCH) | callejón rightUp (auto) | `beltToggleMode: INVERT` |
+| Interruptor puente (bajar) | `story-ch4-belt-switch-top` (SWITCH) | (30,14) | `beltToggleMode: RESTORE`, mitad alta del terminal |
 | Carta Antigrabity | `story-ch4-card-antigrabity` (REWARD_CARD) | callejón hub (auto) | `entity-antigrabity`; `imageSrc` = arte |
 | Carta Hydra | `story-ch4-card-hydra` (REWARD_CARD) | callejón leftUp (auto) | `exec-hydra-attack-down`; `gateRequiredNodeIds: [duel-8]` |
 | USB Raro | `story-ch4-cache-usb` (REWARD_OBJECT) | callejón laberinto 2 (auto) | LEVEL_CANDY |
@@ -64,10 +73,13 @@ semilla). Los aumentos ATK/DEF y las cartas van SIEMPRE en un callejón del maze
 | duel-2 | `story-ch4-duel-2` | (16,51) | guardia entrada leftLow (ATK) |
 | duel-3 | `story-ch4-duel-3` | (36,51) | guardia entrada rightLow (DEF) |
 | duel-4 | `story-ch4-duel-4` | (16,29) | guardia entrada leftUp (Hydra) |
-| duel-5 | `story-ch4-duel-5` | (30,17) | antesala terminal (abre gate-boss) |
+| duel-5 | `story-ch4-duel-5` | (22,14) | mitad alta del terminal, vigila la salida del medio laberinto (abre gate-boss) |
 | duel-6 | `story-ch4-duel-6` (BOSS) | (26,9) | GenNvim JEFE 1 |
 | duel-7 | `story-ch4-duel-7` (BOSS) | (26,4) | Midutech JEFE FINAL |
 | duel-8 | `story-ch4-duel-8` | acceso callejón leftUp (auto) | GenNvim (DUEL) — **emboscada**: `hidden`, sin `visionRange`, NO ocupa casilla |
+| duel-9 | `story-ch4-duel-9` | nicho del hub (auto) | Soldado-Terminal **patrullando** (V, sweep). NO ocupa casilla: sellaría la salida |
+| duel-10 | `story-ch4-duel-10` | (21,19) | GenNvim en la **Fábrica de Cartas**: `hidden`, sin visión, no ocupa casilla |
+| Máquina de la Fábrica | overlay `CARD_FORGE` | (20,18)+(21,18) | dos casillas sólidas encima de los villanos |
 
 ### Emboscada de la Hydra (duel-8) — cutscene por pantalla
 El pasillo de la carta Hydra está **vacío** (GenNvim ya no espera plantado: se le veía venir desde la entrada del
@@ -84,10 +96,21 @@ cuya posición **se calcula** trazando el pasillo con `traceWalkableCorridor` (n
 4. Se **re-dispara** mientras no venzas (se gatea por `completed`, no por "evento visto"). Como el rival ya no
    tapa físicamente el callejón, la carta lleva `gateRequiredNodeIds: ["story-ch4-duel-8"]`.
 
+### Fábrica de Cartas (duel-10) — escena obligatoria en la sala del terminal
+El medio laberinto de la mitad baja tiene **una sola boca de salida** (nodo `(22,17)`, con el breach encima) y ahí
+vive el trigger `story-ch4-event-card-forge`: la escena **no se puede saltar**. En el callejón que cuelga justo
+debajo está la **máquina** (dos casillas `OVERLAY_TILE.CARD_FORGE`, procedural) y, bajo ella, **GenNvim y Midutech
+hombro con hombro mirando hacia arriba**. Guion (`act-4-card-forge-cutscene.ts`, dos NPCs vía `npcId`): aparecen de
+espaldas → paso `EVENT` con las **3 líneas** ("Hemos podido crear la carta suprema" / "Con esto la Entidad podrá
+controlar todo el ciberespacio" / "Voy a llevármela") → Midutech **se desmaterializa** (`DESPAWN_NPC` +
+`effect: "TELEPORT"`) → GenNvim se gira (`NPC_FACE`) y sube el pasillo hasta pegarse al jugador → desafío
+(`story-ch4-duel-10` en el catálogo) → combate. Enganchado en `AMBUSH_BY_TRIGGER_ID`.
+
 ### Narraciones (catálogo `src/services/story/story-node-interaction-dialogue-catalog.ts`)
-Sin "la Entidad": `story-ch4-event-intro` (E1), `story-ch4-card-antigrabity` (aviso BigLog), `story-ch4-event-hydra`
-(GenNvim antes de duel-8), `story-ch4-event-belt-locked`, `story-ch4-belt-switch` / `-top` (Flujo Invertido/Redirigido),
-`story-ch4-event-rightup` (placeholder), E4/E5/E6. **Avatares:** las líneas de GenNvim/Midutech llevan `portraitUrl`
+Sin "la Entidad" (salvo la Fábrica, que la usa a propósito): `story-ch4-event-intro` (E1),
+`story-ch4-card-antigrabity` (aviso BigLog), `story-ch4-event-hydra` (GenNvim antes de duel-8),
+`story-ch4-event-card-forge` + `story-ch4-duel-10` (Fábrica), E4/E5/E6. **Los interruptores de la pasarela ya NO
+narran** (su estado se ve en el dibujo), y `story-ch4-event-belt-locked` / `story-ch4-event-rightup` se eliminaron. **Avatares:** las líneas de GenNvim/Midutech llevan `portraitUrl`
 (su cara, no la de BigLog por defecto). **Personajes:** BigLog = mentor; GenNvim/Midutech = villanos; Sistema = terminal.
 **Vídeo:** E1 (`story-ch4-event-intro`, al PRIMER paso) ya lleva `cinematicVideo`
 (`/assets/videos/story/act-4/genNvim.mp4`) y se abre con el overlay de terminal de los Actos 1/2; **el vídeo
@@ -173,7 +196,7 @@ de BigLog. **Timing:** `DEFAULT_AUTO_ADVANCE_MS = 10s` en
   parte de la historia; NO son definitivas. Neutralízalas solo cuando él lo indique.
 - **Nombre del jugador** en las narraciones: no hay inyección dinámica; se usa "Operador".
 - **Habilidades de combate** de `opp-ch4-*` (y ahora duel-8): asignar en admin (esto conecta con la rama `feat/opponent-skill-abilities`).
-- **Salas opcionales:** rightUp pasa a tener el evento del paso 5; la sala der del laberinto 1 ya tiene el DEF.
+- **Salas opcionales:** (desactualizado) rightUp dejó de ser opcional: hoy guarda el INTERRUPTOR de la pasarela.
 
 ### Ficheros que se tocan
 - `src/services/story/overworld/act-4-overworld-tilemap.ts` (mapa/mazes/objetos).

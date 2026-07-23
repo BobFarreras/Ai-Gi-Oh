@@ -2,6 +2,11 @@
 // TERMINAL, registrado, y el laberinto de la Fase 2 (caja + placa + cinta + reset) que abre la compuerta a
 // las plantas altas. Sin la placa pulsada, el jefe es inalcanzable (puzzle obligatorio).
 import {
+  CARD_FORGE_DUEL_ID,
+  CARD_FORGE_GENNVIM_TILE,
+  CARD_FORGE_MAX_TILES_FROM_MACHINE,
+  CARD_FORGE_MIDUTECH_TILE,
+  CARD_FORGE_TRIGGER_ID,
   HYDRA_AMBUSH_TILES_BEFORE_CARD,
   HYDRA_AMBUSH_TRIGGER_ID,
   buildAct4OverworldTilemap,
@@ -16,7 +21,7 @@ import { resolveMovementContext } from "@/core/services/story/overworld/movement
 import { findGridPath } from "@/core/services/story/overworld/pathfinding";
 import { IOverworldProgressState, toGridPositionKey } from "@/core/services/story/overworld/overworld-types";
 import { findStoryVirtualNodeDefinition } from "@/services/story/map-definitions/story-map-definition-registry";
-import { GROUND_TILE, invertBeltKind, resolveBeltDirection } from "@/services/story/overworld/overworld-tile-kinds";
+import { GROUND_TILE, OVERLAY_TILE, invertBeltKind, resolveBeltDirection } from "@/services/story/overworld/overworld-tile-kinds";
 
 const SWITCH_ID = "story-ch4-belt-switch";
 const SWITCH_TOP_ID = "story-ch4-belt-switch-top";
@@ -284,6 +289,10 @@ describe("buildAct4OverworldTilemap", () => {
     expect(top.kind).toBe("SWITCH");
     expect(bottom.beltToggleRect).toEqual(rect);
     expect(top.beltToggleRect).toEqual(rect);
+    // Dos posiciones de la MISMA palanca: el de abajo invierte (subir), el de arriba restaura (bajar). Nunca
+    // pueden quedar los dos encendidos ni los dos apagados.
+    expect(bottom.beltToggleMode).toBe("INVERT");
+    expect(top.beltToggleMode).toBe("RESTORE");
     // El de arriba está en el terminal (y<=21) para poder revertir la cinta y bajar; el de abajo vive DENTRO del
     // laberinto de la sala derecha alta (x>=38, y=25..33), que deja así de ser una sala opcional de adorno.
     expect(top.tileY).toBeLessThanOrEqual(21);
@@ -336,6 +345,66 @@ describe("buildAct4OverworldTilemap", () => {
     expect(
       isReachableWithBlockedTile(tilemap, mazeEntry, exitTile, { tileX: sentinel.tileX, tileY: sentinel.tileY }),
     ).toBe(false);
+  });
+
+  it("la FÁBRICA DE CARTAS está en un callejón del medio laberinto, con la máquina sobre los villanos", () => {
+    const tilemap = buildAct4OverworldTilemap();
+    // Las dos casillas de los villanos son suelo contiguo (hombro con hombro) dentro de la sala del terminal.
+    expect(tilemap.collision[CARD_FORGE_GENNVIM_TILE.tileY][CARD_FORGE_GENNVIM_TILE.tileX]).toBe(1);
+    expect(tilemap.collision[CARD_FORGE_MIDUTECH_TILE.tileY][CARD_FORGE_MIDUTECH_TILE.tileX]).toBe(1);
+    // La MÁQUINA son dos casillas de overlay CARD_FORGE justo encima de ellos (y sólidas: no se pisa).
+    for (const tileX of [CARD_FORGE_GENNVIM_TILE.tileX, CARD_FORGE_MIDUTECH_TILE.tileX]) {
+      const machineY = CARD_FORGE_GENNVIM_TILE.tileY - 1;
+      expect(tilemap.layers.overlay[machineY][tileX]).toBe(OVERLAY_TILE.CARD_FORGE);
+      expect(tilemap.collision[machineY][tileX]).toBe(0);
+    }
+    // Callejón: desde la casilla de Midutech (el fondo) sólo se sale por la de GenNvim.
+    const midutechNeighbours = ([[1, 0], [-1, 0], [0, 1], [0, -1]] as Array<[number, number]>).filter(
+      ([dx, dy]) => tilemap.collision[CARD_FORGE_MIDUTECH_TILE.tileY + dy]?.[CARD_FORGE_MIDUTECH_TILE.tileX + dx] === 1,
+    );
+    expect(midutechNeighbours).toHaveLength(1);
+  });
+
+  it("la escena de la Fábrica es OBLIGATORIA: su trigger es la única boca de salida del medio laberinto", () => {
+    const tilemap = buildAct4OverworldTilemap();
+    const trigger = tilemap.objects.find((object) => object.id === CARD_FORGE_TRIGGER_ID)!;
+    expect(trigger.trigger).toBe("STEP_ON");
+    expect(trigger.hidden).toBe(true);
+    // Sin pisar el trigger no se sale del medio laberinto hacia la mitad alta (ni, por tanto, al jefe).
+    const beltArrival = { tileX: 26, tileY: 21 }; // donde te deja la cinta del puente
+    const upperHalf = { tileX: 26, tileY: 13 }; // mitad alta del terminal (camino a la compuerta del jefe)
+    expect(isReachableWithBlockedTile(tilemap, beltArrival, upperHalf, { tileX: -1, tileY: -1 })).toBe(true);
+    expect(
+      isReachableWithBlockedTile(tilemap, beltArrival, upperHalf, { tileX: trigger.tileX, tileY: trigger.tileY }),
+    ).toBe(false);
+    // Y la cámara de la Fábrica queda a tiro de vista del trigger (si no, la escena arrancaría fuera de cámara).
+    const toVillains = traceWalkableCorridor(
+      tilemap.collision,
+      { tileX: trigger.tileX, tileY: trigger.tileY },
+      { tileX: CARD_FORGE_GENNVIM_TILE.tileX, tileY: CARD_FORGE_GENNVIM_TILE.tileY },
+    );
+    expect(toVillains.length).toBeGreaterThan(1);
+    expect(toVillains.length).toBeLessThanOrEqual(CARD_FORGE_MAX_TILES_FROM_MACHINE);
+  });
+
+  it("duel-10 (GenNvim en la Fábrica) es un rival de escena: oculto, sin visión y sin ocupar casilla", () => {
+    const tilemap = buildAct4OverworldTilemap();
+    const duel10 = tilemap.objects.find((object) => object.id === CARD_FORGE_DUEL_ID)!;
+    expect(duel10.kind).toBe("DUEL");
+    expect(duel10.hidden).toBe(true);
+    expect(duel10.visionRange).toBeUndefined();
+    expect(tilemap.collision[duel10.tileY][duel10.tileX]).toBe(1);
+  });
+
+  it("lo que vivía en la mitad baja del terminal se movió a la mitad alta (fuera del medio laberinto)", () => {
+    const tilemap = buildAct4OverworldTilemap();
+    // duel-5 abre la compuerta al jefe y el interruptor gemelo evita el soft-lock de la cinta: ninguno puede
+    // haber quedado sepultado bajo el maze nuevo (y=16..21).
+    for (const id of [DUEL_5, SWITCH_TOP_ID, "story-ch4-event-revelation"]) {
+      const object = tilemap.objects.find((entry) => entry.id === id)!;
+      expect(object.tileY).toBeLessThanOrEqual(15);
+      expect(approachOf(tilemap, object)).not.toBeNull();
+    }
   });
 
   it("la pasarela ya no narra nada y la sala derecha alta no tiene consola de evento", () => {

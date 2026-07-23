@@ -30,8 +30,10 @@ export interface IRenderOptions {
   blockedObjectIds: ReadonlySet<string>;
   /** Oponentes como entidades dinámicas (posición en vivo, haz de visión). */
   opponentActors: ReadonlyArray<IOpponentActorRenderData>;
-  /** NPC de cutscene (p. ej. BigLog en la intro), o null. */
-  cutsceneNpc: IOverworldCutsceneNpcRender | null;
+  /** NPCs de cutscene (p. ej. BigLog en la intro, o GenNvim + Midutech en la Fábrica de Cartas). */
+  cutsceneNpcs: IOverworldCutsceneNpcRender[];
+  /** Interruptores de cinta ENCENDIDOS (los que mandan el estado actual de su pasarela). */
+  activeBeltSwitchIds: ReadonlySet<string>;
   /** Objetos ya recogidos: no se dibujan. */
   collectedObjectIds: ReadonlySet<string>;
   /** Efecto de recolección en curso (objeto encogiéndose + valor flotante). */
@@ -214,7 +216,7 @@ export class Renderer2D {
     this.drawObjectsPass(world, cameraOffset, range, options);
     this.drawBoxesPass(world, cameraOffset, options);
     this.drawActorsPass(world, cameraOffset, options);
-    this.drawCutsceneNpc(world, cameraOffset, options);
+    for (const npc of options.cutsceneNpcs) this.drawCutsceneNpc(world, cameraOffset, npc);
     this.drawPlayer(world, playerPixel, cameraOffset);
     this.drawOverlayPass(tilemap, cameraOffset, range, options.timeMs);
     this.drawCollectEffect(cameraOffset, options);
@@ -606,7 +608,9 @@ export class Renderer2D {
       const screenY = camera.y + object.tileY * size;
       const isBlocked = options.blockedObjectIds.has(object.id);
       const isFocused = options.focusedObjectId === object.id;
-      this.drawObject(object.id, object.kind, object.imageSrc, screenX, screenY, size, isBlocked, isFocused, options.timeMs);
+      // Los interruptores de CINTA se dibujan encendidos/apagados (los demás SWITCH, neutros = null).
+      const beltSwitchOn = object.beltToggleRect ? options.activeBeltSwitchIds.has(object.id) : null;
+      this.drawObject(object.id, object.kind, object.imageSrc, screenX, screenY, size, isBlocked, isFocused, options.timeMs, beltSwitchOn);
     }
   }
 
@@ -620,6 +624,7 @@ export class Renderer2D {
     isBlocked: boolean,
     isFocused: boolean,
     timeMs: number,
+    beltSwitchOn: boolean | null = null,
   ): void {
     const context = this.context;
     const cx = screenX + size / 2;
@@ -649,7 +654,7 @@ export class Renderer2D {
     } else if (kind === "WARP") {
       this.drawPortal(cx, cy, size, accent, timeMs);
     } else if (kind === "SWITCH") {
-      this.drawSwitch(screenX, screenY, size, accent, timeMs);
+      this.drawSwitch(screenX, screenY, size, accent, timeMs, beltSwitchOn);
     } else if (kind === "BOX_RESET") {
       this.drawResetButton(screenX, screenY, size, accent, timeMs);
     } else if (kind === "MARKET" || kind === "ARSENAL" || kind === "TELEPORT") {
@@ -915,30 +920,59 @@ export class Renderer2D {
   }
 
   /** Interruptor de pared: caja con palanca y bombilla que late (llama la atención en la oscuridad). */
-  private drawSwitch(screenX: number, screenY: number, size: number, accent: string, timeMs: number): void {
+  /**
+   * Interruptor. Con `beltSwitchOn` a null (interruptores de luz) se dibuja el estado neutro de siempre. Los
+   * interruptores de CINTA sí muestran su posición: ENCENDIDO (palanca arriba, placa iluminada, piloto verde
+   * fijo y halo) o APAGADO (palanca abajo, todo apagado en gris). Los dos extremos del puente están siempre en
+   * oposición, así que de un vistazo se ve cuál manda y cuál queda por accionar.
+   */
+  private drawSwitch(
+    screenX: number,
+    screenY: number,
+    size: number,
+    accent: string,
+    timeMs: number,
+    beltSwitchOn: boolean | null = null,
+  ): void {
     const context = this.context;
     const x = screenX + size * 0.3;
     const y = screenY + size * 0.24;
     const w = size * 0.4;
     const h = size * 0.52;
+    const isOff = beltSwitchOn === false;
+    const isOn = beltSwitchOn === true;
+    const tint = isOff ? "#64748b" : isOn ? "#4ade80" : accent;
+
+    // Halo del estado encendido: se nota desde lejos que ESTE es el que manda.
+    if (isOn) {
+      const glow = 0.35 + (0.5 + Math.sin(timeMs / 320) * 0.5) * 0.35;
+      context.globalAlpha = glow;
+      context.fillStyle = tint;
+      context.beginPath();
+      context.arc(screenX + size / 2, screenY + size / 2, size * 0.46, 0, Math.PI * 2);
+      context.fill();
+      context.globalAlpha = 1;
+    }
     // Placa.
-    context.fillStyle = "#0b1220";
+    context.fillStyle = isOn ? "#0f2a1a" : "#0b1220";
     context.fillRect(x, y, w, h);
-    context.strokeStyle = accent;
+    context.strokeStyle = tint;
     context.lineWidth = 2;
     context.strokeRect(x, y, w, h);
-    // Palanca.
-    context.strokeStyle = accent;
+    // Palanca: arriba (encendido) / abajo (apagado). El neutro conserva la inclinación original.
+    context.strokeStyle = tint;
     context.lineWidth = Math.max(2, size * 0.05);
     context.lineCap = "round";
     context.beginPath();
-    context.moveTo(x + w / 2, y + h * 0.72);
-    context.lineTo(x + w * 0.68, y + h * 0.32);
+    context.moveTo(x + w / 2, y + h * (isOn ? 0.78 : 0.72));
+    if (isOn) context.lineTo(x + w * 0.72, y + h * 0.2);
+    else if (isOff) context.lineTo(x + w * 0.28, y + h * 0.5);
+    else context.lineTo(x + w * 0.68, y + h * 0.32);
     context.stroke();
-    // Bombilla pulsante encima.
+    // Piloto: fijo y brillante encendido, pulsante en neutro, apagado en gris.
     const pulse = 0.5 + Math.sin(timeMs / 220) * 0.5;
-    context.globalAlpha = 0.35 + pulse * 0.55;
-    context.fillStyle = accent;
+    context.globalAlpha = isOn ? 1 : isOff ? 0.3 : 0.35 + pulse * 0.55;
+    context.fillStyle = tint;
     context.beginPath();
     context.arc(screenX + size / 2, y - size * 0.06, size * 0.08, 0, Math.PI * 2);
     context.fill();
@@ -991,9 +1025,11 @@ export class Renderer2D {
     context.globalAlpha = 1;
   }
 
-  private drawCutsceneNpc(world: IEngineWorldState, camera: ICameraOffset, options: IRenderOptions): void {
-    const npc = options.cutsceneNpc;
-    if (!npc) return;
+  private drawCutsceneNpc(
+    world: IEngineWorldState,
+    camera: ICameraOffset,
+    npc: IOverworldCutsceneNpcRender,
+  ): void {
     const context = this.context;
     const size = world.tilemap.tileSize;
     const drawX = camera.x + npc.pixelX;
@@ -1149,9 +1185,49 @@ export class Renderer2D {
         else if (kind === OVERLAY_TILE.CRATE) this.drawCrate(screenX, screenY, size);
         else if (kind === OVERLAY_TILE.COOLING_UNIT) this.drawCoolingUnit(screenX, screenY, size, timeMs, tileX + tileY);
         else if (kind === OVERLAY_TILE.DATA_PYLON) this.drawDataPylon(screenX, screenY, size, timeMs);
+        else if (kind === OVERLAY_TILE.CARD_FORGE) this.drawCardForge(screenX, screenY, size, timeMs, tileX);
         else this.drawPillar(screenX, screenY, size, timeMs, tileX);
       }
     }
+  }
+
+  /**
+   * FÁBRICA DE CARTAS del Núcleo (Acto 4): chasis industrial con una ranura encendida por la que sale una carta
+   * holográfica que flota y se desvanece. Se pinta por casilla, así que dos casillas contiguas leen como una
+   * sola máquina grande. Todo procedural (sin assets), en el verde fósforo del acto.
+   */
+  private drawCardForge(screenX: number, screenY: number, size: number, timeMs: number, seed: number): void {
+    const context = this.context;
+    const phase = (timeMs / 1400 + seed * 0.37) % 1;
+    // Chasis: ocupa la casilla entera para que dos contiguas formen un bloque continuo.
+    context.fillStyle = "#0a1512";
+    context.fillRect(screenX, screenY + size * 0.1, size, size * 0.9);
+    context.strokeStyle = "rgba(74, 222, 128, 0.55)";
+    context.lineWidth = 2;
+    context.strokeRect(screenX + 1, screenY + size * 0.1, size - 2, size * 0.9);
+    // Rejilla de refrigeración.
+    context.strokeStyle = "rgba(74, 222, 128, 0.2)";
+    context.lineWidth = 1;
+    for (let line = 1; line <= 4; line++) {
+      const lineY = screenY + size * (0.18 + line * 0.09);
+      context.beginPath();
+      context.moveTo(screenX + size * 0.12, lineY);
+      context.lineTo(screenX + size * 0.88, lineY);
+      context.stroke();
+    }
+    // Ranura de salida, encendida y pulsante.
+    const glow = 0.45 + Math.sin(timeMs / 260 + seed) * 0.3;
+    context.fillStyle = `rgba(134, 239, 172, ${glow})`;
+    context.fillRect(screenX + size * 0.2, screenY + size * 0.58, size * 0.6, size * 0.07);
+    // Carta holográfica que asciende desde la ranura y se disipa.
+    const cardY = screenY + size * (0.58 - phase * 0.42);
+    context.globalAlpha = Math.max(0, 1 - phase) * 0.85;
+    context.fillStyle = "rgba(16, 185, 129, 0.35)";
+    context.fillRect(screenX + size * 0.36, cardY, size * 0.28, size * 0.36);
+    context.strokeStyle = "#86efac";
+    context.lineWidth = 1.5;
+    context.strokeRect(screenX + size * 0.36, cardY, size * 0.28, size * 0.36);
+    context.globalAlpha = 1;
   }
 
   private drawServerRack(screenX: number, screenY: number, size: number, timeMs: number, seed: number): void {

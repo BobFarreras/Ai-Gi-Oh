@@ -1,8 +1,8 @@
--- docs/supabase/sql/147_story_act4_patrol_duel.sql - Duelo EXTRA del Acto 4: el CENTINELA que patrulla el
--- laberinto 1 (hub) del Núcleo GenNvim. Idempotente (ON CONFLICT DO UPDATE). Sigue el patrón de
--- 146_story_act4_hydra_duel.sql. El id (story-ch4-duel-9) coincide con el objeto DUEL del tilemap (act-4) y con
--- duelHref /hub/story/chapter/4/duel/9. Es un duelo OPCIONAL: el centinela no bloquea ninguna casilla, así que
--- se le puede esquivar; sólo salta si su haz de visión te pilla cruzando el corredor de salida del laberinto.
+-- docs/supabase/sql/147_story_act4_patrol_duel.sql - Dos duelos EXTRA del Acto 4: (9) el CENTINELA que patrulla
+-- el laberinto 1 (hub) y (10) GenNvim en la FÁBRICA DE CARTAS de la sala del terminal. Idempotente (ON CONFLICT
+-- DO UPDATE). Sigue el patrón de 146_story_act4_hydra_duel.sql. Los ids coinciden con los objetos DUEL del
+-- tilemap (act-4) y con sus duelHref /hub/story/chapter/4/duel/{9,10}. El 9 es OPCIONAL (el centinela no bloquea
+-- casilla, se le puede esquivar); el 10 es OBLIGATORIO: su escena salta en la única boca de salida del maze.
 --
 -- ORDEN DE DESPLIEGUE: aplicar en/tras el release del Acto 4 (después de 145 y 146). Reutiliza el oponente
 -- Soldado-Terminal (opp-ch4-soldado-terminal) creado en 145, pero con deck propio: al ser una patrulla que se
@@ -45,9 +45,28 @@ on conflict (id) do update set
   reward_player_experience = excluded.reward_player_experience, unlock_requirement_duel_id = excluded.unlock_requirement_duel_id,
   is_boss_duel = excluded.is_boss_duel, is_active = excluded.is_active, updated_at = now();
 
+-- ── Duelo 10 del capítulo 4: la FÁBRICA DE CARTAS ───────────────────────────
+-- GenNvim y Midutech observan la máquina que forja la carta suprema; Midutech se la lleva y GenNvim te pilla
+-- mirando. Reutiliza el oponente/deck de GenNvim-Hydra (creado en 146). Se alcanza tras la cinta del puente,
+-- que exige el interruptor: el requisito jugable anterior es duel-4 (guardia del laberinto de la Hydra).
+insert into public.story_duels
+  (id, chapter, duel_index, title, description, opponent_id, deck_list_id, opening_hand_size,
+   starter_player, reward_nexus, reward_player_experience, unlock_requirement_duel_id, is_boss_duel, is_active)
+values
+  ('story-ch4-duel-10', 4, 10, 'La Carta Suprema',
+   'Has visto demasiado: GenNvim no piensa dejarte salir de la sala de la forja a contarlo.',
+   'opp-ch4-gennvim-hydra', 'deck-opp-ch4-gennvim-hydra-v1', 4, 'OPPONENT', 950, 520, 'story-ch4-duel-4', false, true)
+on conflict (id) do update set
+  chapter = excluded.chapter, duel_index = excluded.duel_index, title = excluded.title, description = excluded.description,
+  opponent_id = excluded.opponent_id, deck_list_id = excluded.deck_list_id, opening_hand_size = excluded.opening_hand_size,
+  starter_player = excluded.starter_player, reward_nexus = excluded.reward_nexus,
+  reward_player_experience = excluded.reward_player_experience, unlock_requirement_duel_id = excluded.unlock_requirement_duel_id,
+  is_boss_duel = excluded.is_boss_duel, is_active = excluded.is_active, updated_at = now();
+
 -- ── Dificultad por aparición (perfil de IA) ──────────────────────────────────
 insert into public.story_duel_ai_profiles (duel_id, difficulty, ai_profile, is_active)
 values
-  ('story-ch4-duel-9', 'ELITE', '{"style":"balanced","aggression":0.7}'::jsonb, true)
+  ('story-ch4-duel-9', 'ELITE', '{"style":"balanced","aggression":0.7}'::jsonb, true),
+  ('story-ch4-duel-10', 'MYTHIC', '{"style":"aggressive","aggression":0.86}'::jsonb, true)
 on conflict (duel_id) do update set
   difficulty = excluded.difficulty, ai_profile = excluded.ai_profile, is_active = excluded.is_active, updated_at = now();
