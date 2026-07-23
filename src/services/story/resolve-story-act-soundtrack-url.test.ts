@@ -19,7 +19,11 @@ describe("resolveStoryActSoundtrackUrl", () => {
     expect(resolveStoryActSoundtrackUrl(3)).toContain("/audio/story/soundtracks/act-3/Neon-Horizon-Protocol.m4a");
   });
 
+  it("resuelve la pista dedicada del Acto 4", () => {
+    expect(resolveStoryActSoundtrackUrl(4)).toContain("/audio/story/soundtracks/act-4/Pulso-de-Cromo.m4a");
+  });
+
   it("usa fallback al Acto 1 cuando no hay pista definida", () => {
-    expect(resolveStoryActSoundtrackUrl(4)).toContain("/audio/story/soundtracks/act-1/act-1-main-theme.m4a");
+    expect(resolveStoryActSoundtrackUrl(99)).toContain("/audio/story/soundtracks/act-1/act-1-main-theme.m4a");
   });
 });

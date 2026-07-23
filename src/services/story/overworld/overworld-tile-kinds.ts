@@ -58,7 +58,10 @@ export const OVERLAY_TILE = {
   CRATE: 5,
   COOLING_UNIT: 6, // unidad de refrigeración con rejillas y ventilador giratorio
   DATA_PYLON: 7, // pilón/antena de datos con baliza pulsante
-  CARD_FORGE: 8, // fábrica de cartas: chasis con ranura y una carta holográfica saliendo (Acto 4)
+  // Fábrica de Cartas del Acto 4: UNA máquina de dos casillas. Cada mitad se dibuja por separado y encajan por
+  // la costura central, donde se forma el holograma de la carta.
+  CARD_FORGE: 8, // mitad IZQUIERDA del chasis
+  CARD_FORGE_RIGHT: 9, // mitad DERECHA del chasis
 } as const;
 
 export type GroundTileKind = (typeof GROUND_TILE)[keyof typeof GROUND_TILE];

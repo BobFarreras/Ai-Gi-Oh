@@ -34,14 +34,16 @@ Entrada (E1 intro, GenNvim habla con SU avatar) -> duel-1 (obligatorio)
        · callejón: USB Raro (REWARD_OBJECT)
        · sala izq alta = LABERINTO leftUp (x4-14): carta HYDRA en callejón; a 2 casillas de ella, EMBOSCADA de
          GenNvim (duel-8): aparece por detrás (teletransporte en desktop / andando en móvil) -> narra -> combate
-       · sala der alta = LABERINTO rightUp (x38-48, atrezzo COOLING_UNIT): INTERRUPTOR de la cinta en su
-         callejón (obligatorio: sin él la pasarela va en contra y no se sube)
+       · sala der alta = LABERINTO rightUp (x38-48, atrezzo COOLING_UNIT): INTERRUPTOR de la cinta en el
+         callejón MÁS PROFUNDO y guardado por duel-5 (obligatorio: sin él la pasarela va en contra y no se sube)
   -> puente/cinta (26,22-24)
-  -> Terminal: MEDIO LABERINTO en la mitad baja (y16..21) + CÁMARA DE LA FÁBRICA DE CARTAS en su callejón
-       · la ÚNICA boca de salida del maze (22,17) es el trigger: escena de GenNvim + Midutech ante la máquina
-         -> 3 líneas -> Midutech se desmaterializa con la carta -> GenNvim te corta el paso -> duel-10
-       · mitad alta (y13..15): duel-5 (abre gate-boss), consola E4 y 2º interruptor de cinta
-  -> GenNvim (duel-6, JEFE 1) -> E5 -> puerta post-jefe -> Midutech (duel-7, JEFE FINAL) -> E6
+  -> Terminal: MEDIO LABERINTO en la mitad baja (y16..21); la ÚNICA salida (22,15) es el trigger de la escena
+       · mitad alta (y13..15) = nave de la FÁBRICA DE CARTAS: la máquina preside la pared alta (23-24,13) con
+         GenNvim + Midutech debajo -> 3 líneas -> Midutech se desmaterializa -> GenNvim viene a por ti -> duel-10
+       · en la misma mitad alta: 2º interruptor de cinta (30,14). (La consola E4 se eliminó.)
+  -> Sala del jefe: antesala vacía (GenNvim ya cayó en la Fábrica) -> narración "Llegas Tarde" (26,7)
+     -> puerta post-jefe (exige duel-10) -> Midutech (duel-7, JEFE FINAL y ÚNICO) -> E6 llave del Core
+     -> PORTAL al Acto 5 (28,3): WARP sin destino, cuenta que el Core está en construcción
 ```
 
 ### Mecánica del puente — PALANCA DE DOS POSICIONES (sin narración, con estado visible)
@@ -73,13 +75,14 @@ semilla). Los aumentos ATK/DEF y las cartas van SIEMPRE en un callejón del maze
 | duel-2 | `story-ch4-duel-2` | (16,51) | guardia entrada leftLow (ATK) |
 | duel-3 | `story-ch4-duel-3` | (36,51) | guardia entrada rightLow (DEF) |
 | duel-4 | `story-ch4-duel-4` | (16,29) | guardia entrada leftUp (Hydra) |
-| duel-5 | `story-ch4-duel-5` | (22,14) | mitad alta del terminal, vigila la salida del medio laberinto (abre gate-boss) |
-| duel-6 | `story-ch4-duel-6` (BOSS) | (26,9) | GenNvim JEFE 1 |
-| duel-7 | `story-ch4-duel-7` (BOSS) | (26,4) | Midutech JEFE FINAL |
+| duel-5 | `story-ch4-duel-5` | acceso al callejón del interruptor, maze rightUp (auto) | guardia del INTERRUPTOR de la cinta (y sigue abriendo gate-boss) |
+| duel-7 | `story-ch4-duel-7` (BOSS) | (26,4) | Midutech, **único jefe** del acto |
+| Portal Acto 5 | `story-ch4-transition-to-act5` (WARP) | (28,3) | **sin `warp`**: narra "en construcción". Exige duel-7 |
 | duel-8 | `story-ch4-duel-8` | acceso callejón leftUp (auto) | GenNvim (DUEL) — **emboscada**: `hidden`, sin `visionRange`, NO ocupa casilla |
 | duel-9 | `story-ch4-duel-9` | nicho del hub (auto) | Soldado-Terminal **patrullando** (V, sweep). NO ocupa casilla: sellaría la salida |
-| duel-10 | `story-ch4-duel-10` | (21,19) | GenNvim en la **Fábrica de Cartas**: `hidden`, sin visión, no ocupa casilla |
-| Máquina de la Fábrica | overlay `CARD_FORGE` | (20,18)+(21,18) | dos casillas sólidas encima de los villanos |
+| duel-10 | `story-ch4-duel-10` | (22,14) | GenNvim en la **Fábrica de Cartas**: `hidden`, sin visión, no ocupa casilla (su celda es donde ACABA la cutscene) |
+| Villanos de la Fábrica | `story-ch4-npc-forge-gennvim` / `-midutech` (NPC) | (24,14) / (23,14) | atrezzo visible antes de la escena; se ocultan al arrancarla y tras vencer duel-10 |
+| Máquina de la Fábrica | overlay `CARD_FORGE` + `CARD_FORGE_RIGHT` | (23,13)+(24,13) | las dos mitades del MISMO chasis, sólidas, contra la pared alta del terminal |
 
 ### Emboscada de la Hydra (duel-8) — cutscene por pantalla
 El pasillo de la carta Hydra está **vacío** (GenNvim ya no espera plantado: se le veía venir desde la entrada del
@@ -97,10 +100,12 @@ cuya posición **se calcula** trazando el pasillo con `traceWalkableCorridor` (n
    tapa físicamente el callejón, la carta lleva `gateRequiredNodeIds: ["story-ch4-duel-8"]`.
 
 ### Fábrica de Cartas (duel-10) — escena obligatoria en la sala del terminal
-El medio laberinto de la mitad baja tiene **una sola boca de salida** (nodo `(22,17)`, con el breach encima) y ahí
-vive el trigger `story-ch4-event-card-forge`: la escena **no se puede saltar**. En el callejón que cuelga justo
-debajo está la **máquina** (dos casillas `OVERLAY_TILE.CARD_FORGE`, procedural) y, bajo ella, **GenNvim y Midutech
-hombro con hombro mirando hacia arriba**. Guion (`act-4-card-forge-cutscene.ts`, dos NPCs vía `npcId`): aparecen de
+El medio laberinto de la mitad baja tiene **una sola boca de salida** y la casilla a la que desemboca `(22,15)`
+lleva el trigger `story-ch4-event-card-forge`: la escena **no se puede saltar**. La **máquina** preside la mitad
+ALTA (fuera del laberinto), contra la pared: dos casillas — `OVERLAY_TILE.CARD_FORGE` (mitad izquierda) y
+`CARD_FORGE_RIGHT` (derecha) — que el `Renderer2D` dibuja como UN solo reactor sincronizado (columna de energía,
+anillos que giran, la carta forjándose en la costura, chispas y barrido). Debajo, **GenNvim y Midutech hombro con
+hombro mirándola**. Guion (`act-4-card-forge-cutscene.ts`, dos NPCs vía `npcId`): aparecen de
 espaldas → paso `EVENT` con las **3 líneas** ("Hemos podido crear la carta suprema" / "Con esto la Entidad podrá
 controlar todo el ciberespacio" / "Voy a llevármela") → Midutech **se desmaterializa** (`DESPAWN_NPC` +
 `effect: "TELEPORT"`) → GenNvim se gira (`NPC_FACE`) y sube el pasillo hasta pegarse al jugador → desafío

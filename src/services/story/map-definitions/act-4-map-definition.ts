@@ -49,7 +49,6 @@ export const storyAct4MapDefinition: IStoryActMapDefinition = {
     v({ id: "story-ch4-event-hydra", duelIndex: 407, nodeType: "EVENT", title: "Guardián de la Hydra", unlockRequirementNodeId: null, position: { x: 400, y: 400 } }),
     // Escena de la Fábrica de Cartas (GenNvim + Midutech ante la máquina), antes de duel-10.
     v({ id: "story-ch4-event-card-forge", duelIndex: 417, nodeType: "EVENT", title: "La Carta Suprema", unlockRequirementNodeId: null, position: { x: 1200, y: 400 } }),
-    v({ id: "story-ch4-event-revelation", duelIndex: 408, nodeType: "EVENT", title: "Registro-Madre", unlockRequirementNodeId: null, position: { x: 600, y: 400 } }),
     v({ id: "story-ch4-event-pre-midutech", duelIndex: 409, nodeType: "EVENT", title: "El Arquitecto", unlockRequirementNodeId: null, position: { x: 800, y: 400 } }),
     v({ id: "story-ch4-event-core-key", duelIndex: 410, nodeType: "EVENT", title: "Llave del Core", unlockRequirementNodeId: null, position: { x: 1000, y: 400 } }),
     // Recompensas-objeto (una vez, vía claim-reward): USB en el laberinto + aumentos ATK/DEF tras rivales.

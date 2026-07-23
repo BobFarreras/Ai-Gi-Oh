@@ -266,11 +266,95 @@ catálogo). Nada de UI nueva.
 
 ---
 
-## C. Avisos que siguen abiertos (heredados)
-- **Aplicar 145 + 146 + 147 a prod** — lo único que bloquea jugar el acto entero (duel-6/7/8/9/10).
-- **E4/E6** (`story-ch4-event-revelation`, `story-ch4-event-core-key`) mencionan "la Entidad" con textos **no
-  definitivos**: el usuario rehará esa parte. La escena B.4 sí usa "la Entidad" **a propósito** (texto suyo).
-- **E4/E6 serán vídeo** algún día (E1 ya lo es).
+## C. 3ª TANDA — ajustes tras probar el acto (2026-07-23, tarde)
+
+Cuatro retoques pedidos por el usuario después de jugar lo anterior. Todos implementados, con tests en verde.
+
+### C.1 Soundtrack del Acto 4
+`resolveStoryActSoundtrackUrl` gana la entrada `4`: antes el acto caía en el fallback del Acto 1. Se enganchó
+primero a la pista del Acto 2 y, acto seguido, el usuario subió una **pista propia**
+(`/audio/story/soundtracks/act-4/Pulso-de-Cromo.m4a`), que es la que suena ahora.
+
+### C.2 El interruptor de la pasarela, más escondido y con guardia
+- El interruptor ya no va al primer callejón que aparece al barrer la malla, sino al **más profundo**: nuevo
+  `findFarthestDeadEnd(fromTile, reserved, fallback)` en el handle de `carveMaze` (mide con
+  `traceWalkableCorridor` desde la boca del maze y se queda con el callejón más lejano).
+- **duel-5 pasa a guardarlo**: ocupa la única celda de acceso a ese callejón (`openApproach`) y mira hacia fuera
+  para que su haz barra el pasillo. Se movió desde la mitad alta del terminal `(22,14)`, que ahora es la nave de
+  la Fábrica. Sigue abriendo `story-a4-gate-boss`, así que la compuerta del jefe ya estará abierta al llegar
+  arriba (sin el interruptor no se sube ⇒ duel-5 sigue siendo obligatorio). **No hace falta migración nueva.**
+
+### C.3 La Fábrica de Cartas, fuera del laberinto y rediseñada
+- La máquina y los dos villanos suben a la **mitad alta del terminal**, donde estaba la consola E4: máquina en
+  `(23,13)`+`(24,13)` contra la pared, Midutech `(23,14)` y GenNvim `(24,14)` debajo mirándola. El nicho tallado
+  a mano en la franja `x=20..21` desaparece (esa franja se tapia entera).
+- El trigger se mueve a `(22,15)`, la casilla a la que desemboca la única salida del medio laberinto: la escena
+  sigue siendo **inevitable** (hay test) y ahora se ve de frente al salir, no desde arriba de un callejón.
+- **Consola E4 `story-ch4-event-revelation` eliminada** (tilemap + map-definition + catálogo): la revelación la
+  cuenta la propia escena de la Fábrica.
+- **Arte nuevo:** la máquina pasa de un chasis plano a **UN reactor de dos casillas**: `OVERLAY_TILE.CARD_FORGE`
+  (mitad izquierda) + `CARD_FORGE_RIGHT` (derecha), que `Renderer2D.drawCardForge(..., isRightHalf)` dibuja
+  encajando por la costura central — halo radial, columna de energía, tres anillos que giran, la carta suprema
+  forjándose y ascendiendo (media carta por mitad, marco sin el lado de la costura), bahías de LEDs en cascada,
+  conductos con pulsos hacia el centro, chispas y barrido de escáner. La animación va **solo con el reloj** (sin
+  semilla por casilla) para que las dos mitades queden sincronizadas, y cada mitad **recorta a su casilla**.
+
+### C.4 Retratos en las conversaciones entre villanos
+En `StoryNodeInteractionDialog` el hueco de abajo era **siempre** del jugador, así que en la charla GenNvim ↔
+Midutech salía el avatar del Operador, que ni está en la escena. Ahora: si habla alguien que **no** es el jugador
+y su línea trae `counterpartPortraitUrl`, ese hueco muestra **al otro personaje**. Sin `counterpartPortraitUrl`
+no cambia nada, así que el resto de diálogos del juego siguen igual.
+
+**Y las posiciones NO se intercambian** (2ª pasada): al principio el hablante saltaba siempre al hueco de arriba,
+así que los dos villanos cambiaban de sitio en cada línea. Ahora, en una conversación villano↔villano, **cada uno
+se queda fijo en su hueco** según el `side` de su línea (`LEFT` = abajo, `RIGHT` = arriba) y lo único que cambia
+es de quién sale la burbuja: GenNvim abajo, Midutech arriba. El prop del bocadillo pasó de `isPlayerSpeaker` a
+`isSpeakerOnBottom`. Hay test que reproduce las dos líneas seguidas y comprueba que los retratos no se mueven.
+
+### C.5 Los villanos, visibles ANTES de la escena
+Antes solo existían como NPCs de cutscene: aparecían de golpe al pisar el trigger. Ahora hay **atrezzo fijo** —dos
+objetos `NPC` (`story-ch4-npc-forge-gennvim` / `-midutech`) plantados ante la máquina, no sólidos— que se ven en
+cuanto asomas a la sala. Al arrancar la cutscene se ocultan con `engine.markObjectCollected(...)` y toman el
+relevo los NPCs guionizados (que sí se mueven); y si el duelo ya está vencido, no se dibujan de entrada porque
+`resolveResolvedSceneryIds()` los mete en `collectedNodeIds` al construir el motor. El enganche es genérico:
+`IOverworldAmbush.sceneryNodeIds`, así que cualquier emboscada futura puede tener su atrezzo.
+
+**Ojo con esto:** el validador de tilemap **prohíbe dos objetos en la misma celda**, así que el nodo fantasma
+`story-ch4-duel-10` se movió a `(22,14)` — la casilla donde GenNvim **acaba** la cutscene, no donde empieza.
+
+---
+
+## D. 4ª TANDA — cierre del acto (2026-07-23, noche)
+
+### D.1 GenNvim deja de ser jefe: Midutech es el jefe final único
+Se le vence en la escena de la Fábrica (duel-10), así que **`story-ch4-duel-6` se borra del mapa** (objeto +
+`markSolid`): la mitad baja de la sala del jefe queda como antesala vacía. La puerta post-jefe
+(`story-a4-gate-postboss`) pasa a exigir **duel-10** en vez de duel-6 — como duel-10 es obligatorio, al llegar
+ya está abierta y sólo hace de marco. **La fila `story-ch4-duel-6` sigue en la BD** (inactiva de facto, nadie la
+referencia): no se borró por si se quiere recuperar; si molesta, `is_active = false`.
+
+### D.2 Narración previa a Midutech: "Llegas Tarde"
+`story-ch4-event-pre-midutech` (STEP_ON en `(26,7)`, antes de la puerta) se reescribe: Midutech cuenta que **la
+carta suprema ya está entregada** a la Entidad mientras el jugador peleaba en la forja, que GenNvim solo era su
+código y que la llave del Core no la suelta; BigLog remata con "llegamos tarde a la carta, pero no a él".
+
+### D.3 Portal al Acto 5 "próximamente"
+Nuevo objeto `story-ch4-transition-to-act5` (`WARP`, `STEP_ON`, `(28,3)`, `gateRequiredNodeIds: [duel-7]`), junto
+al trigger de la llave del Core. **Es un WARP SIN destino a propósito**: se admitió en el validador
+(`kind === "WARP"` con `warp` opcional) como "acto anunciado pero no construido", y en `OverworldDevScene` la
+rama WARP comprueba `object.warp`: si no lo hay, en vez de saltar de mapa abre la narración
+`story-ch4-transition-to-act5` ("ruta detectada, destino NO COMPILADO…"). No se marca como visto, así que se
+puede releer cada vez que se pisa. Para el Acto 5 real, basta con añadirle el `warp` de destino.
+
+---
+
+## E. Avisos que siguen abiertos (heredados)
+- ~~Aplicar 145 + 146 + 147 a prod~~ **HECHO**: 145 y 146 ya estaban; la **147 se aplicó el 2026-07-23**
+  (`apply_migration`, verificado: `story-ch4-duel-9` ELITE y `story-ch4-duel-10` MYTHIC con sus mazos). Era la
+  causa del "No disponible" al entrar al duelo de la Fábrica.
+- **E6** (`story-ch4-event-core-key`) menciona "la Entidad" con texto **no definitivo**: el usuario rehará esa
+  parte. La escena de la Fábrica sí usa "la Entidad" **a propósito** (texto suyo). E4 ya no existe (ver C.3).
+- **E6 será vídeo** algún día (E1 ya lo es).
 - **Habilidades de combate** de los `opp-ch4-*` sin asignar en admin (conecta con la rama
   `feat/opponent-skill-abilities`).
 - El claim de recompensas (`/api/story/overworld/claim-reward`) **no valida gates en servidor**: el candado de la

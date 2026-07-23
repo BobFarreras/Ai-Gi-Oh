@@ -51,9 +51,13 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
   "story-ch4-event-card-forge": {
     title: "La Carta Suprema",
     lines: [
-      { actorId: "opp-ch4-gennvim", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: GENNVIM_PORTRAIT, speaker: "GenNvim", text: "Hemos podido crear la carta suprema." },
-      { actorId: "opp-ch4-midutech", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: MIDUTECH_PORTRAIT, speaker: "Midutech", text: "Con esto la Entidad podrá controlar todo el ciberespacio." },
-      { actorId: "opp-ch4-midutech", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: MIDUTECH_PORTRAIT, speaker: "Midutech", text: "Voy a llevármela." },
+      // Hablan ELLOS DOS (el jugador solo espía): cada línea declara `counterpartPortraitUrl` con la cara del
+      // otro villano, para que el hueco de abajo no muestre al jugador, que no está en la escena. Y cada uno
+      // tiene su hueco FIJO vía `side` —GenNvim abajo (LEFT), Midutech arriba (RIGHT)— para que no salten de
+      // sitio en cada línea: lo único que cambia es de quién sale la burbuja.
+      { actorId: "opp-ch4-gennvim", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: GENNVIM_PORTRAIT, counterpartPortraitUrl: MIDUTECH_PORTRAIT, speaker: "GenNvim", text: "Hemos podido crear la carta suprema." },
+      { actorId: "opp-ch4-midutech", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: MIDUTECH_PORTRAIT, counterpartPortraitUrl: GENNVIM_PORTRAIT, speaker: "Midutech", text: "Con esto la Entidad podrá controlar todo el ciberespacio." },
+      { actorId: "opp-ch4-midutech", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: MIDUTECH_PORTRAIT, counterpartPortraitUrl: GENNVIM_PORTRAIT, speaker: "Midutech", text: "Voy a llevármela." },
     ],
   },
   // Desafío de GenNvim al girarse y pillarte en el callejón: al cerrarlo arranca duel-10 (sin réplica de BigLog,
@@ -64,19 +68,22 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
       { actorId: "opp-ch4-gennvim", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: GENNVIM_PORTRAIT, speaker: "GenNvim", text: "¿Cuánto llevas ahí? Da igual: de esta sala no sales a contarlo." },
     ],
   },
-  "story-ch4-event-revelation": {
-    title: "Archivo Maestro",
+  // Narración PREVIA al jefe final (se pisa al cruzar hacia la mitad alta de la sala del jefe): llegas tarde,
+  // la carta suprema ya está entregada. GenNvim no está: se le venció en la Fábrica.
+  "story-ch4-event-pre-midutech": {
+    title: "Llegas Tarde",
     lines: [
-      { speaker: "Sistema", text: "ARCHIVO MAESTRO — La Entidad no nació: la compilaron aquí GenNvim y Midutech." },
-      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Es verdad. Ayudé a crearla para CONTENERLA, no para esto. Cuando se escapó, te entrené a ti para arreglarlo. Lo siento." },
-      { actorId: "opp-ch4-gennvim", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: GENNVIM_PORTRAIT, speaker: "GenNvim", text: "Conmovedor. Pero de aquí no pasas." },
+      { actorId: "opp-ch4-midutech", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: MIDUTECH_PORTRAIT, speaker: "Midutech", text: "Tranquilo, no corras: la carta suprema ya está entregada. Mientras tú te peleabas con GenNvim en la forja, yo la puse en manos de la Entidad." },
+      { actorId: "opp-ch4-midutech", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: MIDUTECH_PORTRAIT, speaker: "Midutech", text: "GenNvim solo era mi código; yo lo escribí. Y la llave del Core es mía: de aquí no pasas." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Llegamos tarde a la carta, pero no a él. Véncelo y nos llevamos la llave: sin ella, la Entidad no puede abrir el Core." },
     ],
   },
-  "story-ch4-event-pre-midutech": {
-    title: "El Arquitecto",
+  // Portal al Acto 5 (WARP sin destino): se puede releer cada vez que se pulsa, no se marca como visto.
+  "story-ch4-transition-to-act5": {
+    title: "Portal al Core",
     lines: [
-      { actorId: "opp-ch4-midutech", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: MIDUTECH_PORTRAIT, speaker: "Midutech", text: "GenNvim solo era mi código. Yo lo escribí. La llave del Core es mía y no pienso dártela." },
-      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Cuidado con él: conoce cómo piensas, porque ayudó a diseñarte. Mantén la calma y juega tu mejor mano." },
+      { speaker: "Sistema", text: "ENLACE AL CORE — Ruta detectada, destino NO COMPILADO. El Acto 5 todavía está en construcción." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Guarda la llave: en cuanto el Core esté listo, este portal se abrirá y entraremos juntos. Mientras tanto, disfruta de lo que has conseguido aquí.", autoAdvanceMs: 8000 },
     ],
   },
   "story-ch4-event-core-key": {

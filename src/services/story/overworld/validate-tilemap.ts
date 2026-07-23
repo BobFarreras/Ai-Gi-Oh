@@ -153,8 +153,9 @@ function validateObject(
   }
 
   let warp: IOverworldTilemapObject["warp"];
-  if (kind === "WARP") {
-    if (!isRecord(raw.warp)) fail(`${path}.warp`, "un objeto WARP necesita destino");
+  // Un WARP SIN destino es un portal "anunciado pero no construido" (p. ej. el del Acto 5 al final del Acto 4):
+  // se dibuja como portal y, al usarlo, la escena cuenta que ese acto todavía no existe en vez de saltar de mapa.
+  if (kind === "WARP" && isRecord(raw.warp)) {
     const toMapId = assertNonEmptyString(raw.warp.toMapId, `${path}.warp.toMapId`);
     const toSpawnId = assertNonEmptyString(raw.warp.toSpawnId, `${path}.warp.toSpawnId`);
     const direction = assertNonEmptyString(raw.warp.direction, `${path}.warp.direction`);
@@ -162,7 +163,7 @@ function validateObject(
       fail(`${path}.warp.direction`, "se esperaba 'forward' o 'backward'");
     }
     warp = { toMapId, toSpawnId, direction: direction as "forward" | "backward" };
-  } else if (raw.warp !== undefined) {
+  } else if (kind !== "WARP" && raw.warp !== undefined) {
     fail(`${path}.warp`, `solo los objetos WARP admiten destino (kind actual: ${kind})`);
   }
 

@@ -40,6 +40,71 @@ describe("StoryNodeInteractionDialog", () => {
     vi.useRealTimers();
   });
 
+  it("en una conversación entre villanos no sale el jugador y cada uno mantiene su hueco fijo", () => {
+    const GENNVIM = "/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.webp";
+    const MIDUTECH = "/assets/story/opponents/opp-ch1-midutech/avatar-Midutech.webp";
+    // Línea de GenNvim, fijado ABAJO por `side: "LEFT"`; su interlocutor Midutech ocupa el hueco de arriba.
+    const view = render(
+      <StoryNodeInteractionDialog
+        isOpen
+        title="La Carta Suprema"
+        cinematicVideo={null}
+        line={{
+          actorId: "opp-ch4-gennvim",
+          speaker: "GenNvim",
+          text: "Hemos podido crear la carta suprema.",
+          side: "LEFT",
+          portraitUrl: GENNVIM,
+          counterpartPortraitUrl: MIDUTECH,
+        }}
+        onNext={() => undefined}
+        onClose={() => undefined}
+      />,
+    );
+
+    expect(screen.queryByAltText(/retrato del jugador/i)).toBeNull();
+    const bottomFirst = screen.getByAltText(/retrato de GenNvim/i).getAttribute("src");
+    const topFirst = screen.getByAltText(/retrato del interlocutor/i).getAttribute("src");
+
+    // Turno de Midutech (`side: "RIGHT"`, arriba): los retratos NO se intercambian, solo cambia quien habla.
+    view.rerender(
+      <StoryNodeInteractionDialog
+        isOpen
+        title="La Carta Suprema"
+        cinematicVideo={null}
+        line={{
+          actorId: "opp-ch4-midutech",
+          speaker: "Midutech",
+          text: "Voy a llevármela.",
+          side: "RIGHT",
+          portraitUrl: MIDUTECH,
+          counterpartPortraitUrl: GENNVIM,
+        }}
+        onNext={() => undefined}
+        onClose={() => undefined}
+      />,
+    );
+
+    expect(screen.queryByAltText(/retrato del jugador/i)).toBeNull();
+    expect(screen.getByAltText(/retrato del interlocutor/i).getAttribute("src")).toBe(bottomFirst);
+    expect(screen.getByAltText(/retrato de Midutech/i).getAttribute("src")).toBe(topFirst);
+  });
+
+  it("sin interlocutor declarado, el hueco de abajo sigue siendo del jugador", () => {
+    render(
+      <StoryNodeInteractionDialog
+        isOpen
+        title="Guardián de la Hydra"
+        cinematicVideo={null}
+        line={{ actorId: "opp-ch4-gennvim", speaker: "GenNvim", text: "Ni un paso más.", side: "RIGHT" }}
+        onNext={() => undefined}
+        onClose={() => undefined}
+      />,
+    );
+
+    expect(screen.getByAltText(/retrato del jugador/i)).toBeInTheDocument();
+  });
+
   it("permite interrumpir la cinemática full-screen", () => {
     vi.useFakeTimers();
     const onClose = vi.fn();

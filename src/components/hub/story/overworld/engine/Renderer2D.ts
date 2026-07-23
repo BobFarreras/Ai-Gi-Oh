@@ -1185,49 +1185,148 @@ export class Renderer2D {
         else if (kind === OVERLAY_TILE.CRATE) this.drawCrate(screenX, screenY, size);
         else if (kind === OVERLAY_TILE.COOLING_UNIT) this.drawCoolingUnit(screenX, screenY, size, timeMs, tileX + tileY);
         else if (kind === OVERLAY_TILE.DATA_PYLON) this.drawDataPylon(screenX, screenY, size, timeMs);
-        else if (kind === OVERLAY_TILE.CARD_FORGE) this.drawCardForge(screenX, screenY, size, timeMs, tileX);
+        else if (kind === OVERLAY_TILE.CARD_FORGE) this.drawCardForge(screenX, screenY, size, timeMs, false);
+        else if (kind === OVERLAY_TILE.CARD_FORGE_RIGHT) this.drawCardForge(screenX, screenY, size, timeMs, true);
         else this.drawPillar(screenX, screenY, size, timeMs, tileX);
       }
     }
   }
 
   /**
-   * FÁBRICA DE CARTAS del Núcleo (Acto 4): chasis industrial con una ranura encendida por la que sale una carta
-   * holográfica que flota y se desvanece. Se pinta por casilla, así que dos casillas contiguas leen como una
-   * sola máquina grande. Todo procedural (sin assets), en el verde fósforo del acto.
+   * FÁBRICA DE CARTAS del Núcleo (Acto 4). Es UNA máquina de DOS casillas: cada mitad se dibuja por separado y
+   * encaja con la otra por la costura central, donde un reactor forja la carta suprema (columna de energía,
+   * anillos que giran, la carta materializándose y ascendiendo, chispas y barrido de escáner). La animación va
+   * SOLO con el reloj —sin semilla por casilla— para que las dos mitades vayan sincronizadas y lean como una
+   * sola máquina. Todo procedural (sin assets), en el verde fósforo del acto.
    */
-  private drawCardForge(screenX: number, screenY: number, size: number, timeMs: number, seed: number): void {
+  private drawCardForge(screenX: number, screenY: number, size: number, timeMs: number, isRightHalf: boolean): void {
     const context = this.context;
-    const phase = (timeMs / 1400 + seed * 0.37) % 1;
-    // Chasis: ocupa la casilla entera para que dos contiguas formen un bloque continuo.
-    context.fillStyle = "#0a1512";
-    context.fillRect(screenX, screenY + size * 0.1, size, size * 0.9);
-    context.strokeStyle = "rgba(74, 222, 128, 0.55)";
+    const phase = (timeMs / 2200) % 1; // ciclo de forja (0 = carta naciendo, 1 = disipada)
+    const pulse = 0.5 + Math.sin(timeMs / 300) * 0.5;
+    // Costura: borde interior de la casilla. `inward` apunta desde la costura hacia el centro de esta mitad.
+    const seamX = isRightHalf ? screenX : screenX + size;
+    const inward = isRightHalf ? 1 : -1;
+    const topY = screenY + size * 0.06;
+    const bodyH = size * 0.94;
+
+    context.save();
+    // Nada se sale de su casilla (las mitades no pisan al vecino ni al suelo de los villanos).
+    context.beginPath();
+    context.rect(screenX, screenY, size, size);
+    context.clip();
+
+    // ── Chasis: bloque oscuro con degradado y bisel neón solo en el lado EXTERIOR (la costura queda limpia).
+    const chassis = context.createLinearGradient(screenX, topY, screenX, topY + bodyH);
+    chassis.addColorStop(0, "#0d2019");
+    chassis.addColorStop(0.55, "#071510");
+    chassis.addColorStop(1, "#02100c");
+    context.fillStyle = chassis;
+    context.fillRect(screenX, topY, size, bodyH);
+    context.strokeStyle = "rgba(74, 222, 128, 0.5)";
     context.lineWidth = 2;
-    context.strokeRect(screenX + 1, screenY + size * 0.1, size - 2, size * 0.9);
-    // Rejilla de refrigeración.
-    context.strokeStyle = "rgba(74, 222, 128, 0.2)";
+    context.beginPath();
+    const outerX = isRightHalf ? screenX + size - 1 : screenX + 1;
+    context.moveTo(outerX, topY + bodyH);
+    context.lineTo(outerX, topY + 1);
+    context.lineTo(seamX, topY + 1);
+    context.stroke();
+
+    // ── Torre de refrigeración exterior: bahías con LEDs que se encienden en cascada.
+    const bayX = seamX + inward * size * 0.72;
+    context.fillStyle = "rgba(2, 24, 18, 0.9)";
+    context.fillRect(Math.min(bayX, bayX + inward * size * 0.2), topY + size * 0.12, size * 0.2, bodyH * 0.72);
+    for (let bay = 0; bay < 5; bay++) {
+      const on = (Math.floor(timeMs / 190) + bay) % 5 !== 0;
+      context.fillStyle = on ? "rgba(134, 239, 172, 0.85)" : "rgba(74, 222, 128, 0.18)";
+      context.fillRect(bayX + inward * size * 0.03, topY + size * (0.18 + bay * 0.12), size * 0.1, size * 0.04);
+    }
+
+    // ── Conductos que empujan energía hacia la costura (líneas con un pulso que viaja).
+    context.strokeStyle = "rgba(74, 222, 128, 0.22)";
     context.lineWidth = 1;
-    for (let line = 1; line <= 4; line++) {
-      const lineY = screenY + size * (0.18 + line * 0.09);
+    for (let duct = 0; duct < 4; duct++) {
+      const ductY = topY + size * (0.2 + duct * 0.16);
       context.beginPath();
-      context.moveTo(screenX + size * 0.12, lineY);
-      context.lineTo(screenX + size * 0.88, lineY);
+      context.moveTo(seamX, ductY);
+      context.lineTo(seamX + inward * size * 0.66, ductY);
+      context.stroke();
+      const travel = ((timeMs / 700 + duct * 0.25) % 1);
+      context.fillStyle = "rgba(190, 242, 100, 0.75)";
+      context.fillRect(seamX + inward * size * 0.66 * (1 - travel) - 1, ductY - 1.5, size * 0.09 * -inward, 3);
+    }
+
+    // ── Reactor de la costura: halo, columna de luz y anillos que giran (media elipse por mitad).
+    const coreY = topY + bodyH * 0.52;
+    const halo = context.createRadialGradient(seamX, coreY, 1, seamX, coreY, size * 0.62);
+    halo.addColorStop(0, `rgba(190, 242, 100, ${0.34 + pulse * 0.26})`);
+    halo.addColorStop(0.5, "rgba(34, 197, 94, 0.16)");
+    halo.addColorStop(1, "rgba(34, 197, 94, 0)");
+    context.fillStyle = halo;
+    context.fillRect(screenX, screenY, size, size);
+    context.fillStyle = `rgba(220, 252, 231, ${0.5 + pulse * 0.35})`;
+    context.fillRect(seamX + (isRightHalf ? 0 : -size * 0.05), topY + size * 0.08, size * 0.05, bodyH * 0.86);
+    context.strokeStyle = "rgba(134, 239, 172, 0.75)";
+    context.lineWidth = 2;
+    for (let ring = 0; ring < 3; ring++) {
+      const spin = (timeMs / 900 + ring * 0.33) % 1;
+      const ringRadius = size * (0.16 + ring * 0.11);
+      const squash = 0.34 + Math.abs(Math.sin(spin * Math.PI)) * 0.5;
+      context.globalAlpha = 0.28 + (1 - ring / 3) * 0.4;
+      context.beginPath();
+      context.ellipse(
+        seamX,
+        coreY + Math.sin(spin * Math.PI * 2) * size * 0.06,
+        ringRadius,
+        ringRadius * squash,
+        0,
+        isRightHalf ? -Math.PI / 2 : Math.PI / 2,
+        isRightHalf ? Math.PI / 2 : (3 * Math.PI) / 2,
+      );
       context.stroke();
     }
-    // Ranura de salida, encendida y pulsante.
-    const glow = 0.45 + Math.sin(timeMs / 260 + seed) * 0.3;
-    context.fillStyle = `rgba(134, 239, 172, ${glow})`;
-    context.fillRect(screenX + size * 0.2, screenY + size * 0.58, size * 0.6, size * 0.07);
-    // Carta holográfica que asciende desde la ranura y se disipa.
-    const cardY = screenY + size * (0.58 - phase * 0.42);
-    context.globalAlpha = Math.max(0, 1 - phase) * 0.85;
-    context.fillStyle = "rgba(16, 185, 129, 0.35)";
-    context.fillRect(screenX + size * 0.36, cardY, size * 0.28, size * 0.36);
-    context.strokeStyle = "#86efac";
-    context.lineWidth = 1.5;
-    context.strokeRect(screenX + size * 0.36, cardY, size * 0.28, size * 0.36);
     context.globalAlpha = 1;
+
+    // ── La CARTA suprema: se materializa en la costura, asciende y se disipa (media carta por mitad).
+    const cardW = size * 0.34; // media anchura: entre las dos mitades sale una carta de 0.68 casillas
+    const cardH = size * 0.44;
+    const cardTop = coreY - cardH * 0.5 - phase * size * 0.42;
+    const cardAlpha = Math.min(1, phase * 4) * Math.max(0, 1 - Math.max(0, phase - 0.55) / 0.45);
+    context.globalAlpha = cardAlpha;
+    const cardX = isRightHalf ? seamX : seamX - cardW;
+    const cardFill = context.createLinearGradient(cardX, cardTop, cardX + cardW, cardTop + cardH);
+    cardFill.addColorStop(0, "rgba(134, 239, 172, 0.45)");
+    cardFill.addColorStop(1, "rgba(16, 185, 129, 0.22)");
+    context.fillStyle = cardFill;
+    context.fillRect(cardX, cardTop, cardW, cardH);
+    context.strokeStyle = "#d9f99d";
+    context.lineWidth = 1.5;
+    // Marco sin el lado de la costura, para que las dos mitades formen un único borde.
+    context.beginPath();
+    context.moveTo(seamX, cardTop);
+    context.lineTo(cardX + (isRightHalf ? cardW : 0), cardTop);
+    context.lineTo(cardX + (isRightHalf ? cardW : 0), cardTop + cardH);
+    context.lineTo(seamX, cardTop + cardH);
+    context.stroke();
+    // Brillo que recorre la carta.
+    context.fillStyle = "rgba(255, 255, 255, 0.28)";
+    const sheenY = cardTop + ((timeMs / 600) % 1) * cardH;
+    context.fillRect(cardX, sheenY, cardW, 2);
+    context.globalAlpha = 1;
+
+    // ── Chispas que suben desde el reactor y barrido de escáner sobre el chasis.
+    context.fillStyle = "rgba(190, 242, 100, 0.8)";
+    for (let spark = 0; spark < 4; spark++) {
+      const life = ((timeMs / 520 + spark * 0.27) % 1);
+      const sparkX = seamX + inward * size * (0.06 + spark * 0.11) * (0.4 + life);
+      const sparkY = coreY - life * size * 0.5;
+      context.globalAlpha = (1 - life) * 0.8;
+      context.fillRect(sparkX, sparkY, 2, 2);
+    }
+    context.globalAlpha = 0.16;
+    context.fillStyle = "#bbf7d0";
+    context.fillRect(screenX, topY + ((timeMs / 1100) % 1) * bodyH, size, size * 0.05);
+    context.globalAlpha = 1;
+    context.restore();
   }
 
   private drawServerRack(screenX: number, screenY: number, size: number, timeMs: number, seed: number): void {

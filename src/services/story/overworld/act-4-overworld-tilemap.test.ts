@@ -2,10 +2,13 @@
 // TERMINAL, registrado, y el laberinto de la Fase 2 (caja + placa + cinta + reset) que abre la compuerta a
 // las plantas altas. Sin la placa pulsada, el jefe es inalcanzable (puzzle obligatorio).
 import {
+  ACT_5_PORTAL_ID,
   CARD_FORGE_DUEL_ID,
   CARD_FORGE_GENNVIM_TILE,
   CARD_FORGE_MAX_TILES_FROM_MACHINE,
   CARD_FORGE_MIDUTECH_TILE,
+  CARD_FORGE_SCENERY_GENNVIM_ID,
+  CARD_FORGE_SCENERY_MIDUTECH_ID,
   CARD_FORGE_TRIGGER_ID,
   HYDRA_AMBUSH_TILES_BEFORE_CARD,
   HYDRA_AMBUSH_TRIGGER_ID,
@@ -31,7 +34,6 @@ const DUEL_4 = "story-ch4-duel-4";
 const DUEL_5 = "story-ch4-duel-5";
 const DUEL_8 = "story-ch4-duel-8";
 const DUEL_9 = "story-ch4-duel-9";
-const GENNVIM = "story-ch4-duel-6";
 
 function contextFor(progress: { completed?: string[]; interacted?: string[] } = {}) {
   const tilemap = buildAct4OverworldTilemap();
@@ -156,14 +158,29 @@ describe("buildAct4OverworldTilemap", () => {
     expect(findGridPath(spawnTile(ready.tilemap), approach, ready.context)).not.toBeNull();
   });
 
-  it("Midutech (boss final) exige haber vencido a GenNvim: la puerta post-jefe lo sella", () => {
+  it("Midutech (boss final) exige haber vencido a GenNvim en la FÁBRICA: la puerta post-jefe lo sella", () => {
     const approach = { tileX: 26, tileY: 5 }; // casilla contigua (debajo) de Midutech (26,4)
-    // Con la compuerta abierta pero GenNvim vivo: la puerta post-jefe sella a Midutech.
+    // Con la compuerta abierta pero sin haber vencido a GenNvim (duel-10), la puerta post-jefe sella a Midutech.
     const beforeBoss = contextFor({ completed: [DUEL_1, DUEL_5] });
     expect(findGridPath(spawnTile(beforeBoss.tilemap), approach, beforeBoss.context)).toBeNull();
-    // GenNvim vencido: se libera su casilla y se abre la puerta post-jefe -> Midutech alcanzable.
-    const afterBoss = contextFor({ completed: [DUEL_1, DUEL_5, GENNVIM] });
+    // GenNvim vencido en la Fábrica: se abre la puerta post-jefe -> Midutech alcanzable.
+    const afterBoss = contextFor({ completed: [DUEL_1, DUEL_5, CARD_FORGE_DUEL_ID] });
     expect(findGridPath(spawnTile(afterBoss.tilemap), approach, afterBoss.context)).not.toBeNull();
+  });
+
+  it("GenNvim ya NO es jefe de la última sala: duel-6 no está en el mapa y Midutech es el único BOSS", () => {
+    const objects = buildAct4OverworldTilemap().objects;
+    expect(objects.some((object) => object.id === "story-ch4-duel-6")).toBe(false);
+    expect(objects.filter((object) => object.kind === "BOSS").map((object) => object.id)).toEqual(["story-ch4-duel-7"]);
+    // Su antigua casilla (26,9) queda como suelo libre de la antesala.
+    expect(buildAct4OverworldTilemap().collision[9][26]).toBe(1);
+  });
+
+  it("el portal al Acto 5 existe SIN destino (aún no construido) y sólo tras vencer a Midutech", () => {
+    const portal = buildAct4OverworldTilemap().objects.find((object) => object.id === ACT_5_PORTAL_ID)!;
+    expect(portal.kind).toBe("WARP");
+    expect(portal.warp).toBeUndefined(); // sin destino: la escena narra que el Acto 5 está en construcción
+    expect(portal.gateRequiredNodeIds).toEqual(["story-ch4-duel-7"]);
   });
 
   it("coloca los 3 objetos (USB + aumentos ATK/DEF) y están registrados para claim-reward", () => {
@@ -210,16 +227,15 @@ describe("buildAct4OverworldTilemap", () => {
     expect(walls).toBeGreaterThan(8);
   });
 
-  it("coloca los 9 rivales del capítulo 4 (duel-8/9 son DUEL) y marca a GenNvim/Midutech como BOSS", () => {
+  it("coloca los rivales del capítulo 4 (menos duel-6, que ya no se pelea en la sala del jefe)", () => {
     const objects = buildAct4OverworldTilemap().objects;
     const ids = new Set(objects.map((object) => object.id));
-    for (let n = 1; n <= 9; n++) expect(ids.has(`story-ch4-duel-${n}`)).toBe(true);
+    for (const n of [1, 2, 3, 4, 5, 7, 8, 9, 10]) expect(ids.has(`story-ch4-duel-${n}`)).toBe(true);
+    expect(ids.has("story-ch4-duel-6")).toBe(false);
     // duel-8 (guardián de la Hydra) es DUEL, no BOSS.
     expect(objects.find((object) => object.id === "story-ch4-duel-8")?.kind).toBe("DUEL");
-    const bosses = objects.filter((object) => object.kind === "BOSS").map((object) => object.id).sort();
-    expect(bosses).toEqual(["story-ch4-duel-6", "story-ch4-duel-7"]);
     const postBossGate = objects.find((object) => object.id === "story-a4-gate-postboss")!;
-    expect(postBossGate.gateRequiredNodeIds).toEqual(["story-ch4-duel-6"]);
+    expect(postBossGate.gateRequiredNodeIds).toEqual([CARD_FORGE_DUEL_ID]);
   });
 
   it("la carta HYDRA exige vencer a duel-8: el nodo está gateado (ya no lo tapa el cuerpo del rival)", () => {
@@ -301,15 +317,26 @@ describe("buildAct4OverworldTilemap", () => {
     expect(bottom.tileY).toBeLessThanOrEqual(33);
   });
 
-  it("el interruptor del maze rightUp es SIEMPRE alcanzable (sin guardia): anti soft-lock del puente", () => {
-    // La sala derecha alta no tiene rival en su corredor, así que basta con haber despejado la entrada (duel-1)
-    // para poder llegar a invertir la pasarela. Si esto falla, el jugador se queda sin poder subir al terminal.
+  it("el interruptor del maze rightUp está al FONDO del todo y lo guarda duel-5", () => {
     const tilemap = buildAct4OverworldTilemap();
     const bottom = tilemap.objects.find((object) => object.id === SWITCH_ID)!;
-    const approach = approachOf(tilemap, bottom);
-    expect(approach).not.toBeNull();
-    const opened = contextFor({ completed: [DUEL_1] });
-    expect(findGridPath(spawnTile(opened.tilemap), approach!, opened.context)).not.toBeNull();
+    const guard = tilemap.objects.find((object) => object.id === DUEL_5)!;
+    // Escondido: es el callejón MÁS LEJANO de la boca del maze (38,29), no el primero que aparece al barrer.
+    // El interruptor y su guardia son sólidos (se usan desde el lado), así que se miden sobre una copia de la
+    // rejilla con esas dos celdas abiertas.
+    const walkable = tilemap.collision.map((row) => [...row]);
+    walkable[bottom.tileY][bottom.tileX] = 1;
+    walkable[guard.tileY][guard.tileX] = 1;
+    const fromEntry = traceWalkableCorridor(walkable, { tileX: 38, tileY: 29 }, { tileX: bottom.tileX, tileY: bottom.tileY });
+    expect(fromEntry.length).toBeGreaterThanOrEqual(6);
+    // El centinela ocupa la ÚNICA casilla contigua al interruptor (su acceso).
+    expect(Math.abs(guard.tileX - bottom.tileX) + Math.abs(guard.tileY - bottom.tileY)).toBe(1);
+    expect(guard.tileX).toBeGreaterThanOrEqual(38); // dentro del maze rightUp
+    // Sin vencer a duel-5 no se llega al interruptor; venciéndolo, sí (su casilla se libera).
+    const locked = contextFor({ completed: [DUEL_1] });
+    expect(findGridPath(spawnTile(locked.tilemap), { tileX: guard.tileX, tileY: guard.tileY }, locked.context)).toBeNull();
+    const cleared = contextFor({ completed: [DUEL_1, DUEL_5] });
+    expect(findGridPath(spawnTile(cleared.tilemap), { tileX: guard.tileX, tileY: guard.tileY }, cleared.context)).not.toBeNull();
   });
 
   it("duel-9 patrulla el laberinto 1 en vertical y su recorrido sale del nicho al corredor", () => {
@@ -347,22 +374,24 @@ describe("buildAct4OverworldTilemap", () => {
     ).toBe(false);
   });
 
-  it("la FÁBRICA DE CARTAS está en un callejón del medio laberinto, con la máquina sobre los villanos", () => {
+  it("la FÁBRICA DE CARTAS preside la mitad ALTA del terminal (fuera del laberinto), con los villanos debajo", () => {
     const tilemap = buildAct4OverworldTilemap();
-    // Las dos casillas de los villanos son suelo contiguo (hombro con hombro) dentro de la sala del terminal.
-    expect(tilemap.collision[CARD_FORGE_GENNVIM_TILE.tileY][CARD_FORGE_GENNVIM_TILE.tileX]).toBe(1);
-    expect(tilemap.collision[CARD_FORGE_MIDUTECH_TILE.tileY][CARD_FORGE_MIDUTECH_TILE.tileX]).toBe(1);
-    // La MÁQUINA son dos casillas de overlay CARD_FORGE justo encima de ellos (y sólidas: no se pisa).
+    // Las dos casillas de los villanos son suelo contiguo (hombro con hombro) y están FUERA del medio laberinto
+    // (y <= 15), en la nave abierta del terminal.
+    for (const villain of [CARD_FORGE_GENNVIM_TILE, CARD_FORGE_MIDUTECH_TILE]) {
+      expect(tilemap.collision[villain.tileY][villain.tileX]).toBe(1);
+      expect(villain.tileY).toBeLessThanOrEqual(15);
+    }
+    expect(Math.abs(CARD_FORGE_GENNVIM_TILE.tileX - CARD_FORGE_MIDUTECH_TILE.tileX)).toBe(1);
+    // La MÁQUINA son las dos mitades del mismo chasis, justo encima de ellos y sólidas (no se pisan).
+    const machineY = CARD_FORGE_GENNVIM_TILE.tileY - 1;
+    expect(tilemap.layers.overlay[machineY][CARD_FORGE_MIDUTECH_TILE.tileX]).toBe(OVERLAY_TILE.CARD_FORGE);
+    expect(tilemap.layers.overlay[machineY][CARD_FORGE_GENNVIM_TILE.tileX]).toBe(OVERLAY_TILE.CARD_FORGE_RIGHT);
     for (const tileX of [CARD_FORGE_GENNVIM_TILE.tileX, CARD_FORGE_MIDUTECH_TILE.tileX]) {
-      const machineY = CARD_FORGE_GENNVIM_TILE.tileY - 1;
-      expect(tilemap.layers.overlay[machineY][tileX]).toBe(OVERLAY_TILE.CARD_FORGE);
       expect(tilemap.collision[machineY][tileX]).toBe(0);
     }
-    // Callejón: desde la casilla de Midutech (el fondo) sólo se sale por la de GenNvim.
-    const midutechNeighbours = ([[1, 0], [-1, 0], [0, 1], [0, -1]] as Array<[number, number]>).filter(
-      ([dx, dy]) => tilemap.collision[CARD_FORGE_MIDUTECH_TILE.tileY + dy]?.[CARD_FORGE_MIDUTECH_TILE.tileX + dx] === 1,
-    );
-    expect(midutechNeighbours).toHaveLength(1);
+    // No tapona el paso a la compuerta del jefe (x=26): la ruta hacia arriba sigue libre.
+    expect(tilemap.collision[machineY][26]).toBe(1);
   });
 
   it("la escena de la Fábrica es OBLIGATORIA: su trigger es la única boca de salida del medio laberinto", () => {
@@ -387,6 +416,23 @@ describe("buildAct4OverworldTilemap", () => {
     expect(toVillains.length).toBeLessThanOrEqual(CARD_FORGE_MAX_TILES_FROM_MACHINE);
   });
 
+  it("los dos villanos son ATREZZO visible antes de la escena (no aparecen de la nada)", () => {
+    const tilemap = buildAct4OverworldTilemap();
+    const scenery = [
+      { id: CARD_FORGE_SCENERY_GENNVIM_ID, tile: CARD_FORGE_GENNVIM_TILE },
+      { id: CARD_FORGE_SCENERY_MIDUTECH_ID, tile: CARD_FORGE_MIDUTECH_TILE },
+    ];
+    for (const { id, tile } of scenery) {
+      const object = tilemap.objects.find((entry) => entry.id === id)!;
+      expect(object.kind).toBe("NPC");
+      expect(object.hidden).toBeUndefined(); // se dibujan desde que asomas a la sala
+      expect(object.imageSrc).toBeTruthy();
+      expect({ tileX: object.tileX, tileY: object.tileY }).toEqual({ tileX: tile.tileX, tileY: tile.tileY });
+      // NO son sólidos: los NPCs guionizados de la cutscene recorren esas casillas.
+      expect(tilemap.collision[object.tileY][object.tileX]).toBe(1);
+    }
+  });
+
   it("duel-10 (GenNvim en la Fábrica) es un rival de escena: oculto, sin visión y sin ocupar casilla", () => {
     const tilemap = buildAct4OverworldTilemap();
     const duel10 = tilemap.objects.find((object) => object.id === CARD_FORGE_DUEL_ID)!;
@@ -396,15 +442,15 @@ describe("buildAct4OverworldTilemap", () => {
     expect(tilemap.collision[duel10.tileY][duel10.tileX]).toBe(1);
   });
 
-  it("lo que vivía en la mitad baja del terminal se movió a la mitad alta (fuera del medio laberinto)", () => {
+  it("el interruptor gemelo sigue accesible en la mitad alta y la consola E4 ya no existe", () => {
     const tilemap = buildAct4OverworldTilemap();
-    // duel-5 abre la compuerta al jefe y el interruptor gemelo evita el soft-lock de la cinta: ninguno puede
-    // haber quedado sepultado bajo el maze nuevo (y=16..21).
-    for (const id of [DUEL_5, SWITCH_TOP_ID, "story-ch4-event-revelation"]) {
-      const object = tilemap.objects.find((entry) => entry.id === id)!;
-      expect(object.tileY).toBeLessThanOrEqual(15);
-      expect(approachOf(tilemap, object)).not.toBeNull();
-    }
+    // El gemelo evita el soft-lock de la cinta: no puede haber quedado sepultado bajo el maze (y=16..21).
+    const top = tilemap.objects.find((entry) => entry.id === SWITCH_TOP_ID)!;
+    expect(top.tileY).toBeLessThanOrEqual(15);
+    expect(approachOf(tilemap, top)).not.toBeNull();
+    // La consola "registro-madre" se retiró: su revelación la cuenta la escena de la Fábrica.
+    expect(tilemap.objects.some((entry) => entry.id === "story-ch4-event-revelation")).toBe(false);
+    expect(findStoryVirtualNodeDefinition("story-ch4-event-revelation")).toBeNull();
   });
 
   it("la pasarela ya no narra nada y la sala derecha alta no tiene consola de evento", () => {

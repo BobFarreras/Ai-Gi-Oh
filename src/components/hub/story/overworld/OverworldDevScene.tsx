@@ -38,6 +38,8 @@ import { buildAct4HydraAmbushCutscene } from "@/services/story/overworld/act-4-h
 import { buildAct4CardForgeCutscene } from "@/services/story/overworld/act-4-card-forge-cutscene";
 import {
   CARD_FORGE_DUEL_ID,
+  CARD_FORGE_SCENERY_GENNVIM_ID,
+  CARD_FORGE_SCENERY_MIDUTECH_ID,
   CARD_FORGE_TRIGGER_ID,
   HYDRA_AMBUSH_DUEL_ID,
   HYDRA_AMBUSH_TRIGGER_ID,
@@ -129,6 +131,12 @@ interface IOverworldAmbush {
   /** Nodo del catálogo cuya narración se muestra al terminar la cutscene (antes del combate). */
   dialogueNodeId: string;
   buildCutscene: (tilemap: IOverworldTilemap, options: { isCompactViewport: boolean }) => OverworldCutsceneStep[];
+  /**
+   * Objetos de ATREZZO que representan a los rivales antes de la escena (para que no aparezcan de la nada):
+   * se dejan de dibujar al arrancar la cutscene —los sustituyen los NPCs guionizados— y también de entrada si
+   * el duelo ya está vencido.
+   */
+  sceneryNodeIds?: string[];
 }
 const AMBUSH_BY_TRIGGER_ID: Record<string, IOverworldAmbush> = {
   // Acto 2: BigLog sale del fondo del búnker al pisar su entrada.
@@ -149,8 +157,18 @@ const AMBUSH_BY_TRIGGER_ID: Record<string, IOverworldAmbush> = {
     duelId: CARD_FORGE_DUEL_ID,
     dialogueNodeId: CARD_FORGE_DUEL_ID,
     buildCutscene: buildAct4CardForgeCutscene,
+    // Los dos villanos ya están plantados ante la máquina (atrezzo). Al arrancar la escena se ocultan y toman
+    // el relevo los NPCs guionizados, que sí se mueven; tras vencer el duelo no se vuelven a dibujar.
+    sceneryNodeIds: [CARD_FORGE_SCENERY_GENNVIM_ID, CARD_FORGE_SCENERY_MIDUTECH_ID],
   },
 };
+
+/** Atrezzo que hay que dejar de dibujar de entrada porque su escena ya está resuelta. */
+function resolveResolvedSceneryIds(completedNodeIds: ReadonlySet<string>): string[] {
+  return Object.values(AMBUSH_BY_TRIGGER_ID)
+    .filter((ambush) => completedNodeIds.has(ambush.duelId))
+    .flatMap((ambush) => ambush.sceneryNodeIds ?? []);
+}
 
 /** Casilla contigua fuera del haz del rival (perpendicular a su orientación), para no re-activar el combate al volver. */
 function resolveSafeReturnTile(
@@ -525,8 +543,12 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
       progress: buildProgress(initialCompleted, initialInteracted),
       config: {
         initialPosition,
-        // Las consolas re-leíbles no se ocultan aunque estén interactuadas (siguen consultables).
-        collectedNodeIds: [...initialInteracted].filter((id) => !REREADABLE_EVENT_IDS.has(id)),
+        // Las consolas re-leíbles no se ocultan aunque estén interactuadas (siguen consultables). El atrezzo de
+        // una escena ya resuelta (los villanos de la Fábrica tras vencerla) tampoco se vuelve a dibujar.
+        collectedNodeIds: [
+          ...[...initialInteracted].filter((id) => !REREADABLE_EVENT_IDS.has(id)),
+          ...resolveResolvedSceneryIds(initialCompleted),
+        ],
         zoom: initialZoom,
       },
       hooks: {
@@ -630,8 +652,18 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
             engine.playServiceZoom(object.id, () => exitToHub());
             return;
           }
-          // Portal de acto: zoom al portal y salto de mapa validado en servidor.
+          // Portal de acto: zoom al portal y salto de mapa validado en servidor. Un portal SIN destino es un
+          // acto anunciado pero aún no construido (el del Acto 5): en vez de saltar, cuenta su narración —y no
+          // se marca como visto, para poder volver a leerla cada vez que se pulse.
           if (!intent.isBlocked && object.kind === "WARP") {
+            if (!object.warp) {
+              const pendingDialogue = resolveOverworldEventDialogue(object.id);
+              if (!pendingDialogue || pendingDialogue.lines.length === 0) return;
+              engine.setInteractionSuspended(true);
+              playDeviceSound();
+              setNarration({ title: pendingDialogue.title, lines: pendingDialogue.lines, lineIndex: 0, isCutscene: false });
+              return;
+            }
             engine.setInteractionSuspended(true);
             engine.playServiceZoom(object.id, () => void warpToMap(object.id));
             return;
@@ -657,6 +689,12 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
               if (ambushDuel) {
                 engine.setInteractionSuspended(true);
                 ambushPendingRef.current = { duel: ambushDuel, dialogueNodeId: ambush.dialogueNodeId };
+                // El atrezzo deja paso a los NPCs guionizados (mismas casillas, pero estos sí se mueven).
+                const sceneryIds = ambush.sceneryNodeIds ?? [];
+                for (const sceneryId of sceneryIds) engine.markObjectCollected(sceneryId);
+                if (sceneryIds.length > 0) {
+                  setCollectedRewardIds((current) => new Set([...current, ...sceneryIds]));
+                }
                 engine.startCutscene(ambush.buildCutscene(tilemap, { isCompactViewport }));
                 return;
               }

@@ -44,11 +44,24 @@ export function StoryNodeInteractionDialog({
   const isPlayerSpeaker = actorId === "player";
   const defaultOpponentPortraitUrl = "/assets/story/opponents/opp-ch1-biglog/avatar-BigLog.webp";
 
-  // El jugador se fija abajo-izquierda y el interlocutor arriba-derecha para lectura estable.
-  const playerPortraitUrl = isPlayerSpeaker ? (portraitUrl || "/assets/story/player/bob.webp") : "/assets/story/player/bob.webp";
-  const opponentPortraitUrl = isPlayerSpeaker
+  // Reparto de huecos: el jugador abajo-izquierda y su interlocutor arriba-derecha, para lectura estable.
+  // En las conversaciones en las que el jugador NO participa (dos villanos hablando entre ellos) la línea
+  // declara `counterpartPortraitUrl` con la cara del otro; entonces **cada personaje se queda fijo en su
+  // hueco** (lo elige su `side`: LEFT = abajo, RIGHT = arriba) y lo único que cambia al pasar de línea es de
+  // quién sale la burbuja. Si se recolocaran por "quien habla va arriba", los dos saltarían de sitio en cada
+  // línea y parecería que se teletransportan.
+  const isVillainToVillain = !isPlayerSpeaker && Boolean(counterpartPortraitUrl);
+  const isSpeakerOnBottom = isPlayerSpeaker || (isVillainToVillain && line?.side === "LEFT");
+  const bottomPortraitUrl = isPlayerSpeaker
+    ? (portraitUrl || "/assets/story/player/bob.webp")
+    : isVillainToVillain
+      ? (isSpeakerOnBottom ? portraitUrl : counterpartPortraitUrl)
+      : "/assets/story/player/bob.webp";
+  const topPortraitUrl = isPlayerSpeaker
     ? (counterpartPortraitUrl || defaultOpponentPortraitUrl)
-    : (portraitUrl || defaultOpponentPortraitUrl);
+    : isVillainToVillain && isSpeakerOnBottom
+      ? counterpartPortraitUrl
+      : (portraitUrl || defaultOpponentPortraitUrl);
 
   useEffect(() => {
     if (!isOpen || isVideoOpen) return;
@@ -72,14 +85,14 @@ export function StoryNodeInteractionDialog({
             </header>
             <div className="relative min-h-0 flex-1 px-4 pb-24 sm:px-8">
               <StoryDialogPortraitPanel
-                src={playerPortraitUrl}
-                alt="Retrato del jugador"
+                src={bottomPortraitUrl}
+                alt={isVillainToVillain ? (isSpeakerOnBottom ? `Retrato de ${activeSpeaker}` : "Retrato del interlocutor") : "Retrato del jugador"}
                 side="LEFT"
                 terminalMode={isTerminalMode}
               />
               <StoryDialogPortraitPanel
-                src={opponentPortraitUrl}
-                alt={`Retrato de ${activeSpeaker}`}
+                src={topPortraitUrl}
+                alt={isVillainToVillain && isSpeakerOnBottom ? "Retrato del interlocutor" : `Retrato de ${activeSpeaker}`}
                 side="RIGHT"
                 terminalMode={isTerminalMode}
               />
@@ -87,7 +100,7 @@ export function StoryNodeInteractionDialog({
                 <StoryDialogSpeechBubble
                   key={`${line?.speaker ?? "system"}-${line?.text ?? "empty"}`}
                   line={line}
-                  isPlayerSpeaker={isPlayerSpeaker}
+                  isSpeakerOnBottom={isSpeakerOnBottom}
                   terminalMode={isTerminalMode}
                 />
               </AnimatePresence>
