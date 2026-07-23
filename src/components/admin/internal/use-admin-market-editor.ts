@@ -2,6 +2,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useAdminFeedback } from "@/components/admin/internal/use-admin-feedback";
 import { deleteAdminPack, fetchAdminCatalogSnapshot, saveAdminListing, saveAdminPack } from "@/components/admin/admin-catalog-api";
 import { addPoolEntry, createEmptyPackDraft, createListingCommand, createListingDraft, createPackCommand, createPackDraft, IAdminMarketListingDraft, IAdminMarketPackDraft } from "@/components/admin/internal/admin-market-drafts";
 import { resolveFirstCardId, resolveFirstPackId, toPreviewIdsText } from "@/components/admin/internal/admin-market-editor-helpers";
@@ -16,7 +17,7 @@ export function useAdminMarketEditor(initialSnapshot: IAdminCatalogSnapshot) {
   const [packDraft, setPackDraft] = useState<IAdminMarketPackDraft>(() => initialSnapshot.packs[0] ? createPackDraft(initialSnapshot.packs[0]) : createEmptyPackDraft());
   const [isPackEditMode, setIsPackEditMode] = useState(initialSnapshot.packs.length === 0);
   const [isBusy, setIsBusy] = useState(false);
-  const [feedback, setFeedback] = useState("");
+  const { feedback, clearFeedback, notifySuccess, notifyError } = useAdminFeedback();
 
   const listingByCardId = useMemo(() => new Map(snapshot.listings.map((entry) => [entry.cardId, entry])), [snapshot.listings]);
   const selectedPack = useMemo(() => snapshot.packs.find((pack) => pack.id === selectedPackId) ?? null, [selectedPackId, snapshot.packs]);
@@ -32,9 +33,9 @@ export function useAdminMarketEditor(initialSnapshot: IAdminCatalogSnapshot) {
       setSelectedPackId(nextPackId);
       setListingDraft(createListingDraft(nextCardId, next.listings.find((entry) => entry.cardId === nextCardId) ?? null));
       setPackDraft(next.packs.find((pack) => pack.id === nextPackId) ? createPackDraft(next.packs.find((pack) => pack.id === nextPackId)!) : createEmptyPackDraft());
-      setFeedback("");
+      clearFeedback();
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No se pudo refrescar market.");
+      notifyError(error, "No se pudo refrescar market.");
     } finally {
       setIsBusy(false);
     }
@@ -56,7 +57,7 @@ export function useAdminMarketEditor(initialSnapshot: IAdminCatalogSnapshot) {
     selectCard: (cardId: string) => {
       setSelectedCardId(cardId);
       setListingDraft(createListingDraft(cardId, listingByCardId.get(cardId) ?? null));
-      setFeedback("");
+      clearFeedback();
     },
     updateListingDraft: <K extends keyof IAdminMarketListingDraft>(key: K, value: IAdminMarketListingDraft[K]) => setListingDraft((current) => ({ ...current, [key]: value })),
     saveListing: async () => {
@@ -64,9 +65,9 @@ export function useAdminMarketEditor(initialSnapshot: IAdminCatalogSnapshot) {
       try {
         await saveAdminListing(createListingCommand(listingDraft));
         await refresh();
-        setFeedback("Listing guardado correctamente.");
+        notifySuccess("Listing guardado correctamente.");
       } catch (error) {
-        setFeedback(error instanceof Error ? error.message : "No se pudo guardar listing.");
+        notifyError(error, "No se pudo guardar listing.");
       } finally {
         setIsBusy(false);
       }
@@ -76,23 +77,23 @@ export function useAdminMarketEditor(initialSnapshot: IAdminCatalogSnapshot) {
       const pack = snapshot.packs.find((entry) => entry.id === packId);
       if (pack) setPackDraft(createPackDraft(pack));
       setIsPackEditMode(false);
-      setFeedback("");
+      clearFeedback();
     },
     beginCreatePack: () => {
       setPackDraft(createEmptyPackDraft());
       setIsPackEditMode(true);
-      setFeedback("");
+      clearFeedback();
     },
     beginEditPack: () => {
       if (!selectedPack) return;
       setPackDraft(createPackDraft(selectedPack));
       setIsPackEditMode(true);
-      setFeedback("");
+      clearFeedback();
     },
     cancelPackEdit: () => {
       if (selectedPack) setPackDraft(createPackDraft(selectedPack));
       setIsPackEditMode(false);
-      setFeedback("");
+      clearFeedback();
     },
     updatePackDraft: <K extends keyof IAdminMarketPackDraft>(key: K, value: IAdminMarketPackDraft[K]) => setPackDraft((current) => ({ ...current, [key]: value })),
     updatePackPoolEntry: (index: number, key: keyof IAdminMarketPackDraft["poolEntries"][number], value: string) => setPackDraft((current) => {
@@ -119,9 +120,9 @@ export function useAdminMarketEditor(initialSnapshot: IAdminCatalogSnapshot) {
         await refresh();
         setSelectedPackId(packDraft.id);
         setIsPackEditMode(false);
-        setFeedback("Pack guardado correctamente.");
+        notifySuccess("Pack guardado correctamente.");
       } catch (error) {
-        setFeedback(error instanceof Error ? error.message : "No se pudo guardar pack.");
+        notifyError(error, "No se pudo guardar pack.");
       } finally {
         setIsBusy(false);
       }
@@ -132,9 +133,9 @@ export function useAdminMarketEditor(initialSnapshot: IAdminCatalogSnapshot) {
         await deleteAdminPack(packId);
         await refresh();
         setIsPackEditMode(false);
-        setFeedback("Pack eliminado correctamente.");
+        notifySuccess("Pack eliminado correctamente.");
       } catch (error) {
-        setFeedback(error instanceof Error ? error.message : "No se pudo eliminar pack.");
+        notifyError(error, "No se pudo eliminar pack.");
       } finally {
         setIsBusy(false);
       }

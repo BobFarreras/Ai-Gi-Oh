@@ -1,6 +1,8 @@
 // src/core/services/admin/validate-admin-story-deck.ts - Validadores de integridad para edición de decks Story en panel admin.
 import { IAdminSaveStoryDeckCommand } from "@/core/entities/admin/IAdminStoryDeckCommands";
 import { ValidationError } from "@/core/errors/ValidationError";
+import { getMaxCardLevel } from "@/core/services/progression/card-level-rules";
+import { MAX_CARD_VERSION_TIER, MIN_CARD_VERSION_TIER } from "@/core/services/progression/card-version-rules";
 
 const MAX_STORY_DECK_SIZE = 60;
 const MAX_COPIES_PER_CARD = 3;
@@ -36,12 +38,21 @@ export function validateAdminSaveStoryDeckCommand(command: IAdminSaveStoryDeckCo
   if (new Set(command.duelConfig.fusionCardIds).size !== command.duelConfig.fusionCardIds.length) throw new ValidationError("No se puede repetir carta en el bloque de fusión del duelo.");
   if (command.duelConfig.rewardCardIds.some((cardId) => !cardId.trim())) throw new ValidationError("Las cartas de recompensa requieren cardId válido.");
   if (new Set(command.duelConfig.rewardCardIds).size !== command.duelConfig.rewardCardIds.length) throw new ValidationError("No se pueden duplicar cartas de recompensa en un mismo duelo.");
+  // Los topes salen de las reglas del juego (nivel máximo de carta y versión máxima), no de números sueltos:
+  // el nivel llegó a 100 hace tiempo y este validador se quedó clavado en 30, así que rechazaba escalados
+  // perfectamente válidos. Los mensajes dicen QUÉ carta y QUÉ slot fallan, que es lo que el admin necesita.
+  const maxCardLevel = getMaxCardLevel();
   for (const slot of command.duelConfig.slotOverrides) {
     if (!slot.cardId.trim()) throw new ValidationError("Cada override requiere cardId válido.");
+    const at = `Slot ${slot.slotIndex + 1} (${slot.cardId})`;
     if (slot.slotIndex < 0 || slot.slotIndex >= MAX_STORY_DECK_SIZE) throw new ValidationError("slotIndex fuera de rango.");
-    if (slot.versionTier < 0 || slot.versionTier > 5) throw new ValidationError("versionTier debe estar entre 0 y 5.");
-    if (slot.level < 0 || slot.level > 30) throw new ValidationError("level debe estar entre 0 y 30.");
-    if (slot.xp < 0) throw new ValidationError("xp no puede ser negativo.");
+    if (!Number.isInteger(slot.versionTier) || slot.versionTier < MIN_CARD_VERSION_TIER || slot.versionTier > MAX_CARD_VERSION_TIER) {
+      throw new ValidationError(`${at}: la versión debe ser un entero entre ${MIN_CARD_VERSION_TIER} y ${MAX_CARD_VERSION_TIER}.`);
+    }
+    if (!Number.isInteger(slot.level) || slot.level < 0 || slot.level > maxCardLevel) {
+      throw new ValidationError(`${at}: el nivel debe ser un entero entre 0 y ${maxCardLevel}.`);
+    }
+    if (!Number.isFinite(slot.xp) || slot.xp < 0) throw new ValidationError(`${at}: la XP no puede ser negativa.`);
   }
 }
 

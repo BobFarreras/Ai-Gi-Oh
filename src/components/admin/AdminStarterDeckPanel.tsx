@@ -1,5 +1,6 @@
 // src/components/admin/AdminStarterDeckPanel.tsx - Composición principal del editor starter deck con layout tipo Arsenal para administración.
 "use client";
+import { ADMIN_FEEDBACK_TONE_CLASS } from "@/components/admin/internal/admin-feedback-styles";
 import { DragEvent, useMemo, useState } from "react";
 import { IAdminStarterDeckApiResponse } from "@/components/admin/admin-starter-deck-api";
 import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
@@ -21,7 +22,7 @@ export function AdminStarterDeckPanel({ initialData }: IAdminStarterDeckPanelPro
   const selectedCard = (editor.selectedCollectionCardId ? cardById.get(editor.selectedCollectionCardId) ?? null : null) ?? (selectedSlotCardId ? cardById.get(selectedSlotCardId) ?? null : null);
   const filledSlots = editor.draftCardIds.filter((id) => typeof id === "string" && id.length > 0).length;
   const totalSlots = editor.draftCardIds.length;
-  const hasErrorFeedback = editor.feedback.toLowerCase().includes("no se pudo") || editor.feedback.toLowerCase().includes("debes ");
+  const feedbackTone = editor.feedback.tone;
 
   function onDropOnSlot(slotIndex: number, event: DragEvent<HTMLElement>): void {
     if (!editor.isEditMode) return;
@@ -160,9 +161,9 @@ export function AdminStarterDeckPanel({ initialData }: IAdminStarterDeckPanelPro
           </div>
         </div>
 
-        {editor.feedback ? (
-          <p className={`relative mt-2 rounded-lg border px-3 py-1.5 text-[11px] font-semibold ${hasErrorFeedback ? "border-rose-500/60 bg-rose-950/30 text-rose-200" : "border-emerald-500/60 bg-emerald-950/30 text-emerald-200"}`}>
-            {editor.feedback}
+        {editor.feedback.message ? (
+          <p className={`relative mt-2 rounded-lg border px-3 py-1.5 text-[11px] font-semibold ${ADMIN_FEEDBACK_TONE_CLASS[feedbackTone]}`}>
+            {editor.feedback.message}
           </p>
         ) : null}
       </div>

@@ -2,6 +2,8 @@
 import { describe, expect, it } from "vitest";
 import { IAdminSaveStoryDeckCommand } from "@/core/entities/admin/IAdminStoryDeckCommands";
 import { validateAdminSaveStoryDeckCommand } from "@/core/services/admin/validate-admin-story-deck";
+import { getMaxCardLevel } from "@/core/services/progression/card-level-rules";
+import { MAX_CARD_VERSION_TIER } from "@/core/services/progression/card-version-rules";
 
 function buildCommand(partial?: Partial<IAdminSaveStoryDeckCommand>): IAdminSaveStoryDeckCommand {
   return {
@@ -21,6 +23,37 @@ function buildCommand(partial?: Partial<IAdminSaveStoryDeckCommand>): IAdminSave
 }
 
 describe("validateAdminSaveStoryDeckCommand", () => {
+  it("acepta niveles hasta el máximo REAL de carta del juego (el tope viejo de 30 bloqueaba escalados válidos)", () => {
+    const maxLevel = getMaxCardLevel();
+    const atCap = buildCommand({
+      duelConfig: {
+        ...buildCommand().duelConfig!,
+        slotOverrides: [{ slotIndex: 0, cardId: "entity-chatgpt", versionTier: MAX_CARD_VERSION_TIER, level: maxLevel, xp: 0, attackOverride: null, defenseOverride: null }],
+      },
+    });
+    expect(() => validateAdminSaveStoryDeckCommand(atCap)).not.toThrow();
+  });
+
+  it("rechaza niveles por encima del máximo diciendo QUÉ slot y QUÉ carta fallan", () => {
+    const overCap = buildCommand({
+      duelConfig: {
+        ...buildCommand().duelConfig!,
+        slotOverrides: [{ slotIndex: 3, cardId: "entity-chatgpt", versionTier: 0, level: getMaxCardLevel() + 1, xp: 0, attackOverride: null, defenseOverride: null }],
+      },
+    });
+    expect(() => validateAdminSaveStoryDeckCommand(overCap)).toThrow(/Slot 4 \(entity-chatgpt\)/);
+  });
+
+  it("rechaza nivel o versión no enteros", () => {
+    const fractionalLevel = buildCommand({
+      duelConfig: {
+        ...buildCommand().duelConfig!,
+        slotOverrides: [{ slotIndex: 0, cardId: "entity-chatgpt", versionTier: 0, level: 12.5, xp: 0, attackOverride: null, defenseOverride: null }],
+      },
+    });
+    expect(() => validateAdminSaveStoryDeckCommand(fractionalLevel)).toThrow(/entero/);
+  });
+
   it("acepta configuración de duelo con 2 cartas de fusión y recompensa opcional", () => {
     expect(() => validateAdminSaveStoryDeckCommand(buildCommand())).not.toThrow();
   });

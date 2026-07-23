@@ -1,5 +1,7 @@
 // src/components/admin/internal/admin-story-deck-editor-state.ts - Utilidades puras de transformación de draft para editor Story Deck admin.
 import { IStorySlotLevelDraft } from "@/components/admin/internal/admin-story-duel-draft";
+import { getMaxCardLevel } from "@/core/services/progression/card-level-rules";
+import { MAX_CARD_VERSION_TIER, MIN_CARD_VERSION_TIER } from "@/core/services/progression/card-version-rules";
 
 export function applySlotLevelToSameCards(
   levels: IStorySlotLevelDraft[],
@@ -19,6 +21,11 @@ export function applySlotLevelToSameCards(
   return next;
 }
 
+/**
+ * Edición masiva del escalado. Los topes salen de las reglas del juego: estaban clavados a 30 (el nivel máximo
+ * de hace dos versiones), así que "Aplicar todas" recortaba en silencio cualquier nivel por encima de 30 y
+ * parecía que no se guardaba lo que habías puesto.
+ */
 export function applyMassLevels(
   levels: IStorySlotLevelDraft[],
   draftCardIds: Array<string | null>,
@@ -27,8 +34,8 @@ export function applyMassLevels(
   return levels.map((row, slotIndex) => {
     if (!draftCardIds[slotIndex]) return row;
     return {
-      versionTier: Math.max(0, Math.min(5, Math.trunc(input.versionTier))),
-      level: Math.max(0, Math.min(30, Math.trunc(input.level))),
+      versionTier: Math.max(MIN_CARD_VERSION_TIER, Math.min(MAX_CARD_VERSION_TIER, Math.trunc(input.versionTier))),
+      level: Math.max(0, Math.min(getMaxCardLevel(), Math.trunc(input.level))),
       xp: Math.max(0, Math.trunc(input.xp)),
       // Los objetos equipados (override de stats) no los toca el escalado masivo.
       attackOverride: row?.attackOverride ?? null,

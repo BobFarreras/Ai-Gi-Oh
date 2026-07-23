@@ -18,7 +18,7 @@ interface IExecuteAdminStoryDeckLoadInput {
   setIsBaseDeckMode: (value: boolean) => void;
   setSelectedSlotIndex: (value: number | null) => void;
   setSelectedCollectionCardId: (value: string | null) => void;
-  setFeedback: (value: string) => void;
+  clearFeedback: () => void;
 }
 
 /**
@@ -41,5 +41,5 @@ export async function executeAdminStoryDeckLoad(input: IExecuteAdminStoryDeckLoa
   input.setIsBaseDeckMode(snapshot.isBaseDeckMode);
   input.setSelectedSlotIndex(0);
   input.setSelectedCollectionCardId(null);
-  input.setFeedback("");
+  input.clearFeedback();
 }

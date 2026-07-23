@@ -1,5 +1,6 @@
 // src/components/admin/internal/admin-story-deck-editor-types.ts - Tipos públicos del hook de edición Story Deck en panel admin.
 import { IAdminStoryDeckApiResponse } from "@/components/admin/admin-story-deck-api";
+import { IAdminFeedback } from "@/components/admin/internal/use-admin-feedback";
 import { IStorySlotLevelDraft } from "@/components/admin/internal/admin-story-duel-draft";
 import { StoryAiStyle } from "@/core/services/opponent/difficulty/story-ai-profile";
 import { StoryOpponentDifficulty } from "@/core/entities/opponent/IStoryDuelDefinition";
@@ -39,8 +40,9 @@ export interface IUseAdminStoryDeckEditorResult {
   isBaseDeckMode: boolean;
   setIsBaseDeckMode: (value: boolean) => void;
   isBusy: boolean;
-  feedback: string;
-  setFeedbackMessage: (message: string) => void;
+  feedback: IAdminFeedback;
+  /** Emite un aviso de ERROR en el panel (p. ej. un slot que no admite esa carta). */
+  setFeedbackMessage: (error: unknown, fallback: string) => void;
   canSave: boolean;
   onSelectOpponent: (opponentId: string) => Promise<void>;
   onSelectDuelReference: (duelId: string) => Promise<void>;

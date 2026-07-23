@@ -22,14 +22,18 @@ export function CollapsibleSection({ title, accent, defaultOpen = false, childre
 }
 
 /** Contador de objetos por stat: valor actual (+N) con botones - / + que quitan/añaden un objeto (su valor). */
-export function BonusStepper({ label, colorClass, value, step, disabled, onAdd, onRemove }: { label: string; colorClass: string; value: number; step: number; disabled: boolean; onAdd: () => void; onRemove: () => void }) {
+/**
+ * `allowNegative`: en los rivales (Story) el atributo puede quedar POR DEBAJO de su base para hacer la carta
+ * más blanda, así que el botón de restar no se bloquea en 0 y el signo se pinta según el valor.
+ */
+export function BonusStepper({ label, colorClass, value, step, disabled, allowNegative = false, onAdd, onRemove }: { label: string; colorClass: string; value: number; step: number; disabled: boolean; allowNegative?: boolean; onAdd: () => void; onRemove: () => void }) {
   const btn = "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-fuchsia-800/50 bg-[#0a0716] text-sm font-black text-fuchsia-200 transition hover:bg-fuchsia-950/50 disabled:opacity-40";
   return (
     <div className="rounded-lg border border-fuchsia-900/40 bg-[#0a0716]/70 p-2">
       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
       <div className="mt-1 flex items-center justify-between gap-1">
-        <button type="button" aria-label={`Quitar objeto de ${label.toLowerCase()}`} className={btn} disabled={disabled || value <= 0} onClick={onRemove}>−</button>
-        <span className={`font-mono text-sm font-black ${colorClass}`}>+{value}</span>
+        <button type="button" aria-label={`Quitar objeto de ${label.toLowerCase()}`} className={btn} disabled={disabled || (!allowNegative && value <= 0)} onClick={onRemove}>−</button>
+        <span className={`font-mono text-sm font-black ${colorClass}`}>{value < 0 ? "−" : "+"}{Math.abs(value)}</span>
         <button type="button" aria-label={`Añadir objeto de ${label.toLowerCase()}`} className={btn} disabled={disabled} onClick={onAdd}>+</button>
       </div>
       <p className="mt-0.5 text-center text-[9px] text-slate-500">+{step} por objeto</p>
