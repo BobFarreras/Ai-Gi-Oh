@@ -6,8 +6,22 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.19.0] - 2026-07-23
+
+### Added
+- **Acto 4 — Núcleo GenNvim (completo y jugable)**: el mainframe verde terminal, con **siete laberintos reales** encadenados (generados con un backtracker determinista), cintas transportadoras que van en contra hasta accionar su palanca, aumentos de ATK/DEF y objetos escondidos en callejones sin salida. Termina con Midutech, jefe final del acto, y la **llave del Core**.
+- **Vídeo de intro del Acto 4**: se reproduce al primer paso con el mismo overlay de terminal (se abre y se pliega) que las intros de los Actos 1 y 2, y con **pista de música propia**.
+- **Emboscadas guionizadas**: dos escenas nuevas en las que el rival no está plantado en el mapa, sino que aparece. En el pasillo de la carta **Hydra**, GenNvim te corta la retirada por detrás —se **materializa** en escritorio (donde se ve media sala) y **entra andando desde fuera de cámara** en móvil—; y en la **Fábrica de Cartas**, GenNvim y Midutech hablan ante una máquina que forja la carta suprema, Midutech se la lleva y GenNvim te pilla mirando.
+- **Portal al Acto 5**: aparece tras vencer a Midutech y avisa de que el Core todavía está en construcción.
+- **Cartas y recompensas del acto**: **Antigrabity** y **Hydra: Fuerza Bruta** escondidas en sendos laberintos, más USB Raro y los aumentos de ataque/defensa.
+
 ### Changed
+- **Diálogos entre personajes que no incluyen al jugador**: en una conversación entre dos villanos ya no se cuela el avatar del Operador en el hueco de abajo; cada personaje mantiene su posición fija y solo cambia de quién sale el bocadillo.
 - **Chat estilo WhatsApp**: el campo de escritura (chat general y DM) pasa de `<input>` de una línea a un `<textarea>` multilínea con auto-crecimiento y scrollbar del juego. Enter envía (escritorio) y Shift+Enter / Enter en táctil hace salto de línea; los saltos se respetan al mostrar el mensaje. El límite de longitud sube de 500 a **4000** caracteres (migración **142** relaja el `CHECK` de `chat_messages` y `dm_messages`; aplicar ANTES o a la vez que el deploy del código).
+
+### Internal
+- Motor del overworld: pasos de cutscene `PLAYER_FACE` / `NPC_FACE`, varios NPCs por escena (`npcId`), aparición y desaparición con efecto de **teletransporte**, y atrezzo que se retira al arrancar una escena. Nuevo helper `traceWalkableCorridor` para colocar triggers "a N casillas de X" y trazar recorridos de NPC sin atravesar muros (nada de coordenadas a mano).
+- Migraciones **145**, **146** y **147** (oponentes, mazos y los diez duelos del capítulo 4). Ya aplicadas en producción.
 
 ## [1.18.2] - 2026-07-21
 
@@ -384,7 +398,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.2...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.0...HEAD
+[1.19.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.2...v1.19.0
 [1.18.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.1...v1.18.2
 [1.18.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.0...v1.18.1
 [1.18.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.17.0...v1.18.0

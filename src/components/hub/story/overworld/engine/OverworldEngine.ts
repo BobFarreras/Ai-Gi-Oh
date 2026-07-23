@@ -31,9 +31,11 @@ import {
   buildCollisionGridFromTilemap,
   listGatesFromTilemap,
 } from "@/services/story/overworld/tilemap-runtime";
-import { resolveBeltDirection } from "@/services/story/overworld/overworld-tile-kinds";
+import { invertBeltKind, resolveBeltDirection } from "@/services/story/overworld/overworld-tile-kinds";
 import { resolveCameraOffset } from "@/components/hub/story/overworld/engine/camera-math";
 import {
+  CUTSCENE_TELEPORT_SECONDS,
+  DEFAULT_CUTSCENE_NPC_ID,
   DEFAULT_ENGINE_CONFIG,
   FIXED_TIMESTEP_MS,
   IEngineWorldState,
@@ -75,6 +77,11 @@ interface IOverworldEngineInit {
   config?: Partial<IOverworldEngineConfig>;
 }
 
+/** Clave de un rect de cinta conmutable: el estado (invertida o no) vive por rect, no por interruptor. */
+function toBeltRectKey(rect: { x0: number; y0: number; x1: number; y1: number }): string {
+  return `${rect.x0},${rect.y0},${rect.x1},${rect.y1}`;
+}
+
 /**
  * Motor del overworld. Vive fuera del ciclo de render de React: React lo monta,
  * le envía entrada externa (móvil) y escucha hooks; el motor no toca DOM de React ni la BD.
@@ -93,6 +100,19 @@ export class OverworldEngine {
   private progress: IOverworldProgressState;
   private readonly switchLightSources: ISwitchLightSource[];
   private activeLights: IOverworldLight[] = [];
+  // Interruptores que INVIERTEN cintas: cada uno controla un rect de casillas-cinta y manda UNA posición
+  // (`INVERT` = al revés del sentido base, `RESTORE` = sentido base). El estado vive por RECT, no por
+  // interruptor: `invertedBeltRectKeys` dice qué cintas están dadas la vuelta ahora mismo. Así dos
+  // interruptores en extremos opuestos del puente son las dos posiciones de UNA palanca: exactamente uno
+  // "encendido" en todo momento, y volver a pulsar el que ya manda no hace nada (no se puede desincronizar).
+  // No persiste: al recargar vuelve al sentido base (siempre hay un interruptor alcanzable → sin soft-lock).
+  private readonly beltToggleControllers: Array<{
+    id: string;
+    rect: { x0: number; y0: number; x1: number; y1: number };
+    invertsBelt: boolean;
+  }>;
+  private readonly baseBeltKinds: Map<string, number> = new Map();
+  private readonly invertedBeltRectKeys = new Set<string>();
   // Cajas empujables (sokoban): posición lógica viva + celdas que bloquean + animación de deslizado.
   private boxPositions = new Map<string, IGridPosition>();
   private boxHomePositions = new Map<string, IGridPosition>();
@@ -133,14 +153,21 @@ export class OverworldEngine {
   private isCutsceneStepStarted = false;
   private cutsceneWaitSeconds = 0;
   private isCutsceneAwaitingResume = false;
-  private cutsceneNpc: {
-    tile: IGridPosition;
-    facing: OverworldDirection;
-    spriteSrc: string;
-    activeMove: { from: IGridPosition; to: IGridPosition; progress: number } | null;
-    walkPath: IGridPosition[];
-    walkIndex: number;
-  } | null = null;
+  // Varios NPCs a la vez (p. ej. GenNvim + Midutech en la Fábrica de Cartas). Los pasos sin `npcId` usan
+  // DEFAULT_CUTSCENE_NPC_ID, así que las escenas de un solo actor no cambian.
+  private cutsceneNpcs = new Map<
+    string,
+    {
+      tile: IGridPosition;
+      facing: OverworldDirection;
+      spriteSrc: string;
+      activeMove: { from: IGridPosition; to: IGridPosition; progress: number } | null;
+      walkPath: IGridPosition[];
+      walkIndex: number;
+      /** Materialización en curso (efecto TELEPORT): 0..1; 1 = ya sólido. */
+      spawnProgress: number;
+    }
+  >();
 
   private heldDirection: OverworldDirection | null = null;
   private externalDirection: OverworldDirection | null = null;
@@ -227,6 +254,13 @@ export class OverworldEngine {
     this.actors = new OpponentActorManager(init.tilemap.objects, this.config.tilesPerSecond);
     this.switchLightSources = this.buildSwitchLightSources(init.tilemap.objects);
     this.recomputeLights();
+    this.beltToggleControllers = init.tilemap.objects
+      .filter((object) => (object.kind === "SWITCH" || object.kind === "PLATE") && object.beltToggleRect)
+      .map((object) => ({
+        id: object.id,
+        rect: object.beltToggleRect!,
+        invertsBelt: object.beltToggleMode !== "RESTORE",
+      }));
     this.initBoxesAndPlates(init.tilemap.objects);
 
     const spawn =
@@ -261,6 +295,10 @@ export class OverworldEngine {
         activeMove: null,
       },
     };
+    // Belt-toggle: snapshot del sentido base + aplicar estado inicial. DESPUÉS de asignar this.world (ambos
+    // métodos mutan/leen this.world.tilemap.layers.ground). El sentido de cinta no afecta al movementContext.
+    this.snapshotBaseBeltKinds();
+    this.applyBeltToggles();
     this.recomputeBlockedObjects();
   }
 
@@ -270,6 +308,7 @@ export class OverworldEngine {
     this.rebuildMovementContext();
     this.recomputeBlockedObjects();
     this.recomputeLights();
+    this.applyBeltToggles();
   }
 
   /** Construye las fuentes de luz de los interruptores del mapa (radio o sala). */
@@ -299,6 +338,67 @@ export class OverworldEngine {
   /** Recalcula las luces encendidas (interruptores ya accionados) tras un cambio de progreso. */
   private recomputeLights(): void {
     this.activeLights = resolveActiveLights(this.switchLightSources, this.progress.interactedNodeIds);
+  }
+
+  /** Guarda el sentido ORIGINAL de las casillas-cinta controladas por interruptores (para invertir/restaurar). */
+  private snapshotBaseBeltKinds(): void {
+    const ground = this.world.tilemap.layers.ground;
+    for (const controller of this.beltToggleControllers) {
+      for (let tileY = controller.rect.y0; tileY <= controller.rect.y1; tileY++) {
+        for (let tileX = controller.rect.x0; tileX <= controller.rect.x1; tileX++) {
+          if (resolveBeltDirection(ground[tileY]?.[tileX]) === null) continue;
+          this.baseBeltKinds.set(`${tileX},${tileY}`, ground[tileY][tileX]);
+        }
+      }
+    }
+  }
+
+  /**
+   * Aplica el estado de las cintas conmutables: una casilla se INVIERTE respecto a su sentido base si el rect
+   * que la cubre está marcado como invertido. Muta la capa ground, así que movimiento y render leen el sentido
+   * vigente sin fontanería extra.
+   */
+  private applyBeltToggles(): void {
+    if (this.baseBeltKinds.size === 0) return;
+    const ground = this.world.tilemap.layers.ground;
+    for (const [key, baseKind] of this.baseBeltKinds) {
+      const [tileX, tileY] = key.split(",").map(Number);
+      const isInverted = this.beltToggleControllers.some(
+        (controller) =>
+          this.invertedBeltRectKeys.has(toBeltRectKey(controller.rect)) &&
+          tileX >= controller.rect.x0 && tileX <= controller.rect.x1 && tileY >= controller.rect.y0 && tileY <= controller.rect.y1,
+      );
+      ground[tileY][tileX] = isInverted ? invertBeltKind(baseKind) : baseKind;
+    }
+  }
+
+  /**
+   * Acciona un interruptor de cinta. Cada interruptor manda UNA posición de su pasarela (invertida o base), así
+   * que pulsar el que ya está al mando no hace nada y los dos extremos del puente nunca se desincronizan.
+   * Devuelve `true` si el sentido de la cinta ha cambiado. No persiste (estado de runtime).
+   */
+  toggleBelt(controllerId: string): boolean {
+    const controller = this.beltToggleControllers.find((entry) => entry.id === controllerId);
+    if (!controller) return false;
+    const rectKey = toBeltRectKey(controller.rect);
+    if (this.invertedBeltRectKeys.has(rectKey) === controller.invertsBelt) return false;
+    if (controller.invertsBelt) this.invertedBeltRectKeys.add(rectKey);
+    else this.invertedBeltRectKeys.delete(rectKey);
+    this.applyBeltToggles();
+    return true;
+  }
+
+  /**
+   * Interruptores de cinta ENCENDIDOS: los que mandan el estado actual de su pasarela. Con dos interruptores
+   * opuestos sobre el mismo puente, siempre hay exactamente uno encendido (el otro se dibuja apagado).
+   */
+  private resolveActiveBeltSwitchIds(): Set<string> {
+    const activeIds = new Set<string>();
+    for (const controller of this.beltToggleControllers) {
+      const isInverted = this.invertedBeltRectKeys.has(toBeltRectKey(controller.rect));
+      if (isInverted === controller.invertsBelt) activeIds.add(controller.id);
+    }
+    return activeIds;
   }
 
   private rebuildMovementContext(): void {
@@ -537,7 +637,7 @@ export class OverworldEngine {
     this.isCutsceneActive = true;
     this.isCutsceneStepStarted = false;
     this.isCutsceneAwaitingResume = false;
-    this.cutsceneNpc = null;
+    this.cutsceneNpcs.clear();
     this.focusedObjectId = null;
     this.hooks.onFocusChanged?.(null);
   }
@@ -713,7 +813,7 @@ export class OverworldEngine {
     this.cutsceneWaitSeconds = 0;
     if (this.cutsceneIndex >= this.cutsceneSteps.length) {
       this.isCutsceneActive = false;
-      this.cutsceneNpc = null;
+      this.cutsceneNpcs.clear();
       this.hooks.onCutsceneEnd?.();
     }
   }
@@ -721,7 +821,11 @@ export class OverworldEngine {
   private advanceCutscene(deltaSeconds: number): void {
     const step = this.cutsceneSteps[this.cutsceneIndex];
     if (!step) {
+      // Cutscene vacía (guion que no se pudo construir): se cierra igual devolviendo el control por el
+      // hook, o la escena se quedaría con la interacción suspendida para siempre.
       this.isCutsceneActive = false;
+      this.cutsceneNpcs.clear();
+      this.hooks.onCutsceneEnd?.();
       return;
     }
     switch (step.kind) {
@@ -736,21 +840,43 @@ export class OverworldEngine {
       case "PLAYER_STEP":
         this.advanceCutscenePlayerStep(step.direction, deltaSeconds);
         break;
-      case "SPAWN_NPC":
-        this.sprites.load(step.spriteSrc);
-        this.cutsceneNpc = {
-          tile: { tileX: step.tileX, tileY: step.tileY },
-          facing: step.facing,
-          spriteSrc: step.spriteSrc,
-          activeMove: null,
-          walkPath: [],
-          walkIndex: 0,
-        };
+      case "PLAYER_FACE":
+        this.world.player.facing = step.direction;
         this.goToNextCutsceneStep();
         break;
-      case "NPC_WALK_TO":
-        this.advanceCutsceneNpcWalk(step.tileX, step.tileY, deltaSeconds);
+      case "SPAWN_NPC": {
+        const npcId = step.npcId ?? DEFAULT_CUTSCENE_NPC_ID;
+        if (!this.isCutsceneStepStarted) {
+          this.isCutsceneStepStarted = true;
+          this.sprites.load(step.spriteSrc);
+          this.cutsceneNpcs.set(npcId, {
+            tile: { tileX: step.tileX, tileY: step.tileY },
+            facing: step.facing,
+            spriteSrc: step.spriteSrc,
+            activeMove: null,
+            walkPath: [],
+            walkIndex: 0,
+            spawnProgress: step.effect === "TELEPORT" ? 0 : 1,
+          });
+        }
+        // Con efecto TELEPORT el paso dura lo que la materialización; sin él, se pasa al siguiente ya.
+        const spawned = this.cutsceneNpcs.get(npcId);
+        if (spawned && spawned.spawnProgress < 1) {
+          spawned.spawnProgress = Math.min(1, spawned.spawnProgress + deltaSeconds / CUTSCENE_TELEPORT_SECONDS);
+          if (spawned.spawnProgress < 1) break;
+        }
+        this.goToNextCutsceneStep();
         break;
+      }
+      case "NPC_WALK_TO":
+        this.advanceCutsceneNpcWalk(step.npcId ?? DEFAULT_CUTSCENE_NPC_ID, step.tileX, step.tileY, deltaSeconds);
+        break;
+      case "NPC_FACE": {
+        const npc = this.cutsceneNpcs.get(step.npcId ?? DEFAULT_CUTSCENE_NPC_ID);
+        if (npc) npc.facing = step.direction;
+        this.goToNextCutsceneStep();
+        break;
+      }
       case "EVENT":
         if (!this.isCutsceneStepStarted) {
           this.isCutsceneStepStarted = true;
@@ -758,10 +884,18 @@ export class OverworldEngine {
           this.hooks.onCutsceneEvent?.(step.nodeId);
         }
         break;
-      case "DESPAWN_NPC":
-        this.cutsceneNpc = null;
+      case "DESPAWN_NPC": {
+        const leaving = step.npcId ? this.cutsceneNpcs.get(step.npcId) : null;
+        // Con efecto TELEPORT el NPC se DESmaterializa (spawnProgress 1 → 0) antes de desaparecer.
+        if (step.effect === "TELEPORT" && leaving) {
+          leaving.spawnProgress = Math.max(0, leaving.spawnProgress - deltaSeconds / CUTSCENE_TELEPORT_SECONDS);
+          if (leaving.spawnProgress > 0) break;
+        }
+        if (step.npcId) this.cutsceneNpcs.delete(step.npcId);
+        else this.cutsceneNpcs.clear();
         this.goToNextCutsceneStep();
         break;
+      }
     }
   }
 
@@ -787,8 +921,8 @@ export class OverworldEngine {
     }
   }
 
-  private advanceCutsceneNpcWalk(targetX: number, targetY: number, deltaSeconds: number): void {
-    const npc = this.cutsceneNpc;
+  private advanceCutsceneNpcWalk(npcId: string, targetX: number, targetY: number, deltaSeconds: number): void {
+    const npc = this.cutsceneNpcs.get(npcId);
     if (!npc) {
       this.goToNextCutsceneStep();
       return;
@@ -837,22 +971,29 @@ export class OverworldEngine {
     return "UP";
   }
 
-  private resolveCutsceneNpcRender(tileSize: number): IOverworldCutsceneNpcRender | null {
-    const npc = this.cutsceneNpc;
-    if (!npc) return null;
-    const pixel = npc.activeMove
-      ? {
-          x:
-            (npc.activeMove.from.tileX +
-              (npc.activeMove.to.tileX - npc.activeMove.from.tileX) * npc.activeMove.progress) *
-            tileSize,
-          y:
-            (npc.activeMove.from.tileY +
-              (npc.activeMove.to.tileY - npc.activeMove.from.tileY) * npc.activeMove.progress) *
-            tileSize,
-        }
-      : { x: npc.tile.tileX * tileSize, y: npc.tile.tileY * tileSize };
-    return { pixelX: pixel.x, pixelY: pixel.y, facing: npc.facing, spriteSrc: npc.spriteSrc };
+  private resolveCutsceneNpcRenders(tileSize: number): IOverworldCutsceneNpcRender[] {
+    return [...this.cutsceneNpcs.entries()].map(([npcId, npc]) => {
+      const pixel = npc.activeMove
+        ? {
+            x:
+              (npc.activeMove.from.tileX +
+                (npc.activeMove.to.tileX - npc.activeMove.from.tileX) * npc.activeMove.progress) *
+              tileSize,
+            y:
+              (npc.activeMove.from.tileY +
+                (npc.activeMove.to.tileY - npc.activeMove.from.tileY) * npc.activeMove.progress) *
+              tileSize,
+          }
+        : { x: npc.tile.tileX * tileSize, y: npc.tile.tileY * tileSize };
+      return {
+        npcId,
+        pixelX: pixel.x,
+        pixelY: pixel.y,
+        facing: npc.facing,
+        spriteSrc: npc.spriteSrc,
+        spawnProgress: npc.spawnProgress,
+      };
+    });
   }
 
   private readonly handleKeyDown = (event: KeyboardEvent): void => {
@@ -1193,7 +1334,8 @@ export class OverworldEngine {
       focusedObjectId: this.focusedObjectId,
       blockedObjectIds: this.blockedObjectIds,
       opponentActors: this.actors.getRenderData(tilemap.tileSize, this.isOpponentDefeated),
-      cutsceneNpc: this.resolveCutsceneNpcRender(tilemap.tileSize),
+      cutsceneNpcs: this.resolveCutsceneNpcRenders(tilemap.tileSize),
+      activeBeltSwitchIds: this.resolveActiveBeltSwitchIds(),
       collectedObjectIds: this.collectedObjectIds,
       collectEffect: this.resolveCollectEffectRender(tilemap.tileSize),
       activeLights: this.activeLights,

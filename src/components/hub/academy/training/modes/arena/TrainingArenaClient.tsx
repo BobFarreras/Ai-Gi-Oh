@@ -37,6 +37,9 @@ interface ITrainingArenaClientProps {
   playerMaxEnergyBonus?: number;
   playerTurn1EnergyBonus?: number;
   playerOpeningMulligan?: boolean;
+  opponentStartingLpBonus?: number;
+  opponentMaxEnergyBonus?: number;
+  opponentTurn1EnergyBonus?: number;
   tiers: Array<{
     tier: number;
     code: string;
@@ -164,6 +167,9 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
             playerStartingLpBonus: props.playerStartingLpBonus,
             playerMaxEnergyBonus: props.playerMaxEnergyBonus,
             playerTurn1EnergyBonus: props.playerTurn1EnergyBonus,
+            opponentStartingLpBonus: props.opponentStartingLpBonus,
+            opponentMaxEnergyBonus: props.opponentMaxEnergyBonus,
+            opponentTurn1EnergyBonus: props.opponentTurn1EnergyBonus,
           }}
           playerAvatarUrl="/assets/story/player/bob.webp"
           opponentAvatarUrl={props.opponentAvatarUrl}

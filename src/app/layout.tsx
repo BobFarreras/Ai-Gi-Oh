@@ -149,7 +149,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    // suppressHydrationWarning: algunas extensiones del navegador inyectan atributos en <html>/<body>
+    // (p.ej. bis_register, __processed_*) antes de que React hidrate, provocando un falso mismatch. Solo
+    // silencia el aviso de estos dos elementos raíz, no de sus hijos.
+    <html lang="es" suppressHydrationWarning>
       <head>
         {/* Structured data para SEO (rich results de Google) y GEO (motores de IA). */}
         <script
@@ -160,6 +163,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} ${chakraPetch.variable} antialiased`}
+        suppressHydrationWarning
       >
         {children}
         <AnalyticsInitializer />

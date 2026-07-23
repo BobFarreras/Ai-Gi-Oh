@@ -167,9 +167,9 @@ export const TRAINING_OPPONENT_DECK_POOLS: Record<string, ITrainingOpponentDeckV
       fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
     },
   ],
-  "training-mouretech": [
+  "training-midutech": [
     {
-      id: "mouretech-offense",
+      id: "midutech-offense",
       deckCardIds: toDeck([
         "entity-chatgpt", "entity-gemini", "entity-claude", "entity-kali-linux", "entity-deepseek",
         "entity-python", "entity-postgress", "entity-nextjs", "entity-react", "entity-vercel",
@@ -180,7 +180,7 @@ export const TRAINING_OPPONENT_DECK_POOLS: Record<string, ITrainingOpponentDeckV
       fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
     },
     {
-      id: "mouretech-control",
+      id: "midutech-control",
       deckCardIds: toDeck([
         "entity-chatgpt", "entity-gemini", "entity-claude", "entity-kali-linux", "entity-deepseek",
         "entity-python", "entity-postgress", "entity-nextjs", "entity-react", "entity-supabase",

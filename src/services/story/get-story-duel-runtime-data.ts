@@ -6,6 +6,7 @@ import { StoryOpponentDifficulty } from "@/core/entities/opponent/IStoryDuelDefi
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { getPlayerBoardLoadout } from "@/services/game/get-player-board-deck";
 import { getPlayerCombatModifiers } from "@/services/progression/get-player-combat-modifiers";
+import { getOpponentCombatModifiers } from "@/services/progression/get-opponent-combat-modifiers";
 import { createSupabaseOpponentRepository } from "@/infrastructure/persistence/supabase/create-supabase-opponent-repository";
 import { createSupabasePlayerStoryDuelProgressRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-story-duel-progress-repository";
 import { createSupabasePlayerStoryWorldRepository } from "@/infrastructure/persistence/supabase/create-supabase-player-story-world-repository";
@@ -37,6 +38,10 @@ export interface IStoryDuelRuntimeData {
   playerMaxEnergyBonus: number;
   playerTurn1EnergyBonus: number;
   playerOpeningMulligan: boolean;
+  /** Habilidades de combate asignadas al OPONENTE desde el admin (LP/energía). */
+  opponentStartingLpBonus: number;
+  opponentMaxEnergyBonus: number;
+  opponentTurn1EnergyBonus: number;
 }
 
 function applyStoryDeckEntryToCard(
@@ -78,10 +83,13 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
   const duel = await opponentRepository.getStoryDuel(chapter, duelIndex);
   if (!duel) return null;
   const worldStateUseCase = new GetStoryWorldStateUseCase(opponentRepository, storyProgressRepository);
-  const [worldState, currentNodeId, supabase] = await Promise.all([
+  const [worldState, currentNodeId, supabase, opponentCombatModifiers] = await Promise.all([
     worldStateUseCase.execute({ playerId: session.user.id }),
     storyWorldRepository.getCurrentNodeIdByPlayerId(session.user.id).catch(() => null),
     createSupabaseServerClient(),
+    // Habilidades de combate POR DUELO: la clave es el id del duelo (no el del oponente), así un mismo rival
+    // puede tener habilidades distintas en cada uno de sus combates del acto (escalado).
+    getOpponentCombatModifiers(duel.id, "story"),
   ]);
   const isUnlocked = worldState.progress.unlockedNodeIds.includes(duel.id);
   const isCurrentNode = currentNodeId === duel.id;
@@ -124,5 +132,8 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
     playerMaxEnergyBonus: combatModifiers.maxEnergyBonus,
     playerTurn1EnergyBonus: combatModifiers.turn1EnergyBonus,
     playerOpeningMulligan: combatModifiers.openingMulligan,
+    opponentStartingLpBonus: opponentCombatModifiers.startingLpBonus,
+    opponentMaxEnergyBonus: opponentCombatModifiers.maxEnergyBonus,
+    opponentTurn1EnergyBonus: opponentCombatModifiers.turn1EnergyBonus,
   };
 }

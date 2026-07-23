@@ -30,8 +30,10 @@ export interface IRenderOptions {
   blockedObjectIds: ReadonlySet<string>;
   /** Oponentes como entidades dinámicas (posición en vivo, haz de visión). */
   opponentActors: ReadonlyArray<IOpponentActorRenderData>;
-  /** NPC de cutscene (p. ej. BigLog en la intro), o null. */
-  cutsceneNpc: IOverworldCutsceneNpcRender | null;
+  /** NPCs de cutscene (p. ej. BigLog en la intro, o GenNvim + Midutech en la Fábrica de Cartas). */
+  cutsceneNpcs: IOverworldCutsceneNpcRender[];
+  /** Interruptores de cinta ENCENDIDOS (los que mandan el estado actual de su pasarela). */
+  activeBeltSwitchIds: ReadonlySet<string>;
   /** Objetos ya recogidos: no se dibujan. */
   collectedObjectIds: ReadonlySet<string>;
   /** Efecto de recolección en curso (objeto encogiéndose + valor flotante). */
@@ -88,10 +90,40 @@ const OBJECT_ACCENT: Record<OverworldObjectKind, string> = {
 /** Radio (en celdas) de la luz que acompaña al jugador en mapas DARK. */
 const DARK_PLAYER_LIGHT_TILES = 2.7;
 
-const BACKGROUND = "#05070f";
-const GRID_LINE = "rgba(56, 189, 248, 0.07)";
-const LANE_CORE = "#0e2a3d";
-const LANE_GLOW = "rgba(34, 211, 238, 0.55)";
+/** Paleta del mundo por ambiente. El default es cian; TERMINAL (Acto 4) lo tiñe de verde fósforo. */
+interface IAmbientPalette {
+  background: string;
+  gridLine: string;
+  laneCore: string;
+  laneGlow: string;
+  /** Componentes "r, g, b" de la vena animada del circuito (alpha dinámico aparte). */
+  veinRgb: string;
+  /** Tinte de pantalla completa al final del frame (null = sin tinte). */
+  tint: string | null;
+}
+
+const DEFAULT_PALETTE: IAmbientPalette = {
+  background: "#05070f",
+  gridLine: "rgba(56, 189, 248, 0.07)",
+  laneCore: "#0e2a3d",
+  laneGlow: "rgba(34, 211, 238, 0.55)",
+  veinRgb: "34, 211, 238",
+  tint: null,
+};
+
+/** Verde terminal ciberpunk (GenNvim ≈ Vim/Neovim): fondo casi negro, rejilla y lanes en verde neón. */
+const TERMINAL_PALETTE: IAmbientPalette = {
+  background: "#020a05",
+  gridLine: "rgba(52, 211, 153, 0.11)",
+  laneCore: "#0b3a1e",
+  laneGlow: "rgba(74, 222, 128, 0.55)",
+  veinRgb: "74, 222, 128",
+  tint: "rgba(16, 90, 45, 0.12)",
+};
+
+function resolveAmbientPalette(ambient: IOverworldTilemap["ambient"]): IAmbientPalette {
+  return ambient === "TERMINAL" ? TERMINAL_PALETTE : DEFAULT_PALETTE;
+}
 
 /**
  * Renderer imperativo cibernético: rejilla neón, lanes de circuito e imágenes reales.
@@ -109,6 +141,8 @@ export class Renderer2D {
   private readonly gateOpenProgress = new Map<string, number>();
   private lastRenderMs = 0;
   private frameDeltaMs = 16;
+  /** Paleta activa (por ambiente), resuelta al inicio de cada render. */
+  private palette: IAmbientPalette = DEFAULT_PALETTE;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -159,6 +193,7 @@ export class Renderer2D {
     options: IRenderOptions,
   ): void {
     const { tilemap } = world;
+    this.palette = resolveAmbientPalette(tilemap.ambient);
     // Delta de frame para animaciones basadas en estado (apertura de puertas/puente).
     this.frameDeltaMs = this.lastRenderMs === 0 ? 16 : Math.max(0, Math.min(120, options.timeMs - this.lastRenderMs));
     this.lastRenderMs = options.timeMs;
@@ -181,7 +216,7 @@ export class Renderer2D {
     this.drawObjectsPass(world, cameraOffset, range, options);
     this.drawBoxesPass(world, cameraOffset, options);
     this.drawActorsPass(world, cameraOffset, options);
-    this.drawCutsceneNpc(world, cameraOffset, options);
+    for (const npc of options.cutsceneNpcs) this.drawCutsceneNpc(world, cameraOffset, npc);
     this.drawPlayer(world, playerPixel, cameraOffset);
     this.drawOverlayPass(tilemap, cameraOffset, range, options.timeMs);
     this.drawCollectEffect(cameraOffset, options);
@@ -298,10 +333,10 @@ export class Renderer2D {
     const context = this.context;
     const viewW = viewport.cssWidth;
     const viewH = viewport.cssHeight;
-    context.fillStyle = BACKGROUND;
+    context.fillStyle = this.palette.background;
     context.fillRect(0, 0, viewW, viewH);
     // Rejilla técnica alineada al mundo (se desplaza con la cámara).
-    context.strokeStyle = GRID_LINE;
+    context.strokeStyle = this.palette.gridLine;
     context.lineWidth = 1;
     context.beginPath();
     const startX = camera.x % tileSize;
@@ -518,14 +553,14 @@ export class Renderer2D {
     const size = tilemap.tileSize;
     const screenX = camera.x + tileX * size;
     const screenY = camera.y + tileY * size;
-    context.fillStyle = LANE_CORE;
+    context.fillStyle = this.palette.laneCore;
     context.fillRect(screenX + 2, screenY + 2, size - 4, size - 4);
 
     const ground = tilemap.layers.ground;
     const isLane = (x: number, y: number): boolean => ground[y]?.[x] === GROUND_TILE.PATH;
     // Vena de energía central que conecta lanes contiguas.
     const pulse = 0.55 + Math.sin(timeMs / 500 + (tileX + tileY) * 0.6) * 0.25;
-    context.strokeStyle = `rgba(34, 211, 238, ${pulse})`;
+    context.strokeStyle = `rgba(${this.palette.veinRgb}, ${pulse})`;
     context.lineWidth = Math.max(2, size * 0.08);
     context.lineCap = "round";
     const cx = screenX + size / 2;
@@ -541,7 +576,7 @@ export class Renderer2D {
     if (isLane(tileX, tileY - 1)) context.lineTo(cx, screenY);
     context.stroke();
     // Nodo central.
-    context.fillStyle = LANE_GLOW;
+    context.fillStyle = this.palette.laneGlow;
     context.beginPath();
     context.arc(cx, cy, size * 0.06, 0, Math.PI * 2);
     context.fill();
@@ -573,7 +608,9 @@ export class Renderer2D {
       const screenY = camera.y + object.tileY * size;
       const isBlocked = options.blockedObjectIds.has(object.id);
       const isFocused = options.focusedObjectId === object.id;
-      this.drawObject(object.id, object.kind, object.imageSrc, screenX, screenY, size, isBlocked, isFocused, options.timeMs);
+      // Los interruptores de CINTA se dibujan encendidos/apagados (los demás SWITCH, neutros = null).
+      const beltSwitchOn = object.beltToggleRect ? options.activeBeltSwitchIds.has(object.id) : null;
+      this.drawObject(object.id, object.kind, object.imageSrc, screenX, screenY, size, isBlocked, isFocused, options.timeMs, beltSwitchOn);
     }
   }
 
@@ -587,6 +624,7 @@ export class Renderer2D {
     isBlocked: boolean,
     isFocused: boolean,
     timeMs: number,
+    beltSwitchOn: boolean | null = null,
   ): void {
     const context = this.context;
     const cx = screenX + size / 2;
@@ -616,7 +654,7 @@ export class Renderer2D {
     } else if (kind === "WARP") {
       this.drawPortal(cx, cy, size, accent, timeMs);
     } else if (kind === "SWITCH") {
-      this.drawSwitch(screenX, screenY, size, accent, timeMs);
+      this.drawSwitch(screenX, screenY, size, accent, timeMs, beltSwitchOn);
     } else if (kind === "BOX_RESET") {
       this.drawResetButton(screenX, screenY, size, accent, timeMs);
     } else if (kind === "MARKET" || kind === "ARSENAL" || kind === "TELEPORT") {
@@ -882,30 +920,59 @@ export class Renderer2D {
   }
 
   /** Interruptor de pared: caja con palanca y bombilla que late (llama la atención en la oscuridad). */
-  private drawSwitch(screenX: number, screenY: number, size: number, accent: string, timeMs: number): void {
+  /**
+   * Interruptor. Con `beltSwitchOn` a null (interruptores de luz) se dibuja el estado neutro de siempre. Los
+   * interruptores de CINTA sí muestran su posición: ENCENDIDO (palanca arriba, placa iluminada, piloto verde
+   * fijo y halo) o APAGADO (palanca abajo, todo apagado en gris). Los dos extremos del puente están siempre en
+   * oposición, así que de un vistazo se ve cuál manda y cuál queda por accionar.
+   */
+  private drawSwitch(
+    screenX: number,
+    screenY: number,
+    size: number,
+    accent: string,
+    timeMs: number,
+    beltSwitchOn: boolean | null = null,
+  ): void {
     const context = this.context;
     const x = screenX + size * 0.3;
     const y = screenY + size * 0.24;
     const w = size * 0.4;
     const h = size * 0.52;
+    const isOff = beltSwitchOn === false;
+    const isOn = beltSwitchOn === true;
+    const tint = isOff ? "#64748b" : isOn ? "#4ade80" : accent;
+
+    // Halo del estado encendido: se nota desde lejos que ESTE es el que manda.
+    if (isOn) {
+      const glow = 0.35 + (0.5 + Math.sin(timeMs / 320) * 0.5) * 0.35;
+      context.globalAlpha = glow;
+      context.fillStyle = tint;
+      context.beginPath();
+      context.arc(screenX + size / 2, screenY + size / 2, size * 0.46, 0, Math.PI * 2);
+      context.fill();
+      context.globalAlpha = 1;
+    }
     // Placa.
-    context.fillStyle = "#0b1220";
+    context.fillStyle = isOn ? "#0f2a1a" : "#0b1220";
     context.fillRect(x, y, w, h);
-    context.strokeStyle = accent;
+    context.strokeStyle = tint;
     context.lineWidth = 2;
     context.strokeRect(x, y, w, h);
-    // Palanca.
-    context.strokeStyle = accent;
+    // Palanca: arriba (encendido) / abajo (apagado). El neutro conserva la inclinación original.
+    context.strokeStyle = tint;
     context.lineWidth = Math.max(2, size * 0.05);
     context.lineCap = "round";
     context.beginPath();
-    context.moveTo(x + w / 2, y + h * 0.72);
-    context.lineTo(x + w * 0.68, y + h * 0.32);
+    context.moveTo(x + w / 2, y + h * (isOn ? 0.78 : 0.72));
+    if (isOn) context.lineTo(x + w * 0.72, y + h * 0.2);
+    else if (isOff) context.lineTo(x + w * 0.28, y + h * 0.5);
+    else context.lineTo(x + w * 0.68, y + h * 0.32);
     context.stroke();
-    // Bombilla pulsante encima.
+    // Piloto: fijo y brillante encendido, pulsante en neutro, apagado en gris.
     const pulse = 0.5 + Math.sin(timeMs / 220) * 0.5;
-    context.globalAlpha = 0.35 + pulse * 0.55;
-    context.fillStyle = accent;
+    context.globalAlpha = isOn ? 1 : isOff ? 0.3 : 0.35 + pulse * 0.55;
+    context.fillStyle = tint;
     context.beginPath();
     context.arc(screenX + size / 2, y - size * 0.06, size * 0.08, 0, Math.PI * 2);
     context.fill();
@@ -958,9 +1025,11 @@ export class Renderer2D {
     context.globalAlpha = 1;
   }
 
-  private drawCutsceneNpc(world: IEngineWorldState, camera: ICameraOffset, options: IRenderOptions): void {
-    const npc = options.cutsceneNpc;
-    if (!npc) return;
+  private drawCutsceneNpc(
+    world: IEngineWorldState,
+    camera: ICameraOffset,
+    npc: IOverworldCutsceneNpcRender,
+  ): void {
     const context = this.context;
     const size = world.tilemap.tileSize;
     const drawX = camera.x + npc.pixelX;
@@ -968,6 +1037,11 @@ export class Renderer2D {
     const cx = drawX + size / 2;
     const cy = drawY + size / 2;
     const radius = size * 0.42;
+    // Materialización (TELEPORT): el token nace transparente y "cuaja" mientras un anillo se cierra.
+    const spawn = Math.max(0, Math.min(1, npc.spawnProgress));
+
+    context.save();
+    if (spawn < 1) context.globalAlpha = spawn;
 
     context.fillStyle = "rgba(0,0,0,0.4)";
     context.beginPath();
@@ -994,6 +1068,38 @@ export class Renderer2D {
     context.beginPath();
     context.arc(cx + delta.tileX * radius, cy + delta.tileY * radius, size * 0.06, 0, Math.PI * 2);
     context.fill();
+    context.restore();
+
+    if (spawn < 1) this.drawTeleportBurst(cx, cy, size, spawn);
+  }
+
+  /**
+   * Estallido de teletransporte del Núcleo (verde terminal): anillo que se cierra sobre la casilla
+   * + rebanadas de glitch horizontales. Se dibuja mientras el NPC aún se está materializando.
+   */
+  private drawTeleportBurst(cx: number, cy: number, size: number, progress: number): void {
+    const context = this.context;
+    context.save();
+    // Anillo exterior que colapsa hacia el token.
+    const ringRadius = size * (1.1 - 0.6 * progress);
+    context.strokeStyle = "#4ade80";
+    context.globalAlpha = 0.25 + (1 - progress) * 0.6;
+    context.lineWidth = size * 0.06;
+    context.beginPath();
+    context.arc(cx, cy, ringRadius, 0, Math.PI * 2);
+    context.stroke();
+    // Columna de luz + rebanadas de glitch (scanlines desplazadas) sobre el token.
+    context.globalAlpha = (1 - progress) * 0.5;
+    context.fillStyle = "#bbf7d0";
+    context.fillRect(cx - size * 0.06, cy - size * 0.95, size * 0.12, size * 1.9);
+    context.globalAlpha = (1 - progress) * 0.75;
+    context.fillStyle = "#22c55e";
+    for (let slice = 0; slice < 5; slice++) {
+      const offset = ((slice * 7 + Math.round(progress * 23)) % 11) - 5;
+      const sliceY = cy - size * 0.45 + slice * size * 0.2;
+      context.fillRect(cx - size * 0.42 + offset * 2, sliceY, size * 0.84, size * 0.045);
+    }
+    context.restore();
   }
 
   private drawPlayer(world: IEngineWorldState, playerPixel: ICameraOffset, camera: ICameraOffset): void {
@@ -1077,9 +1183,150 @@ export class Renderer2D {
         if (kind === OVERLAY_TILE.SERVER_RACK) this.drawServerRack(screenX, screenY, size, timeMs, tileX + tileY);
         else if (kind === OVERLAY_TILE.HOLO_SCREEN) this.drawHoloScreen(screenX, screenY, size, timeMs);
         else if (kind === OVERLAY_TILE.CRATE) this.drawCrate(screenX, screenY, size);
+        else if (kind === OVERLAY_TILE.COOLING_UNIT) this.drawCoolingUnit(screenX, screenY, size, timeMs, tileX + tileY);
+        else if (kind === OVERLAY_TILE.DATA_PYLON) this.drawDataPylon(screenX, screenY, size, timeMs);
+        else if (kind === OVERLAY_TILE.CARD_FORGE) this.drawCardForge(screenX, screenY, size, timeMs, false);
+        else if (kind === OVERLAY_TILE.CARD_FORGE_RIGHT) this.drawCardForge(screenX, screenY, size, timeMs, true);
         else this.drawPillar(screenX, screenY, size, timeMs, tileX);
       }
     }
+  }
+
+  /**
+   * FÁBRICA DE CARTAS del Núcleo (Acto 4). Es UNA máquina de DOS casillas: cada mitad se dibuja por separado y
+   * encaja con la otra por la costura central, donde un reactor forja la carta suprema (columna de energía,
+   * anillos que giran, la carta materializándose y ascendiendo, chispas y barrido de escáner). La animación va
+   * SOLO con el reloj —sin semilla por casilla— para que las dos mitades vayan sincronizadas y lean como una
+   * sola máquina. Todo procedural (sin assets), en el verde fósforo del acto.
+   */
+  private drawCardForge(screenX: number, screenY: number, size: number, timeMs: number, isRightHalf: boolean): void {
+    const context = this.context;
+    const phase = (timeMs / 2200) % 1; // ciclo de forja (0 = carta naciendo, 1 = disipada)
+    const pulse = 0.5 + Math.sin(timeMs / 300) * 0.5;
+    // Costura: borde interior de la casilla. `inward` apunta desde la costura hacia el centro de esta mitad.
+    const seamX = isRightHalf ? screenX : screenX + size;
+    const inward = isRightHalf ? 1 : -1;
+    const topY = screenY + size * 0.06;
+    const bodyH = size * 0.94;
+
+    context.save();
+    // Nada se sale de su casilla (las mitades no pisan al vecino ni al suelo de los villanos).
+    context.beginPath();
+    context.rect(screenX, screenY, size, size);
+    context.clip();
+
+    // ── Chasis: bloque oscuro con degradado y bisel neón solo en el lado EXTERIOR (la costura queda limpia).
+    const chassis = context.createLinearGradient(screenX, topY, screenX, topY + bodyH);
+    chassis.addColorStop(0, "#0d2019");
+    chassis.addColorStop(0.55, "#071510");
+    chassis.addColorStop(1, "#02100c");
+    context.fillStyle = chassis;
+    context.fillRect(screenX, topY, size, bodyH);
+    context.strokeStyle = "rgba(74, 222, 128, 0.5)";
+    context.lineWidth = 2;
+    context.beginPath();
+    const outerX = isRightHalf ? screenX + size - 1 : screenX + 1;
+    context.moveTo(outerX, topY + bodyH);
+    context.lineTo(outerX, topY + 1);
+    context.lineTo(seamX, topY + 1);
+    context.stroke();
+
+    // ── Torre de refrigeración exterior: bahías con LEDs que se encienden en cascada.
+    const bayX = seamX + inward * size * 0.72;
+    context.fillStyle = "rgba(2, 24, 18, 0.9)";
+    context.fillRect(Math.min(bayX, bayX + inward * size * 0.2), topY + size * 0.12, size * 0.2, bodyH * 0.72);
+    for (let bay = 0; bay < 5; bay++) {
+      const on = (Math.floor(timeMs / 190) + bay) % 5 !== 0;
+      context.fillStyle = on ? "rgba(134, 239, 172, 0.85)" : "rgba(74, 222, 128, 0.18)";
+      context.fillRect(bayX + inward * size * 0.03, topY + size * (0.18 + bay * 0.12), size * 0.1, size * 0.04);
+    }
+
+    // ── Conductos que empujan energía hacia la costura (líneas con un pulso que viaja).
+    context.strokeStyle = "rgba(74, 222, 128, 0.22)";
+    context.lineWidth = 1;
+    for (let duct = 0; duct < 4; duct++) {
+      const ductY = topY + size * (0.2 + duct * 0.16);
+      context.beginPath();
+      context.moveTo(seamX, ductY);
+      context.lineTo(seamX + inward * size * 0.66, ductY);
+      context.stroke();
+      const travel = ((timeMs / 700 + duct * 0.25) % 1);
+      context.fillStyle = "rgba(190, 242, 100, 0.75)";
+      context.fillRect(seamX + inward * size * 0.66 * (1 - travel) - 1, ductY - 1.5, size * 0.09 * -inward, 3);
+    }
+
+    // ── Reactor de la costura: halo, columna de luz y anillos que giran (media elipse por mitad).
+    const coreY = topY + bodyH * 0.52;
+    const halo = context.createRadialGradient(seamX, coreY, 1, seamX, coreY, size * 0.62);
+    halo.addColorStop(0, `rgba(190, 242, 100, ${0.34 + pulse * 0.26})`);
+    halo.addColorStop(0.5, "rgba(34, 197, 94, 0.16)");
+    halo.addColorStop(1, "rgba(34, 197, 94, 0)");
+    context.fillStyle = halo;
+    context.fillRect(screenX, screenY, size, size);
+    context.fillStyle = `rgba(220, 252, 231, ${0.5 + pulse * 0.35})`;
+    context.fillRect(seamX + (isRightHalf ? 0 : -size * 0.05), topY + size * 0.08, size * 0.05, bodyH * 0.86);
+    context.strokeStyle = "rgba(134, 239, 172, 0.75)";
+    context.lineWidth = 2;
+    for (let ring = 0; ring < 3; ring++) {
+      const spin = (timeMs / 900 + ring * 0.33) % 1;
+      const ringRadius = size * (0.16 + ring * 0.11);
+      const squash = 0.34 + Math.abs(Math.sin(spin * Math.PI)) * 0.5;
+      context.globalAlpha = 0.28 + (1 - ring / 3) * 0.4;
+      context.beginPath();
+      context.ellipse(
+        seamX,
+        coreY + Math.sin(spin * Math.PI * 2) * size * 0.06,
+        ringRadius,
+        ringRadius * squash,
+        0,
+        isRightHalf ? -Math.PI / 2 : Math.PI / 2,
+        isRightHalf ? Math.PI / 2 : (3 * Math.PI) / 2,
+      );
+      context.stroke();
+    }
+    context.globalAlpha = 1;
+
+    // ── La CARTA suprema: se materializa en la costura, asciende y se disipa (media carta por mitad).
+    const cardW = size * 0.34; // media anchura: entre las dos mitades sale una carta de 0.68 casillas
+    const cardH = size * 0.44;
+    const cardTop = coreY - cardH * 0.5 - phase * size * 0.42;
+    const cardAlpha = Math.min(1, phase * 4) * Math.max(0, 1 - Math.max(0, phase - 0.55) / 0.45);
+    context.globalAlpha = cardAlpha;
+    const cardX = isRightHalf ? seamX : seamX - cardW;
+    const cardFill = context.createLinearGradient(cardX, cardTop, cardX + cardW, cardTop + cardH);
+    cardFill.addColorStop(0, "rgba(134, 239, 172, 0.45)");
+    cardFill.addColorStop(1, "rgba(16, 185, 129, 0.22)");
+    context.fillStyle = cardFill;
+    context.fillRect(cardX, cardTop, cardW, cardH);
+    context.strokeStyle = "#d9f99d";
+    context.lineWidth = 1.5;
+    // Marco sin el lado de la costura, para que las dos mitades formen un único borde.
+    context.beginPath();
+    context.moveTo(seamX, cardTop);
+    context.lineTo(cardX + (isRightHalf ? cardW : 0), cardTop);
+    context.lineTo(cardX + (isRightHalf ? cardW : 0), cardTop + cardH);
+    context.lineTo(seamX, cardTop + cardH);
+    context.stroke();
+    // Brillo que recorre la carta.
+    context.fillStyle = "rgba(255, 255, 255, 0.28)";
+    const sheenY = cardTop + ((timeMs / 600) % 1) * cardH;
+    context.fillRect(cardX, sheenY, cardW, 2);
+    context.globalAlpha = 1;
+
+    // ── Chispas que suben desde el reactor y barrido de escáner sobre el chasis.
+    context.fillStyle = "rgba(190, 242, 100, 0.8)";
+    for (let spark = 0; spark < 4; spark++) {
+      const life = ((timeMs / 520 + spark * 0.27) % 1);
+      const sparkX = seamX + inward * size * (0.06 + spark * 0.11) * (0.4 + life);
+      const sparkY = coreY - life * size * 0.5;
+      context.globalAlpha = (1 - life) * 0.8;
+      context.fillRect(sparkX, sparkY, 2, 2);
+    }
+    context.globalAlpha = 0.16;
+    context.fillStyle = "#bbf7d0";
+    context.fillRect(screenX, topY + ((timeMs / 1100) % 1) * bodyH, size, size * 0.05);
+    context.globalAlpha = 1;
+    context.restore();
   }
 
   private drawServerRack(screenX: number, screenY: number, size: number, timeMs: number, seed: number): void {
@@ -1124,6 +1371,76 @@ export class Renderer2D {
     }
     context.fillStyle = "#0a1220";
     context.fillRect(screenX + size * 0.44, screenY + size * 0.7, size * 0.12, size * 0.22);
+  }
+
+  /** Unidad de refrigeración: caja con rejillas de ventilación y un ventilador giratorio. */
+  private drawCoolingUnit(screenX: number, screenY: number, size: number, timeMs: number, seed: number): void {
+    const context = this.context;
+    const x = screenX + size * 0.14;
+    const y = screenY + size * 0.2;
+    const w = size * 0.72;
+    const h = size * 0.66;
+    context.fillStyle = "rgba(0,0,0,0.35)";
+    context.fillRect(screenX + size * 0.18, screenY + size * 0.86, size * 0.64, size * 0.1);
+    context.fillStyle = "#0c1626";
+    context.fillRect(x, y, w, h);
+    context.strokeStyle = "rgba(52, 211, 153, 0.5)";
+    context.lineWidth = 2;
+    context.strokeRect(x, y, w, h);
+    // Rejillas de ventilación (mitad izquierda).
+    context.strokeStyle = "rgba(148, 163, 184, 0.4)";
+    context.lineWidth = 1;
+    for (let slat = 0; slat < 4; slat++) {
+      const slatY = y + h * (0.2 + slat * 0.2);
+      context.beginPath();
+      context.moveTo(x + w * 0.1, slatY);
+      context.lineTo(x + w * 0.58, slatY);
+      context.stroke();
+    }
+    // Ventilador (derecha), gira con el tiempo.
+    const fanX = x + w * 0.78;
+    const fanY = y + h * 0.5;
+    const radius = Math.min(w, h) * 0.22;
+    const spin = timeMs / 400 + seed;
+    context.strokeStyle = `rgba(34, 211, 238, ${0.4 + Math.sin(timeMs / 300) * 0.2})`;
+    context.lineWidth = 2;
+    context.beginPath();
+    context.arc(fanX, fanY, radius, 0, Math.PI * 2);
+    context.stroke();
+    for (let blade = 0; blade < 3; blade++) {
+      const angle = spin + blade * ((Math.PI * 2) / 3);
+      context.beginPath();
+      context.moveTo(fanX, fanY);
+      context.lineTo(fanX + Math.cos(angle) * radius, fanY + Math.sin(angle) * radius);
+      context.stroke();
+    }
+  }
+
+  /** Pilón de datos: mástil delgado con struts y una baliza verde pulsante en la punta. */
+  private drawDataPylon(screenX: number, screenY: number, size: number, timeMs: number): void {
+    const context = this.context;
+    const cx = screenX + size * 0.5;
+    context.fillStyle = "rgba(0,0,0,0.3)";
+    context.fillRect(screenX + size * 0.34, screenY + size * 0.88, size * 0.32, size * 0.08);
+    context.fillStyle = "#0a1526";
+    context.fillRect(cx - size * 0.06, screenY + size * 0.14, size * 0.12, size * 0.76);
+    context.strokeStyle = "rgba(52, 211, 153, 0.45)";
+    context.lineWidth = 2;
+    context.strokeRect(cx - size * 0.06, screenY + size * 0.14, size * 0.12, size * 0.76);
+    // Struts diagonales hasta la base.
+    context.strokeStyle = "rgba(148, 163, 184, 0.35)";
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(cx - size * 0.2, screenY + size * 0.86);
+    context.lineTo(cx, screenY + size * 0.5);
+    context.lineTo(cx + size * 0.2, screenY + size * 0.86);
+    context.stroke();
+    // Baliza pulsante.
+    const glow = 0.5 + Math.sin(timeMs / 300) * 0.4;
+    context.fillStyle = `rgba(74, 222, 128, ${glow})`;
+    context.beginPath();
+    context.arc(cx, screenY + size * 0.12, size * 0.1, 0, Math.PI * 2);
+    context.fill();
   }
 
   private drawCrate(screenX: number, screenY: number, size: number): void {
@@ -1296,6 +1613,12 @@ export class Renderer2D {
     gradient.addColorStop(1, "rgba(0,0,0,0.5)");
     context.fillStyle = gradient;
     context.fillRect(0, 0, this.cssWidth, this.cssHeight);
+    // Tinte de ambiente (TERMINAL): un velo verde a pantalla completa que armoniza los acentos cian
+    // restantes hacia el look de terminal. Un solo fillRect: coste despreciable.
+    if (this.palette.tint) {
+      context.fillStyle = this.palette.tint;
+      context.fillRect(0, 0, this.cssWidth, this.cssHeight);
+    }
   }
 }
 

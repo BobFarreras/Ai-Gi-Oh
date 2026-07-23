@@ -1,7 +1,100 @@
 // src/services/story/story-node-interaction-dialogue-catalog.ts - Catálogo de secuencias narrativas Story para eventos y recompensas del mapa.
 import { IStoryNodeInteractionDialogue } from "@/services/story/story-node-interaction-dialogue-types";
 
+// Retratos de los villanos del Acto 4 (para que sus líneas muestren SU avatar, no el de BigLog por defecto).
+const GENNVIM_PORTRAIT = "/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.webp";
+const MIDUTECH_PORTRAIT = "/assets/story/opponents/opp-ch1-midutech/avatar-Midutech.webp";
+
 export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNodeInteractionDialogue> = {
+  // ── Acto 4 — Núcleo GenNvim (terminal verde) ────────────────────────────────
+  // BigLog es el MENTOR (bueno): habla claro y te guía. Las amenazas las dicen los villanos GenNvim/Midutech.
+  // E1 YA es vídeo (`/assets/videos/story/act-4/genNvim.mp4`); E4/E6 lo serán, de momento van como narración.
+  "story-ch4-event-intro": {
+    title: "Núcleo GenNvim",
+    // Cinemática de entrada al acto (se abre el terminal, reproduce y se cierra), como las intros de los
+    // Actos 1 y 2. En el overworld el vídeo SUSTITUYE a la narración; las líneas quedan como respaldo del
+    // mapa Story clásico.
+    cinematicVideo: {
+      videoUrl: "/assets/videos/story/act-4/genNvim.mp4",
+      skipLabel: "Interrumpir vídeo",
+      autoPlay: true,
+      loop: false,
+    },
+    lines: [
+      { actorId: "opp-ch4-gennvim", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: GENNVIM_PORTRAIT, speaker: "GenNvim", text: "Vaya… un intruso en mi núcleo. Bienvenido a mis laberintos. Si logras cruzarlos todos, quizá seas digno de presentarte ante mi señor, Midutech. Aunque lo dudo mucho." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Tranquilo, yo te guío desde aquí. Cruza el mainframe sala por sala: cada una es un laberinto de GenNvim." },
+      { actorId: "player", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "Operador", text: "Pues a cruzarlos." },
+    ],
+  },
+  // Aviso de BigLog al COGER la carta Antigrabity (keyed por el id del nodo de recompensa de carta).
+  "story-ch4-card-antigrabity": {
+    title: "Antigrabity",
+    lines: [
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Operador, nos han informado de que en este sector están fabricando cartas muy poderosas con código oscuro. La que acabas de coger es una de ellas. ¡Ten cuidado!" },
+    ],
+  },
+  // Los interruptores de la pasarela (story-ch4-belt-switch / -top) NO narran: se dibujan encendidos/apagados
+  // en el mapa y esa es toda la información que hace falta. Tampoco lo hace la pasarela en contra: se descubre
+  // pisándola.
+  // EMBOSCADA de GenNvim: salta al pisar el trigger a dos casillas de la carta Hydra, tras la cutscene en la
+  // que aparece POR DETRÁS (teletransporte en desktop, entrando andando en móvil). Al cerrarla → duel-8.
+  "story-ch4-event-hydra": {
+    title: "Guardián de la Hydra",
+    lines: [
+      // Solo habla GenNvim: al cerrar SU línea arranca el combate (sin réplica de BigLog que corte el ritmo).
+      { actorId: "opp-ch4-gennvim", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: GENNVIM_PORTRAIT, speaker: "GenNvim", text: "Ni un paso más. ¿Creías que iba a dejar esa carta sin vigilancia? Esa Hydra es para mi señor Midutech. Si la quieres, tendrás que arrancármela en combate." },
+    ],
+  },
+  // FÁBRICA DE CARTAS (sala del terminal): las tres líneas se dicen DENTRO de la cutscene, con los dos villanos
+  // todavía de espaldas mirando la máquina. Al cerrarlas, Midutech se desmaterializa con la carta y GenNvim sube
+  // a por ti (su desafío es la entrada "story-ch4-duel-10", justo debajo).
+  "story-ch4-event-card-forge": {
+    title: "La Carta Suprema",
+    lines: [
+      // Hablan ELLOS DOS (el jugador solo espía): cada línea declara `counterpartPortraitUrl` con la cara del
+      // otro villano, para que el hueco de abajo no muestre al jugador, que no está en la escena. Y cada uno
+      // tiene su hueco FIJO vía `side` —GenNvim abajo (LEFT), Midutech arriba (RIGHT)— para que no salten de
+      // sitio en cada línea: lo único que cambia es de quién sale la burbuja.
+      { actorId: "opp-ch4-gennvim", side: "LEFT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: GENNVIM_PORTRAIT, counterpartPortraitUrl: MIDUTECH_PORTRAIT, speaker: "GenNvim", text: "Hemos podido crear la carta suprema." },
+      { actorId: "opp-ch4-midutech", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: MIDUTECH_PORTRAIT, counterpartPortraitUrl: GENNVIM_PORTRAIT, speaker: "Midutech", text: "Con esto la Entidad podrá controlar todo el ciberespacio." },
+      { actorId: "opp-ch4-midutech", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: MIDUTECH_PORTRAIT, counterpartPortraitUrl: GENNVIM_PORTRAIT, speaker: "Midutech", text: "Voy a llevármela." },
+    ],
+  },
+  // Desafío de GenNvim al girarse y pillarte en el callejón: al cerrarlo arranca duel-10 (sin réplica de BigLog,
+  // que cortaría el ritmo, igual que en la emboscada de la Hydra).
+  "story-ch4-duel-10": {
+    title: "Testigo Incómodo",
+    lines: [
+      { actorId: "opp-ch4-gennvim", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: GENNVIM_PORTRAIT, speaker: "GenNvim", text: "¿Cuánto llevas ahí? Da igual: de esta sala no sales a contarlo." },
+    ],
+  },
+  // Narración PREVIA al jefe final (se pisa al cruzar hacia la mitad alta de la sala del jefe): llegas tarde,
+  // la carta suprema ya está entregada. GenNvim no está: se le venció en la Fábrica.
+  "story-ch4-event-pre-midutech": {
+    title: "Llegas Tarde",
+    lines: [
+      { actorId: "opp-ch4-midutech", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: MIDUTECH_PORTRAIT, speaker: "Midutech", text: "Tranquilo, no corras: la carta suprema ya está entregada. Mientras tú te peleabas con GenNvim en la forja, yo la puse en manos de la Entidad." },
+      { actorId: "opp-ch4-midutech", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: MIDUTECH_PORTRAIT, speaker: "Midutech", text: "GenNvim solo era mi código; yo lo escribí. Y la llave del Core es mía: de aquí no pasas." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Llegamos tarde a la carta, pero no a él. Véncelo y nos llevamos la llave: sin ella, la Entidad no puede abrir el Core." },
+    ],
+  },
+  // Portal al Acto 5 (WARP sin destino): se puede releer cada vez que se pulsa, no se marca como visto.
+  "story-ch4-transition-to-act5": {
+    title: "Portal al Core",
+    lines: [
+      { speaker: "Sistema", text: "ENLACE AL CORE — Ruta detectada, destino NO COMPILADO. El Acto 5 todavía está en construcción." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Guarda la llave: en cuanto el Core esté listo, este portal se abrirá y entraremos juntos. Mientras tanto, disfruta de lo que has conseguido aquí.", autoAdvanceMs: 8000 },
+    ],
+  },
+  "story-ch4-event-core-key": {
+    title: "Llave del Core",
+    lines: [
+      { actorId: "opp-ch4-midutech", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: MIDUTECH_PORTRAIT, speaker: "Midutech", text: "Impresionante. Puede que me haya equivocado contigo." },
+      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Lo lograste. Ya tienes la llave del Core. A partir de aquí… ni yo sé lo que hay dentro." },
+      { speaker: "Sistema", text: "Acto 5: próximamente.", autoAdvanceMs: 5000 },
+    ],
+  },
+
   // ── Acto 3 — Repositorio Fantasma (Jaku) ────────────────────────────────────
   "story-ch3-event-intro": {
     title: "Umbral del Repositorio",

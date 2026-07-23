@@ -22,14 +22,53 @@ export interface ICreateInitialBoardStateInput {
   /** Fábrica de ids determinista (multijugador) para instanceId idénticos en ambos clientes. */
   idFactory?: IGameEngineIdFactory;
   /**
-   * Modificadores de COMBATE del árbol de habilidades (ficha 8), aplicados SOLO al jugador local (playerA)
-   * en modos PvE. El rival nunca los recibe. Se aplican tras crear el estado base (createInitialGameState los
-   * repartiría a ambos jugadores).
+   * Modificadores de COMBATE del árbol de habilidades (ficha 8) del jugador local (playerA), en modos PvE. Se
+   * aplican tras crear el estado base (createInitialGameState los repartiría a ambos jugadores).
    */
   playerStartingLpBonus?: number;
   playerMaxEnergyBonus?: number;
   /** Arranque en Frío (ficha 8): +energía one-time en el primer turno del jugador, por encima del tope. */
   playerTurn1EnergyBonus?: number;
+  /**
+   * Modificadores de COMBATE asignados al OPONENTE (playerB) desde el admin (habilidades de oponente). Mismo
+   * efecto que los del jugador pero sobre el rival: sube su LP inicial, su techo de energía y su energía de
+   * turno 1. PvE. 0/ausente = el rival arranca con los valores por defecto.
+   */
+  opponentStartingLpBonus?: number;
+  opponentMaxEnergyBonus?: number;
+  opponentTurn1EnergyBonus?: number;
+}
+
+/**
+ * Aplica los bonus de combate (LP/energía/arranque) a un lado del tablero. Idéntico para jugador y oponente:
+ * el bonus de LP sube vida (actual + máxima), el de energía sube el techo (y la energía actual), y el de
+ * turno 1 se concede ya si ese lado ARRANCA (por encima del tope) o se difiere a su primer turno si no.
+ */
+function applySkillBonusesToSide(
+  state: GameState,
+  side: "playerA" | "playerB",
+  lpBonus: number,
+  energyBonus: number,
+  turn1EnergyBonus: number,
+): GameState {
+  if (lpBonus === 0 && energyBonus === 0 && turn1EnergyBonus === 0) return state;
+  const p = state[side];
+  const isStarter = state.activePlayerId === p.id;
+  const starterTurn1Energy = isStarter ? turn1EnergyBonus : 0;
+  return {
+    ...state,
+    [side]: {
+      ...p,
+      maxHealthPoints: p.maxHealthPoints + lpBonus,
+      healthPoints: p.healthPoints + lpBonus,
+      maxEnergy: p.maxEnergy + energyBonus,
+      currentEnergy: p.currentEnergy + energyBonus + starterTurn1Energy,
+    },
+    firstTurnEnergyBonusByPlayerId:
+      !isStarter && turn1EnergyBonus > 0
+        ? { ...state.firstTurnEnergyBonusByPlayerId, [p.id]: turn1EnergyBonus }
+        : state.firstTurnEnergyBonusByPlayerId,
+  };
 }
 
 export function createInitialBoardState(input?: ICreateInitialBoardStateInput): GameState {
@@ -53,26 +92,18 @@ export function createInitialBoardState(input?: ICreateInitialBoardStateInput): 
     idFactory: input?.idFactory,
   });
 
-  const lpBonus = Math.max(0, Math.floor(input?.playerStartingLpBonus ?? 0));
-  const energyBonus = Math.max(0, Math.floor(input?.playerMaxEnergyBonus ?? 0));
-  const turn1EnergyBonus = Math.max(0, Math.floor(input?.playerTurn1EnergyBonus ?? 0));
-  if (lpBonus === 0 && energyBonus === 0 && turn1EnergyBonus === 0) return baseState;
-  const a = baseState.playerA;
-  // Arranque en Frío: si el jugador local ARRANCA (turno 1 ya activo), se concede ahora, por encima del tope;
-  // si no arranca, se difiere a su primer turno vía next-phase (firstTurnEnergyBonusByPlayerId).
-  const isPlayerAStarter = baseState.activePlayerId === a.id;
-  const starterTurn1Energy = isPlayerAStarter ? turn1EnergyBonus : 0;
-  return {
-    ...baseState,
-    playerA: {
-      ...a,
-      maxHealthPoints: a.maxHealthPoints + lpBonus,
-      healthPoints: a.healthPoints + lpBonus,
-      maxEnergy: a.maxEnergy + energyBonus,
-      currentEnergy: a.currentEnergy + energyBonus + starterTurn1Energy,
-    },
-    firstTurnEnergyBonusByPlayerId: !isPlayerAStarter && turn1EnergyBonus > 0
-      ? { ...baseState.firstTurnEnergyBonusByPlayerId, [a.id]: turn1EnergyBonus }
-      : baseState.firstTurnEnergyBonusByPlayerId,
-  };
+  const playerState = applySkillBonusesToSide(
+    baseState,
+    "playerA",
+    Math.max(0, Math.floor(input?.playerStartingLpBonus ?? 0)),
+    Math.max(0, Math.floor(input?.playerMaxEnergyBonus ?? 0)),
+    Math.max(0, Math.floor(input?.playerTurn1EnergyBonus ?? 0)),
+  );
+  return applySkillBonusesToSide(
+    playerState,
+    "playerB",
+    Math.max(0, Math.floor(input?.opponentStartingLpBonus ?? 0)),
+    Math.max(0, Math.floor(input?.opponentMaxEnergyBonus ?? 0)),
+    Math.max(0, Math.floor(input?.opponentTurn1EnergyBonus ?? 0)),
+  );
 }
