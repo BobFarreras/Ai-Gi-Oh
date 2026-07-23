@@ -1,7 +1,12 @@
 // src/services/story/overworld/act-4-overworld-tilemap.test.ts - Blinda el Acto 4: válido, ambiente verde
 // TERMINAL, registrado, y el laberinto de la Fase 2 (caja + placa + cinta + reset) que abre la compuerta a
 // las plantas altas. Sin la placa pulsada, el jefe es inalcanzable (puzzle obligatorio).
-import { buildAct4OverworldTilemap } from "@/services/story/overworld/act-4-overworld-tilemap";
+import {
+  HYDRA_AMBUSH_TILES_BEFORE_CARD,
+  HYDRA_AMBUSH_TRIGGER_ID,
+  buildAct4OverworldTilemap,
+} from "@/services/story/overworld/act-4-overworld-tilemap";
+import { traceWalkableCorridor } from "@/services/story/overworld/trace-walkable-corridor";
 import { buildOverworldTilemap } from "@/services/story/overworld/resolve-overworld-tilemap";
 import {
   buildCollisionGridFromTilemap,
@@ -185,21 +190,50 @@ describe("buildAct4OverworldTilemap", () => {
     expect(postBossGate.gateRequiredNodeIds).toEqual(["story-ch4-duel-6"]);
   });
 
-  it("la carta HYDRA está tras el guardia duel-8 (dentro del maze leftUp): obligatorio vencerlo", () => {
-    // duel-8 es sólido y ocupa la ÚNICA celda contigua al callejón de la Hydra: sin vencerlo, la carta es
-    // inalcanzable (nadie puede pararse a su lado). Al vencerlo se libera esa celda.
+  it("la carta HYDRA exige vencer a duel-8: el nodo está gateado (ya no lo tapa el cuerpo del rival)", () => {
+    // GenNvim pasó de guardia plantado a EMBOSCADA por cutscene: su casilla ya no bloquea el pasillo, así
+    // que el candado de la carta es el gate del nodo (y el trigger que fuerza el combate al acercarse).
+    const tilemap = buildAct4OverworldTilemap();
+    const hydra = tilemap.objects.find((object) => object.id === "story-ch4-card-hydra")!;
+    expect(hydra.gateRequiredNodeIds).toEqual([DUEL_8]);
+  });
+
+  it("duel-8 (GenNvim) es un rival de emboscada: oculto, sin visión y sin ocupar el pasillo", () => {
     const tilemap = buildAct4OverworldTilemap();
     const duel8 = tilemap.objects.find((object) => object.id === DUEL_8)!;
+    // Oculto (ni token ni minimapa) y sin visionRange → el motor no crea actor: solo aparece en la cutscene.
+    expect(duel8.hidden).toBe(true);
+    expect(duel8.visionRange).toBeUndefined();
+    // Su casilla nominal (el acceso al callejón de la Hydra) es transitable: el pasillo está despejado.
+    expect(tilemap.collision[duel8.tileY][duel8.tileX]).toBe(1);
+    // Sigue siendo la celda contigua a la carta (desde ahí se recoge).
     const hydra = tilemap.objects.find((object) => object.id === "story-ch4-card-hydra")!;
-    // La celda de duel-8 es la contigua a la carta Hydra (su acceso).
-    const adjacency = Math.abs(duel8.tileX - hydra.tileX) + Math.abs(duel8.tileY - hydra.tileY);
-    expect(adjacency).toBe(1);
+    expect(Math.abs(duel8.tileX - hydra.tileX) + Math.abs(duel8.tileY - hydra.tileY)).toBe(1);
+  });
+
+  it("el trigger de la emboscada está DOS casillas antes del acceso a la carta, en el pasillo", () => {
+    const tilemap = buildAct4OverworldTilemap();
+    const trigger = tilemap.objects.find((object) => object.id === HYDRA_AMBUSH_TRIGGER_ID)!;
+    const duel8 = tilemap.objects.find((object) => object.id === DUEL_8)!;
+    expect(trigger.trigger).toBe("STEP_ON");
+    expect(trigger.hidden).toBe(true);
+    const corridor = traceWalkableCorridor(
+      tilemap.collision,
+      { tileX: duel8.tileX, tileY: duel8.tileY },
+      { tileX: trigger.tileX, tileY: trigger.tileY },
+    );
+    // [acceso, +1, +2]: se pisa a dos pasos de poder coger la carta.
+    expect(corridor).toHaveLength(HYDRA_AMBUSH_TILES_BEFORE_CARD + 1);
+  });
+
+  it("el maze de la Hydra sigue exigiendo vencer al guardia de su entrada (duel-4)", () => {
+    // La emboscada no abre un atajo: la puerta del maze leftUp la sigue tapando duel-4.
+    const tilemap = buildAct4OverworldTilemap();
+    const duel8 = tilemap.objects.find((object) => object.id === DUEL_8)!;
     const target = { tileX: duel8.tileX, tileY: duel8.tileY };
-    // Con duel-1 (subir) + duel-4 (entrar al maze) pero SIN duel-8: la celda contigua a la Hydra está bloqueada.
-    const locked = contextFor({ completed: [DUEL_1, DUEL_4] });
+    const locked = contextFor({ completed: [DUEL_1] });
     expect(findGridPath(spawnTile(locked.tilemap), target, locked.context)).toBeNull();
-    // + duel-8 vencido: se libera su celda (contigua a la Hydra) → alcanzable.
-    const cleared = contextFor({ completed: [DUEL_1, DUEL_4, DUEL_8] });
+    const cleared = contextFor({ completed: [DUEL_1, DUEL_4] });
     expect(findGridPath(spawnTile(cleared.tilemap), target, cleared.context)).not.toBeNull();
   });
 

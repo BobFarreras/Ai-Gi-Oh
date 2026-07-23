@@ -32,10 +32,25 @@ export interface IOverworldFocus {
 export type OverworldCutsceneStep =
   | { kind: "WAIT"; seconds: number }
   | { kind: "PLAYER_STEP"; direction: OverworldDirection }
-  | { kind: "SPAWN_NPC"; tileX: number; tileY: number; facing: OverworldDirection; spriteSrc: string }
+  | { kind: "PLAYER_FACE"; direction: OverworldDirection }
+  | {
+      kind: "SPAWN_NPC";
+      tileX: number;
+      tileY: number;
+      facing: OverworldDirection;
+      spriteSrc: string;
+      /**
+       * `TELEPORT` materializa al NPC en la casilla (anillo + glitch) en vez de aparecer de golpe.
+       * Se usa cuando no hay sitio para que entre andando desde fuera de cámara.
+       */
+      effect?: "TELEPORT";
+    }
   | { kind: "NPC_WALK_TO"; tileX: number; tileY: number }
   | { kind: "EVENT"; nodeId: string }
   | { kind: "DESPAWN_NPC" };
+
+/** Duración (s) de la materialización de un SPAWN_NPC con efecto TELEPORT. */
+export const CUTSCENE_TELEPORT_SECONDS = 0.7;
 
 /** Datos de render del NPC de cutscene (posición interpolada en píxeles). */
 export interface IOverworldCutsceneNpcRender {
@@ -43,6 +58,8 @@ export interface IOverworldCutsceneNpcRender {
   pixelY: number;
   facing: OverworldDirection;
   spriteSrc: string;
+  /** Avance de la materialización 0..1 (1 = ya sólido; los spawns sin efecto nacen en 1). */
+  spawnProgress: number;
 }
 
 /** Datos de render del efecto de recolección (el objeto se encoge hacia el jugador + valor flotante). */

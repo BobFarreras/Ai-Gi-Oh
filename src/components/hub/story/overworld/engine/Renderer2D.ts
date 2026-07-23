@@ -1001,6 +1001,11 @@ export class Renderer2D {
     const cx = drawX + size / 2;
     const cy = drawY + size / 2;
     const radius = size * 0.42;
+    // Materialización (TELEPORT): el token nace transparente y "cuaja" mientras un anillo se cierra.
+    const spawn = Math.max(0, Math.min(1, npc.spawnProgress));
+
+    context.save();
+    if (spawn < 1) context.globalAlpha = spawn;
 
     context.fillStyle = "rgba(0,0,0,0.4)";
     context.beginPath();
@@ -1027,6 +1032,38 @@ export class Renderer2D {
     context.beginPath();
     context.arc(cx + delta.tileX * radius, cy + delta.tileY * radius, size * 0.06, 0, Math.PI * 2);
     context.fill();
+    context.restore();
+
+    if (spawn < 1) this.drawTeleportBurst(cx, cy, size, spawn);
+  }
+
+  /**
+   * Estallido de teletransporte del Núcleo (verde terminal): anillo que se cierra sobre la casilla
+   * + rebanadas de glitch horizontales. Se dibuja mientras el NPC aún se está materializando.
+   */
+  private drawTeleportBurst(cx: number, cy: number, size: number, progress: number): void {
+    const context = this.context;
+    context.save();
+    // Anillo exterior que colapsa hacia el token.
+    const ringRadius = size * (1.1 - 0.6 * progress);
+    context.strokeStyle = "#4ade80";
+    context.globalAlpha = 0.25 + (1 - progress) * 0.6;
+    context.lineWidth = size * 0.06;
+    context.beginPath();
+    context.arc(cx, cy, ringRadius, 0, Math.PI * 2);
+    context.stroke();
+    // Columna de luz + rebanadas de glitch (scanlines desplazadas) sobre el token.
+    context.globalAlpha = (1 - progress) * 0.5;
+    context.fillStyle = "#bbf7d0";
+    context.fillRect(cx - size * 0.06, cy - size * 0.95, size * 0.12, size * 1.9);
+    context.globalAlpha = (1 - progress) * 0.75;
+    context.fillStyle = "#22c55e";
+    for (let slice = 0; slice < 5; slice++) {
+      const offset = ((slice * 7 + Math.round(progress * 23)) % 11) - 5;
+      const sliceY = cy - size * 0.45 + slice * size * 0.2;
+      context.fillRect(cx - size * 0.42 + offset * 2, sliceY, size * 0.84, size * 0.045);
+    }
+    context.restore();
   }
 
   private drawPlayer(world: IEngineWorldState, playerPixel: ICameraOffset, camera: ICameraOffset): void {

@@ -8,6 +8,7 @@ import { OverworldEngine } from "@/components/hub/story/overworld/engine/Overwor
 import {
   IOverworldFocus,
   IOverworldIntent,
+  OverworldCutsceneStep,
 } from "@/components/hub/story/overworld/engine/engine-types";
 import { OverworldTouchControls } from "@/components/hub/story/overworld/hud/OverworldTouchControls";
 import { OverworldKeyboardHints } from "@/components/hub/story/overworld/hud/OverworldKeyboardHints";
@@ -33,6 +34,11 @@ import { buildAct1OverworldTilemap } from "@/services/story/overworld/act-1-over
 import { buildOverworldTilemap, resolveOverworldActId } from "@/services/story/overworld/resolve-overworld-tilemap";
 import { buildAct1EchoCutscene } from "@/services/story/overworld/act-1-echo-cutscene";
 import { buildAct2BigLogCutscene } from "@/services/story/overworld/act-2-biglog-cutscene";
+import { buildAct4HydraAmbushCutscene } from "@/services/story/overworld/act-4-hydra-cutscene";
+import {
+  HYDRA_AMBUSH_DUEL_ID,
+  HYDRA_AMBUSH_TRIGGER_ID,
+} from "@/services/story/overworld/act-4-overworld-tilemap";
 import { resolveOverworldEventDialogue } from "@/services/story/overworld/resolve-overworld-event-dialogue";
 import { markOverworldEventInteracted } from "@/services/story/overworld/overworld-persistence-client";
 import { IPlayerOverworldPosition } from "@/core/entities/story/IPlayerOverworldState";
@@ -109,6 +115,32 @@ const ACT2_BIGLOG_DUEL_ID = "story-ch2-duel-8";
 const ACT2_BIGLOG_TRIGGER_ID = "story-a2-biglog-trigger";
 const ACT2_BRIDGE_EVENT_ID = "story-ch2-event-core";
 const OPEN_DOOR_SOUND = "/audio/story/open-door-story.m4a";
+
+/**
+ * EMBOSCADAS: un trigger oculto (STEP_ON) lanza una cutscene de aparición del rival y, al cerrarse la
+ * narración, arranca su combate. El rival NO está plantado en el mapa: aparece guionizado.
+ * Se re-dispara mientras no lo venzas (se gatea por su duelo completado, no por "evento visto").
+ */
+interface IOverworldAmbush {
+  duelId: string;
+  /** Nodo del catálogo cuya narración se muestra al terminar la cutscene (antes del combate). */
+  dialogueNodeId: string;
+  buildCutscene: (tilemap: IOverworldTilemap, options: { isCompactViewport: boolean }) => OverworldCutsceneStep[];
+}
+const AMBUSH_BY_TRIGGER_ID: Record<string, IOverworldAmbush> = {
+  // Acto 2: BigLog sale del fondo del búnker al pisar su entrada.
+  [ACT2_BIGLOG_TRIGGER_ID]: {
+    duelId: ACT2_BIGLOG_DUEL_ID,
+    dialogueNodeId: ACT2_BIGLOG_DUEL_ID,
+    buildCutscene: () => buildAct2BigLogCutscene(),
+  },
+  // Acto 4: GenNvim corta la retirada dos casillas antes de la carta Hydra (teletransporte en desktop).
+  [HYDRA_AMBUSH_TRIGGER_ID]: {
+    duelId: HYDRA_AMBUSH_DUEL_ID,
+    dialogueNodeId: HYDRA_AMBUSH_TRIGGER_ID,
+    buildCutscene: buildAct4HydraAmbushCutscene,
+  },
+};
 
 /** Casilla contigua fuera del haz del rival (perpendicular a su orientación), para no re-activar el combate al volver. */
 function resolveSafeReturnTile(
@@ -252,8 +284,8 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
   const { isMuted, toggleMute } = useStoryMapSoundtrack(actId);
   const precombatRef = useRef<HTMLAudioElement | null>(null);
   const doorSoundRef = useRef<HTMLAudioElement | null>(null);
-  // Nodo BigLog pendiente de combate tras su cutscene de aparición.
-  const bigLogPendingRef = useRef<IOverworldIntent["object"] | null>(null);
+  // Emboscada en curso: rival pendiente de combate tras su cutscene de aparición (+ narración a mostrar).
+  const ambushPendingRef = useRef<{ duel: IOverworldIntent["object"]; dialogueNodeId: string } | null>(null);
   useEffect(() => {
     if (typeof Audio === "undefined") return;
     const precombat = new Audio(PRECOMBAT_SOUND);
@@ -492,11 +524,19 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
         onPlayerTileChanged: (tile) => {
           playerTileRef.current = { tileX: tile.tileX, tileY: tile.tileY };
           setPlayerTile({ tileX: tile.tileX, tileY: tile.tileY });
-          // Intro del acto al PRIMER paso: BigLog narra el Repositorio Fantasma una sola vez.
+          // Intro del acto al PRIMER paso (una sola vez): cinemática si el acto la tiene, si no narración.
           if (firstStepIntroId && !seenEventIdsRef.current.has(firstStepIntroId)) {
             markEventSeen(firstStepIntroId);
             void markOverworldEventInteracted(firstStepIntroId);
             const dialogue = resolveOverworldEventDialogue(firstStepIntroId);
+            // Intro con VÍDEO (Acto 4): mismo overlay de terminal que las intros de los Actos 1 y 2 (se abre,
+            // reproduce y se cierra). El vídeo ES la intro: sustituye a la narración, no se encadena detrás.
+            if (dialogue?.cinematicVideo) {
+              engine.setInteractionSuspended(true);
+              playDeviceSound();
+              setActiveVideo({ video: dialogue.cinematicVideo, isCutscene: false, nodeId: firstStepIntroId });
+              return;
+            }
             if (dialogue && dialogue.lines.length > 0) {
               engine.setInteractionSuspended(true);
               setNarration({ title: dialogue.title, lines: dialogue.lines, lineIndex: 0, isCutscene: false });
@@ -534,16 +574,18 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
           }
         },
         onCutsceneEnd: () => {
-          // Fin de la cutscene de BigLog: narra el reto y (al cerrarla) arranca el combate.
-          const bigLogDuel = bigLogPendingRef.current;
-          if (bigLogDuel) {
-            bigLogPendingRef.current = null;
-            pendingNarrationBattleRef.current = bigLogDuel;
-            const dialogue = resolveOverworldEventDialogue(bigLogDuel.id);
+          // Fin de una cutscene de emboscada: narra el reto y (al cerrarla) arranca el combate.
+          const ambush = ambushPendingRef.current;
+          if (ambush) {
+            ambushPendingRef.current = null;
+            pendingNarrationBattleRef.current = ambush.duel;
+            const dialogue = resolveOverworldEventDialogue(ambush.dialogueNodeId);
             if (dialogue && dialogue.lines.length > 0) {
               setNarration({ title: dialogue.title, lines: dialogue.lines, lineIndex: 0, isCutscene: false });
               return;
             }
+            // Sin narración configurada: al combate directo (si no, el rival se quedaría plantado ahí).
+            if (launchPendingNarrationBattle()) return;
           }
           engine.setInteractionSuspended(false);
         },
@@ -594,16 +636,18 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
             return;
           }
           if (!intent.isBlocked && (object.kind === "EVENT" || object.kind === "NPC")) {
-            // BigLog: al PISAR la entrada del búnker salta la cutscene (aparece + se acerca); al
-            // terminar se narra el reto y arranca el combate. Se re-dispara mientras no lo venzas
-            // (se gatea por su duelo completado, no por "visto"), y por eso NO se marca como visto.
-            if (object.id === ACT2_BIGLOG_TRIGGER_ID) {
-              if (initialCompleted.has(ACT2_BIGLOG_DUEL_ID)) return;
-              const bigLogDuel = tilemap.objects.find((entry) => entry.id === ACT2_BIGLOG_DUEL_ID);
-              if (bigLogDuel) {
+            // EMBOSCADAS (BigLog en el búnker del Acto 2, GenNvim en el pasillo de la Hydra del Acto 4): al
+            // PISAR el trigger salta la cutscene de aparición; al terminar se narra el reto y arranca el
+            // combate. Se re-dispara mientras no lo venzas (se gatea por su duelo completado, no por
+            // "visto"), y por eso NO se marca como visto.
+            const ambush = AMBUSH_BY_TRIGGER_ID[object.id];
+            if (ambush) {
+              if (initialCompleted.has(ambush.duelId)) return;
+              const ambushDuel = tilemap.objects.find((entry) => entry.id === ambush.duelId);
+              if (ambushDuel) {
                 engine.setInteractionSuspended(true);
-                bigLogPendingRef.current = bigLogDuel;
-                engine.startCutscene(buildAct2BigLogCutscene());
+                ambushPendingRef.current = { duel: ambushDuel, dialogueNodeId: ambush.dialogueNodeId };
+                engine.startCutscene(ambush.buildCutscene(tilemap, { isCompactViewport }));
                 return;
               }
             }
@@ -699,7 +743,7 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
       engine.dispose();
       engineRef.current = null;
     };
-  }, [mapId, storageKey, tilemap, initialCompleted, initialPosition, initialInteracted, openArsenal, enterMarket, exitToHub, warpToMap]);
+  }, [mapId, storageKey, tilemap, initialCompleted, initialPosition, initialInteracted, openArsenal, enterMarket, exitToHub, warpToMap, launchPendingNarrationBattle]);
 
   const closeIntent = (): void => {
     setActiveIntent(null);
@@ -990,6 +1034,14 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
               activeIntent.object.kind === "DUEL" || activeIntent.object.kind === "BOSS" ? (
                 <p className="mt-3 text-sm text-slate-200">
                   Este rival aún no te reconoce como rival. Vence antes a los oponentes anteriores del sector.
+                </p>
+              ) : activeIntent.object.kind === "REWARD_CARD" ||
+                activeIntent.object.kind === "REWARD_NEXUS" ||
+                activeIntent.object.kind === "REWARD_OBJECT" ? (
+                // Recompensa custodiada (p. ej. la carta Hydra hasta vencer a GenNvim): mensaje de juego,
+                // no el id crudo del nodo.
+                <p className="mt-3 text-sm text-slate-200">
+                  Sigue protegida: no podrás llevártela hasta vencer a quien la custodia.
                 </p>
               ) : (
                 <p className="mt-3 text-sm text-slate-200">

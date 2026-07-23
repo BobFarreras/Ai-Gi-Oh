@@ -7,6 +7,10 @@
 
 Esta guía tiene 2 partes: **(A)** cómo está el acto AHORA y **(B) HANDOFF**: los pasos 4 y 5 que faltan, con el cómo técnico.
 
+> **▶ Pulido posterior y trabajo pendiente:** [ACT-4-HANDOFF-2026-07-23.md](./ACT-4-HANDOFF-2026-07-23.md) —
+> emboscada de la Hydra + vídeo de intro (hechos) y las 4 mejoras siguientes (narración de la pasarela,
+> interruptor a la sala derecha, rival patrullando y sala de la Fábrica de Cartas).
+
 ---
 
 ## A. Estado actual (ya hecho y validado)
@@ -27,7 +31,8 @@ Entrada (E1 intro, GenNvim habla con SU avatar) -> duel-1 (obligatorio)
   -> LABERINTO 2 (sala módulo, y25..42): maze real
        · callejón: USB Raro (REWARD_OBJECT)
        · cámara arriba (y27): INTERRUPTOR de cinta (belt-toggle, REVERSIBLE)
-       · sala izq alta = LABERINTO leftUp (x4-14): carta HYDRA en callejón, guardada por duel-8 (GenNvim)
+       · sala izq alta = LABERINTO leftUp (x4-14): carta HYDRA en callejón; a 2 casillas de ella, EMBOSCADA de
+         GenNvim (duel-8): aparece por detrás (teletransporte en desktop / andando en móvil) -> narra -> combate
        · sala der alta = LABERINTO rightUp (x38-48, atrezzo COOLING_UNIT): nodo de evento (opcional)
   -> puente/cinta (26,22-24) -> Terminal (consola E4 + 2º interruptor de cinta) + duel-5 (abre gate-boss)
   -> GenNvim (duel-6, JEFE 1) -> E5 -> puerta post-jefe -> Midutech (duel-7, JEFE FINAL) -> E6
@@ -51,7 +56,7 @@ semilla). Los aumentos ATK/DEF y las cartas van SIEMPRE en un callejón del maze
 | Interruptor puente (abajo) | `story-ch4-belt-switch` (SWITCH) | (22,27) | belt-toggle reversible |
 | Interruptor puente (arriba) | `story-ch4-belt-switch-top` (SWITCH) | (28,20) | gemelo, revierte la cinta para bajar |
 | Carta Antigrabity | `story-ch4-card-antigrabity` (REWARD_CARD) | callejón hub (auto) | `entity-antigrabity`; `imageSrc` = arte |
-| Carta Hydra | `story-ch4-card-hydra` (REWARD_CARD) | callejón leftUp (auto) | `exec-hydra-attack-down`; tras duel-8 |
+| Carta Hydra | `story-ch4-card-hydra` (REWARD_CARD) | callejón leftUp (auto) | `exec-hydra-attack-down`; `gateRequiredNodeIds: [duel-8]` |
 | USB Raro | `story-ch4-cache-usb` (REWARD_OBJECT) | callejón laberinto 2 (auto) | LEVEL_CANDY |
 | Aumento ATK | `story-ch4-cache-atk` (REWARD_OBJECT) | callejón leftLow (auto) | tras duel-2 |
 | Aumento DEF | `story-ch4-cache-def` (REWARD_OBJECT) | callejón rightLow (auto) | tras duel-3 |
@@ -62,14 +67,33 @@ semilla). Los aumentos ATK/DEF y las cartas van SIEMPRE en un callejón del maze
 | duel-5 | `story-ch4-duel-5` | (30,17) | antesala terminal (abre gate-boss) |
 | duel-6 | `story-ch4-duel-6` (BOSS) | (26,9) | GenNvim JEFE 1 |
 | duel-7 | `story-ch4-duel-7` (BOSS) | (26,4) | Midutech JEFE FINAL |
-| duel-8 | `story-ch4-duel-8` | acceso callejón leftUp (auto) | GenNvim (DUEL) guardia carta Hydra |
+| duel-8 | `story-ch4-duel-8` | acceso callejón leftUp (auto) | GenNvim (DUEL) — **emboscada**: `hidden`, sin `visionRange`, NO ocupa casilla |
+
+### Emboscada de la Hydra (duel-8) — cutscene por pantalla
+El pasillo de la carta Hydra está **vacío** (GenNvim ya no espera plantado: se le veía venir desde la entrada del
+maze). A **2 casillas** de poder coger la carta hay un trigger oculto `story-ch4-event-hydra` (`STEP_ON`, `hidden`)
+cuya posición **se calcula** trazando el pasillo con `traceWalkableCorridor` (nada hardcodeado). Al pisarlo:
+
+1. `OverworldDevScene` mira `AMBUSH_BY_TRIGGER_ID` (mismo mecanismo que BigLog en el Acto 2) y, si duel-8 no está
+   vencido, suspende el control y lanza `buildAct4HydraAmbushCutscene(tilemap, { isCompactViewport })`.
+2. **Desktop** (cámara cerrada, se ve media sala): GenNvim se **materializa** (`SPAWN_NPC` con `effect: "TELEPORT"`
+   → anillo verde + glitch en `Renderer2D.drawTeleportBurst`) a 2 casillas por detrás y avanza 1 paso.
+   **Móvil** (viewport estrecho): nace 5 casillas atrás, **fuera de cámara**, y entra **andando** por el pasillo.
+   En ambos casos acaba **pegado al jugador, cortándole la retirada**, y el jugador se gira (`PLAYER_FACE`).
+3. Al terminar la cutscene se narra `story-ch4-event-hydra` y, al cerrarla, arranca duel-8.
+4. Se **re-dispara** mientras no venzas (se gatea por `completed`, no por "evento visto"). Como el rival ya no
+   tapa físicamente el callejón, la carta lleva `gateRequiredNodeIds: ["story-ch4-duel-8"]`.
 
 ### Narraciones (catálogo `src/services/story/story-node-interaction-dialogue-catalog.ts`)
 Sin "la Entidad": `story-ch4-event-intro` (E1), `story-ch4-card-antigrabity` (aviso BigLog), `story-ch4-event-hydra`
 (GenNvim antes de duel-8), `story-ch4-event-belt-locked`, `story-ch4-belt-switch` / `-top` (Flujo Invertido/Redirigido),
 `story-ch4-event-rightup` (placeholder), E4/E5/E6. **Avatares:** las líneas de GenNvim/Midutech llevan `portraitUrl`
 (su cara, no la de BigLog por defecto). **Personajes:** BigLog = mentor; GenNvim/Midutech = villanos; Sistema = terminal.
-Vídeos previstos: E1, E4, E6 (de momento narración). **Timing:** `DEFAULT_AUTO_ADVANCE_MS = 10s` en
+**Vídeo:** E1 (`story-ch4-event-intro`, al PRIMER paso) ya lleva `cinematicVideo`
+(`/assets/videos/story/act-4/genNvim.mp4`) y se abre con el overlay de terminal de los Actos 1/2; **el vídeo
+sustituye a la narración** (las líneas quedan de respaldo para el mapa Story clásico). E4/E6 aún pendientes de
+vídeo. La emboscada de la Hydra solo tiene **la línea de GenNvim**: al cerrarla arranca el combate, sin réplica
+de BigLog. **Timing:** `DEFAULT_AUTO_ADVANCE_MS = 10s` en
 `StoryNodeInteractionDialog`. **Eliminado:** `story-ch4-event-belts` (ya no existe).
 
 ---
@@ -89,6 +113,14 @@ Vídeos previstos: E1, E4, E6 (de momento narración). **Timing:** `DEFAULT_AUTO
 > Card real y luego salta la narración). (3) Líneas de GenNvim/Midutech con `portraitUrl` → muestran SU avatar.
 > (4) Evento `story-ch4-event-belts` ELIMINADO (tilemap + map-def + catálogo). (5) Narración más lenta:
 > `DEFAULT_AUTO_ADVANCE_MS` 7s→10s + líneas "Sistema" del acto a 5-6s.
+>
+> **Ajuste 2026-07-23 — EMBOSCADA de duel-8:** GenNvim ya NO espera plantado en el pasillo de la Hydra (se le
+> veía llegar desde la entrada del maze y quitaba tensión). Ahora el pasillo está vacío y salta una **cutscene de
+> emboscada** 2 casillas antes de la carta (ver "Emboscada de la Hydra" en la sección A). Cambios: `duel-8` pasa a
+> `hidden` sin `visionRange` y **sin `markSolid`**; el trigger `story-ch4-event-hydra` se mueve de la boca del maze
+> al pasillo (posición calculada con el nuevo `trace-walkable-corridor.ts`); la carta lleva `gateRequiredNodeIds`;
+> nuevo guion `act-4-hydra-cutscene.ts`; el motor gana los pasos `PLAYER_FACE` y `SPAWN_NPC` con
+> `effect: "TELEPORT"`; `OverworldDevScene` generaliza el caso BigLog en `AMBUSH_BY_TRIGGER_ID`. **Sin cambios de BD.**
 
 ### (histórico) Lo que faltaba (pasos 4 y 5)
 

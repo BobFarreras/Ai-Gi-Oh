@@ -34,6 +34,7 @@ import {
 import { invertBeltKind, resolveBeltDirection } from "@/services/story/overworld/overworld-tile-kinds";
 import { resolveCameraOffset } from "@/components/hub/story/overworld/engine/camera-math";
 import {
+  CUTSCENE_TELEPORT_SECONDS,
   DEFAULT_ENGINE_CONFIG,
   FIXED_TIMESTEP_MS,
   IEngineWorldState,
@@ -150,6 +151,8 @@ export class OverworldEngine {
     activeMove: { from: IGridPosition; to: IGridPosition; progress: number } | null;
     walkPath: IGridPosition[];
     walkIndex: number;
+    /** Materialización en curso (efecto TELEPORT): 0..1; 1 = ya sólido. */
+    spawnProgress: number;
   } | null = null;
 
   private heldDirection: OverworldDirection | null = null;
@@ -787,7 +790,11 @@ export class OverworldEngine {
   private advanceCutscene(deltaSeconds: number): void {
     const step = this.cutsceneSteps[this.cutsceneIndex];
     if (!step) {
+      // Cutscene vacía (guion que no se pudo construir): se cierra igual devolviendo el control por el
+      // hook, o la escena se quedaría con la interacción suspendida para siempre.
       this.isCutsceneActive = false;
+      this.cutsceneNpc = null;
+      this.hooks.onCutsceneEnd?.();
       return;
     }
     switch (step.kind) {
@@ -802,16 +809,32 @@ export class OverworldEngine {
       case "PLAYER_STEP":
         this.advanceCutscenePlayerStep(step.direction, deltaSeconds);
         break;
+      case "PLAYER_FACE":
+        this.world.player.facing = step.direction;
+        this.goToNextCutsceneStep();
+        break;
       case "SPAWN_NPC":
-        this.sprites.load(step.spriteSrc);
-        this.cutsceneNpc = {
-          tile: { tileX: step.tileX, tileY: step.tileY },
-          facing: step.facing,
-          spriteSrc: step.spriteSrc,
-          activeMove: null,
-          walkPath: [],
-          walkIndex: 0,
-        };
+        if (!this.isCutsceneStepStarted) {
+          this.isCutsceneStepStarted = true;
+          this.sprites.load(step.spriteSrc);
+          this.cutsceneNpc = {
+            tile: { tileX: step.tileX, tileY: step.tileY },
+            facing: step.facing,
+            spriteSrc: step.spriteSrc,
+            activeMove: null,
+            walkPath: [],
+            walkIndex: 0,
+            spawnProgress: step.effect === "TELEPORT" ? 0 : 1,
+          };
+        }
+        // Con efecto TELEPORT el paso dura lo que la materialización; sin él, se pasa al siguiente ya.
+        if (this.cutsceneNpc && this.cutsceneNpc.spawnProgress < 1) {
+          this.cutsceneNpc.spawnProgress = Math.min(
+            1,
+            this.cutsceneNpc.spawnProgress + deltaSeconds / CUTSCENE_TELEPORT_SECONDS,
+          );
+          if (this.cutsceneNpc.spawnProgress < 1) break;
+        }
         this.goToNextCutsceneStep();
         break;
       case "NPC_WALK_TO":
@@ -918,7 +941,13 @@ export class OverworldEngine {
             tileSize,
         }
       : { x: npc.tile.tileX * tileSize, y: npc.tile.tileY * tileSize };
-    return { pixelX: pixel.x, pixelY: pixel.y, facing: npc.facing, spriteSrc: npc.spriteSrc };
+    return {
+      pixelX: pixel.x,
+      pixelY: pixel.y,
+      facing: npc.facing,
+      spriteSrc: npc.spriteSrc,
+      spawnProgress: npc.spawnProgress,
+    };
   }
 
   private readonly handleKeyDown = (event: KeyboardEvent): void => {

@@ -8,9 +8,18 @@ const MIDUTECH_PORTRAIT = "/assets/story/opponents/opp-ch1-midutech/avatar-Midut
 export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNodeInteractionDialogue> = {
   // ── Acto 4 — Núcleo GenNvim (terminal verde) ────────────────────────────────
   // BigLog es el MENTOR (bueno): habla claro y te guía. Las amenazas las dicen los villanos GenNvim/Midutech.
-  // E1/E4/E6 serán vídeo; de momento van como narración.
+  // E1 YA es vídeo (`/assets/videos/story/act-4/genNvim.mp4`); E4/E6 lo serán, de momento van como narración.
   "story-ch4-event-intro": {
     title: "Núcleo GenNvim",
+    // Cinemática de entrada al acto (se abre el terminal, reproduce y se cierra), como las intros de los
+    // Actos 1 y 2. En el overworld el vídeo SUSTITUYE a la narración; las líneas quedan como respaldo del
+    // mapa Story clásico.
+    cinematicVideo: {
+      videoUrl: "/assets/videos/story/act-4/genNvim.mp4",
+      skipLabel: "Interrumpir vídeo",
+      autoPlay: true,
+      loop: false,
+    },
     lines: [
       { actorId: "opp-ch4-gennvim", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: GENNVIM_PORTRAIT, speaker: "GenNvim", text: "Vaya… un intruso en mi núcleo. Bienvenido a mis laberintos. Si logras cruzarlos todos, quizá seas digno de presentarte ante mi señor, Midutech. Aunque lo dudo mucho." },
       { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Tranquilo, yo te guío desde aquí. Cruza el mainframe sala por sala: cada una es un laberinto de GenNvim." },
@@ -45,12 +54,13 @@ export const STORY_NODE_INTERACTION_DIALOGUE_BY_NODE_ID: Record<string, IStoryNo
       { speaker: "Sistema", text: "Interruptor accionado. Flujo de la pasarela revertido: ahora baja. Úsalo para volver a las salas inferiores.", autoAdvanceMs: 6000 },
     ],
   },
-  // Aviso de GenNvim al entrar al maze de la carta Hydra (leftUp), justo antes de duel-8.
+  // EMBOSCADA de GenNvim: salta al pisar el trigger a dos casillas de la carta Hydra, tras la cutscene en la
+  // que aparece POR DETRÁS (teletransporte en desktop, entrando andando en móvil). Al cerrarla → duel-8.
   "story-ch4-event-hydra": {
     title: "Guardián de la Hydra",
     lines: [
-      { actorId: "opp-ch4-gennvim", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: GENNVIM_PORTRAIT, speaker: "GenNvim", text: "No puede ser que hayas llegado hasta aquí… Esa carta es para mi señor Midutech. Si la quieres, tendrás que arrancármela en combate." },
-      { actorId: "opp-biglog", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", speaker: "BigLog", text: "Otra carta de código oscuro. Véncelo y será tuya, pero prepárate: no va a ser fácil." },
+      // Solo habla GenNvim: al cerrar SU línea arranca el combate (sin réplica de BigLog que corte el ritmo).
+      { actorId: "opp-ch4-gennvim", side: "RIGHT", visualKind: "CHARACTER", presentationMode: "TERMINAL", portraitUrl: GENNVIM_PORTRAIT, speaker: "GenNvim", text: "Ni un paso más. ¿Creías que iba a dejar esa carta sin vigilancia? Esa Hydra es para mi señor Midutech. Si la quieres, tendrás que arrancármela en combate." },
     ],
   },
   // PLACEHOLDER (a reescribir): consola neutra al fondo del maze rightUp (sala opcional). Sin "la Entidad".

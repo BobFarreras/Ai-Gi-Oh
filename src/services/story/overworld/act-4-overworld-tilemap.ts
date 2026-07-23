@@ -5,9 +5,25 @@
 import { IOverworldTilemap } from "@/services/story/overworld/tilemap-schema";
 import { validateOverworldTilemap } from "@/services/story/overworld/validate-tilemap";
 import { GROUND_TILE, OVERLAY_TILE } from "@/services/story/overworld/overworld-tile-kinds";
+import { traceWalkableCorridor } from "@/services/story/overworld/trace-walkable-corridor";
 
 const MAP_WIDTH = 52;
 const MAP_HEIGHT = 70;
+
+/**
+ * A cuántas casillas del acceso a la carta Hydra salta la emboscada de GenNvim (duel-8): 2 = el jugador ve
+ * la carta a tiro y, justo antes de alcanzarla, le cortan el paso por detrás.
+ */
+export const HYDRA_AMBUSH_TILES_BEFORE_CARD = 2;
+/** Id del trigger oculto que lanza la cutscene de emboscada de GenNvim (y del diálogo que narra). */
+export const HYDRA_AMBUSH_TRIGGER_ID = "story-ch4-event-hydra";
+/** Id del duelo que se lanza al terminar la cutscene de emboscada. */
+export const HYDRA_AMBUSH_DUEL_ID = "story-ch4-duel-8";
+/**
+ * Nodo de ENTRADA del maze de la Hydra (leftUp): la boca del laberinto por la que se accede desde el
+ * laberinto 2. Es el extremo "hacia fuera" al trazar el pasillo (GenNvim llega desde ahí).
+ */
+export const HYDRA_MAZE_ENTRY_TILE = { tileX: 14, tileY: 29 } as const;
 
 // Avatares (ya existen en assets). GenNvim reutiliza el del apprentice; Midutech el del oponente de arena.
 const SOLDADO = "/assets/story/opponents/opp-ch4-soldado-terminal/avatar-Soldado-terminal.webp";
@@ -269,9 +285,18 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   const hydraMaze = carveMaze(map, { bodyY0: 25, bodyY1: 33, nodeX0: 4, nodeY0: 27, cols: 6, rows: 3, seed: 0x4a3d1b7e, start: [5, 1] });
   // Carta HYDRA en el callejón sin salida más profundo (reservando el nodo de entrada).
   const [hydraTileX, hydraTileY] = hydraMaze.findDeadEnd(new Set(["5,1"]), [4, 27]);
-  // duel-8 (GenNvim) en la ÚNICA celda de acceso al callejón de la Hydra: obligatorio vencerlo para coger la carta.
+  // Única celda de acceso al callejón de la Hydra: desde ahí se coge la carta (pulsando al lado).
   const hydraApproach = hydraMaze.openApproach(hydraTileX, hydraTileY) ?? [hydraTileX - 1, hydraTileY];
   const [duel8TileX, duel8TileY] = hydraApproach;
+  // EMBOSCADA de GenNvim (duel-8): ya no espera plantado en el pasillo (se veía venir desde la entrada del
+  // maze). Ahora el pasillo está vacío y, DOS casillas antes de poder coger la carta, un trigger oculto lanza
+  // la cutscene: GenNvim aparece por detrás (cortando la retirada), narra y arranca el combate. El corredor se
+  // traza sobre la rejilla (no hay coordenadas a mano) desde el acceso a la carta hacia la entrada del maze.
+  const hydraCorridor = traceWalkableCorridor(map.collision, { tileX: duel8TileX, tileY: duel8TileY }, HYDRA_MAZE_ENTRY_TILE);
+  const ambushTile = hydraCorridor[Math.min(HYDRA_AMBUSH_TILES_BEFORE_CARD, hydraCorridor.length - 1)] ?? {
+    tileX: duel8TileX,
+    tileY: duel8TileY,
+  };
 
   // LABERINTO rightUp (sala der alta, x=38..48, y=25..33): maze OPCIONAL con atrezzo distinto (unidades de
   // refrigeración en vez de racks) y un nodo de EVENTO al fondo. Nodos 6x3 en x=38,40,42,44,46,48 / y=27,29,31.
@@ -314,7 +339,7 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
   markSolid(map, 16, 51); // duel-2 (rama izq del laberinto 1, guardia del aumento ATK)
   markSolid(map, 36, 51); // duel-3 (rama der del laberinto 1, guardia del aumento DEF)
   markSolid(map, 16, 29); // duel-4 (rama izq del laberinto 2, guardia de la ENTRADA del maze de la Hydra)
-  markSolid(map, duel8TileX, duel8TileY); // duel-8 GenNvim (guardia del callejón de la carta Hydra, dentro del maze leftUp)
+  // duel-8 (GenNvim) NO ocupa casilla: aparece por cutscene en la emboscada del pasillo de la Hydra.
   markSolid(map, 30, 17); // duel-5 (guardia del terminal)
   markSolid(map, 26, 9); // duel-6 GenNvim (boss 1, mitad baja de la sala del jefe)
   markSolid(map, 26, 4); // duel-7 Midutech (boss final, mitad alta, tras la puerta post-jefe)
@@ -361,8 +386,10 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       { id: "story-ch4-duel-5", kind: "DUEL", tileX: 30, tileY: 17, sprite: "soldado-terminal", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/5", imageSrc: SOLDADO, facing: "DOWN", visionRange: 3 },
       { id: "story-ch4-duel-6", kind: "BOSS", tileX: 26, tileY: 9, sprite: "gennvim", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/6", imageSrc: GENNVIM, facing: "DOWN", visionRange: 3, visionRect: { x0: 18, y0: 7, x1: 34, y1: 11 } },
       { id: "story-ch4-duel-7", kind: "BOSS", tileX: 26, tileY: 4, sprite: "midutech", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/7", imageSrc: MIDUTECH, facing: "DOWN", visionRange: 3, visionRect: { x0: 18, y0: 3, x1: 34, y1: 5 } },
-      // duel-8: GenNvim (DUEL, no BOSS) custodia el callejón de la carta Hydra dentro del maze leftUp.
-      { id: "story-ch4-duel-8", kind: "DUEL", tileX: duel8TileX, tileY: duel8TileY, sprite: "gennvim", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/8", imageSrc: GENNVIM, facing: "DOWN", visionRange: 2 },
+      // duel-8: GenNvim (DUEL, no BOSS) custodia la carta Hydra. NO se dibuja ni bloquea el pasillo: es un nodo
+      // "fantasma" (hidden, sin visionRange → sin actor) que solo existe para el combate que lanza la cutscene de
+      // emboscada. Su casilla nominal es el acceso al callejón, para que el nodo viva donde ocurre la escena.
+      { id: HYDRA_AMBUSH_DUEL_ID, kind: "DUEL", tileX: duel8TileX, tileY: duel8TileY, sprite: "gennvim", trigger: "ADJACENT_ACTION", duelHref: "/hub/story/chapter/4/duel/8", imageSrc: GENNVIM, facing: "DOWN", hidden: true },
 
       // ── Recompensas: USB + aumentos ATK/DEF (objetos) + carta ANTIGRABITY (recompensa de carta) ──────
       { id: "story-ch4-cache-usb", kind: "REWARD_OBJECT", tileX: usbTileX, tileY: usbTileY, sprite: "usb-raro", trigger: "ADJACENT_ACTION", imageSrc: USB },
@@ -371,8 +398,9 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       // Carta ANTIGRABITY escondida en un rincón del laberinto 1; el nodo muestra el arte de la carta y al cogerla
       // se revela la Card real y luego salta el aviso de BigLog.
       { id: "story-ch4-card-antigrabity", kind: "REWARD_CARD", tileX: cardTileX, tileY: cardTileY, sprite: "card", trigger: "ADJACENT_ACTION", imageSrc: CARD_ANTIGRABITY },
-      // Carta HYDRA al fondo del maze leftUp, tras vencer a duel-8 (GenNvim). El nodo muestra el arte de la carta.
-      { id: "story-ch4-card-hydra", kind: "REWARD_CARD", tileX: hydraTileX, tileY: hydraTileY, sprite: "card", trigger: "ADJACENT_ACTION", imageSrc: CARD_HYDRA },
+      // Carta HYDRA al fondo del maze leftUp. Ya no la tapa el cuerpo de GenNvim (ahora emboscada), así que el
+      // candado es explícito: sin duel-8 vencido el nodo está bloqueado y no se puede reclamar.
+      { id: "story-ch4-card-hydra", kind: "REWARD_CARD", tileX: hydraTileX, tileY: hydraTileY, sprite: "card", trigger: "ADJACENT_ACTION", imageSrc: CARD_HYDRA, gateRequiredNodeIds: [HYDRA_AMBUSH_DUEL_ID] },
 
       // ── Puerta post-GenNvim: SOLO abre tras vencer a GenNvim (duel-6); sella a Midutech ──────────────
       { id: "story-a4-gate-postboss", kind: "GATE", tileX: 26, tileY: 6, sprite: "gate", trigger: "ADJACENT_ACTION", gateRequiredNodeIds: ["story-ch4-duel-6"] },
@@ -385,8 +413,9 @@ export function buildAct4OverworldTilemap(): IOverworldTilemap {
       // Triggers ocultos (se pisan, una vez): belt-locked al llegar al puente en contra; E5 tras vencer a GenNvim
       // (celda naturalmente sellada por su casilla sólida); E6 tras Midutech.
       { id: "story-ch4-event-belt-locked", kind: "EVENT", tileX: 26, tileY: 25, sprite: "hidden", trigger: "STEP_ON", hidden: true },
-      // Al entrar al maze leftUp (nodo de entrada 14,29): GenNvim advierte por la carta Hydra, antes de duel-8.
-      { id: "story-ch4-event-hydra", kind: "EVENT", tileX: 14, tileY: 29, sprite: "hidden", trigger: "STEP_ON", hidden: true },
+      // EMBOSCADA de la Hydra: trigger oculto DOS casillas antes del acceso a la carta. Al pisarlo, GenNvim
+      // aparece por detrás (teletransporte en desktop / entrando andando en móvil), narra y arranca duel-8.
+      { id: HYDRA_AMBUSH_TRIGGER_ID, kind: "EVENT", tileX: ambushTile.tileX, tileY: ambushTile.tileY, sprite: "hidden", trigger: "STEP_ON", hidden: true },
       { id: "story-ch4-event-pre-midutech", kind: "EVENT", tileX: 26, tileY: 7, sprite: "hidden", trigger: "STEP_ON", hidden: true },
       { id: "story-ch4-event-core-key", kind: "EVENT", tileX: 26, tileY: 3, sprite: "hidden", trigger: "STEP_ON", hidden: true },
     ],
