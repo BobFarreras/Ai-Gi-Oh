@@ -1,6 +1,6 @@
 // src/components/admin/internal/admin-story-deck-save-flow.ts - Orquesta guardado del draft Story y refresco manteniendo foco de oponente/duelo.
 import { saveAdminStoryDeck } from "@/components/admin/admin-story-deck-api";
-import { IStorySlotLevelDraft } from "@/components/admin/internal/admin-story-duel-draft";
+import { EMPTY_SLOT_LEVEL_DRAFT, IStorySlotLevelDraft } from "@/components/admin/internal/admin-story-duel-draft";
 import { StoryAiStyle } from "@/core/services/opponent/difficulty/story-ai-profile";
 import { StoryOpponentDifficulty } from "@/core/entities/opponent/IStoryDuelDefinition";
 
@@ -24,7 +24,13 @@ interface IExecuteAdminStoryDeckSaveInput {
  * Ejecuta persistencia de deck/config por duelo y recarga el editor sin perder contexto.
  */
 export async function executeAdminStoryDeckSave(input: IExecuteAdminStoryDeckSaveInput): Promise<void> {
-  const compactCardIds = input.draftCardIds.filter((cardId): cardId is string => typeof cardId === "string" && cardId.trim().length > 0);
+  // Las cartas se guardan COMPACTADAS (sin los huecos que haya dejado el editor), así que sus overrides tienen
+  // que numerarse con esa misma posición compactada. Guardarlos con el índice original del hueco descoloca los
+  // atributos en la siguiente carga: las cartas se corren y el nivel/ATK/DEF acaba en otra carta o se pierde.
+  const filledSlots = input.draftCardIds.flatMap((cardId, draftIndex) =>
+    typeof cardId === "string" && cardId.trim().length > 0 ? [{ cardId, draftIndex }] : [],
+  );
+  const compactCardIds = filledSlots.map((slot) => slot.cardId);
   await saveAdminStoryDeck({
     deckListId: input.deckListId,
     cardIds: compactCardIds,
@@ -34,10 +40,9 @@ export async function executeAdminStoryDeckSave(input: IExecuteAdminStoryDeckSav
       aiProfile: { style: input.duelAiStyle, aggression: input.duelAiAggression },
       fusionCardIds: input.draftFusionCardIds.filter((cardId) => cardId.trim().length > 0),
       rewardCardIds: input.draftRewardCardIds.filter((cardId) => cardId.trim().length > 0),
-      slotOverrides: input.draftCardIds.flatMap((cardId, slotIndex) => {
-        if (!cardId) return [];
-        const levels = input.draftSlotLevels[slotIndex] ?? { versionTier: 0, level: 0, xp: 0, attackOverride: null, defenseOverride: null };
-        return [{ slotIndex, cardId, versionTier: levels.versionTier, level: levels.level, xp: levels.xp, attackOverride: levels.attackOverride, defenseOverride: levels.defenseOverride }];
+      slotOverrides: filledSlots.map(({ cardId, draftIndex }, slotIndex) => {
+        const levels = input.draftSlotLevels[draftIndex] ?? EMPTY_SLOT_LEVEL_DRAFT;
+        return { slotIndex, cardId, versionTier: levels.versionTier, level: levels.level, xp: levels.xp, attackOverride: levels.attackOverride, defenseOverride: levels.defenseOverride };
       }),
     } : null,
     updateBaseDeck: input.isBaseDeckMode,

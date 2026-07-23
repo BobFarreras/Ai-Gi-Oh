@@ -5,8 +5,13 @@ import { useMemo, useState } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { IAdminArenaCardEntry } from "@/core/entities/training/IAdminArena";
 import { useAdminArena } from "@/components/admin/internal/arena/use-admin-arena";
+import {
+  ArenaDeckZone,
+  applyArenaBonusToSameCards,
+  applyArenaScaleToSameCards,
+} from "@/components/admin/internal/arena/admin-arena-deck-entry-state";
 
-export type ArenaDeckZone = "DECK" | "FUSION";
+export type { ArenaDeckZone };
 interface IArenaDraft {
   variantId: string;
   deck: IAdminArenaCardEntry[];
@@ -97,24 +102,13 @@ export function useAdminArenaDeckEditor() {
       }));
       setSelectedDeckRef(null);
     },
+    /** Escalado (versión/nivel/XP) de la carta: se aplica a todas sus copias, como en Story. */
     setOverride(zone: ArenaDeckZone, index: number, field: "versionTier" | "level" | "xp", value: number | null) {
-      mutateDraft((current) => ({
-        ...current,
-        [zone === "DECK" ? "deck" : "fusion"]: (zone === "DECK" ? current.deck : current.fusion).map((entry, i) =>
-          i === index ? { ...entry, [field]: value } : entry,
-        ),
-      }));
+      mutateDraft((current) => ({ ...current, ...applyArenaScaleToSameCards(current, zone, index, field, value) }));
     },
-    /** Ajusta el bonus ATK/DEF de la carta en `delta` (un objeto = +/- su valor). Nunca baja de 0. */
+    /** Ajusta el bonus ATK/DEF (un objeto = +/- su valor) y deja el mismo valor en todas las copias. */
     adjustBonus(zone: ArenaDeckZone, index: number, stat: "ATTACK" | "DEFENSE", delta: number) {
-      mutateDraft((current) => ({
-        ...current,
-        [zone === "DECK" ? "deck" : "fusion"]: (zone === "DECK" ? current.deck : current.fusion).map((entry, i) => {
-          if (i !== index) return entry;
-          const key = stat === "ATTACK" ? "attackBonus" : "defenseBonus";
-          return { ...entry, [key]: Math.max(0, (entry[key] ?? 0) + delta) };
-        }),
-      }));
+      mutateDraft((current) => ({ ...current, ...applyArenaBonusToSameCards(current, zone, index, stat, delta) }));
     },
     async saveVariant(): Promise<void> {
       if (!variant) return;

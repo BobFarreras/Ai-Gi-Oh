@@ -12,10 +12,13 @@ import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
 import { AdminArenaDeckGrid } from "@/components/admin/internal/arena/AdminArenaDeckGrid";
 import { AdminArenaOpponentColumn } from "@/components/admin/internal/arena/AdminArenaOpponentColumn";
 import { useAdminArenaDeckEditor } from "@/components/admin/internal/arena/use-admin-arena-deck-editor";
+import { getMaxCardLevel } from "@/core/services/progression/card-level-rules";
+import { MAX_CARD_VERSION_TIER } from "@/core/services/progression/card-version-rules";
 
+// Topes tomados de las reglas del juego: si el nivel máximo de carta sube, estos campos suben con él.
 const SCALE_FIELDS: { key: "versionTier" | "level"; label: string; max: number }[] = [
-  { key: "versionTier", label: "Ver", max: 5 },
-  { key: "level", label: "Lvl", max: 30 },
+  { key: "versionTier", label: "Ver", max: MAX_CARD_VERSION_TIER },
+  { key: "level", label: "Lvl", max: getMaxCardLevel() },
 ];
 
 export function AdminArenaDeckEditor() {

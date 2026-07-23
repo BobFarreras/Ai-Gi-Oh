@@ -2,6 +2,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { IAdminFeedback, useAdminFeedback } from "@/components/admin/internal/use-admin-feedback";
 import {
   fetchAdminStarterDeckTemplateData,
   IAdminStarterDeckApiResponse,
@@ -24,7 +25,7 @@ interface IUseAdminStarterDeckEditorResult {
   swapSlots: (fromSlotIndex: number, toSlotIndex: number) => void;
   canSave: boolean;
   isBusy: boolean;
-  feedback: string;
+  feedback: IAdminFeedback;
   onSelectTemplate: (templateKey: string) => Promise<void>;
   onRefresh: () => Promise<void>;
   onSave: () => Promise<void>;
@@ -45,7 +46,7 @@ export function useAdminStarterDeckEditor(initialData: IAdminStarterDeckApiRespo
   const [activateOnSave, setActivateOnSave] = useState(false);
   const [draftCardIds, setDraftCardIds] = useState<Array<string | null>>(resolveInitialDraft(initialData));
   const [isBusy, setIsBusy] = useState(false);
-  const [feedback, setFeedback] = useState("");
+  const { feedback, clearFeedback, notifySuccess, notifyError } = useAdminFeedback();
 
   const selectedTemplateKey = useMemo(() => data.template?.templateKey ?? "", [data.template?.templateKey]);
   const canSave = useMemo(
@@ -61,9 +62,9 @@ export function useAdminStarterDeckEditor(initialData: IAdminStarterDeckApiRespo
       setSelectedSlotIndex(0);
       setSelectedCollectionCardId(null);
       setDraftCardIds(resolveInitialDraft(nextData));
-      setFeedback("");
+      clearFeedback();
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No se pudo cargar starter deck.");
+      notifyError(error, "No se pudo cargar starter deck.");
     } finally {
       setIsBusy(false);
     }
@@ -72,7 +73,7 @@ export function useAdminStarterDeckEditor(initialData: IAdminStarterDeckApiRespo
   async function onSave(): Promise<void> {
     if (!data.template) return;
     if (!canSave) {
-      setFeedback("Debes completar los 20 slots antes de guardar.");
+      notifyError(null, "Debes completar los 20 slots antes de guardar.");
       return;
     }
     setIsBusy(true);
@@ -85,9 +86,9 @@ export function useAdminStarterDeckEditor(initialData: IAdminStarterDeckApiRespo
       });
       await load(data.template.templateKey);
       setIsEditMode(false);
-      setFeedback("Starter deck guardado correctamente.");
+      notifySuccess("Starter deck guardado correctamente.");
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No se pudo guardar starter deck.");
+      notifyError(error, "No se pudo guardar starter deck.");
     } finally {
       setIsBusy(false);
     }

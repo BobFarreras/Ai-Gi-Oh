@@ -2,6 +2,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { IAdminFeedback, useAdminFeedback } from "@/components/admin/internal/use-admin-feedback";
 import { fetchAdminCatalogSnapshot, saveAdminCard } from "@/components/admin/admin-catalog-api";
 import {
   createCommandFromDraft,
@@ -24,7 +25,7 @@ interface IUseAdminCardCatalogEditorResult {
   draftPreviewCard: ReturnType<typeof createPreviewCardFromDraft>;
   mode: "view" | "create" | "edit";
   isBusy: boolean;
-  feedback: string;
+  feedback: IAdminFeedback;
   selectCard: (cardId: string) => void;
   updateDraft: <K extends keyof IAdminCardCatalogDraft>(key: K, value: IAdminCardCatalogDraft[K]) => void;
   applyTypeTemplate: (nextType: CardType, force: boolean) => void;
@@ -45,7 +46,7 @@ export function useAdminCardCatalogEditor(initialSnapshot: IAdminCatalogSnapshot
   const [mode, setMode] = useState<"view" | "create" | "edit">("view");
   const [draft, setDraft] = useState<IAdminCardCatalogDraft>(createEmptyCardDraft());
   const [isBusy, setIsBusy] = useState(false);
-  const [feedback, setFeedback] = useState("");
+  const { feedback, clearFeedback, notifySuccess, notifyError } = useAdminFeedback();
 
   const selectedEntry = useMemo(
     () => snapshot.cards.find((card) => card.id === selectedCardId) ?? null,
@@ -69,9 +70,9 @@ export function useAdminCardCatalogEditor(initialSnapshot: IAdminCatalogSnapshot
         ? selectedCardId
         : pickDefaultSelectedId(nextSnapshot);
       setSelectedCardId(nextSelectedId);
-      setFeedback("");
+      clearFeedback();
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No se pudo refrescar el catálogo.");
+      notifyError(error, "No se pudo refrescar el catálogo.");
     } finally {
       setIsBusy(false);
     }
@@ -90,24 +91,24 @@ export function useAdminCardCatalogEditor(initialSnapshot: IAdminCatalogSnapshot
     selectCard: (cardId) => {
       setSelectedCardId(cardId);
       setMode("view");
-      setFeedback("");
+      clearFeedback();
     },
     updateDraft: (key, value) => setDraft((current) => ({ ...current, [key]: value })),
     applyTypeTemplate: (nextType, force) => setDraft((current) => applyCardTypeTemplate(current, nextType, force)),
     beginCreate: () => {
       setDraft(createEmptyCardDraft());
       setMode("create");
-      setFeedback("");
+      clearFeedback();
     },
     beginEdit: () => {
       if (!selectedEntry) return;
       setDraft(createDraftFromEntry(selectedEntry));
       setMode("edit");
-      setFeedback("");
+      clearFeedback();
     },
     cancelEdit: () => {
       setMode("view");
-      setFeedback("");
+      clearFeedback();
     },
     refresh,
     save: async () => {
@@ -119,9 +120,9 @@ export function useAdminCardCatalogEditor(initialSnapshot: IAdminCatalogSnapshot
         setSnapshot(nextSnapshot);
         setSelectedCardId(command.id);
         setMode("view");
-        setFeedback("Carta guardada correctamente en catálogo.");
+        notifySuccess("Carta guardada correctamente en catálogo.");
       } catch (error) {
-        setFeedback(error instanceof Error ? error.message : "No se pudo guardar la carta.");
+        notifyError(error, "No se pudo guardar la carta.");
       } finally {
         setIsBusy(false);
       }
