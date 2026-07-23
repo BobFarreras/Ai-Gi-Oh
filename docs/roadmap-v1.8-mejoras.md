@@ -7,7 +7,7 @@
 **Progreso:**
 - ✅ **Fase 1** — Arena cambia de nivel sin recarga (soft-nav).
 - ✅ **Fase 2** — Animaciones de las **10** pasivas V5 en combate (el diagnóstico inicial se quedó corto; ver bloque de la fase).
-- ✅ **Fase 4** — 2 oponentes nuevos (Guill nivel 6 + Mouretech comodín), migración 086 aplicada a prod.
+- ✅ **Fase 4** — 2 oponentes nuevos (Guill nivel 6 + Midutech comodín), migración 086 aplicada a prod.
 - ✅ **Fase 3** — Admin mobile (Catálogo, Market, Starter, Story, Arena con detalle en diálogo; desktop intacto).
 - ⬜ **Fases 5 + 7 (FUSIONADAS)** — Academy 3D estilo "selección de campaña" (3 pilares holográficos: Tutorial, Oponentes, Documentación).
 - ⬜ Fase 6 — documentación interactiva (el contenido que abre el pilar de Documentación).
@@ -131,7 +131,7 @@ El problema está **dentro de cada panel de contenido**, no en el shell. Ejemplo
 
 ## Fase 4 — Dos oponentes nuevos, agnósticos Arena/Story 🟠 medio (mayormente contenido) · ✅ IMPLEMENTADA (commit `d213879`)
 
-> **Hecho.** **Guill** = rival dedicado del **Nivel 6** (APEX); antes el N6 reusaba `training-tier-5` (el soldado quedaba duplicado en el roster). **Mouretech** = rival **comodín** con 25% de aparecer en cualquier nivel (lógica pura: el azar se inyecta desde la página con `crypto`, no `Math.random`). Toca: narración (`story-opponent-narration-catalog.ts`, textos puestos; audios los graba el usuario), presets/pools de arena, catálogo de tiers (+Nivel 6), resolver (comodín), migración `086_arena_opponents_guill_mouretech.sql` **aplicada a prod** (verificado: 22 cartas/variante, cero refs rotas). Alta solo en Arena (identidad lista para Story). Gotcha resuelto: `trap-gemini-counter-seal` era un id muerto (no está en CARD_BY_ID) → `trap-atk-drain`. Guard `db:validate` extendido para validar cartas de decks de migraciones (commit `ee4418e`). **Pendiente:** el usuario graba los `.m4a`.
+> **Hecho.** **Guill** = rival dedicado del **Nivel 6** (APEX); antes el N6 reusaba `training-tier-5` (el soldado quedaba duplicado en el roster). **Midutech** = rival **comodín** con 25% de aparecer en cualquier nivel (lógica pura: el azar se inyecta desde la página con `crypto`, no `Math.random`). Toca: narración (`story-opponent-narration-catalog.ts`, textos puestos; audios los graba el usuario), presets/pools de arena, catálogo de tiers (+Nivel 6), resolver (comodín), migración `086_arena_opponents_guill_midutech.sql` **aplicada a prod** (verificado: 22 cartas/variante, cero refs rotas). Alta solo en Arena (identidad lista para Story). Gotcha resuelto: `trap-gemini-counter-seal` era un id muerto (no está en CARD_BY_ID) → `trap-atk-drain`. Guard `db:validate` extendido para validar cartas de decks de migraciones (commit `ee4418e`). **Pendiente:** el usuario graba los `.m4a`.
 
 **Diagnóstico.** El sistema es más maduro de lo que parece a primera vista: **tanto Arena como Story ya son 100% data-driven en BD**, con paneles admin propios:
 - **Arena:** tablas `arena_opponents` / `arena_opponent_deck_variants` / `arena_deck_variant_cards` / `arena_tiers` (migraciones 081-084), editadas desde `/admin-portal/[slug]/arena` (`AdminArenaPanel`, con pestañas Mazos/Estructura).

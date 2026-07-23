@@ -209,8 +209,8 @@ export const OPPONENT_BIOS: Record<string, IOpponentBio> = {
     role: "Rival final (APEX)",
     bio: "El oponente del último nivel, al que nadie ha superado. Un desafío de élite pensado para poner a prueba todo lo aprendido.",
   },
-  "opp-mouretech": {
-    displayName: "Mouretech",
+  "opp-midutech": {
+    displayName: "Midutech",
     role: "Comodín impredecible",
     bio: "Una presencia optimizada que puede aparecer en cualquier nivel sin avisar. Nunca sabes cuándo interceptará tu partida para 'optimizar tu derrota'.",
   },
@@ -224,5 +224,5 @@ export const OPPONENT_ORDER: string[] = [
   "opp-helena",
   "opp-soldier-act01",
   "opp-guill",
-  "opp-mouretech",
+  "opp-midutech",
 ];

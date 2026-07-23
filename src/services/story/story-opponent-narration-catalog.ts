@@ -144,12 +144,12 @@ export const STORY_OPPONENT_NARRATION_CATALOG: Record<string, IStoryOpponentNarr
       opponentDefeat: line("opponentDefeat", "Imposible... ¿me has superado?", "derrota-oponente.m4a"),
     },
   }),
-  "opp-mouretech": profile({
-    opponentId: "opp-mouretech",
-    assetFolder: "opp-ch1-mouretech",
-    portraits: { intro: "intro-Mouretech.webp", victory: "victoria-Mouretech.webp", defeat: "derrota-Mouretech.webp" },
+  "opp-midutech": profile({
+    opponentId: "opp-midutech",
+    assetFolder: "opp-ch1-midutech",
+    portraits: { intro: "intro-Midutech.webp", victory: "victoria-Midutech.webp", defeat: "derrota-Midutech.webp" },
     lines: {
-      intro: line("intro", "Mouretech interviene. Optimizaré tu derrota.", "intro.m4a"),
+      intro: line("intro", "Midutech interviene. Optimizaré tu derrota.", "intro.m4a"),
       trap: line("trap", "Todo dentro de los parámetros previstos.", "trampa.m4a"),
       fusion: line("fusion", "Recursos combinados. Eficiencia máxima.", "fusion.m4a"),
       directHitToPlayer: line("directHitToPlayer", "Daño asumible.", "impacto-directo-jugador.m4a"),

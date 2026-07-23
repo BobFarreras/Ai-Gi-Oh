@@ -32,17 +32,42 @@ export interface IOverworldFocus {
 export type OverworldCutsceneStep =
   | { kind: "WAIT"; seconds: number }
   | { kind: "PLAYER_STEP"; direction: OverworldDirection }
-  | { kind: "SPAWN_NPC"; tileX: number; tileY: number; facing: OverworldDirection; spriteSrc: string }
-  | { kind: "NPC_WALK_TO"; tileX: number; tileY: number }
+  | { kind: "PLAYER_FACE"; direction: OverworldDirection }
+  | {
+      kind: "SPAWN_NPC";
+      tileX: number;
+      tileY: number;
+      facing: OverworldDirection;
+      spriteSrc: string;
+      /**
+       * `TELEPORT` materializa al NPC en la casilla (anillo + glitch) en vez de aparecer de golpe.
+       * Se usa cuando no hay sitio para que entre andando desde fuera de cámara.
+       */
+      effect?: "TELEPORT";
+      /** Actor al que apunta el paso. Por defecto `"main"`: las escenas de un solo NPC no lo declaran. */
+      npcId?: string;
+    }
+  | { kind: "NPC_WALK_TO"; tileX: number; tileY: number; npcId?: string }
+  | { kind: "NPC_FACE"; direction: OverworldDirection; npcId?: string }
   | { kind: "EVENT"; nodeId: string }
-  | { kind: "DESPAWN_NPC" };
+  /** `effect: "TELEPORT"` desmaterializa al NPC (mismo anillo + glitch que el spawn, al revés) antes de borrarlo. */
+  | { kind: "DESPAWN_NPC"; npcId?: string; effect?: "TELEPORT" };
 
-/** Datos de render del NPC de cutscene (posición interpolada en píxeles). */
+/** Actor por defecto de los pasos de cutscene que no declaran `npcId` (escenas de un solo NPC). */
+export const DEFAULT_CUTSCENE_NPC_ID = "main";
+
+/** Duración (s) de la materialización de un SPAWN_NPC con efecto TELEPORT. */
+export const CUTSCENE_TELEPORT_SECONDS = 0.7;
+
+/** Datos de render de un NPC de cutscene (posición interpolada en píxeles). */
 export interface IOverworldCutsceneNpcRender {
+  npcId: string;
   pixelX: number;
   pixelY: number;
   facing: OverworldDirection;
   spriteSrc: string;
+  /** Avance de la materialización 0..1 (1 = ya sólido; los spawns sin efecto nacen en 1). */
+  spawnProgress: number;
 }
 
 /** Datos de render del efecto de recolección (el objeto se encoge hacia el jugador + valor flotante). */

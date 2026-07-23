@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { IAdminArenaOpponent, IAdminArenaTier } from "@/core/entities/training/IAdminArena";
+import { OpponentCombatSkillEditor } from "@/components/admin/internal/shared/OpponentCombatSkillEditor";
 
 interface IAdminArenaTierRowProps {
   tier: IAdminArenaTier;
@@ -26,7 +27,8 @@ export function AdminArenaTierRow({ tier, opponents, isBusy, onSave, onDelete }:
   const [draft, setDraft] = useState<IAdminArenaTier>(tier);
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-slate-700/60 bg-slate-950/40 p-2">
+    <div className="rounded-lg border border-slate-700/60 bg-slate-950/40 p-2">
+      <div className="flex flex-wrap items-center gap-1.5">
       <span className="w-8 text-center text-sm font-black text-cyan-200">T{draft.tier}</span>
       <input aria-label="Código del tier" className={`${FIELD} w-20`} placeholder="Código" value={draft.code} onChange={(event) => setDraft({ ...draft, code: event.target.value })} />
       <select aria-label="Dificultad IA" className={`${FIELD} w-24`} value={draft.aiDifficulty} onChange={(event) => setDraft({ ...draft, aiDifficulty: event.target.value })}>
@@ -50,6 +52,11 @@ export function AdminArenaTierRow({ tier, opponents, isBusy, onSave, onDelete }:
       <label className="flex items-center gap-1 text-[11px] text-slate-300"><input type="checkbox" aria-label="Tier activo" checked={draft.isActive} onChange={(event) => setDraft({ ...draft, isActive: event.target.checked })} /> Activo</label>
       <button type="button" aria-label="Guardar tier" disabled={isBusy} className="h-7 rounded border border-emerald-600/60 bg-emerald-950/40 px-3 text-[10px] font-black uppercase text-emerald-300 hover:bg-emerald-900/50 disabled:opacity-50" onClick={() => onSave(draft)}>Guardar</button>
       <button type="button" aria-label="Eliminar tier" disabled={isBusy} className="h-7 w-7 rounded border border-rose-700/50 text-[12px] text-rose-300 hover:bg-rose-900/40 disabled:opacity-50" onClick={() => onDelete(draft.tier)}>×</button>
+      </div>
+      {/* Habilidades de combate del rival de este tier (LP/energía extra), en el mismo contenedor. */}
+      <div className="mt-1.5 border-t border-slate-800/60 pt-1.5">
+        <OpponentCombatSkillEditor opponentId={`arena-tier-${draft.tier}`} opponentType="arena" />
+      </div>
     </div>
   );
 }

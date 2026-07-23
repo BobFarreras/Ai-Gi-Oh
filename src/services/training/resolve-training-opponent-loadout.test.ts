@@ -9,7 +9,7 @@ describe("resolveTrainingOpponentLoadout", () => {
     const names = Array.from({ length: 8 }, (_, wins) =>
       resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: wins, tierMatches: 0 }).displayName,
     );
-    expect(names).toEqual(["GenNvim", "Helena", "Jaku", "Mouretech", "Soldado", "Guill", "Soldado-Laptop", "Gokernel"]);
+    expect(names).toEqual(["GenNvim", "Helena", "Jaku", "Midutech", "Soldado", "Guill", "Soldado-Laptop", "Gokernel"]);
   });
 
   it("usa el mismo roster en cualquier nivel (solo cambia la fuerza)", () => {
@@ -39,8 +39,8 @@ describe("resolveTrainingOpponentLoadout", () => {
     const loadout = resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: 3, tierMatches: 0 });
     expect(loadout.ladderIndex).toBe(3);
     expect(loadout.ladderSize).toBe(8);
-    expect(loadout.displayName).toBe("Mouretech");
-    expect(loadout.storyOpponentId).toBe("opp-mouretech");
+    expect(loadout.displayName).toBe("Midutech");
+    expect(loadout.storyOpponentId).toBe("opp-midutech");
   });
 
   it("mantiene la dificultad fija del tier (sin adaptar por winrate)", () => {

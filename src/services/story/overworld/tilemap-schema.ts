@@ -35,8 +35,12 @@ export type OverworldObjectKind =
   | "PLATE" // placa de presión (se "pulsa" con una caja encima; abre un GATE en vivo).
   | "BOX_RESET"; // botón que devuelve las cajas a su posición inicial (anti soft-lock).
 
-/** Ambiente lumínico del mapa. `DARK` activa el pase de oscuridad + radios de luz. */
-export type OverworldAmbient = "NORMAL" | "DARK";
+/**
+ * Ambiente visual del mapa.
+ * - `DARK` activa el pase de oscuridad + radios de luz (Acto 3).
+ * - `TERMINAL` tiñe el mundo de verde fósforo ciberpunk (Acto 4, GenNvim): rejilla neón verde y scanlines.
+ */
+export type OverworldAmbient = "NORMAL" | "DARK" | "TERMINAL";
 
 /** Rectángulo de celdas (inclusivo) que un interruptor ilumina por completo. */
 export interface IOverworldLightRect {
@@ -109,6 +113,18 @@ export interface IOverworldTilemapObject {
   lightRadius?: number;
   /** Solo SWITCH: sala completa (rect de celdas) que se ilumina al activarse. */
   lightRect?: IOverworldLightRect;
+  /**
+   * Solo SWITCH: rect de casillas-cinta cuyo sentido se INVIERTE mientras el interruptor está accionado
+   * (belt-toggle). Un botón en una sala puede así abrir/cerrar el paso por una pasarela de otra sala.
+   */
+  beltToggleRect?: IOverworldLightRect;
+  /**
+   * Solo SWITCH/PLATE con `beltToggleRect`: QUÉ posición manda este interruptor. `INVERT` deja la cinta al revés
+   * de su sentido base; `RESTORE` (por defecto en el gemelo de vuelta) la devuelve al base. Dos interruptores
+   * sobre el mismo rect con modos opuestos forman UNA palanca de dos posiciones: siempre hay exactamente uno
+   * encendido, y volver a pulsar el que ya manda no hace nada.
+   */
+  beltToggleMode?: "INVERT" | "RESTORE";
 }
 
 export interface IOverworldTilemapSpawn {

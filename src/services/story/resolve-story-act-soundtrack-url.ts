@@ -4,6 +4,8 @@ const STORY_ACT_SOUNDTRACKS: Record<number, string> = {
   2: "/audio/story/soundtracks/act-2/Chromed-Horizon.m4a",
   // Acto 3 (Repositorio Fantasma, oscuro): pista dedicada.
   3: "/audio/story/soundtracks/act-3/Neon-Horizon-Protocol.m4a",
+  // Acto 4 (Núcleo GenNvim): pista dedicada.
+  4: "/audio/story/soundtracks/act-4/Pulso-de-Cromo.m4a",
   5: "/audio/story/soundtracks/act-5/act-5-main-theme.m4a",
 };
 

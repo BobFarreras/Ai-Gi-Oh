@@ -7,16 +7,17 @@ import { IStoryInteractionDialogueLine } from "@/services/story/story-node-inter
 
 interface IStoryDialogSpeechBubbleProps {
   line: IStoryInteractionDialogueLine | null;
-  isPlayerSpeaker: boolean;
+  /** El hablante ocupa el retrato de ABAJO (el jugador, o el villano fijado en ese hueco). */
+  isSpeakerOnBottom: boolean;
   terminalMode: boolean;
 }
 
 export function StoryDialogSpeechBubble({
   line,
-  isPlayerSpeaker,
+  isSpeakerOnBottom,
   terminalMode,
 }: IStoryDialogSpeechBubbleProps) {
-  const sideClassName = isPlayerSpeaker
+  const sideClassName = isSpeakerOnBottom
     ? "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 md:bottom-[230px] md:left-[188px] md:top-auto md:translate-x-0 md:translate-y-0"
     : "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 md:right-[176px] md:top-[218px] md:left-auto md:translate-x-0 md:translate-y-0";
 
@@ -25,8 +26,8 @@ export function StoryDialogSpeechBubble({
       initial={{
         opacity: 0,
         scale: 0.72,
-        x: isPlayerSpeaker ? -42 : 42,
-        y: isPlayerSpeaker ? 16 : -16,
+        x: isSpeakerOnBottom ? -42 : 42,
+        y: isSpeakerOnBottom ? 16 : -16,
       }}
       animate={{
         opacity: 1,
@@ -37,8 +38,8 @@ export function StoryDialogSpeechBubble({
       exit={{
         opacity: 0,
         scale: 0.82,
-        x: isPlayerSpeaker ? -36 : 36,
-        y: isPlayerSpeaker ? 12 : -12,
+        x: isSpeakerOnBottom ? -36 : 36,
+        y: isSpeakerOnBottom ? 12 : -12,
       }}
       transition={{
         type: "spring",
@@ -55,7 +56,7 @@ export function StoryDialogSpeechBubble({
         aria-hidden
         className={cn(
           "absolute hidden h-4 w-4 rotate-45 border-zinc-950 bg-white md:block",
-          isPlayerSpeaker
+          isSpeakerOnBottom
             ? "left-[-9.5px] top-[70%] border-b-[3px] border-l-[3px]"
             : "right-[-9.5px] top-[26%] border-r-[3px] border-t-[3px]",
         )}

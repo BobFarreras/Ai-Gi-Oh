@@ -119,12 +119,12 @@ export const TRAINING_OPPONENT_PRESETS: Record<string, ITrainingOpponentPreset> 
     ]),
     fusionDeckCardIds: ["fusion-gemgpt", "fusion-kaclauli"],
   },
-  "training-mouretech": {
-    storyOpponentId: "opp-mouretech",
-    codeName: "mouretech",
-    displayName: "Mouretech",
-    avatarUrl: "/assets/story/opponents/opp-ch1-mouretech/avatar-Mouretech.webp",
-    introUrl: "/assets/story/opponents/opp-ch1-mouretech/intro-Mouretech.webp",
+  "training-midutech": {
+    storyOpponentId: "opp-midutech",
+    codeName: "midutech",
+    displayName: "Midutech",
+    avatarUrl: "/assets/story/opponents/opp-ch1-midutech/avatar-Midutech.webp",
+    introUrl: "/assets/story/opponents/opp-ch1-midutech/intro-Midutech.webp",
     deckCardIds: toDeck([
       "entity-chatgpt", "entity-gemini", "entity-claude", "entity-kali-linux", "entity-deepseek",
       "entity-python", "entity-postgress", "entity-nextjs", "entity-react", "entity-vercel",

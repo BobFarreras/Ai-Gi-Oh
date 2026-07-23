@@ -126,7 +126,8 @@ describe("validateOverworldTilemap", () => {
     expect(() => validateOverworldTilemap(raw)).toThrow(/necesita duelHref/);
   });
 
-  it("rechaza un WARP sin destino y un warp en kind no-WARP", () => {
+  it("acepta un WARP SIN destino (acto anunciado pero no construido) y rechaza un warp en kind no-WARP", () => {
+    // Portal "próximamente": se dibuja y, al usarlo, la escena cuenta que ese acto aún no existe.
     const raw = buildValidRawTilemap();
     const objects = raw.objects as Record<string, unknown>[];
     objects.push({
@@ -137,7 +138,8 @@ describe("validateOverworldTilemap", () => {
       sprite: "portal",
       trigger: "STEP_ON",
     });
-    expect(() => validateOverworldTilemap(raw)).toThrow(/necesita destino/);
+    const validated = validateOverworldTilemap(raw);
+    expect(validated.objects.find((object) => object.id === "warp-act2")?.warp).toBeUndefined();
 
     const rawWithBadWarp = buildValidRawTilemap();
     (rawWithBadWarp.objects as Record<string, unknown>[])[0].warp = {
@@ -181,9 +183,14 @@ describe("validateOverworldTilemap", () => {
     expect(tilemap.objects.at(-1)?.lightRect).toEqual({ x0: 0, y0: 0, x1: 2, y1: 1 });
   });
 
+  it("acepta ambient TERMINAL (verde, Acto 4)", () => {
+    const tilemap = validateOverworldTilemap({ ...buildValidRawTilemap(), ambient: "TERMINAL" });
+    expect(tilemap.ambient).toBe("TERMINAL");
+  });
+
   it("rechaza ambient desconocido", () => {
     expect(() => validateOverworldTilemap({ ...buildValidRawTilemap(), ambient: "FOGGY" })).toThrow(
-      /'NORMAL' o 'DARK'/,
+      /'NORMAL', 'DARK' o 'TERMINAL'/,
     );
   });
 
