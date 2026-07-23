@@ -1,6 +1,7 @@
 // src/components/admin/AdminCatalogPanel.tsx - Panel visual de Card Catalog con almacén, detalle y editor con preview en tiempo real.
 "use client";
 
+import { ADMIN_FEEDBACK_TONE_CLASS } from "@/components/admin/internal/admin-feedback-styles";
 import { useMemo, useState } from "react";
 import { IAdminCatalogSnapshot } from "@/core/entities/admin/IAdminCatalogSnapshot";
 import { AdminCardCatalogDetailPanel } from "@/components/admin/internal/AdminCardCatalogDetailPanel";
@@ -21,7 +22,7 @@ export function AdminCatalogPanel({ initialSnapshot }: AdminCatalogPanelProps) {
   const totalCards = editor.cards.length;
   const activeCards = editor.cards.filter((entry) => entry.isActive).length;
   const detailCard = isFormMode ? editor.draftPreviewCard : editor.selectedPreviewCard;
-  const hasErrorFeedback = editor.feedback.toLowerCase().includes("no se pudo") || editor.feedback.toLowerCase().includes("válido");
+  const feedbackTone = editor.feedback.tone;
   // Detalle como diálogo en móvil (<xl); en desktop sigue inline. Se abre al seleccionar carta o editar.
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
   const beginCreateMobile = () => {
@@ -106,9 +107,9 @@ export function AdminCatalogPanel({ initialSnapshot }: AdminCatalogPanelProps) {
           </div>
         </div>
 
-        {editor.feedback ? (
-          <p className={`relative mt-2 rounded-lg border px-3 py-1.5 text-[11px] font-semibold ${hasErrorFeedback ? "border-rose-500/60 bg-rose-950/30 text-rose-200" : "border-emerald-500/60 bg-emerald-950/30 text-emerald-200"}`}>
-            {editor.feedback}
+        {editor.feedback.message ? (
+          <p className={`relative mt-2 rounded-lg border px-3 py-1.5 text-[11px] font-semibold ${ADMIN_FEEDBACK_TONE_CLASS[feedbackTone]}`}>
+            {editor.feedback.message}
           </p>
         ) : null}
       </div>

@@ -6,6 +6,19 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.19.1] - 2026-07-23
+
+### Fixed
+- **Panel de admin — atributos y niveles de las cartas de los rivales**: varias cosas que impedían guardar bien el escalado de un oponente.
+  - El **nivel máximo** se había quedado en **30** en el panel (validación, campos y edición masiva) y también en la base de datos, cuando el tope real del juego es **100**. Poner más de 30 fallaba, y "Aplicar todas" además lo recortaba en silencio. Ahora todos los topes salen de las reglas del juego.
+  - Los atributos **se descolocaban al guardar un mazo con huecos**: las cartas se guardaban compactadas pero sus atributos con el índice del hueco, así que al recargar las cartas se corrían y las posteriores al hueco perdían nivel y ATK/DEF. Los datos ya guardados se recolocan solos al abrirlos.
+  - En **Arena**, los atributos se aplicaban solo a la copia seleccionada: el mismo rival podía tener una carta a +300 y otra igual a 0. Ahora, como en Historia (y como los objetos del jugador), el valor es de la **carta** y alcanza a todas sus copias, también en la zona de fusión.
+  - Los rivales **no tienen tope de atributos** (el presupuesto por coste de energía es solo de los objetos del jugador), y ahora tampoco por abajo: se puede dejar una carta por debajo de su ATK/DEF base para hacerla más blanda.
+- **Errores del panel de admin que parecían éxitos**: el aviso se pintaba de verde o rojo **buscando "no se pudo" dentro del texto**, así que un error de validación del servidor se mostraba igual que un guardado correcto. Ahora el tono lo marca quien emite el mensaje y los errores salen en rojo y con el prefijo "No se guardó:". Aplicado a los paneles de Historia, Catálogo, Market y Starter Deck.
+
+### Internal
+- Migración **148**: sube a 100 el `CHECK` de nivel de `story_duel_deck_overrides` (quedó en 30 al ampliar la curva; su gemela de `player_card_progress` sí se actualizó en la 120). Ya aplicada en producción.
+
 ## [1.19.0] - 2026-07-23
 
 ### Added
@@ -398,7 +411,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.0...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.1...HEAD
+[1.19.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.0...v1.19.1
 [1.19.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.2...v1.19.0
 [1.18.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.1...v1.18.2
 [1.18.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.0...v1.18.1

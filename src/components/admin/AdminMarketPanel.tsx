@@ -1,6 +1,7 @@
 // src/components/admin/AdminMarketPanel.tsx - Panel visual de mercado admin para gestionar listings y packs con edición guiada.
 "use client";
 
+import { ADMIN_FEEDBACK_TONE_CLASS } from "@/components/admin/internal/admin-feedback-styles";
 import { useMemo } from "react";
 import { AdminMarketListingsWorkspace } from "@/components/admin/internal/AdminMarketListingsWorkspace";
 import { AdminMarketPacksWorkspace } from "@/components/admin/internal/AdminMarketPacksWorkspace";
@@ -15,7 +16,7 @@ interface IAdminMarketPanelProps {
 export function AdminMarketPanel({ initialSnapshot }: IAdminMarketPanelProps) {
   const editor = useAdminMarketEditor(initialSnapshot);
   const cardById = useMemo(() => new Map(editor.snapshot.cards.map((entry) => [entry.id, mapEntryToCard(entry)])), [editor.snapshot.cards]);
-  const hasErrorFeedback = editor.feedback.toLowerCase().includes("no se pudo") || editor.feedback.toLowerCase().includes("debe");
+  const feedbackTone = editor.feedback.tone;
 
   return (
     <section className="flex h-full min-h-0 flex-1 flex-col gap-3">
@@ -72,9 +73,9 @@ export function AdminMarketPanel({ initialSnapshot }: IAdminMarketPanelProps) {
           </div>
         </div>
 
-        {editor.feedback ? (
-          <p className={`relative mt-2 rounded-lg border px-3 py-1.5 text-[11px] font-semibold ${hasErrorFeedback ? "border-rose-500/60 bg-rose-950/30 text-rose-200" : "border-emerald-500/60 bg-emerald-950/30 text-emerald-200"}`}>
-            {editor.feedback}
+        {editor.feedback.message ? (
+          <p className={`relative mt-2 rounded-lg border px-3 py-1.5 text-[11px] font-semibold ${ADMIN_FEEDBACK_TONE_CLASS[feedbackTone]}`}>
+            {editor.feedback.message}
           </p>
         ) : null}
       </div>

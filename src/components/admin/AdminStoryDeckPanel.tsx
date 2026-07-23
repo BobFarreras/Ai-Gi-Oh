@@ -14,11 +14,18 @@ import { BonusStepper, CollapsibleSection } from "@/components/admin/internal/De
 import { readAdminStarterDeckDragData, writeAdminStarterDeckDragData } from "@/components/admin/internal/admin-starter-deck-dnd";
 import { fetchAdminShopObjects } from "@/components/admin/admin-objects-api";
 import { useAdminStoryDeckEditor } from "@/components/admin/internal/use-admin-story-deck-editor";
+import { ADMIN_FEEDBACK_TONE_CLASS } from "@/components/admin/internal/admin-feedback-styles";
+import { getMaxCardLevel } from "@/core/services/progression/card-level-rules";
+import { MAX_CARD_VERSION_TIER } from "@/core/services/progression/card-version-rules";
 import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
 
 interface IAdminStoryDeckPanelProps {
   initialData: IAdminStoryDeckApiResponse;
 }
+
+/** Tope real de nivel de carta del juego: los inputs no pueden ofrecer más de lo que acepta el servidor. */
+const MAX_CARD_LEVEL = getMaxCardLevel();
+
 
 function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps) {
   const editor = useAdminStoryDeckEditor(initialData);
@@ -38,7 +45,7 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
   const [cloneSourceDuelId, setCloneSourceDuelId] = useState<string>("");
   const selectedSlotLevels = editor.selectedSlotIndex === null ? null : (editor.draftSlotLevels[editor.selectedSlotIndex] ?? null);
   const isDuelMode = !editor.isBaseDeckMode && editor.selectedDuelId !== null;
-  const hasErrorFeedback = editor.feedback.toLowerCase().includes("no se pudo");
+  const feedbackTone = editor.feedback.tone;
 
   // Catálogo de objetos de mejora para equipar en las cartas del rival de Story. Fallo → sin picker.
   const [upgradeItems, setUpgradeItems] = useState<IAdminCardUpgradeItemEntry[]>([]);
@@ -54,19 +61,23 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
   const baseDefense = typeof selectedCard?.defense === "number" ? selectedCard.defense : null;
   const effectiveAttack = selectedSlotLevels?.attackOverride ?? baseAttack;
   const effectiveDefense = selectedSlotLevels?.defenseOverride ?? baseDefense;
-  const attackBonus = baseAttack !== null && effectiveAttack !== null ? Math.max(0, effectiveAttack - baseAttack) : 0;
-  const defenseBonus = baseDefense !== null && effectiveDefense !== null ? Math.max(0, effectiveDefense - baseDefense) : 0;
+  // Delta con SIGNO respecto a la base: en los rivales se admite dejar el atributo por debajo del original.
+  const attackBonus = baseAttack !== null && effectiveAttack !== null ? effectiveAttack - baseAttack : 0;
+  const defenseBonus = baseDefense !== null && effectiveDefense !== null ? effectiveDefense - baseDefense : 0;
   const previewCard = selectedCard ? { ...selectedCard, attack: effectiveAttack ?? selectedCard.attack, defense: effectiveDefense ?? selectedCard.defense } : null;
   const objectsDisabled = editor.selectedSlotIndex === null || editor.isBaseDeckMode || !isDuelMode;
   const idx = editor.selectedSlotIndex;
+  // Los rivales NO tienen tope de atributos (el presupuesto por coste de energía es de los objetos del JUGADOR),
+  // ni por arriba ni por abajo: aquí se puede dejar una carta por DEBAJO de su base para hacerla más blanda.
+  // Solo se guarda `null` cuando el valor coincide exactamente con la base, que es "sin override".
   function stepObject(stat: "ATTACK" | "DEFENSE", direction: 1 | -1) {
     if (idx === null) return;
     const base = stat === "ATTACK" ? baseAttack : baseDefense;
     if (base === null) return;
     const step = stat === "ATTACK" ? attackStep : defenseStep;
     const current = (stat === "ATTACK" ? selectedSlotLevels?.attackOverride : selectedSlotLevels?.defenseOverride) ?? base;
-    const next = current + direction * step;
-    editor.setDraftSlotOverrideByIndex(idx, stat, next <= base ? null : next);
+    const next = Math.max(0, current + direction * step);
+    editor.setDraftSlotOverrideByIndex(idx, stat, next === base ? null : next);
   }
 
   function onDropOnSlot(slotIndex: number, event: DragEvent<HTMLElement>): void {
@@ -81,7 +92,7 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
 
   function onInvalidFusionCardDrop(cardId: string): void {
     const cardName = cardById.get(cardId)?.name ?? cardId;
-    editor.setFeedbackMessage(`Solo puedes colocar cartas FUSION en estos slots. Intentaste usar: ${cardName}.`);
+    editor.setFeedbackMessage(null, `Solo puedes colocar cartas FUSION en estos slots. Intentaste usar: ${cardName}.`);
   }
 
   return (
@@ -333,11 +344,11 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
               <span className="text-[10px] font-bold uppercase text-amber-400/80">Masiva:</span>
               <label className="flex h-8 items-center gap-1 rounded-md border border-slate-600/50 bg-slate-950/60 px-2 text-[10px] text-slate-300">
                 Ver
-                <input aria-label="Version tier masiva" type="number" min={0} max={5} value={massVersionTier} onChange={(event) => setMassVersionTier(Number(event.target.value))} className="w-10 bg-transparent text-right text-[10px] text-slate-100 outline-none" />
+                <input aria-label="Version tier masiva" type="number" min={0} max={MAX_CARD_VERSION_TIER} value={massVersionTier} onChange={(event) => setMassVersionTier(Number(event.target.value))} className="w-10 bg-transparent text-right text-[10px] text-slate-100 outline-none" />
               </label>
               <label className="flex h-8 items-center gap-1 rounded-md border border-slate-600/50 bg-slate-950/60 px-2 text-[10px] text-slate-300">
                 Lvl
-                <input aria-label="Level masivo" type="number" min={0} max={30} value={massLevel} onChange={(event) => setMassLevel(Number(event.target.value))} className="w-10 bg-transparent text-right text-[10px] text-slate-100 outline-none" />
+                <input aria-label="Level masivo" type="number" min={0} max={MAX_CARD_LEVEL} value={massLevel} onChange={(event) => setMassLevel(Number(event.target.value))} className="w-10 bg-transparent text-right text-[10px] text-slate-100 outline-none" />
               </label>
               <label className="flex h-8 items-center gap-1 rounded-md border border-slate-600/50 bg-slate-950/60 px-2 text-[10px] text-slate-300">
                 XP
@@ -356,9 +367,10 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
         </div>
 
         {/* Feedback */}
-        {editor.feedback ? (
-          <p className={`mt-2 rounded-lg border px-3 py-1.5 text-[11px] font-semibold ${hasErrorFeedback ? "border-rose-500/60 bg-rose-950/30 text-rose-200" : "border-emerald-500/60 bg-emerald-950/30 text-emerald-200"}`}>
-            {editor.feedback}
+        {editor.feedback.message ? (
+          <p className={`mt-2 rounded-lg border px-3 py-1.5 text-[11px] font-semibold ${ADMIN_FEEDBACK_TONE_CLASS[feedbackTone]}`}>
+            {feedbackTone === "ERROR" ? "No se guardó: " : null}
+            {editor.feedback.message}
           </p>
         ) : null}
       </div>
@@ -464,7 +476,7 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
                   aria-label="Version del detalle"
                   type="number"
                   min={0}
-                  max={5}
+                  max={MAX_CARD_VERSION_TIER}
                   value={selectedSlotLevels?.versionTier ?? 0}
                   disabled={editor.selectedSlotIndex === null || editor.isBaseDeckMode}
                   onChange={(event) => editor.selectedSlotIndex !== null ? editor.setDraftSlotLevelByIndex(editor.selectedSlotIndex, "versionTier", Number(event.target.value)) : undefined}
@@ -477,7 +489,7 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
                   aria-label="Level del detalle"
                   type="number"
                   min={0}
-                  max={30}
+                  max={MAX_CARD_LEVEL}
                   value={selectedSlotLevels?.level ?? 0}
                   disabled={editor.selectedSlotIndex === null || editor.isBaseDeckMode}
                   onChange={(event) => editor.selectedSlotIndex !== null ? editor.setDraftSlotLevelByIndex(editor.selectedSlotIndex, "level", Number(event.target.value)) : undefined}
@@ -504,8 +516,8 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
           <CollapsibleSection title="Objetos equipados" accent="fuchsia">
             <p className="text-[10px] text-slate-400">Cada objeto suma su valor al ATK/DEF del rival (apilable). Solo en duelo, en modo edición.</p>
             <div className="mt-2 grid grid-cols-2 gap-2">
-              <BonusStepper label="Ataque" colorClass="text-rose-300" value={attackBonus} step={attackStep} disabled={objectsDisabled || baseAttack === null} onAdd={() => stepObject("ATTACK", 1)} onRemove={() => stepObject("ATTACK", -1)} />
-              <BonusStepper label="Defensa" colorClass="text-sky-300" value={defenseBonus} step={defenseStep} disabled={objectsDisabled || baseDefense === null} onAdd={() => stepObject("DEFENSE", 1)} onRemove={() => stepObject("DEFENSE", -1)} />
+              <BonusStepper label="Ataque" colorClass="text-rose-300" value={attackBonus} step={attackStep} allowNegative disabled={objectsDisabled || baseAttack === null} onAdd={() => stepObject("ATTACK", 1)} onRemove={() => stepObject("ATTACK", -1)} />
+              <BonusStepper label="Defensa" colorClass="text-sky-300" value={defenseBonus} step={defenseStep} allowNegative disabled={objectsDisabled || baseDefense === null} onAdd={() => stepObject("DEFENSE", 1)} onRemove={() => stepObject("DEFENSE", -1)} />
             </div>
           </CollapsibleSection>
         </div>

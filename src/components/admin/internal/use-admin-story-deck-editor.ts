@@ -12,6 +12,7 @@ import { StoryOpponentDifficulty } from "@/core/entities/opponent/IStoryDuelDefi
 import { executeAdminStoryDeckSave } from "@/components/admin/internal/admin-story-deck-save-flow";
 import { executeAdminStoryDeckLoad } from "@/components/admin/internal/admin-story-deck-load-flow";
 import { applyDeckModeSelection, applyDuelDifficultyPreset, applyDuelSelection, cloneFromSourceDuel } from "@/components/admin/internal/admin-story-deck-selection-actions";
+import { useAdminFeedback } from "@/components/admin/internal/use-admin-feedback";
 
 export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse): IUseAdminStoryDeckEditorResult {
   const [data, setData] = useState<IAdminStoryDeckApiResponse>(initialData);
@@ -30,7 +31,7 @@ export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse)
   const [isEditMode, setIsEditMode] = useState(false);
   const [isBaseDeckMode, setIsBaseDeckMode] = useState(initialSnapshot.isBaseDeckMode);
   const [isBusy, setIsBusy] = useState(false);
-  const [feedback, setFeedback] = useState("");
+  const { feedback, clearFeedback, notifySuccess, notifyInfo, notifyError } = useAdminFeedback();
   const canSave = useMemo(() => {
     return draftCardIds.some((cardId) => typeof cardId === "string");
   }, [draftCardIds]);
@@ -50,10 +51,10 @@ export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse)
         setIsBaseDeckMode,
         setSelectedSlotIndex,
         setSelectedCollectionCardId,
-        setFeedback,
+        clearFeedback,
       });
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "No se pudo cargar Story Deck.");
+      notifyError(error, "No se pudo cargar Story Deck.");
     } finally {
       setIsBusy(false);
     }
@@ -108,7 +109,7 @@ export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse)
     setIsBaseDeckMode: (value) => applyDeckModeSelection(value, data, selectedDuelId, setIsBaseDeckMode, setDraftCardIds, setDraftSlotLevels, setDraftFusionCardIds, setDraftRewardCardIds),
     isBusy,
     feedback,
-    setFeedbackMessage: setFeedback,
+    setFeedbackMessage: notifyError,
     canSave,
     onSelectOpponent: async (opponentId) => load({ opponentId }),
     onSelectDuelReference: async (duelId) => {
@@ -120,7 +121,7 @@ export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse)
     cloneFromDuel: (duelId) => {
       cloneFromSourceDuel({ data, sourceDuelId: duelId, setSelectedDuelDifficulty, setDuelAiStyle, setDuelAiAggression, setDraftCardIds, setDraftSlotLevels, setDraftFusionCardIds, setDraftRewardCardIds, setIsBaseDeckMode });
       setIsEditMode(true);
-      setFeedback("Configuración clonada en borrador. Pulsa Guardar para persistir.");
+      notifyInfo("Configuración clonada en borrador. Pulsa Guardar para persistir.");
     },
     onSelectDeck: async (deckListId) => load({ opponentId: selectedOpponentId ?? data.deck?.opponentId, deckListId }),
     onRefresh: async () => load({ opponentId: selectedOpponentId ?? data.deck?.opponentId, deckListId: data.deck?.deckListId, preferredDuelId: selectedDuelId }),
@@ -129,9 +130,9 @@ export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse)
       setIsBusy(true);
       try {
         await executeAdminStoryDeckSave({ deckListId: data.deck.deckListId, deckOpponentId: data.deck.opponentId, selectedOpponentId, selectedDuelId, selectedDuelDifficulty, duelAiStyle, duelAiAggression, draftCardIds, draftSlotLevels, draftFusionCardIds, draftRewardCardIds, isBaseDeckMode, load });
-        setFeedback(isBaseDeckMode ? "Deck base Story guardado correctamente." : "Configuración de duelo guardada correctamente.");
+        notifySuccess(isBaseDeckMode ? "Deck base Story guardado correctamente." : "Configuración de duelo guardada correctamente.");
       } catch (error) {
-        setFeedback(error instanceof Error ? error.message : "No se pudo guardar Story Deck.");
+        notifyError(error, "No se pudo guardar Story Deck.");
       } finally {
         setIsBusy(false);
       }
