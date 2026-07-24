@@ -16,6 +16,7 @@ import { fetchAdminShopObjects } from "@/components/admin/admin-objects-api";
 import { useAdminStoryDeckEditor } from "@/components/admin/internal/use-admin-story-deck-editor";
 import { ADMIN_FEEDBACK_TONE_CLASS } from "@/components/admin/internal/admin-feedback-styles";
 import { getMaxCardLevel } from "@/core/services/progression/card-level-rules";
+import { resolveCardLevelBonuses } from "@/core/services/progression/card-level-bonus-rules";
 import { MAX_CARD_VERSION_TIER } from "@/core/services/progression/card-version-rules";
 import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
 
@@ -56,7 +57,8 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
   }, []);
   const attackStep = upgradeItems.find((item) => item.stat === "ATTACK")?.value ?? 100;
   const defenseStep = upgradeItems.find((item) => item.stat === "DEFENSE")?.value ?? 100;
-  // Story NO aplica curva de nivel: el combate usa attackOverride ?? base. La preview refleja eso mismo.
+  // El combate resuelve la carta del rival como (override ?? base) + curva de NIVEL, igual que el jugador y que
+  // arena. La preview aplica lo mismo para que el número del detalle sea el que se verá en el duelo.
   const baseAttack = typeof selectedCard?.attack === "number" ? selectedCard.attack : null;
   const baseDefense = typeof selectedCard?.defense === "number" ? selectedCard.defense : null;
   const effectiveAttack = selectedSlotLevels?.attackOverride ?? baseAttack;
@@ -64,7 +66,15 @@ function AdminStoryDeckPanelComponent({ initialData }: IAdminStoryDeckPanelProps
   // Delta con SIGNO respecto a la base: en los rivales se admite dejar el atributo por debajo del original.
   const attackBonus = baseAttack !== null && effectiveAttack !== null ? effectiveAttack - baseAttack : 0;
   const defenseBonus = baseDefense !== null && effectiveDefense !== null ? effectiveDefense - baseDefense : 0;
-  const previewCard = selectedCard ? { ...selectedCard, attack: effectiveAttack ?? selectedCard.attack, defense: effectiveDefense ?? selectedCard.defense } : null;
+  const levelBonuses = resolveCardLevelBonuses(selectedCard?.type ?? "ENTITY", selectedSlotLevels?.level ?? 0);
+  const previewCard = selectedCard
+    ? {
+        ...selectedCard,
+        attack: effectiveAttack !== null ? effectiveAttack + levelBonuses.attackBonus : selectedCard.attack,
+        defense: effectiveDefense !== null ? effectiveDefense + levelBonuses.defenseBonus : selectedCard.defense,
+        cost: Math.max(1, selectedCard.cost - levelBonuses.energyCostReduction),
+      }
+    : null;
   const objectsDisabled = editor.selectedSlotIndex === null || editor.isBaseDeckMode || !isDuelMode;
   const idx = editor.selectedSlotIndex;
   // Los rivales NO tienen tope de atributos (el presupuesto por coste de energía es de los objetos del JUGADOR),
