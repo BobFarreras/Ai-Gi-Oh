@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from "react";
 import { IAdminStoryDeckApiResponse } from "@/components/admin/admin-story-deck-api";
-import { applyMassLevels, applySlotLevelToSameCards, applySlotOverrideToSameCards, copyLevelsFromSimilarCard, extendLevelsToSlot } from "@/components/admin/internal/admin-story-deck-editor-state";
+import { applyMassLevels, applySlotLevelToSameCards, applySlotOverrideToSameCards, clearLevelsAtSlot, extendLevelsToSlot, resolveLevelsForPlacedCard, swapLevelsBetweenSlots } from "@/components/admin/internal/admin-story-deck-editor-state";
 import { IUseAdminStoryDeckEditorResult } from "@/components/admin/internal/admin-story-deck-editor-types";
 import { IStorySlotLevelDraft } from "@/components/admin/internal/admin-story-duel-draft";
 import { buildStoryDeckLoadSnapshot } from "@/components/admin/internal/admin-story-deck-load-state";
@@ -95,14 +95,22 @@ export function useAdminStoryDeckEditor(initialData: IAdminStoryDeckApiResponse)
     applyMassSlotLevels: (input) => setDraftSlotLevels((current) => applyMassLevels(current, draftCardIds, input)),
     setDraftCardIdBySlot: (slotIndex, cardId) => {
       setDraftCardIds((current) => {
-        setDraftSlotLevels((levels) => extendLevelsToSlot(levels, slotIndex));
-        setDraftSlotLevels((levels) => copyLevelsFromSimilarCard(levels, current, slotIndex, cardId));
+        // El escalado se recalcula SIEMPRE para la carta que entra (hereda de otra copia suya o arranca limpio):
+        // el hueco no puede quedarse con el nivel/atributos de la carta anterior.
+        setDraftSlotLevels((levels) => resolveLevelsForPlacedCard(extendLevelsToSlot(levels, slotIndex), current, slotIndex, cardId));
         if (slotIndex < current.length) return current.map((value, index) => (index === slotIndex ? cardId : value));
         return [...current, ...Array.from({ length: slotIndex - current.length }, () => null), cardId];
       });
     },
-    clearSlotCardByIndex: (slotIndex) => setDraftCardIds((current) => current.map((value, index) => (index === slotIndex ? null : value))),
-    swapSlots: (fromSlotIndex, toSlotIndex) => setDraftCardIds((current) => { const next = [...current]; const source = next[fromSlotIndex] ?? null; next[fromSlotIndex] = next[toSlotIndex] ?? null; next[toSlotIndex] = source; return next; }),
+    clearSlotCardByIndex: (slotIndex) => {
+      setDraftSlotLevels((levels) => clearLevelsAtSlot(levels, slotIndex));
+      setDraftCardIds((current) => current.map((value, index) => (index === slotIndex ? null : value)));
+    },
+    swapSlots: (fromSlotIndex, toSlotIndex) => {
+      // Los atributos viajan con la carta, no con la posición.
+      setDraftSlotLevels((levels) => swapLevelsBetweenSlots(levels, fromSlotIndex, toSlotIndex));
+      setDraftCardIds((current) => { const next = [...current]; const source = next[fromSlotIndex] ?? null; next[fromSlotIndex] = next[toSlotIndex] ?? null; next[toSlotIndex] = source; return next; });
+    },
     isEditMode,
     setIsEditMode,
     isBaseDeckMode,
