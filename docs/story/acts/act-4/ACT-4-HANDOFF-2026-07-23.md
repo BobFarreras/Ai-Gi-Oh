@@ -57,8 +57,11 @@ Jugador `3f2e43ec-9a77-4c33-8284-aa67150d7450`. Se borró **solo Acto 4**: las 4
 `overworld_position → null` (arranca en el spawn). Actos 1-3 intactos. **No existe `player_story_history_events`
 en prod** (la migración 013 no llegó entera): no hay nada que limpiar ahí.
 
-> ⚠️ El juego cachea los eventos vistos en `localStorage`. Tras un reset hay que limpiar también
-> `overworld-seen-events-<playerId>-act-4` o la intro y las emboscadas no vuelven a saltar.
+> ⚠️ **Obsoleto desde v1.19.3**: el juego cacheaba los eventos vistos en `localStorage`
+> (`overworld-seen-events-<playerId>-<mapId>`) y los UNÍA al estado del servidor, así que tras un reset en BD
+> la intro y las emboscadas seguían sin saltarle al jugador. Esa capa se retiró: la BD
+> (`interacted_node_ids`) es la única fuente, y al entrar al mundo se purgan las claves que quedaran. Un reset
+> hecho solo en base de datos ya surte efecto sin tocar el navegador.
 
 ### A.5 Ficheros tocados
 ```

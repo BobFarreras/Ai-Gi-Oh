@@ -1,6 +1,6 @@
 // src/services/story/overworld/overworld-persistence-client.test.ts - Tests del cliente de persistencia de eventos del overworld.
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { markOverworldEventInteracted } from "./overworld-persistence-client";
+import { markOverworldEventInteracted, purgeLegacyOverworldSeenEventsCache } from "./overworld-persistence-client";
 
 describe("markOverworldEventInteracted", () => {
   afterEach(() => {
@@ -33,5 +33,26 @@ describe("markOverworldEventInteracted", () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
 
     await expect(markOverworldEventInteracted("story-a1-event-echo")).resolves.toBe(false);
+  });
+});
+
+describe("purgeLegacyOverworldSeenEventsCache", () => {
+  afterEach(() => {
+    window.localStorage.clear();
+  });
+
+  it("borra solo las claves del caché de eventos vistos", () => {
+    window.localStorage.setItem("overworld-seen-events-player-1-act-4", JSON.stringify(["story-ch4-event-intro"]));
+    window.localStorage.setItem("overworld-seen-events-player-1-act-1", JSON.stringify(["story-a1-event-echo"]));
+    window.localStorage.setItem("story-map-muted", "1");
+
+    expect(purgeLegacyOverworldSeenEventsCache()).toBe(2);
+    expect(window.localStorage.getItem("overworld-seen-events-player-1-act-4")).toBeNull();
+    // El resto de preferencias del jugador (mute, FX...) no se toca.
+    expect(window.localStorage.getItem("story-map-muted")).toBe("1");
+  });
+
+  it("no falla si no hay nada que limpiar", () => {
+    expect(purgeLegacyOverworldSeenEventsCache()).toBe(0);
   });
 });

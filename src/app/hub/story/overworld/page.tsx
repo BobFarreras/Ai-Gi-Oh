@@ -48,7 +48,6 @@ export default async function StoryOverworldPage({ searchParams }: StoryOverworl
   return (
     <main className="flex h-[100svh] w-full flex-col overflow-hidden bg-black">
       <OverworldDevScene
-        playerId={session.user.id}
         mapId={runtime?.currentMapId ?? DEFAULT_OVERWORLD_MAP_ID}
         completedNodeIds={runtime?.completedNodeIds ?? []}
         initialPosition={resetToActStart ? null : runtime?.initialPosition ?? null}
