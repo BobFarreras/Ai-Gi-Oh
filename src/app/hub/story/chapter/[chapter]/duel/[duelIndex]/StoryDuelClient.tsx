@@ -127,7 +127,7 @@ export function StoryDuelClient(props: StoryDuelClientProps) {
         enableOpeningMulligan={props.playerOpeningMulligan}
         duelResultRewardSummary={rewardSummary}
         resultActionLabel={props.resultActionLabel ?? "Volver al mapa Story"}
-        onResultAction={handleResultAction}
+        onResultAction={() => void handleResultAction()}
         onExitMatch={() => void handleAbortMatch()}
         abandonPenaltyNexus={STORY_DEFEAT_NEXUS_PENALTY}
         onMatchResolved={handleMatchResolved}
