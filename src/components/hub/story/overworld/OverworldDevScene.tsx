@@ -45,7 +45,7 @@ import {
   HYDRA_AMBUSH_TRIGGER_ID,
 } from "@/services/story/overworld/act-4-overworld-tilemap";
 import { resolveOverworldEventDialogue } from "@/services/story/overworld/resolve-overworld-event-dialogue";
-import { markOverworldEventInteracted } from "@/services/story/overworld/overworld-persistence-client";
+import { markOverworldEventInteracted, purgeLegacyOverworldSeenEventsCache } from "@/services/story/overworld/overworld-persistence-client";
 import { IPlayerOverworldPosition } from "@/core/entities/story/IPlayerOverworldState";
 import { ICard } from "@/core/entities/ICard";
 import { OverworldDirection } from "@/core/services/story/overworld/overworld-types";
@@ -67,32 +67,7 @@ const FIRST_STEP_INTRO_BY_MAP: Record<string, string> = {
   "act-4": "story-ch4-event-intro",
 };
 
-function seenEventsStorageKey(playerId: string, mapId: string): string {
-  return `overworld-seen-events-${playerId}-${mapId}`;
-}
-
-function loadSeenEvents(storageKey: string): Set<string> {
-  try {
-    const raw = window.localStorage.getItem(storageKey);
-    const parsed = raw ? (JSON.parse(raw) as unknown) : null;
-    if (Array.isArray(parsed)) return new Set(parsed.filter((id): id is string => typeof id === "string"));
-  } catch {
-    // localStorage no disponible: los eventos simplemente no persisten.
-  }
-  return new Set();
-}
-
-function persistSeenEvents(storageKey: string, seen: Set<string>): void {
-  try {
-    window.localStorage.setItem(storageKey, JSON.stringify([...seen]));
-  } catch {
-    // Ignorar si no hay localStorage.
-  }
-}
-
 interface IOverworldDevSceneProps {
-  /** Jugador actual: aísla el caché local de eventos vistos por cuenta (no se filtra entre jugadores). */
-  playerId: string;
   /** Mapa/acto activo (p. ej. "act-1", "act-2"). Determina tilemap, soundtrack y persistencia. */
   mapId: string;
   completedNodeIds: string[];
@@ -236,15 +211,16 @@ interface IActiveNarration {
   isCutscene: boolean;
 }
 
-export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPosition, interactedNodeIds, resetToActStart, penaltyNexus = 0 }: IOverworldDevSceneProps) {
+export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, interactedNodeIds, resetToActStart, penaltyNexus = 0 }: IOverworldDevSceneProps) {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<OverworldEngine | null>(null);
   const tilemap = useMemo(() => buildOverworldTilemap(mapId) ?? buildAct1OverworldTilemap(), [mapId]);
   const actId = useMemo(() => resolveOverworldActId(mapId), [mapId]);
   const actArcTitle = useMemo(() => buildStoryChapterBriefing(actId).arcTitle, [actId]);
-  const storageKey = useMemo(() => seenEventsStorageKey(playerId, mapId), [playerId, mapId]);
   const initialCompleted = useMemo(() => new Set(completedNodeIds), [completedNodeIds]);
+  // Eventos vistos de ESTA sesión. La fuente de verdad es la BD (`interactedNodeIds`, que llega ya
+  // renderizado del servidor): este set solo evita repetir un evento entre pasos, no persiste nada.
   const seenEventIdsRef = useRef<Set<string>>(new Set());
   // Recompensas cuya reclamación está en vuelo (fetch en curso): impide dobles cobros/etiquetas
   // "+N" si el jugador vuelve a pulsar antes de que el servidor responda.
@@ -439,12 +415,13 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
     const canvas = canvasRef.current;
     if (!canvas) return;
     const firstStepIntroId = FIRST_STEP_INTRO_BY_MAP[mapId];
-    // Los eventos/recompensas ya vistos no se repiten (persisten entre recargas + servidor).
-    loadSeenEvents(storageKey).forEach((id) => seenEventIdsRef.current.add(id));
+    // Los eventos/recompensas ya vistos vienen de la BD y de ningún sitio más: así un reset de progreso
+    // hecho en la base de datos le llega al jugador, y ve lo mismo en cualquier navegador o dispositivo.
     initialInteracted.forEach((id) => seenEventIdsRef.current.add(id));
+    // Restos del caché anterior en el navegador: se borran una vez y ya no se vuelven a escribir.
+    purgeLegacyOverworldSeenEventsCache();
     const markEventSeen = (nodeId: string): void => {
       seenEventIdsRef.current.add(nodeId);
-      persistSeenEvents(storageKey, seenEventIdsRef.current);
     };
     const claimReward = async (object: IOverworldIntent["object"]): Promise<void> => {
       // Guard anti-duplicado: si ya se está reclamando (o ya está visto) no se relanza. Evita varias
@@ -783,7 +760,7 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
       engine.dispose();
       engineRef.current = null;
     };
-  }, [mapId, storageKey, tilemap, initialCompleted, initialPosition, initialInteracted, openArsenal, enterMarket, exitToHub, warpToMap, launchPendingNarrationBattle]);
+  }, [mapId, tilemap, initialCompleted, initialPosition, initialInteracted, openArsenal, enterMarket, exitToHub, warpToMap, launchPendingNarrationBattle]);
 
   const closeIntent = (): void => {
     setActiveIntent(null);
@@ -882,7 +859,6 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
       }
       // Código correcto: marca el terminal como resuelto (persistido) → abre la puerta enlazada.
       seenEventIdsRef.current.add(active.objectId);
-      persistSeenEvents(storageKey, seenEventIdsRef.current);
       void markOverworldEventInteracted(active.objectId);
       engineRef.current?.updateProgress(buildProgress(initialCompleted, seenEventIdsRef.current));
       if (doorSoundRef.current) {
@@ -894,7 +870,7 @@ export function OverworldDevScene({ playerId, mapId, completedNodeIds, initialPo
       setSubmissionError(null);
       engineRef.current?.setInteractionSuspended(false);
     },
-    [submission, initialCompleted, storageKey],
+    [submission, initialCompleted],
   );
 
   const beginBattleFromPanel = (): void => {

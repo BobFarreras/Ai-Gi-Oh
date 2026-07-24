@@ -6,6 +6,11 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.19.3] - 2026-07-24
+
+### Changed
+- **Los eventos vistos del mundo de Historia dejan de guardarse en el navegador**: la intro del acto, las cutscenes, las emboscadas y las recompensas ya recogidas se guardaban **a la vez** en la base de datos y en el navegador del jugador, y al entrar al mundo se juntaban las dos listas. Eso hacía que un reset de progreso hecho desde la base de datos **no le llegara al jugador** (su navegador volvía a marcar como visto lo que se acababa de borrar) y que el estado pudiera diferir entre dispositivos. Ahora la base de datos es la única fuente y, al entrar al mundo, se limpian los restos que hubiera guardados en el navegador. Las preferencias del jugador (música, efectos) no se tocan.
+
 ## [1.19.2] - 2026-07-24
 
 ### Fixed
@@ -421,7 +426,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.2...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.3...HEAD
+[1.19.3]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.2...v1.19.3
 [1.19.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.1...v1.19.2
 [1.19.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.0...v1.19.1
 [1.19.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.2...v1.19.0
