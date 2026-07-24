@@ -3,6 +3,7 @@ import { ICard } from "@/core/entities/ICard";
 import { GetStoryWorldStateUseCase } from "@/core/use-cases/story/GetStoryWorldStateUseCase";
 import { IStoryAiProfile, normalizeStoryAiProfile } from "@/core/services/opponent/difficulty/story-ai-profile";
 import { StoryOpponentDifficulty } from "@/core/entities/opponent/IStoryDuelDefinition";
+import { applyStoryDeckEntryToCard } from "@/services/story/internal/apply-story-deck-entry-to-card";
 import { getCurrentUserSession } from "@/services/auth/get-current-user-session";
 import { getPlayerBoardLoadout } from "@/services/game/get-player-board-deck";
 import { getPlayerCombatModifiers } from "@/services/progression/get-player-combat-modifiers";
@@ -44,21 +45,6 @@ export interface IStoryDuelRuntimeData {
   opponentTurn1EnergyBonus: number;
 }
 
-function applyStoryDeckEntryToCard(
-  card: ICard,
-  entry: { versionTier: number; level: number; xp: number; attackOverride: number | null; defenseOverride: number | null; effectOverride: Record<string, unknown> | null },
-): ICard {
-  return {
-    ...card,
-    versionTier: entry.versionTier,
-    level: entry.level,
-    xp: entry.xp,
-    attack: entry.attackOverride ?? card.attack,
-    defense: entry.defenseOverride ?? card.defense,
-    effect: (entry.effectOverride as ICard["effect"] | null) ?? card.effect,
-  };
-}
-
 function collectFusionRecipeIdsFromDeck(deck: ICard[]): string[] {
   return Array.from(
     new Set(
@@ -96,10 +82,12 @@ export async function getStoryDuelRuntimeData(chapter: number, duelIndex: number
 
   const opponentFusionDeckCardIds = duel.opponentFusionDeckCardIds ?? [];
   const cardsById = await loadCardsByIds(supabase, [...duel.opponentDeckEntries.map((entry) => entry.cardId), ...opponentFusionDeckCardIds]);
+  // Cada entrada se hidrata con SU fila: si una carta falta del catálogo se omite sin correr los índices (antes
+  // el `.map` posterior leía `opponentDeckEntries[index]` del array ya filtrado y los atributos saltaban de carta).
   const opponentDeck = duel.opponentDeckEntries.flatMap((entry) => {
     const card = cardsById.get(entry.cardId);
-    return card ? [{ ...card }] : [];
-  }).map((card, index) => applyStoryDeckEntryToCard(card, duel.opponentDeckEntries[index]));
+    return card ? [applyStoryDeckEntryToCard(card, entry)] : [];
+  });
   const inferredFusionRecipeIds = collectFusionRecipeIdsFromDeck(opponentDeck);
   const missingInCatalog = inferredFusionRecipeIds.filter((id) => !cardsById.has(id));
   const inferredFusionCardsById = missingInCatalog.length > 0 ? await loadCardsByIds(supabase, missingInCatalog) : new Map<string, ICard>();
