@@ -6,6 +6,16 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.19.2] - 2026-07-24
+
+### Fixed
+- **Ganar un duelo de Historia te devolvía al principio del acto**: la pantalla de resultado deja pulsar "Volver al mundo" mientras el cierre del duelo todavía se está registrando en el servidor. Si pulsabas en ese hueco, el juego volvía al mapa **dando el duelo por perdido**, y el mundo reaparece en el punto de inicio del acto cuando pierdes. La victoria sí quedaba registrada, pero acababas al principio. Encima, al navegar se cancelaba la petición en curso, así que a veces el cierre ni llegaba y las emboscadas ya vencidas se volvían a disparar. Depende de la conexión, por eso a unos jugadores les pasaba siempre y a otros nunca; el jefe es el caso más frecuente porque su cierre es el más lento (recompensas, cartas, Nexus, experiencia y habilidades). Ahora el retorno espera a la confirmación real, reintenta una vez si falla y nunca inventa una derrota. Perder o abandonar sigue devolviéndote al inicio del acto, como hasta ahora, y ahora la penalización de Nexus se registra siempre.
+- **El nivel de las cartas de los rivales de Historia no hacía nada**: los aumentos de atributo sí se aplicaban, pero el nivel se copiaba a la carta sin recalcular nada, así que un rival configurado a nivel 50 peleaba con el ataque, la defensa y el coste de energía de nivel 0. Afectaba a **todos los actos**. Ahora la carta del rival se resuelve con las mismas reglas que las del jugador y que las de Arena: los objetos equipados fijan la base y la curva de nivel se suma encima. **Los duelos de Historia con rivales de nivel alto son ahora más duros de verdad**; si algún acto queda pasado de rosca, se ajusta bajando niveles desde el panel de admin.
+- **Editar mazos de rivales en el admin arrastraba el escalado de la carta anterior**: el nivel y los objetos se guardaban por **hueco** y no por carta, así que al poner una carta en un hueco ya usado aparecía con el nivel y los atributos de la que estaba antes, y al intercambiar dos cartas los atributos se quedaban en la posición. Ahora colocar una carta hereda el escalado únicamente de otra copia suya en ese mismo mazo (siguen yendo todas iguales) o arranca limpia, vaciar un hueco borra su escalado, y al intercambiar cartas los atributos viajan con ellas. La vista previa del detalle ya muestra el ATK/DEF y el coste con el nivel aplicado.
+
+### Internal
+- La hidratación de las cartas del rival de Historia pasa por `applyCardProgressionToCard`, el único punto por el que ya pasaban las del jugador, Arena y multijugador. Además, cada entrada del mazo se resuelve con su propia fila: si una carta faltaba del catálogo, los atributos se corrían a las cartas siguientes.
+
 ## [1.19.1] - 2026-07-23
 
 ### Fixed
@@ -411,7 +421,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.1...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.2...HEAD
+[1.19.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.1...v1.19.2
 [1.19.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.0...v1.19.1
 [1.19.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.2...v1.19.0
 [1.18.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.18.1...v1.18.2
