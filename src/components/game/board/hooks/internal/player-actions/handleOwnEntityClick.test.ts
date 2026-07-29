@@ -89,7 +89,7 @@ describe("handleOwnEntityClick reemplazo", () => {
 
     const result = await handleOwnEntityClick({
       entity: execution,
-      event: createClickEvent(),
+      event: createClickEvent(2),
       activeAttackerId: null,
       applyTransition,
       clearSelection: vi.fn(),

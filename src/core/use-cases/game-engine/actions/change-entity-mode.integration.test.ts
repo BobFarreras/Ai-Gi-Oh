@@ -30,4 +30,15 @@ describe("GameEngine change entity mode", () => {
     expect(state.playerA.activeEntities[0].mode).toBe("DEFENSE");
     expect(state.playerA.activeExecutions[0].mode).toBe("ACTIVATE");
   });
+
+  it("debería permitir voltear una entity propia de SET a DEFENSE", () => {
+    let state = createActionBaseState();
+    state = GameEngine.playCard(state, "p1", "entity-1", "SET");
+
+    const entityId = state.playerA.activeEntities[0].instanceId;
+    expect(state.playerA.activeEntities[0].mode).toBe("SET");
+
+    state = GameEngine.changeEntityMode(state, "p1", entityId, "DEFENSE");
+    expect(state.playerA.activeEntities[0].mode).toBe("DEFENSE");
+  });
 });
