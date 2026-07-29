@@ -16,7 +16,11 @@ export async function runMainPhaseStep(
 
   if (gameState.pendingTurnAction?.playerId === opponentId) {
     const selectedId = pickOpponentPendingActionId(context, autoPick);
-    if (!selectedId) return true;
+    if (!selectedId) {
+      context.applyTransition((state) => GameEngine.cancelUnresolvablePendingTurnAction(state, opponentId));
+      context.setIsAnimating(false);
+      return true;
+    }
     context.setIsAnimating(true);
     await sleep(timings.stepDelayMs);
     const nextState = context.applyTransition((state) => GameEngine.resolvePendingTurnAction(state, opponentId, selectedId));

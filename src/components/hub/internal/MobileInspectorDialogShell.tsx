@@ -51,10 +51,11 @@ export function MobileInspectorDialogShell({
           className={`fixed inset-x-0 bottom-0 xl:hidden ${zIndexClassName} ${overlayTintClassName} ${overlayTopClassName}`}
         >
           <motion.div
-            initial={disableMotion ? false : { opacity: 0, scale: 0.2, x: animationOffset.x, y: animationOffset.y }}
+            initial={disableMotion ? false : { opacity: 0, scale: 0.96, x: animationOffset.x * 0.08, y: 24 }}
             animate={disableMotion ? { opacity: 1 } : { opacity: 1, scale: 1, x: 0, y: 0 }}
-            exit={disableMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 16 }}
-            transition={disableMotion ? { duration: 0.12 } : { duration: 0.3, ease: "easeOut" }}
+            exit={disableMotion ? { opacity: 0 } : { opacity: 0, scale: 0.98, y: 12 }}
+            transition={disableMotion ? { duration: 0.12 } : { duration: 0.2, ease: "easeOut" }}
+            style={{ willChange: "transform, opacity" }}
             onClick={(event) => event.stopPropagation()}
             className={`fixed bottom-[max(8px,env(safe-area-inset-bottom))] left-2 right-2 mx-auto flex max-w-lg flex-col overflow-hidden rounded-xl border border-cyan-500/45 bg-[#020a14] shadow-[0_0_40px_rgba(0,0,0,0.65)] ${panelTopClassName}`}
           >
