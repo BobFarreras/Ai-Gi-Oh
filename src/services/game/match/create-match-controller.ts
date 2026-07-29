@@ -5,6 +5,8 @@ import {
   StoryMatchController,
   TrainingMatchController,
   TutorialMatchController,
+  SurvivalMatchController,
+  OlympusMatchController,
 } from "@/services/game/match/modes";
 
 export function createMatchController(config: IMatchConfig): IMatchController {
@@ -22,5 +24,9 @@ export function createMatchController(config: IMatchConfig): IMatchController {
       return new TutorialMatchController(sharedConfig);
     case "MULTIPLAYER":
       return new MultiplayerMatchController(sharedConfig);
+    case "SURVIVAL":
+      return new SurvivalMatchController(sharedConfig);
+    case "OLYMPUS":
+      return new OlympusMatchController(sharedConfig);
   }
 }

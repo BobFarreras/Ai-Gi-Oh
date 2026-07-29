@@ -17,9 +17,14 @@ describe("ranking-scoring", () => {
     expect(rules.some((rule) => rule.points === "+15")).toBe(true);
   });
 
-  it("refleja los puntos de COMMERCIAL (+10 carta, +30 pack, +20 evolución)", () => {
+  it("refleja los puntos de COMMERCIAL, incluida la compra de objetos", () => {
     const points = RANKING_SCORING_GUIDES.COMMERCIAL.rules.map((rule) => rule.points).sort();
-    expect(points).toEqual(["+10", "+20", "+30"]);
+    expect(points).toEqual(["+10", "+10", "+20", "+30"]);
+    expect(
+      RANKING_SCORING_GUIDES.COMMERCIAL.rules.some(
+        (rule) => rule.action === "Comprar un objeto de mejora" && rule.points === "+10",
+      ),
+    ).toBe(true);
   });
 
   it("marca los tableros semanales (nota de cierre); el ELO es permanente", () => {

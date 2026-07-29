@@ -345,3 +345,14 @@
 1. `pnpm lint`
 2. `pnpm test`
 3. `pnpm build`
+
+## Modos PvE - Fase 1: contratos y CombatProof
+
+1. `IMatchMode` incorpora `SURVIVAL` y `OLYMPUS` con controllers propios.
+2. Las acciones deterministas pasan a ser contrato canónico de Match; Multiplayer conserva un reexport compatible.
+3. Se añaden `ICombatSession`, `ICombatProof` y `CombatActionJournal` con secuencia y límite de acciones.
+4. `replayCombatProof` valida identidad, modo, snapshot, protocolo, ventana temporal, participantes, tamaño y orden antes de derivar ganador y LP.
+5. Los tickets HMAC vinculan jugador, modo, sesión, batalla, snapshot y versión de protocolo.
+6. El motor permite LP iniciales distintos del máximo para transportar vida de Supervivencia.
+7. Supervivencia y Olimpo no reciben recompensas del fallback común mientras no exista su liquidación versionada.
+8. Persistencia Supabase, endpoints y UI quedan fuera de esta fase.

@@ -1,6 +1,6 @@
 // src/core/services/multiplayer/apply-match-action.ts - Aplica una acción de partida al estado del juego usando GameEngine. Reutilizable en cliente y servidor.
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
-import { IMatchActionPayload } from "@/core/entities/multiplayer/IMatchAction";
+import { IMatchActionPayload } from "@/core/entities/match";
 
 export function applyMatchAction(state: GameState, playerId: string, action: IMatchActionPayload): GameState {
   switch (action.type) {

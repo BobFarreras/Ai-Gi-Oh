@@ -3,3 +3,5 @@ export { TrainingMatchController } from "@/services/game/match/modes/TrainingMat
 export { StoryMatchController } from "@/services/game/match/modes/StoryMatchController";
 export { TutorialMatchController } from "@/services/game/match/modes/TutorialMatchController";
 export { MultiplayerMatchController } from "@/services/game/match/modes/MultiplayerMatchController";
+export { SurvivalMatchController } from "@/services/game/match/modes/SurvivalMatchController";
+export { OlympusMatchController } from "@/services/game/match/modes/OlympusMatchController";
