@@ -356,3 +356,16 @@
 6. El motor permite LP iniciales distintos del máximo para transportar vida de Supervivencia.
 7. Supervivencia y Olimpo no reciben recompensas del fallback común mientras no exista su liquidación versionada.
 8. Persistencia Supabase, endpoints y UI quedan fuera de esta fase.
+
+## Modos PvE - Fase 2: fundación Supabase local
+
+1. La migración `150_arena_modes_foundation.sql` crea los agregados de sesiones, runs, batallas, cartera, campeones, árbol, intentos diarios y rivales legendarios.
+2. Los catálogos activos son legibles por usuarios autenticados; el progreso personal queda protegido por RLS y solo permite lectura de filas propias.
+3. `anon` y `authenticated` no pueden mutar progreso, resultados ni Fragmentos directamente.
+4. Las nueve operaciones del diseño se ejecutan mediante funciones transaccionales reservadas a `service_role`, con `search_path` vacío, bloqueos `FOR UPDATE` e idempotencia.
+5. Supervivencia limita una run y una batalla activas, transporta LP y aplica la curación de hito dentro de la misma transacción que recompensa y avance.
+6. Olimpo deriva el periodo diario en UTC, consume el intento al emitir batalla y exige un campeón desbloqueado en su tier.
+7. La inversión y el respec bloquean cartera y progreso del campeón; el ledger impide duplicar créditos o débitos.
+8. El seed incorpora un ruleset inicial, ocho campeones ligados al ladder, tres nodos por campeón y dos rivales legendarios ficticios.
+9. La reconstrucción histórica solo desbloquea el campeón `N` cuando `tier_stats` confirma las victorias mínimas en el tier `N`.
+10. Validación local: regeneración de 151 migraciones, `pnpm db:reset`, 36 tests pgTAP y advisors de seguridad/rendimiento.
