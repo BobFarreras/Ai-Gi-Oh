@@ -110,7 +110,7 @@ URLs locales:
 
 - App: `http://localhost:3000`
 - Hub: `http://localhost:3000/hub`
-- Supabase Studio: `http://127.0.0.1:54323`
+- Supabase Studio: `http://127.0.0.1:57323`
 
 ## Cómo contribuir
 

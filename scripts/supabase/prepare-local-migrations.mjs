@@ -1,6 +1,7 @@
 // scripts/supabase/prepare-local-migrations.mjs - Genera migraciones locales de Supabase desde docs/supabase/sql para contributors.
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const repositoryRoot = process.cwd();
 const sourceDir = path.join(repositoryRoot, "docs", "supabase", "sql");
@@ -10,18 +11,34 @@ function ensureDirectory(directoryPath) {
   fs.mkdirSync(directoryPath, { recursive: true });
 }
 
+/** Ordena por el prefijo numérico para que 010 se aplique antes que 100. */
+export function compareSqlFilenames(left, right) {
+  const leftSequence = Number.parseInt(left.match(/^(\d+)/)?.[1] ?? "", 10);
+  const rightSequence = Number.parseInt(right.match(/^(\d+)/)?.[1] ?? "", 10);
+  if (Number.isNaN(leftSequence) || Number.isNaN(rightSequence)) return left.localeCompare(right);
+  return leftSequence - rightSequence || left.localeCompare(right);
+}
+
 function readSqlFilenames() {
   return fs
     .readdirSync(sourceDir, { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith(".sql"))
     .map((entry) => entry.name)
-    .sort((left, right) => left.localeCompare(right));
+    .sort(compareSqlFilenames);
 }
 
-function toMigrationPrefix(index) {
-  const fixedDate = "202601010000";
-  const sequence = String(index + 1).padStart(2, "0");
-  return `${fixedDate}${sequence}`;
+/** Genera timestamps válidos y ordenables incluso cuando hay más de 99 migraciones. */
+export function toMigrationPrefix(index) {
+  const timestamp = new Date(Date.UTC(2026, 0, 1, 0, 0, index + 1));
+  const digits = [
+    timestamp.getUTCFullYear(),
+    timestamp.getUTCMonth() + 1,
+    timestamp.getUTCDate(),
+    timestamp.getUTCHours(),
+    timestamp.getUTCMinutes(),
+    timestamp.getUTCSeconds(),
+  ];
+  return digits.map((value, position) => String(value).padStart(position === 0 ? 4 : 2, "0")).join("");
 }
 
 function cleanGeneratedMigrations() {
@@ -62,4 +79,5 @@ function main() {
   console.log(`OK: ${sqlFilenames.length} migraciones locales generadas en supabase/migrations.`);
 }
 
-main();
+const executedPath = process.argv[1] ? pathToFileURL(path.resolve(process.argv[1])).href : "";
+if (import.meta.url === executedPath) main();

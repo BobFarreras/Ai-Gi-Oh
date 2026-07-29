@@ -36,6 +36,7 @@
     "supabase:env:local": "node scripts/supabase/setup-local-env.mjs",
     "supabase:env:apply": "node scripts/supabase/apply-local-env-to-dotenv-local.mjs",
     "supabase:env:restore": "node scripts/supabase/restore-dotenv-local.mjs",
+    "supabase:verify:local": "node scripts/supabase/verify-local.mjs",
     "supabase:bootstrap:local": "node scripts/supabase/bootstrap-local.mjs",
     "db:reset": "node scripts/supabase/reset-local.mjs",
     "db:seed:dump": "node scripts/supabase/dump-seed.mjs",

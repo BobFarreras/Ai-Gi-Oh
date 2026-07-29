@@ -66,7 +66,7 @@ function main() {
     ui.note("  1) DNS/red de Docker: si ves 'no such host' o 'unexpected EOF' al descargar imágenes,");
     ui.note("     Docker no tiene salida a internet. Reinicia Docker Desktop por completo (icono de la");
     ui.note("     bandeja → Quit → abrir de nuevo) y pausa VPN/proxy/antivirus si los usas.");
-    ui.note("  2) Puertos 54321-54324 ocupados por otro proceso.");
+    ui.note("  2) Puertos 57321-57324 ocupados por otro proceso.");
     ui.note("  3) Docker con pocos recursos (RAM/disco) asignados.");
     ui.note("Cuando Docker vuelva a tener red, reintenta SOLO este paso: pnpm supabase:bootstrap:local");
     process.exit(1);
@@ -74,6 +74,7 @@ function main() {
 
   // 3) Generar el .env con las claves locales.
   runNodeStep("Generando .env.local.supabase", "scripts/supabase/setup-local-env.mjs");
+  runNodeStep("Verificando economía e idempotencia local", "scripts/supabase/verify-local.mjs");
 
   ui.print();
   ui.ok(paint("greenBright", "Bootstrap local completado"));
