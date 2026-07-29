@@ -15,7 +15,7 @@ El trabajo incluye el rediseño responsive, el dominio, la persistencia, la segu
 
 ### 2.1. Arena clásica
 
-- Mantiene tiers, ladder de seis rivales y progresión existente.
+- Mantiene tiers, ladder de ocho rivales y progresión existente.
 - Conserva las recompensas actuales para no devaluar el progreso.
 - Su acceso se mueve a una ruta explícita, sin mezclar sus reglas con los nuevos modos.
 
@@ -28,13 +28,20 @@ El trabajo incluye el rediseño responsive, el dominio, la persistencia, la segu
 - Una derrota finaliza la expedición. Los empates se consideran derrota para evitar runs infinitas.
 - Salir de la página no abandona la expedición; se puede reanudar.
 - Abandonar exige confirmación y cierra la expedición sin recompensa pendiente.
-- La dificultad y las recompensas escalan por tramos de cinco victorias.
-- La selección de rival es determinista a partir de la expedición y el número de combate.
+- La dificultad y las recompensas escalan de forma determinista desde una potencia equivalente al tier 4.
+- Los rivales reutilizan el orden canónico de Arena y aumentan de tier efectivo cada dos victorias.
+- Al alcanzar el tier máximo comienza una Ascensión por vueltas completas del roster; nunca se repite indefinidamente la misma dificultad.
 - El mazo del jugador se fija al iniciar cada duelo, no durante toda la expedición. Así puede ajustar el Arsenal entre combates sin alterar un duelo ya emitido.
+- Cada victoria y cada hito conceden **Fragmentos de Ascensión**, una moneda exclusiva para mejorar campeones de Olimpo.
 
 ### 2.3. Olimpo
 
-- El jugador elige un rival legendario entre los disponibles.
+- El jugador elige un campeón clásico desbloqueado y controla su deck real contra un rival legendario.
+- Los campeones se desbloquean al derrotar a cada rival dentro de su tier asignado, no solo por alcanzar el tier.
+- La inversión de Fragmentos pertenece a un campeón concreto y se representa mediante un árbol pequeño de tres ramas.
+- Cada árbol admite respec server-authoritative con coste configurado y una primera reasignación gratuita.
+- Las cartas prestadas no reciben experiencia ni se incorporan a la colección del jugador.
+- Los bonus de combate del árbol general del jugador no se aplican al campeón; los modificadores económicos permitidos sí pueden afectar a la recompensa.
 - Se permiten **3 intentos diarios**, configurables desde servidor sin despliegue.
 - El periodo diario usa medianoche UTC, igual que misiones y login diario.
 - El intento se consume al crear la batalla, no al enviar el resultado. Cerrar la pestaña no permite repetir gratis.
@@ -48,6 +55,23 @@ El trabajo incluye el rediseño responsive, el dominio, la persistencia, la segu
 - El límite, catálogo, disponibilidad y recompensas son autoridad del servidor.
 
 La cifra de tres intentos debe almacenarse como configuración (`daily_attempt_limit`) para poder probar dos intentos en eventos sin cambiar código.
+
+### 2.4. Matriz de desbloqueo de campeones
+
+El tier asignado coincide con la posición canónica del rival:
+
+| Tier requerido | Campeón | Condición |
+|---|---|---|
+| 1 | GenNvim | Derrotar a GenNvim en tier 1 |
+| 2 | Helena | Derrotar a Helena en tier 2 |
+| 3 | Jaku | Derrotar a Jaku en tier 3 |
+| 4 | Midutech | Derrotar a Midutech en tier 4 |
+| 5 | Soldado | Derrotar a Soldado en tier 5 |
+| 6 | Guill | Derrotar a Guill en tier 6 |
+| 7 | Soldado-Laptop | Derrotar a Soldado-Laptop en tier 7 |
+| 8 | Gokernel | Derrotar a Gokernel en tier 8 |
+
+Como cada tier presenta el mismo ladder ordenado, el estado histórico se puede reconstruir sin regalar campeones: el campeón de posición `N` está derrotado en su tier si `tierStats[tier=N].wins >= N`. Después del despliegue, cada victoria válida también genera un registro explícito e idempotente de desbloqueo.
 
 ## 3. ADR: límites del dominio
 
@@ -220,11 +244,33 @@ LP siguiente = min(
 )
 ```
 
+Escalado inicial recomendado:
+
+```text
+rosterIndex = (battleIndex - 1) % rosterSize
+effectiveTier = min(maxConfiguredTier, 4 + floor((battleIndex - 1) / 2))
+ascensionRank = floor(max(0, battleIndex - firstMaxTierBattle) / rosterSize)
+```
+
+La resolución ocurre por capas y queda guardada en el snapshot:
+
+1. Roster y variante de deck del catálogo de Arena.
+2. Escalado de cartas del `effectiveTier`.
+3. Perfil de IA del tramo (`HARD`, `BOSS`, `MASTER`, `MYTHIC`).
+4. Modificadores de Ascensión configurados por vuelta completa.
+
+Cuando cartas y versiones alcanzan sus máximos, la Ascensión aplica incrementos moderados y limitados de LP, energía y presión de combate. No añade ATK/DEF infinito ni altera cartas del catálogo. El panel admin define caps, tramos y recompensas, y un simulador batch rechaza configuraciones con loops, duración P95 excesiva o saltos de dificultad no previstos.
+
 ### 6.3. Olimpo
 
 Entidades:
 
 - `IOlympusOpponentDefinition`;
+- `IOlympusChampionDefinition`;
+- `IOlympusChampionUnlock`;
+- `IChampionUpgradeTree`;
+- `IPlayerChampionProgress`;
+- `IAscensionFragmentWallet`;
 - `IOlympusDailyAllowance`;
 - `IOlympusBattle`;
 - `IOlympusVictory`;
@@ -238,8 +284,31 @@ Invariantes:
 - Solo se acredita una victoria por `battleId`.
 - El bonus de primera victoria tiene unicidad `(playerId, opponentId)`.
 - Un rival inactivo o fuera de ventana no puede emitir una batalla.
+- El campeón debe constar como desbloqueado por una victoria verificada en su tier asignado.
+- Comprar o resetear nodos bloquea cartera y progreso del campeón en una misma transacción.
+- El snapshot usa la composición real del deck del campeón y aplica después sus nodos; nunca muta Arena ni la colección.
 
-### 6.4. Dificultad legendaria
+### 6.4. Progresión de campeones
+
+Cada campeón referencia un oponente y una variante base versionada del catálogo de Arena. La composición de cartas es real, pero sus niveles, versiones y habilidades se resuelven para Olimpo:
+
+```text
+deck Arena versionado
+  -> escala base del campeón
+  -> nodos comprados por el jugador
+  -> caps de Olimpo
+  -> snapshot inmutable de batalla
+```
+
+El árbol contiene entre 8 y 12 nodos y tres ramas:
+
+- **Potencia:** `+5 level` global, versiones de grupos concretos y mejora del fusion deck.
+- **Resistencia:** LP, consistencia y energía con topes explícitos.
+- **Identidad:** habilidad propia y mejora de cartas emblemáticas.
+
+No existe `+1 versionTier` global repetible. Cada nodo declara selector de cartas, operación, magnitud, prerrequisitos y coste. Los Fragmentos se almacenan en una cartera con ledger idempotente. El respec devuelve el porcentaje configurado, nunca acepta importes calculados por cliente y deja un asiento de auditoría.
+
+### 6.5. Dificultad legendaria
 
 No se debe crear una dificultad “tramposa” aumentando números sin control. Cada leyenda combina:
 
@@ -303,22 +372,56 @@ combat_sessions
 
 player_survival_runs
   id, player_id, status, current_lp, max_lp, wins,
-  current_battle_index, started_at, completed_at, version
+  current_battle_index, ruleset_version, started_at, completed_at, version
+
+survival_rulesets
+  id, version, start_tier, battles_per_tier, roster_json,
+  milestone_interval, milestone_heal, is_active, published_at
+
+survival_scaling_stages
+  id, ruleset_id, from_battle, ai_profile,
+  card_scale_json, ascension_modifiers_json, reward_definition_id
 
 survival_battles
   battle_id, run_id, battle_index, opponent_id,
-  starting_lp, ending_lp, outcome, milestone_heal, reward_json
+  effective_tier, ascension_rank, starting_lp, ending_lp,
+  outcome, milestone_heal, reward_json
+
+combat_mode_wallets
+  player_id, ascension_fragments, updated_at, version
+
+combat_mode_wallet_transactions
+  id, player_id, operation_id, amount, reason, metadata, created_at
+
+olympus_champions
+  id, arena_opponent_id, required_tier, required_ladder_position,
+  base_deck_variant_id, base_scale_json, is_active, version
+
+olympus_champion_upgrade_nodes
+  id, champion_id, branch, prerequisite_node_ids,
+  effect_json, fragment_cost, sort_order, is_active, version
+
+player_olympus_champion_unlocks
+  player_id, champion_id, source_tier, source_battle_id, unlocked_at
+
+player_olympus_champion_progress
+  player_id, champion_id, unlocked_node_ids, respec_count, version
 
 olympus_opponents
   id, code, display_name, deck_template_id, ai_profile,
   combat_modifiers_json, reward_definition_id,
   available_from, available_until, is_active, version
 
+olympus_opponent_deck_entries
+  id, opponent_id, zone, position, card_id,
+  level, xp, version_tier, attack_bonus, defense_bonus
+
 olympus_daily_usage
   player_id, period_key, attempts_used, daily_limit
 
 olympus_battles
-  battle_id, player_id, opponent_id, period_key,
+  battle_id, player_id, champion_id, opponent_id,
+  champion_snapshot_hash, opponent_snapshot_hash, period_key,
   attempt_number, outcome, reward_json, completed_at
 
 olympus_first_victories
@@ -333,6 +436,8 @@ Las definiciones de catálogo pueden ser legibles por usuarios autenticados. Run
 - Índice único parcial para una sesión emitida por jugador y modo cuando aplique.
 - `UNIQUE(run_id, battle_index)` y `UNIQUE(battle_id)`.
 - `PRIMARY KEY(player_id, period_key)` en uso diario.
+- `PRIMARY KEY(player_id, champion_id)` en desbloqueos y progreso de campeón.
+- `UNIQUE(player_id, operation_id)` en el ledger de Fragmentos.
 - Checks para LP, intentos, estados y recompensas no negativas.
 - Índices en todas las columnas usadas por RLS (`player_id`) y lookups (`status`, `expires_at`, `period_key`).
 - Foreign keys a usuario, sesión, oponente y definición de recompensa.
@@ -360,8 +465,13 @@ Operaciones atómicas mínimas:
 4. `abandon_survival_run`.
 5. `issue_olympus_battle` (bloquea fila diaria e incrementa intento).
 6. `complete_olympus_battle`.
+7. `purchase_champion_upgrade`.
+8. `respec_champion_upgrades`.
+9. `grant_champion_unlock_from_arena_win`.
 
 Cada función bloquea el agregado con `SELECT ... FOR UPDATE`, comprueba estado y aplica idempotencia. No se repetirá el patrón “reservar claim y después hacer varias escrituras independientes”, porque un fallo intermedio puede dejar una batalla cobrada pero incompleta.
+
+La migración inicial reconstruye desbloqueos desde `player_training_progress`: para cada campeón `N`, inserta el unlock únicamente cuando las victorias del tier `N` alcanzan su posición `N`. Esta operación debe ser repetible y no sobrescribir registros explícitos.
 
 ### 8.5. Desarrollo local
 
@@ -396,11 +506,16 @@ survival/
   IssueSurvivalBattleUseCase
   CompleteSurvivalBattleUseCase
   AbandonSurvivalRunUseCase
+  ResolveSurvivalDifficultyUseCase
 
 olympus/
   GetOlympusStateUseCase
   IssueOlympusBattleUseCase
   CompleteOlympusBattleUseCase
+  UnlockOlympusChampionUseCase
+  PurchaseChampionUpgradeUseCase
+  RespecChampionUpgradesUseCase
+  ResolveOlympusChampionLoadoutUseCase
 ```
 
 ### 9.2. Contratos
@@ -409,9 +524,12 @@ olympus/
 ICombatSessionRepository
 ISurvivalRunRepository
 ISurvivalBattleRepository
+ICombatModeWalletRepository
 IOlympusCatalogRepository
 IOlympusBattleRepository
 IOlympusAllowanceRepository
+IOlympusChampionRepository
+IOlympusChampionProgressRepository
 IAtomicCombatSettlementRepository
 ```
 
@@ -457,15 +575,60 @@ src/components/hub/academy/training/modes/survival/
 src/components/hub/academy/training/modes/olympus/
   OlympusClient.tsx
   OlympusLobby.tsx
+  OlympusChampionTree.tsx
   OlympusOpponentCard.tsx
   internal/
     useOlympusBattle.ts
+    useChampionProgression.ts
     OlympusAllowanceStatus.tsx
 ```
 
 Cada componente, hook, servicio o caso de uso debe permanecer por debajo de 150 líneas. Los tipos y configuración pueden superar el límite solo con justificación.
 
-## 11. APIs
+## 11. Administración
+
+Se crean dos secciones nuevas en el panel. Pueden reutilizar componentes visuales y utilidades del editor de Arena, pero no sus endpoints ni tablas: compartir presentación no debe acoplar los dominios.
+
+### 11.1. Supervivencia
+
+El administrador permite:
+
+- ordenar o excluir rivales reutilizando IDs del roster de Arena;
+- elegir tier inicial y frecuencia de incremento;
+- configurar perfiles de IA por tramo;
+- editar curación, hitos, Fragmentos y recompensas;
+- definir caps y modificadores por Ascensión;
+- activar, versionar o programar configuraciones;
+- previsualizar los primeros combates y cada vuelta del roster;
+- ejecutar simulaciones batch antes de publicar.
+
+La configuración activa es inmutable para una run ya iniciada: `ISurvivalRun` conserva `rulesetVersion`. Publicar cambios crea una versión nueva y no altera expediciones en curso.
+
+### 11.2. Olimpo
+
+El administrador permite:
+
+- crear, ordenar, activar y programar legendarios;
+- editar identidad, avatar, IA, LP, energía y reglas visibles;
+- editar deck y fusion deck con el selector de cartas existente;
+- fijar nivel, experiencia y versión por carta;
+- configurar recompensa base, primera victoria y pools premium;
+- configurar los tres intentos globales y reset UTC;
+- vincular campeón con rival/tier/posición y variante real de Arena;
+- editar nodos, ramas, costes, prerrequisitos, efectos y respec;
+- previsualizar el loadout final para cualquier combinación de nodos.
+
+Toda mutación administrativa pasa por autorización existente, validación de use case y auditoría con diff antes/después. No se aceptan efectos arbitrarios en JSON: `effect_json` se valida contra una unión discriminada y un catálogo cerrado de operaciones.
+
+### 11.3. Seguridad de publicación
+
+- Borrado lógico para definiciones utilizadas por batallas.
+- Control optimista por `version` para impedir sobrescrituras entre administradores.
+- Validación de veinte cartas, fusion deck válido, IDs existentes y caps.
+- Una configuración no puede activarse sin simulación satisfactoria y reward policy válida.
+- Los cambios solo se prueban contra Supabase local y staging antes de producción.
+
+## 12. APIs
 
 ```text
 GET  /api/training/survival
@@ -477,6 +640,8 @@ POST /api/training/survival/abandon
 GET  /api/training/olympus
 POST /api/training/olympus/battles
 POST /api/training/olympus/battles/complete
+POST /api/training/olympus/champions/upgrade
+POST /api/training/olympus/champions/respec
 ```
 
 Recomendación Next.js:
@@ -488,7 +653,7 @@ Recomendación Next.js:
 - `Cache-Control: no-store` en estado individual e intentos.
 - Errores de límite usan `429`; conflicto de batalla/run usa `409`; prueba inválida usa `422`.
 
-## 12. Recompensas y economía
+## 13. Recompensas y economía
 
 - Definiciones de recompensa versionadas y persistidas.
 - El resultado guarda un snapshot de la recompensa aplicada para auditoría.
@@ -496,6 +661,8 @@ Recomendación Next.js:
 - Objetos raros usan una clave de operación única ligada al `battleId`.
 - Los modificadores del árbol se aplican mediante la política común de economía, con caps específicos por modo.
 - Supervivencia entrega recompensa incremental y bonus de hito; no acumula un “bote” solo en cliente.
+- Los Fragmentos de Ascensión se acreditan por victoria y con bonus cada cinco; su curva y cap diario son configurables.
+- Gastar Fragmentos solo modifica el árbol del campeón elegido.
 - Olimpo muestra probabilidades o recompensas exactas antes de gastar intento.
 - Toda modificación se somete a simulación económica para evitar inflación.
 
@@ -511,7 +678,7 @@ Configuración inicial sugerida, pendiente de balance:
 
 Los importes definitivos no se codifican hasta disponer de métricas de economía.
 
-## 13. Observabilidad y analítica
+## 14. Observabilidad y analítica
 
 Eventos mínimos:
 
@@ -521,6 +688,10 @@ Eventos mínimos:
 - `survival_battle_completed`;
 - `survival_milestone_reached`;
 - `survival_run_ended`;
+- `ascension_fragments_earned`;
+- `champion_unlocked`;
+- `champion_upgrade_purchased`;
+- `champion_upgrades_respecced`;
 - `olympus_opponent_selected`;
 - `olympus_attempt_started`;
 - `olympus_battle_completed`;
@@ -539,19 +710,23 @@ Dashboard de salud:
 - latencia P95 de start/complete;
 - FPS/INP móvil segmentado por perfil.
 
-## 14. Estrategia de pruebas
+## 15. Estrategia de pruebas
 
-### 14.1. Dominio unitario
+### 15.1. Dominio unitario
 
 - Carry de LP y cap máximo.
 - Curación exactamente en victorias 5, 10, 15.
 - Empate y derrota finalizan run.
 - Escalado determinista de rival/recompensa.
+- Progresión desde tier 4, salto cada dos combates y Ascensión tras el máximo.
+- Desbloqueo del campeón solo al derrotarlo dentro de su tier asignado.
+- Reconstrucción histórica mediante victorias mínimas del tier correcto.
+- Compra y respec por campeón sin saldo negativo ni efectos fuera de caps.
 - Period key UTC y reset.
 - Límite diario y primera victoria.
 - Rechazo de estados/transiciones inválidas.
 
-### 14.2. Replay del motor
+### 15.2. Replay del motor
 
 - Mismo seed + snapshots + acciones produce mismo resultado.
 - Acción fuera de orden o ilegal se rechaza.
@@ -559,19 +734,21 @@ Dashboard de salud:
 - Límite de acciones y expiración.
 - Cartas con trampas, fusiones, efectos temporales y robos.
 
-### 14.3. Repositorios y base de datos local
+### 15.3. Repositorios y base de datos local
 
 Tests pgTAP:
 
 - RLS impide leer runs de otro jugador.
 - `anon`/`authenticated` no pueden mutar progreso.
 - Dos requests concurrentes crean un solo intento/run/battle.
+- Dos compras concurrentes no gastan los mismos Fragmentos.
+- Vencer a Guill fuera del tier 6 no lo desbloquea.
 - Completar dos veces no duplica recompensa.
 - Fallo en wallet hace rollback de todo.
 - Índices, constraints, grants y `search_path`.
 - Reset UTC en frontera de día.
 
-### 14.4. API
+### 15.4. API
 
 - Sin sesión, origen no confiable y body inválido.
 - Ticket de otro jugador/modo/batalla.
@@ -579,16 +756,18 @@ Tests pgTAP:
 - Reintento de completion devuelve resultado idempotente.
 - Nunca confía en reward, opponent, period o LP del body.
 
-### 14.5. Componentes
+### 15.5. Componentes
 
 - Navegación semántica por teclado.
 - CTA cambia entre iniciar y reanudar.
 - No consume intento al abrir detalle; sí al confirmar batalla.
+- Solo ofrece campeones desbloqueados y explica la condición de los bloqueados.
+- Árbol muestra costes, prerrequisitos, saldo y resultado del respec.
 - El detalle no se cierra por actualizaciones de estado no relacionadas.
 - Countdown y LP anunciados de forma accesible.
 - Perfil móvil desmonta efectos costosos.
 
-### 14.6. E2E
+### 15.6. E2E
 
 - Run completa con cinco victorias y curación.
 - Recarga/reanudación entre combates.
@@ -610,7 +789,7 @@ pnpm build
 
 La medición visual se realiza con build de producción y CPU 4x, no con `next dev`.
 
-## 15. Plan de entrega por PR
+## 16. Plan de entrega por PR
 
 ### PR 1 — Contratos y ADR
 
@@ -642,7 +821,7 @@ La medición visual se realiza con build de producción y CPU 4x, no con `next d
 
 ### PR 5 — Supervivencia dominio/API
 
-- Runs, emisión, finalización, curación y recompensas.
+- Runs, emisión, finalización, escalado por Ascensión, curación, Fragmentos y recompensas.
 - Integración con replay y economía.
 - Tests unitarios, API y base de datos.
 
@@ -654,8 +833,8 @@ La medición visual se realiza con build de producción y CPU 4x, no con `next d
 
 ### PR 7 — Olimpo dominio/API/admin
 
-- Catálogo, allowance diario, intentos, primeras victorias y recompensas.
-- Editor admin con auditoría.
+- Catálogo, campeones, desbloqueos por tier, árbol/respec, allowance diario, intentos, primeras victorias y recompensas.
+- Editores admin de Supervivencia y Olimpo con versionado, simulación y auditoría.
 - Tests de concurrencia y seguridad.
 
 ### PR 8 — Olimpo UI
@@ -673,7 +852,7 @@ La medición visual se realiza con build de producción y CPU 4x, no con `next d
 
 Cada PR debe ser desplegable y reversible. Ninguno puede depender de datos creados manualmente en producción.
 
-## 16. Feature flags y rollout
+## 17. Feature flags y rollout
 
 - Flags server-side: `combat_portal_enabled`, `survival_enabled`, `olympus_enabled`.
 - Catálogos inactivos por defecto hasta terminar seed y balance.
@@ -685,7 +864,7 @@ Cada PR debe ser desplegable y reversible. Ninguno puede depender de datos cread
 - Si se desactiva un modo, las runs y batallas existentes permanecen legibles y reanudables durante una ventana de gracia.
 - Rollback de UI no borra progreso; migraciones destructivas se posponen a otra release.
 
-## 17. Criterios de aceptación
+## 18. Criterios de aceptación
 
 ### Portal
 
@@ -697,12 +876,17 @@ Cada PR debe ser desplegable y reversible. Ninguno puede depender de datos cread
 
 - Conserva LP verificados entre duelos.
 - Cura 2.000 LP cada cinco victorias y respeta el máximo.
+- Empieza con potencia equivalente al tier 4 y escala hasta Ascensión sin meseta permanente.
+- Acredita Fragmentos de forma atómica e idempotente.
 - Sobrevive a recarga, navegación y retry de red.
 - No duplica avance ni recompensa en concurrencia.
 
 ### Olimpo
 
 - Consume como máximo tres intentos por periodo UTC.
+- Solo permite controlar campeones derrotados dentro de su tier asignado.
+- Usa el deck real versionado del campeón con su árbol aplicado sobre un snapshot.
+- Compra y respec afectan exclusivamente al campeón seleccionado.
 - El cliente no puede modificar rival, límite, outcome o recompensa.
 - La primera victoria se concede una sola vez.
 - La UI explica intentos, reset, dificultad y recompensa antes de confirmar.
@@ -716,7 +900,7 @@ Cada PR debe ser desplegable y reversible. Ninguno puede depender de datos cread
 - `lint`, `typecheck`, tests, pgTAP y build en verde.
 - Sin warnings nuevos ni acceso a Supabase desde UI.
 
-## 18. Riesgos principales
+## 19. Riesgos principales
 
 | Riesgo | Mitigación |
 |---|---|
@@ -729,8 +913,11 @@ Cada PR debe ser desplegable y reversible. Ninguno puede depender de datos cread
 | Refactor rompe Arena actual | Traslado primero, tests de caracterización y flag |
 | Función privilegiada expuesta | Grants mínimos, RLS, schema privado cuando proceda y pgTAP |
 | Replay diverge por aleatoriedad | Seed única, ids deterministas y tests de cartas complejas |
+| Escalado infinito vuelve las partidas largas o injustas | Caps, Ascensión por capas, sudden pressure y simulación P95 |
+| Cambiar Arena rompe campeones ya configurados | Referencias versionadas y snapshots inmutables |
+| Árboles multiplican el coste de balance | Plantilla común de 8-12 nodos y efectos cerrados |
 
-## 19. Referencias técnicas
+## 20. Referencias técnicas
 
 - Arquitectura local: `docs/architecture/`.
 - Motor y efectos: `docs/architecture/03-domain-game.md` y `07-game-engine-effects-extension.md`.
@@ -740,6 +927,6 @@ Cada PR debe ser desplegable y reversible. Ninguno puede depender de datos cread
 - Seguridad RLS: <https://supabase.com/docs/guides/database/postgres/row-level-security>.
 - Testing de base de datos: <https://supabase.com/docs/guides/database/testing>.
 
-## 20. Definición de terminado
+## 21. Definición de terminado
 
 La feature estará terminada cuando los tres modos estén disponibles desde el portal, las reglas y recompensas sean autoritativas, los flujos críticos estén reproducidos en Supabase local y los budgets de móvil se cumplan. Una pantalla visualmente completa sin replay, atomicidad, RLS, tests de concurrencia o medición de rendimiento se considera incompleta.
