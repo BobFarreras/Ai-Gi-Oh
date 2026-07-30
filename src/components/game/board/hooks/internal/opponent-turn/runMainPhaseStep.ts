@@ -5,7 +5,7 @@ import { addRevealedId, findReactiveTrap, findReactiveTraps, removeRevealedId, t
 import { sleep } from "../sleep";
 import { IOpponentAutoPick, IOpponentStepTimings, IOpponentTurnContext } from "./types";
 import { pickOpponentPendingActionId } from "./pick-opponent-pending-action-id";
-
+import { buildOpponentExecutionAction, buildOpponentPlayAction } from "./build-opponent-play-action";
 export async function runMainPhaseStep(
   context: IOpponentTurnContext,
   timings: IOpponentStepTimings,
@@ -13,7 +13,6 @@ export async function runMainPhaseStep(
 ): Promise<boolean> {
   const { gameState } = context;
   const opponentId = gameState.playerB.id;
-
   if (gameState.pendingTurnAction?.playerId === opponentId) {
     const selectedId = pickOpponentPendingActionId(context, autoPick);
     if (!selectedId) {
@@ -24,6 +23,7 @@ export async function runMainPhaseStep(
     context.setIsAnimating(true);
     await sleep(timings.stepDelayMs);
     const nextState = context.applyTransition((state) => GameEngine.resolvePendingTurnAction(state, opponentId, selectedId));
+    if (nextState) context.emitCommittedAction?.(opponentId, { type: "RESOLVE_PENDING_TURN_ACTION", payload: { selectedId } });
     await sleep(timings.postResolutionMs);
     context.setIsAnimating(false);
     if (nextState && nextState.activePlayerId === nextState.playerA.id) {
@@ -32,10 +32,8 @@ export async function runMainPhaseStep(
     }
     return true;
   }
-
   const pendingExecution = gameState.playerB.activeExecutions.find((entity) => entity.mode === "ACTIVATE");
   if (pendingExecution) {
-    // Ficha 4: el humano elige cuál de sus trampas reactivas a magia activar (carrusel).
     const reactiveTraps = findReactiveTraps(gameState, gameState.playerA.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
     const trapDecision = reactiveTraps.length > 0
       ? await context.requestTrapActivationDecision(toTrapEligibleOptions(reactiveTraps), "ON_OPPONENT_EXECUTION_ACTIVATED")
@@ -74,9 +72,15 @@ export async function runMainPhaseStep(
         chosenTrapInstanceId: shouldActivateReactiveTrap ? chosenTrapInstanceId : undefined,
       }),
     );
+    if (nextState) context.emitCommittedAction?.(
+      opponentId,
+      buildOpponentExecutionAction(pendingExecution.instanceId, shouldActivateReactiveTrap, chosenTrapInstanceId),
+    );
     await sleep(timings.postResolutionMs);
-    if (reactiveTrap && shouldActivateReactiveTrap) context.setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
-    if (opponentCounterTrap && shouldActivateReactiveTrap) context.setRevealedEntities((previous) => removeRevealedId(previous, opponentCounterTrap.instanceId));
+    if (reactiveTrap && shouldActivateReactiveTrap)
+      context.setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
+    if (opponentCounterTrap && shouldActivateReactiveTrap)
+      context.setRevealedEntities((previous) => removeRevealedId(previous, opponentCounterTrap.instanceId));
     context.setSelectedCard(null);
     context.setActiveAttackerId(null);
     context.setIsAnimating(false);
@@ -86,16 +90,17 @@ export async function runMainPhaseStep(
     }
     return true;
   }
-  const setExecutionToActivate = gameState.playerB.activeExecutions.find((entity) =>
-    entity.mode === "SET" && canActivateExecutionNow(entity.card, gameState.playerB, gameState.playerA));
+  const setExecutionToActivate = gameState.playerB.activeExecutions.find(
+    (entity) => entity.mode === "SET" && canActivateExecutionNow(entity.card, gameState.playerB, gameState.playerA),
+  );
   if (setExecutionToActivate) {
     context.setIsAnimating(true);
     await sleep(timings.stepDelayMs);
-    context.applyTransition((state) => GameEngine.changeEntityMode(state, opponentId, setExecutionToActivate.instanceId, "ACTIVATE"));
+    const nextState = context.applyTransition((state) => GameEngine.changeEntityMode(state, opponentId, setExecutionToActivate.instanceId, "ACTIVATE"));
+    if (nextState) context.emitCommittedAction?.(opponentId, { type: "CHANGE_ENTITY_MODE", payload: { instanceId: setExecutionToActivate.instanceId, newMode: "ACTIVATE" } });
     context.setIsAnimating(false);
     return true;
   }
-
   const playDecision = context.strategy.choosePlay(gameState, opponentId);
   if (playDecision) {
     context.setIsAnimating(true);
@@ -125,6 +130,9 @@ export async function runMainPhaseStep(
             ),
           )
       : context.applyTransition((state) => GameEngine.playCard(state, opponentId, playDecision.cardId, playDecision.mode));
+    if (nextState) {
+      context.emitCommittedAction?.(opponentId, buildOpponentPlayAction(playDecision));
+    }
     if (!playDecision.fusionMaterialInstanceIds && playDecision.mode === "ACTIVATE" && nextState) {
       const activatedExecution = [...nextState.playerB.activeExecutions].reverse().find((entity) => entity.card.id === playDecision.cardId);
       context.setActiveAttackerId(activatedExecution?.instanceId ?? null);
@@ -134,10 +142,10 @@ export async function runMainPhaseStep(
     context.setIsAnimating(false);
     return true;
   }
-
   context.setIsAnimating(true);
   await sleep(500);
-  context.applyTransition((state) => GameEngine.nextPhase(state));
+  const nextState = context.applyTransition((state) => GameEngine.nextPhase(state));
+  if (nextState) context.emitCommittedAction?.(opponentId, { type: "NEXT_PHASE", payload: {} });
   context.setIsAnimating(false);
   return true;
 }

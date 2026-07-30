@@ -12,10 +12,13 @@ describe("CombatModePortal", () => {
     );
   });
 
-  it("presenta Supervivencia y Olimpo como modos todavía no disponibles", () => {
+  it("habilita Supervivencia y mantiene Olimpo en preparación", () => {
     render(<CombatModePortal />);
-    expect(screen.getByRole("heading", { name: "Supervivencia" }).closest("article")).toHaveAttribute("data-availability", "unavailable");
+    expect(screen.getByRole("link", { name: "Entrar en Supervivencia" })).toHaveAttribute(
+      "href",
+      "/hub/academy/training/arena/survival",
+    );
     expect(screen.getByRole("heading", { name: "Olimpo" }).closest("article")).toHaveAttribute("data-availability", "unavailable");
-    expect(screen.getAllByText("En preparación")).toHaveLength(2);
+    expect(screen.getByText("En preparación")).toBeInTheDocument();
   });
 });

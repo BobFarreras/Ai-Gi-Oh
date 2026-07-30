@@ -2,6 +2,11 @@
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { IMatchActionPayload } from "@/core/entities/match";
 
+/** Resuelve el defensor potencial sin asumir que el actor ocupa siempre playerB. */
+function resolveOtherPlayerId(state: GameState, playerId: string): string {
+  return state.playerA.id === playerId ? state.playerB.id : state.playerA.id;
+}
+
 export function applyMatchAction(state: GameState, playerId: string, action: IMatchActionPayload): GameState {
   switch (action.type) {
     case "PLAY_CARD":
@@ -37,6 +42,9 @@ export function applyMatchAction(state: GameState, playerId: string, action: IMa
       return GameEngine.executeAttack(state, playerId, action.payload.attackerInstanceId, action.payload.defenderInstanceId, {
         skipCounterTrapPlayerIds: action.payload.declineCounterTrap ? [playerId] : undefined,
         deferReactiveTraps: action.payload.deferReactiveTraps,
+        skipReactivePlayerIds: action.payload.declineReactiveTrap ? [resolveOtherPlayerId(state, playerId)] : undefined,
+        skipTrapEventTypes: action.payload.declineReactiveTrap ? ["ATTACK_DECLARED"] : undefined,
+        chosenTrapInstanceId: action.payload.chosenTrapInstanceId,
       });
     case "RESOLVE_REACTIVE_TRAP":
       // `playerId` es QUIEN emitió la acción; el motor exige que sea el defensor de la pausa (un atacante que
@@ -50,6 +58,9 @@ export function applyMatchAction(state: GameState, playerId: string, action: IMa
     case "RESOLVE_EXECUTION":
       return GameEngine.resolveExecution(state, playerId, action.payload.instanceId, {
         skipCounterTrapPlayerIds: action.payload.declineCounterTrap ? [playerId] : undefined,
+        skipReactivePlayerIds: action.payload.declineReactiveTrap ? [resolveOtherPlayerId(state, playerId)] : undefined,
+        skipTrapEventTypes: action.payload.declineReactiveTrap ? ["EXECUTION_ACTIVATED"] : undefined,
+        chosenTrapInstanceId: action.payload.chosenTrapInstanceId,
       });
     case "CHANGE_ENTITY_MODE":
       return GameEngine.changeEntityMode(state, playerId, action.payload.instanceId, action.payload.newMode);

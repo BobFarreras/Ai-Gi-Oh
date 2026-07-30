@@ -15,13 +15,13 @@ export function createAudio(trackId: AudioTrackId, isMusic: boolean): HTMLAudioE
 }
 
 /** Crea instancia de audio por ruta directa (útil para efectos por acción). */
-export function createAudioFromPath(path: string, volume = 0.75): HTMLAudioElement | null {
+export function createAudioFromPath(path: string, volume = 0.75, isMusic = false): HTMLAudioElement | null {
   if (typeof window === "undefined" || typeof window.Audio === "undefined" || path.trim().length === 0) return null;
   if (isAudioPlaybackBlocked()) return null;
   const audio = new Audio(path);
   audio.preload = "auto";
-  audio.loop = false;
-  audio.volume = Math.max(0, Math.min(1, volume * AUDIO_CHANNEL_VOLUME.sfx));
+  audio.loop = isMusic;
+  audio.volume = Math.max(0, Math.min(1, volume * (isMusic ? AUDIO_CHANNEL_VOLUME.music : AUDIO_CHANNEL_VOLUME.sfx)));
   return audio;
 }
 

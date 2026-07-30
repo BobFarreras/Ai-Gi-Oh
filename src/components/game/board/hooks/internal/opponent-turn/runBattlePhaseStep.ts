@@ -15,6 +15,7 @@ export async function runBattlePhaseStep(context: IOpponentTurnContext, timings:
     context.setIsAnimating(true);
     await sleep(280);
     const nextState = context.applyTransition((state) => GameEngine.nextPhase(state));
+    if (nextState) context.emitCommittedAction?.(opponentId, { type: "NEXT_PHASE", payload: {} });
     context.setIsAnimating(false);
     context.setActiveAttackerId(null);
     if (nextState && nextState.activePlayerId === nextState.playerA.id) {
@@ -31,9 +32,10 @@ export async function runBattlePhaseStep(context: IOpponentTurnContext, timings:
       context.setIsAnimating(true);
       context.setActiveAttackerId(modeChangeDecision.instanceId);
       await sleep(Math.max(180, Math.trunc(timings.stepDelayMs * 0.6)));
-      context.applyTransition((state) =>
+      const nextState = context.applyTransition((state) =>
         GameEngine.changeEntityMode(state, opponentId, modeChangeDecision.instanceId, modeChangeDecision.newMode),
       );
+      if (nextState) context.emitCommittedAction?.(opponentId, { type: "CHANGE_ENTITY_MODE", payload: modeChangeDecision });
       context.setIsAnimating(false);
       context.setActiveAttackerId(null);
       return true;
@@ -41,6 +43,7 @@ export async function runBattlePhaseStep(context: IOpponentTurnContext, timings:
     context.setIsAnimating(true);
     await sleep(500);
     const nextState = context.applyTransition((state) => GameEngine.nextPhase(state));
+    if (nextState) context.emitCommittedAction?.(opponentId, { type: "NEXT_PHASE", payload: {} });
     context.setIsAnimating(false);
     if (nextState && nextState.activePlayerId === nextState.playerA.id) {
       context.clearSelection();
@@ -101,6 +104,17 @@ export async function runBattlePhaseStep(context: IOpponentTurnContext, timings:
       chosenTrapInstanceId: shouldActivateReactiveTrap ? chosenTrapInstanceId : undefined,
     }),
   );
+  if (nextState) {
+    context.emitCommittedAction?.(opponentId, {
+      type: "ATTACK",
+      payload: {
+        attackerInstanceId: attackDecision.attackerInstanceId,
+        defenderInstanceId: attackDecision.defenderInstanceId,
+        declineReactiveTrap: !shouldActivateReactiveTrap || undefined,
+        chosenTrapInstanceId: shouldActivateReactiveTrap ? chosenTrapInstanceId : undefined,
+      },
+    });
+  }
   await sleep(timings.postResolutionMs);
   if (shouldRevealTargetBeforeBattle && targetEntity) {
     context.setRevealedEntities((previous) => removeRevealedId(previous, targetEntity.instanceId));

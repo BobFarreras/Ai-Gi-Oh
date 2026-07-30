@@ -1,0 +1,54 @@
+// src/components/hub/academy/training/modes/survival/survival-api-client.ts - Cliente HTTP tipado del flujo autoritativo de Supervivencia.
+import { ICombatProof, ICombatSession } from "@/core/entities/match";
+import { ISurvivalBattle, ISurvivalRun } from "@/core/entities/survival/ISurvival";
+import { GameState } from "@/core/use-cases/GameEngine";
+import { createSeededGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
+
+export interface ISurvivalBattleRuntime {
+  battle: ISurvivalBattle;
+  session: ICombatSession;
+  initialState: GameState;
+  completionTicket: string;
+}
+
+interface ICompleteSurvivalResponse {
+  run: ISurvivalRun;
+  battle: ISurvivalBattle;
+  outcome: "WIN" | "LOSS" | "DRAW";
+  reward?: { nexus: number; playerExperience: number; ascensionFragments: number };
+}
+
+/** Ejecuta una mutación Survival y convierte errores HTTP en mensajes aptos para UI. */
+async function postJson<T>(path: string, body: Record<string, unknown>): Promise<T> {
+  const response = await fetch(path, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { error?: string } | null;
+    throw new Error(payload?.error ?? "No se pudo completar la operación de Supervivencia.");
+  }
+  return response.json() as Promise<T>;
+}
+
+/** Inicia una expedición o recupera la activa de forma idempotente. */
+export function startSurvivalRun(): Promise<{ run: ISurvivalRun; resumed: boolean }> {
+  return postJson("/api/survival/runs/start", {});
+}
+
+/** Emite la siguiente batalla y restaura la fábrica de ids perdida al serializar JSON. */
+export async function issueSurvivalBattle(runId: string): Promise<ISurvivalBattleRuntime> {
+  const runtime = await postJson<ISurvivalBattleRuntime>("/api/survival/battles/issue", { runId });
+  runtime.initialState.idFactory = createSeededGameEngineIdFactory(runtime.session.seed);
+  return runtime;
+}
+
+/** Envía exclusivamente el journal y el ticket; el servidor deriva resultado, LP y recompensa. */
+export function completeSurvivalBattle(
+  completionTicket: string,
+  proof: ICombatProof,
+): Promise<ICompleteSurvivalResponse> {
+  return postJson("/api/survival/battles/complete", { completionTicket, proof });
+}

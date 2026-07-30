@@ -28,13 +28,20 @@ export function useBoard(
   disableOpponentAutomation = false,
   opponentStrategyOverride: IOpponentStrategy | null = null,
   enableOpeningMulligan = false,
+  authoritativeInitialState: GameState | null = null,
+  customSoundtrackPath: string | null = null,
 ) {
   const [campaignProgress] = useState<ICampaignProgress>({ chapterIndex: 1, duelIndex: 1, victories: 0 });
   const [matchSeed] = useState(() => createMatchSeed());
-  const createInitialState = useCallback(
-    () => createInitialBoardState({ ...initialConfig, mode, playerDeck: initialPlayerDeck, seed: initialConfig?.seed ?? matchSeed }),
-    [initialConfig, initialPlayerDeck, matchSeed, mode],
-  );
+  const createInitialState = useCallback(() => {
+    if (!authoritativeInitialState) {
+      return createInitialBoardState({ ...initialConfig, mode, playerDeck: initialPlayerDeck, seed: initialConfig?.seed ?? matchSeed });
+    }
+    // El snapshot firmado se clona sin compartir referencias, preservando la fábrica determinista.
+    const cloned = structuredClone({ ...authoritativeInitialState, idFactory: undefined }) as GameState;
+    cloned.idFactory = authoritativeInitialState.idFactory;
+    return cloned;
+  }, [authoritativeInitialState, initialConfig, initialPlayerDeck, matchSeed, mode]);
   const gameStateRef = useRef<GameState>(createInitialState());
   const uiState = useMatchUiState({ gameStateRef, createInitialState });
   const winnerPlayerId = useMemo(() => resolveWinnerPlayerId(uiState.gameState), [uiState.gameState]);
@@ -48,6 +55,7 @@ export function useBoard(
     if (mode !== "TUTORIAL" || !uiState.isAutoPhaseEnabled) return;
     uiState.setIsAutoPhaseEnabled(false);
   }, [mode, uiState]);
+  const emitLocalAction = useLocalActionEmitter();
   const runtime = useMatchRuntime({
     mode,
     campaignProgress,
@@ -57,6 +65,7 @@ export function useBoard(
     isMatchStartLocked: matchStartLockedEffective,
     disableOpponentAutomation,
     opponentStrategyOverride,
+    emitCommittedAction: (actorPlayerId, action) => emitLocalAction(action, actorPlayerId),
   });
   const keepMulligan = useCallback(() => setMulliganResolved(true), []);
   const reshuffleOpeningHand = useCallback(() => {
@@ -83,6 +92,7 @@ export function useBoard(
     isMuted: uiState.isMuted,
     isPaused: uiState.isPaused,
     disableBaseSoundtrack,
+    customSoundtrackPath,
   });
   const restartMatch = useCallback(() => {
     progression.resetBattleProgression();
@@ -104,7 +114,6 @@ export function useBoard(
   // Ficha 4 (multi): el defensor recibe el ataque diferido y elige su trampa reactiva con el MISMO carrusel
   // que contra la IA (mismo `requestTrapActivationDecision`), pero con auto-pasar por timeout para no colgar
   // al atacante. El emisor viaja por contexto (noop fuera de multi).
-  const emitLocalAction = useLocalActionEmitter();
   const requestReactiveTrapDecision = useCallback(
     (traps: ITrapEligibleOption[]) =>
       runtime.requestTrapActivationDecision(traps, "ON_OPPONENT_ATTACK_DECLARED", { autoPassAfterMs: REACTIVE_TRAP_DECISION_TIMEOUT_MS }),

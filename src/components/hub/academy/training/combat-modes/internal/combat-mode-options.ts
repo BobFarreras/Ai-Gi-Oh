@@ -1,6 +1,7 @@
 // src/components/hub/academy/training/combat-modes/internal/combat-mode-options.ts - Catálogo estático de entradas del portal.
 import {
   ACADEMY_TRAINING_ARENA_CLASSIC_ROUTE,
+  ACADEMY_TRAINING_SURVIVAL_ROUTE,
 } from "@/core/constants/routes/academy-routes";
 import { ICombatModeOption } from "./combat-mode.types";
 
@@ -25,7 +26,8 @@ export const COMBAT_MODE_OPTIONS: ICombatModeOption[] = [
     description: "Encadena duelos conservando tus LP y alcanza hitos para recuperar fuerzas.",
     imageUrl: "/assets/story/opponents/opp-ch1-soldier-act01/intro-Soldado-act01.webp",
     imageAlt: "Soldado acechando en el modo Supervivencia",
-    availabilityLabel: "En preparación",
+    href: ACADEMY_TRAINING_SURVIVAL_ROUTE,
+    availabilityLabel: "Entrar en Supervivencia",
   },
   {
     id: "olympus",

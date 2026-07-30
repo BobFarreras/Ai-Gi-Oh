@@ -137,6 +137,7 @@ describe("runBattlePhaseStep", () => {
         }],
       },
     };
+    const emitCommittedAction = vi.fn();
     const context: IOpponentTurnContext = {
       gameState: state,
       strategy: new HeuristicOpponentStrategy({ difficulty: "EASY" }),
@@ -151,11 +152,16 @@ describe("runBattlePhaseStep", () => {
       setRevealedEntities: vi.fn(),
       setSelectedCard: vi.fn(),
       requestTrapActivationDecision: vi.fn(async () => ({ activate: false })),
+      emitCommittedAction,
     };
 
     await runBattlePhaseStep(context, { stepDelayMs: 0, attackWindupMs: 0, postResolutionMs: 0, trapPreviewMs: 0 });
 
     expect(state.playerB.activeEntities[0].mode).toBe("DEFENSE");
     expect(state.phase).toBe("BATTLE");
+    expect(emitCommittedAction).toHaveBeenCalledWith("p2", {
+      type: "CHANGE_ENTITY_MODE",
+      payload: { instanceId: "attacker", newMode: "DEFENSE" },
+    });
   });
 });

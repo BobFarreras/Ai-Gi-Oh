@@ -38,6 +38,7 @@ export function useOpponentTurn({
   setRevealedEntities,
   setSelectedCard,
   requestTrapActivationDecision,
+  emitCommittedAction = () => {},
 }: IUseOpponentTurnParams): void {
   useEffect(() => {
     if (disableAutomation || isMatchStartLocked || duelWinnerId || isAnimating || gameState.activePlayerId !== gameState.playerB.id) return;
@@ -53,6 +54,7 @@ export function useOpponentTurn({
       setRevealedEntities,
       setSelectedCard,
       requestTrapActivationDecision,
+      emitCommittedAction,
     };
 
     const timeoutId = setTimeout(async () => {
@@ -81,6 +83,7 @@ export function useOpponentTurn({
     setSelectedCard,
     requestTrapActivationDecision,
     strategy,
+    emitCommittedAction,
   ]);
 }
 

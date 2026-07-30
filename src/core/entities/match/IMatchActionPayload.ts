@@ -39,6 +39,8 @@ export interface IAttackPayload {
   defenderInstanceId?: string;
   declineCounterTrap?: boolean;
   deferReactiveTraps?: boolean;
+  declineReactiveTrap?: boolean;
+  chosenTrapInstanceId?: string;
 }
 
 export interface IResolveReactiveTrapPayload {
@@ -49,11 +51,13 @@ export interface IResolveReactiveTrapPayload {
 export interface IResolveExecutionPayload {
   instanceId: string;
   declineCounterTrap?: boolean;
+  declineReactiveTrap?: boolean;
+  chosenTrapInstanceId?: string;
 }
 
 export interface IChangeEntityModePayload {
   instanceId: string;
-  newMode: "ATTACK" | "DEFENSE";
+  newMode: "ATTACK" | "DEFENSE" | "ACTIVATE";
 }
 
 export interface IResolvePendingTurnActionPayload {

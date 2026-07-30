@@ -22,6 +22,7 @@ import { MulliganOverlay } from "@/components/game/board/ui/overlays/MulliganOve
 import { MAX_PAUSED_TURNS_MULTIPLAYER } from "@/components/game/board/multiplayer/pause-turn-limit";
 import { useCallback, useLayoutEffect } from "react";
 import { useBoardViewportMetrics } from "./hooks/internal/layout/use-board-viewport-metrics";
+import { GameState } from "@/core/use-cases/GameEngine";
 
 export type BoardBossThemeVariant = "CRIMSON" | "AMBER" | "VIOLET" | "CYAN";
 
@@ -63,14 +64,18 @@ interface IBoardProps {
   onLocalForfeit?: () => void;
   /** PvE: habilita el overlay de mulligan de apertura (habilidad OPENING_MULLIGAN del árbol). */
   enableOpeningMulligan?: boolean;
+  /** Snapshot firmado por el servidor para modos autoritativos. */
+  authoritativeInitialState?: GameState | null;
+  /** Soundtrack alternativo del modo; comparte mute, pausa y ciclo de vida con el tablero. */
+  customSoundtrackPath?: string | null;
   /** Callback que recibe applyTransition al montar el Board. Permite que clientes externos (ej. multijugador) apliquen acciones al estado de partida. */
   applyTransitionRef?: React.MutableRefObject<((transition: (state: import("@/core/use-cases/GameEngine").GameState) => import("@/core/use-cases/GameEngine").GameState) => import("@/core/use-cases/GameEngine").GameState | null) | null>;
   /** Recibe applyRemoteAction: aplica una acción del rival CON su coreografía visual (multijugador). */
   applyRemoteActionRef?: React.MutableRefObject<((action: import("@/core/entities/multiplayer/IMatchAction").IMatchActionPayload) => Promise<void>) | null>;
 }
-export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, opponentAvatarObjectPosition, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, abandonPenaltyNexus = 0, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId, onLocalForfeit, enableOpeningMulligan = false }: IBoardProps) {
+export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, opponentAvatarObjectPosition, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, abandonPenaltyNexus = 0, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId, onLocalForfeit, enableOpeningMulligan = false, authoritativeInitialState = null, customSoundtrackPath = null }: IBoardProps) {
   countRender("Board");
-  const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme, disableOpponentAutomation, opponentStrategyOverride, enableOpeningMulligan);
+  const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme, disableOpponentAutomation, opponentStrategyOverride, enableOpeningMulligan, authoritativeInitialState, customSoundtrackPath);
   useLayoutEffect(() => {
     if (applyTransitionRef) applyTransitionRef.current = board.applyTransition;
     if (applyRemoteActionRef) applyRemoteActionRef.current = board.applyRemoteAction;

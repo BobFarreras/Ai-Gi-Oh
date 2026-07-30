@@ -5,7 +5,6 @@ import { AudioTrackId } from "@/core/config/audio-catalog";
 import { resolveEffectAudioPath } from "./audio/effect-audio-registry";
 import { createAudio, createAudioFromPath, mapEventToTrack, safePlay, safePlayWithFallback } from "./audio/audioRuntime";
 import { setAudioPlaybackBlocked } from "./audio/audio-gate";
-
 interface UseGameAudioParams {
   combatLog: ICombatLogEvent[];
   winnerPlayerId: string | null;
@@ -16,13 +15,12 @@ interface UseGameAudioParams {
   isMuted: boolean;
   isPaused: boolean;
   disableBaseSoundtrack?: boolean;
+  customSoundtrackPath?: string | null;
 }
-
 function resolveDuelEndTrack(winnerPlayerId: string, playerId: string): AudioTrackId {
   if (winnerPlayerId === "DRAW") return "DUEL_DRAW";
   return winnerPlayerId === playerId ? "DUEL_WIN" : "GAME_OVER";
 }
-
 function playAudioCue(track: AudioTrackId, isMuted: boolean, isPaused: boolean): void {
   if (!isMuted && !isPaused) safePlay(createAudio(track, false));
 }
@@ -37,6 +35,7 @@ export function useGameAudio({
   isMuted,
   isPaused,
   disableBaseSoundtrack = false,
+  customSoundtrackPath = null,
 }: UseGameAudioParams) {
   const processedRef = useRef(0);
   const soundtrackRef = useRef<HTMLAudioElement | null>(null);
@@ -71,13 +70,15 @@ export function useGameAudio({
       return;
     }
     if (!soundtrackRef.current && !isMuted && !isPaused) {
-      soundtrackRef.current = createAudio("SOUNDTRACK", true);
+      soundtrackRef.current = customSoundtrackPath
+        ? createAudioFromPath(customSoundtrackPath, 0.34, true)
+        : createAudio("SOUNDTRACK", true);
     }
     return () => {
       soundtrackRef.current?.pause();
       soundtrackRef.current = null;
     };
-  }, [disableBaseSoundtrack, isMuted, isPaused]);
+  }, [customSoundtrackPath, disableBaseSoundtrack, isMuted, isPaused]);
 
   useEffect(() => {
     const soundtrack = soundtrackRef.current;
