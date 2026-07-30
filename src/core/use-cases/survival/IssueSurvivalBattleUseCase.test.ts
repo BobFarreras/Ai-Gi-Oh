@@ -4,6 +4,7 @@ import { ISurvivalRepository } from "@/core/repositories/ISurvivalRepository";
 import { ISurvivalBattle, ISurvivalRun } from "@/core/entities/survival/ISurvival";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IssueSurvivalBattleUseCase } from "./IssueSurvivalBattleUseCase";
+import { COMBAT_PROOF_PROTOCOL_VERSION } from "@/core/entities/match";
 
 const run = {
   id: "run-1", playerId: "player-1", rulesetVersion: 1, currentBattleIndex: 0,
@@ -26,11 +27,52 @@ describe("IssueSurvivalBattleUseCase", () => {
     const repository = {
       getActiveRun: vi.fn().mockResolvedValue(run),
       getIssuedBattle: vi.fn().mockResolvedValue(battle),
+      getCombatSession: vi.fn().mockResolvedValue({
+        session: {
+          protocolVersion: COMBAT_PROOF_PROTOCOL_VERSION,
+          expiresAtIso: "2026-08-02T00:00:00Z",
+        },
+        snapshot: {},
+      }),
     } as unknown as ISurvivalRepository;
     const result = await new IssueSurvivalBattleUseCase(repository, snapshotFactory)
-      .execute({ playerId: "player-1", runId: "run-1", battleId: "new", seed: "s", expiresAtIso: "2026-08-01T00:00:00Z" });
+      .execute({
+        playerId: "player-1", runId: "run-1", battleId: "new", seed: "s",
+        expiresAtIso: "2026-08-02T00:00:00Z", nowIso: "2026-08-01T00:00:00Z",
+      });
     expect(result).toEqual({ battle, resumed: true });
     expect(snapshotFactory).not.toHaveBeenCalled();
+  });
+
+  it("invalida una batalla expirada y reemite el mismo índice con snapshot nuevo", async () => {
+    const refreshedRun = { ...run, currentBattleIndex: 0 };
+    const snapshot = {
+      playerA: { id: "player-1" },
+      playerB: { id: "opponent-1" },
+    } as GameState;
+    const repository = {
+      getActiveRun: vi.fn()
+        .mockResolvedValueOnce({ ...run, currentBattleIndex: 1 })
+        .mockResolvedValueOnce(refreshedRun),
+      getIssuedBattle: vi.fn().mockResolvedValue(battle),
+      getCombatSession: vi.fn().mockResolvedValue({
+        session: { protocolVersion: 1, expiresAtIso: "2026-07-30T08:00:00Z" },
+        snapshot,
+      }),
+      invalidateIssuedBattle: vi.fn().mockResolvedValue(undefined),
+      getRuleset: vi.fn().mockResolvedValue(configuration),
+      issueBattle: vi.fn().mockResolvedValue(battle),
+    } as unknown as ISurvivalRepository;
+    const snapshotFactory = vi.fn().mockResolvedValue({ snapshot, snapshotHash: "new-hash" });
+
+    const result = await new IssueSurvivalBattleUseCase(repository, snapshotFactory).execute({
+      playerId: "player-1", runId: "run-1", battleId: "new-battle", seed: "new-seed",
+      expiresAtIso: "2026-08-01T01:00:00Z", nowIso: "2026-08-01T00:00:00Z",
+    });
+
+    expect(repository.invalidateIssuedBattle).toHaveBeenCalledWith("player-1", "battle-1");
+    expect(snapshotFactory).toHaveBeenCalledWith(refreshedRun, expect.objectContaining({ battleIndex: 1 }), "new-seed");
+    expect(result).toEqual({ battle, encounter: expect.objectContaining({ battleIndex: 1 }), resumed: false });
   });
 
   it("persiste rival y tier derivados del ruleset", async () => {

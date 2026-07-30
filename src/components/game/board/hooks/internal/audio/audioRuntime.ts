@@ -3,6 +3,8 @@ import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { AUDIO_CATALOG, AUDIO_CHANNEL_VOLUME, AudioTrackId } from "@/core/config/audio-catalog";
 import { isAudioPlaybackBlocked, registerManagedAudio } from "./audio-gate";
 
+let primedMusic: { path: string; audio: HTMLAudioElement } | null = null;
+
 export function createAudio(trackId: AudioTrackId, isMusic: boolean): HTMLAudioElement | null {
   if (typeof window === "undefined" || typeof window.Audio === "undefined") return null;
   if (isAudioPlaybackBlocked()) return null;
@@ -22,6 +24,23 @@ export function createAudioFromPath(path: string, volume = 0.75, isMusic = false
   audio.preload = "auto";
   audio.loop = isMusic;
   audio.volume = Math.max(0, Math.min(1, volume * (isMusic ? AUDIO_CHANNEL_VOLUME.music : AUDIO_CHANNEL_VOLUME.sfx)));
+  return audio;
+}
+
+/** Inicia música dentro del gesto del usuario para cumplir la política de autoplay móvil. */
+export function primeMusicFromUserGesture(path: string, volume = 0.75): void {
+  const audio = createAudioFromPath(path, volume, true);
+  if (!audio) return;
+  primedMusic?.audio.pause();
+  primedMusic = { path, audio };
+  safePlay(audio);
+}
+
+/** Entrega al tablero la pista iniciada por el gesto sin crear una segunda instancia. */
+export function consumePrimedMusic(path: string): HTMLAudioElement | null {
+  if (primedMusic?.path !== path) return null;
+  const audio = primedMusic.audio;
+  primedMusic = null;
   return audio;
 }
 

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { AudioTrackId } from "@/core/config/audio-catalog";
 import { resolveEffectAudioPath } from "./audio/effect-audio-registry";
-import { createAudio, createAudioFromPath, mapEventToTrack, safePlay, safePlayWithFallback } from "./audio/audioRuntime";
+import { consumePrimedMusic, createAudio, createAudioFromPath, mapEventToTrack, safePlay, safePlayWithFallback } from "./audio/audioRuntime";
 import { setAudioPlaybackBlocked } from "./audio/audio-gate";
 interface UseGameAudioParams {
   combatLog: ICombatLogEvent[];
@@ -67,7 +67,7 @@ export function useGameAudio({
     }
     if (!soundtrackRef.current && !isMuted && !isPaused) {
       soundtrackRef.current = customSoundtrackPath
-        ? createAudioFromPath(customSoundtrackPath, 0.34, true)
+        ? consumePrimedMusic(customSoundtrackPath) ?? createAudioFromPath(customSoundtrackPath, 0.34, true)
         : createAudio("SOUNDTRACK", true);
     }
     return () => {

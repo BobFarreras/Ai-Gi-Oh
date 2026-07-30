@@ -1,8 +1,8 @@
 // src/core/entities/match/ICombatSession.ts - Describe la sesión autoritativa vinculada a un snapshot inmutable de combate.
 import { IMatchMode } from "./IMatchMode";
 
-export const COMBAT_PROOF_PROTOCOL_VERSION = 1 as const;
-export type CombatProofProtocolVersion = typeof COMBAT_PROOF_PROTOCOL_VERSION;
+export const COMBAT_PROOF_PROTOCOL_VERSION = 2 as const;
+export type CombatProofProtocolVersion = number;
 
 export interface ICombatSession {
   id: string;

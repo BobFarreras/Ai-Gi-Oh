@@ -4,7 +4,7 @@ import { ValidationError } from "@/core/errors/ValidationError";
 import { ISurvivalRepository, ICompleteSurvivalBattleInput, IIssueSurvivalBattleInput } from "@/core/repositories/ISurvivalRepository";
 import { createSeededGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 import { GameState } from "@/core/use-cases/GameEngine";
-import { COMBAT_PROOF_PROTOCOL_VERSION, ICombatSession } from "@/core/entities/match";
+import { ICombatSession } from "@/core/entities/match";
 import {
   mapSurvivalBattle,
   mapSurvivalRuleset,
@@ -79,7 +79,7 @@ export class SupabaseSurvivalRepository implements ISurvivalRepository {
         id: String(row.id), battleId: String(row.battle_id), mode: "SURVIVAL",
         playerId: String(row.player_id), opponentId: String((snapshot.playerB as { id: string }).id),
         seed: String(row.seed), snapshotHash: String(row.snapshot_hash),
-        protocolVersion: COMBAT_PROOF_PROTOCOL_VERSION,
+        protocolVersion: Number(row.protocol_version),
         issuedAtIso: String(row.issued_at), expiresAtIso: String(row.expires_at),
       },
       snapshot,
@@ -104,6 +104,14 @@ export class SupabaseSurvivalRepository implements ISurvivalRepository {
     });
     if (error || !data) throw new ValidationError("No se pudo emitir el combate de Supervivencia.");
     return mapSurvivalBattle(data as Row);
+  }
+
+  async invalidateIssuedBattle(playerId: string, battleId: string): Promise<void> {
+    const { error } = await this.writeClient.rpc("invalidate_survival_battle", {
+      p_player_id: playerId,
+      p_battle_id: battleId,
+    });
+    if (error) throw new ValidationError("No se pudo renovar el combate de Supervivencia.");
   }
 
   async completeBattle(input: ICompleteSurvivalBattleInput) {

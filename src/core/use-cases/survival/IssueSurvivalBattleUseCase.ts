@@ -12,6 +12,7 @@ interface IIssueSurvivalBattleCommand {
   battleId: string;
   seed: string;
   expiresAtIso: string;
+  nowIso?: string;
 }
 
 type SnapshotFactory = (
@@ -28,10 +29,22 @@ export class IssueSurvivalBattleUseCase {
 
   /** Fija rival, tier y Ascensión server-side antes de persistir el snapshot de replay. */
   async execute(command: IIssueSurvivalBattleCommand) {
-    const run = await this.repository.getActiveRun(command.playerId);
+    let run = await this.repository.getActiveRun(command.playerId);
     if (!run || run.id !== command.runId) throw new ValidationError("La expedición no está activa.");
     const pendingBattle = await this.repository.getIssuedBattle(run.id);
-    if (pendingBattle) return { battle: pendingBattle, resumed: true };
+    if (pendingBattle) {
+      const stored = await this.repository.getCombatSession(command.playerId, pendingBattle.battleId);
+      const nowMs = Date.parse(command.nowIso ?? new Date().toISOString());
+      const isReusable = Boolean(
+        stored
+        && stored.session.protocolVersion === COMBAT_PROOF_PROTOCOL_VERSION
+        && Date.parse(stored.session.expiresAtIso) > nowMs,
+      );
+      if (isReusable) return { battle: pendingBattle, resumed: true };
+      await this.repository.invalidateIssuedBattle(command.playerId, pendingBattle.battleId);
+      run = await this.repository.getActiveRun(command.playerId);
+      if (!run) throw new ValidationError("La expedición no se pudo renovar.");
+    }
     const configuration = await this.repository.getRuleset(run.rulesetVersion);
     if (!configuration || configuration.ruleset.version !== run.rulesetVersion) {
       throw new ValidationError("El ruleset de la expedición ya no está disponible.");

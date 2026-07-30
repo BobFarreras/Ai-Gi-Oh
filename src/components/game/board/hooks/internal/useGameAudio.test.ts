@@ -2,11 +2,12 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useGameAudio } from "./useGameAudio";
-import { createAudioFromPath, safePlay } from "./audio/audioRuntime";
+import { consumePrimedMusic, createAudioFromPath, safePlay } from "./audio/audioRuntime";
 
 vi.mock("./audio/audioRuntime", () => ({
   createAudio: vi.fn(),
   createAudioFromPath: vi.fn(),
+  consumePrimedMusic: vi.fn(),
   mapEventToTrack: vi.fn(),
   safePlay: vi.fn(),
   safePlayWithFallback: vi.fn(),
@@ -34,5 +35,26 @@ describe("useGameAudio", () => {
     expect(safePlay).toHaveBeenCalledTimes(1);
     act(() => window.dispatchEvent(new Event("pointerdown")));
     expect(safePlay).toHaveBeenCalledTimes(2);
+  });
+
+  it("reutiliza la pista iniciada en el gesto del lobby", () => {
+    const soundtrack = { pause: vi.fn(), currentTime: 0 } as unknown as HTMLAudioElement;
+    vi.mocked(consumePrimedMusic).mockReturnValue(soundtrack);
+
+    renderHook(() => useGameAudio({
+      combatLog: [],
+      winnerPlayerId: null,
+      playerId: "p1",
+      isHistoryOpen: false,
+      hasSelectedCard: false,
+      lastErrorCode: null,
+      isMuted: false,
+      isPaused: false,
+      customSoundtrackPath: "/audio/survival/pulso-de-neon.m4a",
+    }));
+
+    expect(consumePrimedMusic).toHaveBeenCalledWith("/audio/survival/pulso-de-neon.m4a");
+    expect(createAudioFromPath).not.toHaveBeenCalled();
+    expect(safePlay).toHaveBeenCalledWith(soundtrack);
   });
 });

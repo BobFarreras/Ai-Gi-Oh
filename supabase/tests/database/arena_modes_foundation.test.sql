@@ -2,7 +2,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(36);
+select plan(41);
 
 select has_table('public', 'combat_sessions', 'Existe el agregado de sesiones autoritativas');
 select has_table('public', 'player_survival_runs', 'Existe el agregado de runs');
@@ -144,10 +144,45 @@ select results_eq(
   array[1],
   'La primera batalla de Supervivencia avanza el índice a uno'
 );
+select lives_ok(
+  $$select public.invalidate_survival_battle(
+    '00000000-0000-0000-0000-000000000101',
+    '00000000-0000-0000-0000-000000000201'
+  )$$,
+  'Un snapshot obsoleto puede invalidarse de forma autoritativa'
+);
+select results_eq(
+  $$select status from public.survival_battles
+    where battle_id = '00000000-0000-0000-0000-000000000201'$$,
+  array['EXPIRED'::text],
+  'La batalla invalidada deja de bloquear la expedición'
+);
+select results_eq(
+  $$select status from public.combat_sessions
+    where battle_id = '00000000-0000-0000-0000-000000000201'$$,
+  array['EXPIRED'::text],
+  'La sesión incompatible también queda expirada'
+);
+select results_eq(
+  $$select current_battle_index from public.player_survival_runs
+    where player_id = '00000000-0000-0000-0000-000000000101'$$,
+  array[0],
+  'Invalidar restaura el índice para no saltar el encuentro'
+);
+select results_eq(
+  $$select battle_index from public.issue_survival_battle(
+    '00000000-0000-0000-0000-000000000101',
+    (select id from public.player_survival_runs where player_id = '00000000-0000-0000-0000-000000000101'),
+    '00000000-0000-0000-0000-000000000202', 'training-tier-4', 4, 0, 'seed-survival-renewed',
+    'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', '{}'::jsonb, 2, now() + interval '15 minutes'
+  )$$,
+  array[1],
+  'La batalla renovada conserva el índice y admite una seed nueva'
+);
 select results_eq(
   $$select current_lp from public.complete_survival_battle(
     '00000000-0000-0000-0000-000000000101',
-    '00000000-0000-0000-0000-000000000201', 'WIN', 6000, '{"fragments":20}'::jsonb, 20
+    '00000000-0000-0000-0000-000000000202', 'WIN', 6000, '{"fragments":20}'::jsonb, 20
   )$$,
   array[6000],
   'La victoria transporta los LP finales verificados'
@@ -155,7 +190,7 @@ select results_eq(
 select results_eq(
   $$select wins from public.complete_survival_battle(
     '00000000-0000-0000-0000-000000000101',
-    '00000000-0000-0000-0000-000000000201', 'WIN', 6000, '{"fragments":20}'::jsonb, 20
+    '00000000-0000-0000-0000-000000000202', 'WIN', 6000, '{"fragments":20}'::jsonb, 20
   )$$,
   array[1],
   'Completar de nuevo la batalla no duplica la victoria'

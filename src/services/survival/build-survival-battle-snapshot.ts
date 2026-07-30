@@ -17,7 +17,7 @@ const AI_DIFFICULTY: Record<ISurvivalEncounter["aiProfile"], OpponentDifficulty>
 };
 
 /** Baraja una copia con seed propia por duelista para no correlacionar ambos órdenes. */
-function shuffleDeck(deck: ICard[], seed: string): ICard[] {
+export function shuffleSurvivalDeck(deck: ICard[], seed: string): ICard[] {
   const random = createSeededRandom(seed);
   const shuffled = deck.map((card) => ({ ...card }));
   for (let index = shuffled.length - 1; index > 0; index -= 1) {
@@ -50,12 +50,12 @@ export async function buildSurvivalBattleSnapshot(
   });
   const baseSnapshot = createInitialGameState({
     playerA: {
-      id: playerId, name: "Arquitecto", deck: shuffleDeck(loadout.deck, `${seed}:player-deck`),
+      id: playerId, name: "Arquitecto", deck: shuffleSurvivalDeck(loadout.deck, `${seed}:player-deck`),
       fusionDeck: loadout.fusionDeck ?? [], startingHealthPoints: run.currentLp,
     },
     playerB: {
       id: encounter.opponentId, name: opponent.displayName,
-      deck: shuffleDeck(opponent.deck, `${seed}:opponent-deck`), fusionDeck: opponent.fusionDeck,
+      deck: shuffleSurvivalDeck(opponent.deck, `${seed}:opponent-deck`), fusionDeck: opponent.fusionDeck,
     },
     maxHealthPoints: run.maxLp,
     randomSource: createSeededRandom(seed),

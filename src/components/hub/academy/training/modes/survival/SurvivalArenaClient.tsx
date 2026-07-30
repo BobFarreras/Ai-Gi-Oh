@@ -8,6 +8,7 @@ import { ACADEMY_TRAINING_ARENA_ROUTE } from "@/core/constants/routes/academy-ro
 import { SurvivalLobby } from "./internal/SurvivalLobby";
 import { useSurvivalExpedition } from "./useSurvivalExpedition";
 import { buildStoryOpponentNarrationPack } from "@/services/story/build-story-opponent-narration-pack";
+import { primeMusicFromUserGesture } from "@/components/game/board/hooks/internal/audio/audioRuntime";
 
 const SURVIVAL_SOUNDTRACK = "/audio/survival/pulso-de-neon.m4a";
 
@@ -48,7 +49,10 @@ export function SurvivalArenaClient() {
       opponentName={expedition.battle.presentation.displayName}
       opponentAvatarUrl={expedition.battle.presentation.avatarUrl}
       error={expedition.error}
-      onStart={() => setIsBattleStarted(true)}
+      onStart={() => {
+        primeMusicFromUserGesture(SURVIVAL_SOUNDTRACK, 0.34);
+        setIsBattleStarted(true);
+      }}
       onBack={() => window.location.replace(ACADEMY_TRAINING_ARENA_ROUTE)}
     />;
   }

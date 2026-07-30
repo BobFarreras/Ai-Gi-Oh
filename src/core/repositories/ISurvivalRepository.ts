@@ -41,5 +41,6 @@ export interface ISurvivalRepository {
   getCombatSession(playerId: string, battleId: string): Promise<{ session: ICombatSession; snapshot: GameState } | null>;
   startRun(playerId: string, maxLp: number, rulesetVersion: number): Promise<ISurvivalRun>;
   issueBattle(input: IIssueSurvivalBattleInput): Promise<ISurvivalBattle>;
+  invalidateIssuedBattle(playerId: string, battleId: string): Promise<void>;
   completeBattle(input: ICompleteSurvivalBattleInput): Promise<ISurvivalRun>;
 }
