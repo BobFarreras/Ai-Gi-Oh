@@ -3,6 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { useBoard } from './useBoard';
 import { ICard } from '@/core/entities/ICard';
+import { createInitialBoardState } from './internal/boardInitialState';
 
 // 1. Preparamos un Mock de una Carta Cyberpunk
 const mockCard: ICard = {
@@ -98,6 +99,30 @@ describe('useBoard Custom Hook', () => {
     expect(result.current.lastError).not.toBeNull();
     expect(result.current.lastError?.code).toBe('VALIDATION_ERROR');
     expect(typeof result.current.lastError?.message).toBe('string');
+  });
+
+  it('usa el snapshot autoritativo de Supervivencia en lugar del deck mock', () => {
+    const authoritativeState = createInitialBoardState({
+      mode: "SURVIVAL",
+      seed: "survival-owned-deck",
+      playerDeck: Array.from({ length: 20 }, (_, index) => ({
+        ...mockCard,
+        id: `owned-${index}`,
+        name: `Carta propia ${index}`,
+      })),
+      preserveDeckOrder: true,
+    });
+
+    const { result } = renderHook(() =>
+      useBoard(undefined, "SURVIVAL", undefined, false, false, false, null, false, authoritativeState),
+    );
+
+    const playerCardIds = [
+      ...result.current.gameState.playerA.hand,
+      ...result.current.gameState.playerA.deck,
+    ].map((card) => card.id);
+    expect(playerCardIds).toHaveLength(20);
+    expect(playerCardIds.every((cardId) => cardId.startsWith("owned-"))).toBe(true);
   });
 });
 

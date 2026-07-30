@@ -3,8 +3,16 @@ import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
 import { IArenaOpponent } from "@/core/entities/training/IArenaOpponent";
 import { resolveTrainingOpponentLoadout } from "@/services/training/resolve-training-opponent-loadout";
+import { resolveArenaOpponentPresentation } from "@/services/training/resolve-arena-opponent-presentation";
 
 describe("resolveTrainingOpponentLoadout", () => {
+  it("expone la presentación del rival para el lobby y el HUD de Supervivencia", () => {
+    const presentation = resolveArenaOpponentPresentation("training-tier-2");
+    expect(presentation.displayName).toBe("Helena");
+    expect(presentation.avatarUrl).toContain("helena");
+    expect(presentation.storyOpponentId).toBe("opp-helena");
+  });
+
   it("enfrenta a los 8 rivales del ladder en orden por victorias del nivel", () => {
     const names = Array.from({ length: 8 }, (_, wins) =>
       resolveTrainingOpponentLoadout({ tier: 1, aiDifficulty: "EASY", tierWins: wins, tierMatches: 0 }).displayName,

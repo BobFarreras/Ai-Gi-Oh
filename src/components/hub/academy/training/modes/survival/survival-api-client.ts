@@ -3,12 +3,14 @@ import { ICombatProof, ICombatSession } from "@/core/entities/match";
 import { ISurvivalBattle, ISurvivalRun } from "@/core/entities/survival/ISurvival";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { createSeededGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
+import { IArenaOpponentPresentation } from "@/services/training/resolve-arena-opponent-presentation";
 
 export interface ISurvivalBattleRuntime {
   battle: ISurvivalBattle;
   session: ICombatSession;
   initialState: GameState;
   completionTicket: string;
+  presentation: IArenaOpponentPresentation;
 }
 
 interface ICompleteSurvivalResponse {

@@ -11,6 +11,34 @@ export interface IPlayerBoardLoadout {
   fusionDeck: ICard[] | null;
 }
 
+/** Carga el loadout del jugador ya autenticado sin volver a inferir su identidad. */
+export async function getPlayerBoardLoadoutByPlayerId(playerId: string): Promise<IPlayerBoardLoadout> {
+  const repositories = await createPlayerRuntimeRepositories();
+  const [deck, collection, progressRows, upgradesByCardId] = await Promise.all([
+    repositories.deckRepository.getDeck(playerId),
+    repositories.deckRepository.getCollection(playerId),
+    repositories.playerCardProgressRepository.listByPlayer(playerId),
+    repositories.playerCardUpgradesRepository.getUpgradesByPlayer(playerId),
+  ]);
+  const cardById = new Map(collection.map((entry) => [entry.card.id, entry.card]));
+  const progressByCardId = new Map(progressRows.map((progress) => [progress.cardId, progress]));
+  const resolveCard = (cardId: string | null) => {
+    if (!cardId) return null;
+    const card = cardById.get(cardId);
+    return card
+      ? applyCardProgressionToCard(card, progressByCardId.get(cardId) ?? null, upgradesByCardId.get(cardId))
+      : null;
+  };
+  const mainDeck = deck.slots.map((slot) => resolveCard(slot.cardId)).filter((card): card is ICard => card !== null);
+  const fusionDeck = deck.fusionSlots
+    .map((slot) => resolveCard(slot.cardId))
+    .filter((card): card is ICard => card?.type === "FUSION");
+  return {
+    deck: mainDeck.length === HOME_DECK_SIZE ? mainDeck.map((card) => ({ ...card })) : null,
+    fusionDeck: fusionDeck.map((card) => ({ ...card })),
+  };
+}
+
 export async function getPlayerBoardDeck(): Promise<ICard[] | null> {
   const session = await getCurrentUserSession();
   if (!session?.user.id) return null;
@@ -39,36 +67,5 @@ export async function getPlayerBoardDeck(): Promise<ICard[] | null> {
 export async function getPlayerBoardLoadout(): Promise<IPlayerBoardLoadout> {
   const session = await getCurrentUserSession();
   if (!session?.user.id) return { deck: null, fusionDeck: null };
-  const repositories = await createPlayerRuntimeRepositories();
-  const playerId = session.user.id;
-  const [deck, collection, progressRows, upgradesByCardId] = await Promise.all([
-    repositories.deckRepository.getDeck(playerId),
-    repositories.deckRepository.getCollection(playerId),
-    repositories.playerCardProgressRepository.listByPlayer(playerId),
-    repositories.playerCardUpgradesRepository.getUpgradesByPlayer(playerId),
-  ]);
-  const cardById = new Map(collection.map((entry) => [entry.card.id, entry.card]));
-  const progressByCardId = new Map(progressRows.map((progress) => [progress.cardId, progress]));
-  const mainDeck = deck.slots
-    .map((slot) => {
-      if (!slot.cardId) return null;
-      const card = cardById.get(slot.cardId);
-      if (!card) return null;
-      return applyCardProgressionToCard(card, progressByCardId.get(slot.cardId) ?? null, upgradesByCardId.get(slot.cardId));
-    })
-    .filter((card): card is ICard => card !== null);
-  const fusionDeck = deck.fusionSlots
-    .map((slot) => {
-      if (!slot.cardId) return null;
-      const card = cardById.get(slot.cardId);
-      if (!card || card.type !== "FUSION") return null;
-      return applyCardProgressionToCard(card, progressByCardId.get(slot.cardId) ?? null, upgradesByCardId.get(slot.cardId));
-    })
-    .filter((card): card is ICard => card !== null);
-  return {
-    deck: mainDeck.length === HOME_DECK_SIZE ? mainDeck.map((card) => ({ ...card })) : null,
-    // El bloque de fusión es agnóstico: el jugador puede llevar 0, 1 o 2 cartas de
-    // fusión (no se obliga a llenarlo). Se devuelven las válidas que tenga tal cual.
-    fusionDeck: fusionDeck.map((card) => ({ ...card })),
-  };
+  return getPlayerBoardLoadoutByPlayerId(session.user.id);
 }

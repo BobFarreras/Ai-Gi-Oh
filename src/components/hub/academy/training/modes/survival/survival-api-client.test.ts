@@ -16,6 +16,12 @@ describe("issueSurvivalBattle", () => {
       session: { id: "session-1", battleId: "battle-1", seed: "seed-1" },
       initialState,
       completionTicket: "ticket",
+      presentation: {
+        storyOpponentId: "opp-helena",
+        displayName: "Helena",
+        avatarUrl: "/helena.webp",
+        introUrl: "/helena-intro.webp",
+      },
     }), { status: 200 })));
 
     const runtime = await issueSurvivalBattle("run-1");
@@ -25,5 +31,6 @@ describe("issueSurvivalBattle", () => {
       body: JSON.stringify({ runId: "run-1" }),
     }));
     expect(runtime.initialState.idFactory).toBeTypeOf("object");
+    expect(runtime.presentation.avatarUrl).toBe("/helena.webp");
   });
 });

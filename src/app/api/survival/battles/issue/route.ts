@@ -8,6 +8,8 @@ import { buildSurvivalBattleSnapshot } from "@/services/survival/build-survival-
 import { createSurvivalRouteContext } from "@/services/survival/create-survival-route-context";
 import { issueCombatSessionTicket } from "@/services/security/duel-completion-ticket";
 import { ValidationError } from "@/core/errors/ValidationError";
+import { getArenaCatalog } from "@/services/training/get-arena-catalog";
+import { resolveArenaOpponentPresentation } from "@/services/training/resolve-arena-opponent-presentation";
 
 const BATTLE_TTL_MS = 1000 * 60 * 45;
 
@@ -33,6 +35,11 @@ export async function POST(request: NextRequest) {
     const result = await useCase.execute({ playerId: context.playerId, runId, battleId, seed, expiresAtIso });
     const stored = await context.repository.getCombatSession(context.playerId, result.battle.battleId);
     if (!stored) throw new ValidationError("La sesión emitida no está disponible.");
+    const catalog = await getArenaCatalog();
+    const presentation = resolveArenaOpponentPresentation(
+      result.battle.opponentId,
+      catalog.opponents ?? undefined,
+    );
     const completionTicket = issueCombatSessionTicket({
       playerId: context.playerId,
       mode: "SURVIVAL",
@@ -47,6 +54,7 @@ export async function POST(request: NextRequest) {
       session: stored.session,
       initialState: stored.snapshot,
       completionTicket,
+      presentation,
     }, {
       status: result.resumed ? 200 : 201,
       headers: context.response.headers,

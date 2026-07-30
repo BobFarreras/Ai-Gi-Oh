@@ -5,7 +5,7 @@ import { OpponentDifficulty } from "@/core/services/opponent/difficulty/types";
 import { createSeededRandom } from "@/core/services/random/seeded-rng";
 import { createInitialGameState } from "@/core/use-cases/game-engine/state/create-initial-game-state";
 import { createSeededGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
-import { getPlayerBoardLoadout } from "@/services/game/get-player-board-deck";
+import { getPlayerBoardLoadoutByPlayerId } from "@/services/game/get-player-board-deck";
 import { getArenaCatalog } from "@/services/training/get-arena-catalog";
 import { resolveTrainingOpponentLoadout } from "@/services/training/resolve-training-opponent-loadout";
 import { resolveDifficultyScale } from "@/services/training/internal/training-card-scaling";
@@ -34,7 +34,7 @@ export async function buildSurvivalBattleSnapshot(
   encounter: ISurvivalEncounter,
   seed: string,
 ) {
-  const [loadout, catalog] = await Promise.all([getPlayerBoardLoadout(), getArenaCatalog()]);
+  const [loadout, catalog] = await Promise.all([getPlayerBoardLoadoutByPlayerId(playerId), getArenaCatalog()]);
   if (!loadout.deck) throw new ValidationError("Necesitas un deck principal completo para Supervivencia.");
   const difficulty = AI_DIFFICULTY[encounter.aiProfile];
   const scale = resolveDifficultyScale(difficulty);

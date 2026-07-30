@@ -23,6 +23,7 @@ import { MAX_PAUSED_TURNS_MULTIPLAYER } from "@/components/game/board/multiplaye
 import { useCallback, useLayoutEffect } from "react";
 import { useBoardViewportMetrics } from "./hooks/internal/layout/use-board-viewport-metrics";
 import { GameState } from "@/core/use-cases/GameEngine";
+import { resolveBoardThemeClasses } from "./internal/resolve-board-theme-classes";
 
 export type BoardBossThemeVariant = "CRIMSON" | "AMBER" | "VIOLET" | "CYAN";
 
@@ -87,12 +88,7 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
   const bossThemeClassName = isBossTheme ? `board-boss-theme board-boss-theme--${bossThemeVariant.toLowerCase()}` : "";
   // Base CSS `h-dvh` (correcta en SSR y sin JS); el visualViewport afina el px exacto tras montar.
   const boardRootClassName = `board-space-bg relative w-full h-dvh overflow-hidden font-sans cursor-crosshair ${bossThemeClassName} ${shouldReduceCombatEffects ? "reduced-combat-effects" : ""}`;
-  const boardAmbientClassName = isBossTheme
-    ? "absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(244,63,94,0.14),transparent_52%)] pointer-events-none"
-    : "absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(34,211,238,0.12),transparent_52%)] pointer-events-none";
-  const boardVignetteClassName = isBossTheme
-    ? "absolute inset-0 shadow-[inset_0_0_210px_rgba(44,7,16,0.64)] pointer-events-none"
-    : "absolute inset-0 shadow-[inset_0_0_200px_rgba(1,4,12,0.58)] pointer-events-none";
+  const boardThemeClasses = resolveBoardThemeClasses(isBossTheme, bossThemeVariant);
   const screen = useBoardScreenState({
     board,
     mode,
@@ -130,8 +126,8 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
   }, [board, isMultiplayer, onLocalForfeit]);
   return (
     <div className={boardRootClassName} style={viewportMetrics.height ? { height: `${viewportMetrics.height}px` } : undefined} onClick={board.clearSelection}>
-      <div className={boardAmbientClassName} />
-      <div className={boardVignetteClassName} />
+      <div className={boardThemeClasses.ambient} />
+      <div className={boardThemeClasses.vignette} />
       {!isMatchStartLocked ? (
         <>
           <BoardStatusAndTopBarSection

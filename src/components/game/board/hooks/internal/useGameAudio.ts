@@ -24,7 +24,6 @@ function resolveDuelEndTrack(winnerPlayerId: string, playerId: string): AudioTra
 function playAudioCue(track: AudioTrackId, isMuted: boolean, isPaused: boolean): void {
   if (!isMuted && !isPaused) safePlay(createAudio(track, false));
 }
-
 export function useGameAudio({
   combatLog,
   winnerPlayerId,
@@ -42,11 +41,9 @@ export function useGameAudio({
   const prevHistoryOpenRef = useRef(isHistoryOpen);
   const prevSelectedCardRef = useRef(hasSelectedCard);
   const prevErrorRef = useRef<string | null>(lastErrorCode);
-
   useEffect(() => {
     setAudioPlaybackBlocked(isMuted || isPaused);
   }, [isMuted, isPaused]);
-
   const playCombatEventAudio = useCallback((event: ICombatLogEvent) => {
     const effectAudioPath = resolveEffectAudioPath(event);
     if (effectAudioPath) {
@@ -62,7 +59,6 @@ export function useGameAudio({
     const track = mapEventToTrack(event);
     if (track) safePlay(createAudio(track, false));
   }, []);
-
   useEffect(() => {
     if (disableBaseSoundtrack) {
       soundtrackRef.current?.pause();
@@ -79,18 +75,25 @@ export function useGameAudio({
       soundtrackRef.current = null;
     };
   }, [customSoundtrackPath, disableBaseSoundtrack, isMuted, isPaused]);
-
   useEffect(() => {
     const soundtrack = soundtrackRef.current;
     if (!soundtrack) return;
+    // Los navegadores móviles pueden bloquear el primer play tras una carga HTTP; el siguiente gesto
+    // del tablero rearma la misma pista sin crear audios duplicados.
     if (isMuted || winnerPlayerId || isPaused) {
       soundtrack.pause();
       if (winnerPlayerId) soundtrack.currentTime = 0;
       return;
     }
+    const resumeAfterInteraction = () => safePlay(soundtrack);
+    window.addEventListener("pointerdown", resumeAfterInteraction, { once: true });
+    window.addEventListener("keydown", resumeAfterInteraction, { once: true });
     safePlay(soundtrack);
+    return () => {
+      window.removeEventListener("pointerdown", resumeAfterInteraction);
+      window.removeEventListener("keydown", resumeAfterInteraction);
+    };
   }, [isMuted, isPaused, winnerPlayerId]);
-
   useEffect(() => {
     if (isMuted || isPaused) {
       processedRef.current = combatLog.length;
@@ -100,14 +103,12 @@ export function useGameAudio({
     processedRef.current = combatLog.length;
     nextEvents.forEach((event) => playCombatEventAudio(event));
   }, [combatLog, isMuted, isPaused, playCombatEventAudio]);
-
   useEffect(() => {
     if (isMuted || isPaused || !winnerPlayerId) return;
     const track = resolveDuelEndTrack(winnerPlayerId, playerId);
     safePlay(createAudio(track, false));
     if (track === "DUEL_WIN") safePlay(createAudio("VICTORY_STINGER", false));
   }, [isMuted, isPaused, playerId, winnerPlayerId]);
-
   useEffect(() => {
     if (isMuted || isPaused) {
       prevHistoryOpenRef.current = isHistoryOpen;
@@ -118,7 +119,6 @@ export function useGameAudio({
       prevHistoryOpenRef.current = isHistoryOpen;
     }
   }, [isHistoryOpen, isMuted, isPaused]);
-
   useEffect(() => {
     if (isMuted || isPaused) {
       prevSelectedCardRef.current = hasSelectedCard;
