@@ -1,9 +1,9 @@
-// src/infrastructure/persistence/supabase/internal/create-supabase-service-role-client.ts - Crea cliente Supabase server-only con service role para operaciones administrativas controladas.
+// src/infrastructure/persistence/supabase/internal/create-supabase-service-role-client.ts - Crea cliente server-only para mutaciones privilegiadas controladas.
 import { createClient } from "@supabase/supabase-js";
 import { ValidationError } from "@/core/errors/ValidationError";
 
 /**
- * Debe usarse únicamente tras validar autenticación y autorización admin.
+ * Debe usarse únicamente en servidor tras validar la autenticación y la autorización exigida por el caso de uso.
  */
 export function createSupabaseServiceRoleClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

@@ -78,11 +78,12 @@ select results_eq(
   array[8000],
   'La run nace con los LP máximos fijados por servidor'
 );
-select throws_ok(
-  $$select public.start_survival_run('00000000-0000-0000-0000-000000000101', 8000, 1)$$,
-  '23505',
-  null,
-  'El índice parcial impide dos runs activas'
+select results_eq(
+  $$select current_lp from public.start_survival_run(
+    '00000000-0000-0000-0000-000000000101', 8000, 1
+  )$$,
+  array[8000],
+  'Reintentar el inicio devuelve la misma run sin duplicarla'
 );
 select results_eq(
   $$select public.credit_ascension_fragments(

@@ -378,3 +378,14 @@
 4. Supervivencia y Olimpo se presentan como modos en preparación, sin enlaces a runtimes todavía inexistentes.
 5. El portal usa imágenes estáticas, no monta tableros ni animaciones continuas y mantiene objetivos táctiles de al menos 44 px.
 6. Se añade cobertura co-localizada para navegación, disponibilidad y resolución de CTA.
+
+## Modos PvE - Fase 4: Supervivencia dominio/API
+
+1. Se define el agregado de Supervivencia y el puerto `ISurvivalRepository` para separar dominio y Supabase.
+2. El escalado empieza en tier 4, avanza por bloques configurables y entra en Ascensión por vueltas completas del roster.
+3. Inicio y emisión son idempotentes: una run o batalla activas se reanudan en lugar de duplicarse.
+4. Las rutas `/api/survival/*` autentican, validan origen y usan RPCs reservadas a `service_role` para las mutaciones.
+5. La finalización exige ticket firmado y `ICombatProof`; outcome, LP, curación y Fragmentos se derivan en servidor.
+6. El snapshot inmutable usa seed e `idFactory` deterministas para que el replay pueda reproducir efectos complejos.
+7. Los rulesets históricos se leen por versión para que una expedición activa sobreviva a cambios de live-ops.
+8. Zeus, Loki y Hefes se organizan bajo `public/assets/combat/olympus/opponents` sin acoplarlos a Story.

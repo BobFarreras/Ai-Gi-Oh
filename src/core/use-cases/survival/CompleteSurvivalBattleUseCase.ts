@@ -1,0 +1,54 @@
+// src/core/use-cases/survival/CompleteSurvivalBattleUseCase.ts - Liquida replay, LP y Fragmentos de forma autoritativa.
+import { ICombatProof } from "@/core/entities/match";
+import { ValidationError } from "@/core/errors/ValidationError";
+import { ISurvivalRepository } from "@/core/repositories/ISurvivalRepository";
+import { resolveSurvivalEncounter } from "@/core/services/survival/resolve-survival-encounter";
+import { resolveSurvivalReward } from "@/core/services/survival/resolve-survival-reward";
+import { replayCombatProof } from "@/core/use-cases/match/replay-combat-proof";
+import { applyMatchAction } from "@/core/services/multiplayer/apply-match-action";
+
+export class CompleteSurvivalBattleUseCase {
+  constructor(private readonly repository: ISurvivalRepository) {}
+
+  /** Reproduce la prueba y deriva resultado, LP y recompensa sin aceptar esos valores del body. */
+  async execute(playerId: string, proof: ICombatProof, nowIso = new Date().toISOString()) {
+    const [stored, battle] = await Promise.all([
+      this.repository.getCombatSession(playerId, proof.battleId),
+      this.repository.getBattleById(playerId, proof.battleId),
+    ]);
+    if (!stored || !battle) throw new ValidationError("El combate no está disponible.");
+    if (battle.status === "COMPLETED") {
+      const run = await this.repository.getRunById(playerId, battle.runId);
+      return { run, battle, duplicate: true };
+    }
+    const owningRun = await this.repository.getRunById(playerId, battle.runId);
+    if (!owningRun) throw new ValidationError("La expedición del combate no está disponible.");
+    const configuration = await this.repository.getRuleset(owningRun.rulesetVersion);
+    if (!configuration) throw new ValidationError("El ruleset histórico del combate no está disponible.");
+    const replay = replayCombatProof({
+      session: stored.session,
+      proof,
+      nowIso,
+      initialStateFactory: () => stored.snapshot,
+      applyAction: applyMatchAction,
+    });
+    const outcome = replay.winnerPlayerId === "DRAW"
+      ? "DRAW"
+      : replay.winnerPlayerId === playerId ? "WIN" : "LOSS";
+    const encounter = resolveSurvivalEncounter(
+      configuration.ruleset,
+      configuration.stages,
+      battle.battleIndex,
+    );
+    const reward = resolveSurvivalReward(battle, configuration.ruleset, encounter.rewardDefinitionId, outcome);
+    const run = await this.repository.completeBattle({
+      playerId,
+      battleId: battle.battleId,
+      outcome,
+      endingLp: replay.playerEndingHealthPoints,
+      reward: reward as unknown as Record<string, unknown>,
+      fragmentAmount: reward.ascensionFragments,
+    });
+    return { run, battle, outcome, reward, duplicate: false };
+  }
+}
