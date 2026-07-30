@@ -1,11 +1,10 @@
 // src/core/services/survival/resolve-survival-reward.ts - Deriva Fragmentos y auditoría sin confiar en el cliente.
-import { ISurvivalBattle, ISurvivalRuleset, SurvivalOutcome } from "@/core/entities/survival/ISurvival";
-
-export interface ISurvivalReward {
-  ascensionFragments: number;
-  definitionId: string;
-  milestoneReached: boolean;
-}
+import {
+  ISurvivalBattle,
+  ISurvivalReward,
+  ISurvivalRuleset,
+  SurvivalOutcome,
+} from "@/core/entities/survival/ISurvival";
 
 /**
  * Aplica una curva conservadora y determinista; el cliente nunca aporta importes ni multiplicadores.

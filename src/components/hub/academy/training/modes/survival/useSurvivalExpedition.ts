@@ -3,13 +3,20 @@
 import { useCallback, useRef, useState } from "react";
 import { CombatActionJournal } from "@/core/services/match/combat-action-journal";
 import { ICombatProof, IMatchActionPayload } from "@/core/entities/match";
-import { ISurvivalRun } from "@/core/entities/survival/ISurvival";
-import { completeSurvivalBattle, issueSurvivalBattle, ISurvivalBattleRuntime, startSurvivalRun } from "./survival-api-client";
+import { ISurvivalProgress, ISurvivalRun } from "@/core/entities/survival/ISurvival";
+import {
+  completeSurvivalBattle,
+  issueSurvivalBattle,
+  ISurvivalBattleRuntime,
+  ISurvivalSettlement,
+  startSurvivalRun,
+} from "./survival-api-client";
 
 export function useSurvivalExpedition() {
   const [run, setRun] = useState<ISurvivalRun | null>(null);
   const [battle, setBattle] = useState<ISurvivalBattleRuntime | null>(null);
-  const [reward, setReward] = useState<{ nexus: number; playerExperience: number; ascensionFragments: number } | null>(null);
+  const [progress, setProgress] = useState<ISurvivalProgress | null>(null);
+  const [settlement, setSettlement] = useState<ISurvivalSettlement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const journalRef = useRef(new CombatActionJournal());
@@ -25,10 +32,13 @@ export function useSurvivalExpedition() {
       journalRef.current.reset();
       completedRef.current = false;
       setRun(started.run);
+      setProgress(started.progress);
       setBattle(issued);
-      setReward(null);
+      setSettlement(null);
+      return true;
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "No se pudo preparar la expedición.");
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -44,6 +54,8 @@ export function useSurvivalExpedition() {
   const completeBattle = useCallback(async () => {
     if (!battle || completedRef.current) return;
     completedRef.current = true;
+    setIsLoading(true);
+    setError(null);
     const proof: ICombatProof = {
       sessionId: battle.session.id,
       battleId: battle.session.battleId,
@@ -55,12 +67,18 @@ export function useSurvivalExpedition() {
     try {
       const result = await completeSurvivalBattle(battle.completionTicket, proof);
       setRun(result.run);
-      setReward(result.reward ?? null);
+      setProgress(result.progress);
+      setSettlement(result);
     } catch (caught) {
       completedRef.current = false;
       setError(caught instanceof Error ? caught.message : "No se pudo validar el resultado.");
+    } finally {
+      setIsLoading(false);
     }
   }, [battle]);
 
-  return { run, battle, reward, error, isLoading, enterBattle, recordAction, completeBattle };
+  return {
+    run, battle, progress, settlement, error, isLoading,
+    enterBattle, recordAction, completeBattle,
+  };
 }

@@ -389,3 +389,11 @@
 6. El snapshot inmutable usa seed e `idFactory` deterministas para que el replay pueda reproducir efectos complejos.
 7. Los rulesets históricos se leen por versión para que una expedición activa sobreviva a cambios de live-ops.
 8. Zeus, Loki y Hefes se organizan bajo `public/assets/combat/olympus/opponents` sin acoplarlos a Story.
+
+## Modos PvE - Fase 5: Progresión completa de Supervivencia
+
+1. El settlement autoritativo expone run, batalla liquidada, recompensa, récord y saldo de Fragmentos.
+2. La UI incorpora un informe entre combates con LP transportados, curación cada cinco victorias y cierre por derrota.
+3. El récord se deriva del historial de runs y usa un índice específico, evitando duplicar estado mutable.
+4. Los retries recuperan el settlement persistido sin duplicar victorias ni moneda.
+5. El escalado infinito continúa mediante tier, perfil IA, nivel/versión, rango de Ascensión y bonus data-driven de LP y ATK/DEF.

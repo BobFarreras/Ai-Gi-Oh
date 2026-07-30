@@ -11,6 +11,7 @@ import { resolveTrainingOpponentLoadout } from "@/services/training/resolve-trai
 import { resolveDifficultyScale } from "@/services/training/internal/training-card-scaling";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { ICard } from "@/core/entities/ICard";
+import { applySurvivalAscension } from "@/core/services/survival/apply-survival-ascension";
 
 const AI_DIFFICULTY: Record<ISurvivalEncounter["aiProfile"], OpponentDifficulty> = {
   HARD: "HARD", BOSS: "BOSS", MASTER: "MASTER", MYTHIC: "MYTHIC",
@@ -48,6 +49,11 @@ export async function buildSurvivalBattleSnapshot(
     opponentId: encounter.opponentId,
     defaultScaling: scale,
   });
+  const opponentDeck = applySurvivalAscension(
+    opponent.deck,
+    encounter.ascensionRank,
+    encounter.statBonusPerRank,
+  );
   const baseSnapshot = createInitialGameState({
     playerA: {
       id: playerId, name: "Arquitecto", deck: shuffleSurvivalDeck(loadout.deck, `${seed}:player-deck`),
@@ -55,7 +61,12 @@ export async function buildSurvivalBattleSnapshot(
     },
     playerB: {
       id: encounter.opponentId, name: opponent.displayName,
-      deck: shuffleSurvivalDeck(opponent.deck, `${seed}:opponent-deck`), fusionDeck: opponent.fusionDeck,
+      deck: shuffleSurvivalDeck(opponentDeck, `${seed}:opponent-deck`),
+      fusionDeck: applySurvivalAscension(
+        opponent.fusionDeck,
+        encounter.ascensionRank,
+        encounter.statBonusPerRank,
+      ),
     },
     maxHealthPoints: run.maxLp,
     randomSource: createSeededRandom(seed),

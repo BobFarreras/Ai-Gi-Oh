@@ -8,8 +8,8 @@ const ruleset: ISurvivalRuleset = {
   roster: ["a", "b", "c"], milestoneInterval: 5, milestoneHeal: 2000,
 };
 const stages: ISurvivalScalingStage[] = [
-  { fromBattle: 1, aiProfile: "HARD", maxTier: 5, maxLpBonus: 0, rewardDefinitionId: "base" },
-  { fromBattle: 5, aiProfile: "BOSS", maxTier: 8, maxLpBonus: 500, rewardDefinitionId: "boss" },
+  { fromBattle: 1, aiProfile: "HARD", maxTier: 5, maxLpBonus: 0, statBonusPerRank: 0, rewardDefinitionId: "base" },
+  { fromBattle: 5, aiProfile: "BOSS", maxTier: 8, maxLpBonus: 500, statBonusPerRank: 150, rewardDefinitionId: "boss" },
 ];
 
 describe("resolveSurvivalEncounter", () => {
@@ -21,7 +21,9 @@ describe("resolveSurvivalEncounter", () => {
 
   it("entra en Ascensión por vueltas completas tras alcanzar el tier máximo", () => {
     expect(resolveSurvivalEncounter(ruleset, stages, 9)).toMatchObject({ effectiveTier: 8, ascensionRank: 0 });
-    expect(resolveSurvivalEncounter(ruleset, stages, 12)).toMatchObject({ effectiveTier: 8, ascensionRank: 1, maxLpBonus: 500 });
+    expect(resolveSurvivalEncounter(ruleset, stages, 12)).toMatchObject({
+      effectiveTier: 8, ascensionRank: 1, maxLpBonus: 500, statBonusPerRank: 150,
+    });
   });
 
   it("rechaza índices fuera del contrato", () => {

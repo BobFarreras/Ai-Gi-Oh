@@ -17,7 +17,7 @@ const configuration = {
   },
   stages: [{
     fromBattle: 1, aiProfile: "HARD" as const, maxTier: 8,
-    maxLpBonus: 0, rewardDefinitionId: "base",
+    maxLpBonus: 0, statBonusPerRank: 0, rewardDefinitionId: "base",
   }],
 };
 

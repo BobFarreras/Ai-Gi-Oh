@@ -1,13 +1,14 @@
 // src/components/hub/academy/training/modes/survival/internal/SurvivalLobby.tsx - Presenta la antesala animada de una expedición Survival.
 "use client";
 import { motion } from "framer-motion";
-import { ISurvivalRun } from "@/core/entities/survival/ISurvival";
+import { ISurvivalProgress, ISurvivalRun } from "@/core/entities/survival/ISurvival";
 import { TrainingArenaLobbyBackdrop } from "../../classic/internal/TrainingArenaLobbyBackdrop";
 import { TrainingArenaCombatantCard } from "../../classic/internal/TrainingArenaCombatantCard";
 import { TrainingArenaLobbyActions } from "../../classic/internal/TrainingArenaLobbyActions";
 
 interface ISurvivalLobbyProps {
   run: ISurvivalRun;
+  progress: ISurvivalProgress;
   opponentName: string;
   opponentAvatarUrl: string;
   error: string | null;
@@ -36,18 +37,21 @@ export function SurvivalLobby(props: ISurvivalLobbyProps) {
               </span>
             </div>
           </div>
-          <div className="grid grid-cols-3 divide-x divide-emerald-300/15">
+          <div className="grid grid-cols-2 divide-x divide-y divide-emerald-300/15 md:grid-cols-5 md:divide-y-0">
             <SurvivalStat label="LP persistentes" value={`${props.run.currentLp} / ${props.run.maxLp}`} />
             <SurvivalStat label="Victorias" value={String(props.run.wins)} />
-            <SurvivalStat label="Curación Nexus" value={`En ${nextMilestone}`} />
+            <SurvivalStat label="Récord personal" value={String(props.progress.bestWins)} />
+            <SurvivalStat label="Fragmentos" value={String(props.progress.ascensionFragments)} />
+            <SurvivalStat label="Próxima curación" value={`En ${nextMilestone}`} />
           </div>
         </motion.header>
         <div className="grid min-h-0 flex-1 grid-cols-1 items-stretch gap-2 md:w-full md:flex-none md:grid-cols-[1fr_auto_1fr] md:gap-4">
           <TrainingArenaCombatantCard alignment="player" name="Arquitecto" imageUrl="/assets/story/player/bob.webp" />
           <motion.div
             className="order-2 mx-auto flex items-center justify-center text-3xl font-black italic tracking-[0.12em] text-emerald-200 md:order-none md:text-5xl"
-            animate={{ scale: [1, 1.08, 1], opacity: [0.82, 1, 0.82] }}
-            transition={{ duration: 1.8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
           >
             VS
           </motion.div>

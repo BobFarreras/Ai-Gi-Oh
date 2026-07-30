@@ -6,6 +6,7 @@ import { LocalActionEmitterProvider } from "@/components/game/board/multiplayer/
 import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
 import { ACADEMY_TRAINING_ARENA_ROUTE } from "@/core/constants/routes/academy-routes";
 import { SurvivalLobby } from "./internal/SurvivalLobby";
+import { SurvivalDebrief } from "./internal/SurvivalDebrief";
 import { useSurvivalExpedition } from "./useSurvivalExpedition";
 import { buildStoryOpponentNarrationPack } from "@/services/story/build-story-opponent-narration-pack";
 import { primeMusicFromUserGesture } from "@/components/game/board/hooks/internal/audio/audioRuntime";
@@ -43,9 +44,23 @@ export function SurvivalArenaClient() {
       </main>
     );
   }
-  if (!isBattleStarted && expedition.run) {
+  if (expedition.settlement) {
+    return <SurvivalDebrief
+      settlement={expedition.settlement}
+      isLoading={expedition.isLoading}
+      error={expedition.error}
+      onContinue={() => {
+        void expedition.enterBattle().then((prepared) => {
+          if (prepared) setIsBattleStarted(false);
+        });
+      }}
+      onExit={() => window.location.replace(ACADEMY_TRAINING_ARENA_ROUTE)}
+    />;
+  }
+  if (!isBattleStarted && expedition.run && expedition.progress) {
     return <SurvivalLobby
       run={expedition.run}
+      progress={expedition.progress}
       opponentName={expedition.battle.presentation.displayName}
       opponentAvatarUrl={expedition.battle.presentation.avatarUrl}
       error={expedition.error}
@@ -56,15 +71,6 @@ export function SurvivalArenaClient() {
       onBack={() => window.location.replace(ACADEMY_TRAINING_ARENA_ROUTE)}
     />;
   }
-  const isRunActive = expedition.run?.status !== "COMPLETED_DEFEAT";
-  const isValidated = expedition.reward !== null;
-  const rewardSummary = expedition.reward
-    ? {
-        rewardNexus: expedition.reward.nexus,
-        rewardPlayerExperience: expedition.reward.playerExperience,
-        rewardCards: [],
-      }
-    : null;
   return (
     <LocalActionEmitterProvider value={expedition.recordAction}>
       <Board
@@ -78,15 +84,8 @@ export function SurvivalArenaClient() {
         isBossTheme
         bossThemeVariant="CYAN"
         customSoundtrackPath={SURVIVAL_SOUNDTRACK}
-        duelResultRewardSummary={rewardSummary}
-        resultActionLabel={!isValidated ? "Validar resultado" : isRunActive ? "Siguiente combate" : "Finalizar expedición"}
-        onResultAction={() => {
-          if (!isValidated) void expedition.completeBattle();
-          else if (isRunActive) {
-            void expedition.enterBattle().then(() => setIsBattleStarted(false));
-          }
-          else window.location.replace(ACADEMY_TRAINING_ARENA_ROUTE);
-        }}
+        resultActionLabel={expedition.isLoading ? "Validando…" : "Ver informe"}
+        onResultAction={() => void expedition.completeBattle()}
         onExitMatch={() => window.location.replace(ACADEMY_TRAINING_ARENA_ROUTE)}
         onMatchResolved={() => void expedition.completeBattle()}
       />

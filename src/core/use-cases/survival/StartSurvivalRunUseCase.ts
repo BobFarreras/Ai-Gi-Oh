@@ -11,10 +11,14 @@ export class StartSurvivalRunUseCase {
       throw new ValidationError("No se puede iniciar una expedición con datos inválidos.");
     }
     const existing = await this.repository.getActiveRun(playerId);
-    if (existing) return { run: existing, resumed: true };
+    if (existing) {
+      const progress = await this.repository.getProgress(playerId);
+      return { run: existing, progress, resumed: true };
+    }
     const configuration = await this.repository.getRuleset();
     if (!configuration) throw new ValidationError("Supervivencia no tiene un ruleset activo.");
     const run = await this.repository.startRun(playerId, maxLp, configuration.ruleset.version);
-    return { run, resumed: false };
+    const progress = await this.repository.getProgress(playerId);
+    return { run, progress, resumed: false };
   }
 }

@@ -6,6 +6,7 @@ import { ISurvivalRepository } from "@/core/repositories/ISurvivalRepository";
 const { repository } = vi.hoisted(() => ({
   repository: {
     getActiveRun: vi.fn().mockResolvedValue({ id: "run-1", playerId: "player-1", status: "ACTIVE" }),
+    getProgress: vi.fn().mockResolvedValue({ bestWins: 6, ascensionFragments: 90 }),
     startRun: vi.fn(),
   },
 }));
@@ -27,7 +28,11 @@ describe("POST /api/survival/runs/start", () => {
   it("devuelve la expedición activa sin duplicarla", async () => {
     const response = await POST({} as NextRequest);
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({ resumed: true, run: { id: "run-1" } });
+    await expect(response.json()).resolves.toMatchObject({
+      resumed: true,
+      run: { id: "run-1" },
+      progress: { bestWins: 6, ascensionFragments: 90 },
+    });
     expect(repository.startRun).not.toHaveBeenCalled();
   });
 });

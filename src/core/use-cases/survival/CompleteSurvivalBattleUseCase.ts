@@ -18,8 +18,17 @@ export class CompleteSurvivalBattleUseCase {
     ]);
     if (!stored || !battle) throw new ValidationError("El combate no está disponible.");
     if (battle.status === "COMPLETED") {
-      const run = await this.repository.getRunById(playerId, battle.runId);
-      return { run, battle, duplicate: true };
+      const [run, progress] = await Promise.all([
+        this.repository.getRunById(playerId, battle.runId),
+        this.repository.getProgress(playerId),
+      ]);
+      if (!run || !battle.outcome || !battle.reward) {
+        throw new ValidationError("La liquidación anterior está incompleta.");
+      }
+      return {
+        run, progress, battle, outcome: battle.outcome,
+        reward: battle.reward, duplicate: true,
+      };
     }
     const owningRun = await this.repository.getRunById(playerId, battle.runId);
     if (!owningRun) throw new ValidationError("La expedición del combate no está disponible.");
@@ -49,6 +58,11 @@ export class CompleteSurvivalBattleUseCase {
       reward: reward as unknown as Record<string, unknown>,
       fragmentAmount: reward.ascensionFragments,
     });
-    return { run, battle, outcome, reward, duplicate: false };
+    const [completedBattle, progress] = await Promise.all([
+      this.repository.getBattleById(playerId, battle.battleId),
+      this.repository.getProgress(playerId),
+    ]);
+    if (!completedBattle) throw new ValidationError("La liquidación no se pudo recuperar.");
+    return { run, progress, battle: completedBattle, outcome, reward, duplicate: false };
   }
 }

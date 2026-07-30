@@ -1,6 +1,12 @@
 // src/components/hub/academy/training/modes/survival/survival-api-client.ts - Cliente HTTP tipado del flujo autoritativo de Supervivencia.
 import { ICombatProof, ICombatSession } from "@/core/entities/match";
-import { ISurvivalBattle, ISurvivalRun } from "@/core/entities/survival/ISurvival";
+import {
+  ISurvivalBattle,
+  ISurvivalProgress,
+  ISurvivalReward,
+  ISurvivalRun,
+  SurvivalOutcome,
+} from "@/core/entities/survival/ISurvival";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { createSeededGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 import { IArenaOpponentPresentation } from "@/services/training/resolve-arena-opponent-presentation";
@@ -13,11 +19,13 @@ export interface ISurvivalBattleRuntime {
   presentation: IArenaOpponentPresentation;
 }
 
-interface ICompleteSurvivalResponse {
+export interface ISurvivalSettlement {
   run: ISurvivalRun;
+  progress: ISurvivalProgress;
   battle: ISurvivalBattle;
-  outcome: "WIN" | "LOSS" | "DRAW";
-  reward?: { nexus: number; playerExperience: number; ascensionFragments: number };
+  outcome: SurvivalOutcome;
+  reward: ISurvivalReward;
+  duplicate: boolean;
 }
 
 /** Ejecuta una mutación Survival y convierte errores HTTP en mensajes aptos para UI. */
@@ -36,7 +44,7 @@ async function postJson<T>(path: string, body: Record<string, unknown>): Promise
 }
 
 /** Inicia una expedición o recupera la activa de forma idempotente. */
-export function startSurvivalRun(): Promise<{ run: ISurvivalRun; resumed: boolean }> {
+export function startSurvivalRun(): Promise<{ run: ISurvivalRun; progress: ISurvivalProgress; resumed: boolean }> {
   return postJson("/api/survival/runs/start", {});
 }
 
@@ -51,6 +59,6 @@ export async function issueSurvivalBattle(runId: string): Promise<ISurvivalBattl
 export function completeSurvivalBattle(
   completionTicket: string,
   proof: ICombatProof,
-): Promise<ICompleteSurvivalResponse> {
+): Promise<ISurvivalSettlement> {
   return postJson("/api/survival/battles/complete", { completionTicket, proof });
 }

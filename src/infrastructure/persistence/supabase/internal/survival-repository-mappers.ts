@@ -31,6 +31,7 @@ export function mapSurvivalStage(row: Row): ISurvivalScalingStage {
     aiProfile: stringValue(row.ai_profile) as ISurvivalScalingStage["aiProfile"],
     maxTier: numberValue(cardScale?.maxTier ?? 8),
     maxLpBonus: numberValue(ascension?.maxLpBonus ?? 0),
+    statBonusPerRank: numberValue(ascension?.statBonusPerRank ?? 0),
     rewardDefinitionId: stringValue(row.reward_definition_id),
   };
 }
@@ -52,6 +53,9 @@ export function mapSurvivalRun(row: Row): ISurvivalRun {
 }
 
 export function mapSurvivalBattle(row: Row): ISurvivalBattle {
+  const reward = row.reward_json && typeof row.reward_json === "object"
+    ? row.reward_json as Row
+    : null;
   return {
     battleId: stringValue(row.battle_id),
     runId: stringValue(row.run_id),
@@ -64,6 +68,10 @@ export function mapSurvivalBattle(row: Row): ISurvivalBattle {
     status: stringValue(row.status) as ISurvivalBattle["status"],
     outcome: row.outcome === null ? null : stringValue(row.outcome) as ISurvivalBattle["outcome"],
     milestoneHeal: numberValue(row.milestone_heal),
-    reward: row.reward_json && typeof row.reward_json === "object" ? row.reward_json as Row : null,
+    reward: reward ? {
+      ascensionFragments: numberValue(reward.ascensionFragments ?? reward.fragments ?? 0),
+      definitionId: stringValue(reward.definitionId ?? "legacy"),
+      milestoneReached: Boolean(reward.milestoneReached),
+    } : null,
   };
 }

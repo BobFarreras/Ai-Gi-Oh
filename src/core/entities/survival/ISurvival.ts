@@ -19,6 +19,7 @@ export interface ISurvivalScalingStage {
   aiProfile: SurvivalAiProfile;
   maxTier: number;
   maxLpBonus: number;
+  statBonusPerRank: number;
   rewardDefinitionId: string;
 }
 
@@ -48,7 +49,7 @@ export interface ISurvivalBattle {
   status: SurvivalBattleStatus;
   outcome: SurvivalOutcome | null;
   milestoneHeal: number;
-  reward: Record<string, unknown> | null;
+  reward: ISurvivalReward | null;
 }
 
 export interface ISurvivalEncounter {
@@ -58,5 +59,17 @@ export interface ISurvivalEncounter {
   ascensionRank: number;
   aiProfile: SurvivalAiProfile;
   maxLpBonus: number;
+  statBonusPerRank: number;
   rewardDefinitionId: string;
+}
+
+export interface ISurvivalProgress {
+  bestWins: number;
+  ascensionFragments: number;
+}
+
+export interface ISurvivalReward {
+  ascensionFragments: number;
+  definitionId: string;
+  milestoneReached: boolean;
 }

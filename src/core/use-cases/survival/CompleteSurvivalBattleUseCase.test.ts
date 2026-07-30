@@ -30,8 +30,14 @@ function createRepository(): ISurvivalRepository {
       },
       snapshot,
     }),
-    getBattleById: vi.fn().mockResolvedValue(battle),
+    getBattleById: vi.fn()
+      .mockResolvedValueOnce(battle)
+      .mockResolvedValueOnce({
+        ...battle, status: "COMPLETED", outcome: "WIN", endingLp: 8000,
+        milestoneHeal: 2000, reward: { ascensionFragments: 31 },
+      }),
     getRunById: vi.fn().mockResolvedValue(run),
+    getProgress: vi.fn().mockResolvedValue({ bestWins: 5, ascensionFragments: 131 }),
     getRuleset: vi.fn().mockResolvedValue({
       ruleset: {
         id: "r", version: 1, startTier: 4, battlesPerTier: 2,
@@ -39,7 +45,7 @@ function createRepository(): ISurvivalRepository {
       },
       stages: [{
         fromBattle: 1, aiProfile: "HARD", maxTier: 8,
-        maxLpBonus: 0, rewardDefinitionId: "base",
+        maxLpBonus: 0, statBonusPerRank: 0, rewardDefinitionId: "base",
       }],
     }),
     completeBattle: vi.fn().mockResolvedValue(run),
@@ -55,8 +61,35 @@ describe("CompleteSurvivalBattleUseCase", () => {
     };
     const result = await new CompleteSurvivalBattleUseCase(repository).execute("player-1", proof, nowIso);
     expect(result).toMatchObject({ outcome: "WIN", duplicate: false });
+    expect(result.progress).toEqual({ bestWins: 5, ascensionFragments: 131 });
     expect(repository.completeBattle).toHaveBeenCalledWith(expect.objectContaining({
       outcome: "WIN", endingLp: 8000, fragmentAmount: 31,
     }));
+  });
+
+  it("devuelve la liquidación persistida sin duplicar créditos en un retry", async () => {
+    const repository = createRepository();
+    vi.mocked(repository.getBattleById).mockReset().mockResolvedValue({
+      ...battle,
+      status: "COMPLETED",
+      outcome: "WIN",
+      endingLp: 6000,
+      milestoneHeal: 2000,
+      reward: {
+        ascensionFragments: 31,
+        definitionId: "base",
+        milestoneReached: true,
+      },
+    });
+    const proof: ICombatProof = {
+      sessionId: "session-1", battleId: "battle-1", mode: "SURVIVAL",
+      snapshotHash: "hash", protocolVersion: COMBAT_PROOF_PROTOCOL_VERSION, entries: [],
+    };
+
+    const result = await new CompleteSurvivalBattleUseCase(repository)
+      .execute("player-1", proof, nowIso);
+
+    expect(result).toMatchObject({ duplicate: true, outcome: "WIN" });
+    expect(repository.completeBattle).not.toHaveBeenCalled();
   });
 });

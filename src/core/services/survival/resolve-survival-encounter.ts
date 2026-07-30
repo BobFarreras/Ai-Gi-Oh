@@ -39,6 +39,7 @@ export function resolveSurvivalEncounter(
     ascensionRank,
     aiProfile: stage.aiProfile,
     maxLpBonus: stage.maxLpBonus * ascensionRank,
+    statBonusPerRank: stage.statBonusPerRank,
     rewardDefinitionId: stage.rewardDefinitionId,
   };
 }

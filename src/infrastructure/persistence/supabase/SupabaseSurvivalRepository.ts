@@ -86,6 +86,22 @@ export class SupabaseSurvivalRepository implements ISurvivalRepository {
     };
   }
 
+  async getProgress(playerId: string) {
+    const [bestRunResult, walletResult] = await Promise.all([
+      this.readClient.from("player_survival_runs").select("wins").eq("player_id", playerId)
+        .order("wins", { ascending: false }).limit(1).maybeSingle(),
+      this.readClient.from("combat_mode_wallets").select("ascension_fragments")
+        .eq("player_id", playerId).maybeSingle(),
+    ]);
+    if (bestRunResult.error || walletResult.error) {
+      throw new ValidationError("No se pudo cargar el progreso de Supervivencia.");
+    }
+    return {
+      bestWins: Number(bestRunResult.data?.wins ?? 0),
+      ascensionFragments: Number(walletResult.data?.ascension_fragments ?? 0),
+    };
+  }
+
   async startRun(playerId: string, maxLp: number, rulesetVersion: number) {
     const { data, error } = await this.writeClient.rpc("start_survival_run", {
       p_player_id: playerId, p_max_lp: maxLp, p_ruleset_version: rulesetVersion,

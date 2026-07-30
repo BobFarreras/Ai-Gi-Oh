@@ -2,7 +2,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(41);
+select plan(49);
 
 select has_table('public', 'combat_sessions', 'Existe el agregado de sesiones autoritativas');
 select has_table('public', 'player_survival_runs', 'Existe el agregado de runs');
@@ -10,6 +10,10 @@ select has_table('public', 'survival_battles', 'Existe el historial de batallas'
 select has_table('public', 'combat_mode_wallets', 'Existe la cartera de Fragmentos');
 select has_table('public', 'olympus_champions', 'Existe el catálogo de campeones');
 select has_table('public', 'olympus_battles', 'Existe el historial de Olimpo');
+select has_index(
+  'public', 'player_survival_runs', 'idx_player_survival_runs_best_wins',
+  'El récord personal se resuelve con índice por jugador y victorias'
+);
 
 select ok(
   (select relrowsecurity from pg_class where oid = 'public.combat_sessions'::regclass),
@@ -49,6 +53,14 @@ select results_eq(
   $$select count(*)::bigint from public.survival_rulesets where is_active$$,
   array[1::bigint],
   'Existe exactamente un ruleset activo'
+);
+select results_eq(
+  $$select (stage.ascension_modifiers_json ->> 'statBonusPerRank')::integer
+    from public.survival_scaling_stages stage
+    where stage.ai_profile = 'MYTHIC'
+    order by stage.from_battle desc limit 1$$,
+  array[175],
+  'El tramo MYTHIC prolonga el escalado de stats tras alcanzar los caps'
 );
 select results_eq(
   $$select count(*)::bigint from public.olympus_champions where is_active$$,
@@ -195,6 +207,54 @@ select results_eq(
   array[1],
   'Completar de nuevo la batalla no duplica la victoria'
 );
+select lives_ok(
+  $$update public.player_survival_runs
+    set wins = 4, current_battle_index = 4, current_lp = 5000
+    where player_id = '00000000-0000-0000-0000-000000000101'$$,
+  'Se prepara el hito quinto sin alterar la función bajo prueba'
+);
+select results_eq(
+  $$select battle_index from public.issue_survival_battle(
+    '00000000-0000-0000-0000-000000000101',
+    (select id from public.player_survival_runs where player_id = '00000000-0000-0000-0000-000000000101'),
+    '00000000-0000-0000-0000-000000000203', 'training-gokernel', 8, 0, 'seed-milestone',
+    'ffffffffffffffffffffffffffffffff', '{}'::jsonb, 2, now() + interval '15 minutes'
+  )$$,
+  array[5],
+  'El encuentro de hito conserva la secuencia de la expedición'
+);
+select results_eq(
+  $$select current_lp from public.complete_survival_battle(
+    '00000000-0000-0000-0000-000000000101',
+    '00000000-0000-0000-0000-000000000203', 'WIN', 5000, '{"fragments":30}'::jsonb, 30
+  )$$,
+  array[7000],
+  'La quinta victoria recupera 2000 LP sin confiar en el cliente'
+);
+select results_eq(
+  $$select milestone_heal from public.survival_battles
+    where battle_id = '00000000-0000-0000-0000-000000000203'$$,
+  array[2000],
+  'La curación del hito queda auditada en la batalla'
+);
+select results_eq(
+  $$select battle_index from public.issue_survival_battle(
+    '00000000-0000-0000-0000-000000000101',
+    (select id from public.player_survival_runs where player_id = '00000000-0000-0000-0000-000000000101'),
+    '00000000-0000-0000-0000-000000000204', 'training-gokernel', 8, 0, 'seed-defeat',
+    '99999999999999999999999999999999', '{}'::jsonb, 2, now() + interval '15 minutes'
+  )$$,
+  array[6],
+  'La expedición puede continuar después del hito'
+);
+select results_eq(
+  $$select status from public.complete_survival_battle(
+    '00000000-0000-0000-0000-000000000101',
+    '00000000-0000-0000-0000-000000000204', 'LOSS', 3000, '{}'::jsonb, 0
+  )$$,
+  array['COMPLETED_DEFEAT'::text],
+  'La derrota cierra la run y evita transportar LP manipulados'
+);
 select results_eq(
   $$select attempt_number from public.issue_olympus_battle(
     '00000000-0000-0000-0000-000000000101',
@@ -225,7 +285,7 @@ select results_eq(
   $$select public.respec_champion_upgrades(
     '00000000-0000-0000-0000-000000000101', 'guill', 'respec-1'
   )$$,
-  array[120],
+  array[150],
   'El respec devuelve el 75 por ciento del coste configurado'
 );
 select is(

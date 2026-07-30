@@ -4,6 +4,7 @@ import {
   ISurvivalRuleset,
   ISurvivalRun,
   ISurvivalScalingStage,
+  ISurvivalProgress,
   SurvivalOutcome,
 } from "@/core/entities/survival/ISurvival";
 import { ICombatSession } from "@/core/entities/match";
@@ -39,6 +40,7 @@ export interface ISurvivalRepository {
   getIssuedBattle(runId: string): Promise<ISurvivalBattle | null>;
   getBattleById(playerId: string, battleId: string): Promise<ISurvivalBattle | null>;
   getCombatSession(playerId: string, battleId: string): Promise<{ session: ICombatSession; snapshot: GameState } | null>;
+  getProgress(playerId: string): Promise<ISurvivalProgress>;
   startRun(playerId: string, maxLp: number, rulesetVersion: number): Promise<ISurvivalRun>;
   issueBattle(input: IIssueSurvivalBattleInput): Promise<ISurvivalBattle>;
   invalidateIssuedBattle(playerId: string, battleId: string): Promise<void>;
