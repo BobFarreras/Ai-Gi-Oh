@@ -9,6 +9,8 @@ import { TrainingArenaLobbyActions } from "../../classic/internal/TrainingArenaL
 interface ISurvivalLobbyProps {
   run: ISurvivalRun;
   progress: ISurvivalProgress;
+  battleIndex: number;
+  isResumed: boolean;
   opponentName: string;
   opponentAvatarUrl: string;
   error: string | null;
@@ -33,7 +35,7 @@ export function SurvivalLobby(props: ISurvivalLobbyProps) {
             <div className="mt-1 flex flex-wrap items-end justify-between gap-2">
               <h1 className="text-2xl font-black uppercase italic tracking-[0.08em] text-white md:text-4xl">Supervivencia</h1>
               <span className="rounded-md border border-cyan-300/35 bg-cyan-950/55 px-3 py-1 text-xs font-black uppercase tracking-widest">
-                Combate {props.run.currentBattleIndex + 1}
+                Combate {props.battleIndex}
               </span>
             </div>
           </div>
@@ -61,7 +63,11 @@ export function SurvivalLobby(props: ISurvivalLobbyProps) {
           Los LP que conserves serán los LP iniciales del siguiente combate
         </p>
         {props.error ? <p role="alert" className="text-center text-sm font-bold text-rose-300">{props.error}</p> : null}
-        <TrainingArenaLobbyActions onStart={props.onStart} onBack={props.onBack} />
+        <TrainingArenaLobbyActions
+          onStart={props.onStart}
+          onBack={props.onBack}
+          startLabel={props.isResumed ? "Reanudar Combate" : "Empezar Combate"}
+        />
       </div>
     </section>
   );

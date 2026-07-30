@@ -13,6 +13,8 @@ describe("SurvivalLobby", () => {
         completedAtIso: null, version: 1,
       }}
       progress={{ bestWins: 7, ascensionFragments: 120 }}
+      battleIndex={4}
+      isResumed={false}
       opponentName="Helena"
       opponentAvatarUrl="/helena.webp"
       error={null}
@@ -26,5 +28,26 @@ describe("SurvivalLobby", () => {
     expect(screen.getByText("Helena")).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: "Empezar Combate" })[0]);
     expect(onStart).toHaveBeenCalledOnce();
+  });
+
+  it("identifica una sesión pendiente como reanudación del mismo combate", () => {
+    render(<SurvivalLobby
+      run={{
+        id: "run-1", playerId: "p1", status: "ACTIVE", currentLp: 8000, maxLp: 8000,
+        wins: 0, currentBattleIndex: 1, rulesetVersion: 1, startedAtIso: "2026-07-30",
+        completedAtIso: null, version: 1,
+      }}
+      progress={{ bestWins: 0, ascensionFragments: 0 }}
+      battleIndex={1}
+      isResumed
+      opponentName="GenNvim"
+      opponentAvatarUrl="/gennvim.webp"
+      error={null}
+      onStart={vi.fn()}
+      onBack={vi.fn()}
+    />);
+
+    expect(screen.getByText("Combate 1")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Reanudar Combate" })).not.toHaveLength(0);
   });
 });

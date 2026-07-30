@@ -13,6 +13,7 @@ import { IArenaOpponentPresentation } from "@/services/training/resolve-arena-op
 
 export interface ISurvivalBattleRuntime {
   battle: ISurvivalBattle;
+  resumed: boolean;
   session: ICombatSession;
   initialState: GameState;
   completionTicket: string;

@@ -21,6 +21,14 @@ type SnapshotFactory = (
   seed: string,
 ) => Promise<{ snapshot: GameState; snapshotHash: string }>;
 
+/** Evita reanudar snapshots previos al contrato PvE de cuatro cartas sin afectar otros modos. */
+function hasCurrentOpeningContract(snapshot: GameState): boolean {
+  return Array.isArray(snapshot.playerA?.hand)
+    && snapshot.playerA.hand.length === 4
+    && Array.isArray(snapshot.playerB?.hand)
+    && snapshot.playerB.hand.length === 4;
+}
+
 export class IssueSurvivalBattleUseCase {
   constructor(
     private readonly repository: ISurvivalRepository,
@@ -38,7 +46,8 @@ export class IssueSurvivalBattleUseCase {
       const isReusable = Boolean(
         stored
         && stored.session.protocolVersion === COMBAT_PROOF_PROTOCOL_VERSION
-        && Date.parse(stored.session.expiresAtIso) > nowMs,
+        && Date.parse(stored.session.expiresAtIso) > nowMs
+        && hasCurrentOpeningContract(stored.snapshot),
       );
       if (isReusable) return { battle: pendingBattle, resumed: true };
       await this.repository.invalidateIssuedBattle(command.playerId, pendingBattle.battleId);

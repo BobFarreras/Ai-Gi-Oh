@@ -61,6 +61,8 @@ export function SurvivalArenaClient() {
     return <SurvivalLobby
       run={expedition.run}
       progress={expedition.progress}
+      battleIndex={expedition.battle.battle.battleIndex}
+      isResumed={expedition.battle.resumed}
       opponentName={expedition.battle.presentation.displayName}
       opponentAvatarUrl={expedition.battle.presentation.avatarUrl}
       error={expedition.error}

@@ -30,3 +30,5 @@ La UI desmonta el tablero al recibir el settlement y presenta `SurvivalDebrief`.
 - Los retries recuperan la liquidación persistida sin volver a acreditar.
 - El escalado continúa gobernado por el ruleset histórico de la run.
 - Tras alcanzar los caps de nivel y versión, cada rango de Ascensión mantiene crecimiento de ATK/DEF y LP mediante modificadores data-driven.
+- Survival comparte Fisher–Yates con el Board, reparte cuatro cartas y sortea iniciador desde la seed firmada.
+- Reentrar en una batalla `ISSUED` conserva su snapshot; el lobby la identifica como reanudación y no como combate nuevo.

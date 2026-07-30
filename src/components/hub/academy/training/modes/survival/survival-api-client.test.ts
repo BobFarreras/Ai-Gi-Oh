@@ -13,6 +13,7 @@ describe("issueSurvivalBattle", () => {
     };
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
       battle: { battleId: "battle-1" },
+      resumed: false,
       session: { id: "session-1", battleId: "battle-1", seed: "seed-1" },
       initialState,
       completionTicket: "ticket",
@@ -32,5 +33,6 @@ describe("issueSurvivalBattle", () => {
     }));
     expect(runtime.initialState.idFactory).toBeTypeOf("object");
     expect(runtime.presentation.avatarUrl).toBe("/helena.webp");
+    expect(runtime.resumed).toBe(false);
   });
 });

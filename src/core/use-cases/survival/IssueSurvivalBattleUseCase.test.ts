@@ -24,6 +24,10 @@ const configuration = {
 describe("IssueSurvivalBattleUseCase", () => {
   it("reanuda el combate pendiente sin crear snapshot nuevo", async () => {
     const snapshotFactory = vi.fn();
+    const currentSnapshot = {
+      playerA: { hand: [{}, {}, {}, {}] },
+      playerB: { hand: [{}, {}, {}, {}] },
+    } as GameState;
     const repository = {
       getActiveRun: vi.fn().mockResolvedValue(run),
       getIssuedBattle: vi.fn().mockResolvedValue(battle),
@@ -32,7 +36,7 @@ describe("IssueSurvivalBattleUseCase", () => {
           protocolVersion: COMBAT_PROOF_PROTOCOL_VERSION,
           expiresAtIso: "2026-08-02T00:00:00Z",
         },
-        snapshot: {},
+        snapshot: currentSnapshot,
       }),
     } as unknown as ISurvivalRepository;
     const result = await new IssueSurvivalBattleUseCase(repository, snapshotFactory)
@@ -44,11 +48,11 @@ describe("IssueSurvivalBattleUseCase", () => {
     expect(snapshotFactory).not.toHaveBeenCalled();
   });
 
-  it("invalida una batalla expirada y reemite el mismo índice con snapshot nuevo", async () => {
+  it("invalida una mano antigua de tres cartas y reemite el mismo índice", async () => {
     const refreshedRun = { ...run, currentBattleIndex: 0 };
     const snapshot = {
-      playerA: { id: "player-1" },
-      playerB: { id: "opponent-1" },
+      playerA: { id: "player-1", hand: [{}, {}, {}] },
+      playerB: { id: "opponent-1", hand: [{}, {}, {}] },
     } as GameState;
     const repository = {
       getActiveRun: vi.fn()
@@ -56,7 +60,7 @@ describe("IssueSurvivalBattleUseCase", () => {
         .mockResolvedValueOnce(refreshedRun),
       getIssuedBattle: vi.fn().mockResolvedValue(battle),
       getCombatSession: vi.fn().mockResolvedValue({
-        session: { protocolVersion: 1, expiresAtIso: "2026-07-30T08:00:00Z" },
+        session: { protocolVersion: 2, expiresAtIso: "2026-08-02T08:00:00Z" },
         snapshot,
       }),
       invalidateIssuedBattle: vi.fn().mockResolvedValue(undefined),

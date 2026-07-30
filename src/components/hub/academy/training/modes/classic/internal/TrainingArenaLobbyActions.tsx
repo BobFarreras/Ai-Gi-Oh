@@ -6,12 +6,17 @@ import { AcademyBackButton } from "@/components/hub/academy/AcademyBackButton";
 interface ITrainingArenaLobbyActionsProps {
   onStart: () => void;
   onBack: () => void;
+  startLabel?: string;
 }
 
 /**
  * Centraliza acciones del lobby para mantener consistencia visual entre breakpoints.
  */
-export function TrainingArenaLobbyActions({ onStart, onBack }: ITrainingArenaLobbyActionsProps) {
+export function TrainingArenaLobbyActions({
+  onStart,
+  onBack,
+  startLabel = "Empezar Combate",
+}: ITrainingArenaLobbyActionsProps) {
   return (
     <>
       <motion.div
@@ -29,7 +34,7 @@ export function TrainingArenaLobbyActions({ onStart, onBack }: ITrainingArenaLob
           transition={{ duration: 1.8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
           className="w-full max-w-md rounded-xl border border-emerald-300/70 bg-emerald-500/20 px-7 py-2.5 text-sm font-black uppercase tracking-[0.15em] text-emerald-100 hover:bg-emerald-400/30"
         >
-          Empezar Combate
+          {startLabel}
         </motion.button>
         <AcademyBackButton label="Volver a Academy" onClick={onBack} />
       </motion.div>
@@ -46,7 +51,7 @@ export function TrainingArenaLobbyActions({ onStart, onBack }: ITrainingArenaLob
             whileTap={{ scale: 0.98 }}
             className="w-full rounded-xl border border-emerald-300/70 bg-emerald-500/20 px-6 py-2.5 text-sm font-black uppercase tracking-[0.14em] text-emerald-100"
           >
-            Empezar Combate
+            {startLabel}
           </motion.button>
           <AcademyBackButton label="Volver a Academy" onClick={onBack} className="w-full" />
         </div>

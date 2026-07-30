@@ -397,3 +397,5 @@
 3. El récord se deriva del historial de runs y usa un índice específico, evitando duplicar estado mutable.
 4. Los retries recuperan el settlement persistido sin duplicar victorias ni moneda.
 5. El escalado infinito continúa mediante tier, perfil IA, nivel/versión, rango de Ascensión y bonus data-driven de LP y ATK/DEF.
+6. El contrato Survival unifica barajado, mano inicial de cuatro cartas y sorteo de iniciador con el runtime PvE.
+7. El lobby diferencia una reanudación —mismo snapshot firmado— de una batalla recién emitida.
