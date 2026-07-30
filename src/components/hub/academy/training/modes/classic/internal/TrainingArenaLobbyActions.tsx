@@ -1,4 +1,4 @@
-// src/components/hub/academy/training/modes/arena/internal/TrainingArenaLobbyActions.tsx - Renderiza CTA de inicio y retorno para desktop y móvil.
+// src/components/hub/academy/training/modes/classic/internal/TrainingArenaLobbyActions.tsx - Renderiza las acciones accesibles del lobby clásico.
 "use client";
 import { motion } from "framer-motion";
 import { AcademyBackButton } from "@/components/hub/academy/AcademyBackButton";

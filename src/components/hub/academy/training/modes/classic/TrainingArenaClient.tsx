@@ -1,56 +1,17 @@
-// src/components/hub/academy/training/modes/arena/TrainingArenaClient.tsx - Orquesta UI de arena training con selección de tier y cierre de partida remoto.
+// src/components/hub/academy/training/modes/classic/TrainingArenaClient.tsx - Orquesta la Arena clásica y su cierre remoto.
 "use client";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Board } from "@/components/game/board";
-import { ICard } from "@/core/entities/ICard";
-import { IDuelResultRewardSummary } from "@/components/game/board/ui/internal/duel-result/duel-result-reward-summary";
 import { IMatchOutcome } from "@/core/entities/match/IMatchOutcome";
 import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
-import { OpponentDifficulty } from "@/core/services/opponent/difficulty/types";
-import { ACADEMY_HOME_ROUTE } from "@/core/constants/routes/academy-routes";
-import { IMatchNarrationPack } from "@/components/game/board/narration/types";
+import { ACADEMY_HOME_ROUTE, ACADEMY_TRAINING_ARENA_CLASSIC_ROUTE } from "@/core/constants/routes/academy-routes";
 import { postTrainingMatchCompletion } from "./training-match-completion-client";
-import { TrainingArenaLobby } from "@/components/hub/academy/training/modes/arena/internal/TrainingArenaLobby";
-import { resolveTrainingResultAction } from "@/components/hub/academy/training/modes/arena/internal/resolve-training-result-action";
+import { TrainingArenaLobby } from "@/components/hub/academy/training/modes/classic/internal/TrainingArenaLobby";
+import { resolveTrainingResultAction } from "@/components/hub/academy/training/modes/classic/internal/resolve-training-result-action";
+import { ITrainingArenaClientProps, TrainingRewardSummary } from "@/components/hub/academy/training/modes/classic/internal/training-arena-client.types";
 import { resolveTrainingTierReward } from "@/core/services/training/resolve-training-tier-reward";
 import { track } from "@/services/analytics/client/analytics-buffer";
-
-interface ITrainingArenaClientProps {
-  deck: ICard[];
-  fusionDeck: ICard[];
-  opponentDeck: ICard[];
-  opponentFusionDeck: ICard[];
-  playerName: string;
-  opponentName: string;
-  opponentAvatarUrl: string;
-  opponentDifficulty: OpponentDifficulty;
-  /** Los 6 rivales del nivel en orden (para las "monedas" de progreso del lobby). */
-  ladder: Array<{ displayName: string; avatarUrl: string }>;
-  /** Victorias en el nivel actual: marca cuáles del ladder ya has ganado y cuál es el siguiente. */
-  ladderWins: number;
-  narrationPack: IMatchNarrationPack;
-  selectedTier: number;
-  completionTicket: string;
-  completionBattleId: string;
-  playerStartingLpBonus?: number;
-  playerMaxEnergyBonus?: number;
-  playerTurn1EnergyBonus?: number;
-  playerOpeningMulligan?: boolean;
-  opponentStartingLpBonus?: number;
-  opponentMaxEnergyBonus?: number;
-  opponentTurn1EnergyBonus?: number;
-  tiers: Array<{
-    tier: number;
-    code: string;
-    aiDifficulty: OpponentDifficulty;
-    rewardMultiplier: number;
-    requiredWinsInPreviousTier: number;
-    winsInPreviousTier: number;
-    isUnlocked: boolean;
-    missingWins: number;
-  }>;
-}
 
 function resolveOutcome(result: { winnerPlayerId: string | "DRAW"; playerId: string }): IMatchOutcome {
   if (result.winnerPlayerId === "DRAW") return "DRAW";
@@ -60,7 +21,7 @@ function resolveOutcome(result: { winnerPlayerId: string | "DRAW"; playerId: str
 export function TrainingArenaClient(props: ITrainingArenaClientProps) {
   const router = useRouter();
   const [isBattleStarted, setIsBattleStarted] = useState(false);
-  const [rewardSummary, setRewardSummary] = useState<IDuelResultRewardSummary | null>(null);
+  const [rewardSummary, setRewardSummary] = useState<TrainingRewardSummary>(null);
   const [resultAction, setResultAction] = useState(() => ({ label: "Volver a selección", href: ACADEMY_HOME_ROUTE }));
   const [isTierSwitching, startTierTransition] = useTransition();
   const hasPostedRef = useRef(false);
@@ -74,7 +35,7 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
   // Precarga los niveles desbloqueados para que el cambio de nivel (soft-nav) sea casi instantáneo.
   useEffect(() => {
     for (const tier of props.tiers) {
-      if (tier.isUnlocked) router.prefetch(`/hub/academy/training/arena?tier=${tier.tier}`);
+      if (tier.isUnlocked) router.prefetch(`${ACADEMY_TRAINING_ARENA_CLASSIC_ROUTE}?tier=${tier.tier}`);
     }
   }, [props.tiers, router]);
   const opponentStrategy = useMemo(
@@ -140,7 +101,7 @@ export function TrainingArenaClient(props: ITrainingArenaClientProps) {
             isUnlocked: tier.isUnlocked,
             isSelected: tier.tier === props.selectedTier,
           }))}
-          onSelectTier={(tier) => startTierTransition(() => router.push(`/hub/academy/training/arena?tier=${tier}`, { scroll: false }))}
+          onSelectTier={(tier) => startTierTransition(() => router.push(`${ACADEMY_TRAINING_ARENA_CLASSIC_ROUTE}?tier=${tier}`, { scroll: false }))}
           isTierSwitching={isTierSwitching}
           ladder={props.ladder}
           ladderWins={props.ladderWins}

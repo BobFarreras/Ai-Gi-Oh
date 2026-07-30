@@ -6,7 +6,7 @@ import { boardMockGameState } from "@/components/game/board/board-test-fixtures"
 import { GameState } from "@/core/use-cases/GameEngine";
 import { ITrapActivationPrompt } from "@/components/game/board/hooks/internal/board-state/useBoardUiState";
 
-const pathnameMock = vi.fn<() => string | null>(() => "/hub/academy/training/arena");
+const pathnameMock = vi.fn<() => string | null>(() => "/hub/academy/training/arena/classic");
 
 vi.mock("next/navigation", () => ({
   usePathname: () => pathnameMock(),
@@ -48,7 +48,7 @@ function createTrapPrompt(): ITrapActivationPrompt {
 
 describe("BoardMobilePanelsDialog", () => {
   it("expone activar/cancelar cuando hay prompt de trampa en móvil", () => {
-    pathnameMock.mockReturnValue("/hub/academy/training/arena");
+    pathnameMock.mockReturnValue("/hub/academy/training/arena/classic");
     const onActivatePendingTrap = vi.fn();
     const onSkipPendingTrap = vi.fn();
 
@@ -93,7 +93,7 @@ describe("BoardMobilePanelsDialog", () => {
   });
 
   it("abre el detalle al tocar una carta del combat log y lo cierra con la X", () => {
-    pathnameMock.mockReturnValue("/hub/academy/training/arena");
+    pathnameMock.mockReturnValue("/hub/academy/training/arena/classic");
     const gameStateWithLog: GameState = {
       ...boardMockGameState,
       combatLog: [

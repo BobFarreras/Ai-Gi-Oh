@@ -1,4 +1,4 @@
-// src/components/hub/academy/training/modes/arena/training-match-completion-client.ts - Cliente HTTP para registrar cierre de combate del modo entrenamiento.
+// src/components/hub/academy/training/modes/classic/training-match-completion-client.ts - Cliente HTTP para registrar el cierre de Arena clásica.
 import { IMatchOutcome } from "@/core/entities/match/IMatchOutcome";
 
 interface IPostTrainingMatchCompletionInput {

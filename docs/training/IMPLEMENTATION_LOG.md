@@ -369,3 +369,12 @@
 8. El seed incorpora un ruleset inicial, ocho campeones ligados al ladder, tres nodos por campeón y dos rivales legendarios ficticios.
 9. La reconstrucción histórica solo desbloquea el campeón `N` cuando `tier_stats` confirma las victorias mínimas en el tier `N`.
 10. Validación local: regeneración de 151 migraciones, `pnpm db:reset`, 36 tests pgTAP y advisors de seguridad/rendimiento.
+
+## Modos PvE - Fase 3: portal de combate y Arena clásica
+
+1. `/hub/academy/training/arena` pasa a ser un portal server-side para Arena clásica, Supervivencia y Olimpo.
+2. La Arena existente se traslada a `/hub/academy/training/arena/classic` sin modificar sus reglas ni persistencia.
+3. Prefetch, cambio de tier y CTA post-duelo apuntan a la ruta clásica para evitar regresar al portal durante una sesión.
+4. Supervivencia y Olimpo se presentan como modos en preparación, sin enlaces a runtimes todavía inexistentes.
+5. El portal usa imágenes estáticas, no monta tableros ni animaciones continuas y mantiene objetivos táctiles de al menos 44 px.
+6. Se añade cobertura co-localizada para navegación, disponibilidad y resolución de CTA.

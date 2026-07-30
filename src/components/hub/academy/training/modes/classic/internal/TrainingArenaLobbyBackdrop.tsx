@@ -1,4 +1,4 @@
-// src/components/hub/academy/training/modes/arena/internal/TrainingArenaLobbyBackdrop.tsx - Fondo animado reutilizable para la pantalla previa de arena.
+// src/components/hub/academy/training/modes/classic/internal/TrainingArenaLobbyBackdrop.tsx - Renderiza el fondo visual del lobby clásico.
 "use client";
 import { motion } from "framer-motion";
 

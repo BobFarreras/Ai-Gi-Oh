@@ -1,4 +1,4 @@
-// src/components/hub/academy/training/modes/arena/internal/training-arena-lobby.types.ts - Tipos compartidos del lobby de arena de entrenamiento.
+// src/components/hub/academy/training/modes/classic/internal/training-arena-lobby.types.ts - Contrata los datos del lobby de Arena clásica.
 export interface ITrainingArenaTierOption {
   tier: number;
   isUnlocked: boolean;

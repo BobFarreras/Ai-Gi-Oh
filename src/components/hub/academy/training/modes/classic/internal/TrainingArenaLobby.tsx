@@ -1,13 +1,13 @@
-// src/components/hub/academy/training/modes/arena/internal/TrainingArenaLobby.tsx - Pantalla previa de arena con presentación Jugador vs Oponente y CTA de inicio.
+// src/components/hub/academy/training/modes/classic/internal/TrainingArenaLobby.tsx - Presenta el lobby de Arena clásica antes del duelo.
 "use client";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { Swords } from "lucide-react";
 import { GameSelect } from "@/components/ui/GameSelect";
-import { AcademyBackButton } from "@/components/hub/academy/AcademyBackButton";
-import { TrainingArenaLobbyBackdrop } from "@/components/hub/academy/training/modes/arena/internal/TrainingArenaLobbyBackdrop";
-import { TrainingArenaLobbyActions } from "@/components/hub/academy/training/modes/arena/internal/TrainingArenaLobbyActions";
-import { ITrainingArenaLobbyProps } from "@/components/hub/academy/training/modes/arena/internal/training-arena-lobby.types";
+import { TrainingArenaLobbyBackdrop } from "@/components/hub/academy/training/modes/classic/internal/TrainingArenaLobbyBackdrop";
+import { TrainingArenaLobbyActions } from "@/components/hub/academy/training/modes/classic/internal/TrainingArenaLobbyActions";
+import { TrainingArenaCombatantCard } from "@/components/hub/academy/training/modes/classic/internal/TrainingArenaCombatantCard";
+import { TrainingArenaLadder } from "@/components/hub/academy/training/modes/classic/internal/TrainingArenaLadder";
+import { ITrainingArenaLobbyProps } from "@/components/hub/academy/training/modes/classic/internal/training-arena-lobby.types";
 
 /**
  * Presenta el duelo antes de cargar el tablero para reforzar identidad de tier y rival.
@@ -122,58 +122,10 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
             </div>
           </div>
 
-          {props.ladder.length > 0 ? (
-            <div className="relative mt-2.5 flex flex-col items-center gap-1 border-t border-cyan-300/15 pt-2">
-              <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-cyan-300/70 md:text-[10px]">
-                Combate {Math.min(props.ladderWins + 1, props.ladder.length)} de {props.ladder.length}
-              </span>
-              <div className="flex items-center justify-center gap-1.5 md:gap-2.5">
-                {props.ladder.map((entry, index) => {
-                  const isBeaten = index < props.ladderWins;
-                  const isNext = index === props.ladderWins;
-                  return (
-                    <div
-                      key={`${entry.displayName}-${index}`}
-                      title={entry.displayName}
-                      className={`relative h-7 w-7 shrink-0 overflow-hidden rounded-full border-2 transition md:h-11 md:w-11 ${
-                        isBeaten
-                          ? "border-emerald-400/80 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
-                          : isNext
-                            ? "border-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.65)] ring-2 ring-cyan-300/50"
-                            : "border-slate-600/50 opacity-45 grayscale"
-                      }`}
-                    >
-                      <Image src={entry.avatarUrl} alt={entry.displayName} fill sizes="44px" className="object-cover object-top" />
-                      {isBeaten ? (
-                        <span className="absolute inset-0 flex items-center justify-center bg-emerald-500/35">
-                          <svg className="h-4 w-4 text-white md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path d="M8 13.2 4.6 9.8l-1.2 1.2L8 15.6l9-9-1.2-1.2z" />
-                          </svg>
-                        </span>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
+          <TrainingArenaLadder entries={props.ladder} wins={props.ladderWins} />
         </motion.header>
         <div className="grid min-h-0 flex-1 grid-cols-1 items-stretch gap-2 md:w-full md:flex-none md:grid-cols-[1fr_auto_1fr] md:gap-4">
-          <motion.article
-            initial={{ x: -34, y: 20, opacity: 0 }}
-            animate={{ x: 0, y: 0, opacity: 1 }}
-            transition={{ duration: 0.46, ease: "easeOut", delay: 0.08 }}
-            className="relative order-1 flex min-h-0 flex-col rounded-2xl border border-cyan-300/45 bg-[#05192d]/90 p-2.5 shadow-[0_0_24px_rgba(34,211,238,0.28)] md:order-none md:block md:p-3"
-          >
-            <div className="pointer-events-none absolute left-2 top-2 h-4 w-4 border-l border-t border-cyan-300/55" />
-            <div className="pointer-events-none absolute bottom-2 right-2 h-4 w-4 border-b border-r border-cyan-300/55" />
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-300">Jugador</p>
-            <div className="mt-2 flex min-h-0 flex-1 rounded-xl border border-cyan-200/30 bg-[linear-gradient(160deg,rgba(7,35,57,0.92),rgba(4,16,30,0.88))] p-1.5 md:block">
-              <div className="h-full w-full overflow-hidden rounded-lg border border-cyan-100/25 bg-[#020a13] md:aspect-[4/3] md:h-auto">
-                <Image src={props.playerAvatarUrl} alt="Avatar del jugador" width={540} height={720} className="h-full w-full object-cover object-center" priority />
-              </div>
-            </div>
-          </motion.article>
+          <TrainingArenaCombatantCard alignment="player" name="Jugador" imageUrl={props.playerAvatarUrl} />
           <div className="mx-auto order-2 flex flex-col items-center justify-center gap-1 self-center px-0.5 text-center md:order-none md:px-2">
             <motion.p
               className="text-3xl font-black uppercase tracking-[0.12em] text-cyan-100 md:text-5xl"
@@ -183,42 +135,10 @@ export function TrainingArenaLobby(props: ITrainingArenaLobbyProps) {
               VS
             </motion.p>
           </div>
-          <motion.article
-            initial={{ x: 34, y: 20, opacity: 0 }}
-            animate={{ x: 0, y: 0, opacity: 1 }}
-            transition={{ duration: 0.46, ease: "easeOut", delay: 0.14 }}
-            className="relative order-3 flex min-h-0 flex-col rounded-2xl border border-rose-300/45 bg-[#230b17]/90 p-2.5 shadow-[0_0_24px_rgba(251,113,133,0.25)] md:order-none md:block md:p-3"
-          >
-            <div className="pointer-events-none absolute left-2 top-2 h-4 w-4 border-l border-t border-rose-300/55" />
-            <div className="pointer-events-none absolute bottom-2 right-2 h-4 w-4 border-b border-r border-rose-300/55" />
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-rose-200">{props.opponentName}</p>
-            <div className="mt-2 flex min-h-0 flex-1 rounded-xl border border-rose-200/35 bg-[linear-gradient(160deg,rgba(62,18,40,0.9),rgba(30,8,20,0.9))] p-1.5 md:block">
-              <div className="h-full w-full overflow-hidden rounded-lg border border-rose-100/25 bg-[#13040d] md:aspect-[4/3] md:h-auto">
-                <Image src={props.opponentAvatarUrl} alt={`Avatar de ${props.opponentName}`} width={540} height={720} className="h-full w-full object-cover object-center" priority />
-              </div>
-            </div>
-          </motion.article>
+          <TrainingArenaCombatantCard alignment="opponent" name={props.opponentName} imageUrl={props.opponentAvatarUrl} />
         </div>
         <TrainingArenaLobbyActions onStart={props.onStart} onBack={props.onBack} />
       </div>
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.35, ease: "easeOut", delay: 0.24 }}
-        className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[calc(env(safe-area-inset-bottom)+10px)] pt-2 md:hidden"
-      >
-        <div className="mx-auto flex w-full max-w-md flex-col items-center gap-2">
-          <motion.button
-            type="button"
-            onClick={props.onStart}
-            whileTap={{ scale: 0.98 }}
-            className="w-full rounded-xl border border-emerald-300/70 bg-emerald-500/20 px-6 py-2.5 text-sm font-black uppercase tracking-[0.14em] text-emerald-100"
-          >
-            Empezar Combate
-          </motion.button>
-          <AcademyBackButton label="Volver a Academy" onClick={props.onBack} className="w-full" />
-        </div>
-      </motion.div>
     </section>
   );
 }
