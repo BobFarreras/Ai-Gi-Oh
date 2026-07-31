@@ -60,6 +60,8 @@ export async function POST(request: NextRequest) {
       ...result,
       session: stored.session,
       initialState: stored.snapshot,
+      // Avance ya registrado: el cliente lo reproduce para retomar el combate donde estaba.
+      journalEntries: stored.journalEntries,
       completionTicket,
       presentation,
       // El cliente no elige la dificultad: debe animar con el mismo perfil que el servidor reproducirá.

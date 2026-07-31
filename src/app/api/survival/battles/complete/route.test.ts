@@ -46,20 +46,4 @@ describe("POST /api/survival/battles/complete", () => {
     await expect(response.json()).resolves.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 
-  it("corta con 429 al agotar el cupo del replay, que es la ruta más cara", async () => {
-    const body = {
-      completionTicket: "ticket",
-      proof: {
-        sessionId: "session-firmada", battleId: "battle-1", mode: "SURVIVAL",
-        snapshotHash: "hash", protocolVersion: 1, entries: [],
-      },
-    };
-    for (let attempt = 0; attempt < 40; attempt += 1) {
-      await POST(request(body));
-    }
-
-    const response = await POST(request(body));
-
-    expect(response.status).toBe(429);
-  });
 });

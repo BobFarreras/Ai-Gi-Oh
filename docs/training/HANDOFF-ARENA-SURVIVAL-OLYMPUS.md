@@ -263,8 +263,18 @@ la expedición (`forfeit_survival_battle`). La incompatibilidad de snapshot sigu
 porque esa es culpa nuestra y no del jugador. La política vive en
 `src/core/services/survival/resolve-issued-battle-disposition.ts`.
 
-Pendiente: reanudar **antes** de que caduque sigue devolviendo el mismo snapshot. Cerrarlo del todo exige
-checkpoint por turno (ver §11).
+Segunda mitad (checkpoint por turno): el cliente reporta su diario en cada frontera de turno a la misma
+ruta de cierre, y el servidor decide si eso liquida el combate o solo registra avance. Como el turno del
+rival lo deriva él (§4 bis), **el golpe letal aparece al reproducir aunque el cliente no lo reporte**: dejar
+de enviar el final no evita la derrota. Reanudar reconstruye el estado desde el avance registrado con
+`replayJournalToState`, así que no se reinicia el combate ni se reparten manos nuevas.
+
+El historial es inmutable: `checkpoint_combat_session` solo acepta diarios más largos y
+`assertJournalExtendsCheckpoint` rechaza los que contradicen lo ya registrado.
+
+Residuo conocido: un cliente modificado que nunca reporte puede reintentar dentro de la ventana de sesión;
+al caducar, cae en el cierre por abandono. Eliminarlo del todo exigiría que el servidor dirigiera el turno
+en vez de reproducirlo.
 
 ### Riesgo de premiar dos veces
 

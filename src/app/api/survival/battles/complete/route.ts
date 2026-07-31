@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
   try {
     const context = await createSurvivalRouteContext(request);
     const rateLimited = await enforceSurvivalRateLimit(request, context.playerId, {
-      operation: "complete", maxPerPlayer: 40, maxPerIp: 80, windowMs: 5 * 60 * 1000,
+      // Recibe el avance de cada turno, no solo el cierre: el cupo cubre varios combates largos seguidos.
+      operation: "complete", maxPerPlayer: 400, maxPerIp: 800, windowMs: 5 * 60 * 1000,
     }, context.response.headers);
     if (rateLimited) return rateLimited;
     const body = await readJsonObjectBody(request, "Payload inválido para completar combate.");

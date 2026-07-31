@@ -4,7 +4,8 @@ import { COMBAT_SETTLEMENT_GRACE_MS, ICombatProof, ICombatSession, IMatchActionP
 import { resolveWinnerPlayerId } from "@/core/services/turn/resolve-winner-player-id";
 import { DEFAULT_COMBAT_ACTION_LIMIT } from "@/core/services/match/combat-action-journal";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
-import { deriveOpponentTurn, IOpponentDerivation } from "./internal/derive-opponent-turn";
+import { IOpponentDerivation } from "./internal/derive-opponent-turn";
+import { replayJournalToState } from "./replay-journal-to-state";
 
 const DEFAULT_MAX_PROOF_BYTES = 256 * 1024;
 
@@ -16,12 +17,15 @@ interface IReplayCombatProofInput {
   applyAction: (state: GameState, actorPlayerId: string, action: IMatchActionPayload) => GameState;
   /** Presente en los modos donde el rival es IA: el servidor lo juega en vez de creerse al cliente. */
   deriveOpponent?: IOpponentDerivation;
+  /** Los checkpoints intermedios reproducen un combate aún abierto; la liquidación exige desenlace. */
+  allowUnfinished?: boolean;
   maxActions?: number;
   maxProofBytes?: number;
 }
 
 export interface ICombatReplayResult {
-  winnerPlayerId: string | "DRAW";
+  /** `null` solo cuando se permitió reproducir un combate todavía sin desenlace. */
+  winnerPlayerId: string | "DRAW" | null;
   playerEndingHealthPoints: number;
   opponentEndingHealthPoints: number;
   turn: number;
@@ -71,45 +75,6 @@ function assertStateParticipants(state: GameState, session: ICombatSession): voi
 }
 
 /**
- * Intercala las acciones del jugador con los turnos que el servidor juega por el rival, de modo que el
- * journal solo aporta lo que el servidor no puede derivar.
- */
-function replayWithDerivedOpponent(
-  input: IReplayCombatProofInput,
-  initialState: GameState,
-  derivation: IOpponentDerivation,
-): GameState {
-  const { entries } = input.proof;
-  let { state, cursor, stepsTaken } = deriveOpponentTurn({
-    state: initialState,
-    opponentId: input.session.opponentId,
-    entries,
-    cursor: 0,
-    derivation,
-    applyAction: input.applyAction,
-    stepsTaken: 0,
-  });
-  while (cursor < entries.length) {
-    const entry = entries[cursor];
-    cursor += 1;
-    if (entry.action.type === "RESOLVE_REACTIVE_TRAP") {
-      throw new CombatProofError("El journal declara una decisión de trampa fuera del turno del rival.");
-    }
-    state = input.applyAction(state, input.session.playerId, entry.action);
-    ({ state, cursor, stepsTaken } = deriveOpponentTurn({
-      state,
-      opponentId: input.session.opponentId,
-      entries,
-      cursor,
-      derivation,
-      applyAction: input.applyAction,
-      stepsTaken,
-    }));
-  }
-  return state;
-}
-
-/**
  * Valida y reproduce la prueba completa; ganador y LP proceden exclusivamente del estado final.
  */
 export function replayCombatProof(input: IReplayCombatProofInput): ICombatReplayResult {
@@ -133,13 +98,22 @@ export function replayCombatProof(input: IReplayCombatProofInput): ICombatReplay
   const initialState = input.initialStateFactory();
   assertStateParticipants(initialState, input.session);
   const finalState = input.deriveOpponent
-    ? replayWithDerivedOpponent(input, initialState, input.deriveOpponent)
+    ? replayJournalToState({
+      snapshot: initialState,
+      entries: input.proof.entries,
+      playerId: input.session.playerId,
+      opponentId: input.session.opponentId,
+      derivation: input.deriveOpponent,
+      applyAction: input.applyAction,
+    })
     : input.proof.entries.reduce(
       (state, entry) => input.applyAction(state, entry.actorPlayerId, entry.action),
       initialState,
     );
-  const winnerPlayerId = resolveWinnerPlayerId(finalState);
-  if (!winnerPlayerId) throw new CombatProofError("La prueba no concluye el duelo.");
+  const winnerPlayerId = resolveWinnerPlayerId(finalState) ?? null;
+  if (!winnerPlayerId && !input.allowUnfinished) {
+    throw new CombatProofError("La prueba no concluye el duelo.");
+  }
   const player = finalState.playerA.id === input.session.playerId ? finalState.playerA : finalState.playerB;
   const opponent = finalState.playerA.id === input.session.opponentId ? finalState.playerA : finalState.playerB;
   // Impecable es "no recibir daño en ESTA batalla", no "acabar con los LP al máximo": en Supervivencia el

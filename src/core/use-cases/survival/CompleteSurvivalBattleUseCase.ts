@@ -1,4 +1,4 @@
-// src/core/use-cases/survival/CompleteSurvivalBattleUseCase.ts - Liquida replay, LP y Fragmentos de forma autoritativa.
+// src/core/use-cases/survival/CompleteSurvivalBattleUseCase.ts - Reproduce el diario reportado: guarda avance o liquida si ya hay desenlace.
 import { ICombatProof } from "@/core/entities/match";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { ISurvivalRepository } from "@/core/repositories/ISurvivalRepository";
@@ -7,11 +7,16 @@ import { resolveSurvivalReward } from "@/core/services/survival/resolve-survival
 import { replayCombatProof } from "@/core/use-cases/match/replay-combat-proof";
 import { applyMatchAction } from "@/core/services/multiplayer/apply-match-action";
 import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
+import { assertJournalExtendsCheckpoint } from "./internal/assert-journal-extends-checkpoint";
 
 export class CompleteSurvivalBattleUseCase {
   constructor(private readonly repository: ISurvivalRepository) {}
 
-  /** Reproduce la prueba y deriva resultado, LP y recompensa sin aceptar esos valores del body. */
+  /**
+   * El cliente reporta su diario en cada frontera de turno y al terminar; el servidor decide cuál de las
+   * dos cosas es. Como el turno del rival lo deriva él, un golpe letal aparece al reproducir aunque el
+   * cliente no lo haya reportado: abandonar deja de permitir repetir el combate.
+   */
   async execute(playerId: string, proof: ICombatProof, nowIso = new Date().toISOString()) {
     const [stored, battle] = await Promise.all([
       this.repository.getCombatSession(playerId, proof.battleId),
@@ -27,6 +32,7 @@ export class CompleteSurvivalBattleUseCase {
         throw new ValidationError("La liquidación anterior está incompleta.");
       }
       return {
+        settled: true as const,
         run, progress, battle, outcome: battle.outcome,
         reward: battle.reward, duplicate: true,
       };
@@ -40,6 +46,7 @@ export class CompleteSurvivalBattleUseCase {
       configuration.stages,
       battle.battleIndex,
     );
+    assertJournalExtendsCheckpoint(stored.journalEntries, proof.entries);
     const replay = replayCombatProof({
       session: stored.session,
       proof,
@@ -48,7 +55,13 @@ export class CompleteSurvivalBattleUseCase {
       applyAction: applyMatchAction,
       // El rival lo juega el servidor con el perfil que fijó el ruleset, no el navegador.
       deriveOpponent: { strategy: new HeuristicOpponentStrategy({ difficulty: encounter.aiProfile }) },
+      allowUnfinished: true,
     });
+    if (!replay.winnerPlayerId) {
+      // Avance intermedio: se guarda para que reanudar continúe donde estaba en vez de reiniciar.
+      const journalLength = await this.repository.saveJournalCheckpoint(playerId, battle.battleId, proof.entries);
+      return { settled: false as const, journalLength };
+    }
     const outcome = replay.winnerPlayerId === "DRAW"
       ? "DRAW"
       : replay.winnerPlayerId === playerId ? "WIN" : "LOSS";
@@ -66,6 +79,6 @@ export class CompleteSurvivalBattleUseCase {
       this.repository.getProgress(playerId),
     ]);
     if (!completedBattle) throw new ValidationError("La liquidación no se pudo recuperar.");
-    return { run, progress, battle: completedBattle, outcome, reward, duplicate: false };
+    return { settled: true as const, run, progress, battle: completedBattle, outcome, reward, duplicate: false };
   }
 }

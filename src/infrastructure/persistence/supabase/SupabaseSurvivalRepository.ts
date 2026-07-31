@@ -4,7 +4,7 @@ import { ValidationError } from "@/core/errors/ValidationError";
 import { ISurvivalRepository, ICompleteSurvivalBattleInput, IIssueSurvivalBattleInput } from "@/core/repositories/ISurvivalRepository";
 import { createSeededGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 import { GameState } from "@/core/use-cases/GameEngine";
-import { ICombatSession } from "@/core/entities/match";
+import { ICombatJournalEntry, ICombatSession } from "@/core/entities/match";
 import {
   mapSurvivalBattle,
   mapSurvivalRuleset,
@@ -67,7 +67,7 @@ export class SupabaseSurvivalRepository implements ISurvivalRepository {
   async getCombatSession(
     playerId: string,
     battleId: string,
-  ): Promise<{ session: ICombatSession; snapshot: GameState } | null> {
+  ): Promise<{ session: ICombatSession; snapshot: GameState; journalEntries: ICombatJournalEntry[] } | null> {
     const result = await this.readClient.from("combat_sessions").select("*").eq("player_id", playerId).eq("battle_id", battleId).maybeSingle();
     if (result.error) throw new ValidationError("No se pudo cargar la sesión de combate.");
     if (!result.data) return null;
@@ -83,7 +83,16 @@ export class SupabaseSurvivalRepository implements ISurvivalRepository {
         issuedAtIso: String(row.issued_at), expiresAtIso: String(row.expires_at),
       },
       snapshot,
+      journalEntries: Array.isArray(row.journal_json) ? row.journal_json as ICombatJournalEntry[] : [],
     };
+  }
+
+  async saveJournalCheckpoint(playerId: string, battleId: string, entries: ICombatJournalEntry[]) {
+    const { data, error } = await this.writeClient.rpc("checkpoint_combat_session", {
+      p_player_id: playerId, p_battle_id: battleId, p_journal: entries,
+    });
+    if (error) throw new ValidationError("No se pudo guardar el avance del combate.");
+    return Number(data ?? 0);
   }
 
   async getProgress(playerId: string) {

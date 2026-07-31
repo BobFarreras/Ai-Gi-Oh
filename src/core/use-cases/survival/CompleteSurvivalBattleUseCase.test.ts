@@ -29,6 +29,7 @@ function createRepository(): ISurvivalRepository {
         issuedAtIso: "2026-07-30T10:00:00.000Z", expiresAtIso: "2026-07-30T11:00:00.000Z",
       },
       snapshot,
+      journalEntries: [],
     }),
     getBattleById: vi.fn()
       .mockResolvedValueOnce(battle)
@@ -49,6 +50,7 @@ function createRepository(): ISurvivalRepository {
       }],
     }),
     completeBattle: vi.fn().mockResolvedValue(run),
+    saveJournalCheckpoint: vi.fn().mockResolvedValue(2),
   } as unknown as ISurvivalRepository;
 }
 
@@ -60,7 +62,7 @@ describe("CompleteSurvivalBattleUseCase", () => {
       snapshotHash: "hash", protocolVersion: COMBAT_PROOF_PROTOCOL_VERSION, entries: [],
     };
     const result = await new CompleteSurvivalBattleUseCase(repository).execute("player-1", proof, nowIso);
-    expect(result).toMatchObject({ outcome: "WIN", duplicate: false });
+    expect(result).toMatchObject({ settled: true, outcome: "WIN", duplicate: false });
     expect(result.progress).toEqual({ bestWins: 5, ascensionFragments: 131 });
     expect(repository.completeBattle).toHaveBeenCalledWith(expect.objectContaining({
       outcome: "WIN", endingLp: 8000, fragmentAmount: 31,
@@ -89,7 +91,70 @@ describe("CompleteSurvivalBattleUseCase", () => {
     const result = await new CompleteSurvivalBattleUseCase(repository)
       .execute("player-1", proof, nowIso);
 
-    expect(result).toMatchObject({ duplicate: true, outcome: "WIN" });
+    expect(result).toMatchObject({ settled: true, duplicate: true, outcome: "WIN" });
     expect(repository.completeBattle).not.toHaveBeenCalled();
+  });
+
+  it("guarda avance en vez de liquidar cuando el duelo sigue abierto", async () => {
+    const repository = createRepository();
+    // Snapshot sin desenlace: el rival conserva sus LP.
+    vi.mocked(repository.getCombatSession).mockImplementation(async () => {
+      const snapshot = createInitialGameState({
+        playerA: { id: "player-1", name: "P", deck: [] },
+        playerB: { id: "opponent-1", name: "O", deck: [] },
+        starterPlayerId: "player-1",
+      });
+      return {
+        session: {
+          id: "session-1", battleId: "battle-1", mode: "SURVIVAL",
+          playerId: "player-1", opponentId: "opponent-1", seed: "seed",
+          snapshotHash: "hash", protocolVersion: COMBAT_PROOF_PROTOCOL_VERSION,
+          issuedAtIso: "2026-07-30T10:00:00.000Z", expiresAtIso: "2026-07-30T11:00:00.000Z",
+        },
+        snapshot,
+        journalEntries: [],
+      };
+    });
+    const proof: ICombatProof = {
+      sessionId: "session-1", battleId: "battle-1", mode: "SURVIVAL",
+      snapshotHash: "hash", protocolVersion: COMBAT_PROOF_PROTOCOL_VERSION, entries: [],
+    };
+
+    const result = await new CompleteSurvivalBattleUseCase(repository).execute("player-1", proof, nowIso);
+
+    expect(result).toEqual({ settled: false, journalLength: 2 });
+    expect(repository.completeBattle).not.toHaveBeenCalled();
+    expect(repository.saveJournalCheckpoint).toHaveBeenCalledWith("player-1", "battle-1", []);
+  });
+
+  it("rechaza un diario que contradice el avance ya registrado", async () => {
+    const repository = createRepository();
+    vi.mocked(repository.getCombatSession).mockResolvedValue({
+      session: {
+        id: "session-1", battleId: "battle-1", mode: "SURVIVAL",
+        playerId: "player-1", opponentId: "opponent-1", seed: "seed",
+        snapshotHash: "hash", protocolVersion: COMBAT_PROOF_PROTOCOL_VERSION,
+        issuedAtIso: "2026-07-30T10:00:00.000Z", expiresAtIso: "2026-07-30T11:00:00.000Z",
+      },
+      snapshot: createInitialGameState({
+        playerA: { id: "player-1", name: "P", deck: [] },
+        playerB: { id: "opponent-1", name: "O", deck: [] },
+        starterPlayerId: "player-1",
+      }),
+      journalEntries: [
+        { sequence: 1, actorPlayerId: "player-1", action: { type: "NEXT_PHASE", payload: {} } },
+      ],
+    });
+    const proof: ICombatProof = {
+      sessionId: "session-1", battleId: "battle-1", mode: "SURVIVAL",
+      snapshotHash: "hash", protocolVersion: COMBAT_PROOF_PROTOCOL_VERSION,
+      // Reescribe la primera acción ya reportada.
+      entries: [
+        { sequence: 1, actorPlayerId: "player-1", action: { type: "CHANGE_ENTITY_MODE", payload: { instanceId: "x", newMode: "ATTACK" } } },
+      ],
+    };
+
+    await expect(new CompleteSurvivalBattleUseCase(repository).execute("player-1", proof, nowIso))
+      .rejects.toThrow("contradice el avance");
   });
 });

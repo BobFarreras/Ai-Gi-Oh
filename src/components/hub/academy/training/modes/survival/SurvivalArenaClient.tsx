@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Board } from "@/components/game/board";
 import { LocalActionEmitterProvider } from "@/components/game/board/multiplayer/local-action-emitter";
 import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
+import { applyMatchAction } from "@/core/services/multiplayer/apply-match-action";
+import { replayJournalToState } from "@/core/use-cases/match/replay-journal-to-state";
 import { ACADEMY_TRAINING_ARENA_ROUTE } from "@/core/constants/routes/academy-routes";
 import { SurvivalLobby } from "./internal/SurvivalLobby";
 import { SurvivalDebrief } from "./internal/SurvivalDebrief";
@@ -28,6 +30,24 @@ export function SurvivalArenaClient() {
     hasPreparedRef.current = true;
     void enterBattle();
   }, [enterBattle]);
+  // Un combate retomado arranca donde se quedó: se reproduce el avance registrado por el servidor.
+  const resumedInitialState = useMemo(() => {
+    const runtime = expedition.battle;
+    if (!runtime || !opponentStrategy) return null;
+    if (runtime.journalEntries.length === 0) return runtime.initialState;
+    try {
+      return replayJournalToState({
+        snapshot: runtime.initialState,
+        entries: runtime.journalEntries,
+        playerId: runtime.session.playerId,
+        opponentId: runtime.session.opponentId,
+        derivation: { strategy: opponentStrategy },
+        applyAction: applyMatchAction,
+      });
+    } catch {
+      return null;
+    }
+  }, [expedition.battle, opponentStrategy]);
   const narrationPack = useMemo(() => {
     const presentation = expedition.battle?.presentation;
     return presentation
@@ -58,6 +78,13 @@ export function SurvivalArenaClient() {
       onExit={() => window.location.replace(ACADEMY_TRAINING_ARENA_ROUTE)}
     />;
   }
+  if (!resumedInitialState) {
+    return (
+      <main className="flex min-h-dvh items-center justify-center bg-[#020b11] px-6 text-center text-sm font-black uppercase tracking-[0.18em] text-rose-200">
+        No se pudo reconstruir el avance de este combate. Vuelve a Arena e inténtalo de nuevo.
+      </main>
+    );
+  }
   if (!isBattleStarted && expedition.run && expedition.progress) {
     return <SurvivalLobby
       run={expedition.run}
@@ -81,7 +108,7 @@ export function SurvivalArenaClient() {
       <Board
         key={expedition.battle.battle.battleId}
         mode="SURVIVAL"
-        authoritativeInitialState={expedition.battle.initialState}
+        authoritativeInitialState={resumedInitialState}
         opponentStrategyOverride={opponentStrategy}
         playerAvatarUrl="/assets/story/player/bob.webp"
         opponentAvatarUrl={expedition.battle.presentation.avatarUrl}

@@ -2,7 +2,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(55);
+select plan(60);
 
 select has_table('public', 'combat_sessions', 'Existe el agregado de sesiones autoritativas');
 select has_table('public', 'player_survival_runs', 'Existe el agregado de runs');
@@ -339,6 +339,47 @@ select results_eq(
   )$$,
   array['COMPLETED_DEFEAT'::text],
   'Repetir el abandono es idempotente y no vuelve a castigar'
+);
+
+-- Checkpoint del diario: solo crece, nunca reescribe lo ya jugado.
+select lives_ok(
+  $$select public.start_survival_run('00000000-0000-0000-0000-000000000101', 8000, 1)$$,
+  'El abandono anterior cerró la run, así que se abre otra para el checkpoint'
+);
+select results_eq(
+  $$select battle_index from public.issue_survival_battle(
+    '00000000-0000-0000-0000-000000000101',
+    (select id from public.player_survival_runs
+      where player_id = '00000000-0000-0000-0000-000000000101' and status = 'ACTIVE'),
+    '00000000-0000-0000-0000-000000000206', 'training-tier-4', 4, 0, 'seed-checkpoint',
+    '66666666666666666666666666666666', '{}'::jsonb, 3, now() + interval '15 minutes'
+  )$$,
+  array[1],
+  'Se emite un combate para probar el avance registrado'
+);
+select results_eq(
+  $$select public.checkpoint_combat_session(
+    '00000000-0000-0000-0000-000000000101',
+    '00000000-0000-0000-0000-000000000206',
+    '[{"sequence":1},{"sequence":2}]'::jsonb
+  )$$,
+  array[2],
+  'El avance se registra con su longitud'
+);
+select results_eq(
+  $$select public.checkpoint_combat_session(
+    '00000000-0000-0000-0000-000000000101',
+    '00000000-0000-0000-0000-000000000206',
+    '[{"sequence":1}]'::jsonb
+  )$$,
+  array[2],
+  'Un diario más corto no puede acortar el historial'
+);
+select results_eq(
+  $$select jsonb_array_length(journal_json) from public.combat_sessions
+    where battle_id = '00000000-0000-0000-0000-000000000206'$$,
+  array[2],
+  'El historial persistido conserva el avance mayor'
 );
 
 select * from finish();

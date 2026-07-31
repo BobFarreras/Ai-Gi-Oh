@@ -36,6 +36,12 @@ export class CombatActionJournal {
     return this.entries.map((entry) => structuredClone(entry));
   }
 
+  /** Retoma un combate a medias desde el avance que el servidor ya tenía registrado. */
+  restore(entries: ICombatJournalEntry[]): void {
+    this.entries = entries.map((entry) => structuredClone(entry));
+    this.overflowed = false;
+  }
+
   /** Reinicia numeración, contenido y desbordamiento al comenzar otra batalla. */
   reset(): void {
     this.entries = [];

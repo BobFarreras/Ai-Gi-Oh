@@ -421,3 +421,14 @@
    Supervivencia el jugador arrastra LP y era inalcanzable desde el segundo combate.
 3. El intervalo de curación viaja del ruleset al cliente; el lobby deja de asumir un 5 fijo.
 4. El empate queda documentado y explicado en el informe: cierra la expedición igual que una derrota.
+
+## Modos PvE - Fase 9: checkpoint por turno
+
+1. `combat_sessions.journal_json` guarda el diario en curso; `checkpoint_combat_session` solo admite
+   diarios más largos, de modo que el historial nunca se reescribe.
+2. La ruta de cierre pasa a ser "el cliente reporta, el servidor decide": guarda avance o liquida si el
+   replay ya tiene desenlace.
+3. Reanudar reconstruye el estado con `replayJournalToState`, compartido por cliente y servidor, en vez de
+   reiniciar el combate con las mismas manos.
+4. Como el rival lo deriva el servidor, ocultar el envío final no evita la derrota: el golpe letal aparece
+   al reproducir el prefijo reportado.

@@ -1,5 +1,5 @@
 // src/components/hub/academy/training/modes/survival/survival-api-client.ts - Cliente HTTP tipado del flujo autoritativo de Supervivencia.
-import { ICombatProof, ICombatSession } from "@/core/entities/match";
+import { ICombatJournalEntry, ICombatProof, ICombatSession } from "@/core/entities/match";
 import {
   ISurvivalBattle,
   ISurvivalProgress,
@@ -21,7 +21,12 @@ export interface ISurvivalBattleRuntime {
   initialState: GameState;
   completionTicket: string;
   presentation: IArenaOpponentPresentation;
+  /** Acciones ya registradas por el servidor cuando se retoma un combate a medias. */
+  journalEntries: ICombatJournalEntry[];
 }
+
+/** El servidor decide si el diario reportado cierra el combate o solo registra avance. */
+export type ISurvivalSubmission = ({ settled: true } & ISurvivalSettlement) | { settled: false; journalLength: number };
 
 export interface ISurvivalSettlement {
   run: ISurvivalRun;
@@ -41,8 +46,12 @@ async function postJson<T>(path: string, body: Record<string, unknown>): Promise
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { error?: string } | null;
-    throw new Error(payload?.error ?? "No se pudo completar la operación de Supervivencia.");
+    // La API responde { code, message, traceId }; leer `error` dejaba siempre el mensaje genérico.
+    const payload = await response.json().catch(() => null) as { message?: string; error?: string } | null;
+    if (response.status === 429) {
+      throw new Error("Demasiadas peticiones seguidas. Espera unos segundos y vuelve a intentarlo.");
+    }
+    throw new Error(payload?.message ?? payload?.error ?? "No se pudo completar la operación de Supervivencia.");
   }
   return response.json() as Promise<T>;
 }
@@ -69,10 +78,10 @@ export async function issueSurvivalBattle(runId: string): Promise<ISurvivalBattl
   return runtime;
 }
 
-/** Envía exclusivamente el journal y el ticket; el servidor deriva resultado, LP y recompensa. */
+/** Envía el diario y el ticket; el servidor guarda avance o liquida según haya desenlace. */
 export function completeSurvivalBattle(
   completionTicket: string,
   proof: ICombatProof,
-): Promise<ISurvivalSettlement> {
+): Promise<ISurvivalSubmission> {
   return postJson("/api/survival/battles/complete", { completionTicket, proof });
 }

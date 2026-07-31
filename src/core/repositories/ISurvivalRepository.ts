@@ -8,7 +8,7 @@ import {
   ISurvivalProgress,
   SurvivalOutcome,
 } from "@/core/entities/survival/ISurvival";
-import { ICombatSession } from "@/core/entities/match";
+import { ICombatJournalEntry, ICombatSession } from "@/core/entities/match";
 import { GameState } from "@/core/use-cases/GameEngine";
 
 export interface IIssueSurvivalBattleInput {
@@ -40,11 +40,16 @@ export interface ISurvivalRepository {
   getRunById(playerId: string, runId: string): Promise<ISurvivalRun | null>;
   getIssuedBattle(runId: string): Promise<ISurvivalBattle | null>;
   getBattleById(playerId: string, battleId: string): Promise<ISurvivalBattle | null>;
-  getCombatSession(playerId: string, battleId: string): Promise<{ session: ICombatSession; snapshot: GameState } | null>;
+  getCombatSession(
+    playerId: string,
+    battleId: string,
+  ): Promise<{ session: ICombatSession; snapshot: GameState; journalEntries: ICombatJournalEntry[] } | null>;
   getProgress(playerId: string): Promise<ISurvivalProgress>;
   startRun(playerId: string, maxLp: number, rulesetVersion: number): Promise<ISurvivalRun>;
   issueBattle(input: IIssueSurvivalBattleInput): Promise<ISurvivalBattle>;
   invalidateIssuedBattle(playerId: string, battleId: string): Promise<void>;
+  /** Persiste el journal en curso; el historial solo crece y devuelve su longitud efectiva. */
+  saveJournalCheckpoint(playerId: string, battleId: string, entries: ICombatJournalEntry[]): Promise<number>;
   /** Cierra como derrota una batalla jugable abandonada; no acredita recompensa alguna. */
   forfeitIssuedBattle(playerId: string, battleId: string): Promise<ISurvivalRun>;
   completeBattle(input: ICompleteSurvivalBattleInput): Promise<ISurvivalRun>;

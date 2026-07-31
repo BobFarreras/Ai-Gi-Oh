@@ -68,4 +68,14 @@ describe("POST /api/survival/runs/start", () => {
     });
     expect(repository.forfeitIssuedBattle).toHaveBeenCalledWith("player-1", "battle-3");
   });
+
+  it("corta con 429 al agotar el cupo por jugador", async () => {
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      await POST(buildRequest());
+    }
+
+    const response = await POST(buildRequest());
+
+    expect(response.status).toBe(429);
+  });
 });
