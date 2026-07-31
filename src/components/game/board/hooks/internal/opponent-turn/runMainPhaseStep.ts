@@ -1,11 +1,13 @@
 // src/components/game/board/hooks/internal/opponent-turn/runMainPhaseStep.ts - Ejecuta el paso principal del turno rival resolviendo pendientes y acciones jugables.
 import { GameEngine } from "@/core/use-cases/GameEngine";
 import { canActivateExecutionNow } from "@/core/services/opponent/select-opponent-play";
-import { addRevealedId, findReactiveTrap, findReactiveTraps, removeRevealedId, toTrapEligibleOptions } from "../trapPreview";
+import { addRevealedId, removeRevealedId, toTrapEligibleOptions } from "../trapPreview";
+import { findReactiveTrap, findReactiveTraps } from "@/core/services/opponent/find-reactive-traps";
 import { sleep } from "../sleep";
-import { IOpponentAutoPick, IOpponentStepTimings, IOpponentTurnContext } from "./types";
-import { pickOpponentPendingActionId } from "./pick-opponent-pending-action-id";
-import { buildOpponentExecutionAction, buildOpponentPlayAction } from "./build-opponent-play-action";
+import { IOpponentStepTimings, IOpponentTurnContext } from "./types";
+import { IOpponentAutoPick } from "@/core/services/opponent/types";
+import { pickOpponentPendingActionId } from "@/core/services/opponent/pick-opponent-pending-action-id";
+import { buildOpponentExecutionAction, buildOpponentPlayAction } from "@/core/services/opponent/build-opponent-play-action";
 export async function runMainPhaseStep(
   context: IOpponentTurnContext,
   timings: IOpponentStepTimings,
@@ -14,7 +16,7 @@ export async function runMainPhaseStep(
   const { gameState } = context;
   const opponentId = gameState.playerB.id;
   if (gameState.pendingTurnAction?.playerId === opponentId) {
-    const selectedId = pickOpponentPendingActionId(context, autoPick);
+    const selectedId = pickOpponentPendingActionId(gameState, autoPick);
     if (!selectedId) {
       context.applyTransition((state) => GameEngine.cancelUnresolvablePendingTurnAction(state, opponentId));
       context.setIsAnimating(false);

@@ -1,6 +1,7 @@
 // src/components/game/board/hooks/internal/opponent-turn/runBattlePhaseStep.ts - Ejecuta paso de batalla del oponente con timings y resolución de trampas.
 import { GameEngine } from "@/core/use-cases/GameEngine";
-import { addRevealedId, findReactiveTrap, findReactiveTraps, removeRevealedId, toTrapEligibleOptions } from "../trapPreview";
+import { addRevealedId, removeRevealedId, toTrapEligibleOptions } from "../trapPreview";
+import { findReactiveTrap, findReactiveTraps } from "@/core/services/opponent/find-reactive-traps";
 import { sleep } from "../sleep";
 import { IOpponentStepTimings, IOpponentTurnContext } from "./types";
 

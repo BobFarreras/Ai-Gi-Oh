@@ -1,6 +1,6 @@
-// src/components/game/board/hooks/internal/opponent-turn/build-opponent-play-action.ts - Traduce una decisión táctica de IA al protocolo reproducible.
+// src/core/services/opponent/build-opponent-play-action.ts - Traduce una decisión táctica de IA al protocolo reproducible.
 import { IMatchActionPayload } from "@/core/entities/match";
-import { IOpponentStrategy } from "@/core/services/opponent/types";
+import { IOpponentStrategy } from "./types";
 
 type OpponentPlayDecision = NonNullable<ReturnType<IOpponentStrategy["choosePlay"]>>;
 

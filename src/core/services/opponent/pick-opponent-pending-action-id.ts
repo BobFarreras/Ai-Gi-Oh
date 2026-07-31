@@ -1,8 +1,9 @@
-// src/components/game/board/hooks/internal/opponent-turn/pick-opponent-pending-action-id.ts - Resuelve selección automática robusta para acciones pendientes del rival.
+// src/core/services/opponent/pick-opponent-pending-action-id.ts - Resuelve la selección obligatoria del rival de forma pura y determinista.
 import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
-import { pickPendingFusionMaterialInstanceId } from "@/core/services/opponent/opponent-pending-fusion-material";
-import { IOpponentAutoPick, IOpponentTurnContext } from "./types";
+import { GameState } from "@/core/use-cases/GameEngine";
+import { pickPendingFusionMaterialInstanceId } from "./opponent-pending-fusion-material";
+import { IOpponentAutoPick } from "./types";
 
 function scoreSetCardThreat(entity: IBoardEntity): number {
   const attack = entity.card.attack ?? 0;
@@ -23,8 +24,7 @@ function pickLatestOpponentGraveyardCard(graveyard: ICard[], cardType?: ICard["t
   return candidate ? candidate.runtimeId ?? candidate.id : null;
 }
 
-function pickBestOpponentSetCard(context: IOpponentTurnContext, zone: "ENTITIES" | "EXECUTIONS" | "ANY"): string | null {
-  const { gameState } = context;
+function pickBestOpponentSetCard(gameState: GameState, zone: "ENTITIES" | "EXECUTIONS" | "ANY"): string | null {
   const fromEntities = zone !== "EXECUTIONS" ? gameState.playerA.activeEntities.filter((entity) => entity.mode === "SET") : [];
   const fromExecutions = zone !== "ENTITIES" ? gameState.playerA.activeExecutions.filter((entity) => entity.mode === "SET") : [];
   const candidates = [...fromEntities, ...fromExecutions];
@@ -35,8 +35,7 @@ function pickBestOpponentSetCard(context: IOpponentTurnContext, zone: "ENTITIES"
 }
 
 /** Selecciona automáticamente el ID a resolver para la acción obligatoria actual del oponente. */
-export function pickOpponentPendingActionId(context: IOpponentTurnContext, autoPick: IOpponentAutoPick): string | null {
-  const { gameState } = context;
+export function pickOpponentPendingActionId(gameState: GameState, autoPick: IOpponentAutoPick): string | null {
   if (!gameState.pendingTurnAction || gameState.pendingTurnAction.playerId !== gameState.playerB.id) return null;
   if (gameState.pendingTurnAction.type === "DISCARD_FOR_HAND_LIMIT") return autoPick.chooseCardToDiscard(gameState.playerB.hand)?.id ?? null;
   if (gameState.pendingTurnAction.type === "SELECT_FUSION_MATERIALS") {
@@ -54,7 +53,7 @@ export function pickOpponentPendingActionId(context: IOpponentTurnContext, autoP
     return pickLatestOpponentGraveyardCard(gameState.playerA.graveyard, gameState.pendingTurnAction.cardType);
   }
   if (gameState.pendingTurnAction.type === "SELECT_OPPONENT_SET_CARD") {
-    return pickBestOpponentSetCard(context, gameState.pendingTurnAction.zone);
+    return pickBestOpponentSetCard(gameState, gameState.pendingTurnAction.zone);
   }
   if (
     gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_LOCK" ||

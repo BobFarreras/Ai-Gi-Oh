@@ -1,4 +1,4 @@
-// src/components/game/board/hooks/internal/opponent-turn/autoPick.ts - Descripción breve del módulo.
+// src/core/services/opponent/opponent-auto-pick.ts - Selecciones automáticas puras del rival, compartidas por tablero y replay.
 import { ICard } from "@/core/entities/ICard";
 import { IBoardEntity } from "@/core/entities/IPlayer";
 import { IOpponentAutoPick } from "./types";
