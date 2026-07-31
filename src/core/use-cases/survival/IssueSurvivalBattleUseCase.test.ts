@@ -79,6 +79,35 @@ describe("IssueSurvivalBattleUseCase", () => {
     expect(result).toEqual({ battle, encounter: expect.objectContaining({ battleIndex: 1 }), resumed: false });
   });
 
+  it("cierra como derrota un combate jugable abandonado en vez de reemitirlo", async () => {
+    const repository = {
+      getActiveRun: vi.fn().mockResolvedValue(run),
+      getIssuedBattle: vi.fn().mockResolvedValue(battle),
+      getCombatSession: vi.fn().mockResolvedValue({
+        session: {
+          protocolVersion: COMBAT_PROOF_PROTOCOL_VERSION,
+          expiresAtIso: "2026-08-01T00:00:00Z",
+        },
+        snapshot: {
+          playerA: { hand: [{}, {}, {}, {}] },
+          playerB: { hand: [{}, {}, {}, {}] },
+        } as GameState,
+      }),
+      forfeitIssuedBattle: vi.fn().mockResolvedValue(run),
+      invalidateIssuedBattle: vi.fn(),
+      issueBattle: vi.fn(),
+    } as unknown as ISurvivalRepository;
+
+    await expect(new IssueSurvivalBattleUseCase(repository, vi.fn()).execute({
+      playerId: "player-1", runId: "run-1", battleId: "new", seed: "s",
+      expiresAtIso: "2026-08-02T00:00:00Z", nowIso: "2026-08-01T06:00:00Z",
+    })).rejects.toThrow("abandonar");
+
+    expect(repository.forfeitIssuedBattle).toHaveBeenCalledWith("player-1", "battle-1");
+    expect(repository.invalidateIssuedBattle).not.toHaveBeenCalled();
+    expect(repository.issueBattle).not.toHaveBeenCalled();
+  });
+
   it("persiste rival y tier derivados del ruleset", async () => {
     const snapshot = {
       playerA: { id: "player-1" },

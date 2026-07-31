@@ -2,7 +2,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(49);
+select plan(55);
 
 select has_table('public', 'combat_sessions', 'Existe el agregado de sesiones autoritativas');
 select has_table('public', 'player_survival_runs', 'Existe el agregado de runs');
@@ -293,6 +293,52 @@ select is(
     where player_id = '00000000-0000-0000-0000-000000000101' and champion_id = 'guill'),
   '{}'::text[],
   'El respec limpia únicamente el árbol del campeón elegido'
+);
+
+-- Abandono: una batalla jugable sin liquidar deja de ser gratis al caducar su sesión.
+select lives_ok(
+  $$select public.start_survival_run('00000000-0000-0000-0000-000000000101', 8000, 1)$$,
+  'Tras una derrota se puede iniciar una expedición nueva'
+);
+select results_eq(
+  $$select battle_index from public.issue_survival_battle(
+    '00000000-0000-0000-0000-000000000101',
+    (select id from public.player_survival_runs
+      where player_id = '00000000-0000-0000-0000-000000000101' and status = 'ACTIVE'),
+    '00000000-0000-0000-0000-000000000205', 'training-tier-4', 4, 0, 'seed-abandon',
+    '77777777777777777777777777777777', '{}'::jsonb, 2, now() + interval '15 minutes'
+  )$$,
+  array[1],
+  'La expedición nueva emite su primera batalla'
+);
+select results_eq(
+  $$select status from public.forfeit_survival_battle(
+    '00000000-0000-0000-0000-000000000101',
+    '00000000-0000-0000-0000-000000000205'
+  )$$,
+  array['COMPLETED_DEFEAT'::text],
+  'Abandonar un combate jugable cierra la expedición como derrota'
+);
+select results_eq(
+  $$select outcome, status, ending_lp from public.survival_battles
+    where battle_id = '00000000-0000-0000-0000-000000000205'$$,
+  $$values ('LOSS'::text, 'COMPLETED'::text, 0)$$,
+  'La batalla abandonada queda registrada como derrota sin LP'
+);
+select results_eq(
+  $$select count(*)::bigint from public.combat_mode_wallet_transactions
+    where player_id = '00000000-0000-0000-0000-000000000101'
+      and operation_id like '%00000000-0000-0000-0000-000000000205%'$$,
+  array[0::bigint],
+  'El abandono no acredita Fragmentos'
+);
+select results_eq(
+  $$select status from public.forfeit_survival_battle(
+    '00000000-0000-0000-0000-000000000101',
+    '00000000-0000-0000-0000-000000000205'
+  )$$,
+  array['COMPLETED_DEFEAT'::text],
+  'Repetir el abandono es idempotente y no vuelve a castigar'
 );
 
 select * from finish();

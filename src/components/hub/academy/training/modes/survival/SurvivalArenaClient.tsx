@@ -66,6 +66,7 @@ export function SurvivalArenaClient() {
       opponentName={expedition.battle.presentation.displayName}
       opponentAvatarUrl={expedition.battle.presentation.avatarUrl}
       error={expedition.error}
+      notice={expedition.notice}
       onStart={() => {
         primeMusicFromUserGesture(SURVIVAL_SOUNDTRACK, 0.34);
         setIsBattleStarted(true);

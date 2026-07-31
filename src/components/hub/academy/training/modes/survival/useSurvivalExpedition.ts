@@ -18,6 +18,7 @@ export function useSurvivalExpedition() {
   const [progress, setProgress] = useState<ISurvivalProgress | null>(null);
   const [settlement, setSettlement] = useState<ISurvivalSettlement | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const journalRef = useRef(new CombatActionJournal());
   const completedRef = useRef(false);
@@ -28,6 +29,9 @@ export function useSurvivalExpedition() {
     setError(null);
     try {
       const started = await startSurvivalRun();
+      setNotice(started.forfeitedPreviousRun
+        ? "Tu expedición anterior se cerró como derrota: dejaste un combate sin terminar."
+        : null);
       const issued = await issueSurvivalBattle(started.run.id);
       journalRef.current.reset();
       completedRef.current = false;
@@ -78,7 +82,7 @@ export function useSurvivalExpedition() {
   }, [battle]);
 
   return {
-    run, battle, progress, settlement, error, isLoading,
+    run, battle, progress, settlement, error, notice, isLoading,
     enterBattle, recordAction, completeBattle,
   };
 }

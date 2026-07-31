@@ -130,6 +130,15 @@ export class SupabaseSurvivalRepository implements ISurvivalRepository {
     if (error) throw new ValidationError("No se pudo renovar el combate de Supervivencia.");
   }
 
+  async forfeitIssuedBattle(playerId: string, battleId: string) {
+    const { data, error } = await this.writeClient.rpc("forfeit_survival_battle", {
+      p_player_id: playerId,
+      p_battle_id: battleId,
+    });
+    if (error || !data) throw new ValidationError("No se pudo cerrar el combate abandonado de Supervivencia.");
+    return mapSurvivalRun(data as Row);
+  }
+
   async completeBattle(input: ICompleteSurvivalBattleInput) {
     const { data, error } = await this.writeClient.rpc("complete_survival_battle", {
       p_player_id: input.playerId, p_battle_id: input.battleId, p_outcome: input.outcome,

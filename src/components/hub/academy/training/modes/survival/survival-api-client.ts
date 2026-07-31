@@ -44,8 +44,16 @@ async function postJson<T>(path: string, body: Record<string, unknown>): Promise
   return response.json() as Promise<T>;
 }
 
+export interface ISurvivalRunStart {
+  run: ISurvivalRun;
+  progress: ISurvivalProgress;
+  resumed: boolean;
+  /** La expedición anterior se cerró como derrota por abandonar un combate jugable. */
+  forfeitedPreviousRun: boolean;
+}
+
 /** Inicia una expedición o recupera la activa de forma idempotente. */
-export function startSurvivalRun(): Promise<{ run: ISurvivalRun; progress: ISurvivalProgress; resumed: boolean }> {
+export function startSurvivalRun(): Promise<ISurvivalRunStart> {
   return postJson("/api/survival/runs/start", {});
 }
 

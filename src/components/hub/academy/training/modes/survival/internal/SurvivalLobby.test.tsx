@@ -18,6 +18,7 @@ describe("SurvivalLobby", () => {
       opponentName="Helena"
       opponentAvatarUrl="/helena.webp"
       error={null}
+      notice={null}
       onStart={onStart}
       onBack={vi.fn()}
     />);
@@ -28,6 +29,27 @@ describe("SurvivalLobby", () => {
     expect(screen.getByText("Helena")).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: "Empezar Combate" })[0]);
     expect(onStart).toHaveBeenCalledOnce();
+  });
+
+  it("avisa de que la expedición anterior se cerró por abandono", () => {
+    render(<SurvivalLobby
+      run={{
+        id: "run-2", playerId: "p1", status: "ACTIVE", currentLp: 8000, maxLp: 8000,
+        wins: 0, currentBattleIndex: 1, rulesetVersion: 1, startedAtIso: "2026-07-31",
+        completedAtIso: null, version: 1,
+      }}
+      progress={{ bestWins: 7, ascensionFragments: 120 }}
+      battleIndex={1}
+      isResumed={false}
+      opponentName="GenNvim"
+      opponentAvatarUrl="/gennvim.webp"
+      error={null}
+      notice="Tu expedición anterior se cerró como derrota: dejaste un combate sin terminar."
+      onStart={vi.fn()}
+      onBack={vi.fn()}
+    />);
+
+    expect(screen.getByRole("status")).toHaveTextContent("se cerró como derrota");
   });
 
   it("identifica una sesión pendiente como reanudación del mismo combate", () => {
@@ -43,6 +65,7 @@ describe("SurvivalLobby", () => {
       opponentName="GenNvim"
       opponentAvatarUrl="/gennvim.webp"
       error={null}
+      notice={null}
       onStart={vi.fn()}
       onBack={vi.fn()}
     />);

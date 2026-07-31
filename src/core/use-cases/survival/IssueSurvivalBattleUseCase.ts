@@ -3,6 +3,7 @@ import { COMBAT_PROOF_PROTOCOL_VERSION } from "@/core/entities/match";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { ISurvivalRepository } from "@/core/repositories/ISurvivalRepository";
 import { resolveSurvivalEncounter } from "@/core/services/survival/resolve-survival-encounter";
+import { resolveIssuedBattleDisposition } from "@/core/services/survival/resolve-issued-battle-disposition";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { ISurvivalEncounter, ISurvivalRun } from "@/core/entities/survival/ISurvival";
 
@@ -21,14 +22,6 @@ type SnapshotFactory = (
   seed: string,
 ) => Promise<{ snapshot: GameState; snapshotHash: string }>;
 
-/** Evita reanudar snapshots previos al contrato PvE de cuatro cartas sin afectar otros modos. */
-function hasCurrentOpeningContract(snapshot: GameState): boolean {
-  return Array.isArray(snapshot.playerA?.hand)
-    && snapshot.playerA.hand.length === 4
-    && Array.isArray(snapshot.playerB?.hand)
-    && snapshot.playerB.hand.length === 4;
-}
-
 export class IssueSurvivalBattleUseCase {
   constructor(
     private readonly repository: ISurvivalRepository,
@@ -42,14 +35,18 @@ export class IssueSurvivalBattleUseCase {
     const pendingBattle = await this.repository.getIssuedBattle(run.id);
     if (pendingBattle) {
       const stored = await this.repository.getCombatSession(command.playerId, pendingBattle.battleId);
-      const nowMs = Date.parse(command.nowIso ?? new Date().toISOString());
-      const isReusable = Boolean(
-        stored
-        && stored.session.protocolVersion === COMBAT_PROOF_PROTOCOL_VERSION
-        && Date.parse(stored.session.expiresAtIso) > nowMs
-        && hasCurrentOpeningContract(stored.snapshot),
-      );
-      if (isReusable) return { battle: pendingBattle, resumed: true };
+      const disposition = resolveIssuedBattleDisposition({
+        session: stored?.session ?? null,
+        snapshot: stored?.snapshot ?? null,
+        nowIso: command.nowIso ?? new Date().toISOString(),
+        expectedProtocolVersion: COMBAT_PROOF_PROTOCOL_VERSION,
+      });
+      if (disposition === "RESUME") return { battle: pendingBattle, resumed: true };
+      if (disposition === "FORFEIT") {
+        // Defensa en profundidad: el cierre normal ocurre al iniciar la expedición, no aquí.
+        await this.repository.forfeitIssuedBattle(command.playerId, pendingBattle.battleId);
+        throw new ValidationError("La expedición terminó por abandonar un combate; inicia una nueva.");
+      }
       await this.repository.invalidateIssuedBattle(command.playerId, pendingBattle.battleId);
       run = await this.repository.getActiveRun(command.playerId);
       if (!run) throw new ValidationError("La expedición no se pudo renovar.");

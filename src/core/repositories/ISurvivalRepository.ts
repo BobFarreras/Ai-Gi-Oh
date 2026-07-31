@@ -44,5 +44,7 @@ export interface ISurvivalRepository {
   startRun(playerId: string, maxLp: number, rulesetVersion: number): Promise<ISurvivalRun>;
   issueBattle(input: IIssueSurvivalBattleInput): Promise<ISurvivalBattle>;
   invalidateIssuedBattle(playerId: string, battleId: string): Promise<void>;
+  /** Cierra como derrota una batalla jugable abandonada; no acredita recompensa alguna. */
+  forfeitIssuedBattle(playerId: string, battleId: string): Promise<ISurvivalRun>;
   completeBattle(input: ICompleteSurvivalBattleInput): Promise<ISurvivalRun>;
 }

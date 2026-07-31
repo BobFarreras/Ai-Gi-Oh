@@ -14,6 +14,7 @@ interface ISurvivalLobbyProps {
   opponentName: string;
   opponentAvatarUrl: string;
   error: string | null;
+  notice: string | null;
   onStart: () => void;
   onBack: () => void;
 }
@@ -62,6 +63,9 @@ export function SurvivalLobby(props: ISurvivalLobbyProps) {
         <p className="text-center text-xs font-bold uppercase tracking-[0.12em] text-zinc-400">
           Los LP que conserves serán los LP iniciales del siguiente combate
         </p>
+        {props.notice ? (
+          <p role="status" className="text-center text-sm font-bold text-amber-300">{props.notice}</p>
+        ) : null}
         {props.error ? <p role="alert" className="text-center text-sm font-bold text-rose-300">{props.error}</p> : null}
         <TrainingArenaLobbyActions
           onStart={props.onStart}
