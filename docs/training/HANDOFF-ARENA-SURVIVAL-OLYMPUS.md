@@ -41,6 +41,7 @@ No crear un segundo motor, un Board alternativo ni decks mock para Supervivencia
 - `IMatchMode` admite `SURVIVAL` y `OLYMPUS`.
 - `ICombatSession`, `ICombatProof` y el diario de acciones son contratos compartidos.
 - El servidor reproduce el combate y deriva ganador y LP; no confía en el resultado declarado por el navegador.
+- Protocolo v3: el journal es **exclusivamente del jugador**. Ver §4 bis.
 - Tickets HMAC vinculan jugador, modo, batalla, snapshot, expiración y versión de protocolo.
 - El motor admite LP iniciales distintos del máximo.
 
@@ -141,6 +142,32 @@ Implementación:
 - `src/services/survival/build-survival-battle-snapshot.ts`
 - `src/core/use-cases/survival/IssueSurvivalBattleUseCase.ts`
 
+## 4 bis. El rival lo juega el servidor (protocolo v3)
+
+Hasta el protocolo v2 el journal contenía las acciones de **ambos** duelistas y el servidor las reproducía
+tal cual. Como las jugadas del rival las elegía el navegador, bastaba con enviar un diario donde la IA no
+jugaba nada para liquidar victoria impecable y Fragmentos ilimitados. El replay validaba legalidad, no
+autoría.
+
+Contrato vigente:
+
+- El journal solo admite acciones cuyo actor es el jugador; declarar una del rival se rechaza.
+- El servidor juega los turnos del rival con `resolveOpponentIntent`, el mismo resolutor puro que usa el
+  tablero para animar. No hay dos bucles de IA.
+- La única decisión humana dentro del turno rival —activar o no una trampa reactiva, y cuál— viaja como
+  acción del jugador (`RESOLVE_REACTIVE_TRAP`) y se consume justo cuando el servidor deriva el disparo.
+- El perfil de IA lo fija el ruleset y lo envía el servidor (`aiProfile`); el cliente nunca lo elige. Si
+  cliente y servidor usaran perfiles distintos, el replay divergiría en cada combate.
+- `cancelUnresolvablePendingTurnAction` no viaja por el journal: el servidor la deriva igual.
+
+Piezas principales:
+
+- `src/core/services/opponent/resolve-opponent-intent.ts`
+- `src/core/use-cases/match/internal/derive-opponent-turn.ts`
+- `src/components/game/board/hooks/internal/opponent-turn/`
+
+No devolver las acciones del rival al journal ni reintroducir una dificultad fija en la UI.
+
 ## 5. UI, tablero, audio y assets
 
 Supervivencia reutiliza la presentación real del combate:
@@ -218,6 +245,20 @@ Solución:
 Causa: iniciar audio después de operaciones asíncronas pierde el gesto de usuario requerido por navegadores móviles.
 
 Solución: preparar la pista al pulsar el CTA y consumir esa instancia en el sistema compartido de audio del Board.
+
+### Abandonar un combate perdido salía gratis
+
+Una batalla `ISSUED` se reanudaba siempre con el mismo snapshot, así que perder y cerrar la pestaña
+permitía repetir el combate con información perfecta hasta ganarlo; dejar caducar la sesión lo reemitía
+sin coste.
+
+Solución: si la sesión de una batalla **jugable** caduca sin liquidarse, se registra como derrota y cierra
+la expedición (`forfeit_survival_battle`). La incompatibilidad de snapshot sigue reemitiendo sin castigo,
+porque esa es culpa nuestra y no del jugador. La política vive en
+`src/core/services/survival/resolve-issued-battle-disposition.ts`.
+
+Pendiente: reanudar **antes** de que caduque sigue devolviendo el mismo snapshot. Cerrarlo del todo exige
+checkpoint por turno (ver §11).
 
 ### Riesgo de premiar dos veces
 
@@ -339,7 +380,9 @@ Después de la UI:
 - E2E de tres intentos, dos pestañas, reanudación y red intermitente;
 - perfil móvil con CPU 4x;
 - objetivos: INP < 200 ms, CLS < 0,1 y al menos 30 FPS;
-- rollout mediante flags server-side.
+- rollout mediante flags server-side;
+- checkpoint por turno del journal, para que reanudar continúe desde el último turno confirmado en vez de
+  reiniciar la batalla (cierra el resto del abandono descrito en §6).
 
 ## 12. Commits de referencia
 
@@ -365,6 +408,6 @@ b65f767d  apertura PvE unificada y barajado seeded
 - Servicios, hooks y componentes por debajo de 150 líneas.
 - Cabecera de ruta y comentario de intención en cada archivo modificado.
 - No duplicar Board, GameEngine, barajado, audio, IA ni carga de decks.
-- No aceptar autoridad económica o de combate desde el cliente.
+- No aceptar autoridad económica o de combate desde el cliente: el journal es solo del jugador (§4 bis).
 - Actualizar esta guía y `IMPLEMENTATION_LOG.md` al cerrar cada fase.
 - Guardar decisión y resumen de sesión en Engram.

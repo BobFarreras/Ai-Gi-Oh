@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { ISurvivalRepository } from "@/core/repositories/ISurvivalRepository";
+import { COMBAT_PROOF_PROTOCOL_VERSION } from "@/core/entities/match";
 
 const { repository } = vi.hoisted(() => ({
   repository: {
@@ -43,7 +44,7 @@ describe("POST /api/survival/runs/start", () => {
   it("informa de la expedición cerrada al abandonar un combate", async () => {
     repository.getIssuedBattle.mockResolvedValueOnce({ battleId: "battle-3", runId: "run-1" });
     repository.getCombatSession.mockResolvedValueOnce({
-      session: { protocolVersion: 2, expiresAtIso: "2020-01-01T00:00:00.000Z" },
+      session: { protocolVersion: COMBAT_PROOF_PROTOCOL_VERSION, expiresAtIso: "2020-01-01T00:00:00.000Z" },
       snapshot: { playerA: { hand: [{}, {}, {}, {}] }, playerB: { hand: [{}, {}, {}, {}] } },
     });
     repository.forfeitIssuedBattle.mockResolvedValueOnce({ id: "run-1", status: "COMPLETED_DEFEAT" });

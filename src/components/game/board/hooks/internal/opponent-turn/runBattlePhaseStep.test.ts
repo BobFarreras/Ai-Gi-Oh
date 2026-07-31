@@ -159,9 +159,49 @@ describe("runBattlePhaseStep", () => {
 
     expect(state.playerB.activeEntities[0].mode).toBe("DEFENSE");
     expect(state.phase).toBe("BATTLE");
-    expect(emitCommittedAction).toHaveBeenCalledWith("p2", {
-      type: "CHANGE_ENTITY_MODE",
-      payload: { instanceId: "attacker", newMode: "DEFENSE" },
+    // El servidor deriva al rival: sus jugadas no viajan por el journal y no pueden falsearse.
+    expect(emitCommittedAction).not.toHaveBeenCalled();
+  });
+
+  it("envía al journal la decisión de trampa del humano, no la jugada del rival", async () => {
+    const base = createState();
+    const state: GameState = {
+      ...base,
+      playerA: {
+        ...base.playerA,
+        activeExecutions: [{
+          instanceId: "trap-1",
+          mode: "SET",
+          card: { id: "trap", name: "Trap", description: "Trap", type: "TRAP", faction: "NEUTRAL", cost: 1, trigger: "ON_OPPONENT_ATTACK_DECLARED" },
+          hasAttackedThisTurn: false,
+          isNewlySummoned: false,
+        }],
+      } as GameState["playerA"],
+    };
+    const emitCommittedAction = vi.fn();
+    const context: IOpponentTurnContext = {
+      gameState: state,
+      strategy: {
+        choosePlay: () => null,
+        chooseAttack: () => ({ attackerInstanceId: "attacker", defenderInstanceId: "defender-set" }),
+      },
+      applyTransition: (transition) => transition(state),
+      clearSelection: vi.fn(),
+      clearError: vi.fn(),
+      setIsAnimating: vi.fn(),
+      setActiveAttackerId: vi.fn(),
+      setRevealedEntities: vi.fn(),
+      setSelectedCard: vi.fn(),
+      requestTrapActivationDecision: vi.fn(async () => ({ activate: true, chosenTrapInstanceId: "trap-1" })),
+      emitCommittedAction,
+    };
+
+    await runBattlePhaseStep(context, { stepDelayMs: 0, attackWindupMs: 0, postResolutionMs: 0, trapPreviewMs: 0 });
+
+    expect(emitCommittedAction).toHaveBeenCalledTimes(1);
+    expect(emitCommittedAction).toHaveBeenCalledWith("p1", {
+      type: "RESOLVE_REACTIVE_TRAP",
+      payload: { activate: true, chosenTrapInstanceId: "trap-1" },
     });
   });
 });

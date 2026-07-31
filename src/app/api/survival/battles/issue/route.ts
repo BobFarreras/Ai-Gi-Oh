@@ -55,6 +55,8 @@ export async function POST(request: NextRequest) {
       initialState: stored.snapshot,
       completionTicket,
       presentation,
+      // El cliente no elige la dificultad: debe animar con el mismo perfil que el servidor reproducirá.
+      aiProfile: result.encounter.aiProfile,
     }, {
       status: result.resumed ? 200 : 201,
       headers: context.response.headers,

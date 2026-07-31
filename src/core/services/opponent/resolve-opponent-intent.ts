@@ -1,8 +1,5 @@
 // src/core/services/opponent/resolve-opponent-intent.ts - Decide la jugada del rival de forma pura para que tablero y replay no diverjan.
-import { TrapTrigger } from "@/core/entities/ICard";
-import { IMatchActionPayload } from "@/core/entities/match";
 import { GameState } from "@/core/use-cases/GameEngine";
-import { buildOpponentExecutionAction, buildOpponentPlayAction } from "./build-opponent-play-action";
 import { findReactiveTraps } from "./find-reactive-traps";
 import { pickOpponentPendingActionId } from "./pick-opponent-pending-action-id";
 import { canActivateExecutionNow } from "./select-opponent-play";
@@ -14,9 +11,12 @@ import {
   IOpponentStrategy,
 } from "./types";
 
+/** Únicos disparos del rival que pausan su turno para que decida el humano. */
+export type PlayerTrapPromptTrigger = "ON_OPPONENT_ATTACK_DECLARED" | "ON_OPPONENT_EXECUTION_ACTIVATED";
+
 /** Trampas del humano que el rival dispara y que exigen una decisión suya antes de resolver. */
 export interface IPlayerTrapPrompt {
-  trigger: TrapTrigger;
+  trigger: PlayerTrapPromptTrigger;
   eligibleTrapInstanceIds: string[];
 }
 
@@ -46,7 +46,7 @@ interface IResolveOpponentIntentInput {
 function buildTrapPrompt(
   state: GameState,
   humanId: string,
-  trigger: TrapTrigger,
+  trigger: PlayerTrapPromptTrigger,
   defenderInstanceId?: string,
 ): IPlayerTrapPrompt | null {
   const traps = findReactiveTraps(state, humanId, trigger, defenderInstanceId ? { defenderInstanceId } : undefined);
@@ -119,37 +119,4 @@ export function resolveOpponentIntent(input: IResolveOpponentIntentInput): Oppon
   if (state.phase === "MAIN_1") return resolveMainPhaseIntent(input, opponent, human);
   if (state.phase === "BATTLE") return resolveBattlePhaseIntent(input, human);
   return { kind: "IDLE" };
-}
-
-/** Traduce la intención ya resuelta al protocolo reproducible; null si no viaja por el journal. */
-export function buildOpponentIntentAction(
-  intent: OpponentIntent,
-  trapChoice: IPlayerTrapChoice = { activate: false },
-): IMatchActionPayload | null {
-  switch (intent.kind) {
-    case "RESOLVE_PENDING_TURN_ACTION":
-      return { type: "RESOLVE_PENDING_TURN_ACTION", payload: { selectedId: intent.selectedId } };
-    case "RESOLVE_EXECUTION":
-      return buildOpponentExecutionAction(intent.instanceId, trapChoice.activate, trapChoice.chosenTrapInstanceId);
-    case "ACTIVATE_SET_EXECUTION":
-      return { type: "CHANGE_ENTITY_MODE", payload: { instanceId: intent.instanceId, newMode: "ACTIVATE" } };
-    case "PLAY":
-      return buildOpponentPlayAction(intent.decision);
-    case "ATTACK":
-      return {
-        type: "ATTACK",
-        payload: {
-          attackerInstanceId: intent.decision.attackerInstanceId,
-          defenderInstanceId: intent.decision.defenderInstanceId,
-          declineReactiveTrap: !trapChoice.activate || undefined,
-          chosenTrapInstanceId: trapChoice.activate ? trapChoice.chosenTrapInstanceId : undefined,
-        },
-      };
-    case "CHANGE_ENTITY_MODE":
-      return { type: "CHANGE_ENTITY_MODE", payload: intent.decision };
-    case "NEXT_PHASE":
-      return { type: "NEXT_PHASE", payload: {} };
-    default:
-      return null;
-  }
 }

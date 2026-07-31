@@ -2,7 +2,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IOpponentAutoPick, IOpponentStrategy } from "./types";
-import { buildOpponentIntentAction, resolveOpponentIntent } from "./resolve-opponent-intent";
+import { resolveOpponentIntent } from "./resolve-opponent-intent";
+import { buildOpponentIntentAction } from "./build-opponent-intent-action";
 
 const OPPONENT_ID = "opponent";
 const HUMAN_ID = "human";

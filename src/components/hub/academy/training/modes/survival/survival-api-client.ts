@@ -7,6 +7,7 @@ import {
   ISurvivalRun,
   SurvivalOutcome,
 } from "@/core/entities/survival/ISurvival";
+import { OpponentDifficulty } from "@/core/services/opponent/difficulty/types";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { createSeededGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 import { IArenaOpponentPresentation } from "@/services/training/resolve-arena-opponent-presentation";
@@ -14,6 +15,8 @@ import { IArenaOpponentPresentation } from "@/services/training/resolve-arena-op
 export interface ISurvivalBattleRuntime {
   battle: ISurvivalBattle;
   resumed: boolean;
+  /** Perfil de IA fijado por el ruleset; el cliente debe animar con el mismo que reproduce el servidor. */
+  aiProfile: OpponentDifficulty;
   session: ICombatSession;
   initialState: GameState;
   completionTicket: string;

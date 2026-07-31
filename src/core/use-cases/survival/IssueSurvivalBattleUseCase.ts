@@ -41,7 +41,12 @@ export class IssueSurvivalBattleUseCase {
         nowIso: command.nowIso ?? new Date().toISOString(),
         expectedProtocolVersion: COMBAT_PROOF_PROTOCOL_VERSION,
       });
-      if (disposition === "RESUME") return { battle: pendingBattle, resumed: true };
+      if (disposition === "RESUME") {
+        // El encuentro viaja también al reanudar: el cliente necesita el mismo perfil de IA que
+        // usará el servidor al reproducir, o el replay divergiría.
+        const resumedEncounter = await this.resolveEncounterFor(run, pendingBattle.battleIndex);
+        return { battle: pendingBattle, encounter: resumedEncounter, resumed: true };
+      }
       if (disposition === "FORFEIT") {
         // Defensa en profundidad: el cierre normal ocurre al iniciar la expedición, no aquí.
         await this.repository.forfeitIssuedBattle(command.playerId, pendingBattle.battleId);
@@ -51,15 +56,7 @@ export class IssueSurvivalBattleUseCase {
       run = await this.repository.getActiveRun(command.playerId);
       if (!run) throw new ValidationError("La expedición no se pudo renovar.");
     }
-    const configuration = await this.repository.getRuleset(run.rulesetVersion);
-    if (!configuration || configuration.ruleset.version !== run.rulesetVersion) {
-      throw new ValidationError("El ruleset de la expedición ya no está disponible.");
-    }
-    const encounter = resolveSurvivalEncounter(
-      configuration.ruleset,
-      configuration.stages,
-      run.currentBattleIndex + 1,
-    );
+    const encounter = await this.resolveEncounterFor(run, run.currentBattleIndex + 1);
     const prepared = await this.snapshotFactory(run, encounter, command.seed);
     if (prepared.snapshot.playerB.id !== encounter.opponentId || prepared.snapshot.playerA.id !== command.playerId) {
       throw new ValidationError("El snapshot no coincide con el encuentro resuelto.");
@@ -73,5 +70,14 @@ export class IssueSurvivalBattleUseCase {
       protocolVersion: COMBAT_PROOF_PROTOCOL_VERSION,
     });
     return { battle, encounter, resumed: false };
+  }
+
+  /** Resuelve el encuentro contra el ruleset histórico fijado por la expedición. */
+  private async resolveEncounterFor(run: ISurvivalRun, battleIndex: number): Promise<ISurvivalEncounter> {
+    const configuration = await this.repository.getRuleset(run.rulesetVersion);
+    if (!configuration || configuration.ruleset.version !== run.rulesetVersion) {
+      throw new ValidationError("El ruleset de la expedición ya no está disponible.");
+    }
+    return resolveSurvivalEncounter(configuration.ruleset, configuration.stages, battleIndex);
   }
 }

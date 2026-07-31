@@ -18,9 +18,10 @@ export function SurvivalArenaClient() {
   const { enterBattle } = expedition;
   const [isBattleStarted, setIsBattleStarted] = useState(false);
   const hasPreparedRef = useRef(false);
+  const aiProfile = expedition.battle?.aiProfile;
   const opponentStrategy = useMemo(
-    () => new HeuristicOpponentStrategy({ difficulty: "BOSS" }),
-    [],
+    () => (aiProfile ? new HeuristicOpponentStrategy({ difficulty: aiProfile }) : null),
+    [aiProfile],
   );
   useEffect(() => {
     if (hasPreparedRef.current) return;

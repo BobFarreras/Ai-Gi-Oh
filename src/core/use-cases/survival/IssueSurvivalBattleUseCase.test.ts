@@ -9,7 +9,7 @@ import { COMBAT_PROOF_PROTOCOL_VERSION } from "@/core/entities/match";
 const run = {
   id: "run-1", playerId: "player-1", rulesetVersion: 1, currentBattleIndex: 0,
 } as ISurvivalRun;
-const battle = { battleId: "battle-1", runId: "run-1" } as ISurvivalBattle;
+const battle = { battleId: "battle-1", runId: "run-1", battleIndex: 1 } as ISurvivalBattle;
 const configuration = {
   ruleset: {
     id: "r", version: 1, startTier: 4, battlesPerTier: 2,
@@ -38,13 +38,15 @@ describe("IssueSurvivalBattleUseCase", () => {
         },
         snapshot: currentSnapshot,
       }),
+      getRuleset: vi.fn().mockResolvedValue(configuration),
     } as unknown as ISurvivalRepository;
     const result = await new IssueSurvivalBattleUseCase(repository, snapshotFactory)
       .execute({
         playerId: "player-1", runId: "run-1", battleId: "new", seed: "s",
         expiresAtIso: "2026-08-02T00:00:00Z", nowIso: "2026-08-01T00:00:00Z",
       });
-    expect(result).toEqual({ battle, resumed: true });
+    // La reanudación devuelve el encuentro para que el cliente anime con el perfil de IA del servidor.
+    expect(result).toEqual({ battle, encounter: expect.objectContaining({ aiProfile: "HARD" }), resumed: true });
     expect(snapshotFactory).not.toHaveBeenCalled();
   });
 
@@ -60,7 +62,7 @@ describe("IssueSurvivalBattleUseCase", () => {
         .mockResolvedValueOnce(refreshedRun),
       getIssuedBattle: vi.fn().mockResolvedValue(battle),
       getCombatSession: vi.fn().mockResolvedValue({
-        session: { protocolVersion: 2, expiresAtIso: "2026-08-02T08:00:00Z" },
+        session: { protocolVersion: COMBAT_PROOF_PROTOCOL_VERSION, expiresAtIso: "2026-08-02T08:00:00Z" },
         snapshot,
       }),
       invalidateIssuedBattle: vi.fn().mockResolvedValue(undefined),

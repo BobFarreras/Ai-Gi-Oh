@@ -399,3 +399,16 @@
 5. El escalado infinito continúa mediante tier, perfil IA, nivel/versión, rango de Ascensión y bonus data-driven de LP y ATK/DEF.
 6. El contrato Survival unifica barajado, mano inicial de cuatro cartas y sorteo de iniciador con el runtime PvE.
 7. El lobby diferencia una reanudación —mismo snapshot firmado— de una batalla recién emitida.
+
+## Modos PvE - Fase 7: rival autoritativo y coste del abandono
+
+1. El journal pasa a ser exclusivamente del jugador: declarar acciones del rival se rechaza (`CombatProofError`).
+2. El servidor juega los turnos del rival con el resolutor puro compartido, así que un cliente modificado ya no
+   puede enviar un combate donde la IA se deja ganar.
+3. La única decisión humana del turno rival —activar o no su trampa reactiva— viaja como acción del jugador.
+4. El perfil de IA lo fija el ruleset y viaja del servidor al cliente; se elimina la dificultad `BOSS` hardcodeada
+   que hacía jugar los tramos MYTHIC con IA de BOSS.
+5. `COMBAT_PROOF_PROTOCOL_VERSION` sube a 3; las sesiones emitidas con el contrato anterior se reemiten sin castigo.
+6. Una batalla jugable cuya sesión caduca sin liquidarse se registra como derrota y cierra la expedición, de modo
+   que abandonar tras perder deja de permitir repetir el mismo snapshot con información perfecta.
+7. La incompatibilidad de snapshot siempre gana sobre la caducidad: nunca se castiga al jugador por una migración.

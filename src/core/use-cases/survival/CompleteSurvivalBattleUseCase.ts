@@ -6,6 +6,7 @@ import { resolveSurvivalEncounter } from "@/core/services/survival/resolve-survi
 import { resolveSurvivalReward } from "@/core/services/survival/resolve-survival-reward";
 import { replayCombatProof } from "@/core/use-cases/match/replay-combat-proof";
 import { applyMatchAction } from "@/core/services/multiplayer/apply-match-action";
+import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
 
 export class CompleteSurvivalBattleUseCase {
   constructor(private readonly repository: ISurvivalRepository) {}
@@ -34,21 +35,23 @@ export class CompleteSurvivalBattleUseCase {
     if (!owningRun) throw new ValidationError("La expedición del combate no está disponible.");
     const configuration = await this.repository.getRuleset(owningRun.rulesetVersion);
     if (!configuration) throw new ValidationError("El ruleset histórico del combate no está disponible.");
+    const encounter = resolveSurvivalEncounter(
+      configuration.ruleset,
+      configuration.stages,
+      battle.battleIndex,
+    );
     const replay = replayCombatProof({
       session: stored.session,
       proof,
       nowIso,
       initialStateFactory: () => stored.snapshot,
       applyAction: applyMatchAction,
+      // El rival lo juega el servidor con el perfil que fijó el ruleset, no el navegador.
+      deriveOpponent: { strategy: new HeuristicOpponentStrategy({ difficulty: encounter.aiProfile }) },
     });
     const outcome = replay.winnerPlayerId === "DRAW"
       ? "DRAW"
       : replay.winnerPlayerId === playerId ? "WIN" : "LOSS";
-    const encounter = resolveSurvivalEncounter(
-      configuration.ruleset,
-      configuration.stages,
-      battle.battleIndex,
-    );
     const reward = resolveSurvivalReward(battle, configuration.ruleset, encounter.rewardDefinitionId, outcome);
     const run = await this.repository.completeBattle({
       playerId,

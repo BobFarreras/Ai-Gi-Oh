@@ -1,7 +1,8 @@
 // src/core/entities/match/ICombatSession.ts - Describe la sesión autoritativa vinculada a un snapshot inmutable de combate.
 import { IMatchMode } from "./IMatchMode";
 
-export const COMBAT_PROOF_PROTOCOL_VERSION = 2 as const;
+// v3: el journal es exclusivamente del jugador; el rival lo deriva el servidor.
+export const COMBAT_PROOF_PROTOCOL_VERSION = 3 as const;
 export type CombatProofProtocolVersion = number;
 
 export interface ICombatSession {
