@@ -412,3 +412,12 @@
 6. Una batalla jugable cuya sesión caduca sin liquidarse se registra como derrota y cierra la expedición, de modo
    que abandonar tras perder deja de permitir repetir el mismo snapshot con información perfecta.
 7. La incompatibilidad de snapshot siempre gana sobre la caducidad: nunca se castiga al jugador por una migración.
+
+## Modos PvE - Fase 8: afinado de reglas de Supervivencia
+
+1. Liquidar un duelo dispone de `COMBAT_SETTLEMENT_GRACE_MS` por encima de la caducidad de la sesión: esta
+   decide si hubo abandono, no si una prueba ya concluida puede enviarse. El ticket de cierre vive esa suma.
+2. "Impecable" pasa a medirse contra los LP con los que empezó esa batalla, no contra el máximo; en
+   Supervivencia el jugador arrastra LP y era inalcanzable desde el segundo combate.
+3. El intervalo de curación viaja del ruleset al cliente; el lobby deja de asumir un 5 fijo.
+4. El empate queda documentado y explicado en el informe: cierra la expedición igual que una derrota.

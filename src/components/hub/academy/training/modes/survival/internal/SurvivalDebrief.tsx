@@ -22,6 +22,8 @@ export function SurvivalDebrief({
 }: ISurvivalDebriefProps) {
   const survived = settlement.run.status === "ACTIVE";
   const healedLp = settlement.battle.milestoneHeal;
+  // Un empate no es una victoria: cierra la expedición igual que una derrota y conviene decirlo.
+  const isDraw = settlement.outcome === "DRAW";
   return (
     <main className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-[#020b11] px-4 py-6 text-cyan-50">
       <TrainingArenaLobbyBackdrop />
@@ -35,8 +37,13 @@ export function SurvivalDebrief({
           Informe de expedición
         </p>
         <h1 className="mt-2 text-center text-3xl font-black uppercase italic text-white md:text-5xl">
-          {survived ? "Sistema superado" : "Expedición finalizada"}
+          {survived ? "Sistema superado" : isDraw ? "Empate" : "Expedición finalizada"}
         </h1>
+        {isDraw ? (
+          <p className="mt-2 text-center text-sm font-bold text-amber-300">
+            Un empate no permite avanzar: la expedición termina aquí.
+          </p>
+        ) : null}
         <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
           <DebriefStat label="Victorias" value={String(settlement.run.wins)} />
           <DebriefStat label="Récord" value={String(settlement.progress.bestWins)} />

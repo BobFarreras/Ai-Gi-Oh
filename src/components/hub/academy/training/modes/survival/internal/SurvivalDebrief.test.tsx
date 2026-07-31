@@ -42,4 +42,22 @@ describe("SurvivalDebrief", () => {
     expect(screen.getByText("Expedición finalizada")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Siguiente combate" })).not.toBeInTheDocument();
   });
+
+  it("explica que un empate también termina la expedición", () => {
+    render(<SurvivalDebrief
+      settlement={{
+        ...settlement,
+        outcome: "DRAW",
+        run: { ...settlement.run, status: "COMPLETED_DEFEAT" },
+      }}
+      isLoading={false}
+      error={null}
+      onContinue={vi.fn()}
+      onExit={vi.fn()}
+    />);
+
+    expect(screen.getByText("Empate")).toBeInTheDocument();
+    expect(screen.getByText("Un empate no permite avanzar: la expedición termina aquí.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Siguiente combate" })).not.toBeInTheDocument();
+  });
 });

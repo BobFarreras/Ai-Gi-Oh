@@ -8,6 +8,7 @@ import { buildSurvivalBattleSnapshot } from "@/services/survival/build-survival-
 import { createSurvivalRouteContext } from "@/services/survival/create-survival-route-context";
 import { enforceSurvivalRateLimit } from "@/services/survival/api/security/enforce-survival-rate-limit";
 import { issueCombatSessionTicket } from "@/services/security/duel-completion-ticket";
+import { COMBAT_SETTLEMENT_GRACE_MS } from "@/core/entities/match";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { getArenaCatalog } from "@/services/training/get-arena-catalog";
 import { resolveArenaOpponentPresentation } from "@/services/training/resolve-arena-opponent-presentation";
@@ -52,7 +53,8 @@ export async function POST(request: NextRequest) {
       battleId: stored.session.battleId,
       snapshotHash: stored.session.snapshotHash,
       protocolVersion: stored.session.protocolVersion,
-      ttlMs: BATTLE_TTL_MS,
+      // El ticket debe sobrevivir a la sesión, o un duelo lento no podría liquidarse ni con margen.
+      ttlMs: BATTLE_TTL_MS + COMBAT_SETTLEMENT_GRACE_MS,
     });
     return NextResponse.json({
       ...result,

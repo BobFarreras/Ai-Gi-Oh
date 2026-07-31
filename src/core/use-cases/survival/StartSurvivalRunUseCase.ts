@@ -16,14 +16,31 @@ export class StartSurvivalRunUseCase {
     const existing = await this.repository.getActiveRun(playerId);
     const forfeitedPreviousRun = existing ? await this.forfeitAbandonedBattle(playerId, existing, nowIso) : false;
     if (existing && !forfeitedPreviousRun) {
-      const progress = await this.repository.getProgress(playerId);
-      return { run: existing, progress, resumed: true, forfeitedPreviousRun: false };
+      const [progress, configuration] = await Promise.all([
+        this.repository.getProgress(playerId),
+        this.repository.getRuleset(existing.rulesetVersion),
+      ]);
+      if (!configuration) throw new ValidationError("El ruleset de la expedición ya no está disponible.");
+      return {
+        run: existing,
+        progress,
+        resumed: true,
+        forfeitedPreviousRun: false,
+        milestoneInterval: configuration.ruleset.milestoneInterval,
+      };
     }
     const configuration = await this.repository.getRuleset();
     if (!configuration) throw new ValidationError("Supervivencia no tiene un ruleset activo.");
     const run = await this.repository.startRun(playerId, maxLp, configuration.ruleset.version);
     const progress = await this.repository.getProgress(playerId);
-    return { run, progress, resumed: false, forfeitedPreviousRun };
+    // El intervalo de curación viaja al cliente: la UI no debe fijar por su cuenta una regla del ruleset.
+    return {
+      run,
+      progress,
+      resumed: false,
+      forfeitedPreviousRun,
+      milestoneInterval: configuration.ruleset.milestoneInterval,
+    };
   }
 
   /**

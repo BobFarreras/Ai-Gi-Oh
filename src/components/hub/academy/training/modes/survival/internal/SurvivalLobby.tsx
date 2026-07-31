@@ -10,6 +10,7 @@ interface ISurvivalLobbyProps {
   run: ISurvivalRun;
   progress: ISurvivalProgress;
   battleIndex: number;
+  milestoneInterval: number;
   isResumed: boolean;
   opponentName: string;
   opponentAvatarUrl: string;
@@ -20,7 +21,9 @@ interface ISurvivalLobbyProps {
 }
 
 export function SurvivalLobby(props: ISurvivalLobbyProps) {
-  const nextMilestone = 5 - (props.run.wins % 5);
+  const nextMilestone = props.milestoneInterval > 0
+    ? props.milestoneInterval - (props.run.wins % props.milestoneInterval)
+    : null;
   return (
     <section className="relative mx-auto flex min-h-dvh w-full items-center justify-center overflow-hidden px-3 py-4 text-cyan-100 md:px-6 md:py-6">
       <TrainingArenaLobbyBackdrop />
@@ -45,7 +48,7 @@ export function SurvivalLobby(props: ISurvivalLobbyProps) {
             <SurvivalStat label="Victorias" value={String(props.run.wins)} />
             <SurvivalStat label="Récord personal" value={String(props.progress.bestWins)} />
             <SurvivalStat label="Fragmentos" value={String(props.progress.ascensionFragments)} />
-            <SurvivalStat label="Próxima curación" value={`En ${nextMilestone}`} />
+            <SurvivalStat label="Próxima curación" value={nextMilestone ? `En ${nextMilestone}` : "—"} />
           </div>
         </motion.header>
         <div className="grid min-h-0 flex-1 grid-cols-1 items-stretch gap-2 md:w-full md:flex-none md:grid-cols-[1fr_auto_1fr] md:gap-4">

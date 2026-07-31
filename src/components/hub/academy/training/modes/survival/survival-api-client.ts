@@ -53,6 +53,8 @@ export interface ISurvivalRunStart {
   resumed: boolean;
   /** La expedición anterior se cerró como derrota por abandonar un combate jugable. */
   forfeitedPreviousRun: boolean;
+  /** Cada cuántas victorias cura el ruleset; la UI no lo fija por su cuenta. */
+  milestoneInterval: number;
 }
 
 /** Inicia una expedición o recupera la activa de forma idempotente. */

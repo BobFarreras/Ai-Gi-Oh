@@ -8,6 +8,7 @@ import { StartSurvivalRunUseCase } from "./StartSurvivalRunUseCase";
 
 const run = { id: "run-1", playerId: "player-1" } as ISurvivalRun;
 const progress = { bestWins: 12, ascensionFragments: 90 };
+const configuration = { ruleset: { version: 3, milestoneInterval: 5 }, stages: [] };
 const pendingBattle = { battleId: "battle-7", runId: "run-1" } as ISurvivalBattle;
 const playableSnapshot = {
   playerA: { hand: [{}, {}, {}, {}] },
@@ -20,11 +21,12 @@ describe("StartSurvivalRunUseCase", () => {
     const repository = {
       getActiveRun: vi.fn().mockResolvedValue(run),
       getIssuedBattle: vi.fn().mockResolvedValue(null),
+      getRuleset: vi.fn().mockResolvedValue(configuration),
       getProgress: vi.fn().mockResolvedValue(progress),
       startRun: vi.fn(),
     } as unknown as ISurvivalRepository;
     const result = await new StartSurvivalRunUseCase(repository).execute("player-1", 8000, NOW_ISO);
-    expect(result).toEqual({ run, progress, resumed: true, forfeitedPreviousRun: false });
+    expect(result).toEqual({ run, progress, resumed: true, forfeitedPreviousRun: false, milestoneInterval: 5 });
     expect(repository.startRun).not.toHaveBeenCalled();
   });
 
@@ -37,11 +39,12 @@ describe("StartSurvivalRunUseCase", () => {
         snapshot: playableSnapshot,
       }),
       getProgress: vi.fn().mockResolvedValue(progress),
+      getRuleset: vi.fn().mockResolvedValue(configuration),
       forfeitIssuedBattle: vi.fn(),
       startRun: vi.fn(),
     } as unknown as ISurvivalRepository;
     const result = await new StartSurvivalRunUseCase(repository).execute("player-1", 8000, NOW_ISO);
-    expect(result).toEqual({ run, progress, resumed: true, forfeitedPreviousRun: false });
+    expect(result).toEqual({ run, progress, resumed: true, forfeitedPreviousRun: false, milestoneInterval: 5 });
     expect(repository.forfeitIssuedBattle).not.toHaveBeenCalled();
   });
 
@@ -55,7 +58,7 @@ describe("StartSurvivalRunUseCase", () => {
         snapshot: playableSnapshot,
       }),
       forfeitIssuedBattle: vi.fn().mockResolvedValue({ ...run, status: "COMPLETED_DEFEAT" }),
-      getRuleset: vi.fn().mockResolvedValue({ ruleset: { version: 3 }, stages: [] }),
+      getRuleset: vi.fn().mockResolvedValue(configuration),
       startRun: vi.fn().mockResolvedValue(freshRun),
       getProgress: vi.fn().mockResolvedValue(progress),
     } as unknown as ISurvivalRepository;
@@ -64,7 +67,7 @@ describe("StartSurvivalRunUseCase", () => {
 
     expect(repository.forfeitIssuedBattle).toHaveBeenCalledWith("player-1", "battle-7");
     expect(repository.startRun).toHaveBeenCalledWith("player-1", 8000, 3);
-    expect(result).toEqual({ run: freshRun, progress, resumed: false, forfeitedPreviousRun: true });
+    expect(result).toEqual({ run: freshRun, progress, resumed: false, forfeitedPreviousRun: true, milestoneInterval: 5 });
   });
 
   it("no castiga un snapshot incompatible aunque haya caducado", async () => {
@@ -77,24 +80,25 @@ describe("StartSurvivalRunUseCase", () => {
       }),
       forfeitIssuedBattle: vi.fn(),
       getProgress: vi.fn().mockResolvedValue(progress),
+      getRuleset: vi.fn().mockResolvedValue(configuration),
       startRun: vi.fn(),
     } as unknown as ISurvivalRepository;
 
     const result = await new StartSurvivalRunUseCase(repository).execute("player-1", 8000, NOW_ISO);
 
     expect(repository.forfeitIssuedBattle).not.toHaveBeenCalled();
-    expect(result).toEqual({ run, progress, resumed: true, forfeitedPreviousRun: false });
+    expect(result).toEqual({ run, progress, resumed: true, forfeitedPreviousRun: false, milestoneInterval: 5 });
   });
 
   it("crea una run con la versión activa", async () => {
     const repository = {
       getActiveRun: vi.fn().mockResolvedValue(null),
-      getRuleset: vi.fn().mockResolvedValue({ ruleset: { version: 3 }, stages: [] }),
+      getRuleset: vi.fn().mockResolvedValue(configuration),
       startRun: vi.fn().mockResolvedValue(run),
       getProgress: vi.fn().mockResolvedValue(progress),
     } as unknown as ISurvivalRepository;
     await expect(new StartSurvivalRunUseCase(repository).execute("player-1", 8000, NOW_ISO))
-      .resolves.toEqual({ run, progress, resumed: false, forfeitedPreviousRun: false });
+      .resolves.toEqual({ run, progress, resumed: false, forfeitedPreviousRun: false, milestoneInterval: 5 });
     expect(repository.startRun).toHaveBeenCalledWith("player-1", 8000, 3);
   });
 });

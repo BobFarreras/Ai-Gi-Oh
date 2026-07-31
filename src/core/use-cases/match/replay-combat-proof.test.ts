@@ -63,11 +63,56 @@ describe("replayCombatProof", () => {
     expect(result.flawless).toBe(true);
   });
 
+  it("mide impecable contra los LP con los que empezó la batalla, no contra el máximo", () => {
+    const carriedOverLp = 3200;
+    const common = {
+      session: createSession(),
+      proof: createProof(),
+      nowIso: "2026-07-29T10:30:00.000Z",
+      initialStateFactory: () => {
+        const state = createState();
+        return { ...state, playerA: { ...state.playerA, healthPoints: carriedOverLp } };
+      },
+    };
+
+    const untouched = replayCombatProof({
+      ...common,
+      applyAction: (state) => ({ ...state, playerB: { ...state.playerB, healthPoints: 0 } }),
+    });
+    const damaged = replayCombatProof({
+      ...common,
+      applyAction: (state) => ({
+        ...state,
+        playerA: { ...state.playerA, healthPoints: carriedOverLp - 500 },
+        playerB: { ...state.playerB, healthPoints: 0 },
+      }),
+    });
+
+    expect(untouched.playerEndingHealthPoints).toBe(carriedOverLp);
+    expect(untouched.flawless).toBe(true);
+    expect(damaged.flawless).toBe(false);
+  });
+
   it("rechaza secuencias desordenadas, snapshots manipulados y pruebas expiradas", () => {
     const common = { nowIso: "2026-07-29T10:30:00.000Z", initialStateFactory: createState, applyAction: (state: GameState) => state };
     expect(() => replayCombatProof({ ...common, session: createSession(), proof: createProof({ entries: [{ ...createProof().entries[0], sequence: 2 }] }) })).toThrow("secuencia");
     expect(() => replayCombatProof({ ...common, session: createSession(), proof: createProof({ snapshotHash: "alterado" }) })).toThrow("snapshot");
-    expect(() => replayCombatProof({ ...common, session: createSession({ expiresAtIso: "2026-07-29T10:00:01.000Z" }), proof: createProof() })).toThrow("expirada");
+    // Caducada muy por encima del margen de liquidación (sesión de 08:00 a 08:30, ahora 10:30).
+    const staleSession = createSession({ issuedAtIso: "2026-07-29T08:00:00.000Z", expiresAtIso: "2026-07-29T08:30:00.000Z" });
+    expect(() => replayCombatProof({ ...common, session: staleSession, proof: createProof() })).toThrow("expirada");
+  });
+
+  it("admite liquidar un duelo que se alargó más que la ventana de la sesión", () => {
+    const result = replayCombatProof({
+      // La sesión caducó hace diez minutos: el jugador terminó tarde, no abandonó.
+      session: createSession({ expiresAtIso: "2026-07-29T10:20:00.000Z" }),
+      proof: createProof(),
+      nowIso: "2026-07-29T10:30:00.000Z",
+      initialStateFactory: createState,
+      applyAction: (state) => ({ ...state, playerB: { ...state.playerB, healthPoints: 0 } }),
+    });
+
+    expect(result.winnerPlayerId).toBe("p1");
   });
 
   it("rechaza otra sesión, otro modo y diarios excesivos", () => {

@@ -1,6 +1,6 @@
 // src/core/use-cases/match/replay-combat-proof.ts - Reproduce un journal validado y deriva el resultado autoritativo del duelo.
 import { CombatProofError } from "@/core/errors/CombatProofError";
-import { ICombatProof, ICombatSession, IMatchActionPayload } from "@/core/entities/match";
+import { COMBAT_SETTLEMENT_GRACE_MS, ICombatProof, ICombatSession, IMatchActionPayload } from "@/core/entities/match";
 import { resolveWinnerPlayerId } from "@/core/services/turn/resolve-winner-player-id";
 import { DEFAULT_COMBAT_ACTION_LIMIT } from "@/core/services/match/combat-action-journal";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
@@ -45,7 +45,11 @@ function assertWindow(session: ICombatSession, nowIso: string): void {
   if (![nowMs, issuedAtMs, expiresAtMs].every(Number.isFinite) || expiresAtMs <= issuedAtMs) {
     throw new CombatProofError("La ventana temporal de la sesión es inválida.");
   }
-  if (nowMs < issuedAtMs || nowMs > expiresAtMs) throw new CombatProofError("La prueba de combate está expirada.");
+  // Terminar el duelo tarde no debe costar la victoria: la caducidad de la sesión decide abandono,
+  // no si una prueba ya concluida puede liquidarse.
+  if (nowMs < issuedAtMs || nowMs > expiresAtMs + COMBAT_SETTLEMENT_GRACE_MS) {
+    throw new CombatProofError("La prueba de combate está expirada.");
+  }
 }
 
 function assertJournal(proof: ICombatProof, maxActions: number, maxProofBytes: number): void {
@@ -138,12 +142,15 @@ export function replayCombatProof(input: IReplayCombatProofInput): ICombatReplay
   if (!winnerPlayerId) throw new CombatProofError("La prueba no concluye el duelo.");
   const player = finalState.playerA.id === input.session.playerId ? finalState.playerA : finalState.playerB;
   const opponent = finalState.playerA.id === input.session.opponentId ? finalState.playerA : finalState.playerB;
+  // Impecable es "no recibir daño en ESTA batalla", no "acabar con los LP al máximo": en Supervivencia el
+  // jugador arrastra los LP del combate anterior y comparar con el máximo lo hacía inalcanzable.
+  const initialPlayer = initialState.playerA.id === input.session.playerId ? initialState.playerA : initialState.playerB;
   return {
     winnerPlayerId,
     playerEndingHealthPoints: player.healthPoints,
     opponentEndingHealthPoints: opponent.healthPoints,
     turn: finalState.turn,
-    flawless: winnerPlayerId === player.id && player.healthPoints >= player.maxHealthPoints,
+    flawless: winnerPlayerId === player.id && player.healthPoints >= initialPlayer.healthPoints,
     finalState,
   };
 }

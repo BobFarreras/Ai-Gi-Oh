@@ -95,8 +95,11 @@ Flujo implementado:
 5. El Board y GameEngine compartidos ejecutan el duelo.
 6. El cliente envía el diario; el servidor reproduce y liquida.
 7. Los LP restantes pasan al siguiente duelo.
-8. Cada quinta victoria cura 2.000 LP sin superar el máximo.
-9. La derrota termina la run.
+8. Cada `milestoneInterval` victorias se cura `milestoneHeal` sin superar el máximo. Ambos valores salen del
+   ruleset y viajan al cliente; la UI no los fija.
+9. La derrota termina la run. **El empate también**: no acredita victoria ni Fragmentos, fija los LP a 0 y
+   cierra la expedición igual que una derrota. Es intencional —sobrevivir exige ganar— y el informe lo dice
+   explícitamente en vez de mostrarlo como una derrota más.
 10. Las recompensas y Fragmentos se acreditan de forma atómica e idempotente.
 11. Entre combates se muestra un informe con LP, cura, recompensa, récord y saldo.
 
@@ -134,6 +137,9 @@ Este punto causó las regresiones más graves y no debe volver a alterarse.
 - Ambos jugadores reciben cuatro cartas iniciales, igual que el PvE existente.
 - El jugador inicial se sortea de forma determinista.
 - Reabrir una batalla `ISSUED` reanuda exactamente el mismo snapshot. Esto es idempotencia y protección anti-cheat, no falta de barajado.
+- La caducidad de la sesión decide si hubo abandono; liquidar una prueba ya concluida dispone además de
+  `COMBAT_SETTLEMENT_GRACE_MS`, para que un duelo lento no se gane en pantalla y se rechace al enviarlo. El
+  ticket de cierre vive esa suma, no solo la ventana de la sesión.
 - Un snapshot Survival antiguo de tres cartas se invalida y reemite sin cambiar el índice lógico.
 
 Implementación:

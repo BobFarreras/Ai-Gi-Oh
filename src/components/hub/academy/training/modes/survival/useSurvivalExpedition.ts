@@ -21,6 +21,7 @@ export function useSurvivalExpedition() {
   const [settlement, setSettlement] = useState<ISurvivalSettlement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [milestoneInterval, setMilestoneInterval] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const journalRef = useRef(new CombatActionJournal());
   const completedRef = useRef(false);
@@ -39,6 +40,7 @@ export function useSurvivalExpedition() {
       completedRef.current = false;
       setRun(started.run);
       setProgress(started.progress);
+      setMilestoneInterval(started.milestoneInterval);
       setBattle(issued);
       setSettlement(null);
       return true;
@@ -90,7 +92,7 @@ export function useSurvivalExpedition() {
   }, [battle]);
 
   return {
-    run, battle, progress, settlement, error, notice, isLoading,
+    run, battle, progress, settlement, error, notice, isLoading, milestoneInterval,
     enterBattle, recordAction, completeBattle,
   };
 }

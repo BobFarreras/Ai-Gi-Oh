@@ -11,7 +11,7 @@ const { repository } = vi.hoisted(() => ({
     getIssuedBattle: vi.fn().mockResolvedValue(null),
     getCombatSession: vi.fn().mockResolvedValue(null),
     forfeitIssuedBattle: vi.fn(),
-    getRuleset: vi.fn().mockResolvedValue({ ruleset: { version: 1 }, stages: [] }),
+    getRuleset: vi.fn().mockResolvedValue({ ruleset: { version: 1, milestoneInterval: 5 }, stages: [] }),
     getProgress: vi.fn().mockResolvedValue({ bestWins: 6, ascensionFragments: 90 }),
     startRun: vi.fn(),
   },

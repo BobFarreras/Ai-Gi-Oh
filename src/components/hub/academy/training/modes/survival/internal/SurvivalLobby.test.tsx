@@ -14,6 +14,7 @@ describe("SurvivalLobby", () => {
       }}
       progress={{ bestWins: 7, ascensionFragments: 120 }}
       battleIndex={4}
+      milestoneInterval={5}
       isResumed={false}
       opponentName="Helena"
       opponentAvatarUrl="/helena.webp"
@@ -31,6 +32,29 @@ describe("SurvivalLobby", () => {
     expect(onStart).toHaveBeenCalledOnce();
   });
 
+  it("calcula la próxima curación con el intervalo del ruleset, no con uno fijo", () => {
+    render(<SurvivalLobby
+      run={{
+        id: "run-1", playerId: "p1", status: "ACTIVE", currentLp: 6000, maxLp: 8000,
+        wins: 4, currentBattleIndex: 4, rulesetVersion: 2, startedAtIso: "2026-07-31",
+        completedAtIso: null, version: 1,
+      }}
+      progress={{ bestWins: 4, ascensionFragments: 60 }}
+      battleIndex={5}
+      milestoneInterval={3}
+      isResumed={false}
+      opponentName="Jaku"
+      opponentAvatarUrl="/jaku.webp"
+      error={null}
+      notice={null}
+      onStart={vi.fn()}
+      onBack={vi.fn()}
+    />);
+
+    // Con intervalo 3 y 4 victorias, la siguiente curación llega en 2, no en 1 como daría un 5 fijo.
+    expect(screen.getByText("En 2")).toBeInTheDocument();
+  });
+
   it("avisa de que la expedición anterior se cerró por abandono", () => {
     render(<SurvivalLobby
       run={{
@@ -40,6 +64,7 @@ describe("SurvivalLobby", () => {
       }}
       progress={{ bestWins: 7, ascensionFragments: 120 }}
       battleIndex={1}
+      milestoneInterval={5}
       isResumed={false}
       opponentName="GenNvim"
       opponentAvatarUrl="/gennvim.webp"
@@ -61,6 +86,7 @@ describe("SurvivalLobby", () => {
       }}
       progress={{ bestWins: 0, ascensionFragments: 0 }}
       battleIndex={1}
+      milestoneInterval={5}
       isResumed
       opponentName="GenNvim"
       opponentAvatarUrl="/gennvim.webp"

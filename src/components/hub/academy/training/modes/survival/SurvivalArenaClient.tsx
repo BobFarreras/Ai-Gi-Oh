@@ -63,6 +63,7 @@ export function SurvivalArenaClient() {
       run={expedition.run}
       progress={expedition.progress}
       battleIndex={expedition.battle.battle.battleIndex}
+      milestoneInterval={expedition.milestoneInterval}
       isResumed={expedition.battle.resumed}
       opponentName={expedition.battle.presentation.displayName}
       opponentAvatarUrl={expedition.battle.presentation.avatarUrl}
