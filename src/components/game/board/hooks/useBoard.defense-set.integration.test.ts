@@ -11,7 +11,7 @@ function createMouseEvent(): React.MouseEvent {
 describe("useBoard defensa desde mano", () => {
   it("debería convertir DEFENSE en SET al jugar entidad desde mano", async () => {
     const deterministicDeck = ENTITY_CARDS.slice(0, 12);
-    const { result } = renderHook(() => useBoard(deterministicDeck, "TRAINING", { seed: "defense-set-test-seed" }));
+    const { result } = renderHook(() => useBoard({ initialPlayerDeck: deterministicDeck, mode: "TRAINING", initialConfig: { seed: "defense-set-test-seed" } }));
     const entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
     expect(entityCard).toBeDefined();
     if (!entityCard) {

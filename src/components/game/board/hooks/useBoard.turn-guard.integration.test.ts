@@ -23,7 +23,7 @@ describe("useBoard turn-guard integración", () => {
 
   it("muestra aviso al intentar avanzar desde MAIN si aún hay acciones", () => {
     const deck = Array.from({ length: 20 }, () => LOW_COST_ENTITY);
-    const { result } = renderHook(() => useBoard(deck));
+    const { result } = renderHook(() => useBoard({ initialPlayerDeck: deck }));
     expect(result.current.gameState.phase).toBe("MAIN_1");
     act(() => {
       result.current.advancePhase();
@@ -34,7 +34,7 @@ describe("useBoard turn-guard integración", () => {
 
   it("permite confirmar avance y desactivar avisos futuros", () => {
     const deck = Array.from({ length: 20 }, () => LOW_COST_ENTITY);
-    const { result } = renderHook(() => useBoard(deck));
+    const { result } = renderHook(() => useBoard({ initialPlayerDeck: deck }));
     act(() => {
       result.current.advancePhase();
     });
@@ -48,7 +48,7 @@ describe("useBoard turn-guard integración", () => {
 
   it("no muestra diálogo de ayuda cuando el avance viene por tiempo agotado", () => {
     const deck = Array.from({ length: 20 }, () => LOW_COST_ENTITY);
-    const { result } = renderHook(() => useBoard(deck));
+    const { result } = renderHook(() => useBoard({ initialPlayerDeck: deck }));
     expect(result.current.gameState.phase).toBe("MAIN_1");
     act(() => {
       result.current.handleTimerExpired();
@@ -59,7 +59,7 @@ describe("useBoard turn-guard integración", () => {
 
   it("no muestra aviso de salto de fase en modo tutorial", () => {
     const deck = Array.from({ length: 20 }, () => LOW_COST_ENTITY);
-    const { result } = renderHook(() => useBoard(deck, "TUTORIAL"));
+    const { result } = renderHook(() => useBoard({ initialPlayerDeck: deck, mode: "TUTORIAL" }));
     expect(result.current.gameState.phase).toBe("MAIN_1");
     act(() => {
       result.current.advancePhase();

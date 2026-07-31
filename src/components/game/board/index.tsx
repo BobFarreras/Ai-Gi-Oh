@@ -76,7 +76,19 @@ interface IBoardProps {
 }
 export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, opponentAvatarObjectPosition, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, abandonPenaltyNexus = 0, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId, onLocalForfeit, enableOpeningMulligan = false, authoritativeInitialState = null, customSoundtrackPath = null }: IBoardProps) {
   countRender("Board");
-  const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme, disableOpponentAutomation, opponentStrategyOverride, enableOpeningMulligan, authoritativeInitialState, customSoundtrackPath);
+  const board = useBoard({
+    initialPlayerDeck: initialPlayerDeck ?? undefined,
+    mode,
+    initialConfig,
+    isMatchStartLocked,
+    // El tema de jefe sustituye la banda sonora base por la suya.
+    disableBaseSoundtrack: isBossTheme,
+    disableOpponentAutomation,
+    opponentStrategyOverride,
+    enableOpeningMulligan,
+    authoritativeInitialState,
+    customSoundtrackPath,
+  });
   useLayoutEffect(() => {
     if (applyTransitionRef) applyTransitionRef.current = board.applyTransition;
     if (applyRemoteActionRef) applyRemoteActionRef.current = board.applyRemoteAction;

@@ -1,6 +1,7 @@
 // src/app/api/survival/battles/complete/route.test.ts - Verifica que ticket y prueba deben coincidir.
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { resetSurvivalRateLimiterForTests } from "@/services/survival/api/security/survival-rate-limiter";
 
 vi.mock("@/services/security/api/require-trusted-mutation-origin", () => ({
   requireTrustedMutationOrigin: () => null,
@@ -24,10 +25,15 @@ vi.mock("@/services/security/duel-completion-ticket", () => ({
 import { POST } from "./route";
 
 function request(body: unknown): NextRequest {
-  return { json: async () => body } as unknown as NextRequest;
+  return {
+    json: async () => body,
+    headers: new Headers({ "x-forwarded-for": "203.0.113.10" }),
+  } as unknown as NextRequest;
 }
 
 describe("POST /api/survival/battles/complete", () => {
+  beforeEach(() => resetSurvivalRateLimiterForTests());
+
   it("rechaza una prueba perteneciente a otra sesión", async () => {
     const response = await POST(request({
       completionTicket: "ticket",
@@ -38,5 +44,22 @@ describe("POST /api/survival/battles/complete", () => {
     }));
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+
+  it("corta con 429 al agotar el cupo del replay, que es la ruta más cara", async () => {
+    const body = {
+      completionTicket: "ticket",
+      proof: {
+        sessionId: "session-firmada", battleId: "battle-1", mode: "SURVIVAL",
+        snapshotHash: "hash", protocolVersion: 1, entries: [],
+      },
+    };
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      await POST(request(body));
+    }
+
+    const response = await POST(request(body));
+
+    expect(response.status).toBe(429);
   });
 });

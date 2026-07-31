@@ -1,6 +1,7 @@
 // src/app/api/survival/runs/start/route.test.ts - Verifica reanudación idempotente desde la API.
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { resetSurvivalRateLimiterForTests } from "@/services/survival/api/security/survival-rate-limiter";
 import { ISurvivalRepository } from "@/core/repositories/ISurvivalRepository";
 import { COMBAT_PROOF_PROTOCOL_VERSION } from "@/core/entities/match";
 
@@ -29,9 +30,16 @@ vi.mock("@/services/survival/create-survival-route-context", () => ({
 
 import { POST } from "./route";
 
+function buildRequest(): NextRequest {
+  return { headers: new Headers({ "x-forwarded-for": "203.0.113.10" }) } as unknown as NextRequest;
+}
+
+
 describe("POST /api/survival/runs/start", () => {
+  beforeEach(() => resetSurvivalRateLimiterForTests());
+
   it("devuelve la expedición activa sin duplicarla", async () => {
-    const response = await POST({} as NextRequest);
+    const response = await POST(buildRequest());
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       resumed: true,
@@ -50,7 +58,7 @@ describe("POST /api/survival/runs/start", () => {
     repository.forfeitIssuedBattle.mockResolvedValueOnce({ id: "run-1", status: "COMPLETED_DEFEAT" });
     repository.startRun.mockResolvedValueOnce({ id: "run-2", playerId: "player-1", status: "ACTIVE" });
 
-    const response = await POST({} as NextRequest);
+    const response = await POST(buildRequest());
 
     expect(response.status).toBe(201);
     await expect(response.json()).resolves.toMatchObject({

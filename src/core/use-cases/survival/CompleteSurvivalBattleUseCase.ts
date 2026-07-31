@@ -58,7 +58,7 @@ export class CompleteSurvivalBattleUseCase {
       battleId: battle.battleId,
       outcome,
       endingLp: replay.playerEndingHealthPoints,
-      reward: reward as unknown as Record<string, unknown>,
+      reward,
       fragmentAmount: reward.ascensionFragments,
     });
     const [completedBattle, progress] = await Promise.all([

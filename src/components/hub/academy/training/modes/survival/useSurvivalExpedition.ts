@@ -12,6 +12,8 @@ import {
   startSurvivalRun,
 } from "./survival-api-client";
 
+const OVERFLOW_MESSAGE = "Este combate superó el límite de acciones registrables. Sal y reanúdalo para poder liquidarlo.";
+
 export function useSurvivalExpedition() {
   const [run, setRun] = useState<ISurvivalRun | null>(null);
   const [battle, setBattle] = useState<ISurvivalBattleRuntime | null>(null);
@@ -48,15 +50,21 @@ export function useSurvivalExpedition() {
     }
   }, []);
 
-  /** Registra acciones aceptadas de ambos duelistas en el orden real del cliente. */
+  /** Registra las acciones del jugador en el orden real; las del rival las deriva el servidor. */
   const recordAction = useCallback((action: IMatchActionPayload, actorPlayerId?: string) => {
     if (!battle) return;
-    journalRef.current.append(actorPlayerId ?? battle.session.playerId, action);
+    const recorded = journalRef.current.append(actorPlayerId ?? battle.session.playerId, action);
+    if (!recorded) setError(OVERFLOW_MESSAGE);
   }, [battle]);
 
   /** Liquida una sola vez; el backend reproduce el journal antes de acreditar nada. */
   const completeBattle = useCallback(async () => {
     if (!battle || completedRef.current) return;
+    if (journalRef.current.hasOverflowed()) {
+      // Enviar una prueba incompleta solo produciría un rechazo del servidor sin explicación útil.
+      setError(OVERFLOW_MESSAGE);
+      return;
+    }
     completedRef.current = true;
     setIsLoading(true);
     setError(null);

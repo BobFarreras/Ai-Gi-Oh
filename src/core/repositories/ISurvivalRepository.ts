@@ -1,6 +1,7 @@
 // src/core/repositories/ISurvivalRepository.ts - Puerto de persistencia para runs y batallas de Supervivencia.
 import {
   ISurvivalBattle,
+  ISurvivalReward,
   ISurvivalRuleset,
   ISurvivalRun,
   ISurvivalScalingStage,
@@ -29,7 +30,7 @@ export interface ICompleteSurvivalBattleInput {
   battleId: string;
   outcome: SurvivalOutcome;
   endingLp: number;
-  reward: Record<string, unknown>;
+  reward: ISurvivalReward;
   fragmentAmount: number;
 }
 

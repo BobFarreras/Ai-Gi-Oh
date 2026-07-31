@@ -114,7 +114,7 @@ describe('useBoard Custom Hook', () => {
     });
 
     const { result } = renderHook(() =>
-      useBoard(undefined, "SURVIVAL", undefined, false, false, false, null, false, authoritativeState),
+      useBoard({ mode: "SURVIVAL", authoritativeInitialState: authoritativeState }),
     );
 
     const playerCardIds = [

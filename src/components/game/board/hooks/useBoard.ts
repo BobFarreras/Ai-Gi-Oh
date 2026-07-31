@@ -19,18 +19,32 @@ import { useLocalActionEmitter } from "@/components/game/board/multiplayer/local
 import { REACTIVE_TRAP_DECISION_TIMEOUT_MS } from "@/components/game/board/multiplayer/reactive-trap-decision";
 import { ITrapEligibleOption } from "./internal/board-state/useBoardUiState";
 
-export function useBoard(
-  initialPlayerDeck?: ICard[],
-  mode: IMatchMode = "TRAINING",
-  initialConfig?: ICreateInitialBoardStateInput,
+export interface IUseBoardOptions {
+  initialPlayerDeck?: ICard[];
+  mode?: IMatchMode;
+  initialConfig?: ICreateInitialBoardStateInput;
+  isMatchStartLocked?: boolean;
+  disableBaseSoundtrack?: boolean;
+  disableOpponentAutomation?: boolean;
+  opponentStrategyOverride?: IOpponentStrategy | null;
+  enableOpeningMulligan?: boolean;
+  /** Snapshot firmado por el servidor en los modos autoritativos. */
+  authoritativeInitialState?: GameState | null;
+  customSoundtrackPath?: string | null;
+}
+
+export function useBoard({
+  initialPlayerDeck,
+  mode = "TRAINING",
+  initialConfig,
   isMatchStartLocked = false,
   disableBaseSoundtrack = false,
   disableOpponentAutomation = false,
-  opponentStrategyOverride: IOpponentStrategy | null = null,
+  opponentStrategyOverride = null,
   enableOpeningMulligan = false,
-  authoritativeInitialState: GameState | null = null,
-  customSoundtrackPath: string | null = null,
-) {
+  authoritativeInitialState = null,
+  customSoundtrackPath = null,
+}: IUseBoardOptions = {}) {
   const [campaignProgress] = useState<ICampaignProgress>({ chapterIndex: 1, duelIndex: 1, victories: 0 });
   const [matchSeed] = useState(() => createMatchSeed());
   const createInitialState = useCallback(() => {
