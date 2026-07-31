@@ -1,4 +1,4 @@
-// src/core/use-cases/survival/internal/assert-journal-extends-checkpoint.test.ts - Fija que el avance solo se prolongue, sin falsos conflictos por formato.
+// src/core/use-cases/match/internal/assert-journal-extends-checkpoint.test.ts - Fija que el avance solo se prolongue, sin falsos conflictos por formato.
 import { describe, expect, it } from "vitest";
 import { ICombatJournalEntry } from "@/core/entities/match";
 import { assertJournalExtendsCheckpoint } from "./assert-journal-extends-checkpoint";

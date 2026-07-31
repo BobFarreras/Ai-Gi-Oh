@@ -1,4 +1,4 @@
-// src/core/use-cases/survival/internal/assert-journal-extends-checkpoint.ts - Impide reescribir lo ya jugado al reportar avance.
+// src/core/use-cases/match/internal/assert-journal-extends-checkpoint.ts - Impide reescribir lo ya jugado al reportar avance.
 import { ICombatJournalEntry } from "@/core/entities/match";
 import { CombatProofError } from "@/core/errors/CombatProofError";
 

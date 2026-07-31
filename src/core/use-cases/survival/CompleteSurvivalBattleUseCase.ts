@@ -7,7 +7,7 @@ import { resolveSurvivalReward } from "@/core/services/survival/resolve-survival
 import { replayCombatProof } from "@/core/use-cases/match/replay-combat-proof";
 import { applyMatchAction } from "@/core/services/multiplayer/apply-match-action";
 import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
-import { assertJournalExtendsCheckpoint } from "./internal/assert-journal-extends-checkpoint";
+import { assertJournalExtendsCheckpoint } from "@/core/use-cases/match/internal/assert-journal-extends-checkpoint";
 
 export class CompleteSurvivalBattleUseCase {
   constructor(private readonly repository: ISurvivalRepository) {}
