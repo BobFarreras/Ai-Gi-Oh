@@ -487,3 +487,24 @@
    `replayJournalToState` para retomar; el lobby reutiliza las acciones de Arena clásica.
 7. Responsive: carruseles con `scroll-snap` en móvil, CTA fija inferior al alcance del pulgar, objetivos de
    44 px, foco visible y `aria-live` en el marcador de intentos.
+
+## Modos PvE - Fase 13: portal 3D de modos
+
+1. `/hub/academy/training/arena` pasa de tres tarjetas a una escena 3D, espejo del patrón de la Academia:
+   shell 2D + `dynamic(ssr:false)` del mundo, que solo se monta en cliente y con WebGL.
+2. Las tarjetas 2D **no se retiran**: son el fallback de SSR y de equipos sin WebGL, y comparten las
+   mismas ilustraciones que la escena, así que no hay dos fuentes de arte que se desincronicen.
+3. Se descartó la escenografía procedural que se había construido primero (anfiteatro, puesto avanzado,
+   pórtico): las ilustraciones aportadas ya son esas estructuras y mejor resueltas. Queda `ModePedestal`,
+   un disco de luz del color del modo; cualquier geometría añadida competiría con el dibujo.
+4. Las tres ilustraciones vienen **sin canal alfa** pese al `-removebg` del nombre, así que el fondo se
+   recorta en el shader. El umbral del chroma-key pasa a ser configurable —conservando el valor histórico
+   por defecto— porque el Olimpo es mármol y nubes blancas: con el corte laxo el shader se comía los
+   propios templos. Cada modo declara su umbral.
+5. El alto del holograma baja a 2.5: las ilustraciones son apaisadas (604x413) y a la altura de la
+   Academia habrían medido 5.3 de ancho, tocándose entre sí.
+6. Presupuesto de render reutilizando `resolveHubRenderProfile`: en móvil se apaga el pedestal y solo
+   queda el carrusel; en gama baja se recortan luces; `prefers-reduced-motion` navega sin zoom de cámara.
+7. Pendiente de afinar a ojo en preview: cámara, FOV y separación de `resolveCombatModesLayout` son una
+   primera pasada. Y si el recorte del fondo deja fleco, la solución es exportar las imágenes con alfa
+   real, no seguir moviendo umbrales.
