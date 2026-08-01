@@ -1,6 +1,7 @@
 // src/components/hub/academy/training/combat-modes/internal/combat-mode-options.ts - Catálogo estático de entradas del portal.
 import {
   ACADEMY_TRAINING_ARENA_CLASSIC_ROUTE,
+  ACADEMY_TRAINING_OLYMPUS_ROUTE,
   ACADEMY_TRAINING_SURVIVAL_ROUTE,
 } from "@/core/constants/routes/academy-routes";
 import { ICombatModeOption } from "./combat-mode.types";
@@ -34,8 +35,9 @@ export const COMBAT_MODE_OPTIONS: ICombatModeOption[] = [
     eyebrow: "Desafío legendario",
     title: "Olimpo",
     description: "Potencia a tus campeones y desafía a leyendas con mazos exclusivos y recompensas únicas.",
-    imageUrl: "/assets/story/opponents/opp-ch3-gokernel/intro-Gokernel.webp",
-    imageAlt: "Gokernel representando los desafíos del Olimpo",
-    availabilityLabel: "En preparación",
+    imageUrl: "/assets/combat/olympus/opponents/zeus/intro.webp",
+    imageAlt: "Zeus custodiando la entrada al Olimpo",
+    href: ACADEMY_TRAINING_OLYMPUS_ROUTE,
+    availabilityLabel: "Entrar en Olimpo",
   },
 ];

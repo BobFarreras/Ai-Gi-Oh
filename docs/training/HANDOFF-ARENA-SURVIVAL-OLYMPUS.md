@@ -58,7 +58,7 @@ La migración `20260101000231_150_arena_modes_foundation.sql` creó:
 
 - sesiones y snapshots de combate;
 - runs y batallas de Supervivencia;
-- cartera y ledger de Fragmentos;
+- cartera y ledger de Éter (columna interna: `ascension_fragments`);
 - catálogo de campeones y progreso individual;
 - árboles de mejora;
 - allowance diario, batallas, victorias y leyendas de Olimpo;
@@ -97,10 +97,10 @@ Flujo implementado:
 7. Los LP restantes pasan al siguiente duelo.
 8. Cada `milestoneInterval` victorias se cura `milestoneHeal` sin superar el máximo. Ambos valores salen del
    ruleset y viajan al cliente; la UI no los fija.
-9. La derrota termina la run. **El empate también**: no acredita victoria ni Fragmentos, fija los LP a 0 y
+9. La derrota termina la run. **El empate también**: no acredita victoria ni Éter, fija los LP a 0 y
    cierra la expedición igual que una derrota. Es intencional —sobrevivir exige ganar— y el informe lo dice
    explícitamente en vez de mostrarlo como una derrota más.
-10. Las recompensas y Fragmentos se acreditan de forma atómica e idempotente.
+10. Las recompensas y el Éter se acreditan de forma atómica e idempotente.
 11. Entre combates se muestra un informe con LP, cura, recompensa, récord y saldo.
 
 Escalado:
@@ -152,7 +152,7 @@ Implementación:
 
 Hasta el protocolo v2 el journal contenía las acciones de **ambos** duelistas y el servidor las reproducía
 tal cual. Como las jugadas del rival las elegía el navegador, bastaba con enviar un diario donde la IA no
-jugaba nada para liquidar victoria impecable y Fragmentos ilimitados. El replay validaba legalidad, no
+jugaba nada para liquidar victoria impecable y Éter ilimitado. El replay validaba legalidad, no
 autoría.
 
 Contrato vigente:
@@ -355,7 +355,7 @@ Reglas de producto:
 
 - El jugador selecciona un campeón clásico que ya derrotó en su tier.
 - Controla el deck real versionado de ese campeón.
-- Los Fragmentos se gastan por campeón, no globalmente.
+- El Éter se gasta por campeón, no globalmente.
 - El árbol es pequeño, con prerrequisitos y caps.
 - La primera reasignación es gratuita; las siguientes usan coste configurado.
 - Las cartas prestadas no ganan experiencia ni entran en la colección.
@@ -405,22 +405,31 @@ Reutilización (no duplicar): el editor de deck legendario monta `AdminArenaDeck
 `admin-arena-deck-entry-state`, las mismas de Arena y Story. El gate, el rate limit y la auditoría son los
 compartidos de `/api/admin/*`.
 
-## 10. Fase posterior: UI de Olimpo
+## 10. Completado: UI de Olimpo
 
-Solo después de estabilizar los contratos:
+Ruta: `/hub/academy/training/arena/olympus`. La tarjeta del portal deja de estar «En preparación».
 
-- selector de campeón desbloqueado;
-- selector de leyenda;
-- detalle con dificultad, recompensa e intentos;
-- árbol de mejoras y respec;
-- countdown al reset UTC;
-- confirmación explícita antes de consumir intento;
-- reanudación;
-- Board lazy con estado autoritativo;
-- resultado y primera victoria;
-- diseño oro/violeta responsive;
-- carrusel móvil con scroll nativo y `scroll-snap`;
-- targets de 44 px, foco visible, `aria-live` y reduced motion.
+| Requisito | Dónde vive |
+| --- | --- |
+| Selector de campeón desbloqueado | `OlympusChampionSelector` (los bloqueados se ven, apagados y con su requisito) |
+| Selector de leyenda | `OlympusLegendSelector` (arte, lore, reglas y recompensa antes de elegir) |
+| Detalle con dificultad, recompensa e intentos | `OlympusConfirmDialog` |
+| Árbol de mejoras y respec | `OlympusUpgradeTree` (efectos descritos en lenguaje de juego, no por `kind`) |
+| Countdown al reset UTC | `OlympusAttemptGauge` (cuenta hacia `allowance.nextResetIso`, que fija el servidor) |
+| Confirmación explícita antes de consumir intento | `OlympusConfirmDialog`, con el foco inicial en «Cancelar» |
+| Reanudación | `pendingBattle` del overview: retomar **no** pasa por la confirmación ni gasta intento |
+| Board con estado autoritativo | `OlympusArenaClient`, `mode="OLYMPUS"` y tema `VIOLET` |
+| Resultado y primera victoria | `OlympusDebrief` |
+| Carrusel móvil, 44 px, foco visible, `aria-live` | selectores con `scroll-snap`, CTA fija inferior en móvil |
+
+Decisiones de esta fase:
+
+- **La identidad del campeón no está en el dominio.** `IOlympusChampion` no tiene nombre ni avatar: es el
+  rival de Arena al que venciste. La ruta `/api/olympus/overview` los decora con
+  `resolveOlympusChampionCards`, para que el caso de uso siga siendo dominio puro y testeable sin catálogo.
+- El cliente reutiliza el mismo contrato de journal que Supervivencia (checkpoint por turno + cierre) y
+  `replayJournalToState` para retomar; no hay un segundo protocolo.
+- El lobby reutiliza `TrainingArenaLobbyActions` de Arena clásica; solo cambia el vestido.
 
 ## 11. Hardening final
 

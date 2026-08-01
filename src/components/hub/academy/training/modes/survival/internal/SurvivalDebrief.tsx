@@ -48,7 +48,7 @@ export function SurvivalDebrief({
           <DebriefStat label="Victorias" value={String(settlement.run.wins)} />
           <DebriefStat label="Récord" value={String(settlement.progress.bestWins)} />
           <DebriefStat label="LP actuales" value={`${settlement.run.currentLp} / ${settlement.run.maxLp}`} />
-          <DebriefStat label="Fragmentos" value={`+${settlement.reward.ascensionFragments}`} />
+          <DebriefStat label="Éter" value={`+${settlement.reward.ascensionFragments}`} />
         </div>
         <div className="mt-4 rounded-xl border border-emerald-300/25 bg-emerald-950/25 p-4 text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-zinc-300">

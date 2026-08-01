@@ -108,12 +108,36 @@ git commit -m "chore(db): sync seed de contenido desde prod"
 
 ## 5. Flujo del **contribuidor**, tras `git pull`
 
+### 5.1. Elige el comando según lo que necesites
+
+| Comando | Qué hace | ¿Borra tus datos? |
+|---|---|---|
+| `pnpm db:migrate` | Aplica **solo las migraciones que faltan** | **No.** Tu usuario y tu progreso siguen ahí |
+| `pnpm db:reset` | Destruye la BD, la recrea, reaplica **todo** + `seed.sql` | **Sí. Todo.** Te toca registrarte otra vez |
+
+**Por defecto usa `pnpm db:migrate`.** Es lo que quieres el 90 % de las veces: alguien
+añadió una migración y tú solo necesitas ponerte al día.
+
 ```
-pnpm db:reset
+pnpm db:migrate
 ```
 
-Reaplica **todas** las migraciones + el `seed.sql` sobre una BD Docker limpia →
-queda **idéntica al repo**. (Borra datos locales; en local solo hay pruebas.)
+### 5.2. Cuándo hace falta `db:reset` de verdad
+
+- Has **editado una migración ya aplicada**: su versión ya consta como aplicada, así que
+  `db:migrate` no la vuelve a ejecutar y tu BD se queda a medias.
+- Has **insertado un fichero SQL en medio** de la numeración (`154b_…`): los prefijos de
+  todas las posteriores se desplazan y el historial deja de cuadrar.
+- Quieres volver al **contenido exacto del seed** del repo (balance, decks, precios…),
+  porque `db:migrate` **no** re-ejecuta `supabase/seed.sql`.
+- La BD local se ha quedado en un estado raro y prefieres empezar limpio.
+
+```
+pnpm db:reset   # migraciones + seed sobre una BD limpia. BORRA tus datos locales.
+```
+
+> Truco: si vas a resetear y quieres conservar tu cuenta de admin, después del reset
+> vuelve a registrarte y corre `pnpm db:make-admin`.
 
 Primera vez en una máquina:
 

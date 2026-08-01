@@ -6,6 +6,7 @@ import {
   mapAdminOlympusNode,
   mapAdminSurvivalRuleset,
   mapAdminSurvivalStage,
+  mapArenaOpponentRefs,
 } from "./admin-pve-modes-mappers";
 
 describe("admin-pve-modes-mappers", () => {
@@ -67,6 +68,34 @@ describe("admin-pve-modes-mappers", () => {
     expect(node).toMatchObject({
       effectKind: "SIGNATURE_CARD_LEVEL", effectAmount: 5, effectCap: 30, effectCardIds: ["entity-claude"],
     });
+  });
+
+  it("agrupa cada variante bajo su rival y cuenta sus cartas por zona", () => {
+    const refs = mapArenaOpponentRefs(
+      [
+        { id: "training-tier-1", display_name: "GenNvim", avatar_url: "/gennvim.webp" },
+        { id: "training-tier-2", display_name: "Helena", avatar_url: "/helena.webp" },
+      ],
+      [
+        { id: "starter-tools", opponent_id: "training-tier-1", label: "Starter Tools" },
+        { id: "starter-control", opponent_id: "training-tier-1", label: null },
+        { id: "framework-burst", opponent_id: "training-tier-2", label: "Framework Burst" },
+      ],
+      [
+        { variant_id: "starter-tools", zone: "DECK" },
+        { variant_id: "starter-tools", zone: "DECK" },
+        { variant_id: "starter-tools", zone: "FUSION" },
+        { variant_id: "framework-burst", zone: "DECK" },
+      ],
+    );
+
+    expect(refs[0]).toMatchObject({ id: "training-tier-1", displayName: "GenNvim" });
+    expect(refs[0].variants).toEqual([
+      { id: "starter-tools", label: "Starter Tools", deckCount: 2, fusionCount: 1 },
+      { id: "starter-control", label: null, deckCount: 0, fusionCount: 0 },
+    ]);
+    // Una variante nunca cuelga de dos rivales: es lo que impide asignarle a un campeón un mazo ajeno.
+    expect(refs[1].variants.map((variant) => variant.id)).toEqual(["framework-burst"]);
   });
 
   it("ordena el árbol del campeón y aplica el LP por defecto", () => {

@@ -10,6 +10,8 @@ import {
   IUpsertOlympusNodeCommand,
 } from "@/core/entities/admin/IAdminPveModes";
 import { IAdminPveModesRepository } from "@/core/repositories/admin/IAdminPveModesRepository";
+import { getMaxCardLevel, getTotalXpRequiredToReachLevel } from "@/core/services/progression/card-level-rules";
+import { MAX_CARD_VERSION_TIER } from "@/core/services/progression/card-version-rules";
 import {
   Row,
   mapAdminOlympusChampion,
@@ -18,13 +20,18 @@ import {
   mapAdminOlympusSettings,
   mapAdminSurvivalRuleset,
   mapAdminSurvivalStage,
+  mapArenaOpponentRefs,
 } from "./internal/admin-pve-modes-mappers";
+
+/** Respaldo para entradas sin escalado explícito: el tope vigente del juego, no una copia congelada. */
+const MAX_LEVEL = getMaxCardLevel();
+const MAX_LEVEL_XP = getTotalXpRequiredToReachLevel(MAX_LEVEL);
 
 export class SupabaseAdminPveModesRepository implements IAdminPveModesRepository {
   constructor(private readonly client: SupabaseClient) {}
 
   async getSnapshot(): Promise<IAdminPveModesSnapshot> {
-    const [rulesets, stages, settings, legends, deckEntries, champions, nodes, variants, opponents] = await Promise.all([
+    const [rulesets, stages, settings, legends, deckEntries, champions, nodes, variants, opponents, variantCards] = await Promise.all([
       this.client.from("survival_rulesets").select("*").order("version", { ascending: false }),
       this.client.from("survival_scaling_stages").select("*").order("from_battle"),
       this.client.from("olympus_settings").select("*").order("version", { ascending: false }),
@@ -32,10 +39,11 @@ export class SupabaseAdminPveModesRepository implements IAdminPveModesRepository
       this.client.from("olympus_opponent_deck_entries").select("*").order("position"),
       this.client.from("olympus_champions").select("*").order("required_tier"),
       this.client.from("olympus_champion_upgrade_nodes").select("*").order("sort_order"),
-      this.client.from("arena_opponent_deck_variants").select("id").order("id"),
-      this.client.from("arena_opponents").select("id").order("id"),
+      this.client.from("arena_opponent_deck_variants").select("id,opponent_id,label,sort_order").order("sort_order"),
+      this.client.from("arena_opponents").select("id,display_name,avatar_url,sort_order").order("sort_order"),
+      this.client.from("arena_deck_variant_cards").select("variant_id,zone"),
     ]);
-    const failed = [rulesets, stages, settings, legends, deckEntries, champions, nodes, variants, opponents]
+    const failed = [rulesets, stages, settings, legends, deckEntries, champions, nodes, variants, opponents, variantCards]
       .some((result) => result.error);
     if (failed) throw new ValidationError("No se pudo leer la configuración de los modos PvE.");
 
@@ -61,8 +69,11 @@ export class SupabaseAdminPveModesRepository implements IAdminPveModesRepository
         row,
         mappedNodes.filter((node) => node.championId === String(row.id)),
       )),
-      arenaDeckVariantIds: ((variants.data ?? []) as Row[]).map((row) => String(row.id)),
-      arenaOpponentIds: ((opponents.data ?? []) as Row[]).map((row) => String(row.id)),
+      arenaOpponents: mapArenaOpponentRefs(
+        (opponents.data ?? []) as Row[],
+        (variants.data ?? []) as Row[],
+        (variantCards.data ?? []) as Row[],
+      ),
     };
   }
 
@@ -125,7 +136,7 @@ export class SupabaseAdminPveModesRepository implements IAdminPveModesRepository
     if (removal.error) throw new ValidationError("No se pudo actualizar el deck legendario.");
     const toRow = (zone: "DECK" | "FUSION") => (entry: IUpsertOlympusLegendCommand["deckCards"][number], index: number) => ({
       opponent_id: command.id, zone, position: index + 1, card_id: entry.cardId,
-      level: entry.level ?? 30, xp: entry.xp ?? 9800, version_tier: entry.versionTier ?? 5,
+      level: entry.level ?? MAX_LEVEL, xp: entry.xp ?? MAX_LEVEL_XP, version_tier: entry.versionTier ?? MAX_CARD_VERSION_TIER,
       attack_bonus: entry.attackBonus ?? 0, defense_bonus: entry.defenseBonus ?? 0,
     });
     const rows = [...command.deckCards.map(toRow("DECK")), ...command.fusionCards.map(toRow("FUSION"))];

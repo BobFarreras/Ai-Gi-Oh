@@ -1,5 +1,7 @@
 // src/services/admin/api/read-admin-pve-command.test.ts - Verifica que la API rechaza configuraciones PvE que romperían el runtime.
 import { describe, expect, it } from "vitest";
+import { getMaxCardLevel } from "@/core/services/progression/card-level-rules";
+import { MAX_CARD_VERSION_TIER } from "@/core/services/progression/card-version-rules";
 import {
   readPublishOlympusSettingsCommand,
   readPublishSurvivalRulesetCommand,
@@ -75,9 +77,28 @@ describe("readPublishOlympusSettingsCommand", () => {
 });
 
 describe("readUpsertOlympusLegendCommand", () => {
-  it("normaliza el deck legendario al tope de versión y nivel", () => {
+  it("normaliza el deck legendario al tope de versión y nivel vigentes del juego", () => {
     const command = readUpsertOlympusLegendCommand({ ...legend });
-    expect(command.deckCards[0]).toMatchObject({ cardId: "entity-a", level: 30, versionTier: 5 });
+    expect(command.deckCards[0]).toMatchObject({
+      cardId: "entity-a",
+      level: getMaxCardLevel(),
+      versionTier: MAX_CARD_VERSION_TIER,
+    });
+  });
+
+  it("acepta cartas por encima del antiguo tope de nivel 30", () => {
+    const command = readUpsertOlympusLegendCommand({
+      ...legend,
+      deckCards: [{ cardId: "entity-a", level: 80, versionTier: 5, xp: 0, attackBonus: 0, defenseBonus: 0 }],
+    });
+    expect(command.deckCards[0].level).toBe(80);
+  });
+
+  it("sigue rechazando un nivel por encima del máximo del juego", () => {
+    expect(() => readUpsertOlympusLegendCommand({
+      ...legend,
+      deckCards: [{ cardId: "entity-a", level: getMaxCardLevel() + 1, versionTier: 5, xp: 0, attackBonus: 0, defenseBonus: 0 }],
+    })).toThrow(/nivel de la carta/i);
   });
 
   it("rechaza una ventana de disponibilidad invertida", () => {

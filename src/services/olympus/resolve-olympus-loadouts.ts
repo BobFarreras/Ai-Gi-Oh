@@ -5,6 +5,8 @@ import { IOlympusChampion } from "@/core/entities/olympus/IOlympus";
 import { IOlympusChampionBattleProfile } from "@/core/services/olympus/resolve-champion-battle-profile";
 import { IOlympusLegendDeckEntry } from "@/core/repositories/IOlympusRepository";
 import { ValidationError } from "@/core/errors/ValidationError";
+import { getMaxCardLevel, getTotalXpRequiredToReachLevel } from "@/core/services/progression/card-level-rules";
+import { MAX_CARD_VERSION_TIER } from "@/core/services/progression/card-version-rules";
 import { applyArenaCardScaling } from "@/services/training/internal/training-card-scaling";
 
 export interface IOlympusLoadout {
@@ -67,7 +69,9 @@ export function resolveLegendLoadout(
     .filter((entry) => entry.zone === zone)
     .sort((left, right) => left.position - right.position)
     .map(toArenaEntry);
-  const scale = { level: 30, versionTier: 5, xp: 9800 };
+  // Solo actúa de respaldo: cada entrada del deck legendario trae su propio nivel y versión desde BD.
+  const maxLevel = getMaxCardLevel();
+  const scale = { level: maxLevel, versionTier: MAX_CARD_VERSION_TIER, xp: getTotalXpRequiredToReachLevel(maxLevel) };
   return {
     deck: applyArenaCardScaling(byZone("DECK"), scale, cardCatalog),
     fusionDeck: applyArenaCardScaling(byZone("FUSION"), scale, cardCatalog),

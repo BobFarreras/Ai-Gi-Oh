@@ -1,6 +1,7 @@
 // src/core/services/olympus/resolve-champion-battle-profile.test.ts - Verifica caps, acumulación y aislamiento entre campeones.
 import { describe, expect, it } from "vitest";
 import { IOlympusChampion, IOlympusUpgradeNode } from "@/core/entities/olympus/IOlympus";
+import { getMaxCardLevel, getTotalXpRequiredToReachLevel } from "@/core/services/progression/card-level-rules";
 import { resolveChampionBattleProfile } from "./resolve-champion-battle-profile";
 
 const champion: IOlympusChampion = {
@@ -75,8 +76,16 @@ describe("resolveChampionBattleProfile", () => {
     expect(resolveChampionBattleProfile(champion, nodes, ["ajeno"]).level).toBe(14);
   });
 
-  it("interpola la experiencia desde el nivel resuelto", () => {
+  it("deriva la experiencia real acumulada del nivel resuelto", () => {
     const nodes = [node({ id: "max", effect: { kind: "GLOBAL_LEVEL", amount: 30, cap: 30 } })];
-    expect(resolveChampionBattleProfile(champion, nodes, ["max"])).toMatchObject({ level: 30, xp: 9800 });
+    expect(resolveChampionBattleProfile(champion, nodes, ["max"])).toMatchObject({
+      level: 30,
+      xp: getTotalXpRequiredToReachLevel(30),
+    });
+  });
+
+  it("permite subir por encima del antiguo tope de 30 hasta el máximo del juego", () => {
+    const nodes = [node({ id: "alto", effect: { kind: "GLOBAL_LEVEL", amount: 200, cap: 200 } })];
+    expect(resolveChampionBattleProfile(champion, nodes, ["alto"]).level).toBe(getMaxCardLevel());
   });
 });

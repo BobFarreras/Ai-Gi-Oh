@@ -5,6 +5,8 @@ import { useMemo, useState } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { IAdminOlympusLegend, IUpsertOlympusLegendCommand } from "@/core/entities/admin/IAdminPveModes";
 import { IAdminArenaCardEntry } from "@/core/entities/training/IAdminArena";
+import { getMaxCardLevel, getTotalXpRequiredToReachLevel } from "@/core/services/progression/card-level-rules";
+import { MAX_CARD_VERSION_TIER } from "@/core/services/progression/card-version-rules";
 import {
   ArenaDeckZone,
   applyArenaBonusToSameCards,
@@ -35,8 +37,14 @@ function toCommand(legend: IAdminOlympusLegend): IUpsertOlympusLegendCommand {
   };
 }
 
+/** Una leyenda promete "deck a versión máxima": las cartas nuevas nacen al tope vigente del juego. */
 const NEW_ENTRY = (cardId: string): IAdminArenaCardEntry => ({
-  cardId, versionTier: 5, level: 30, xp: 9800, attackBonus: 0, defenseBonus: 0,
+  cardId,
+  versionTier: MAX_CARD_VERSION_TIER,
+  level: getMaxCardLevel(),
+  xp: getTotalXpRequiredToReachLevel(getMaxCardLevel()),
+  attackBonus: 0,
+  defenseBonus: 0,
 });
 
 export type OlympusLegendDraft = ReturnType<typeof useOlympusLegendDraft>;

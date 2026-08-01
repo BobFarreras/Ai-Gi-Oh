@@ -471,3 +471,19 @@
    publicación y cada edición dejan asiento con actor, entidad y versión.
 7. El vocabulario de efectos del árbol vive en un único módulo compartido por API y UI: publicar un tipo que
    el resolutor no sabe aplicar es imposible desde el panel y falla al mapear si llega por otra vía.
+
+## Modos PvE - Fase 12: UI de Olimpo
+
+1. `/hub/academy/training/arena/olympus` existe y la tarjeta del portal deja de estar «En preparación».
+2. La antesala reúne en una pantalla lo que el jugador necesita para decidir: intentos restantes con
+   cuenta atrás al reset UTC, campeones (los bloqueados visibles con su requisito), leyendas con su arte,
+   reglas y recompensa, y el árbol de mejoras con reasignación.
+3. Gastar un intento exige confirmación explícita, con el foco inicial en «Cancelar» y anticipando cuántos
+   intentos quedarán. Retomar un combate pendiente no pasa por ahí: no consume otro.
+4. El árbol describe cada nodo en lenguaje de juego («+5 nivel a todo el mazo») en vez del `kind` interno.
+5. La identidad del campeón se compone en la ruta con `resolveOlympusChampionCards`: el dominio no sabe de
+   avatares ni nombres, porque el campeón es el rival de Arena al que venciste.
+6. El cliente reutiliza el contrato de journal de Supervivencia (checkpoint por turno + cierre) y
+   `replayJournalToState` para retomar; el lobby reutiliza las acciones de Arena clásica.
+7. Responsive: carruseles con `scroll-snap` en móvil, CTA fija inferior al alcance del pulgar, objetivos de
+   44 px, foco visible y `aria-live` en el marcador de intentos.

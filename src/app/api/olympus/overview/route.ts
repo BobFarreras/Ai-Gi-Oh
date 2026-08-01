@@ -4,6 +4,7 @@ import { GetOlympusOverviewUseCase } from "@/core/use-cases/olympus/GetOlympusOv
 import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
 import { enforcePveRateLimit } from "@/services/security/api/rate-limit/enforce-pve-rate-limit";
 import { createOlympusRouteContext } from "@/services/olympus/create-olympus-route-context";
+import { resolveOlympusChampionCards } from "@/services/olympus/resolve-olympus-champion-cards";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,7 +14,9 @@ export async function GET(request: NextRequest) {
     }, context.response.headers);
     if (rateLimited) return rateLimited;
     const overview = await new GetOlympusOverviewUseCase(context.repository).execute(context.playerId);
-    return NextResponse.json(overview, { status: 200, headers: context.response.headers });
+    // La identidad del campeón vive en el catálogo de Arena: se compone aquí, no en el dominio.
+    const champions = await resolveOlympusChampionCards(overview.champions);
+    return NextResponse.json({ ...overview, champions }, { status: 200, headers: context.response.headers });
   } catch (error) {
     return createApiErrorResponse(error, "No se pudo cargar el Olimpo.");
   }

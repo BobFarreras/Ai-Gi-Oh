@@ -3,12 +3,13 @@ import {
   IOlympusChampion,
   IOlympusUpgradeNode,
 } from "@/core/entities/olympus/IOlympus";
+import { getMaxCardLevel, getTotalXpRequiredToReachLevel } from "@/core/services/progression/card-level-rules";
+import { MAX_CARD_VERSION_TIER } from "@/core/services/progression/card-version-rules";
 
-const MAX_CARD_LEVEL = 30;
-const MAX_VERSION_TIER = 5;
+// Los topes son los del juego, no propios de Olimpo: duplicarlos los deja congelados cuando cambian.
+const MAX_CARD_LEVEL = getMaxCardLevel();
+const MAX_VERSION_TIER = MAX_CARD_VERSION_TIER;
 const MAX_ENERGY_BONUS = 5;
-/** El catálogo asigna 9800 XP al nivel máximo; el resto se interpola para no inventar progresiones. */
-const XP_AT_MAX_LEVEL = 9800;
 
 export interface IOlympusChampionBattleProfile {
   level: number;
@@ -77,7 +78,8 @@ export function resolveChampionBattleProfile(
   return {
     level: resolvedLevel,
     versionTier: settle(versionTier),
-    xp: Math.round((resolvedLevel / MAX_CARD_LEVEL) * XP_AT_MAX_LEVEL),
+    // XP real acumulada de ese nivel: la barra de la carta prestada cuadra con la del jugador.
+    xp: getTotalXpRequiredToReachLevel(resolvedLevel),
     // Sin selector explícito, "emblemático" es el fusion deck: se resuelve al hidratar el mazo.
     signatureCardIds: [...signatureCardIds],
     signatureLevel: settle(signature),

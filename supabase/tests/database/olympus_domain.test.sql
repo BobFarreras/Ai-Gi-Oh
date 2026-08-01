@@ -2,7 +2,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(75);
+select plan(78);
 
 -- 1. Superficie persistida del subdominio.
 select has_table('public', 'olympus_champions', 'Existe el catálogo de campeones');
@@ -74,15 +74,33 @@ select results_eq(
 );
 select results_eq(
   $$select count(*)::bigint from public.olympus_champions champion
-    where (select count(*) from public.olympus_champion_upgrade_nodes node
+    where (select count(distinct node.branch) from public.olympus_champion_upgrade_nodes node
       where node.champion_id = champion.id and node.is_active) <> 3$$,
   array[0::bigint],
-  'Cada campeón nace con las tres ramas del árbol'
+  'Cada campeón tiene nodos en las tres ramas del árbol'
 );
 select results_eq(
   $$select count(distinct branch)::bigint from public.olympus_champion_upgrade_nodes$$,
   array[3::bigint],
   'El árbol declara exactamente Potencia, Resistencia e Identidad'
+);
+-- Identidad nacía con SIGNATURE_CARD_LEVEL, que era un subconjunto del +nivel global de Potencia: se
+-- pagaba más por menos. Ahora sube versión (pasivas), que es un eje distinto del nivel (ATK/DEF).
+select results_eq(
+  $$select count(*)::bigint from public.olympus_champion_upgrade_nodes power
+    join public.olympus_champion_upgrade_nodes identity
+      on identity.champion_id = power.champion_id and identity.branch = 'IDENTITY'
+    where power.branch = 'POWER'
+      and power.effect_json ->> 'kind' = identity.effect_json ->> 'kind'$$,
+  array[0::bigint],
+  'Identidad no duplica el efecto de Potencia'
+);
+select results_eq(
+  $$select count(*)::bigint from public.olympus_champion_upgrade_nodes
+    where effect_json ->> 'kind' in ('GLOBAL_LEVEL', 'SIGNATURE_CARD_LEVEL')
+      and (effect_json ->> 'cap')::integer < 100$$,
+  array[0::bigint],
+  'Ningún nodo de nivel se queda en el tope antiguo de 30'
 );
 select results_eq(
   $$select count(*)::bigint from public.olympus_opponents opponent
@@ -94,9 +112,15 @@ select results_eq(
 );
 select results_eq(
   $$select count(*)::bigint from public.olympus_opponent_deck_entries
-    where version_tier <> 5 or level <> 30$$,
+    where version_tier <> 5 or level <> 100$$,
   array[0::bigint],
-  'El deck legendario viaja al tope de nivel y versión'
+  'El deck legendario viaja al tope de nivel y versión vigentes del juego'
+);
+select lives_ok(
+  $$insert into public.olympus_opponent_deck_entries
+      (opponent_id, zone, position, card_id, level, xp, version_tier)
+    values ('zeus', 'DECK', 999, 'entity-chatgpt', 100, 149800, 5)$$,
+  'La base de datos acepta el nivel máximo vigente (100), no el antiguo 30'
 );
 select results_eq(
   $$select count(*)::bigint from public.olympus_opponents where is_active and ai_profile <> 'MYTHIC'$$,

@@ -15,6 +15,8 @@ import {
   SURVIVAL_AI_PROFILES,
 } from "@/core/entities/admin/IAdminPveModes.types";
 import { IAdminArenaCardEntry } from "@/core/entities/training/IAdminArena";
+import { getMaxCardLevel, getTotalXpRequiredToReachLevel } from "@/core/services/progression/card-level-rules";
+import { MAX_CARD_VERSION_TIER } from "@/core/services/progression/card-version-rules";
 
 type Raw = Record<string, unknown>;
 
@@ -42,16 +44,21 @@ function asOption<T extends string>(value: unknown, options: readonly T[], field
   return value as T;
 }
 
-/** El deck legendario comparte forma con el de Arena para reutilizar su editor visual sin duplicar tipos. */
+/**
+ * El deck legendario comparte forma con el de Arena para reutilizar su editor visual sin duplicar tipos.
+ * Los topes salen de las reglas de progresión, no de constantes propias: cuando el juego subió el nivel
+ * máximo a 100, tenerlos duplicados aquí es lo que hacía rechazar guardados perfectamente válidos.
+ */
 function readCardEntries(value: unknown, field: string): IAdminArenaCardEntry[] {
   if (!Array.isArray(value)) throw new ValidationError(`${field} debe ser una lista de cartas.`);
+  const maxLevel = getMaxCardLevel();
   return value.map((raw) => {
     const entry = raw as Raw;
     return {
       cardId: asString(entry.cardId, "La carta"),
-      versionTier: asInteger(entry.versionTier ?? 5, "La versión de la carta", 1, 5),
-      level: asInteger(entry.level ?? 30, "El nivel de la carta", 1, 30),
-      xp: asInteger(entry.xp ?? 0, "La experiencia de la carta", 0, 1_000_000),
+      versionTier: asInteger(entry.versionTier ?? MAX_CARD_VERSION_TIER, "La versión de la carta", 1, MAX_CARD_VERSION_TIER),
+      level: asInteger(entry.level ?? maxLevel, "El nivel de la carta", 1, maxLevel),
+      xp: asInteger(entry.xp ?? 0, "La experiencia de la carta", 0, getTotalXpRequiredToReachLevel(maxLevel)),
       attackBonus: asInteger(entry.attackBonus ?? 0, "El bonus de ataque", 0, 100_000),
       defenseBonus: asInteger(entry.defenseBonus ?? 0, "El bonus de defensa", 0, 100_000),
     };
@@ -138,8 +145,8 @@ export function readUpsertOlympusChampionCommand(data: Raw): IUpsertOlympusChamp
     requiredTier: asInteger(data.requiredTier, "El tier requerido", 1, 20),
     requiredLadderPosition: asInteger(data.requiredLadderPosition, "La posición del ladder", 1, 20),
     baseDeckVariantId: asString(data.baseDeckVariantId, "La variante de mazo base"),
-    baseLevel: asInteger(data.baseLevel, "El nivel base", 0, 30),
-    baseVersionTier: asInteger(data.baseVersionTier, "La versión base", 0, 5),
+    baseLevel: asInteger(data.baseLevel, "El nivel base", 0, getMaxCardLevel()),
+    baseVersionTier: asInteger(data.baseVersionTier, "La versión base", 0, MAX_CARD_VERSION_TIER),
     baseStartingLp: asInteger(data.baseStartingLp, "Los LP iniciales", 1000, 100_000),
     isActive: data.isActive === true,
   };

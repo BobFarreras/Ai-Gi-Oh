@@ -6,6 +6,7 @@ import { IUpsertOlympusLegendCommand } from "@/core/entities/admin/IAdminPveMode
 import { AdminPveModes } from "@/components/admin/internal/pve/use-admin-pve-modes";
 import { AdminOlympusLegendDeckEditor } from "@/components/admin/internal/pve/AdminOlympusLegendDeckEditor";
 import { AdminOlympusLegendForm } from "@/components/admin/internal/pve/AdminOlympusLegendForm";
+import { AdminPveHelpNote } from "@/components/admin/internal/pve/AdminPveHelpNote";
 import { createEmptyLegend, useOlympusLegendDraft } from "@/components/admin/internal/pve/use-olympus-legend-draft";
 import {
   PVE_DANGER_BUTTON, PVE_GHOST_BUTTON, PVE_SAVE_BUTTON, PVE_SECTION, PVE_TITLE,
@@ -32,6 +33,18 @@ export function AdminOlympusLegendsPanel({ modes }: { modes: AdminPveModes }) {
 
   return (
     <div className="home-modern-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
+      <AdminPveHelpNote
+        title="Cómo se configura una leyenda"
+        defaultOpen={false}
+        steps={[
+          "Identidad y arte: las cuatro imágenes viven en public/assets/combat/olympus/opponents/<id>/.",
+          "«Energía +» es energía POR ENCIMA del máximo compartido del motor, no un valor absoluto.",
+          "Las reglas especiales se le muestran al jugador antes de que gaste su intento.",
+          "Sin fechas de disponibilidad la leyenda sale siempre mientras esté activa; con fechas, rota.",
+          "El bonus de primera victoria se paga una sola vez por jugador y leyenda; la derrota solo deja la compensación.",
+          "En el mazo, pulsa una carta para abrir su ficha con nivel, versión y objetos. El cambio afecta a todas sus copias.",
+        ]}
+      />
       <section className={PVE_SECTION}>
         <div className="mb-2 flex items-center justify-between">
           <h2 className={PVE_TITLE}>Leyendas ({modes.legends.length})</h2>
@@ -106,7 +119,7 @@ export function AdminOlympusLegendsPanel({ modes }: { modes: AdminPveModes }) {
             </span>
           </div>
 
-          <AdminOlympusLegendForm legend={draft.current} deckVariantIds={modes.arenaDeckVariantIds} onEdit={draft.edit} />
+          <AdminOlympusLegendForm legend={draft.current} arenaOpponents={modes.arenaOpponents} onEdit={draft.edit} />
           <section className={PVE_SECTION}>
             <h3 className={`${PVE_TITLE} mb-2`}>Deck legendario</h3>
             <AdminOlympusLegendDeckEditor draft={draft} validCards={modes.validCards} />

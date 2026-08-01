@@ -27,7 +27,10 @@ export function AdminPveModesPanel() {
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-cyan-800/50 bg-[linear-gradient(120deg,rgba(4,14,30,0.96),rgba(2,9,20,0.98))] px-4 py-3">
         <div>
           <h1 className="text-sm font-black uppercase tracking-widest text-cyan-100">Modos PvE</h1>
-          <p className="text-[10px] text-slate-400">{activeTab.hint}. Publicar crea versión nueva; las partidas en curso no se reescalan.</p>
+          <p className="text-[10px] text-slate-400">
+            {activeTab.hint}. Publicar crea versión nueva; las partidas en curso no se reescalan.
+            {" "}<span className="text-slate-500">Guía completa en <code className="text-cyan-500">docs/admin/GUIA-PANEL-MODOS-PVE.md</code>.</span>
+          </p>
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-1 rounded-lg border border-slate-700/50 bg-slate-950/50 p-1">
           {TABS.map((tab) => (

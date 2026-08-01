@@ -94,15 +94,32 @@ export interface IAdminOlympusChampion {
   nodes: IAdminOlympusUpgradeNode[];
 }
 
+/** Variante de mazo publicada de un rival de Arena, con su tamaño para elegirla sin abrir el editor. */
+export interface IAdminPveArenaVariantRef {
+  id: string;
+  label: string | null;
+  deckCount: number;
+  fusionCount: number;
+}
+
+/**
+ * Rival de Arena tal y como lo necesita el panel PvE: identidad visual para el roster y sus variantes,
+ * para que un campeón solo pueda prestar mazos de SU rival.
+ */
+export interface IAdminPveArenaOpponentRef {
+  id: string;
+  displayName: string;
+  avatarUrl: string;
+  variants: IAdminPveArenaVariantRef[];
+}
+
 /** Instantánea completa que consume el panel; una sola lectura evita cascadas de fetch en la UI. */
 export interface IAdminPveModesSnapshot {
   survivalRulesets: IAdminSurvivalRuleset[];
   olympusSettings: IAdminOlympusSettings[];
   legends: IAdminOlympusLegend[];
   champions: IAdminOlympusChampion[];
-  /** Ids de rivales de Arena y sus variantes, para enlazar campeones y decks legendarios sin inventar ids. */
-  arenaDeckVariantIds: string[];
-  arenaOpponentIds: string[];
+  arenaOpponents: IAdminPveArenaOpponentRef[];
 }
 
 export interface IPublishSurvivalRulesetCommand {

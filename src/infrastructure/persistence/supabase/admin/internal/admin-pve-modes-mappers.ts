@@ -4,6 +4,7 @@ import {
   IAdminOlympusLegend,
   IAdminOlympusSettings,
   IAdminOlympusUpgradeNode,
+  IAdminPveArenaOpponentRef,
   IAdminSurvivalRuleset,
   IAdminSurvivalStage,
 } from "@/core/entities/admin/IAdminPveModes";
@@ -114,6 +115,45 @@ export function mapAdminOlympusNode(row: Row): IAdminOlympusUpgradeNode {
     isActive: row.is_active === true,
     version: num(row.version),
   };
+}
+
+/**
+ * Agrupa las variantes bajo su rival. El campeón presta el mazo de SU rival, así que el panel necesita
+ * saber a quién pertenece cada variante para no ofrecer combinaciones que romperían la emisión.
+ */
+export function mapArenaOpponentRefs(
+  opponentRows: Row[],
+  variantRows: Row[],
+  variantCardRows: Row[],
+): IAdminPveArenaOpponentRef[] {
+  const counts = new Map<string, { deck: number; fusion: number }>();
+  for (const card of variantCardRows) {
+    const key = str(card.variant_id);
+    const current = counts.get(key) ?? { deck: 0, fusion: 0 };
+    if (str(card.zone) === "FUSION") current.fusion += 1;
+    else current.deck += 1;
+    counts.set(key, current);
+  }
+  return opponentRows.map((opponent) => {
+    const id = str(opponent.id);
+    return {
+      id,
+      displayName: str(opponent.display_name),
+      avatarUrl: str(opponent.avatar_url),
+      variants: variantRows
+        .filter((variant) => str(variant.opponent_id) === id)
+        .map((variant) => {
+          const variantId = str(variant.id);
+          const count = counts.get(variantId) ?? { deck: 0, fusion: 0 };
+          return {
+            id: variantId,
+            label: optStr(variant.label),
+            deckCount: count.deck,
+            fusionCount: count.fusion,
+          };
+        }),
+    };
+  });
 }
 
 export function mapAdminOlympusChampion(row: Row, nodes: IAdminOlympusUpgradeNode[]): IAdminOlympusChampion {

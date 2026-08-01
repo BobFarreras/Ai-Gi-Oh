@@ -1,13 +1,13 @@
 // src/components/admin/internal/pve/AdminOlympusLegendForm.tsx - Identidad, arte, ventana de disponibilidad y recompensas de una leyenda.
 "use client";
 
-import { IUpsertOlympusLegendCommand } from "@/core/entities/admin/IAdminPveModes";
+import { IAdminPveArenaOpponentRef, IUpsertOlympusLegendCommand } from "@/core/entities/admin/IAdminPveModes";
 import { OLYMPUS_AI_PROFILES } from "@/core/entities/admin/IAdminPveModes.types";
 import { PVE_FIELD, PVE_LABEL, PVE_SECTION, PVE_TITLE } from "@/components/admin/internal/pve/admin-pve-styles";
 
 interface IAdminOlympusLegendFormProps {
   legend: IUpsertOlympusLegendCommand;
-  deckVariantIds: string[];
+  arenaOpponents: IAdminPveArenaOpponentRef[];
   onEdit: (patch: Partial<IUpsertOlympusLegendCommand>) => void;
 }
 
@@ -19,7 +19,7 @@ const ASSET_FIELDS: { key: "avatarPath" | "introPath" | "victoryPath" | "defeatP
 ];
 
 const REWARD_FIELDS: { key: "baseFragmentReward" | "firstVictoryFragmentBonus" | "defeatFragmentReward"; label: string; hint: string }[] = [
-  { key: "baseFragmentReward", label: "Victoria", hint: "Fragmentos por cada victoria." },
+  { key: "baseFragmentReward", label: "Victoria", hint: "Éter por cada victoria." },
   { key: "firstVictoryFragmentBonus", label: "Primera victoria", hint: "Bonus único por leyenda." },
   { key: "defeatFragmentReward", label: "Derrota", hint: "Compensación explícita, nunca premium." },
 ];
@@ -28,7 +28,7 @@ const REWARD_FIELDS: { key: "baseFragmentReward" | "firstVictoryFragmentBonus" |
 const toLocalInput = (iso: string | null): string => (iso ? new Date(iso).toISOString().slice(0, 16) : "");
 const fromLocalInput = (value: string): string | null => (value ? new Date(value).toISOString() : null);
 
-export function AdminOlympusLegendForm({ legend, deckVariantIds, onEdit }: IAdminOlympusLegendFormProps) {
+export function AdminOlympusLegendForm({ legend, arenaOpponents, onEdit }: IAdminOlympusLegendFormProps) {
   return (
     <div className="space-y-3">
       <section className={PVE_SECTION}>
@@ -56,11 +56,20 @@ export function AdminOlympusLegendForm({ legend, deckVariantIds, onEdit }: IAdmi
             <input aria-label="Bonus de energía de la leyenda" className={`${PVE_FIELD} w-12`} inputMode="numeric" value={legend.energyBonus}
               onChange={(event) => onEdit({ energyBonus: Number(event.target.value) || 0 })} />
           </label>
-          <label className={PVE_LABEL}>Variante base
-            <select aria-label="Variante de mazo de referencia" className={`${PVE_FIELD} w-40`} value={legend.deckTemplateId}
+          {/* Referencia de plantilla: el deck real se edita abajo, esta variante solo documenta de dónde salió. */}
+          <label className={PVE_LABEL} title="Variante de Arena que sirvió de plantilla; el deck real se edita más abajo">Plantilla
+            <select aria-label="Variante de mazo de referencia" className={`${PVE_FIELD} w-52`} value={legend.deckTemplateId}
               onChange={(event) => onEdit({ deckTemplateId: event.target.value })}>
-              <option value="">— elige variante —</option>
-              {deckVariantIds.map((id) => <option key={id} value={id}>{id}</option>)}
+              <option value="">— elige plantilla —</option>
+              {arenaOpponents.map((opponent) => (
+                <optgroup key={opponent.id} label={opponent.displayName}>
+                  {opponent.variants.map((variant) => (
+                    <option key={variant.id} value={variant.id}>
+                      {variant.label ?? variant.id} · {variant.deckCount} cartas
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
           </label>
           <label className="flex items-center gap-1 text-[11px] text-slate-300">
@@ -108,7 +117,7 @@ export function AdminOlympusLegendForm({ legend, deckVariantIds, onEdit }: IAdmi
           {REWARD_FIELDS.map((field) => (
             <label key={field.key} className={PVE_LABEL} title={field.hint}>
               {field.label}
-              <input aria-label={`Fragmentos por ${field.label.toLowerCase()}`} className={`${PVE_FIELD} w-20`} inputMode="numeric" value={legend[field.key]}
+              <input aria-label={`Éter por ${field.label.toLowerCase()}`} className={`${PVE_FIELD} w-20`} inputMode="numeric" value={legend[field.key]}
                 onChange={(event) => onEdit({ [field.key]: Number(event.target.value) || 0 })} />
             </label>
           ))}

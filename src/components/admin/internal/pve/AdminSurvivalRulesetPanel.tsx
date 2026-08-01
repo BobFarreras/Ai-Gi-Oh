@@ -1,120 +1,117 @@
-// src/components/admin/internal/pve/AdminSurvivalRulesetPanel.tsx - Publica versiones del ruleset de Supervivencia (roster, hitos y escalado).
+// src/components/admin/internal/pve/AdminSurvivalRulesetPanel.tsx - Publica versiones del ruleset de Supervivencia con vista previa del escalado.
 "use client";
 
 import { useState } from "react";
-import { IAdminSurvivalRuleset, IAdminSurvivalStage } from "@/core/entities/admin/IAdminPveModes";
-import { SURVIVAL_AI_PROFILES } from "@/core/entities/admin/IAdminPveModes.types";
+import { IAdminSurvivalRuleset } from "@/core/entities/admin/IAdminPveModes";
 import { AdminPveModes } from "@/components/admin/internal/pve/use-admin-pve-modes";
+import { AdminPveHelpNote } from "@/components/admin/internal/pve/AdminPveHelpNote";
 import { AdminPveVersionHistory } from "@/components/admin/internal/pve/AdminPveVersionHistory";
+import { AdminSurvivalPreview } from "@/components/admin/internal/pve/AdminSurvivalPreview";
+import { AdminSurvivalRosterEditor } from "@/components/admin/internal/pve/AdminSurvivalRosterEditor";
+import { AdminSurvivalStageEditor } from "@/components/admin/internal/pve/AdminSurvivalStageEditor";
+import { SurvivalDraft } from "@/components/admin/internal/pve/admin-survival-preview";
 import {
-  PVE_DANGER_BUTTON, PVE_FIELD, PVE_GHOST_BUTTON, PVE_LABEL, PVE_SAVE_BUTTON, PVE_SECTION, PVE_TITLE,
+  PVE_FIELD, PVE_GHOST_BUTTON, PVE_SAVE_BUTTON, PVE_SECTION, PVE_TITLE,
 } from "@/components/admin/internal/pve/admin-pve-styles";
 
-const NEW_STAGE: IAdminSurvivalStage = {
-  fromBattle: 1, aiProfile: "HARD", maxTier: 8, maxLpBonus: 0, statBonusPerRank: 0, rewardDefinitionId: "survival-base",
+const DEFAULT_DRAFT: SurvivalDraft = {
+  startTier: 4, battlesPerTier: 2, roster: [], milestoneInterval: 5, milestoneHeal: 2000,
+  stages: [{ fromBattle: 1, aiProfile: "HARD", maxTier: 8, maxLpBonus: 0, statBonusPerRank: 0, rewardDefinitionId: "survival-base" }],
 };
 
-type Draft = Pick<IAdminSurvivalRuleset, "startTier" | "battlesPerTier" | "roster" | "milestoneInterval" | "milestoneHeal" | "stages">;
-
-function toDraft(active: IAdminSurvivalRuleset | undefined): Draft {
-  if (!active) return { startTier: 4, battlesPerTier: 2, roster: [], milestoneInterval: 5, milestoneHeal: 2000, stages: [NEW_STAGE] };
+function toDraft(active: IAdminSurvivalRuleset | undefined): SurvivalDraft {
+  if (!active) return DEFAULT_DRAFT;
   const { startTier, battlesPerTier, roster, milestoneInterval, milestoneHeal, stages } = active;
-  return { startTier, battlesPerTier, roster: [...roster], milestoneInterval, milestoneHeal, stages: stages.map((stage) => ({ ...stage })) };
+  return {
+    startTier, battlesPerTier, milestoneInterval, milestoneHeal,
+    roster: [...roster], stages: stages.map((stage) => ({ ...stage })),
+  };
 }
+
+const BASE_FIELDS: { key: "startTier" | "battlesPerTier" | "milestoneInterval" | "milestoneHeal"; label: string; hint: string }[] = [
+  { key: "startTier", label: "Tier inicial", hint: "Fuerza del rival en el primer combate." },
+  { key: "battlesPerTier", label: "Combates por tier", hint: "Cada N combates el rival sube un tier." },
+  { key: "milestoneInterval", label: "Hito cada N victorias", hint: "Cadencia de la curación." },
+  { key: "milestoneHeal", label: "LP que cura el hito", hint: "Nunca supera los LP máximos." },
+];
 
 export function AdminSurvivalRulesetPanel({ modes }: { modes: AdminPveModes }) {
   const active = modes.survivalRulesets.find((ruleset) => ruleset.isActive);
-  const [draft, setDraft] = useState<Draft | null>(null);
+  const [draft, setDraft] = useState<SurvivalDraft | null>(null);
   const current = draft ?? toDraft(active);
-  const edit = (patch: Partial<Draft>) => setDraft({ ...current, ...patch });
-  const editStage = (index: number, patch: Partial<IAdminSurvivalStage>) =>
-    edit({ stages: current.stages.map((stage, position) => (position === index ? { ...stage, ...patch } : stage)) });
+  const edit = (patch: Partial<SurvivalDraft>) => setDraft({ ...current, ...patch });
 
   return (
     <div className="home-modern-scroll min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+      <AdminPveHelpNote
+        title="Cómo escala una expedición"
+        steps={[
+          "El jugador encadena combates con sus LP reales: lo que le queda al ganar es con lo que empieza el siguiente. Perder o empatar cierra la expedición.",
+          "El rival del combate N sale del roster en orden circular: el combate 1 es el primero de la lista, y al acabar la vuelta se vuelve a empezar.",
+          "La fuerza sube por tiers: cada «combates por tier» el rival gana un tier, empezando en el «tier inicial».",
+          "Cada tramo fija la dificultad de la IA y el tier máximo. Al tocar ese tope el rival deja de subir de tier y arranca la Ascensión.",
+          "En Ascensión, cada vuelta completa al roster suma los LP y el ATK/DEF extra del tramo. Es el crecimiento acotado que sustituye al tier.",
+          "Cada «hito» de victorias devuelve LP al jugador, sin pasar de su máximo.",
+        ]}
+      />
+
       <section className={PVE_SECTION}>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <h2 className={PVE_TITLE}>Expedición · versión activa v{active?.version ?? "—"}</h2>
-          <p className="text-[10px] text-slate-500">Guardar publica una versión nueva. Las expediciones en curso conservan la suya.</p>
+          <h2 className={PVE_TITLE}>Reglas base · versión activa v{active?.version ?? "—"}</h2>
+          <p className="text-[10px] text-slate-500">Guardar publica una versión nueva; las expediciones en curso conservan la suya.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className={PVE_LABEL}>Tier inicial
-            <input aria-label="Tier inicial" className={`${PVE_FIELD} w-14`} inputMode="numeric" value={current.startTier}
-              onChange={(event) => edit({ startTier: Number(event.target.value) || 1 })} />
-          </label>
-          <label className={PVE_LABEL}>Combates por tier
-            <input aria-label="Combates por tier" className={`${PVE_FIELD} w-14`} inputMode="numeric" value={current.battlesPerTier}
-              onChange={(event) => edit({ battlesPerTier: Number(event.target.value) || 1 })} />
-          </label>
-          <label className={PVE_LABEL}>Hito cada
-            <input aria-label="Intervalo de hito" className={`${PVE_FIELD} w-14`} inputMode="numeric" value={current.milestoneInterval}
-              onChange={(event) => edit({ milestoneInterval: Number(event.target.value) || 1 })} />
-          </label>
-          <label className={PVE_LABEL}>Curación de hito
-            <input aria-label="Curación de hito" className={`${PVE_FIELD} w-20`} inputMode="numeric" value={current.milestoneHeal}
-              onChange={(event) => edit({ milestoneHeal: Number(event.target.value) || 0 })} />
-          </label>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {BASE_FIELDS.map((field) => (
+            <label key={field.key} className="space-y-1">
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">{field.label}</span>
+              <input
+                aria-label={field.label}
+                className={`${PVE_FIELD} w-full`}
+                inputMode="numeric"
+                value={current[field.key]}
+                onChange={(event) => edit({ [field.key]: Number(event.target.value) || 0 })}
+              />
+              <span className="block text-[9.5px] text-slate-500">{field.hint}</span>
+            </label>
+          ))}
         </div>
-        <label className="mt-2 block text-[10px] text-slate-400">
-          Roster (ids de rivales de Arena, uno por línea y en orden)
-          <textarea
-            aria-label="Roster de la expedición"
-            rows={4}
-            className="mt-1 w-full rounded border border-slate-600 bg-slate-950/70 p-2 font-mono text-[11px] text-slate-100 focus:border-cyan-600 focus:outline-none"
-            value={current.roster.join("\n")}
-            onChange={(event) => edit({ roster: event.target.value.split("\n").map((id) => id.trim()).filter(Boolean) })}
-          />
-        </label>
       </section>
 
       <section className={PVE_SECTION}>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className={PVE_TITLE}>Tramos de escalado ({current.stages.length})</h2>
-          <button type="button" aria-label="Añadir tramo de escalado" className={PVE_GHOST_BUTTON} disabled={modes.isBusy}
-            onClick={() => edit({ stages: [...current.stages, { ...NEW_STAGE, fromBattle: current.stages.length + 1 }] })}>
-            + Tramo
-          </button>
-        </div>
-        <div className="space-y-1.5">
-          {current.stages.map((stage, index) => (
-            <div key={`stage-${index}`} className="flex flex-wrap items-center gap-1.5 rounded border border-slate-800/70 bg-slate-950/50 p-1.5">
-              <label className={PVE_LABEL}>Desde
-                <input aria-label={`Combate inicial del tramo ${index + 1}`} className={`${PVE_FIELD} w-12`} inputMode="numeric" value={stage.fromBattle}
-                  onChange={(event) => editStage(index, { fromBattle: Number(event.target.value) || 1 })} />
-              </label>
-              <select aria-label={`Perfil de IA del tramo ${index + 1}`} className={`${PVE_FIELD} w-24`} value={stage.aiProfile}
-                onChange={(event) => editStage(index, { aiProfile: event.target.value as IAdminSurvivalStage["aiProfile"] })}>
-                {SURVIVAL_AI_PROFILES.map((profile) => <option key={profile} value={profile}>{profile}</option>)}
-              </select>
-              <label className={PVE_LABEL}>Tier máx
-                <input aria-label={`Tier máximo del tramo ${index + 1}`} className={`${PVE_FIELD} w-12`} inputMode="numeric" value={stage.maxTier}
-                  onChange={(event) => editStage(index, { maxTier: Number(event.target.value) || 1 })} />
-              </label>
-              <label className={PVE_LABEL} title="LP extra del rival por vuelta de Ascensión">LP rival
-                <input aria-label={`Bonus de LP del tramo ${index + 1}`} className={`${PVE_FIELD} w-16`} inputMode="numeric" value={stage.maxLpBonus}
-                  onChange={(event) => editStage(index, { maxLpBonus: Number(event.target.value) || 0 })} />
-              </label>
-              <label className={PVE_LABEL} title="ATK/DEF extra por vuelta de Ascensión">Stats/vuelta
-                <input aria-label={`Bonus de stats del tramo ${index + 1}`} className={`${PVE_FIELD} w-16`} inputMode="numeric" value={stage.statBonusPerRank}
-                  onChange={(event) => editStage(index, { statBonusPerRank: Number(event.target.value) || 0 })} />
-              </label>
-              <input aria-label={`Recompensa del tramo ${index + 1}`} className={`${PVE_FIELD} min-w-0 flex-1`} placeholder="reward-id" value={stage.rewardDefinitionId}
-                onChange={(event) => editStage(index, { rewardDefinitionId: event.target.value })} />
-              <button type="button" aria-label={`Quitar tramo ${index + 1}`} className={PVE_DANGER_BUTTON} disabled={current.stages.length <= 1}
-                onClick={() => edit({ stages: current.stages.filter((_, position) => position !== index) })}>×</button>
-            </div>
-          ))}
-        </div>
-        <div className="mt-3 flex items-center gap-2">
-          <button type="button" aria-label="Publicar nueva versión del ruleset" className={PVE_SAVE_BUTTON} disabled={modes.isBusy}
-            onClick={() => void modes.publishSurvivalRuleset(current).then((ok) => ok && setDraft(null))}>
-            Publicar versión
-          </button>
-          {draft ? (
-            <button type="button" aria-label="Descartar cambios del ruleset" className={PVE_GHOST_BUTTON} onClick={() => setDraft(null)}>Descartar</button>
-          ) : null}
-        </div>
+        <h2 className={`${PVE_TITLE} mb-2`}>Roster de rivales</h2>
+        <AdminSurvivalRosterEditor
+          roster={current.roster}
+          arenaOpponents={modes.arenaOpponents}
+          onChange={(roster) => edit({ roster })}
+        />
       </section>
+
+      <section className={PVE_SECTION}>
+        <h2 className={`${PVE_TITLE} mb-2`}>Tramos de escalado ({current.stages.length})</h2>
+        <AdminSurvivalStageEditor stages={current.stages} onChange={(stages) => edit({ stages })} />
+      </section>
+
+      <AdminSurvivalPreview draft={current} arenaOpponents={modes.arenaOpponents} />
+
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          aria-label="Publicar nueva versión del ruleset"
+          className={PVE_SAVE_BUTTON}
+          disabled={modes.isBusy || current.roster.length === 0}
+          onClick={() => void modes.publishSurvivalRuleset(current).then((ok) => ok && setDraft(null))}
+        >
+          Publicar versión
+        </button>
+        {draft ? (
+          <button type="button" aria-label="Descartar cambios del ruleset" className={PVE_GHOST_BUTTON} onClick={() => setDraft(null)}>
+            Descartar cambios
+          </button>
+        ) : null}
+        {current.roster.length === 0 ? (
+          <span className="text-[10px] text-rose-300">Añade al menos un rival antes de publicar.</span>
+        ) : null}
+      </div>
 
       <AdminPveVersionHistory
         title="Historial de rulesets"
@@ -122,7 +119,7 @@ export function AdminSurvivalRulesetPanel({ modes }: { modes: AdminPveModes }) {
           version: ruleset.version,
           isActive: ruleset.isActive,
           publishedAtIso: ruleset.publishedAtIso,
-          summary: `Tier ${ruleset.startTier} · hito cada ${ruleset.milestoneInterval} · ${ruleset.stages.length} tramos`,
+          summary: `Tier ${ruleset.startTier} · ${ruleset.roster.length} rivales · hito cada ${ruleset.milestoneInterval} · ${ruleset.stages.length} tramos`,
         }))}
       />
     </div>

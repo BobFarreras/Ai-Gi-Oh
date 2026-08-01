@@ -47,7 +47,7 @@ export function SurvivalLobby(props: ISurvivalLobbyProps) {
             <SurvivalStat label="LP persistentes" value={`${props.run.currentLp} / ${props.run.maxLp}`} />
             <SurvivalStat label="Victorias" value={String(props.run.wins)} />
             <SurvivalStat label="Récord personal" value={String(props.progress.bestWins)} />
-            <SurvivalStat label="Fragmentos" value={String(props.progress.ascensionFragments)} />
+            <SurvivalStat label="Éter" value={String(props.progress.ascensionFragments)} />
             <SurvivalStat label="Próxima curación" value={nextMilestone ? `En ${nextMilestone}` : "—"} />
           </div>
         </motion.header>

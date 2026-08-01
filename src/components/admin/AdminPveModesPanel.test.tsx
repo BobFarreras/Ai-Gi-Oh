@@ -18,8 +18,12 @@ const snapshot = {
   }],
   legends: [],
   champions: [],
-  arenaDeckVariantIds: ["gokernel-ultra"],
-  arenaOpponentIds: ["training-tier-1"],
+  arenaOpponents: [{
+    id: "training-tier-1",
+    displayName: "GenNvim",
+    avatarUrl: "/assets/story/opponents/opp-ch1-apprentice/avatar-GenNvim.webp",
+    variants: [{ id: "starter-tools", label: "Starter Tools", deckCount: 20, fusionCount: 2 }],
+  }],
   validCards: [],
 };
 
@@ -37,16 +41,30 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("AdminPveModesPanel", () => {
-  it("abre en Supervivencia con la versión activa y su roster", async () => {
+  it("abre en Supervivencia con la versión activa y su roster con caras", async () => {
     render(<AdminPveModesPanel />);
 
-    expect(await screen.findByText(/Expedición · versión activa v1/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Roster de la expedición/i)).toHaveValue("training-tier-1\ntraining-gokernel");
+    expect(await screen.findByText(/Reglas base · versión activa v1/i)).toBeInTheDocument();
+    // El roster deja de ser texto suelto: cada rival se reconoce por su nombre y su avatar.
+    expect(screen.getAllByText("GenNvim").length).toBeGreaterThan(0);
+    // El rival que ya no existe en Arena se señala en vez de guardarse en silencio.
+    expect(screen.getAllByText("training-gokernel").length).toBeGreaterThan(0);
+    expect(screen.getByText(/No existe en Arena/i)).toBeInTheDocument();
+  });
+
+  it("simula el escalado de los primeros combates con el resolutor real", async () => {
+    render(<AdminPveModesPanel />);
+    await screen.findByText(/Reglas base · versión activa v1/i);
+
+    expect(screen.getByText(/Así se jugará/i)).toBeInTheDocument();
+    // El ruleset del fixture arranca en el tier 4 y sube uno cada dos combates.
+    expect(screen.getAllByText("T4").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("HARD").length).toBeGreaterThan(0);
   });
 
   it("cambia a la configuración de Olimpo y muestra sus valores vigentes", async () => {
     render(<AdminPveModesPanel />);
-    await screen.findByText(/Expedición · versión activa v1/i);
+    await screen.findByText(/Reglas base · versión activa v1/i);
 
     fireEvent.click(screen.getByRole("button", { name: /Ver Config Olimpo/i }));
 
@@ -56,7 +74,7 @@ describe("AdminPveModesPanel", () => {
 
   it("publica la configuración de Olimpo editada como versión nueva", async () => {
     render(<AdminPveModesPanel />);
-    await screen.findByText(/Expedición · versión activa v1/i);
+    await screen.findByText(/Reglas base · versión activa v1/i);
     fireEvent.click(screen.getByRole("button", { name: /Ver Config Olimpo/i }));
 
     const limitField = await screen.findByLabelText(/Intentos por día/i);

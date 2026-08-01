@@ -12,13 +12,16 @@ describe("CombatModePortal", () => {
     );
   });
 
-  it("habilita Supervivencia y mantiene Olimpo en preparación", () => {
+  it("habilita los tres modos ahora que Olimpo tiene runtime", () => {
     render(<CombatModePortal />);
     expect(screen.getByRole("link", { name: "Entrar en Supervivencia" })).toHaveAttribute(
       "href",
       "/hub/academy/training/arena/survival",
     );
-    expect(screen.getByRole("heading", { name: "Olimpo" }).closest("article")).toHaveAttribute("data-availability", "unavailable");
-    expect(screen.getByText("En preparación")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Entrar en Olimpo" })).toHaveAttribute(
+      "href",
+      "/hub/academy/training/arena/olympus",
+    );
+    expect(screen.queryByText("En preparación")).not.toBeInTheDocument();
   });
 });

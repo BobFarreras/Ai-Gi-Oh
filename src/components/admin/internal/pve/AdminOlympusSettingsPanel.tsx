@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { IPublishOlympusSettingsCommand } from "@/core/entities/admin/IAdminPveModes";
 import { AdminPveModes } from "@/components/admin/internal/pve/use-admin-pve-modes";
+import { AdminPveHelpNote } from "@/components/admin/internal/pve/AdminPveHelpNote";
 import { AdminPveVersionHistory } from "@/components/admin/internal/pve/AdminPveVersionHistory";
 import {
   PVE_FIELD, PVE_GHOST_BUTTON, PVE_LABEL, PVE_SAVE_BUTTON, PVE_SECTION, PVE_TITLE,
@@ -13,7 +14,7 @@ const FIELDS: { key: keyof IPublishOlympusSettingsCommand; label: string; hint: 
   { key: "dailyAttemptLimit", label: "Intentos por día", hint: "Se reinician a las 00:00 UTC." },
   { key: "battleTtlMinutes", label: "Caducidad (min)", hint: "Pasado ese tiempo, abandonar cuenta como derrota." },
   { key: "respecFreeAllowance", label: "Respecs gratis", hint: "Reasignaciones sin coste por campeón." },
-  { key: "respecCost", label: "Coste de respec", hint: "Fragmentos que cuesta a partir de la gratuita." },
+  { key: "respecCost", label: "Coste de respec", hint: "Éter que cuesta a partir de la gratuita." },
   { key: "respecRefundPercent", label: "Reembolso (%)", hint: "Porcentaje de lo invertido que se devuelve." },
 ];
 
@@ -34,6 +35,16 @@ export function AdminOlympusSettingsPanel({ modes }: { modes: AdminPveModes }) {
 
   return (
     <div className="home-modern-scroll min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+      <AdminPveHelpNote
+        title="Qué controla esta configuración"
+        defaultOpen={false}
+        steps={[
+          "El intento se consume al emitir la batalla; reanudar una ya emitida no gasta otro.",
+          "El día es UTC: los intentos se reinician a las 00:00 UTC, no a medianoche local.",
+          "Si la batalla caduca sin liquidarse, abandonarla cuenta como derrota y el intento queda gastado.",
+          "La primera reasignación de cada campeón es gratuita; a partir de ahí cuesta lo configurado y devuelve el porcentaje indicado.",
+        ]}
+      />
       <section className={PVE_SECTION}>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <h2 className={PVE_TITLE}>Configuración · versión activa v{active?.version ?? "—"}</h2>

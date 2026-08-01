@@ -15,8 +15,7 @@ import {
 const BASE = "/api/admin/pve-modes";
 
 const EMPTY: IAdminPveModesSnapshot = {
-  survivalRulesets: [], olympusSettings: [], legends: [], champions: [],
-  arenaDeckVariantIds: [], arenaOpponentIds: [],
+  survivalRulesets: [], olympusSettings: [], legends: [], champions: [], arenaOpponents: [],
 };
 
 export type PveModesStatus = "loading" | "idle" | "saving" | "error";
