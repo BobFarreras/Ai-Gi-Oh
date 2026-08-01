@@ -7,7 +7,7 @@ import { readJsonObjectBody, readRequiredStringField } from "@/services/security
 import { requireTrustedMutationOrigin } from "@/services/security/api/require-trusted-mutation-origin";
 import { verifyCombatSessionTicket } from "@/services/security/duel-completion-ticket";
 import { createSurvivalRouteContext } from "@/services/survival/create-survival-route-context";
-import { enforceSurvivalRateLimit } from "@/services/survival/api/security/enforce-survival-rate-limit";
+import { enforcePveRateLimit } from "@/services/security/api/rate-limit/enforce-pve-rate-limit";
 import { ValidationError } from "@/core/errors/ValidationError";
 
 export async function POST(request: NextRequest) {
@@ -15,9 +15,9 @@ export async function POST(request: NextRequest) {
   if (originGuard) return originGuard;
   try {
     const context = await createSurvivalRouteContext(request);
-    const rateLimited = await enforceSurvivalRateLimit(request, context.playerId, {
+    const rateLimited = await enforcePveRateLimit(request, context.playerId, {
       // Recibe el avance de cada turno, no solo el cierre: el cupo cubre varios combates largos seguidos.
-      operation: "complete", maxPerPlayer: 400, maxPerIp: 800, windowMs: 5 * 60 * 1000,
+      mode: "survival", operation: "complete", maxPerPlayer: 400, maxPerIp: 800, windowMs: 5 * 60 * 1000,
     }, context.response.headers);
     if (rateLimited) return rateLimited;
     const body = await readJsonObjectBody(request, "Payload inválido para completar combate.");

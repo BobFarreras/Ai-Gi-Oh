@@ -1,7 +1,7 @@
 // src/app/api/survival/runs/start/route.test.ts - Verifica reanudación idempotente desde la API.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { resetSurvivalRateLimiterForTests } from "@/services/survival/api/security/survival-rate-limiter";
+import { resetPveRateLimiterForTests } from "@/services/security/api/rate-limit/pve-rate-limiter";
 import { ISurvivalRepository } from "@/core/repositories/ISurvivalRepository";
 import { COMBAT_PROOF_PROTOCOL_VERSION } from "@/core/entities/match";
 
@@ -36,7 +36,7 @@ function buildRequest(): NextRequest {
 
 
 describe("POST /api/survival/runs/start", () => {
-  beforeEach(() => resetSurvivalRateLimiterForTests());
+  beforeEach(() => resetPveRateLimiterForTests());
 
   it("devuelve la expedición activa sin duplicarla", async () => {
     const response = await POST(buildRequest());

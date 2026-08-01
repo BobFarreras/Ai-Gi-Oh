@@ -1,4 +1,4 @@
-// src/core/services/survival/resolve-issued-battle-disposition.ts - Decide si una batalla pendiente se reanuda, se castiga por abandono o se reemite.
+// src/core/services/match/resolve-issued-battle-disposition.ts - Decide si una batalla pendiente se reanuda, se castiga por abandono o se reemite.
 import { GameState } from "@/core/use-cases/GameEngine";
 
 export type IssuedBattleDisposition = "RESUME" | "FORFEIT" | "REISSUE";

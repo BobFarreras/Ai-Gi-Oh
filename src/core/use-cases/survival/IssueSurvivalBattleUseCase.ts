@@ -3,7 +3,7 @@ import { COMBAT_PROOF_PROTOCOL_VERSION } from "@/core/entities/match";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { ISurvivalRepository } from "@/core/repositories/ISurvivalRepository";
 import { resolveSurvivalEncounter } from "@/core/services/survival/resolve-survival-encounter";
-import { resolveIssuedBattleDisposition } from "@/core/services/survival/resolve-issued-battle-disposition";
+import { resolveIssuedBattleDisposition } from "@/core/services/match/resolve-issued-battle-disposition";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { ISurvivalEncounter, ISurvivalRun } from "@/core/entities/survival/ISurvival";
 

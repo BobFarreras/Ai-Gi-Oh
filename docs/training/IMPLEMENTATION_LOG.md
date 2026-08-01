@@ -432,3 +432,42 @@
    reiniciar el combate con las mismas manos.
 4. Como el rival lo deriva el servidor, ocultar el envío final no evita la derrota: el golpe letal aparece
    al reproducir el prefijo reportado.
+
+## Modos PvE - Fase 10: runtime de Olimpo (dominio, persistencia y API)
+
+1. `olympus_domain.test.sql` caracteriza tablas, RLS, grants, seeds y RPC del modo antes de tocarlos:
+   allowance diario, batalla activa única, primera victoria irrepetible y prerrequisitos del árbol.
+2. La migración 154 publica `olympus_settings` versionada (intentos, TTL, coste y reembolso del respec) y
+   sustituye las leyendas provisionales por Zeus, Loki y Hefes con su arte, reglas visibles y recompensas.
+3. Se cierra el hueco documentado: la primera reasignación por campeón es gratuita y las siguientes cobran
+   el coste configurado, con asiento de auditoría propio para el cobro.
+4. `forfeit_olympus_battle` castiga el abandono; `invalidate_olympus_battle` devuelve el intento cuando el
+   snapshot incompatible es deuda nuestra. Emitir con una batalla en curso ya falla con nombre propio.
+5. Entidades y reglas puras viven en `core/entities/olympus` y `core/services/olympus`: allowance UTC,
+   perfil de batalla del campeón con caps, recompensa por leyenda y presupuesto de respec.
+6. `IOlympusRepository` + `SupabaseOlympusRepository` mantienen lectura bajo RLS y escritura solo por RPC.
+   Un efecto de nodo desconocido se rechaza al mapear en vez de convertir un nodo pagado en decoración.
+7. El snapshot reutiliza el barajado canónico, la apertura de cuatro cartas y el escalado de cartas de
+   Arena; las asimetrías de LP y energía se aplican después porque el motor las comparte.
+8. Las rutas `/api/olympus/*` son finas: origen confiable, auth de sesión, validación, rate limit y ticket
+   HMAC de modo OLYMPUS. El límite PvE pasa a `services/security/api/rate-limit` y lo comparten los dos modos.
+9. `resolveIssuedBattleDisposition` se mueve a `core/services/match`: la política de reanudar, castigar o
+   reemitir es del kernel compartido, no de Supervivencia.
+
+## Modos PvE - Fase 11: panel admin de Supervivencia y Olimpo
+
+1. Sección `Modos PvE` en el portal admin con cuatro pestañas (Supervivencia, Config Olimpo, Leyendas,
+   Campeones); cada panel es un componente propio, ninguno pasa de 150 líneas.
+2. La migración 155 añade `publish_survival_ruleset` y `publish_olympus_settings`: publicar inserta versión
+   nueva y mueve `is_active` en la misma transacción, en vez de reescribir la fila que están usando las
+   expediciones en curso.
+3. Leyendas, campeones y nodos sí se editan en sitio y suben su `version`: cada batalla replica desde su
+   snapshot inmutable, así que el catálogo puede evolucionar sin romper duelos abiertos.
+4. Retirar una leyenda con historial o un nodo ya comprado los archiva (`is_active = false`) en lugar de
+   borrarlos; borrarlos dejaría batallas huérfanas y sacaría el coste del nodo del reembolso del respec.
+5. El editor de deck legendario reutiliza el grid, el almacén de cartas y el inspector de Arena/Story, más
+   las funciones puras que propagan escalado y objetos a todas las copias de una carta.
+6. La API `/api/admin/pve-modes` reutiliza gate admin, rate limit por usuario/IP y `admin_audit_log`; cada
+   publicación y cada edición dejan asiento con actor, entidad y versión.
+7. El vocabulario de efectos del árbol vive en un único módulo compartido por API y UI: publicar un tipo que
+   el resolutor no sabe aplicar es imposible desde el panel y falla al mapear si llega por otra vía.

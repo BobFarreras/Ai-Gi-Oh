@@ -258,7 +258,7 @@ select results_eq(
 select results_eq(
   $$select attempt_number from public.issue_olympus_battle(
     '00000000-0000-0000-0000-000000000101',
-    '00000000-0000-0000-0000-000000000301', 'guill', 'legendary-kernel', 'seed-olympus',
+    '00000000-0000-0000-0000-000000000301', 'guill', 'zeus', 'seed-olympus',
     'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', '{}'::jsonb, 1,
     'cccccccccccccccccccccccccccccccc', 'dddddddddddddddddddddddddddddddd',
     now() + interval '15 minutes'

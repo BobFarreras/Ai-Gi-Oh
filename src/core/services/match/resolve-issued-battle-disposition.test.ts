@@ -1,4 +1,4 @@
-// src/core/services/survival/resolve-issued-battle-disposition.test.ts - Fija la política de reanudar, castigar o reemitir una batalla pendiente.
+// src/core/services/match/resolve-issued-battle-disposition.test.ts - Fija la política de reanudar, castigar o reemitir una batalla pendiente.
 import { describe, expect, it } from "vitest";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { resolveIssuedBattleDisposition } from "./resolve-issued-battle-disposition";

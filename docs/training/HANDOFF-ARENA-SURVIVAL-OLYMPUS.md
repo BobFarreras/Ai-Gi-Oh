@@ -313,27 +313,43 @@ pnpm build
 
 No usar Supabase de producción para desarrollo. `.env.local` debe apuntar a la instancia local y cualquier migración nueva debe validarse con reset/pgTAP local.
 
-## 8. Siguiente fase: Olimpo dominio/API/admin
+## 8. Completado: Olimpo dominio/API (pasos 1-7 y 9)
 
-La base de datos existe, pero el runtime completo de Olimpo todavía no está implementado. No crear primero una UI simulada.
+El runtime de Olimpo ya existe de extremo a extremo salvo la UI (§10) y el panel admin (§9).
 
-Orden recomendado:
+| Paso | Estado | Piezas |
+| --- | --- | --- |
+| 1. Caracterizar tablas, RPC y seeds | Hecho | `supabase/tests/database/olympus_domain.test.sql` |
+| 2. Entidades y reglas puras | Hecho | `src/core/entities/olympus/IOlympus.ts`, `src/core/services/olympus/` |
+| 3. `IOlympusRepository` | Hecho | `src/core/repositories/IOlympusRepository.ts` |
+| 4. Adaptador Supabase y mappers | Hecho | `SupabaseOlympusRepository.ts`, `internal/olympus-repository-mappers.ts` |
+| 5. Casos de uso | Hecho | `src/core/use-cases/olympus/` |
+| 6. Snapshot con el GameEngine compartido | Hecho | `src/services/olympus/` |
+| 7. APIs finas | Hecho | `src/app/api/olympus/` |
+| 8. Administración versionada | Hecho (falta el simulador) | `src/app/api/admin/pve-modes/`, `src/components/admin/internal/pve/` |
+| 9. Tests unitarios, API, RLS y pgTAP | Hecho para lo anterior | co-localizados + pgTAP |
 
-1. Caracterizar tablas, RPC y seeds existentes con tests.
-2. Crear entidades y reglas puras de Olimpo en `core/`.
-3. Definir `IOlympusRepository`.
-4. Implementar el adaptador Supabase y sus mappers.
-5. Implementar casos de uso:
-   - consultar catálogo/allowance;
-   - resolver campeones desbloqueados;
-   - comprar nodo;
-   - respec;
-   - emitir/reanudar batalla;
-   - completar y liquidar.
-6. Construir snapshots con el GameEngine compartido.
-7. Crear APIs finas con autenticación, origen confiable, validación y rate limit.
-8. Añadir administración versionada.
-9. Cerrar tests unitarios, API, concurrencia, RLS y pgTAP.
+Decisiones que se tomaron dentro de esta fase y no deben revertirse:
+
+- La configuración vive en `olympus_settings`, versionada y con una sola fila activa. Intentos diarios,
+  TTL de batalla, coste y porcentaje de reembolso del respec salen de ahí, nunca del cliente ni de
+  constantes en código.
+- **El respec ya cobra.** La primera reasignación por campeón es gratuita (`respec_free_allowance`) y las
+  siguientes descuentan `respec_cost`, con un asiento de ledger propio (`operation_id || ':cost'`) para que
+  el cobro sea auditable por separado del reembolso.
+- Las leyendas provisionales `legendary-kernel` y `legendary-nexus` dieron paso a **Zeus, Loki y Hefes**,
+  con las rutas de arte de §5 ya en BD, reglas visibles, recompensa base, bonus de primera victoria y
+  compensación por derrota como columnas administrables.
+- `combat_modifiers_json` usa `energyBonus` (energía **por encima** del máximo compartido), no
+  `startingEnergy`: el motor arranca a energía máxima y un valor absoluto de 5 habría sido un nerf.
+- Abandonar e invalidar están separados, igual que en Supervivencia: `forfeit_olympus_battle` cierra como
+  derrota con el intento gastado; `invalidate_olympus_battle` borra la batalla y **devuelve el intento**,
+  porque un snapshot incompatible es deuda nuestra.
+- Un efecto de nodo que el resolutor no sabe aplicar se rechaza al mapear. Ignorarlo en silencio
+  convertiría un nodo pagado en decoración.
+- Sin selector explícito de cartas, `SIGNATURE_CARD_LEVEL` sube el fusion deck del campeón.
+- `resolveIssuedBattleDisposition` y el rate limit PvE son ahora kernel compartido
+  (`core/services/match/`, `services/security/api/rate-limit/`), no piezas de Supervivencia.
 
 Reglas de producto:
 
@@ -351,21 +367,43 @@ Reglas de producto:
 - La primera victoria por leyenda se recompensa una sola vez.
 - El cliente nunca decide intentos, rival interno, outcome, recompensa ni periodo UTC.
 
-## 9. Panel admin pendiente
+## 9. Completado: panel admin de los modos PvE
 
-Crear secciones cohesionadas; no un GOD component:
+Ruta: `/admin-portal/<slug>/pve-modes`. Cuatro pestañas, ningún GOD component; cada panel vive en
+`src/components/admin/internal/pve/` y ninguno supera las 150 líneas.
 
-- Leyendas: identidad, assets, disponibilidad y reglas especiales.
-- Decks legendarios: composición y versión.
-- Recompensas: base, primera victoria y rotación.
-- Configuración: límite diario, expiración y ventanas.
-- Campeones: vínculo con rival/tier y versión de deck.
-- Árboles: nodos, costes, prerequisitos, selectores y caps.
-- Supervivencia: stages, hitos, recompensas y Ascensión.
-- Simulación: batches por seed con tasa de victoria, turnos P50/P95 y stalls.
-- Auditoría: quién publicó cada versión y cuándo.
+| Sección de esta guía | Estado | Dónde se edita |
+| --- | --- | --- |
+| Configuración: límite diario, expiración y ventanas | Hecho | Pestaña **Config Olimpo** (`olympus_settings`) |
+| Leyendas: identidad, assets, disponibilidad y reglas especiales | Hecho | Pestaña **Leyendas** → `AdminOlympusLegendForm` |
+| Decks legendarios: composición y versión | Hecho | Pestaña **Leyendas** → `AdminOlympusLegendDeckEditor` |
+| Recompensas: base, primera victoria y rotación | Hecho | Pestaña **Leyendas** (rotación = ventanas de disponibilidad) |
+| Campeones: vínculo con rival/tier y versión de deck | Hecho | Pestaña **Campeones** |
+| Árboles: nodos, costes, prerequisitos, selectores y caps | Hecho | Pestaña **Campeones** → `AdminOlympusNodeRow` |
+| Supervivencia: stages, hitos, recompensas y Ascensión | Hecho | Pestaña **Supervivencia** |
+| Auditoría: quién publicó cada versión y cuándo | Hecho | `admin_audit_log` + historial de versiones en pantalla |
+| Simulación: batches por seed, P50/P95 y stalls | **Pendiente** | ver §11 |
 
-La edición debe crear versiones nuevas; no mutar snapshots históricos ni runs activas.
+Reglas de versionado que implementa el panel (no revertir):
+
+- **Supervivencia y configuración de Olimpo se publican, no se editan.** Guardar inserta una versión nueva
+  y mueve `is_active` en una transacción (`publish_survival_ruleset`, `publish_olympus_settings`, migración
+  155). Una expedición en curso conserva su `ruleset_version`: su escalado queda congelado.
+- **Leyendas, campeones y nodos se editan en sitio y suben su `version`.** Es seguro porque cada batalla
+  guarda su snapshot inmutable en `combat_sessions`: el replay reproduce lo que se emitió, no el catálogo
+  de hoy.
+- **Retirar es archivar cuando hay historial.** Una leyenda con batallas jugadas y un nodo ya comprado pasan
+  a `is_active = false`; borrarlos dejaría batallas huérfanas y sacaría el coste del nodo del reembolso del
+  respec.
+- **Solo se publican tipos de efecto soportados** (`GLOBAL_LEVEL`, `GLOBAL_VERSION_TIER`,
+  `SIGNATURE_CARD_LEVEL`, `STARTING_LP`, `STARTING_ENERGY`). La lista viva está en
+  `src/core/entities/admin/IAdminPveModes.types.ts` y la validan API y UI; cualquier otro tipo hace fallar
+  el mapeo a propósito, para que un nodo cobrado nunca quede sin efecto.
+
+Reutilización (no duplicar): el editor de deck legendario monta `AdminArenaDeckGrid`,
+`AdminStarterDeckCollectionPanel`, `HomeCardInspector`, `DetailBonusControls` y las funciones puras de
+`admin-arena-deck-entry-state`, las mismas de Arena y Story. El gate, el rate limit y la auditoría son los
+compartidos de `/api/admin/*`.
 
 ## 10. Fase posterior: UI de Olimpo
 

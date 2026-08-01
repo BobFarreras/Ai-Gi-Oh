@@ -4,7 +4,7 @@ import { StartSurvivalRunUseCase } from "@/core/use-cases/survival/StartSurvival
 import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
 import { requireTrustedMutationOrigin } from "@/services/security/api/require-trusted-mutation-origin";
 import { createSurvivalRouteContext } from "@/services/survival/create-survival-route-context";
-import { enforceSurvivalRateLimit } from "@/services/survival/api/security/enforce-survival-rate-limit";
+import { enforcePveRateLimit } from "@/services/security/api/rate-limit/enforce-pve-rate-limit";
 
 const SURVIVAL_BASE_MAX_LP = 8000;
 
@@ -13,8 +13,8 @@ export async function POST(request: NextRequest) {
   if (originGuard) return originGuard;
   try {
     const context = await createSurvivalRouteContext(request);
-    const rateLimited = await enforceSurvivalRateLimit(request, context.playerId, {
-      operation: "start", maxPerPlayer: 30, maxPerIp: 60, windowMs: 5 * 60 * 1000,
+    const rateLimited = await enforcePveRateLimit(request, context.playerId, {
+      mode: "survival", operation: "start", maxPerPlayer: 30, maxPerIp: 60, windowMs: 5 * 60 * 1000,
     }, context.response.headers);
     if (rateLimited) return rateLimited;
     const result = await new StartSurvivalRunUseCase(context.repository)

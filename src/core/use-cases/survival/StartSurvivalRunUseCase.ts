@@ -3,7 +3,7 @@ import { COMBAT_PROOF_PROTOCOL_VERSION } from "@/core/entities/match";
 import { ISurvivalRun } from "@/core/entities/survival/ISurvival";
 import { ValidationError } from "@/core/errors/ValidationError";
 import { ISurvivalRepository } from "@/core/repositories/ISurvivalRepository";
-import { resolveIssuedBattleDisposition } from "@/core/services/survival/resolve-issued-battle-disposition";
+import { resolveIssuedBattleDisposition } from "@/core/services/match/resolve-issued-battle-disposition";
 
 export class StartSurvivalRunUseCase {
   constructor(private readonly repository: ISurvivalRepository) {}

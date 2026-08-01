@@ -1,7 +1,7 @@
 // src/app/api/survival/battles/complete/route.test.ts - Verifica que ticket y prueba deben coincidir.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { resetSurvivalRateLimiterForTests } from "@/services/survival/api/security/survival-rate-limiter";
+import { resetPveRateLimiterForTests } from "@/services/security/api/rate-limit/pve-rate-limiter";
 
 vi.mock("@/services/security/api/require-trusted-mutation-origin", () => ({
   requireTrustedMutationOrigin: () => null,
@@ -32,7 +32,7 @@ function request(body: unknown): NextRequest {
 }
 
 describe("POST /api/survival/battles/complete", () => {
-  beforeEach(() => resetSurvivalRateLimiterForTests());
+  beforeEach(() => resetPveRateLimiterForTests());
 
   it("rechaza una prueba perteneciente a otra sesión", async () => {
     const response = await POST(request({
