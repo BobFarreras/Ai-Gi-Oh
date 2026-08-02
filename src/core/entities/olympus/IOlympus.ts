@@ -48,7 +48,10 @@ export interface IOlympusUpgradeNode {
   branch: OlympusUpgradeBranch;
   prerequisiteNodeIds: string[];
   effect: IOlympusUpgradeEffect;
+  /** Coste del PRIMER rango; cada rango siguiente cuesta `fragmentCost × rango`. */
   fragmentCost: number;
+  /** Veces que puede subirse el nodo. Uno solo lo convierte en compra única. */
+  maxRank: number;
   sortOrder: number;
 }
 
@@ -77,6 +80,8 @@ export interface IOlympusLegend {
 export interface IOlympusChampionProgress {
   championId: string;
   unlockedNodeIds: string[];
+  /** Rango comprado por nodo; ausente equivale a 0. Es lo que hace acumulable cada mejora. */
+  nodeRanks: Record<string, number>;
   respecCount: number;
   version: number;
 }

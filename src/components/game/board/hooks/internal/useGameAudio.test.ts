@@ -57,4 +57,27 @@ describe("useGameAudio", () => {
     expect(createAudioFromPath).not.toHaveBeenCalled();
     expect(safePlay).toHaveBeenCalledWith(soundtrack);
   });
+
+  it("adopta y detiene la pista del modo aunque el tema de jefe silencie la base", () => {
+    const soundtrack = { pause: vi.fn(), currentTime: 0 } as unknown as HTMLAudioElement;
+    vi.mocked(consumePrimedMusic).mockReturnValue(soundtrack);
+
+    const { unmount } = renderHook(() => useGameAudio({
+      combatLog: [],
+      winnerPlayerId: null,
+      playerId: "p1",
+      isHistoryOpen: false,
+      hasSelectedCard: false,
+      lastErrorCode: null,
+      isMuted: false,
+      isPaused: false,
+      // Es lo que pasan Supervivencia y Olimpo: sin adoptarla, la pista seguía sonando tras el combate.
+      disableBaseSoundtrack: true,
+      customSoundtrackPath: "/audio/survival/pulso-de-neon.m4a",
+    }));
+
+    expect(consumePrimedMusic).toHaveBeenCalledWith("/audio/survival/pulso-de-neon.m4a");
+    unmount();
+    expect(soundtrack.pause).toHaveBeenCalled();
+  });
 });

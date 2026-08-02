@@ -10,12 +10,14 @@ const node: IOlympusUpgradeNode = {
   prerequisiteNodeIds: ["gennvim-power-1"],
   effect: { kind: "GLOBAL_LEVEL", amount: 5, cap: 30 },
   fragmentCost: 40,
-  sortOrder: 11,
+  maxRank: 16,
+  sortOrder: 10,
 };
 
 const progress: IOlympusChampionProgress = {
   championId: "gennvim",
   unlockedNodeIds: ["gennvim-power-1"],
+  nodeRanks: { "gennvim-power-1": 1 },
   respecCount: 0,
   version: 1,
 };
@@ -33,17 +35,33 @@ describe("assertNodePurchasable", () => {
     expect(() => assertNodePurchasable(node, null, 999)).toThrow(/desbloquear al campeón/i);
   });
 
-  it("rechaza volver a comprar un nodo ya desbloqueado", () => {
-    const owned = { ...progress, unlockedNodeIds: ["gennvim-power-1", "gennvim-power-2"] };
-    expect(() => assertNodePurchasable(node, owned, 999)).toThrow(/ya está desbloqueado/i);
+  it("deja seguir subiendo un nodo ya empezado: las mejoras se acumulan por rango", () => {
+    const owned = {
+      ...progress,
+      unlockedNodeIds: ["gennvim-power-1", "gennvim-power-2"],
+      nodeRanks: { "gennvim-power-1": 1, "gennvim-power-2": 3 },
+    };
+    expect(() => assertNodePurchasable(node, owned, 999)).not.toThrow();
   });
 
-  it("rechaza saltarse el orden del árbol", () => {
-    expect(() => assertNodePurchasable(node, { ...progress, unlockedNodeIds: [] }, 999))
+  it("rechaza pasar del rango máximo del nodo", () => {
+    const maxed = { ...progress, nodeRanks: { "gennvim-power-1": 1, "gennvim-power-2": 16 } };
+    expect(() => assertNodePurchasable(node, maxed, 999)).toThrow(/rango máximo/i);
+  });
+
+  it("rechaza saltarse el orden del árbol solo en el primer rango", () => {
+    expect(() => assertNodePurchasable(node, { ...progress, unlockedNodeIds: [], nodeRanks: {} }, 999))
       .toThrow(/nodos previos/i);
+    // Con el nodo ya abierto, subirlo no vuelve a exigir el prerrequisito.
+    const started = { ...progress, unlockedNodeIds: [], nodeRanks: { "gennvim-power-2": 2 } };
+    expect(() => assertNodePurchasable(node, started, 999)).not.toThrow();
   });
 
-  it("rechaza comprar sin Fragmentos suficientes", () => {
-    expect(() => assertNodePurchasable(node, progress, 39)).toThrow(/Fragmentos suficientes/i);
+  it("cobra el rango siguiente, que es más caro que el primero", () => {
+    // Rango 0 → siguiente cuesta 40; con rango 3 comprado, el siguiente cuesta 160.
+    expect(() => assertNodePurchasable(node, { ...progress, nodeRanks: {} }, 39)).toThrow(/Éter suficiente/i);
+    const started = { ...progress, nodeRanks: { "gennvim-power-1": 1, "gennvim-power-2": 3 } };
+    expect(() => assertNodePurchasable(node, started, 159)).toThrow(/Éter suficiente/i);
+    expect(() => assertNodePurchasable(node, started, 160)).not.toThrow();
   });
 });

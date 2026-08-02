@@ -24,6 +24,7 @@ export function useSurvivalExpedition() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [milestoneInterval, setMilestoneInterval] = useState(0);
+  const [milestoneHeal, setMilestoneHeal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const journalRef = useRef(new CombatActionJournal());
   const completedRef = useRef(false);
@@ -51,6 +52,7 @@ export function useSurvivalExpedition() {
       setRun(started.run);
       setProgress(started.progress);
       setMilestoneInterval(started.milestoneInterval);
+      setMilestoneHeal(started.milestoneHeal);
       setBattle(issued);
       setSettlement(null);
       return true;
@@ -66,11 +68,11 @@ export function useSurvivalExpedition() {
    * Reporta el diario al servidor. Se llama en cada frontera de turno y al terminar: el servidor decide
    * si eso cierra el combate, de modo que abandonar tras perder no permite repetirlo.
    */
-  const submitJournal = useCallback(async (isFinal: boolean) => {
+  const submitJournal = useCallback(async (isFinal: boolean, reveal = false) => {
     if (!battle) return;
     if (completedRef.current) {
-      // El servidor ya liquidó al recibir un avance: se muestra al cerrar, no a media animación.
-      if (isFinal && pendingSettlementRef.current) setSettlement(pendingSettlementRef.current);
+      // El servidor ya liquidó: el informe se enseña cuando el jugador lo pide, no a media animación.
+      if (reveal && pendingSettlementRef.current) setSettlement(pendingSettlementRef.current);
       return;
     }
     if (journalRef.current.hasOverflowed()) {
@@ -102,7 +104,9 @@ export function useSurvivalExpedition() {
       setRun(result.run);
       setProgress(result.progress);
       setError(null);
-      if (isFinal) setSettlement(result);
+      // Liquidar y ENSEÑAR el informe son cosas distintas: el servidor cobra al acabar el duelo, pero la
+      // pantalla no se cambia hasta que el jugador ha visto la subida de experiencia de sus cartas.
+      if (reveal) setSettlement(result);
     } catch (caught) {
       // Un checkpoint fallido no debe interrumpir el combate; solo el envío final informa al jugador.
       if (isFinal) setError(caught instanceof Error ? caught.message : "No se pudo validar el resultado.");
@@ -123,10 +127,13 @@ export function useSurvivalExpedition() {
     if (action.type === "NEXT_PHASE") void submitJournal(false);
   }, [battle, submitJournal]);
 
+  /** Liquida con el servidor al terminar el duelo, sin sacar al jugador del tablero. */
   const completeBattle = useCallback(() => submitJournal(true), [submitJournal]);
+  /** Muestra el informe: lo pide el jugador desde el overlay de resultado, ya vista la experiencia. */
+  const revealSettlement = useCallback(() => submitJournal(true, true), [submitJournal]);
 
   return {
-    run, battle, progress, settlement, error, notice, isLoading, milestoneInterval,
-    enterBattle, recordAction, completeBattle,
+    run, battle, progress, settlement, error, notice, isLoading, milestoneInterval, milestoneHeal,
+    enterBattle, recordAction, completeBattle, revealSettlement,
   };
 }

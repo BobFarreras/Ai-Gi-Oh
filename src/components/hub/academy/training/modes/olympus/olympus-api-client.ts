@@ -11,6 +11,7 @@ import {
 import { IOlympusOverview as IOlympusOverviewBase } from "@/core/use-cases/olympus/GetOlympusOverviewUseCase";
 import { IOlympusRespecQuote } from "@/core/services/olympus/resolve-respec-quote";
 import { IOlympusChampionCard } from "@/services/olympus/resolve-olympus-champion-cards";
+import { IOlympusChampionDeckPreview } from "@/services/olympus/resolve-champion-deck-preview";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { createSeededGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 
@@ -19,7 +20,7 @@ export interface IOlympusOverview extends Omit<IOlympusOverviewBase, "champions"
   champions: IOlympusChampionCard[];
 }
 
-export type { IOlympusChampionCard };
+export type { IOlympusChampionCard, IOlympusChampionDeckPreview };
 
 export interface IOlympusPresentation {
   championName: string;
@@ -104,4 +105,29 @@ export function purchaseChampionUpgrade(championId: string, nodeId: string): Pro
 
 export function respecChampionUpgrades(championId: string): Promise<IOlympusUpgradeResult> {
   return request("/api/olympus/upgrades/respec", { championId });
+}
+
+// El mazo solo cambia al comprar un rango, y esa compra ya invalida la caché: mientras tanto, reabrir
+// el diálogo no debe volver a pagar la latencia de resolver el catálogo entero.
+const championDeckCache = new Map<string, Promise<IOlympusChampionDeckPreview>>();
+
+/** El mazo llega resuelto por el mismo camino que el snapshot de combate, no reconstruido en cliente. */
+export function fetchChampionDeck(championId: string): Promise<IOlympusChampionDeckPreview> {
+  const cached = championDeckCache.get(championId);
+  if (cached) return cached;
+  const pending = request<IOlympusChampionDeckPreview>(
+    `/api/olympus/champions/deck?championId=${encodeURIComponent(championId)}`,
+  ).catch((error: unknown) => {
+    // Un fallo no se cachea: el siguiente intento tiene que volver a pedirlo.
+    championDeckCache.delete(championId);
+    throw error;
+  });
+  championDeckCache.set(championId, pending);
+  return pending;
+}
+
+/** Toda mejora reescala el mazo prestado, así que la vista previa guardada deja de ser cierta. */
+export function invalidateChampionDeckCache(championId?: string): void {
+  if (championId) championDeckCache.delete(championId);
+  else championDeckCache.clear();
 }

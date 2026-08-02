@@ -40,9 +40,11 @@ const settle = (value: ICappedTotal): number => Math.min(value.total, value.cap)
 export function resolveChampionBattleProfile(
   champion: IOlympusChampion,
   nodes: IOlympusUpgradeNode[],
-  unlockedNodeIds: string[],
+  nodeRanks: Record<string, number>,
 ): IOlympusChampionBattleProfile {
-  const unlocked = new Set(unlockedNodeIds);
+  /** Cada rango vuelve a aplicar el efecto: es lo que convierte el árbol en progresión y no en 4 compras. */
+  const rankOf = (nodeId: string, maxRank: number): number =>
+    Math.max(0, Math.min(Math.floor(nodeRanks[nodeId] ?? 0), maxRank));
   let level: ICappedTotal = { total: champion.baseScale.level, cap: MAX_CARD_LEVEL };
   let versionTier: ICappedTotal = { total: champion.baseScale.versionTier, cap: MAX_VERSION_TIER };
   let startingLp: ICappedTotal = { total: champion.baseScale.startingLp, cap: Number.MAX_SAFE_INTEGER };
@@ -51,25 +53,28 @@ export function resolveChampionBattleProfile(
   const signatureCardIds = new Set<string>();
 
   for (const node of nodes) {
-    if (node.championId !== champion.id || !unlocked.has(node.id)) continue;
+    if (node.championId !== champion.id) continue;
+    const rank = rankOf(node.id, node.maxRank);
+    if (rank === 0) continue;
     const effect = node.effect;
+    const gain = effect.amount * rank;
     switch (effect.kind) {
       case "GLOBAL_LEVEL":
-        level = addCapped(level, effect.amount, effect.cap);
-        signature = addCapped(signature, effect.amount, effect.cap);
+        level = addCapped(level, gain, effect.cap);
+        signature = addCapped(signature, gain, effect.cap);
         break;
       case "GLOBAL_VERSION_TIER":
-        versionTier = addCapped(versionTier, effect.amount, effect.cap);
+        versionTier = addCapped(versionTier, gain, effect.cap);
         break;
       case "SIGNATURE_CARD_LEVEL":
-        signature = addCapped(signature, effect.amount, effect.cap);
+        signature = addCapped(signature, gain, effect.cap);
         for (const cardId of effect.cardIds ?? []) signatureCardIds.add(cardId);
         break;
       case "STARTING_LP":
-        startingLp = addCapped(startingLp, effect.amount, effect.cap);
+        startingLp = addCapped(startingLp, gain, effect.cap);
         break;
       case "STARTING_ENERGY":
-        energyBonus = addCapped(energyBonus, effect.amount, effect.cap);
+        energyBonus = addCapped(energyBonus, gain, effect.cap);
         break;
     }
   }

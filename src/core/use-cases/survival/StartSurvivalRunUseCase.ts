@@ -27,19 +27,21 @@ export class StartSurvivalRunUseCase {
         resumed: true,
         forfeitedPreviousRun: false,
         milestoneInterval: configuration.ruleset.milestoneInterval,
+        milestoneHeal: configuration.ruleset.milestoneHeal,
       };
     }
     const configuration = await this.repository.getRuleset();
     if (!configuration) throw new ValidationError("Supervivencia no tiene un ruleset activo.");
     const run = await this.repository.startRun(playerId, maxLp, configuration.ruleset.version);
     const progress = await this.repository.getProgress(playerId);
-    // El intervalo de curación viaja al cliente: la UI no debe fijar por su cuenta una regla del ruleset.
+      // Intervalo y cantidad de curación viajan al cliente: la UI no fija por su cuenta reglas del ruleset.
     return {
       run,
       progress,
       resumed: false,
       forfeitedPreviousRun,
       milestoneInterval: configuration.ruleset.milestoneInterval,
+      milestoneHeal: configuration.ruleset.milestoneHeal,
     };
   }
 

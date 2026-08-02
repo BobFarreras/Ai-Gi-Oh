@@ -29,8 +29,10 @@ export class ManageChampionUpgradesUseCase {
       this.repository.getFragmentBalance(playerId),
     ]);
     assertNodePurchasable(node, progress, balance);
+    // El rango va en la clave: sin él, subir el mismo nodo por segunda vez se deduplicaría como retry.
+    const nextRank = (progress?.nodeRanks[nodeId] ?? 0) + 1;
     const ascensionFragments = await this.repository.purchaseUpgrade(
-      playerId, championId, nodeId, `olympus-upgrade:${playerId}:${championId}:${nodeId}`,
+      playerId, championId, nodeId, `olympus-upgrade:${playerId}:${championId}:${nodeId}:r${nextRank}`,
     );
     return { ascensionFragments, progress: await this.findProgress(playerId, championId) };
   }
@@ -49,7 +51,7 @@ export class ManageChampionUpgradesUseCase {
     if (quote.refund <= 0) throw new ValidationError("No hay mejoras que reasignar en este campeón.");
     const balance = await this.repository.getFragmentBalance(playerId);
     if (balance + quote.refund < quote.charge) {
-      throw new ValidationError("No tienes Fragmentos suficientes para pagar la reasignación.");
+      throw new ValidationError("No tienes Éter suficiente para pagar la reasignación.");
     }
     const ascensionFragments = await this.repository.respecUpgrades(
       playerId, championId, `olympus-respec:${playerId}:${championId}:${progress.respecCount}`,

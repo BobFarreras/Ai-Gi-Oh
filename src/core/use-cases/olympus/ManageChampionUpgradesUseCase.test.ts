@@ -17,13 +17,13 @@ function repositoryWith(overrides: Partial<IOlympusRepository>): IOlympusReposit
 }
 
 describe("ManageChampionUpgradesUseCase", () => {
-  it("deriva un operationId estable por nodo para que reintentar no vuelva a cobrar", async () => {
+  it("mete el rango en el operationId: sin él, subir el mismo nodo otra vez se deduplicaría", async () => {
     const repository = repositoryWith({});
     const result = await new ManageChampionUpgradesUseCase(repository)
       .purchase("player-1", "gennvim", "gennvim-power-1");
 
     expect(repository.purchaseUpgrade).toHaveBeenCalledWith(
-      "player-1", "gennvim", "gennvim-power-1", "olympus-upgrade:player-1:gennvim:gennvim-power-1",
+      "player-1", "gennvim", "gennvim-power-1", "olympus-upgrade:player-1:gennvim:gennvim-power-1:r1",
     );
     expect(result.ascensionFragments).toBe(160);
   });
@@ -38,7 +38,7 @@ describe("ManageChampionUpgradesUseCase", () => {
   it("no compra sin Fragmentos suficientes", async () => {
     const repository = repositoryWith({ getFragmentBalance: vi.fn().mockResolvedValue(10) });
     await expect(new ManageChampionUpgradesUseCase(repository)
-      .purchase("player-1", "gennvim", "gennvim-power-1")).rejects.toThrow(/Fragmentos suficientes/i);
+      .purchase("player-1", "gennvim", "gennvim-power-1")).rejects.toThrow(/Éter suficiente/i);
     expect(repository.purchaseUpgrade).not.toHaveBeenCalled();
   });
 
@@ -50,7 +50,7 @@ describe("ManageChampionUpgradesUseCase", () => {
   });
 
   it("la primera reasignación es gratuita y numera la operación por contador", async () => {
-    const invested = { ...olympusProgress, unlockedNodeIds: ["gennvim-power-1"] };
+    const invested = { ...olympusProgress, unlockedNodeIds: ["gennvim-power-1"], nodeRanks: { "gennvim-power-1": 1 } };
     const repository = repositoryWith({ getChampionProgress: vi.fn().mockResolvedValue([invested]) });
     const result = await new ManageChampionUpgradesUseCase(repository).respec("player-1", "gennvim");
 
@@ -61,13 +61,18 @@ describe("ManageChampionUpgradesUseCase", () => {
   });
 
   it("la segunda reasignación cobra y exige saldo para el coste", async () => {
-    const invested = { ...olympusProgress, unlockedNodeIds: ["gennvim-power-1"], respecCount: 1 };
+    const invested = {
+      ...olympusProgress,
+      unlockedNodeIds: ["gennvim-power-1"],
+      nodeRanks: { "gennvim-power-1": 1 },
+      respecCount: 1,
+    };
     const repository = repositoryWith({
       getChampionProgress: vi.fn().mockResolvedValue([invested]),
       getFragmentBalance: vi.fn().mockResolvedValue(0),
     });
     await expect(new ManageChampionUpgradesUseCase(repository).respec("player-1", "gennvim"))
-      .rejects.toThrow(/Fragmentos suficientes/i);
+      .rejects.toThrow(/Éter suficiente/i);
     expect(repository.respecUpgrades).not.toHaveBeenCalled();
   });
 });

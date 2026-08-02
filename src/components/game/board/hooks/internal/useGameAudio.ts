@@ -60,7 +60,10 @@ export function useGameAudio({
     if (track) safePlay(createAudio(track, false));
   }, []);
   useEffect(() => {
-    if (disableBaseSoundtrack) {
+    // `disableBaseSoundtrack` silencia la pista POR DEFECTO, no la del modo: si hay una custom el
+    // tablero tiene que adoptarla igualmente. Si no, la pista que arrancó el lobby se queda sonando
+    // sin dueño y sigue después del combate.
+    if (disableBaseSoundtrack && !customSoundtrackPath) {
       soundtrackRef.current?.pause();
       soundtrackRef.current = null;
       return;

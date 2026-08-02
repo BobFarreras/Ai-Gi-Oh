@@ -31,7 +31,7 @@ type SnapshotFactory = (
   champion: IOlympusChampion,
   legend: IOlympusLegend,
   nodes: IOlympusUpgradeNode[],
-  unlockedNodeIds: string[],
+  nodeRanks: Record<string, number>,
   seed: string,
 ) => Promise<IPreparedSnapshot>;
 
@@ -76,9 +76,9 @@ export class IssueOlympusBattleUseCase {
       throw new ValidationError("Debes derrotar a ese rival en su nivel antes de usarlo en Olimpo.");
     }
     const progress = await this.repository.getChampionProgress(command.playerId);
-    const unlockedNodeIds = progress.find((entry) => entry.championId === champion.id)?.unlockedNodeIds ?? [];
+    const nodeRanks = progress.find((entry) => entry.championId === champion.id)?.nodeRanks ?? {};
     const nodes = catalog.nodes.filter((node) => node.championId === champion.id);
-    const prepared = await this.snapshotFactory(champion, legend, nodes, unlockedNodeIds, command.seed);
+    const prepared = await this.snapshotFactory(champion, legend, nodes, nodeRanks, command.seed);
     if (prepared.snapshot.playerA.id !== command.playerId || prepared.snapshot.playerB.id !== legend.id) {
       throw new ValidationError("El snapshot no coincide con el combate resuelto.");
     }

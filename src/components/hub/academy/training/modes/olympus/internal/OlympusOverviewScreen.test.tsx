@@ -1,5 +1,5 @@
 // src/components/hub/academy/training/modes/olympus/internal/OlympusOverviewScreen.test.tsx - Verifica intentos, bloqueo de campeones y confirmación antes de gastar intento.
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { IOlympusLegend } from "@/core/entities/olympus/IOlympus";
 import { OlympusMode } from "../useOlympusMode";
@@ -13,12 +13,13 @@ const champion = (id: string, unlocked: boolean): IOlympusChampionCard => ({
   },
   nodes: [{
     id: `${id}-power-1`, championId: id, branch: "POWER", prerequisiteNodeIds: [],
-    effect: { kind: "GLOBAL_LEVEL", amount: 5, cap: 30 }, fragmentCost: 40, sortOrder: 10,
+    effect: { kind: "GLOBAL_LEVEL", amount: 5, cap: 100 }, fragmentCost: 40, maxRank: 16, sortOrder: 10,
   }],
-  progress: { championId: id, unlockedNodeIds: [], respecCount: 0, version: 1 },
+  progress: { championId: id, unlockedNodeIds: [], nodeRanks: {}, respecCount: 0, version: 1 },
   unlocked,
   displayName: id === "gennvim" ? "GenNvim" : "Helena",
   avatarUrl: null,
+  introUrl: null,
 });
 
 const legend = {
@@ -106,6 +107,24 @@ describe("OlympusOverviewScreen", () => {
     render(<OlympusOverviewScreen mode={modeWith(overviewWith({ allowance }))} onEnterBattle={vi.fn()} />);
     expect(screen.getByRole("button", { name: /Elegir combate contra la leyenda/i })).toBeDisabled();
     expect(screen.getByText(/Sin intentos hasta el reset/i)).toBeInTheDocument();
+  });
+
+  it("deja ver el mazo prestado del campeón elegido, no el de la leyenda", async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        championId: "gennvim", displayName: "GenNvim", deck: [], fusionDeck: [],
+        level: 29, versionTier: 4, startingLp: 8000, energyBonus: 0,
+      }),
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+
+    render(<OlympusOverviewScreen mode={modeWith(overviewWith({}))} onEnterBattle={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: /Ver el mazo prestado de GenNvim/i }));
+
+    await waitFor(() => expect(screen.getByRole("dialog", { name: /Mazo prestado de GenNvim/i })).toBeInTheDocument());
+    expect(fetchSpy.mock.calls[0][0]).toContain("championId=gennvim");
+    vi.unstubAllGlobals();
   });
 
   it("explica qué hacer cuando no hay campeones desbloqueados", () => {

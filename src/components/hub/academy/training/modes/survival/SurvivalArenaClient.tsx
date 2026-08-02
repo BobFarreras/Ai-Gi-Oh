@@ -70,9 +70,14 @@ export function SurvivalArenaClient() {
       settlement={expedition.settlement}
       isLoading={expedition.isLoading}
       error={expedition.error}
+      milestoneInterval={expedition.milestoneInterval}
+      previousLp={expedition.battle.battle.startingLp}
       onContinue={() => {
+        // El clic ya es el gesto de usuario: se prepara aquí la pista para poder saltarse el lobby
+        // y caer directamente en el tablero, que es lo que se espera de «Siguiente combate».
+        primeMusicFromUserGesture(SURVIVAL_SOUNDTRACK, 0.34);
         void expedition.enterBattle().then((prepared) => {
-          if (prepared) setIsBattleStarted(false);
+          if (prepared) setIsBattleStarted(true);
         });
       }}
       onExit={() => window.location.replace(ACADEMY_TRAINING_ARENA_ROUTE)}
@@ -91,9 +96,13 @@ export function SurvivalArenaClient() {
       progress={expedition.progress}
       battleIndex={expedition.battle.battle.battleIndex}
       milestoneInterval={expedition.milestoneInterval}
+      milestoneHeal={expedition.milestoneHeal}
       isResumed={expedition.battle.resumed}
       opponentName={expedition.battle.presentation.displayName}
       opponentAvatarUrl={expedition.battle.presentation.avatarUrl}
+      effectiveTier={expedition.battle.battle.effectiveTier}
+      ascensionRank={expedition.battle.battle.ascensionRank}
+      aiProfile={expedition.battle.aiProfile}
       error={expedition.error}
       notice={expedition.notice}
       onStart={() => {
@@ -117,7 +126,9 @@ export function SurvivalArenaClient() {
         bossThemeVariant="CYAN"
         customSoundtrackPath={SURVIVAL_SOUNDTRACK}
         resultActionLabel={expedition.isLoading ? "Validando…" : "Ver informe"}
-        onResultAction={() => void expedition.completeBattle()}
+        // Pulsar el resultado es lo que lleva al informe; resolverse el duelo solo liquida con el
+        // servidor, para que el overlay con la experiencia de las cartas dé tiempo a verse.
+        onResultAction={() => void expedition.revealSettlement()}
         onExitMatch={() => window.location.replace(ACADEMY_TRAINING_ARENA_ROUTE)}
         onMatchResolved={() => void expedition.completeBattle()}
       />

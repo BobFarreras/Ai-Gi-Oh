@@ -27,9 +27,9 @@ export async function POST(request: NextRequest) {
 
     const useCase = new IssueOlympusBattleUseCase(
       context.repository,
-      (champion, legend, nodes, unlockedNodeIds, seed) => buildOlympusBattleSnapshot({
+      (champion, legend, nodes, nodeRanks, seed) => buildOlympusBattleSnapshot({
         playerId: context.playerId,
-        champion, legend, nodes, unlockedNodeIds, seed,
+        champion, legend, nodes, nodeRanks, seed,
         repository: context.repository,
       }),
     );

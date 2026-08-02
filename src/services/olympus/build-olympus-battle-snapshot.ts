@@ -14,7 +14,8 @@ interface IBuildOlympusBattleSnapshotInput {
   playerId: string;
   champion: IOlympusChampion;
   nodes: IOlympusUpgradeNode[];
-  unlockedNodeIds: string[];
+  /** Rango comprado por nodo: el efecto se aplica una vez por rango. */
+  nodeRanks: Record<string, number>;
   legend: IOlympusLegend;
   seed: string;
   repository: IOlympusRepository;
@@ -33,7 +34,7 @@ export async function buildOlympusBattleSnapshot(input: IBuildOlympusBattleSnaps
   ]);
   const cardCatalog = catalog.cardCatalog ?? CARD_BY_ID;
   const opponents = catalog.opponents ?? buildArenaOpponentsFromPresets();
-  const profile = resolveChampionBattleProfile(input.champion, input.nodes, input.unlockedNodeIds);
+  const profile = resolveChampionBattleProfile(input.champion, input.nodes, input.nodeRanks);
   const champion = resolveChampionLoadout(input.champion, opponents, cardCatalog, profile);
   const legend = resolveLegendLoadout(legendEntries, cardCatalog);
   if (champion.deck.length === 0) throw new ValidationError("El campeón no tiene deck jugable.");

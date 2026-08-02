@@ -64,6 +64,8 @@ export interface ISurvivalRunStart {
   forfeitedPreviousRun: boolean;
   /** Cada cuántas victorias cura el ruleset; la UI no lo fija por su cuenta. */
   milestoneInterval: number;
+  /** Cuántos LP devuelve ese hito; la barra lo pinta como tramo por recuperar. */
+  milestoneHeal: number;
 }
 
 /** Inicia una expedición o recupera la activa de forma idempotente. */

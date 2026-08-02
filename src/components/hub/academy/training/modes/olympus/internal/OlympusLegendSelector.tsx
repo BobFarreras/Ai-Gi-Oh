@@ -1,7 +1,11 @@
-// src/components/hub/academy/training/modes/olympus/internal/OlympusLegendSelector.tsx - Elige la leyenda y muestra sus reglas y recompensas antes de gastar intento.
+// src/components/hub/academy/training/modes/olympus/internal/OlympusLegendSelector.tsx - Carrusel de leyendas: una en escena, con flechas para pasar entre ellas.
 "use client";
 import Image from "next/image";
+import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, Heart, ShieldCheck, Zap } from "lucide-react";
 import { IOlympusLegend } from "@/core/entities/olympus/IOlympus";
+import { EterIcon } from "../../EterIcon";
+import { describeAiProfile } from "./olympus-labels";
 
 interface IOlympusLegendSelectorProps {
   legends: IOlympusLegend[];
@@ -11,76 +15,139 @@ interface IOlympusLegendSelectorProps {
 }
 
 /**
- * Las reglas especiales y la recompensa se enseñan ANTES de confirmar: el jugador nunca gasta un intento
- * sin saber contra qué se mete ni qué gana.
+ * Una leyenda cada vez y a pantalla grande: pasar de rival es un gesto, no una lista que compite
+ * consigo misma. Las reglas del duelo se ven en el lobby y en la confirmación, así que aquí sobran.
  */
 export function OlympusLegendSelector({ legends, defeatedLegendIds, selectedId, onSelect }: IOlympusLegendSelectorProps) {
-  return (
-    <section aria-labelledby="olympus-legends-title">
-      <h2 id="olympus-legends-title" className="mb-2 text-[11px] font-black uppercase tracking-[0.28em] text-violet-300/80">
-        Tu rival legendario
-      </h2>
-      <ul className="home-modern-scroll flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-3 md:overflow-visible">
-        {legends.map((legend) => {
-          const isSelected = legend.id === selectedId;
-          const isDefeated = defeatedLegendIds.includes(legend.id);
-          return (
-            <li key={legend.id} className="w-[248px] shrink-0 snap-start md:w-auto">
-              <button
-                type="button"
-                aria-pressed={isSelected}
-                aria-label={`Elegir a ${legend.displayName}`}
-                onClick={() => onSelect(legend.id)}
-                className={`group relative flex h-full w-full flex-col overflow-hidden rounded-2xl border text-left transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300 ${
-                  isSelected
-                    ? "border-amber-300/70 shadow-[0_0_28px_rgba(168,85,247,0.32)]"
-                    : "border-violet-800/50 hover:border-violet-500/60"
-                }`}
-              >
-                <span className="relative block h-36 w-full overflow-hidden bg-[#0d0616]">
-                  {legend.avatarPath ? (
-                    <Image src={legend.avatarPath} alt="" fill sizes="260px" unoptimized
-                      className={`object-cover object-top transition-transform duration-300 ${isSelected ? "scale-105" : "group-hover:scale-105"}`} />
-                  ) : null}
-                  <span className="absolute inset-0 bg-[linear-gradient(180deg,transparent_35%,rgba(13,6,22,0.95))]" />
-                  {isDefeated ? (
-                    <span className="absolute right-2 top-2 rounded-full border border-emerald-400/60 bg-emerald-950/85 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-300">
-                      Vencida
-                    </span>
-                  ) : (
-                    <span className="absolute right-2 top-2 rounded-full border border-amber-300/60 bg-amber-950/85 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-200">
-                      +{legend.firstVictoryFragmentBonus} 1ª victoria
-                    </span>
-                  )}
-                  <span className="absolute inset-x-3 bottom-2">
-                    <span className="block text-xl font-black uppercase italic tracking-tight text-amber-50">{legend.displayName}</span>
-                    <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-violet-300/90">{legend.aiProfile}</span>
-                  </span>
-                </span>
+  if (legends.length === 0) return null;
 
-                <span className="flex flex-1 flex-col gap-2 bg-[#120a1e]/90 p-3">
-                  {legend.lore ? <span className="block text-[11px] leading-snug text-slate-400">{legend.lore}</span> : null}
-                  {legend.specialRules.length > 0 ? (
-                    <ul className="space-y-1">
-                      {legend.specialRules.map((rule) => (
-                        <li key={rule} className="flex gap-1.5 text-[10.5px] leading-snug text-violet-200/90">
-                          <span aria-hidden className="text-amber-400">◆</span>
-                          {rule}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  <span className="mt-auto flex items-center gap-2 border-t border-violet-900/60 pt-2 text-[10px] font-bold uppercase tracking-wider">
-                    <span className="text-amber-300">{legend.baseFragmentReward} de Éter</span>
-                    <span className="text-slate-600">·</span>
-                    <span className="text-slate-500">Derrota: {legend.defeatFragmentReward}</span>
-                  </span>
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+  const currentIndex = Math.max(0, legends.findIndex((legend) => legend.id === selectedId));
+  const legend = legends[currentIndex];
+  const isDefeated = defeatedLegendIds.includes(legend.id);
+  // El carrusel es circular: desde la última se vuelve a la primera sin callejón sin salida.
+  const step = (offset: number) => onSelect(legends[(currentIndex + offset + legends.length) % legends.length].id);
+
+  return (
+    <section aria-labelledby="olympus-legends-title" aria-roledescription="carrusel">
+      <div className="mb-1.5 flex items-center gap-2">
+        <h2 id="olympus-legends-title" className="font-display text-[11px] font-black uppercase tracking-[0.28em] text-violet-300/80">
+          Tu rival legendario
+        </h2>
+        <span className="ml-auto font-display text-[10px] font-black tabular-nums text-violet-400/70">
+          {currentIndex + 1}/{legends.length}
+        </span>
+      </div>
+
+      <div className="relative overflow-hidden rounded-2xl border border-amber-300/60 shadow-[0_0_32px_rgba(168,85,247,0.24)]">
+        <div className="relative h-52 w-full bg-[#0d0616] md:h-72">
+          {legend.introPath ?? legend.avatarPath ? (
+            // `key` por leyenda: al cambiar de rival el retrato se remonta y vuelve a entrar en escena.
+            <motion.span
+              key={legend.id}
+              initial={{ opacity: 0, scale: 1.08 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+              className="absolute inset-0 block"
+            >
+              <Image
+                src={(legend.introPath ?? legend.avatarPath) as string}
+                alt=""
+                fill
+                sizes="(min-width: 768px) 900px, 100vw"
+                unoptimized
+                className="object-cover object-top saturate-125"
+              />
+            </motion.span>
+          ) : null}
+          <span aria-hidden className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,5,19,0.2),rgba(10,5,19,0.45)_50%,#120a1e)]" />
+          <span aria-hidden className="absolute inset-0 bg-[radial-gradient(circle_at_18%_120%,rgba(251,191,36,0.28),transparent_55%)]" />
+
+          <span className="absolute right-2 top-2">
+            {isDefeated ? (
+              <span className="flex items-center gap-1 rounded-full border border-emerald-400/60 bg-emerald-950/85 px-2 py-0.5 font-display text-[9px] font-black uppercase tracking-wider text-emerald-300">
+                <ShieldCheck aria-hidden size={10} /> Vencida
+              </span>
+            ) : (
+              // Sin la palabra «Éter» el número no dice nada: aquí es donde el jugador aprende la moneda.
+              <span className="flex items-center gap-1 rounded-full border border-amber-300/60 bg-amber-950/85 px-2 py-0.5 font-display text-[9px] font-black uppercase tracking-wider text-amber-200">
+                <EterIcon size={13} /> +{legend.firstVictoryFragmentBonus} Éter por la 1ª victoria
+              </span>
+            )}
+          </span>
+
+          <div className="absolute inset-x-12 bottom-2 text-center">
+            <p className="truncate font-display text-2xl font-black uppercase italic leading-none tracking-tight text-amber-50 md:text-5xl">
+              {legend.displayName}
+            </p>
+            <p className="mt-1 font-display text-[9.5px] font-black uppercase tracking-[0.24em] text-violet-300/90">
+              IA {describeAiProfile(legend.aiProfile)}
+            </p>
+          </div>
+
+          <ArrowButton side="left" label="Ver la leyenda anterior" onClick={() => step(-1)} />
+          <ArrowButton side="right" label="Ver la siguiente leyenda" onClick={() => step(1)} />
+        </div>
+
+        <div className="space-y-2 bg-[#120a1e]/95 p-3">
+          <div className="flex flex-wrap justify-center gap-1.5">
+            <StatChip icon={<Heart aria-hidden size={12} />} label="LP" value={legend.startingLp.toLocaleString("es-ES")} tone="border-rose-500/40 text-rose-200" />
+            {legend.energyBonus > 0 ? (
+              <StatChip icon={<Zap aria-hidden size={12} />} label="Energía" value={`+${legend.energyBonus}`} tone="border-sky-500/40 text-sky-200" />
+            ) : null}
+            <StatChip icon={<EterIcon size={15} />} label="Si ganas" value={String(legend.baseFragmentReward)} tone="border-amber-400/40 text-amber-200" />
+            <StatChip icon={<EterIcon size={15} className="opacity-50" />} label="Si pierdes" value={String(legend.defeatFragmentReward)} tone="border-slate-600/60 text-slate-400" />
+          </div>
+
+          {legend.lore ? (
+            <p className="text-center text-[11.5px] italic leading-relaxed text-slate-400">{legend.lore}</p>
+          ) : null}
+
+          {/* Los puntos dan salto directo y, de paso, dicen cuántas leyendas hay sin contar tarjetas. */}
+          {legends.length > 1 ? (
+            <div className="flex justify-center gap-1.5 pt-0.5">
+              {legends.map((candidate, index) => (
+                <button
+                  key={candidate.id}
+                  type="button"
+                  aria-label={`Ir a ${candidate.displayName}`}
+                  aria-current={index === currentIndex}
+                  onClick={() => onSelect(candidate.id)}
+                  className={`h-2 rounded-full transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300 ${
+                    index === currentIndex ? "w-6 bg-[linear-gradient(90deg,#fde68a,#c084fc)]" : "w-2 bg-slate-700 hover:bg-slate-500"
+                  }`}
+                />
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </div>
     </section>
+  );
+}
+
+function ArrowButton({ side, label, onClick }: { side: "left" | "right"; label: string; onClick: () => void }) {
+  const Icon = side === "left" ? ChevronLeft : ChevronRight;
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      // Clases completas por lado: Tailwind no ve los nombres construidos en tiempo de ejecución.
+      className={`absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-amber-300/50 bg-[#0a0513]/75 text-amber-200 backdrop-blur transition hover:bg-amber-950/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 ${
+        side === "left" ? "left-1.5" : "right-1.5"
+      }`}
+    >
+      <Icon aria-hidden size={22} />
+    </button>
+  );
+}
+
+function StatChip({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone: string }) {
+  return (
+    <span className={`flex items-center gap-1.5 rounded-lg border bg-slate-950/60 px-2 py-1 ${tone}`}>
+      {icon}
+      <span className="text-[9px] font-bold uppercase tracking-wider opacity-70">{label}</span>
+      <span className="font-display text-[12px] font-black tabular-nums">{value}</span>
+    </span>
   );
 }

@@ -9,6 +9,7 @@ import {
   IOlympusSettlement,
   completeOlympusBattle,
   fetchOlympusOverview,
+  invalidateChampionDeckCache,
   issueOlympusBattle,
   purchaseChampionUpgrade,
   respecChampionUpgrades,
@@ -73,10 +74,10 @@ export function useOlympusMode() {
    * Reporta el diario al servidor en cada frontera de turno y al terminar; él decide si eso cierra el
    * combate. Como deriva el turno de la leyenda, ocultar el envío final no evita la derrota.
    */
-  const submitJournal = useCallback(async (isFinal: boolean) => {
+  const submitJournal = useCallback(async (isFinal: boolean, reveal = false) => {
     if (!battle) return;
     if (completedRef.current) {
-      if (isFinal && pendingSettlementRef.current) setSettlement(pendingSettlementRef.current);
+      if (reveal && pendingSettlementRef.current) setSettlement(pendingSettlementRef.current);
       return;
     }
     if (journalRef.current.hasOverflowed()) {
@@ -105,7 +106,9 @@ export function useOlympusMode() {
       completedRef.current = true;
       pendingSettlementRef.current = result;
       setError(null);
-      if (isFinal) setSettlement(result);
+      // Liquidar y ENSEÑAR el informe son cosas distintas: el servidor cobra al acabar el duelo, pero la
+      // pantalla no cambia hasta que el jugador ha visto la subida de experiencia de sus cartas.
+      if (reveal) setSettlement(result);
     } catch (caught) {
       // Un checkpoint fallido no debe interrumpir el combate; solo el envío final informa al jugador.
       if (isFinal) setError(caught instanceof Error ? caught.message : "No se pudo validar el resultado.");
@@ -149,13 +152,23 @@ export function useOlympusMode() {
     reloadOverview,
     enterBattle,
     recordAction,
+    /** Liquida con el servidor al terminar el duelo, sin sacar al jugador del tablero. */
     completeBattle: useCallback(() => submitJournal(true), [submitJournal]),
+    /** Muestra el informe: lo pide el jugador desde el overlay, ya vista la experiencia de sus cartas. */
+    revealSettlement: useCallback(() => submitJournal(true, true), [submitJournal]),
     dismissBattle: useCallback(() => { setBattle(null); setSettlement(null); }, []),
     clearError: useCallback(() => setError(null), []),
+    // Comprar o reasignar reescala el mazo prestado: la vista previa cacheada deja de ser cierta.
     purchaseUpgrade: (championId: string, nodeId: string) =>
-      runUpgrade(() => purchaseChampionUpgrade(championId, nodeId), "No se pudo comprar la mejora."),
+      runUpgrade(async () => {
+        await purchaseChampionUpgrade(championId, nodeId);
+        invalidateChampionDeckCache(championId);
+      }, "No se pudo comprar la mejora."),
     respecUpgrades: (championId: string) =>
-      runUpgrade(() => respecChampionUpgrades(championId), "No se pudo reasignar el árbol."),
+      runUpgrade(async () => {
+        await respecChampionUpgrades(championId);
+        invalidateChampionDeckCache(championId);
+      }, "No se pudo reasignar el árbol."),
   };
 }
 

@@ -77,6 +77,7 @@ export function mapOlympusUpgradeNode(row: Row): IOlympusUpgradeNode {
       : [],
     effect: mapUpgradeEffect(row.effect_json, id),
     fragmentCost: numberValue(row.fragment_cost),
+    maxRank: Math.max(1, numberValue(row.max_rank ?? 1)),
     sortOrder: numberValue(row.sort_order),
   };
 }
@@ -124,6 +125,9 @@ export function mapOlympusLegendDeckEntry(row: Row): IOlympusLegendDeckEntry {
 export function mapOlympusChampionProgress(row: Row): IOlympusChampionProgress {
   return {
     championId: stringValue(row.champion_id),
+    nodeRanks: row.node_ranks && typeof row.node_ranks === "object"
+      ? Object.fromEntries(Object.entries(row.node_ranks as Record<string, unknown>).map(([id, rank]) => [id, Number(rank)]))
+      : {},
     unlockedNodeIds: Array.isArray(row.unlocked_node_ids)
       ? row.unlocked_node_ids.filter((id): id is string => typeof id === "string")
       : [],

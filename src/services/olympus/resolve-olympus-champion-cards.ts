@@ -6,6 +6,8 @@ import { buildArenaOpponentsFromPresets } from "@/services/training/internal/bui
 export interface IOlympusChampionCard extends IOlympusChampionState {
   displayName: string;
   avatarUrl: string | null;
+  /** Retrato de cuerpo entero; es el que el selector usa recortado, sin marco. */
+  introUrl: string | null;
 }
 
 /**
@@ -21,6 +23,7 @@ export async function resolveOlympusChampionCards(champions: IOlympusChampionSta
       ...state,
       displayName: arenaOpponent?.displayName ?? state.champion.id,
       avatarUrl: arenaOpponent?.avatarUrl ?? null,
+      introUrl: arenaOpponent?.introUrl ?? null,
     };
   });
 }

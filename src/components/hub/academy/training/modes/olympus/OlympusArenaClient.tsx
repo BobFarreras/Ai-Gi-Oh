@@ -1,6 +1,6 @@
-// src/components/hub/academy/training/modes/olympus/OlympusArenaClient.tsx - Conecta selección, lobby, Board y liquidación autoritativa de Olimpo.
+// src/components/hub/academy/training/modes/olympus/OlympusArenaClient.tsx - Conecta selección, Board y liquidación autoritativa de Olimpo.
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Board } from "@/components/game/board";
 import { LocalActionEmitterProvider } from "@/components/game/board/multiplayer/local-action-emitter";
 import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
@@ -10,7 +10,6 @@ import { ACADEMY_TRAINING_ARENA_ROUTE } from "@/core/constants/routes/academy-ro
 import { buildStoryOpponentNarrationPack } from "@/services/story/build-story-opponent-narration-pack";
 import { primeMusicFromUserGesture } from "@/components/game/board/hooks/internal/audio/audioRuntime";
 import { OlympusDebrief } from "./internal/OlympusDebrief";
-import { OlympusLobby } from "./internal/OlympusLobby";
 import { OlympusOverviewScreen } from "./internal/OlympusOverviewScreen";
 import { useOlympusMode } from "./useOlympusMode";
 
@@ -19,7 +18,6 @@ const exitToArena = () => window.location.replace(ACADEMY_TRAINING_ARENA_ROUTE);
 
 export function OlympusArenaClient() {
   const mode = useOlympusMode();
-  const [isBattleStarted, setIsBattleStarted] = useState(false);
   const runtime = mode.battle;
   const aiProfile = runtime?.aiProfile;
   const opponentStrategy = useMemo(
@@ -55,7 +53,6 @@ export function OlympusArenaClient() {
   }, [runtime]);
 
   const returnToSelection = () => {
-    setIsBattleStarted(false);
     mode.dismissBattle();
     void mode.reloadOverview();
   };
@@ -75,9 +72,10 @@ export function OlympusArenaClient() {
 
   if (!runtime) {
     return <OlympusOverviewScreen mode={mode} onEnterBattle={(championId, opponentId) => {
-      void mode.enterBattle(championId, opponentId).then((prepared) => {
-        if (prepared) setIsBattleStarted(false);
-      });
+      // Confirmar YA es el gesto del usuario: se arranca aquí la pista para caer directo en el tablero,
+      // sin una antesala intermedia que el jugador ya ha visto en la pantalla de selección.
+      primeMusicFromUserGesture(OLYMPUS_SOUNDTRACK, 0.34);
+      void mode.enterBattle(championId, opponentId);
     }} />;
   }
 
@@ -86,20 +84,6 @@ export function OlympusArenaClient() {
       <main className="flex min-h-dvh items-center justify-center bg-[#0a0513] px-6 text-center text-sm font-black uppercase tracking-[0.18em] text-rose-200">
         No se pudo reconstruir el avance de este combate. Vuelve a Arena e inténtalo de nuevo.
       </main>
-    );
-  }
-
-  if (!isBattleStarted) {
-    return (
-      <OlympusLobby
-        runtime={runtime}
-        error={mode.error}
-        onStart={() => {
-          primeMusicFromUserGesture(OLYMPUS_SOUNDTRACK, 0.34);
-          setIsBattleStarted(true);
-        }}
-        onBack={returnToSelection}
-      />
     );
   }
 
@@ -117,7 +101,9 @@ export function OlympusArenaClient() {
         bossThemeVariant="VIOLET"
         customSoundtrackPath={OLYMPUS_SOUNDTRACK}
         resultActionLabel={mode.isLoading ? "Validando…" : "Ver informe"}
-        onResultAction={() => void mode.completeBattle()}
+        // Pulsar el resultado lleva al informe; resolverse el duelo solo liquida, para que el overlay
+        // con la experiencia de las cartas dé tiempo a verse.
+        onResultAction={() => void mode.revealSettlement()}
         onExitMatch={exitToArena}
         onMatchResolved={() => void mode.completeBattle()}
       />

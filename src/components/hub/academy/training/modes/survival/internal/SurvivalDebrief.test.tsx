@@ -19,13 +19,16 @@ describe("SurvivalDebrief", () => {
     render(<SurvivalDebrief
       settlement={settlement}
       isLoading={false}
+      milestoneInterval={5}
       error={null}
       onContinue={onContinue}
       onExit={vi.fn()}
     />);
 
     expect(screen.getByText("Hito alcanzado · +2000 LP recuperados")).toBeInTheDocument();
-    expect(screen.getByText("Saldo de Ascensión: 130")).toBeInTheDocument();
+    expect(screen.getByText("Saldo de Éter")).toBeInTheDocument();
+    expect(screen.getByText("130")).toBeInTheDocument();
+    expect(screen.getByText("+31")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Siguiente combate" }));
     expect(onContinue).toHaveBeenCalledOnce();
   });
@@ -34,6 +37,7 @@ describe("SurvivalDebrief", () => {
     render(<SurvivalDebrief
       settlement={{ ...settlement, run: { ...settlement.run, status: "COMPLETED_DEFEAT" } }}
       isLoading={false}
+      milestoneInterval={5}
       error={null}
       onContinue={vi.fn()}
       onExit={vi.fn()}
@@ -51,6 +55,7 @@ describe("SurvivalDebrief", () => {
         run: { ...settlement.run, status: "COMPLETED_DEFEAT" },
       }}
       isLoading={false}
+      milestoneInterval={5}
       error={null}
       onContinue={vi.fn()}
       onExit={vi.fn()}

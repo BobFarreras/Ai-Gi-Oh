@@ -35,6 +35,7 @@ export const olympusNode: IOlympusUpgradeNode = {
   prerequisiteNodeIds: [],
   effect: { kind: "GLOBAL_LEVEL", amount: 5, cap: 30 },
   fragmentCost: 40,
+  maxRank: 16,
   sortOrder: 10,
 };
 
@@ -70,6 +71,7 @@ export const olympusCatalog: IOlympusCatalog = {
 export const olympusProgress: IOlympusChampionProgress = {
   championId: "gennvim",
   unlockedNodeIds: [],
+  nodeRanks: {},
   respecCount: 0,
   version: 1,
 };
