@@ -123,6 +123,10 @@ export class SupabaseAdminPveModesRepository implements IAdminPveModesRepository
       base_fragment_reward: command.baseFragmentReward,
       first_victory_fragment_bonus: command.firstVictoryFragmentBonus,
       defeat_fragment_reward: command.defeatFragmentReward,
+      nexus_reward: command.nexusReward,
+      // Cadena vacía = "sin carta": la FK contra `cards_catalog` rechazaría el string vacío.
+      card_reward_id: command.cardRewardId || null,
+      card_reward_first_victory_only: command.cardRewardFirstVictoryOnly,
       available_from: command.availableFromIso, available_until: command.availableUntilIso,
       is_active: command.isActive, sort_order: command.sortOrder,
       version: Number(current.data?.version ?? 0) + 1,

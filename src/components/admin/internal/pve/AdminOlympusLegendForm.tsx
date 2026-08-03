@@ -1,6 +1,7 @@
 // src/components/admin/internal/pve/AdminOlympusLegendForm.tsx - Identidad, arte, ventana de disponibilidad y recompensas de una leyenda.
 "use client";
 
+import { ICard } from "@/core/entities/ICard";
 import { IAdminPveArenaOpponentRef, IUpsertOlympusLegendCommand } from "@/core/entities/admin/IAdminPveModes";
 import { OLYMPUS_AI_PROFILES } from "@/core/entities/admin/IAdminPveModes.types";
 import { PVE_FIELD, PVE_LABEL, PVE_SECTION, PVE_TITLE } from "@/components/admin/internal/pve/admin-pve-styles";
@@ -8,6 +9,8 @@ import { PVE_FIELD, PVE_LABEL, PVE_SECTION, PVE_TITLE } from "@/components/admin
 interface IAdminOlympusLegendFormProps {
   legend: IUpsertOlympusLegendCommand;
   arenaOpponents: IAdminPveArenaOpponentRef[];
+  /** Catálogo real: la carta de botín se elige de una lista, no se teclea un id a ciegas. */
+  validCards: ICard[];
   onEdit: (patch: Partial<IUpsertOlympusLegendCommand>) => void;
 }
 
@@ -28,7 +31,7 @@ const REWARD_FIELDS: { key: "baseFragmentReward" | "firstVictoryFragmentBonus" |
 const toLocalInput = (iso: string | null): string => (iso ? new Date(iso).toISOString().slice(0, 16) : "");
 const fromLocalInput = (value: string): string | null => (value ? new Date(value).toISOString() : null);
 
-export function AdminOlympusLegendForm({ legend, arenaOpponents, onEdit }: IAdminOlympusLegendFormProps) {
+export function AdminOlympusLegendForm({ legend, arenaOpponents, validCards, onEdit }: IAdminOlympusLegendFormProps) {
   return (
     <div className="space-y-3">
       <section className={PVE_SECTION}>
@@ -125,6 +128,40 @@ export function AdminOlympusLegendForm({ legend, arenaOpponents, onEdit }: IAdmi
             <input aria-label="Identificador de recompensa" className={`${PVE_FIELD} w-40`} value={legend.rewardDefinitionId}
               onChange={(event) => onEdit({ rewardDefinitionId: event.target.value })} />
           </label>
+        </div>
+
+        {/* Éter arriba, botín que sale del modo abajo: son dos economías distintas. */}
+        <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-slate-700/60 pt-2">
+          <label className={PVE_LABEL} title="Nexus acreditado en cada victoria contra esta leyenda">Nexus
+            <input aria-label="Nexus por victoria" className={`${PVE_FIELD} w-24`} inputMode="numeric" value={legend.nexusReward}
+              onChange={(event) => onEdit({ nexusReward: Number(event.target.value) || 0 })} />
+          </label>
+          <label className={PVE_LABEL} title="Carta que entra en la colección al ganar">Carta de botín
+            <select
+              aria-label="Carta de botín de la leyenda"
+              className={`${PVE_FIELD} w-56`}
+              value={legend.cardRewardId ?? ""}
+              onChange={(event) => onEdit({ cardRewardId: event.target.value || null })}
+            >
+              <option value="">— sin carta —</option>
+              {validCards.map((card) => (
+                <option key={card.id} value={card.id}>{card.name} · {card.type}</option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-1 text-[11px] text-slate-300"
+            title="Con tres intentos al día, repartirla en cada victoria convierte el modo en una fábrica de copias">
+            <input
+              type="checkbox"
+              aria-label="La carta solo cae en la primera victoria"
+              checked={legend.cardRewardFirstVictoryOnly}
+              onChange={(event) => onEdit({ cardRewardFirstVictoryOnly: event.target.checked })}
+            />
+            Solo 1ª victoria
+          </label>
+          <span className="text-[9.5px] text-slate-500">
+            Sin carta seleccionada, esta leyenda solo reparte Éter y Nexus.
+          </span>
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <label className={PVE_LABEL}>Desde

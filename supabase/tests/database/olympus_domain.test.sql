@@ -2,7 +2,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(78);
+select plan(86);
 
 -- 1. Superficie persistida del subdominio.
 select has_table('public', 'olympus_champions', 'Existe el catálogo de campeones');
@@ -14,6 +14,16 @@ select has_table('public', 'player_olympus_champion_progress', 'Existe el progre
 select has_table('public', 'olympus_daily_usage', 'Existe el allowance diario');
 select has_table('public', 'olympus_battles', 'Existe el historial de batallas');
 select has_table('public', 'olympus_first_victories', 'Existe el registro de primeras victorias');
+select has_column('public', 'olympus_opponents', 'nexus_reward', 'La leyenda declara su Nexus por victoria');
+select has_column('public', 'olympus_opponents', 'card_reward_id', 'La leyenda declara su carta de botín');
+select has_column('public', 'olympus_opponents', 'card_reward_first_victory_only', 'El botín de carta puede limitarse a la primera victoria');
+-- FK real: un id de carta inventado desde el panel tiene que fallar al guardar, no al repartir.
+select throws_ok(
+  $$update public.olympus_opponents set card_reward_id = 'carta-que-no-existe' where id = 'zeus'$$,
+  '23503',
+  null,
+  'La carta de botín referencia el catálogo maestro'
+);
 
 -- 2. El cliente autenticado lee lo suyo y no escribe nada de valor.
 select ok(
@@ -338,18 +348,36 @@ select throws_ok(
 select results_eq(
   $$select status from public.complete_olympus_battle(
     '00000000-0000-0000-0000-000000000501', '00000000-0000-0000-0000-000000000601',
-    'WIN', '{"ascensionFragments":50}'::jsonb, 50
+    'WIN', '{"ascensionFragments":50}'::jsonb, 50, 300, 'fusion-gemgpt'
   )$$,
   array['COMPLETED'::text],
   'La victoria reproducida se persiste'
 );
+select ok(
+  (select nexus from public.player_wallets
+   where player_id = '00000000-0000-0000-0000-000000000501') >= 300,
+  'La victoria legendaria acredita Nexus, no solo Éter'
+);
+select results_eq(
+  $$select owned_copies from public.player_collection_cards
+    where player_id = '00000000-0000-0000-0000-000000000501' and card_id = 'fusion-gemgpt'$$,
+  array[1],
+  'La carta de botín entra en la colección del jugador'
+);
 select results_eq(
   $$select outcome from public.complete_olympus_battle(
     '00000000-0000-0000-0000-000000000501', '00000000-0000-0000-0000-000000000601',
-    'LOSS', '{"ascensionFragments":0}'::jsonb, 0
+    'LOSS', '{"ascensionFragments":0}'::jsonb, 0, 300, 'fusion-gemgpt'
   )$$,
   array['WIN'::text],
   'Reliquidar no reescribe el desenlace ya registrado'
+);
+-- El candado de la batalla ya liquidada es lo único que impide duplicar Nexus y carta.
+select results_eq(
+  $$select owned_copies from public.player_collection_cards
+    where player_id = '00000000-0000-0000-0000-000000000501' and card_id = 'fusion-gemgpt'$$,
+  array[1],
+  'Reliquidar no vuelve a repartir la carta de botín'
 );
 select results_eq(
   $$select count(*)::bigint from public.combat_mode_wallet_transactions
@@ -384,10 +412,17 @@ select results_eq(
 select results_eq(
   $$select status from public.complete_olympus_battle(
     '00000000-0000-0000-0000-000000000501', '00000000-0000-0000-0000-000000000603',
-    'WIN', '{"ascensionFragments":50}'::jsonb, 50
+    'WIN', '{"ascensionFragments":50}'::jsonb, 50, 300, null
   )$$,
   array['COMPLETED'::text],
   'La segunda victoria también se liquida'
+);
+-- El dominio manda null en la carta porque ya no es primera victoria; la RPC solo obedece.
+select results_eq(
+  $$select owned_copies from public.player_collection_cards
+    where player_id = '00000000-0000-0000-0000-000000000501' and card_id = 'fusion-gemgpt'$$,
+  array[1],
+  'Repetir leyenda no regala una segunda copia de la carta'
 );
 select results_eq(
   $$select count(*)::bigint from public.olympus_first_victories
@@ -409,7 +444,7 @@ select results_eq(
 select results_eq(
   $$select status from public.complete_olympus_battle(
     '00000000-0000-0000-0000-000000000501', '00000000-0000-0000-0000-000000000604',
-    'LOSS', '{"ascensionFragments":0}'::jsonb, 0
+    'LOSS', '{"ascensionFragments":0}'::jsonb, 0, 0, null
   )$$,
   array['COMPLETED'::text],
   'La derrota cierra la batalla sin recompensa premium'

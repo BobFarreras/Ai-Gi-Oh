@@ -119,7 +119,12 @@ export function AdminOlympusLegendsPanel({ modes }: { modes: AdminPveModes }) {
             </span>
           </div>
 
-          <AdminOlympusLegendForm legend={draft.current} arenaOpponents={modes.arenaOpponents} onEdit={draft.edit} />
+          <AdminOlympusLegendForm
+            legend={draft.current}
+            arenaOpponents={modes.arenaOpponents}
+            validCards={modes.validCards}
+            onEdit={draft.edit}
+          />
           <section className={PVE_SECTION}>
             <h3 className={`${PVE_TITLE} mb-2`}>Deck legendario</h3>
             <AdminOlympusLegendDeckEditor draft={draft} validCards={modes.validCards} />

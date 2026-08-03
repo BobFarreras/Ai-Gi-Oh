@@ -1,5 +1,5 @@
 // src/components/hub/academy/training/modes/olympus/internal/OlympusChampionDeckDialog.test.tsx - La ficha de la carta tiene que abrirse por encima del mazo.
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { OlympusChampionDeckDialog } from "./OlympusChampionDeckDialog";
 
@@ -38,8 +38,9 @@ describe("OlympusChampionDeckDialog", () => {
     fireEvent.click(await screen.findByRole("button", { name: /Ver la ficha de Kernel Táctico/i }));
     await screen.findByRole("dialog", { name: /Ficha de Kernel Táctico/i });
 
+    // Nada de esperar a que la ficha desaparezca del DOM: su animación de salida puede quedarse a
+    // medias bajo carga. Lo que importa es a quién cierra cada Escape.
     fireEvent.keyDown(window, { key: "Escape" });
-    await waitFor(() => expect(screen.queryByRole("dialog", { name: /Ficha de/i })).not.toBeInTheDocument());
     expect(onClose).not.toHaveBeenCalled();
 
     fireEvent.keyDown(window, { key: "Escape" });

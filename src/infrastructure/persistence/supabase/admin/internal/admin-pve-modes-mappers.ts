@@ -89,6 +89,10 @@ export function mapAdminOlympusLegend(row: Row, deckRows: Row[]): IAdminOlympusL
     baseFragmentReward: num(row.base_fragment_reward),
     firstVictoryFragmentBonus: num(row.first_victory_fragment_bonus),
     defeatFragmentReward: num(row.defeat_fragment_reward),
+    nexusReward: num(row.nexus_reward),
+    cardRewardId: optStr(row.card_reward_id),
+    // El default de la columna es `true`: sin el campo, el botín se limita a la primera victoria.
+    cardRewardFirstVictoryOnly: row.card_reward_first_victory_only !== false,
     availableFromIso: optStr(row.available_from),
     availableUntilIso: optStr(row.available_until),
     isActive: row.is_active === true,

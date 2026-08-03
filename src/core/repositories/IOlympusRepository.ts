@@ -33,6 +33,9 @@ export interface ICompleteOlympusBattleInput {
   outcome: OlympusOutcome;
   reward: IOlympusReward;
   fragmentAmount: number;
+  /** Nexus y carta viajan aparte del `reward`: son los importes que la RPC aplica de verdad. */
+  nexusAmount: number;
+  cardRewardId: string | null;
 }
 
 export interface IOlympusCatalog {

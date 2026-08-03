@@ -269,7 +269,7 @@ select results_eq(
 select results_eq(
   $$select status from public.complete_olympus_battle(
     '00000000-0000-0000-0000-000000000101',
-    '00000000-0000-0000-0000-000000000301', 'WIN', '{"fragments":10}'::jsonb, 10
+    '00000000-0000-0000-0000-000000000301', 'WIN', '{"fragments":10}'::jsonb, 10, 0, null
   )$$,
   array['COMPLETED'::text],
   'Olimpo persiste la victoria verificada'

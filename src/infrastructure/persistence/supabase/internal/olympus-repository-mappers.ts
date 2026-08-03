@@ -104,6 +104,10 @@ export function mapOlympusLegend(row: Row): IOlympusLegend {
     baseFragmentReward: numberValue(row.base_fragment_reward),
     firstVictoryFragmentBonus: numberValue(row.first_victory_fragment_bonus),
     defeatFragmentReward: numberValue(row.defeat_fragment_reward),
+    nexusReward: numberValue(row.nexus_reward),
+    cardRewardId: optionalString(row.card_reward_id),
+    // El default de la columna es `true`: una fila antigua sin el campo no debe repartir carta en bucle.
+    cardRewardFirstVictoryOnly: row.card_reward_first_victory_only !== false,
     sortOrder: numberValue(row.sort_order),
     version: numberValue(row.version),
   };
@@ -149,8 +153,11 @@ export function mapOlympusBattle(row: Row): IOlympusBattle {
     outcome: row.outcome === null || row.outcome === undefined
       ? null
       : stringValue(row.outcome) as IOlympusBattle["outcome"],
+    // Las batallas liquidadas antes de la 160 no llevan Nexus ni carta en su `reward_json`.
     reward: reward ? {
       ascensionFragments: numberValue(reward.ascensionFragments ?? 0),
+      nexus: numberValue(reward.nexus ?? 0),
+      cardId: optionalString(reward.cardId),
       definitionId: stringValue(reward.definitionId ?? "legacy"),
       firstVictory: Boolean(reward.firstVictory),
     } : null,

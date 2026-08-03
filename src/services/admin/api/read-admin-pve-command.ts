@@ -129,6 +129,10 @@ export function readUpsertOlympusLegendCommand(data: Raw): IUpsertOlympusLegendC
     baseFragmentReward: asInteger(data.baseFragmentReward, "La recompensa base", 0, 100_000),
     firstVictoryFragmentBonus: asInteger(data.firstVictoryFragmentBonus, "El bonus de primera victoria", 0, 100_000),
     defeatFragmentReward: asInteger(data.defeatFragmentReward, "La compensación por derrota", 0, 100_000),
+    nexusReward: asInteger(data.nexusReward ?? 0, "El Nexus por victoria", 0, 1_000_000),
+    // El id se valida de verdad contra `cards_catalog` por FK; aquí solo se normaliza el vacío.
+    cardRewardId: asOptionalString(data.cardRewardId),
+    cardRewardFirstVictoryOnly: data.cardRewardFirstVictoryOnly !== false,
     availableFromIso,
     availableUntilIso,
     isActive: data.isActive === true,

@@ -1,8 +1,11 @@
 // src/components/hub/academy/training/modes/olympus/internal/OlympusDebrief.tsx - Informe del duelo legendario, con el bonus de primera victoria destacado.
 "use client";
 import { ReactNode } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
+import { Coins } from "lucide-react";
 import { IOlympusLegend } from "@/core/entities/olympus/IOlympus";
+import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
 import { IOlympusSettlement } from "../olympus-api-client";
 import { EterIcon } from "../../EterIcon";
 
@@ -25,6 +28,8 @@ export function OlympusDebrief(props: IOlympusDebriefProps) {
   const copy = OUTCOME_COPY[props.settlement.outcome];
   const { reward } = props.settlement;
   const hasAttempts = props.attemptsRemaining > 0;
+  // La carta puede haber salido del catálogo entre la victoria y el informe: sin ficha no se anuncia.
+  const rewardCard = reward.cardId ? CARD_BY_ID.get(reward.cardId) ?? null : null;
 
   return (
     <main className="flex min-h-dvh items-center justify-center bg-[radial-gradient(circle_at_50%_-10%,rgba(168,85,247,0.22),transparent_55%),#0a0513] px-4 py-6">
@@ -45,11 +50,34 @@ export function OlympusDebrief(props: IOlympusDebriefProps) {
           </p>
         ) : null}
 
+        {/* El botín de carta es el titular de la victoria: va antes que cualquier cifra. */}
+        {rewardCard ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.25, duration: 0.4, ease: "easeOut" }}
+            className="flex items-center gap-3 border-b border-amber-400/40 bg-[linear-gradient(100deg,rgba(251,191,36,0.16),transparent)] px-5 py-3"
+          >
+            {rewardCard.renderUrl ? (
+              <Image src={rewardCard.renderUrl} alt="" width={52} height={52} unoptimized
+                className="h-14 w-14 shrink-0 rounded-lg border border-amber-300/50 object-cover" />
+            ) : null}
+            <div className="min-w-0">
+              <p className="font-display text-[10px] font-black uppercase tracking-[0.28em] text-amber-300">
+                Carta obtenida
+              </p>
+              <p className="truncate font-display text-lg font-black uppercase italic text-amber-50">{rewardCard.name}</p>
+              <p className="text-[10px] text-slate-400">Ya está en tu colección.</p>
+            </div>
+          </motion.div>
+        ) : null}
+
         <dl className="grid grid-cols-2 divide-x divide-y divide-violet-900/60">
           <Stat label="Éter ganado" value={`+${reward.ascensionFragments}`} highlight icon={<EterIcon size={18} />} />
-          <Stat label="Saldo total" value={String(props.settlement.ascensionFragments)} icon={<EterIcon size={18} className="opacity-70" />} />
+          <Stat label="Nexus ganado" value={`+${reward.nexus}`} highlight={reward.nexus > 0}
+            icon={<Coins aria-hidden size={16} className="text-emerald-300" />} />
+          <Stat label="Saldo de Éter" value={String(props.settlement.ascensionFragments)} icon={<EterIcon size={18} className="opacity-70" />} />
           <Stat label="Intentos restantes" value={String(props.attemptsRemaining)} />
-          <Stat label="Intento" value={`Nº ${props.settlement.battle.attemptNumber}`} />
         </dl>
 
         <div className="flex flex-col gap-2 p-4 sm:flex-row-reverse">

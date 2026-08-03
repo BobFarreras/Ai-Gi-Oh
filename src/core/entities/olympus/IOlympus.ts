@@ -73,6 +73,12 @@ export interface IOlympusLegend {
   baseFragmentReward: number;
   firstVictoryFragmentBonus: number;
   defeatFragmentReward: number;
+  /** Nexus por victoria: es lo que devuelve Olimpo a la economía general del juego. */
+  nexusReward: number;
+  /** Carta que entra en la colección al ganar. `null` = esta leyenda no reparte carta. */
+  cardRewardId: string | null;
+  /** Con tres intentos al día, repartir carta en cada victoria convierte el modo en una fábrica de copias. */
+  cardRewardFirstVictoryOnly: boolean;
   sortOrder: number;
   version: number;
 }
@@ -96,6 +102,10 @@ export interface IOlympusAllowance {
 
 export interface IOlympusReward {
   ascensionFragments: number;
+  /** Nexus acreditado por esta batalla; cero en derrota y empate. */
+  nexus: number;
+  /** Carta entregada por esta batalla, ya resuelta la regla de primera victoria. */
+  cardId: string | null;
   definitionId: string;
   firstVictory: boolean;
 }

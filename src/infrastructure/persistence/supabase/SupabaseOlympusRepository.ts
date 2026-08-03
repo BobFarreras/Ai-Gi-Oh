@@ -189,6 +189,7 @@ export class SupabaseOlympusRepository implements IOlympusRepository {
     const { data, error } = await this.writeClient.rpc("complete_olympus_battle", {
       p_player_id: input.playerId, p_battle_id: input.battleId, p_outcome: input.outcome,
       p_reward_json: input.reward, p_fragment_amount: input.fragmentAmount,
+      p_nexus_amount: input.nexusAmount, p_card_reward_id: input.cardRewardId,
     });
     if (error || !data) throw new ValidationError("No se pudo completar el combate de Olimpo.");
     return mapOlympusBattle(data as Row);

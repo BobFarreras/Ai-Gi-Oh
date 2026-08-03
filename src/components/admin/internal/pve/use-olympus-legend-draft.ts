@@ -20,7 +20,10 @@ export function createEmptyLegend(sortOrder: number): IUpsertOlympusLegendComman
     deckTemplateId: "", aiProfile: "MYTHIC", startingLp: 12000, energyBonus: 0,
     rewardDefinitionId: `olympus-${id}`, avatarPath: null, introPath: null, victoryPath: null, defeatPath: null,
     lore: null, specialRules: [], baseFragmentReward: 120, firstVictoryFragmentBonus: 300,
-    defeatFragmentReward: 15, availableFromIso: null, availableUntilIso: null,
+    defeatFragmentReward: 15, nexusReward: 200,
+    // Sin carta y limitada a la primera victoria: repartir botín es una decisión explícita.
+    cardRewardId: null, cardRewardFirstVictoryOnly: true,
+    availableFromIso: null, availableUntilIso: null,
     // Nace inactiva: una leyenda sin deck ni arte no debe aparecerle al jugador por accidente.
     isActive: false, sortOrder, deckCards: [], fusionCards: [],
   };

@@ -55,7 +55,7 @@ describe("CompleteOlympusBattleUseCase", () => {
 
     expect(result).toMatchObject({ settled: true, outcome: "WIN", duplicate: false });
     expect(repository.completeBattle).toHaveBeenCalledWith(expect.objectContaining({
-      outcome: "WIN", fragmentAmount: 550,
+      outcome: "WIN", fragmentAmount: 550, nexusAmount: 300, cardRewardId: "fusion-gemgpt",
     }));
   });
 
@@ -65,6 +65,9 @@ describe("CompleteOlympusBattleUseCase", () => {
 
     expect(repository.completeBattle).toHaveBeenCalledWith(expect.objectContaining({
       fragmentAmount: 150,
+      // El Nexus se repite en cada victoria; la carta no, porque ya no es la primera.
+      nexusAmount: 300,
+      cardRewardId: null,
       reward: expect.objectContaining({ firstVictory: false }),
     }));
   });

@@ -55,6 +55,11 @@ export interface IAdminOlympusLegend {
   baseFragmentReward: number;
   firstVictoryFragmentBonus: number;
   defeatFragmentReward: number;
+  /** Nexus por victoria: lo que Olimpo devuelve a la economía general. */
+  nexusReward: number;
+  /** Carta que entra en la colección al ganar; null = esta leyenda no reparte carta. */
+  cardRewardId: string | null;
+  cardRewardFirstVictoryOnly: boolean;
   availableFromIso: string | null;
   availableUntilIso: string | null;
   isActive: boolean;

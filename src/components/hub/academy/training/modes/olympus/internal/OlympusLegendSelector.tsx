@@ -2,8 +2,9 @@
 "use client";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Heart, ShieldCheck, Zap } from "lucide-react";
+import { ChevronLeft, ChevronRight, Coins, Heart, ShieldCheck, Zap } from "lucide-react";
 import { IOlympusLegend } from "@/core/entities/olympus/IOlympus";
+import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
 import { EterIcon } from "../../EterIcon";
 import { describeAiProfile } from "./olympus-labels";
 
@@ -24,6 +25,7 @@ export function OlympusLegendSelector({ legends, defeatedLegendIds, selectedId, 
   const currentIndex = Math.max(0, legends.findIndex((legend) => legend.id === selectedId));
   const legend = legends[currentIndex];
   const isDefeated = defeatedLegendIds.includes(legend.id);
+  const rewardCard = legend.cardRewardId ? CARD_BY_ID.get(legend.cardRewardId) ?? null : null;
   // El carrusel es circular: desde la última se vuelve a la primera sin callejón sin salida.
   const step = (offset: number) => onSelect(legends[(currentIndex + offset + legends.length) % legends.length].id);
 
@@ -95,8 +97,25 @@ export function OlympusLegendSelector({ legends, defeatedLegendIds, selectedId, 
               <StatChip icon={<Zap aria-hidden size={12} />} label="Energía" value={`+${legend.energyBonus}`} tone="border-sky-500/40 text-sky-200" />
             ) : null}
             <StatChip icon={<EterIcon size={15} />} label="Si ganas" value={String(legend.baseFragmentReward)} tone="border-amber-400/40 text-amber-200" />
+            {legend.nexusReward > 0 ? (
+              <StatChip icon={<Coins aria-hidden size={12} />} label="Nexus" value={String(legend.nexusReward)} tone="border-emerald-500/40 text-emerald-200" />
+            ) : null}
             <StatChip icon={<EterIcon size={15} className="opacity-50" />} label="Si pierdes" value={String(legend.defeatFragmentReward)} tone="border-slate-600/60 text-slate-400" />
           </div>
+
+          {/* La carta de botín se anuncia ANTES de gastar el intento: es el motivo de venir aquí. */}
+          {rewardCard ? (
+            <p className="flex items-center justify-center gap-1.5 rounded-lg border border-amber-400/40 bg-amber-950/25 px-2 py-1.5 text-center text-[11px] text-amber-100">
+              {rewardCard.renderUrl ? (
+                <Image src={rewardCard.renderUrl} alt="" width={22} height={22} unoptimized
+                  className="h-6 w-6 rounded border border-amber-300/40 object-cover" />
+              ) : null}
+              <span className="font-display text-[10px] font-black uppercase tracking-wider">
+                {legend.cardRewardFirstVictoryOnly ? "1ª victoria" : "Cada victoria"}
+              </span>
+              · {rewardCard.name}
+            </p>
+          ) : null}
 
           {legend.lore ? (
             <p className="text-center text-[11.5px] italic leading-relaxed text-slate-400">{legend.lore}</p>

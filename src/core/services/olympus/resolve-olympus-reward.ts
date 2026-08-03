@@ -3,7 +3,8 @@ import { IOlympusLegend, IOlympusReward, OlympusOutcome } from "@/core/entities/
 
 /**
  * La derrota puede dejar una compensación pequeña y explícita; el bonus de primera victoria solo se
- * paga cuando el jugador todavía no lo había cobrado contra esa leyenda.
+ * paga cuando el jugador todavía no lo había cobrado contra esa leyenda. El Nexus y la carta son la
+ * parte del botín que sale de Olimpo hacia el resto del juego, así que se deciden aquí y no en SQL.
  */
 export function resolveOlympusReward(
   legend: IOlympusLegend,
@@ -13,13 +14,19 @@ export function resolveOlympusReward(
   if (outcome !== "WIN") {
     return {
       ascensionFragments: legend.defeatFragmentReward,
+      nexus: 0,
+      cardId: null,
       definitionId: legend.rewardDefinitionId,
       firstVictory: false,
     };
   }
   const firstVictory = !hasPreviousVictory;
+  // Con el interruptor activo la carta solo cae la primera vez; si no, cada victoria la repite.
+  const grantsCard = legend.cardRewardId !== null && (firstVictory || !legend.cardRewardFirstVictoryOnly);
   return {
     ascensionFragments: legend.baseFragmentReward + (firstVictory ? legend.firstVictoryFragmentBonus : 0),
+    nexus: legend.nexusReward,
+    cardId: grantsCard ? legend.cardRewardId : null,
     definitionId: legend.rewardDefinitionId,
     firstVictory,
   };

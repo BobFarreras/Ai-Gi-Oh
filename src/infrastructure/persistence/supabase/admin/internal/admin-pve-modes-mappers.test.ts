@@ -56,6 +56,24 @@ describe("admin-pve-modes-mappers", () => {
     expect(legend.deckCards.map((entry) => entry.cardId)).toEqual(["a", "b"]);
     expect(legend.fusionCards).toHaveLength(1);
     expect(legend).toMatchObject({ startingLp: 14000, energyBonus: 2, version: 3 });
+    // Una fila anterior a la 160 no trae botín: sin Nexus, sin carta y limitada a la primera victoria.
+    expect(legend).toMatchObject({ nexusReward: 0, cardRewardId: null, cardRewardFirstVictoryOnly: true });
+  });
+
+  it("traslada el botín de Nexus y carta configurado en el panel", () => {
+    const legend = mapAdminOlympusLegend(
+      {
+        id: "zeus", code: "ZEUS", display_name: "Zeus", deck_template_id: "gokernel-ultra",
+        ai_profile: "MYTHIC", combat_modifiers_json: {}, reward_definition_id: "olympus-v1-zeus",
+        special_rules_json: [], base_fragment_reward: 150, first_victory_fragment_bonus: 400,
+        defeat_fragment_reward: 20, nexus_reward: 300, card_reward_id: "fusion-gemgpt",
+        card_reward_first_victory_only: false, is_active: true, sort_order: 10, version: 4,
+      },
+      [],
+    );
+    expect(legend).toMatchObject({
+      nexusReward: 300, cardRewardId: "fusion-gemgpt", cardRewardFirstVictoryOnly: false,
+    });
   });
 
   it("aplana el efecto del nodo para editarlo campo a campo", () => {

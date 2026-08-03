@@ -77,6 +77,8 @@ export class CompleteOlympusBattleUseCase {
       outcome,
       reward,
       fragmentAmount: reward.ascensionFragments,
+      nexusAmount: reward.nexus,
+      cardRewardId: reward.cardId,
     });
     return {
       settled: true,
