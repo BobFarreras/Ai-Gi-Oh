@@ -22,6 +22,8 @@ import { MulliganOverlay } from "@/components/game/board/ui/overlays/MulliganOve
 import { MAX_PAUSED_TURNS_MULTIPLAYER } from "@/components/game/board/multiplayer/pause-turn-limit";
 import { useCallback, useLayoutEffect } from "react";
 import { useBoardViewportMetrics } from "./hooks/internal/layout/use-board-viewport-metrics";
+import { GameState } from "@/core/use-cases/GameEngine";
+import { resolveBoardThemeClasses } from "./internal/resolve-board-theme-classes";
 
 export type BoardBossThemeVariant = "CRIMSON" | "AMBER" | "VIOLET" | "CYAN";
 
@@ -63,14 +65,30 @@ interface IBoardProps {
   onLocalForfeit?: () => void;
   /** PvE: habilita el overlay de mulligan de apertura (habilidad OPENING_MULLIGAN del árbol). */
   enableOpeningMulligan?: boolean;
+  /** Snapshot firmado por el servidor para modos autoritativos. */
+  authoritativeInitialState?: GameState | null;
+  /** Soundtrack alternativo del modo; comparte mute, pausa y ciclo de vida con el tablero. */
+  customSoundtrackPath?: string | null;
   /** Callback que recibe applyTransition al montar el Board. Permite que clientes externos (ej. multijugador) apliquen acciones al estado de partida. */
   applyTransitionRef?: React.MutableRefObject<((transition: (state: import("@/core/use-cases/GameEngine").GameState) => import("@/core/use-cases/GameEngine").GameState) => import("@/core/use-cases/GameEngine").GameState | null) | null>;
   /** Recibe applyRemoteAction: aplica una acción del rival CON su coreografía visual (multijugador). */
   applyRemoteActionRef?: React.MutableRefObject<((action: import("@/core/entities/multiplayer/IMatchAction").IMatchActionPayload) => Promise<void>) | null>;
 }
-export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, opponentAvatarObjectPosition, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, abandonPenaltyNexus = 0, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId, onLocalForfeit, enableOpeningMulligan = false }: IBoardProps) {
+export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, duelResultRewardSummary, narrationPack, playerAvatarUrl = null, opponentAvatarUrl = null, opponentAvatarObjectPosition, isBossTheme = false, bossThemeVariant = "CRIMSON", resultActionLabel, onResultAction, onExitMatch, abandonPenaltyNexus = 0, isMatchStartLocked = false, disableOpponentAutomation = false, isTurnTimerEnabled = true, suppressCombatFeedback = false, suppressCombatBanners = false, opponentStrategyOverride = null, onMatchResolved, onTutorialFlowFinished, applyTransitionRef, applyRemoteActionRef, externalWinnerPlayerId, onLocalForfeit, enableOpeningMulligan = false, authoritativeInitialState = null, customSoundtrackPath = null }: IBoardProps) {
   countRender("Board");
-  const board = useBoard(initialPlayerDeck ?? undefined, mode, initialConfig, isMatchStartLocked, isBossTheme, disableOpponentAutomation, opponentStrategyOverride, enableOpeningMulligan);
+  const board = useBoard({
+    initialPlayerDeck: initialPlayerDeck ?? undefined,
+    mode,
+    initialConfig,
+    isMatchStartLocked,
+    // El tema de jefe sustituye la banda sonora base por la suya.
+    disableBaseSoundtrack: isBossTheme,
+    disableOpponentAutomation,
+    opponentStrategyOverride,
+    enableOpeningMulligan,
+    authoritativeInitialState,
+    customSoundtrackPath,
+  });
   useLayoutEffect(() => {
     if (applyTransitionRef) applyTransitionRef.current = board.applyTransition;
     if (applyRemoteActionRef) applyRemoteActionRef.current = board.applyRemoteAction;
@@ -82,12 +100,7 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
   const bossThemeClassName = isBossTheme ? `board-boss-theme board-boss-theme--${bossThemeVariant.toLowerCase()}` : "";
   // Base CSS `h-dvh` (correcta en SSR y sin JS); el visualViewport afina el px exacto tras montar.
   const boardRootClassName = `board-space-bg relative w-full h-dvh overflow-hidden font-sans cursor-crosshair ${bossThemeClassName} ${shouldReduceCombatEffects ? "reduced-combat-effects" : ""}`;
-  const boardAmbientClassName = isBossTheme
-    ? "absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(244,63,94,0.14),transparent_52%)] pointer-events-none"
-    : "absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(34,211,238,0.12),transparent_52%)] pointer-events-none";
-  const boardVignetteClassName = isBossTheme
-    ? "absolute inset-0 shadow-[inset_0_0_210px_rgba(44,7,16,0.64)] pointer-events-none"
-    : "absolute inset-0 shadow-[inset_0_0_200px_rgba(1,4,12,0.58)] pointer-events-none";
+  const boardThemeClasses = resolveBoardThemeClasses(isBossTheme, bossThemeVariant);
   const screen = useBoardScreenState({
     board,
     mode,
@@ -125,8 +138,8 @@ export function Board({ initialPlayerDeck, mode = "TRAINING", initialConfig, due
   }, [board, isMultiplayer, onLocalForfeit]);
   return (
     <div className={boardRootClassName} style={viewportMetrics.height ? { height: `${viewportMetrics.height}px` } : undefined} onClick={board.clearSelection}>
-      <div className={boardAmbientClassName} />
-      <div className={boardVignetteClassName} />
+      <div className={boardThemeClasses.ambient} />
+      <div className={boardThemeClasses.vignette} />
       {!isMatchStartLocked ? (
         <>
           <BoardStatusAndTopBarSection

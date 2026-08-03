@@ -12,6 +12,7 @@ export type ProgressionActionType =
   | "WIN_MP_MATCH"
   | "BUY_CARD"
   | "BUY_PACK"
+  | "BUY_ITEM"
   | "EVOLVE_CARD"
   | "SPEND_NEXUS"
   | "WIN_FLAWLESS_STORY"

@@ -46,6 +46,9 @@ function resolveModeDefaults(mode: IMatchMode): Omit<IBoardMatchConfig, "seed" |
       return { mode, openingHandSize: 4, starterPlayerId: "player-local" };
     case "MULTIPLAYER":
       return { mode, openingHandSize: 4, starterPlayerId: "player-local" };
+    case "SURVIVAL":
+    case "OLYMPUS":
+      return { mode, openingHandSize: 4, starterPlayerId: "player-local" };
     case "TRAINING":
     default:
       return { mode: "TRAINING", openingHandSize: 4, starterPlayerId: "player-local" };

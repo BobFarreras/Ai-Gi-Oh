@@ -66,6 +66,7 @@ export const RANKING_SCORING_GUIDES: Record<RankingBoardId, IRankingScoringGuide
     rules: [
       { action: "Comprar una carta en el mercado", points: "+10" },
       { action: "Comprar un pack de sobres", points: "+30" },
+      { action: "Comprar un objeto de mejora", points: "+10" },
       { action: "Evolucionar una carta", points: "+20" },
     ],
     weekly: true,

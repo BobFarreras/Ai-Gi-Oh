@@ -43,5 +43,39 @@ describe("createInitialGameState", () => {
     expect(state.startingPlayerId).toBe("p2");
     expect(state.activePlayerId).toBe("p2");
   });
+
+  it("permite iniciar cada jugador con LP actuales distintos de su máximo", () => {
+    const state = createInitialGameState({
+      playerA: { id: "p1", name: "Neo", deck: createDeck("a", 20), startingHealthPoints: 2350 },
+      playerB: { id: "p2", name: "Smith", deck: createDeck("b", 20), startingHealthPoints: 7000 },
+      maxHealthPoints: 8000,
+      starterPlayerId: "p1",
+    });
+
+    expect(state.playerA.healthPoints).toBe(2350);
+    expect(state.playerA.maxHealthPoints).toBe(8000);
+    expect(state.playerB.healthPoints).toBe(7000);
+    expect(state.playerB.maxHealthPoints).toBe(8000);
+  });
+
+  it("rechaza LP iniciales fuera del intervalo válido", () => {
+    const base = {
+      playerB: { id: "p2", name: "Smith", deck: createDeck("b", 20) },
+      maxHealthPoints: 8000,
+    };
+
+    expect(() =>
+      createInitialGameState({
+        ...base,
+        playerA: { id: "p1", name: "Neo", deck: createDeck("a", 20), startingHealthPoints: 0 },
+      }),
+    ).toThrow("LP iniciales");
+    expect(() =>
+      createInitialGameState({
+        ...base,
+        playerA: { id: "p1", name: "Neo", deck: createDeck("a", 20), startingHealthPoints: 8001 },
+      }),
+    ).toThrow("LP iniciales");
+  });
 });
 

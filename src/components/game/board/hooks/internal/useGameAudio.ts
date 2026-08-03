@@ -3,9 +3,8 @@ import { useCallback, useEffect, useRef } from "react";
 import { ICombatLogEvent } from "@/core/entities/ICombatLog";
 import { AudioTrackId } from "@/core/config/audio-catalog";
 import { resolveEffectAudioPath } from "./audio/effect-audio-registry";
-import { createAudio, createAudioFromPath, mapEventToTrack, safePlay, safePlayWithFallback } from "./audio/audioRuntime";
+import { consumePrimedMusic, createAudio, createAudioFromPath, mapEventToTrack, safePlay, safePlayWithFallback } from "./audio/audioRuntime";
 import { setAudioPlaybackBlocked } from "./audio/audio-gate";
-
 interface UseGameAudioParams {
   combatLog: ICombatLogEvent[];
   winnerPlayerId: string | null;
@@ -16,17 +15,15 @@ interface UseGameAudioParams {
   isMuted: boolean;
   isPaused: boolean;
   disableBaseSoundtrack?: boolean;
+  customSoundtrackPath?: string | null;
 }
-
 function resolveDuelEndTrack(winnerPlayerId: string, playerId: string): AudioTrackId {
   if (winnerPlayerId === "DRAW") return "DUEL_DRAW";
   return winnerPlayerId === playerId ? "DUEL_WIN" : "GAME_OVER";
 }
-
 function playAudioCue(track: AudioTrackId, isMuted: boolean, isPaused: boolean): void {
   if (!isMuted && !isPaused) safePlay(createAudio(track, false));
 }
-
 export function useGameAudio({
   combatLog,
   winnerPlayerId,
@@ -37,17 +34,16 @@ export function useGameAudio({
   isMuted,
   isPaused,
   disableBaseSoundtrack = false,
+  customSoundtrackPath = null,
 }: UseGameAudioParams) {
   const processedRef = useRef(0);
   const soundtrackRef = useRef<HTMLAudioElement | null>(null);
   const prevHistoryOpenRef = useRef(isHistoryOpen);
   const prevSelectedCardRef = useRef(hasSelectedCard);
   const prevErrorRef = useRef<string | null>(lastErrorCode);
-
   useEffect(() => {
     setAudioPlaybackBlocked(isMuted || isPaused);
   }, [isMuted, isPaused]);
-
   const playCombatEventAudio = useCallback((event: ICombatLogEvent) => {
     const effectAudioPath = resolveEffectAudioPath(event);
     if (effectAudioPath) {
@@ -63,33 +59,44 @@ export function useGameAudio({
     const track = mapEventToTrack(event);
     if (track) safePlay(createAudio(track, false));
   }, []);
-
   useEffect(() => {
-    if (disableBaseSoundtrack) {
+    // `disableBaseSoundtrack` silencia la pista POR DEFECTO, no la del modo: si hay una custom el
+    // tablero tiene que adoptarla igualmente. Si no, la pista que arrancó el lobby se queda sonando
+    // sin dueño y sigue después del combate.
+    if (disableBaseSoundtrack && !customSoundtrackPath) {
       soundtrackRef.current?.pause();
       soundtrackRef.current = null;
       return;
     }
     if (!soundtrackRef.current && !isMuted && !isPaused) {
-      soundtrackRef.current = createAudio("SOUNDTRACK", true);
+      soundtrackRef.current = customSoundtrackPath
+        ? consumePrimedMusic(customSoundtrackPath) ?? createAudioFromPath(customSoundtrackPath, 0.34, true)
+        : createAudio("SOUNDTRACK", true);
     }
     return () => {
       soundtrackRef.current?.pause();
       soundtrackRef.current = null;
     };
-  }, [disableBaseSoundtrack, isMuted, isPaused]);
-
+  }, [customSoundtrackPath, disableBaseSoundtrack, isMuted, isPaused]);
   useEffect(() => {
     const soundtrack = soundtrackRef.current;
     if (!soundtrack) return;
+    // Los navegadores móviles pueden bloquear el primer play tras una carga HTTP; el siguiente gesto
+    // del tablero rearma la misma pista sin crear audios duplicados.
     if (isMuted || winnerPlayerId || isPaused) {
       soundtrack.pause();
       if (winnerPlayerId) soundtrack.currentTime = 0;
       return;
     }
+    const resumeAfterInteraction = () => safePlay(soundtrack);
+    window.addEventListener("pointerdown", resumeAfterInteraction, { once: true });
+    window.addEventListener("keydown", resumeAfterInteraction, { once: true });
     safePlay(soundtrack);
+    return () => {
+      window.removeEventListener("pointerdown", resumeAfterInteraction);
+      window.removeEventListener("keydown", resumeAfterInteraction);
+    };
   }, [isMuted, isPaused, winnerPlayerId]);
-
   useEffect(() => {
     if (isMuted || isPaused) {
       processedRef.current = combatLog.length;
@@ -99,14 +106,12 @@ export function useGameAudio({
     processedRef.current = combatLog.length;
     nextEvents.forEach((event) => playCombatEventAudio(event));
   }, [combatLog, isMuted, isPaused, playCombatEventAudio]);
-
   useEffect(() => {
     if (isMuted || isPaused || !winnerPlayerId) return;
     const track = resolveDuelEndTrack(winnerPlayerId, playerId);
     safePlay(createAudio(track, false));
     if (track === "DUEL_WIN") safePlay(createAudio("VICTORY_STINGER", false));
   }, [isMuted, isPaused, playerId, winnerPlayerId]);
-
   useEffect(() => {
     if (isMuted || isPaused) {
       prevHistoryOpenRef.current = isHistoryOpen;
@@ -117,7 +122,6 @@ export function useGameAudio({
       prevHistoryOpenRef.current = isHistoryOpen;
     }
   }, [isHistoryOpen, isMuted, isPaused]);
-
   useEffect(() => {
     if (isMuted || isPaused) {
       prevSelectedCardRef.current = hasSelectedCard;

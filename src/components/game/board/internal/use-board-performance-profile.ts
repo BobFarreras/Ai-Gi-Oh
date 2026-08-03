@@ -14,7 +14,11 @@ export type { IBoardPerformanceProfile } from "./resolve-board-performance-profi
 
 // Valor por defecto SSR-seguro: debe coincidir con lo que renderiza el servidor (sin window)
 // para no provocar hydration mismatch. El valor real del dispositivo se calcula tras montar.
-const SSR_SAFE_PROFILE: IBoardPerformanceProfile = { isMobileViewport: false, shouldReduceCombatEffects: false };
+const SSR_SAFE_PROFILE: IBoardPerformanceProfile = {
+  isMobileViewport: false,
+  shouldReduceCombatEffects: false,
+  combatEffectsBudget: "FULL",
+};
 
 function hasMatchMediaApi(): boolean {
   return typeof window !== "undefined" && typeof window.matchMedia === "function";
@@ -22,7 +26,7 @@ function hasMatchMediaApi(): boolean {
 
 function detectProfile(): IBoardPerformanceProfile {
   if (typeof window === "undefined") {
-    return { isMobileViewport: false, shouldReduceCombatEffects: false };
+    return SSR_SAFE_PROFILE;
   }
 
   const prefersReducedMotion = hasMatchMediaApi()

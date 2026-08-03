@@ -226,6 +226,30 @@ Al finalizar, tendrás un panel admin con acceso seguro basado en rol real, oper
    - endpoint `GET /api/admin/audit` con paginación y filtros (`action`, `entityType`, `actorUserId`, rango de fechas),
    - sección visual `Audit Log` en el sidebar admin con tabla read-only y paginación,
    - tests de API y UI para la nueva capa de auditoría.
-6. Pendiente bloque de evolución:
+6. Sección `Modos PvE` (Supervivencia y Olimpo) completada:
+   - `GET /api/admin/pve-modes` devuelve configuración, leyendas, campeones, árboles y almacén de cartas,
+   - `POST /api/admin/pve-modes/upsert` publica versiones y edita leyendas/campeones/nodos,
+   - `POST /api/admin/pve-modes/delete` retira leyendas y nodos, **archivándolos** si ya tienen historial,
+   - las cuatro pestañas viven en `src/components/admin/internal/pve/`.
+7. Pendiente bloque de evolución:
    - MFA obligatoria para cuentas admin en Supabase Auth,
-   - pruebas E2E específicas de seguridad/rate-limit admin.
+   - pruebas E2E específicas de seguridad/rate-limit admin,
+   - simulador batch de balance PvE (tasa de victoria, turnos P50/P95 y detección de stalls).
+
+## 13. Regla de versionado de los modos PvE
+
+Editar en caliente lo que ya está jugando alguien es el error que este módulo evita por diseño:
+
+1. **Supervivencia (`survival_rulesets`) y configuración de Olimpo (`olympus_settings`) se publican, no se editan.**
+   Guardar inserta una versión nueva y mueve `is_active` dentro de una sola transacción
+   (`publish_survival_ruleset` / `publish_olympus_settings`). Una expedición en curso conserva su
+   `ruleset_version`: su escalado queda congelado y las versiones antiguas nunca se borran.
+2. **Leyendas, campeones y nodos se editan en sitio y suben su `version`.** Es seguro porque cada batalla
+   guarda un snapshot inmutable en `combat_sessions`: el replay del servidor reproduce lo que se emitió,
+   no lo que dice el catálogo hoy.
+3. **Retirar es archivar cuando hay historial.** Una leyenda con batallas jugadas y un nodo ya comprado se
+   marcan `is_active = false` en vez de borrarse; borrarlos dejaría batallas huérfanas y sacaría el coste
+   del nodo del cálculo de reembolso del respec.
+4. **Solo se publican efectos de nodo que el resolutor sabe aplicar.** La lista viva está en
+   `src/core/entities/admin/IAdminPveModes.types.ts` y la validan API y UI: cualquier otro tipo sería un
+   nodo cobrado sin efecto en combate.

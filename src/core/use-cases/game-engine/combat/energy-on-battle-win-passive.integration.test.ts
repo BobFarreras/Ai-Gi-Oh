@@ -3,7 +3,7 @@
 // SIGUIENTE turno. El motor cuenta en el GameState y concede al inicio del turno (motor puro, sin servidor).
 import { describe, expect, it } from "vitest";
 import { ICard } from "@/core/entities/ICard";
-import { BattleMode, IBoardEntity, IPlayer } from "@/core/entities/IPlayer";
+import { BattleMode, IBoardEntity } from "@/core/entities/IPlayer";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { ENERGY_ON_BATTLE_WIN_PASSIVE_ID } from "@/core/services/progression/mastery-passive-ids";
 import { createTestGameState } from "@/core/use-cases/game-engine/test-support/state-fixtures";

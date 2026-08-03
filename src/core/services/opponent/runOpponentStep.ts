@@ -22,7 +22,7 @@ export function runOpponentStep(state: GameState, opponentId: string, strategy: 
   if (state.pendingTurnAction?.playerId === opponentId) {
     const selectionId = pickPendingSelectionId(state, opponentId);
     if (!selectionId) {
-      return state;
+      return GameEngine.cancelUnresolvablePendingTurnAction(state, opponentId);
     }
 
     return GameEngine.resolvePendingTurnAction(state, opponentId, selectionId);

@@ -19,18 +19,21 @@ describe("resolveBoardPerformanceProfile", () => {
   it("mantiene efectos completos en desktop potente", () => {
     const profile = resolveBoardPerformanceProfile(createCapableDesktopSignals());
     expect(profile.shouldReduceCombatEffects).toBe(false);
+    expect(profile.combatEffectsBudget).toBe("FULL");
     expect(profile.isMobileViewport).toBe(false);
   });
 
   it("reduce efectos en viewport móvil", () => {
     const profile = resolveBoardPerformanceProfile(createCapableDesktopSignals({ isMobileViewport: true }));
     expect(profile.shouldReduceCombatEffects).toBe(true);
+    expect(profile.combatEffectsBudget).toBe("BALANCED");
     expect(profile.isMobileViewport).toBe(true);
   });
 
   it("reduce efectos con pocos núcleos de CPU", () => {
     const profile = resolveBoardPerformanceProfile(createCapableDesktopSignals({ hardwareConcurrency: 4 }));
     expect(profile.shouldReduceCombatEffects).toBe(true);
+    expect(profile.combatEffectsBudget).toBe("REDUCED");
   });
 
   it("reduce efectos con poca memoria", () => {
@@ -58,5 +61,6 @@ describe("resolveBoardPerformanceProfile", () => {
       createCapableDesktopSignals({ effectsOverride: "full", isMobileViewport: true, isSlowCpu: true, deviceMemory: 2 }),
     );
     expect(profile.shouldReduceCombatEffects).toBe(false);
+    expect(profile.combatEffectsBudget).toBe("FULL");
   });
 });

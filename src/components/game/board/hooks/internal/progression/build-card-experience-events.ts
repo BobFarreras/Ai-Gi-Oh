@@ -21,12 +21,25 @@ function pushEvent(
   events: ICardExperienceEvent[],
   cardId: string | null,
   eventType: CardExperienceEventType,
+  ownedCardIds: ReadonlySet<string>,
 ): void {
   if (!cardId) return;
+  // La lista cerrada evita acreditar cartas ajenas incluso cuando el jugador no tiene un mazo válido.
+  if (!ownedCardIds.has(cardId)) return;
   events.push({ cardId, eventType });
 }
 
-export function buildCardExperienceEvents(combatLog: ICombatLogEvent[], playerId: string): ICardExperienceEvent[] {
+/**
+ * Construye eventos de EXP a partir del combatLog.
+ * @param combatLog - Registro de eventos de combate.
+ * @param playerId - ID del jugador activo.
+ * @param ownedCardIds - Instantánea de cardIds propios al comienzo del duelo.
+ */
+export function buildCardExperienceEvents(
+  combatLog: ICombatLogEvent[],
+  playerId: string,
+  ownedCardIds: ReadonlySet<string>,
+): ICardExperienceEvent[] {
   const events: ICardExperienceEvent[] = [];
 
   for (const logEvent of combatLog) {
@@ -37,18 +50,18 @@ export function buildCardExperienceEvents(combatLog: ICombatLogEvent[], playerId
       const cardId = readPayloadString(payload, "cardId");
       const cardType = readPayloadString(payload, "cardType");
       const mode = readPayloadString(payload, "mode");
-      if (cardType === "ENTITY") pushEvent(events, cardId, "SUMMON_SUCCESS");
-      if (cardType === "EXECUTION" && mode === "ACTIVATE") pushEvent(events, cardId, "ACTIVATE_EFFECT");
+      if (cardType === "ENTITY") pushEvent(events, cardId, "SUMMON_SUCCESS", ownedCardIds);
+      if (cardType === "EXECUTION" && mode === "ACTIVATE") pushEvent(events, cardId, "ACTIVATE_EFFECT", ownedCardIds);
       continue;
     }
 
     if (logEvent.eventType === "FUSION_SUMMONED") {
-      pushEvent(events, readPayloadString(payload, "fusionCardId"), "SUMMON_SUCCESS");
+      pushEvent(events, readPayloadString(payload, "fusionCardId"), "SUMMON_SUCCESS", ownedCardIds);
       continue;
     }
 
     if (logEvent.eventType === "TRAP_TRIGGERED") {
-      pushEvent(events, readPayloadString(payload, "trapCardId"), "ACTIVATE_EFFECT");
+      pushEvent(events, readPayloadString(payload, "trapCardId"), "ACTIVATE_EFFECT", ownedCardIds);
       continue;
     }
 
@@ -57,8 +70,8 @@ export function buildCardExperienceEvents(combatLog: ICombatLogEvent[], playerId
       const defenderCardId = readPayloadString(payload, "defenderCardId");
       const defenderDestroyed = readPayloadBoolean(payload, "defenderDestroyed");
       const damageToDefenderPlayer = readPayloadNumber(payload, "damageToDefenderPlayer") ?? 0;
-      if (defenderDestroyed) pushEvent(events, attackerCardId, "DESTROY_ENEMY_ENTITY");
-      if (!defenderCardId && damageToDefenderPlayer > 0) pushEvent(events, attackerCardId, "DIRECT_HIT");
+      if (defenderDestroyed) pushEvent(events, attackerCardId, "DESTROY_ENEMY_ENTITY", ownedCardIds);
+      if (!defenderCardId && damageToDefenderPlayer > 0) pushEvent(events, attackerCardId, "DIRECT_HIT", ownedCardIds);
     }
   }
 

@@ -34,7 +34,9 @@ const event: IAdminEvent = {
 };
 
 describe("AdminEventEditor", () => {
-  it("muestra el sub-bloque de retos del evento con alta, borrado y objetivos de colección", () => {
+  // Este render monta el catálogo completo de objetivos y ronda los 3-4 s en frío; con la suite entera
+  // en paralelo se comía los 5 s por defecto y tumbaba el gate sin que nada estuviera roto.
+  it("muestra el sub-bloque de retos del evento con alta, borrado y objetivos de colección", { timeout: 15_000 }, () => {
     render(<AdminEventEditor event={event} />);
 
     expect(screen.getByText(/Retos \(una vez\)/i)).toBeInTheDocument();

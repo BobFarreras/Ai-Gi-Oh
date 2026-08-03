@@ -1,5 +1,6 @@
-// src/core/services/opponent/types.ts - Descripción breve del módulo.
-import { BattleMode } from "@/core/entities/IPlayer";
+// src/core/services/opponent/types.ts - Contratos de decisión del rival compartidos por tablero y replay.
+import { ICard } from "@/core/entities/ICard";
+import { BattleMode, IBoardEntity } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
 
 export interface IOpponentPlayDecision {
@@ -26,3 +27,7 @@ export interface IOpponentStrategy {
   chooseModeChange?(state: GameState, opponentId: string): IOpponentModeChangeDecision | null;
 }
 
+export interface IOpponentAutoPick {
+  chooseCardToDiscard: (hand: ICard[]) => ICard | null;
+  chooseEntityToSacrifice: (entities: IBoardEntity[]) => IBoardEntity | null;
+}

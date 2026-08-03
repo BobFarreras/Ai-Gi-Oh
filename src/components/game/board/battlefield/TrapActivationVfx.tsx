@@ -7,11 +7,13 @@ import { DigitalBeam } from "./DigitalBeam";
 import { useBoardPerformanceProfile } from "@/components/game/board/internal/use-board-performance-profile";
 import { ChargeCastSfx } from "@/components/game/board/battlefield/internal/ChargeCastSfx";
 import { ChargeCastVfx } from "@/components/game/board/battlefield/internal/ChargeCastVfx";
+import { CombatEffectsBudget } from "@/components/game/board/internal/resolve-board-performance-profile";
 
 interface ITrapActivationVfxProps {
   entity: IBoardEntity;
   isOpponentSide: boolean;
   isTrapActivating: boolean;
+  effectsBudget?: CombatEffectsBudget;
 }
 
 function resolveTrapLabel(action: string): string {
@@ -25,15 +27,27 @@ function resolveTrapLabel(action: string): string {
   return "TRAP";
 }
 
-export function TrapActivationVfx({ entity, isOpponentSide, isTrapActivating }: ITrapActivationVfxProps) {
-  const { shouldReduceCombatEffects } = useBoardPerformanceProfile();
+export function TrapActivationVfx({ entity, isOpponentSide, isTrapActivating, effectsBudget }: ITrapActivationVfxProps) {
+  const profile = useBoardPerformanceProfile();
+  const resolvedBudget = effectsBudget ?? profile.combatEffectsBudget;
   const action = entity.card.effect?.action;
   const chargePlayKey = `${entity.instanceId}:${action ?? "none"}:charge`;
   const blockPlayKey = `${entity.instanceId}:${action ?? "none"}:block`;
   if (!isTrapActivating || entity.card.type !== "TRAP" || !action) return null;
   const isBlockAction = action === "NEGATE_ATTACK_AND_DESTROY_ATTACKER" || action === "NEGATE_OPPONENT_TRAP_AND_DESTROY" || action === "FORCE_SUMMONED_DEFENSE_TO_ATTACK_LOCKED";
 
-  if (shouldReduceCombatEffects) {
+  if (resolvedBudget === "REDUCED") {
+    return (
+      <div className="pointer-events-none absolute inset-0 z-[260] flex items-center justify-center">
+        <ChargeCastSfx enabled playKey={chargePlayKey} path="/audio/sfx/effects/execution/cargar.m4a" volume={0.76} />
+        <div className="rounded border border-fuchsia-300/60 bg-black/80 px-3 py-1">
+          <span className="text-xs font-black tracking-wider text-fuchsia-200">{resolveTrapLabel(action)}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (resolvedBudget === "BALANCED") {
     return (
       <div className="pointer-events-none absolute inset-0 z-[260] flex items-center justify-center">
         <ChargeCastSfx enabled playKey={chargePlayKey} path="/audio/sfx/effects/execution/cargar.m4a" volume={0.76} />

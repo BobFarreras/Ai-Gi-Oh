@@ -11,6 +11,7 @@ interface IUseMatchAudioParams {
   isMuted: boolean;
   isPaused: boolean;
   disableBaseSoundtrack?: boolean;
+  customSoundtrackPath?: string | null;
 }
 
 export function useMatchAudio(params: IUseMatchAudioParams) {

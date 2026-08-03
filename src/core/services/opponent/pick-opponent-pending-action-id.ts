@@ -1,0 +1,86 @@
+// src/core/services/opponent/pick-opponent-pending-action-id.ts - Resuelve la selección obligatoria del rival de forma pura y determinista.
+import { ICard } from "@/core/entities/ICard";
+import { IBoardEntity } from "@/core/entities/IPlayer";
+import { GameState } from "@/core/use-cases/GameEngine";
+import { pickPendingFusionMaterialInstanceId } from "./opponent-pending-fusion-material";
+import { IOpponentAutoPick } from "./types";
+
+function scoreSetCardThreat(entity: IBoardEntity): number {
+  const attack = entity.card.attack ?? 0;
+  const defense = entity.card.defense ?? 0;
+  const body = attack + defense;
+  if (entity.card.type === "TRAP") return body + 1200 + entity.card.cost * 80;
+  if (entity.card.type === "EXECUTION") return body + 900 + entity.card.cost * 70;
+  return body + entity.card.cost * 60;
+}
+
+function pickLatestOwnGraveyardCard(graveyard: ICard[], cardType?: ICard["type"]): string | null {
+  const candidate = [...graveyard].reverse().find((card) => !cardType || card.type === cardType);
+  return candidate ? candidate.runtimeId ?? candidate.id : null;
+}
+
+function pickLatestOpponentGraveyardCard(graveyard: ICard[], cardType?: ICard["type"]): string | null {
+  const candidate = [...graveyard].reverse().find((card) => !cardType || card.type === cardType);
+  return candidate ? candidate.runtimeId ?? candidate.id : null;
+}
+
+function pickBestOpponentSetCard(gameState: GameState, zone: "ENTITIES" | "EXECUTIONS" | "ANY"): string | null {
+  const fromEntities = zone !== "EXECUTIONS" ? gameState.playerA.activeEntities.filter((entity) => entity.mode === "SET") : [];
+  const fromExecutions = zone !== "ENTITIES" ? gameState.playerA.activeExecutions.filter((entity) => entity.mode === "SET") : [];
+  const candidates = [...fromEntities, ...fromExecutions];
+  if (candidates.length === 0) return null;
+  const best = candidates.reduce((selected, current) =>
+    scoreSetCardThreat(current) > scoreSetCardThreat(selected) ? current : selected);
+  return best.instanceId;
+}
+
+/** Selecciona automáticamente el ID a resolver para la acción obligatoria actual del oponente. */
+export function pickOpponentPendingActionId(gameState: GameState, autoPick: IOpponentAutoPick): string | null {
+  if (!gameState.pendingTurnAction || gameState.pendingTurnAction.playerId !== gameState.playerB.id) return null;
+  if (gameState.pendingTurnAction.type === "DISCARD_FOR_HAND_LIMIT") return autoPick.chooseCardToDiscard(gameState.playerB.hand)?.id ?? null;
+  if (gameState.pendingTurnAction.type === "SELECT_FUSION_MATERIALS") {
+    const pending = gameState.pendingTurnAction;
+    return pickPendingFusionMaterialInstanceId({
+      activeEntities: gameState.playerB.activeEntities,
+      selectedMaterialInstanceIds: pending.selectedMaterialInstanceIds,
+      recipeId: pending.fusionFromExecutionRecipeId ?? pending.fusionCardId,
+    });
+  }
+  if (gameState.pendingTurnAction.type === "SELECT_GRAVEYARD_CARD") {
+    return pickLatestOwnGraveyardCard(gameState.playerB.graveyard, gameState.pendingTurnAction.cardType);
+  }
+  if (gameState.pendingTurnAction.type === "SELECT_OPPONENT_GRAVEYARD_CARD") {
+    return pickLatestOpponentGraveyardCard(gameState.playerA.graveyard, gameState.pendingTurnAction.cardType);
+  }
+  if (gameState.pendingTurnAction.type === "SELECT_OPPONENT_SET_CARD") {
+    return pickBestOpponentSetCard(gameState, gameState.pendingTurnAction.zone);
+  }
+  if (
+    gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_LOCK" ||
+    gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_DESTROY" ||
+    gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_FLIP_DEFENSE" ||
+    gameState.pendingTurnAction.type === "SELECT_OPPONENT_ENTITY_TO_STEAL"
+  ) {
+    // Bloquea/destruye/voltea/roba la entity rival (playerA) con más ataque: la amenaza mayor.
+    const candidates = gameState.playerA.activeEntities;
+    if (candidates.length === 0) return null;
+    const best = candidates.reduce((selected, current) =>
+      (current.card.attack ?? 0) > (selected.card.attack ?? 0) ? current : selected);
+    return best.instanceId;
+  }
+  if (gameState.pendingTurnAction.type === "SELECT_OPPONENT_EXECUTION_TO_STEAL") {
+    // Roba la magia/trampa rival (playerA) más "valiosa" según amenaza estimada.
+    const candidates = gameState.playerA.activeExecutions;
+    if (candidates.length === 0) return null;
+    const best = candidates.reduce((selected, current) => (scoreSetCardThreat(current) > scoreSetCardThreat(selected) ? current : selected));
+    return best.instanceId;
+  }
+  if (gameState.pendingTurnAction.type === "SELECT_OWN_ENTITY_TO_SACRIFICE") {
+    // Sacrifica su entity propia (playerB) con menor ataque: la de menor valor.
+    const own = gameState.playerB.activeEntities;
+    if (own.length === 0) return null;
+    const weakest = own.reduce((selected, current) => ((current.card.attack ?? 0) < (selected.card.attack ?? 0) ? current : selected));
+    return weakest.instanceId;
+  }
+  return null;
+}

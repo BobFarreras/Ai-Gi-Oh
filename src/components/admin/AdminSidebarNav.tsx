@@ -11,7 +11,7 @@ interface IAdminSidebarNavProps {
 
 interface IAdminSidebarItem {
   href: string;
-  icon: "catalog" | "market" | "objects" | "starter" | "story" | "audit" | "analytics" | "liveops" | "effects" | "arena";
+  icon: "catalog" | "market" | "objects" | "starter" | "story" | "audit" | "analytics" | "liveops" | "effects" | "arena" | "pve";
   label: string;
   description: string;
 }
@@ -26,6 +26,7 @@ function buildItems(portalSlug: string): IAdminSidebarItem[] {
     { href: `${base}/starter-deck`, icon: "starter", label: "Starter Deck", description: "Plantilla inicial" },
     { href: `${base}/story-decks`, icon: "story", label: "Story Decks", description: "Oponentes & Duelos" },
     { href: `${base}/arena`, icon: "arena", label: "Arena", description: "Oponentes & Tiers" },
+    { href: `${base}/pve-modes`, icon: "pve", label: "Modos PvE", description: "Supervivencia & Olimpo" },
     { href: `${base}/audit`, icon: "audit", label: "Auditoría", description: "Historial de cambios" },
     { href: `${base}/analytics`, icon: "analytics", label: "Analytics", description: "Dashboard de telemetría" },
     { href: `${base}/live-ops`, icon: "liveops", label: "Live-Ops", description: "Misiones & Promos" },
@@ -99,6 +100,15 @@ function AdminNavIcon({ icon, isActive }: { icon: IAdminSidebarItem["icon"]; isA
       <svg viewBox="0 0 24 24" className={cls}>
         <path d="M14.5 3.5l6 6M3 21l5.5-1.5L19 9l-4-4L4.5 15.5 3 21z" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
         <path d="M9.5 5.5l-4-2-2 4 2 1M14.5 18.5l4 2 2-4-2-1" strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round" />
+      </svg>
+    );
+  if (icon === "pve")
+    // Columnata: el Olimpo por encima de la escalera de Supervivencia.
+    return (
+      <svg viewBox="0 0 24 24" className={cls}>
+        <path d="M3 8l9-5 9 5" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
+        <path d="M5.5 9v7M12 9v7M18.5 9v7" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M3 19h18" strokeWidth="1.6" strokeLinecap="round" />
       </svg>
     );
   return (

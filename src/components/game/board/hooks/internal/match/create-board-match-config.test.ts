@@ -33,4 +33,8 @@ describe("create-board-match-config", () => {
     const second = createBoardMatchConfig({ mode: "TRAINING", seed: "seed-x" });
     expect(first.playerA.deck.slice(0, 4).map((card) => card.id)).toEqual(second.playerA.deck.slice(0, 4).map((card) => card.id));
   });
+
+  it.each(["SURVIVAL", "OLYMPUS"] as const)("preserva el modo PvE %s en la configuración", (mode) => {
+    expect(createBoardMatchConfig({ mode, seed: `seed-${mode}` }).mode).toBe(mode);
+  });
 });

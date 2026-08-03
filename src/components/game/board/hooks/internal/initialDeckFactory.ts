@@ -5,6 +5,7 @@ import { EXECUTION_CARDS } from "@/core/data/mock-cards/executions";
 import { TRAP_CARDS } from "@/core/data/mock-cards/traps";
 import { FUSION_CARDS } from "@/core/data/mock-cards/fusions";
 import { RandomSource } from "@/core/services/random/seeded-rng";
+import { shuffleWithRandom } from "@/core/services/random/shuffle-with-random";
 
 type CardMap = Record<string, ICard>;
 
@@ -70,12 +71,7 @@ function toDeck(deckIds: readonly string[]): ICard[] {
 }
 
 export function shuffleDeck(deck: ICard[], randomFn: RandomSource = Math.random): ICard[] {
-  const shuffled = [...deck];
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const randomIndex = Math.floor(randomFn() * (index + 1));
-    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
-  }
-  return shuffled;
+  return shuffleWithRandom(deck, randomFn);
 }
 
 export function createPlayerDeckA(randomFn: RandomSource = Math.random): ICard[] {

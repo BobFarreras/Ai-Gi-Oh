@@ -345,3 +345,166 @@
 1. `pnpm lint`
 2. `pnpm test`
 3. `pnpm build`
+
+## Modos PvE - Fase 1: contratos y CombatProof
+
+1. `IMatchMode` incorpora `SURVIVAL` y `OLYMPUS` con controllers propios.
+2. Las acciones deterministas pasan a ser contrato canónico de Match; Multiplayer conserva un reexport compatible.
+3. Se añaden `ICombatSession`, `ICombatProof` y `CombatActionJournal` con secuencia y límite de acciones.
+4. `replayCombatProof` valida identidad, modo, snapshot, protocolo, ventana temporal, participantes, tamaño y orden antes de derivar ganador y LP.
+5. Los tickets HMAC vinculan jugador, modo, sesión, batalla, snapshot y versión de protocolo.
+6. El motor permite LP iniciales distintos del máximo para transportar vida de Supervivencia.
+7. Supervivencia y Olimpo no reciben recompensas del fallback común mientras no exista su liquidación versionada.
+8. Persistencia Supabase, endpoints y UI quedan fuera de esta fase.
+
+## Modos PvE - Fase 2: fundación Supabase local
+
+1. La migración `150_arena_modes_foundation.sql` crea los agregados de sesiones, runs, batallas, cartera, campeones, árbol, intentos diarios y rivales legendarios.
+2. Los catálogos activos son legibles por usuarios autenticados; el progreso personal queda protegido por RLS y solo permite lectura de filas propias.
+3. `anon` y `authenticated` no pueden mutar progreso, resultados ni Fragmentos directamente.
+4. Las nueve operaciones del diseño se ejecutan mediante funciones transaccionales reservadas a `service_role`, con `search_path` vacío, bloqueos `FOR UPDATE` e idempotencia.
+5. Supervivencia limita una run y una batalla activas, transporta LP y aplica la curación de hito dentro de la misma transacción que recompensa y avance.
+6. Olimpo deriva el periodo diario en UTC, consume el intento al emitir batalla y exige un campeón desbloqueado en su tier.
+7. La inversión y el respec bloquean cartera y progreso del campeón; el ledger impide duplicar créditos o débitos.
+8. El seed incorpora un ruleset inicial, ocho campeones ligados al ladder, tres nodos por campeón y dos rivales legendarios ficticios.
+9. La reconstrucción histórica solo desbloquea el campeón `N` cuando `tier_stats` confirma las victorias mínimas en el tier `N`.
+10. Validación local: regeneración de 151 migraciones, `pnpm db:reset`, 36 tests pgTAP y advisors de seguridad/rendimiento.
+
+## Modos PvE - Fase 3: portal de combate y Arena clásica
+
+1. `/hub/academy/training/arena` pasa a ser un portal server-side para Arena clásica, Supervivencia y Olimpo.
+2. La Arena existente se traslada a `/hub/academy/training/arena/classic` sin modificar sus reglas ni persistencia.
+3. Prefetch, cambio de tier y CTA post-duelo apuntan a la ruta clásica para evitar regresar al portal durante una sesión.
+4. Supervivencia y Olimpo se presentan como modos en preparación, sin enlaces a runtimes todavía inexistentes.
+5. El portal usa imágenes estáticas, no monta tableros ni animaciones continuas y mantiene objetivos táctiles de al menos 44 px.
+6. Se añade cobertura co-localizada para navegación, disponibilidad y resolución de CTA.
+
+## Modos PvE - Fase 4: Supervivencia dominio/API
+
+1. Se define el agregado de Supervivencia y el puerto `ISurvivalRepository` para separar dominio y Supabase.
+2. El escalado empieza en tier 4, avanza por bloques configurables y entra en Ascensión por vueltas completas del roster.
+3. Inicio y emisión son idempotentes: una run o batalla activas se reanudan en lugar de duplicarse.
+4. Las rutas `/api/survival/*` autentican, validan origen y usan RPCs reservadas a `service_role` para las mutaciones.
+5. La finalización exige ticket firmado y `ICombatProof`; outcome, LP, curación y Fragmentos se derivan en servidor.
+6. El snapshot inmutable usa seed e `idFactory` deterministas para que el replay pueda reproducir efectos complejos.
+7. Los rulesets históricos se leen por versión para que una expedición activa sobreviva a cambios de live-ops.
+8. Zeus, Loki y Hefes se organizan bajo `public/assets/combat/olympus/opponents` sin acoplarlos a Story.
+
+## Modos PvE - Fase 5: Progresión completa de Supervivencia
+
+1. El settlement autoritativo expone run, batalla liquidada, recompensa, récord y saldo de Fragmentos.
+2. La UI incorpora un informe entre combates con LP transportados, curación cada cinco victorias y cierre por derrota.
+3. El récord se deriva del historial de runs y usa un índice específico, evitando duplicar estado mutable.
+4. Los retries recuperan el settlement persistido sin duplicar victorias ni moneda.
+5. El escalado infinito continúa mediante tier, perfil IA, nivel/versión, rango de Ascensión y bonus data-driven de LP y ATK/DEF.
+6. El contrato Survival unifica barajado, mano inicial de cuatro cartas y sorteo de iniciador con el runtime PvE.
+7. El lobby diferencia una reanudación —mismo snapshot firmado— de una batalla recién emitida.
+
+## Modos PvE - Fase 7: rival autoritativo y coste del abandono
+
+1. El journal pasa a ser exclusivamente del jugador: declarar acciones del rival se rechaza (`CombatProofError`).
+2. El servidor juega los turnos del rival con el resolutor puro compartido, así que un cliente modificado ya no
+   puede enviar un combate donde la IA se deja ganar.
+3. La única decisión humana del turno rival —activar o no su trampa reactiva— viaja como acción del jugador.
+4. El perfil de IA lo fija el ruleset y viaja del servidor al cliente; se elimina la dificultad `BOSS` hardcodeada
+   que hacía jugar los tramos MYTHIC con IA de BOSS.
+5. `COMBAT_PROOF_PROTOCOL_VERSION` sube a 3; las sesiones emitidas con el contrato anterior se reemiten sin castigo.
+6. Una batalla jugable cuya sesión caduca sin liquidarse se registra como derrota y cierra la expedición, de modo
+   que abandonar tras perder deja de permitir repetir el mismo snapshot con información perfecta.
+7. La incompatibilidad de snapshot siempre gana sobre la caducidad: nunca se castiga al jugador por una migración.
+
+## Modos PvE - Fase 8: afinado de reglas de Supervivencia
+
+1. Liquidar un duelo dispone de `COMBAT_SETTLEMENT_GRACE_MS` por encima de la caducidad de la sesión: esta
+   decide si hubo abandono, no si una prueba ya concluida puede enviarse. El ticket de cierre vive esa suma.
+2. "Impecable" pasa a medirse contra los LP con los que empezó esa batalla, no contra el máximo; en
+   Supervivencia el jugador arrastra LP y era inalcanzable desde el segundo combate.
+3. El intervalo de curación viaja del ruleset al cliente; el lobby deja de asumir un 5 fijo.
+4. El empate queda documentado y explicado en el informe: cierra la expedición igual que una derrota.
+
+## Modos PvE - Fase 9: checkpoint por turno
+
+1. `combat_sessions.journal_json` guarda el diario en curso; `checkpoint_combat_session` solo admite
+   diarios más largos, de modo que el historial nunca se reescribe.
+2. La ruta de cierre pasa a ser "el cliente reporta, el servidor decide": guarda avance o liquida si el
+   replay ya tiene desenlace.
+3. Reanudar reconstruye el estado con `replayJournalToState`, compartido por cliente y servidor, en vez de
+   reiniciar el combate con las mismas manos.
+4. Como el rival lo deriva el servidor, ocultar el envío final no evita la derrota: el golpe letal aparece
+   al reproducir el prefijo reportado.
+
+## Modos PvE - Fase 10: runtime de Olimpo (dominio, persistencia y API)
+
+1. `olympus_domain.test.sql` caracteriza tablas, RLS, grants, seeds y RPC del modo antes de tocarlos:
+   allowance diario, batalla activa única, primera victoria irrepetible y prerrequisitos del árbol.
+2. La migración 154 publica `olympus_settings` versionada (intentos, TTL, coste y reembolso del respec) y
+   sustituye las leyendas provisionales por Zeus, Loki y Hefes con su arte, reglas visibles y recompensas.
+3. Se cierra el hueco documentado: la primera reasignación por campeón es gratuita y las siguientes cobran
+   el coste configurado, con asiento de auditoría propio para el cobro.
+4. `forfeit_olympus_battle` castiga el abandono; `invalidate_olympus_battle` devuelve el intento cuando el
+   snapshot incompatible es deuda nuestra. Emitir con una batalla en curso ya falla con nombre propio.
+5. Entidades y reglas puras viven en `core/entities/olympus` y `core/services/olympus`: allowance UTC,
+   perfil de batalla del campeón con caps, recompensa por leyenda y presupuesto de respec.
+6. `IOlympusRepository` + `SupabaseOlympusRepository` mantienen lectura bajo RLS y escritura solo por RPC.
+   Un efecto de nodo desconocido se rechaza al mapear en vez de convertir un nodo pagado en decoración.
+7. El snapshot reutiliza el barajado canónico, la apertura de cuatro cartas y el escalado de cartas de
+   Arena; las asimetrías de LP y energía se aplican después porque el motor las comparte.
+8. Las rutas `/api/olympus/*` son finas: origen confiable, auth de sesión, validación, rate limit y ticket
+   HMAC de modo OLYMPUS. El límite PvE pasa a `services/security/api/rate-limit` y lo comparten los dos modos.
+9. `resolveIssuedBattleDisposition` se mueve a `core/services/match`: la política de reanudar, castigar o
+   reemitir es del kernel compartido, no de Supervivencia.
+
+## Modos PvE - Fase 11: panel admin de Supervivencia y Olimpo
+
+1. Sección `Modos PvE` en el portal admin con cuatro pestañas (Supervivencia, Config Olimpo, Leyendas,
+   Campeones); cada panel es un componente propio, ninguno pasa de 150 líneas.
+2. La migración 155 añade `publish_survival_ruleset` y `publish_olympus_settings`: publicar inserta versión
+   nueva y mueve `is_active` en la misma transacción, en vez de reescribir la fila que están usando las
+   expediciones en curso.
+3. Leyendas, campeones y nodos sí se editan en sitio y suben su `version`: cada batalla replica desde su
+   snapshot inmutable, así que el catálogo puede evolucionar sin romper duelos abiertos.
+4. Retirar una leyenda con historial o un nodo ya comprado los archiva (`is_active = false`) en lugar de
+   borrarlos; borrarlos dejaría batallas huérfanas y sacaría el coste del nodo del reembolso del respec.
+5. El editor de deck legendario reutiliza el grid, el almacén de cartas y el inspector de Arena/Story, más
+   las funciones puras que propagan escalado y objetos a todas las copias de una carta.
+6. La API `/api/admin/pve-modes` reutiliza gate admin, rate limit por usuario/IP y `admin_audit_log`; cada
+   publicación y cada edición dejan asiento con actor, entidad y versión.
+7. El vocabulario de efectos del árbol vive en un único módulo compartido por API y UI: publicar un tipo que
+   el resolutor no sabe aplicar es imposible desde el panel y falla al mapear si llega por otra vía.
+
+## Modos PvE - Fase 12: UI de Olimpo
+
+1. `/hub/academy/training/arena/olympus` existe y la tarjeta del portal deja de estar «En preparación».
+2. La antesala reúne en una pantalla lo que el jugador necesita para decidir: intentos restantes con
+   cuenta atrás al reset UTC, campeones (los bloqueados visibles con su requisito), leyendas con su arte,
+   reglas y recompensa, y el árbol de mejoras con reasignación.
+3. Gastar un intento exige confirmación explícita, con el foco inicial en «Cancelar» y anticipando cuántos
+   intentos quedarán. Retomar un combate pendiente no pasa por ahí: no consume otro.
+4. El árbol describe cada nodo en lenguaje de juego («+5 nivel a todo el mazo») en vez del `kind` interno.
+5. La identidad del campeón se compone en la ruta con `resolveOlympusChampionCards`: el dominio no sabe de
+   avatares ni nombres, porque el campeón es el rival de Arena al que venciste.
+6. El cliente reutiliza el contrato de journal de Supervivencia (checkpoint por turno + cierre) y
+   `replayJournalToState` para retomar; el lobby reutiliza las acciones de Arena clásica.
+7. Responsive: carruseles con `scroll-snap` en móvil, CTA fija inferior al alcance del pulgar, objetivos de
+   44 px, foco visible y `aria-live` en el marcador de intentos.
+
+## Modos PvE - Fase 13: portal 3D de modos
+
+1. `/hub/academy/training/arena` pasa de tres tarjetas a una escena 3D, espejo del patrón de la Academia:
+   shell 2D + `dynamic(ssr:false)` del mundo, que solo se monta en cliente y con WebGL.
+2. Las tarjetas 2D **no se retiran**: son el fallback de SSR y de equipos sin WebGL, y comparten las
+   mismas ilustraciones que la escena, así que no hay dos fuentes de arte que se desincronicen.
+3. Se descartó la escenografía procedural que se había construido primero (anfiteatro, puesto avanzado,
+   pórtico): las ilustraciones aportadas ya son esas estructuras y mejor resueltas. Queda `ModePedestal`,
+   un disco de luz del color del modo; cualquier geometría añadida competiría con el dibujo.
+4. Las tres ilustraciones vienen **sin canal alfa** pese al `-removebg` del nombre, así que el fondo se
+   recorta en el shader. El umbral del chroma-key pasa a ser configurable —conservando el valor histórico
+   por defecto— porque el Olimpo es mármol y nubes blancas: con el corte laxo el shader se comía los
+   propios templos. Cada modo declara su umbral.
+5. El alto del holograma baja a 2.5: las ilustraciones son apaisadas (604x413) y a la altura de la
+   Academia habrían medido 5.3 de ancho, tocándose entre sí.
+6. Presupuesto de render reutilizando `resolveHubRenderProfile`: en móvil se apaga el pedestal y solo
+   queda el carrusel; en gama baja se recortan luces; `prefers-reduced-motion` navega sin zoom de cámara.
+7. Pendiente de afinar a ojo en preview: cámara, FOV y separación de `resolveCombatModesLayout` son una
+   primera pasada. Y si el recorte del fondo deja fleco, la solución es exportar las imágenes con alfa
+   real, no seguir moviendo umbrales.

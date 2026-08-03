@@ -1,6 +1,6 @@
 {
   "name": "ai-gi-oh",
-  "version": "1.19.3",
+  "version": "1.20.0",
   "private": true,
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -36,8 +36,10 @@
     "supabase:env:local": "node scripts/supabase/setup-local-env.mjs",
     "supabase:env:apply": "node scripts/supabase/apply-local-env-to-dotenv-local.mjs",
     "supabase:env:restore": "node scripts/supabase/restore-dotenv-local.mjs",
+    "supabase:verify:local": "node scripts/supabase/verify-local.mjs",
     "supabase:bootstrap:local": "node scripts/supabase/bootstrap-local.mjs",
     "db:reset": "node scripts/supabase/reset-local.mjs",
+    "db:migrate": "node scripts/supabase/apply-pending-migrations.mjs",
     "db:seed:dump": "node scripts/supabase/dump-seed.mjs",
     "db:validate": "node scripts/supabase/validate-card-references.mjs",
     "db:make-admin": "node scripts/supabase/make-admin.mjs",

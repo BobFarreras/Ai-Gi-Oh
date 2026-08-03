@@ -4,7 +4,7 @@
 import { createContext, useContext } from "react";
 import { IMatchActionPayload } from "@/core/entities/multiplayer/IMatchAction";
 
-export type LocalActionEmitter = (action: IMatchActionPayload) => void;
+export type LocalActionEmitter = (action: IMatchActionPayload, actorPlayerId?: string) => void;
 
 const noop: LocalActionEmitter = () => {};
 

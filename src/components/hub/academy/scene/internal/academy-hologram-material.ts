@@ -29,6 +29,11 @@ export const AcademyHologramMaterial = shaderMaterial(
     // 1 = recorta el fondo BLANCO/claro de la imagen (chroma-key) para imágenes sin canal alfa
     // (p. ej. el nodo de Documentación es un servidor sobre fondo blanco): deja solo la silueta.
     uChromaWhite: 0,
+    // Umbrales del chroma-key. Los valores por defecto son los históricos del nodo de Documentación.
+    // Una imagen con blancos PROPIOS (mármol, nubes, nieve) necesita un corte casi puro, o el shader
+    // se come el objeto además del fondo.
+    uChromaBright: 0.8,
+    uChromaSat: 0.15,
   },
   /* glsl - vertex */ `
     varying vec2 vUv;
@@ -46,6 +51,8 @@ export const AcademyHologramMaterial = shaderMaterial(
     uniform float uGlow;
     uniform float uCardMask;
     uniform float uChromaWhite;
+    uniform float uChromaBright;
+    uniform float uChromaSat;
     varying vec2 vUv;
 
     void main() {
@@ -60,7 +67,7 @@ export const AcademyHologramMaterial = shaderMaterial(
         float mn = min(min(tex.r, tex.g), tex.b);
         float sat = mx > 0.001 ? (mx - mn) / mx : 0.0;
         float bright = dot(tex.rgb, vec3(0.299, 0.587, 0.114));
-        if (bright > 0.8 && sat < 0.15) discard;
+        if (bright > uChromaBright && sat < uChromaSat) discard;
       }
 
       // Máscara de carta (baraja): recorta el margen oscuro exterior de la imagen y redondea las
