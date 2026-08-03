@@ -15,6 +15,11 @@ import {
 /** Espaciado mínimo entre avances: el cierre siempre se envía, pase el tiempo que pase. */
 const CHECKPOINT_MIN_INTERVAL_MS = 12_000;
 const OVERFLOW_MESSAGE = "Este combate superó el límite de acciones registrables. Sal y reanúdalo para poder liquidarlo.";
+/**
+ * El servidor no reconoce el desenlace que el tablero ya da por bueno. Es raro, pero el jugador necesita
+ * saberlo y tener salida: reanudar reconstruye el combate desde el avance que el servidor sí guardó.
+ */
+const UNSETTLED_MESSAGE = "El servidor todavía no da este combate por terminado. Vuelve a pulsar para reintentar; si sigue igual, sal a Arena y reanuda la expedición.";
 
 export function useSurvivalExpedition() {
   const [run, setRun] = useState<ISurvivalRun | null>(null);
@@ -98,7 +103,12 @@ export function useSurvivalExpedition() {
     };
     try {
       const result = await completeSurvivalBattle(battle.completionTicket, proof);
-      if (!result.settled) return;
+      if (!result.settled) {
+        // Un envío FINAL que no liquida = el servidor no vio desenlace al reproducir el diario. Callarlo
+        // dejaba al jugador atrapado: «Ver informe» no hacía nada y volver a pulsarlo repetía el silencio.
+        if (isFinal) setError(UNSETTLED_MESSAGE);
+        return;
+      }
       completedRef.current = true;
       pendingSettlementRef.current = result;
       setRun(result.run);

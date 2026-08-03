@@ -38,6 +38,15 @@ export function OlympusUpgradeTree(props: IOlympusUpgradeTreeProps) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
+        {/* El saldo va aquí porque es donde se gasta: mirar la cabecera para saber si llega es un viaje de más. */}
+        <span
+          className="flex items-center gap-1.5 rounded-lg border border-amber-400/50 bg-amber-950/25 px-2.5 py-1"
+          aria-label={`Tienes ${props.ascensionFragments} de Éter`}
+        >
+          <EterIcon size={16} />
+          <span className="font-display text-sm font-black tabular-nums text-amber-200">{props.ascensionFragments}</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400/70">Éter</span>
+        </span>
         <p className="font-display text-[11px] font-black uppercase tracking-[0.2em] text-violet-300/80">
           Cada mejora sube por rangos y se acumula
         </p>

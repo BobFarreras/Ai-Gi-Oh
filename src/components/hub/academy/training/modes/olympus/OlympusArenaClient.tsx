@@ -62,6 +62,8 @@ export function OlympusArenaClient() {
       <OlympusDebrief
         settlement={mode.settlement}
         legend={runtime.legend}
+        // El runtime de la batalla trae la leyenda del dominio; la carta resuelta viene del overview.
+        rewardCard={mode.overview?.legends.find((legend) => legend.id === runtime.legend.id)?.rewardCard ?? null}
         attemptsRemaining={mode.overview?.allowance.attemptsRemaining ?? 0}
         isLoading={mode.isLoading}
         onContinue={returnToSelection}
