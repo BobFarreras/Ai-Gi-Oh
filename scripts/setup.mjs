@@ -227,8 +227,8 @@ async function main() {
   ui.print();
   ui.note("URLs locales:");
   ui.note("App            → http://localhost:3000");
-  ui.note("Supabase Studio → http://127.0.0.1:54323  (UI para inspeccionar la BD)");
-  ui.note("Inbucket (mail) → http://127.0.0.1:54324");
+  ui.note("Supabase Studio → http://127.0.0.1:57323  (UI para inspeccionar la BD)");
+  ui.note("Inbucket (mail) → http://127.0.0.1:57324");
   ui.print();
 
   rl.close();

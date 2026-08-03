@@ -15,6 +15,7 @@ import { RandomSource } from "@/core/services/random/seeded-rng";
 import { resolvePendingTurnAction } from "./game-engine/phases/resolve-pending-turn-action";
 import { createInitialGameState } from "./game-engine/state/create-initial-game-state";
 import { GameState } from "./game-engine/state/types";
+import { cancelUnresolvablePendingTurnAction } from "./game-engine/phases/cancel-unresolvable-pending-turn-action";
 
 export type { GameState };
 
@@ -130,6 +131,11 @@ export class GameEngine {
   /** Resuelve una acción obligatoria pendiente del turno activo. */
   public static resolvePendingTurnAction(state: GameState, playerId: string, selectedId: string): GameState {
     return resolvePendingTurnAction(state, playerId, selectedId);
+  }
+
+  /** Recupera un turno automático cuando una acción pendiente ya no tiene candidatos legales. */
+  public static cancelUnresolvablePendingTurnAction(state: GameState, playerId: string): GameState {
+    return cancelUnresolvablePendingTurnAction(state, playerId);
   }
 
   /** Cambia el modo de una entidad/ejecución ya desplegada del jugador indicado. */

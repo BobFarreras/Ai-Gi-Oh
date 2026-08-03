@@ -8,6 +8,7 @@ import type { useBoardTurnControls } from "../board-state/useBoardTurnControls";
 import { ITrapActivationDecision, ITrapEligibleOption, TrapDecisionTrigger } from "../board-state/useBoardUiState";
 import { IUsePlayerActionsParams } from "../player-actions/types";
 import { IUseMatchUiStateResult } from "./useMatchUiState";
+import { IMatchActionPayload } from "@/core/entities/match";
 
 export type RequestTrapActivationDecision = (
   traps: ITrapEligibleOption[],
@@ -23,6 +24,7 @@ interface IBuildOpponentTurnParamsInput {
   winnerPlayerId: string | "DRAW" | null;
   requestTrapActivationDecision: RequestTrapActivationDecision;
   applyTransition: (transition: (state: GameState) => GameState) => GameState | null;
+  emitCommittedAction: (actorPlayerId: string, action: IMatchActionPayload) => void;
 }
 
 interface IBuildMatchRuntimeResultInput {
@@ -57,6 +59,7 @@ export function buildOpponentTurnParams(input: IBuildOpponentTurnParamsInput) {
     setRevealedEntities: input.uiState.setRevealedEntities,
     setSelectedCard: input.uiState.setSelectedCard,
     requestTrapActivationDecision: input.requestTrapActivationDecision,
+    emitCommittedAction: input.emitCommittedAction,
   };
 }
 

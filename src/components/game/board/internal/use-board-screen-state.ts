@@ -92,7 +92,7 @@ export function useBoardScreenState(input: IUseBoardScreenStateInput) {
     const passiveNexusEarned = board.gameState.nexusEarnedByPlayerId?.[playerId] ?? 0;
     onMatchResolved({ winnerPlayerId: board.winnerPlayerId, playerId, mode, matchSeed: board.matchSeed, flawless, passiveNexusEarned });
     resolvedWinnerRef.current = board.winnerPlayerId;
-  }, [board.matchSeed, board.winnerPlayerId, board.gameState.playerA, board.gameState.playerB, mode, onMatchResolved, playerId]);
+  }, [board.matchSeed, board.winnerPlayerId, board.gameState.playerA, board.gameState.playerB, board.gameState.nexusEarnedByPlayerId, mode, onMatchResolved, playerId]);
   useEffect(() => {
     if (!board.winnerPlayerId) return;
     board.setIsHistoryOpen(false);

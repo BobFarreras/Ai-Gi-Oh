@@ -21,4 +21,8 @@ describe("match-reward-policy", () => {
   it("multijugador usa curva propia", () => {
     expect(resolveMatchReward({ mode: "MULTIPLAYER", outcome: "DRAW" })).toEqual({ nexus: 45, playerExperience: 80 });
   });
+
+  it.each(["SURVIVAL", "OLYMPUS"] as const)("no concede recompensas genéricas al modo %s", (mode) => {
+    expect(resolveMatchReward({ mode, outcome: "WIN" })).toEqual({ nexus: 0, playerExperience: 0 });
+  });
 });

@@ -1,30 +1,7 @@
 // src/components/game/board/hooks/internal/player-actions/handleOwnEntityClick.ts - Gestiona clics sobre entidades propias según fase, acciones pendientes y animaciones.
-import { IBoardEntity } from "@/core/entities/IPlayer";
 import { GameEngine } from "@/core/use-cases/GameEngine";
 import { canAttackFromDefense } from "@/core/use-cases/game-engine/state/status-effects";
-import { IUsePlayerActionsParams } from "./types";
-import { MouseEvent } from "react";
-
-interface IHandleOwnEntityClickParams extends Pick<
-  IUsePlayerActionsParams,
-  | "activeAttackerId"
-  | "applyTransition"
-  | "clearSelection"
-  | "gameState"
-  | "pendingFusionSummon"
-  | "pendingEntityReplacement"
-  | "pendingEntityReplacementTargetId"
-  | "setActiveAttackerId"
-  | "setLastError"
-  | "setPendingEntityReplacementTargetId"
-  | "setPendingFusionSummon"
-  | "setPlayingCard"
-  | "setSelectedCard"
-  | "setSelectedBoardEntityInstanceId"
-> {
-  entity: IBoardEntity | null;
-  event: MouseEvent;
-}
+import { IHandleOwnEntityClickParams } from "./handle-own-entity-click.types";
 
 export async function handleOwnEntityClick({
   entity,
@@ -121,12 +98,15 @@ export async function handleOwnEntityClick({
     return "handled";
   }
   if (entity.mode === "DEFENSE" || entity.mode === "SET") {
-    // Doble click sobre una entidad en DEFENSA (boca arriba) la devuelve a ATAQUE: es el inverso
-    // simétrico del doble-click ATTACK->DEFENSE de más abajo. Las cartas SET (boca abajo) no se
-    // voltean con este gesto (revelarlas es otra acción). `changeEntityMode` respeta `modeLock`,
-    // así que una entidad bloqueada en defensa simplemente no cambia (no-op silencioso).
-    if (entity.mode === "DEFENSE" && event.detail >= 2) {
-      applyTransition((state) => GameEngine.changeEntityMode(state, state.playerA.id, entity.instanceId, "ATTACK"));
+    // Doble click sobre una entidad propia en DEFENSA (boca arriba) la devuelve a ATAQUE.
+    // Doble click sobre una ENTITY propia en SET (boca abajo) la voltea a DEFENSE para que
+    // pueda atacar posteriormente. Solo aplica a entities, no a ejecuciones/trampas.
+    if (event.detail >= 2) {
+      if (entity.mode === "DEFENSE" && entity.card.type === "ENTITY") {
+        applyTransition((state) => GameEngine.changeEntityMode(state, state.playerA.id, entity.instanceId, "ATTACK"));
+      } else if (entity.mode === "SET" && entity.card.type === "ENTITY") {
+        applyTransition((state) => GameEngine.changeEntityMode(state, state.playerA.id, entity.instanceId, "DEFENSE"));
+      }
     }
     setSelectedCard(entity.card);
     setSelectedBoardEntityInstanceId(entity.instanceId);

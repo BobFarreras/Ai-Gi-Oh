@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { IPlayerProgress } from "@/core/entities/player/IPlayerProgress";
 import { IRankUpResult } from "@/core/entities/progression/ISkillTreeNode";
 import { IPlayerProgressRepository } from "@/core/repositories/IPlayerProgressRepository";
-import { IRankUpSkillNodeCommand, ISkillTreeRepository } from "@/core/repositories/ISkillTreeRepository";
+import { ISkillTreeRepository } from "@/core/repositories/ISkillTreeRepository";
 import { RankUpSkillNodeUseCase } from "./RankUpSkillNodeUseCase";
 
 function progressWith(experience: number | null): IPlayerProgressRepository {
@@ -23,7 +23,7 @@ function progressWith(experience: number | null): IPlayerProgressRepository {
 }
 
 function skillRepoSpy(result: IRankUpResult) {
-  const rankUp = vi.fn(async (_command: IRankUpSkillNodeCommand) => result);
+  const rankUp = vi.fn(async () => result);
   const repo = {
     getActiveCatalog: vi.fn(),
     getPlayerRanks: vi.fn(),

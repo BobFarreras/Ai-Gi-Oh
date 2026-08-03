@@ -26,6 +26,8 @@ export interface ICreateInitialBoardStateInput {
    * aplican tras crear el estado base (createInitialGameState los repartiría a ambos jugadores).
    */
   playerStartingLpBonus?: number;
+  /** LP actuales transportados entre combates; no altera el máximo base. */
+  playerStartingHealthPoints?: number;
   playerMaxEnergyBonus?: number;
   /** Arranque en Frío (ficha 8): +energía one-time en el primer turno del jugador, por encima del tope. */
   playerTurn1EnergyBonus?: number;
@@ -35,6 +37,7 @@ export interface ICreateInitialBoardStateInput {
    * turno 1. PvE. 0/ausente = el rival arranca con los valores por defecto.
    */
   opponentStartingLpBonus?: number;
+  opponentStartingHealthPoints?: number;
   opponentMaxEnergyBonus?: number;
   opponentTurn1EnergyBonus?: number;
 }
@@ -79,12 +82,14 @@ export function createInitialBoardState(input?: ICreateInitialBoardStateInput): 
       name: matchConfig.playerA.name,
       deck: matchConfig.playerA.deck,
       fusionDeck: matchConfig.playerA.fusionDeck,
+      startingHealthPoints: input?.playerStartingHealthPoints,
     },
     playerB: {
       id: matchConfig.playerB.id,
       name: matchConfig.playerB.name,
       deck: matchConfig.playerB.deck,
       fusionDeck: matchConfig.playerB.fusionDeck,
+      startingHealthPoints: input?.opponentStartingHealthPoints,
     },
     starterPlayerId: matchConfig.starterPlayerId,
     openingHandSize: matchConfig.openingHandSize,

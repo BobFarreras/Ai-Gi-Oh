@@ -1,0 +1,83 @@
+// src/components/game/board/hooks/internal/useGameAudio.test.ts - Verifica el reintento de soundtrack tras bloqueo de autoplay móvil.
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useGameAudio } from "./useGameAudio";
+import { consumePrimedMusic, createAudioFromPath, safePlay } from "./audio/audioRuntime";
+
+vi.mock("./audio/audioRuntime", () => ({
+  createAudio: vi.fn(),
+  createAudioFromPath: vi.fn(),
+  consumePrimedMusic: vi.fn(),
+  mapEventToTrack: vi.fn(),
+  safePlay: vi.fn(),
+  safePlayWithFallback: vi.fn(),
+}));
+
+describe("useGameAudio", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("reintenta el soundtrack custom en el primer gesto si autoplay fue bloqueado", () => {
+    const soundtrack = { pause: vi.fn(), currentTime: 0 } as unknown as HTMLAudioElement;
+    vi.mocked(createAudioFromPath).mockReturnValue(soundtrack);
+    renderHook(() => useGameAudio({
+      combatLog: [],
+      winnerPlayerId: null,
+      playerId: "p1",
+      isHistoryOpen: false,
+      hasSelectedCard: false,
+      lastErrorCode: null,
+      isMuted: false,
+      isPaused: false,
+      customSoundtrackPath: "/audio/survival/pulso-de-neon.m4a",
+    }));
+
+    expect(createAudioFromPath).toHaveBeenCalledWith("/audio/survival/pulso-de-neon.m4a", 0.34, true);
+    expect(safePlay).toHaveBeenCalledTimes(1);
+    act(() => window.dispatchEvent(new Event("pointerdown")));
+    expect(safePlay).toHaveBeenCalledTimes(2);
+  });
+
+  it("reutiliza la pista iniciada en el gesto del lobby", () => {
+    const soundtrack = { pause: vi.fn(), currentTime: 0 } as unknown as HTMLAudioElement;
+    vi.mocked(consumePrimedMusic).mockReturnValue(soundtrack);
+
+    renderHook(() => useGameAudio({
+      combatLog: [],
+      winnerPlayerId: null,
+      playerId: "p1",
+      isHistoryOpen: false,
+      hasSelectedCard: false,
+      lastErrorCode: null,
+      isMuted: false,
+      isPaused: false,
+      customSoundtrackPath: "/audio/survival/pulso-de-neon.m4a",
+    }));
+
+    expect(consumePrimedMusic).toHaveBeenCalledWith("/audio/survival/pulso-de-neon.m4a");
+    expect(createAudioFromPath).not.toHaveBeenCalled();
+    expect(safePlay).toHaveBeenCalledWith(soundtrack);
+  });
+
+  it("adopta y detiene la pista del modo aunque el tema de jefe silencie la base", () => {
+    const soundtrack = { pause: vi.fn(), currentTime: 0 } as unknown as HTMLAudioElement;
+    vi.mocked(consumePrimedMusic).mockReturnValue(soundtrack);
+
+    const { unmount } = renderHook(() => useGameAudio({
+      combatLog: [],
+      winnerPlayerId: null,
+      playerId: "p1",
+      isHistoryOpen: false,
+      hasSelectedCard: false,
+      lastErrorCode: null,
+      isMuted: false,
+      isPaused: false,
+      // Es lo que pasan Supervivencia y Olimpo: sin adoptarla, la pista seguía sonando tras el combate.
+      disableBaseSoundtrack: true,
+      customSoundtrackPath: "/audio/survival/pulso-de-neon.m4a",
+    }));
+
+    expect(consumePrimedMusic).toHaveBeenCalledWith("/audio/survival/pulso-de-neon.m4a");
+    unmount();
+    expect(soundtrack.pause).toHaveBeenCalled();
+  });
+});

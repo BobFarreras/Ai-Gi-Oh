@@ -41,6 +41,8 @@ function rewardForMultiplayer(outcome: IMatchOutcome): IMatchReward {
 
 export function resolveMatchReward(context: IMatchRewardContext): IMatchReward {
   if (context.mode === "TUTORIAL") return rewardForTutorial();
+  // Estos modos liquidan una economía versionada propia; el fallback común nunca concede premios.
+  if (context.mode === "SURVIVAL" || context.mode === "OLYMPUS") return rewardForTutorial();
   if (context.mode === "TRAINING") return rewardForTraining(context.outcome);
   if (context.mode === "STORY") return rewardForStory(context.outcome, context.storyOpponentTier);
   return rewardForMultiplayer(context.outcome);

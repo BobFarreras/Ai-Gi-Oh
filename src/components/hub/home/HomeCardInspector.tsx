@@ -57,7 +57,9 @@ export function HomeCardInspector({
     const syncScale = (width: number, height: number): void => {
       const fit = Math.min(width / 260, height / 380);
       const nextScale = Math.max(minCardScale, Math.min(maxCardScale, fit));
-      if (Number.isFinite(nextScale) && nextScale > 0) setCardScale(nextScale);
+      if (Number.isFinite(nextScale) && nextScale > 0) {
+        setCardScale((currentScale) => Math.abs(currentScale - nextScale) < 0.01 ? currentScale : nextScale);
+      }
     };
 
     const observer = new ResizeObserver((entries) => {

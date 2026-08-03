@@ -6,6 +6,27 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.20.0] - 2026-08-03
+
+### Added
+- **Portal de modos de Arena en 3D**: `/hub/academy/training/arena` deja de ser tres tarjetas planas y pasa a una escena tridimensional con la ilustración de cada arena sobre su pedestal de luz, igual que la Academia. En equipos sin WebGL (o mientras carga) se siguen viendo las tarjetas de siempre, con las mismas imágenes.
+- **Supervivencia — modo nuevo**: una expedición de combates encadenados donde **los LP no se recuperan entre duelos**. Los puntos de vida con los que acabas un combate son con los que empiezas el siguiente, así que cada victoria justa te acerca al final de la carrera. Cada cierto número de victorias hay un **hito que te cura**, los rivales escalan de nivel según avanzas y, cuando caes, tu marca queda registrada. La expedición se puede retomar donde la dejaste: salir del navegador a mitad de combate ya no la pierde.
+- **Olimpo — modo nuevo**: el desafío de más alto nivel del juego, con **3 intentos al día** que se reinician a las 00:00 UTC.
+  - Peleas con el **mazo prestado de un campeón**: los rivales de Arena clásica a los que has derrotado te prestan su baraja. Hay un botón para ver exactamente qué cartas tiene y con qué nivel van a salir.
+  - Enfrente, **leyendas** (Zeus, Loki y Hefes) con sus reglas de duelo, su arte y su recompensa, todo visible **antes** de gastar el intento.
+  - Cada campeón tiene un **árbol de mejoras acumulable**: Potencia sube el nivel de todo el mazo, Resistencia los LP y la energía, e Identidad la versión de las cartas. Cada nodo se sube por rangos y el coste crece con cada rango. Se puede reasignar (la primera vez, gratis).
+  - Derrotar a una leyenda da **Éter**, **Nexus** y **una carta** para tu colección. El Éter solo sirve dentro de Olimpo; el Nexus y la carta salen del modo y se quedan contigo.
+- **Éter, la moneda de Supervivencia y Olimpo**: se llama así para no confundirla con los Fragmentos de los eventos, y tiene icono propio en toda la interfaz.
+- **Panel de admin de modos PvE**: Supervivencia y Olimpo se configuran desde el panel, sin tocar la base de datos. Las reglas de Supervivencia y los ajustes de Olimpo se **publican por versiones** (una expedición en curso sigue con las reglas con las que empezó), mientras que leyendas, campeones y nodos se editan en sitio. La recompensa de cada leyenda (Éter, Nexus y carta) se elige desde ahí, con la carta escogida de una lista real del catálogo.
+
+### Fixed
+- **La música de combate seguía sonando después del duelo**: la pista que arranca al empezar el combate se quedaba en bucle al volver a la pantalla de selección. Afectaba a Supervivencia y a Olimpo; en Supervivencia quedaba disimulado porque salir recarga la página. Ahora el tablero se hace cargo de la pista del modo y la detiene al terminar.
+- **Olimpo subía de nivel cartas que no son tuyas**: como el mazo es prestado del campeón, la experiencia del duelo no debe tocar tu colección, pero se estaba guardando igualmente. Ahora el resumen de experiencia se sigue viendo al acabar el combate, pero no se escribe nada: las mejoras de Olimpo viven en el campeón, no en tus cartas.
+
+### Internal
+- Los modos PvE comparten el **protocolo autoritativo v3**: el cliente solo reporta sus propias acciones y el servidor deriva y reproduce el turno del rival, así que dejar de enviar el cierre no evita la derrota. El avance se registra en cada frontera de turno para poder retomar un combate a medias.
+- Migraciones **149 a 160** (12), pendientes de aplicar en producción **en orden**. La 160 recrea `complete_olympus_battle` con dos parámetros más (Nexus y carta), así que el reparto del botín es atómico con el cierre de la batalla.
+
 ## [1.19.3] - 2026-07-24
 
 ### Changed
@@ -426,7 +447,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.3...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.20.0...HEAD
+[1.20.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.3...v1.20.0
 [1.19.3]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.2...v1.19.3
 [1.19.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.1...v1.19.2
 [1.19.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.0...v1.19.1

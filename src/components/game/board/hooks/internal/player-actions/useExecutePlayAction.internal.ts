@@ -4,7 +4,8 @@ import { GameState, GameEngine } from "@/core/use-cases/GameEngine";
 import { LocalActionEmitter } from "@/components/game/board/multiplayer/local-action-emitter";
 import { sleep } from "../sleep";
 import { executionEffectAppliesBuff } from "@/core/services/effects/execution-buff-detection";
-import { addRevealedId, findReactiveTrap, removeRevealedId } from "../trapPreview";
+import { addRevealedId, removeRevealedId } from "../trapPreview";
+import { findReactiveTrap } from "@/core/services/opponent/find-reactive-traps";
 import { PLAYER_POST_RESOLUTION_MS, PLAYER_TRAP_PREVIEW_MS } from "./constants";
 import { IUsePlayerActionsParams, RequestTrapActivationDecision } from "./types";
 

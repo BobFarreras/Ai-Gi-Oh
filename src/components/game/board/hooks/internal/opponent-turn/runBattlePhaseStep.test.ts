@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IOpponentTurnContext } from "./types";
 import { runBattlePhaseStep } from "./runBattlePhaseStep";
+import { HeuristicOpponentStrategy } from "@/core/services/opponent/HeuristicOpponentStrategy";
 
 function createState(): GameState {
   return {
@@ -114,5 +115,93 @@ describe("runBattlePhaseStep", () => {
     expect(setActiveAttackerId).toHaveBeenCalledWith(null);
     expect(context.clearSelection).toHaveBeenCalledTimes(1);
     expect(context.clearError).toHaveBeenCalledTimes(1);
+  });
+
+  it("aplica el repliegue defensivo universal antes de terminar la fase", async () => {
+    let state = createState();
+    state = {
+      ...state,
+      playerA: {
+        ...state.playerA,
+        activeEntities: [{
+          ...state.playerA.activeEntities[0],
+          mode: "ATTACK",
+          card: { ...state.playerA.activeEntities[0].card, attack: 2200, defense: 800 },
+        }],
+      },
+      playerB: {
+        ...state.playerB,
+        activeEntities: [{
+          ...state.playerB.activeEntities[0],
+          card: { ...state.playerB.activeEntities[0].card, attack: 1200, defense: 2400 },
+        }],
+      },
+    };
+    const emitCommittedAction = vi.fn();
+    const context: IOpponentTurnContext = {
+      gameState: state,
+      strategy: new HeuristicOpponentStrategy({ difficulty: "EASY" }),
+      applyTransition: (transition) => {
+        state = transition(state);
+        return state;
+      },
+      clearSelection: vi.fn(),
+      clearError: vi.fn(),
+      setIsAnimating: vi.fn(),
+      setActiveAttackerId: vi.fn(),
+      setRevealedEntities: vi.fn(),
+      setSelectedCard: vi.fn(),
+      requestTrapActivationDecision: vi.fn(async () => ({ activate: false })),
+      emitCommittedAction,
+    };
+
+    await runBattlePhaseStep(context, { stepDelayMs: 0, attackWindupMs: 0, postResolutionMs: 0, trapPreviewMs: 0 });
+
+    expect(state.playerB.activeEntities[0].mode).toBe("DEFENSE");
+    expect(state.phase).toBe("BATTLE");
+    // El servidor deriva al rival: sus jugadas no viajan por el journal y no pueden falsearse.
+    expect(emitCommittedAction).not.toHaveBeenCalled();
+  });
+
+  it("envía al journal la decisión de trampa del humano, no la jugada del rival", async () => {
+    const base = createState();
+    const state: GameState = {
+      ...base,
+      playerA: {
+        ...base.playerA,
+        activeExecutions: [{
+          instanceId: "trap-1",
+          mode: "SET",
+          card: { id: "trap", name: "Trap", description: "Trap", type: "TRAP", faction: "NEUTRAL", cost: 1, trigger: "ON_OPPONENT_ATTACK_DECLARED" },
+          hasAttackedThisTurn: false,
+          isNewlySummoned: false,
+        }],
+      } as GameState["playerA"],
+    };
+    const emitCommittedAction = vi.fn();
+    const context: IOpponentTurnContext = {
+      gameState: state,
+      strategy: {
+        choosePlay: () => null,
+        chooseAttack: () => ({ attackerInstanceId: "attacker", defenderInstanceId: "defender-set" }),
+      },
+      applyTransition: (transition) => transition(state),
+      clearSelection: vi.fn(),
+      clearError: vi.fn(),
+      setIsAnimating: vi.fn(),
+      setActiveAttackerId: vi.fn(),
+      setRevealedEntities: vi.fn(),
+      setSelectedCard: vi.fn(),
+      requestTrapActivationDecision: vi.fn(async () => ({ activate: true, chosenTrapInstanceId: "trap-1" })),
+      emitCommittedAction,
+    };
+
+    await runBattlePhaseStep(context, { stepDelayMs: 0, attackWindupMs: 0, postResolutionMs: 0, trapPreviewMs: 0 });
+
+    expect(emitCommittedAction).toHaveBeenCalledTimes(1);
+    expect(emitCommittedAction).toHaveBeenCalledWith("p1", {
+      type: "RESOLVE_REACTIVE_TRAP",
+      payload: { activate: true, chosenTrapInstanceId: "trap-1" },
+    });
   });
 });

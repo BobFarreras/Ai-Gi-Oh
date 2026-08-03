@@ -10,6 +10,7 @@ import { buildProjectedExperienceSummary } from "../progression/build-projected-
 import { IBoardUiError } from "../boardError";
 import type { IAppliedCardExperienceResult } from "@/core/use-cases/progression/ApplyBattleCardExperienceUseCase";
 import { createMatchProgressionService } from "@/services/game/match/progression";
+import { buildPlayerOwnedCardIds } from "../progression/build-player-owned-card-ids";
 
 function createBattleExperienceBatchId(): string {
   return `battle-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -30,6 +31,8 @@ export function useMatchProgression({ mode, gameState, winnerPlayerId, applyTran
   const battleExperienceCardLookup = useMemo(() => buildPlayerCardLookup(gameState.playerA), [gameState.playerA]);
   const progressionService = useMemo(() => createMatchProgressionService(mode), [mode]);
   const hasAppliedBattleExperienceRef = useRef(false);
+  // La propiedad se congela antes de que robos o cambios de zona mezclen cartas propias y ajenas.
+  const ownedCardIdsRef = useRef<ReadonlySet<string>>(buildPlayerOwnedCardIds(gameState.playerA));
 
   const resetBattleProgression = useCallback(() => {
     setBattleExperienceSummary([]);
@@ -46,7 +49,7 @@ export function useMatchProgression({ mode, gameState, winnerPlayerId, applyTran
     if (hasAppliedBattleExperienceRef.current) return;
     hasAppliedBattleExperienceRef.current = true;
     Promise.resolve().then(() => setIsBattleExperiencePending(true));
-    const experienceEvents = buildCardExperienceEvents(gameState.combatLog, gameState.playerA.id);
+    const experienceEvents = buildCardExperienceEvents(gameState.combatLog, gameState.playerA.id, ownedCardIdsRef.current);
     const projectedSummary = buildProjectedExperienceSummary(gameState.playerA.id, battleExperienceCardLookup, experienceEvents);
 
     progressionService

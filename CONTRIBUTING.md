@@ -75,8 +75,9 @@ pnpm supabase:bootstrap:local
 ```
 
 Esto genera migraciones, levanta contenedores Docker, aplica el esquema y crea `.env.local.supabase`.
+El propio bootstrap ejecuta un smoke test local de compra, ranking e idempotencia antes de terminar.
 
-**Requisitos:** Docker Desktop corriendo. Puertos 54321-54324 disponibles.
+**Requisitos:** Docker Desktop corriendo. Puertos 57320-57324 disponibles.
 
 ### 4. Aplicar variables de entorno
 
@@ -99,9 +100,9 @@ Estos puertos son fijos (definidos en `supabase/config.toml`), iguales para todo
 | Servicio | URL | Para qué sirve |
 |---|---|---|
 | App | `http://localhost:3000` | La aplicación Next.js |
-| Supabase Studio | `http://127.0.0.1:54323` | UI web para inspeccionar y editar la base de datos |
-| API Supabase | `http://127.0.0.1:54321` | Endpoint REST/Auth local |
-| Inbucket (emails auth) | `http://127.0.0.1:54324` | Bandeja de correos de autenticación |
+| Supabase Studio | `http://127.0.0.1:57323` | UI web para inspeccionar y editar la base de datos |
+| API Supabase | `http://127.0.0.1:57321` | Endpoint REST/Auth local |
+| Inbucket (emails auth) | `http://127.0.0.1:57324` | Bandeja de correos de autenticación |
 
 ## Acceder al panel de administración en local
 
@@ -124,7 +125,7 @@ pnpm db:make-admin --email=tu@email.com
 ```
 
 El comando aborta si la URL de Supabase no es local (protección anti-producción; fuérzalo con `--force`
-solo si sabes lo que haces). Alternativa manual: en Supabase Studio (`http://127.0.0.1:54323`) → SQL:
+solo si sabes lo que haces). Alternativa manual: en Supabase Studio (`http://127.0.0.1:57323`) → SQL:
 
 ```sql
 insert into admin_users (user_id, role, is_active)
@@ -197,6 +198,7 @@ pnpm dev
 | `supabase:env:apply` | Aplica `.env.local.supabase` sobre `.env.local` (con backup) |
 | `supabase:env:restore` | Restaura `.env.local` original |
 | `db:reset` | Regenera migraciones desde `docs/supabase/sql` + `supabase db reset --local`. Úsalo **tras cada `git pull`** para que tu BD quede igual al repo (borra datos locales de prueba). |
+| `supabase:verify:local` | Crea un usuario efímero local y valida compra `BUY_ITEM`, ranking e idempotencia; lo elimina al terminar. |
 | `db:seed:dump` | Regenera `supabase/seed.sql` desde la BD fuente (solo mantenedores). |
 | `db:make-admin` | Te concede acceso al panel admin en la BD **local** (`--email=`, `--role=`). Ver [Acceder al panel de administración en local](#acceder-al-panel-de-administración-en-local). |
 
@@ -223,3 +225,4 @@ pnpm build
 2. **Contenido editable del juego** (precios/rareza de mercado, sobres, eventos, misiones, promos, calendario de login) = `supabase/seed.sql`. Son UPSERTs idempotentes que corren **después** de las migraciones (capa que gana). No incluye `cards_catalog` (lo gobiernan las migraciones) ni datos de jugador. Edítalo a mano o regenéralo con `pnpm db:seed:dump`.
 3. **Evita funciones de auth dependientes de versión en políticas RLS** (`auth.role()`, `auth.email()`): cambian entre versiones de Supabase y pueden hacer fallar el SELECT. Para "cualquier usuario autenticado" usa `to authenticated using (true)`; para "el dueño" usa `auth.uid() = <columna>`.
 4. Ejecuta `pnpm db:reset` para validar que el bootstrap local (migraciones + seed) sigue siendo reproducible.
+5. Ejecuta `pnpm supabase:env:local && pnpm supabase:verify:local` para validar los flujos críticos contra la BD local.

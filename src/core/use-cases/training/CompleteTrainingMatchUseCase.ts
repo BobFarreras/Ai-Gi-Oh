@@ -2,7 +2,9 @@
 import { ValidationError } from "@/core/errors/ValidationError";
 import { IMatchOutcome } from "@/core/entities/match/IMatchOutcome";
 import { IMatchReward } from "@/core/entities/match/IMatchReward";
+import { IOlympusChampionUnlockRepository } from "@/core/repositories/IOlympusChampionUnlockRepository";
 import { ITrainingMatchClaimRepository } from "@/core/repositories/ITrainingMatchClaimRepository";
+import { ITrainingProgress } from "@/core/entities/training/ITrainingProgress";
 import { ITrainingProgressRepository } from "@/core/repositories/ITrainingProgressRepository";
 import { IWalletRepository } from "@/core/repositories/IWalletRepository";
 import { IPlayerProgressRepository } from "@/core/repositories/IPlayerProgressRepository";
@@ -27,6 +29,8 @@ interface ICompleteTrainingMatchOutput {
   reward: IMatchReward;
   highestUnlockedTier: number;
   newlyUnlockedTiers: number[];
+  /** Campeones de Olimpo concedidos por esta victoria; vacío si no había ninguno pendiente. */
+  newlyUnlockedChampionIds: string[];
 }
 
 interface ICompleteTrainingMatchDependencies {
@@ -36,6 +40,8 @@ interface ICompleteTrainingMatchDependencies {
   playerProgressRepository: IPlayerProgressRepository;
   /** Árbol de habilidades (ficha 8): si se inyecta, aplica los modificadores de economía a la recompensa. */
   skillTreeRepository?: ISkillTreeRepository;
+  /** Olimpo: si se inyecta, ganar en Arena presta el campeón correspondiente. */
+  championUnlockRepository?: IOlympusChampionUnlockRepository;
 }
 
 export class CompleteTrainingMatchUseCase {
@@ -49,7 +55,12 @@ export class CompleteTrainingMatchUseCase {
       throw new ValidationError("Los datos de cierre de entrenamiento son obligatorios.");
     }
     const reserved = await this.dependencies.claimRepository.tryReserveMatch(input.playerId, input.battleId, input.tier);
-    if (!reserved) return { applied: false, reward: { nexus: 0, playerExperience: 0 }, highestUnlockedTier: 1, newlyUnlockedTiers: [] };
+    if (!reserved) {
+      return {
+        applied: false, reward: { nexus: 0, playerExperience: 0 },
+        highestUnlockedTier: 1, newlyUnlockedTiers: [], newlyUnlockedChampionIds: [],
+      };
+    }
 
     const catalog = resolveTrainingTierCatalog();
     const tierConfig = catalog.find((item) => item.tier === input.tier);
@@ -80,7 +91,31 @@ export class CompleteTrainingMatchUseCase {
       reward,
       highestUnlockedTier: trainingResolution.nextProgress.highestUnlockedTier,
       newlyUnlockedTiers: trainingResolution.newlyUnlockedTiers,
+      newlyUnlockedChampionIds: await this.grantOlympusChampions(input, trainingResolution.nextProgress),
     };
+  }
+
+  /**
+   * Ganar en Arena presta ese rival como campeón de Olimpo. NO-FATAL, igual que la economía del árbol: si
+   * Olimpo no está cableado o falla, el cierre del duelo se completa igualmente.
+   */
+  private async grantOlympusChampions(
+    input: ICompleteTrainingMatchInput,
+    nextProgress: ITrainingProgress,
+  ): Promise<string[]> {
+    const repository = this.dependencies.championUnlockRepository;
+    if (!repository || input.outcome !== "WIN") return [];
+    try {
+      const tierWins = nextProgress.tierStats.find((stat) => stat.tier === input.tier)?.wins ?? 0;
+      const championIds = await repository.listChampionIdsEarnedInTier(input.tier, tierWins);
+      const granted = await Promise.all(championIds.map(async (championId) => {
+        const isNew = await repository.grantUnlock(input.playerId, championId, input.tier, input.battleId);
+        return isNew ? championId : null;
+      }));
+      return granted.filter((championId): championId is string => championId !== null);
+    } catch {
+      return [];
+    }
   }
 
   /**

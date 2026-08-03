@@ -8,6 +8,7 @@ import { ITrainingProgressRepository } from "@/core/repositories/ITrainingProgre
 import { IWalletRepository } from "@/core/repositories/IWalletRepository";
 import { IPlayerProgressRepository } from "@/core/repositories/IPlayerProgressRepository";
 import { ISkillTreeRepository } from "@/core/repositories/ISkillTreeRepository";
+import { IOlympusChampionUnlockRepository } from "@/core/repositories/IOlympusChampionUnlockRepository";
 
 interface IProcessTrainingMatchCompletionInput {
   playerId: string;
@@ -20,6 +21,8 @@ interface IProcessTrainingMatchCompletionInput {
     playerProgressRepository: IPlayerProgressRepository;
     /** Árbol de habilidades (ficha 8): aplica los modificadores de economía a la recompensa (no-fatal). */
     skillTreeRepository?: ISkillTreeRepository;
+    /** Olimpo: ganar en Arena presta ese rival como campeón (no-fatal). */
+    championUnlockRepository?: IOlympusChampionUnlockRepository;
     /** Inyectable en tests; por defecto la acreditación real vía RPC service-role. */
     creditPassiveNexus?: CreditPassiveNexusFn;
   };

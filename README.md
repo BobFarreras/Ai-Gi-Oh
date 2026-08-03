@@ -1,8 +1,8 @@
-<!-- README.md - Guía principal de AI-GI-OH como producto en producción v1.19.1. -->
+<!-- README.md - Guía principal de AI-GI-OH como producto en producción v1.20.0. -->
 # AI-GI-OH
 
 <p align="center">
-  <strong>Producto en producción · v1.19.1</strong><br/>
+  <strong>Producto en producción · v1.20.0</strong><br/>
   Juego táctico de cartas con motor desacoplado, arquitectura por capas y flujo profesional de calidad.
 </p>
 
@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-1.19.1-06b6d4">
+  <img alt="Version" src="https://img.shields.io/badge/version-1.20.0-06b6d4">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black">
   <img alt="React" src="https://img.shields.io/badge/React-19-149eca">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-Strict-3178c6">
@@ -110,7 +110,7 @@ URLs locales:
 
 - App: `http://localhost:3000`
 - Hub: `http://localhost:3000/hub`
-- Supabase Studio: `http://127.0.0.1:54323`
+- Supabase Studio: `http://127.0.0.1:57323`
 
 ## Cómo contribuir
 

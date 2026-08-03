@@ -2,6 +2,7 @@
 import { CombatEffectsOverride } from "@/services/performance/combat-effects-override";
 
 export type { CombatEffectsOverride } from "@/services/performance/combat-effects-override";
+export type CombatEffectsBudget = "FULL" | "BALANCED" | "REDUCED";
 
 /** Señales de capacidad del dispositivo ya recolectadas por el hook cliente. */
 export interface IBoardPerformanceSignals {
@@ -16,6 +17,7 @@ export interface IBoardPerformanceSignals {
 export interface IBoardPerformanceProfile {
   isMobileViewport: boolean;
   shouldReduceCombatEffects: boolean;
+  combatEffectsBudget: CombatEffectsBudget;
 }
 
 /**
@@ -25,17 +27,18 @@ export interface IBoardPerformanceProfile {
 export function resolveBoardPerformanceProfile(signals: IBoardPerformanceSignals): IBoardPerformanceProfile {
   const isConstrainedDevice =
     signals.hardwareConcurrency <= 4 || signals.deviceMemory <= 4 || signals.isSlowCpu;
-  const shouldReduceByAutoDetection =
-    signals.prefersReducedMotion || signals.isMobileViewport || isConstrainedDevice;
-  const shouldReduceCombatEffects =
+  const combatEffectsBudget: CombatEffectsBudget =
     signals.effectsOverride === "full"
-      ? false
-      : signals.effectsOverride === "reduced"
-        ? true
-        : shouldReduceByAutoDetection;
+      ? "FULL"
+      : signals.effectsOverride === "reduced" || signals.prefersReducedMotion || isConstrainedDevice
+        ? "REDUCED"
+        : signals.isMobileViewport
+          ? "BALANCED"
+          : "FULL";
 
   return {
     isMobileViewport: signals.isMobileViewport,
-    shouldReduceCombatEffects,
+    shouldReduceCombatEffects: combatEffectsBudget !== "FULL",
+    combatEffectsBudget,
   };
 }

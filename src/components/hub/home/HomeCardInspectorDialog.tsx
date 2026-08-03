@@ -1,7 +1,6 @@
 // src/components/hub/home/HomeCardInspectorDialog.tsx - Diálogo mobile para inspección detallada de carta en Arsenal.
 "use client";
 
-import { useEffect, useState } from "react";
 import { ICard } from "@/core/entities/ICard";
 import { ICardUpgradeCounts } from "@/components/game/card/internal/card-frame-types";
 import { HomeCardInspector } from "@/components/hub/home/HomeCardInspector";
@@ -11,6 +10,7 @@ import { IInspectorOrigin } from "@/components/hub/internal/mobile-inspector-ani
 import { MobileInspectorDialogShell } from "@/components/hub/internal/MobileInspectorDialogShell";
 import { IHomeActionResult } from "@/components/hub/home/layout/home-workspace-types";
 import { HomeInspectorStatusMessage } from "@/components/hub/home/internal/view/HomeInspectorStatusMessage";
+import { useHomeInspectorActions } from "@/components/hub/home/internal/hooks/use-home-inspector-actions";
 
 interface HomeCardInspectorDialogProps {
   isOpen: boolean;
@@ -59,57 +59,15 @@ export function HomeCardInspectorDialog({
   isTutorialActionStep = false,
   tutorialHighlightTargetId = null,
 }: HomeCardInspectorDialogProps) {
-  const [pendingAction, setPendingAction] = useState<"INSERT" | "REMOVE" | "EVOLVE" | null>(null);
-  const [statusMessage, setStatusMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+  const { pendingAction, statusMessage, handleInsert, handleRemove, handleEvolve } = useHomeInspectorActions({
+    onInsert,
+    onRemove,
+    onEvolve,
+    onClose,
+  });
   const { play } = useHubModuleSfx();
   const handleRequestClose = (source: "overlay" | "button") => {
     if (source === "button") play("DIALOG_CLOSE");
-  };
-  useEffect(() => {
-    if (!statusMessage) return;
-    const timer = window.setTimeout(() => setStatusMessage(null), statusMessage.tone === "error" ? 2600 : 1400);
-    return () => window.clearTimeout(timer);
-  }, [statusMessage]);
-  const handleInsert = async () => {
-    if (pendingAction) return;
-    setPendingAction("INSERT");
-    try {
-      const result = await Promise.resolve(onInsert());
-      if (!result.ok) {
-        setStatusMessage({ tone: "error", text: result.message ?? "No se pudo añadir la carta." });
-        return;
-      }
-      setStatusMessage({ tone: "success", text: "Carta añadida al deck." });
-      onClose();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo añadir la carta.";
-      setStatusMessage({ tone: "error", text: message });
-    } finally {
-      setPendingAction(null);
-    }
-  };
-  const handleRemove = async () => {
-    if (pendingAction) return;
-    setPendingAction("REMOVE");
-    try {
-      onClose();
-      await Promise.resolve(onRemove());
-    } finally {
-      setPendingAction(null);
-    }
-  };
-  const handleEvolve = async () => {
-    if (pendingAction) return;
-    setPendingAction("EVOLVE");
-    // Cerrar el inspector para que la cinemática de evolución (overlay a pantalla completa) se vea en
-    // móvil sin quedar tapada por este diálogo modal. Los fallos se muestran vía el diálogo de error de
-    // la escena (HubErrorDialog, alimentado por handleHomeEvolveSelectedCard), así que no se pierde feedback.
-    onClose();
-    try {
-      await Promise.resolve(onEvolve());
-    } finally {
-      setPendingAction(null);
-    }
   };
   return (
     <MobileInspectorDialogShell

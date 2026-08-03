@@ -20,7 +20,7 @@ describe("useBoard integración battle-rules", () => {
       name: `${integrationEntityCard.name} Direct ${index + 1}`,
       runtimeId: `integration-direct-${index + 1}`,
     }));
-    const { result } = renderHook(() => useBoard(forcedDeck));
+    const { result } = renderHook(() => useBoard({ initialPlayerDeck: forcedDeck }));
     const entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
     expect(entityCard).toBeDefined();
     if (!entityCard) throw new Error("No se encontró entidad en mano con deck forzado.");
@@ -44,7 +44,7 @@ describe("useBoard integración battle-rules", () => {
       name: `${integrationEntityCard.name} ${index + 1}`,
       runtimeId: `integration-entity-${index + 1}`,
     }));
-    const { result } = renderHook(() => useBoard(forcedDeck));
+    const { result } = renderHook(() => useBoard({ initialPlayerDeck: forcedDeck }));
     const entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
     expect(entityCard).toBeDefined();
     if (!entityCard) throw new Error("Se requiere una entidad en mano.");

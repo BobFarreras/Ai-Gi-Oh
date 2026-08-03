@@ -1,26 +1,12 @@
 // src/services/game/match/create-match-controller.ts - Fábrica de controllers de match para centralizar construcción por modo.
 import { IMatchConfig, IMatchController } from "@/core/entities/match";
-import {
-  MultiplayerMatchController,
-  StoryMatchController,
-  TrainingMatchController,
-  TutorialMatchController,
-} from "@/services/game/match/modes";
+import { LocalMatchController } from "@/services/game/match/LocalMatchController";
 
+/**
+ * Los seis modos compartían el mismo runtime local y solo se distinguían por su `mode`, así que la
+ * fábrica lo instancia directamente. Cuando un modo necesite comportamiento propio, recibirá su clase
+ * aquí sin obligar a los demás a tener una vacía.
+ */
 export function createMatchController(config: IMatchConfig): IMatchController {
-  const sharedConfig = {
-    seed: config.seed,
-    initialStateFactory: config.initialStateFactory,
-    actionResolver: config.actionResolver,
-  };
-  switch (config.mode) {
-    case "TRAINING":
-      return new TrainingMatchController(sharedConfig);
-    case "STORY":
-      return new StoryMatchController(sharedConfig);
-    case "TUTORIAL":
-      return new TutorialMatchController(sharedConfig);
-    case "MULTIPLAYER":
-      return new MultiplayerMatchController(sharedConfig);
-  }
+  return new LocalMatchController(config);
 }

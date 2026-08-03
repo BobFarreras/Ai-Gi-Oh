@@ -1,8 +1,8 @@
 // src/services/security/duel-completion-ticket.ts - Emite y valida tickets firmados para limitar el cierre de duelos al contexto server-side activo.
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { ValidationError } from "@/core/errors/ValidationError";
+import { decodeSignedDuelToken, encodeSignedDuelToken } from "@/services/security/internal/signed-duel-token";
 
-type DuelCompletionMode = "TRAINING" | "STORY";
+type DuelCompletionMode = "TRAINING" | "STORY" | "SURVIVAL" | "OLYMPUS";
 
 interface IBaseClaims {
   mode: DuelCompletionMode;
@@ -23,38 +23,23 @@ interface IStoryClaims extends IBaseClaims {
   duelIndex: number;
 }
 
-type DuelCompletionClaims = ITrainingClaims | IStoryClaims;
+interface ICombatSessionClaims extends IBaseClaims {
+  mode: "SURVIVAL" | "OLYMPUS";
+  sessionId: string;
+  battleId: string;
+  snapshotHash: string;
+  protocolVersion: number;
+}
+
+type DuelCompletionClaims = ITrainingClaims | IStoryClaims | ICombatSessionClaims;
 
 const DEFAULT_TTL_MS = 1000 * 60 * 30;
-const DEV_FALLBACK_SECRET = "dev-only-duel-completion-secret-change-me";
-
-function resolveTicketSecret(): string {
-  const value = process.env.DUEL_COMPLETION_TOKEN_SECRET?.trim();
-  if (value) return value;
-  const serviceRoleFallback = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  if (serviceRoleFallback) return serviceRoleFallback;
-  if (process.env.NODE_ENV !== "production") return DEV_FALLBACK_SECRET;
-  throw new ValidationError("Falta DUEL_COMPLETION_TOKEN_SECRET para validar cierres de duelo.");
-}
-
-function signPayload(encodedPayload: string): string {
-  return createHmac("sha256", resolveTicketSecret()).update(encodedPayload).digest("base64url");
-}
-
 function encodeClaims(claims: DuelCompletionClaims): string {
-  const encodedPayload = Buffer.from(JSON.stringify(claims), "utf-8").toString("base64url");
-  return `${encodedPayload}.${signPayload(encodedPayload)}`;
+  return encodeSignedDuelToken(claims);
 }
 
 function decodeAndVerifyClaims(ticket: string): DuelCompletionClaims {
-  const [encodedPayload, signature] = ticket.trim().split(".");
-  if (!encodedPayload || !signature) throw new ValidationError("Ticket de cierre de duelo inválido.");
-  const expected = signPayload(encodedPayload);
-  const signatureBuffer = Buffer.from(signature, "utf-8");
-  const expectedBuffer = Buffer.from(expected, "utf-8");
-  if (signatureBuffer.length !== expectedBuffer.length) throw new ValidationError("Firma de ticket inválida.");
-  if (!timingSafeEqual(signatureBuffer, expectedBuffer)) throw new ValidationError("Firma de ticket inválida.");
-  const parsed = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf-8")) as Partial<DuelCompletionClaims>;
+  const parsed = decodeSignedDuelToken(ticket);
   if (typeof parsed.playerId !== "string" || !parsed.playerId.trim()) {
     throw new ValidationError("Ticket de cierre sin playerId válido.");
   }
@@ -63,11 +48,15 @@ function decodeAndVerifyClaims(ticket: string): DuelCompletionClaims {
   }
   const nowMs = Date.now();
   if (nowMs > parsed.expiresAtMs) throw new ValidationError("El ticket de cierre ha expirado.");
-  if (parsed.mode !== "TRAINING" && parsed.mode !== "STORY") throw new ValidationError("Modo de ticket inválido.");
-  return parsed as DuelCompletionClaims;
+  if (typeof parsed.mode !== "string" || !["TRAINING", "STORY", "SURVIVAL", "OLYMPUS"].includes(parsed.mode)) {
+    throw new ValidationError("Modo de ticket inválido.");
+  }
+  return parsed as unknown as DuelCompletionClaims;
 }
 
-export function issueTrainingCompletionTicket(input: { playerId: string; tier: number; battleId: string; ttlMs?: number }): string {
+export function issueTrainingCompletionTicket(
+  input: { playerId: string; tier: number; battleId: string; ttlMs?: number },
+): string {
   return encodeClaims({
     mode: "TRAINING",
     playerId: input.playerId,
@@ -78,12 +67,30 @@ export function issueTrainingCompletionTicket(input: { playerId: string; tier: n
   });
 }
 
-export function issueStoryCompletionTicket(input: { playerId: string; chapter: number; duelIndex: number; ttlMs?: number }): string {
+export function issueStoryCompletionTicket(
+  input: { playerId: string; chapter: number; duelIndex: number; ttlMs?: number },
+): string {
   return encodeClaims({
     mode: "STORY",
     playerId: input.playerId,
     chapter: input.chapter,
     duelIndex: input.duelIndex,
+    issuedAtMs: Date.now(),
+    expiresAtMs: Date.now() + (input.ttlMs ?? DEFAULT_TTL_MS),
+  });
+}
+
+export function issueCombatSessionTicket(input: {
+  playerId: string;
+  mode: "SURVIVAL" | "OLYMPUS";
+  sessionId: string;
+  battleId: string;
+  snapshotHash: string;
+  protocolVersion: number;
+  ttlMs?: number;
+}): string {
+  return encodeClaims({
+    ...input,
     issuedAtMs: Date.now(),
     expiresAtMs: Date.now() + (input.ttlMs ?? DEFAULT_TTL_MS),
   });
@@ -105,4 +112,26 @@ export function verifyStoryCompletionTicket(ticket: string, playerId: string): {
   if (!Number.isInteger(claims.chapter) || claims.chapter <= 0) throw new ValidationError("Capítulo inválido en ticket Story.");
   if (!Number.isInteger(claims.duelIndex) || claims.duelIndex <= 0) throw new ValidationError("Índice de duelo inválido en ticket Story.");
   return { chapter: claims.chapter, duelIndex: claims.duelIndex };
+}
+
+export function verifyCombatSessionTicket(
+  ticket: string,
+  playerId: string,
+  expectedMode: "SURVIVAL" | "OLYMPUS",
+): { sessionId: string; battleId: string; snapshotHash: string; protocolVersion: number } {
+  const claims = decodeAndVerifyClaims(ticket);
+  if (claims.mode !== expectedMode) throw new ValidationError("El ticket no corresponde al modo de combate.");
+  if (claims.playerId !== playerId) throw new ValidationError("El ticket no pertenece al jugador autenticado.");
+  if (!claims.sessionId.trim() || !claims.battleId.trim() || !claims.snapshotHash.trim()) {
+    throw new ValidationError("El ticket de sesión contiene identificadores inválidos.");
+  }
+  if (!Number.isInteger(claims.protocolVersion) || claims.protocolVersion < 1) {
+    throw new ValidationError("El ticket de sesión contiene una versión inválida.");
+  }
+  return {
+    sessionId: claims.sessionId,
+    battleId: claims.battleId,
+    snapshotHash: claims.snapshotHash,
+    protocolVersion: claims.protocolVersion,
+  };
 }

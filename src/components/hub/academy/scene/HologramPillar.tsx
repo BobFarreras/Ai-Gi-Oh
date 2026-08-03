@@ -43,6 +43,12 @@ interface HologramPillarProps {
   animatePosition?: boolean;
   /** Si true, recorta el fondo blanco de la imagen (chroma-key), para imágenes sin canal alfa. */
   chromaKeyWhite?: boolean;
+  /**
+   * Umbral del chroma-key [brillo, saturación]. Por defecto el histórico del nodo de Documentación.
+   * Súbelo casi a blanco puro cuando la imagen tenga blancos PROPIOS (mármol, nubes): con el umbral
+   * laxo el shader recorta también el objeto, no solo el fondo.
+   */
+  chromaKeyThreshold?: [number, number];
 }
 
 // Rapidez del deslizamiento del carrusel (lambda de MathUtils.damp; mayor = más rápido).
@@ -112,6 +118,7 @@ export function HologramPillar({
   lite = false,
   animatePosition = false,
   chromaKeyWhite = false,
+  chromaKeyThreshold = [0.8, 0.15],
 }: HologramPillarProps) {
   // El colorSpace se fija en el callback de carga (no se puede mutar el valor devuelto por el hook).
   const texture = useTexture(textureUrl, (loaded) => {
@@ -303,6 +310,8 @@ export function HologramPillar({
             ref={materialRef}
             uMap={texture}
             uChromaWhite={chromaKeyWhite ? 1 : 0}
+            uChromaBright={chromaKeyThreshold[0]}
+            uChromaSat={chromaKeyThreshold[1]}
             transparent
             depthWrite={false}
             side={THREE.DoubleSide}

@@ -40,6 +40,8 @@ interface IResolveTrainingOpponentLoadoutInput {
   cardCatalog?: Map<string, ICard>;
   /** Escalado de cartas propio del tier; si se omite, se usa el escalado por dificultad. */
   defaultScaling?: ITrainingCardScale | null;
+  /** Supervivencia fija el rival desde su ruleset; Arena clásica mantiene la rotación por victorias. */
+  opponentId?: string;
 }
 
 export interface ITrainingOpponentLoadout {
@@ -111,8 +113,11 @@ export function resolveTrainingOpponentLoadout(input: IResolveTrainingOpponentLo
   const roster = resolveLadderRoster(opponents);
   // Índice del rival = victorias del nivel (en orden). El módulo mantiene el índice dentro del roster
   // aunque el contador venga por encima (defensivo); dentro de un nivel va de 0 a roster.length-1.
-  const ladderIndex = ((input.tierWins % roster.length) + roster.length) % roster.length;
-  const selectedTemplateId = roster[ladderIndex];
+  const configuredIndex = input.opponentId ? roster.indexOf(input.opponentId) : -1;
+  const ladderIndex = configuredIndex >= 0
+    ? configuredIndex
+    : ((input.tierWins % roster.length) + roster.length) % roster.length;
+  const selectedTemplateId = input.opponentId ?? roster[ladderIndex];
   const opponent = opponents[selectedTemplateId];
   if (!opponent) throw new ValidationError(`No existe preset de oponente para '${selectedTemplateId}'.`);
   const selectedVariant = resolveDeckVariant(opponent, input.tierMatches);

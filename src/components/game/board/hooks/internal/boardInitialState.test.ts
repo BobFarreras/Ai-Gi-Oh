@@ -105,6 +105,12 @@ describe("boardInitialState", () => {
     expect(state.playerB.maxHealthPoints).toBe(base.playerB.maxHealthPoints + 500);
   });
 
+  it("transporta LP actuales sin reducir el máximo ni perder el bonus permitido", () => {
+    const state = createInitialBoardState({ playerStartingHealthPoints: 2400, playerStartingLpBonus: 300 });
+    expect(state.playerA.healthPoints).toBe(2700);
+    expect(state.playerA.maxHealthPoints).toBe(8300);
+  });
+
   it("permite inyectar identidad de jugador y oponente sin hardcode local", () => {
     const state = createInitialBoardState({
       playerId: "player-123",

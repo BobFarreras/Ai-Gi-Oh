@@ -3,8 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 import {
   issueStoryCompletionTicket,
   issueTrainingCompletionTicket,
+  issueCombatSessionTicket,
   verifyStoryCompletionTicket,
   verifyTrainingCompletionTicket,
+  verifyCombatSessionTicket,
 } from "@/services/security/duel-completion-ticket";
 
 describe("duel-completion-ticket", () => {
@@ -26,6 +28,25 @@ describe("duel-completion-ticket", () => {
     vi.setSystemTime(new Date(now.getTime() + 2000));
     expect(() => verifyStoryCompletionTicket(ticket, "player-1")).toThrow("expirado");
     vi.useRealTimers();
+  });
+
+  it("vincula CombatProof a jugador, modo, sesión y snapshot", () => {
+    const ticket = issueCombatSessionTicket({
+      playerId: "player-1",
+      mode: "SURVIVAL",
+      sessionId: "session-1",
+      battleId: "battle-1",
+      snapshotHash: "sha256:snapshot",
+      protocolVersion: 1,
+    });
+    expect(verifyCombatSessionTicket(ticket, "player-1", "SURVIVAL")).toEqual({
+      sessionId: "session-1",
+      battleId: "battle-1",
+      snapshotHash: "sha256:snapshot",
+      protocolVersion: 1,
+    });
+    expect(() => verifyCombatSessionTicket(ticket, "player-2", "SURVIVAL")).toThrow("no pertenece");
+    expect(() => verifyCombatSessionTicket(ticket, "player-1", "OLYMPUS")).toThrow("modo");
   });
 
   it("usa SUPABASE_SERVICE_ROLE_KEY como fallback seguro en producción", () => {

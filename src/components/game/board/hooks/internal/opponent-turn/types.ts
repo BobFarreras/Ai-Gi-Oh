@@ -1,9 +1,9 @@
-// src/components/game/board/hooks/internal/opponent-turn/types.ts - Descripción breve del módulo.
+// src/components/game/board/hooks/internal/opponent-turn/types.ts - Contexto de presentación del turno rival (la decisión vive en core).
 import { ICard } from "@/core/entities/ICard";
-import { IBoardEntity } from "@/core/entities/IPlayer";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IOpponentStrategy } from "@/core/services/opponent/types";
 import { RequestTrapActivationDecision } from "../match/useMatchRuntime.builders";
+import { IMatchActionPayload } from "@/core/entities/match";
 
 export interface IOpponentTurnContext {
   gameState: GameState;
@@ -16,6 +16,7 @@ export interface IOpponentTurnContext {
   setRevealedEntities: (value: string[] | ((prev: string[]) => string[])) => void;
   setSelectedCard: (card: ICard | null) => void;
   requestTrapActivationDecision: RequestTrapActivationDecision;
+  emitCommittedAction?: (actorPlayerId: string, action: IMatchActionPayload) => void;
 }
 
 export interface IOpponentStepTimings {
@@ -23,10 +24,5 @@ export interface IOpponentStepTimings {
   attackWindupMs: number;
   postResolutionMs: number;
   trapPreviewMs: number;
-}
-
-export interface IOpponentAutoPick {
-  chooseCardToDiscard: (hand: ICard[]) => ICard | null;
-  chooseEntityToSacrifice: (entities: IBoardEntity[]) => IBoardEntity | null;
 }
 

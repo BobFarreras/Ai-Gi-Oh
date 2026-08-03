@@ -2,6 +2,7 @@
 import { ICard } from "@/core/entities/ICard";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { RandomSource } from "@/core/services/random/seeded-rng";
+import { ValidationError } from "@/core/errors/ValidationError";
 import type { IGameEngineIdFactory } from "./id-factory";
 import { GameState } from "./types";
 
@@ -10,6 +11,8 @@ interface IInitialPlayerConfig {
   name: string;
   deck: ICard[];
   fusionDeck?: ICard[];
+  /** LP actuales al iniciar; permite transportar vida sin modificar el máximo. */
+  startingHealthPoints?: number;
 }
 
 interface ICreateInitialGameStateConfig {
@@ -30,6 +33,14 @@ function createRuntimeId(config: IInitialPlayerConfig, card: ICard, index: numbe
   return `${config.id}-${card.id}-${index}-${randomSuffix}`;
 }
 
+function resolveStartingHealthPoints(config: IInitialPlayerConfig, maxHealthPoints: number): number {
+  const value = config.startingHealthPoints ?? maxHealthPoints;
+  if (!Number.isInteger(value) || value < 1 || value > maxHealthPoints) {
+    throw new ValidationError("Los LP iniciales deben ser un entero entre 1 y los LP máximos.");
+  }
+  return value;
+}
+
 function createPlayer(config: IInitialPlayerConfig, maxHealthPoints: number, maxEnergy: number, randomSource: RandomSource): IPlayer {
   const deckWithRuntimeIds = config.deck.map((card, index) => ({
     ...card,
@@ -38,7 +49,7 @@ function createPlayer(config: IInitialPlayerConfig, maxHealthPoints: number, max
   return {
     id: config.id,
     name: config.name,
-    healthPoints: maxHealthPoints,
+    healthPoints: resolveStartingHealthPoints(config, maxHealthPoints),
     maxHealthPoints,
     currentEnergy: maxEnergy,
     maxEnergy,

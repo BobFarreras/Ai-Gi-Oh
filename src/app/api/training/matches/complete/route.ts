@@ -1,7 +1,9 @@
 // src/app/api/training/matches/complete/route.ts - Registra cierre de combate de entrenamiento con progreso y recompensas escaladas.
 import { NextRequest, NextResponse } from "next/server";
+import { SupabaseOlympusChampionUnlockRepository } from "@/infrastructure/persistence/supabase/SupabaseOlympusChampionUnlockRepository";
 import { SupabasePlayerProgressRepository } from "@/infrastructure/persistence/supabase/SupabasePlayerProgressRepository";
 import { SupabaseSkillTreeRepository } from "@/infrastructure/persistence/supabase/SupabaseSkillTreeRepository";
+import { createSupabaseServiceRoleClient } from "@/infrastructure/persistence/supabase/internal/create-supabase-service-role-client";
 import { getAuthenticatedUserId } from "@/services/auth/api/internal/get-authenticated-user-id";
 import { createPlayerRouteRepositories } from "@/services/player-persistence/create-player-route-repositories";
 import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
@@ -42,6 +44,11 @@ export async function POST(request: NextRequest) {
         walletRepository: repositories.walletRepository,
         playerProgressRepository: new SupabasePlayerProgressRepository(repositories.client),
         skillTreeRepository: new SupabaseSkillTreeRepository(repositories.client),
+        // El desbloqueo escribe en una tabla de valor, así que la mutación va por service_role.
+        championUnlockRepository: new SupabaseOlympusChampionUnlockRepository(
+          repositories.client,
+          createSupabaseServiceRoleClient(),
+        ),
       },
     });
     await recordProgressionEvent(repositories.client, resolveDuelProgressionActions("TRAINING", payload.outcome === "WIN", payload.flawless === true));

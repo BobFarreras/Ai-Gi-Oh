@@ -1,139 +1,73 @@
-// src/components/game/board/hooks/internal/opponent-turn/runMainPhaseStep.ts - Ejecuta el paso principal del turno rival resolviendo pendientes y acciones jugables.
+// src/components/game/board/hooks/internal/opponent-turn/runMainPhaseStep.ts - Anima la fase principal del rival; qué juega lo decide el resolutor compartido.
+import { applyMatchAction } from "@/core/services/multiplayer/apply-match-action";
+import { resolveOpponentIntent } from "@/core/services/opponent/resolve-opponent-intent";
+import { buildOpponentIntentAction } from "@/core/services/opponent/build-opponent-intent-action";
+import { IOpponentAutoPick } from "@/core/services/opponent/types";
 import { GameEngine } from "@/core/use-cases/GameEngine";
-import { canActivateExecutionNow } from "@/core/services/opponent/select-opponent-play";
-import { addRevealedId, findReactiveTrap, findReactiveTraps, removeRevealedId, toTrapEligibleOptions } from "../trapPreview";
 import { sleep } from "../sleep";
-import { IOpponentAutoPick, IOpponentStepTimings, IOpponentTurnContext } from "./types";
-import { pickOpponentPendingActionId } from "./pick-opponent-pending-action-id";
+import { IOpponentStepTimings, IOpponentTurnContext } from "./types";
+import { runOpponentExecution } from "./internal/run-opponent-execution";
+import { runOpponentPlay } from "./internal/run-opponent-play";
+
+function clearBoardIfTurnPassed(context: IOpponentTurnContext, nextState: ReturnType<IOpponentTurnContext["applyTransition"]>): void {
+  if (nextState && nextState.activePlayerId === nextState.playerA.id) {
+    context.clearSelection();
+    context.clearError();
+  }
+}
+
+async function applyOpponentAction(
+  context: IOpponentTurnContext,
+  intent: Parameters<typeof buildOpponentIntentAction>[0],
+  delays: { before: number; after: number },
+): Promise<void> {
+  const opponentId = context.gameState.playerB.id;
+  const action = buildOpponentIntentAction(intent);
+  context.setIsAnimating(true);
+  await sleep(delays.before);
+  const nextState = action
+    ? context.applyTransition((state) => applyMatchAction(state, opponentId, action))
+    : null;
+  await sleep(delays.after);
+  context.setIsAnimating(false);
+  clearBoardIfTurnPassed(context, nextState);
+}
 
 export async function runMainPhaseStep(
   context: IOpponentTurnContext,
   timings: IOpponentStepTimings,
   autoPick: IOpponentAutoPick,
 ): Promise<boolean> {
-  const { gameState } = context;
-  const opponentId = gameState.playerB.id;
+  const opponentId = context.gameState.playerB.id;
+  const intent = resolveOpponentIntent({
+    state: context.gameState,
+    opponentId,
+    strategy: context.strategy,
+    autoPick,
+  });
 
-  if (gameState.pendingTurnAction?.playerId === opponentId) {
-    const selectedId = pickOpponentPendingActionId(context, autoPick);
-    if (!selectedId) return true;
-    context.setIsAnimating(true);
-    await sleep(timings.stepDelayMs);
-    const nextState = context.applyTransition((state) => GameEngine.resolvePendingTurnAction(state, opponentId, selectedId));
-    await sleep(timings.postResolutionMs);
-    context.setIsAnimating(false);
-    if (nextState && nextState.activePlayerId === nextState.playerA.id) {
-      context.clearSelection();
-      context.clearError();
-    }
-    return true;
+  switch (intent.kind) {
+    case "CANCEL_PENDING_TURN_ACTION":
+      // No viaja por el journal: el servidor la deriva igual al reproducir el turno rival.
+      context.applyTransition((state) => GameEngine.cancelUnresolvablePendingTurnAction(state, opponentId));
+      context.setIsAnimating(false);
+      return true;
+    case "RESOLVE_PENDING_TURN_ACTION":
+      await applyOpponentAction(context, intent, { before: timings.stepDelayMs, after: timings.postResolutionMs });
+      return true;
+    case "RESOLVE_EXECUTION":
+      await runOpponentExecution(context, timings, intent);
+      return true;
+    case "ACTIVATE_SET_EXECUTION":
+      await applyOpponentAction(context, intent, { before: timings.stepDelayMs, after: 0 });
+      return true;
+    case "PLAY":
+      await runOpponentPlay(context, timings, intent);
+      return true;
+    case "NEXT_PHASE":
+      await applyOpponentAction(context, intent, { before: 500, after: 0 });
+      return true;
+    default:
+      return true;
   }
-
-  const pendingExecution = gameState.playerB.activeExecutions.find((entity) => entity.mode === "ACTIVATE");
-  if (pendingExecution) {
-    // Ficha 4: el humano elige cuál de sus trampas reactivas a magia activar (carrusel).
-    const reactiveTraps = findReactiveTraps(gameState, gameState.playerA.id, "ON_OPPONENT_EXECUTION_ACTIVATED");
-    const trapDecision = reactiveTraps.length > 0
-      ? await context.requestTrapActivationDecision(toTrapEligibleOptions(reactiveTraps), "ON_OPPONENT_EXECUTION_ACTIVATED")
-      : { activate: false };
-    const shouldActivateReactiveTrap = trapDecision.activate;
-    const chosenTrapInstanceId = trapDecision.chosenTrapInstanceId;
-    const reactiveTrap = shouldActivateReactiveTrap
-      ? reactiveTraps.find((entity) => entity.instanceId === chosenTrapInstanceId) ?? reactiveTraps[0] ?? null
-      : reactiveTraps[0] ?? null;
-    const opponentCounterTrap = reactiveTrap
-      ? findReactiveTrap(gameState, gameState.playerB.id, "ON_OPPONENT_TRAP_ACTIVATED")
-      : null;
-    context.setIsAnimating(true);
-    context.setActiveAttackerId(pendingExecution.instanceId);
-    if (reactiveTrap && shouldActivateReactiveTrap) {
-      context.setRevealedEntities((previous) => addRevealedId(previous, reactiveTrap.instanceId));
-      context.setSelectedCard(reactiveTrap.card);
-    }
-    await sleep(timings.stepDelayMs);
-    if (reactiveTrap && shouldActivateReactiveTrap) {
-      context.setActiveAttackerId(reactiveTrap.instanceId);
-      await sleep(timings.trapPreviewMs);
-      context.setActiveAttackerId(pendingExecution.instanceId);
-    }
-    if (opponentCounterTrap && shouldActivateReactiveTrap) {
-      context.setRevealedEntities((previous) => addRevealedId(previous, opponentCounterTrap.instanceId));
-      context.setActiveAttackerId(opponentCounterTrap.instanceId);
-      context.setSelectedCard(opponentCounterTrap.card);
-      await sleep(timings.trapPreviewMs);
-      context.setActiveAttackerId(pendingExecution.instanceId);
-    }
-    const nextState = context.applyTransition((state) =>
-      GameEngine.resolveExecution(state, opponentId, pendingExecution.instanceId, {
-        skipReactivePlayerIds: shouldActivateReactiveTrap ? [] : [state.playerA.id],
-        skipTrapEventTypes: shouldActivateReactiveTrap ? [] : ["EXECUTION_ACTIVATED"],
-        chosenTrapInstanceId: shouldActivateReactiveTrap ? chosenTrapInstanceId : undefined,
-      }),
-    );
-    await sleep(timings.postResolutionMs);
-    if (reactiveTrap && shouldActivateReactiveTrap) context.setRevealedEntities((previous) => removeRevealedId(previous, reactiveTrap.instanceId));
-    if (opponentCounterTrap && shouldActivateReactiveTrap) context.setRevealedEntities((previous) => removeRevealedId(previous, opponentCounterTrap.instanceId));
-    context.setSelectedCard(null);
-    context.setActiveAttackerId(null);
-    context.setIsAnimating(false);
-    if (nextState && nextState.activePlayerId === nextState.playerA.id) {
-      context.clearSelection();
-      context.clearError();
-    }
-    return true;
-  }
-  const setExecutionToActivate = gameState.playerB.activeExecutions.find((entity) =>
-    entity.mode === "SET" && canActivateExecutionNow(entity.card, gameState.playerB, gameState.playerA));
-  if (setExecutionToActivate) {
-    context.setIsAnimating(true);
-    await sleep(timings.stepDelayMs);
-    context.applyTransition((state) => GameEngine.changeEntityMode(state, opponentId, setExecutionToActivate.instanceId, "ACTIVATE"));
-    context.setIsAnimating(false);
-    return true;
-  }
-
-  const playDecision = context.strategy.choosePlay(gameState, opponentId);
-  if (playDecision) {
-    context.setIsAnimating(true);
-    const nextState = playDecision.fusionMaterialInstanceIds
-      ? context.applyTransition((state) =>
-          GameEngine.fuseCards(state, opponentId, playDecision.cardId, playDecision.fusionMaterialInstanceIds!, playDecision.mode === "DEFENSE" ? "DEFENSE" : "ATTACK"),
-        )
-      : playDecision.replaceEntityInstanceId
-        ? context.applyTransition((state) =>
-            GameEngine.playCardWithEntityReplacement(
-              state,
-              opponentId,
-              playDecision.cardId,
-              playDecision.mode,
-              playDecision.replaceEntityInstanceId!,
-            ),
-          )
-      : playDecision.replaceExecutionInstanceId
-        ? context.applyTransition((state) =>
-            GameEngine.playCardWithZoneReplacement(
-              state,
-              opponentId,
-              playDecision.cardId,
-              playDecision.mode,
-              playDecision.replaceExecutionInstanceId!,
-              "EXECUTIONS",
-            ),
-          )
-      : context.applyTransition((state) => GameEngine.playCard(state, opponentId, playDecision.cardId, playDecision.mode));
-    if (!playDecision.fusionMaterialInstanceIds && playDecision.mode === "ACTIVATE" && nextState) {
-      const activatedExecution = [...nextState.playerB.activeExecutions].reverse().find((entity) => entity.card.id === playDecision.cardId);
-      context.setActiveAttackerId(activatedExecution?.instanceId ?? null);
-    }
-    await sleep(timings.stepDelayMs);
-    context.setActiveAttackerId(null);
-    context.setIsAnimating(false);
-    return true;
-  }
-
-  context.setIsAnimating(true);
-  await sleep(500);
-  context.applyTransition((state) => GameEngine.nextPhase(state));
-  context.setIsAnimating(false);
-  return true;
 }

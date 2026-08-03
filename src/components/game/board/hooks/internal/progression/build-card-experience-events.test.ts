@@ -27,7 +27,7 @@ describe("build-card-experience-events", () => {
         damageToDefenderPlayer: 1200,
       }),
     ];
-    expect(buildCardExperienceEvents(logs, "p1")).toEqual([
+    expect(buildCardExperienceEvents(logs, "p1", new Set(["entity-python", "exec-1"]))).toEqual([
       { cardId: "entity-python", eventType: "SUMMON_SUCCESS" },
       { cardId: "exec-1", eventType: "ACTIVATE_EFFECT" },
       { cardId: "entity-python", eventType: "DIRECT_HIT" },
@@ -49,7 +49,34 @@ describe("build-card-experience-events", () => {
         damageToDefenderPlayer: 0,
       }),
     ];
-    expect(buildCardExperienceEvents(logs, "p1")).toEqual([{ cardId: "entity-react", eventType: "DESTROY_ENEMY_ENTITY" }]);
+    expect(buildCardExperienceEvents(logs, "p1", new Set(["entity-react"]))).toEqual([
+      { cardId: "entity-react", eventType: "DESTROY_ENEMY_ENTITY" },
+    ]);
+  });
+
+  it("excluye cartas robadas del oponente que no pertenecen al jugador", () => {
+    const logs: ICombatLogEvent[] = [
+      createEvent("CARD_PLAYED", "p1", { cardId: "entity-python", cardType: "ENTITY", mode: "ATTACK" }),
+      createEvent("CARD_PLAYED", "p1", { cardId: "entity-stolen-opponent", cardType: "ENTITY", mode: "ATTACK" }),
+      createEvent("BATTLE_RESOLVED", "p1", {
+        attackerCardId: "entity-stolen-opponent",
+        defenderCardId: null,
+        defenderDestroyed: false,
+        damageToDefenderPlayer: 800,
+      }),
+    ];
+    const ownedCardIds = new Set(["entity-python", "entity-react", "exec-1"]);
+    const events = buildCardExperienceEvents(logs, "p1", ownedCardIds);
+    expect(events).toEqual([
+      { cardId: "entity-python", eventType: "SUMMON_SUCCESS" },
+    ]);
+  });
+
+  it("no acredita experiencia cuando la instantánea de propiedad está vacía", () => {
+    const logs: ICombatLogEvent[] = [
+      createEvent("CARD_PLAYED", "p1", { cardId: "entity-stolen", cardType: "ENTITY", mode: "ATTACK" }),
+    ];
+    expect(buildCardExperienceEvents(logs, "p1", new Set())).toEqual([]);
   });
 });
 

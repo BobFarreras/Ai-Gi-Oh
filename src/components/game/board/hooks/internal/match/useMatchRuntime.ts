@@ -13,6 +13,7 @@ import { IUseMatchUiStateResult } from "./useMatchUiState";
 import { useEntityReplacementActions } from "./useEntityReplacementActions";
 import { buildMatchRuntimeResult, buildOpponentTurnParams, buildPlayerActionsParams } from "./useMatchRuntime.builders";
 import { useApplyTransition, useAssertPlayerTurn, useAutoClearBoardError, useAutoSyncGameStateRef, useTrapDecisionManager } from "./useMatchRuntime.internal";
+import { IMatchActionPayload } from "@/core/entities/match";
 
 interface IUseMatchRuntimeParams {
   mode: IMatchMode;
@@ -23,6 +24,7 @@ interface IUseMatchRuntimeParams {
   isMatchStartLocked?: boolean;
   disableOpponentAutomation?: boolean;
   opponentStrategyOverride?: IOpponentStrategy | null;
+  emitCommittedAction?: (actorPlayerId: string, action: IMatchActionPayload) => void;
 }
 
 export function useMatchRuntime({
@@ -34,6 +36,7 @@ export function useMatchRuntime({
   isMatchStartLocked = false,
   disableOpponentAutomation = false,
   opponentStrategyOverride = null,
+  emitCommittedAction = () => {},
 }: IUseMatchRuntimeParams) {
   const opponentDifficulty = useMemo(() => resolveDifficultyFromCampaign(campaignProgress), [campaignProgress]);
   const opponentStrategy = useMemo(
@@ -55,6 +58,7 @@ export function useMatchRuntime({
     winnerPlayerId,
     requestTrapActivationDecision,
     applyTransition,
+    emitCommittedAction,
   }));
 
   const turnControls = useBoardTurnControls({

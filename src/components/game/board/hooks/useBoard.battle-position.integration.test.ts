@@ -13,9 +13,10 @@ describe("useBoard cambio de posición en batalla", () => {
     window.localStorage.setItem("board-auto-phase", "0");
     const deterministicDeck = ENTITY_CARDS.slice(0, 8).map((card) => ({ ...card }));
     const { result } = renderHook(() =>
-      useBoard(deterministicDeck, "TRAINING", {
-        preserveDeckOrder: true,
-        openingHandSize: 4,
+      useBoard({
+        initialPlayerDeck: deterministicDeck,
+        mode: "TRAINING",
+        initialConfig: { preserveDeckOrder: true, openingHandSize: 4 },
       }),
     );
     const entityCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");

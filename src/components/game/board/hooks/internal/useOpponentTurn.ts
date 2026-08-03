@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IOpponentStrategy } from "@/core/services/opponent/types";
-import { opponentAutoPick } from "./opponent-turn/autoPick";
+import { opponentAutoPick } from "@/core/services/opponent/opponent-auto-pick";
 import { runBattlePhaseStep } from "./opponent-turn/runBattlePhaseStep";
 import { runMainPhaseStep } from "./opponent-turn/runMainPhaseStep";
 import { IOpponentStepTimings, IOpponentTurnContext } from "./opponent-turn/types";
@@ -38,6 +38,7 @@ export function useOpponentTurn({
   setRevealedEntities,
   setSelectedCard,
   requestTrapActivationDecision,
+  emitCommittedAction = () => {},
 }: IUseOpponentTurnParams): void {
   useEffect(() => {
     if (disableAutomation || isMatchStartLocked || duelWinnerId || isAnimating || gameState.activePlayerId !== gameState.playerB.id) return;
@@ -53,6 +54,7 @@ export function useOpponentTurn({
       setRevealedEntities,
       setSelectedCard,
       requestTrapActivationDecision,
+      emitCommittedAction,
     };
 
     const timeoutId = setTimeout(async () => {
@@ -81,6 +83,7 @@ export function useOpponentTurn({
     setSelectedCard,
     requestTrapActivationDecision,
     strategy,
+    emitCommittedAction,
   ]);
 }
 

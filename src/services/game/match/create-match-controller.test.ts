@@ -43,7 +43,7 @@ function createBaseState(): GameState {
 }
 
 describe("create-match-controller", () => {
-  it.each<IMatchMode>(["TRAINING", "STORY", "TUTORIAL", "MULTIPLAYER"])(
+  it.each<IMatchMode>(["TRAINING", "SURVIVAL", "OLYMPUS", "STORY", "TUTORIAL", "MULTIPLAYER"])(
     "crea controller tipado para modo %s",
     async (mode) => {
       const controller = createMatchController({

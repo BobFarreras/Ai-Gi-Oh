@@ -20,7 +20,7 @@ describe("useBoard integración core", () => {
       name: `${integrationEntityCard.name} Playable ${index + 1}`,
       runtimeId: `integration-playable-${index + 1}`,
     }));
-    const { result } = renderHook(() => useBoard(forcedDeck));
+    const { result } = renderHook(() => useBoard({ initialPlayerDeck: forcedDeck }));
     const playableCard = result.current.gameState.playerA.hand.find((card) => card.type === "ENTITY");
     expect(playableCard).toBeDefined();
     if (!playableCard) throw new Error("La mano inicial debe incluir ENTITY.");
