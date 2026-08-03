@@ -1,9 +1,8 @@
 // src/components/hub/academy/training/modes/olympus/internal/OlympusOverviewScreen.test.tsx - Verifica intentos, bloqueo de campeones y confirmación antes de gastar intento.
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { IOlympusLegend } from "@/core/entities/olympus/IOlympus";
 import { OlympusMode } from "../useOlympusMode";
-import { IOlympusChampionCard, IOlympusOverview } from "../olympus-api-client";
+import { IOlympusChampionCard, IOlympusLegendCard, IOlympusOverview } from "../olympus-api-client";
 import { OlympusOverviewScreen } from "./OlympusOverviewScreen";
 
 const champion = (id: string, unlocked: boolean): IOlympusChampionCard => ({
@@ -29,7 +28,10 @@ const legend = {
   lore: "Custodio del núcleo.", specialRules: ["Comienza con 14.000 LP"],
   baseFragmentReward: 150, firstVictoryFragmentBonus: 400, defeatFragmentReward: 20,
   sortOrder: 10, version: 1,
-} as IOlympusLegend;
+  nexusReward: 300, cardRewardId: "fusion-gemgpt", cardRewardFirstVictoryOnly: true,
+  // Resuelta en servidor: es lo que el selector pinta, no un `get` contra el catálogo de código.
+  rewardCard: { id: "fusion-gemgpt", name: "GemGPT", renderUrl: "/assets/renders/gemgpt.webp" },
+} as IOlympusLegendCard;
 
 function overviewWith(overrides: Partial<IOlympusOverview>): IOlympusOverview {
   return {

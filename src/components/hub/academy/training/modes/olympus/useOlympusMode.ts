@@ -18,6 +18,8 @@ import {
 /** Espaciado mínimo entre avances: el cierre siempre se envía, pase el tiempo que pase. */
 const CHECKPOINT_MIN_INTERVAL_MS = 12_000;
 const OVERFLOW_MESSAGE = "Este combate superó el límite de acciones registrables. Sal y reanúdalo para poder liquidarlo.";
+/** Retomar no gasta otro intento, así que salir y volver es una salida segura para el jugador. */
+const UNSETTLED_MESSAGE = "El servidor todavía no da este combate por terminado. Vuelve a pulsar para reintentar; si sigue igual, sal y retómalo: no gasta otro intento.";
 
 export function useOlympusMode() {
   const [overview, setOverview] = useState<IOlympusOverview | null>(null);
@@ -102,7 +104,11 @@ export function useOlympusMode() {
     };
     try {
       const result = await completeOlympusBattle(battle.completionTicket, proof);
-      if (!result.settled) return;
+      if (!result.settled) {
+        // Mismo agujero que en Supervivencia: sin este aviso, «Ver informe» no hacía nada y sin explicación.
+        if (isFinal) setError(UNSETTLED_MESSAGE);
+        return;
+      }
       completedRef.current = true;
       pendingSettlementRef.current = result;
       setError(null);

@@ -12,15 +12,17 @@ import { IOlympusOverview as IOlympusOverviewBase } from "@/core/use-cases/olymp
 import { IOlympusRespecQuote } from "@/core/services/olympus/resolve-respec-quote";
 import { IOlympusChampionCard } from "@/services/olympus/resolve-olympus-champion-cards";
 import { IOlympusChampionDeckPreview } from "@/services/olympus/resolve-champion-deck-preview";
+import { IOlympusLegendCard } from "@/services/olympus/resolve-olympus-legend-cards";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { createSeededGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
 
-/** La ruta decora los campeones con su identidad de Arena antes de devolverlos. */
-export interface IOlympusOverview extends Omit<IOlympusOverviewBase, "champions"> {
+/** La ruta decora campeones y leyendas con lo que vive fuera del dominio antes de devolverlos. */
+export interface IOlympusOverview extends Omit<IOlympusOverviewBase, "champions" | "legends"> {
   champions: IOlympusChampionCard[];
+  legends: IOlympusLegendCard[];
 }
 
-export type { IOlympusChampionCard, IOlympusChampionDeckPreview };
+export type { IOlympusChampionCard, IOlympusChampionDeckPreview, IOlympusLegendCard };
 
 export interface IOlympusPresentation {
   championName: string;

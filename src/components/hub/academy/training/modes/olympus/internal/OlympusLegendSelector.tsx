@@ -3,13 +3,12 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Coins, Heart, ShieldCheck, Zap } from "lucide-react";
-import { IOlympusLegend } from "@/core/entities/olympus/IOlympus";
-import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
+import { IOlympusLegendCard } from "../olympus-api-client";
 import { EterIcon } from "../../EterIcon";
 import { describeAiProfile } from "./olympus-labels";
 
 interface IOlympusLegendSelectorProps {
-  legends: IOlympusLegend[];
+  legends: IOlympusLegendCard[];
   defeatedLegendIds: string[];
   selectedId: string | null;
   onSelect: (opponentId: string) => void;
@@ -25,7 +24,8 @@ export function OlympusLegendSelector({ legends, defeatedLegendIds, selectedId, 
   const currentIndex = Math.max(0, legends.findIndex((legend) => legend.id === selectedId));
   const legend = legends[currentIndex];
   const isDefeated = defeatedLegendIds.includes(legend.id);
-  const rewardCard = legend.cardRewardId ? CARD_BY_ID.get(legend.cardRewardId) ?? null : null;
+  // Resuelto en servidor contra `cards_catalog`: el catálogo de código no conoce las cartas del panel.
+  const rewardCard = legend.rewardCard;
   // El carrusel es circular: desde la última se vuelve a la primera sin callejón sin salida.
   const step = (offset: number) => onSelect(legends[(currentIndex + offset + legends.length) % legends.length].id);
 
