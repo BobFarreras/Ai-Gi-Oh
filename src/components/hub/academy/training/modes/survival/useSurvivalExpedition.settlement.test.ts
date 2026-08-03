@@ -60,4 +60,17 @@ describe("useSurvivalExpedition · liquidación e informe", () => {
     // La segunda llamada reutiliza lo ya liquidado: nada de cobrar dos veces.
     expect(completeSurvivalBattle).toHaveBeenCalledOnce();
   });
+
+  it("avisa cuando el servidor no da el combate por terminado, en vez de dejar el botón muerto", async () => {
+    // El servidor reproduce el diario y no ve desenlace: antes se hacía `return` en silencio y el
+    // jugador se quedaba atrapado pulsando «Ver informe» sin que pasara nada.
+    completeSurvivalBattle.mockResolvedValueOnce({ settled: false, journalLength: 12 } as never);
+    const { result } = renderHook(() => useSurvivalExpedition());
+    await act(async () => { await result.current.enterBattle(); });
+
+    await act(async () => { await result.current.revealSettlement(); });
+
+    expect(result.current.settlement).toBeNull();
+    await waitFor(() => expect(result.current.error).toMatch(/no da este combate por terminado/i));
+  });
 });

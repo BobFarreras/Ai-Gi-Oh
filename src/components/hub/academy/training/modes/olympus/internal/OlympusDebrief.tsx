@@ -5,13 +5,15 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Coins } from "lucide-react";
 import { IOlympusLegend } from "@/core/entities/olympus/IOlympus";
-import { CARD_BY_ID } from "@/infrastructure/repositories/internal/card-catalog";
+import { IOlympusRewardCard } from "@/services/olympus/resolve-olympus-legend-cards";
 import { IOlympusSettlement } from "../olympus-api-client";
 import { EterIcon } from "../../EterIcon";
 
 interface IOlympusDebriefProps {
   settlement: IOlympusSettlement;
   legend: IOlympusLegend;
+  /** Resuelta en servidor: el catálogo de código no conoce las cartas creadas desde el panel. */
+  rewardCard: IOlympusRewardCard | null;
   attemptsRemaining: number;
   isLoading: boolean;
   onContinue: () => void;
@@ -28,8 +30,8 @@ export function OlympusDebrief(props: IOlympusDebriefProps) {
   const copy = OUTCOME_COPY[props.settlement.outcome];
   const { reward } = props.settlement;
   const hasAttempts = props.attemptsRemaining > 0;
-  // La carta puede haber salido del catálogo entre la victoria y el informe: sin ficha no se anuncia.
-  const rewardCard = reward.cardId ? CARD_BY_ID.get(reward.cardId) ?? null : null;
+  // Solo se anuncia si esta batalla la entregó: `reward.cardId` es null cuando ya no era primera victoria.
+  const rewardCard = reward.cardId ? props.rewardCard : null;
 
   return (
     <main className="flex min-h-dvh items-center justify-center bg-[radial-gradient(circle_at_50%_-10%,rgba(168,85,247,0.22),transparent_55%),#0a0513] px-4 py-6">

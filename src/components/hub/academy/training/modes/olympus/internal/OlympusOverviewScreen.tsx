@@ -10,6 +10,7 @@ import { OlympusChampionSelector } from "./OlympusChampionSelector";
 import { OlympusConfirmDialog } from "./OlympusConfirmDialog";
 import { OlympusLegendSelector } from "./OlympusLegendSelector";
 import { OlympusUpgradeTree } from "./OlympusUpgradeTree";
+import { useRememberedChampion } from "./use-remembered-champion";
 
 interface IOlympusOverviewScreenProps {
   mode: OlympusMode;
@@ -19,7 +20,7 @@ interface IOlympusOverviewScreenProps {
 export function OlympusOverviewScreen({ mode, onEnterBattle }: IOlympusOverviewScreenProps) {
   const overview = mode.overview;
   const unlockedChampions = overview?.champions.filter((state) => state.unlocked) ?? [];
-  const [championId, setChampionId] = useState<string | null>(null);
+  const [championId, rememberChampion] = useRememberedChampion();
   const [legendId, setLegendId] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [deckChampionId, setDeckChampionId] = useState<string | null>(null);
@@ -95,7 +96,7 @@ export function OlympusOverviewScreen({ mode, onEnterBattle }: IOlympusOverviewS
               selectedId={champion?.champion.id ?? null}
               // Elegir campeón calienta su mazo: cuando el jugador pulsa «Ver mazo» ya suele estar listo.
               onSelect={(id) => {
-                setChampionId(id);
+                rememberChampion(id);
                 void fetchChampionDeck(id).catch(() => undefined);
               }}
               onInspectDeck={setDeckChampionId}
