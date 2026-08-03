@@ -6,6 +6,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.20.0] - 2026-08-03
+
 ### Added
 - **Portal de modos de Arena en 3D**: `/hub/academy/training/arena` deja de ser tres tarjetas planas y pasa a una escena tridimensional con la ilustración de cada arena sobre su pedestal de luz, igual que la Academia. En equipos sin WebGL (o mientras carga) se siguen viendo las tarjetas de siempre, con las mismas imágenes.
 - **Supervivencia — modo nuevo**: una expedición de combates encadenados donde **los LP no se recuperan entre duelos**. Los puntos de vida con los que acabas un combate son con los que empiezas el siguiente, así que cada victoria justa te acerca al final de la carrera. Cada cierto número de victorias hay un **hito que te cura**, los rivales escalan de nivel según avanzas y, cuando caes, tu marca queda registrada. La expedición se puede retomar donde la dejaste: salir del navegador a mitad de combate ya no la pierde.
@@ -445,7 +447,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.3...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.20.0...HEAD
+[1.20.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.3...v1.20.0
 [1.19.3]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.2...v1.19.3
 [1.19.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.1...v1.19.2
 [1.19.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.19.0...v1.19.1
