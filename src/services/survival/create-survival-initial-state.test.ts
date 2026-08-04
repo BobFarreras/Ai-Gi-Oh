@@ -65,7 +65,7 @@ describe("createSurvivalInitialState", () => {
     expect(starters).toEqual(new Set(["player-1", "opponent-1"]));
   });
 
-  it("aplica los bonus de combate del árbol SOLO al jugador, dentro del snapshot determinista", () => {
+  it("aplica los bonus de energía del árbol SOLO al jugador, y omite el bonus de LP (validado por la RPC)", () => {
     const state = createSurvivalInitialState({
       playerId: "player-1",
       playerDeck: createDeck("player"),
@@ -84,8 +84,9 @@ describe("createSurvivalInitialState", () => {
         openingMulligan: false,
       },
     });
-    expect(state.playerA.maxHealthPoints).toBe(run.maxLp + 300);
-    expect(state.playerA.healthPoints).toBe(run.currentLp + 300);
+    // El bonus de LP no debe inflar el tope ni la vida actual: la RPC complete_survival_battle exige ending_lp <= max_lp.
+    expect(state.playerA.maxHealthPoints).toBe(run.maxLp);
+    expect(state.playerA.healthPoints).toBe(run.currentLp);
     expect(state.playerA.maxEnergy).toBe(12);
     expect(state.playerA.currentEnergy).toBe(12);
     // El rival no recibe el bonus del árbol del jugador.
