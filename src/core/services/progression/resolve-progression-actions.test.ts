@@ -21,10 +21,17 @@ describe("resolveDuelProgressionActions", () => {
   it("MULTIPLAYER ganado añade victorias de duelo y MP", () => {
     expect(resolveDuelProgressionActions("MULTIPLAYER", true)).toEqual(["PLAY_DUEL", "PLAY_MP_MATCH", "WIN_DUEL", "WIN_MP_MATCH"]);
   });
+  it("SURVIVAL perdido cuenta duelo + arena jugados (mismo trato que TRAINING)", () => {
+    expect(resolveDuelProgressionActions("SURVIVAL", false)).toEqual(["PLAY_DUEL", "PLAY_ARENA"]);
+  });
+  it("SURVIVAL ganado añade victorias de duelo y arena", () => {
+    expect(resolveDuelProgressionActions("SURVIVAL", true)).toEqual(["PLAY_DUEL", "PLAY_ARENA", "WIN_DUEL", "WIN_ARENA"]);
+  });
 
   it("flawless solo cuenta si se gana, y es específico por sección", () => {
     expect(resolveDuelProgressionActions("STORY", true, true)).toEqual(["PLAY_DUEL", "WIN_DUEL", "WIN_FLAWLESS_STORY"]);
     expect(resolveDuelProgressionActions("TRAINING", true, true)).toEqual(["PLAY_DUEL", "PLAY_ARENA", "WIN_DUEL", "WIN_ARENA", "WIN_FLAWLESS_TRAINING"]);
+    expect(resolveDuelProgressionActions("SURVIVAL", true, true)).toEqual(["PLAY_DUEL", "PLAY_ARENA", "WIN_DUEL", "WIN_ARENA", "WIN_FLAWLESS_TRAINING"]);
     expect(resolveDuelProgressionActions("MULTIPLAYER", true, true)).toEqual(["PLAY_DUEL", "PLAY_MP_MATCH", "WIN_DUEL", "WIN_MP_MATCH", "WIN_FLAWLESS_MP"]);
   });
 

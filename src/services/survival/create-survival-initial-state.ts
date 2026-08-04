@@ -5,6 +5,8 @@ import { createSeededRandom } from "@/core/services/random/seeded-rng";
 import { shuffleWithRandom } from "@/core/services/random/shuffle-with-random";
 import { createInitialGameState } from "@/core/use-cases/game-engine/state/create-initial-game-state";
 import { createSeededGameEngineIdFactory } from "@/core/use-cases/game-engine/state/id-factory";
+import { applySkillBonusesToSide } from "@/core/use-cases/game-engine/state/apply-skill-bonuses";
+import { IPlayerCombatModifiers } from "@/services/progression/get-player-combat-modifiers";
 
 interface ICreateSurvivalInitialStateInput {
   playerId: string;
@@ -16,6 +18,8 @@ interface ICreateSurvivalInitialStateInput {
   run: ISurvivalRun;
   encounter: ISurvivalEncounter;
   seed: string;
+  /** Bonus de combate del árbol de habilidades (ficha 8) del jugador, aplicados sobre su lado del snapshot. */
+  playerCombatModifiers?: IPlayerCombatModifiers;
 }
 
 function shuffledCards(deck: ICard[], seed: string): ICard[] {
@@ -24,7 +28,7 @@ function shuffledCards(deck: ICard[], seed: string): ICard[] {
 
 /** Reparte cuatro cartas y sortea el iniciador desde la seed firmada, igual que el runtime PvE. */
 export function createSurvivalInitialState(input: ICreateSurvivalInitialStateInput) {
-  const state = createInitialGameState({
+  let state = createInitialGameState({
     playerA: {
       id: input.playerId,
       name: "Arquitecto",
@@ -43,6 +47,16 @@ export function createSurvivalInitialState(input: ICreateSurvivalInitialStateInp
     randomSource: createSeededRandom(`${input.seed}:starter`),
     idFactory: createSeededGameEngineIdFactory(input.seed),
   });
+  // Bonus de combate del árbol de habilidades (ficha 8) SOLO para el jugador, dentro del snapshot firmado:
+  // el servidor reproducirá este mismo estado, así que ambos lados aplican los mismos valores.
+  const modifiers = input.playerCombatModifiers ?? EMPTY_COMBAT_MODIFIERS;
+  state = applySkillBonusesToSide(
+    state,
+    "playerA",
+    Math.max(0, Math.floor(modifiers.startingLpBonus)),
+    Math.max(0, Math.floor(modifiers.maxEnergyBonus)),
+    Math.max(0, Math.floor(modifiers.turn1EnergyBonus)),
+  );
   if (input.encounter.maxLpBonus <= 0) return state;
   return {
     ...state,
@@ -53,3 +67,5 @@ export function createSurvivalInitialState(input: ICreateSurvivalInitialStateInp
     },
   };
 }
+
+const EMPTY_COMBAT_MODIFIERS: IPlayerCombatModifiers = { startingLpBonus: 0, maxEnergyBonus: 0, turn1EnergyBonus: 0, openingHandBonus: 0, openingMulligan: false };
