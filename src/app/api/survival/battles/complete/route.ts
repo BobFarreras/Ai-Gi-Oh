@@ -1,11 +1,13 @@
 // src/app/api/survival/battles/complete/route.ts - Reproduce y liquida un combate Survival sin confiar en el cliente.
 import { NextRequest, NextResponse } from "next/server";
 import { CompleteSurvivalBattleUseCase } from "@/core/use-cases/survival/CompleteSurvivalBattleUseCase";
+import { resolveDuelProgressionActions } from "@/core/services/progression/resolve-progression-actions";
 import { createApiErrorResponse } from "@/services/security/api/create-api-error-response";
 import { parseCombatProof } from "@/services/security/api/parse-combat-proof";
 import { readJsonObjectBody, readRequiredStringField } from "@/services/security/api/request-body-parser";
 import { requireTrustedMutationOrigin } from "@/services/security/api/require-trusted-mutation-origin";
 import { verifyCombatSessionTicket } from "@/services/security/duel-completion-ticket";
+import { recordProgressionEvent } from "@/services/progression/record-progression-event";
 import { createSurvivalRouteContext } from "@/services/survival/create-survival-route-context";
 import { enforcePveRateLimit } from "@/services/security/api/rate-limit/enforce-pve-rate-limit";
 import { ValidationError } from "@/core/errors/ValidationError";
@@ -34,6 +36,14 @@ export async function POST(request: NextRequest) {
     }
     const result = await new CompleteSurvivalBattleUseCase(context.repository)
       .execute(context.playerId, proof);
+    // Solo una liquidación real cuenta para misiones diarias y ranking semanal: los avances intermedios
+    // (checkpoints) y las liquidaciones duplicadas no deben sumar acciones de progresión.
+    if (result.settled && !result.duplicate) {
+      await recordProgressionEvent(
+        context.client,
+        resolveDuelProgressionActions("SURVIVAL", result.outcome === "WIN"),
+      );
+    }
     return NextResponse.json(result, { status: 200, headers: context.response.headers });
   } catch (error) {
     return createApiErrorResponse(error, "No se pudo completar el combate de Supervivencia.");

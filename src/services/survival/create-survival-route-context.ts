@@ -11,5 +11,6 @@ export async function createSurvivalRouteContext(request: NextRequest) {
   const readClient = createSupabaseRouteClient(request, response);
   const playerId = await getAuthenticatedUserId(readClient);
   const repository = new SupabaseSurvivalRepository(readClient, createSupabaseServiceRoleClient());
-  return { playerId, repository, response };
+  // El cliente autenticado (lectura) se expone para progresión: recordProgressionEvent depende de auth.uid().
+  return { playerId, repository, client: readClient, response };
 }

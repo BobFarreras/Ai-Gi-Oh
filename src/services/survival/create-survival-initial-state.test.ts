@@ -64,4 +64,81 @@ describe("createSurvivalInitialState", () => {
     );
     expect(starters).toEqual(new Set(["player-1", "opponent-1"]));
   });
+
+  it("aplica los bonus de combate del árbol SOLO al jugador, dentro del snapshot determinista", () => {
+    const state = createSurvivalInitialState({
+      playerId: "player-1",
+      playerDeck: createDeck("player"),
+      playerFusionDeck: [],
+      opponentName: "Rival",
+      opponentDeck: createDeck("opponent"),
+      opponentFusionDeck: [],
+      run,
+      encounter,
+      seed: "battle-seed-modifiers",
+      playerCombatModifiers: {
+        startingLpBonus: 300,
+        maxEnergyBonus: 2,
+        turn1EnergyBonus: 0,
+        openingHandBonus: 0,
+        openingMulligan: false,
+      },
+    });
+    expect(state.playerA.maxHealthPoints).toBe(run.maxLp + 300);
+    expect(state.playerA.healthPoints).toBe(run.currentLp + 300);
+    expect(state.playerA.maxEnergy).toBe(12);
+    expect(state.playerA.currentEnergy).toBe(12);
+    // El rival no recibe el bonus del árbol del jugador.
+    expect(state.playerB.maxHealthPoints).toBe(run.maxLp);
+    expect(state.playerB.maxEnergy).toBe(10);
+  });
+
+  it("Arranque en Frío: aplica +energía en el turno 1 del jugador, concedida o diferida según arranque", () => {
+    const state = createSurvivalInitialState({
+      playerId: "player-1",
+      playerDeck: createDeck("player"),
+      playerFusionDeck: [],
+      opponentName: "Rival",
+      opponentDeck: createDeck("opponent"),
+      opponentFusionDeck: [],
+      run,
+      encounter,
+      seed: "battle-seed-frost",
+      playerCombatModifiers: {
+        startingLpBonus: 0,
+        maxEnergyBonus: 0,
+        turn1EnergyBonus: 1,
+        openingHandBonus: 0,
+        openingMulligan: false,
+      },
+    });
+    const isStarter = state.startingPlayerId === "player-1";
+    // Si arranca, la energía extra se concede ya (por encima del tope); si no, se difiere al motor.
+    if (isStarter) {
+      expect(state.playerA.currentEnergy).toBe(11);
+      expect(state.firstTurnEnergyBonusByPlayerId?.["player-1"] ?? 0).toBe(0);
+    } else {
+      expect(state.playerA.currentEnergy).toBe(10);
+      expect(state.firstTurnEnergyBonusByPlayerId?.["player-1"]).toBe(1);
+    }
+    expect(state.playerA.maxEnergy).toBe(10);
+  });
+
+  it("sin modifiers no altera los valores por defecto", () => {
+    const state = createSurvivalInitialState({
+      playerId: "player-1",
+      playerDeck: createDeck("player"),
+      playerFusionDeck: [],
+      opponentName: "Rival",
+      opponentDeck: createDeck("opponent"),
+      opponentFusionDeck: [],
+      run,
+      encounter,
+      seed: "battle-seed-plain",
+    });
+    expect(state.playerA.maxHealthPoints).toBe(run.maxLp);
+    expect(state.playerA.healthPoints).toBe(run.currentLp);
+    expect(state.playerA.maxEnergy).toBe(10);
+    expect(state.playerB.maxHealthPoints).toBe(run.maxLp);
+  });
 });
