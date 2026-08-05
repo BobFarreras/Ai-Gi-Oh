@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import {
+  createGemGptFusionCard,
   createFusionExecutionCard,
   createFusionMaterialEntity,
 } from "@/core/use-cases/game-engine/fusion/fusion-test-fixtures";
@@ -11,12 +12,43 @@ import {
 } from "@/core/use-cases/game-engine/test-support/state-fixtures";
 
 describe("fusión desde ejecución", () => {
+  it("invoca la carta exacta del fusionDeck congelado en el snapshot", () => {
+    const productionFusion = {
+      ...createGemGptFusionCard(),
+      attack: 3800,
+      defense: 3200,
+      fusionMaterials: ["entity-chatgpt", "entity-gemini"],
+    };
+    let state = createTestGameState({
+      playerA: createTestPlayer("p1", {
+        hand: [createFusionExecutionCard()],
+        fusionDeck: [productionFusion],
+        activeEntities: [
+          createFusionMaterialEntity("m1", "entity-chatgpt", "BIG_TECH"),
+          createFusionMaterialEntity("m2", "entity-gemini", "BIG_TECH"),
+        ],
+      }),
+      playerB: createTestPlayer("p2"),
+      activePlayerId: "p1",
+      phase: "MAIN_1",
+    });
+    state = GameEngine.playCard(state, "p1", "exec-fusion-gemgpt", "ACTIVATE");
+    state = GameEngine.resolveExecution(state, "p1", state.playerA.activeExecutions[0].instanceId);
+    state = GameEngine.resolvePendingTurnAction(state, "p1", "m1");
+    state = GameEngine.resolvePendingTurnAction(state, "p1", "m2");
+
+    const summoned = state.playerA.activeEntities.find((entity) => entity.card.id === "fusion-gemgpt");
+    expect(summoned?.card).toMatchObject({ attack: 3800, defense: 3200 });
+    expect(summoned?.card).toBe(productionFusion);
+  });
+
   it("debería iniciar selección y completar fusión al elegir 2 materiales", () => {
     let state = GameEngine.playCard(
       createTestGameState({
         playerA: createTestPlayer("p1", {
           name: "Neo",
           hand: [createFusionExecutionCard()],
+          fusionDeck: [createGemGptFusionCard()],
           activeEntities: [
             createFusionMaterialEntity("m1", "entity-chatgpt", "BIG_TECH"),
             createFusionMaterialEntity("m2", "entity-gemini", "BIG_TECH"),
@@ -52,6 +84,7 @@ describe("fusión desde ejecución", () => {
       playerA: createTestPlayer("p1", {
         name: "Neo",
         hand: [createFusionExecutionCard()],
+        fusionDeck: [createGemGptFusionCard()],
         activeEntities: [
           createFusionMaterialEntity("m1", "entity-chatgpt", "BIG_TECH"),
           createFusionMaterialEntity("m2", "entity-gemini", "BIG_TECH"),

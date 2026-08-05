@@ -13,6 +13,7 @@ Documentación dividida por bloques para facilitar mantenimiento y revisión té
 6. [Quality Gates y Política de Documentación](./06-quality-gates-and-doc-policy.md)
 7. [Extensión de Efectos del Motor](./07-game-engine-effects-extension.md)
 8. [Progresión y Liquidación de Supervivencia](./08-survival-progression-settlement.md)
+9. [Autoridad de Fusiones en el Snapshot](./09-fusion-snapshot-authority.md)
 
 ## Alcance
 

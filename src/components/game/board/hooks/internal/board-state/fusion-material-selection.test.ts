@@ -13,6 +13,11 @@ function createState(): GameState {
       currentEnergy: 10,
       maxEnergy: 10,
       deck: [],
+      fusionDeck: [{
+        id: "fusion-gemgpt", name: "GemGPT", description: "", type: "FUSION",
+        faction: "BIG_TECH", cost: 7, fusionRecipeId: "fusion-gemgpt",
+        fusionMaterials: ["entity-chatgpt", "entity-gemini"],
+      }],
       hand: [],
       graveyard: [],
       activeEntities: [

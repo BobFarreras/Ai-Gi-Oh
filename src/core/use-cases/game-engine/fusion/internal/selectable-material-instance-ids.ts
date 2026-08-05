@@ -1,12 +1,13 @@
 // src/core/use-cases/game-engine/fusion/internal/selectable-material-instance-ids.ts - Resuelve instancias elegibles de materiales para una receta de fusión.
 import { IBoardEntity } from "@/core/entities/IPlayer";
-import { getFusionRecipeByResultId } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
+import { ICard } from "@/core/entities/ICard";
+import { getFusionRecipe } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 
 export function resolveSelectableMaterialInstanceIds(
   playerEntities: IBoardEntity[],
-  fusionResultCardId: string,
+  fusionCard: ICard,
 ): string[] {
-  const recipe = getFusionRecipeByResultId(fusionResultCardId);
+  const recipe = getFusionRecipe(fusionCard);
   if (!recipe) return playerEntities.map((entity) => entity.instanceId);
 
   if (recipe.requiredMaterialIds && recipe.requiredMaterialIds.length > 0) {

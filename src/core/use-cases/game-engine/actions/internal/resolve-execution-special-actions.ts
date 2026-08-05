@@ -1,79 +1,47 @@
-// src/core/use-cases/game-engine/actions/internal/resolve-execution-special-actions.ts - Encapsula acciones especiales de ejecución que desvían el flujo estándar de resolución.
+// src/core/use-cases/game-engine/actions/internal/resolve-execution-special-actions.ts - Orquesta ejecuciones especiales de fusión y cementerio.
 import {
   CardType,
   IDestroyOpponentEntityEffect,
   IFlipOpponentEntityToDefenseEffect,
+  IFusionSummonEffect,
+  ILockOpponentEntityEffect,
+  IReturnGraveyardCardToFieldEffect,
+  IReturnGraveyardCardToHandEffect,
   ISacrificeAllyEntityForEnergyEffect,
   IStealOpponentEntityEffect,
   IStealOpponentExecutionEffect,
-  IFusionSummonEffect,
-  ILockOpponentEntityEffect,
-  IRevealOpponentSetCardEffect,
-  IReturnGraveyardCardToFieldEffect,
-  IReturnGraveyardCardToHandEffect,
-  IStealOpponentGraveyardCardToHandEffect,
 } from "@/core/entities/ICard";
-import { IPlayer } from "@/core/entities/IPlayer";
 import { GameRuleError } from "@/core/errors/GameRuleError";
-import { startFusionSummonFromExecution } from "@/core/use-cases/game-engine/fusion/start-fusion-summon-from-execution";
+import { findPlayerFusionCard } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 import { resolveSelectableMaterialInstanceIds } from "@/core/use-cases/game-engine/fusion/internal/selectable-material-instance-ids";
-import { suspendExecutionInSet } from "@/core/use-cases/game-engine/actions/internal/suspend-execution";
+import { startFusionSummonFromExecution } from "@/core/use-cases/game-engine/fusion/start-fusion-summon-from-execution";
 import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
-import {
-  createGraveyardSelectionPendingAction,
-  createOpponentEntityToLockSelectionPendingAction,
-  createOpponentEntityToDestroySelectionPendingAction,
-  createOpponentEntityToFlipDefenseSelectionPendingAction,
-  createOwnEntityToSacrificeSelectionPendingAction,
-  createOpponentEntityToStealSelectionPendingAction,
-  createOpponentExecutionToStealSelectionPendingAction,
-  createOpponentGraveyardSelectionPendingAction,
-  createOpponentSetCardSelectionPendingAction,
-} from "@/core/use-cases/game-engine/state/pending-turn-action-factory";
+import { createGraveyardSelectionPendingAction } from "@/core/use-cases/game-engine/state/pending-turn-action-factory";
 import { GameState } from "@/core/use-cases/game-engine/state/types";
-
-interface ISpecialActionContext {
-  state: GameState;
-  playerId: string;
-  player: IPlayer;
-  opponent: IPlayer;
-  isPlayerA: boolean;
-  executionInstanceId: string;
-}
+import {
+  ISpecialActionContext,
+  OpponentSelectionEffect,
+  resolveExecutionTargetAction,
+} from "./resolve-execution-target-action";
+import { suspendExecutionInSet } from "./suspend-execution";
 
 type GraveyardReturnEffect = IReturnGraveyardCardToHandEffect | IReturnGraveyardCardToFieldEffect;
-type OpponentSelectionEffect = IRevealOpponentSetCardEffect | IStealOpponentGraveyardCardToHandEffect;
+type TargetEffect = OpponentSelectionEffect | ILockOpponentEntityEffect | IDestroyOpponentEntityEffect
+  | IFlipOpponentEntityToDefenseEffect | ISacrificeAllyEntityForEnergyEffect
+  | IStealOpponentEntityEffect | IStealOpponentExecutionEffect;
 
-function hasSelectableGraveyardCard(player: IPlayer, cardType?: CardType): boolean {
-  return player.graveyard.some((card) => !cardType || card.type === cardType);
-}
-
-function hasSelectableOpponentGraveyardCard(opponent: IPlayer, cardType?: CardType): boolean {
-  return opponent.graveyard.some((card) => !cardType || card.type === cardType);
-}
-
-function hasSelectableOpponentSetCard(opponent: IPlayer, zone: "ENTITIES" | "EXECUTIONS" | "ANY"): boolean {
-  const entityMatches = zone !== "EXECUTIONS" && opponent.activeEntities.some((entity) => entity.mode === "SET");
-  const executionMatches = zone !== "ENTITIES" && opponent.activeExecutions.some((entity) => entity.mode === "SET");
-  return entityMatches || executionMatches;
-}
-
-/** Deja la ejecución del contexto en SET a la espera (fusión sin materiales, sin objetivo, etc.). */
-function suspendExecutionUntilCondition(context: ISpecialActionContext, waitType: string): GameState {
+/** Mantiene la ejecución preparada cuando su condición todavía no se cumple. */
+function suspend(context: ISpecialActionContext, waitType: string): GameState {
   return suspendExecutionInSet(context.state, context.playerId, context.executionInstanceId, waitType);
 }
 
 function resolveFusionEffect(context: ISpecialActionContext, effect: IFusionSummonEffect): GameState {
   const { state, playerId, player, executionInstanceId } = context;
-  if (player.activeEntities.length < 2) {
-    return suspendExecutionUntilCondition(context, "FUSION_WAITING_MATERIALS");
-  }
-  // Aunque haya entidades suficientes, puede que no cumplan la receta específica.
-  // En ese caso suspendemos en SET en vez de lanzar un error que deja la carta en ACTIVATE.
-  const selectableMaterials = resolveSelectableMaterialInstanceIds(player.activeEntities, effect.recipeId);
-  if (selectableMaterials.length < 2) {
-    return suspendExecutionUntilCondition(context, "FUSION_WAITING_MATERIALS");
-  }
+  if (player.activeEntities.length < 2) return suspend(context, "FUSION_WAITING_MATERIALS");
+  const fusionCard = findPlayerFusionCard(player, effect.recipeId);
+  if (!fusionCard) return suspend(context, "FUSION_WAITING_RESULT");
+  const selectable = resolveSelectableMaterialInstanceIds(player.activeEntities, fusionCard);
+  if (selectable.length < 2) return suspend(context, "FUSION_WAITING_MATERIALS");
   return startFusionSummonFromExecution(state, playerId, executionInstanceId, effect.recipeId);
 }
 
@@ -85,141 +53,32 @@ function startGraveyardSelection(
   cardType?: CardType,
 ): GameState {
   const { player } = getPlayerPair(state, playerId);
-  if (!hasSelectableGraveyardCard(player, cardType)) {
+  if (!player.graveyard.some((card) => !cardType || card.type === cardType)) {
     throw new GameRuleError("No hay cartas válidas en cementerio para este efecto.");
   }
   return {
     ...state,
-    pendingTurnAction: createGraveyardSelectionPendingAction(playerId, executionInstanceId, destination, cardType),
+    pendingTurnAction: createGraveyardSelectionPendingAction(
+      playerId, executionInstanceId, destination, cardType,
+    ),
   };
 }
 
-function resolveGraveyardReturnEffect(context: ISpecialActionContext, effect: GraveyardReturnEffect): GameState {
-  if (effect.action === "RETURN_GRAVEYARD_CARD_TO_HAND") {
-    return startGraveyardSelection(context.state, context.playerId, context.executionInstanceId, "HAND", effect.cardType);
-  }
-  return startGraveyardSelection(context.state, context.playerId, context.executionInstanceId, "FIELD", effect.cardType);
+function resolveGraveyardEffect(context: ISpecialActionContext, effect: GraveyardReturnEffect): GameState {
+  const destination = effect.action === "RETURN_GRAVEYARD_CARD_TO_HAND" ? "HAND" : "FIELD";
+  return startGraveyardSelection(
+    context.state, context.playerId, context.executionInstanceId, destination, effect.cardType,
+  );
 }
 
-function resolveOpponentSelectionEffect(context: ISpecialActionContext, effect: OpponentSelectionEffect): GameState {
-  if (effect.action === "STEAL_OPPONENT_GRAVEYARD_CARD_TO_HAND") {
-    if (!hasSelectableOpponentGraveyardCard(context.opponent, effect.cardType)) {
-      throw new GameRuleError("No hay cartas válidas en cementerio rival para este efecto.");
-    }
-    return {
-      ...context.state,
-      pendingTurnAction: createOpponentGraveyardSelectionPendingAction(context.playerId, context.executionInstanceId, effect.cardType),
-    };
-  }
-  const zone = effect.zone ?? "ANY";
-  // Si el rival no tiene ninguna carta seteada que revelar, dejamos la ejecución a la espera
-  // (igual que la fusión sin materiales): se queda en SET y puede reactivarse en otro turno.
-  if (!hasSelectableOpponentSetCard(context.opponent, zone)) {
-    return suspendExecutionUntilCondition(context, "REVEAL_WAITING_TARGET");
-  }
-  return {
-    ...context.state,
-    pendingTurnAction: createOpponentSetCardSelectionPendingAction(context.playerId, context.executionInstanceId, zone),
-  };
-}
-
-function resolveLockOpponentEntityEffect(context: ISpecialActionContext, effect: ILockOpponentEntityEffect): GameState {
-  // Sin entities rivales a las que apuntar: deja la ejecución en SET para reactivarla más tarde.
-  if (context.opponent.activeEntities.length === 0) {
-    return suspendExecutionUntilCondition(context, "LOCK_WAITING_TARGET");
-  }
-  return {
-    ...context.state,
-    pendingTurnAction: createOpponentEntityToLockSelectionPendingAction(context.playerId, context.executionInstanceId, effect.turns),
-  };
-}
-
-function resolveDestroyOpponentEntityEffect(context: ISpecialActionContext): GameState {
-  // Sin entities rivales a las que apuntar: deja la ejecución en SET para reactivarla más tarde.
-  if (context.opponent.activeEntities.length === 0) {
-    return suspendExecutionUntilCondition(context, "DESTROY_WAITING_TARGET");
-  }
-  return {
-    ...context.state,
-    pendingTurnAction: createOpponentEntityToDestroySelectionPendingAction(context.playerId, context.executionInstanceId),
-  };
-}
-
-function resolveFlipOpponentEntityToDefenseEffect(context: ISpecialActionContext): GameState {
-  // Sin entities rivales a las que apuntar: deja la ejecución en SET para reactivarla más tarde.
-  if (context.opponent.activeEntities.length === 0) {
-    return suspendExecutionUntilCondition(context, "FLIP_DEFENSE_WAITING_TARGET");
-  }
-  return {
-    ...context.state,
-    pendingTurnAction: createOpponentEntityToFlipDefenseSelectionPendingAction(context.playerId, context.executionInstanceId),
-  };
-}
-
-function resolveStealOpponentEntityEffect(context: ISpecialActionContext): GameState {
-  // Sin entities rivales que robar, o sin hueco propio: deja la ejecución en SET para reactivarla.
-  if (context.opponent.activeEntities.length === 0 || context.player.activeEntities.length >= 3) {
-    return suspendExecutionUntilCondition(context, "STEAL_ENTITY_WAITING_TARGET");
-  }
-  return {
-    ...context.state,
-    pendingTurnAction: createOpponentEntityToStealSelectionPendingAction(context.playerId, context.executionInstanceId),
-  };
-}
-
-function resolveStealOpponentExecutionEffect(context: ISpecialActionContext): GameState {
-  // Sin magias/trampas rivales que robar: deja la ejecución en SET para reactivarla. No hace falta
-  // comprobar hueco propio: la propia carta de robo libera su slot al resolverse.
-  if (context.opponent.activeExecutions.length === 0) {
-    return suspendExecutionUntilCondition(context, "STEAL_EXECUTION_WAITING_TARGET");
-  }
-  return {
-    ...context.state,
-    pendingTurnAction: createOpponentExecutionToStealSelectionPendingAction(context.playerId, context.executionInstanceId),
-  };
-}
-
-function resolveSacrificeAllyForEnergyEffect(context: ISpecialActionContext): GameState {
-  // Sin entities propias a las que sacrificar: deja la ejecución en SET para reactivarla más tarde.
-  if (context.player.activeEntities.length === 0) {
-    return suspendExecutionUntilCondition(context, "SACRIFICE_WAITING_TARGET");
-  }
-  return {
-    ...context.state,
-    pendingTurnAction: createOwnEntityToSacrificeSelectionPendingAction(context.playerId, context.executionInstanceId),
-  };
-}
-
-/**
- * Resuelve acciones especiales de ejecución que no siguen el pipeline estándar de `applyExecutionEffect`.
- */
+/** Resuelve acciones especiales que desvían el pipeline estándar de efectos. */
 export function resolveExecutionSpecialAction(
   context: ISpecialActionContext,
-  effect: IFusionSummonEffect | GraveyardReturnEffect | OpponentSelectionEffect | ILockOpponentEntityEffect | IDestroyOpponentEntityEffect | IFlipOpponentEntityToDefenseEffect | ISacrificeAllyEntityForEnergyEffect | IStealOpponentEntityEffect | IStealOpponentExecutionEffect,
+  effect: IFusionSummonEffect | GraveyardReturnEffect | TargetEffect,
 ): GameState {
-  if (effect.action === "FUSION_SUMMON") {
-    return resolveFusionEffect(context, effect);
-  }
+  if (effect.action === "FUSION_SUMMON") return resolveFusionEffect(context, effect);
   if (effect.action === "RETURN_GRAVEYARD_CARD_TO_HAND" || effect.action === "RETURN_GRAVEYARD_CARD_TO_FIELD") {
-    return resolveGraveyardReturnEffect(context, effect);
+    return resolveGraveyardEffect(context, effect);
   }
-  if (effect.action === "LOCK_OPPONENT_ENTITY") {
-    return resolveLockOpponentEntityEffect(context, effect);
-  }
-  if (effect.action === "DESTROY_OPPONENT_ENTITY") {
-    return resolveDestroyOpponentEntityEffect(context);
-  }
-  if (effect.action === "FLIP_OPPONENT_ENTITY_TO_DEFENSE") {
-    return resolveFlipOpponentEntityToDefenseEffect(context);
-  }
-  if (effect.action === "SACRIFICE_ALLY_ENTITY_FOR_ENERGY") {
-    return resolveSacrificeAllyForEnergyEffect(context);
-  }
-  if (effect.action === "STEAL_OPPONENT_ENTITY") {
-    return resolveStealOpponentEntityEffect(context);
-  }
-  if (effect.action === "STEAL_OPPONENT_EXECUTION") {
-    return resolveStealOpponentExecutionEffect(context);
-  }
-  return resolveOpponentSelectionEffect(context, effect);
+  return resolveExecutionTargetAction(context, effect);
 }

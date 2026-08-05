@@ -1,5 +1,6 @@
 // src/core/use-cases/game-engine/fusion/fusion-recipes.ts - Catálogo de recetas de fusión y utilidades de búsqueda por carta resultado.
 import { CardArchetype, ICard } from "@/core/entities/ICard";
+import { IPlayer } from "@/core/entities/IPlayer";
 
 export interface IFusionRecipe {
   resultCardId: string;
@@ -69,10 +70,28 @@ export function getFusionRecipe(card: ICard): IFusionRecipe | null {
     return null;
   }
 
-  if (card.fusionRecipeId) {
-    return getFusionRecipeByResultId(card.fusionRecipeId);
+  // Las cartas hidratadas desde cards_catalog contienen su receta efectiva. Se prioriza ese dato
+  // congelado en el snapshot para que un balance del admin no quede eclipsado por presets legacy.
+  if (card.fusionMaterials && card.fusionMaterials.length > 0) {
+    return {
+      resultCardId: card.id,
+      requiredMaterialIds: [...card.fusionMaterials],
+      ...(card.fusionEnergyRequirement === undefined
+        ? {}
+        : { requiredTotalEnergy: card.fusionEnergyRequirement }),
+    };
   }
+  return getFusionRecipeByResultId(card.fusionRecipeId ?? card.id);
+}
 
-  return getFusionRecipeByResultId(card.id);
+/** Encuentra la carta resultado dentro del deck fijado para este jugador y combate. */
+export function findPlayerFusionCard(player: IPlayer, resultCardId: string): ICard | null {
+  return player.fusionDeck?.find((card) => card.type === "FUSION" && card.id === resultCardId) ?? null;
+}
+
+/** Resuelve una receta únicamente desde el fusionDeck del snapshot, sin catálogos globales. */
+export function getPlayerFusionRecipe(player: IPlayer, resultCardId: string): IFusionRecipe | null {
+  const fusionCard = findPlayerFusionCard(player, resultCardId);
+  return fusionCard ? getFusionRecipe(fusionCard) : null;
 }
 

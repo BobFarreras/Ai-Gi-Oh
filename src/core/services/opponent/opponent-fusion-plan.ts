@@ -7,7 +7,7 @@ import { resolveFusionMaterialGaps, workingFusionRecipeIds } from "@/core/servic
 import { chooseFusionMaterialsByRecipeId } from "@/core/services/opponent/heuristic-fusion-materials";
 import { GameState } from "@/core/use-cases/GameEngine";
 import { IBoardEntity } from "@/core/entities/IPlayer";
-import { getFusionRecipeByResultId } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
+import { getPlayerFusionRecipe } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 
 /** Mayor ATK entre los rivales EN ATAQUE: la amenaza que mataría a un material recién invocado. */
 function rivalAttackThreat(target: IPlayer): number {
@@ -16,7 +16,7 @@ function rivalAttackThreat(target: IPlayer): number {
 
 /** ¿Ya hay algún material de la receta en mesa? (fusión ya empezada = no abortar a mitad). */
 function hasStartedRecipe(opponent: IPlayer, recipeId: string): boolean {
-  const recipe = getFusionRecipeByResultId(recipeId);
+  const recipe = getPlayerFusionRecipe(opponent, recipeId);
   if (!recipe) return false;
   return opponent.activeEntities.some((entity) =>
     Boolean(recipe.requiredMaterialIds?.includes(entity.card.id)) ||
@@ -41,15 +41,15 @@ function scoreEntitySacrifice(entity: IBoardEntity): number {
   return (entity.card.attack ?? 0) + (entity.card.defense ?? 0) + entity.card.cost * 100;
 }
 
-function isRecipeProtectedMaterial(entity: IBoardEntity, recipeId: string): boolean {
-  const recipe = getFusionRecipeByResultId(recipeId);
+function isRecipeProtectedMaterial(entity: IBoardEntity, recipeId: string, opponent: IPlayer): boolean {
+  const recipe = getPlayerFusionRecipe(opponent, recipeId);
   if (!recipe) return false;
   if (recipe.requiredMaterialIds?.includes(entity.card.id)) return true;
   return Boolean(entity.card.archetype && recipe.requiredArchetypes?.includes(entity.card.archetype));
 }
 
 function chooseEntityToReplace(opponent: IPlayer, recipeId: string): string | null {
-  const removable = opponent.activeEntities.filter((entity) => !isRecipeProtectedMaterial(entity, recipeId));
+  const removable = opponent.activeEntities.filter((entity) => !isRecipeProtectedMaterial(entity, recipeId, opponent));
   const candidates = removable.length > 0 ? removable : opponent.activeEntities;
   if (candidates.length === 0) return null;
   return candidates.reduce((worst, current) =>
@@ -88,7 +88,7 @@ function lethalPressure(opponent: IPlayer, target: IPlayer): boolean {
 export function shouldHoldEnergyForFusion(opponent: IPlayer, target: IPlayer): boolean {
   if (lethalPressure(opponent, target)) return false;
   for (const recipeId of workingFusionRecipeIds(opponent)) {
-    const ready = chooseFusionMaterialsByRecipeId(opponent.activeEntities, recipeId) !== null;
+    const ready = chooseFusionMaterialsByRecipeId(opponent.activeEntities, recipeId, opponent.fusionDeck) !== null;
     if (!ready) continue;
     const execInHand = opponent.hand.find(
       (card) => card.type === "EXECUTION" && card.effect?.action === "FUSION_SUMMON" && card.effect.recipeId === recipeId,
@@ -114,7 +114,7 @@ export function chooseFusionSetupPlay(state: GameState, opponent: IPlayer, targe
   if (!state.hasNormalSummonedThisTurn) {
     for (const recipeId of recipeIds) {
       // Par ya en mesa: la activación la resuelve el loop (exec en mano→ACTIVATE) o findActivatableSetExecution.
-      if (chooseFusionMaterialsByRecipeId(opponent.activeEntities, recipeId) !== null) continue;
+      if (chooseFusionMaterialsByRecipeId(opponent.activeEntities, recipeId, opponent.fusionDeck) !== null) continue;
       // Materiales de la receta disponibles en mano, el de MÁS DEFENSA primero: será el ANCLA que aguante en mesa
       // el turno rival mientras esperamos al 2º material (petición del usuario: "un material fuerte en el tablero").
       const materialPlays = playable

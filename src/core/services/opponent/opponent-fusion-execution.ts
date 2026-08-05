@@ -2,7 +2,7 @@
 import { CardArchetype, ICard } from "@/core/entities/ICard";
 import { IPlayer } from "@/core/entities/IPlayer";
 import { chooseFusionMaterialsByRecipeId } from "@/core/services/opponent/heuristic-fusion-materials";
-import { getFusionRecipeByResultId } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
+import { getPlayerFusionRecipe } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 
 interface IFusionMaterialGaps {
   missingCardIds: string[];
@@ -20,12 +20,12 @@ export function canActivateFusionExecutionNow(opponent: IPlayer, executionCard: 
   if (!recipeId) return false;
   const fusionCard = resolveFusionCardFromDeck(opponent, recipeId);
   if (!fusionCard) return false;
-  return chooseFusionMaterialsByRecipeId(opponent.activeEntities, recipeId) !== null;
+  return chooseFusionMaterialsByRecipeId(opponent.activeEntities, recipeId, opponent.fusionDeck) !== null;
 }
 
 /** ¿La receta ya tiene sus 2 materiales en mesa listos para fusionar? */
 function fusionReady(opponent: IPlayer, recipeId: string): boolean {
-  return chooseFusionMaterialsByRecipeId(opponent.activeEntities, recipeId) !== null;
+  return chooseFusionMaterialsByRecipeId(opponent.activeEntities, recipeId, opponent.fusionDeck) !== null;
 }
 
 /**
@@ -49,7 +49,7 @@ export function workingFusionRecipeIds(opponent: IPlayer): string[] {
 export function isPendingFusionMaterial(card: ICard, opponent: IPlayer): boolean {
   for (const recipeId of workingFusionRecipeIds(opponent)) {
     if (fusionReady(opponent, recipeId)) continue; // ya tiene el par: se activará, no hace falta seguir protegiendo
-    const recipe = getFusionRecipeByResultId(recipeId);
+    const recipe = getPlayerFusionRecipe(opponent, recipeId);
     const isRequiredId = Boolean(recipe?.requiredMaterialIds?.includes(card.id));
     const isRequiredArch = Boolean(card.archetype && recipe?.requiredArchetypes?.includes(card.archetype));
     if (isRequiredId || isRequiredArch) return true;
@@ -58,7 +58,7 @@ export function isPendingFusionMaterial(card: ICard, opponent: IPlayer): boolean
 }
 
 export function resolveFusionMaterialGaps(opponent: IPlayer, recipeId: string): IFusionMaterialGaps {
-  const recipe = getFusionRecipeByResultId(recipeId);
+  const recipe = getPlayerFusionRecipe(opponent, recipeId);
   if (!recipe) return { missingCardIds: [], missingArchetypes: [] };
   const activeCardIds = opponent.activeEntities.map((entity) => entity.card.id);
   const pendingArchetypes = [...(recipe.requiredArchetypes ?? [])];

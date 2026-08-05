@@ -2,8 +2,8 @@
 import { GameRuleError } from "@/core/errors/GameRuleError";
 import { NotFoundError } from "@/core/errors/NotFoundError";
 import { ValidationError } from "@/core/errors/ValidationError";
-import { assertFusionCardInFusionDeck } from "@/core/use-cases/game-engine/fusion/internal/assert-fusion-card-in-fusion-deck";
 import { resolveSelectableMaterialInstanceIds } from "@/core/use-cases/game-engine/fusion/internal/selectable-material-instance-ids";
+import { findPlayerFusionCard } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 import { assertMainPhaseActionAllowedForActivePlayer } from "@/core/use-cases/game-engine/state/action-flow-preconditions";
 import { getPlayerPair } from "@/core/use-cases/game-engine/state/player-utils";
 import { createFusionMaterialsPendingAction } from "@/core/use-cases/game-engine/state/pending-turn-action-factory";
@@ -37,8 +37,9 @@ export function startFusionSummonFromExecution(
   if (player.activeEntities.length < 2) {
     throw new GameRuleError("Necesitas 2 entidades en campo para fusionar.");
   }
-  assertFusionCardInFusionDeck(player, recipeId);
-  const selectableMaterials = resolveSelectableMaterialInstanceIds(player.activeEntities, recipeId);
+  const fusionCard = findPlayerFusionCard(player, recipeId);
+  if (!fusionCard) throw new ValidationError("La carta resultado no está en el deck de fusión.");
+  const selectableMaterials = resolveSelectableMaterialInstanceIds(player.activeEntities, fusionCard);
   if (selectableMaterials.length < 2) {
     throw new GameRuleError("No puedes fusionar: faltan materiales válidos en el campo.");
   }

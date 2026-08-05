@@ -44,8 +44,16 @@ function chooseFusionMaterialsFromRecipe(activeEntities: IBoardEntity[], recipe:
   return validPair ? [validPair[0].instanceId, validPair[1].instanceId] : null;
 }
 
-export function chooseFusionMaterialsByRecipeId(activeEntities: IBoardEntity[], recipeId: string): [string, string] | null {
-  return chooseFusionMaterialsFromRecipe(activeEntities, getFusionRecipeByResultId(recipeId));
+export function chooseFusionMaterialsByRecipeId(
+  activeEntities: IBoardEntity[],
+  recipeId: string,
+  fusionDeck?: readonly ICard[],
+): [string, string] | null {
+  const snapshotCard = fusionDeck?.find((card) => card.type === "FUSION" && card.id === recipeId);
+  return chooseFusionMaterialsFromRecipe(
+    activeEntities,
+    snapshotCard ? getFusionRecipe(snapshotCard) : getFusionRecipeByResultId(recipeId),
+  );
 }
 
 export function chooseFusionMaterials(opponent: IPlayer, fusionCard: ICard): [string, string] | null {

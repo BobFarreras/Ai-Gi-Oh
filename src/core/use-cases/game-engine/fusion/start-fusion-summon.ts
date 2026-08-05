@@ -29,7 +29,7 @@ export function startFusionSummon(
   if (player.activeEntities.length < 2) {
     throw new GameRuleError("Necesitas 2 entidades en campo para fusionar.");
   }
-  const selectableMaterials = resolveSelectableMaterialInstanceIds(player.activeEntities, fusionCard.id);
+  const selectableMaterials = resolveSelectableMaterialInstanceIds(player.activeEntities, fusionCard);
   if (selectableMaterials.length < 2) {
     throw new GameRuleError("No puedes fusionar: faltan materiales válidos en el campo.");
   }

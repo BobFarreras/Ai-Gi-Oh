@@ -3,7 +3,8 @@
 import { describe, expect, it } from "vitest";
 import { GameEngine, GameState } from "@/core/use-cases/GameEngine";
 import { applyMatchAction } from "@/core/services/multiplayer/apply-match-action";
-import { createTestBoardEntity } from "@/core/use-cases/game-engine/test-support/state-fixtures";
+import { createTestBoardEntity, createTestGameState, createTestPlayer } from "@/core/use-cases/game-engine/test-support/state-fixtures";
+import { createFusionExecutionCard, createFusionMaterialEntity, createGemGptFusionCard } from "@/core/use-cases/game-engine/fusion/fusion-test-fixtures";
 import {
   attackerCard,
   createTrapBaseState,
@@ -22,6 +23,31 @@ function stateWithTwoDefenderTraps(): GameState {
 }
 
 describe("applyMatchAction — trampa reactiva diferida (ficha 4 multi)", () => {
+  it("replay: conserva los atributos de fusión fijados en el snapshot", () => {
+    const productionFusion = {
+      ...createGemGptFusionCard(), attack: 3800, defense: 3200,
+      fusionMaterials: ["entity-chatgpt", "entity-gemini"],
+    };
+    let state = createTestGameState({
+      playerA: createTestPlayer("p1", {
+        hand: [createFusionExecutionCard()], fusionDeck: [productionFusion],
+        activeEntities: [
+          createFusionMaterialEntity("m1", "entity-chatgpt"),
+          createFusionMaterialEntity("m2", "entity-gemini"),
+        ],
+      }),
+      playerB: createTestPlayer("p2"), phase: "MAIN_1", activePlayerId: "p1",
+    });
+    state = applyMatchAction(state, "p1", { type: "PLAY_CARD", payload: { cardId: "exec-fusion-gemgpt", mode: "ACTIVATE" } });
+    const executionId = state.playerA.activeExecutions[0].instanceId;
+    state = applyMatchAction(state, "p1", { type: "RESOLVE_EXECUTION", payload: { instanceId: executionId } });
+    state = applyMatchAction(state, "p1", { type: "RESOLVE_PENDING_TURN_ACTION", payload: { selectedId: "m1" } });
+    state = applyMatchAction(state, "p1", { type: "RESOLVE_PENDING_TURN_ACTION", payload: { selectedId: "m2" } });
+
+    expect(state.playerA.activeEntities[0].card).toBe(productionFusion);
+    expect(state.playerA.activeEntities[0].card).toMatchObject({ attack: 3800, defense: 3200 });
+  });
+
   it("ATTACK con deferReactiveTraps pausa; RESOLVE_REACTIVE_TRAP la continúa igual en ambos clientes", () => {
     // Simulamos los dos clientes aplicando la MISMA secuencia de acciones sobre el mismo estado inicial.
     const applySequence = () => {
