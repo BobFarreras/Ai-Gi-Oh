@@ -11,6 +11,7 @@ import {
   ISurvivalSettlement,
   startSurvivalRun,
 } from "./survival-api-client";
+import { useSurvivalRecovery } from "./internal/use-survival-recovery";
 
 /** Espaciado mínimo entre avances: el cierre siempre se envía, pase el tiempo que pase. */
 const CHECKPOINT_MIN_INTERVAL_MS = 12_000;
@@ -20,7 +21,6 @@ const OVERFLOW_MESSAGE = "Este combate superó el límite de acciones registrabl
  * saberlo y tener salida: reanudar reconstruye el combate desde el avance que el servidor sí guardó.
  */
 const UNSETTLED_MESSAGE = "El servidor todavía no da este combate por terminado. Vuelve a pulsar para reintentar; si sigue igual, sal a Arena y reanuda la expedición.";
-
 export function useSurvivalExpedition() {
   const [run, setRun] = useState<ISurvivalRun | null>(null);
   const [battle, setBattle] = useState<ISurvivalBattleRuntime | null>(null);
@@ -142,8 +142,9 @@ export function useSurvivalExpedition() {
   /** Muestra el informe: lo pide el jugador desde el overlay de resultado, ya vista la experiencia. */
   const revealSettlement = useCallback(() => submitJournal(true, true), [submitJournal]);
 
+  const resetExpedition = useSurvivalRecovery({ enterBattle, setError, setIsLoading, setNotice });
   return {
     run, battle, progress, settlement, error, notice, isLoading, milestoneInterval, milestoneHeal,
-    enterBattle, recordAction, completeBattle, revealSettlement,
+    enterBattle, recordAction, completeBattle, revealSettlement, resetExpedition,
   };
 }

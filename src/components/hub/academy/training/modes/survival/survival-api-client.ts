@@ -73,6 +73,11 @@ export function startSurvivalRun(): Promise<ISurvivalRunStart> {
   return postJson("/api/survival/runs/start", {});
 }
 
+/** Cierra la batalla bloqueada y crea una expedición limpia sin esperar a la caducidad. */
+export function resetSurvivalRun(): Promise<ISurvivalRunStart> {
+  return postJson("/api/survival/runs/reset", {});
+}
+
 /** Emite la siguiente batalla y restaura la fábrica de ids perdida al serializar JSON. */
 export async function issueSurvivalBattle(runId: string): Promise<ISurvivalBattleRuntime> {
   const runtime = await postJson<ISurvivalBattleRuntime>("/api/survival/battles/issue", { runId });

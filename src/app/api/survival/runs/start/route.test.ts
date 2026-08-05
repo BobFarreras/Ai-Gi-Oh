@@ -27,6 +27,9 @@ vi.mock("@/services/survival/create-survival-route-context", () => ({
     response: { headers: new Headers() },
   }),
 }));
+vi.mock("@/services/survival/get-survival-starting-lp", () => ({
+  getSurvivalStartingLp: vi.fn().mockResolvedValue(8500),
+}));
 
 import { POST } from "./route";
 

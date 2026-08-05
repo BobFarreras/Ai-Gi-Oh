@@ -65,7 +65,7 @@ describe("createSurvivalInitialState", () => {
     expect(starters).toEqual(new Set(["player-1", "opponent-1"]));
   });
 
-  it("aplica los bonus de energía del árbol SOLO al jugador, y omite el bonus de LP (validado por la RPC)", () => {
+  it("aplica la energía solo al jugador y no duplica el bonus de LP ya persistido en la run", () => {
     const state = createSurvivalInitialState({
       playerId: "player-1",
       playerDeck: createDeck("player"),
@@ -84,7 +84,7 @@ describe("createSurvivalInitialState", () => {
         openingMulligan: false,
       },
     });
-    // El bonus de LP no debe inflar el tope ni la vida actual: la RPC complete_survival_battle exige ending_lp <= max_lp.
+    // La run es la fuente del LP efectivo; sumar otra vez el modifier rompería la validación de liquidación.
     expect(state.playerA.maxHealthPoints).toBe(run.maxLp);
     expect(state.playerA.healthPoints).toBe(run.currentLp);
     expect(state.playerA.maxEnergy).toBe(12);

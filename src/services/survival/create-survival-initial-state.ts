@@ -49,9 +49,8 @@ export function createSurvivalInitialState(input: ICreateSurvivalInitialStateInp
   });
   // Bonus de combate del árbol de habilidades (ficha 8) SOLO para el jugador, dentro del snapshot firmado:
   // el servidor reproducirá este mismo estado, así que ambos lados aplican los mismos valores.
-  // El bonus de LP se omite deliberadamente: en Survival el tope de vida es run.max_lp, que la RPC
-  // complete_survival_battle valida de forma autoritativa (ending_lp <= max_lp). Inflar el máximo por
-  // combate rompería esa validación y la economía de vida persistente del run.
+  // El bonus de LP ya forma parte de run.maxLp desde el inicio de la expedición. No se suma aquí otra vez:
+  // así snapshot, vida persistente y validación ending_lp <= max_lp comparten una única fuente autoritativa.
   const modifiers = input.playerCombatModifiers ?? EMPTY_COMBAT_MODIFIERS;
   state = applySkillBonusesToSide(
     state,
