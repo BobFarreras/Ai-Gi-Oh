@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { chooseFusionMaterialsByRecipeId } from "@/core/services/opponent/heuristic-fusion-materials";
 import { IBoardEntity } from "@/core/entities/IPlayer";
+import { ICard } from "@/core/entities/ICard";
 
 function createEntity(instanceId: string, cardId: string, archetype: "LLM" | "FRAMEWORK" | "DB" | "IDE" | "LANGUAGE" | "TOOL" | "SECURITY"): IBoardEntity {
   return {
@@ -24,6 +25,21 @@ function createEntity(instanceId: string, cardId: string, archetype: "LLM" | "FR
 }
 
 describe("chooseFusionMaterialsByRecipeId", () => {
+  it("usa los materiales de la carta del snapshot para la IA", () => {
+    const activeEntities = [
+      createEntity("other", "entity-other", "TOOL"),
+      createEntity("gemini", "entity-gemini", "LLM"),
+      createEntity("chatgpt", "entity-chatgpt", "LLM"),
+    ];
+    const fusionDeck = [{
+      id: "fusion-gemgpt", type: "FUSION", fusionMaterials: ["entity-other", "entity-gemini"],
+    }] as ICard[];
+
+    const selected = chooseFusionMaterialsByRecipeId(activeEntities, "fusion-gemgpt", fusionDeck);
+
+    expect(selected).toEqual(["other", "gemini"]);
+  });
+
   it("rechaza pares sin los ids exactos requeridos por la receta", () => {
     const activeEntities = [
       createEntity("mat-1", "entity-chatgpt", "LLM"),

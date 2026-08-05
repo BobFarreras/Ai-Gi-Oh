@@ -5,7 +5,7 @@ import { pickPendingFusionMaterialInstanceId } from "@/core/services/opponent/op
 import { canActivateExecutionNow } from "@/core/services/opponent/select-opponent-play";
 import { workingFusionRecipeIds } from "@/core/services/opponent/opponent-fusion-execution";
 import { chooseFusionMaterialsByRecipeId } from "@/core/services/opponent/heuristic-fusion-materials";
-import { getFusionRecipeByResultId } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
+import { getPlayerFusionRecipe } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 import { GameState } from "@/core/use-cases/GameEngine";
 
 function getPlayerPairById(state: GameState, playerId: string): { player: IPlayer; opponent: IPlayer } {
@@ -17,7 +17,7 @@ function getPlayerPairById(state: GameState, playerId: string): { player: IPlaye
 /** ¿La carta (entity) es material requerido de alguna fusión hacia la que la IA ya trabaja (exec en mano o SET)? */
 function isMaterialForWorkingFusion(card: ICard, player: IPlayer): boolean {
   for (const recipeId of workingFusionRecipeIds(player)) {
-    const recipe = getFusionRecipeByResultId(recipeId);
+    const recipe = getPlayerFusionRecipe(player, recipeId);
     if (!recipe) continue;
     if (recipe.requiredMaterialIds?.includes(card.id)) return true;
     if (card.archetype && recipe.requiredArchetypes?.includes(card.archetype)) return true;
@@ -41,7 +41,7 @@ function scoreCardForDiscard(card: ICard, player: IPlayer): number {
     // Si el par YA está en mesa, JAMÁS descartarlo (era el bug: se tiraba con los 2 materiales listos).
     if (!hasFusionCard) {
       effectValue += 600; // no está la carta resultado en el fusionDeck: no puede completarse, valor bajo
-    } else if (chooseFusionMaterialsByRecipeId(player.activeEntities, effect.recipeId) !== null) {
+    } else if (chooseFusionMaterialsByRecipeId(player.activeEntities, effect.recipeId, player.fusionDeck) !== null) {
       effectValue += 100_000; // par listo: descartarlo tiraría una fusión hecha
     } else if (player.activeEntities.some((entity) => isMaterialForWorkingFusion(entity.card, player)) || player.hand.some((handCard) => handCard.type === "ENTITY" && isMaterialForWorkingFusion(handCard, player))) {
       effectValue += 8000; // ya hay/viene material: conservar el ejecutable para completar
@@ -69,6 +69,7 @@ export function pickPendingSelectionId(state: GameState, opponentId: string): st
       activeEntities: player.activeEntities,
       selectedMaterialInstanceIds: pending.selectedMaterialInstanceIds,
       recipeId: pending.fusionFromExecutionRecipeId ?? pending.fusionCardId,
+      fusionDeck: player.fusionDeck,
     });
   }
   if (state.pendingTurnAction.type === "SELECT_GRAVEYARD_CARD") {

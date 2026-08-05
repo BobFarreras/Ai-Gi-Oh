@@ -1,6 +1,7 @@
 // src/components/game/board/hooks/internal/board-state/fusion-material-selection.ts - Calcula materiales seleccionables de fusión para resaltar solo candidatos válidos.
 import { resolveSelectableMaterialInstanceIds } from "@/core/use-cases/game-engine/fusion/internal/selectable-material-instance-ids";
 import { GameState } from "@/core/use-cases/GameEngine";
+import { findPlayerFusionCard } from "@/core/use-cases/game-engine/fusion/fusion-recipes";
 
 /**
  * Devuelve instancias del campo propio que pueden participar en la receta activa.
@@ -17,6 +18,8 @@ export function resolveSelectableFusionMaterialIds(gameState: GameState): string
   if (!recipeId) {
     return playerEntities.map((entity) => entity.instanceId);
   }
-
-  return resolveSelectableMaterialInstanceIds(playerEntities, recipeId);
+  const fusionCard = pendingAction.fusionFromExecutionRecipeId
+    ? findPlayerFusionCard(gameState.playerA, recipeId)
+    : gameState.playerA.hand.find((card) => card.runtimeId === recipeId || card.id === recipeId) ?? null;
+  return fusionCard ? resolveSelectableMaterialInstanceIds(playerEntities, fusionCard) : [];
 }

@@ -1,5 +1,6 @@
 // src/core/services/opponent/opponent-pending-fusion-material.ts - Selecciona material de fusión válido cuando el rival resuelve acciones pendientes.
 import { IBoardEntity } from "@/core/entities/IPlayer";
+import { ICard } from "@/core/entities/ICard";
 import { chooseFusionMaterialsByRecipeId } from "@/core/services/opponent/heuristic-fusion-materials";
 
 function pickFirstNonSelected(activeEntities: IBoardEntity[], selectedMaterialInstanceIds: string[]): string | null {
@@ -13,9 +14,10 @@ export function pickPendingFusionMaterialInstanceId(input: {
   activeEntities: IBoardEntity[];
   selectedMaterialInstanceIds: string[];
   recipeId?: string;
+  fusionDeck?: readonly ICard[];
 }): string | null {
   if (!input.recipeId) return pickFirstNonSelected(input.activeEntities, input.selectedMaterialInstanceIds);
-  const pair = chooseFusionMaterialsByRecipeId(input.activeEntities, input.recipeId);
+  const pair = chooseFusionMaterialsByRecipeId(input.activeEntities, input.recipeId, input.fusionDeck);
   if (!pair) return pickFirstNonSelected(input.activeEntities, input.selectedMaterialInstanceIds);
   return pair.find((instanceId) => !input.selectedMaterialInstanceIds.includes(instanceId)) ?? null;
 }
