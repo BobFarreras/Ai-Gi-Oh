@@ -9,6 +9,7 @@ import { replayJournalToState } from "@/core/use-cases/match/replay-journal-to-s
 import { ACADEMY_TRAINING_ARENA_ROUTE } from "@/core/constants/routes/academy-routes";
 import { SurvivalLobby } from "./internal/SurvivalLobby";
 import { SurvivalDebrief } from "./internal/SurvivalDebrief";
+import { SurvivalRecoveryBanner } from "./internal/SurvivalRecoveryBanner";
 import { useSurvivalExpedition } from "./useSurvivalExpedition";
 import { buildStoryOpponentNarrationPack } from "@/services/story/build-story-opponent-narration-pack";
 import { primeMusicFromUserGesture } from "@/components/game/board/hooks/internal/audio/audioRuntime";
@@ -133,9 +134,13 @@ export function SurvivalArenaClient() {
         onMatchResolved={() => void expedition.completeBattle()}
       />
       {expedition.error ? (
-        <div role="alert" className="fixed inset-x-4 top-4 z-[200] mx-auto max-w-xl rounded-xl border border-rose-400/50 bg-rose-950/95 p-4 text-center text-sm font-bold text-rose-100">
-          {expedition.error}
-        </div>
+        <SurvivalRecoveryBanner
+          error={expedition.error}
+          isLoading={expedition.isLoading}
+          onReset={() => void expedition.resetExpedition().then((restored) => {
+            if (restored) setIsBattleStarted(false);
+          })}
+        />
       ) : null}
     </LocalActionEmitterProvider>
   );

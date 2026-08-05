@@ -65,7 +65,7 @@ describe("createSurvivalInitialState", () => {
     expect(starters).toEqual(new Set(["player-1", "opponent-1"]));
   });
 
-  it("aplica los bonus de combate del árbol SOLO al jugador, dentro del snapshot determinista", () => {
+  it("aplica la energía solo al jugador y no duplica el bonus de LP ya persistido en la run", () => {
     const state = createSurvivalInitialState({
       playerId: "player-1",
       playerDeck: createDeck("player"),
@@ -84,8 +84,9 @@ describe("createSurvivalInitialState", () => {
         openingMulligan: false,
       },
     });
-    expect(state.playerA.maxHealthPoints).toBe(run.maxLp + 300);
-    expect(state.playerA.healthPoints).toBe(run.currentLp + 300);
+    // La run es la fuente del LP efectivo; sumar otra vez el modifier rompería la validación de liquidación.
+    expect(state.playerA.maxHealthPoints).toBe(run.maxLp);
+    expect(state.playerA.healthPoints).toBe(run.currentLp);
     expect(state.playerA.maxEnergy).toBe(12);
     expect(state.playerA.currentEnergy).toBe(12);
     // El rival no recibe el bonus del árbol del jugador.

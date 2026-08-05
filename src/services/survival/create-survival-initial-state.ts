@@ -49,11 +49,13 @@ export function createSurvivalInitialState(input: ICreateSurvivalInitialStateInp
   });
   // Bonus de combate del árbol de habilidades (ficha 8) SOLO para el jugador, dentro del snapshot firmado:
   // el servidor reproducirá este mismo estado, así que ambos lados aplican los mismos valores.
+  // El bonus de LP ya forma parte de run.maxLp desde el inicio de la expedición. No se suma aquí otra vez:
+  // así snapshot, vida persistente y validación ending_lp <= max_lp comparten una única fuente autoritativa.
   const modifiers = input.playerCombatModifiers ?? EMPTY_COMBAT_MODIFIERS;
   state = applySkillBonusesToSide(
     state,
     "playerA",
-    Math.max(0, Math.floor(modifiers.startingLpBonus)),
+    0,
     Math.max(0, Math.floor(modifiers.maxEnergyBonus)),
     Math.max(0, Math.floor(modifiers.turn1EnergyBonus)),
   );

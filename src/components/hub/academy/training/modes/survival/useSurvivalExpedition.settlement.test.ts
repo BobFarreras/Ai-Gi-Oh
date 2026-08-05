@@ -25,17 +25,27 @@ const runtime = {
 };
 
 const completeSurvivalBattle = vi.fn(async () => settlement);
-
-vi.mock("./survival-api-client", () => ({
-  startSurvivalRun: vi.fn(async () => ({
-    run: settlement.run, progress: settlement.progress, resumed: false,
-    forfeitedPreviousRun: false, milestoneInterval: 5, milestoneHeal: 2000,
-  })),
-  issueSurvivalBattle: vi.fn(async () => runtime),
-  completeSurvivalBattle: (...args: unknown[]) => completeSurvivalBattle(...(args as [])),
+const startSurvivalRun = vi.fn(async () => ({
+  run: settlement.run, progress: settlement.progress, resumed: false,
+  forfeitedPreviousRun: false, milestoneInterval: 5, milestoneHeal: 2000,
+}));
+const resetSurvivalRun = vi.fn(async () => ({
+  run: { ...settlement.run, id: "run-2" }, progress: settlement.progress,
+  resumed: false, forfeitedPreviousRun: true, milestoneInterval: 5, milestoneHeal: 2000,
 }));
 
-afterEach(() => completeSurvivalBattle.mockClear());
+vi.mock("./survival-api-client", () => ({
+  startSurvivalRun: (...args: unknown[]) => startSurvivalRun(...(args as [])),
+  issueSurvivalBattle: vi.fn(async () => runtime),
+  completeSurvivalBattle: (...args: unknown[]) => completeSurvivalBattle(...(args as [])),
+  resetSurvivalRun: (...args: unknown[]) => resetSurvivalRun(...(args as [])),
+}));
+
+afterEach(() => {
+  completeSurvivalBattle.mockClear();
+  startSurvivalRun.mockClear();
+  resetSurvivalRun.mockClear();
+});
 
 describe("useSurvivalExpedition · liquidación e informe", () => {
   it("liquida al acabar el duelo pero NO muestra el informe: el overlay de experiencia debe verse", async () => {
@@ -72,5 +82,26 @@ describe("useSurvivalExpedition · liquidación e informe", () => {
 
     expect(result.current.settlement).toBeNull();
     await waitFor(() => expect(result.current.error).toMatch(/no da este combate por terminado/i));
+  });
+
+  it("restaura de inmediato una expedición bloqueada y emite un combate nuevo", async () => {
+    startSurvivalRun
+      .mockResolvedValueOnce({
+        run: settlement.run, progress: settlement.progress, resumed: false,
+        forfeitedPreviousRun: false, milestoneInterval: 5, milestoneHeal: 2000,
+      })
+      .mockResolvedValueOnce({
+        run: { ...settlement.run, id: "run-2" }, progress: settlement.progress, resumed: true,
+        forfeitedPreviousRun: false, milestoneInterval: 5, milestoneHeal: 2000,
+      });
+    const { result } = renderHook(() => useSurvivalExpedition());
+    await act(async () => { await result.current.enterBattle(); });
+
+    await act(async () => { await result.current.resetExpedition(); });
+
+    expect(resetSurvivalRun).toHaveBeenCalledOnce();
+    expect(result.current.run?.id).toBe("run-2");
+    expect(result.current.error).toBeNull();
+    expect(result.current.notice).toMatch(/cerró como derrota/i);
   });
 });
