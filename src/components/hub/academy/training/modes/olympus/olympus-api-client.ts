@@ -101,6 +101,11 @@ export function completeOlympusBattle(completionTicket: string, proof: ICombatPr
   return request("/api/olympus/battles/complete", { completionTicket, proof });
 }
 
+/** Cierra la batalla bloqueada como derrota sin consumir un intento adicional. */
+export function resetOlympusBattle(): Promise<{ forfeited: true }> {
+  return request("/api/olympus/battles/reset", {});
+}
+
 export function purchaseChampionUpgrade(championId: string, nodeId: string): Promise<IOlympusUpgradeResult> {
   return request("/api/olympus/upgrades/purchase", { championId, nodeId });
 }

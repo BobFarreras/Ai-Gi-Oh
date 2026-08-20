@@ -1,6 +1,6 @@
 // src/components/hub/academy/training/modes/olympus/olympus-api-client.test.ts - Verifica el contrato HTTP y la restauración determinista del snapshot.
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { issueOlympusBattle, purchaseChampionUpgrade } from "./olympus-api-client";
+import { issueOlympusBattle, purchaseChampionUpgrade, resetOlympusBattle } from "./olympus-api-client";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -42,5 +42,17 @@ describe("issueOlympusBattle", () => {
   it("traduce el 429 a un mensaje accionable en vez del genérico", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 429 })));
     await expect(purchaseChampionUpgrade("gennvim", "gennvim-power-1")).rejects.toThrow(/Espera unos segundos/i);
+  });
+});
+
+describe("resetOlympusBattle", () => {
+  it("solicita el cierre autoritativo de la batalla bloqueada", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ forfeited: true }), { status: 200 })));
+
+    await expect(resetOlympusBattle()).resolves.toEqual({ forfeited: true });
+    expect(fetch).toHaveBeenCalledWith("/api/olympus/battles/reset", expect.objectContaining({
+      method: "POST",
+      body: JSON.stringify({}),
+    }));
   });
 });

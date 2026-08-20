@@ -11,6 +11,7 @@ import { buildStoryOpponentNarrationPack } from "@/services/story/build-story-op
 import { primeMusicFromUserGesture } from "@/components/game/board/hooks/internal/audio/audioRuntime";
 import { OlympusDebrief } from "./internal/OlympusDebrief";
 import { OlympusOverviewScreen } from "./internal/OlympusOverviewScreen";
+import { OlympusRecoveryBanner } from "./internal/OlympusRecoveryBanner";
 import { useOlympusMode } from "./useOlympusMode";
 
 const OLYMPUS_SOUNDTRACK = "/audio/survival/pulso-de-neon.m4a";
@@ -110,9 +111,11 @@ export function OlympusArenaClient() {
         onMatchResolved={() => void mode.completeBattle()}
       />
       {mode.error ? (
-        <div role="alert" className="fixed inset-x-4 top-4 z-[200] mx-auto max-w-xl rounded-xl border border-rose-400/50 bg-rose-950/95 p-4 text-center text-sm font-bold text-rose-100">
-          {mode.error}
-        </div>
+        <OlympusRecoveryBanner
+          error={mode.error}
+          isLoading={mode.isLoading}
+          onReset={() => void mode.resetBattle()}
+        />
       ) : null}
     </LocalActionEmitterProvider>
   );
