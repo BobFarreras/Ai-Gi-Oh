@@ -6,6 +6,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.21.4] - 2026-09-15
+
 ### Fixed
 - **Acto 6: el código del terminal del borde ya no se puede perder.** Las tres claves de router se entregaban una sola vez — la consola se marcaba interactuada, desaparecía del mapa y el diálogo no volvía a abrirse—, así que quien no se apuntara los fragmentos en un papel se quedaba encallado en un mapa de 60×48 con las consolas en esquinas opuestas. Ahora **las consolas no se agotan** (se releen siempre, como ya hacía el registro corrupto del Acto 3) y **el propio terminal recuerda los fragmentos que ya llevas**: lista los tres routers, enseña solo los visitados y, con los tres, ofrece encadenarlos. El puzzle sigue exigiendo recorrer las tres regiones: los fragmentos que faltan siguen tapados.
 
@@ -501,7 +503,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.21.3...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.21.4...HEAD
+[1.21.4]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.21.3...v1.21.4
 [1.21.3]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.21.2...v1.21.3
 [1.21.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.21.1...v1.21.2
 [1.21.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.21.0...v1.21.1
