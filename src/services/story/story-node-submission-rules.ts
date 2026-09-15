@@ -1,6 +1,14 @@
 // src/services/story/story-node-submission-rules.ts - Define validación de submissions especiales en nodos Story de activación.
 import { ValidationError } from "@/core/errors/ValidationError";
 
+/** Trozo de código que entrega un nodo-llave, para poder recomponer la clave en el propio terminal. */
+export interface IStoryNodeKeyFragment {
+  /** Nodo que lo entrega: el terminal solo muestra los fragmentos de nodos ya visitados. */
+  nodeId: string;
+  label: string;
+  fragment: string;
+}
+
 export interface IStoryNodeSubmissionPrompt {
   title: string;
   hint: string;
@@ -8,12 +16,19 @@ export interface IStoryNodeSubmissionPrompt {
   activationLabel: string;
   generatedCode: string;
   requiredNodeIds: string[];
+  /**
+   * Fragmentos recuperables, en el orden en que componen el código. Vacío si el puzzle no se
+   * arma por trozos. El terminal solo enseña los que el jugador ya ha recogido, así que esto no
+   * regala la solución: evita que la pierda por no haberla apuntado.
+   */
+  keyFragments: IStoryNodeKeyFragment[];
 }
 
 /** Config interna de un terminal de submission: código esperado + requisitos + mensajes de error. */
 interface IStoryNodeSubmissionConfig extends IStoryNodeSubmissionPrompt {
   /** Ids de nodo (eventos/llaves) que deben estar resueltos antes de aceptar el código. */
   requiredNodeIds: string[];
+  keyFragments: IStoryNodeKeyFragment[];
   missingRequirementsError: string;
   emptyAnswerError: string;
   invalidCodeError: string;
@@ -36,6 +51,7 @@ const SUBMISSION_CONFIG_BY_NODE_ID: Record<string, IStoryNodeSubmissionConfig> =
       "Faltan llaves de enlace. Completa los eventos clave antes de sincronizar el puente.",
     emptyAnswerError: "Debes completar la submission para sincronizar el puente.",
     invalidCodeError: "Submission inválida. Revisa la firma del enlace de pasarela.",
+    keyFragments: [],
   },
   // Acto 3: terminal del cortafuegos del Repositorio Fantasma. El código se descubre en un log del acto.
   "story-ch3-firewall-terminal": {
@@ -49,6 +65,7 @@ const SUBMISSION_CONFIG_BY_NODE_ID: Record<string, IStoryNodeSubmissionConfig> =
       "Sin la clave de purga el terminal rechaza la conexión. Encuentra el registro corrupto primero.",
     emptyAnswerError: "Introduce la clave de purga para ejecutar el terminal.",
     invalidCodeError: "Clave rechazada. El cortafuegos sigue activo: revisa el registro corrupto.",
+    keyFragments: [],
   },
   // Acto 6: terminal del borde de la red pública. La clave se compone leyendo las TRES llaves de router,
   // así que el terminal no se puede resolver por fuerza bruta antes de haber hecho las tres regiones.
@@ -63,8 +80,43 @@ const SUBMISSION_CONFIG_BY_NODE_ID: Record<string, IStoryNodeSubmissionConfig> =
       "El terminal rechaza la conexión: faltan claves de router. Toma las tres antes de volver.",
     emptyAnswerError: "Introduce la clave del borde para autorizar la salida.",
     invalidCodeError: "Clave rechazada. Vuelve a leer las tres claves de router: el orden importa.",
+    // El mapa del Acto 6 son 60x48 casillas y las tres consolas están en esquinas opuestas: obligar a
+    // recorrerlo otra vez porque no te apuntaste un trozo no es dificultad, es peaje. El terminal
+    // reconstruye lo que YA has recogido; sigue haciendo falta visitar las tres regiones.
+    keyFragments: [
+      { nodeId: "story-ch6-key-north", label: "Router norte", fragment: "EDGE-40" },
+      { nodeId: "story-ch6-key-east", label: "Router este", fragment: "21-88" },
+      { nodeId: "story-ch6-key-south", label: "Router sur", fragment: "30" },
+    ],
   },
 };
+
+/**
+ * Consolas cuyo diálogo CONTIENE un código (entero o un trozo). Nunca se agotan: quedan dibujadas en
+ * el mapa y se pueden releer siempre, porque un puzzle de código no puede depender de que el jugador
+ * se lo apuntara en un papel. Todo nodo que aporte un `keyFragments` tiene que estar aquí — lo vigila
+ * un test.
+ */
+const CODE_BEARING_NODE_IDS: ReadonlySet<string> = new Set([
+  // Acto 3: el registro corrupto suelta la clave de purga entera.
+  "story-ch3-event-corrupt-log",
+  // Acto 6: las tres claves de router, un trozo cada una.
+  "story-ch6-key-north",
+  "story-ch6-key-east",
+  "story-ch6-key-south",
+]);
+
+/** ¿Este nodo guarda un código y por tanto debe poder consultarse las veces que haga falta? */
+export function isCodeBearingStoryNodeId(nodeId: string): boolean {
+  return CODE_BEARING_NODE_IDS.has(nodeId);
+}
+
+/** Todos los fragmentos declarados en el catálogo, para validar la lista de arriba. */
+export function listStoryNodeKeyFragmentSourceIds(): string[] {
+  return Object.values(SUBMISSION_CONFIG_BY_NODE_ID).flatMap((config) =>
+    config.keyFragments.map((entry) => entry.nodeId),
+  );
+}
 
 function resolveConfig(nodeId: string): IStoryNodeSubmissionConfig | null {
   return SUBMISSION_CONFIG_BY_NODE_ID[nodeId] ?? null;
@@ -118,5 +170,6 @@ export function resolveStoryNodeSubmissionPrompt(nodeId: string): IStoryNodeSubm
     activationLabel: config.activationLabel,
     generatedCode: config.generatedCode,
     requiredNodeIds: [...config.requiredNodeIds],
+    keyFragments: config.keyFragments.map((entry) => ({ ...entry })),
   };
 }

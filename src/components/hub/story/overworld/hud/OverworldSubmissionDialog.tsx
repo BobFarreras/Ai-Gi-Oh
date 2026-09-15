@@ -7,6 +7,8 @@ import { IStoryNodeSubmissionPrompt } from "@/services/story/story-node-submissi
 
 interface IOverworldSubmissionDialogProps {
   prompt: IStoryNodeSubmissionPrompt;
+  /** Nodos que el jugador ya ha visitado: decide qué fragmentos de clave se le recuerdan. */
+  collectedNodeIds: ReadonlySet<string>;
   /** Mensaje de error de la última validación fallida (o null). */
   errorText: string | null;
   /** Envía el código introducido para validarlo en el padre. */
@@ -20,11 +22,14 @@ interface IOverworldSubmissionDialogProps {
  */
 export function OverworldSubmissionDialog({
   prompt,
+  collectedNodeIds,
   errorText,
   onSubmit,
   onClose,
 }: IOverworldSubmissionDialogProps) {
   const [code, setCode] = useState("");
+  // Solo los fragmentos que el jugador ya ha recogido: los que le faltan siguen siendo un hueco.
+  const knownFragments = prompt.keyFragments.filter((entry) => collectedNodeIds.has(entry.nodeId));
 
   const handleSubmit = (event: FormEvent): void => {
     event.preventDefault();
@@ -43,6 +48,42 @@ export function OverworldSubmissionDialog({
           <p className="text-[11px] font-black uppercase tracking-widest">{prompt.title}</p>
         </div>
         <p className="mt-3 text-sm text-slate-200">{prompt.hint}</p>
+
+        {prompt.keyFragments.length > 0 ? (
+          <div className="mt-4 rounded-lg border border-cyan-300/25 bg-cyan-950/25 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-cyan-300">
+              Fragmentos recuperados
+            </p>
+            <ul className="mt-2 space-y-1">
+              {prompt.keyFragments.map((entry) => {
+                const isKnown = collectedNodeIds.has(entry.nodeId);
+                return (
+                  <li key={entry.nodeId} className="flex items-baseline justify-between gap-3 text-xs">
+                    <span className={isKnown ? "text-slate-300" : "text-slate-500"}>{entry.label}</span>
+                    <span
+                      className={
+                        isKnown
+                          ? "font-mono font-black tracking-widest text-cyan-100"
+                          : "font-mono tracking-widest text-slate-600"
+                      }
+                    >
+                      {isKnown ? entry.fragment : "· · · ·"}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            {knownFragments.length === prompt.keyFragments.length ? (
+              <button
+                type="button"
+                onClick={() => setCode(knownFragments.map((entry) => entry.fragment).join(""))}
+                className="mt-3 w-full rounded border border-cyan-300/40 bg-cyan-500/15 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100 transition hover:bg-cyan-400/25"
+              >
+                Encadenar fragmentos
+              </button>
+            ) : null}
+          </div>
+        ) : null}
 
         <input
           autoFocus

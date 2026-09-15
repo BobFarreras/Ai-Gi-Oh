@@ -22,6 +22,7 @@ import { resolveIntentPresentation } from "@/components/hub/story/overworld/hud/
 import {
   assertStoryNodeSubmissionRequirements,
   assertStoryNodeSubmissionValid,
+  isCodeBearingStoryNodeId,
   IStoryNodeSubmissionPrompt,
   resolveStoryNodeSubmissionPrompt,
 } from "@/services/story/story-node-submission-rules";
@@ -76,10 +77,10 @@ import { IOverworldTilemap } from "@/services/story/overworld/tilemap-schema";
 
 const ECHO_TRIGGER_NODE_ID = "story-a1-side-event-echo-fragment";
 const PRECOMBAT_SOUND = "/audio/story/sonido-precombate.m4a";
-// Consolas re-leíbles: eventos-nota (p. ej. el registro con el código del terminal) que se pueden
-// volver a consultar siempre. Se marcan interactuados una vez (para satisfacer requisitos) pero
-// NUNCA se ocultan ni se bloquean: si no apuntaste el código, vuelves y lo relees.
-const REREADABLE_EVENT_IDS = new Set<string>(["story-ch3-event-corrupt-log"]);
+// Las consolas que guardan un código (`isCodeBearingStoryNodeId`) se marcan interactuadas una vez
+// —para satisfacer los requisitos del terminal— pero NUNCA se ocultan ni se bloquean: si no apuntaste
+// el código, vuelves y lo relees. La lista vive con las reglas de submission, no aquí.
+
 // Evento de intro que se dispara al PRIMER paso del jugador en el acto (no por trigger de suelo).
 const FIRST_STEP_INTRO_BY_MAP: Record<string, string> = {
   "act-3": "story-ch3-event-intro",
@@ -580,7 +581,7 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
         // Las consolas re-leíbles no se ocultan aunque estén interactuadas (siguen consultables). El atrezzo de
         // una escena ya resuelta (los villanos de la Fábrica tras vencerla) tampoco se vuelve a dibujar.
         collectedNodeIds: [
-          ...[...initialInteracted].filter((id) => !REREADABLE_EVENT_IDS.has(id)),
+          ...[...initialInteracted].filter((id) => !isCodeBearingStoryNodeId(id)),
           ...resolveResolvedSceneryIds(initialCompleted),
         ],
         zoom: initialZoom,
@@ -733,7 +734,7 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
                 return;
               }
             }
-            const isReReadable = REREADABLE_EVENT_IDS.has(object.id);
+            const isReReadable = isCodeBearingStoryNodeId(object.id);
             // Las consolas re-leíbles no se bloquean: siempre reabren su diálogo. El resto, una vez.
             if (!isReReadable && seenEventIdsRef.current.has(object.id)) return;
             if (!seenEventIdsRef.current.has(object.id)) {
@@ -1070,6 +1071,7 @@ export function OverworldDevScene({ mapId, completedNodeIds, initialPosition, in
       {submission ? (
         <OverworldSubmissionDialog
           prompt={submission.prompt}
+          collectedNodeIds={seenEventIdsRef.current}
           errorText={submissionError}
           onSubmit={submitSubmission}
           onClose={closeSubmission}

@@ -196,13 +196,15 @@ export const STORY_ACTS_5_8_DIALOGUE_BY_NODE_ID: Record<string, IStoryNodeIntera
   "story-ch6-key-north": {
     title: "Clave de Router · Norte",
     lines: [
-      biglog("Primer fragmento: «EDGE-40». Apúntatelo, que el terminal del borde los va a pedir los tres."),
+      biglog("Primer fragmento: «EDGE-40». El terminal del borde los va a pedir los tres."),
+      biglog("No hace falta que lo apuntes: esta consola se queda aquí y la puedes releer cuando quieras. El terminal también te recuerda los fragmentos que ya lleves."),
     ],
   },
   "story-ch6-key-east": {
     title: "Clave de Router · Este",
     lines: [
       biglog("Segundo fragmento: «21-88». Va detrás del que sacaste al norte."),
+      biglog("Queda guardado. Si lo pierdes de vista, vuelve a esta consola o míralo en el terminal del borde."),
     ],
   },
   "story-ch6-key-south": {
@@ -210,6 +212,7 @@ export const STORY_ACTS_5_8_DIALOGUE_BY_NODE_ID: Record<string, IStoryNodeIntera
     lines: [
       biglog("Y el tercero: «30». Con esto ya tienes la clave entera del borde."),
       operador("EDGE-4021-8830."),
+      biglog("El terminal ya los tiene los tres apuntados por ti. Ve y encadénalos."),
     ],
   },
   "story-ch6-cache-usb": {
