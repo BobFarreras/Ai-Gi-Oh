@@ -6,6 +6,9 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Fixed
+- **Acto 6: el código del terminal del borde ya no se puede perder.** Las tres claves de router se entregaban una sola vez — la consola se marcaba interactuada, desaparecía del mapa y el diálogo no volvía a abrirse—, así que quien no se apuntara los fragmentos en un papel se quedaba encallado en un mapa de 60×48 con las consolas en esquinas opuestas. Ahora **las consolas no se agotan** (se releen siempre, como ya hacía el registro corrupto del Acto 3) y **el propio terminal recuerda los fragmentos que ya llevas**: lista los tres routers, enseña solo los visitados y, con los tres, ofrece encadenarlos. El puzzle sigue exigiendo recorrer las tres regiones: los fragmentos que faltan siguen tapados.
+
 ## [1.21.3] - 2026-09-15
 
 ### Internal
