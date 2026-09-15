@@ -40,6 +40,25 @@ El acto es deliberadamente **no lineal**: las tres regiones se hacen en el orden
 La clave del terminal **se compone leyendo las tres llaves** (`EDGE-40` + `21-88` + `30`), así que no se puede
 resolver por fuerza bruta antes de haber hecho las tres regiones.
 
+### El código no se puede perder (corregido el 2026-09-15)
+
+En la primera versión los tres fragmentos se entregaban **una sola vez**: la consola se marcaba interactuada,
+dejaba de dibujarse en el mapa y el diálogo no volvía a abrirse. Quien no se lo apuntara en un papel se quedaba
+sin forma de recuperarlo en un mapa de 60×48 con las consolas en esquinas opuestas. Eso no es dificultad, es
+peaje. Ahora hay **dos** vías de recuperación, y el puzzle sigue exigiendo visitar las tres regiones:
+
+1. **Las consolas no se agotan.** `isCodeBearingStoryNodeId` (en
+   [`story-node-submission-rules.ts`](../../../../src/services/story/story-node-submission-rules.ts)) marca
+   los nodos cuyo diálogo contiene un código; el overworld ni los oculta ni los bloquea, así que se releen
+   las veces que haga falta. El Acto 3 ya funcionaba así con su registro corrupto.
+2. **El propio terminal recuerda lo que llevas.** El diálogo del borde lista los tres routers y enseña el
+   fragmento **solo de los que ya has visitado** (los que faltan salen como `· · · ·`). Con los tres, un botón
+   *Encadenar fragmentos* compone `EDGE-4021-8830` en el campo. Los fragmentos viven en `keyFragments` de la
+   config de submission, y un test comprueba que encadenados dan exactamente el `generatedCode`.
+
+Un nodo que aporte un `keyFragments` nuevo y no esté en la lista de nodos re-leíbles **rompe un test**: es la
+misma trampa, y no se puede volver a colar.
+
 ## Rivales
 | Duelo | Rival | Dificultad | Nivel/tier | Idea de mazo |
 |---|---|---|---|---|
@@ -61,6 +80,11 @@ desfasados, que es exactamente el efecto buscado.
 - `act-6-overworld-tilemap.test.ts`: las tres llaves son alcanzables de salida (simultaneidad real), la boca
   oeste no se abre con dos, y el Leviatán exige terminal + Enjambre.
 - `act-6-swarm-cutscene.test.ts`: cinco bocas con ruta real, avance intercalado, y despawn de cuatro.
+- `story-node-submission-rules.test.ts`: los fragmentos encadenados reconstruyen el código del terminal, cada
+  fragmento cuelga de una llave realmente exigida, las tres consolas son re-leíbles, y el terminal sigue
+  rechazando la submission con solo dos regiones hechas.
+- `OverworldSubmissionDialog.test.tsx`: el terminal tapa los fragmentos que aún no has recogido y solo ofrece
+  encadenar con los tres.
 
 ## Curva de dificultad
 
