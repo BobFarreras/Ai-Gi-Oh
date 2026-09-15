@@ -6,6 +6,13 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.21.3] - 2026-09-15
+
+### Internal
+- **El medidor de cuota de Vercel engañaba**: tras la limpieza de despliegues del 12/09 el panel pasó a marcar **9,75 GB / 10 GB**, *más* que los 8,94 GB de antes. No era un fallo de la limpieza: ese indicador agrega los **últimos 30 días**, así que sigue contando los días previos al borrado. El almacenamiento real, leído del total del gráfico de uso, es de **1,44 GB** (−84%). Documentado arriba del todo en el runbook para no volver a caer.
+- **Web Analytics sí recoge datos** (8 visitantes, 114 páginas vistas desde el 11/09): el aviso "has not collected data during the past 7 days" es residual y se apaga cuando la ventana de 7 días deja de incluir días vacíos. Anotado además que el MCP de Vercel devuelve `404 Web Analytics not found` aunque el proyecto lo tenga activo — no es señal fiable.
+- **`STORY_OVERWORLD_ENABLED` confirmado en `true` en producción**: la variable es `Secret` y no se puede leer, pero Web Analytics lista `/hub/story/overworld` como ruta servida con 5 visitantes, empatada con `/hub/story` — exactamente lo que produce la redirección del flag. Los Actos 5-8 son jugables y hay jugadores reales dentro. Retirada la advertencia de "no verificable" del runbook.
+
 ## [1.21.2] - 2026-09-12
 
 ### Internal
@@ -491,7 +498,8 @@ y versionado [Semantic Versioning](https://semver.org/lang/es/).
 - Quality gates automáticos en CI (`lint`, `typecheck`, `test:coverage`, `audit`, `build`).
 - Presentación TFM web interna en `/presentacion-tfm`.
 
-[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.21.2...HEAD
+[Unreleased]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.21.3...HEAD
+[1.21.3]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.21.2...v1.21.3
 [1.21.2]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.21.1...v1.21.2
 [1.21.1]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.21.0...v1.21.1
 [1.21.0]: https://github.com/BobFarreras/Ai-Gi-Oh/compare/v1.20.1...v1.21.0
