@@ -1,14 +1,24 @@
 <!-- docs/vercel/avisos-de-cuota.md - Por qué Vercel avisa de cuota y cómo bajarla sin romper nada. -->
 # Avisos de cuota en Vercel
 
-Estado a **2026-09-12** (plan Hobby, cuentan **todos** los proyectos de la cuenta):
+> **Leer esto antes que nada (2026-09-15).** El indicador «Deployment Storage X / 10 GB» del panel es el
+> agregado de los **últimos 30 días**, no lo que ocupas ahora. Tras borrar 45 despliegues el 12/09 el
+> indicador llegó a marcar **9,75 GB**, más que antes de la limpieza, mientras el almacenamiento real ya
+> era de **1,44 GB**. El número de cabecera no baja hasta que los días anteriores a la limpieza salen de
+> la ventana de 30 días. Para ver lo real: *Usage → Deployment Storage*, y mirar el **total del gráfico**
+> («Updated just now»), no el medidor.
 
-| Métrica | Uso | Límite | Comentario |
-|---|---|---|---|
-| **Deployment Storage** | 8,94 GB | 10 GB | **el que avisa** |
-| Fluid Active CPU | 47m 11s | 4h | holgado |
-| Functions Storage | 1,15 GB | 10 GB | holgado |
-| Edge Requests | 67K | 1M | holgado |
+Estado (plan Hobby, cuentan **todos** los proyectos de la cuenta, aunque aquí sólo hay uno):
+
+| Métrica | 12/09 (antes) | 15/09 (medidor) | 15/09 (real) | Límite |
+|---|---|---|---|---|
+| **Deployment Storage** | 8,94 GB | 9,75 GB ⚠️ ventana 30d | **1,44 GB** | 10 GB |
+| Fluid Active CPU | 47m 11s | 47m 53s | — | 4h |
+| Functions Storage | 1,15 GB | 1,38 GB | — | 10 GB |
+| Edge Requests | 67K | 71K | — | 1M |
+
+El medidor **subió** después de la limpieza y aun así el almacenamiento real bajó un 84%. Es la ventana,
+no un problema.
 
 ## Por qué se llena el Deployment Storage
 
@@ -19,6 +29,10 @@ el sitio el que ocupa 9 GB: son cuarenta copias del sitio. Con `public/` en 236 
 ## Las tres palancas, de más a menos inmediata
 
 ### 1. Borrar despliegues viejos
+
+Aplicado el **2026-09-12**: de 59 despliegues a 14, y el almacenamiento real pasó de ~9 GB a **1,44 GB**
+(comprobado el 15/09 en el gráfico de uso). Funcionó; solo el medidor de cabecera tarda 30 días en
+reflejarlo.
 
 ```bash
 VERCEL_TOKEN=xxx pnpm vercel:prune:deployments
@@ -83,7 +97,7 @@ visualizaciones al mes antes de agotar la cuota, y con ella agotada los jugadore
 cinemáticas hasta el mes siguiente. Se cambiaba un problema de almacenamiento por uno de disponibilidad.
 Comprimidos y servidos desde el CDN de Vercel no hay ninguno de los dos.
 
-## El otro aviso: "has not collected data during the past 7 days"
+## El otro aviso: "has not collected data during the past 7 days" — RESUELTO
 
 Ese es de **Web Analytics** y no tiene nada que ver con la cuota. Faltaban dos cosas:
 
@@ -93,6 +107,13 @@ Ese es de **Web Analytics** y no tiene nada que ver con la cuota. Faltaban dos c
    panel ya muestra Visitors / Page Views / Bounce Rate. En Hobby el plan incluye 2.500 eventos al mes.
    (Al activarlo, el Vercel Agent abrió el PR #41 proponiendo exactamente este mismo cambio; se cerró por
    duplicado.)
+
+**Confirmado el 2026-09-15: está recogiendo datos.** El panel marca 8 visitantes y 114 páginas vistas,
+con la serie arrancando el 11/09 (el día del despliegue que llevaba el componente). El aviso que sigue
+apareciendo es residual: su ventana de 7 días todavía incluye días sin datos. Se apaga solo.
+
+Aviso para el futuro: el MCP de Vercel devuelve `404 Web Analytics not found` para este proyecto aunque
+funcione. No es señal de que esté desactivado — mirar el panel, no la API.
 
 No confundirlo con la **telemetría propia** (`AnalyticsInitializer`), que escribe en Supabase y alimenta
 el panel de admin. Esa es independiente y necesita las dos variables a la vez, porque el cliente no emite
@@ -119,3 +140,8 @@ deja leerlas; sólo los secretos de verdad (service-role, tokens de Upstash) nec
 
 **Cómo verificar el flag sin poder leerlo:** entrar a `/hub/story` con sesión iniciada. Si redirige a
 `/hub/story/overworld`, `STORY_OVERWORLD_ENABLED` está en `true`; si se queda en el panel clásico, no.
+
+**Verificado el 2026-09-15 y el flag está en `true`:** Web Analytics registra `/hub/story/overworld` como
+**ruta servida** con 5 visitantes, empatada con `/hub/story` (5), justo lo que produce la redirección. Si
+el flag estuviera apagado la ruta resolvería a `/_not-found`, no a sí misma. Los Actos 5-8 son jugables
+en producción. Web Analytics sirve además como verificador de flags sin tener que leer la variable.
